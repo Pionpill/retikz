@@ -25,6 +25,7 @@ const createFlexLayoutInput = (props: Readonly<Record<string, unknown>>, context
   const { authoring: _authoring, children, ...input } = props as FlexLayoutProps;
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Flex, context);
+
   return withInputEmbedAdapters({ ...input, children: collected.items } satisfies InputFlexLayout, collected.adapters);
 };
 

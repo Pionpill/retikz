@@ -61,7 +61,10 @@ type ReactInputEmbedProps<TInput> = Readonly<{
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
-/** 将嵌入 props 与其递归 authoring 子项使用的 Vanilla adapter 一并交给根 traversal */
+/**
+ * 将嵌入 props 与其递归 authoring 子项使用的 Vanilla adapter 一并交给根 traversal
+ * @template TInput 被适配器集合伴随传递的作者输入类型，包装后仍原样保留
+ */
 export const withInputEmbedAdapters = <TInput>(
   input: TInput,
   adapters: ReadonlyArray<AnyInputEmbedAdapter>,
@@ -84,9 +87,11 @@ const componentLabel = (type: unknown): string => {
     const component = type as { displayName?: string; name?: string };
     return component.displayName ?? component.name ?? 'Unknown';
   }
+
   if (type !== null && typeof type === 'object') {
     return (type as { displayName?: string }).displayName ?? 'Unknown';
   }
+
   return String(type);
 };
 
@@ -102,18 +107,22 @@ const splitChildTextLines = (text: string): Array<string> => {
   const lines: Array<string> = [];
   let start = 0;
   let inDisplayTex = false;
+
   for (let index = 0; index < text.length; index += 1) {
     if (text[index] === '$' && text[index + 1] === '$' && !isEscapedAt(text, index)) {
       inDisplayTex = !inDisplayTex;
       index += 1;
       continue;
     }
+
     if (text[index] === '\n' && !inDisplayTex) {
       lines.push(text.slice(start, index));
       start = index + 1;
     }
   }
+
   lines.push(text.slice(start));
+
   return lines;
 };
 
@@ -121,8 +130,10 @@ const splitChildTextLines = (text: string): Array<string> => {
 const textElementToLineSpec = (element: ReactElement): IRLine | undefined => {
   const props = element.props as TextProps;
   if (typeof props.children !== 'string' && typeof props.children !== 'number') return undefined;
+
   const text = String(props.children);
   if (props.fill === undefined && props.opacity === undefined && props.font === undefined) return text;
+
   return {
     text,
     ...(props.fill === undefined ? {} : { fill: props.fill }),
@@ -136,64 +147,80 @@ const collectChildLines = (children: unknown): Array<IRLine> => {
   const lines: Array<IRLine> = [];
   let buffer = '';
   let hasBuffer = false;
+
   const flush = (): void => {
     if (hasBuffer) lines.push(buffer);
     buffer = '';
     hasBuffer = false;
   };
+
   const append = (text: string): void => {
     buffer += text;
     hasBuffer = true;
   };
+
   const visit = (node: unknown): void => {
     if (typeof node === 'string') {
       const parts = splitChildTextLines(node);
       append(parts[0] ?? '');
+
       for (let index = 1; index < parts.length; index += 1) {
         flush();
         append(parts[index] ?? '');
       }
+
       return;
     }
+
     if (typeof node === 'number') {
       append(String(node));
       return;
     }
+
     if (Array.isArray(node)) {
       for (const child of node) visit(child);
       return;
     }
+
     if (!isValidElement(node)) return;
     if (node.type === Fragment) {
       visit((node.props as { children?: ReactNode }).children);
       return;
     }
+
     if (getDisplayName(node) === TIKZ_TEXT) {
       const line = textElementToLineSpec(node);
       if (line !== undefined) {
         flush();
         lines.push(line);
       }
+
       return;
     }
+
     if (typeof node.type === 'function') visit((node.type as (props: unknown) => ReactNode)(node.props));
   };
+
   visit(children);
   flush();
+
   return lines;
 };
 
 /** 读取 Node 的显式 text 或 JSX children */
 const readNodeText = (props: NodeProps): IRNode['text'] => {
   if (typeof props.text === 'string' || Array.isArray(props.text)) return props.text;
+
   const lines = collectChildLines(props.children);
   if (lines.length === 0) return undefined;
+
   return lines.length === 1 && typeof lines[0] === 'string' ? lines[0] : lines;
 };
 
 /** 从 <EdgeLabel> sugar 中读取首个标签 */
 const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
   let result: InputStepLabel | undefined;
+
   const visit = (node: ReactNode): void => {
     Children.forEach(node, child => {
       if (!isValidElement(child)) return;
@@ -201,18 +228,22 @@ const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
         visit((child.props as { children?: ReactNode }).children);
         return;
       }
+
       if (getDisplayName(child) !== TIKZ_EDGE_LABEL) {
         if (typeof child.type === 'function') visit((child.type as (props: unknown) => ReactNode)(child.props));
         return;
       }
+
       const props = child.props as EdgeLabelElementProps;
       if (typeof props.children !== 'string') return;
       if (result !== undefined) {
         if (process.env.NODE_ENV !== 'production') {
           console.warn('[retikz] <Step> 含多个 <EdgeLabel>，仅首个生效、其余被忽略');
         }
+
         return;
       }
+
       result = {
         text: props.children,
         ...(props.position === undefined ? {} : { position: props.position }),
@@ -222,7 +253,9 @@ const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
       };
     });
   };
+
   visit(children);
+
   return result;
 };
 
@@ -240,15 +273,18 @@ const inputStepFromProps = (props: StepProps): InputStep => {
     const step = props as Extract<StepProps, { kind: 'move' }>;
     return { type: 'step', kind: 'move', to: step.to };
   }
+
   const label = resolveStepLabel(props);
   if (kind === 'line') {
     const step = props as Extract<StepProps, { kind?: 'line' }>;
     return { type: 'step', kind: 'line', to: step.to, ...(label === undefined ? {} : { label }) };
   }
+
   if (kind === 'axis-line') {
     const step = props as Extract<StepProps, { kind: 'axis-line' }>;
     return { type: 'step', kind: 'axis-line', axis: step.axis, to: step.to, ...(label === undefined ? {} : { label }) };
   }
+
   if (kind === 'fold') {
     const step = props as Extract<StepProps, { kind: 'fold' }>;
     return {
@@ -260,6 +296,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(label === undefined ? {} : { label }),
     };
   }
+
   if (kind === 'curve') {
     const step = props as Extract<StepProps, { kind: 'curve' }>;
     return {
@@ -270,6 +307,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(label === undefined ? {} : { label }),
     };
   }
+
   if (kind === 'cubic') {
     const step = props as Extract<StepProps, { kind: 'cubic' }>;
     return {
@@ -281,6 +319,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(label === undefined ? {} : { label }),
     };
   }
+
   if (kind === 'bend') {
     const step = props as Extract<StepProps, { kind: 'bend' }>;
     return {
@@ -295,6 +334,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(label === undefined ? {} : { label }),
     };
   }
+
   if (kind === 'arc') {
     const step = props as Extract<StepProps, { kind: 'arc' }>;
     return {
@@ -307,6 +347,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(label === undefined ? {} : { label }),
     };
   }
+
   if (kind === 'circlePath' || kind === 'ellipsePath') {
     const step = props as Extract<StepProps, { kind: 'circlePath' | 'ellipsePath' }>;
     return {
@@ -319,6 +360,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(label === undefined ? {} : { label }),
     } as InputStep;
   }
+
   if (kind === 'rectangle') {
     const step = props as Extract<StepProps, { kind: 'rectangle' }>;
     return {
@@ -329,6 +371,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(step.cornerRadius === undefined ? {} : { cornerRadius: step.cornerRadius }),
     };
   }
+
   if (kind === 'smooth') {
     const step = props as Extract<StepProps, { kind: 'smooth' }>;
     return {
@@ -339,7 +382,9 @@ const inputStepFromProps = (props: StepProps): InputStep => {
       ...(label === undefined ? {} : { label }),
     };
   }
+
   const step = props as Extract<StepProps, { kind: 'generator' }>;
+
   return {
     type: 'step',
     kind: 'generator',
@@ -353,6 +398,7 @@ const inputStepFromProps = (props: StepProps): InputStep => {
 /** 收集 <Path> children 中的 <Step> Input */
 const readPathChildren = (children: ReactNode): ReadonlyArray<InputStep> => {
   const steps: Array<InputStep> = [];
+
   const visit = (node: ReactNode): void => {
     Children.forEach(node, child => {
       if (!isValidElement(child)) return;
@@ -360,14 +406,18 @@ const readPathChildren = (children: ReactNode): ReadonlyArray<InputStep> => {
         visit((child.props as { children?: ReactNode }).children);
         return;
       }
+
       if (getDisplayName(child) === TIKZ_STEP) {
         steps.push(inputStepFromProps(child.props as StepProps));
         return;
       }
+
       if (typeof child.type === 'function') visit((child.type as (props: unknown) => ReactNode)(child.props));
     });
   };
+
   visit(children);
+
   return steps;
 };
 
@@ -454,6 +504,7 @@ const inputEmbedFromElement = (
       : undefined;
   context.adapters.set(adapter.kind, adapter);
   nested?.adapters.forEach(nestedAdapter => context.adapters.set(nestedAdapter.kind, nestedAdapter));
+
   return {
     type: 'embed',
     kind: adapter.kind,
@@ -473,6 +524,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
         visit((child.props as { children?: ReactNode }).children);
         return;
       }
+
       switch (getDisplayName(child)) {
         case TIKZ_NODE:
           output.push(inputNodeFromProps(child.props as NodeProps));
@@ -487,6 +539,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
           output.push(inputScopeFromProps(child.props as ScopeProps, context));
           return;
       }
+
       if (typeof child.type === 'function') {
         if (isClassComponent(child.type)) {
           throw new RetikzReactError(
@@ -494,14 +547,18 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
             `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件`,
           );
         }
+
         const adapter = resolveInputEmbedAdapter(child.type);
         if (adapter !== null) {
           output.push(inputEmbedFromElement(child, adapter, context));
           return;
         }
+
         visit((child.type as (props: unknown) => ReactNode)(child.props));
+
         return;
       }
+
       if (process.env.NODE_ENV !== 'production') {
         console.warn(
           `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child.type)}>，已忽略。只有 Kernel、Sugar 与 React.Fragment 会被转换为 Input`,
@@ -509,6 +566,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
       }
     });
   visit(children);
+
   return output;
 };
 
@@ -546,6 +604,7 @@ export const pickScopeStyle = (scope: ScopeStyleProps): Partial<ScopeStyleProps>
       );
     if (!hasDefaults) delete picked.defaults;
   }
+
   return picked;
 };
 

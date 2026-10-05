@@ -45,7 +45,7 @@ export type CompileContext = {
   loweredIr: IRScene;
   /** Scene 根解析后的完整 Theme */
   theme: ResolvedTheme;
-  /** Core Theme style registry */
+  /** Core 主题风格注册表 */
   themeStyles: ReadonlyMap<string, ThemeStyleDefinition>;
   /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
@@ -62,7 +62,14 @@ export type CompileContext = {
   /** 显式 observed compile 的本次 session */
   observation: CompileObservationRuntime | undefined;
   /** 本次 full compile 共享的可选 trace 计数器 */
-  trace: { reporter: NonNullable<CompileOptions['trace']>; visited: number } | undefined;
+  trace:
+    | {
+        /** 接收编译跟踪事件的回调 */
+        reporter: NonNullable<CompileOptions['trace']>;
+        /** 当前编译已访问的子项数量 */
+        visited: number;
+      }
+    | undefined;
   /** Scene 输出 rounder */
   round: (n: number) => number;
   /** 自动 layout padding */
@@ -116,6 +123,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
     console.warn(formatCompileWarning({ ...warning, origin: warning.origin ?? { kind: 'primary' } }));
   };
+
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
   const clips = resolveClipRegistry(options.clips);
@@ -126,6 +134,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
       `CompileOptions.maxClipDepth '${maxClipDepth}' must be a non-negative safe integer`,
     );
   }
+
   const patterns = resolvePatternRegistry(options.patterns);
   const composites = resolveCompositeRegistry(options.composites);
   const themeStyles = resolveThemeStyleRegistry(options.themeStyles);

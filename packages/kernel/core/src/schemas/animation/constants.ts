@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /**
  * 可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
  * @description `viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
@@ -47,3 +49,18 @@ export const AnimationFill = {
 
 /** 播放触发器关键字（runtime 落地；DrawWay 风格 const + 派生类型，与其它 Animation 枚举单一真源一致） */
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
+
+/** 内置可动画属性通道名联合 */
+export type AnimationProperty = ValueOf<typeof AnimationProperty>;
+
+/** 缓动预设名联合 */
+export type AnimationEasing = ValueOf<typeof AnimationEasing>;
+
+/** 播放方向名联合 */
+export type AnimationDirection = ValueOf<typeof AnimationDirection>;
+
+/** 填充模式名联合 */
+export type AnimationFill = ValueOf<typeof AnimationFill>;
+
+/** 触发器关键字联合（不含 { onEvent } 对象形态） */
+export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;

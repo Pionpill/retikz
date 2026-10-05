@@ -20,11 +20,14 @@ const getShortcutLabel = (key: ShortcutKey): string => {
     if (key === 'mod') return '⌘';
     if (key === 'alt') return '⌥';
     if (key === 'shift') return '⇧';
+
     return key;
   }
+
   if (key === 'mod') return 'Ctrl';
   if (key === 'alt') return 'Alt';
   if (key === 'shift') return 'Shift';
+
   return key;
 };
 

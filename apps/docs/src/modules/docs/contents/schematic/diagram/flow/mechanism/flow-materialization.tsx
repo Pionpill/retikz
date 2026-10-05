@@ -15,6 +15,7 @@ export type FlowMaterializationProps = Readonly<{ lang?: Lang }>;
 const FlowMaterialization: FC<FlowMaterializationProps> = props => {
   const { lang = 'zh' } = props;
   const t = flowMaterializationI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map

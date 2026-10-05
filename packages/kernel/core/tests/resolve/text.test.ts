@@ -30,6 +30,7 @@ describe('resolve text', () => {
 
   it('resolves string shorthand and TeX gating', () => {
     const inheritedFont = { size: 16, family: 'serif' } as const;
+
     expect(
       resolveTextLine('a $x$ b', {
         rootFontSize: 16,

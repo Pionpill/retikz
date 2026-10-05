@@ -45,6 +45,7 @@ const definePathKindImplementation = (input: unknown): unknown => {
   if (schema === null || typeof schema !== 'object' || typeof Reflect.get(schema, 'parse') !== 'function') {
     throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'definePathKind: schema must be a Zod schema.');
   }
+
   const ownerOutput = record.ownerOutput;
   if (ownerOutput !== undefined) {
     if (
@@ -58,6 +59,7 @@ const definePathKindImplementation = (input: unknown): unknown => {
       );
     }
   }
+
   return definition;
 };
 

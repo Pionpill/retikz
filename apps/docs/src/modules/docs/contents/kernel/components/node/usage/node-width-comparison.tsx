@@ -12,6 +12,7 @@ export type NodeWidthComparisonProps = { lang?: Lang };
 const NodeWidthComparison: FC<NodeWidthComparisonProps> = props => {
   const { lang = 'zh' } = props;
   const text = nodeWidthComparisonI18n[lang];
+
   return (
     <Layout>
       <Scope

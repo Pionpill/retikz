@@ -15,5 +15,6 @@ export const firstLineDy = (
   const n = text.lines.length;
   if (text.baseline === 'middle') return (-(n - 1) / 2) * text.lineHeight;
   if (text.baseline === 'bottom') return -(n - 1) * text.lineHeight;
+
   return 0;
 };

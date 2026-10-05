@@ -17,6 +17,7 @@ const collectNumbers = (v: unknown, out: Array<number> = []): Array<number> => {
   if (typeof v === 'number') out.push(v);
   else if (Array.isArray(v)) for (const x of v) collectNumbers(x, out);
   else if (v && typeof v === 'object') for (const x of Object.values(v)) collectNumbers(x, out);
+
   return out;
 };
 
@@ -55,6 +56,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
         { type: 'step', kind: 'generator', name: 'g', to: [10, 0], params: { coeff: Infinity } },
       ],
     };
+
     expect(PathSchema.safeParse(path).success).toBe(false);
   });
 
@@ -68,6 +70,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/non-finite coordinate/i);
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/'gen'/);
   });
@@ -82,6 +85,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/non-finite coordinate/i);
   });
 
@@ -98,6 +102,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: { k: Infinity } },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow();
   });
 
@@ -108,7 +113,9 @@ describe('[ADV] JSON 可序列化护栏', () => {
       generate: ({ from, params }) => {
         const cmds: Array<PathCommand> = [];
         const n = params.n as number;
+
         for (let i = 1; i <= n; i++) cmds.push({ kind: 'line', to: [from[0] + i, from[1] + i] });
+
         return cmds;
       },
     });
@@ -117,6 +124,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
       { type: 'step', kind: 'generator', name: 'gen', params: { n: 5 } },
     ]);
     const scene = compileToScene(ir, { pathGenerators: [gen] }).scene;
+
     expect(JSON.parse(JSON.stringify(scene))).toEqual(scene);
     expect(collectNumbers(scene as unknown).every(Number.isFinite)).toBe(true);
   });
@@ -141,21 +149,27 @@ describe('[ADV] 精确 schema transform', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: { a: 1 } },
     ]);
+
     return { error: catchCompile(ir, { gen }), observed };
   };
 
   it('transform 注入 NaN → callback 直接接收', () => {
     const result = probe(Number.NaN);
+
     expect(result.error).toBeUndefined();
     expect(result.observed).toBeNaN();
   });
+
   it('transform 注入 Infinity → callback 直接接收', () => {
     const result = probe(Number.POSITIVE_INFINITY);
+
     expect(result.error).toBeUndefined();
     expect(result.observed).toBe(Number.POSITIVE_INFINITY);
   });
+
   it('transform 注入 -Infinity → callback 直接接收', () => {
     const result = probe(Number.NEGATIVE_INFINITY);
+
     expect(result.error).toBeUndefined();
     expect(result.observed).toBe(Number.NEGATIVE_INFINITY);
   });
@@ -172,6 +186,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
       { type: 'step', kind: 'line', to: [10, 10] },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 
@@ -183,6 +198,7 @@ describe('[ADV] generate 输出校验', () => {
           kindReads += 1;
           return kindReads === 1 ? 'line' : 'bogus';
         }
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -222,6 +238,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/invalid.*command/i);
   });
 
@@ -238,6 +255,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'generator', name: 'throwingGen', params: {} },
     ]);
     const err = catchCompile(ir, { throwingGen });
+
     expect(err?.message).toMatch(/throwingGen/);
     expect(err?.message).toMatch(/boom inside generate/);
   });
@@ -258,6 +276,7 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
     const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [gen] }).scene.primitives);
+
     expect(drawn?.commands.length ?? 0).toBeGreaterThanOrEqual(N);
   }, 15_000);
 });
@@ -281,6 +300,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', to: [50, 0], params: { bend: { id: 'NOPE' } } },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
     expect(seen && 'bend' in seen).toBe(false);
   });
@@ -296,6 +316,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', to: [50, 0], params: { other: 1 } },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 
@@ -314,6 +335,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       { type: 'step', kind: 'generator', name: 'gen', to: [50, 0], params: { bend: value } },
     ]);
     const err = catchCompile(ir, { gen });
+
     expect(err?.message).toMatch(/targetParams key 'bend'/);
     expect(err?.message).toMatch(new RegExp(`got ${label}`));
   });
@@ -337,6 +359,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       [{ type: 'coordinate', id: 'C', position: [7, 7] }],
     );
     compileToScene(ir, { pathGenerators: [gen] });
+
     expect(seen?.bend).toEqual([7, 7]);
   });
 
@@ -356,6 +379,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       { type: 'step', kind: 'generator', name: 'gen', to: [50, 0], params: { bend: [3, 4] } },
     ]);
     compileToScene(ir, { pathGenerators: [gen] });
+
     expect(seen?.bend).toEqual([3, 4]);
   });
 
@@ -373,6 +397,7 @@ describe('[ADV] targetParams resolve 边角', () => {
       ],
       [{ type: 'coordinate', id: 'C', position: [1, 2] }],
     );
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 });
@@ -387,11 +412,13 @@ describe('[ADV] 未注册 / 名称边角', () => {
       { type: 'step', kind: 'generator', name: 'missing-generator', params: {} },
     ]);
     let err: Error | undefined;
+
     try {
       compileToScene(ir);
     } catch (e) {
       err = e as Error;
     }
+
     expect(err?.message).toMatch(/missing-generator/);
   });
 
@@ -401,6 +428,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
       { type: 'step', kind: 'generator', name: 'sin', params: {} },
     ]);
     const err = catchCompile(ir, {});
+
     expect(err?.message).toContain("Unknown path generator 'sin'; available: (none registered)");
   });
 
@@ -414,6 +442,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'custom-curve', params: {} },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [{ ...gen, name: 'Custom-Curve' }] }).scene).toThrow(
       /custom-curve/,
     );
@@ -425,11 +454,13 @@ describe('[ADV] 未注册 / 名称边角', () => {
       paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
+
     for (const evil of ['__proto__', 'constructor', 'hasOwnProperty', 'toString', 'valueOf']) {
       const ir = wrapPath([
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'generator', name: evil, params: {} },
       ]);
+
       expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow();
     }
   });
@@ -445,6 +476,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
       { type: 'step', kind: 'generator', name: 'zzz', params: {} },
     ]);
     const err = catchCompile(ir, { banana: g, apple: g, cherry: g });
+
     expect(err?.message).toMatch(/apple, banana, cherry/);
   });
 });
@@ -463,6 +495,7 @@ describe('[ADV] cursor / 衔接', () => {
       { type: 'step', kind: 'generator', name: 'gen', to: [5, 5], params: {} },
       { type: 'step', kind: 'line', to: [20, 20] },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 
@@ -479,6 +512,7 @@ describe('[ADV] cursor / 衔接', () => {
     ]);
     const drawn = firstDrawnPath(compileToScene(ir, { pathGenerators: [g1] }).scene.primitives);
     const lines = drawn?.commands.filter(c => c.kind === 'line') ?? [];
+
     expect(lines[lines.length - 1].to[0]).toBe(20);
   });
 
@@ -489,6 +523,7 @@ describe('[ADV] cursor / 衔接', () => {
       { type: 'step', kind: 'generator', name: 'empty', to: [99, 99], params: {} },
       { type: 'step', kind: 'line', to: [50, 50] },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [empty] }).scene).not.toThrow();
   });
 
@@ -503,6 +538,7 @@ describe('[ADV] cursor / 衔接', () => {
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
       { type: 'step', kind: 'line', to: [30, 30] },
     ]);
+
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
   });
 });
@@ -559,11 +595,14 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
     };
     const a = PathSchema.safeParse(path);
     const b = PathSchema.safeParse(JSON.parse(JSON.stringify(path)));
+
     expect(a.success).toBe(true);
     expect(b.success).toBe(true);
+
     if (a.success && b.success) {
       const ga = a.data.children![1];
       const gb = b.data.children![1];
+
       expect(ga.kind === 'generator' && ga.params).toEqual(gb.kind === 'generator' ? gb.params : undefined);
     }
   });
@@ -579,6 +618,7 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
       { type: 'step', kind: 'generator', name: 'gen', params: {}, label: { text: 'gen', position: 'midway' } },
     ]);
     const scene = compileToScene(ir, { pathGenerators: [gen] }).scene;
+
     expect(flattenPrims(scene.primitives).some(p => p.type === 'text')).toBe(true);
   });
 });

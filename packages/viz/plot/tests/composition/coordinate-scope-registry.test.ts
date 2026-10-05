@@ -76,11 +76,13 @@ describe('coordinate composition registry schema', () => {
 
   it('composition_scope_registry_round_trips_through_json', () => {
     const json = JSON.parse(JSON.stringify(compositionSpec));
+
     expect(parsePlotIR(json)).toEqual(compositionSpec);
   });
 
   it('mark_and_axis_coordinate_scope_fields_are_preserved', () => {
     const parsed = parsedComposition();
+
     expect(parsed.marks[1]).toMatchObject({ coordinateView: 'xy' });
     expect(parsed.guides?.[1]).toMatchObject({ coordinateView: 'xy' });
   });
@@ -95,6 +97,7 @@ describe('coordinate composition registry schema', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
+
     expect(parsePlotIR(spec)).toEqual(spec);
   });
 
@@ -108,11 +111,13 @@ describe('coordinate composition registry schema', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' } } }],
       guides: [],
     };
+
     expect(parsePlotIR(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
   });
 
   it('empty_composition_scopes_rejected', () => {
     const spec = { ...compositionSpec, composition: { defaultView: 'main', views: [] } };
+
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
@@ -127,6 +132,7 @@ describe('coordinate composition registry schema', () => {
         ],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/duplicate coordinate view/i);
   });
 
@@ -138,6 +144,7 @@ describe('coordinate composition registry schema', () => {
         views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' } }],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/defaultView/);
   });
 
@@ -146,6 +153,7 @@ describe('coordinate composition registry schema', () => {
       ...compositionSpec,
       marks: [{ type: 'point', coordinateView: 'missing', encoding: { x: { field: 'month' } } }],
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
@@ -154,6 +162,7 @@ describe('coordinate composition registry schema', () => {
       ...compositionSpec,
       guides: [{ type: 'axis', dimension: 'x', coordinateView: 'missing' }],
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
@@ -162,6 +171,7 @@ describe('coordinate composition registry schema', () => {
       ...coordinateShorthandSpec,
       marks: [{ type: 'point', coordinateView: 'missing', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
@@ -170,11 +180,13 @@ describe('coordinate composition registry schema', () => {
       ...coordinateShorthandSpec,
       guides: [{ type: 'axis', dimension: 'x', coordinateView: 'missing' }],
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
   it('coordinate_and_composition_coexistence_rejected', () => {
     const spec = { ...compositionSpec, coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' } };
+
     expect(() => parsePlotIR(spec)).toThrow(/composition/);
   });
 
@@ -195,6 +207,7 @@ describe('coordinate composition registry schema', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/target/);
   });
 
@@ -212,6 +225,7 @@ describe('coordinate composition registry schema', () => {
         ],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/target/);
   });
 
@@ -231,6 +245,7 @@ describe('coordinate composition registry schema', () => {
         ],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow();
   });
 });
@@ -238,6 +253,7 @@ describe('coordinate composition registry schema', () => {
 describe('coordinate composition registry lowering', () => {
   it('mark_and_axis_lowering_use_their_bound_coordinate_scope', () => {
     const outer = expandOf(parsedComposition());
+
     expect(outer.children.length).toBeGreaterThanOrEqual(4);
   });
 
@@ -261,6 +277,7 @@ describe('coordinate composition registry lowering', () => {
       ],
       guides: [{ type: 'axis', dimension: 'y', coordinateView: 'plane' }],
     };
+
     expect(() => expandOf(parsePlotIR(spec))).not.toThrow();
   });
 });

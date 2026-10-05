@@ -47,6 +47,7 @@ export const easingToCss = (
   if (easing === undefined) return 'linear';
   if (Array.isArray(easing)) return `cubic-bezier(${easing.join(', ')})`;
   if (CSS_NAMED_EASINGS.has(easing)) return easing;
+
   const custom = registry !== undefined && Object.hasOwn(registry, easing) ? registry[easing] : undefined;
   if (Array.isArray(custom)) return `cubic-bezier(${custom.join(', ')})`;
   if (typeof custom === 'function') {
@@ -55,7 +56,9 @@ export const easingToCss = (
     );
     return 'linear';
   }
+
   onWarn(`SVG animation: unknown easing "${easing}"; falling back to linear.`);
+
   return 'linear';
 };
 
@@ -67,7 +70,14 @@ export const iterationsToCss = (iterations: number | 'infinite' | undefined): st
 const COLOR_SAMPLES = 8;
 
 /** 单帧归一化形态：offset∈[0,1] + 该通道 CSS 值（+ 可选段内 easing） */
-export type ExpandedFrame = { offset: number; value: string; easing?: string };
+export type ExpandedFrame = {
+  /** 展开帧在单次轨道周期内的归一化位置 */
+  offset: number;
+  /** 当前 CSS 属性在此帧的序列化值 */
+  value: string;
+  /** 从此帧到下一帧的 CSS 缓动表达式 */
+  easing?: string;
+};
 
 /** track 展开结果：CSS 属性名 + 帧列表 + 可选 transform 支点 / 一次性 setup 属性 */
 export type ExpandedTrack = {
@@ -82,9 +92,13 @@ export type ExpandedTrack = {
 };
 
 /** 跳过原因（caller 据此 warn 并降级到 base） */
-export type ExpandSkip = { skip: string };
+export type ExpandSkip = {
+  /** 当前轨道无法展开为 CSS 动画时的诊断原因 */
+  skip: string;
+};
 
 const asNumber = (value: unknown): number => (typeof value === 'number' ? value : Number(value));
+
 const asColor = (value: unknown): string => (typeof value === 'string' ? value : String(value));
 
 /**
@@ -117,6 +131,7 @@ export const expandTrack = (
         frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(asNumber(kf.value)), ...ease(kf) })),
       };
     }
+
     // 颜色：相邻 keyframe 段在 oklch 预采样成多帧
     const frames: Array<ExpandedFrame> = [];
     track.keyframes.forEach((kf, index) => {
@@ -124,12 +139,15 @@ export const expandTrack = (
         frames.push({ offset: kf.at, value: asColor(kf.value) });
         return;
       }
+
       const prev = track.keyframes[index - 1];
       const samples = sampleColorOklch(asColor(prev.value), asColor(kf.value), COLOR_SAMPLES);
+
       for (let s = 1; s <= COLOR_SAMPLES; s++) {
         frames.push({ offset: prev.at + ((kf.at - prev.at) * s) / COLOR_SAMPLES, value: samples[s], easing: 'linear' });
       }
     });
+
     return { cssProperty, frames };
   }
 

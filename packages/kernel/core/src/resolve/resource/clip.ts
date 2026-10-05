@@ -34,7 +34,9 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
       `Clip provider 'clip:${kind}' schema returned kind '${String(params.kind)}' instead of '${kind}'.`,
     );
   }
+
   const resolve = (nested: IRClip): ClipResolution => resolveClip(nested, context);
+
   return { spec: clip, kind, definition, params, resolve };
 };
 
@@ -58,5 +60,6 @@ export const resolveClipShape = (shape: ClipShape, context: ClipResolveContext):
       `Clip provider 'clip:${kind}' shapeSchema returned kind '${String(params.kind)}' instead of '${kind}'.`,
     );
   }
+
   return { spec: shape, kind, definition, params: params as ClipShape };
 };

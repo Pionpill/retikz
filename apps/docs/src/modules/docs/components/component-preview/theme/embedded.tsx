@@ -1,3 +1,5 @@
+import { BranchDiagram as RuntimeBranchDiagram } from '@retikz/diagram-react/branch';
+import type { BranchDiagramProps } from '@retikz/diagram-react/branch';
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import { FlowDiagram as RuntimeFlowDiagram } from '@retikz/diagram-react/flow';
 import type { EntityProps, GraphProps, RelationProps } from '@retikz/graph-react';
@@ -152,5 +154,23 @@ export const PreviewManualTable: InputEmbeddableTableComponent<ManualTableProps>
     inputEmbedAdapter: RuntimeManualTable.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>) =>
       RuntimeManualTable.createInputEmbedProps(withTableThemeStyles(props as ManualTableProps)),
+  },
+);
+
+const withBranchThemeStyles = (props: BranchDiagramProps): BranchDiagramProps => ({
+  ...props,
+  diagramThemeStyles: [...PreviewThemeDefinitionBundle.diagram, ...(props.diagramThemeStyles ?? [])],
+  graphThemeStyles: [...new Set([...PreviewThemeDefinitionBundle.graph, ...(props.graphThemeStyles ?? [])])],
+});
+
+/** 共享 Diagram 与 Graph 主题的 Branch 文档预览 */
+export const PreviewBranchDiagram: typeof RuntimeBranchDiagram = Object.assign(
+  ((props: BranchDiagramProps) => <RuntimeBranchDiagram {...withBranchThemeStyles(props)} />) as FC<BranchDiagramProps>,
+  {
+    displayName: 'PreviewBranchDiagram',
+    isTier2Embeddable: true as const,
+    inputEmbedAdapter: RuntimeBranchDiagram.inputEmbedAdapter,
+    createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
+      RuntimeBranchDiagram.createInputEmbedProps(withBranchThemeStyles(props as BranchDiagramProps), context),
   },
 );

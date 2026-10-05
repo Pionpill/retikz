@@ -16,6 +16,7 @@ import { PlotSchema } from '../../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const WIDTH = 400;
+
 const HEIGHT = 300;
 
 const expandOf = (
@@ -29,6 +30,7 @@ const expandOf = (
 /** 收集 scope 树内所有 node */
 const nodesOf = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -36,7 +38,9 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -83,6 +87,7 @@ const BAR_ROWS: Datasets = {
     { month: 'Feb', revenue: 980 },
   ],
 };
+
 const POINT_ROWS: Datasets = {
   d: [
     { px: 1, py: 2, label: 'A', cat: 'x' },
@@ -95,15 +100,20 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
     const spec = intervalSpec({ content: { field: 'revenue' }, position: 'top', distance: 6 });
     const layer = expandOf(spec, BAR_ROWS);
     const nodes = nodesOf(layer);
+
     // 每行一个柱 Node（无额外 text Node）
     expect(nodes).toHaveLength(2);
+
     for (const node of nodes) {
       expect(node.label).toBeDefined();
+
       const label = node.label as { text: string; position?: string; distance?: number };
+
       expect(label.position).toBe('top');
       expect(label.distance).toBe(6);
       expect(typeof label.text).toBe('string');
     }
+
     expect((nodes[0].label as { text: string }).text).toBe('1234.5');
     expect((nodes[1].label as { text: string }).text).toBe('980');
   });
@@ -111,6 +121,7 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-display-format：displayFormat 套在 field 上 → datum Node.label 文本为格式化串', () => {
     const spec = intervalSpec({ content: { field: 'revenue', displayFormat: ',.0f' } });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
+
     expect((nodes[0].label as { text: string }).text).toBe('1,235');
     expect((nodes[1].label as { text: string }).text).toBe('980');
   });
@@ -118,12 +129,14 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
   it('label-pin-leader：label.pin=true → 宿主 Node.label 带引线', () => {
     const spec = intervalSpec({ content: { value: 'X' }, pin: true });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
+
     expect((nodes[0].label as { pin?: boolean }).pin).toBe(true);
   });
 
   it('label-value-constant：value → 所有 datum Node.label 同一常量串', () => {
     const spec = intervalSpec({ content: { value: 'TOP' } });
     const nodes = nodesOf(expandOf(spec, BAR_ROWS));
+
     expect((nodes[0].label as { text: string }).text).toBe('TOP');
     expect((nodes[1].label as { text: string }).text).toBe('TOP');
   });
@@ -136,7 +149,9 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
       resolveLabel: { bars: row => `${row.month}=${row.revenue}` },
     });
     const nodes = nodesOf(layer);
+
     expect((nodes[0].label as { text: string }).text).toBe('Jan=1234.5');
+
     // IR 序列化往返不变（不含函数）
     expect(() => JSON.stringify(layer)).not.toThrow();
     expect(JSON.stringify(layer)).not.toContain('function');
@@ -151,6 +166,7 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
       ],
     });
     const nodes = nodesOf(layer);
+
     expect(nodes).toHaveLength(2);
     expect(nodes[0].label).toBeDefined();
     expect(nodes[1].label).toBeUndefined();
@@ -160,6 +176,7 @@ describe('contract priority-1 宿主 label（填 datum Node.label）', () => {
 describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）', () => {
   it('text-field-content：text={field} → 每行 Node.text = 字段值转串', () => {
     const nodes = nodesOf(expandOf(textSpec({ text: { field: 'label' } }), POINT_ROWS));
+
     expect(nodes).toHaveLength(2);
     expect(nodes[0].text).toBe('A');
     expect(nodes[1].text).toBe('B');
@@ -167,6 +184,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
 
   it('text-value-constant：text={value} → 所有行 Node.text 同一常量串', () => {
     const nodes = nodesOf(expandOf(textSpec({ text: { value: 'lbl' } }), POINT_ROWS));
+
     expect(nodes.map(n => n.text)).toEqual(['lbl', 'lbl']);
   });
 
@@ -185,6 +203,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
       guides: [],
     });
     const pointNodes = nodesOf(expandOf(pointSpec, POINT_ROWS));
+
     expect(textNodes.map(n => n.position)).toEqual(pointNodes.map(n => n.position));
   });
 
@@ -197,12 +216,14 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
         ],
       }),
     );
+
     expect(nodes).toHaveLength(1);
     expect(nodes[0].text).toBe('A');
   });
 
   it('text-empty-rows：全跳过 → 该 text 图层不产（无 node）', () => {
     const layer = expandOf(textSpec({ text: { field: 'label' } }), { d: [{ px: 1, py: 2 }] });
+
     expect(nodesOf(layer)).toHaveLength(0);
   });
 
@@ -210,6 +231,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
     const base = nodesOf(expandOf(textSpec({ text: { field: 'label' } }), POINT_ROWS));
     const shifted = nodesOf(expandOf(textSpec({ text: { field: 'label' } }, { dx: 5, dy: -8 }), POINT_ROWS));
     const [bx, by] = base[0].position as [number, number];
+
     expect(shifted[0].position).toEqual([bx + 5, by - 8]);
   });
 
@@ -234,8 +256,10 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
       guides: [],
     });
     const layer = expandOf(spec, POINT_ROWS);
+
     // 子 Scope 的 nodeDefault 带 textColor、不带 fill
     const scopes: Array<{ defaults?: { node?: { style?: Record<string, unknown> } } }> = [];
+
     const walk = (children: ReadonlyArray<unknown>): void => {
       for (const child of children) {
         const c = child as {
@@ -249,9 +273,12 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
         }
       }
     };
+
     walk(layer.children);
     const withDefault = scopes.filter(s => s.defaults?.node?.style !== undefined);
+
     expect(withDefault.length).toBeGreaterThanOrEqual(2);
+
     for (const s of withDefault) {
       expect(s.defaults?.node?.style).toHaveProperty('textColor');
       expect(s.defaults?.node?.style).toHaveProperty('fill', 'none');
@@ -274,9 +301,12 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
       guides: [],
     });
     const nodes = nodesOf(expandOf(spec, POINT_ROWS));
+
     expect(nodes).toHaveLength(2);
+
     for (const node of nodes) {
       const [x, y] = node.position as [number, number];
+
       expect(Number.isFinite(x)).toBe(true);
       expect(Number.isFinite(y)).toBe(true);
     }
@@ -290,6 +320,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
         resolveLabel: { t1: row => `<${row.label}>` },
       }),
     );
+
     expect(nodes[0].text).toBe('<A>');
     expect(nodes[1].text).toBe('<B>');
   });
@@ -319,7 +350,9 @@ describe('contract schema accept/reject', () => {
       guides: [],
     });
     const nodes = nodesOf(expandOf(spec, POINT_ROWS));
+
     expect(nodes).toHaveLength(2);
+
     // glyph（散点）—— 不携带 text 内容
     expect(nodes.every(n => n.text === undefined)).toBe(true);
   });

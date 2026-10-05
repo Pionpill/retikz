@@ -410,7 +410,7 @@ export type CircleCircleInput = {
 ### CircularArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={55}>
+  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={56}>
     Circular arc curve segment
   </ApiSourceLink>
 </p>
@@ -454,7 +454,7 @@ export type CircularArcCurveSegment = {
 ### CubicBezierCurveSegment
 
 <p>
-  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={31}>
+  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={32}>
     Cubic Bézier curve segment
   </ApiSourceLink>
 </p>
@@ -496,7 +496,7 @@ export type CubicBezierCurveSegment = {
 ### CubicSegment
 
 <p>
-  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={45}>
+  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={46}>
     One cubic Bézier segment: two control points and an endpoint (the start is the prior segment endpoint or the first
     knot)
   </ApiSourceLink>
@@ -538,7 +538,7 @@ export type CubicSegment = {
   <ApiSourceLink
     label={'CurveApproximationOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={109}
+    startLine={110}
   >
     Curve-length approximation configuration
   </ApiSourceLink>
@@ -576,7 +576,7 @@ export type CurveApproximationOptions = {
   <ApiSourceLink
     label={'CurveParameterAtDistanceOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={117}
+    startLine={118}
   >
     Configuration for inverting curve distance to a parameter
   </ApiSourceLink>
@@ -614,7 +614,7 @@ export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
 ### CurveSegment
 
 <p>
-  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={93}>
+  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={94}>
     Zero-dependency curve segment that can be parameterized and sliced
   </ApiSourceLink>
 </p>
@@ -720,7 +720,7 @@ export type CurveSegment =
 ### CurveSegmentSample
 
 <p>
-  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={101}>
+  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={102}>
     Curve parameter sampling result
   </ApiSourceLink>
 </p>
@@ -878,7 +878,7 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 ### EllipseArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={71}>
+  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={72}>
     Elliptical arc curve segment
   </ApiSourceLink>
 </p>
@@ -982,7 +982,7 @@ export type LineCircleInput = {
 ### LineCurveSegment
 
 <p>
-  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={9}>
+  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={10}>
     Line curve segment
   </ApiSourceLink>
 </p>
@@ -1075,7 +1075,7 @@ export type Position = Vector2;
   <ApiSourceLink
     label={'QuadraticBezierCurveSegment'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={19}
+    startLine={20}
   >
     Quadratic Bézier curve segment
   </ApiSourceLink>
@@ -1186,7 +1186,7 @@ export const AFFINE_IDENTITY: AffineMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
 ### circle
 
 <p>
-  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={46}>
+  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={48}>
     Circle-related geometry algorithms
   </ApiSourceLink>
 </p>
@@ -1218,7 +1218,7 @@ export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilo
 ### curve
 
 <p>
-  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={479}>
+  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={509}>
     Pure geometric operations for parameterized curves
   </ApiSourceLink>
 </p>
@@ -1315,7 +1315,7 @@ export declare const ellipse: {
 
 ### intersect
 
-<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={122}>Intersection primitives for lines, circles, and segments, consistently returning points (`Position | null` / `Array<Position>`)</ApiSourceLink></p>
+<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={132}>Intersection primitives for lines, circles, and segments, consistently returning points (`Position | null` / `Array<Position>`)</ApiSourceLink></p>
 
 ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is exported separately from `./arc-intersection`.
 
@@ -1580,7 +1580,7 @@ export declare const boundsOf: (points: ReadonlyArray<Position>) => AxisAlignedB
 ### boundsToRect
 
 <p>
-  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={89}>
+  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={93}>
     Converts min/max bounds to a top-left-plus-size rectangle
   </ApiSourceLink>
 </p>
@@ -1613,7 +1613,7 @@ export declare const boundsToRect: ({ maxX, maxY, minX, minY }: AxisAlignedBound
 ### centerOfBounds
 
 <p>
-  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={125}>
+  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={129}>
     Center of axis-aligned bounds
   </ApiSourceLink>
 </p>
@@ -1649,7 +1649,7 @@ export declare const centerOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBou
   <ApiSourceLink
     label={'collectArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={93}
+    startLine={96}
   >
     Arc bounds extrema candidates: the start and end points plus points at every 90°·k direction inside `[startAngle,
     endAngle]`
@@ -1694,7 +1694,7 @@ export declare const collectArcBoundingCandidates: ({
   <ApiSourceLink
     label={'collectEllipseArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={151}
+    startLine={158}
   >
     Elliptical-arc bounds extrema candidates: endpoints plus ellipse points at every 90°·k parameter angle inside
     `[start, end]`
@@ -1774,7 +1774,7 @@ export declare const convexHull: (points: Array<Position>) => Array<Position>;
 ### cornersOfBounds
 
 <p>
-  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={159}>
+  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={163}>
     Four corner points of axis-aligned bounds
   </ApiSourceLink>
 </p>
@@ -1807,7 +1807,7 @@ export declare const cornersOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBo
 ### expandBounds
 
 <p>
-  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={144}>
+  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={148}>
     Expands axis-aligned bounds on all four sides
   </ApiSourceLink>
 </p>
@@ -1882,7 +1882,7 @@ export declare const getAffineSimilarityScale: (matrix: AffineMatrix) => number 
 ### halfAxesOfBounds
 
 <p>
-  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={134}>
+  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={138}>
     Half-axes of axis-aligned bounds
   </ApiSourceLink>
 </p>
@@ -1962,7 +1962,7 @@ export declare const intersectRayWithArc: ({
 ### isAngleWithinArcSweep
 
 <p>
-  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={121}>
+  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={126}>
     Whether angle `a` in degrees falls within the arc angle range `[startAngle, endAngle]`, including endpoints with
     tolerance
   </ApiSourceLink>
@@ -2003,7 +2003,7 @@ export declare const isAngleWithinArcSweep: ({
 ### isFiniteBoundsRect
 
 <p>
-  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={111}>
+  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={115}>
     Checks whether all four bounds-rectangle fields are finite numbers
   </ApiSourceLink>
 </p>
@@ -2172,7 +2172,7 @@ export declare const isInfiniteNumber: (value: unknown) => value is number;
 ### isPositiveBoundsRect
 
 <p>
-  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={118}>
+  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={122}>
     Checks whether a bounds rectangle is finite and has strictly positive width and height
   </ApiSourceLink>
 </p>
@@ -2205,7 +2205,7 @@ export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 ### lerp
 
 <p>
-  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={100}>
+  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={102}>
     Linear interpolation: `a + (b - a) * t`
   </ApiSourceLink>
 </p>
@@ -2276,7 +2276,7 @@ export declare const localToWorld: (shape: CenteredShape, local: Position) => Po
 ### mergeBounds
 
 <p>
-  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={74}>
+  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={77}>
     Merges two axis-aligned bounds
   </ApiSourceLink>
 </p>
@@ -2346,7 +2346,7 @@ export declare const multiplyAffine: (outer: AffineMatrix, inner: AffineMatrix) 
 ### pointAtArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={83}>
+  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={86}>
     Maps a circle center, radius, and angle in degrees to the corresponding point on the circumference
   </ApiSourceLink>
 </p>
@@ -2381,7 +2381,7 @@ export declare const pointAtArcAngle: (center: Position, radius: number, angleDe
 ### pointAtEllipseArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={141}>
+  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={148}>
     Maps an elliptical-arc center, half-axes `rx` / `ry`, and parameter angle in degrees to a point on the ellipse
   </ApiSourceLink>
 </p>
@@ -2421,7 +2421,7 @@ export declare const pointAtEllipseArcAngle: ({
 ### rectToBounds
 
 <p>
-  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={100}>
+  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={104}>
     Converts a top-left-plus-size rectangle to min/max bounds
   </ApiSourceLink>
 </p>
@@ -2454,7 +2454,7 @@ export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => Axis
 ### worldToLocal
 
 <p>
-  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={35}>
+  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={37}>
     Maps world coordinates to local coordinates, the inverse of `localToWorld`
   </ApiSourceLink>
 </p>

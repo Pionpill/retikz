@@ -6,6 +6,7 @@ import type { DetailTableInput, ManualTableInput, TableDetailColumnInput } from 
 const normalizeDetailColumn = (column: TableDetailColumnInput): IRTableDetailColumn => {
   const { header, ...fields } = column;
   if (header === undefined) return fields;
+
   return {
     ...fields,
     header: typeof header === 'string' ? { kind: TableCellPayloadKind.Value, value: header } : header,

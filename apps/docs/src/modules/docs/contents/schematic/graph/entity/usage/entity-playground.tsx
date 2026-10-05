@@ -19,11 +19,16 @@ const createPreview = (lang: Lang) =>
       lang,
     ),
   );
+
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewControls = previewControlContract.controls;
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
+
 /** 实体试验场的语言 */
 export type EntityPlaygroundProps = { lang?: Lang };
+
 /** 固定位置比较角色、状态、分组色与显式外观 */
 const EntityPlayground: FC<EntityPlaygroundProps> = props => {
   const { lang = 'zh' } = props;

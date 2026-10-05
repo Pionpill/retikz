@@ -5,6 +5,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { createPointCoordinateSection } from '../point-coordinate-control';
 import { connectedScatterData } from './connected-scatter-basic.data';
 import { connectedScatterEncodingsI18n } from './connected-scatter-encodings.i18n';
+
 /** 仅控制当前示例的数据映射 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const i18n = connectedScatterEncodingsI18n[lang];

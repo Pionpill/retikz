@@ -35,6 +35,7 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
       </Link>
     );
   }
+
   if (href && /^https?:\/\//i.test(href)) {
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className={cn(linkClass, className)} {...rest}>
@@ -42,6 +43,7 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
       </a>
     );
   }
+
   return (
     <a href={href} className={cn(linkClass, className)} {...rest}>
       {children}

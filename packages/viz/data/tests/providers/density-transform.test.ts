@@ -92,9 +92,11 @@ describe('density transform behavior (contract)', () => {
 
     expect(out).toHaveLength(64);
     expect(out[0].densityX).toBeLessThan(0);
+
     for (let index = 1; index < out.length; index++) {
       expect(out[index].densityX as number).toBeGreaterThan(out[index - 1].densityX as number);
     }
+
     expect(out.every(row => Number.isFinite(row.density))).toBe(true);
   });
 
@@ -138,6 +140,7 @@ describe('density transform behavior (contract)', () => {
         }),
       ],
     );
+
     expect(single.map(row => row.x)).toEqual([2, 5, 8]);
     expect(single[1].d).toBeGreaterThan(single[0].d as number);
 
@@ -154,6 +157,7 @@ describe('density transform behavior (contract)', () => {
         }),
       ],
     );
+
     expect(identical.map(row => row.x)).toEqual([-2, 10]);
   });
 

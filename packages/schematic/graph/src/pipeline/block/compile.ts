@@ -23,13 +23,16 @@ const blockAxisProposal = (
       const value = Math.min(Math.max(width, proposal.min), proposal.max ?? width);
       return { kind: 'exact', value };
     }
+
     return { kind: 'exact', value: width };
   }
+
   if (minWidth === undefined) return proposal;
   if (proposal.kind === 'range') {
     const min = Math.min(Math.max(minWidth, proposal.min), proposal.max ?? minWidth);
     return { kind: 'range', min, ...(proposal.max === undefined ? {} : { max: proposal.max }) };
   }
+
   return { kind: 'range', min: minWidth };
 };
 
@@ -45,6 +48,7 @@ export const createCompileBlock =
     const block = resolveBlock(source, options, context.theme);
     const proposal = blockProposal(block, context.proposal);
     const measuredSurface = requiredLayoutProbe(context, { child: lowerBlockSurface(block), occurrence: 0 }, proposal);
+
     // range 先保留内容自然增长，再把已选定的最终宽度作为 exact cross 传播到嵌套 stretch 布局
     const surface =
       proposal.x.kind === 'exact'
@@ -54,6 +58,7 @@ export const createCompileBlock =
             { child: lowerBlockSurface(block), occurrence: 0 },
             { ...proposal, x: { kind: 'exact', value: measuredSurface.slotSize.width } },
           );
+
     return {
       allocationBounds: surface.allocationBounds,
       children: [context.replay(surface)],

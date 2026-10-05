@@ -25,6 +25,7 @@ const Probe: FC<ProbeProps> = props => {
     expanded: false,
   });
   onState(state);
+
   return null;
 };
 
@@ -61,7 +62,9 @@ describe('usePreviewPanelState', () => {
     expect(card!.controlState).toBe(controlState);
     expect(card!.renderPaneRef).not.toBe(dialog!.renderPaneRef);
     expect(card!.runtime.value('curve')).toBeUndefined();
+
     card!.runtime.setValue('curve', 'step');
+
     expect(dialog!.runtime.value('curve')).toBe('step');
   });
 

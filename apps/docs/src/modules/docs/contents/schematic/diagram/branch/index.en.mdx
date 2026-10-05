@@ -1,0 +1,52 @@
+---
+title: Branch
+description: Draw roadmaps, commit histories, and reading routes with ordered branches.
+---
+
+Branch represents a continuous main path with forks and merges. A node catalog defines markers; each branch references nodes in order and connects adjacent references automatically. Sharing an ID across branches shares a single node.
+
+## Responsibilities at a glance
+
+| Content                       | Responsibility                   | When to read                 |
+| ----------------------------- | -------------------------------- | ---------------------------- |
+| Basic usage                   | Nodes, labels, and paths         | First diagram                |
+| Extended usage                | Layout, appearance, presentation | Document integration         |
+| Implementation and references | Mechanisms and contracts         | Investigation or integration |
+
+The feature path below shares its start and merge nodes with the release path. Each shared version has only one marker.
+
+<ComponentPreview files="branch-roadmap" size="md" />
+
+Dates, versions, Git refs, and article titles are labels, not proportional time coordinates. Branch does not read repositories or navigate pages. For arbitrary directed relations and authored routes, see [Flow](/schematic/diagram/flow).
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare nodes and ordered paths',
+      url: '/schematic/diagram/branch/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Configure layout and presentation',
+      url: '/schematic/diagram/branch/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand shared nodes and routes',
+      url: '/schematic/diagram/branch/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public entry points',
+      url: '/schematic/diagram/branch/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input fields',
+      url: '/schematic/diagram/branch/schema-reference',
+    },
+  ]}
+/>

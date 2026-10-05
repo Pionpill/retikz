@@ -2,6 +2,7 @@ import type { IRPath } from '@retikz/core';
 
 import { shapePathProperties, shapeAngles, ShapeArcCloseSchema } from '../shared';
 import type { IRArc } from './types';
+
 /** 将 Arc 意图下沉为单一 Core Path */
 export const lowerArc = (source: IRArc): IRPath => {
   const angles = shapeAngles(source)!;
@@ -10,6 +11,7 @@ export const lowerArc = (source: IRArc): IRPath => {
   void _hostLabel;
   const { label } = source;
   const arcLabel = label === undefined ? {} : { label };
+
   return {
     ...properties,
     type: 'path',

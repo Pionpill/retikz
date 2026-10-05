@@ -5,6 +5,7 @@ import { polygon } from '../../../src/providers/shape';
 import type { Rect } from '../../../src/shared/geometry/rect';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
+
 const identity = (n: number): number => n;
 
 /** 轴对齐 rect（emit / boundaryPoint 都接受；boundaryPoint 含 rotate 语义但此处 rotate=0） */
@@ -47,11 +48,17 @@ describe('polygon cornerRadius — emit', () => {
   it('polygon_cornerRadius_emit：sides:6 cornerRadius:8 → path 含 fillet arc 命令', () => {
     const rect = squareRect();
     const prims = [...polygon.emit(rect, {}, round2, { sides: 6, cornerRadius: 8 })];
+
     expect(prims.length).toBe(1);
+
     const path = prims[0];
+
     expect(path.type).toBe('path');
+
     if (path.type !== 'path') throw new Error('expected path');
+
     const kinds = path.commands.map(c => c.kind);
+
     // 含 arc（fillet 弧）；首 move、末 close
     expect(kinds[0]).toBe('move');
     expect(kinds[kinds.length - 1]).toBe('close');
@@ -64,10 +71,13 @@ describe('polygon cornerRadius — emit', () => {
     const prims = [...polygon.emit(rect, {}, round2, { sides: 6, cornerRadius: 8 })];
     const path = prims[0];
     if (path.type !== 'path') throw new Error('expected path');
+
     const arcs = path.commands.filter(
       (cmd): cmd is Extract<(typeof path.commands)[number], { kind: 'arc' }> => cmd.kind === 'arc',
     );
+
     expect(arcs.length).toBe(6);
+
     for (const arc of arcs) {
       expect(Math.abs(arc.endAngle - arc.startAngle)).toBeLessThanOrEqual(180);
     }
@@ -82,10 +92,13 @@ describe('polygon cornerRadius — boundary aware', () => {
     const toward: Position = [1000, 0]; // 朝 +x 顶点方向
     const sharp = polygon.boundaryPoint(rect, toward, { sides: 4 });
     const rounded = polygon.boundaryPoint(rect, toward, { sides: 4, cornerRadius: 20 });
+
     // 朝顶点方向：尖角点离中心最远（外接半径）；倒角后该方向边界更靠近中心
     const distSharp = Math.hypot(sharp[0], sharp[1]);
     const distRounded = Math.hypot(rounded[0], rounded[1]);
+
     expect(distRounded).toBeLessThan(distSharp - 1e-6);
+
     // r=0 与尖角一致（顶点在外接半径上、朝 +x）
     expect(sharp[1]).toBeCloseTo(0, 6);
     expect(sharp[0]).toBeGreaterThan(0);
@@ -96,6 +109,7 @@ describe('polygon cornerRadius — boundary aware', () => {
     const toward: Position = [300, 130];
     const omitted = polygon.boundaryPoint(rect, toward, { sides: 5, rotate: 12 });
     const zero = polygon.boundaryPoint(rect, toward, { sides: 5, rotate: 12, cornerRadius: 0 });
+
     expect(zero[0]).toBeCloseTo(omitted[0], 9);
     expect(zero[1]).toBeCloseTo(omitted[1], 9);
   });
@@ -116,12 +130,15 @@ describe('polygon cornerRadius — r=0 equivalence to current sharp-corner outpu
     );
     const radius = rect.width / 2 / maxAbsCos;
     const out: Array<{ kind: string; to?: [number, number] }> = [];
+
     for (let k = 0; k < params.sides; k++) {
       const a = (startDeg + k * stepDeg) * DEG;
       const v: [number, number] = [round(rect.x + radius * Math.cos(a)), round(rect.y + radius * Math.sin(a))];
       out.push({ kind: k === 0 ? 'move' : 'line', to: v });
     }
+
     out.push({ kind: 'close' });
+
     return out;
   };
 
@@ -133,11 +150,14 @@ describe('polygon cornerRadius — r=0 equivalence to current sharp-corner outpu
       { sides: 6 },
       { sides: 8, rotate: -30 },
     ];
+
     for (const params of cases) {
       const prims = [...polygon.emit(rect, {}, round2, params)];
       const path = prims[0];
       if (path.type !== 'path') throw new Error('expected path');
+
       const expected = sharpEmitReference(rect, round2, params);
+
       expect(path.commands).toEqual(expected);
     }
   });
@@ -148,6 +168,7 @@ describe('polygon cornerRadius — r=0 equivalence to current sharp-corner outpu
     const prims = [...polygon.emit(rect, {}, identity, params)];
     const path = prims[0];
     if (path.type !== 'path') throw new Error('expected path');
+
     expect(path.commands).toEqual(sharpEmitReference(rect, identity, params));
   });
 });
@@ -159,6 +180,7 @@ describe('polygon cornerRadius — scaleParams', () => {
       rotate: 10,
       cornerRadius: 16,
     });
+
     // 几何均值因子：sx=4 sy=1 → factor=2
     expect(polygon.scaleParams!({ sides: 5, cornerRadius: 10 }, 4, 1)).toEqual({
       sides: 5,
@@ -175,6 +197,7 @@ describe('polygon cornerRadius — circumscribe unchanged', () => {
   it('polygon_circumscribe_unchanged：cornerRadius 变化不改 circumscribe AABB', () => {
     const noCorner = polygon.circumscribe(40, 30, { sides: 6 });
     const withCorner = polygon.circumscribe(40, 30, { sides: 6, cornerRadius: 12 });
+
     expect(withCorner).toEqual(noCorner);
   });
 });
@@ -188,6 +211,7 @@ describe('polygon diamond aspectRatio', () => {
 
   it('aspectRatio controls the four-sided diamond width-to-height ratio', () => {
     const result = polygon.circumscribe(40, 30, { sides: 4, aspectRatio: 1.8 });
+
     expect(result.halfWidth / result.halfHeight).toBeCloseTo(1.8, 10);
     expect(result.halfWidth).toBeCloseTo(94, 10);
     expect(result.halfHeight).toBeCloseTo(94 / 1.8, 10);
@@ -198,6 +222,7 @@ describe('polygon diamond aspectRatio', () => {
     const params = { sides: 4, aspectRatio: 1.8 } as const;
     const right = polygon.boundaryPoint({ ...bounds, width: 180 }, [1000, 0], params);
     const top = polygon.boundaryPoint(bounds, [0, 1000], params);
+
     expect(right[0]).toBeCloseTo(90, 10);
     expect(right[1]).toBeCloseTo(0, 10);
     expect(top[0]).toBeCloseTo(0, 10);

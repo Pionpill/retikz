@@ -46,7 +46,9 @@ const data: ExternalDatasets = {
 };
 
 const ScreenShiftSchema = strictObject({ kind: literal('react-screen-shift'), dx: number() });
+
 type ScreenShift = { kind: 'react-screen-shift'; dx: number };
+
 const screenShift = definePositionAdjustment<ScreenShift>({
   space: 'screen',
   schema: ScreenShiftSchema,
@@ -77,6 +79,7 @@ const geometry = (svg: string) => {
     })
     .sort();
   const paths = (svg.match(/\sd="[^"]+"/g) ?? []).sort();
+
   return { glyphs, paths };
 };
 
@@ -147,7 +150,9 @@ describe('<Plot spec data> 薄包装', () => {
 
     expect(runtime.lowerOptions.resolveLabel?.points).toBe(pointResolveLabel);
     expect(runtime.lowerOptions.resolveLabel?.bars).toBe(intervalResolveLabel);
+
     const serialized = JSON.stringify(runtime.spec);
+
     expect(serialized).not.toContain('resolveLabel');
     expect(serialized).not.toContain('function');
     expect(serialized).toContain('"marks"');
@@ -165,6 +170,7 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('渲染出含 path（折线）与 circle（散点）的 SVG', () => {
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} />);
+
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
     expect(svg).toContain('<ellipse');
@@ -172,6 +178,7 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('省略 width/height 时仍渲染（Layout 自动布局）', () => {
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} />);
+
     expect(svg).toContain('<svg');
     expect(svg).toContain('<ellipse');
   });
@@ -183,6 +190,7 @@ describe('<Plot spec data> 薄包装', () => {
       .match(/viewBox="([^"]+)"/)?.[1]
       .split(' ')
       .map(Number);
+
     expect(bounds).toBeDefined();
     expect(Number(root.match(/\swidth="([^"]+)"/)?.[1])).toBe(bounds?.[2]);
     expect(Number(root.match(/\sheight="([^"]+)"/)?.[1])).toBe(bounds?.[3]);
@@ -248,6 +256,7 @@ describe('<Plot spec data> 薄包装', () => {
         height={300}
       />,
     );
+
     expect(geometry(viaPlot)).toEqual(geometry(viaLayout));
   });
 
@@ -376,6 +385,7 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('lineage=false 时 React 链路解析保持关闭', () => {
     const lineage = resolvePlotLineage({ spec, data, width: 480, height: 300, lineage: false });
+
     expect(lineage).toBeUndefined();
   });
 

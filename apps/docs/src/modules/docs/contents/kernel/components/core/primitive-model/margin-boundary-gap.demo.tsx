@@ -5,16 +5,22 @@ import type { FC } from 'react';
 // 每列三层嵌套：文本区（内容盒，lightgray）→ shape（内框，currentColor 实线）→ 连接面（虚线）。
 // 连接面随 margin 离 shape 越来越远；第三列把 boundary 换成 circle：margin 同样推开它，形状由 boundary 决定。
 const HW = 35; // 内框（shape）半宽
+
 const HH = 22; // 内框（shape）半高
+
 const CW = 22; // 内容盒半宽
+
 const CH = 11; // 内容盒半高
+
 const DOT = {
   radius: 2.5,
   style: { fill: 'gray', stroke: 'none' },
 } as const;
+
 const SHAPE = {
   style: { fill: 'none', stroke: 'currentColor' },
 } as const;
+
 const CONTENT = {
   style: { fill: 'lightgray', stroke: 'none' },
 } as const;

@@ -1,0 +1,145 @@
+---
+title: Chain
+description: Connect text and drawings with ordered branches, joins, alignment, and orthogonal paths.
+---
+
+`Chain` connects content cells in order, with nested branches and joins. Cells accept text, empty content, or a drawing, for processing chains and algorithm illustrations.
+
+## Getting started
+
+After [installation and first render](/library/standard/get-start), import from the collection entry.
+
+<ComponentPreview files="chain-basic" size="sm" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Chain } from '@retikz/standard-react/collection';
+
+<Layout>
+  <Chain items={['A', 'B', 'C']} />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
+  adapters: [ChainInputEmbedAdapter],
+});
+```
+
+</DocTab>
+<DocTab value="ir" label="Source IR">
+
+```json
+{ "namespace": "standard", "type": "chain", "items": ["A", "B", "C"] }
+```
+
+Direct IR needs ChainProvider and PathClipProvider, plus content dependencies. Expanded data also needs ArrayProvider and MapProvider.
+
+</DocTab>
+</DocTabs>
+
+## Choose inputs and branch skeletons
+
+Choose exactly one of items, data, and skeleton. An items string is literal text; a full cell uses `{ kind: 'cell', content?, id?, style?, layout? }`. Each JSON data value creates a sequential cell, without inferring branches from arrays or objects. dataExpand defaults to true; use false or a map/array selection to control nested expansion.
+
+| Skeleton form                                                    | Result                                                 |
+| ---------------------------------------------------------------- | ------------------------------------------------------ |
+| `skeleton={{ count: 4 }}`                                        | Four sequential empty cells                            |
+| `skeleton={{ labels: ['A', '', 'C'] }}`                          | Sequential symbols; empty text preserves an empty cell |
+| `skeleton={{ items: ['A', { branches: [['B'], ['C']] }, 'D'] }}` | Explicit branches and a join; recursively nestable     |
+
+These forms exclude one another. Skeleton branches contain symbols only, without drawings, ids, or local styling. Full items use `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`, with optional local layout and connection overrides.
+
+<ComponentPreview
+  files={['chain-inputs', 'chain-inputs.preview.tsx']}
+  defaultSourceFile="chain-inputs.preview.tsx"
+  size="md"
+/>
+
+Each parallel block requires at least two nonempty branches and an adjacent cell before and after it. Branches must also start and end with cells. An empty string or cell is a cell; an empty array is not a bypass. Empty root sequences have no connections, and single cells never connect to themselves.
+
+## Align branches and steps
+
+layout.direction defaults to right and also accepts down. Positive gap and branchGap control main-axis and branch clearance, both defaulting to 24.
+
+branchAlign places the complete branch envelope relative to the preceding cell: start, center, end, or `{ branch: 0 }`. The default is center. A selected branch keeps its baseline on the parent baseline. Start/end mean top/bottom for horizontal chains and left/right for vertical chains.
+
+spacing defaults to steps, sharing tracks across immediate branch items; compact packs branches independently. justify places shorter branches at start, center, or end, defaulting to start. A nested parallel block occupies one parent step. Centered short branches put an odd extra empty track at the end, without creating dummy nodes.
+
+<ComponentPreview
+  files={['chain-alignment', 'chain-alignment.preview.tsx']}
+  defaultSourceFile="chain-alignment.preview.tsx"
+  size="xl"
+/>
+
+## Compose drawings and nested branches
+
+The JSX hierarchy is:
+
+```text
+Chain
+├── ChainCell
+├── ChainParallel
+│   ├── ChainBranch → ChainCell / ChainParallel
+│   └── ChainBranch → ChainCell / ChainParallel
+└── ChainCell
+```
+
+ChainCell text and its single drawing child exclude each other; omit both for an empty cell. ChainBranch groups structure without a border. The items prop accepts text cells; use children for drawings. Vanilla items.content accepts drawable inputs.
+
+This example embeds a Matrix and adds a nested parallel block in another branch. It overrides cell width to 64. Fixed dimensions clip by default; auto dimensions measure content naturally. Content is never scaled. Visible overflow does not trigger obstacle avoidance.
+
+<ComponentPreview
+  files={['chain-content', 'chain-content.preview.tsx']}
+  defaultSourceFile="chain-content.preview.tsx"
+  size="lg"
+/>
+
+## Connections, labels, and references
+
+connection.route defaults to auto. Horizontal branching uses `|-`, joining uses `-|`; vertical chains reverse these choices. Auto connections reserve turning positions in the gaps. Short branches also use the shared join corridor. Explicit straight, `|-`, and `-|` connect endpoints directly and may cross other content.
+
+<ComponentPreview
+  files={['chain-connection', 'chain-connection.preview.tsx']}
+  defaultSourceFile="chain-connection.preview.tsx"
+  size="md"
+/>
+
+This example overrides the stroke to blue. React/Vanilla connection.path.arrow accepts none, forward, and bidirectional arrows through existing path normalization. Source IR uses marks; an empty array removes the default end arrow. The path label field is label. Path configuration cannot replace identity, type, or steps.
+
+An explicit cell id supports external references: React/Vanilla use `target.right`, while Source IR uses `{ id: 'target', anchor: 'right' }`. These target the cell's actual border box rather than its content or branch. Root label attaches to the whole Chain. Branch settings inherit by field; explicit marks replace inherited arrays.
+
+## Errors and limitations
+
+Mixed inputs, empty branches, parallel blocks without adjacent cells, invalid main-branch indices, and nonpositive gaps fail with structural context. Insufficient parent space never compresses cells or gaps. Chain has no arbitrary cross-branch edges, back edges, closed chains, or obstacle avoidance; use Graph for diagram relationships.
+
+## How it works
+
+Standard resolves the three inputs into one structure, measures shared Cells, and recursively combines branch bounds and step tracks. Connections become ordinary paths. Core handles arrows, labels, clipping, namespaces, and final spatial references.
+
+<SourceLinks
+  sources={[
+    { label: 'Chain compilation', path: 'packages/library/standard/src/collection/chain/pipeline.ts', startLine: 1 },
+  ]}
+/>
+
+## API reference
+
+{/* @include library/standard/collection/chain/generated */}
+
+## Schema reference
+
+Source retains the selected input form. Factories neither expand skeletons nor fill defaults; explicit parsing materializes static defaults.
+
+#### ChainSchema
+
+<ZodSchema name="ChainSchema" description="Series-parallel structure, JSON data, or recursive skeleton" expandNested />

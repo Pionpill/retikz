@@ -20,6 +20,7 @@ const renderTexPlaygroundLoading = () => <Layout />;
 const Demo: FC = () => {
   const values = usePreviewControls(texPlaygroundControls);
   const lowerTexState = useLowerTex({ profile: 'math' });
+
   return lowerTexState.status === 'ready'
     ? TexPlaygroundPreview(values, lowerTexState.lowerTex)
     : renderTexPlaygroundLoading();

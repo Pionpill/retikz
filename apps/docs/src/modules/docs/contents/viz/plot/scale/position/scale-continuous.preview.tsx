@@ -13,12 +13,15 @@ const renderScale = (values: typeof previewControlContract.canonicalValues): Rea
   if (values.scaleType === 'log') {
     return <PlotScale dimension="y" type="log" base={values.base} domainPadding={domainPadding} />;
   }
+
   if (values.scaleType === 'sqrt') {
     return <PlotScale dimension="y" type="sqrt" domainPadding={domainPadding} />;
   }
+
   if (values.scaleType === 'symlog') {
     return <PlotScale dimension="y" type="symlog" constant={values.constant} domainPadding={domainPadding} />;
   }
+
   return <PlotScale dimension="y" type="linear" domainPadding={domainPadding} />;
 };
 

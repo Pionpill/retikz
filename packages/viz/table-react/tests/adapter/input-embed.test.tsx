@@ -7,7 +7,9 @@ import { describe, expect, it } from 'vitest';
 import { DetailTable, ManualTable, Table } from '../../src';
 
 type InputEmbeddableTableComponent = {
+  /** 将 Table 输入接入 Core 的领域 adapter */
   inputEmbedAdapter?: InputEmbedAdapter<InputTable<unknown>>;
+  /** 将作者属性转换为 Vanilla Table 输入 */
   createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable<unknown>;
 };
 
@@ -16,9 +18,11 @@ const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProp
   if (component.inputEmbedAdapter !== TableInputEmbedAdapter) {
     throw new Error('expected the shared Table Vanilla adapter');
   }
+
   if (component.createInputEmbedProps === undefined) {
     throw new Error('expected a React-to-Vanilla input factory');
   }
+
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
 };
 

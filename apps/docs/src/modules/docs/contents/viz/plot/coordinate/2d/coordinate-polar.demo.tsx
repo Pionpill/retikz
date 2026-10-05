@@ -8,5 +8,6 @@ export const previewControls = coordinatePolarControls;
 const controlledPreview = defineControlledPreview(previewControlContract, renderCoordinatePolar);
 
 export const previewSource = controlledPreview.source;
+
 const Preview = controlledPreview.Component;
 export default Preview;

@@ -234,6 +234,7 @@ describe('canonical visual bounds', () => {
       lineContactX: 2,
       emit: () => [],
     });
+
     const maxX = (endpointOverlap: number) => {
       const ir: IRScene = {
         version: 1,
@@ -257,6 +258,7 @@ describe('canonical visual bounds', () => {
       };
       const scene = compileToScene(ir, { arrows: [arrow], padding: 0 }).scene;
       const bounds = boundsOf(scene.primitives, scene.resources);
+
       return bounds.x + bounds.width;
     };
 

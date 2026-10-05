@@ -26,5 +26,6 @@ export const renderConnectedScatterOrderFigurePreview = (
       }}
     />
   );
+
   return chart;
 };

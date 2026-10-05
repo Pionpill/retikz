@@ -108,7 +108,9 @@ describe('runtime runtime participant preflight', () => {
       initialSnapshots: [createRuntimeSourceInput(foreign, 1)],
       participants: [invalid],
     });
+
     expect(runtime.participant(invalid)).toEqual({ key: 'invalid' });
+
     runtime.dispose();
   });
 
@@ -132,7 +134,9 @@ describe('runtime runtime participant preflight', () => {
     );
 
     const retry = create([fresh]);
+
     expect(retry.participant(fresh)).toEqual({ key: 'a-fresh' });
+
     retry.dispose();
     first.dispose();
   });
@@ -153,6 +157,7 @@ describe('runtime runtime participant preflight', () => {
     expect(() => runtime.participant(foreign as RuntimeCommitParticipant<{ key: string }>)).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantUnknown }),
     );
+
     runtime.dispose();
   });
 });

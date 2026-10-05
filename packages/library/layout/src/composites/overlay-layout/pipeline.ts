@@ -120,7 +120,9 @@ const finiteContentLimitOf = (
       naturalContribution: 0,
     }).allocationSize;
   }
+
   const paddingSize = axis === 'x' ? padding.left + padding.right : padding.top + padding.bottom;
+
   return allocation === undefined ? undefined : Math.max(0, allocation - paddingSize);
 };
 
@@ -158,11 +160,13 @@ const probeOverlayProfile = (
     const justify = item.authored.justifySelf ?? node.justifyItems;
     contextualX = justify === LayoutAlignment.Stretch ? exactProposal(available) : boundedProposal(available);
   }
+
   const yProposal =
     placement.kind === OverlayPlacementKind.Positioned && placement.height !== undefined
       ? exactProposal(placement.height)
       : intrinsicProposal(mode);
   const yResult = requiredProbe(context, item.sourceIndex, { x: contextualX, y: yProposal });
+
   return Object.freeze({ xResult, yResult });
 };
 
@@ -179,10 +183,12 @@ const placedGuideCoordinate = (
     value => value.dimension === LayoutAlignmentGuideDimension.Y && value.name === name,
   );
   if (guide !== undefined) return { coordinate: guide.position + placed.translation.y, real: true };
+
   const edge =
     name === LayoutAlignmentGuideName.FirstBaseline
       ? placed.result.allocationBounds.y
       : placed.result.allocationBounds.y + placed.result.allocationBounds.height;
+
   return { coordinate: edge + placed.translation.y, real: false };
 };
 
@@ -193,10 +199,12 @@ const outgoingOverlayGuide = (
   baselineTarget: number | undefined,
 ): number => {
   if (baselineTarget !== undefined) return baselineTarget;
+
   const ordered = [...placed].sort((first, second) => first.sourceIndex - second.sourceIndex);
   const traversal = name === LayoutAlignmentGuideName.FirstBaseline ? ordered : [...ordered].reverse();
   const real = traversal.map(item => placedGuideCoordinate(item, name)).find(candidate => candidate.real);
   if (real !== undefined) return real.coordinate;
+
   return placedGuideCoordinate(traversal[0], name).coordinate;
 };
 
@@ -212,6 +220,7 @@ export const compileOverlayLayout = (
   const measured: ReadonlyArray<MeasuredOverlayItem> = createEffectiveLayoutItems(node.children).map(
     (authored, sourceIndex) => Object.freeze({ authored, sourceIndex, margin: authored.margin }),
   );
+
   const minimumResults = measured.map(item =>
     probeOverlayProfile(context, node, item, 'minimum', finiteXLimit, finiteYLimit),
   );
@@ -231,8 +240,10 @@ export const compileOverlayLayout = (
         yResult: results[sourceIndex].yResult,
       })),
     );
+
   const minimumProfile = profileOf(minimumResults);
   const naturalProfile = profileOf(naturalResults);
+
   const width = resolveLayoutAxisSize({
     axis: 'x',
     policy: node.size.x,
@@ -247,6 +258,7 @@ export const compileOverlayLayout = (
     minimumContribution: containerContribution(minimumProfile.contentSize.height, padding.top, padding.bottom),
     naturalContribution: containerContribution(naturalProfile.contentSize.height, padding.top, padding.bottom),
   }).allocationSize;
+
   const allocation: LayoutRect = Object.freeze({ x: 0, y: 0, width, height });
   const content = contentRectOf(allocation, padding);
 
@@ -259,10 +271,12 @@ export const compileOverlayLayout = (
         y: exactProposal(placement.height ?? natural.yResult.slotSize.height),
       });
     }
+
     const availableWidth = Math.max(0, content.width - item.margin.left - item.margin.right);
     const availableHeight = Math.max(0, content.height - item.margin.top - item.margin.bottom);
     const justify = item.authored.justifySelf ?? node.justifyItems;
     const align = item.authored.alignSelf ?? node.alignItems;
+
     return requiredProbe(context, item.sourceIndex, {
       x: justify === LayoutAlignment.Stretch ? exactProposal(availableWidth) : boundedProposal(availableWidth),
       y: align === LayoutAlignment.Stretch ? exactProposal(availableHeight) : boundedProposal(availableHeight),
@@ -285,14 +299,17 @@ export const compileOverlayLayout = (
       );
       return content.y + ascent;
     }
+
     const descent = Math.max(
       ...participants.map(item => {
         const result = finalResults[item.sourceIndex];
         return item.margin.bottom + result.slotSize.height - overlayStructuralGuideOffset(result, name).offset;
       }),
     );
+
     return content.y + content.height - descent;
   };
+
   const firstTarget = baselineTargetOf(LayoutAlignmentGuideName.FirstBaseline);
   const lastTarget = baselineTargetOf(LayoutAlignmentGuideName.LastBaseline);
 
@@ -301,6 +318,7 @@ export const compileOverlayLayout = (
     const result = finalResults[sourceIndex];
     const justify = authored.justifySelf ?? node.justifyItems;
     const alignment = authored.alignSelf ?? node.alignItems;
+
     const geometry = placeOverlayItem({
       placement: authored.placement,
       content,
@@ -310,6 +328,7 @@ export const compileOverlayLayout = (
       align: alignment,
       result,
     });
+
     let resolvedSlot =
       authored.placement.kind === OverlayPlacementKind.Positioned
         ? geometry.slot
@@ -342,6 +361,7 @@ export const compileOverlayLayout = (
           overlayStructuralGuideOffset(result, LayoutAlignmentGuideName.LastBaseline).offset,
       });
     }
+
     return Object.freeze({
       authored,
       sourceIndex,
@@ -364,6 +384,7 @@ export const compileOverlayLayout = (
     const replay = context.replay(placed.result, {
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     });
+
     return context.scope({ zIndex: placed.authored.zIndex }, [replay]);
   });
   const scope = context.scope(
@@ -391,6 +412,7 @@ export const compileOverlayLayout = (
       }),
     ]);
   }
+
   const items = placedBySource.map(placed => {
     const usesBaseline =
       placed.authored.placement.kind === OverlayPlacementKind.Aligned &&
@@ -430,6 +452,7 @@ export const compileOverlayLayout = (
         : {}),
     });
   });
+
   return {
     children: [scope],
     allocationBounds: allocation,

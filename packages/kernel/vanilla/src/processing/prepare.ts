@@ -33,6 +33,7 @@ const createInputEmbedThemeContextResolver = (
       theme,
       ...(themeStyles === undefined ? {} : { themeStyles }),
     });
+
   return Object.freeze({
     root: createContext(resolveTheme(DEFAULT_RESOLVED_THEME, scene.theme, 'scene.theme', registry)),
     resolveScope: (parent, theme, sourcePath) => createContext(resolveTheme(parent.theme, theme, sourcePath, registry)),
@@ -88,6 +89,7 @@ export const prepareProcessingInput = (
       runtimeMeta: normalized.runtimeMeta,
     });
   }
+
   return Object.freeze({
     source,
     coreOptions: Object.freeze({ ...(options.compile ?? {}) }),
@@ -104,6 +106,7 @@ export const prepareProcessingInputAsync = async (
 ): Promise<PreparedProcessingInput> => {
   assertPreparationActive(signal);
   if (!isInputScene(source)) return prepareProcessingInput(source, { ...options, adapters: undefined });
+
   const traversal = createInputSceneTraversal(source, {
     embedThemeContext: createInputEmbedThemeContextResolver(source, options.compile),
   });
@@ -112,6 +115,7 @@ export const prepareProcessingInputAsync = async (
   const contributions = await execute();
   assertPreparationActive(signal);
   const normalized = traversal.normalize(contributions);
+
   return Object.freeze({
     source: normalized.ir,
     coreOptions: resolveCoreOptions(

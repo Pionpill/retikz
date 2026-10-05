@@ -41,6 +41,7 @@ const findHexagonBoundaryPoint = (radius: number, direction: Position): Position
   }
 
   const distance = Number.isFinite(nearestDistance) ? nearestDistance : radius;
+
   return [ray[0] * distance, ray[1] * distance];
 };
 
@@ -60,6 +61,7 @@ const createHexagon = (): ShapeDefinition =>
         const scale = Math.hypot(corner[0], corner[1]) / Math.hypot(unitBoundary[0], unitBoundary[1]);
         return Math.max(radius, scale);
       }, 1);
+
       return { halfWidth: halfAxis, halfHeight: halfAxis };
     },
     boundaryPoint: (rect, toward) => {

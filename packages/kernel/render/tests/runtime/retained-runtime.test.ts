@@ -42,6 +42,7 @@ const scene = (text: string): IRScene => ({
 });
 
 const svgHost = Object.freeze({ tagName: 'svg', namespaceURI: 'http://www.w3.org/2000/svg' }) as SVGSVGElement;
+
 const canvasHost = Object.freeze({ tagName: 'canvas' }) as HTMLCanvasElement;
 
 const noopToken = (): RuntimePreparedCommit =>
@@ -93,6 +94,7 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
     read,
     dispose: vi.fn(),
   });
+
   return { renderer, prepareMount, prepare, read, patches };
 };
 
@@ -128,6 +130,7 @@ const createHarness = (
       createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
     ],
   });
+
   return { renderer, coreComputation, handle, session, factory };
 };
 
@@ -182,6 +185,7 @@ describe('@retikz/render/runtime public contract', () => {
       },
       dispose: () => undefined,
     });
+
     expect(Object.isFrozen(svgRenderer)).toBe(true);
     expect(svgRenderer).toEqual({
       backend: 'svg',
@@ -254,6 +258,7 @@ describe('RenderRuntimeSourceDefinition', () => {
     input.handlerContributions.length = 0;
     input.animation.enabled = false;
     input.canvas.width = 640;
+
     expect(config.handlerContributions).toHaveLength(1);
     expect(config.animation?.enabled).toBe(true);
     expect(config.canvas).toEqual({ width: 320, height: 180 });
@@ -279,6 +284,7 @@ describe('RenderRuntimeSourceDefinition', () => {
         }),
       ],
     });
+
     expect(
       sorted.snapshot(RenderRuntimeSourceDefinition).value.handlerContributions?.map(item => item.registration),
     ).toEqual([0, 2]);
@@ -340,6 +346,7 @@ describe('RenderRuntimeSourceDefinition', () => {
 
     const tuple = [0, 0, 1, 1];
     Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
+
     expect(() =>
       createRuntime({
         sources,
@@ -361,6 +368,7 @@ describe('RenderRuntimeSourceDefinition', () => {
     Object.defineProperty(tuplePrototype, 'every', { configurable: true, get: everyGetter });
     const inheritedTuple: [number, number, number, number] = [0, 0, 1, 1];
     Object.setPrototypeOf(inheritedTuple, tuplePrototype);
+
     expect(() =>
       createRuntime({
         sources,
@@ -379,6 +387,7 @@ describe('RenderRuntimeSourceDefinition', () => {
     Object.defineProperty(contributionPrototype, 'map', { configurable: true, get: mapGetter });
     const inheritedContributions = [{ registration: 0, handlers: {} }];
     Object.setPrototypeOf(inheritedContributions, contributionPrototype);
+
     expect(() =>
       createRuntime({
         sources,
@@ -401,7 +410,9 @@ describe('createRetainedRenderParticipant', () => {
     expect(factory).toHaveBeenCalledTimes(1);
     expect(renderer.prepareMount).toHaveBeenCalledTimes(1);
     expect(renderer.read).toHaveBeenCalledTimes(1);
+
     const first = handle.read(session);
+
     expect(first.frame.primary.revision).toBe(0);
     expect(handle.read(session)).toBe(first);
     expect(renderer.read).toHaveBeenCalledTimes(1);
@@ -430,6 +441,7 @@ describe('createRetainedRenderParticipant', () => {
     });
 
     const next = handle.read(session);
+
     expect(next).not.toBe(previous);
     expect(next.frame.primary.revision).toBe(1);
     expect(renderer.prepare).toHaveBeenCalledTimes(1);
@@ -602,6 +614,7 @@ describe('createRetainedRenderParticipant', () => {
       update: (_previous, view) => {
         const next = snapshot(view.candidateRevision, view.snapshot(sourceOwner).value);
         if (view.baseRevision === undefined) throw new Error('expected update base revision');
+
         return {
           kind: RuntimeComputationKind.Incremental,
           artifact: artifact(
@@ -745,6 +758,7 @@ describe('createRetainedRenderParticipant', () => {
     });
     const read = handle.read(session);
     if (exposedClone === undefined) throw new Error('expected renderer clone');
+
     (exposedClone as unknown as { primary: { scene: { layout: { width: number } } } }).primary.scene.layout.width = 999;
 
     expect(read.frame).not.toBe(exposedClone);
@@ -768,6 +782,7 @@ describe('createRetainedRenderParticipant', () => {
         throw disposeFailure;
       },
     });
+
     try {
       createRetainedRenderParticipant({
         backend: 'svg',
@@ -797,6 +812,7 @@ describe('createRetainedRenderParticipant', () => {
       }
     });
     let current: RenderFrameSnapshot | undefined;
+
     const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
       const previous = current;
       return Object.freeze({
@@ -809,6 +825,7 @@ describe('createRetainedRenderParticipant', () => {
         dispose: () => undefined,
       });
     };
+
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
@@ -859,6 +876,7 @@ describe('createRetainedRenderParticipant', () => {
 
   it('在 factory 前拒绝 backend/host mismatch，并以 Render error 暴露 cause', () => {
     const factory = vi.fn();
+
     expect(() =>
       createRetainedRenderParticipant({
         backend: 'svg',
@@ -902,6 +920,7 @@ describe('createRetainedRenderParticipant', () => {
         const count = (reads.get(key) ?? 0) + 1;
         reads.set(key, count);
         if (count > 1) throw new Error(`property ${String(key)} was read twice`);
+
         return Reflect.get(value, key, receiver);
       },
     });
@@ -949,7 +968,9 @@ describe('createRetainedRenderParticipant', () => {
       throw new Error('expected create to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzRuntimeError);
+
       const runtime = error as RetikzRuntimeError;
+
       expect(runtime.code).toBe(RetikzRuntimeErrorCode.ParticipantPrepareFailed);
       expect(isRetikzRenderError(runtime.cause)).toBe(true);
       expect((runtime.cause as RetikzRenderError).code).toBe(RetikzRenderErrorCode.RetainedRendererPrepareFailed);
@@ -1048,7 +1069,9 @@ describe('createRetainedRenderParticipant', () => {
       throw new Error('expected create to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzRuntimeError);
+
       const runtime = error as RetikzRuntimeError;
+
       expect(runtime.code).toBe(RetikzRuntimeErrorCode.ParticipantReadFailed);
       expect(runtime.cause).toEqual(
         expect.objectContaining({

@@ -95,7 +95,9 @@ export const runDeprecationCheck = ({ changed, cwd = process.cwd() }) => {
   for (const diagnostic of diagnostics) {
     console.error(formatDeprecatedDiagnostic(diagnostic));
   }
+
   console.error(`Found ${diagnostics.length} deprecated API use(s).`);
+
   return 1;
 };
 

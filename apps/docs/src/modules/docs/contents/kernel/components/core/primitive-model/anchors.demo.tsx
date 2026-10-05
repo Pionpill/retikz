@@ -4,27 +4,33 @@ import { Circle, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const FONT = { size: 10 };
+
 const RECT = {
   style: { fill: 'none', stroke: 'darkorange', strokeWidth: 2 },
 } as const;
+
 const TITLE = {
   style: { stroke: 'none', textColor: 'gray' },
 } as const;
+
 // 点用蓝色（anchor 本身），标注文字统一灰色
 const TAG = {
   style: { stroke: 'none', textColor: 'gray' },
 } as const;
+
 const DEG = Math.PI / 180;
 
 const polar = (cx: number, cy: number, r: number, deg: number): [number, number] => [
   cx + r * Math.cos(deg * DEG),
   cy + r * Math.sin(deg * DEG),
 ];
+
 const arcPts = (cx: number, cy: number, r: number, a: number, b: number, n: number): Array<[number, number]> =>
   Array.from({ length: n + 1 }, (_unused, i): [number, number] => polar(cx, cy, r, a + ((b - a) * i) / n));
 
 // 四个 anchor 家族横向排列：Web 方位、角度/边比例、star、sector
 const RA = { x: -180, y: 0, w: 35, h: 23 };
+
 const RB = { x: -60, y: 0, w: 35, h: 23 };
 
 const WEB_ANCHORS: Array<{ dx: number; dy: number; l: string }> = [
@@ -40,17 +46,21 @@ const WEB_ANCHORS: Array<{ dx: number; dy: number; l: string }> = [
 
 // 角度 anchor 30°：从中心沿 30° 射线打到边界（命中 right 边）
 const ANG_PT: [number, number] = [RB.x + RB.w, RB.y + RB.w * Math.tan(30 * DEG)];
+
 // 边比例 anchor { side: 'top', fraction:0.25}：top 边左→右，fraction=0 在 TL
 const EDGE_PT: [number, number] = [RB.x - RB.w + 0.25 * 2 * RB.w, RB.y - RB.h];
 
 // 有 shape 专属 anchor 的非矩形：star / sector
 const STAR_C = { x: 60, y: 3, ro: 30, ri: 13 };
+
 const STAR: Array<[number, number]> = Array.from({ length: 10 }, (_unused, j): [number, number] =>
   polar(STAR_C.x, STAR_C.y, j % 2 === 0 ? STAR_C.ro : STAR_C.ri, -90 + j * 36),
 );
+
 const TIPS = [0, 2, 4, 6, 8].map(j => STAR[j]);
 
 const SEC = { x: 180, y: 19, ro: 38, ri: 0, a: -150, b: -30 };
+
 const SECTOR_TIPS: Array<[number, number]> = [
   [SEC.x, SEC.y], // apex
   polar(SEC.x, SEC.y, SEC.ro, (SEC.a + SEC.b) / 2), // outer-arc-mid

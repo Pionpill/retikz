@@ -34,21 +34,28 @@ describe('Standard shape family', () => {
       to: [14, 23],
     });
   });
+
   it('bakes polygon and star orientation exactly once', () => {
     const polygon = lowerPolygon(createPolygon({ center: [0, 0], radius: 10, sides: 4, rotate: 0 }));
+
     expect(polygon).not.toHaveProperty('rotate');
     expect(polygon.children[0]).toMatchObject({ to: [10, 0] });
     expect(polygon.children.at(-1)).toMatchObject({ kind: 'cycle' });
+
     const star = lowerStar(createStar({ center: [0, 0], outerRadius: 10, points: 5, rotate: 0 }));
+
     expect(star.children).toHaveLength(11);
     expect(star).not.toHaveProperty('rotate');
   });
+
   it('attaches arc labels to the arc and reverses the inner ring winding', () => {
     const arc = lowerArc(
       createArc({ center: [0, 0], radius: 10, startAngle: 30, sweepAngle: -90, label: { text: 'arc' } }),
     );
+
     expect(arc).not.toHaveProperty('label');
     expect(arc.children[1]).toMatchObject({ kind: 'arc', startAngle: 30, endAngle: -60, label: { text: 'arc' } });
+
     const ring = lowerSector(
       createSector({
         center: [0, 0],
@@ -59,6 +66,7 @@ describe('Standard shape family', () => {
         label: { text: 'outer' },
       }),
     );
+
     expect(ring.children[1]).toMatchObject({ kind: 'arc', startAngle: 0, endAngle: 90, label: { text: 'outer' } });
     expect(ring.children[3]).toMatchObject({ kind: 'arc', startAngle: 90, endAngle: 0 });
     expect(ring.children[3]).not.toHaveProperty('label');
@@ -68,6 +76,7 @@ describe('Standard shape family', () => {
         .children[1],
     ).toMatchObject({ kind: 'circlePath', closed: 'sector' });
   });
+
   it.each([
     [EllipseSchema, 'ellipse', { center: [0, 0], radius: { x: -1, y: 2 } }],
     [RectangleSchema, 'rectangle', { center: 'origin', width: 2, height: 3 }],
@@ -88,6 +97,7 @@ describe('Standard shape family', () => {
 describe('Circle composite', () => {
   it('preserves semantic JSON and lowers to an ordinary path with the authored identity', () => {
     const circle = createCircle({ id: 'circle', center: [10, 20], radius: 30, meta: { source: 'author' } });
+
     expect(JSON.parse(JSON.stringify(circle))).toEqual(circle);
     expect(circle).toMatchObject({ namespace: 'standard', type: 'circle', radius: 30 });
     expect(lowerCircle(circle)).toEqual({
@@ -106,11 +116,13 @@ describe('Circle composite', () => {
     const scene = { type: 'scene' as const, version: 1 as const, children: [circle] };
     const actual = compileToScene(scene, { composites: [CircleDefinition] });
     const expected = compileToScene({ type: 'scene', version: 1, children: [lowerCircle(circle)] });
+
     expect(actual.scene).toEqual(expected.scene);
   });
 
   it('resolves diameter and box fit without changing the authored source', () => {
     const diameter = createCircle({ center: [0, 0], diameter: 20 });
+
     expect(lowerCircle(diameter).children[1]).toMatchObject({ kind: 'circlePath', radius: 10 });
     expect(diameter).not.toHaveProperty('radius');
     expect(

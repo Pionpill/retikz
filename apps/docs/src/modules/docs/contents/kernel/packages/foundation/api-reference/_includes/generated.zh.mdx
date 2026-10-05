@@ -50,7 +50,7 @@ export class RetikzError<
 ### RetikzFoundationError
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={79}>
+  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={81}>
     Foundation 原子契约失败的统一结构化错误
   </ApiSourceLink>
 </p>
@@ -63,7 +63,7 @@ export class RetikzError<
 
 | 成员              | 签名                                                                            | 说明                                     |
 | ----------------- | ------------------------------------------------------------------------------- | ---------------------------------------- |
-| `TCode` (泛型)    | `extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue`       | Foundation 错误码的具体字面量类型        |
+| `TCode` (泛型)    | `extends RetikzFoundationErrorCode = RetikzFoundationErrorCode`                 | Foundation 错误码的具体字面量类型        |
 | `TDetails` (泛型) | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | 与 Foundation 错误码关联的结构化详情类型 |
 | `constructor`     | `(message: string)`                                                             | 使用默认错误码创建 Foundation 错误       |
 |                   | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | 使用结构化参数创建 Foundation 错误       |
@@ -76,7 +76,7 @@ export class RetikzError<
 
 ```ts
 export class RetikzFoundationError<
-  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TCode extends RetikzFoundationErrorCode = RetikzFoundationErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends RetikzError<TCode, TDetails> {
   constructor(message: string);
@@ -358,43 +358,6 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
 
 </DocTabs>
 
-### RetikzFoundationErrorCodeValue
-
-<p>
-  <ApiSourceLink
-    label={'RetikzFoundationErrorCodeValue'}
-    path={'packages/kernel/foundation/src/error.ts'}
-    startLine={71}
-  >
-    Foundation 包稳定错误码取值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type RetikzFoundationErrorCodeValue =
-  | 'FOUNDATION_ERROR'
-  | 'FOUNDATION_NON_EMPTY_STRING_REQUIRED'
-  | 'FOUNDATION_POSITIVE_NUMBER_REQUIRED'
-  | 'FOUNDATION_JSON_ERROR'
-  | 'FOUNDATION_COLOR_ERROR';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### ValueOf
 
 <p>
@@ -496,7 +459,7 @@ export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<
 ### RetikzFoundationErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={57}>
+  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={59}>
     Foundation 包稳定错误码
   </ApiSourceLink>
 </p>
@@ -509,6 +472,8 @@ export const RetikzFoundationErrorCode = {
   Json: 'FOUNDATION_JSON_ERROR',
   Color: 'FOUNDATION_COLOR_ERROR',
 } as const;
+
+export type RetikzFoundationErrorCode = ValueOf<typeof RetikzFoundationErrorCode>;
 ```
 
 ### StaticCssNamedColorHexByName
@@ -575,7 +540,7 @@ export declare const assertNonEmptyString: (value: string, label: string, ownerE
 ### assertPlainDataContainers
 
 <p>
-  <ApiSourceLink label={'assertPlainDataContainers'} path={'packages/kernel/foundation/src/json.ts'} startLine={82}>
+  <ApiSourceLink label={'assertPlainDataContainers'} path={'packages/kernel/foundation/src/json.ts'} startLine={97}>
     断言一棵外部数据树只使用普通对象、普通数组与安全属性描述符
   </ApiSourceLink>
 </p>
@@ -611,7 +576,7 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 ### assertPositiveNumber
 
 <p>
-  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={35}>
+  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={36}>
     拒绝非有限数值以及小于等于零的数值
   </ApiSourceLink>
 </p>
@@ -647,7 +612,7 @@ export declare const assertPositiveNumber: (value: number, label: string, ownerE
 ### cloneAndFreezeJson
 
 <p>
-  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={94}>
+  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={109}>
     校验 JSON 安全的普通数据，创建脱离原输入的深冻结副本
   </ApiSourceLink>
 </p>
@@ -682,7 +647,7 @@ export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
 ### compositeOpaqueColor
 
 <p>
-  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={367}>
+  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={401}>
     把静态 CSS 前景色按权重预合成到不透明静态底色
   </ApiSourceLink>
 </p>
@@ -769,12 +734,12 @@ export declare const createOpenStringSchema: <const TValues extends Readonly<Rec
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称      | 类型 / 签名                         | 说明                                                  |
-| ------ | --------- | ----------------------------------- | ----------------------------------------------------- |
-| 泛型   | `TKey`    | —                                   | Map 键类型                                            |
-|        | `TValue`  | —                                   | Map 值类型                                            |
-| 参数   | `entries` | `Iterable<readonly [TKey, TValue]>` | 用于创建快照的键值对                                  |
-| 返回值 | —         | `ReadonlyMap<TKey, TValue>`         | 独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结 |
+| 类别   | 名称      | 类型 / 签名                                                | 说明                                                  |
+| ------ | --------- | ---------------------------------------------------------- | ----------------------------------------------------- |
+| 泛型   | `TKey`    | —                                                          | Map 键类型                                            |
+|        | `TValue`  | —                                                          | Map 值类型                                            |
+| 参数   | `entries` | `Iterable<readonly [`<br />`TKey,`<br />`TValue`<br />`]>` | 用于创建快照的键值对                                  |
+| 返回值 | —         | `ReadonlyMap<TKey, TValue>`                                | 独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结 |
 
 </ApiTable>
 
@@ -795,7 +760,7 @@ export declare const createReadonlyMap: <TKey, TValue>(
 ### isRetikzError
 
 <p>
-  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={105}>
+  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={107}>
     判断动态值是否继承自 Retikz 结构化领域错误
   </ApiSourceLink>
 </p>
@@ -869,7 +834,7 @@ export declare const mergeProperties: <T extends object>(
 ### parseStaticCssColor
 
 <p>
-  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={318}>
+  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={349}>
     解析无需宿主环境即可确定的静态 CSS color 子集
   </ApiSourceLink>
 </p>

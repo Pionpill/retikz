@@ -245,7 +245,7 @@ Core 的 layout-aware composite compile context 必须提供领域中立的结�
 
 ```ts
 type LayoutCompositeCompileContext = Readonly<{
-  warn: (code: CompileWarningCodeValue, message: string, subPath?: string) => void;
+  warn: (code: CompileWarningCode, message: string, subPath?: string) => void;
 }>;
 
 const ChartWarningCode = {

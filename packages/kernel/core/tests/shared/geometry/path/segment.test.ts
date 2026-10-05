@@ -7,6 +7,7 @@ describe('foldSegmentSample', () => {
     const from: [number, number] = [0, 0];
     const corner: [number, number] = [10, 0];
     const to: [number, number] = [10, 5];
+
     expect(foldSegmentSample(from, corner, to, 0).point).toEqual([0, 0]);
     expect(foldSegmentSample(from, corner, to, 0.25).point).toEqual([5, 0]);
     expect(foldSegmentSample(from, corner, to, 0.5).point).toEqual([10, 0]);
@@ -18,6 +19,7 @@ describe('foldSegmentSample', () => {
     const from: [number, number] = [0, 0];
     const corner: [number, number] = [10, 0];
     const to: [number, number] = [10, 5];
+
     expect(foldSegmentSample(from, corner, to, 0.25).tangent).toEqual([1, 0]);
     expect(foldSegmentSample(from, corner, to, 0.75).tangent).toEqual([0, 1]);
   });
@@ -27,6 +29,7 @@ describe('foldSegmentSample', () => {
       [3, 0],
       [3, 6],
     ];
+
     expect(foldSegmentSample([0, 0], corners, [9, 6], 1 / 6).point).toEqual([1.5, 0]);
     expect(foldSegmentSample([0, 0], corners, [9, 6], 1 / 3)).toEqual({
       point: [3, 0],

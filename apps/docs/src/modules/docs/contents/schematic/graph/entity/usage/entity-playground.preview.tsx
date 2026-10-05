@@ -1,11 +1,11 @@
-import type { GraphStatusValue } from '@retikz/graph';
+import type { GraphStatus } from '@retikz/graph';
 import { Entity, Graph } from '@retikz/graph-react';
 
 import type { Lang } from '@/i18n';
 
 import { entityPlaygroundI18n } from './entity-playground.i18n';
 
-const statusValues: Readonly<Record<string, GraphStatusValue | undefined>> = {
+const statusValues: Readonly<Record<string, GraphStatus | undefined>> = {
   '': undefined,
   error: 'error',
   success: 'success',

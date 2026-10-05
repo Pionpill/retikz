@@ -7,21 +7,25 @@ import { ReferenceMark } from '../../../src/components/marks';
 describe('buildPlotIR rule 装配（alpha.11 ADR-03）', () => {
   it('rulemark-constant：数字 → value（line），常量 color → value', () => {
     const spec = buildPlotIR(<ReferenceMark y={80} color="crimson" />, '__plot');
+
     expect(spec.marks[0]).toEqual({ type: 'reference', encoding: { y: { value: 80 }, color: { value: 'crimson' } } });
   });
 
   it('rulemark-field：字符串 → field（per-datum line），color field → AUTO_COLOR', () => {
     const spec = buildPlotIR(<ReferenceMark y="threshold" color="category" />, '__plot');
+
     expect(spec.marks[0]).toEqual({
       type: 'reference',
       encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: '__color' } },
     });
+
     // per-datum color field → 自动色 scale
     expect(spec.scales.some(scale => scale.name === '__color')).toBe(true);
   });
 
   it('rulemark-band：给 yTo → band（数字常量上界）', () => {
     const spec = buildPlotIR(<ReferenceMark y={70} yTo={90} color="amber" />, '__plot');
+
     expect(spec.marks[0]).toEqual({
       type: 'reference',
       yTo: 90,
@@ -31,16 +35,19 @@ describe('buildPlotIR rule 装配（alpha.11 ADR-03）', () => {
 
   it('rulemark-band-field：字符串上界 → field band', () => {
     const spec = buildPlotIR(<ReferenceMark y="lo" yTo="hi" />, '__plot');
+
     expect(spec.marks[0]).toEqual({ type: 'reference', yTo: 'hi', encoding: { y: { field: 'lo' } } });
   });
 
   it('rulemark-orientation-vertical：绑 x → 竖直 rule（encoding.x）', () => {
     const spec = buildPlotIR(<ReferenceMark x={5} />, '__plot');
+
     expect(spec.marks[0]).toEqual({ type: 'reference', encoding: { x: { value: 5 } } });
   });
 
   it('rulemark-extent：透传 extent 字段', () => {
     const spec = buildPlotIR(<ReferenceMark x="date" extentField="rowLo" extentToField="rowHi" />, '__plot');
+
     expect(spec.marks[0]).toEqual({
       type: 'reference',
       extentField: 'rowLo',
@@ -51,11 +58,13 @@ describe('buildPlotIR rule 装配（alpha.11 ADR-03）', () => {
 
   it('rulemark-vertical-band-xTo：绑 x + xTo → band', () => {
     const spec = buildPlotIR(<ReferenceMark x={2} xTo={5} />, '__plot');
+
     expect(spec.marks[0]).toEqual({ type: 'reference', xTo: 5, encoding: { x: { value: 2 } } });
   });
 
   it('rulemark-region：kind=region + x/xTo/y/yTo → bounded area', () => {
     const spec = buildPlotIR(<ReferenceMark kind="region" x={2} xTo={5} y={70} yTo={90} color="amber" />, '__plot');
+
     expect(spec.marks[0]).toEqual({
       type: 'reference',
       kind: 'region',
@@ -67,6 +76,7 @@ describe('buildPlotIR rule 装配（alpha.11 ADR-03）', () => {
 
   it('rulemark-region-field：region 字符串边界 → field + color field', () => {
     const spec = buildPlotIR(<ReferenceMark kind="region" x="x0" xTo="x1" y="y0" yTo="y1" color="tier" />, '__plot');
+
     expect(spec.marks[0]).toEqual({
       type: 'reference',
       kind: 'region',
@@ -120,6 +130,7 @@ describe('buildPlotIR rule 装配（alpha.11 ADR-03）', () => {
       </>,
       '__plot',
     );
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

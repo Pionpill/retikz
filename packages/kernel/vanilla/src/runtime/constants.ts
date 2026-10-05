@@ -10,4 +10,4 @@ export const VanillaViewMode = {
 } as const;
 
 /** Vanilla view 执行模式取值 */
-export type VanillaViewModeValue = ValueOf<typeof VanillaViewMode>;
+export type VanillaViewMode = ValueOf<typeof VanillaViewMode>;

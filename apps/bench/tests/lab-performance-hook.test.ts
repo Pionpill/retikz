@@ -47,11 +47,14 @@ describe('Performance Lab execution lifecycle', () => {
     await i18n.init({ lng: 'zh', resources: { zh: { translation: {} } } });
     const testCase = getDefaultBenchTestCase(defaultBenchModule.id);
     if (testCase === undefined) throw new Error('Kernel test case is unavailable');
+
     const container = document.createElement('div');
     document.body.append(container);
+
     const Harness = (props: Readonly<{ mode: typeof LabRunMode.Preview | typeof LabRunMode.Benchmark }>) => {
       const { mode } = props;
       const lab = usePerformanceLab(defaultBenchModule, testCase, mode);
+
       return createElement(
         'div',
         null,
@@ -59,6 +62,7 @@ describe('Performance Lab execution lifecycle', () => {
         createElement('output', null, lab.state.status),
       );
     };
+
     const root = createRoot(container);
 
     await act(() =>
@@ -70,6 +74,7 @@ describe('Performance Lab execution lifecycle', () => {
       await Promise.resolve();
       await vi.dynamicImportSettled();
     });
+
     expect(runKernelLabMock).toHaveBeenCalledTimes(1);
     expect(container.querySelector('output')?.textContent).toBe('running');
 
@@ -90,6 +95,7 @@ describe('Performance Lab execution lifecycle', () => {
     });
 
     expect(container.querySelector('output')?.textContent).toBe('idle');
+
     await act(() => root.unmount());
   });
 
@@ -111,8 +117,10 @@ describe('Performance Lab execution lifecycle', () => {
     await i18n.init({ lng: 'zh', resources: { zh: { translation: {} } } });
     const testCase = getDefaultBenchTestCase(defaultBenchModule.id);
     if (testCase === undefined) throw new Error('Kernel test case is unavailable');
+
     const container = document.createElement('div');
     document.body.append(container);
+
     const Harness = () => {
       const lab = usePerformanceLab(defaultBenchModule, testCase, LabRunMode.Preview);
       return createElement(
@@ -131,13 +139,18 @@ describe('Performance Lab execution lifecycle', () => {
         createElement('output', null, lab.state.status),
       );
     };
+
     const root = createRoot(container);
 
     await act(() => root.render(createElement(I18nextProvider, { i18n }, createElement(Harness))));
     await act(() => container.querySelector<HTMLButtonElement>('[data-action="run"]')?.click());
+
     expect(container.querySelector('output')?.textContent).toBe('running');
+
     await act(() => container.querySelector<HTMLButtonElement>('[data-action="switch"]')?.click());
+
     expect(container.querySelector('output')?.textContent).toBe('idle');
+
     await act(async () => {
       continueFrame?.(0);
       await Promise.resolve();
@@ -146,6 +159,7 @@ describe('Performance Lab execution lifecycle', () => {
     });
 
     expect(runKernelLabMock).not.toHaveBeenCalled();
+
     await act(() => root.unmount());
   });
 
@@ -166,6 +180,7 @@ describe('Performance Lab execution lifecycle', () => {
     await i18n.init({ lng: 'zh', resources: { zh: { translation: {} } } });
     const initialTestCase = getDefaultBenchTestCase(defaultBenchModule.id);
     if (initialTestCase === undefined) throw new Error('Kernel test case is unavailable');
+
     const newTestCase: BenchTestCase = Object.freeze({
       ...initialTestCase,
       id: 'new-case',
@@ -173,10 +188,12 @@ describe('Performance Lab execution lifecycle', () => {
     });
     const container = document.createElement('div');
     document.body.append(container);
+
     const Harness = (props: Readonly<{ testCase: BenchTestCase }>) => {
       const lab = usePerformanceLab(defaultBenchModule, props.testCase, LabRunMode.Benchmark);
       return createElement('button', { type: 'button', onClick: () => void lab.run() }, 'run');
     };
+
     const root = createRoot(container);
 
     await act(() =>
@@ -196,6 +213,7 @@ describe('Performance Lab execution lifecycle', () => {
       expect.objectContaining({ scenarioId: 'new-scenario' }),
       expect.any(Function),
     );
+
     await act(() => root.unmount());
   });
 });

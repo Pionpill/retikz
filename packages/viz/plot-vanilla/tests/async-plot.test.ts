@@ -16,6 +16,7 @@ const rows = [
   { x: 1, y: 2 },
   { x: 2, y: 4 },
 ];
+
 const spec = () =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -37,6 +38,7 @@ describe('async Plot authoring', () => {
     const options = { adapters: [PlotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
     const a = await createProcessingControllerAsync(input(first), options);
     const b = await createProcessingControllerAsync(input(second), options);
+
     try {
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
@@ -52,6 +54,7 @@ describe('async Plot authoring', () => {
       b.dispose();
     }
   });
+
   it('notifies committed lineage callbacks independently and never notifies discarded candidates', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const first = vi.fn(() => {
@@ -62,13 +65,17 @@ describe('async Plot authoring', () => {
       embed({ kind: 'plot', props: { spec: spec(), datasets: { rows }, onLineage } });
     const source = scene({ children: [input(first), input(second)] });
     const options = { adapters: [PlotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
+
     try {
       const discarded = await prepareStaticProcessingAsync(source, options);
       discarded.discard();
+
       expect(first).not.toHaveBeenCalled();
       expect(second).not.toHaveBeenCalled();
+
       const committed = await prepareStaticProcessingAsync(source, options);
       committed.commit();
+
       expect(first).toHaveBeenCalledOnce();
       expect(second).toHaveBeenCalledOnce();
       expect(committed.result.scene.primitives).toHaveLength(2);
@@ -76,9 +83,11 @@ describe('async Plot authoring', () => {
       warn.mockRestore();
     }
   });
+
   it('preserves builtin SVG parity for rows and canonical results', async () => {
     const plot = spec();
     const expected = renderPlot(plot, { rows });
+
     expect(await renderPlotAsync(plot, { rows: { kind: 'rows', rows } })).toBe(expected);
     expect(
       await renderPlotAsync(plot, {
@@ -106,7 +115,9 @@ describe('async Plot authoring', () => {
           execute: async input => {
             await Promise.resolve();
             if (input.kind !== 'result') throw new Error('fixture requires canonical result');
+
             executions++;
+
             return {
               rows: input.result.rows.map(row => ({ ...row, ratio: Number(row.y) / 6 })),
               model: stage.outputModel,
@@ -125,6 +136,7 @@ describe('async Plot authoring', () => {
         lineage: { rowValues: { fields: ['ratio'], maxRows: 2 } },
       },
     );
+
     expect(result.svg).toContain('<svg');
     expect(JSON.stringify(result.lineage)).toContain('ratio');
     expect(executions).toBe(1);
@@ -138,6 +150,7 @@ describe('async Plot authoring', () => {
     const result = await processToStaticInputResultAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }), {
       adapters: [PlotInputEmbedAdapter],
     });
+
     expect(result.scene.primitives).toHaveLength(2);
     expect(JSON.stringify(result.scene).match(/"type":"ellipse"/g)).toHaveLength(3);
     expect(JSON.stringify(result.scene)).not.toContain('dataBindings');

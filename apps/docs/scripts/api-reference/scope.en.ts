@@ -100,5 +100,6 @@ export const translateScopeApiReference = (source: string): string => {
   const translated = translations[source];
   if (translated !== undefined) return translated;
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   throw new Error(`Missing Scope API translation: ${source}`);
 };

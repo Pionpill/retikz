@@ -34,6 +34,7 @@ const hexagonVertices =
   (halfWidth: number, halfHeight: number): Array<Position> => {
     const shoulderDepth = effectiveShoulderDepth(halfWidth, params);
     const innerX = halfWidth - shoulderDepth;
+
     return [
       [-innerX, -halfHeight],
       [innerX, -halfHeight],

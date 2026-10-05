@@ -5,7 +5,9 @@ import { matrix } from './rect-heatmap.data';
 
 /** 矩形边界 playground 的稳定控件 id */
 export const RECT_BOUNDS_MODE_ID = 'rect-bounds-mode';
+
 export const RECT_BOUNDS_SHOW_COLOR_ID = 'rect-bounds-show-color';
+
 export const RECT_BOUNDS_COORDINATE_ID = 'interval-cell-coordinate';
 
 /** 矩形边界来源的中文属性面板 */

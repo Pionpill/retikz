@@ -35,6 +35,7 @@ const compile = (
   ).scene;
   const path = scene.primitives.find(primitive => primitive.type === 'path');
   if (path?.type !== 'path') throw new Error('Expected ribbon path');
+
   return path;
 };
 
@@ -47,6 +48,7 @@ describe('Ribbon endpoint outline contract', () => {
 
   it.each(['butt', 'square', 'round'])('collapses zero-width %s caps without invalid geometry', name => {
     const path = compile({ width: { kind: 'fixed', value: 0 }, start: { cap: { name } }, end: { cap: { name } } });
+
     expect(JSON.stringify(path.commands)).not.toMatch(/null/);
     expect(path.commands[0]).toEqual({ kind: 'move', to: [0, 0] });
   });
@@ -70,6 +72,7 @@ describe('Ribbon endpoint outline contract', () => {
           context.center[1] + x * context.outward[1] + y * context.sectionAxis[1],
         ];
         const half = (context.width / 2) * (context.endpoint === 'end' ? 1 : -1);
+
         return {
           extension: 0,
           commands: [
@@ -89,6 +92,7 @@ describe('Ribbon endpoint outline contract', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [createRibbonProviderContribution({ caps: [cap] })],
     });
+
     expect(compile(options, definitions.pathKinds?.[0]).commands).toEqual(direct.commands);
     expect(direct.commands).toContainEqual({ kind: 'line', to: [0, -30] });
     expect(direct.commands).toContainEqual({ kind: 'line', to: [100, 130] });
@@ -116,12 +120,15 @@ describe('Ribbon endpoint outline contract', () => {
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
     if (path?.type !== 'path') throw new Error('Expected ribbon path');
+
     expect(path.commands).toContainEqual({ kind: 'line', to: [100, 10] });
     expect(path.commands).toContainEqual({ kind: 'line', to: [90, 0] });
     expect(path.commands.some(command => command.kind === 'cubic')).toBe(false);
   });
+
   it('retains direction as a section axis and preserves the endpoint center', () => {
     const path = compile({ width: { kind: 'fixed', value: 20 }, start: { direction: 0 }, end: { direction: 0 } });
+
     expect(path.commands[0]).toEqual({ kind: 'move', to: [-10, 0] });
     expect(path.commands).toContainEqual({ kind: 'line', to: [110, 100] });
   });
@@ -132,6 +139,7 @@ describe('Ribbon endpoint outline contract', () => {
 
   it('uses cubic interpolation by default', () => {
     const path = compile({ width: { kind: 'fixed', value: 20 } });
+
     expect(path.commands.some(command => command.kind === 'cubic')).toBe(true);
     expect(path.commands.at(-1)).toEqual({ kind: 'close' });
   });
@@ -157,13 +165,17 @@ describe('Ribbon endpoint outline contract', () => {
     });
     const definition = createRibbonPathKindDefinition({ caps: [cap] });
     let caught: unknown;
+
     try {
       compile({ width: { kind: 'fixed', value: 20 }, start: { direction: 0, cap: { name: 'failing' } } }, definition);
     } catch (error) {
       caught = error;
     }
+
     expect(caught).toBeInstanceOf(Error);
+
     while (caught instanceof Error && caught.cause !== undefined) caught = caught.cause;
+
     expect(caught).toBe(failure);
   });
 
@@ -192,6 +204,7 @@ describe('Ribbon endpoint outline contract', () => {
       },
       { pathKinds: [RibbonPathKindDefinition], padding: 0 },
     ).scene;
+
     expect(scene.layout.x + scene.layout.width).toBeGreaterThanOrEqual(110);
     expect(scene.layout.y + scene.layout.height).toBeGreaterThanOrEqual(100 - Math.sqrt(75) + 10);
   });
@@ -204,14 +217,18 @@ describe('Ribbon endpoint outline contract', () => {
       compile({ width: { kind: 'fixed', value: 20 }, end: { cap: { name: 'arc', params: { radius: -1 } } } }),
     ).toThrow(/end.cap/);
   });
+
   it('rotates a chord arc around the section frame', () => {
     const path = compile({
       width: { kind: 'fixed', value: 10 },
       start: { direction: 0, cap: { name: 'arc', params: { center: [-Math.sqrt(75), 0], radius: 10 } } },
     });
     const arc = path.commands.find(command => command.kind === 'arc');
+
     expect(arc).toMatchObject({ kind: 'arc', radius: 10 });
+
     if (arc?.kind !== 'arc') throw new Error('Expected circular cap');
+
     expect(arc.center[0]).toBeCloseTo(0);
     expect(arc.center[1]).toBeCloseTo(Math.sqrt(75));
     expect(Math.abs(arc.endAngle - arc.startAngle)).toBeCloseTo(60);
@@ -224,6 +241,7 @@ describe('Ribbon endpoint outline contract', () => {
     });
     const arc = path.commands.find(command => command.kind === 'arc');
     if (arc?.kind !== 'arc') throw new Error('Expected circular cap');
+
     expect(Math.abs(arc.endAngle - arc.startAngle)).toBeCloseTo(300);
   });
 
@@ -239,6 +257,7 @@ describe('Ribbon endpoint outline contract', () => {
         ],
       }),
     });
+
     expect(() =>
       compile(
         { width: { kind: 'fixed', value: 10 }, start: { cap: { name: cap.name } } },
@@ -253,6 +272,7 @@ describe('Ribbon endpoint outline contract', () => {
       paramsSchema: strictObject({}),
       resolve: () => ({ extension: 0, commands: [] }),
     });
+
     expect(() => createRibbonPathKindDefinition({ caps: [cap] })).toThrow(/defined more than once/);
   });
 
@@ -282,6 +302,7 @@ describe('Ribbon endpoint outline contract', () => {
       { pathKinds: [RibbonPathKindDefinition] },
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
+
     expect(path).toMatchObject({
       commands: [
         { kind: 'move', to: [0, 0] },

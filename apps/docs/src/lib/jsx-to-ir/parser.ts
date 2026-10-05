@@ -44,15 +44,19 @@ export const parseRetikzJsx = (source: string): ParseRetikzJsxResult => {
   if (trimmed.length === 0) {
     return { ok: false, error: '源码为空' };
   }
+
   let ast: AstNode;
+
   try {
     ast = JsxParser.parseExpressionAt(trimmed, 0, { ecmaVersion: 2022 }) as unknown as AstNode;
   } catch (err) {
     return { ok: false, error: `JSX 语法解析失败：${err instanceof Error ? err.message : String(err)}` };
   }
+
   if (ast.type !== 'JSXElement') {
     return { ok: false, error: `根节点必须是 JSX 元素（例如 <Layout>...</Layout>），实际：${ast.type}` };
   }
+
   try {
     return { ok: true, element: walkJsxElement(ast) };
   } catch (err) {
@@ -66,11 +70,13 @@ const walkJsxElement = (node: AstNode, key?: number): ReactElement => {
   if (nameNode.type !== 'JSXIdentifier') {
     throw new Error(`不支持的组件名形式：${nameNode.type}（仅支持简单标识符，例如 Layout / Node）`);
   }
+
   const componentName = nameNode.name as string;
   const Component = COMPONENT_REGISTRY[componentName];
   if (!Component) {
     throw new Error(`不支持的组件：${componentName}（白名单：${componentNames}）`);
   }
+
   const attrs = opening.attributes as Array<AstNode>;
   const props = walkAttributes(attrs);
   if (key !== undefined) props.key = key;
@@ -78,34 +84,42 @@ const walkJsxElement = (node: AstNode, key?: number): ReactElement => {
   const children = childNodes
     .map((child, index) => walkChild(child, index))
     .filter((child): child is ReactNode => child !== null);
+
   return createElement(Component, props, ...children);
 };
 
 const walkAttributes = (attrs: Array<AstNode>): Record<string, unknown> => {
   const props: Record<string, unknown> = {};
+
   for (const attr of attrs) {
     if (attr.type === 'JSXSpreadAttribute') {
       throw new Error('不支持的属性形式：{...spread}（请逐个列出 props）');
     }
+
     if (attr.type !== 'JSXAttribute') {
       throw new Error(`不支持的属性形式：${attr.type}`);
     }
+
     const attrName = (attr.name as AstNode).name as string;
     if (attr.value === null || attr.value === undefined) {
       props[attrName] = true;
       continue;
     }
+
     const valueNode = attr.value as AstNode;
     if (valueNode.type === 'Literal') {
       props[attrName] = valueNode.value;
       continue;
     }
+
     if (valueNode.type === 'JSXExpressionContainer') {
       props[attrName] = evalLiteralExpression(valueNode.expression as AstNode, attrName);
       continue;
     }
+
     throw new Error(`不支持的属性值类型：${valueNode.type}（仅支持字面量与 {字面量表达式}）`);
   }
+
   return props;
 };
 
@@ -118,7 +132,9 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
       if (expressions.length > 0) {
         throw new Error(`不支持的属性值：${contextName} 含模板插值（仅允许字面量字符串）`);
       }
+
       const quasis = node.quasis as Array<AstNode>;
+
       return quasis.map(q => (q.value as { cooked: string }).cooked).join('');
     }
     case 'UnaryExpression': {
@@ -127,6 +143,7 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
       if ((operator === '-' || operator === '+') && argument.type === 'Literal' && typeof argument.value === 'number') {
         return operator === '-' ? -argument.value : argument.value;
       }
+
       throw new Error(`不支持的表达式：${operator}${describeNode(argument)}（仅允许字面量与一元 -/+ 数字）`);
     }
     case 'ArrayExpression': {
@@ -135,25 +152,31 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
         if (el === null) {
           throw new Error(`不支持的属性值：${contextName} 含空槽数组（位置 ${index}）`);
         }
+
         return evalLiteralExpression(el, `${contextName}[${index}]`);
       });
     }
     case 'ObjectExpression': {
       const obj: Record<string, unknown> = {};
       const properties = node.properties as Array<AstNode>;
+
       for (const prop of properties) {
         if (prop.type === 'SpreadElement') {
           throw new Error(`不支持的对象形式：${contextName} 含 {...spread}（请逐个列出字段）`);
         }
+
         if (prop.type !== 'Property') {
           throw new Error(`不支持的对象成员形式：${prop.type}`);
         }
+
         if (prop.computed === true) {
           throw new Error(`不支持的对象 key 形式：${contextName} 含 computed key（不允许 [expr]: ...）`);
         }
+
         if (prop.kind !== 'init') {
           throw new Error(`不支持的对象成员形式：${prop.kind}（仅允许字面量 init）`);
         }
+
         const keyNode = prop.key as AstNode;
         let propKey: string;
         if (keyNode.type === 'Identifier') {
@@ -166,8 +189,10 @@ const evalLiteralExpression = (node: AstNode, contextName: string): unknown => {
         } else {
           throw new Error(`不支持的对象 key 形式：${keyNode.type}`);
         }
+
         obj[propKey] = evalLiteralExpression(prop.value as AstNode, `${contextName}.${propKey}`);
       }
+
       return obj;
     }
     case 'Identifier': {

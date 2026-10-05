@@ -31,6 +31,7 @@ export const MdxToc: FC<MdxTocProps> = ({ source }) => {
 
     const update = () => {
       let current = items[0]?.id ?? '';
+
       for (const item of items) {
         const el = document.getElementById(item.id);
         if (!el) continue;
@@ -40,11 +41,13 @@ export const MdxToc: FC<MdxTocProps> = ({ source }) => {
           break;
         }
       }
+
       setActiveId(current);
     };
 
     update();
     window.addEventListener('scroll', update, { passive: true });
+
     return () => window.removeEventListener('scroll', update);
   }, [items]);
 

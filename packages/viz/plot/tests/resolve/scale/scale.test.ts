@@ -7,6 +7,7 @@ import type { IRPlotScaleOperation } from '../../../src/schemas';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
+
 const resolvePositionScale = (
   operation: IRPlotScaleOperation,
   values: Array<unknown>,
@@ -17,6 +18,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
   // Happy path
   it('scale_maps_like_alpha1', () => {
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 2] }, [], [0, 480]);
+
     expect(scale(0)).toBe(0);
     expect(scale(1)).toBe(240);
     expect(scale(2)).toBe(480);
@@ -25,6 +27,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
   it('scale_infers_domain_from_values', () => {
     // domain 缺省时从数据值 extent 推断
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domainPadding: 0 }, [3, 7, 5], [0, 100]);
+
     expect(scale(3)).toBe(0);
     expect(scale(7)).toBe(100);
   });
@@ -41,6 +44,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
     '%s_inferred_domain_defaults_to_zero_padding',
     (_family, operation, values) => {
       const scale = resolvePositionScale(operation, values, [0, 100]);
+
       expect(scale.coordinate(values[0])).toBeCloseTo(0, 6);
       expect(scale.coordinate(values.at(-1))).toBeCloseTo(100, 6);
     },
@@ -52,6 +56,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
       [10, 20],
       [0, 100],
     );
+
     expect(scale.domain()).toEqual([7.5, 20]);
   });
 
@@ -59,12 +64,14 @@ describe('resolveLinearScale (contract d3-scale)', () => {
   it('scale_single_datum_midpoint', () => {
     // d0=d1：d3 归一化返回 0.5 → range 中点
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [5, 5] }, [], [0, 480]);
+
     expect(scale(5)).toBe(240);
   });
 
   it('scale_empty_values_extent', () => {
     // 空数据 + 无显式 domain → safeExtent 回退 [0,1]
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domainPadding: 0 }, [], [0, 100]);
+
     expect(scale(0)).toBe(0);
     expect(scale(1)).toBe(100);
   });
@@ -72,8 +79,11 @@ describe('resolveLinearScale (contract d3-scale)', () => {
   it('scale_nice_toggle', () => {
     // nice 会把 [0,9.7] 扩展到整齐的 [0,10]
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 9.7], nice: true }, [], [0, 100]);
+
     expect(scale.domain()).toEqual([0, 10]);
+
     const plain = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 9.7] }, [], [0, 100]);
+
     expect(plain.domain()).toEqual([0, 9.7]);
   });
 
@@ -84,8 +94,11 @@ describe('resolveLinearScale (contract d3-scale)', () => {
       [],
       [0, 1],
     );
+
     expect(clamped(20)).toBe(100);
+
     const open = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 10], range: [0, 100] }, [], [0, 1]);
+
     expect(open(20)).toBe(200);
   });
 
@@ -95,6 +108,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
       [],
       [0, 480],
     );
+
     expect(scale(0)).toBe(50);
     expect(scale(10)).toBe(150);
   });
@@ -119,6 +133,7 @@ describe('resolvePositionScale domain padding units', () => {
       );
       const [rangeStart, rangeEnd] = scale.range();
       const direction = Math.sign(rangeEnd - rangeStart);
+
       expect(scale.coordinate(lowerValue)).toBeCloseTo(rangeStart + direction * 10, 6);
       expect(scale.coordinate(upperValue)).toBeCloseTo(rangeEnd - direction * 20, 6);
     },
@@ -130,6 +145,7 @@ describe('resolvePositionScale domain padding units', () => {
       [],
       [0, 100],
     );
+
     expect(scale.coordinate(10)).toBeCloseTo(0.25, 6);
     expect(scale.coordinate(20)).toBeCloseTo(99.75, 6);
   });
@@ -140,6 +156,7 @@ describe('resolvePositionScale domain padding units', () => {
       [],
       [0, 100],
     );
+
     expect(scale.domain()).toEqual([7.5, 20]);
   });
 
@@ -154,6 +171,7 @@ describe('resolvePositionScale domain padding units', () => {
       [],
       [100, 0],
     );
+
     expect(scale.coordinate(10)).toBeCloseTo(90, 6);
     expect(scale.coordinate(20)).toBeCloseTo(20, 6);
   });
@@ -170,12 +188,14 @@ describe('resolvePositionScale domain padding units', () => {
       [],
       [0, 500],
     );
+
     expect(scale.coordinate(0)).toBeCloseTo(60, 6);
     expect(scale.coordinate(10)).toBeCloseTo(130, 6);
   });
 
   it('keeps zero padding as a no-op for a collapsed range', () => {
     const scale = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 10], domainPadding: 0 }, [], [5, 5]);
+
     expect(scale.domain()).toEqual([0, 10]);
   });
 
@@ -216,6 +236,7 @@ describe('resolvePositionScale domain padding units', () => {
       [],
       [0, 100],
     );
+
     expect(scale.domain()).toEqual([3.75, 6.25]);
   });
 
@@ -231,6 +252,7 @@ describe('resolvePositionScale domain padding units', () => {
       [],
       [0, 100],
     );
+
     expect(scale.domain()).toEqual([0, 11]);
   });
 });
@@ -239,6 +261,7 @@ describe('scaleTicks (contract)', () => {
   it('scaleticks_count_and_labels', () => {
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 10] }, [], [0, 100]);
     const { values, labels } = scaleTicks(scale, 5);
+
     // d3 ticks 取 nice 整数刻度，含端点
     expect(values).toContain(0);
     expect(values).toContain(10);
@@ -250,6 +273,7 @@ describe('scaleTicks (contract)', () => {
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 100] }, [], [0, 100]);
     const withDefault = scaleTicks(scale);
     const explicit = scaleTicks(scale, DEFAULT_TICK_COUNT);
+
     expect(withDefault.values).toEqual(explicit.values);
   });
 
@@ -257,6 +281,7 @@ describe('scaleTicks (contract)', () => {
     // 退化 domain：d3 仍给非空刻度（单点），不崩
     const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [5, 5] }, [], [0, 100]);
     const { values, labels } = scaleTicks(scale, 5);
+
     expect(values.length).toBeGreaterThan(0);
     expect(labels).toHaveLength(values.length);
   });
@@ -282,14 +307,17 @@ describe('resolvePositionScale band / point (contract)', () => {
     const ca = scale.coordinate('a');
     const cb = scale.coordinate('b');
     const cc = scale.coordinate('c');
+
     expect(ca).toBeLessThan(cb);
     expect(cb).toBeLessThan(cc);
+
     // band 中心等距
     expect(cb - ca).toBeCloseTo(cc - cb, 6);
   });
 
   it('band_bandwidth_positive', () => {
     const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b', 'c'] }, [], [0, 300]);
+
     expect(scale.bandwidth).toBeGreaterThan(0);
   });
 
@@ -300,12 +328,14 @@ describe('resolvePositionScale band / point (contract)', () => {
       [],
       [0, 300],
     );
+
     expect(scale.bandwidth).toBeCloseTo(300, 6);
     expect(scale.coordinate('only')).toBeCloseTo(150, 6);
   });
 
   it('band_infers_domain_from_values', () => {
     const scale = resolvePositionScale({ type: 'band', name: 'x' }, ['x', 'y', 'x'], [0, 200]);
+
     expect(scale.ticks().values).toEqual(['x', 'y']);
   });
 
@@ -315,23 +345,27 @@ describe('resolvePositionScale band / point (contract)', () => {
       [Number.NaN, Infinity, -Infinity, 1, 'a'],
       [0, 200],
     );
+
     expect(scale.ticks().values).toEqual([1, 'a']);
   });
 
   it('band_unknown_category_nan', () => {
     const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b'] }, [], [0, 300]);
+
     expect(Number.isNaN(scale.coordinate('zzz'))).toBe(true);
   });
 
   it('band_ticks_at_centers', () => {
     const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b'] }, [], [0, 300]);
     const { values, labels } = scale.ticks();
+
     expect(values).toEqual(['a', 'b']);
     expect(labels).toEqual(['a', 'b']);
   });
 
   it('point_coordinate_zero_bandwidth', () => {
     const scale = resolvePositionScale({ type: 'point', name: 'x', domain: ['a', 'b'] }, [], [0, 100]);
+
     expect(scale.bandwidth).toBe(0);
     expect(scale.coordinate('a')).toBeLessThan(scale.coordinate('b'));
   });
@@ -340,19 +374,23 @@ describe('resolvePositionScale band / point (contract)', () => {
 describe('resolvePositionScale linear back-compat (contract)', () => {
   it('linear_through_positionscale_unchanged', () => {
     const pos = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 2] }, [], [0, 480]);
+
     expect(pos.coordinate(1)).toBe(240);
     expect(pos.bandwidth).toBe(0);
+
     // ticks 与直接 scaleTicks 等价
     const direct = scaleTicks(
       resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 2] }, [], [0, 480]),
       DEFAULT_TICK_COUNT,
     );
+
     expect(pos.ticks(DEFAULT_TICK_COUNT)).toEqual(direct);
   });
 
   it('linear_skips_non_numeric', () => {
     // 非数值（含数字字符串）→ NaN，不投影
     const pos = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 10] }, [], [0, 100]);
+
     expect(Number.isNaN(pos.coordinate('5'))).toBe(true);
     expect(Number.isNaN(pos.coordinate(undefined))).toBe(true);
     expect(pos.coordinate(5)).toBe(50);
@@ -361,6 +399,7 @@ describe('resolvePositionScale linear back-compat (contract)', () => {
   it('linear_infers_domain_from_numeric_values', () => {
     // 原始值混入非数值，连续 scale 内部过滤后求 extent
     const pos = resolvePositionScale({ type: 'linear', name: 'x', domainPadding: 0 }, [3, 'skip', 7, null], [0, 100]);
+
     expect(pos.coordinate(3)).toBe(0);
     expect(pos.coordinate(7)).toBe(100);
   });
@@ -378,6 +417,7 @@ describe('resolveTimeScale / coerceTimestamp (contract, UTC)', () => {
     const lo = Date.UTC(2024, 0, 1);
     const hi = Date.UTC(2024, 3, 1);
     const pos = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 300]);
+
     expect(pos.coordinate(lo)).toBeCloseTo(0, 6);
     expect(pos.coordinate(hi)).toBeCloseTo(300, 6);
     expect(pos.bandwidth).toBe(0);
@@ -387,6 +427,7 @@ describe('resolveTimeScale / coerceTimestamp (contract, UTC)', () => {
     const lo = Date.UTC(2024, 0, 1);
     const hi = Date.UTC(2024, 0, 3);
     const pos = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 200]);
+
     // 2024-01-02（中点）→ 100
     expect(pos.coordinate('2024-01-02T00:00:00Z')).toBeCloseTo(100, 6);
   });
@@ -397,6 +438,7 @@ describe('resolveTimeScale / coerceTimestamp (contract, UTC)', () => {
     const { values, labels } = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 300]).ticks(
       3,
     );
+
     // UTC 确定性：Feb 1 在刻度里（值用 epoch ms）
     expect(values).toContain(Date.UTC(2024, 1, 1));
     expect(labels).toHaveLength(values.length);
@@ -409,12 +451,14 @@ describe('resolveTimeScale / coerceTimestamp (contract, UTC)', () => {
       ['2024-01-01', '2024-12-31'],
       [0, 100],
     );
+
     expect(pos.coordinate('2024-01-01')).toBeCloseTo(0, 6);
     expect(pos.coordinate('2024-12-31')).toBeCloseTo(100, 6);
   });
 
   it('time_bad_string_nan', () => {
     const pos = resolvePositionScale({ type: 'time', name: 'x', domain: [0, 1000] }, [], [0, 100]);
+
     expect(Number.isNaN(pos.coordinate('nope'))).toBe(true);
   });
 });

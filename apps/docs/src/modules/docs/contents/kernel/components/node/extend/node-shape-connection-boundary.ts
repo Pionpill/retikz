@@ -95,6 +95,7 @@ const dottedGuidePrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
   if (primitive.type === 'group') {
     return { ...primitive, children: primitive.children.map(dottedGuidePrimitive) };
   }
+
   if (primitive.type === 'ellipse') {
     const { cx, cy, rx, ry, rotate } = primitive;
     return {
@@ -115,6 +116,7 @@ const dottedGuidePrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
       strokeLinecap: 'round',
     } satisfies PathPrim;
   }
+
   if (primitive.type === 'rect') {
     const { x, y, width, height } = primitive;
     return {
@@ -130,6 +132,7 @@ const dottedGuidePrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
       strokeLinecap: 'round',
     } satisfies PathPrim;
   }
+
   return primitive;
 };
 
@@ -151,6 +154,7 @@ const guideRect = (
     boundary === 'rectangle' || fit === 'bounds'
       ? boundsConnectionEnvelope(rect, kind)
       : (visual.definition.connectionEnvelope?.(rect, kind, visual.params) ?? boundsConnectionEnvelope(rect, kind));
+
   return {
     ...rect,
     width: (envelope.halfWidth + gap) * 2,
@@ -177,6 +181,7 @@ export const boundaryGuideShape = defineShape<BoundaryGuideParams>({
   anchor: () => undefined,
   *emit(rect, style, round, params) {
     const visual = visualShapeOf(params.shape);
+
     switch (params.boundary) {
       case 'shape':
         yield* emitDottedGuide(visual.definition.emit(rect, style, round, visual.params));

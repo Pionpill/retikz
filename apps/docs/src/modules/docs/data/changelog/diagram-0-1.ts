@@ -10,6 +10,20 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '待发布 · Branch 分支图', en: 'Unreleased · Branch diagrams' },
+        content: {
+          zh: '新增 BranchDiagram、BranchNode 与 Branch，以有序节点路径表达主线、分叉和汇合。共享节点和同外观相邻段只绘制一次，支持外侧标签、四向轨道布局、展示区域和参考路由 artifact；IR、Vanilla、React 对称提供 /branch 入口，并补充路线图、提交历史与阅读路线示例。',
+          en: 'Adds BranchDiagram, BranchNode, and Branch for ordered main paths, forks, and merges. Shared nodes and matching adjacent segments are drawn once, with outside labels, four-direction lane layout, presentation regions, and reference-route artifacts. IR, Vanilla, and React expose symmetric /branch entries with roadmap, commit-history, and reading-path examples.',
+        },
+      },
+      {
+        label: { zh: '待发布 · 同级容器等宽', en: 'Unreleased · Equal-width sibling containers' },
+        content: {
+          zh: 'FlowLayout 增加 containerWidth: match-largest，为同级横向行或单内容根 Group 分配相同宽度；内部 itemWidth: fill 在自然宽度上均分增量，固定宽度节点不增长。',
+          en: 'FlowLayout adds containerWidth: match-largest for sibling horizontal rows or single-root Groups. Inner itemWidth: fill shares extra space over natural widths while fixed-width nodes remain unchanged.',
+        },
+      },
+      {
         label: { zh: '待发布 · 端点选侧与自动等分', en: 'Unreleased · Endpoint sides and automatic spacing' },
         content: {
           zh: 'Relation source/target 支持 { id, side?, overlap? } 或固定 anchor；separate 在同侧按 i/(n+1) 分配独立位置，allow 共用位置，固定锚点不移动。BREAKING：自定义布局输入端点改为对象并声明 endpointPlacement，输出及 artifact 的 source/target 改为 { id, anchor? }；用 resolveEndpoint 查询真实边界。自动比例要求形状支持 Core side anchor，当前 polygon 不支持；不保证箭头图形或路径无重叠。',

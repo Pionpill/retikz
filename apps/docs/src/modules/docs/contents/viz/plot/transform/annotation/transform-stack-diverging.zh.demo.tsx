@@ -9,5 +9,6 @@ export const previewControls = stackDivergingControls;
 const controlledPreview = defineControlledPreview(previewControlContract, () => TransformStackDivergingPreview('zh'));
 
 export const previewSource = controlledPreview.source;
+
 const Preview = controlledPreview.Component;
 export default Preview;

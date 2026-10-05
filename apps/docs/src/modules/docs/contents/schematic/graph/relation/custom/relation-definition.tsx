@@ -27,9 +27,11 @@ const priorityPredicate = defineRelationPredicate({
 
 /** 自定义 Relation kind 与 predicate 共享 Graph resolve 路径 */
 export type RelationDefinitionProps = { lang?: Lang };
+
 const Demo: FC<RelationDefinitionProps> = props => {
   const { lang = 'zh' } = props;
   const text = relationDefinitionI18n[lang];
+
   return (
     <Graph
       relationKinds={[feedbackKind]}

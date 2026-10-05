@@ -1,4 +1,4 @@
-﻿import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
+﻿import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -13,24 +13,23 @@ export const channelValue = (channel: IRPlotChannel | undefined, row: ExternalRo
   if (!channel) return undefined;
   if (channel.value !== undefined) return channel.value;
   if (channel.field !== undefined) return resolveFieldPath(row, channel.field);
+
   return undefined;
 };
 
 /**
- * 把字段值按展示格式串格式化。
+ * 把字段值按展示格式串格式化
  * @description temporal 使用 d3-time-format，其余使用 d3-format；非法格式或非法值回退到 String(value)
  */
-const applyDisplayFormat = (
-  value: unknown,
-  displayFormat: string,
-  fieldType: DataFieldTypeValue | undefined,
-): string => {
+const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: DataFieldType | undefined): string => {
   try {
     if (fieldType === DataFieldType.Temporal) {
       if (!isFiniteNumber(value)) return String(value);
       return d3UtcFormat(displayFormat)(new Date(value));
     }
+
     if (!isFiniteNumber(value)) return String(value);
+
     return d3Format(displayFormat)(value);
   } catch {
     return String(value);
@@ -38,24 +37,27 @@ const applyDisplayFormat = (
 };
 
 /**
- * text 内容通道某行解析为标签串。
+ * text 内容通道某行解析为标签串
  * @description resolveLabel 最高优先；其次 field 解析值；再次 value 常量
  */
 export const labelOf = (
   content: IRPlotTextChannel | IRPlotMarkLabelContent,
   row: ExternalRow,
-  fieldType?: DataFieldTypeValue,
+  fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
 ): IRPlotMarkLabelContent['value'] | string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));
   if (content.field !== undefined) {
     const value = resolveFieldPath(row, content.field);
     if (value === null || value === undefined) return undefined;
+
     return content.displayFormat !== undefined
       ? applyDisplayFormat(value, content.displayFormat, fieldType)
       : String(value);
   }
+
   if (content.value !== undefined) return content.value;
+
   return undefined;
 };
 
@@ -75,6 +77,7 @@ export const createFieldCollector = (fields: Set<string>): FieldCollector => ({
       if (channel.kind === 'field') fields.add(String(channel.value));
       return;
     }
+
     if (channel.field !== undefined) fields.add(channel.field);
   },
 });

@@ -20,6 +20,7 @@ const scatter = {
 describe('Scatter Chart exact Source schema', () => {
   it('parses nested family and recipe envelope and round-trips JSON', () => {
     const parsed = ScatterChartSchema.parse(scatter);
+
     expect(parsed).toEqual(scatter);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
@@ -91,6 +92,7 @@ describe('Scatter Chart exact Source schema', () => {
     ]) {
       expect(ScatterChartPropertiesSchema.safeParse({ domainPadding }).success).toBe(true);
     }
+
     for (const domainPadding of [
       -0.01,
       {},
@@ -103,13 +105,17 @@ describe('Scatter Chart exact Source schema', () => {
     ]) {
       expect(ScatterChartPropertiesSchema.safeParse({ domainPadding }).success).toBe(false);
     }
+
     const invalidRatio = ScatterChartPropertiesSchema.safeParse({
       domainPadding: { kind: 'ratio', left: 1 },
     });
+
     expect(invalidRatio.success).toBe(false);
+
     if (!invalidRatio.success) {
       expect(invalidRatio.error.issues[0]?.path).toEqual(['domainPadding', 'left']);
     }
+
     expect(ScatterChartMarkSchema.safeParse({ kind: 'scatter', properties: { domainPadding: 0.1 } }).success).toBe(
       false,
     );
@@ -133,6 +139,7 @@ describe('Scatter Chart exact Source schema', () => {
       });
 
       expect(result.success).toBe(false);
+
       if (!result.success) {
         expect(result.error.issues.some(issue => issue.path.slice(0, 2).join('.') === 'recipe.encodings')).toBe(true);
       }

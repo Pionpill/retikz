@@ -35,6 +35,7 @@ describe('independent visual contracts', () => {
       ...StrokeCapJoinSchema.shape,
     });
     const value = { fill: 'white', textColor: 'contrast', font: { size: 12 }, lineJoin: 'round' };
+
     expect(schema.parse(JSON.parse(JSON.stringify(value)))).toEqual(value);
     expect(schema.parse({})).toEqual({});
     expect(schema.safeParse({ zIndex: 2 }).success).toBe(false);

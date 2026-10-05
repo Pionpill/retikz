@@ -140,6 +140,7 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports.defineRelationPredicate).toBeTypeOf('function');
     expect(graphExports.defineGraphThemeStyle).toBeTypeOf('function');
     expect(graphExports.GraphRelationStructureTokenOverridesSchema).toBeDefined();
+
     for (const name of [
       'GraphEntityAppearanceTokenOverridesSchema',
       'GraphRelationAppearanceTokenOverridesSchema',

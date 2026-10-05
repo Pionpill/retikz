@@ -36,10 +36,12 @@ type ExecuteFlowLayout = (
 
 const findDiagramError = (error: unknown): RetikzDiagramError | undefined => {
   let current = error;
+
   while (current !== null && typeof current === 'object') {
     if (current instanceof RetikzDiagramError) return current;
     current = 'cause' in current ? current.cause : undefined;
   }
+
   return undefined;
 };
 
@@ -55,6 +57,7 @@ const getExecuteFlowLayout = (): ExecuteFlowLayout | undefined => {
   ) {
     return candidate.executeFlowLayout;
   }
+
   return undefined;
 };
 
@@ -142,9 +145,11 @@ const definition = (layout: FlowLayoutDefinition['layout']): FlowLayoutDefinitio
 const expectDiagramError = (run: () => unknown, code: string): void => {
   try {
     run();
+
     expect.unreachable(`Expected ${code}`);
   } catch (error) {
     if (!(error instanceof RetikzDiagramError)) throw error;
+
     expect(error.code).toBe(code);
     expect(error.details).toMatchObject({ definition: 'test-layout' });
   }
@@ -171,7 +176,9 @@ const slopedLabelGroup = (primitives: ReadonlyArray<ScenePrimitive>, text: strin
 describe('Flow layout callback execution', () => {
   it('publishes one detached, frozen and normalized provider boundary', () => {
     const executeFlowLayout = getExecuteFlowLayout();
+
     expect(executeFlowLayout).toBeDefined();
+
     if (executeFlowLayout === undefined) return;
 
     let callCount = 0;
@@ -203,7 +210,9 @@ describe('Flow layout callback execution', () => {
 
   it('rejects Promise and non-plain callback outputs with the Definition callback error', () => {
     const executeFlowLayout = getExecuteFlowLayout();
+
     expect(executeFlowLayout).toBeDefined();
+
     if (executeFlowLayout === undefined) return;
 
     const promiseDefinition = definition(() => output());
@@ -226,7 +235,9 @@ describe('Flow layout callback execution', () => {
 
   it('rejects identity, order, coverage, leaf size, endpoint, route and label contract violations', () => {
     const executeFlowLayout = getExecuteFlowLayout();
+
     expect(executeFlowLayout).toBeDefined();
+
     if (executeFlowLayout === undefined) return;
 
     const relationWithIdentity = {
@@ -290,7 +301,9 @@ describe('Flow layout callback execution', () => {
 
   it('requires each authored Layout placement exactly once and preserves its relative child bounds', () => {
     const executeFlowLayout = getExecuteFlowLayout();
+
     expect(executeFlowLayout).toBeDefined();
+
     if (executeFlowLayout === undefined) return;
 
     const layoutInput: FlowLayoutInput = {
@@ -344,6 +357,7 @@ describe('Flow layout callback execution', () => {
       layoutInput,
       placementContext,
     );
+
     expect(accepted.elements).toHaveLength(2);
 
     for (const callback of [
@@ -357,6 +371,7 @@ describe('Flow layout callback execution', () => {
       (_input: FlowLayoutInput, context: FlowLayoutExecutionContext) => {
         const placement = place(context);
         place(context);
+
         return {
           elements: [
             { id: 'lane', bounds: placement.bounds },
@@ -441,6 +456,7 @@ describe('Flow Diagram compile transaction', () => {
     );
     const lane = flowArtifact.elements[0];
     if (lane.kind !== 'layout') throw new Error('expected root Flow Layout artifact');
+
     const short = lane.elements.find(element => element.id === 'short');
     const long = lane.elements.find(element => element.id === 'long');
     const nestedLayout = lane.elements.find(element => element.id === 'nested-layout');
@@ -457,6 +473,7 @@ describe('Flow Diagram compile transaction', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
+
     const compile = (text: IRFlowEntity['text'], layout: NonNullable<IRFlowEntity['layout']> = {}) => {
       const entity: IRFlowEntity = {
         id: 'form',
@@ -471,6 +488,7 @@ describe('Flow Diagram compile transaction', () => {
         layouts: [],
         children: ['form'],
       });
+
       return compileToScene(
         { type: 'scene', version: 1, children: [source] },
         {
@@ -493,6 +511,7 @@ describe('Flow Diagram compile transaction', () => {
       );
 
     const text = textPrimitive(rich.scene.primitives, 'Frontend form');
+
     expect(text).toMatchObject({
       align: 'start',
       lineHeight: 18,
@@ -549,6 +568,7 @@ describe('Flow Diagram compile transaction', () => {
         : undefined;
 
     expect(createContribution).toBeDefined();
+
     if (createContribution === undefined) return;
 
     const definitions = resolveCoreProviderDependencies({ contributions: [createContribution()] });
@@ -852,6 +872,7 @@ describe('Flow Diagram compile transaction', () => {
 
       expect(artifact.frame.allocationBounds).toMatchObject({ width: 420, height: 260 });
       expect(legendBounds).toBeDefined();
+
       if (legendBounds === undefined) return;
       if (legendPosition === 'top') expect(legendBounds.y + legendBounds.height + 9).toBe(drawing.y);
       if (legendPosition === 'bottom') expect(drawing.y + drawing.height + 9).toBe(legendBounds.y);
@@ -935,9 +956,12 @@ describe('Flow Diagram compile transaction', () => {
       expect(mainFlexArtifact).toBeDefined();
       expect(actualDrawing).toBeDefined();
       expect(actualLegend).toBeDefined();
+
       if (actualDrawing === undefined || actualLegend === undefined) return;
+
       const contentOffsetX = flowArtifact.frame.allocationBounds.x + 12;
       const contentOffsetY = flowArtifact.frame.allocationBounds.y + 12;
+
       expect(flowArtifact.regions.drawing.allocationBounds).toEqual({
         x: actualDrawing.allocationBounds.x + contentOffsetX,
         y: actualDrawing.allocationBounds.y + contentOffsetY,
@@ -950,14 +974,18 @@ describe('Flow Diagram compile transaction', () => {
         width: actualLegend.allocationBounds.width,
         height: actualLegend.allocationBounds.height,
       });
+
       for (const [key, expectedBounds] of [
         ['region:drawing', flowArtifact.regions.drawing.allocationBounds],
         ['region:legend', flowArtifact.regions.legend?.allocationBounds],
       ] as const) {
         const handleBounds = result.spatialHandles.entries.find(entry => entry.id === key)?.geometry.bounds;
+
         expect(handleBounds).toBeDefined();
         expect(expectedBounds).toBeDefined();
+
         if (handleBounds === undefined || expectedBounds === undefined) continue;
+
         expect(handleBounds.x).toBeCloseTo(expectedBounds.x, 2);
         expect(handleBounds.y).toBeCloseTo(expectedBounds.y, 2);
         expect(handleBounds.width).toBeCloseTo(expectedBounds.width, 2);
@@ -984,6 +1012,7 @@ describe('Flow Diagram compile transaction', () => {
         if (sourceElement.kind !== 'leaf' || targetElement.kind !== 'leaf') {
           throw new Error('invalid test input');
         }
+
         const sourceBounds = { x: 0, y: 0, width: sourceElement.size.width, height: sourceElement.size.height };
         const targetBounds = {
           x: 120,
@@ -1005,9 +1034,11 @@ describe('Flow Diagram compile transaction', () => {
         ];
         const labelSize = relation.labelSize;
         if (labelSize === undefined) throw new Error('missing test label size');
+
         measuredLabelSize = labelSize;
         const labelCenter: [number, number] =
           reservation === 'horizontal' ? [50, sourceCenter[1] - 12] : [turnX + 18, 52];
+
         return {
           elements: [
             { id: sourceElement.id, bounds: sourceBounds },
@@ -1060,12 +1091,16 @@ describe('Flow Diagram compile transaction', () => {
         result.scene.primitives,
         typeof relationLabel === 'string' ? relationLabel : relationLabel[0],
       );
+
       expect(label).toBeDefined();
+
       if (label === undefined) throw new Error('missing rendered relation label');
+
       const rotation = slopedLabelGroup(result.scene.primitives, 'edge-label')?.transforms?.find(
         transform => transform.kind === 'rotate',
       );
       if (measuredLabelSize === undefined) throw new Error('missing measured relation label size');
+
       return {
         hasDetail:
           typeof relationLabel === 'string' || textPrimitive(result.scene.primitives, relationLabel[1]) !== undefined,
@@ -1085,6 +1120,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(vertical.rotation).toBeUndefined();
 
     const multiLine = compile('horizontal', ['edge-label', 'detail']);
+
     expect(multiLine.labelSize.height).toBeGreaterThan(horizontal.labelSize.height);
     expect(multiLine.hasDetail).toBe(true);
   });
@@ -1130,9 +1166,11 @@ describe('Flow Diagram compile transaction', () => {
           measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
         },
       );
+
       expect.unreachable('Expected final Graph Relation probe to fail');
     } catch (error) {
       const diagramError = findDiagramError(error);
+
       expect(diagramError).toBeDefined();
       expect(diagramError?.code).toBe(RetikzDiagramErrorCode.FlowMaterializationFailed);
       expect(diagramError?.details).toMatchObject({
@@ -1177,9 +1215,11 @@ describe('Flow Diagram compile transaction', () => {
           measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
         },
       );
+
       expect.unreachable('Expected Flow Foundation assembly to fail');
     } catch (error) {
       const diagramError = findDiagramError(error);
+
       expect(diagramError).toBeDefined();
       expect(diagramError?.code).toBe(RetikzDiagramErrorCode.FlowMaterializationFailed);
       expect(diagramError?.details).toMatchObject({ stage: 'assemble', path: [] });
@@ -1194,8 +1234,10 @@ describe('Flow Diagram compile transaction', () => {
       const group = layoutInput.elements[0];
       const outside = layoutInput.elements[1];
       if (group.kind !== 'group' || outside.kind !== 'leaf') throw new Error('invalid test input');
+
       const child = group.elements[0];
       if (child.kind !== 'leaf') throw new Error('invalid test child');
+
       const groupWidth = group.contentInsets.left + child.size.width + group.contentInsets.right;
       const groupHeight = group.contentInsets.top + child.size.height + group.contentInsets.bottom;
       const outsideX = groupWidth + 48;
@@ -1205,6 +1247,7 @@ describe('Flow Diagram compile transaction', () => {
       ];
       const outsideCenter: [number, number] = [outsideX + outside.size.width / 2, outside.size.height / 2];
       const labelSize = layoutInput.relations[0]?.labelSize;
+
       return {
         elements: [
           { id: group.id, bounds: { x: 0, y: 0, width: groupWidth, height: groupHeight } },
@@ -1304,9 +1347,12 @@ describe('Flow Diagram compile transaction', () => {
       const layout = layoutInput.elements[0];
       const outside = layoutInput.elements[1];
       if (layout.kind !== 'layout' || outside.kind !== 'leaf') throw new Error('invalid test input');
+
       const child = layout.elements[0];
       if (child.kind !== 'leaf') throw new Error('invalid test child');
+
       expect(layout.layout.direction).toBe('down');
+
       const placement = context.placeLayout({
         layout: {
           ...layout.placement,
@@ -1314,6 +1360,7 @@ describe('Flow Diagram compile transaction', () => {
         },
         elements: [{ id: child.id, size: child.size, margin: child.margin }],
       });
+
       return {
         elements: [
           { id: layout.id, bounds: placement.bounds },
@@ -1408,6 +1455,7 @@ describe('Flow Diagram compile transaction', () => {
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
     const lane = artifact.elements[0];
     if (lane.kind !== 'layout') throw new Error('Expected Layout artifact');
+
     const [short, long] = lane.elements;
     const mainDelta = long.bounds[main] - short.bounds[main];
     const shortCrossEnd = short.bounds[cross] + (cross === 'x' ? short.bounds.width : short.bounds.height);
@@ -1460,9 +1508,11 @@ describe('Flow Graph materialization invariants', () => {
 
     try {
       materializeFlowGraph(measurement, { elements: [], relations: [] });
+
       expect.unreachable('Expected missing element geometry to fail materialization');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.FlowMaterializationFailed);
       expect(error.details).toEqual({
         stage: 'materialize',

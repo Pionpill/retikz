@@ -6,12 +6,15 @@ import type { IRScene } from '../../src/schemas';
 
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
+
   for (const p of prims) {
     out.push(p);
     if (p.type === 'group') out.push(...flatten(p.children));
   }
+
   return out;
 };
+
 /** 取首个 step label TextPrim（拍平 group，找 text） */
 const labelOf = (ir: IRScene): TextPrim | undefined =>
   flatten(compileToScene(ir).scene.primitives).find((p): p is TextPrim => p.type === 'text');
@@ -87,6 +90,7 @@ describe('边界: 回退链 / 不跟 stroke', () => {
 
   it('step_label_font_partial_fallback：font.size=10 无 family → size=10、family 走 renderer 默认（undefined）', () => {
     const t = labelOf(pathWithLabel({}, { font: { size: 10 } }));
+
     expect(t?.fontSize).toBe(10);
     expect(t?.fontFamily).toBeUndefined();
   });
@@ -121,6 +125,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
         },
       ],
     };
+
     expect(labelOf(ir)?.fill).toBe('red');
   });
 
@@ -145,6 +150,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
         },
       ],
     };
+
     expect(labelOf(ir)?.fill).toBe('gray');
   });
 
@@ -168,6 +174,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
         },
       ],
     };
+
     expect(labelOf(ir)?.fontSize).toBe(10);
   });
 
@@ -186,6 +193,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
 
   it('step_label_zero_break：既有无样式 label → currentColor + 默认字号 16', () => {
     const t = labelOf(pathWithLabel({}, {}));
+
     expect(t?.fill).toBe('currentColor');
     expect(t?.fontSize).toBe(16);
   });

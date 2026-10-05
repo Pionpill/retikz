@@ -35,15 +35,18 @@ export const App: FC<AppProps> = props => {
   const { state, dispatch, previewHostRef, run } = usePerformanceLab(module, testCase, mode, reportHistory.refresh);
   const onRun = (): void => void run();
   const caseStatuses: Partial<Record<string, BenchCaseStatusValue>> = {};
+
   for (const report of reportHistory.reports) {
     if (caseStatuses[report.caseId] !== undefined) continue;
     caseStatuses[report.caseId] = report.status;
   }
+
   if (testCase !== undefined) {
     if (state.status === 'running') caseStatuses[testCase.id] = BenchCaseStatus.Running;
     else if (state.status === 'error') caseStatuses[testCase.id] = BenchCaseStatus.Failed;
     else if (state.session !== undefined) caseStatuses[testCase.id] = createLabSessionReportStatus(state.session);
   }
+
   return (
     <TooltipProvider>
       <SidebarProvider>

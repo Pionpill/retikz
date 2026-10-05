@@ -1,6 +1,6 @@
 import { DrawWay } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react/collection';
+import { Array, Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -14,9 +14,10 @@ export type NamespaceStorageProps = { lang?: Lang };
 const NamespaceStorage: FC<NamespaceStorageProps> = props => {
   const { lang = 'zh' } = props;
   const t = namespaceStorageI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      <List
+      <Array
         transforms={[{ kind: 'translate', x: 20, y: 45 }]}
         label={{ text: t.frames, opacity: 0.8, font: { size: 12 } }}
         layout={{ width: 158, height: 34, padding: 0 }}

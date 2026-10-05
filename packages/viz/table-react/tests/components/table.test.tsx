@@ -288,12 +288,14 @@ describe('Table React components', () => {
         </Layout>,
       ),
     ).toContain('Ada');
+
     const renderBlankId = () =>
       renderToStaticMarkup(
         <Layout>
           <ManualTable id={'\u2003'} rows={[[null]]} />
         </Layout>,
       );
+
     expect(renderBlankId).toThrow(/table runtime contribution reference must be a non-empty string/i);
     expect(() =>
       renderToStaticMarkup(

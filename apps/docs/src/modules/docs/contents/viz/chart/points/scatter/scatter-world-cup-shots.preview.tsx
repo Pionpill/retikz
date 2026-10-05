@@ -19,6 +19,7 @@ export type ScatterWorldCupShotsPreviewOptions = {
 export const renderScatterWorldCupShotsPreview = (options: ScatterWorldCupShotsPreviewOptions) => {
   const { lang, layout, pointSize, pointStroke, pointShape, pointOpacity } = options;
   const i18n = scatterWorldCupShotsI18n[lang];
+
   return (
     <ScatterChart
       layout={layout}

@@ -26,7 +26,9 @@ describe('Plot transform table views', () => {
     const resultRows = views[1].rows;
 
     expect(typeof resultRows).toBe('function');
+
     if (typeof resultRows !== 'function') return;
+
     expect(resultRows({})).toMatchObject([
       { quarter: 'Q1', product: 'A', revenue: 30, y0: 0, y1: 30 },
       { quarter: 'Q1', product: 'B', revenue: 45, y0: 30, y1: 75 },
@@ -43,7 +45,9 @@ describe('Plot transform table views', () => {
     const resultRows = views[1].rows;
 
     expect(typeof resultRows).toBe('function');
+
     if (typeof resultRows !== 'function') return;
+
     expect(resultRows({ [CUSTOM_TRANSFORM_CONTROL_IDS.initialValue]: 60 }).slice(0, 2)).toMatchObject([
       { period: 'Q1', delta: 35, from: 60, to: 95, direction: 'increase' },
       { period: 'Q2', delta: -20, from: 95, to: 75, direction: 'decrease' },
@@ -58,8 +62,11 @@ describe('Plot transform table views', () => {
     const views = table.views;
 
     expect(views.map(view => view.label)).toEqual(labels);
+
     const resultRows = views[1].rows;
+
     expect(typeof resultRows).toBe('function');
+
     if (typeof resultRows !== 'function') return;
 
     const sourceRowsDefinition = views[0].rows;
@@ -68,6 +75,7 @@ describe('Plot transform table views', () => {
         ? sourceRowsDefinition(contract.canonicalValues)
         : sourceRowsDefinition;
     const transformedRows = resultRows(contract.canonicalValues);
+
     expect(transformedRows).not.toEqual(sourceRows);
     expect(transformedRows.map(row => Reflect.get(row, 'orders'))).not.toEqual(
       sourceRows.map(row => Reflect.get(row, 'orders')),

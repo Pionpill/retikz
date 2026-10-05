@@ -14,12 +14,12 @@ export const RetikzPlotVanillaErrorCode = {
 } as const;
 
 /** Plot Vanilla 包稳定错误码取值 */
-export type RetikzPlotVanillaErrorCodeValue = ValueOf<typeof RetikzPlotVanillaErrorCode>;
+export type RetikzPlotVanillaErrorCode = ValueOf<typeof RetikzPlotVanillaErrorCode>;
 
 /** Plot Vanilla 包运行时错误的可选构造参数 */
 export type RetikzPlotVanillaErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzPlotVanillaErrorCodeValue;
+  code: RetikzPlotVanillaErrorCode;
   /** 面向调用方的错误消息 */
   message?: string;
   /** 失败上下文的结构化详情 */
@@ -31,10 +31,7 @@ export type RetikzPlotVanillaErrorOptions = Readonly<{
 type RetikzPlotVanillaErrorCauseOptions = Readonly<Pick<RetikzPlotVanillaErrorOptions, 'cause'>>;
 
 /** Plot Vanilla 包统一的结构化错误 */
-export class RetikzPlotVanillaError extends RetikzError<
-  RetikzPlotVanillaErrorCodeValue,
-  Readonly<Record<string, unknown>>
-> {
+export class RetikzPlotVanillaError extends RetikzError<RetikzPlotVanillaErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 Plot Vanilla 错误 */
   constructor(message: string, options?: RetikzPlotVanillaErrorCauseOptions);
   /** 使用结构化参数创建 Plot Vanilla 错误 */

@@ -27,7 +27,7 @@
     {
       "files": ["**/*.{js,jsx,ts,tsx}"],
       "rules": {
-        "import/newline-after-import": "error",
+        "import/newline-after-import": ["error", { "count": 1, "considerComments": true }],
         "eslint/constructor-super": "error",
         "eslint/for-direction": "error",
         "eslint/getter-return": "error",
@@ -64,7 +64,6 @@
         "eslint/no-nonoctal-decimal-escape": "error",
         "eslint/no-obj-calls": "error",
         "eslint/no-prototype-builtins": "error",
-        "eslint/no-redeclare": "error",
         "eslint/no-regex-spaces": "error",
         "eslint/no-self-assign": "error",
         "eslint/no-setter-return": "error",
@@ -150,6 +149,12 @@
           }
         ],
         "import/consistent-type-specifier-style": ["error", "prefer-top-level"]
+      }
+    },
+    {
+      "files": ["**/*.{js,jsx}"],
+      "rules": {
+        "eslint/no-redeclare": "error"
       }
     },
     {

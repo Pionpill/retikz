@@ -21,8 +21,11 @@ import { buildPositionScale, collectExplicitScales, coordinateTypeOf } from './s
 import { assembledTransformsOf } from './topology';
 
 const AUTO_X = '__x';
+
 const AUTO_Y = '__y';
+
 const AUTO_ANGLE = '__angle';
+
 const AUTO_RADIUS = '__radius';
 
 type Collected = NormalizationState;
@@ -84,17 +87,21 @@ export const assertChartExtensionCollection = (
   if (context.scales !== undefined && scaleDeclaration !== undefined) {
     throwDuplicateDeclarationSource(scaleDeclaration, context.scales.path);
   }
+
   const guideDeclaration = firstDeclarationOf(collection, new Set<PlotDeclarationKind>(['axis', 'legend']));
   if (context.guides !== undefined && guideDeclaration !== undefined) {
     throwDuplicateDeclarationSource(guideDeclaration, context.guides.path);
   }
+
   const compositionDeclaration = firstDeclarationOf(collection, new Set<PlotDeclarationKind>(['facet', 'scaffold']));
   if (context.composition !== undefined && compositionDeclaration !== undefined) {
     throwDuplicateDeclarationSource(compositionDeclaration, context.composition.path);
   }
+
   if (context.coordinate !== undefined && compositionDeclaration !== undefined) {
     throwDuplicateDeclarationSource(compositionDeclaration, context.coordinate.path);
   }
+
   const markDeclaration = firstDeclarationOf(
     collection,
     new Set<PlotDeclarationKind>(['path-mark', 'point-mark', 'interval-mark', 'reference-mark', 'relation-mark']),
@@ -102,6 +109,7 @@ export const assertChartExtensionCollection = (
   if (context.marks !== undefined && markDeclaration !== undefined) {
     throwDuplicateDeclarationSource(markDeclaration, context.marks.path);
   }
+
   if (context.coordinate !== undefined && context.composition !== undefined) {
     throw plotDeclarationError(
       RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
@@ -117,13 +125,16 @@ const chartExtensionScalesOf = (collected: Collected, context: PlotAuthoringCont
   const coordinateKind = coordinateTypeOf(context.coordinate?.value);
   const explicitScales = collectExplicitScales(collected.scales, coordinateKind);
   const scales: Array<IRPlotScaleOperation> = [];
+
   const append = (scale: InputPlotScale | undefined, name: string): void => {
     if (scale !== undefined) scales.push(buildPositionScale(name, scale.type, scale));
   };
+
   append(explicitScales.x, AUTO_X);
   append(explicitScales.y, AUTO_Y);
   append(explicitScales.angle, AUTO_ANGLE);
   append(explicitScales.radius, AUTO_RADIUS);
+
   return scales;
 };
 
@@ -151,6 +162,7 @@ export const normalizeChartExtension = (
         ]
       : context.guides.value.map(guide => ({ ...guide }));
   const marks = context.marks?.value ?? collected.marks;
+
   const normalized = normalizePlotBindings({
     marks,
     guides: declaredGuides,
@@ -160,6 +172,7 @@ export const normalizeChartExtension = (
     facets: collected.facets,
     scaffolds: collected.scaffolds,
   });
+
   const ownsScales = context.scales !== undefined || collected.scales.length > 0 || normalized.scales.length > 0;
   const ownsGuides = context.guides !== undefined || collected.guides.length > 0 || normalized.guides.length > 0;
   const fragment: PlotMemberFragment = {
@@ -173,7 +186,9 @@ export const normalizeChartExtension = (
     ...(marks.length > 0 ? { marks: normalized.marks } : {}),
     ...(ownsGuides ? { guides: normalized.guides } : {}),
   };
+
   const runtime: PlotAuthoringRuntime =
     Object.keys(collected.resolveLabels).length === 0 ? {} : { resolveLabel: collected.resolveLabels };
+
   return { fragment, runtime };
 };

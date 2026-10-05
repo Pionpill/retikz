@@ -43,39 +43,21 @@ export const vizSection: Array<Section> = [
         },
       },
       {
-        id: 'basic',
-        label: 'viz.dataBasicConcepts',
-        sidebarGroup: 'viz.dataConcepts',
-        children: [
-          {
-            id: 'rows-and-fields',
-            label: 'viz.dataRowsAndFields',
-            difficulty: DocDifficulty.Beginner,
-            meta: {
-              pageType: 'concept',
-              audience: 'user',
-              capability: 'data.rows-and-fields',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
-            id: 'field-types',
-            label: 'viz.dataFieldTypes',
-            difficulty: DocDifficulty.Beginner,
-            meta: {
-              pageType: 'concept',
-              audience: 'user',
-              capability: 'data.field-types',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
-      },
-      {
         id: 'model',
         label: 'viz.dataModel',
         sidebarGroup: 'viz.dataContents',
         children: [
+          {
+            id: 'fields-and-types',
+            label: 'viz.dataFieldsAndTypes',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'concept',
+              audience: 'user',
+              capability: 'data.fields-and-types',
+              sourceOfTruth: 'runtime',
+            },
+          },
           { id: 'contract', label: 'viz.dataModelContract', difficulty: DocDifficulty.Advanced },
           { id: 'intake', label: 'viz.dataModelIntake', difficulty: DocDifficulty.Advanced },
           { id: 'validation', label: 'viz.dataModelValidation', difficulty: DocDifficulty.Advanced },

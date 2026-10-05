@@ -21,6 +21,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
       guides: [],
     };
+
     expect(spec).toEqual(expected);
   });
 
@@ -46,6 +47,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     const spec = buildPlotIR(<PointMark x="gdp" y="life" color="continent" />, '__plot', {
       dataFieldNames: new Set(['continent']),
     });
+
     expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color' });
     expect(spec.marks[0]).toMatchObject({ color: { kind: 'field', value: 'continent', scale: '__color' } });
   });
@@ -56,23 +58,27 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       plotDefaults: { palette: { categorical: colors } },
       dataFieldNames: new Set(['continent']),
     });
+
     expect(spec.plotDefaults?.palette?.categorical).toEqual(colors);
     expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color' });
   });
 
   it('no_color_no_ordinal_scale', () => {
     const spec = buildPlotIR(<PointMark x="m" y="r" />, '__plot');
+
     expect(spec.scales.some(s => s.type === 'ordinal')).toBe(false);
   });
 
   it('bar_series_dodge_default_and_color_eq_series', () => {
     const spec = buildPlotIR(<IntervalMark x="month" y="revenue" series="product" />, '__plot');
     const mark = spec.marks[0];
+
     expect(mark).toMatchObject({
       type: 'interval',
       series: 'product',
       bounds: { x: { kind: 'band', group: 'product' } },
     });
+
     // color 缺省取 series
     expect(mark).toMatchObject({ encoding: { color: { field: 'product', scale: '__color' } } });
     expect(spec.transform).toBeUndefined();
@@ -80,6 +86,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
 
   it('bar_stack_assembles_transform', () => {
     const spec = buildPlotIR(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       series: 'product',
@@ -96,6 +103,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       </>,
       '__plot',
     );
+
     expect(spec.scales[0]).toEqual({ type: 'time', name: '__x' });
   });
 
@@ -180,6 +188,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
 
   it('line_series_color_eq_series', () => {
     const spec = buildPlotIR(<PathMark x="t" y="v" series="city" order="t" />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({ type: 'path', series: 'city', order: 't' });
     expect(spec.marks[0]).toMatchObject({ encoding: { color: { field: 'city', scale: '__color' } } });
   });
@@ -200,6 +209,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       </>,
       '__plot',
     );
+
     expect(spec.scales[0]).toEqual({ type: 'band', name: '__x' });
     expect(spec.marks).toHaveLength(2);
   });

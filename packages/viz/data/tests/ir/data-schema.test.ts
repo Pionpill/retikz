@@ -28,7 +28,9 @@ describe('data schema', () => {
     const result = DataModelSchema.safeParse([{ name: 'value' }, { name: 'value' }]);
 
     expect(result.success).toBe(false);
+
     if (result.success) return;
+
     expect(result.error.issues).toEqual([
       expect.objectContaining({ path: [1, 'name'], message: 'duplicate data model field "value"' }),
     ]);

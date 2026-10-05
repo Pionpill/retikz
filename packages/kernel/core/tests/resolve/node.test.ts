@@ -39,6 +39,7 @@ const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> =
 describe('resolveNode', () => {
   it('在 Core 解析阶段补齐局部原点且不修改 Source', () => {
     const source: IRNode = { type: 'node' };
+
     expect(resolve(source).node.position).toEqual([0, 0]);
     expect(source).not.toHaveProperty('position');
   });
@@ -125,6 +126,7 @@ describe('resolveNode', () => {
     expect(resolve(node({ text: '' })).node.text).toEqual(['']);
 
     const lines: NonNullable<IRNode['text']> = ['first', { text: 'second' }];
+
     expect(resolve(node({ text: lines })).node.text).toEqual(lines);
   });
 
@@ -212,6 +214,7 @@ describe('resolveNode', () => {
 
   it('resolves Node scalar defaults and static dash and shadow forms', () => {
     const defaults = resolve(node()).node;
+
     expect(defaults.align).toBe('middle');
     expect(defaults.rotate).toBe(0);
     expect(

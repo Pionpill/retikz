@@ -49,10 +49,13 @@ describe('resolveComposite', () => {
   it('binds and parses an expand composite once', () => {
     const binding = bindComposite(source(), registryOf(expandDefinition));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
+
     const resolution = resolveComposite(binding, 'children[0]');
 
     expect(resolution).toMatchObject({ kind: 'expand', key: 'test.box', node: source() });
+
     if (resolution.kind !== 'expand') throw new Error('expected expand resolution');
+
     expect(
       resolution.expand(resolution.node, {
         theme: DEFAULT_RESOLVED_THEME,
@@ -72,16 +75,20 @@ describe('resolveComposite', () => {
   it('binds a layout-aware composite with its artifact schema', () => {
     const binding = bindComposite(source({ type: 'layout' }), registryOf(layoutDefinition));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
+
     const resolution = resolveComposite(binding, 'children[0]');
 
     expect(resolution).toMatchObject({ kind: 'compile', key: 'test.layout', node: source({ type: 'layout' }) });
+
     if (resolution.kind !== 'compile') throw new Error('expected compile resolution');
+
     expect(resolution.artifactSchema).toBe(layoutDefinition.artifactSchema);
   });
 
   it('reports provider key and IR locator when payload parsing fails', () => {
     const binding = bindComposite(source({ value: 'invalid' }), registryOf(expandDefinition));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
+
     expect(() => resolveComposite(binding, 'children[2]')).toThrow(
       /composite 'test\.box' failed payload validation at children\[2\]/u,
     );

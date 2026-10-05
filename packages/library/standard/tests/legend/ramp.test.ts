@@ -72,7 +72,9 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
         },
       );
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -85,8 +87,10 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
     { composites: [LegendDefinition, leafDefinition, harness], padding: 0 },
   );
   if (observed === undefined) throw new Error('Expected Legend ramp probe to resolve');
+
   const envelope = output.artifacts.find(value => value.kind === 'composite');
   if (envelope === undefined) throw new Error('Expected Legend ramp artifact');
+
   return { observed, output, artifact: envelope.value };
 };
 
@@ -112,14 +116,18 @@ describe('Legend ramp compile contract', () => {
     const root = groupsOf(output.scene.primitives).find(group => group.id === 'ramp-root');
 
     expect(root).toBeDefined();
+
     if (root === undefined) throw new Error('Expected authored Legend root Scope');
+
     expect(root).toMatchObject({
       id: 'ramp-root',
       meta: { source: 'scope-props-test' },
     });
     expect(root.transforms).toEqual(expect.arrayContaining([{ kind: 'translate', x: 4, y: 5 }]));
     expect(root.clipRef).toBeDefined();
+
     const allocation = root.children.find(child => child.type === 'group' && child.id === undefined);
+
     expect(allocation).toMatchObject({ type: 'group', clipRef: expect.any(String) });
     expect(allocation).not.toHaveProperty('meta');
     expect(groupsOf(output.scene.primitives).filter(group => group.clipRef !== undefined)).toHaveLength(2);
@@ -224,7 +232,9 @@ describe('Legend ramp compile contract', () => {
 
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 120, height: 19 });
     expect(artifact.kind).toBe('ramp');
+
     if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
+
     expect(artifact.sample.slotBounds).toEqual({ x: 10, y: 0, width: 100, height: 10 });
     expect(artifact.ticks.map(tick => tick.anchor)).toEqual([
       { x: 10, y: 10 },
@@ -250,7 +260,9 @@ describe('Legend ramp compile contract', () => {
     );
 
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 35, height: 120 });
+
     if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
+
     expect(artifact.sample.slotBounds).toEqual({ x: 0, y: 10, width: 10, height: 100 });
     expect(artifact.ticks.map(tick => tick.anchor)).toEqual([
       { x: 10, y: 10 },
@@ -276,6 +288,7 @@ describe('Legend ramp compile contract', () => {
     );
 
     if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
+
     expect(artifact.ticks.map(tick => tick.key)).toEqual(['a', 'b']);
     expect(artifact.ticks.map(tick => tick.anchor.x)).toEqual([50, 51]);
     expect(artifact.ticks[0]?.label?.slotBounds.x).toBe(35);
@@ -296,7 +309,9 @@ describe('Legend ramp compile contract', () => {
     );
 
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 40, height: 12 });
+
     if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
+
     expect(artifact.bodyBounds).toEqual({ x: 0, y: 0, width: 40, height: 12 });
     expect(artifact.sample.slotBounds).toEqual({ x: 0, y: 0, width: 40, height: 12 });
     expect(artifact.ticks).toEqual([]);
@@ -336,6 +351,7 @@ describe('Legend ramp compile contract', () => {
       }),
     );
     if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
+
     expect(artifact.sample.slotBounds).toEqual({ x: 0, y: 18, width: 10, height: 30 });
     expect(artifact.container.allocationBounds.height).toBe(10);
   });
@@ -353,7 +369,9 @@ describe('Legend ramp compile contract', () => {
     );
 
     expect(observed.allocationBounds.width).toBe(100);
+
     if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
+
     expect(artifact.ticks[0]?.anchor.x).toBe(50);
     expect(artifact.sample.slotBounds.width).toBe(100);
     expect(artifact.sample.allocationBounds.width).toBe(200);

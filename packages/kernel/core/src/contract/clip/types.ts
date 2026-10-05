@@ -12,10 +12,15 @@ export type ClipShape = JsonObject & {
 
 /** 用户坐标系中的矩形裁剪形状 */
 export type RectClipShape = JsonObject & {
+  /** 标识矩形裁剪形状 */
   kind: 'rect';
+  /** 矩形左上角的用户坐标 x */
   x: number;
+  /** 矩形左上角的用户坐标 y */
   y: number;
+  /** 矩形宽度，单位为用户坐标单位 */
   width: number;
+  /** 矩形高度，单位为用户坐标单位 */
   height: number;
 };
 
@@ -44,7 +49,11 @@ export type ClipLowerContext = {
   lower: (shape: ClipShape) => SceneClipPath;
 };
 
-/** 需要将 spec 解析为另一种 shape 的 clip definition 作者侧输入 */
+/**
+ * 需要将 spec 解析为另一种 shape 的 clip definition 作者侧输入
+ * @template TClip 经输入 schema 校验的裁剪声明类型
+ * @template TShape 解析后交给 lowering 的完整裁剪形状类型
+ */
 export type ClipDefinitionResolvedInput<TClip extends ClipLike, TShape extends ClipShape = ClipShape> = {
   /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
   kind: TClip['kind'] & TShape['kind'];
@@ -62,7 +71,10 @@ export type ClipDefinitionResolvedInput<TClip extends ClipLike, TShape extends C
   }['bivarianceHack'];
 };
 
-/** spec 已是完整 ClipShape 时的精简 definition 作者侧输入 */
+/**
+ * spec 已是完整 ClipShape 时的精简 definition 作者侧输入
+ * @template TShape 解析后交给 lowering 的完整裁剪形状类型
+ */
 export type ClipDefinitionIdentityInput<TShape extends ClipShape> = {
   /** 注册表 key，与 spec 和 shape 的 kind 一致 */
   kind: TShape['kind'];
@@ -78,22 +90,37 @@ export type ClipDefinitionIdentityInput<TShape extends ClipShape> = {
   }['bivarianceHack'];
 };
 
-/** clip definition 的作者侧输入形态 */
+/**
+ * clip definition 的作者侧输入形态
+ * @template TClip 经输入 schema 校验的裁剪声明类型
+ * @template TShape 解析后交给 lowering 的完整裁剪形状类型
+ */
 export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape = ClipShape> =
   | ClipDefinitionResolvedInput<TClip, TShape>
   | (TClip extends TShape ? (TShape extends TClip ? ClipDefinitionIdentityInput<TShape> : never) : never);
 
 /** 定义 clip 的公开 authoring 入口 */
 export type DefineClip = {
-  /** 当 spec 已是完整 ClipShape 时，派生 identity resolve 与 shapeSchema */
+  /**
+   * 当 spec 已是完整 ClipShape 时，派生 identity resolve 与 shapeSchema
+   * @template TShape 完整裁剪形状类型，关联解析结果与 lowering 输入
+   */
   <TShape extends ClipShape>(definition: ClipDefinitionIdentityInput<TShape>): ClipDefinition<TShape, TShape>;
-  /** 当 spec 需要解析为完整 ClipShape 时，显式声明 resolve 与 shapeSchema */
+  /**
+   * 当 spec 需要解析为完整 ClipShape 时，显式声明 resolve 与 shapeSchema
+   * @template TClip 由 schema 校验并交给 resolve 的裁剪声明类型
+   * @template TShape 完整裁剪形状类型，关联解析结果与 lowering 输入
+   */
   <TClip extends ClipLike, TShape extends ClipShape>(
     definition: ClipDefinitionResolvedInput<TClip, TShape>,
   ): ClipDefinition<TClip, TShape>;
 };
 
-/** clip 定义的注册表形态：保留 schema 泛型并擦除 callback 参数 */
+/**
+ * clip 定义的注册表形态：保留 schema 泛型并擦除 callback 参数
+ * @template TClip 经输入 schema 校验的裁剪声明类型
+ * @template TShape 解析后交给 lowering 的完整裁剪形状类型
+ */
 export type ClipDefinition<TClip extends ClipLike = ClipLike, TShape extends ClipShape = ClipShape> = Readonly<{
   /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
   kind: TClip['kind'] & TShape['kind'];

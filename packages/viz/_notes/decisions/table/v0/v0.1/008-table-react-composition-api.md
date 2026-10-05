@@ -80,7 +80,7 @@ builder 按 JSX 声明顺序生成 columns，递归穿透 Fragment、数组以�
 type ManualTableRootProps = TableCommonProps & Omit<ManualTableInput, 'cells' | 'rowKinds'>;
 
 type ManualTableCellPropsMode = {
-  rowKinds?: Array<TableRowKindValue>;
+  rowKinds?: Array<TableRowKind>;
   cells: Array<IRTableCell>;
   children?: never;
 };
@@ -92,7 +92,7 @@ type ManualTableCellChildrenMode = {
 };
 
 type RowProps = {
-  kind?: TableRowKindValue;
+  kind?: TableRowKind;
   children?: ReactNode;
 };
 

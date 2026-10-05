@@ -53,3 +53,12 @@ export const WebFontSizeRatio = {
   [WebFontSizePreset.Xl8]: 6,
   [WebFontSizePreset.Xl9]: 8,
 } as const satisfies Record<ValueOf<typeof WebFontSizePreset>, number>;
+
+/** CSS font-weight 关键字取值 */
+export type FontWeightKeyword = ValueOf<typeof FontWeightKeyword>;
+
+/** CSS font-style 关键字取值 */
+export type FontStyle = ValueOf<typeof FontStyle>;
+
+/** 字号 preset 取值 */
+export type WebFontSizePreset = ValueOf<typeof WebFontSizePreset>;

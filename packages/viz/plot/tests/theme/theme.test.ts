@@ -45,6 +45,7 @@ const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>
 
 const scopesOf = (root: IRScope): Array<IRScope> => {
   const out: Array<IRScope> = [];
+
   const visit = (scope: IRScope): void => {
     for (const child of scope.children) {
       if (child.type !== 'scope') continue;
@@ -52,12 +53,15 @@ const scopesOf = (root: IRScope): Array<IRScope> => {
       visit(child as IRScope);
     }
   };
+
   visit(root);
+
   return out;
 };
 
 const nodesOf = (root: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const visit = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const item = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -65,12 +69,15 @@ const nodesOf = (root: IRScope): Array<IRNode> => {
       if (item.type === 'scope' && item.children) visit(item.children);
     }
   };
+
   visit(root.children);
+
   return out;
 };
 
 const pathsOf = (root: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const visit = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const item = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -78,14 +85,18 @@ const pathsOf = (root: IRScope): Array<IRPath> => {
       if (item.type === 'scope' && item.children) visit(item.children);
     }
   };
+
   visit(root.children);
+
   return out;
 };
 
 const primitiveFillsOf = (primitives: ReadonlyArray<unknown>): Array<unknown> =>
   primitives.flatMap(primitive => {
     if (primitive === null || typeof primitive !== 'object') return [];
+
     const item = primitive as { fill?: unknown; type?: string; children?: ReadonlyArray<unknown> };
+
     return [
       ...(Object.hasOwn(item, 'fill') ? [item.fill] : []),
       ...(item.type === 'group' && item.children !== undefined ? primitiveFillsOf(item.children) : []),
@@ -109,6 +120,7 @@ describe('Plot Source defaults and guide lowering', () => {
       { plotDefaults: { axis: { grid: false } } },
       { type: 'axis', dimension: 'y', grid: true },
     );
+
     expect(guide.grid).toBe(true);
   });
 
@@ -167,6 +179,7 @@ describe('Plot Source defaults and guide lowering', () => {
         plotDefaults: { plotArea: { fill: '#f8fafc' } },
       }),
     );
+
     expect(root.children[0]).toMatchObject({
       type: 'node',
       shape: 'circle',
@@ -183,6 +196,7 @@ describe('Plot Source defaults and guide lowering', () => {
         plotDefaults: { plotArea: { border: {} } },
       }),
     );
+
     expect(nodesOf(root)).toContainEqual(
       expect.objectContaining({
         shape: 'circle',
@@ -277,6 +291,7 @@ describe('Plot Source defaults and guide lowering', () => {
     const root = expandOf(baseSpec({ plotDefaults: { palette: { categorical: ['#111111', '#222222'] } } }));
     const markLayer = root.children[0] as IRScope;
     const colorScopes = markLayer.children as Array<IRScope>;
+
     expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#111111', '#222222']);
   });
 
@@ -293,6 +308,7 @@ describe('Plot Source defaults and guide lowering', () => {
     );
     const markLayer = root.children[0] as IRScope;
     const colorScopes = markLayer.children as Array<IRScope>;
+
     expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#aaaaaa', '#bbbbbb']);
   });
 
@@ -307,6 +323,7 @@ describe('Plot Source defaults and guide lowering', () => {
       }),
     );
     const [lineLayer, intervalLayer] = root.children as Array<IRScope>;
+
     expect(lineLayer.defaults?.path?.style?.stroke).toBe('#0f766e');
     expect(intervalLayer.defaults?.node?.style?.fill).toBe('#f97316');
   });
@@ -333,12 +350,15 @@ describe('Plot Source defaults and guide lowering', () => {
       }),
     );
     const gridPath = pathsOf(root).find(path => path.style?.strokeOpacity === 0.4);
+
     expect(gridPath?.style?.stroke).toBe('#ef4444');
     expect(gridPath?.style?.dashPattern).toEqual([4, 2]);
     expect(gridPath?.style?.dashOffset).toBe(2);
     expect(pathsOf(root).some(path => path.style?.lineCap === 'round')).toBe(true);
     expect(nodesOf(root).some(node => node.shape === 'circle' && node.style?.fill === '#111827')).toBe(true);
+
     const labels = nodesOf(root).filter(node => node.text !== undefined && node.style?.textColor !== undefined);
+
     expect(labels.length).toBeGreaterThan(0);
     expect(labels.every(label => label.style?.textColor === '#2563eb')).toBe(true);
     expect(labels.every(label => label.style?.font?.size === 10)).toBe(true);

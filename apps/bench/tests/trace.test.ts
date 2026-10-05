@@ -93,6 +93,7 @@ describe('single trace assertion', () => {
       visited: 5_000,
       reused: 4_999,
     });
+
     expect(assertSingleTraceRecord('svg-update', [unrelated, incremental], incremental)).toBe(incremental);
     expect(() =>
       assertSingleTraceRecord(

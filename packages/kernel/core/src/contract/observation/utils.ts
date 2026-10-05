@@ -6,6 +6,7 @@ export const isCompileObservationOwnerEqual = (
   right: CompileObservationOwner,
 ): boolean => {
   if (left.kind !== right.kind) return false;
+
   switch (left.kind) {
     case 'path':
       return right.kind === 'path' && left.name === right.name;

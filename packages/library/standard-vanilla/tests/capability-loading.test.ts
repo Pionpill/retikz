@@ -1,5 +1,10 @@
 import { StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
-import { ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import {
+  ChainInputEmbedAdapter,
+  MatrixInputEmbedAdapter,
+  ArrayInputEmbedAdapter,
+  MapInputEmbedAdapter,
+} from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -45,8 +50,10 @@ const input = scene({
 describe('Standard Vanilla definition loading', () => {
   it('provides the current adapter catalog once in stable frozen order', () => {
     expect(StandardInputEmbedAdapters).toEqual([
+      ChainInputEmbedAdapter,
+      MatrixInputEmbedAdapter,
       MapInputEmbedAdapter,
-      ListInputEmbedAdapter,
+      ArrayInputEmbedAdapter,
       GridInputEmbedAdapter,
       AxesInputEmbedAdapter,
       FrameInputEmbedAdapter,

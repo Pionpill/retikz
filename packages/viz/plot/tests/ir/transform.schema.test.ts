@@ -16,6 +16,7 @@ describe('TransformSchema external operations', () => {
       ],
       marks: [{ type: 'point', encoding: { x: { field: 'year' }, y: { field: 'value' } } }],
     };
+
     expect(PlotSchema.parse(spec).transform).toEqual(spec.transform);
   });
 });

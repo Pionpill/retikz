@@ -4,6 +4,7 @@ import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/
 
 import { controlI18n } from './strip-marks.i18n';
 import { stripVegaBarleyData } from './strip-vega-barley.data';
+
 /** 示例属性的双语交互契约 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const text = controlI18n[lang];
@@ -52,5 +53,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['StripMark.properties'],
   } satisfies PreviewControlContract;
 };
+
 /** 当前示例的控件值 */
 export type DemoValues = PreviewControlValuesFor<ReturnType<typeof createPreviewControlContract>['controls']>;

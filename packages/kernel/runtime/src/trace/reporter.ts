@@ -33,7 +33,9 @@ const isValidRecord = (
   if (!isValidCount(record.visited) || !isValidCount(record.reused) || !isValidCount(record.changed)) {
     return false;
   }
+
   if (record.reused > record.visited || record.changed > record.visited) return false;
+
   return record.outcome !== PerformanceTraceOutcome.Bailout || record.changed === 0;
 };
 
@@ -41,10 +43,12 @@ const normalizePhaseDefinitions = (
   definitions: ReadonlyArray<RuntimeTracePhaseDefinition>,
 ): ReadonlyMap<string, RuntimeTracePhaseDefinition> => {
   const byKey = new Map<string, RuntimeTracePhaseDefinition>();
+
   for (const definition of definitions) {
     if (definition.outcomes.length === 0) {
       throw traceDefinitionError(`createRuntimeTraceReporter: phase "${definition.phase}" has no outcomes`, definition);
     }
+
     const key = traceDefinitionKey(definition.phase, definition.unit);
     if (byKey.has(key)) {
       throw traceDefinitionError(
@@ -52,12 +56,17 @@ const normalizePhaseDefinitions = (
         definition,
       );
     }
+
     byKey.set(key, Object.freeze({ ...definition, outcomes: Object.freeze([...definition.outcomes]) }));
   }
+
   return byKey;
 };
 
-/** 创建一个固定 owner 且失败隔离的同步 trace reporter */
+/**
+ * 创建一个固定 owner 且失败隔离的同步 trace reporter
+ * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息
+ */
 export const createRuntimeTraceReporter = <const TOwner extends string>(
   input: CreateRuntimeTraceReporterInput<TOwner>,
 ): RuntimeTraceReporter<TOwner> => {
@@ -94,6 +103,7 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
 
     const output = Object.freeze({ ...record, owner });
     reporting = true;
+
     try {
       sink(output);
     } catch {
@@ -102,17 +112,21 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
       reporting = false;
     }
   };
+
   const drainDiagnostics = (): ReadonlyArray<PerformanceTraceDiagnostic> => {
     recordRuntimeTraceReporterDiagnosticDrain(report);
     const output = Object.freeze([...diagnostics]);
     diagnostics = [];
+
     return output;
   };
+
   const reporter: RuntimeTraceReporter<TOwner> = Object.freeze({
     owner,
     report,
     diagnostics: drainDiagnostics,
   });
   reporterRef.current = reporter;
+
   return reporter;
 };

@@ -13,6 +13,7 @@ type Props = {
 };
 
 const td = 'border-b border-border align-top py-2 pr-4';
+
 const th = 'py-2 pr-4 text-left font-normal whitespace-nowrap text-muted-foreground';
 
 /** 超长匿名字段用所属 Schema 的字段路径标识来源 */
@@ -23,12 +24,14 @@ const typeNameOf = (schemaName: string, rows: Array<TableRow>, row: TableRow, in
       .join('');
     return `${schemaName}${suffix}`;
   }
+
   const parent = row.isChild
     ? rows
         .slice(0, index)
         .reverse()
         .find(previous => !previous.isChild)?.name
     : undefined;
+
   return `${schemaName}.${[parent, row.originalName ?? row.name].filter(Boolean).join('.')}`;
 };
 

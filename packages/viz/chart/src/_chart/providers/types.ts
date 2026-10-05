@@ -22,12 +22,16 @@ export type ChartRecipeProviderContribution = Readonly<{
   runtimeDefinitions?: ChartRuntimeDefinitionOptions;
 }>;
 
-/** registry 入口接收的精确 Chart recipe contribution */
+/**
+ * registry 入口接收的精确 Chart recipe contribution
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type ChartRecipeProviderContributionInput<TSource extends IRChartSource> = Omit<
   ChartRecipeProviderContribution,
   'recipe'
 > &
   Readonly<{
+    /** 当前贡献安装的精确 chartType 定义 */
     recipe: ChartRecipeDefinition<TSource>;
   }>;
 

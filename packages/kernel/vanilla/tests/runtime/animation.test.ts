@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToSvgString } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 
-/**
+/*
  * runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
  *   {animation:{enabled:false}} + prefers-reduced-motion 降级；view.animation 句柄
  */
@@ -26,13 +26,16 @@ const createRecordingContext = (): CanvasRenderingContext2D => {
 };
 
 let animateSpy: ReturnType<typeof vi.fn>;
+
 let rafSpy: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => createRecordingContext());
+
   // jsdom 无 element.animate：mock 成返回假 Animation 的 spy
   animateSpy = vi.fn(() => ({ play: vi.fn(), pause: vi.fn(), cancel: vi.fn(), currentTime: 0, playState: 'idle' }));
   (Element.prototype as unknown as { animate: unknown }).animate = animateSpy;
+
   // mock rAF：只记录调用、不真递归（避免无限循环）
   rafSpy = vi.fn(() => 1);
   vi.stubGlobal('requestAnimationFrame', rafSpy);
@@ -68,6 +71,7 @@ const loadIr: IRScene = {
     },
   ],
 };
+
 const manualIr: IRScene = {
   version: 1,
   type: 'scene',
@@ -98,17 +102,20 @@ describe('mountSvg 动画', () => {
   it('load track → 内联 <style> 含 @keyframes（CSS 自播）', () => {
     const view = mountSvg(document.createElement('div'), loadIr);
     const style = view.root.querySelector('style');
+
     expect(style).not.toBeNull();
     expect(style!.textContent).toContain('@keyframes');
   });
 
   it('{animation:{enabled:false}} → 无 <style>（静态 base）', () => {
     const view = mountSvg(document.createElement('div'), loadIr, { animation: { enabled: false } });
+
     expect(view.root.querySelector('style')).toBeNull();
   });
 
   it('交互 track（manual）→ WAAPI 桥调 element.animate + view.animation 句柄', () => {
     const view = mountSvg(document.createElement('div'), manualIr);
+
     expect(animateSpy).toHaveBeenCalled();
     expect(view.animation).toBeDefined();
   });
@@ -116,22 +123,26 @@ describe('mountSvg 动画', () => {
   it('prefers-reduced-motion → 静态（无 <style>）', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const view = mountSvg(document.createElement('div'), loadIr);
+
     expect(view.root.querySelector('style')).toBeNull();
   });
 
   it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const view = mountSvg(document.createElement('div'), loadIr, { animation: { enabled: true } });
+
     expect(view.root.querySelector('style')).not.toBeNull();
   });
 
   it('renderToSvgString 缺省跟随 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
+
     expect(renderToSvgString(loadIr)).not.toContain('@keyframes');
   });
 
   it('renderToSvgString 显式 enabled:true 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
+
     expect(renderToSvgString(loadIr, { animation: { enabled: true } })).toContain('@keyframes');
   });
 });
@@ -139,14 +150,18 @@ describe('mountSvg 动画', () => {
 describe('SVG 静态截帧 {at:t}', () => {
   it('renderToSvgString({at}) → 烘焙静态 opacity、无 @keyframes（SSR 海报帧）', () => {
     const settled = renderToSvgString(loadIr, { animation: { snapshotAt: 999 } });
+
     expect(settled).not.toContain('@keyframes');
     expect(settled).toContain('opacity="1"'); // 末态 = base
+
     const start = renderToSvgString(loadIr, { animation: { snapshotAt: 0 } });
+
     expect(start).toContain('opacity="0"'); // 起点帧
   });
 
   it('mountSvg({at}) → 定格帧、无 <style>', () => {
     const view = mountSvg(document.createElement('div'), loadIr, { animation: { snapshotAt: 0 } });
+
     expect(view.root.querySelector('style')).toBeNull();
     expect(view.root.querySelector('[data-retikz-id="a"]')?.getAttribute('opacity')).toBe('0');
   });
@@ -155,6 +170,7 @@ describe('SVG 静态截帧 {at:t}', () => {
 describe('mountCanvas 动画', () => {
   it('load track → 起 rAF 时钟 + view.animation 句柄', () => {
     const view = mountCanvas(document.createElement('div'), loadIr, { output: { width: 100, height: 100 } });
+
     expect(rafSpy).toHaveBeenCalled();
     expect(view.animation).toBeDefined();
   });
@@ -164,6 +180,7 @@ describe('mountCanvas 动画', () => {
       output: { width: 100, height: 100 },
       animation: { enabled: false },
     });
+
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeUndefined();
   });
@@ -174,15 +191,19 @@ describe('mountCanvas 动画', () => {
       output: { width: 100, height: 100 },
       animation: { enabled: true },
     });
+
     expect(rafSpy).toHaveBeenCalled();
     expect(view.animation).toBeDefined();
   });
 
   it('manual-only track → 不自动起 rAF，但有 view.animation 句柄；play() 起时钟', () => {
     const view = mountCanvas(document.createElement('div'), manualIr, { output: { width: 100, height: 100 } });
+
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeDefined();
+
     view.animation!.play();
+
     expect(rafSpy).toHaveBeenCalled();
   });
 
@@ -193,6 +214,7 @@ describe('mountCanvas 动画', () => {
       children: [{ type: 'node', id: 'a', position: [0, 0], text: 'x' }],
     };
     const view = mountCanvas(document.createElement('div'), plainIr, { output: { width: 100, height: 100 } });
+
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeUndefined();
   });
@@ -228,14 +250,18 @@ describe('mountCanvas visible-trigger 监听合帧', () => {
   it('scroll/resize 高频事件 → 经 rAF 合帧（一帧内多次只排一个 rAF）', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
+
     // visible-only scene 不自动起播放时钟；挂载会排一帧首测相交
     mountCanvas(container, visibleIr, { output: { width: 100, height: 100 } });
     const baseline = rafSpy.mock.calls.length;
+
     // 同一帧内（rafSpy 不真回调，已排的 rAF 不会清空）连发多次 scroll/resize → 不应再排新 rAF
     window.dispatchEvent(new Event('scroll'));
     window.dispatchEvent(new Event('scroll'));
     window.dispatchEvent(new Event('resize'));
+
     expect(rafSpy.mock.calls.length).toBe(baseline);
+
     container.remove();
   });
 });

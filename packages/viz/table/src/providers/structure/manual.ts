@@ -20,10 +20,11 @@ const payloadOf = (cell: IRManualTableCell): IRTableCellPayload => {
       ...(cell.presentation === undefined ? {} : { presentation: cell.presentation }),
     };
   }
+
   return { kind: TableCellPayloadKind.Content, content: cell.content };
 };
 
-/** manual Table structure definition */
+/** 生成显式编写表格结构的能力定义 */
 export const MANUAL_TABLE_STRUCTURE = defineTableStructure({
   schema: ManualTableStructureSchema,
   build: spec => {
@@ -34,9 +35,11 @@ export const MANUAL_TABLE_STRUCTURE = defineTableStructure({
       cells: spec.rows.flatMap((row, rowIndex) =>
         row.flatMap((cell, columnIndex) => {
           if (cell === null) return [];
+
           const rowKind = rowKinds[rowIndex] ?? TableRowKind.Body;
           const isHeader = rowKind === TableRowKind.ColumnHeader;
           const fields = typeof cell === 'object' ? cell : undefined;
+
           return [
             {
               ...(fields?.id === undefined ? {} : { id: fields.id }),

@@ -64,6 +64,7 @@ const createTestDiagramFoundationDefinition = (
       const surface = lowerDiagramFoundation(resolution, source.drawing);
       const result = context.layoutChild(surface, proposal ?? context.proposal);
       if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
+
       return { children: [context.replay(result.result)] };
     },
   });
@@ -93,9 +94,13 @@ type TestFoundationHost = Pick<IRScope, 'theme' | 'defaults' | 'clip'>;
 
 /** test-only Foundation compile 选项 */
 export type TestFoundationCompileOptions = Readonly<{
+  /** 测试宿主作用域的主题、默认值与裁剪输入 */
   host?: TestFoundationHost;
+  /** 用于构造 Foundation provider 的定义选项 */
   diagram?: DiagramDefinitionOptions;
+  /** 测试编译使用的 Core 主题样式定义 */
   themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  /** 注入 Foundation 测量过程的布局提案 */
   proposal?: LayoutProposal;
 }>;
 

@@ -120,4 +120,5 @@ export const createPreviewControlContract = (lang: Lang = 'zh') =>
   defineFlowThemeControlContract(flowThemeI18n[lang].controls);
 
 export const previewControlContract = createPreviewControlContract();
+
 export const flowThemeControls = previewControlContract.controls;

@@ -21,6 +21,7 @@ const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, 
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -28,7 +29,9 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -55,6 +58,7 @@ describe('shape channel 类别映射', () => {
       { x: 2, y: 2, g: 'A' },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
+
     expect(shapeOf(nodes[0])).toBe(PLOT_SHAPE_PALETTE[0]);
     expect(shapeOf(nodes[1])).toBe(PLOT_SHAPE_PALETTE[1]);
     expect(shapeOf(nodes[2])).toBe(PLOT_SHAPE_PALETTE[0]);
@@ -64,6 +68,7 @@ describe('shape channel 类别映射', () => {
     const cats = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
     const data = cats.map((g, i) => ({ x: i, y: i, g }));
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
+
     expect(PLOT_SHAPE_PALETTE).toHaveLength(8);
     expect(nodes.map(shapeOf)).toEqual([...PLOT_SHAPE_PALETTE, PLOT_SHAPE_PALETTE[0]]);
   });
@@ -96,6 +101,7 @@ describe('shape channel 类别映射', () => {
       { x: 2, y: 2, g: 'C' },
     ];
     const nodes = collectNodes(firstLayer(spec, { d: data }));
+
     expect(nodes.map(shapeOf)).toEqual([custom[0], custom[1], custom[0]]);
   });
 
@@ -105,12 +111,14 @@ describe('shape channel 类别映射', () => {
       { x: 1, y: 1 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'constant', value: 'diamond' }), { d: data }));
+
     expect(nodes.every(n => shapeOf(n) === 'diamond')).toBe(true);
   });
 
   it('shape_no_channel_no_shape_override', () => {
     const data = [{ x: 0, y: 0 }];
     const nodes = collectNodes(firstLayer(pointSpec(undefined), { d: data }));
+
     expect(nodes.every(n => shapeOf(n) === undefined)).toBe(true);
   });
 
@@ -120,6 +128,7 @@ describe('shape channel 类别映射', () => {
       { x: 0, y: 0, v: 1.5 },
       { x: 1, y: 1, v: 2.5 },
     ];
+
     expect(() => expandOf(pointSpec({ kind: 'field', value: 'v' }), { d: data })).toThrow(
       /shape requires a categorical field/,
     );
@@ -130,6 +139,7 @@ describe('shape channel 类别映射', () => {
       { x: 0, y: 0, t: '2024-01-01' },
       { x: 1, y: 1, t: '2024-02-01' },
     ];
+
     expect(() => expandOf(pointSpec({ kind: 'field', value: 't' }), { d: data })).toThrow(
       /shape requires a categorical field/,
     );
@@ -162,6 +172,7 @@ describe('shape channel 类别映射', () => {
       { x: 1, y: 1, g: 'B', p: 4 },
     ];
     const nodes = collectNodes(firstLayer(spec, { d: data }));
+
     expect(nodes.every(n => shapeOf(n) !== undefined && n.layout?.minimumSize !== undefined)).toBe(true);
   });
 });

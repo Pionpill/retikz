@@ -4,9 +4,9 @@ type ChartFacetLocatorValue = string | number | boolean | null | Array<string | 
 
 /** Chart facet 定位过滤条件；内部 arrangement identity 由具体 recipe 补齐 */
 export type ChartFacetLocatorOptions = Readonly<{
-  /** facet row key */
+  /** 分面行的标识键 */
   row?: ChartFacetLocatorValue;
-  /** facet column key */
+  /** 分面列的标识键 */
   column?: ChartFacetLocatorValue;
 }>;
 
@@ -18,7 +18,7 @@ export type ChartLocatorOptions = Readonly<{
 
 /** 具体 recipe 提供给 Chart locator 的固定内部 identity */
 export type ChartLocatorIdentity = Readonly<{
-  /** facet arrangement id */
+  /** 分面排列的标识 */
   facet: string;
 }>;
 

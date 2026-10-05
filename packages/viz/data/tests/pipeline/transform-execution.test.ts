@@ -25,6 +25,7 @@ import {
 } from '../../src';
 
 const model: DataTransformModel = [{ name: 'value', type: 'continuous' }];
+
 const input = (values: Array<number>): DataTransformStageInput<never> => ({
   kind: 'result',
   result: { rows: values.map(value => ({ value })), model },
@@ -47,8 +48,10 @@ it('resolves custom semantics without computation and rejects mismatched local o
     model,
     { transformRegistry: resolveTransformRegistry([definition]) },
   );
+
   expect(resolution.stages[0].operation).toEqual({ kind: 'derive-value', field: 'value' });
   expect(resolution.stages[1].outputModel).toEqual([...model, { name: 'derived', type: 'continuous' }]);
+
   let computed = 0;
   const mismatched = defineTransformImplementation({
     definition: differentDefinition,
@@ -57,14 +60,18 @@ it('resolves custom semantics without computation and rejects mismatched local o
       return rows;
     },
   });
+
   await expect(
     createDataTransformExecutor({ transformImplementations: [mismatched] }).prepare(
       { kind: 'result', model },
       resolution,
     ),
   ).rejects.toThrow(/different Definition/);
+
   const unsupported = await createDataTransformExecutor().prepare({ kind: 'result', model }, resolution);
+
   expect(unsupported.kind).toBe('unsupported');
+
   const external = createDataTransformExecutor({
     dataExecution: { mode: 'external', external: 'fixture' },
     externalProviders: [
@@ -85,6 +92,7 @@ it('resolves custom semantics without computation and rejects mismatched local o
       },
     ],
   });
+
   await expect(external.prepare({ kind: 'result', model }, resolution)).rejects.toThrow(
     /different semantic Definition/,
   );
@@ -101,6 +109,7 @@ it('routes only the named provider and rejects duplicate or missing registration
   });
   const a = provider('a');
   const b = provider('b');
+
   expect(() =>
     createDataTransformExecutor({
       externalProviders: [
@@ -109,6 +118,7 @@ it('routes only the named provider and rejects duplicate or missing registration
       ],
     }),
   ).toThrow(/duplicate/);
+
   const executor = createDataTransformExecutor({
     externalProviders: [
       { name: 'a', provider: a },
@@ -119,15 +129,19 @@ it('routes only the named provider and rejects duplicate or missing registration
     [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'external', external: 'b' } }],
     model,
   );
+
   await expect(executeDataTransforms(input([2, 1]), resolution, executor)).rejects.toThrow('b');
   expect(queried).toEqual(['b']);
+
   for (const mode of ['external', 'hybrid'] as const) {
     const missing = resolveDataTransforms(
       [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode } }],
       model,
     );
+
     await expect(executeDataTransforms(input([2, 1]), missing, executor)).rejects.toThrow(/not registered/);
   }
+
   expect(queried).toEqual(['b']);
 });
 
@@ -147,6 +161,7 @@ it('checks actual native capabilities and provenance requirements without using 
           diagnostics: [{ code: 'CAPABILITY', message: 'stable rows and requested provenance required' }],
         };
       }
+
       return {
         kind: 'supported',
         implementation: {
@@ -166,6 +181,7 @@ it('checks actual native capabilities and provenance requirements without using 
   );
   const unordered: Native = { stableRows: false, provenance: true };
   const ordered: Native = { stableRows: true, provenance: false };
+
   expect((await executor.prepare({ kind: 'source', source: unordered, model: nativeModel }, resolution)).kind).toBe(
     'unsupported',
   );
@@ -174,11 +190,13 @@ it('checks actual native capabilities and provenance requirements without using 
       .kind,
   ).toBe('unsupported');
   expect(computed).toBe(0);
+
   const result = await executeDataTransforms(
     { kind: 'source', source: ordered, model: nativeModel },
     resolution,
     executor,
   );
+
   expect(result.model).toEqual(nativeModel);
   expect(computed).toBe(1);
 });
@@ -189,11 +207,13 @@ describe('data execution policy and binding', () => {
       operation: { kind: 'custom', dataExecution: { algorithm: 'fast' } },
       dataExecution: { external: 'worker' },
     };
+
     expect(DataTransformDeclarationSchema.parse(JSON.parse(JSON.stringify(declaration)))).toEqual(declaration);
   });
 
   it('executes local stages with the resolved output model', async () => {
     const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+
     expect(await executeDataTransforms(input([3, 1, 2]), resolution, createDataTransformExecutor())).toEqual({
       rows: [{ value: 1 }, { value: 2 }, { value: 3 }],
       model,
@@ -227,8 +247,10 @@ describe('data execution policy and binding', () => {
     });
     const ready = await executor.prepare({ kind: 'result', model }, resolution);
     if (ready.kind !== 'ready') throw new Error('expected supported plan');
+
     const first = ready.bind(input([1, 2]));
     const second = ready.bind(input([3, 4]));
+
     expect((await first.execute()).rows).toEqual([{ value: 2 }, { value: 1 }]);
     expect((await second.execute()).rows).toEqual([{ value: 4 }, { value: 3 }]);
     expect(matched).toBe(1);
@@ -264,6 +286,7 @@ describe('data execution policy and binding', () => {
       dataExecution: { mode: 'external', external: 'worker' },
       externalProviders: [{ name: 'worker', provider }],
     });
+
     await expect(executeDataTransforms(input([1, 2]), resolution, executor)).rejects.toThrow(/not supported/);
     expect(computed).toBe(false);
   });
@@ -330,6 +353,7 @@ it('awaits local reducer, selector and regression dependencies before advancing'
       regressionRegistry: resolveRegressionRegistry([regression]),
     },
   );
+
   expect((await executeDataTransforms(input([1, 2]), resolution, executor)).rows).toEqual([
     { x: 0, y: 0 },
     { x: 2, y: 4 },
@@ -351,9 +375,13 @@ it('keeps builtin defaults even with registered external providers, and inherits
   });
   const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
   await executeDataTransforms(input([2, 1]), resolution, executor);
+
   expect(queried).toBe(0);
+
   await executeDataTransforms(input([2, 1]), resolution, executor, { dataExecution: { mode: 'hybrid' } });
+
   expect(queried).toBe(1);
+
   const override = resolveDataTransforms(
     [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'builtin' } }],
     model,
@@ -361,6 +389,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
   await executeDataTransforms(input([2, 1]), override, executor, {
     dataExecution: { mode: 'external', external: 'missing' },
   });
+
   expect(queried).toBe(1);
   await expect(
     executeDataTransforms(input([2, 1]), resolution, executor, {
@@ -382,10 +411,12 @@ it('does not turn provider exceptions, rejections, cancellation or invalid resul
     dataExecution: { mode: 'hybrid', external: 'worker' },
     externalProviders: [{ name: 'worker', provider }],
   });
+
   await expect(executeDataTransforms(input([2, 1]), resolution, executor)).rejects.toMatchObject({
     cause,
     details: { operationIndex: 0 },
   });
+
   const query = createDataTransformExecutor({
     dataExecution: { mode: 'hybrid', external: 'worker' },
     externalProviders: [
@@ -399,7 +430,9 @@ it('does not turn provider exceptions, rejections, cancellation or invalid resul
       },
     ],
   });
+
   await expect(executeDataTransforms(input([2, 1]), resolution, query)).rejects.toMatchObject({ cause });
+
   const invalid = createDataTransformExecutor({
     dataExecution: { mode: 'hybrid', external: 'worker' },
     externalProviders: [
@@ -414,9 +447,12 @@ it('does not turn provider exceptions, rejections, cancellation or invalid resul
       },
     ],
   });
+
   await expect(executeDataTransforms(input([2, 1]), resolution, invalid)).rejects.toThrow(/model/);
+
   const abort = new AbortController();
   abort.abort(cause);
+
   await expect(
     executeDataTransforms(input([2, 1]), resolution, executor, { signal: abort.signal }),
   ).rejects.toBeInstanceOf(RetikzDataError);
@@ -448,15 +484,20 @@ it('rejects model/source drift during binding and consumes execution rights whil
     resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
   );
   if (ready.kind !== 'ready') throw new Error('expected ready');
+
   expect(() => ready.bind({ kind: 'result', result: { rows: [], model: [{ name: 'other' }] } })).toThrow(/model/);
   expect(() => ready.bind({ kind: 'result', result: { rows: tagSourceIndex([{ value: 1 }]), model } })).toThrow(
     /provenance/,
   );
+
   const execution = ready.bind(input([1]));
   const pending = execution.execute();
+
   expect(() => execution.execute()).toThrow(/consumed/);
+
   finish?.({ rows: [{ value: 1 }], model });
   await pending;
+
   expect(executions).toBe(1);
 });
 
@@ -471,12 +512,17 @@ it('does not materialize native sources until all stages support the request', a
   });
   const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
   const ready = await executor.prepare({ kind: 'source', source, model }, resolution);
+
   expect(materialized).toBe(0);
+
   if (ready.kind !== 'ready') throw new Error('expected ready');
+
   expect(() => ready.bind({ kind: 'source', source: { name: 'other' }, model })).toThrow(/descriptor/);
   expect((await ready.bind({ kind: 'source', source, model }).execute()).rows).toEqual([{ value: 1 }, { value: 2 }]);
   expect(materialized).toBe(1);
+
   const missing = createDataTransformExecutor<typeof source>();
+
   expect((await missing.prepare({ kind: 'source', source, model }, resolveDataTransforms([], model))).kind).toBe(
     'unsupported',
   );
@@ -497,6 +543,7 @@ it('preserves actual group provenance and records lineage once under explicit sa
     createDataTransformExecutor(),
     { lineage: { reducerOperations: true, rowSamples: { maxRows: 1, fields: ['value'] } } },
   );
+
   expect(readSourceIndices(result.rows[0])).toEqual([0, 1]);
   expect(result.lineage?.events.filter(event => event.kind === 'source')).toHaveLength(1);
   expect(result.lineage?.events.filter(event => event.kind === 'transformStep')).toHaveLength(1);
@@ -508,9 +555,11 @@ it('wraps empty-plan materializer errors and stops local computation after mater
   const source = { name: 'warehouse' };
   const cause = new Error('materializer failed');
   const failure = createDataTransformExecutor<typeof source>({ materializeSource: () => Promise.reject(cause) });
+
   await expect(
     executeDataTransforms({ kind: 'source', source, model }, resolveDataTransforms([], model), failure),
   ).rejects.toMatchObject({ code: 'DATA_ERROR', cause });
+
   const abort = new AbortController();
   let read = 0;
   const cancelled = createDataTransformExecutor<typeof source>({
@@ -529,6 +578,7 @@ it('wraps empty-plan materializer errors and stops local computation after mater
       };
     },
   });
+
   await expect(
     executeDataTransforms(
       { kind: 'source', source, model },
@@ -555,6 +605,7 @@ it('retains the upstream history supplied by an explicitly materialized source',
     resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
     executor,
   );
+
   expect(result.rows).toEqual([{ value: 1 }, { value: 2 }]);
   expect(result.lineage).toEqual(lineage);
 });
@@ -597,5 +648,6 @@ it('does not treat lineage summaries as row-level provenance evidence', async ()
     resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
     executor,
   );
+
   expect(result.lineage).toEqual(lineage);
 });

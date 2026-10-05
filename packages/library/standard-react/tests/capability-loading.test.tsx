@@ -53,8 +53,10 @@ describe('Standard React definition loading', () => {
         </Layout>,
       ),
     ).not.toThrow();
+
     const input = createInputScene(legend);
     const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+
     expect(normalized.contributions[0]).toEqual({
       roots: [LegendProvider.key, GridProvider.key],
       providers: [LegendProvider, GridProvider],

@@ -45,6 +45,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: {

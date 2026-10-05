@@ -39,8 +39,11 @@ const source = FlowDiagramSchema.parse({
 });
 
 const scene: IRScene = { type: 'scene', version: 1, children: [source] };
+
 const FlowBasicCanonicalDemo: FC = () => FlowBasicPreviewSource.canonicalRender?.() ?? null;
+
 const FlowThemeCanonicalDemo: FC = () => FlowThemePreviewSource.canonicalRender?.() ?? null;
+
 const FlowThemeEnCanonicalDemo: FC = () => renderFlowThemePreview(createThemeContract('en').canonicalValues, 'en');
 
 describe('Flow Diagram ComponentPreview', () => {
@@ -104,6 +107,7 @@ describe('Flow Diagram ComponentPreview', () => {
     const mode = ThemeMode.Light;
     const core = PreviewThemeDefinitionBundle.core.find(definition => definition.name === 'docs.logic');
     if (core === undefined) throw new Error('missing docs logic Core definition');
+
     const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
     const result = buildVanillaPreview(preview, {
       theme: { style: 'docs.logic', mode },
@@ -111,10 +115,13 @@ describe('Flow Diagram ComponentPreview', () => {
     });
 
     expect(result.svg, result.code).toBeDefined();
+
     for (const id of ['worker', 'api']) {
       const stroke = result.svg?.match(new RegExp(`data-retikz-id="${id}"[\\s\\S]*?stroke="([^"]+)"`))?.[1];
+
       expect(stroke).toBe(compositeOpaqueColor(colors.categorical[0], '#ffffff', 1));
     }
+
     expect(result.svg).toContain('Worker');
     expect(result.svg).toContain('API');
     expect(result.code).toContain('PreviewThemeDefinitionBundle.flow');
@@ -132,7 +139,9 @@ describe('Flow Diagram ComponentPreview', () => {
     });
 
     expect(serialized).toContain('"namespace":"diagram","type":"flow"');
+
     const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
+
     expect(flow.entities.every(entity => !Object.hasOwn(entity, 'position'))).toBe(true);
     expect(serialized).not.toContain('"width":720');
     expect(serialized).not.toContain('"width":760');
@@ -304,6 +313,7 @@ describe('Flow Diagram ComponentPreview', () => {
         ),
       ).sourceIr.children[0],
     );
+
     expect(withoutSubtitle.entities[1]).toMatchObject({ text: ['前端表单'] });
   });
 

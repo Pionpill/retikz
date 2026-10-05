@@ -23,6 +23,7 @@ export const pointResolutionOf = (
   const cartesian = pointCartesian2DOf(chartType);
   const scales = [...cartesian.scales, ...(options.scales ?? [])];
   const guides = [...pointAxisGuidesOf(), ...(options.guides ?? [])];
+
   return {
     scaffold: {
       scales: scales.map(value => ({ value, replaceable: true })),
@@ -51,7 +52,9 @@ export const resolvePointGuideDefaults = (context: ChartGuideDefaultsResolveCont
       if (grid === false) return [{ ...guide, grid: false }];
       if (grid === true && guide.dimension === 'y') return [{ ...guide, grid: true }];
     }
+
     if (guide.type === PlotGuide.Legend && !legendEnabled) return [];
+
     return [guide];
   });
 };

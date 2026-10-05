@@ -44,6 +44,7 @@ describe('Plot regression runtime injection', () => {
       },
       { embedded },
     );
+
     expect(result.lowerOptions.regressionDefinitions?.[0]).toBe(definition);
     expect(() => lowerPlotWithLineage(result.spec, result.datasets ?? {}, result.lowerOptions)).not.toThrow();
     expect(JSON.stringify(result.spec)).not.toMatch(/regressionDefinitions|predict|schema/);

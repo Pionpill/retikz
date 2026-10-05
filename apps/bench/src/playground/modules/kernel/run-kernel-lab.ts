@@ -50,6 +50,7 @@ export const runKernelLab = async (
   const policies =
     options.mode === LabRunMode.Preview ? [options.policyId] : kernelLabPolicies.map(policy => policy.id);
   const results: Array<LabPolicyResult> = [];
+
   for (const policyId of policies) {
     results.push(
       await execute({
@@ -62,7 +63,9 @@ export const runKernelLab = async (
       }),
     );
   }
+
   sessionSequence += 1;
+
   return Object.freeze({
     id: `kernel-lab-${sessionSequence.toString()}`,
     mode: options.mode,

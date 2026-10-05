@@ -10,6 +10,7 @@ it('keeps circle intent, authored id and exact provider through Vanilla normaliz
   const result = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
     adapters: StandardInputEmbedAdapters,
   });
+
   expect(result.ir.children[0]).toMatchObject({
     namespace: 'standard',
     type: 'circle',
@@ -27,6 +28,7 @@ it('keeps the shape family out of the root entry', () => {
 it('keeps anonymous shapes anonymous after normalization', () => {
   const input = shape.circle({ center: [0, 0], radius: 20 });
   const result = normalizeScene(scene([input]), { adapters: StandardInputEmbedAdapters });
+
   expect(input).not.toHaveProperty('id');
   expect(result.ir.children[0]).toEqual({ namespace: 'standard', type: 'circle', center: [0, 0], radius: 20 });
 });

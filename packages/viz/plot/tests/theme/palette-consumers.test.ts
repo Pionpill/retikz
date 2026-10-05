@@ -6,6 +6,7 @@ import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 
 const options: LowerPlotsOptions = { width: 480, height: 300 };
+
 const rows = [
   { x: 0, y: 1, category: 'A', value: 0 },
   { x: 1, y: 2, category: 'B', value: 50 },
@@ -17,6 +18,7 @@ const lower = (source: unknown, extra: LowerPlotsOptions = {}): IRScope =>
 
 const nodesOf = (root: IRScope): Array<IRNode> => {
   const result: Array<IRNode> = [];
+
   const visit = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const value = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -24,7 +26,9 @@ const nodesOf = (root: IRScope): Array<IRNode> => {
       if (value.type === 'scope' && value.children) visit(value.children);
     }
   };
+
   visit(root.children);
+
   return result;
 };
 
@@ -61,6 +65,7 @@ describe('Plot defaults palette consumers', () => {
       },
     );
     const layers = (root.children[0] as IRScope).children as Array<IRScope>;
+
     expect(layers.map(layer => layer.defaults?.node?.style?.fill)).toEqual(['#102030', '#d0e0f0']);
     expect(layers.map(layer => layer.children.length)).toEqual([1, 2]);
   });
@@ -85,6 +90,7 @@ describe('Plot defaults palette consumers', () => {
     };
     const root = lower(source);
     const [constantLayer, ordinalLayer] = root.children as Array<IRScope>;
+
     expect((constantLayer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#mark-color');
     expect((ordinalLayer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#range-a');
   });
@@ -104,6 +110,7 @@ describe('Plot defaults palette consumers', () => {
       guides: [{ type: 'legend', channel: 'color', scale: 'color' }],
     };
     const legend = nodesOf(lower(source)).filter(node => node.text === undefined && node.style?.fill !== undefined);
+
     expect(legend.map(node => node.style?.fill)).toEqual(expect.arrayContaining(['#legend-a', '#legend-b']));
   });
 });

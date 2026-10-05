@@ -1,25 +1,27 @@
-import type { ValueOf } from '@retikz/foundation';
-
 import type { CompileObservationOwner, CompileOccurrenceLocator } from '../contract';
 import type { CompileWarningCode } from './constants';
 
-/** 编译期 warning code：包含内置 code，并允许扩展能力提供自定义字符串 code */
-export type CompileWarningCodeValue = ValueOf<typeof CompileWarningCode> | (string & {});
-
 /** 编译 warning 的领域中立结构化来源 */
 export type CompileWarningOrigin =
-  | Readonly<{ kind: 'primary' }>
   | Readonly<{
+      /** 区分主编译诊断与观测辅助编译诊断 */
+      kind: 'primary';
+    }>
+  | Readonly<{
+      /** 区分主编译诊断与观测辅助编译诊断 */
       kind: 'observation';
+      /** 产生观测诊断的所属者 */
       owner: CompileObservationOwner;
+      /** 观测目标在编译树中的完整位置 */
       occurrence: CompileOccurrenceLocator;
+      /** 诊断发生于所属者编译还是辅助片段编译 */
       stage: 'owner' | 'fragment';
     }>;
 
 /** 编译内部创建 warning 时使用的未完成输入 */
 export type CompileWarningInput = {
   /** 机器可读 warning code */
-  code: CompileWarningCodeValue;
+  code: CompileWarningCode;
   /** 人类可读消息（英文） */
   message: string;
   /** IR locator 路径（jq-like），如 `children[3].path.children[1].to` */

@@ -88,6 +88,7 @@ const AxisEdgePlacementSchema = strictObject({
   ),
 }).describe('Coordinate-native edge axis placement');
 
+/** 校验可 JSON 序列化的坐标轴辅助值 */
 export const AxisGuideValueSchema = union([string(), number()]).describe('JSON-safe axis guide value');
 
 const AxisOriginPlacementSchema = strictObject({
@@ -103,6 +104,7 @@ const AxisOriginPlacementSchema = strictObject({
   offset: number().optional().describe('Additional offset from the projected origin toward tickSide; omit = 0'),
 }).describe('Cartesian origin axis placement');
 
+/** 校验坐标轴的自动放置、图区方位、坐标原生边或笛卡尔原点模式 */
 export const AxisPlacementSchema = discriminatedUnion('kind', [
   AxisAutoPlacementSchema,
   AxisSidePlacementSchema,
@@ -115,6 +117,7 @@ export const AxisPlacementSchema = discriminatedUnion('kind', [
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
   if (!Array.isArray(value)) return false;
+
   return value.some(line => {
     if (typeof line === 'string') return line.length > 0;
     if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string')
@@ -124,9 +127,11 @@ const textBlockHasContent = (value: unknown): boolean => {
         if (!run || typeof run !== 'object') return false;
         if ('text' in run && typeof run.text === 'string') return run.text.length > 0;
         if ('tex' in run && typeof run.tex === 'string') return run.tex.length > 0;
+
         return false;
       });
     }
+
     return false;
   });
 };
@@ -137,8 +142,10 @@ const nonEmptyTextBlockSchema = (label: string) =>
   });
 
 const AxisTitleTextSchema = nonEmptyTextBlockSchema('axis title');
+
 const LegendTitleTextSchema = nonEmptyTextBlockSchema('legend title');
 
+/** 校验复用 Core 路径词汇的辅助线样式 */
 export const GuideLineStyleSchema = strictObject({
   stroke: PaintValueSchema.optional().describe('Guide line stroke paint; omit to inherit currentColor'),
   strokeWidth: StrokeWidthSchema.optional().describe('Guide line stroke width in user units'),
@@ -147,18 +154,21 @@ export const GuideLineStyleSchema = strictObject({
   dashOffset: StrokeDashOffsetSchema.optional().describe('Guide line dash offset in user units'),
 }).describe('Shared guide line style fields mapped to core path vocabulary');
 
+/** 校验坐标轴基线的纯线条样式 */
 export const AxisLineStyleSchema = GuideLineStyleSchema.extend({
   lineCap: PathLineCapSchema.optional().describe('Axis baseline stroke endpoint cap'),
 })
   .strict()
   .describe('Axis baseline pure line style fields');
 
+/** 校验坐标轴网格的纯线条样式 */
 export const AxisGridLineStyleSchema = GuideLineStyleSchema.extend({
   lineCap: PathLineCapSchema.optional().describe('Axis grid line stroke endpoint cap'),
 })
   .strict()
   .describe('Axis grid pure line style fields');
 
+/** 校验复用 Core 节点文本词汇的辅助文字样式 */
 export const GuideTextStyleSchema = strictObject({
   font: FontSchema.optional().describe('Guide text font; missing fields inherit the plot text default'),
   textColor: ContextualColorSchema.optional().describe(
@@ -170,6 +180,7 @@ export const GuideTextStyleSchema = strictObject({
   maxTextWidth: PositiveNumberSchema.optional().describe('Maximum guide text line width before wrapping'),
 }).describe('Shared guide text style fields mapped to core node text vocabulary');
 
+/** 校验固定间隔的候选刻度来源，优先级低于显式值、高于数量提示 */
 export const GuideTickIntervalSchema = discriminatedUnion('kind', [
   strictObject({
     kind: literal(GuideTickIntervalKind.Number).describe('Numeric fixed-step tick interval'),
@@ -193,6 +204,7 @@ export const GuideTickIntervalSchema = discriminatedUnion('kind', [
   }),
 ]).describe('Fixed-interval candidate tick source. Priority is values > interval > count');
 
+/** 校验显式值、固定间隔或数量提示形式的刻度来源 */
 export const GuideTickSourceSchema = strictObject({
   count: PositiveIntegerSchema.optional().describe(
     'Target number of guide ticks; ignored when values or interval are provided',
@@ -206,6 +218,7 @@ export const GuideTickSourceSchema = strictObject({
   ),
 }).describe('Shared guide tick source: explicit values, fixed interval, or count hint');
 
+/** 校验刻度标签的显示格式 */
 export const GuideTickLabelFormatSchema = strictObject({
   format: NonBlankStringSchema.optional().describe(
     'd3-format specifier for numeric ticks or UTC d3-time-format specifier for time ticks',
@@ -241,6 +254,7 @@ const AxisLineArrowSchema = strictObject({
   })
   .describe('Axis endpoint arrows keyed by negative / positive axis direction');
 
+/** 校验轴基线样式与端点结构几何 */
 export const AxisLineSchema = AxisLineStyleSchema.extend({
   extent: AxisLineExtentSchema.optional().describe(
     'Axis baseline extent; omit or plotArea spans the visible plot area',
@@ -250,6 +264,7 @@ export const AxisLineSchema = AxisLineStyleSchema.extend({
   .strict()
   .describe('Axis baseline line style and structural endpoint geometry');
 
+/** 校验从候选刻度筛选可见刻度的密度策略 */
 export const AxisTickDensitySchema = discriminatedUnion('kind', [
   strictObject({ kind: literal(AxisTickDensityKind.All).describe('Render all candidate ticks') }),
   strictObject({
@@ -321,6 +336,7 @@ const AxisTickCustomShapeMarkSchema = strictObject({
   ...AxisTickShapeMarkBase,
 }).describe('Custom shape tick mark configuration');
 
+/** 校验刻度标记开关及其形状配置 */
 export const AxisTickMarkSchema = union([
   literal(false),
   AxisTickLineMarkSchema,
@@ -328,6 +344,7 @@ export const AxisTickMarkSchema = union([
   AxisTickCustomShapeMarkSchema,
 ]).describe('Axis tick mark switch and shape configuration');
 
+/** 校验坐标轴刻度来源、密度与标记样式 */
 export const AxisTicksSchema = strictObject({
   ...GuideTickSourceSchema.shape,
   length: NonNegativeNumberSchema.optional().describe('Tick mark length in user units'),
@@ -348,6 +365,7 @@ export const AxisTicksSchema = strictObject({
         message: 'ticks.length cannot be used together with ticks.mark',
       });
     }
+
     if (ticks.mark !== undefined && ticks.line !== undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -358,6 +376,7 @@ export const AxisTicksSchema = strictObject({
   })
   .describe('Axis tick source and tick mark style');
 
+/** 校验刻度标签自动尝试的旋转角度与失败恢复策略 */
 export const AxisTickLabelAutoRotateSchema = strictObject({
   angles: array(number()).min(1).optional().describe('Candidate label rotation angles in degrees'),
   recoverWhenFailed: boolean()
@@ -365,6 +384,7 @@ export const AxisTickLabelAutoRotateSchema = strictObject({
     .describe('Whether to fall back to the original angle when all candidates overlap; omit = true'),
 }).describe('Axis tick label auto-rotation strategy');
 
+/** 校验刻度标签重叠隐藏与首末项保留策略 */
 export const AxisTickLabelAutoHideSchema = strictObject({
   strategy: zodEnum(AxisTickLabelHideStrategy).optional().describe('Overlap hiding strategy; omit = greedy'),
   preserveEnds: boolean()
@@ -375,6 +395,7 @@ export const AxisTickLabelAutoHideSchema = strictObject({
   ),
 }).describe('Axis tick label overlap hiding strategy');
 
+/** 校验刻度标签越界处理及容差 */
 export const AxisTickLabelBoundsSchema = strictObject({
   overflow: zodEnum(AxisTickLabelOverflow)
     .optional()
@@ -382,6 +403,7 @@ export const AxisTickLabelBoundsSchema = strictObject({
   tolerance: NonNegativeNumberSchema.optional().describe('Overflow tolerance in user units; omit = 1'),
 }).describe('Axis tick label boundary handling strategy');
 
+/** 校验刻度标签自适应旋转、隐藏、边界与采样策略 */
 export const AxisTickLabelLayoutSchema = union([
   literal(false),
   strictObject({
@@ -408,6 +430,7 @@ export const AxisTitlePaddingSchema = LayoutGapSchema.describe(
   'Non-negative padding from the axis tick label band to the title center.',
 );
 
+/** 校验刻度标签样式，文本内容由最终刻度集合产生 */
 export const AxisTickLabelsSchema = strictObject({
   ...GuideTickLabelFormatSchema.shape,
   gap: AxisTickLabelGapSchema.optional().describe('Gap between tick end and tick label center, in user units'),
@@ -493,6 +516,7 @@ const AxisCrossingSchema = union([
   }),
 ]).describe('Axis crossing tick and label conflict policy');
 
+/** 校验坐标轴标题文本、外观及放置方式 */
 export const AxisTitleSchema = strictObject({
   text: AxisTitleTextSchema.describe('Axis title text block'),
   padding: AxisTitlePaddingSchema.optional().describe(
@@ -525,6 +549,7 @@ export const LegendSymbolScaleSchema = PositiveNumberSchema.describe('Positive l
 /** Legend 内部相邻内容的非负间距 */
 export const LegendLayoutGapSchema = LayoutGapSchema.describe('Non-negative legend layout gap in user units.');
 
+/** 校验图例视觉样式，位置、朝向和刻度等语义仍由图例根字段控制 */
 export const LegendGuideStyleSchema = strictObject({
   swatchSize: LegendSwatchSizeSchema.optional().describe('Legend swatch baseline size in user units'),
   swatchGap: LegendLayoutGapSchema.optional().describe('Gap between a legend swatch and its label, in user units'),
@@ -572,6 +597,7 @@ const TrackGridTargetSelectorSchema = strictObject({
     .describe('Track id or ids to match; omit to match any track'),
 }).describe('Track arrangement selector used by an axis grid target');
 
+/** 校验网格投影目标中的坐标视图、分面或共享轨道选择 */
 export const GuideTargetSelectorSchema = strictObject({
   view: union([NonBlankStringSchema, array(NonBlankStringSchema).min(1)])
     .optional()
@@ -605,6 +631,7 @@ const refineAxisGridProjection = (grid: { applyTo?: string; select?: unknown }, 
       message: 'selected axis grid requires a select target selector',
     });
   }
+
   if (grid.applyTo !== undefined && grid.applyTo !== AxisGridApplyTo.Selected && grid.select !== undefined) {
     ctx.addIssue({
       code: 'custom',
@@ -640,10 +667,12 @@ const AxisMinorGridSchema = strictObject({
   ...AxisGridLineStyleSchema.shape,
 }).describe('Minor axis grid line source and style configuration');
 
+/** 校验坐标轴网格的投影配置 */
 export const AxisGridSchema = strictObject(AxisGridProjectionShape)
   .superRefine(refineAxisGridProjection)
   .describe('Axis grid projection configuration');
 
+/** 校验坐标轴网格的投影、刻度来源与线条样式 */
 export const AxisGridComponentSchema = strictObject({
   ...AxisGridProjectionShape,
   ...AxisGridSourceShape,
@@ -655,6 +684,7 @@ export const AxisGridComponentSchema = strictObject({
   .superRefine(refineAxisGridProjection)
   .describe('Axis grid projection, tick source, and line style configuration');
 
+/** 校验由绑定维度比例尺派生的坐标轴、标签与可选对齐网格 */
 export const AxisGuideSchema = object({
   type: literal(PlotGuide.Axis).describe(
     'Discriminator: a coordinate axis (axis line + ticks + tick labels, with optional aligned grid lines)',
@@ -694,6 +724,7 @@ export const AxisGuideSchema = object({
   'Axis guide: a coordinate axis (ticks + tick labels, with optional aligned grid lines), derived from the bound dimension scale',
 );
 
+/** 校验非位置通道图例，其表达形式由颜色比例尺或通道定义决定 */
 export const LegendGuideSchema = object({
   type: literal(PlotGuide.Legend).describe(
     'Discriminator: a legend that visualizes a non-positional channel as swatches, a ramp, binned classes, or graduated symbols',
@@ -743,4 +774,5 @@ export const LegendGuideSchema = object({
   'Legend guide: visualizes a non-positional channel, with form derived from the color scale or channel definition',
 );
 
+/** 校验坐标轴或图例两类绘图辅助组件 */
 export const GuideSchema = discriminatedUnion('type', [AxisGuideSchema, LegendGuideSchema]);

@@ -6,13 +6,21 @@ import type { Lang } from '@/i18n';
 import { aiRoadmapI18n } from './ai-roadmap.i18n';
 
 const REQUIRED_FILL = '#1f6286';
+
 const OPTIONAL_FILL = '#878787';
+
 const LEAF_TEXT = '#ffffff';
+
 const NODE_STROKE = '#000000';
+
 const EDGE_BLUE = '#1f6286';
+
 const EDGE_RECOMMEND = '#287fad';
+
 const EDGE_RED = '#ff0000';
+
 const TITLE_TEXT = 'currentColor';
+
 const SANS_FONT = { family: 'Helvetica, Arial, sans-serif' };
 
 type RoadmapNodeProps = {
@@ -29,6 +37,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
   const isHeader = variant === 'header';
   const hasBox = !isTitle && !isHeader;
   const fill = variant === 'required' ? REQUIRED_FILL : variant === 'optional' ? OPTIONAL_FILL : undefined;
+
   return (
     <Node
       id={id}

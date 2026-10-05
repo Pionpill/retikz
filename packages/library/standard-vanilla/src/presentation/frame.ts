@@ -49,6 +49,7 @@ const headerInputOf = (child: FrameNode): FrameTitleInput | FrameDescriptionInpu
   const { type: _type, position: _position, ...header } = child;
   void _type;
   void _position;
+
   return header as FrameTitleInput | FrameDescriptionInput;
 };
 
@@ -71,6 +72,7 @@ export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
         details: { operation: 'FrameInputEmbedAdapter' },
       });
     }
+
     const normalizedChildren = normalizeChildren(children);
     if (!normalizedChildren.children.every(isFrameNode)) {
       throw new RetikzStandardError({
@@ -79,6 +81,7 @@ export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
         details: { childCount: normalizedChildren.children.length },
       });
     }
+
     const frameChildren = normalizedChildren.children.filter(isFrameNode);
     const title =
       headers?.title === undefined
@@ -92,6 +95,7 @@ export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
                 details: { childCount: normalized.children.length, header: 'title' },
               });
             }
+
             return headerInputOf(normalized.children[0]);
           })();
     const description =
@@ -106,8 +110,10 @@ export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
                 details: { childCount: normalized.children.length, header: 'description' },
               });
             }
+
             return headerInputOf(normalized.children[0]);
           })();
+
     return {
       node: createFrame({
         ...input,

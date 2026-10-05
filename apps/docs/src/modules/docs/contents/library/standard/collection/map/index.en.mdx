@@ -129,15 +129,30 @@ console.log(svg);
 
 ### Choose an input form
 
-The three input forms are mutually exclusive. Choose based on whether you need cell-specific styling, identities, or drawable content.
+The four input forms are mutually exclusive. Choose based on whether you need cell-specific styling, identities, or drawable content.
 
 | Input          | Use it for                                           |
 | -------------- | ---------------------------------------------------- |
+| `skeleton`     | Symbolic keys and empty value cells without data     |
 | `entries`      | Explicit text, cell styles, and ids                  |
 | `data`         | Recursively displaying a JSON object                 |
 | JSX `children` | Composing drawings with MapEntry / MapKey / MapValue |
 
-`entries` preserves array order. Each entry has a `key` and a `value`, both accepting a string or `{ content, id?, style?, layout? }`. Displayed keys may repeat; strings do not automatically become cell ids.
+`entries` preserves array order. Each entry has a `key` and a `value`, both accepting a string or `{ content?, id?, style?, layout? }`. Displayed keys may repeat; strings do not automatically become cell ids.
+
+### Draw a schematic skeleton
+
+Use `skeleton: { keys: ['k₁', 'k₂', 'kₙ'] }` to illustrate a key/value structure without real values. Components, Vanilla `map()`, and IR share this configuration. Do not combine it with data, entries, or JSX children.
+
+The key array determines row count. Keys appear as plain text and value cells have no content. Order, repeated keys, and empty strings are preserved, with no JSON quoting or inferred identities. `keys: []` creates an empty collection without row gaps.
+
+<ComponentPreview
+  files={['map-skeleton', 'map-skeleton.preview.tsx']}
+  defaultSourceFile="map-skeleton.preview.tsx"
+  caption="This example fixes cells at 64 × 32. Edit symbolic keys or switch to an empty collection; value cells stay empty."
+/>
+
+Empty value cells retain shared and role styles, dimensions, and padding. Use entries for per-cell ids, styles, or drawings. Both key and value roles remain required, but content is optional, as in `{ key: 'k₁', value: {} }`. JSX allows empty MapKey / MapValue components, but neither role can be omitted. Explicit `content: ''` remains empty text, distinct from absent content.
 
 ### Style and dimensions
 
@@ -176,14 +191,14 @@ Overall font, text color, and `defaults.label` supply label defaults, overridden
 
 ### Compose drawable content
 
-Each `MapEntry` must contain exactly one `MapKey` and one `MapValue`. Each cell accepts either `text` or exactly one drawable child, never both.
+Each `MapEntry` must contain exactly one `MapKey` and one `MapValue`. Each cell accepts either `text` or exactly one drawable child, never both. Omitting both preserves an empty cell.
 
 ```text
 Map
 └── MapEntry
     ├── MapKey
     └── MapValue
-        └── List
+        └── Array
 ```
 
 `MapEntry` represents one record; `MapKey` and `MapValue` occupy its key and value columns. These markers declare content and cannot render independently outside this parent-child structure.
@@ -196,12 +211,12 @@ Wrap multiple drawings in one `Scope` before putting them in a cell. React data 
 
 `data` accepts a JSON object. `dataExpand` controls nested objects and arrays and defaults to `true`. It preserves the outer Map structure and applies only to `data`, not explicit cells or JSX composition.
 
-| Setting                               | Nested objects | Nested arrays |
-| ------------------------------------- | -------------- | ------------- |
-| `true` (default) or `['map', 'list']` | Map            | List          |
-| `false` or `[]`                       | JSON text      | JSON text     |
-| `['map']`                             | Map            | JSON text     |
-| `['list']`                            | JSON text      | List          |
+| Setting                                | Nested objects | Nested arrays |
+| -------------------------------------- | -------------- | ------------- |
+| `true` (default) or `['map', 'array']` | Map            | Array         |
+| `false` or `[]`                        | JSON text      | JSON text     |
+| `['map']`                              | Map            | JSON text     |
+| `['array']`                            | JSON text      | Array         |
 
 Generated components recursively use the same selection. A structure displayed as text retains its entire subtree as compact JSON and stops expanding. Empty objects and arrays always appear as `{}` and `[]`. Selection order and duplicates do not affect the result. The example starts with arrays only; switch between the four modes.
 
@@ -211,7 +226,7 @@ Object keys are displayed as plain text; string values use quoted, escaped JSON 
 
 Data never generates cell ids, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. For connections or per-cell customization, use explicit cells containing a nested component with `data`. Overall style / layout affects the current level only; nested structures use their own defaults, with font and text color inherited through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
 
-React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ListDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
+React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ArrayDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
 
 ### Reference cells and control overflow
 
@@ -222,7 +237,7 @@ Automatic cells default to `overflow: 'visible'`; fixing either axis changes the
 ## Errors and limitations
 
 - Do not mix input forms. Explicit cell ids must be unique within the container; configure repeated text separately from identity.
-- Composition markers must be direct children of their required parents, with exactly one drawable per cell. Invalid JSX composition raises an error.
+- Composition markers must be direct children of their required parents, with empty cells allowed and exactly one drawable when provided. Invalid JSX composition raises an error.
 - `data` accepts JSON value trees only, not functions, runtime instances, cycles, or sparse arrays. Project data before rendering when needed.
 - A fixed cell may be smaller than its content, but compilation fails if the parent allocation cannot fit all cells and gaps. Extra parent space remains at the end rather than stretching cells.
 - These components draw data structures; they do not process data or implement arbitrary matrices or merged cells.
@@ -235,7 +250,7 @@ This local reference covers the component’s public React, Vanilla, and IR entr
 
 ## Schema reference
 
-`MapSchema` describes persistent input with `namespace: 'standard'` and `type: 'map'`. Choose either entries or data. Factories preserve sparse input; explicit `schema.parse` materializes declared static defaults. Cell inheritance and the dynamic clipping default are resolved after settings merge.
+`MapSchema` describes persistent input with `namespace: 'standard'` and `type: 'map'`. Choose entries, data, or skeleton. Factories preserve sparse input; explicit `schema.parse` materializes declared static defaults. Cell inheritance and the dynamic clipping default are resolved after settings merge.
 
 #### MapSchema
 

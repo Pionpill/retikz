@@ -58,8 +58,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'BREAKING：lineage mode 类型规范化', en: 'BREAKING: Normalized lineage mode type' },
               content: {
-                zh: '`DataSourceIdentityMode` 现在是包含 `Summary` / `Full` 的 const object enum；类型导入改为 `DataSourceIdentityModeValue`。运行时字面量仍是 `summary` / `full`，并会在 recorder 创建阶段拒绝非法 mode 与字段白名单成员。',
-                en: '`DataSourceIdentityMode` is now a const object enum with `Summary` / `Full`; type imports move to `DataSourceIdentityModeValue`. Runtime literals remain `summary` / `full`, and recorder creation now rejects invalid modes and field-whitelist members.',
+                zh: '`DataSourceIdentityMode` 现在是包含 `Summary` / `Full` 的 const object enum；类型导入改为 `DataSourceIdentityMode`。运行时字面量仍是 `summary` / `full`，并会在 recorder 创建阶段拒绝非法 mode 与字段白名单成员。',
+                en: '`DataSourceIdentityMode` is now a const object enum with `Summary` / `Full`; type imports move to `DataSourceIdentityMode`. Runtime literals remain `summary` / `full`, and recorder creation now rejects invalid modes and field-whitelist members.',
               },
             },
             {

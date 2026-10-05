@@ -23,6 +23,7 @@ const mergeArrowDetail = (a: IRArrowDetail, b: IRArrowDetail): IRArrowDetail => 
   if (start !== undefined) out.start = start;
   const end = mergeArrowEnd(aEnd, bEnd);
   if (end !== undefined) out.end = end;
+
   return out;
 };
 
@@ -41,26 +42,31 @@ const resolveArrowDetail = (
 ): IRArrowDetail | undefined => {
   let acc: IRArrowDetail = {};
   let touched = false;
+
   for (const frame of stack) {
     if (cutsStyleChannel(frame.resetStyle, 'arrow')) {
       acc = {};
       touched = false;
     }
+
     if (frame.arrowDefault) {
       acc = mergeArrowDetail(acc, frame.arrowDefault);
       touched = true;
     }
   }
+
   if (masterColor !== undefined) {
     acc.color = masterColor;
     if (acc.start !== undefined) acc.start = dropArrowEndColor(acc.start);
     if (acc.end !== undefined) acc.end = dropArrowEndColor(acc.end);
     touched = true;
   }
+
   if (explicit) {
     acc = mergeArrowDetail(acc, explicit);
     touched = true;
   }
+
   return touched ? acc : undefined;
 };
 
@@ -78,8 +84,10 @@ type ResolveArrowMarkContext = {
 const resolveArrowMark = (mark: IRArrowMark, { pos, stack, masterColor }: ResolveArrowMarkContext): IRArrowMark => {
   const detail = resolveArrowDetail(undefined, stack, masterColor);
   if (detail === undefined) return mark;
+
   const { start, end, ...top } = detail;
   const side = pos === 0 ? start : pos === 1 ? end : undefined;
+
   return {
     kind: 'arrow',
     ...arrowMarkFromDetail(top),

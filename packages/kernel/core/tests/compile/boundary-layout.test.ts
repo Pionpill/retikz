@@ -28,6 +28,7 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     warn: () => {},
     labelDistance: 12,
   });
+
   return layoutNode(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ namespaceStack: new NamespaceStack(), nodeDistance: 24 }),
@@ -38,6 +39,7 @@ describe('NodeLayout boundary / shapes', () => {
   it('未指定 boundary 时 layout.boundary 为 undefined，shapes 指向传入注册表', () => {
     const shapes = resolveShapeRegistry();
     const layout = layoutOf({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0] }, shapes);
+
     expect(layout.boundary).toBeUndefined();
     expect(layout.shapeDef).toBe(shapes.get('rectangle'));
   });
@@ -48,18 +50,21 @@ describe('NodeLayout boundary / shapes', () => {
       { type: 'node', id: 'a', shape: 'rectangle', boundary: 'circle', position: [0, 0] },
       shapes,
     );
+
     expect(layout.boundary).toBe('circle');
     expect(layout.shapeDef).toBe(shapes.get('rectangle'));
   });
 
   it('不传 shapes 时 layout 使用 builtin rectangle definition', () => {
     const layout = layoutOf({ type: 'node', id: 'a', position: [0, 0] });
+
     expect(layout.shapeDef.name).toBe('rectangle');
   });
 
   it('传入自定义注册表时 layout 使用该表的 rectangle definition', () => {
     const customShapes = resolveShapeRegistry();
     const layout = layoutOf({ type: 'node', id: 'a', position: [0, 0] }, customShapes);
+
     expect(layout.shapeDef).toBe(customShapes.get('rectangle'));
   });
 
@@ -74,6 +79,7 @@ describe('NodeLayout boundary / shapes', () => {
     });
     const toward = [100, 0] as [number, number];
     const clipped = boundaryPointOf(layout, toward, layout.boundary);
+
     expect(clipped[0]).toBeGreaterThan(layout.rect.x + layout.rect.width / 2);
     expect(resolveAnchor(layout, 'right', layout.boundary)).toEqual(clipped);
   });

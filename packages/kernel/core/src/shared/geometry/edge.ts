@@ -1,7 +1,6 @@
 import type { Position } from '@retikz/math';
 import { lerp } from '@retikz/math';
 
-import type { AnchorValue, SideValue } from '../anchor';
 import { Anchor, Side } from '../anchor';
 
 export { lerp as lerpPoint } from '@retikz/math';
@@ -16,14 +15,14 @@ export const EDGE_ENDS = {
   [Side.Bottom]: [Anchor.BottomLeft, Anchor.BottomRight],
   [Side.Right]: [Anchor.TopRight, Anchor.BottomRight],
   [Side.Left]: [Anchor.TopLeft, Anchor.BottomLeft],
-} as const satisfies Record<SideValue, readonly [AnchorValue, AnchorValue]>;
+} as const satisfies Record<Side, readonly [Anchor, Anchor]>;
 
 /**
  * circle / ellipse 周长弧段：side 的局部参数角 θ(t)，单位度
  * @description 约定同 geometry 既有 `(cosθ, sinθ)` + y 轴向下 ⇒ right=0° / bottom=90° / left=180° / top=270°，
  *   顺时针为正。每条 side 是一段 90° 弧（等角插值）；三点（t=0/0.5/1）与 9-anchor 重合
  */
-export const edgeAngleDeg = (side: SideValue, t: number): number => {
+export const edgeAngleDeg = (side: Side, t: number): number => {
   switch (side) {
     case Side.Top:
       return 225 + 90 * t;

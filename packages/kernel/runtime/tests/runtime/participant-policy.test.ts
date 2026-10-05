@@ -40,8 +40,10 @@ describe('runtime runtime participant revision policy', () => {
       baseRevision: explicit.revision(),
       sources: [createRuntimeSourceUpdate(owner, 2)],
     });
+
     expect(explicitResult).toEqual(omittedResult);
     expect(explicit.snapshot(owner)).toEqual(omitted.snapshot(owner));
+
     omitted.dispose();
     explicit.dispose();
   });
@@ -75,6 +77,7 @@ describe('runtime runtime participant revision policy', () => {
         const previous = committed;
         const next = candidate.artifact(computation).value;
         preparedValues.push(next.value);
+
         return Object.freeze({
           commit: () => {
             committed = next;
@@ -103,6 +106,7 @@ describe('runtime runtime participant revision policy', () => {
 
     expect(preparedValues).toEqual([2]);
     expect(runtime.participant(participant)).toEqual({ value: 2 });
+
     runtime.dispose();
   });
 
@@ -113,6 +117,7 @@ describe('runtime runtime participant revision policy', () => {
     const computations = createRuntimeComputationRegistry({ sources });
     const affectedCalls: Array<number> = [];
     const continuousCalls: Array<number> = [];
+
     const define = (key: string, revisionPolicy: 'affected' | 'continuous', calls: Array<number>) => {
       let read: Readonly<{ revision: number }> = Object.freeze({ revision: -1 });
       return defineRuntimeCommitParticipant({
@@ -125,6 +130,7 @@ describe('runtime runtime participant revision policy', () => {
           const previous = read;
           const next = Object.freeze({ revision: candidate.candidateRevision });
           calls.push(candidate.candidateRevision);
+
           return Object.freeze({
             commit: () => {
               read = next;
@@ -139,6 +145,7 @@ describe('runtime runtime participant revision policy', () => {
         dispose: () => undefined,
       });
     };
+
     const affected = define('affected', 'affected', affectedCalls);
     const continuous = define('continuous', 'continuous', continuousCalls);
     const runtime = createRuntime({
@@ -173,8 +180,10 @@ describe('runtime runtime participant revision policy', () => {
       baseRevision: runtime.revision(),
       sources: [createRuntimeSourceUpdate(primary, 2)],
     });
+
     expect(affectedCalls).toEqual([2]);
     expect(continuousCalls).toEqual([1, 2]);
+
     runtime.dispose();
   });
 
@@ -234,6 +243,7 @@ describe('runtime runtime participant revision policy', () => {
     ).toEqual({ revision: 1, outcome: RuntimeComputationKind.Full, diagnostics: [] });
     expect(preparedRevisions).toEqual([1]);
     expect(committedRevisions).toEqual([1]);
+
     runtime.dispose();
   });
 
@@ -270,6 +280,7 @@ describe('runtime runtime participant revision policy', () => {
     const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
     const calls: Array<string> = [];
     const trigger = new Error('dispose failed');
+
     const define = (key: string, failCount: number) => {
       let remainingFailures = failCount;
       return defineRuntimeCommitParticipant({
@@ -289,6 +300,7 @@ describe('runtime runtime participant revision policy', () => {
         },
       });
     };
+
     const first = define('a', 0);
     const second = define('b', 2);
     const runtime = createRuntime({

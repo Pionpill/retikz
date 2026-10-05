@@ -9,11 +9,13 @@ describe('curve projected range', () => {
       curve.projectedRange({ kind: 'quadraticBezier', from: [0, 0], control: [20, 10], to: [0, 20] }, [1, 0]),
     ).toEqual({ min: 0, max: 10 });
   });
+
   it('limits arc extrema to the authored sweep', () => {
     const range = curve.projectedRange(
       { kind: 'arc', center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 },
       [-1, 0],
     );
+
     expect(range.min).toBeCloseTo(-10);
     expect(range.max).toBeCloseTo(0);
   });
@@ -27,6 +29,7 @@ it('finds cubic extrema and handles zero projection axes', () => {
     control2: [40, 20],
     to: [0, 20],
   } satisfies CurveSegment;
+
   expect(curve.projectedRange(segment, [2, 0])).toEqual({ min: 0, max: 60 });
   expect(curve.projectedRange(segment, [0, 0])).toEqual({ min: 0, max: 0 });
 });
@@ -43,6 +46,7 @@ it('finds rotated ellipse extrema in reverse sweeps', () => {
     },
     [1, 0],
   );
+
   expect(range.min).toBeCloseTo(3 - Math.sqrt(250));
   expect(range.max).toBeCloseTo(3 + Math.sqrt(250));
 });

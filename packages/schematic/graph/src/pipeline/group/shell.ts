@@ -13,7 +13,9 @@ import { lowerGroupCaptionComposition, lowerGroupSurface } from './lower';
 
 /** Group shell 对自动布局公开的最小尺寸与 body content insets */
 export type GroupShellMetrics = Readonly<{
+  /** 分组外壳要求的最小宽高 */
   minimumSize: Readonly<Pick<BoundsRect, 'width' | 'height'>>;
+  /** 正文到分组外壳四边的内缩量 */
   contentInsets: Readonly<BoundsInsets>;
 }>;
 
@@ -37,6 +39,7 @@ export const composeGroupShell = (
     bottom: padding.bottom + (caption?.side === 'bottom' ? captionHeightWithGap : 0),
     left: padding.left,
   };
+
   return {
     surface,
     metrics: {

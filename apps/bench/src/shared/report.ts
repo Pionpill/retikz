@@ -27,11 +27,13 @@ export const measureScenario = (
 ): WallClockScenarioReport => {
   for (let index = 0; index < warmupRuns; index += 1) task();
   const samples: Array<number> = [];
+
   for (let index = 0; index < sampleRuns; index += 1) {
     const startedAt = performance.now();
     task();
     samples.push(performance.now() - startedAt);
   }
+
   return Object.freeze({ id, samples: sampleRuns, durationMs: summarizeSamples(samples) });
 };
 
@@ -41,6 +43,7 @@ export const runCoreWallClockReport = (
   sampleRuns: number,
 ): ReadonlyArray<WallClockScenarioReport> => {
   const reports: Array<WallClockScenarioReport> = [];
+
   for (const size of [100, 1_000, 5_000]) {
     const input = createSimpleNodeScene(size);
     reports.push(
@@ -49,6 +52,7 @@ export const runCoreWallClockReport = (
       }),
     );
   }
+
   const first = createSimpleNodeScene(5_000);
   const second = updateSimpleNodeFill(first, 2_500, '#22c55e');
   const coreComputation = createCoreComputation({ onWarn: () => undefined });
@@ -70,6 +74,7 @@ export const runCoreWallClockReport = (
     initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, first)],
   });
   let next = second;
+
   try {
     reports.push(
       measureScenario('core-single-entity-update-5000', warmupRuns, sampleRuns, () => {
@@ -83,5 +88,6 @@ export const runCoreWallClockReport = (
   } finally {
     session.dispose();
   }
+
   return Object.freeze(reports);
 };

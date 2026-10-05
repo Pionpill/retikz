@@ -4,6 +4,7 @@ import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/
 
 import { irisRegressionData } from './regression-basic.data';
 import { controlI18n } from './regression-compare.i18n';
+
 /** 示例属性的双语交互契约 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const text = controlI18n[lang];
@@ -64,5 +65,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['RegressionEncodings', 'RegressionProperties'],
   } satisfies PreviewControlContract;
 };
+
 /** 当前示例的控件值 */
 export type DemoValues = PreviewControlValuesFor<ReturnType<typeof createPreviewControlContract>['controls']>;

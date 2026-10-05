@@ -13,6 +13,7 @@ type PolarScaleNames = {
   color: string;
 };
 
+/** 用于饼图及径向柱图测试的三类占比数据 */
 export const polarShareData: ExternalDatasets = {
   share: [
     { label: 'A', value: 30 },
@@ -21,6 +22,7 @@ export const polarShareData: ExternalDatasets = {
   ],
 };
 
+/** 组合堆叠变换与极坐标区间图元，生成可调整内半径的饼图测试输入 */
 export const createPolarPieSpec = (
   reference = 'share',
   scales: PolarScaleNames = { angle: 'angle', radius: 'radius', color: 'color' },
@@ -53,6 +55,7 @@ export const createPolarPieSpec = (
   guides: [],
 });
 
+/** 生成按 offset 字段沿径向拉出扇区的饼图测试输入 */
 export const createPolarPulledSpec = (): IRPlot => ({
   ...createPolarPieSpec(),
   marks: [
@@ -65,6 +68,7 @@ export const createPolarPulledSpec = (): IRPlot => ({
   ],
 });
 
+/** 生成角度为分类带、半径为数值的径向柱图测试输入 */
 export const createPolarRadialBarSpec = (): IRPlot => ({
   namespace: 'plot',
   type: 'plot',
@@ -84,10 +88,12 @@ export const createPolarRadialBarSpec = (): IRPlot => ({
   guides: [],
 });
 
+/** 覆盖多个步长分箱区间的直方图测试数据 */
 export const histogramData: ExternalDatasets = {
   s: [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }, { m: 8 }, { m: 9 }],
 };
 
+/** 组合分箱变换与区间图元，生成可调整步长的直方图测试输入 */
 export const createHistogramSpec = (
   reference = 's',
   scales: CartesianScaleNames = { x: 'x', y: 'y' },
@@ -112,6 +118,7 @@ export const createHistogramSpec = (
   guides: [],
 });
 
+/** 用于分组密度估计测试的两组数值样本 */
 export const densityData: ExternalDatasets = {
   samples: [
     { species: 'A', value: 0 },
@@ -121,13 +128,30 @@ export const densityData: ExternalDatasets = {
   ],
 };
 
+/** 控制密度面积图测试的估计、采样及外观参数 */
 export type DensityOptions = {
-  bandwidth?: { kind: 'value'; value: number };
+  /** 覆盖测试密度估计的固定带宽 */
+  bandwidth?: {
+    /** 指定显式固定带宽 */
+    kind: 'value';
+    /** 密度估计使用的带宽数值 */
+    value: number;
+  };
+  /** 覆盖测试面积图的填充透明度 */
   fillOpacity?: number;
+  /**
+   * 密度曲线采样数量
+   * @default 8
+   */
   sampleCount?: number;
+  /**
+   * 测试中位置与颜色尺度的名称
+   * @default { x: 'x', y: 'y', color: 'color' }
+   */
   scales?: CartesianScaleNames;
 };
 
+/** 按 species 分组估计密度并以闭合面积路径呈现 */
 export const createDensityAreaSpec = (reference = 'samples', options: DensityOptions = {}): IRPlot => {
   const scales = options.scales ?? { x: 'x', y: 'y', color: 'color' };
   return {
@@ -174,6 +198,7 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
   };
 };
 
+/** 用于分组趋势拟合测试的递增与递减序列 */
 export const smoothData: ExternalDatasets = {
   samples: [
     { series: 'A', time: 0, value: 1 },
@@ -185,12 +210,26 @@ export const smoothData: ExternalDatasets = {
   ],
 };
 
+/** 控制趋势图测试的拟合方法、采样数量与尺度名称 */
 export type SmoothOptions = {
-  method?: { kind: 'linear' };
+  /** 覆盖测试趋势拟合的方法 */
+  method?: {
+    /** 选择线性趋势拟合 */
+    kind: 'linear';
+  };
+  /**
+   * 趋势拟合曲线的采样数量
+   * @default 8
+   */
   sampleCount?: number;
+  /**
+   * 测试中位置与颜色尺度的名称
+   * @default { x: 'x', y: 'y', color: 'color' }
+   */
   scales?: Required<CartesianScaleNames>;
 };
 
+/** 组合原始散点与逐组拟合路径，验证数据层和趋势层共同绘制 */
 export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOptions = {}): IRPlot => {
   const scales = options.scales ?? { x: 'x', y: 'y', color: 'color' };
   return {
@@ -233,6 +272,7 @@ export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOpti
   };
 };
 
+/** 包含两个分组及各自离群值的箱线图测试数据 */
 export const boxplotData: ExternalDatasets = {
   samples: [
     { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 1 },
@@ -248,6 +288,7 @@ export const boxplotData: ExternalDatasets = {
   ],
 };
 
+/** 按组生成四分位区间、中位数及 1.5 倍四分位距须线的测试变换 */
 export const boxplotSummary: IRDataTransform = {
   kind: 'summarize',
   groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
@@ -269,6 +310,7 @@ export const boxplotSummary: IRDataTransform = {
   ],
 };
 
+/** 按组选择 1.5 倍四分位距边界之外的测试数据行 */
 export const boxplotOutside: IRDataTransform = {
   kind: 'select',
   groupBy: ['group'],
@@ -281,6 +323,7 @@ export const boxplotOutside: IRDataTransform = {
   },
 };
 
+/** 组合区间、参考线与离群散点，生成箱线图测试输入 */
 export const createBoxplotComposition = (
   reference = 'samples',
   scales: CartesianScaleNames = { x: 'x', y: 'y' },

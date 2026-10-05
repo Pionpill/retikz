@@ -10,6 +10,7 @@ import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks
 describe('decorateDefaultGuides（薄 Plot 装饰函数，IRPlot 进出、框架无关）', () => {
   it('decorate_adds_cartesian_axes：cartesian2D 无 axis → 前置 x/y 轴，网格交给 Theme', () => {
     const thin = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
+
     expect(thin.guides).toEqual([]);
     expect(decorateDefaultGuides(thin).guides).toEqual([
       { type: 'axis', dimension: 'x' },
@@ -19,6 +20,7 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，IRPlot 进出、框架
 
   it('decorate_keeps_grid_out_of_recipe：装饰产物不固化 grid 风格', () => {
     const decorated = decorateDefaultGuides(buildPlotIR(<IntervalMark x="m" y="r" />, '__plot'));
+
     expect(decorated.guides).toEqual([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y' },
@@ -33,6 +35,7 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，IRPlot 进出、框架
       </>,
       '__plot',
     );
+
     expect(decorateDefaultGuides(withAxis).guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 
@@ -44,6 +47,7 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，IRPlot 进出、框架
       </>,
       '__plot',
     );
+
     expect(decorateDefaultGuides(withLegend).guides).toEqual([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y' },
@@ -53,11 +57,13 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，IRPlot 进出、框架
 
   it('decorate_noop_polar：非 cartesian2D（polar）→ 原样返回，不补轴', () => {
     const polar = buildPlotIR(<IntervalMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+
     expect(decorateDefaultGuides(polar).guides).toEqual([]);
   });
 
   it('decorate_pass_schema：装饰产物过 PlotSchema', () => {
     const decorated = decorateDefaultGuides(buildPlotIR(<PathMark x="m" y="r" />, '__plot'));
+
     expect(() => PlotSchema.parse(decorated)).not.toThrow();
   });
 });

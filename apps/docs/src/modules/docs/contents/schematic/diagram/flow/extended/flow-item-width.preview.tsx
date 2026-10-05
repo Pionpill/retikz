@@ -17,6 +17,7 @@ export const renderFlowItemWidthPreview = (
   const itemWidth =
     values.widthMode === 'natural' ? undefined : values.widthMode === 'match-largest' ? 'match-largest' : values.width;
   const direction = values.direction === 'right' ? 'right' : 'down';
+
   return (
     <PreviewFlowDiagram
       viewBox={

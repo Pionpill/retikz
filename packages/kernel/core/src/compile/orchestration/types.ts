@@ -37,7 +37,7 @@ import type { PendingSpatialHandle } from './spatial-handle';
 export type PendingPathEmission = {
   /** 最终逻辑容器祖先 */
   ancestors: ReadonlyArray<CompileObservationAncestor>;
-  /** 已合并样式和动画过滤后的 path IR */
+
   /** path Source IR，样式与动态 target 解析延迟到 resolving phase */
   path: IRPathBase;
   /** warning 与诊断使用的 IR locator */
@@ -51,7 +51,12 @@ export type PendingPathEmission = {
   /** path 位于该显式 composite allocation boundary 内 */
   allocationBoundary?: object;
   /** path 在所属 primitive sink 中的原位回填槽 */
-  placeholderSlot: { primitiveSink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
+  placeholderSlot: {
+    /** 持有占位项、等待原位回填的图元数组 */
+    primitiveSink: Array<InternalScenePrimitive>;
+    /** 需要被最终路径图元替换的对象引用 */
+    placeholder: PathPlaceholder;
+  };
   /** path 的完整 canonical occurrence */
   occurrence: CompileOccurrenceLocator;
   /** Path owner output observation 的最终输出容器 */
@@ -104,6 +109,7 @@ export type CompositeReplayMaterializeContext = Readonly<{
   scopeChain: ReadonlyArray<Transform>;
 }>;
 
+/** 保存布局探测的完整副作用快照，使成功结果可在最终位置仅重放一次 */
 export type CompositeReplayTransaction = {
   /** 创建 transaction 的 layout-aware composite callback owner */
   owner: CompositeCompileOwner;
@@ -130,7 +136,12 @@ export type CompositeReplayTransaction = {
   /** probe root namespace frame 内全部 Kernel identity registrations */
   topologyIdentityIds: Array<string>;
   /** probe 中由 fork baseline collision 产生的 duplicate warning */
-  namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarningInput }>;
+  namespaceBaselineWarnings: Array<{
+    /** 与探测起始命名空间发生冲突的标识 */
+    id: string;
+    /** 重放时需要重新判断是否发布的重名诊断 */
+    warning: CompileWarningInput;
+  }>;
   /** probe 已解析资源 */
   resources: Array<SceneResource>;
   /** 仅在 replay 时发布的 warning */
@@ -154,19 +165,29 @@ export type CompositeReplayTransaction = {
 /** runtime output tree 中的递归节点 */
 export type CompositeRuntimeOutputChild =
   | Readonly<{
+      /** 区分绑定输入的子项、布局重放与作用域输出 */
       kind: 'bound';
+      /** 绑定局部运行时输入的子项 IR */
       child: IRChild;
+      /** 仅交给绑定子项消费的运行时输入 */
       runtimeInputs: CompositeRuntimeInputScope;
     }>
   | Readonly<{
+      /** 区分绑定输入的子项、布局重放与作用域输出 */
       kind: 'replay';
+      /** 同次编译中布局探测结果的重放凭证 */
       replay: CompositeReplay;
+      /** 应用于重放结果的外层变换或包装 */
       wrapper?: CompositeReplayWrapper;
     }>
   | Readonly<{
+      /** 区分绑定输入的子项、布局重放与作用域输出 */
       kind: 'scope';
+      /** 生成作用域的继承、变换与布局属性 */
       props: CompositeCompileScopeProps;
+      /** 按输出顺序排列的作用域子项 */
       children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
+      /** 作用域公开的空间句柄声明 */
       spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
     }>;
 
@@ -178,13 +199,20 @@ export type CompositeCompileOwner = Readonly<{
 
 /** opaque output handle 对应的 callback-local runtime entry */
 export type CompositeRuntimeOutputEntry = Readonly<{
+  /** 创建该输出句柄的复合组件回调身份 */
   owner: CompositeCompileOwner;
+  /** 句柄对应的实际输出子树 */
   child: CompositeRuntimeOutputChild;
-}> & { used: boolean };
+}> & {
+  /** 输出句柄是否已经被消费，防止重复放置 */
+  used: boolean;
+};
 
 /** layoutChild 返回对象对应的 callback-local replay identity */
 export type CompositeLayoutResultEntry = Readonly<{
+  /** 创建布局结果的复合组件回调身份 */
   owner: CompositeCompileOwner;
+  /** 与该布局结果绑定的重放凭证 */
   replay: CompositeReplay;
 }>;
 
@@ -196,7 +224,7 @@ export type CompositeCompileSession = {
   layoutResults: WeakMap<object, CompositeLayoutResultEntry>;
   /** opaque handle → runtime output 节点；不跨 compile 共享 */
   outputChildren: WeakMap<object, CompositeRuntimeOutputEntry>;
-  /** opaque LayoutChildFailure identity → callback/compile-local failure metadata */
+  /** 以不透明布局失败标识索引当前回调或编译内的失败元数据 */
   failures: WeakMap<object, LayoutProbeFailureEntry>;
 };
 
@@ -349,7 +377,7 @@ export type RuntimeSemanticOwner = Readonly<{
 
 /** canonical compile 为一个 primitive occurrence 分配的 Runtime identity 元数据 */
 export type RuntimePrimitiveMetadata = Readonly<{
-  /** primitive occurrence identity */
+  /** 图元在逻辑树中当前出现位置的身份 */
   identity: RuntimeIdentity;
   /** 产生 primitive 的语义 owner */
   semanticOwner: RuntimeIdentity;
@@ -363,7 +391,7 @@ export type RuntimePrimitiveMetadataTable = Readonly<{
 
 /** canonical traversal 使用的 Runtime topology identity tracker */
 export type RuntimeTopologyTracker = Readonly<{
-  /** document root identity */
+  /** 文档根身份 */
   root: RuntimeSemanticOwner;
   /** 当前 candidate revision */
   revision: RuntimeRevision;
@@ -392,8 +420,11 @@ export type RuntimeTopologyTracker = Readonly<{
 }>;
 
 export type NodeChild = Extract<IRChild, { type: 'node' }>;
+
 export type CoordinateChild = Extract<IRChild, { type: 'coordinate' }>;
+
 export type ScopeChild = Extract<IRChild, { type: 'scope' }>;
+
 export type PathChild = Extract<IRChild, { type: 'path' }>;
 
 /** scope.id layout 占位注册结果 */
@@ -404,17 +435,25 @@ export type ScopeLayoutPlaceholder = {
   placeholderLayout?: NodeLayout;
 };
 
+/** 创建 Scope 布局占位项所需的遍历位置与父帧 */
 export type ScopeLayoutPlaceholderContext = {
+  /** 当前作用域在父层子项中的索引 */
   index: number;
+  /** 登记占位布局所使用的父遍历帧 */
   frame: TraversalFrame;
 };
 
+/** 将已编译的 Scope 子树封装为场景分组所需的坐标、裁剪与身份上下文 */
 export type EmitScopeGroupContext = {
   /** 不参与布局与命中的包络装饰 */
   framePrimitives?: Array<ScenePrimitive>;
+  /** 当前作用域在父层子项中的索引 */
   index: number;
+  /** 施加于该作用域场景分组的变换链 */
   scopeTransforms: ReadonlyArray<Transform>;
+  /** 已收集的作用域子图元及待回填占位项 */
   scopePrimitiveSink: Array<InternalScenePrimitive>;
+  /** 接收作用域输出和布局贡献的父遍历帧 */
   frame: TraversalFrame;
   /** runtime Scope 预检阶段已解析且尚未登记的 clip */
   resolvedClipShape?: ClipShape;
@@ -440,7 +479,7 @@ export type PendingNodeLayoutObservation = {
   layout: NodeLayout;
   /** 从节点所在 frame 到 world 的最终 chain；Scope 收尾期间原位插入 own transforms */
   scopeChain: Array<Transform>;
-  /** Node occurrence locator */
+  /** 节点在逻辑树中的出现位置 */
   occurrence: CompileOccurrenceLocator;
 };
 

@@ -119,7 +119,7 @@ Standard 独占外围 children 的 probe、gap、alignment、placement、overflo
 ```ts
 type TableManifestEncoding = {
   id: string;
-  channel: TableVisualChannelValue;
+  channel: TableVisualChannel;
   scaleName: string;
   cellIds: Array<string>;
   legendId?: string;

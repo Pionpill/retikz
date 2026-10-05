@@ -21,6 +21,7 @@ const Probe: FC<ProbeProps> = props => {
   const { source, defaultSourceFile, onState } = props;
   const state = useSourcePanelState(source, defaultSourceFile);
   onState(state);
+
   return null;
 };
 
@@ -47,6 +48,7 @@ afterEach(async () => {
   for (const root of renderedRoots.splice(0)) {
     await act(() => root.unmount());
   }
+
   document.body.replaceChildren();
 });
 
@@ -75,7 +77,9 @@ describe('useSourcePanelState', () => {
     renderToStaticMarkup(<Probe source={source} onState={state => (latest = state)} />);
 
     expect(latest).not.toBeNull();
+
     const state: SourcePanelState = latest!;
+
     expect(state.views).toEqual(['react', 'vanilla', 'ir']);
     expect(state.display(false).code.split('\n')).toHaveLength(3);
     expect(state.display(false).lineKinds).toBeUndefined();
@@ -116,7 +120,9 @@ describe('useSourcePanelState', () => {
     );
 
     expect(latest).not.toBeNull();
+
     const state: SourcePanelState = latest!;
+
     expect(state.activeFileIndex).toBe(1);
     expect(state.activeFile?.filename).toBe('example-preview.tsx');
   });
@@ -171,12 +177,15 @@ describe('useSourcePanelState', () => {
     expect(latest!.activeFile?.filename).toBe('example-preview.tsx');
 
     await act(() => latest!.setView('vanilla'));
+
     expect(latest!.activeFile?.filename).toBe('example.vanilla.ts');
 
     await act(() => latest!.setView('ir'));
+
     expect(latest!.activeFile?.filename).toBe('example.ir.json');
 
     await act(() => latest!.setView('react'));
+
     expect(latest!.activeFile?.filename).toBe('example-preview.tsx');
   });
 

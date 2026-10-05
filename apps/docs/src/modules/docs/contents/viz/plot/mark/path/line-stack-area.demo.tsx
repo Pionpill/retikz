@@ -1,4 +1,4 @@
-import type { PathCurveValue } from '@retikz/plot';
+import type { PathCurve } from '@retikz/plot';
 import { PathMark, PlotAxis, PlotLegend, PlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
@@ -10,7 +10,7 @@ import { LINE_STACK_AREA_CURVE_ID, previewControlContract } from './line-stack-a
 import { stackArea } from './line-stack-area.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const curve: PathCurveValue = values[LINE_STACK_AREA_CURVE_ID];
+  const curve: PathCurve = values[LINE_STACK_AREA_CURVE_ID];
   return (
     <Layout>
       <Plot

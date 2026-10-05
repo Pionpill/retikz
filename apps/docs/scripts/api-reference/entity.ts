@@ -33,9 +33,7 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
     owner: 'graph',
     symbols: [
       'EntityRole',
-      'EntityRoleValue',
       'GraphStatus',
-      'GraphStatusValue',
       'IRGraphEntity',
       'createEntity',
       'EntityCreateOptions',
@@ -106,8 +104,10 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
 /** 按真实公开声明生成 Entity 双语参考 */
 export const writeEntityApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const satisfies ReadonlyArray<ApiReferenceLanguage>) {
     const sections: Array<string> = [];
+
     for (const config of entityApiConfigs) sections.push(await createApiReferenceMdx(config, lang));
     writeFileSync(
       path.resolve(outputDirectory, `generated.${lang}.mdx`),

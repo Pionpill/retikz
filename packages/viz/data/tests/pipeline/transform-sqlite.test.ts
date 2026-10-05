@@ -49,6 +49,7 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
           kind: 'unsupported',
           diagnostics: [{ code: 'SQL_SUBSET', message: 'SQLite fixture only implements one sum without provenance' }],
         };
+
       const metric = operation.metrics[0];
       if (
         metric.kind !== 'sum' ||
@@ -58,17 +59,20 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
         typeof metric.as !== 'string'
       )
         return { kind: 'unsupported', diagnostics: [{ code: 'SUM_ONLY', message: 'only sum supported' }] };
+
       const fields = stage.outputModel.map(field => field.name);
       const metricField = metric.field;
       const metricAlias = metric.as;
       const quote = (name: string): string => `"${name.replaceAll('"', '""')}"`;
       const groupBy = 'groupBy' in operation && Array.isArray(operation.groupBy) ? operation.groupBy : [];
+
       return {
         kind: 'supported',
         implementation: {
           definition: stage.definition,
           execute: input => {
             if (input.kind !== 'result') throw new Error('fixture requires materialized result');
+
             executed.push('sqlite');
             database.exec('DROP TABLE IF EXISTS input');
             database.exec(
@@ -89,12 +93,14 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
               .prepare(sql)
               .all()
               .map(row => Object.fromEntries(fields.map(field => [field, row[field]])));
+
             return Promise.resolve({ rows: result, model: stage.outputModel });
           },
         },
       };
     },
   };
+
   try {
     const executor = createDataTransformExecutor({
       dataExecution: { mode: 'hybrid', external: 'sqlite' },
@@ -105,6 +111,7 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
       model,
     );
     const result = await executeDataTransforms({ kind: 'result', result: { rows, model } }, resolution, executor);
+
     expect(result.rows).toEqual(applyTransforms(rows, operations));
     expect(result.rows).toEqual([{ grandTotal: 9 }]);
     expect(executed).toEqual(['sqlite', 'sqlite']);

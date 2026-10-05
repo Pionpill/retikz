@@ -55,6 +55,7 @@ describe('Tier 2 composite —— renderer 对照', () => {
     const result = compileToScene(ir, { composites: [labeledBox], themeStyles: [academicTheme] });
     const { scene } = result;
     const svg = renderToSvgString(scene, { idPrefix: 'r' });
+
     expect(result.spatialHandles.entries).toHaveLength(1);
     expect(svg).toContain('<rect');
     expect(svg).toContain('fill="#123456"');
@@ -78,6 +79,7 @@ describe('Tier 2 composite —— renderer 对照', () => {
       },
     });
     const svg = renderToSvgString(scene, { idPrefix: 'r' });
+
     expect(() => drawScene(ctx, scene)).not.toThrow();
     expect(svg).toContain('fill="#123456"');
     expect(svg).not.toContain('spatial');

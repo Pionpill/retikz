@@ -27,7 +27,6 @@ import {
 
 import type { TickSet } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { PlotColorSchemeValue } from '../../../schemas';
 import { PlotColorScheme } from '../../../schemas';
 import { BUILTIN_COLOR_SCHEMES } from './constants';
 
@@ -62,7 +61,7 @@ export const scaleTicks = (
 export type ColorSchemeResolver = (name: string) => (t: number) => string;
 
 /** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
-export const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => string> = {
+export const SCHEME_INTERPOLATORS: Record<PlotColorScheme, (t: number) => string> = {
   [PlotColorScheme.Blues]: d3InterpolateBlues,
   [PlotColorScheme.Greens]: d3InterpolateGreens,
   [PlotColorScheme.Greys]: d3InterpolateGreys,
@@ -91,19 +90,22 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
   if (!BUILTIN_COLOR_SCHEMES.has(name)) {
     throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   }
-  return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
+
+  return SCHEME_INTERPOLATORS[name as PlotColorScheme];
 };
 
 /**
- * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw。
+ * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw
  * @description interpolator 函数不进 IR；IR 只存 scheme 名串，求值期经此解析为函数（含自定义命名配色）
  */
 export const makeColorSchemeResolver =
   (custom?: Record<string, (t: number) => string>): ColorSchemeResolver =>
   name => {
-    if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
+    if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorScheme];
+
     const customInterpolator = custom?.[name];
     if (customInterpolator !== undefined) return customInterpolator;
+
     throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   };
 
@@ -115,10 +117,12 @@ export const makeColorSchemeResolver =
 export const toHexColor = (color: string): string => {
   const match = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(color);
   if (!match) return color;
+
   const channel = (text: string): string =>
     Math.max(0, Math.min(255, Math.round(Number(text))))
       .toString(16)
       .padStart(2, '0');
+
   return `#${channel(match[1])}${channel(match[2])}${channel(match[3])}`;
 };
 
@@ -128,7 +132,7 @@ const DEFAULT_DISCRETE_SCHEME = PlotColorScheme.Viridis;
 /**
  * 从命名 scheme 等距采样 count 个离散色（[0,1] 上均匀取点喂 interpolator，归一化为 hex）
  * @description 离散化 scale（quantize / threshold / quantile）的档色单一来源：count 档 → count 个色。
- *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator。
+ *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator
  */
 export const sampleSchemeColors = (
   scheme: string | undefined,

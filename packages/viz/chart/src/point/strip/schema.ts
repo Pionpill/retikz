@@ -53,8 +53,13 @@ export const StripChartSchema = createChartSourceSchema(ChartFamily.Point, Strip
 );
 
 export type IRStripChart = ZodInfer<typeof StripChartSchema>;
+
 export type IRStripChartRecipe = ZodInfer<typeof StripChartRecipeSchema>;
+
 export type IRStripChartEncodings = ZodInfer<typeof StripChartEncodingsSchema>;
+
 export type IRStripChartProperties = ZodInfer<typeof StripChartPropertiesSchema>;
+
 export type IRStripChartJitter = ZodInfer<typeof StripChartJitterSchema>;
+
 export type IRStripChartMarkProperties = ZodInfer<typeof StripChartMarkPropertiesSchema>;

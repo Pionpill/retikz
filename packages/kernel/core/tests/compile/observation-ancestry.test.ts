@@ -32,6 +32,7 @@ const capture = (
       }),
     },
   ]);
+
   return { source, observed, observations, completes };
 };
 
@@ -55,6 +56,7 @@ describe('最终观测树', () => {
       compile: (_, context) => {
         const laid = context.layoutChild({ namespace: 'test', type: 'pair' }, NaturalLayoutProposal);
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
+
         return {
           children: [
             context.replay(laid.result, {
@@ -68,11 +70,16 @@ describe('最终观测树', () => {
     const { source, observed, observations } = capture([{ namespace: 'test', type: 'clip-pair' }], {
       composites: [wrapper, pair],
     });
+
     expect(observed.primary.scene.primitives).toHaveLength(2);
+
     const clips = observations.filter(observation => observation.owner.kind === 'clip');
+
     expect(clips).toHaveLength(1);
     expect(clips[0]?.transform).toEqual([1, 0, 0, 1, 0, 0]);
+
     const nodes = observations.filter(observation => observation.owner.kind === 'node');
+
     expect(nodes).toHaveLength(2);
     expect(nodes.map(observation => observation.ancestors.map(ancestor => ancestor.owner))).toEqual([
       [
@@ -86,6 +93,7 @@ describe('最终观测树', () => {
     ]);
     expect(observed.primary).toEqual(compileToScene(source, { composites: [wrapper, pair] }));
   });
+
   it('未选中的 Scope 仍作为 Coordinate 的祖先，且自己的变换只应用一次', () => {
     const { observations, completes } = capture(
       [
@@ -104,6 +112,7 @@ describe('最终观测树', () => {
       {},
       site => site.owner.kind === 'coordinate',
     );
+
     expect(completes).toBe(1);
     expect(observations).toHaveLength(1);
     expect(observations[0]).toMatchObject({
@@ -132,6 +141,7 @@ describe('最终观测树', () => {
       }),
     });
     const { observations } = capture([{ namespace: 'test', type: 'empty-containers' }], { composites: [expansion] });
+
     expect(observations.map(observation => observation.owner.kind)).toEqual(['scope', 'scope']);
     expect(observations.map(observation => observation.value)).toEqual([{ envelope: null }, { envelope: null }]);
     expect(observations[0]?.ancestors).toEqual([
@@ -168,6 +178,7 @@ describe('最终观测树', () => {
     ]);
     const scope = observations.find(observation => observation.owner.kind === 'scope');
     const path = observations.find(observation => observation.owner.kind === 'path');
+
     expect(scope?.value).toEqual({ envelope: null });
     expect(scope?.transform).toEqual([1, 0, 0, 1, 25, -15]);
     expect(path?.ancestors).toEqual([{ owner: { kind: 'scope' }, occurrence: scope?.occurrence }]);
@@ -190,18 +201,22 @@ describe('最终观测树', () => {
       },
     ]);
     const clips = observations.filter(observation => observation.owner.kind === 'clip');
+
     expect(clips).toHaveLength(2);
     expect(clips[0]?.value).toEqual(clips[1]?.value);
     expect(clips.map(observation => observation.transform)).toEqual([
       [1, 0, 0, 1, 10, 20],
       [1, 0, 0, 1, 110, 20],
     ]);
+
     for (const clipObservation of clips) {
       expect(clipObservation.occurrence.expansionPath.at(-1)).toEqual({ kind: 'clip', index: 0 });
       expect(clipObservation.provenance.final).toEqual(clipObservation.occurrence);
       expect(clipObservation.ancestors.at(-1)?.owner).toEqual({ kind: 'scope' });
     }
+
     const ordinary = compileToScene(source);
+
     expect(observed.primary).toEqual(ordinary);
   });
 
@@ -223,6 +238,7 @@ describe('最终观测树', () => {
           NaturalLayoutProposal,
         );
         if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
+
         return {
           children: [
             context.scope({ transforms: [{ kind: 'translate', x: 20, y: 30 }] }, [
@@ -241,6 +257,7 @@ describe('最终观测树', () => {
     const nodes = observations.filter(observation => observation.owner.kind === 'node');
     const scopes = observations.filter(observation => observation.owner.kind === 'scope');
     const clips = observations.filter(observation => observation.owner.kind === 'clip');
+
     expect(nodes).toHaveLength(2);
     expect(scopes).toHaveLength(2);
     expect(clips).toHaveLength(1);
@@ -249,10 +266,13 @@ describe('最终观测树', () => {
       [1, 0, 0, 1, 120, 230],
       [1, 0, 0, 1, 120, 230],
     ]);
+
     const outerScope = scopes.find(observation => observation.ancestors.length === 1);
     const innerScope = scopes.find(observation => observation.ancestors.length === 2);
+
     expect(outerScope).toBeDefined();
     expect(innerScope).toBeDefined();
+
     for (const observation of nodes) {
       expect(observation.ancestors).toEqual([
         {
@@ -265,6 +285,7 @@ describe('最终观测树', () => {
       expect(observation.provenance.origin).not.toEqual(observation.provenance.final);
       expect(observation.occurrence.expansionPath.some(segment => segment.kind === 'probe')).toBe(false);
     }
+
     expect(clips[0]?.ancestors).toEqual(innerScope?.ancestors);
     expect(observed.primary).toEqual(compileToScene(source, { composites: [replayed] }));
   });

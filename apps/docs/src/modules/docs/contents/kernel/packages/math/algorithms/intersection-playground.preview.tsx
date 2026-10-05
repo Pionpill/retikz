@@ -22,6 +22,7 @@ const sceneOf = (values: IntersectionPlaygroundPreviewValues): { geometry: React
       values.kind === 'lineLine'
         ? intersect.lineLine({ a1: a[0], a2: a[1], b1: b[0], b2: b[1] })
         : intersect.segmentSegment({ a1: a[0], a2: a[1], b1: b[0], b2: b[1] });
+
     return {
       geometry: (
         <>
@@ -36,6 +37,7 @@ const sceneOf = (values: IntersectionPlaygroundPreviewValues): { geometry: React
   if (values.kind === 'lineCircle') {
     const origin: Position = [-170, values.offset];
     const lineEnd: Position = [170, values.offset];
+
     return {
       geometry: (
         <>
@@ -52,6 +54,7 @@ const sceneOf = (values: IntersectionPlaygroundPreviewValues): { geometry: React
   }
 
   const [centerA, centerB] = circleCircleCenters(values.offset);
+
   return {
     geometry: (
       <>

@@ -3,13 +3,7 @@
  *
  * @description 只公开 canonical compiler、child session、几何、artifact、Flex profile 与 paired-flow 原子能力
  */
-export type {
-  FlexLayoutArtifact,
-  FlexLayoutDirectionValue,
-  FlexLayoutWrapValue,
-  IRFlexLayout,
-  IRFlexLayoutItem,
-} from '../composites/flex-layout';
+export type { FlexLayoutArtifact, IRFlexLayout, IRFlexLayoutItem } from '../composites/flex-layout';
 export { FlexLayoutDirection, FlexLayoutSchema, FlexLayoutWrap } from '../composites/flex-layout';
 export { compileFlexLayout } from '../composites/flex-layout/pipeline';
 export { compileGridLayout } from '../composites/grid-layout/pipeline';
@@ -64,15 +58,11 @@ export { compileOverlayLayout } from '../composites/overlay-layout/pipeline';
 export type {
   IRLayoutAxisSize,
   IRLayoutSize,
-  LayoutAlignmentValue,
   LayoutArtifactAlignmentGuide,
   LayoutArtifactContainer,
   LayoutArtifactItemBase,
   LayoutArtifactOverflow,
   LayoutArtifactRect,
-  LayoutAxisSizeKindValue,
-  LayoutDistributionValue,
-  LayoutOverflowValue,
   LayoutSizeInput,
 } from '../composites/shared';
 export {

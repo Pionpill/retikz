@@ -45,6 +45,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { direction: 'down', widthMode: 'match-largest', width: 160 },
@@ -53,4 +54,5 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
 };
 
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

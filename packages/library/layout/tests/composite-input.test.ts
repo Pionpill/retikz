@@ -31,6 +31,7 @@ describe('Layout prepared child input', () => {
       }),
       createOverlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] }),
     ];
+
     for (const container of containers) {
       const source: IRScene = { type: 'scene', version: 1, children: [container] };
       const output = compileToScene(source, {
@@ -39,6 +40,7 @@ describe('Layout prepared child input', () => {
           { path: ['children', 0, 'children', 0, 'child'], input: 'prepared-layout-child' },
         ]),
       });
+
       expect(JSON.stringify(output.scene)).toContain('prepared-layout-child');
       expect(JSON.stringify(output.scene)).not.toContain('undefined');
     }

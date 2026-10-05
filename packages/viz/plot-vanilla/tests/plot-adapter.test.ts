@@ -216,6 +216,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
   it('reuses the Source id and preserves anonymous Source without inventing an id', () => {
     const named = salesSpec('sales');
     const anonymous = salesSpec();
+
     expect(embedPlot({ spec: named }, datasets)).toMatchObject({ id: 'sales', props: { spec: named } });
     expect(embedPlot({ spec: anonymous }, datasets)).not.toHaveProperty('id');
     expect(PlotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('runtime')).node).not.toHaveProperty(

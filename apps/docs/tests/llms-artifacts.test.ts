@@ -8,6 +8,7 @@ import { collectDocManifest, writeDocArtifacts } from '../scripts/docs-manifest'
 import { generateLlmsTxt } from '../scripts/gen-llms-txt';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+
 const tempDirs: Array<string> = [];
 
 afterEach(() => {
@@ -17,6 +18,7 @@ afterEach(() => {
 describe('LLM documentation artifacts', () => {
   it('excludes the removed Kernel reference section from the manifest', () => {
     const manifest = collectDocManifest(docsRoot);
+
     expect(manifest.some(entry => entry.path.startsWith('/kernel/reference'))).toBe(false);
   });
 
@@ -74,6 +76,7 @@ describe('LLM documentation artifacts', () => {
     const manifestPath = path.join(outDir, 'manifest.json');
     const rawPath = path.join(outDir, 'kernel', 'components', 'layout', 'index.en.mdx');
     const demoPath = path.join(outDir, 'kernel', 'components', 'design', 'principles', 'principles-compile.demo.tsx');
+
     expect(existsSync(manifestPath)).toBe(true);
     expect(existsSync(rawPath)).toBe(true);
     expect(existsSync(demoPath)).toBe(true);

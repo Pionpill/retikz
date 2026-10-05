@@ -2,6 +2,7 @@ import type { IRPath, IRTarget } from '@retikz/core';
 
 import { shapePathProperties, shapeAngles, shapeBoxGeometry, ShapeClosedSchema } from '../shared';
 import type { IREllipse } from './types';
+
 /** 将 Ellipse 意图下沉为单一 Core Path */
 export const lowerEllipse = (source: IREllipse): IRPath => {
   let center: IRTarget;
@@ -17,7 +18,9 @@ export const lowerEllipse = (source: IREllipse): IRPath => {
     center = box.center;
     radius = { x: box.width / 2, y: box.height / 2 };
   }
+
   const angles = shapeAngles(source);
+
   return {
     ...shapePathProperties(source),
     type: 'path',

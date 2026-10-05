@@ -26,14 +26,14 @@ type IRTableCellSelector = {
   columnIds?: Array<string>;
   rowIndices?: Array<number>;
   columnIndices?: Array<number>;
-  locations?: Array<TableCellLocationValue>;
+  locations?: Array<TableCellLocation>;
   roles?: {
-    any?: Array<TableCellRoleValue>;
-    all?: Array<TableCellRoleValue>;
+    any?: Array<TableCellRole>;
+    all?: Array<TableCellRole>;
   };
-  sourceKinds?: Array<TableCellSourceKindValue>;
+  sourceKinds?: Array<TableCellSourceKind>;
   fields?: Array<string>;
-  payloadKinds?: Array<TableCellPayloadKindValue>;
+  payloadKinds?: Array<TableCellPayloadKind>;
   value?: IRTableValuePredicate;
   negate?: boolean;
 };

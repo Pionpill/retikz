@@ -20,6 +20,7 @@ export const assertFiniteLayout = (layout: BoundsRect): BoundsRect => {
       `Node layout produced non-finite bounds (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check shape geometry (e.g. extreme radius).`,
     );
   }
+
   return layout;
 };
 

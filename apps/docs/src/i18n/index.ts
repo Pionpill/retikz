@@ -6,6 +6,7 @@ import { en, zh } from './locales';
 
 /** 受支持语言常量 + 类型 */
 export const LANGS = ['zh', 'en'] as const;
+
 /** 受支持语言代码 */
 export type Lang = (typeof LANGS)[number];
 

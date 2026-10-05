@@ -39,7 +39,10 @@ export type RenderTable = {
   (spec: IRTable, options?: RenderTableOptions): string;
 };
 
-/** 异步Table运行时选项，数据句柄不进入IR */
+/**
+ * 异步Table运行时选项，数据句柄不进入IR
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type RenderTableAsyncCommonOptions<TSource = never> = RenderTableCommonOptions &
   Readonly<{
     /** 与data互斥的原始行、规范结果或原生源绑定 */
@@ -52,10 +55,18 @@ export type RenderTableAsyncCommonOptions<TSource = never> = RenderTableCommonOp
 
 /** 异步Table保留同步入口的string/artifact返回选择 */
 export type RenderTableAsync = {
+  /**
+   * 异步完成数据准备并返回 SVG 与表格编译产物
+   * @template TSource 数据绑定与执行器支持的原生源类型，默认 never 表示不接入原生源
+   */
   <TSource = never>(
     spec: IRTable,
     options: RenderTableAsyncCommonOptions<TSource> & { artifacts: true },
   ): Promise<RenderTableArtifactResult>;
+  /**
+   * 异步完成数据准备并返回 SVG 字符串
+   * @template TSource 数据绑定与执行器支持的原生源类型，默认 never 表示不接入原生源
+   */
   <TSource = never>(
     spec: IRTable,
     options?: RenderTableAsyncCommonOptions<TSource> & { artifacts?: false },

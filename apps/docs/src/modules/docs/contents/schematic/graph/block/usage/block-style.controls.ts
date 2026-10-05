@@ -267,5 +267,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     ],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const blockStyleControls = previewControlContract.controls;

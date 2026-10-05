@@ -23,6 +23,7 @@ const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, 
  */
 const nodeFills = (layer: IRScope): Array<string | undefined> => {
   const out: Array<string | undefined> = [];
+
   const walk = (children: ReadonlyArray<unknown>, inheritedFill: string | undefined): void => {
     for (const child of children) {
       const node = child as {
@@ -36,13 +37,16 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
         walk(node.children, node.defaults?.node?.style?.fill ?? inheritedFill);
     }
   };
+
   walk(layer.children, undefined);
+
   return out;
 };
 
 /** 深度收集图层内所有 point node */
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -50,7 +54,9 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -88,8 +94,10 @@ describe('离散色 · quantize 等宽切档求值（contract）', () => {
     const fills = nodeFills(
       firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], count: 5, scheme: 'blues' }), { d: data }),
     );
+
     expect(fills).toHaveLength(5);
     expect(fills.every(f => typeof f === 'string' && f.length > 0)).toBe(true);
+
     // 5 个值落 5 个不同档 → 5 种不同色
     expect(new Set(fills).size).toBe(5);
   });
@@ -101,8 +109,10 @@ describe('离散色 · quantize 等宽切档求值（contract）', () => {
       { x: 1, y: 1, v: 15 },
       { x: 2, y: 2, v: 95 },
     ];
+
     // count 5, domain [0,100]：5 与 15 同落 [0,20) 第 0 档，95 落末档
     const fills = nodeFills(firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], count: 5 }), { d: data }));
+
     expect(fills[0]).toEqual(fills[1]);
     expect(fills[0]).not.toEqual(fills[2]);
   });
@@ -114,8 +124,11 @@ describe('离散色 · quantize 等宽切档求值（contract）', () => {
       { x: 1, y: 1, v: 50 },
       { x: 2, y: 2, v: 100 },
     ];
+
     expect(() => firstLayer(pointSpec({ type: 'quantize', count: 5 }), { d: data })).not.toThrow();
+
     const fills = nodeFills(firstLayer(pointSpec({ type: 'quantize', count: 5 }), { d: data }));
+
     expect(fills).toHaveLength(3);
     expect(fills[0]).not.toEqual(fills[2]);
   });
@@ -133,6 +146,7 @@ describe('离散色 · quantize 等宽切档求值（contract）', () => {
       ),
     );
     const lower = fills.map(f => f?.toLowerCase());
+
     // 端点落 range 首/末档（range 长度即档数 3）
     expect(lower[0]).toEqual('#111111');
     expect(lower[1]).toEqual('#eeeeee');
@@ -148,6 +162,7 @@ describe('离散色 · quantize 等宽切档求值（contract）', () => {
     const fills = nodeFills(
       firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], count: 3, scheme: 'blues' }), { d: data }),
     );
+
     expect(fills.every(f => typeof f === 'string' && /^#?[0-9a-fA-F]/.test(f))).toBe(true);
     expect(new Set(fills).size).toBe(3);
   });
@@ -167,6 +182,7 @@ describe('离散色 · threshold 阈值断点求值（contract）', () => {
       }),
     );
     const lower = fills.map(f => f?.toLowerCase());
+
     expect(lower[0]).toEqual('#e74c3c');
     expect(lower[1]).toEqual('#f1c40f');
     expect(lower[2]).toEqual('#2ecc71');
@@ -182,6 +198,7 @@ describe('离散色 · threshold 阈值断点求值（contract）', () => {
       firstLayer(pointSpec({ type: 'threshold', breakpoints: [50], range: ['#000000', '#ffffff'] }), { d: data }),
     );
     const lower = fills.map(f => f?.toLowerCase());
+
     expect(lower[0]).toEqual('#000000');
     expect(lower[1]).toEqual('#ffffff');
   });
@@ -196,6 +213,7 @@ describe('离散色 · threshold 阈值断点求值（contract）', () => {
     const fills = nodeFills(
       firstLayer(pointSpec({ type: 'threshold', breakpoints: [60, 80], scheme: 'reds' }), { d: data }),
     );
+
     expect(fills).toHaveLength(3);
     expect(new Set(fills).size).toBe(3);
     expect(fills.every(f => typeof f === 'string' && f.length > 0)).toBe(true);
@@ -207,6 +225,7 @@ describe('离散色 · threshold 阈值断点求值（contract）', () => {
       { x: 0, y: 0, v: 50 },
       { x: 1, y: 1, v: 90 },
     ];
+
     expect(() =>
       expandOf(pointSpec({ type: 'threshold', breakpoints: [80, 60], range: ['#a', '#b', '#c'] }), { d: data }),
     ).toThrow();
@@ -218,6 +237,7 @@ describe('离散色 · threshold 阈值断点求值（contract）', () => {
       { x: 0, y: 0, v: 50 },
       { x: 1, y: 1, v: 90 },
     ];
+
     expect(() =>
       expandOf(pointSpec({ type: 'threshold', breakpoints: [60, 80], range: ['#a', '#b'] }), { d: data }),
     ).toThrow();
@@ -231,13 +251,19 @@ describe('离散色 · quantile 分位切档求值（contract）', () => {
     const values = [1, 2, 3, 4, 5, 6, 7, 8, 100, 200, 300, 400];
     const data = values.map((v, i) => ({ x: i, y: i, v }));
     const fills = nodeFills(firstLayer(pointSpec({ type: 'quantile', count: 4, scheme: 'viridis' }), { d: data }));
+
     expect(fills).toHaveLength(12);
+
     // 4 个不同档色
     const distinct = new Set(fills);
+
     expect(distinct.size).toBe(4);
+
     // 每档样本数约等（12/4 = 3，容差 ±1）
     const counts = new Map<string | undefined, number>();
+
     for (const f of fills) counts.set(f, (counts.get(f) ?? 0) + 1);
+
     for (const c of counts.values()) expect(Math.abs(c - 3)).toBeLessThanOrEqual(1);
   });
 
@@ -252,10 +278,13 @@ describe('离散色 · quantile 分位切档求值（contract）', () => {
       { x: 2, y: 2, v: 3 },
       { x: 3, y: 3, v: 4 },
     ];
+
     // domain 在 PlotSchema.parse 时已被 strip；lower 仍按数据分位求值
     expect(() => expandOf(pointSpec({ type: 'quantile', count: 2, domain: [0, 1000] }), { d: data })).not.toThrow();
+
     const withDomain = nodeFills(firstLayer(pointSpec({ type: 'quantile', count: 2, domain: [0, 1000] }), { d: data }));
     const without = nodeFills(firstLayer(pointSpec({ type: 'quantile', count: 2 }), { d: data }));
+
     // 给 domain 与不给 domain 结果一致（domain 被 strip、分位纯由数据定）
     expect(withDomain).toEqual(without);
   });
@@ -264,6 +293,7 @@ describe('离散色 · quantile 分位切档求值（contract）', () => {
   it('quantile scheme 产稳定 hex 且档间互异', () => {
     const data = [1, 2, 3, 4, 5, 6].map((v, i) => ({ x: i, y: i, v }));
     const fills = nodeFills(firstLayer(pointSpec({ type: 'quantile', count: 3, scheme: 'plasma' }), { d: data }));
+
     expect(fills.every(f => typeof f === 'string' && f.length > 0)).toBe(true);
     expect(new Set(fills).size).toBe(3);
   });
@@ -297,6 +327,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
       { x: 1, y: 3, v: 50 },
       { x: 2, y: 2, v: 100 },
     ];
+
     expect(() =>
       expandOf(pathColorSpec('line', { type: 'quantize', domain: [0, 100], count: 5 }), { d: data }),
     ).toThrow();
@@ -308,6 +339,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
       { x: 1, y: 3, v: 50 },
       { x: 2, y: 2, v: 100 },
     ];
+
     expect(() =>
       expandOf(pathColorSpec('area', { type: 'threshold', breakpoints: [50], range: ['#000', '#fff'] }), { d: data }),
     ).toThrow();
@@ -319,6 +351,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
       { x: 1, y: 3, v: 50 },
       { x: 2, y: 2, v: 100 },
     ];
+
     expect(() => expandOf(pathColorSpec('line', { type: 'quantile', count: 4 }), { d: data })).toThrow();
   });
 });
@@ -350,6 +383,7 @@ describe('离散色 · count 与 range 长度冲突 fail-loud（与 threshold �
     const fills = nodeFills(
       firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], range: ['#111', '#888', '#eee'] }), { d: data }),
     );
+
     expect(new Set(fills).size).toBe(3);
   });
 });
@@ -363,6 +397,7 @@ describe('离散色 · 回归：每点产 node（contract）', () => {
       { x: 2, y: 2, v: 90 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], count: 5 }), { d: data }));
+
     expect(nodes).toHaveLength(3);
   });
 });

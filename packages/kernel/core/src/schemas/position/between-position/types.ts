@@ -17,6 +17,8 @@ export type IRAbsoluteTarget = IRPosition | PolarPosition | IRNodeTarget | IROff
  *   compile 把两端点各 resolve 成世界坐标后 `lerpPoint(A, B, t)`。对应 TikZ `($(A)!t!(B)$)`
  */
 export type IRBetweenPosition = {
+  /** 依次指定插值起点与终点，可使用命名位置或嵌套插值 */
   between: [IRAbsoluteTarget, IRAbsoluteTarget];
+  /** 起点到终点的插值比例，0 为起点、1 为终点 */
   fraction: number;
 };

@@ -20,9 +20,12 @@ const createPreview = (lang: Lang) =>
   );
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
+
 /** 关系示例语言 */
 export type RelationGeneralizationProps = { lang?: Lang };
+
 /** 比较关系方向与外观 */
 const RelationGeneralization: FC<RelationGeneralizationProps> = props => {
   const { lang = 'zh' } = props;

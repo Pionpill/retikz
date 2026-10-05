@@ -5,6 +5,7 @@ import type { ResolvedGraphDefinitionOptions } from './options';
 import { mergeGraphDefinitionOptions, resolveGraphDefinitionOptions } from './options';
 
 const GraphRuntimeOptions = Symbol('retikz.graph.runtimeOptions');
+
 const GraphRuntimeReferencePrefix = '@@retikz/graph/runtime/';
 
 type GraphRuntimeEnvelope = Readonly<{
@@ -24,6 +25,7 @@ export const createGraphRuntimeDatasets = (options: GraphDefinitionOptions): Cor
   const reference = `${GraphRuntimeReferencePrefix}${graphRuntimeReferenceSeed}`;
   graphRuntimeReferenceSeed += 1;
   const envelope: GraphRuntimeEnvelope = Object.freeze({ [GraphRuntimeOptions]: options });
+
   return Object.freeze({ [reference]: envelope });
 };
 
@@ -32,9 +34,11 @@ export const resolveGraphRuntimeOptions = (
   datasets: Readonly<Record<string, unknown>>,
 ): ResolvedGraphDefinitionOptions => {
   const optionSets: Array<GraphDefinitionOptions> = [];
+
   for (const value of Object.values(datasets)) {
     const options = runtimeOptionsOf(value);
     if (options !== undefined) optionSets.push(options);
   }
+
   return resolveGraphDefinitionOptions(mergeGraphDefinitionOptions(optionSets));
 };

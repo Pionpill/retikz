@@ -9,6 +9,7 @@ export { createPreviewControlContract } from './ribbon-custom-profile.controls';
 export const previewControls = previewControlContract.controls;
 
 const preview = defineControlledPreview(previewControlContract, values => renderRibbonCustomProfilePreview(values));
+
 export const previewSource = preview.source;
 
 /** 自定义 Ribbon 宽度 profile 的定义、注入与引用闭环 */

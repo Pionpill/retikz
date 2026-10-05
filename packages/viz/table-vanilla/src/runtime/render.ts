@@ -23,6 +23,7 @@ const renderTableImpl = (
   });
   const svg = renderToSvgString(result.scene, { output: options.output, animation: options.animation });
   if (!requestsArtifacts(options)) return svg;
+
   return Object.freeze({ svg, manifest: result.manifest });
 };
 

@@ -21,6 +21,7 @@ describe('layout public API', () => {
       5,
       createRound(2),
     );
+
     expect(layout).toEqual({ x: -5, y: -5, width: 20, height: 30 });
   });
 

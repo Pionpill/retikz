@@ -41,6 +41,7 @@ const parent = defineComposite({
       },
     );
     if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
     return {
       children: [
         context.scope(

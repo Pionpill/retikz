@@ -8,9 +8,11 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 import { inspectRoleFlowI18n } from './inspect-role-flow.i18n';
 
 export type InspectRoleFlowProps = Readonly<{ lang?: Lang }>;
+
 const InspectRoleFlow: FC<InspectRoleFlowProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = inspectRoleFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout kind="linear" id="all" direction="down" gap={48} align="center">

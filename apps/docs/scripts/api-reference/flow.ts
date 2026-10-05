@@ -17,10 +17,12 @@ const schemaReference = path.resolve(
   repositoryRoot,
   'apps/docs/src/modules/docs/contents/schematic/diagram/flow/schema-reference/index.zh.mdx',
 );
+
 const groupDescriptions = readSchemaDescriptions(
   path.resolve(repositoryRoot, 'apps/docs/src/modules/docs/contents/schematic/graph/group/index.zh.mdx'),
   'GroupSchema',
 );
+
 /** 复用 Schema 页的说明，固定排列的各分支保留独立词典 */
 const resolveFlowSchemaLocalization = createSchemaLocalizationResolver([
   { schema: GeometryLabelSchema, localizations: { zh: { descriptions: geometryLabelSchemaDescriptions } } },
@@ -157,8 +159,10 @@ export const flowApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
 /** 生成 Flow 双语公共 API include */
 export const writeFlowApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const satisfies ReadonlyArray<ApiReferenceLanguage>) {
     const sections: Array<string> = [];
+
     for (const config of flowApiConfigs) sections.push(await createApiReferenceMdx(config, lang));
     if (lang === 'en') assertFlowApiReferenceTranslated();
     writeFileSync(

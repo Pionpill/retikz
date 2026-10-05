@@ -44,6 +44,7 @@ const polygonParamsSchema = strictObject({
       message: 'aspectRatio is only supported for four-sided diamonds.',
     });
   }
+
   if (params.rotate !== undefined && params.rotate !== 0) {
     context.addIssue({
       code: 'custom',
@@ -60,17 +61,21 @@ const vertexAngles = (params: PolygonParams): Array<number> => {
   const startDeg = params.rotate ?? 0;
   const stepDeg = 360 / params.sides;
   const out: Array<number> = [];
+
   for (let k = 0; k < params.sides; k++) out.push(startDeg + k * stepDeg);
+
   return out;
 };
 
 /** 顶点角的 |cos| 最大值，用于由 AABB 半宽反推外接半径 */
 const maxAbsCos = (params: PolygonParams): number => {
   let max = 0;
+
   for (const angle of vertexAngles(params)) {
     const value = Math.abs(Math.cos(angle * DEG_TO_RAD));
     if (value > max) max = value;
   }
+
   return max;
 };
 
@@ -84,11 +89,13 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
   const stepDeg = 360 / sides;
   const apothemFactor = Math.cos(Math.PI / sides);
   let maxSupport = 0;
+
   for (let j = 0; j < sides; j++) {
     const phi = (startDeg + (j + 0.5) * stepDeg) * DEG_TO_RAD;
     const support = hw * Math.abs(Math.cos(phi)) + hh * Math.abs(Math.sin(phi));
     if (support > maxSupport) maxSupport = support;
   }
+
   return maxSupport / apothemFactor;
 };
 
@@ -120,6 +127,7 @@ const polygonLocalVerticesForBounds = (bounds: Rect, params: PolygonParams): Arr
   if (isAspectRatioDiamond(params)) {
     const halfWidth = bounds.width / 2;
     const halfHeight = bounds.height / 2;
+
     return [
       [halfWidth, 0],
       [0, halfHeight],
@@ -127,6 +135,7 @@ const polygonLocalVerticesForBounds = (bounds: Rect, params: PolygonParams): Arr
       [0, -halfHeight],
     ];
   }
+
   return polygonLocalVertices(circumradiusFromRect(bounds, params), params);
 };
 
@@ -144,15 +153,18 @@ export const polygon = defineShape<PolygonParams>({
   paramsSchema: polygonParamsSchema,
   circumscribe: (hw, hh, params) => {
     if (isAspectRatioDiamond(params)) return diamondHalfAxesFor(hw, hh, params.aspectRatio);
+
     const radius = circumradiusFor(hw, hh, params);
     const angles = vertexAngles(params);
     let halfWidth = 0;
     let halfHeight = 0;
+
     for (const angle of angles) {
       const rad = angle * DEG_TO_RAD;
       halfWidth = Math.max(halfWidth, Math.abs(radius * Math.cos(rad)));
       halfHeight = Math.max(halfHeight, Math.abs(radius * Math.sin(rad)));
     }
+
     return { halfWidth, halfHeight };
   },
   boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
@@ -161,6 +173,7 @@ export const polygon = defineShape<PolygonParams>({
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const center: Position = [bounds.x, bounds.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
+
     return hit ?? center;
   },
   anchor: (bounds: Rect, name: ShapeAnchorName): Position | undefined => {

@@ -58,6 +58,7 @@ const registerId = (state: ResolveState, id: string, path: FlowSourcePath): void
       details: { path: [...path, 'id'], relatedIds: [id] },
     });
   }
+
   state.ids.set(id, path);
   state.elementPaths.set(id, path);
 };
@@ -108,6 +109,7 @@ const registerChildren = (
         details: { path: childPath, relatedIds: [childId] },
       });
     }
+
     if (ownerId === childId) {
       return containmentFailure(
         `Flow scope '${ownerId}' cannot contain itself.`,
@@ -116,6 +118,7 @@ const registerChildren = (
         'self-containment',
       );
     }
+
     const previousOwner = state.owners.get(childId);
     if (previousOwner !== undefined) {
       const reason = previousOwner.id === ownerId ? 'duplicate-child' : 'multiple-parents';
@@ -128,6 +131,7 @@ const registerChildren = (
         reason,
       );
     }
+
     state.owners.set(childId, { ...(ownerId === undefined ? {} : { id: ownerId }), path: childPath });
   });
 };
@@ -136,8 +140,10 @@ const assertAcyclicScopes = (source: IRFlowDiagram, state: ResolveState): void =
   const visiting = new Set<string>();
   const visited = new Set<string>();
   const scopes = [...source.groups, ...source.layouts];
+
   const visitScope = (scope: IRFlowGroup | IRFlowLayout): void => {
     if (visited.has(scope.id)) return;
+
     visiting.add(scope.id);
     const isGroup = state.groups.has(scope.id);
     const scopeIndex = isGroup ? source.groups.indexOf(scope) : source.layouts.indexOf(scope as IRFlowLayout);
@@ -152,11 +158,13 @@ const assertAcyclicScopes = (source: IRFlowDiagram, state: ResolveState): void =
           'cycle',
         );
       }
+
       visitScope(childScope);
     });
     visiting.delete(scope.id);
     visited.add(scope.id);
   };
+
   scopes.forEach(visitScope);
 };
 
@@ -169,6 +177,7 @@ const assertCompleteContainment = (source: IRFlowDiagram, state: ResolveState): 
     registerChildren(state, layout.children, ['layouts', layoutIndex, 'children'], layout.id);
   });
   assertAcyclicScopes(source, state);
+
   for (const [id, path] of state.ids) {
     if (!state.owners.has(id)) {
       containmentFailure(
@@ -210,6 +219,7 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
     ...(Object.keys(style).length === 0 ? {} : { style }),
     ...(Object.keys(layout).length === 0 ? {} : { layout }),
   };
+
   return {
     type: 'entity',
     id: source.id,
@@ -225,8 +235,10 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
 /** 从已声明 caption 文本项提取格式，不把内容写入默认片段 */
 const captionFormatting = (value: IRGroupCaptionText | undefined) => {
   if (value === undefined) return undefined;
+
   const { text: _text, ...formatting } = value;
   void _text;
+
   return formatting;
 };
 
@@ -240,6 +252,7 @@ const groupDefaultsOverrideOf = (source: IRFlowGroup): IRFlowDefaults => {
           ...(title === undefined ? {} : { title: captionFormatting(title) }),
           ...(description === undefined ? {} : { description: captionFormatting(description) }),
         };
+
   return {
     group: {
       ...(source.padding === undefined ? {} : { padding: source.padding }),
@@ -264,12 +277,14 @@ const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: Re
             ? {}
             : { description: { ...description, text: source.caption.description.text } }),
         };
+
   const { caption: _caption, ...groupSurface } = groupDefaults;
   void _caption;
   const surface = {
     ...mergeProperties([groupSurface], { shouldOverride: value => value !== undefined }),
     ...(source.overflow === undefined ? {} : { overflow: source.overflow }),
   };
+
   const { rank: _rank, layout: _layout, routing: _routing, children: _children, ...group } = source;
   void _rank;
   void _layout;
@@ -284,8 +299,10 @@ const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: Re
     ...(caption === undefined ? {} : { caption }),
     children: [],
   };
+
   const layout = mergeFlowLayoutIntent(undefined, source.layout);
   const elements = source.children.map(childId => resolveElementRecord(childId, state));
+
   return {
     type: 'group',
     id: source.id,
@@ -353,8 +370,10 @@ const assertWaypointReferences = (target: IRTarget | string, path: FlowSourcePat
         message: `Smooth waypoint must reference an Entity or Group in this Flow: '${id}'.`,
         details: { path, relatedIds: [id] },
       });
+
     return;
   }
+
   if (Array.isArray(target)) return;
   if ('between' in target)
     target.between.forEach((point, index) => assertWaypointReferences(point, [...path, 'between', index], state));
@@ -367,17 +386,20 @@ const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: R
   const resolveEndpoint = (key: 'source' | 'target'): FlowLayoutEndpoint => {
     const value = authored[key];
     const fields = typeof value === 'string' ? { id: value } : value;
+
     return {
       ...fields,
       overlap: FlowEndpointOverlapSchema.parse(fields.overlap ?? state.defaults.relation?.[key]?.overlap),
     };
   };
+
   const source = { ...authored, source: resolveEndpoint('source'), target: resolveEndpoint('target') };
   const path: FlowSourcePath = ['relations', index];
   if (source.routing?.kind === 'smooth')
     source.routing.points.forEach((point, pointIndex) =>
       assertWaypointReferences(point, [...path, 'routing', 'points', pointIndex], state),
     );
+
   for (const endpoint of ['source', 'target'] as const) {
     const id = source[endpoint].id;
     if (!state.ids.has(id)) {
@@ -387,6 +409,7 @@ const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: R
         details: { path: [...path, endpoint], relatedIds: [id] },
       });
     }
+
     if (state.layouts.has(id)) {
       throw new RetikzDiagramError({
         code: RetikzDiagramErrorCode.FlowEndpointInvalid,
@@ -395,6 +418,7 @@ const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: R
       });
     }
   }
+
   const defaults = relationDefaultsOf(state.defaults.relation, source);
   const graph: IRGraphRelation = {
     namespace: 'graph',
@@ -421,6 +445,7 @@ const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: R
     ...(defaults?.labelOpacity === undefined ? {} : { labelOpacity: defaults.labelOpacity }),
   };
   const canonical = resolveRelation(graph, state.graph);
+
   return {
     source,
     graph: { ...graph, direction: canonical.effectiveDirection },
@@ -452,8 +477,10 @@ const projectFlowElementGraphs = (
 ): Array<CanonicalFlowElement> =>
   elements.map(element => {
     if (element.type === 'entity') return { ...element, graph: graphByEntityId.get(element.id)! };
+
     const children = projectFlowElementGraphs(element.elements, graphByEntityId, graphByGroupId);
     if (element.type === 'layout') return { ...element, elements: children };
+
     return { ...element, graph: { ...graphByGroupId.get(element.id)!, children: [] }, elements: children };
   });
 
@@ -474,6 +501,7 @@ const projectFlowGroups = (
   const projected = resolveGraph(graph, state.graph, theme);
   const graphByEntityId = new Map<string, IRGraphEntity>();
   const graphByGroupId = new Map<string, IRGroup>();
+
   const collect = (children: ReadonlyArray<IRChild>): void => {
     for (const child of children) {
       if (isGraphEntity(child)) graphByEntityId.set(child.id!, child);
@@ -483,8 +511,10 @@ const projectFlowGroups = (
       } else if (!('namespace' in child) && child.type === 'scope') collect(child.children);
     }
   };
+
   collect(projected);
   const projectedRelations = projected.filter(isGraphRelation);
+
   return {
     elements: projectFlowElementGraphs(elements, graphByEntityId, graphByGroupId),
     relations: relations.map((relation, relationIndex) => ({
@@ -517,6 +547,7 @@ export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveCo
     context.theme,
     source.graphRules,
   );
+
   return {
     source,
     defaults,

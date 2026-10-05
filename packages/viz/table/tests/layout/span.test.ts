@@ -12,8 +12,11 @@ import type { PropagateTableSpanContributionsInput } from '../../src/pipeline/la
 import { propagateTableSpanContributions, resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
 
 const fixed = (value: number): IRTableFixedTrackSize => ({ kind: TableTrackSizeKind.Fixed, value });
+
 const auto = (): IRTableAutoTrackSize => ({ kind: TableTrackSizeKind.Auto });
+
 const fraction = (weight = 1): IRTableFractionTrackSize => ({ kind: TableTrackSizeKind.Fraction, weight });
+
 const minmax = (
   min: IRTableFixedTrackSize | IRTableAutoTrackSize,
   max: IRTableFixedTrackSize | IRTableAutoTrackSize | IRTableFractionTrackSize,

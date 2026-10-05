@@ -71,6 +71,7 @@ export const TestCatalogNav: FC<TestCatalogNavProps> = props => {
           {group.directions.map(direction => {
             const Icon = direction.icon;
             const isOpen = openDirectionId === direction.id;
+
             return (
               <Collapsible
                 key={direction.id}

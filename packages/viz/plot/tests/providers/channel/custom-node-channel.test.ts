@@ -25,12 +25,14 @@ const intensityChannel = defineNodeChannel<number>({
   resolve: ctx => mark => {
     const binding = extensionChannelsOf(mark).intensity;
     if (binding?.field === undefined) return undefined;
+
     const field = binding.field;
     const valueOf = (row: Record<string, unknown>): number => Number(row[field]);
     const nums = ctx.rows.map(row => valueOf(row)).filter(Number.isFinite);
     const lo = Math.min(...nums);
     const hi = Math.max(...nums);
     const map = (v: number): number => 0.3 + (hi === lo ? 0.5 : (v - lo) / (hi - lo)) * (1 - 0.3);
+
     return {
       resolver: row => {
         const v = valueOf(row);
@@ -42,7 +44,7 @@ const intensityChannel = defineNodeChannel<number>({
         domain: [lo, hi],
         range: [0.3, 1],
         field,
-        fieldType: ctx.fieldTypes.get(field),
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
     };
   },
@@ -59,10 +61,12 @@ const categoryColorChannel = defineNodeChannel<string>({
   resolve: ctx => mark => {
     const binding = extensionChannelsOf(mark).categoryColor;
     if (binding?.field === undefined) return undefined;
+
     const field = binding.field;
     const domain = [...new Set(ctx.rows.map(row => String(row[field])))];
     const range = ['#dc2626', '#2563eb'];
     const colorByCategory = new Map(domain.map((category, index) => [category, range[index]] as const));
+
     return {
       resolver: row => colorByCategory.get(String(row[field])),
       descriptor: {
@@ -71,7 +75,7 @@ const categoryColorChannel = defineNodeChannel<string>({
         domain,
         range,
         field,
-        fieldType: ctx.fieldTypes.get(field),
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
     };
   },
@@ -88,12 +92,14 @@ const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
   resolve: ctx => mark => {
     const binding = extensionChannelsOf(mark).symbolCode;
     if (binding?.field === undefined) return undefined;
+
     const field = binding.field;
     const domain = [...new Set(ctx.rows.map(row => String(row[field])))];
     const shapes: Array<IRShapeValue> = ['circle', 'diamond'];
     const shapeByCategory = new Map(
       domain.map((category, index) => [category, shapes[index % shapes.length]] as const),
     );
+
     return {
       resolver: row => shapeByCategory.get(String(row[field])),
       descriptor: {
@@ -102,7 +108,7 @@ const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
         domain,
         range: shapes,
         field,
-        fieldType: ctx.fieldTypes.get(field),
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
     };
   },
@@ -133,7 +139,9 @@ const lineWeightChannel = definePathChannel<number>({
   resolve: () => mark => {
     const binding = extensionChannelsOf(mark).lineWeight;
     if (binding?.field === undefined) return undefined;
+
     const field = binding.field;
+
     return {
       resolver: row => {
         const value = Number(row[field]);
@@ -167,6 +175,7 @@ const scatterSpec = (channels?: Record<string, unknown>): IRPlot =>
 
 const nodesOf = (scope: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -174,12 +183,15 @@ const nodesOf = (scope: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(scope.children);
+
   return out;
 };
 
 const pathsOf = (scope: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -187,19 +199,25 @@ const pathsOf = (scope: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(scope.children);
+
   return out;
 };
 
 const scopesOf = (scope: IRScope): Array<IRScope> => {
   const out: Array<IRScope> = [];
+
   const walk = (node: IRScope): void => {
     out.push(node);
+
     for (const child of node.children) {
       if ((child as { type?: string }).type === 'scope') walk(child as IRScope);
     }
   };
+
   walk(scope);
+
   return out;
 };
 
@@ -231,6 +249,7 @@ describe('custom node channel registry', () => {
     const spec = scatterSpec({ intensity: { field: 'score' } });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
     const opacities = nodes.map(n => n.style?.opacity ?? NaN);
+
     expect(opacities[0]).toBeCloseTo(0.3, 6);
     expect(opacities[1]).toBeCloseTo(0.65, 6);
     expect(opacities[2]).toBeCloseTo(1, 6);
@@ -240,12 +259,14 @@ describe('custom node channel registry', () => {
   it('unbound_custom_channel_not_applied', () => {
     const spec = scatterSpec();
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
+
     expect(nodes.every(n => n.style?.opacity === undefined)).toBe(true);
   });
 
   // 错误路径：encoding.channels 写了通道名，但没有对应 definition → fail-loud
   it('channels_binding_without_registered_def_fails_loud', () => {
     const spec = scatterSpec({ intensity: { field: 'score' } });
+
     expect(() => firstLayer(spec, { d: rows }, opts())).toThrow(/channel "intensity" is not registered/);
   });
 
@@ -257,6 +278,7 @@ describe('custom node channel registry', () => {
       resolve: () => () => undefined,
       deliver: () => {},
     });
+
     expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([bad]))).toThrow(/collides with a built-in channel/);
   });
 
@@ -268,6 +290,7 @@ describe('custom node channel registry', () => {
       output: { outputKind: 'number' as const, range: [0, 1] as const },
       resolve: () => () => undefined,
     } as unknown as AnyChannelDefinition;
+
     expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([bad]))).toThrow(/must provide deliver/);
   });
 
@@ -285,6 +308,7 @@ describe('custom node channel registry', () => {
       resolve: () => () => undefined,
       deliver: () => {},
     });
+
     expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([bad]))).toThrow(/non-empty channel name/);
   });
 
@@ -308,6 +332,7 @@ describe('custom node channel registry', () => {
       ],
     });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
+
     expect(nodes.every(n => n.style?.opacity !== undefined)).toBe(true);
     expect(nodes.some(n => n.layout?.minimumSize !== undefined)).toBe(true);
   });
@@ -315,6 +340,7 @@ describe('custom node channel registry', () => {
   it('custom_scope_channel_delivers_to_layer_node_default', () => {
     const spec = scatterSpec({ scopeTint: { value: '#f66' } });
     const layer = firstLayer(spec, { d: rows }, opts([scopeTintChannel]));
+
     expect(layer.defaults?.node?.style?.fill).toBe('#f66');
   });
 
@@ -345,6 +371,7 @@ describe('custom node channel registry', () => {
       },
       opts([lineWeightChannel]),
     );
+
     expect(pathsOf(layer)[0]?.style?.strokeWidth).toBe(3);
   });
 
@@ -369,7 +396,9 @@ describe('custom node channel registry', () => {
     });
     const root = expandOf(spec, { d: rows }, opts([intensityChannel]));
     const legend = scopesOf(root).find(scope => scope.id === 'legend.intensity');
+
     expect(legend).toBeDefined();
+
     const ramp = legend
       ? nodesOf(legend).find(
           node =>
@@ -378,6 +407,7 @@ describe('custom node channel registry', () => {
             node.style.fill.kind === 'linearGradient',
         )
       : undefined;
+
     expect(ramp).toBeDefined();
   });
 
@@ -405,12 +435,15 @@ describe('custom node channel registry', () => {
     });
     const root = expandOf(spec, { d: colorRows }, opts([categoryColorChannel]));
     const legend = scopesOf(root).find(scope => scope.id === 'legend.categoryColor');
+
     expect(legend).toBeDefined();
+
     const fills = legend
       ? nodesOf(legend)
           .filter(node => node.text === undefined)
           .map(node => node.style?.fill)
       : [];
+
     expect(fills).toEqual(['#dc2626', '#2563eb']);
   });
 
@@ -444,7 +477,9 @@ describe('custom node channel registry', () => {
       resolve: ctx => mark => {
         const binding = extensionChannelsOf(mark).invalidSymbol;
         if (binding?.field === undefined) return undefined;
+
         const field = binding.field;
+
         return {
           resolver: row => Number(row[field]),
           descriptor: {
@@ -453,7 +488,7 @@ describe('custom node channel registry', () => {
             domain: [0, 1],
             range: [1, 2],
             field,
-            fieldType: ctx.fieldTypes.get(field),
+            fieldType: ctx.model.find(definition => definition.name === field)?.type,
           },
         };
       },
@@ -465,6 +500,7 @@ describe('custom node channel registry', () => {
       ...scatterSpec({ invalidSymbol: { field: 'score' } }),
       guides: [{ type: 'legend', channel: 'invalidSymbol' }],
     });
+
     expect(() => expandOf(spec, { d: rows }, opts([invalidChannel]))).toThrow(
       /legend form "symbol" requires outputKind "symbol"/,
     );
@@ -475,6 +511,7 @@ describe('custom node channel registry', () => {
     const spec = scatterSpec({ intensity: { field: 'score' } });
     const back = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
     const mark = back.marks[0] as { encoding: { channels?: Record<string, unknown> } };
+
     expect(mark.encoding.channels).toEqual({ intensity: { field: 'score' } });
   });
 });

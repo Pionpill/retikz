@@ -57,6 +57,7 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
   void _layouts;
   void _children;
   void _relations;
+
   return scope;
 };
 
@@ -93,11 +94,13 @@ const drawingFailureContext = (
       ],
     };
   }
+
   const elements = (
     values: CanonicalFlowDiagram['elements'],
   ): ReadonlyArray<CanonicalFlowDiagram['elements'][number]> =>
     values.flatMap(element => [element, ...(element.type === 'entity' ? [] : elements(element.elements))]);
   const authoredElements = elements(diagram.elements);
+
   return {
     path: authoredElements.length === 1 ? authoredElements[0].path : [],
     relatedIds: authoredElements.map(element => element.id),
@@ -118,6 +121,7 @@ export const createCompileFlowDiagram =
       graph: options.graph,
     });
     assertFlowLayoutCapabilities(definition, diagram);
+
     const measurement = measureFlowDiagram(diagram, context, definition, options.graph);
     const output = executeFlowLayout(definition, measurement.input, {
       ...createFlowLayoutExecutionContext(context, measurement.input),
@@ -141,6 +145,7 @@ export const createCompileFlowDiagram =
             relationIndex >= 0 && measurement.input.relations[relationIndex].source.id === query.target.id
               ? 'source'
               : 'target';
+
           return materializationFailure(definition.name, 'materialize', 'Endpoint boundary query failed.', cause, {
             path: relationIndex < 0 ? [] : ['relations', relationIndex, end],
             relatedIds: [query.target.id],
@@ -171,6 +176,7 @@ export const createCompileFlowDiagram =
           const queryPath = cause instanceof RetikzCoreError ? cause.details?.path : undefined;
           const pointMatch = typeof queryPath === 'string' ? /^points\[(\d+)\]$/.exec(queryPath) : null;
           const pointIndex = pointMatch === null ? undefined : Number(pointMatch[1]);
+
           return materializationFailure(definition.name, 'materialize', 'Smooth waypoint query failed.', cause, {
             path:
               index < 0
@@ -185,6 +191,7 @@ export const createCompileFlowDiagram =
         }
       },
     });
+
     for (const [index, geometry] of output.relations.entries()) {
       if (geometry.route.kind === 'smooth') {
         const relation = measurement.input.relations[index];
@@ -201,6 +208,7 @@ export const createCompileFlowDiagram =
           );
         continue;
       }
+
       if (geometry.route.kind === 'curve' || geometry.route.kind === 'cubic') {
         const relation = measurement.input.relations[index];
         const conflicts = evaluateFlowBezierConflicts(
@@ -217,8 +225,10 @@ export const createCompileFlowDiagram =
           );
         continue;
       }
+
       if (geometry.route.kind === 'orthogonal') {
         if (geometry.route.points.length === 2) continue;
+
         const relation = measurement.input.relations[index];
         const { score } = evaluateFlowOrthogonalConflicts(
           geometry.route,
@@ -234,9 +244,12 @@ export const createCompileFlowDiagram =
           );
         continue;
       }
+
       if (geometry.route.kind !== 'bend') continue;
+
       const relation = measurement.input.relations[index];
       let conflictCount: number;
+
       try {
         [conflictCount] = scoreFlowBendNodes(
           geometry.route,
@@ -246,6 +259,7 @@ export const createCompileFlowDiagram =
       } catch (cause) {
         return flowBendGeometryFailure(index, relation, cause);
       }
+
       if (conflictCount > 0)
         context.warn(
           'FlowBendObstacleConflict',
@@ -256,7 +270,9 @@ export const createCompileFlowDiagram =
             .replace(/^\./, ''),
         );
     }
+
     const drawing = materializeFlowGraph(measurement, output);
+
     try {
       requiredLayoutProbe(context, { child: drawing, occurrence: 0 }, intrinsicLayoutProposal('natural'));
     } catch (cause) {
@@ -268,6 +284,7 @@ export const createCompileFlowDiagram =
         drawingFailureContext(diagram),
       );
     }
+
     const foundationResolution = resolveDiagramFoundation(
       {
         ...(source.presentation === undefined ? {} : { presentation: source.presentation }),
@@ -277,6 +294,7 @@ export const createCompileFlowDiagram =
       { theme: context.theme, diagramThemeStyles: options.diagramThemeStyles },
     );
     let foundation;
+
     try {
       foundation = composeDiagramFoundation(foundationResolution, drawing, context);
     } catch (cause) {
@@ -284,6 +302,7 @@ export const createCompileFlowDiagram =
         path: [],
       });
     }
+
     const drawingOffset: Position = [foundation.drawingOffset[0], foundation.drawingOffset[1]];
     const artifact = createFlowDiagramArtifact({
       definitionName: definition.name,
@@ -300,6 +319,7 @@ export const createCompileFlowDiagram =
       artifact.regions,
       artifact.elements,
     );
+
     return {
       allocationBounds: foundation.frame.allocationBounds,
       children: [context.scope(flowScopeProps(source), [context.replay(foundation.frame)], spatialHandles)],

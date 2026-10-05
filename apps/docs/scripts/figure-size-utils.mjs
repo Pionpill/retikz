@@ -1,6 +1,9 @@
 const SIZE_KEYS = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl', 'xxxl'];
+
 const DEFAULT_CONTROL_PANEL_SIZE = 25;
+
 const EXPANDED_CONTROL_PANEL_SIZE = 50;
+
 const CONTROL_HEIGHT_GAP_RATIO_LIMIT = 0.5;
 
 const getControlMeasurement = (measurement, panelSize) =>

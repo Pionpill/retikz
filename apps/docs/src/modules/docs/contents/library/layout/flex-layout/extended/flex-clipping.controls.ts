@@ -30,11 +30,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { overflow: 'visible', width: 180, childWidth: 240, basis: 100 },
     relatedApis: ['FlexLayout.overflow', 'FlexLayout.size', 'FlexLayoutItem.basis', 'Node.layout.minimumSize'],
   } satisfies PreviewControlContract;
 };
+
 /** 默认语言的注册契约 */
 export const previewControlContract = createPreviewControlContract('zh');

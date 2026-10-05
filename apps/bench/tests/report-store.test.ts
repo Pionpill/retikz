@@ -53,6 +53,7 @@ describe('Bench report store', () => {
     ).resolves.toContain('"sessionId": "session-2"');
 
     const listed = await store.listReports({ moduleId: 'kernel', caseId: 'single-entity-update' });
+
     expect(listed.diagnostics).toEqual([]);
     expect(listed.reports.map(report => ({ runId: report.runId, status: report.status }))).toEqual([
       { runId: 'run-2', status: 'warning' },

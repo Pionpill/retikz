@@ -38,6 +38,7 @@ describe('runtime runtime participant failure lifecycle', () => {
     const calls: Array<string> = [];
     const trigger = new Error(`${failurePhase} failed`);
     let failing = false;
+
     const define = (key: string, shouldFail: boolean) => {
       let value = 1;
       return defineRuntimeCommitParticipant({
@@ -52,8 +53,10 @@ describe('runtime runtime participant failure lifecycle', () => {
             context.diagnose({ code: 'ATTEMPTED', phase: 'prepare', message: 'attempted' });
             throw trigger;
           }
+
           const previous = value;
           const next = candidate.snapshot(owner).value;
+
           return Object.freeze({
             commit: () => {
               calls.push(`commit:${key}`);
@@ -61,6 +64,7 @@ describe('runtime runtime participant failure lifecycle', () => {
                 context.diagnose({ code: 'ATTEMPTED', phase: 'commit', message: 'attempted' });
                 throw trigger;
               }
+
               value = next;
             },
             rollback: () => {
@@ -74,6 +78,7 @@ describe('runtime runtime participant failure lifecycle', () => {
         dispose: () => undefined,
       });
     };
+
     const first = define('a', false);
     const second = define('b', true);
     const runtime = createRuntime({
@@ -88,6 +93,7 @@ describe('runtime runtime participant failure lifecycle', () => {
     failing = true;
 
     let thrown: unknown;
+
     try {
       runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(owner, 2)] });
     } catch (cause) {
@@ -112,10 +118,13 @@ describe('runtime runtime participant failure lifecycle', () => {
             'token-dispose:a',
           ],
     );
+
     const errorDiagnostic = (thrown as { diagnostics: ReadonlyArray<RuntimeDiagnostic> }).diagnostics[0];
     const queuedDiagnostic = runtime.diagnostics()[0];
+
     expect(errorDiagnostic).toEqual(expect.objectContaining({ code: 'ATTEMPTED', owner: 'b' }));
     expect(queuedDiagnostic).toBe(errorDiagnostic);
+
     runtime.dispose();
   });
 
@@ -298,6 +307,7 @@ describe('runtime runtime participant failure lifecycle', () => {
     });
 
     let thrown: unknown;
+
     try {
       createRuntime({
         sources,
@@ -316,7 +326,9 @@ describe('runtime runtime participant failure lifecycle', () => {
         owner: 'failing',
       }),
     );
+
     const diagnostics = (thrown as { diagnostics: ReadonlyArray<RuntimeDiagnostic> }).diagnostics;
+
     expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
       RuntimeDiagnosticCode.TraceInvalidRecord,
       RetikzRuntimeErrorCode.ParticipantRollbackFailed,
@@ -369,6 +381,7 @@ describe('runtime runtime participant failure lifecycle', () => {
         owner: 'view',
       }),
     ]);
+
     runtime.dispose();
   });
 
@@ -381,6 +394,7 @@ describe('runtime runtime participant failure lifecycle', () => {
     const secondRollbackFailure = new Error('rollback a failed');
     let fail = false;
     let sessionDisposeCalls = 0;
+
     const define = (key: string, rollbackFailure?: Error) => {
       let live = 1;
       const input: RuntimeCommitParticipantDefinitionInput<Readonly<{ value: number }>> = {
@@ -392,6 +406,7 @@ describe('runtime runtime participant failure lifecycle', () => {
         prepare: candidate => {
           const previous = live;
           const next = candidate.snapshot(owner).value;
+
           return Object.freeze({
             commit: () => {
               live = next;
@@ -411,8 +426,10 @@ describe('runtime runtime participant failure lifecycle', () => {
           sessionDisposeCalls += 1;
         },
       };
+
       return defineRuntimeCommitParticipant(input);
     };
+
     const first = define('a', secondRollbackFailure);
     const second = define('b', firstRollbackFailure);
     const runtime = createRuntime({
@@ -424,6 +441,7 @@ describe('runtime runtime participant failure lifecycle', () => {
     fail = true;
 
     let thrown: unknown;
+
     try {
       runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(owner, 2)] });
     } catch (cause) {

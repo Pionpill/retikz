@@ -23,7 +23,9 @@ const emitArrowMarkerPrimitives = (
       `Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`,
     );
   }
+
   let emitted: unknown;
+
   try {
     emitted = def.emit(ctx);
   } catch (e) {
@@ -32,6 +34,7 @@ const emitArrowMarkerPrimitives = (
       providerKey: `arrow:${shape}`,
     });
   }
+
   return validateMarkerPrimitives(`Arrow '${shape}'`, emitted);
 };
 
@@ -41,6 +44,7 @@ const buildEmitContext = (resolution: ArrowMarkResolution, round: (n: number) =>
   const contextStroke: MarkerFill = { kind: 'contextStroke' };
   const stroke: MarkerFill = visual.color ?? contextStroke;
   const fill: MarkerFill = definition.hollow ? contextStroke : (visual.fill ?? visual.color ?? contextStroke);
+
   return { stroke, fill, lineWidth: visual.lineWidth, round };
 };
 
@@ -58,6 +62,7 @@ const emitArrowEnd = (resolution: ArrowMarkResolution, round: (n: number) => num
     marker,
   };
   if (visual.opacity !== undefined) out.opacity = visual.opacity;
+
   return out;
 };
 
@@ -71,6 +76,7 @@ export type EndpointArrowMarkEmission = {
   boundaryOuterInset: number;
 };
 
+/** 物化端点箭头，并按重叠比例插值路径收缩量与边界外缘内缩量 */
 export const emitEndpointArrowMark = (
   resolution: ArrowMarkResolution,
   endpointOverlap: number,
@@ -84,6 +90,7 @@ export const emitEndpointArrowMark = (
       boundaryOuterInset: geometry.boundaryOuterInset,
     };
   }
+
   const fullEntryShrink = ((geometry.visualBackX - geometry.contactX) * geometry.resolvedLength) / geometry.baseSize;
   if (!Number.isFinite(fullEntryShrink)) {
     throw new RetikzCoreError(
@@ -91,6 +98,7 @@ export const emitEndpointArrowMark = (
       `Arrow '${resolution.visual.shape}' full-entry shrink is non-finite; use smaller back/contact/length/scale values.`,
     );
   }
+
   const endpointShrink = geometry.shrink + (fullEntryShrink - geometry.shrink) * endpointOverlap;
   if (!Number.isFinite(endpointShrink)) {
     throw new RetikzCoreError(
@@ -98,6 +106,7 @@ export const emitEndpointArrowMark = (
       `Arrow '${resolution.visual.shape}' endpoint-overlap shrink is non-finite; use smaller geometry values.`,
     );
   }
+
   return {
     spec: emitArrowEnd(resolution, round),
     shrink: endpointShrink,
@@ -143,6 +152,7 @@ type SetEndpointInput = {
 const setEndpoint = ({ commands, index, endpoint, round }: SetEndpointInput): void => {
   const cmd = commands[index];
   if (cmd.kind === 'close') return;
+
   const rp: [number, number] = [round(endpoint[0]), round(endpoint[1])];
   if (cmd.kind === 'move' || cmd.kind === 'line') {
     commands[index] = { ...cmd, to: rp };
@@ -160,14 +170,19 @@ const precedingMoveIndex = (commands: ReadonlyArray<PathCommand>, commandIndex: 
     if (commands[index].kind === 'move') return index;
     if (isDrawableCommand(commands[index])) break;
   }
+
   return -1;
 };
 
 /** 箭头收缩改写所需上下文 */
 export type ApplyArrowShrinksContext = {
+  /** 起点收缩系数，乘 strokeWidth 得到实际距离 */
   shrinkStart: number;
+  /** 终点收缩系数，乘 strokeWidth 得到实际距离 */
   shrinkEnd: number;
+  /** 宿主描边宽度，用于换算箭头收缩距离 */
   strokeWidth: number;
+  /** 统一改写端点的坐标精度 */
   round: (n: number) => number;
 };
 
@@ -198,21 +213,26 @@ export const applyArrowShrinks = (commands: Array<PathCommand>, context: ApplyAr
       }
     }
   }
+
   if (shrinkEnd !== 0) {
     let lastDrawableIndex = -1;
+
     for (let i = commands.length - 1; i >= 0; i--) {
       if (isDrawableCommand(commands[i])) {
         lastDrawableIndex = i;
         break;
       }
     }
+
     if (lastDrawableIndex >= 0) {
       const command = commands[lastDrawableIndex];
       if (command.kind === 'arc' || command.kind === 'ellipseArc') {
         commands[lastDrawableIndex] = trimArcEnd(command, shrinkEnd * strokeWidth);
         return;
       }
+
       let prevIdx = lastDrawableIndex - 1;
+
       while (prevIdx >= 0 && commands[prevIdx].kind === 'close') prevIdx--;
       if (prevIdx >= 0) {
         const curPt = endpointOf(command);

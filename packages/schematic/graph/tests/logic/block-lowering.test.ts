@@ -38,6 +38,7 @@ const flexArtifactWithKeys = (
     .map(candidate => candidate as FlexLayoutCompileArtifact)
     .find(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'));
   if (artifact === undefined) throw new Error(`Expected FlexLayout artifact for keys '${keys.join(', ')}'`);
+
   return artifact;
 };
 
@@ -189,6 +190,7 @@ describe('Block-family layout-aware lowering', () => {
     const overriddenTexts = primitivesOf(overridden.output.scene.primitives).filter(
       primitive => primitive.type === 'text',
     );
+
     expect(overriddenTexts[0]).toEqual(expect.objectContaining({ fontWeight: 'normal' }));
     expect(overriddenTexts[1]).toEqual(expect.objectContaining({ fontSize: 16 }));
 
@@ -197,6 +199,7 @@ describe('Block-family layout-aware lowering', () => {
       naturalProposal,
       Graph.createGraphDefinitions(),
     );
+
     expect(textValues(primitivesOf(titleOnly.output.scene.primitives))).toEqual(['Only']);
   });
 
@@ -238,6 +241,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(implicit.result.allocationBounds).toEqual(vertical.result.allocationBounds);
     expect(horizontal.result.allocationBounds.width).toBeGreaterThan(vertical.result.allocationBounds.width);
     expect(horizontal.result.allocationBounds.height).toBeLessThan(vertical.result.allocationBounds.height);
+
     for (const result of [implicit, vertical, horizontal]) {
       expect(textValues(primitivesOf(result.output.scene.primitives))).toEqual([
         'icon',
@@ -377,6 +381,7 @@ describe('Block-family layout-aware lowering', () => {
         .map(candidate => candidate as FlexLayoutCompileArtifact)
         .find(candidate => candidate.value.items.length === labels.length);
       if (artifact === undefined) throw new Error(`Expected Row FlexLayout artifact with ${labels.length} items`);
+
       return artifact.value.items.map(item => item.slotBounds.width);
     };
 
@@ -473,12 +478,14 @@ describe('Block-family layout-aware lowering', () => {
         .map(candidate => candidate as FlexLayoutCompileArtifact)
         .filter(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'))
         .map(candidate => candidate.value.container.allocationBounds.height);
+
     const sectionHeight = (output: ReturnType<typeof compileToScene>) => {
       const background = pathPrimitivesOf(output.scene.primitives).find(
         path => path.fill === 'currentColor' && path.fillOpacity === 0.037,
       );
       const bottomEdge = background?.commands.find(command => command.kind === 'line' && command.to[0] === 8);
       if (bottomEdge === undefined || bottomEdge.kind !== 'line') throw new Error('Expected Section bottom edge');
+
       return bottomEdge.to[1];
     };
 

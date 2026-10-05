@@ -44,9 +44,11 @@ const distanceBetween = (a: Point, b: Point): number => Math.hypot(a.x - b.x, a.
 describe('IntervalMark 径向柱 demo', () => {
   it('柱间距在完整圆周的首尾接缝处仍然可见', () => {
     const paths = sectorPathData(radialBarMarkup(0.3));
+
     expect(paths).toHaveLength(6);
 
     const seamDistance = distanceBetween(innerEndOf(paths[5]), innerStartOf(paths[0]));
+
     expect(seamDistance).toBeGreaterThan(10);
   });
 });

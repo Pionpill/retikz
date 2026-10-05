@@ -48,6 +48,7 @@ const firstPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrim | undefi
       if (path !== undefined) return path;
     }
   }
+
   return undefined;
 };
 
@@ -240,6 +241,7 @@ describe('Extension optional arrow definitions', () => {
     const customized = firstPath(
       compileToScene(customizedScene, { arrows: [OpenSquareArrowDefinition] }).scene.primitives,
     );
+
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [89.7, 0] });
     expect(customized?.arrowEnd).toMatchObject({ refX: 0, markerWidth: 12, markerHeight: 18 });
     expect(SquareArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
@@ -320,6 +322,7 @@ describe('Extension optional arrow definitions', () => {
     const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
 
     expect(definition).toBeDefined();
+
     if (definition === undefined) return;
 
     expect([
@@ -348,6 +351,7 @@ describe('Extension optional arrow definitions', () => {
     const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
 
     expect(definition).toBeDefined();
+
     if (definition === undefined) return;
 
     const customized = firstPath(
@@ -381,6 +385,7 @@ describe('Extension optional arrow definitions', () => {
         { arrows: [definition] },
       ).scene.primitives,
     );
+
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [99.3, 0] });
     expect(customized?.arrowEnd).toMatchObject({
       shape: 'straightBarb',
@@ -409,6 +414,7 @@ describe('Extension optional arrow definitions', () => {
         { arrows: [definition] },
       ).scene.primitives,
     );
+
     expect(reversed?.commands.at(-1)).toEqual({ kind: 'line', to: [0.1, 0] });
 
     const doubleEnded = firstPath(
@@ -433,6 +439,7 @@ describe('Extension optional arrow definitions', () => {
         { arrows: [definition] },
       ).scene.primitives,
     );
+
     expect(doubleEnded?.commands).toEqual([
       { kind: 'move', to: [0.1, 0] },
       { kind: 'line', to: [99.9, 0] },
@@ -447,7 +454,9 @@ describe('Extension optional arrow definitions', () => {
 
     expect(definition).toBeDefined();
     expect(provider).toBeDefined();
+
     if (definition === undefined || provider === undefined) return;
+
     expect(provider.makeDefinition({})).toBe(definition);
   });
 
@@ -480,6 +489,7 @@ describe('Extension optional arrow definitions', () => {
       ],
     };
     const customized = firstPath(compileToScene(customizedScene, { arrows: [BarArrowDefinition] }).scene.primitives);
+
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [99.3, 0] });
     expect(customized?.arrowEnd).toMatchObject({ refX: 8, markerWidth: 12, markerHeight: 18, opacity: 0.4 });
     expect(customized?.arrowEnd?.marker[0]).toMatchObject({ stroke: '#f00', strokeWidth: 2 });
@@ -502,6 +512,7 @@ describe('Extension optional arrow definitions', () => {
         { arrows: [CrowFootArrowDefinition] },
       ).scene.primitives,
     );
+
     expect(reversed?.commands.at(-1)).toEqual({ kind: 'line', to: [6.5, 0] });
 
     const doubleEnded = firstPath(
@@ -526,6 +537,7 @@ describe('Extension optional arrow definitions', () => {
         { arrows: [BarArrowDefinition, CrowFootArrowDefinition] },
       ).scene.primitives,
     );
+
     expect(doubleEnded?.commands).toEqual([
       { kind: 'move', to: [0.1, 0] },
       { kind: 'line', to: [93.5, 0] },

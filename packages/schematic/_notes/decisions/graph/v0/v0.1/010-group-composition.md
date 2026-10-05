@@ -75,7 +75,7 @@ Surface overflow 只裁剪 content，不裁剪外围 labels；显式 Scope clip 
 
 ```ts
 type IRGroupCaption = Readonly<{
-  side?: Extract<SideValue, 'top' | 'bottom'>;
+  side?: Extract<Side, 'top' | 'bottom'>;
   direction?: 'horizontal' | 'vertical';
   itemGap?: number;
   bodyGap?: number;

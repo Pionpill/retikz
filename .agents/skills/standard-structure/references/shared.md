@@ -22,7 +22,7 @@
 ## Vocabulary
 
 - const object enum 用单数 PascalCase，成员 key 用 PascalCase，值保持用户 / IR 使用的字符串。
-- 派生类型命名 `XxxValue`。`InputXxx` 专指 Vanilla authoring API，不在 shared 建立平行领域契约。
+- 对象与派生类型同名、同文件定义导出，命名遵循 `standard-name`；保留有实际值语义的 `Value` 名称。`InputXxx` 专指 Vanilla authoring API，不在 shared 建立平行领域契约。
 - 消费 shared vocabulary 时使用枚举成员，不写裸字符串。
 - 避免无意义别名，例如不要把 `WebSide` 原样包成 `NodeLabelBoundarySide`。
 

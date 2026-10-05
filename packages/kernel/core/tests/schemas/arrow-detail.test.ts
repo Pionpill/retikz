@@ -34,6 +34,7 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
       opacity: 0.5,
       lineWidth: 2,
     });
+
     expect(ok.success).toBe(true);
   });
 
@@ -43,11 +44,13 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
       start: { shape: 'open', color: 'red' },
       end: { shape: 'stealth', scale: 2 },
     });
+
     expect(ok.success).toBe(true);
   });
 
   it('start 只填一个字段也合法（其余继承顶层 / 内置默认）', () => {
     const ok = ArrowDetailSchema.safeParse({ start: { color: 'red' } });
+
     expect(ok.success).toBe(true);
   });
 
@@ -56,6 +59,7 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
       shape: 'normal',
       start: { shape: 'stealth' },
     });
+
     expect(parsed.success).toBe(false);
   });
 });
@@ -71,6 +75,7 @@ describe('PathSchema: arrow sugar is outside core IR', () => {
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
     });
+
     expect(result.success).toBe(false);
   });
 });
@@ -143,6 +148,7 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
     });
+
     expect(ok.success).toBe(true);
   });
 
@@ -156,6 +162,7 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
     });
+
     expect(result.success).toBe(false);
   });
 });

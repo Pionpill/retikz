@@ -22,6 +22,7 @@ export const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSe
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'BlockSection.children');
     const dependencies = createGraphProviderDependencies(BlockSectionProviderKey);
+
     return {
       node: normalizeBlockSection({
         ...input,

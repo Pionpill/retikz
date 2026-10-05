@@ -1,0 +1,231 @@
+---
+title: Matrix
+description: Draw rectangular content with shared row and column tracks, JSON data, skeletons, independent indices, and cell references.
+---
+
+`Matrix` draws two-dimensional content as aligned cells for arrays, dynamic-programming tables, and schematic matrices. A cell may contain text, one drawing, or no content. Matrix does not perform arithmetic, aggregate data, or merge cells.
+
+## Integration
+
+After [installation and first rendering](/library/standard/get-start), import the collection APIs. React and Vanilla collect component and clipping dependencies automatically; direct IR registers definitions explicitly.
+
+<ComponentPreview files="matrix-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Matrix } from '@retikz/standard-react/collection';
+
+export const Example = () => (
+  <Layout>
+    <Matrix
+      items={[
+        ['A', 'B'],
+        ['C', 'D'],
+      ]}
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { matrix, MatrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const svg = renderToSvgString(
+  scene({
+    children: [
+      matrix({
+        items: [
+          ['A', 'B'],
+          ['C', 'D'],
+        ],
+      }),
+    ],
+  }),
+  { adapters: [MatrixInputEmbedAdapter] },
+);
+```
+
+</DocTab>
+<DocTab value="ir" label="IR">
+
+```ts
+import { MatrixDefinition } from '@retikz/standard/collection';
+import { PathClipDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const svg = renderToSvgString(
+  {
+    type: 'scene',
+    version: 1,
+    children: [
+      {
+        namespace: 'standard',
+        type: 'matrix',
+        items: [
+          ['A', 'B'],
+          ['C', 'D'],
+        ],
+      },
+    ],
+  },
+  { compile: { composites: [MatrixDefinition], clips: [PathClipDefinition] } },
+);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Choose an input
+
+The three inputs are mutually exclusive, including empty inputs. The first two array levels always describe rows and columns. Every row must have the same length; Matrix never pads, truncates, or transposes input.
+
+| Input      | Meaning                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------- |
+| `items`    | Hand-authored cells; strings display literally, and cell objects configure content, id, style, and layout |
+| `data`     | Rectangular JSON data; each value follows JSON display semantics, including quotes around strings         |
+| `skeleton` | Empty rectangles or inside-cell symbols without real data                                                 |
+
+A string item is equivalent to `{ content: text }`; repeated text is valid. `{}` has no content, while `{ content: '' }` still contains empty text. Fields such as id and style inside data remain ordinary data.
+
+<ComponentPreview
+  files={['matrix-inputs', 'matrix-inputs.preview.tsx']}
+  defaultSourceFile="matrix-inputs.preview.tsx"
+  size="sm"
+/>
+
+`[]` means 0 × 0, and `[[], []]` means 2 × 0. A zero axis produces no cells, index strips, or gaps and has zero natural dimensions. Container labels can still render.
+
+### Draw a skeleton
+
+Use `{ rows, columns }` for empty cells or `{ labels: [['x₁₁', 'x₁₂'], ['x₂₁', '']] }` for inside-cell text. These alternatives cannot mix. Dimensions and their product must be nonnegative safe integers. Label rows must be rectangular; empty strings mean no content, other strings are literal text, and repeated symbols are valid.
+
+<ComponentPreview
+  files={['matrix-skeleton', 'matrix-skeleton.preview.tsx']}
+  defaultSourceFile="matrix-skeleton.preview.tsx"
+  size="md"
+/>
+
+Inside and outside labels are independent: skeleton.labels goes inside cells; index.row.labels and index.column.labels go outside. Empty cells retain backgrounds, padding, and reference regions. Use items or JSX for per-cell styling or drawings.
+
+### Configure tracks, styles, and indices
+
+Each column uses the largest cell width demand in that column; each row uses its largest height demand. layout.width and height accept numbers or auto, but not content. Auto cells fill their tracks; smaller fixed cells keep their size at the track's upper-left corner. Unused track space is outside the cell reference region.
+
+<ComponentPreview
+  files={['matrix-layout', 'matrix-layout.preview.tsx']}
+  defaultSourceFile="matrix-layout.preview.tsx"
+  size="lg"
+/>
+
+Dimensions include padding, which defaults to 8. Gap defaults to 2 and accepts a number or an object containing both row and column. Cell styles override container styles; font merges by field. Defaults are gray fill at 0.14 opacity, no stroke, and zero corner radius. Each cell paints its own background and border; borders are not merged.
+
+| index                                                   | Result                        |
+| ------------------------------------------------------- | ----------------------------- |
+| false or omitted                                        | Hide both axes                |
+| true                                                    | Show both, numbered from zero |
+| `{}`                                                    | Hide both axes                |
+| `{ row: true }`                                         | Show row indices only         |
+| `{ column: { labels: ['a', 'b'], position: 'after' } }` | Show column labels below      |
+
+Each axis accepts a boolean or configuration object. An axis object defaults start to zero; start and labels are mutually exclusive. Label count must equal the corresponding axis length, even when the opposite axis is zero. Empty labels are hidden; an entirely empty axis reserves no strip or gap. For rows, before/after means left/right; for columns, above/below. Before is the default. Labels center on their tracks, with an empty corner between strips.
+
+Row strips use column gap; column strips use row gap. Axis style inherits overall font and textColor, but not per-cell styles. Index text is measured independently and does not enlarge cells.
+
+## Extended usage
+
+### Compose drawings and expand nested data
+
+In React, MatrixRow groups MatrixCell declarations without row-level styles or ids. A cell accepts text or exactly one drawable child, never both. Omitting both leaves an empty cell. Fragments, arrays, and React empty nodes may organize markers.
+
+```text
+Matrix
+├── MatrixRow
+│   ├── MatrixCell
+│   └── MatrixCell
+│       └── Map
+└── MatrixRow
+    ├── MatrixCell
+    └── MatrixCell
+```
+
+<ComponentPreview
+  files={['matrix-content', 'matrix-content.preview.tsx']}
+  defaultSourceFile="matrix-content.preview.tsx"
+  size="sm"
+/>
+
+React items contain text configurations; use JSX for nested drawings. Vanilla content accepts an authoring child, and IR accepts a serializable drawable. Wrap multiple drawings in one Scope. React with no input creates empty items; other APIs require an explicit input.
+
+DataExpand applies only to data and controls structures inside each cell:
+
+| Configuration  | Objects   | Arrays    |
+| -------------- | --------- | --------- |
+| true (default) | Map       | Array     |
+| false or []    | JSON text | JSON text |
+| ['map']        | Map       | JSON text |
+| ['array']      | JSON text | Array     |
+
+The selection propagates recursively. A structure rendered as text retains its entire subtree as compact JSON. Empty objects and arrays display as {} and []. Deeper rectangular arrays still become nested Array components; Matrix is never inferred, and there is no matrix selector. Overall cell style/layout affects only this level, while font and text color inherit through content.
+
+Direct IR using data also registers ArrayDefinition and MapDefinition; clipping requires PathClipDefinition. React and Vanilla collect these automatically.
+
+### Reference cells, clip content, and label containers
+
+The default cellIdMode, explicit, uses only explicit cell ids. Index mode requires a Matrix id and generates `<matrix-id>-<row>-<column>`. For example, getMatrixCellId('m', 1, 0) returns m-1-0. Coordinates always start at zero and are independent of displayed indices. Import the helper from @retikz/standard/collection; it validates arguments without checking whether a cell exists.
+
+<ComponentPreview
+  files={['matrix-reference', 'matrix-reference.preview.tsx']}
+  defaultSourceFile="matrix-reference.preview.tsx"
+  size="md"
+/>
+
+Explicit and generated ids may reference the same cell. Identical names on one cell deduplicate; cross-cell collisions fail. References use the actual cell border box, excluding unused track space, gaps, indices, and overflow. Spatial roles are matrix-cell for cells and container for the root.
+
+Fixed dimensions clip by default; auto dimensions preserve overflow. Override overflow explicitly when needed. Clipping never scales or wraps content. Label follows the [Node label contract](/kernel/components/node/labels), accepting one object or an array. Labels attach to the entire Matrix without changing cell measurement. Overall font, color, and defaults.label may provide defaults; cell styles do not affect container labels.
+
+## Errors and limitations
+
+- Ragged rows, mixed inputs, invalid dimensions, mismatched index counts, and cross-cell id collisions are rejected.
+- Data must be a JSON value tree, without functions, cycles, instances, or sparse arrays.
+- A parent allocation smaller than the natural Matrix layout fails compilation. Extra space does not stretch tracks.
+- Matrix does not model merged cells, headers, sorting, aggregation, or matrix arithmetic.
+
+## How it works
+
+Resolution converts all three inputs into shared Cells and merges overall/per-cell settings. Compilation measures content once, calculates column widths and row heights, then positions cells and independent index strips. Fixed cells keep their dimensions; auto cells use their track dimensions.
+
+The shared cell pipeline paints backgrounds, clipped content, and borders separately and registers actual cell bounds. Container labels attach to the overall bounds including index strips and do not participate in cell measurement.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Track measurement and placement',
+      path: 'packages/library/standard/src/collection/matrix/pipeline.ts',
+      startLine: 1,
+    },
+    { label: 'Shared cell output', path: 'packages/library/standard/src/collection/_cell/pipeline.ts', startLine: 1 },
+  ]}
+/>
+
+## API reference
+
+React, Vanilla, and IR signatures and descriptions are generated from source.
+
+{/* @include library/standard/collection/matrix/generated */}
+
+## Schema reference
+
+MatrixSchema owns persistent Source. Factories preserve sparse input. Explicit parse materializes static defaults; resolution handles inheritance and dynamic clipping defaults.
+
+#### MatrixSchema
+
+<ZodSchema name="MatrixSchema" description="Rectangular cells, JSON data, or schematic skeletons" expandNested />

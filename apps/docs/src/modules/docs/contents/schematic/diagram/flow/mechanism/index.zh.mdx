@@ -301,6 +301,16 @@ smooth 的点是曲线必须经过的位置，不是贝塞尔控制点。图中�
   ]}
 />
 
+## 容器宽度分配
+
+同级容器等宽先保留各行自然宽度，再取最大值作为共同预算。自然测量包含节点、间距和关系标签预留；Group 还计入标题与内容 inset。内部 fill 行复用 Flex 的等权增长，固定 layout.width 的节点不参加分配。节点通过 Graph/Core 重测后，最终尺寸才交给布局器；预算不会重新反馈成更大的自然宽度。
+
+布局输入的 allocatedWidth 是必须保留的容器宽度，输出仍使用 bounds。自定义布局器也不能改变该约束；最终路由、Graph 绘制和 artifact 使用同一几何。可观察对照见[同级容器等宽](/schematic/diagram/flow/extended#同级容器等宽)。
+
+<SourceLinks
+  sources={[{ label: '分配与重测', path: 'packages/schematic/diagram/src/flow/pipeline/flow/container-width.ts' }]}
+/>
+
 ## 端点分配
 
 Relation 的 source/target 在布局输入中统一为含 id、有效 overlap 与可选 side 或 anchor 的对象。`endpointPlacement` 能力在布局回调前检查。布局输出只保留 `{ id, anchor? }`，不回写 Source。

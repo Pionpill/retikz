@@ -7,7 +7,9 @@ import { describe, expect, it } from 'vitest';
 import * as compile from '../../src/compile';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
 const root = resolve(here, '../..');
+
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
 describe('compile source structure', () => {

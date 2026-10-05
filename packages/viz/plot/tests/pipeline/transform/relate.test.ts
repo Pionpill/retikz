@@ -39,6 +39,7 @@ describe('relate transform', () => {
         },
       ],
     });
+
     expect([...collectSourceFields(spec, resolveTransformRegistry())].sort()).toEqual(['id', 'value', 'x']);
   });
 });

@@ -51,6 +51,7 @@ describe('ComponentPreview global theme', () => {
         </PreviewDimensionsContext.Provider>
       </PreviewThemeProvider>,
     );
+
     expect(markup).toContain('<svg');
     expect(markup).toContain(color);
     expect(markup.match(/<svg/g)).toHaveLength(1);
@@ -62,6 +63,7 @@ describe('ComponentPreview global theme', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
+
     for (const style of [PreviewThemeStyle.Default, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Default]) {
       await act(async () => {
         root.render(
@@ -74,8 +76,10 @@ describe('ComponentPreview global theme', () => {
         await Promise.resolve();
       });
       const color = style === PreviewThemeStyle.Default ? 'hsl(210, 38%, 48%)' : 'hsl(210, 70%, 54%)';
+
       expect(container.innerHTML).toContain(color);
     }
+
     act(() => root.unmount());
   });
 
@@ -85,6 +89,7 @@ describe('ComponentPreview global theme', () => {
         <ThemeInheritance />
       </PreviewThemeProvider>,
     );
+
     expect(markup).toContain('<svg');
     expect(markup).toContain('#dbeafe');
   });
@@ -118,7 +123,9 @@ describe('ComponentPreview global theme', () => {
         </PreviewThemeProvider>,
       );
     });
+
     expect(container.textContent).toBe(PreviewThemeStyle.Clean);
+
     act(() => root.unmount());
   });
 
@@ -140,7 +147,9 @@ describe('ComponentPreview global theme', () => {
         </PreviewThemeProvider>,
       );
     });
+
     expect(container.textContent).toBe('default');
+
     act(() => root.unmount());
   });
 
@@ -162,10 +171,13 @@ describe('ComponentPreview global theme', () => {
         </PreviewThemeProvider>,
       );
     });
+
     expect(container.textContent).toBe(PreviewThemeStyle.Academic);
 
     act(() => useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Vibrant));
+
     expect(container.textContent).toBe(PreviewThemeStyle.Academic);
+
     act(() => root.unmount());
   });
 
@@ -185,7 +197,9 @@ describe('ComponentPreview global theme', () => {
         </PreviewThemeProvider>,
       );
     });
+
     expect(container.textContent).toBe('dark');
+
     act(() => root.unmount());
   });
 
@@ -258,12 +272,14 @@ describe('ComponentPreview global theme', () => {
     );
     const graphRecord = graph as Readonly<Record<string, unknown>>;
     const graphOptions = (graphRecord.input as Readonly<Record<string, unknown>> | undefined) ?? graphRecord;
+
     expect(graphOptions).toMatchObject({ graphThemeStyles: PreviewThemeDefinitionBundle.graph });
 
     for (const component of [PreviewEntity, PreviewRelation]) {
       const embedded = component.createInputEmbedProps?.({}, { id: 'preview', kind: component.inputEmbedAdapter.kind });
       const record = embedded as Readonly<Record<string, unknown>>;
       const options = (record.input as Readonly<Record<string, unknown>> | undefined) ?? record;
+
       expect(options).not.toHaveProperty('graphThemeStyles');
     }
   });

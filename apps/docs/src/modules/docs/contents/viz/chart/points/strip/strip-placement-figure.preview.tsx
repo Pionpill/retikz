@@ -28,5 +28,6 @@ export const renderStripPlacementFigurePreview = (
       }}
     />
   );
+
   return chart;
 };

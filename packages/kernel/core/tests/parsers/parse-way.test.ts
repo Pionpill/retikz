@@ -67,6 +67,7 @@ describe('parseWay', () => {
   describe('Way 元素形态覆盖', () => {
     it('全是节点 id（string）→ eager 转 NodeTarget 对象', () => {
       const steps = parseWay(['A', 'B', 'C']);
+
       expect(steps.map(toOf)).toEqual([{ id: 'A' }, { id: 'B' }, { id: 'C' }]);
     });
 
@@ -76,6 +77,7 @@ describe('parseWay', () => {
         [10, 10],
         [20, 0],
       ]);
+
       expect(steps.map(toOf)).toEqual([
         [0, 0],
         [10, 10],
@@ -87,6 +89,7 @@ describe('parseWay', () => {
       const a = { angle: 0, radius: 10 };
       const b = { angle: 90, radius: 10 };
       const c = { origin: 'A', angle: 45, radius: 5 };
+
       expect(parseWay([a, b, c])).toEqual([
         { type: 'step', kind: 'move', to: a },
         { type: 'step', kind: 'line', to: b },
@@ -97,6 +100,7 @@ describe('parseWay', () => {
     it('混合形态：string + [x, y] + PolarPosition', () => {
       const polar = { angle: 30, radius: 5 };
       const steps = parseWay(['A', [10, 0], polar, 'B']);
+
       expect(steps).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'line', to: [10, 0] },
@@ -128,12 +132,14 @@ describe('parseWay', () => {
 
     it('除首段外、非 fold 项的段 kind 是 "line"', () => {
       const steps = parseWay(['A', 'B', 'C', 'D']);
+
       expect(steps.slice(1).every(s => s.kind === 'line')).toBe(true);
     });
 
     it('to 字段按 way 顺序对应（节点 id eager 转对象，坐标透传）', () => {
       const way: WayDSL = ['A', [1, 2], 'B', [3, 4]];
       const steps = parseWay(way);
+
       expect(steps.map(toOf)).toEqual([{ id: 'A' }, [1, 2], { id: 'B' }, [3, 4]]);
     });
   });
@@ -143,18 +149,21 @@ describe('parseWay', () => {
       const way: WayDSL = ['A', 'B', 'C'];
       const before = [...way];
       parseWay(way);
+
       expect(way).toEqual(before);
     });
 
     it('不与输入 way item 共享对象（PolarPosition 引用透传 OK）', () => {
       const polar = { angle: 0, radius: 1 };
       const steps = parseWay([polar, 'B']);
+
       // to 字段是同一引用，不深拷贝（对 IR 使用方足够：IR 序列化时再深拷贝）
       expect(toOf(steps[0])).toBe(polar);
     });
 
     it('两次相同输入产出结构相等的结果', () => {
       const way: WayDSL = ['A', [1, 2], 'B'];
+
       expect(parseWay(way)).toEqual(parseWay(way));
     });
   });
@@ -257,6 +266,7 @@ describe('parseWay', () => {
 
     it("裸字符串 'cycle' 不触发闭合——视作普通节点 id（与 DrawWay.Cycle 字面值刻意不同）", () => {
       const steps = parseWay(['A', 'cycle']);
+
       expect(steps[1]).toEqual({ type: 'step', kind: 'line', to: { id: 'cycle' } });
     });
   });
@@ -617,6 +627,7 @@ describe('parseWay', () => {
 
     it('未给 label 的段不写出 label 字段（IR 保持紧凑）', () => {
       const out = parseWay(['A', { label: 'x' }, 'B', 'C']);
+
       expect(out[1]).toEqual({
         type: 'step',
         kind: 'line',

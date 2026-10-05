@@ -14,7 +14,10 @@ export type DomainPaddingTarget = {
   extent: ReadonlyArray<number>;
 };
 
-/** Mark 提供已完成尺寸映射、尚未执行位置映射的观测目标 */
+/**
+ * Mark 提供已完成尺寸映射、尚未执行位置映射的观测目标
+ * @template T 参与位置定义域留白测量的 mark 类型
+ */
 export type MarkDomainPaddingCapability<T> = (
   mark: T,
   rows: Array<ExternalRow>,

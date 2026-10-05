@@ -35,6 +35,7 @@ describe('buildSvgDocument —— 边界', () => {
   it('empty-scene：无 primitive / 无 resource → <svg> 不含 <defs>', () => {
     const scene: Scene = { primitives: [], layout };
     const doc = buildSvgDocument(scene, { idPrefix: 'd1' });
+
     expect(doc.tag).toBe('svg');
     expect(doc.attrs.viewBox).toBe('0 0 10 10');
     expect(childByTag(doc, 'defs')).toBeUndefined();
@@ -56,11 +57,16 @@ describe('buildSvgDocument —— 交互', () => {
     const scene: Scene = { primitives: [path], layout };
     const doc = buildSvgDocument(scene, { idPrefix: 'd1' });
     const defs = childByTag(doc, 'defs');
+
     expect(defs).toBeDefined();
+
     const markers = (defs?.children ?? []).filter((c): c is SvgNode => typeof c !== 'string' && c.tag === 'marker');
+
     expect(markers).toHaveLength(1);
+
     const markerId = markers[0].attrs.id;
     const pathNode = (doc.children ?? []).find((c): c is SvgNode => typeof c !== 'string' && c.tag === 'path');
+
     expect(pathNode?.attrs['marker-start']).toBe(`url(#${markerId})`);
     expect(pathNode?.attrs['marker-end']).toBe(`url(#${markerId})`);
   });
@@ -89,9 +95,11 @@ describe('buildSvgDocument —— 交互', () => {
 
     const a1 = renderToSvgString(scene, { idPrefix: 'a' });
     const a2 = renderToSvgString(scene, { idPrefix: 'a' });
+
     expect(a1).toBe(a2); // 确定性
 
     const b1 = renderToSvgString(scene, { idPrefix: 'b' });
+
     expect(a1).not.toBe(b1); // 不同前缀产不同 id
     expect(a1).toContain('id="retikz-paint-a-paint-1"');
     expect(a1).toContain('url(#retikz-paint-a-paint-1)');
@@ -123,6 +131,7 @@ describe('buildSvgDocument —— 交互', () => {
     const unsafePrefix = 'bad prefix:foo.bar)';
     const out = renderToSvgString({ primitives: [rect], layout, resources: [gradient] }, { idPrefix: unsafePrefix });
     const id = out.match(/id="(retikz-paint-[^"]+)"/)?.[1];
+
     expect(id).toBeDefined();
     expect(id).toMatch(/^[A-Za-z_][A-Za-z0-9_-]*$/);
     expect(out).toContain(`url(#${id})`);
@@ -135,6 +144,7 @@ describe('renderToSvgString —— 尺寸注入', () => {
 
   it('给定 width/height → 根 <svg> 写入显示尺寸属性', () => {
     const out = renderToSvgString(sized(), { idPrefix: 's', width: 320, height: 240 });
+
     expect(out).toMatch(/^<svg\b/);
     expect(out).toContain('width="320"');
     expect(out).toContain('height="240"');
@@ -142,12 +152,14 @@ describe('renderToSvgString —— 尺寸注入', () => {
 
   it('只给 width → 按内容比例推导 height', () => {
     const out = renderToSvgString(sized(), { idPrefix: 's', width: 320 });
+
     expect(out).toContain('width="320"');
     expect(out).toContain('height="320"');
   });
 
   it('缺省 width/height → 使用 scene.layout 的固有尺寸', () => {
     const out = renderToSvgString(sized(), { idPrefix: 's' });
+
     expect(out).toContain('width="10"');
     expect(out).toContain('height="10"');
     expect(out).toContain('viewBox="0 0 10 10"');
@@ -155,6 +167,7 @@ describe('renderToSvgString —— 尺寸注入', () => {
 
   it('viewBox 始终源自 scene.layout，不被显示尺寸覆盖', () => {
     const out = renderToSvgString(sized(), { idPrefix: 's', width: 999, height: 888 });
+
     expect(out).toContain('viewBox="0 0 10 10"');
     expect(out).toContain('width="999"');
     expect(out).toContain('height="888"');

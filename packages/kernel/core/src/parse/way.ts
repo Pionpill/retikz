@@ -66,18 +66,27 @@ export type WayCycle = typeof DrawWay.Cycle;
  * @description 以前一 step 终点为基准（首项回退 [0,0]）；Relative 不更新 prevEnd，Accumulate 累积更新。对象形态便于 IDE 补全字段；parseWay 在 sugar 层就地翻译为 IR `{relative}`/`{relativeAccumulate}`
  */
 export type WayRelativeItem = {
+  /** 以前一段终点为基准的水平与垂直偏移 */
   position: [number, number];
+  /** 选择只偏移当前目标，或同时推进后续目标的累计基点 */
   type: typeof DrawWay.Relative | typeof DrawWay.Accumulate;
 };
 
 /** 二次贝塞尔算子（infix）：把"上一项→下一项"段改成 curve step，curve 字段携控制点 */
-export type WayCurveOp = { curve: IRControlPoint };
+export type WayCurveOp = {
+  /** 上一目标与下一目标之间的二次贝塞尔控制点 */
+  curve: IRControlPoint;
+};
 
 /** 三次贝塞尔算子（infix）：cubic step；cubic 字段携两个控制点 */
-export type WayCubicOp = { cubic: [IRControlPoint, IRControlPoint] };
+export type WayCubicOp = {
+  /** 从上一目标到下一目标依次使用的两个三次贝塞尔控制点 */
+  cubic: [IRControlPoint, IRControlPoint];
+};
 
 /** 弧形简记算子（infix）：bend step；bend=方向，angle 可选缺省 30° */
 export type WayBendOp = {
+  /** 相对行进方向选择左弯或右弯 */
   bend: 'left' | 'right';
   /**
    * bend 角度（度）
@@ -91,18 +100,39 @@ export type WayBendOp = {
  * @description 按起末角度 + 半径画弧；与 curve/fold infix 不同——只消耗前一 target 作圆心，不与下一项合并
  */
 export type WayArcOp = {
-  arc: { startAngle: number; endAngle: number; radius: IRStepRadius };
+  /** 以上一目标为圆心的圆弧参数 */
+  arc: {
+    /** 圆弧起始角，单位为度 */
+    startAngle: number;
+    /** 圆弧终止角，单位为度 */
+    endAngle: number;
+    /** 圆弧半径，支持统一或分轴半径 */
+    radius: IRStepRadius;
+  };
 };
 
 /** 整圆算子（infix），以上一项为圆心、给定半径画整圆，pen 留圆心 */
-export type WayCircleOp = { circle: { radius: number } };
+export type WayCircleOp = {
+  /** 以上一目标为圆心绘制整圆的参数 */
+  circle: {
+    /** 整圆半径，使用绘图坐标单位 */
+    radius: number;
+  };
+};
 
 /** 整椭圆算子（infix），以上一项为圆心、给定 x/y 半径画整椭圆，pen 留圆心 */
-export type WayEllipseOp = { ellipse: { radius: IRStepAnisotropicRadius } };
+export type WayEllipseOp = {
+  /** 以上一目标为中心绘制整椭圆的参数 */
+  ellipse: {
+    /** 椭圆沿水平轴与垂直轴的半径 */
+    radius: IRStepAnisotropicRadius;
+  };
+};
 
 /** 边标注 parser grammar：字符串=`{text:s}`，对象接收可写入 IR 的 canonical side */
 export type WayLabel =
   | (Omit<IRStepLabel, 'side'> & {
+      /** 标签相对路径采样点的放置方位 */
       side?: (typeof Side)[keyof typeof Side];
     })
   | string;
@@ -111,10 +141,21 @@ export type WayLabel =
  * 边标注 prefix 算子（infix），修饰下一段
  * @description line/fold/curve/cubic/bend/arc/circle/ellipse 都可承载；下一个产生段的 way item 消耗到自己的 step.label 上。cycle 不允许挂 label；连续 label/末尾未消费 label 均抛错
  */
-export type WayLabelOp = { label: WayLabel };
+export type WayLabelOp = {
+  /** 应用于后续绘制段的标签文字或配置 */
+  label: WayLabel;
+};
 
 /** 单轴连接算子：把目标投影到当前 host 的水平或垂直轴 */
-export type WayAxisLineOp = { horizontalTo: IRAxisLineTarget | string } | { verticalTo: IRAxisLineTarget | string };
+export type WayAxisLineOp =
+  | {
+      /** 提供水平连接终点横坐标的目标 */
+      horizontalTo: IRAxisLineTarget | string;
+    }
+  | {
+      /** 提供垂直连接终点纵坐标的目标 */
+      verticalTo: IRAxisLineTarget | string;
+    };
 
 /**
  * Sugar 层 way 数组 DSL 元素
@@ -185,6 +226,7 @@ const WayFoldOpSchema = strictObject({
 
 const wayOperatorNamesOf = (item: WayItem): Array<string> => {
   if (!isPlainObject(item)) return [];
+
   const names = [
     'horizontalTo',
     'verticalTo',
@@ -198,6 +240,7 @@ const wayOperatorNamesOf = (item: WayItem): Array<string> => {
     'ellipse',
   ].filter(key => key in item);
   if ('position' in item && 'type' in item) names.push('relative');
+
   return names;
 };
 
@@ -214,6 +257,7 @@ const assertSingleWayOperator = (item: WayItem): void => {
 /** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
 const normalizeLabel = (l: WayLabel): IRStepLabel => {
   if (typeof l === 'string') return { text: l };
+
   const { side, ...rest } = l;
   const rawSide = side as string | undefined;
   const out: IRStepLabel = { ...rest, text: l.text };
@@ -225,6 +269,7 @@ const normalizeLabel = (l: WayLabel): IRStepLabel => {
       if (normalizedSide !== undefined) out.side = normalizedSide;
     }
   }
+
   return out;
 };
 
@@ -234,6 +279,7 @@ const desugarRelativeItem = (item: WayItem): WayItem => {
   if (item.type === DrawWay.Accumulate) {
     return { relativeAccumulate: item.position };
   }
+
   return { relative: item.position };
 };
 
@@ -255,6 +301,7 @@ const classifyWayItem = (item: WayItem): ClassifiedWayItem => {
   if (isWayFoldOpInput(item)) return { kind: 'via', item };
   if (isWayCurveLike(item)) return { kind: 'curve', item };
   if (isWayShapeOp(item)) return { kind: 'shape', item };
+
   return { kind: 'target', item };
 };
 
@@ -289,8 +336,10 @@ const parseFollowingTarget = (
   nextError: (next: WayItem) => string,
 ): IRTarget => {
   if (index + 1 >= way.length) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, endError);
+
   const next = way[index + 1];
   if (isWayOperator(next)) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, nextError(next));
+
   return parseTargetSugar(desugarRelativeItem(next));
 };
 
@@ -311,6 +360,7 @@ const buildViaStep = (
               `parseWay: invalid fold operator: ${result.error.issues[0]?.message ?? 'invalid object'}`,
             );
           }
+
           return result.data;
         })();
   return attachLabel(
@@ -353,6 +403,7 @@ const buildCurveLikeStep = (
       label,
     );
   }
+
   if (isWayCubicOp(item)) {
     return attachLabel(
       {
@@ -365,6 +416,7 @@ const buildCurveLikeStep = (
       label,
     );
   }
+
   const bend: IRBendStep = {
     type: 'step',
     kind: 'bend',
@@ -372,6 +424,7 @@ const buildCurveLikeStep = (
     bendDirection: item.bend,
   };
   if (item.angle !== undefined) bend.bendAngle = item.angle;
+
   return attachLabel(bend, label);
 };
 
@@ -391,6 +444,7 @@ const buildShapeStep = (
       label,
     );
   }
+
   if (isWayCircleOp(item)) {
     return attachLabel(
       {
@@ -401,6 +455,7 @@ const buildShapeStep = (
       label,
     );
   }
+
   return attachLabel(
     {
       type: 'step',
@@ -432,6 +487,7 @@ const axisLineTargetOf = (item: WayAxisLineOp): IRAxisLineTarget => {
       { cause: result.error },
     );
   }
+
   return result.data;
 };
 
@@ -454,10 +510,12 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
   if (way.length < 2) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Parse, 'parseWay: way must contain at least 2 items');
   }
+
   const out: Array<IRStep> = [];
 
   /** 当前未消费的 label 算子结果，下一个产生段的 way item 消耗 */
   let pendingLabel: IRStepLabel | undefined;
+
   const consumeLabel = (): IRStepLabel | undefined => {
     const l = pendingLabel;
     pendingLabel = undefined;
@@ -470,6 +528,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       `parseWay: way[0] must be a target (move start), got label operator`,
     );
   }
+
   const rawMove = targetOf(way[0]);
   if (rawMove === null) {
     throw new RetikzCoreError(
@@ -477,12 +536,15 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       `parseWay: way[0] must be a target (move start), got operator`,
     );
   }
+
   const moveTarget: IRTarget = parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
   out.push(moveStep);
   let index = 1;
+
   while (index < way.length) {
     const classified = classifyWayItem(way[index]);
+
     switch (classified.kind) {
       case 'label':
         if (pendingLabel) {
@@ -491,6 +553,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
             `parseWay: label operator at index ${index} cannot directly follow another label operator`,
           );
         }
+
         pendingLabel = normalizeLabel(classified.item.label);
         index += 1;
         break;
@@ -505,6 +568,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
             `parseWay: cycle step cannot carry a label (label operator at index ${index - 1})`,
           );
         }
+
         out.push({ type: 'step', kind: 'cycle' });
         index += 1;
         break;
@@ -527,11 +591,13 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         break;
     }
   }
+
   if (pendingLabel) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Parse,
       `parseWay: label operator at end of way must be followed by a step`,
     );
   }
+
   return out;
 };

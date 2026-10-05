@@ -81,5 +81,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['Group.caption.side', 'Group.caption.direction', 'Group.caption.itemGap', 'Group.caption.bodyGap'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const groupCaptionControls = previewControlContract.controls;

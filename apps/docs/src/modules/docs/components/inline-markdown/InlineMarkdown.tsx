@@ -36,37 +36,46 @@ const parseBlocks = (src: string): Array<Block> => {
   const lines = src.split('\n');
   const blocks: Array<Block> = [];
   let i = 0;
+
   while (i < lines.length) {
     const line = lines[i];
     if (line.trim() === '') {
       i++;
       continue;
     }
+
     if (line.startsWith('```')) {
       const lang = line.slice(3).trim();
       const start = i + 1;
       let j = start;
+
       while (j < lines.length && !lines[j].startsWith('```')) j++;
       blocks.push({ type: 'code', lang: lang || 'text', code: lines.slice(start, j).join('\n') });
       i = j + 1;
       continue;
     }
+
     const headingMatch = /^(#{1,3})\s+(.*)$/.exec(line);
     if (headingMatch) {
       blocks.push({ type: 'h', level: headingMatch[1].length as 1 | 2 | 3, text: headingMatch[2] });
       i++;
       continue;
     }
+
     if (/^[-*]\s/.test(line)) {
       const items: Array<string> = [];
+
       while (i < lines.length && /^[-*]\s/.test(lines[i])) {
         items.push(lines[i].replace(/^[-*]\s+/, ''));
         i++;
       }
+
       blocks.push({ type: 'list', items });
       continue;
     }
+
     const pStart = i;
+
     while (
       i < lines.length &&
       lines[i].trim() !== '' &&
@@ -76,8 +85,10 @@ const parseBlocks = (src: string): Array<Block> => {
     ) {
       i++;
     }
+
     blocks.push({ type: 'p', text: lines.slice(pStart, i).join('\n') });
   }
+
   return blocks;
 };
 
@@ -87,6 +98,7 @@ const renderInline = (src: string): ReactNode => {
   let lastIndex = 0;
   let m: RegExpExecArray | null;
   let key = 0;
+
   while ((m = re.exec(src)) !== null) {
     if (m.index > lastIndex) nodes.push(src.slice(lastIndex, m.index));
     const token = m[0];
@@ -131,15 +143,20 @@ const renderInline = (src: string): ReactNode => {
         nodes.push(token);
       }
     }
+
     lastIndex = m.index + token.length;
   }
+
   if (lastIndex < src.length) nodes.push(src.slice(lastIndex));
+
   return nodes.map((n, idx) => <Fragment key={idx}>{n}</Fragment>);
 };
 
 const renderMarkdown = (src: string): ReactNode => {
   if (!src) return null;
+
   const blocks = parseBlocks(src);
+
   return blocks.map((b, i) => {
     if (b.type === 'code') {
       return (
@@ -148,16 +165,19 @@ const renderMarkdown = (src: string): ReactNode => {
         </div>
       );
     }
+
     if (b.type === 'h') {
       const baseCls = 'mt-3 mb-1 font-medium';
       const sizeCls = b.level === 1 ? 'text-base' : 'text-sm';
       const Cmp = b.level === 1 ? 'h4' : b.level === 2 ? 'h5' : 'h6';
+
       return (
         <Cmp key={i} className={cn(baseCls, sizeCls)}>
           {renderInline(b.text)}
         </Cmp>
       );
     }
+
     if (b.type === 'list') {
       return (
         <ul key={i} className="my-2 ml-5 list-disc space-y-1">
@@ -167,6 +187,7 @@ const renderMarkdown = (src: string): ReactNode => {
         </ul>
       );
     }
+
     return (
       <p key={i} className="my-2 whitespace-pre-wrap leading-relaxed">
         {renderInline(b.text)}

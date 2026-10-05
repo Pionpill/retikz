@@ -65,6 +65,7 @@ describe('Vanilla processing', () => {
       lower: (_props, context) => {
         expect(context.theme).toMatchObject({ style: 'academic', mode: ThemeMode.Dark });
         expect(context.themeStyles).toEqual([themeStyle]);
+
         return {
           node: { type: 'node', id: 'theme-probe', position: [0, 0] },
           providerDependencies: { roots: [], providers: [] },
@@ -122,6 +123,7 @@ describe('Vanilla processing', () => {
     controller.update({ children: [{ id: 'second', position: [20, 0] }] });
 
     const second = controller.read();
+
     expect(second.revision).toBe(first.revision + 1);
     expect(second.scene).not.toBe(first.scene);
     expect(Object.isFrozen(second)).toBe(true);
@@ -136,8 +138,11 @@ describe('Vanilla processing', () => {
 
     unsubscribe();
     controller.update({ children: [{ id: 'third', position: [40, 0] }] });
+
     expect(listener).toHaveBeenCalledTimes(1);
+
     controller.dispose();
+
     expect(() => controller.update({ children: [{ id: 'after-dispose', position: [60, 0] }] })).toThrow(/disposed/i);
   });
 
@@ -183,6 +188,7 @@ describe('Vanilla processing', () => {
 
     expect(() => controller.update({ children: [{ id: 'restored', position: [20, 0] }] })).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 2);
+
     controller.dispose();
   });
 
@@ -231,6 +237,7 @@ describe('Vanilla processing', () => {
     expect(controller.diagnostics()).toEqual([
       expect.objectContaining({ message: 'expected candidate composite failure' }),
     ]);
+
     controller.dispose();
   });
 
@@ -245,6 +252,7 @@ describe('Vanilla processing', () => {
     expect(() => controller.update({ children: [{ id: 'second', position: [20, 0] }] })).not.toThrow();
     expect(controller.read().revision).toBe(first.revision + 1);
     expect(controller.diagnostics()).toContain(failure);
+
     controller.dispose();
   });
 
@@ -281,6 +289,7 @@ describe('Vanilla processing', () => {
     processing.update({ children: [{ id: 'second', position: [20, 0] }] });
 
     const second = processing.read();
+
     expect(second.revision).toBe(first.revision + 1);
     expect(second.scene).not.toBe(first.scene);
     expect(listener).toHaveBeenCalledWith(second);
@@ -288,9 +297,12 @@ describe('Vanilla processing', () => {
       processing.update({ children: [{ id: 'broken', position: [0, 0], shape: 'missing-shape' }] }),
     ).toThrow();
     expect(processing.read()).toBe(second);
+
     unsubscribe();
     processing.update({ children: [{ id: 'third', position: [40, 0] }] });
+
     expect(listener).toHaveBeenCalledTimes(1);
+
     processing.dispose();
   });
 
@@ -302,6 +314,7 @@ describe('Vanilla processing', () => {
         instances.push(input.instance);
         const existing = sessions.get(input.instance);
         if (existing !== undefined) return existing;
+
         const session = {
           observers: [],
           resolve: (output: Parameters<VanillaCompileDriverSession['resolve']>[0]) => ({
@@ -312,6 +325,7 @@ describe('Vanilla processing', () => {
           }),
         };
         sessions.set(input.instance, session);
+
         return session;
       },
     };
@@ -323,8 +337,10 @@ describe('Vanilla processing', () => {
 
     expect(instances).toHaveLength(2);
     expect(instances[1]).toBe(instances[0]);
+
     const staticResult = processToStaticInputResult(second, { compileDriver: driver });
     const retainedResult = controller.read();
+
     expect(retainedResult.revision).toBe(1);
     expect(retainedResult.scene).toEqual(staticResult.scene);
     expect(retainedResult.compileResult).toEqual(staticResult.compileResult);
@@ -332,6 +348,7 @@ describe('Vanilla processing', () => {
     expect(retainedResult.layers).toEqual(staticResult.layers);
     expect(retainedResult.diagnostics).toEqual(staticResult.diagnostics);
     expect(retainedResult.runtimeMeta.layers).toEqual(staticResult.runtimeMeta.layers);
+
     controller.dispose();
   });
 
@@ -367,8 +384,11 @@ describe('Vanilla processing', () => {
     expect(controller.diagnostics()).toEqual([
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed }),
     ]);
+
     controller.update({ children: [{ id: 'recovered', position: [40, 0] }] });
+
     expect(controller.read().revision).toBe(stable.revision + 1);
+
     controller.dispose();
   });
 });

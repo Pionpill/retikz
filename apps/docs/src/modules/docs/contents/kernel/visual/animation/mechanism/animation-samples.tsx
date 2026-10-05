@@ -7,12 +7,14 @@ import { animationSamplesI18n } from './animation-samples.i18n';
 
 /** 时间采样图的语言参数 */
 export type AnimationSamplesProps = { lang?: Lang };
+
 /** 用同一轨道的四个固定时刻对照基础状态与动画值 */
 const AnimationSamples: FC<AnimationSamplesProps> = props => {
   const { lang = 'zh' } = props;
   const text = animationSamplesI18n[lang];
   const times = [100, 200, 700, 1200];
   const values = times.map(time => (time < 200 ? 1 : 0.2 + 0.8 * Math.min(1, (time - 200) / 1000)));
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {times.map((time, index) => (

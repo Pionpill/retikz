@@ -1,19 +1,6 @@
 import type { IRBoxSpacing } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type {
-  IntervalBoundKind,
-  MarkValueKind,
-  PathClosureKind,
-  PathCurve,
-  PlotMark,
-  ReferenceMarkKind,
-  RelationGeometryKind,
-  RelationOrthogonalLabelStep,
-  RelationRouteStepKind,
-  RelationRoutingKind,
-} from './constants';
 import { BUILTIN_MARK_TYPES } from './constants';
 import type {
   AnchorIdSchema,
@@ -68,14 +55,8 @@ import type {
 
 export type { IRBoxSpacing };
 
-/** mark 类型 */
-export type PlotMarkValue = ValueOf<typeof PlotMark>;
-
 /** point mark（散点 + 文本标签） */
 export type IRPlotPointMark = ZodInfer<typeof PointMarkSchema>;
-
-/** mark 值来源变体 */
-export type MarkValueKindValue = ValueOf<typeof MarkValueKind>;
 
 /** PointMark 颜色样式值（field / constant） */
 export type IRPlotPointColorStyle = ZodInfer<typeof PointColorStyleSchema>;
@@ -149,20 +130,11 @@ export type IRPlotPathThicknessStyle = ZodInfer<typeof PathThicknessStyleSchema>
 /** PathMark scale 绑定样式值 */
 export type IRPlotPathScaleStyle = ZodInfer<typeof PathScaleStyleSchema>;
 
-/** PathMark 相邻点连接方式 */
-export type PathCurveValue = ValueOf<typeof PathCurve>;
-
-/** PathMark 闭合策略 */
-export type PathClosureKindValue = ValueOf<typeof PathClosureKind>;
-
 /** PathMark 闭合策略配置 */
 export type IRPlotPathClosure = ZodInfer<typeof PathClosureSchema>;
 
 /** path mark（折线 / 轮廓） */
 export type IRPlotPathMark = ZodInfer<typeof PathMarkSchema>;
-
-/** interval 单维区间来源 */
-export type IntervalBoundKindValue = ValueOf<typeof IntervalBoundKind>;
 
 /** interval 单维区间来源 */
 export type IRPlotIntervalBound = ZodInfer<typeof IntervalBoundSchema>;
@@ -193,21 +165,6 @@ export type IRPlotMarkTransform = ZodInfer<typeof MarkTransformSchema>;
 
 /** relation mark 的数据派生变换声明 */
 export type IRPlotRelationTransform = ZodInfer<typeof RelationTransformSchema>;
-
-/** RelationMark 几何子类型值 */
-export type RelationGeometryKindValue = ValueOf<typeof RelationGeometryKind>;
-
-/** relation 显式路由支持的 core step 类型取值 */
-export type RelationRouteStepKindValue = ValueOf<typeof RelationRouteStepKind>;
-
-/** relation 自动路由策略类型取值 */
-export type RelationRoutingKindValue = ValueOf<typeof RelationRoutingKind>;
-
-/** relation 正交路由标签落点策略取值 */
-export type RelationOrthogonalLabelStepValue = ValueOf<typeof RelationOrthogonalLabelStep>;
-
-/** reference mark 显式形态取值 */
-export type ReferenceMarkKindValue = ValueOf<typeof ReferenceMarkKind>;
 
 /** relation mark 的路由策略声明 */
 export type IRPlotRelationRouting = ZodInfer<typeof RelationRoutingSchema>;

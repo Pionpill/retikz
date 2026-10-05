@@ -27,6 +27,7 @@ export const inputTableFromIR = (spec: IRTable): InputTableVariant => {
     const { namespace: _namespace, type: _type, data, structure, ...input } = detail;
     void _namespace;
     void _type;
+
     return {
       kind: InputTableKind.Detail,
       input: {
@@ -38,11 +39,13 @@ export const inputTableFromIR = (spec: IRTable): InputTableVariant => {
       },
     };
   }
+
   if (spec.structure.kind === InputTableKind.Manual) {
     const manual = spec as IRManualTable;
     const { namespace: _namespace, type: _type, structure, ...input } = manual;
     void _namespace;
     void _type;
+
     return {
       kind: InputTableKind.Manual,
       input: {
@@ -52,9 +55,11 @@ export const inputTableFromIR = (spec: IRTable): InputTableVariant => {
       },
     };
   }
+
   const custom = spec as IRCustomTable;
   const { namespace: _namespace, type: _type, ...input } = custom;
   void _namespace;
   void _type;
+
   return { kind: InputTableKind.Custom, input };
 };

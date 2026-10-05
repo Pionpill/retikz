@@ -6,10 +6,12 @@ import type { IRScene } from '../../src/schemas';
 
 const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrim> => {
   const texts: Array<TextPrim> = [];
+
   for (const primitive of primitives) {
     if (primitive.type === 'text') texts.push(primitive);
     if (primitive.type === 'group') texts.push(...collectTexts(primitive.children));
   }
+
   return texts;
 };
 
@@ -19,7 +21,9 @@ const findText = (scene: ReturnType<typeof compileToScene>['scene'], text: strin
   const primitive = collectTexts(scene.primitives).find(candidate =>
     candidate.lines.some(line => lineText(line) === text),
   );
+
   expect(primitive).toBeDefined();
+
   return primitive!;
 };
 
@@ -70,6 +74,7 @@ describe('compile font size presets and relative units', () => {
         },
       ],
     };
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
@@ -123,6 +128,7 @@ describe('compile font size presets and relative units', () => {
     };
 
     const text = findText(compileToScene(ir).scene, 'line');
+
     expect(text.lines[0].fontSize).toBe(9);
   });
 

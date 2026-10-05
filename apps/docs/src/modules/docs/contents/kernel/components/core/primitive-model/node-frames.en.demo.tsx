@@ -3,13 +3,21 @@ import { Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const CONTENT_WIDTH = 86;
+
 const CONTENT_HEIGHT = 34;
+
 const PADDING = 24;
+
 const MARGIN = 20;
+
 const INNER_WIDTH = CONTENT_WIDTH + PADDING * 2;
+
 const INNER_HEIGHT = CONTENT_HEIGHT + PADDING * 2;
+
 const OUTER_WIDTH = INNER_WIDTH + MARGIN * 2;
+
 const OUTER_HEIGHT = INNER_HEIGHT + MARGIN * 2;
+
 const FONT = { size: 10 }; // match the Model Anatomy figure's visual font size (smaller viewBox)
 
 const Demo: FC = () => (

@@ -48,5 +48,6 @@ export const renderConnectedScatterGapsPreview = (
       }}
     />
   );
+
   return chart;
 };

@@ -39,6 +39,7 @@ describe('lowerComposites — adversarial', () => {
       expand: () => ({ children: [] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [] };
+
     expect(() => compileToScene(ir, { composites: [dupA, dupB] }).scene).toThrow(
       /duplicate composite registration: "x\.y"/,
     );
@@ -66,6 +67,7 @@ describe('lowerComposites — adversarial', () => {
       ],
     };
     const scene = compileToScene(ir, { composites: [first, second] }).scene;
+
     expect(flattenPrims(scene.primitives).filter(primitive => primitive.type === 'text')).toHaveLength(2);
   });
 
@@ -105,6 +107,7 @@ describe('lowerComposites — adversarial', () => {
       expand: () => ({ children: [{ namespace: 'm', type: 'a' }] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'm', type: 'a' }] };
+
     expect(() => compileToScene(ir, { composites: [aDef, bDef] }).scene).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
   });
 
@@ -114,9 +117,11 @@ describe('lowerComposites — adversarial', () => {
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
     };
+
     expect(() => compileToScene(ir, { composites: [labeledBox], maxCompositeDepth: 0 }).scene).toThrow(
       /COMPOSITE_NEST_TOO_DEEP/,
     );
+
     // 默认 32 下同 IR 正常
     expect(findByType(compileToScene(ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
@@ -134,6 +139,7 @@ describe('lowerComposites — adversarial', () => {
         { type: 'scope', children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }] },
       ],
     };
+
     expect(compileToScene(irComposite, { composites: [labeledBox] }).scene).toEqual(compileToScene(irManual).scene);
   });
 
@@ -145,6 +151,7 @@ describe('lowerComposites — adversarial', () => {
       children: [{ namespace: 'core', type: 'node', position: [0, 0], text: 'A' }],
     };
     const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
+
     expect(warnings.some(w => w.code === CompileWarningCode.CompositeNotRegistered)).toBe(true);
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'text')).toHaveLength(0); // 节点被跳过
   });
@@ -163,6 +170,7 @@ describe('lowerComposites — adversarial', () => {
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'mix', type: 'pair' }] };
     const scene = compileToScene(ir, { composites: [mixed, labeledBox] }).scene;
+
     // 两个 node（kept + 展开的 lb）都产 rect/text
     expect(flattenPrims(scene.primitives).filter(p => p.type === 'rect').length).toBeGreaterThanOrEqual(1);
   });

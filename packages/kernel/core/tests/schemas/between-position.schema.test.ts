@@ -12,6 +12,7 @@ describe('两端点之间按比例取点的端点形态', () => {
       ],
       fraction: 0.5,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -23,6 +24,7 @@ describe('两端点之间按比例取点的端点形态', () => {
       ],
       fraction: 0.5,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -31,6 +33,7 @@ describe('两端点之间按比例取点的端点形态', () => {
       between: [{ id: 'A' }, { id: 'B' }],
       fraction: 0.5,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -42,6 +45,7 @@ describe('两端点之间按比例取点的端点形态', () => {
       ],
       fraction: 0.25,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -53,6 +57,7 @@ describe('两端点之间按比例取点的端点形态', () => {
       ],
       fraction: 0.5,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -61,6 +66,7 @@ describe('两端点之间按比例取点的端点形态', () => {
       between: [{ between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }, { id: 'C' }],
       fraction: 0.5,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -69,6 +75,7 @@ describe('两端点之间按比例取点的端点形态', () => {
       between: [[0, 0], { id: 'B' }],
       fraction: 0.5,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 });
@@ -82,6 +89,7 @@ describe('fraction 的取值范围', () => {
       ],
       fraction: 0,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -93,6 +101,7 @@ describe('fraction 的取值范围', () => {
       ],
       fraction: 1,
     };
+
     expect(() => BetweenPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -161,6 +170,7 @@ describe('端点排除 path-relative 形态', () => {
       ],
       fraction: 0.5,
     };
+
     expect(() => AbsoluteTargetSchema.parse(cartesian)).not.toThrow();
     expect(() => AbsoluteTargetSchema.parse(node)).not.toThrow();
     expect(() => AbsoluteTargetSchema.parse(nested)).not.toThrow();

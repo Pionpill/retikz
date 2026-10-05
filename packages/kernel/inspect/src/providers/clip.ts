@@ -16,6 +16,7 @@ export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip
 /** 取最终 Clip 路径的第一个可见位置，供应用标签定位 */
 const firstPathPosition = (commands: ReadonlyArray<PathCommand>): IRPosition | undefined => {
   let current: IRPosition | undefined;
+
   for (const command of commands) {
     switch (command.kind) {
       case 'move':
@@ -32,8 +33,10 @@ const firstPathPosition = (commands: ReadonlyArray<PathCommand>): IRPosition | u
       case 'close':
         break;
     }
+
     if (current !== undefined) return current;
   }
+
   return current;
 };
 
@@ -56,12 +59,14 @@ export const CLIP_INSPECTOR = defineInspector({
         }),
       );
     }
+
     if (context.options.labels) {
       const position = firstPathPosition(subject.path.commands);
       if (position !== undefined) {
         output.push(labelNode([position[0] + 6, position[1] - 12], 'clip', context.appearance.scopeColor));
       }
     }
+
     return isolateInspectionChildren(output);
   },
 });

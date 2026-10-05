@@ -18,7 +18,9 @@ vi.mock('../src/modules/docs/components/component-preview', () => ({
 }));
 
 let containerWidth = 900;
+
 let resizeObserverCallback: ResizeObserverCallback | undefined;
+
 const roots: Array<Root> = [];
 
 class ResizeObserverStub {

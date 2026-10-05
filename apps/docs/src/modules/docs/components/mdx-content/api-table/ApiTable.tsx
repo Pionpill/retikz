@@ -23,6 +23,7 @@ export const ApiTable: FC<ApiTableProps> = props => {
       : grouped
         ? '[&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]'
         : '[&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]';
+
   return (
     <div
       className={cn(

@@ -38,11 +38,14 @@ type RulePath = {
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const markRegistry = resolveMarkRegistry();
+
 const lowerMark = (mark: IRPlotReferenceMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
   lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), rows, frame);
 
 const WIDTH = 400;
+
 const HEIGHT = 400;
+
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
@@ -53,6 +56,7 @@ const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions):
 const linearStub = (domain: [number, number], range: [number, number]): PositionScale => {
   let r: [number, number] = range;
   const [d0, d1] = domain;
+
   return {
     coordinate: (value: unknown) =>
       typeof value === 'number' && Number.isFinite(value) ? r[0] + ((value - d0) / (d1 - d0)) * (r[1] - r[0]) : NaN,
@@ -74,6 +78,7 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
 /** 收集图层内所有 path（线 rule） */
 const pathsOf = (layer: IRScope): Array<RulePath> => {
   const out: Array<RulePath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -81,13 +86,16 @@ const pathsOf = (layer: IRScope): Array<RulePath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 /** 收集图层内所有 node（band rule） */
 const nodesOf = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -95,7 +103,9 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -113,10 +123,12 @@ const nodeHeight = (node: IRNode): number => {
 
 const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
+
   for (const primitive of primitives) {
     out.push(primitive);
     if (primitive.type === 'group') out.push(...flattenPrimitives(primitive.children));
   }
+
   return out;
 };
 
@@ -131,6 +143,7 @@ const endpointsOf = (path: RulePath): [[number, number], [number, number]] => {
   const lines = steps.filter(
     (s): s is (typeof steps)[number] & { to: [number, number] } => s.kind === 'line' && hasPointTarget(s),
   );
+
   return [move.to, lines[lines.length - 1].to];
 };
 
@@ -144,8 +157,11 @@ describe('rule cartesian line 几何', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 80 } } };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     const paths = pathsOf(layer);
+
     expect(paths).toHaveLength(1);
+
     const [a, b] = endpointsOf(paths[0]);
+
     expect(a).toEqual([0, 80]);
     expect(b).toEqual([400, 80]);
   });
@@ -155,6 +171,7 @@ describe('rule cartesian line 几何', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { x: { value: 5 } } };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     const [a, b] = endpointsOf(pathsOf(layer)[0]);
+
     expect(a).toEqual([200, 400]);
     expect(b).toEqual([200, 0]);
   });
@@ -164,6 +181,7 @@ describe('rule cartesian line 几何', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { field: 'limit' } } };
     const rows = [{ limit: 20 }, { limit: 50 }, { limit: 90 }];
     const layer = lowerMark(mark, rows, cartFrame()) as IRScope;
+
     expect(pathsOf(layer)).toHaveLength(3);
   });
 
@@ -197,10 +215,12 @@ describe('rule cartesian line 几何', () => {
       },
       cartOpts,
     ).children[0] as IRScope;
+
     // 2 色 → 2 个分色子 Scope（各带 pathDefault.stroke）
     const colorScopes = (
       layer.children as Array<{ type?: string; defaults?: { path?: { style?: { stroke?: string } } } }>
     ).filter(c => c.type === 'scope' && c.defaults?.path?.style?.stroke !== undefined);
+
     expect(colorScopes).toHaveLength(2);
     expect(pathsOf(layer)).toHaveLength(3);
   });
@@ -211,6 +231,7 @@ describe('rule cartesian line 几何', () => {
       encoding: { y: { value: 80 }, color: { value: 'crimson' } },
     };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
+
     expect(layer.defaults?.path?.style?.stroke).toBe('crimson');
   });
 
@@ -220,6 +241,7 @@ describe('rule cartesian line 几何', () => {
       type: 'reference',
       encoding: { y: { value: 80 }, color: { field: 'cat', scale: '__color' } },
     };
+
     expect(() => lowerMark(mark, [{ cat: 'a' }, { cat: 'b' }], cartFrame())).toThrow(/constant rule|color field/i);
   });
 });
@@ -231,6 +253,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     const nodes = nodesOf(layer);
+
     expect(nodes).toHaveLength(1);
     expect(nodeWidth(nodes[0])).toBe(400);
     expect(nodeHeight(nodes[0])).toBe(80);
@@ -241,6 +264,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
     // 竖直 band x∈[2,5]，跨满 y 域 → rect。x 像素 80..200 → 宽 120、中心 140；y 满铺 [400,0] → 高 400、中心 200
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { x: { value: 2 } }, xTo: 5 };
     const nodes = nodesOf(lowerMark(mark, [{}], cartFrame()) as IRScope);
+
     expect(nodeWidth(nodes[0])).toBe(120);
     expect(nodeHeight(nodes[0])).toBe(400);
     expect(nodes[0].position).toEqual([140, 200]);
@@ -254,6 +278,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
       { lo: 60, hi: 80 },
     ];
     const nodes = nodesOf(lowerMark(mark, rows, cartFrame()) as IRScope);
+
     expect(nodes).toHaveLength(2);
   });
 
@@ -267,6 +292,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
       yTo: 90,
     };
     const nodes = nodesOf(lowerMark(mark, [{}], cartFrame()) as IRScope);
+
     expect(nodes).toHaveLength(1);
     expect(nodeWidth(nodes[0])).toBe(120);
     expect(nodeHeight(nodes[0])).toBe(80);
@@ -286,6 +312,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
       { x0: 1, x1: 2, y0: 20, y1: 30 },
       { x0: 4, x1: 6, y0: 40, y1: 70 },
     ];
+
     expect(nodesOf(lowerMark(mark, rows, cartFrame()) as IRScope)).toHaveLength(2);
   });
 
@@ -296,12 +323,14 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
       yTo: 90,
     };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
+
     expect(layer.defaults?.node?.style?.fill).toBe('amber');
   });
 
   it('rule-band-compiles-to-scene', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 70 } }, yTo: 90 };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
+
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
@@ -318,6 +347,7 @@ describe('rule 边界', () => {
     };
     const layer = lowerMark(mark, [{ lo: 20, hi: 60 }], cartFrame()) as IRScope;
     const [a, b] = endpointsOf(pathsOf(layer)[0]);
+
     expect(a).toEqual([200, 320]);
     expect(b).toEqual([200, 160]);
   });
@@ -332,6 +362,7 @@ describe('rule 边界', () => {
       yTo: 90,
     };
     const nodes = nodesOf(lowerMark(mark, [{ a: 2, b: 8 }], cartFrame()) as IRScope);
+
     expect(nodeWidth(nodes[0])).toBe(240);
     expect(nodes[0].position).toEqual([200, 80]);
   });
@@ -339,11 +370,13 @@ describe('rule 边界', () => {
   it('rule-single-row', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { field: 'v' } } };
     const layer = lowerMark(mark, [{ v: 42 }], cartFrame()) as IRScope;
+
     expect(pathsOf(layer)).toHaveLength(1);
   });
 
   it('rule-empty-rows-null', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { field: 'v' } } };
+
     expect(lowerMark(mark, [], cartFrame())).toBeNull();
   });
 
@@ -354,6 +387,7 @@ describe('rule 边界', () => {
       extentToField: 'hi',
       encoding: { x: { value: 5 } },
     };
+
     // 缺 extent 字段 → coordinate NaN → 跳过 → null
     expect(lowerMark(mark, [{}], cartFrame())).toBeNull();
   });
@@ -363,26 +397,31 @@ describe('rule 边界', () => {
 describe('rule fail-loud', () => {
   it('rule-orientation-conflict-both', () => {
     const mark = { type: 'reference', encoding: { x: { value: 5 }, y: { value: 80 } } } as IRPlotReferenceMark;
+
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/exactly one of encoding\.x|orientation|both/i);
   });
 
   it('rule-orientation-conflict-neither', () => {
     const mark = { type: 'reference', encoding: {} } as IRPlotReferenceMark;
+
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/exactly one of encoding\.x|orientation|neither/i);
   });
 
   it('rule-extent-unpaired', () => {
     const mark = { type: 'reference', extentField: 'lo', encoding: { x: { value: 5 } } } as IRPlotReferenceMark;
+
     expect(() => lowerMark(mark, [{ lo: 1 }], cartFrame())).toThrow(/extentField|extentToField|together/i);
   });
 
   it('rule-band-bound-mismatch-x-with-yTo', () => {
     const mark = { type: 'reference', yTo: 90, encoding: { x: { value: 5 } } } as IRPlotReferenceMark;
+
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/yTo|match the bound dimension|xTo/i);
   });
 
   it('rule-band-bound-mismatch-y-with-xTo', () => {
     const mark = { type: 'reference', xTo: 5, encoding: { y: { value: 80 } } } as IRPlotReferenceMark;
+
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/xTo|match the bound dimension|yTo/i);
   });
 
@@ -393,6 +432,7 @@ describe('rule fail-loud', () => {
       xTo: 5,
       encoding: { x: { value: 2 }, y: { value: 70 } },
     } as IRPlotReferenceMark;
+
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/region|required|yTo/i);
   });
 
@@ -406,6 +446,7 @@ describe('rule fail-loud', () => {
       extentToField: 'hi',
       encoding: { x: { value: 2 }, y: { value: 70 } },
     } as IRPlotReferenceMark;
+
     expect(() => lowerMark(mark, [{ lo: 0, hi: 10 }], cartFrame())).toThrow(/region|extentField|extentToField/i);
   });
 
@@ -418,6 +459,7 @@ describe('rule fail-loud', () => {
       scales: [{ type: 'linear', name: '__x' }],
       marks: [{ type: 'reference', encoding: { x: { value: 5 } } }],
     });
+
     expect(() => expandOf(spec, { d: [{}] }, cartOpts)).toThrow(/cartesian1D|not supported|rule/i);
   });
 });
@@ -442,6 +484,7 @@ describe('rule polar', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { x: { value: 90 } } };
     const layer = lowerMark(mark, [{}], polarFrame()) as IRScope;
     const paths = pathsOf(layer);
+
     expect(paths).toHaveLength(1);
     expect(paths[0].children.filter(s => s.kind === 'line')).toHaveLength(1);
   });
@@ -451,6 +494,7 @@ describe('rule polar', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 50 } } };
     const layer = lowerMark(mark, [{}], polarFrame()) as IRScope;
     const steps = pathsOf(layer)[0].children;
+
     expect(steps.map(s => s.kind)).toEqual(['move', 'circlePath']);
     expect(steps[1].radius).toBeCloseTo(75, 6);
   });
@@ -461,6 +505,7 @@ describe('rule polar', () => {
     const layer = lowerMark(mark, [{}], polarFrame()) as IRScope;
     const node = nodesOf(layer)[0];
     const shape = node.shape as { type: string; params: { innerRadius: number; outerRadius: number } };
+
     expect(shape.type).toBe('sector');
     expect(shape.params.innerRadius).toBeGreaterThan(0);
     expect(shape.params.innerRadius).toBeCloseTo(60, 6);
@@ -470,6 +515,7 @@ describe('rule polar', () => {
   it('rule-polar-constant-radius-ring_inherits_chord_interpolation', () => {
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 50 } } };
     const layer = lowerMark(mark, [{}], polarFrame(PolarInterpolation.Chord)) as IRScope;
+
     expect(pathsOf(layer)[0].children.map(step => step.kind)).toEqual(['move', 'line', 'line', 'line', 'cycle']);
   });
 
@@ -488,6 +534,7 @@ describe('rule polar', () => {
     };
     const polarNode = nodesOf(lowerMark(polarMark, [{}], polarFrame(PolarInterpolation.Chord)) as IRScope)[0];
     const chordNode = nodesOf(lowerMark(chordMark, [{}], polarFrame()) as IRScope)[0];
+
     expect((polarNode.shape as { type?: string } | undefined)?.type).toBe('sector');
     expect((chordNode.shape as { type?: string } | undefined)?.type).toBe('contour');
   });
@@ -499,6 +546,7 @@ describe('rule polar', () => {
       encoding: { y: { value: 40 } },
       yTo: 60,
     };
+
     expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/interpolation|polar2D/i);
   });
 
@@ -538,6 +586,7 @@ describe('rule polar', () => {
       type: string;
       params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
     };
+
     expect(shape.type).toBe('sector');
     expect(shape.params.innerRadius).toBeGreaterThan(0);
     expect(shape.params.outerRadius).toBeGreaterThan(shape.params.innerRadius);
@@ -551,6 +600,7 @@ describe('rule polar', () => {
     const filledRing = flattenPrimitives(scene.primitives).find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && p.fill === '#fde68a',
     );
+
     expect(filledRing?.type).toBe('path');
     expect(filledRing?.fillRule).toBe('evenodd');
   });
@@ -582,7 +632,9 @@ describe('rule polar', () => {
       cartOpts,
     ).children[0] as IRScope;
     const paths = pathsOf(layer);
+
     expect(paths).toHaveLength(2);
+
     for (const path of paths) {
       expect(path.children.map(s => s.kind)).toEqual(['move', 'circlePath']);
     }
@@ -628,6 +680,7 @@ describe('rule polar', () => {
       .filter(command => Math.abs(command.endAngle - command.startAngle) >= 360);
 
     expect(rings).toHaveLength(2);
+
     for (const ring of rings) {
       expect(scene.layout.x).toBeLessThanOrEqual(ring.center[0] - ring.radiusX);
       expect(scene.layout.y).toBeLessThanOrEqual(ring.center[1] - ring.radiusY);
@@ -650,6 +703,7 @@ describe('rule polar', () => {
       type: string;
       params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
     };
+
     expect(shape.type).toBe('sector');
     expect(shape.params.startAngle).toBeCloseTo(30, 6);
     expect(shape.params.endAngle).toBeCloseTo(120, 6);
@@ -685,6 +739,7 @@ describe('rule polar', () => {
         },
       ],
     };
+
     expect(() => compileToScene(scene, { shapes: [SectorShapeDefinition] }).scene).not.toThrow();
   });
 });
@@ -711,13 +766,16 @@ describe('rule region projectCell 坐标系', () => {
           resolve: (_operation, ctx) => {
             const xScale = linearStub([0, 10], [0, ctx.width]);
             const yScale = linearStub([0, 10], [ctx.height, 0]);
+
             const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
               const x = xScale.coordinate(values[0]);
               const y = yScale.coordinate(values[1]);
+
               return Number.isFinite(x) && Number.isFinite(y)
                 ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
                 : null;
             };
+
             return {
               frame: createCoordinateFrame('curved-reference', ['x', 'y'], projectRoles, {
                 roleScales: { x: xScale, y: yScale },
@@ -739,6 +797,7 @@ describe('rule region projectCell 坐标系', () => {
     const layer = expandOf(spec, { d: [{}] }, options).children[0] as IRScope;
     const node = nodesOf(layer)[0];
     const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
+
     expect(shape?.type).toBe('contour');
     expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(4);
   });
@@ -771,9 +830,11 @@ describe('rule + bar z-order', () => {
       },
       cartOpts,
     );
+
     // 图层序 = 声明序：bar 在前、rule 在后
     const barLayer = expanded.children[0] as IRScope;
     const ruleLayer = expanded.children[1] as IRScope;
+
     expect(nodesOf(barLayer)).toHaveLength(2);
     expect(pathsOf(ruleLayer)).toHaveLength(1);
   });

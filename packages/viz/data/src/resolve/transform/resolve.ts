@@ -16,7 +16,9 @@ import type { IRDataExecution, IRDataTransformDeclaration } from '../../schemas'
 
 /** 已经由各 Definition 唯一解析的声明；仅在当前请求内消费 */
 export type ParsedDataTransformDeclaration = Readonly<{
+  /** 与声明匹配的数据变换语义定义 */
   definition: AnyTransformDefinition;
+  /** 已通过精确 schema 解析的数据变换声明 */
   declaration: IRDataTransformDeclaration;
 }>;
 
@@ -31,6 +33,7 @@ export const parseDataTransformDeclarations = (
       throw new RetikzDataError(`data: transform "${declaration.operation.kind}" is not registered`, {
         operationIndex,
       });
+
     try {
       return { definition, declaration: { ...declaration, operation: definition.schema.parse(declaration.operation) } };
     } catch (cause) {
@@ -59,8 +62,10 @@ export const resolveDataTransformOutputModel = (
       : new Map<string, DataTransformModel[number]>();
   const descriptors = output.kind === 'preserve' ? output.outputs : output.fields;
   const seen = new Set<string>();
+
   for (const descriptor of descriptors) {
     if (seen.has(descriptor.field)) throw new RetikzDataError(`data: duplicate output field "${descriptor.field}"`);
+
     seen.add(descriptor.field);
     let source: DataTransformModel[number] | undefined;
     if (descriptor.type !== undefined && typeof descriptor.type !== 'string') {
@@ -69,6 +74,7 @@ export const resolveDataTransformOutputModel = (
       if (source === undefined)
         throw new RetikzDataError(`data: output references unknown field "${descriptor.type.from}"`);
     }
+
     const type = typeof descriptor.type === 'string' ? descriptor.type : source?.type;
     fields.set(descriptor.field, {
       name: descriptor.field,
@@ -76,6 +82,7 @@ export const resolveDataTransformOutputModel = (
       ...(source?.order === undefined ? {} : { order: source.order }),
     });
   }
+
   return [...fields.values()];
 };
 
@@ -95,13 +102,16 @@ export const resolveParsedDataTransforms = (
         rowSelectorRegistry: options.rowSelectorRegistry ?? resolveRowSelectorRegistry(),
         regressionRegistry: options.regressionRegistry ?? resolveRegressionRegistry(),
       };
+
       for (const field of definition.inputFields?.(operation as never, context) ?? []) {
         if (!model.some(candidate => candidate.name === field))
           throw new RetikzDataError(`data: missing input field "${field}"`);
       }
+
       definition.validate?.(operation as never, context);
       const dependencies = definition.dependencies?.(operation as never, context) ?? [];
       model = resolveDataTransformOutputModel(model, definition.outputModel(operation as never, context));
+
       return {
         definition,
         operation,
@@ -116,6 +126,7 @@ export const resolveParsedDataTransforms = (
       );
     }
   });
+
   return { inputModel, stages };
 };
 

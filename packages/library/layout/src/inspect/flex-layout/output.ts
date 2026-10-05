@@ -46,6 +46,7 @@ export const inspectFlexLayoutArtifact = (
       );
     });
   }
+
   const spacing = inspectLayoutSpacing('flex', artifact.spacing, context.options, context.appearance);
   const [boxes = [], structure = [], underlay = [], normalizedSpacing = []] = normalizeLayoutBoundaryGroups([
     base.boxes,
@@ -53,6 +54,7 @@ export const inspectFlexLayoutArtifact = (
     base.underlay,
     spacing,
   ]);
+
   return lowerLayoutInspectionMarks([
     ...underlay,
     ...normalizedSpacing,

@@ -113,7 +113,7 @@ type ManualTableInput = Omit<
 > & {
   rows: number;
   columns: number;
-  rowKinds?: Array<TableRowKindValue>;
+  rowKinds?: Array<TableRowKind>;
   cells: Array<IRTableCell>;
 };
 

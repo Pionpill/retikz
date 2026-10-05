@@ -34,6 +34,7 @@ const createCommitTrackingCompileDriver = (): Readonly<{
     create: input => {
       const existing = sessions.get(input.instance);
       if (existing !== undefined) return existing;
+
       const session: VanillaCompileDriverSession = {
         observers: [],
         resolve: output => ({
@@ -45,9 +46,11 @@ const createCommitTrackingCompileDriver = (): Readonly<{
         commit,
       };
       sessions.set(input.instance, session);
+
       return session;
     },
   };
+
   return Object.freeze({ driver, commit });
 };
 
@@ -75,6 +78,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     );
 
     expect(container.querySelector('[data-retikz-id="input-node"]')).not.toBeNull();
+
     await act(() => root.unmount());
   });
 
@@ -86,6 +90,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         <Node id="static-commit-node" position={[0, 0]} />
       </Layout>,
     );
+
     expect(commit).not.toHaveBeenCalled();
 
     const container = document.createElement('div');
@@ -99,6 +104,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     );
 
     expect(commit).toHaveBeenCalledTimes(1);
+
     await act(() => root.unmount());
   });
 
@@ -116,6 +122,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     );
 
     expect(commit).toHaveBeenCalledTimes(1);
+
     await act(() => root.unmount());
   });
 
@@ -135,6 +142,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     );
 
     expect(commit).toHaveBeenCalledTimes(2);
+
     await act(() => root.unmount());
   });
 
@@ -153,6 +161,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     );
 
     expect(container.querySelector('[data-retikz-id="strict-node"]')).not.toBeNull();
+
     await act(() => root.unmount());
   });
 
@@ -164,6 +173,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         instances.push(input.instance);
         const existing = sessions.get(input.instance);
         if (existing !== undefined) return existing;
+
         const session: VanillaCompileDriverSession = {
           observers: [],
           resolve: output => ({
@@ -174,6 +184,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
           }),
         };
         sessions.set(input.instance, session);
+
         return session;
       },
     };
@@ -198,6 +209,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     expect(instances).toHaveLength(3);
     expect(instances[2]).toBe(instances[1]);
     expect(container.querySelector('[data-retikz-id="second"]')).not.toBeNull();
+
     await act(() => root.unmount());
   });
 
@@ -220,6 +232,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     expect(onDiagnostic).toHaveBeenCalledWith(diagnostic);
     expect(diagnostics).toHaveBeenCalledTimes(1);
+
     await act(() => root.unmount());
   });
 
@@ -232,6 +245,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       const dispose = vi.fn(controller.dispose);
       const observedController: ProcessingController = Object.freeze({ ...controller, dispose });
       controllers.push(Object.freeze({ controller: observedController, dispose }));
+
       return observedController;
     });
     const container = document.createElement('div');
@@ -246,6 +260,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         </StrictMode>,
       ),
     );
+
     expect(controllers).toHaveLength(2);
 
     await act(() => root.unmount());
@@ -265,7 +280,9 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         </Layout>,
       ),
     );
+
     expect(container.querySelector('[data-retikz-id="stable-node"]')).not.toBeNull();
+
     const successfulFrame = container.innerHTML;
 
     await expect(
@@ -281,6 +298,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     expect(container.querySelectorAll('[data-retikz-id="stable-node"]')).toHaveLength(1);
     expect(container.innerHTML).toBe(successfulFrame);
+
     await act(() => root.unmount());
   });
 
@@ -319,6 +337,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         themeStyles: [testThemeStyle],
       }),
     );
+
     await act(() => root.unmount());
   });
 });

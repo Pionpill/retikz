@@ -82,6 +82,7 @@ describe('Layout Vanilla family', () => {
     );
 
     const item = (normalized.ir.children[0] as { children: Array<Record<string, unknown>> }).children[0];
+
     expect(item).not.toHaveProperty('key');
   });
 

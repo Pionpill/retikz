@@ -8,21 +8,43 @@ import type {
 } from './types';
 
 const runtimeSourceTokens = new WeakSet<object>();
+
 const runtimeSourceExecutors = new WeakMap<object, RuntimeSourceErasedExecutor>();
 
 /** registry 私有保存的 source callback 擦除视图 */
 export type RuntimeSourceErasedExecutor = Readonly<{
-  /** 捕获具体 Definition 的 runtime-owned value */
+  /**
+   * 捕获具体 Definition 的 runtime-owned value
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   */
   capture: <TInput, TValue>(input: TInput) => TValue;
-  /** 读取具体 Definition 的 immutable view */
+  /**
+   * 读取具体 Definition 的 immutable view
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   */
   read: <TValue, TRead>(value: TValue) => TRead;
-  /** 比较具体 Definition 的完整 captured value */
+  /**
+   * 比较具体 Definition 的完整 captured value
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   */
   equals: <TValue>(left: TValue, right: TValue) => boolean;
-  /** 释放具体 Definition 捕获的 value */
+  /**
+   * 释放具体 Definition 捕获的 value
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   */
   dispose?: <TValue>(value: TValue) => void;
-  /** 收集具体 Definition 的结构化 identity */
+  /**
+   * 收集具体 Definition 的结构化 identity
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   */
   collectIdentities?: <TValue>(value: TValue) => ReadonlyArray<RuntimeIdentity>;
-  /** 校验具体 Definition 的 change hint */
+  /**
+   * 校验具体 Definition 的 change hint
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   validateChangeSet?: <TRead, TChange>(
     previous: TRead,
     next: TRead,
@@ -30,7 +52,13 @@ export type RuntimeSourceErasedExecutor = Readonly<{
   ) => 'valid' | 'fallback';
 }>;
 
-/** 创建不暴露 author callbacks 的 typed source token */
+/**
+ * 创建不暴露 author callbacks 的 typed source token
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
   input: RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange>,
 ): RuntimeSourceDefinition<TInput, TValue, TRead, TChange> => {
@@ -43,6 +71,7 @@ export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
       cause: input,
     });
   }
+
   const { capture, read, equals, dispose } = input.value;
   const token = Object.freeze({ key: input.key }) as RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
   const erasedExecutor = Object.freeze({
@@ -55,6 +84,7 @@ export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
   }) as RuntimeSourceErasedExecutor;
   runtimeSourceTokens.add(token);
   runtimeSourceExecutors.set(token, erasedExecutor);
+
   return token;
 };
 
@@ -72,5 +102,6 @@ export const getRuntimeSourceDefinitionExecutor = (definition: RuntimeSourceToke
       cause: definition,
     });
   }
+
   return executor;
 };

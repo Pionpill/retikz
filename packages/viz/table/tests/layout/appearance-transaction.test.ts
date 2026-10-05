@@ -222,6 +222,7 @@ describe('Presented Table layout transaction', () => {
           },
           tableContext,
         );
+
         return { children: transaction.children };
       },
     });
@@ -251,6 +252,7 @@ describe('Presented Table layout transaction', () => {
         cell.box.y + cell.box.height,
       );
     });
+
     expect(transaction?.manifest.cells[0].sourceAllocationBounds.height).toBeGreaterThan(
       transaction?.manifest.cells[1].sourceAllocationBounds.height ?? Number.POSITIVE_INFINITY,
     );
@@ -260,7 +262,9 @@ describe('Presented Table layout transaction', () => {
       { cellId: 'left', xKind: 'range' },
       { cellId: 'right', xKind: 'range' },
     ]);
+
     const tableVisualBounds = transaction?.manifest.visualOverflowBounds;
+
     expect(tableVisualBounds?.x).toBeLessThanOrEqual(0);
     expect(tableVisualBounds?.y).toBeLessThanOrEqual(0);
     expect((tableVisualBounds?.x ?? 0) + (tableVisualBounds?.width ?? 0)).toBeGreaterThanOrEqual(40);
@@ -324,6 +328,7 @@ describe('Presented Table layout transaction', () => {
       ),
     ).toBe(true);
     expect(primitives.some(primitive => primitive.type === 'path' && primitive.stroke === '#ff00ff')).toBe(false);
+
     const backgroundIndexes = primitives.flatMap((primitive, index) =>
       primitive.type === 'path' && primitive.fill !== undefined && primitive.fill !== 'none' ? [index] : [],
     );
@@ -333,6 +338,7 @@ describe('Presented Table layout transaction', () => {
     const borderIndexes = primitives.flatMap((primitive, index) =>
       primitive.type === 'path' && primitive.id?.startsWith('styled/border/') ? [index] : [],
     );
+
     expect(Math.max(...backgroundIndexes)).toBeLessThan(Math.min(...contentIndexes));
     expect(Math.max(...contentIndexes)).toBeLessThan(Math.min(...borderIndexes));
   });

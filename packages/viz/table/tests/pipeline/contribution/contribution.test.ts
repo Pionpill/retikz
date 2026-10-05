@@ -104,6 +104,7 @@ describe('Table runtime contribution', () => {
 
     const provider = tableProviderOf(contribution);
     const anotherProvider = tableProviderOf(another);
+
     expect(provider?.makeDefinition).toBe(anotherProvider?.makeDefinition);
     expect(contribution.roots).toEqual([
       { capability: 'composite', namespace: TABLE_NAMESPACE, type: TableComposite.Table },
@@ -156,6 +157,7 @@ describe('Table runtime contribution', () => {
       `${TABLE_NAMESPACE}.${TableComposite.Table}`,
       'fixture.badge',
     ]);
+
     const result = compileToScene(
       {
         version: 1,
@@ -175,6 +177,7 @@ describe('Table runtime contribution', () => {
       },
       definitions,
     );
+
     expect(JSON.stringify(result.scene)).toContain('Ada');
   });
 

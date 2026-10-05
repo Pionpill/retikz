@@ -18,7 +18,9 @@ export type BenchReportRequestHandler = (
 ) => void;
 
 const reportApiPath = '/__bench/reports';
+
 const maximumBodyBytes = 1024 * 1024;
+
 const writeReportInputKeys = Object.freeze([
   'moduleId',
   'caseId',
@@ -57,6 +59,7 @@ const readJsonBody = async (request: IncomingMessage): Promise<unknown> =>
         request.destroy();
         return;
       }
+
       chunks.push(buffer);
     });
     request.on('end', () => {
@@ -101,15 +104,21 @@ export const createBenchReportRequestHandler =
           sendJson(response, 200, { report: await store.readReport({ moduleId, caseId, runId }) });
           return;
         }
+
         sendJson(response, 200, await store.listReports({ moduleId, ...(caseId === undefined ? {} : { caseId }) }));
+
         return;
       }
+
       if (request.method === 'POST') {
         const input = await readJsonBody(request);
         if (!isWriteReportInput(input)) throw new BenchReportValidationError('Report request body is invalid');
+
         sendJson(response, 201, { report: await store.writeReport(input) });
+
         return;
       }
+
       response.setHeader('allow', 'GET, POST');
       sendJson(response, 405, { error: 'Method not allowed' });
     };

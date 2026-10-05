@@ -149,6 +149,7 @@ describe('smooth transform behavior (contract)', () => {
     expect(quadratic.map(row => row.trendX)).toEqual([-2, -1, 0, 1, 2]);
     expect(polynomialDegreeTwo.map(row => row.trendX)).toEqual([-2, -1, 0, 1, 2]);
     expect(polynomialDefault.map(row => row.trendX)).toEqual([-2, -1, 0, 1, 2]);
+
     quadratic.forEach((row, index) => expect(row.trendY).toBeCloseTo([1, 0, 1, 4, 9][index], 10));
     polynomialDegreeTwo.forEach((row, index) => expect(row.trendY).toBeCloseTo(quadratic[index].trendY as number, 10));
     polynomialDefault.forEach((row, index) => expect(row.trendY).toBeCloseTo([-3, 2, 1, 0, 5][index], 10));
@@ -207,6 +208,7 @@ describe('smooth transform behavior (contract)', () => {
     expect(logarithmic.map(row => row.trendX)).toEqual([1, Math.exp(3)]);
     expect(exponential.map(row => row.trendX)).toEqual([0, 2, 4]);
     expect(power.map(row => row.trendX)).toEqual([1, 2, 3, 4]);
+
     logarithmic.forEach((row, index) => expect(row.trendY).toBeCloseTo([2, 11][index], 10));
     exponential.forEach((row, index) => expect(row.trendY).toBeCloseTo([2, 2 * Math.E, 2 * Math.E ** 2][index], 10));
     power.forEach((row, index) => expect(row.trendY).toBeCloseTo([3, 12, 27, 48][index], 10));
@@ -226,9 +228,11 @@ describe('smooth transform behavior (contract)', () => {
     expect(out).toHaveLength(64);
     expect(out[0].trendX).toBe(0);
     expect(out.at(-1)?.trendX).toBe(2);
+
     for (let index = 1; index < out.length; index++) {
       expect(out[index].trendX as number).toBeGreaterThan(out[index - 1].trendX as number);
     }
+
     expect(out.every(row => Number.isFinite(row.trendY))).toBe(true);
   });
 

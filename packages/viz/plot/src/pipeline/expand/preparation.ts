@@ -1,4 +1,5 @@
 import type {
+  DataFieldTypeMap,
   DataTransformPreparation,
   DataTransformResult,
   DataTransformStageInput,
@@ -31,7 +32,10 @@ import type { LowerPlotsOptions } from './types';
 export const plotMarkTransformsOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> =>
   (mark as { transform?: Array<IRDataTransformDeclaration> }).transform ?? [];
 
-/** 全部作用域先固定实现，再绑定本次根与实际分区进行单次计算 */
+/**
+ * 全部作用域先固定实现，再绑定本次根与实际分区进行单次计算
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const preparePlotData = async <TSource = never>(
   spec: IRPlot,
   request: PlotDataPreparationOptions<TSource>,
@@ -40,6 +44,7 @@ export const preparePlotData = async <TSource = never>(
   const reference = spec.data.reference;
   if (!Object.hasOwn(request.dataBindings, reference))
     throw new RetikzPlotError(`Plot data binding "${reference}" not found`);
+
   const binding = request.dataBindings[reference];
   const provenance =
     options.provenance === true || options.datumProvenance === true || options.datumIdField !== undefined;
@@ -48,13 +53,14 @@ export const preparePlotData = async <TSource = never>(
   if (binding.kind === 'rows') {
     const rows = provenance ? tagSourceIndex(binding.rows) : binding.rows;
     const prepared = prepareRows(spec, { [reference]: rows }, options, rows);
-    if (options.invalid === 'error') assertAllValuesValid(prepared.normalized, prepared.fieldTypes);
+    if (options.invalid === 'error') assertAllValuesValid(prepared.normalized, prepared.fieldTypeMap);
     if (options.validateData)
       validateBoundData(
         prepared.normalized,
-        prepared.fieldTypes,
+        prepared.fieldTypeMap,
         typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
       );
+
     input = { kind: 'result', result: { rows: prepared.dataView.rows, model: prepared.dataView.model } };
   } else {
     if (
@@ -63,6 +69,7 @@ export const preparePlotData = async <TSource = never>(
       options.resolveField !== undefined
     )
       throw new RetikzPlotError('Plot canonical result/source bindings cannot use source format, fieldMaps or parsers');
+
     if (binding.kind === 'source') {
       if (spec.data.model === undefined)
         throw new RetikzPlotError('Plot native source requires an explicit complete data.model');
@@ -70,24 +77,36 @@ export const preparePlotData = async <TSource = never>(
     } else {
       if (spec.data.model !== undefined) assertDataTransformModel(spec.data.model, binding.result.model);
       assertDataTransformResult(binding.result.model, binding.result);
+
       // 新结果引用的局部来源只能指向该结果，不能沿用上游的 Symbol 下标
       const rows = binding.result.rows.map(row => {
         const copy = { ...row };
         Reflect.deleteProperty(copy, SOURCE_INDEX);
         Reflect.deleteProperty(copy, SOURCE_INDICES);
+
         return copy;
       });
       const view = createDataView(provenance ? tagSourceIndex(rows) : rows, binding.result.model);
-      if (options.invalid === 'error') assertAllValuesValid(view.rows, view.fieldTypes);
-      if (options.validateData)
-        validateBoundData(
-          view.rows,
-          view.fieldTypes,
-          typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
-        );
+      if (options.invalid === 'error' || options.validateData) {
+        const fieldTypeMap: DataFieldTypeMap = new Map();
+
+        for (const field of view.model) {
+          if (field.type !== undefined) fieldTypeMap.set(field.name, field.type);
+        }
+
+        if (options.invalid === 'error') assertAllValuesValid(view.rows, fieldTypeMap);
+        if (options.validateData)
+          validateBoundData(
+            view.rows,
+            fieldTypeMap,
+            typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
+          );
+      }
+
       input = { kind: 'result', result: { ...binding.result, rows: view.rows, model: view.model } };
     }
   }
+
   const preserveProvenance =
     provenance ||
     (input.kind === 'result' &&
@@ -105,6 +124,7 @@ export const preparePlotData = async <TSource = never>(
   const rootResolution = resolveDataTransforms(spec.transform ?? [], descriptor.model, semantic);
   const model = rootResolution.stages.at(-1)?.outputModel ?? rootResolution.inputModel;
   const markResolutions = spec.marks.map(mark => resolveDataTransforms(plotMarkTransformsOf(mark), model, semantic));
+
   const prepareScope = async (scope: string, scopeDescriptor: typeof descriptor, resolution: typeof rootResolution) => {
     try {
       const prepared = await executor.prepare(scopeDescriptor, resolution, {
@@ -117,6 +137,7 @@ export const preparePlotData = async <TSource = never>(
         throw new RetikzPlotError(
           `Plot ${scope}: ${prepared.diagnostics.map(diagnostic => diagnostic.message).join('; ')}`,
         );
+
       return prepared;
     } catch (cause) {
       throw new RetikzPlotError(
@@ -125,16 +146,21 @@ export const preparePlotData = async <TSource = never>(
       );
     }
   };
+
   const root = await prepareScope('root', descriptor, rootResolution);
   const marks: Array<Extract<DataTransformPreparation<TSource>, { kind: 'ready' }>> = [];
+
   for (const [index, resolution] of markResolutions.entries())
     marks.push(await prepareScope(`mark[${index}]`, { kind: 'result', model }, resolution));
   const composition = resolveComposition(spec);
   let consumed = false;
+
   return {
     execute: async (): Promise<PreparedPlotData> => {
       if (consumed) throw new RetikzPlotError('Plot data preparation can execute only once');
+
       consumed = true;
+
       const run = async (
         scope: string,
         prepared: Extract<DataTransformPreparation<TSource>, { kind: 'ready' }>,
@@ -146,8 +172,10 @@ export const preparePlotData = async <TSource = never>(
           throw new RetikzPlotError(`Plot ${scope} execution failed`, { cause });
         }
       };
+
       const rootResult = await run('root', root, input);
       const markResults: Array<DataTransformResult> = [];
+
       for (const [index, prepared] of marks.entries())
         markResults.push(
           await run(`mark[${index}]`, prepared, {
@@ -155,11 +183,14 @@ export const preparePlotData = async <TSource = never>(
             result: { rows: rootResult.rows, model: rootResult.model },
           }),
         );
+
       const scopeIds = new Set(composition.coordinateScopes.scopes.map(scope => scope.id));
       const panels = composition.facets.flatMap(facet => resolveFacetPanels(facet, rootResult.rows, scopeIds));
       const panelResults: Array<Array<DataTransformResult>> = [];
+
       for (const [panelIndex, panel] of panels.entries()) {
         const results: Array<DataTransformResult> = [];
+
         for (const [markIndex, prepared] of marks.entries())
           results.push(
             await run(`facet[${panelIndex}].mark[${markIndex}]`, prepared, {
@@ -167,8 +198,10 @@ export const preparePlotData = async <TSource = never>(
               result: { rows: panel.rows, model: rootResult.model },
             }),
           );
+
         panelResults.push(results);
       }
+
       return { root: rootResult, marks: markResults, panels: panelResults };
     },
   };

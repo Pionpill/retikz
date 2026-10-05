@@ -17,6 +17,7 @@ describe('diamond 退化（零半轴）不产 NaN', () => {
   it('contains → false（不除零产 NaN）', () => {
     expect(diamond.contains(degenerate, [1, 2])).toBe(false);
   });
+
   it('boundaryPoint → 塌缩到中心', () => {
     expect(diamond.boundaryPoint(degenerate, [5, 5])).toEqual([1, 2]);
   });
@@ -61,12 +62,14 @@ describe('diamond.anchor', () => {
 describe('diamond.boundaryPoint', () => {
   it('沿 +x → right 顶点', () => {
     const p = diamond.boundaryPoint(d, [100, 0]);
+
     expect(p[0]).toBeCloseTo(10);
     expect(p[1]).toBeCloseTo(0);
   });
 
   it('沿 +y → bottom 顶点', () => {
     const p = diamond.boundaryPoint(d, [0, 100]);
+
     expect(p[0]).toBeCloseTo(0);
     expect(p[1]).toBeCloseTo(5);
   });
@@ -79,6 +82,7 @@ describe('diamond.boundaryPoint', () => {
     ] as Array<[number, number]>) {
       const p = diamond.boundaryPoint(d, toward);
       const v = Math.abs(p[0]) / d.halfA + Math.abs(p[1]) / d.halfB;
+
       expect(v).toBeCloseTo(1);
     }
   });

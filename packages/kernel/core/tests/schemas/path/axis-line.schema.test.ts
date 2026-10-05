@@ -57,6 +57,7 @@ describe('axis-line step schema', () => {
         fraction: 0.5,
       },
     ];
+
     for (const target of rejected) {
       expect(AxisLineTargetSchema.safeParse(target).success).toBe(false);
     }
@@ -70,6 +71,7 @@ describe('axis-line step schema', () => {
       to: [10, 20],
       label: { text: 'y' },
     } as const;
+
     expect(StepSchema.parse(JSON.parse(JSON.stringify(step)))).toEqual(step);
   });
 });

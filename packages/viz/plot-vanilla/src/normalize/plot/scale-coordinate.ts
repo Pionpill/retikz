@@ -13,8 +13,11 @@ import type {
 import type { InputPlotPositionScaleType, InputPlotScale, InputPlotScaleDimension } from './input-scales';
 
 const AUTO_X = '__x';
+
 const AUTO_Y = '__y';
+
 const AUTO_ANGLE = '__angle';
+
 const AUTO_COLOR = '__color';
 
 type Collected = NormalizationState;
@@ -29,12 +32,16 @@ export const buildColorScale = (colorFields: Array<string>, model: IRDataModel |
     });
     if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
   }
+
   return { type: PlotScale.Ordinal, name: AUTO_COLOR };
 };
 
 type ContinuousScaleProps = Extract<InputPlotScale, { type: Exclude<InputPlotPositionScaleType, 'band' | 'point'> }>;
+
 type BandScaleProps = Extract<InputPlotScale, { type: 'band' }>;
+
 type PointScaleProps = Extract<InputPlotScale, { type: 'point' }>;
+
 type PositionScaleOptions = Pick<
   ContinuousScaleProps,
   'base' | 'constant' | 'domain' | 'domainPadding' | 'singleValueSpan'
@@ -79,6 +86,7 @@ export const buildPositionScale = (
   const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
   const bandOptions = bandPositionScaleOptions(options?.type === 'band' ? options : undefined);
   const pointOptions = pointPositionScaleOptions(options?.type === 'point' ? options : undefined);
+
   switch (type) {
     case 'linear':
       return { type: PlotScale.Linear, name, ...scaleOptions };
@@ -111,7 +119,9 @@ export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScal
       'buildPlotIR: <IntervalMark> (bar / heatmap) requires a band x scale; omit <PlotScale dimension="x" /> or set type="band"',
     );
   }
+
   if (forceBand) return buildPositionScale(AUTO_X, 'band', explicit);
+
   return buildPositionScale(AUTO_X, explicit?.type ?? 'linear', explicit);
 };
 
@@ -122,7 +132,9 @@ export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale 
       'buildPlotIR: <IntervalMark> (heatmap) requires a band y scale; omit <PlotScale dimension="y" /> or set type="band"',
     );
   }
+
   if (hasRect) return buildPositionScale(AUTO_Y, 'band', explicit);
+
   return buildPositionScale(AUTO_Y, explicit?.type ?? 'linear', explicit);
 };
 
@@ -136,15 +148,18 @@ export const buildAngleScale = (collected: Collected, explicit: InputPlotScale |
       'buildPlotIR: <IntervalMark> in polar coordinates requires a band angle scale; omit <PlotScale dimension="x" /> or set type="band"',
     );
   }
+
   if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
     throw new RetikzPlotVanillaError(
       'buildPlotIR: <IntervalMark angle> requires a linear angle scale; omit <PlotScale dimension="angle" /> or use type="linear"',
     );
   }
+
   if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit.type, explicit);
   if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
   if (collected.hasBar) return { type: PlotScale.Band, name: AUTO_ANGLE };
   if (collected.hasClosedLine) return { type: PlotScale.Point, name: AUTO_ANGLE };
+
   return { type: PlotScale.Linear, name: AUTO_ANGLE };
 };
 
@@ -160,6 +175,7 @@ const validScaleDimensionsOf = (
   if (coordKind === 'polar2D') return ['x', 'y'];
   if (coordKind === 'cartesian1D') return ['x'];
   if (coordKind === 'polar1D') return ['x'];
+
   return [];
 };
 
@@ -172,8 +188,10 @@ const scaleRoleOf = (
     if (dimension === 'x') return 'angle';
     return 'radius';
   }
+
   if (coordKind === 'cartesian1D') return dimension === 'x' ? 'x' : undefined;
   if (coordKind === 'polar1D') return dimension === 'x' ? 'angle' : undefined;
+
   return undefined;
 };
 
@@ -184,6 +202,7 @@ export const collectExplicitScales = (
 ): ExplicitScaleMap => {
   const out: ExplicitScaleMap = {};
   const valid = validScaleDimensionsOf(coordKind);
+
   for (const scale of declared) {
     const role = scaleRoleOf(scale.dimension, coordKind);
     if (role === undefined) {
@@ -191,13 +210,16 @@ export const collectExplicitScales = (
         `buildPlotIR: ${coordKind} coordinate system does not support scale dimension "${scale.dimension}" (valid dimensions: ${valid.join(', ') || 'none'})`,
       );
     }
+
     if (out[role] !== undefined) {
       throw new RetikzPlotVanillaError(
         `buildPlotIR: duplicate scale for "${role}" role (dimension "${scale.dimension}")`,
       );
     }
+
     out[role] = scale;
   }
+
   return out;
 };
 
@@ -207,6 +229,7 @@ export const buildShortcutTransforms = (
   definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined,
 ): Array<IRDataTransform> => {
   if (definitions === undefined || definitions.length === 0) return [];
+
   return marks.flatMap((mark, markIndex) =>
     definitions
       .filter(definition => definition.markType === mark.type)
@@ -222,7 +245,9 @@ export const coordinateTypeOf = (
   input: InputPlotCoordinate | undefined,
 ): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'custom' => {
   if (input === undefined) return 'cartesian2D';
+
   const type = typeof input === 'string' ? input : input.type;
+
   return BUILTIN_COORDINATE_INPUT_TYPES.has(type)
     ? (type as 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D')
     : 'custom';
@@ -243,5 +268,6 @@ export const toPolarConfig = (coordinate: InputPlotCoordinate | undefined): Pola
       ...(polar.interpolation !== undefined ? { interpolation: polar.interpolation } : {}),
     };
   }
+
   return undefined;
 };

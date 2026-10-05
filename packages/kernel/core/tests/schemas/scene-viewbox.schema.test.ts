@@ -6,6 +6,7 @@ import { SceneSchema, ViewBoxSchema } from '../../src';
 describe('ViewBoxSchema 合法形态', () => {
   it('正常四字段视框被接受', () => {
     const parsed = ViewBoxSchema.safeParse({ x: -100, y: -100, width: 200, height: 200 });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -16,12 +17,14 @@ describe('ViewBoxSchema 合法形态', () => {
 
   it('x / y / width / height 接受小数', () => {
     const parsed = ViewBoxSchema.safeParse({ x: -12.5, y: 3.25, width: 100.125, height: 50.5 });
+
     expect(parsed.success).toBe(true);
   });
 
   it('parse 通过的对象形态与 IRViewBox 同构（x/y/width/height）', () => {
     const value: IRViewBox = { x: -100, y: -100, width: 200, height: 200 };
     const parsed = ViewBoxSchema.parse(value);
+
     expect(parsed).toEqual({ x: -100, y: -100, width: 200, height: 200 });
   });
 });
@@ -29,61 +32,73 @@ describe('ViewBoxSchema 合法形态', () => {
 describe('ViewBoxSchema 拒绝退化 / 非法形态', () => {
   it('width = 0 拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: 0, height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('height = 0 拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: 200, height: 0 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('width 为负拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: -200, height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('height 为负拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: 200, height: -200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('width = Infinity 拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: Infinity, height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('height = NaN 拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: 200, height: NaN });
+
     expect(parsed.success).toBe(false);
   });
 
   it('x = -Infinity 拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: -Infinity, y: 0, width: 200, height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('y = NaN 拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: NaN, width: 200, height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('缺 width 字段拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('缺 x 字段拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ y: 0, width: 200, height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('width 为字符串拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: '200', height: 200 });
+
     expect(parsed.success).toBe(false);
   });
 
   it('未知字段拒绝', () => {
     const parsed = ViewBoxSchema.safeParse({ x: 0, y: 0, width: 200, height: 200, padding: 10 });
+
     expect(parsed.success).toBe(false);
   });
 });
@@ -95,6 +110,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       type: 'scene',
       children: [],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -105,6 +121,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       children: [{ type: 'node', position: [0, 0] }],
       viewBox: { x: -100, y: -100, width: 200, height: 200 },
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -115,6 +132,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       children: [],
       viewBox: { x: -100, y: -100, width: 200, height: 200 },
     });
+
     expect(parsed.viewBox).toEqual({ x: -100, y: -100, width: 200, height: 200 });
   });
 
@@ -124,6 +142,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       type: 'scene',
       children: [],
     });
+
     expect(parsed.viewBox).toBeUndefined();
   });
 
@@ -134,6 +153,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       children: [],
       viewBox: { x: 0, y: 0, width: 0, height: 200 },
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -144,6 +164,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       children: [],
       viewBox: { x: 0, y: 0, width: Infinity, height: 200 },
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -154,6 +175,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       children: [],
       viewBox: { x: -100, y: -100, width: 200, height: 200 },
     });
+
     expect(parsed.version).toBe(1);
   });
 
@@ -164,6 +186,7 @@ describe('SceneSchema 带 / 不带 viewBox', () => {
       children: [],
       metadata: {},
     });
+
     expect(parsed.success).toBe(false);
   });
 });

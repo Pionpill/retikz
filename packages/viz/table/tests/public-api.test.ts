@@ -94,6 +94,7 @@ describe('@retikz/table public API', () => {
         ],
       ],
     });
+
     expect(parsed).toMatchObject({ kind: 'manual', rows: [[{ span: { columns: 2 } }, null]] });
     expect(Table.TableLayoutSchema.parse({ borders: { mode: 'collapse', outer: { top: { kind: 'line' } } } })).toEqual({
       borders: { mode: 'collapse', outer: { top: { kind: 'line' } } },

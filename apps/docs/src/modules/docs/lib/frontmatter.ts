@@ -19,9 +19,11 @@ const unquoteScalar = (value: string): string => {
       return trimmed.slice(1, -1);
     }
   }
+
   if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
     return trimmed.slice(1, -1).replaceAll("''", "'");
   }
+
   return trimmed;
 };
 
@@ -29,10 +31,12 @@ const unquoteScalar = (value: string): string => {
 export const parseDocSource = (source: string): ParsedDocSource => {
   const match = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(source);
   const block = match?.[1] ?? '';
+
   const read = (key: keyof DocFrontmatter) => {
     const value = new RegExp(`^${key}:\\s*(.+?)\\s*$`, 'm').exec(block)?.[1];
     return value === undefined ? '' : unquoteScalar(value);
   };
+
   return {
     frontmatter: { title: read('title'), description: read('description') },
     body: match === null ? source : source.slice(match[0].length),

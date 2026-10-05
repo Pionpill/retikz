@@ -16,6 +16,7 @@ import {
 
 const fieldContractOf = (definition: PreviewControlsDefinition) => {
   if (definition.presentation !== 'panel') throw new Error('Axis playground must use panel controls');
+
   return definition.sections.map(section => ({
     visibleWhen: section.visibleWhen,
     fields: section.controls.map(field => ({

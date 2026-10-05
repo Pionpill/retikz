@@ -1,26 +1,35 @@
 import { RetikzTexError, RetikzTexErrorCode } from '../error';
+import type { MathJaxExtension } from './constants';
 import { loadMathJaxConfigurations, resolveMathJaxExtensions } from './profiles';
-import type { MathJaxEngineOptions, MathJaxExtensionValue, MathJaxSvgEngine } from './types';
+import type { MathJaxEngineOptions, MathJaxSvgEngine } from './types';
 
 type LiteAdaptor = { outerHTML: (node: unknown) => string };
+
 type MathDocument = { convert: (tex: string, options: { display: boolean }) => unknown };
+
 type MathJaxModule = {
   mathjax: {
     document: (documentSource: string, options: { InputJax: unknown; OutputJax: unknown }) => MathDocument;
   };
 };
+
 type TexModule = { TeX: new (options: { packages: Array<string> }) => unknown };
+
 type SvgModule = { SVG: new (options: { fontCache: string }) => unknown };
+
 type AdaptorModule = { liteAdaptor: () => LiteAdaptor };
+
 type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
 
 /** 根据有效 extension 集合生成 MathJax TeX package 顺序 */
-const getMathJaxPackages = (extensions: Array<MathJaxExtensionValue>): Array<string> => {
+const getMathJaxPackages = (extensions: Array<MathJaxExtension>): Array<string> => {
   const packages = ['base'];
+
   for (const extension of extensions) {
     if (extension === 'cases') packages.push('empheq');
     packages.push(extension);
   }
+
   return packages;
 };
 
@@ -48,6 +57,7 @@ export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promi
     adaptorModule: AdaptorModule;
     handlerModule: HandlerModule;
   };
+
   try {
     const [mathJaxModule, tex, svg, adaptorModule, handlerModule] = await Promise.all([
       import('mathjax-full/js/mathjax.js') as Promise<MathJaxModule>,
@@ -65,11 +75,13 @@ export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promi
       { cause: error },
     );
   }
+
   const adaptor = modules.adaptorModule.liteAdaptor();
   modules.handlerModule.RegisterHTMLHandler(adaptor);
   const texInput = new modules.tex.TeX({ packages: getMathJaxPackages(extensions) });
   const svgOutput = new modules.svg.SVG({ fontCache: 'none' });
   const mathDocument = modules.mathJaxModule.mathjax.document('', { InputJax: texInput, OutputJax: svgOutput });
+
   return {
     convert: (tex, convertOptions) => adaptor.outerHTML(mathDocument.convert(tex, { display: convertOptions.display })),
   };

@@ -1,4 +1,4 @@
-import type { ThemeModeValue } from '@retikz/core';
+import type { ThemeMode } from '@retikz/core';
 
 import type { IRTableDefaults } from '../../schemas';
 import { TableDefaultsSchema } from '../../schemas';
@@ -6,7 +6,7 @@ import { deepFreeze } from '../../shared';
 
 const line = (stroke: string, width: number) => ({ kind: 'line' as const, stroke, width });
 
-const presets: Readonly<Record<ThemeModeValue, IRTableDefaults>> = deepFreeze({
+const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
   light: TableDefaultsSchema.parse({
     appearanceDefaults: {
       body: {
@@ -64,4 +64,4 @@ const presets: Readonly<Record<ThemeModeValue, IRTableDefaults>> = deepFreeze({
 });
 
 /** 读取默认 Table style/mode 的 detached Source defaults */
-export const getDefaultTableDefaults = (mode: ThemeModeValue): IRTableDefaults => structuredClone(presets[mode]);
+export const getDefaultTableDefaults = (mode: ThemeMode): IRTableDefaults => structuredClone(presets[mode]);

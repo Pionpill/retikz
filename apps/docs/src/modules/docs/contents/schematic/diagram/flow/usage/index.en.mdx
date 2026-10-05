@@ -89,12 +89,32 @@ Automatic avoidance does not guarantee a collision-free route. If every candidat
 
 See [Extended usage](/schematic/diagram/flow/extended) for parameters and [Implementation](/schematic/diagram/flow/mechanism) for candidate generation and collision detection.
 
+## Presentation
+
+Use `presentation.title`, `presentation.description`, and `presentation.legend` to add a title, description, and explicit legend to the complete flow diagram. Title and description accept `{ text, style?, layout? }` for font, text color, alignment, and line spacing. The legend uses structured Standard Legend content.
+
+The switches use `style.opacity` on the title, description, and legend to hide content while preserving its layout space for comparison. These switches belong to the demo, not to a `visible` API field. Omit an unneeded region from the initial configuration; omit the entire `presentation` when no supporting regions are needed. The example sets `frame.legendPosition: 'bottom'` to place the legend below the drawing.
+
+<ComponentPreview
+  files={['flow-presentation', 'flow-presentation.preview.tsx']}
+  defaultSourceFile="flow-presentation.preview.tsx"
+  size="md"
+  caption="Hide each region independently while keeping the layout unchanged; Reset shows all three again."
+/>
+
 ## Related props
 
-This list contains the members used here to declare steps and connections. See the [API reference](/schematic/diagram/flow/api-reference) for complete types.
+This list contains the members used here to declare steps, connections, and supporting regions. See the [API reference](/schematic/diagram/flow/api-reference) for complete types.
 
 <ComponentProps
   items={[
+    {
+      name: 'FlowDiagram.presentation',
+      kind: 'property',
+      type: 'InputFlowDiagram["presentation"]',
+      description:
+        'Complete-diagram title, description, and explicit legend. Omit a member to hide its region; omit presentation when all are hidden.',
+    },
     {
       name: 'FlowEntities.items',
       kind: 'property',

@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 轨道在固定时刻的状态文案 */
 export const animationSamplesI18n: Record<Lang, { states: Array<string>; operation: string }> = {
   zh: {

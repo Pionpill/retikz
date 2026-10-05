@@ -38,6 +38,7 @@ describe('Plot typography cascade', () => {
 
     const axisTheme = resolvePlotAxisGuideTheme(resolution, 'x');
     const legendTheme = resolvePlotGuideTheme(resolution);
+
     expect(axisTheme.axis.tickLabels).toMatchObject({
       textColor: '#source-global',
       font: { family: 'monospace', size: 14 },
@@ -53,6 +54,7 @@ describe('Plot typography cascade', () => {
     const legend = resolveLegendGuideTokens(legendTheme, {
       label: { textColor: '#guide-legend' },
     });
+
     expect(axis.tickLabels).toMatchObject({ textColor: '#guide-label' });
     expect(legend.label.textColor).toBe('#guide-legend');
     expect(legend.title.textColor).toBe('#source-global');

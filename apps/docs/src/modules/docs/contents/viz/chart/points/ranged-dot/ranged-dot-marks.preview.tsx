@@ -37,5 +37,6 @@ export const renderRangedDotMarksPreview = (
       />
     </RangedDotChart>
   );
+
   return chart;
 };

@@ -18,6 +18,7 @@ const assertValidIdentity = (owner: string, path: ReadonlyArray<string>): void =
   if (path.length === 0) {
     throw identityError(owner, path);
   }
+
   for (let index = 0; index < path.length; index += 1) {
     if (!(index in path)) throw identityError(owner, path);
     const segment = path[index];
@@ -41,21 +42,25 @@ const copyIdentity = (identity: RuntimeIdentity): RuntimeIdentity =>
 
 const comparePaths = (left: RuntimeIdentity, right: RuntimeIdentity): number => {
   const length = Math.min(left.path.length, right.path.length);
+
   for (let index = 0; index < length; index += 1) {
     const leftSegment = left.path[index];
     const rightSegment = right.path[index];
     if (leftSegment < rightSegment) return -1;
     if (leftSegment > rightSegment) return 1;
   }
+
   return left.path.length - right.path.length;
 };
 
 const findTrieNode = (root: IdentityTrieNode, path: ReadonlyArray<string>): IdentityTrieNode | undefined => {
   let current: IdentityTrieNode | undefined = root;
+
   for (const segment of path) {
     if (current === undefined) return undefined;
     current = current.children.get(segment);
   }
+
   return current;
 };
 
@@ -79,10 +84,13 @@ export const createRuntimeIdentityLookup = (
   assertNonEmptyString(owner, 'Runtime identity lookup owner', identityError(owner, owner));
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };
   const copied: Array<RuntimeIdentity> = [];
+
   for (const oriIdentity of identities) {
     if (oriIdentity.owner !== owner) throw identityError(owner, oriIdentity);
+
     const identity = copyIdentity(oriIdentity);
     let current = root;
+
     for (const segment of identity.path) {
       const existing = current.children.get(segment);
       if (existing !== undefined) current = existing;
@@ -92,13 +100,17 @@ export const createRuntimeIdentityLookup = (
         current = child;
       }
     }
+
     if (current.terminal) throw identityError(owner, identity);
+
     current.terminal = true;
     copied.push(identity);
   }
+
   copied.sort(comparePaths);
   const values = Object.freeze(copied);
   const immutableRoot = root as IdentityTrieNode;
+
   return Object.freeze({
     owner,
     size: values.length,

@@ -57,6 +57,7 @@ const headingContent = (resolution: DiagramFoundationResolution): IRScope | unde
   let child: IRChild;
   if (title === undefined) {
     if (description === undefined) return undefined;
+
     child = createDiagramPresentationTextNode(
       description,
       resolveDiagramPresentationTextAppearance(description, resolution.presentationAppearance.description),

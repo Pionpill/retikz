@@ -97,6 +97,7 @@ describe('Diagram Theme schema', () => {
   ])('rejects fields outside Diagram appearance ownership: %j', input => {
     expect(() => DiagramDefaultsSchema.parse(input)).toThrow();
   });
+
   it.each([
     {},
     { frame: {} },

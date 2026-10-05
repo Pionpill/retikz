@@ -77,7 +77,7 @@ export type RelationInputEmbedProps = WithoutInputType<InputRelation>;
 ### normalizeRelation / InputRelation
 
 - `normalizeRelation`：<ApiSourceLink label={"normalizeRelation"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={57}>将 endpoint 与可选 Way sugar 归一为直接持有 route 的 Relation Source record</ApiSourceLink>
-- `InputRelation`：<ApiSourceLink label={"InputRelation"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={53}>Relation 的 Vanilla authoring 输入</ApiSourceLink>
+- `InputRelation`：<ApiSourceLink label={"InputRelation"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={56}>Relation 的 Vanilla authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -112,7 +112,7 @@ export type InputRelation = InputRelationFields & (InputRelationRoute | InputRel
   <ApiSourceLink
     label={'InputRelationEndpoint'}
     path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={24}
+    startLine={27}
   >
     Relation endpoint 的 Vanilla authoring 输入，可直接引用 id 或提供完整 NodeTarget
   </ApiSourceLink>
@@ -128,7 +128,7 @@ export type InputRelationEndpoint = string | RelationCreateOptions['source'];
   <ApiSourceLink
     label={'InputRelationRoute'}
     path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={33}
+    startLine={36}
   >
     直接使用规范 Core route steps 的 Relation authoring 输入
   </ApiSourceLink>
@@ -170,7 +170,7 @@ export type InputRelationRoute = Readonly<{
   <ApiSourceLink
     label={'InputRelationWay'}
     path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={43}
+    startLine={46}
   >
     使用 Core Way DSL、并在 Vanilla normalize 阶段转为 route 的 Relation authoring 输入
   </ApiSourceLink>
@@ -219,7 +219,7 @@ export type InputRelationWay = Readonly<{
 </p>
 
 ```ts
-export declare const RelationInputEmbedAdapter: InputEmbedAdapter<RelationInputEmbedProps>;
+export declare const RelationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInputEmbedProps>;
 ```
 
 ### createGraphVanillaAdapters
@@ -228,7 +228,7 @@ export declare const RelationInputEmbedAdapter: InputEmbedAdapter<RelationInputE
   <ApiSourceLink
     label={'createGraphVanillaAdapters'}
     path={'packages/schematic/graph-vanilla/src/adapters.ts'}
-    startLine={22}
+    startLine={24}
   >
     创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
   </ApiSourceLink>
@@ -240,9 +240,9 @@ export declare const RelationInputEmbedAdapter: InputEmbedAdapter<RelationInputE
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称 | 类型 / 签名                         | 说明                                                                |
-| ------ | ---- | ----------------------------------- | ------------------------------------------------------------------- |
-| 返回值 | —    | `Array<InputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
+| 类别   | 名称 | 类型 / 签名                                    | 说明                                                                |
+| ------ | ---- | ---------------------------------------------- | ------------------------------------------------------------------- |
+| 返回值 | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
 
 </ApiTable>
 
@@ -251,7 +251,7 @@ export declare const RelationInputEmbedAdapter: InputEmbedAdapter<RelationInputE
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGraphVanillaAdapters: () => Array<InputEmbedAdapter<unknown>>;
+export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
 ```
 
 </DocTab>
@@ -312,13 +312,13 @@ export type RelationCreateOptions = Omit<ZodInfer<typeof RelationSchema>, 'names
 
 | 成员                           | 类型                                         | 默认值 | 说明                                               |
 | ------------------------------ | -------------------------------------------- | ------ | -------------------------------------------------- |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | —      | 自定义 Entity kind definitions                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | —      | 自定义 Entity predicate definitions                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | —      | 自定义 Entity role definitions                     |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | —      | 与 Core Theme style 同名的 Graph Theme definitions |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | —      | 自定义 Relation kind definitions                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —      | 自定义 Relation predicate definitions              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —      | 自定义 Relation role definitions                   |
+| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions                     |
+| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions                |
+| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions                     |
+| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions |
+| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions                   |
+| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions              |
+| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions                   |
 
 </ApiTable>
 
@@ -342,41 +342,13 @@ export type GraphDefinitionOptions = Readonly<{
 
 </DocTabs>
 
-### GraphStatusValue
-
-<p>
-  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={15}>
-    Graph 内置语义状态词汇值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type GraphStatusValue = ValueOf<typeof GraphStatus>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### IRGraphRelation
 
 <p>
   <ApiSourceLink
     label={'IRGraphRelation'}
     path={'packages/schematic/graph/src/schemas/relation/types.ts'}
-    startLine={16}
+    startLine={12}
   >
     查看源码
   </ApiSourceLink>
@@ -436,7 +408,7 @@ export type IRGraphRelation = ZodInfer<typeof RelationSchema>;
   <ApiSourceLink
     label={'IRGraphRelationMarkerAppearance'}
     path={'packages/schematic/graph/src/schemas/relation/types.ts'}
-    startLine={22}
+    startLine={18}
   >
     查看源码
   </ApiSourceLink>
@@ -475,7 +447,7 @@ export type IRGraphRelationMarkerAppearance = ZodInfer<typeof GraphRelationMarke
   <ApiSourceLink
     label={'IRGraphRelationMarkerRecipe'}
     path={'packages/schematic/graph/src/schemas/relation/types.ts'}
-    startLine={20}
+    startLine={16}
   >
     查看源码
   </ApiSourceLink>
@@ -514,7 +486,7 @@ export type IRGraphRelationMarkerRecipe = ZodInfer<typeof GraphRelationMarkerRec
   <ApiSourceLink
     label={'IRGraphRelationRoleTokenRecipe'}
     path={'packages/schematic/graph/src/schemas/relation/types.ts'}
-    startLine={24}
+    startLine={20}
   >
     查看源码
   </ApiSourceLink>
@@ -552,7 +524,7 @@ export type IRGraphRelationRoleTokenRecipe = ZodInfer<typeof GraphRelationRoleTo
   <ApiSourceLink
     label={'IRGraphRelationRouteStep'}
     path={'packages/schematic/graph/src/schemas/relation/types.ts'}
-    startLine={18}
+    startLine={14}
   >
     查看源码
   </ApiSourceLink>
@@ -568,7 +540,7 @@ export type IRGraphRelationRouteStep = ZodInfer<typeof GraphRelationRouteStepSch
   <ApiSourceLink
     label={'IRGraphRelationStructureTokenOverrides'}
     path={'packages/schematic/graph/src/schemas/relation/types.ts'}
-    startLine={26}
+    startLine={22}
   >
     查看源码
   </ApiSourceLink>
@@ -600,38 +572,6 @@ export type IRGraphRelationStructureTokenOverrides = ZodInfer<typeof GraphRelati
 
 </DocTabs>
 
-### RelationDirectionValue
-
-<p>
-  <ApiSourceLink
-    label={'RelationDirectionValue'}
-    path={'packages/schematic/graph/src/schemas/relation/types.ts'}
-    startLine={14}
-  >
-    查看源码
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type RelationDirectionValue = 'none' | 'reverse' | 'both' | 'forward';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type RelationDirectionValue = ValueOf<typeof RelationDirection>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### RelationKindDefinition
 
 <p>
@@ -650,14 +590,14 @@ export type RelationDirectionValue = ValueOf<typeof RelationDirection>;
 
 <ApiTable>
 
-| 成员                          | 类型                                                                                        | 默认值 | 说明                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------- | ------ | ----------------------------------- |
-| `readonly allowedDirections?` | `ReadonlyArray<RelationDirectionValue>`                                                     | —      | kind 对所属 role 方向集合的非空收窄 |
-| `readonly defaultDirection?`  | `RelationDirectionValue`                                                                    | —      | kind 覆盖的默认方向                 |
-| `readonly description`        | `string`                                                                                    | —      | 面向作者与工具的稳定语义说明        |
-| `readonly directions?`        | `Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationStructureTokenOverrides>>>` | —      | 按有效方向提供的稀疏结构 delta      |
-| `readonly kind`               | `string`                                                                                    | —      | 全局唯一的开放 Relation kind key    |
-| `readonly role`               | `string`                                                                                    | —      | kind 所属的 Relation role           |
+| 成员                          | 类型                                                                                   | 默认值 | 说明                                |
+| ----------------------------- | -------------------------------------------------------------------------------------- | ------ | ----------------------------------- |
+| `readonly allowedDirections?` | `ReadonlyArray<RelationDirection>`                                                     | —      | kind 对所属 role 方向集合的非空收窄 |
+| `readonly defaultDirection?`  | `RelationDirection`                                                                    | —      | kind 覆盖的默认方向                 |
+| `readonly description`        | `string`                                                                               | —      | 面向作者与工具的稳定语义说明        |
+| `readonly directions?`        | `Readonly<Partial<Record<RelationDirection, IRGraphRelationStructureTokenOverrides>>>` | —      | 按有效方向提供的稀疏结构 delta      |
+| `readonly kind`               | `string`                                                                               | —      | 全局唯一的开放 Relation kind key    |
+| `readonly role`               | `string`                                                                               | —      | kind 所属的 Relation role           |
 
 </ApiTable>
 
@@ -670,9 +610,9 @@ export type RelationKindDefinition = Readonly<{
   kind: string;
   role: string;
   description: string;
-  defaultDirection?: RelationDirectionValue;
-  allowedDirections?: ReadonlyArray<RelationDirectionValue>;
-  directions?: Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationStructureTokenOverrides>>>;
+  defaultDirection?: RelationDirection;
+  allowedDirections?: ReadonlyArray<RelationDirection>;
+  directions?: Readonly<Partial<Record<RelationDirection, IRGraphRelationStructureTokenOverrides>>>;
 }>;
 ```
 
@@ -686,7 +626,7 @@ export type RelationKindDefinition = Readonly<{
   <ApiSourceLink
     label={'RelationPredicateDefinition'}
     path={'packages/schematic/graph/src/contract/relation/types.ts'}
-    startLine={57}
+    startLine={60}
   >
     Relation predicate registry 保存的参数擦除定义
   </ApiSourceLink>
@@ -727,7 +667,7 @@ export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodTy
   <ApiSourceLink
     label={'RelationPredicateDefinitionInput'}
     path={'packages/schematic/graph/src/contract/relation/types.ts'}
-    startLine={41}
+    startLine={44}
   >
     Relation predicate 作者侧的类型安全定义
   </ApiSourceLink>
@@ -739,15 +679,15 @@ export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodTy
 
 <ApiTable>
 
-| 成员                         | 类型                                                                     | 默认值 | 说明                                                       |
-| ---------------------------- | ------------------------------------------------------------------------ | ------ | ---------------------------------------------------------- |
-| `TSchema` (泛型)             | `extends ZodType<JsonObject>`                                            | —      | —                                                          |
-| `readonly description`       | `string`                                                                 | —      | 面向作者与工具的稳定语义说明                               |
-| `readonly kinds?`            | `ReadonlyArray<string>`                                                  | —      | 可选允许的 Relation kind keys；省略表示该 role 的全部 kind |
-| `readonly name`              | `string`                                                                 | —      | 全局唯一的 predicate definition name                       |
-| `readonly paramsSchema`      | `TSchema`                                                                | —      | Source params 的 JSON object schema                        |
-| `readonly resolveStructure?` | `(params: ZodOutput<TSchema>) => IRGraphRelationStructureTokenOverrides` | —      | 根据已校验 Canonical params 解析稀疏结构 delta             |
-| `readonly role`              | `string`                                                                 | —      | predicate 所属的 Relation role                             |
+| 成员                         | 类型                                                                     | 默认值 | 说明                                                               |
+| ---------------------------- | ------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------ |
+| `TSchema` (泛型)             | `extends ZodType<JsonObject>`                                            | —      | 校验 predicate 参数的 JSON 对象 schema，其输出类型传给结构解析回调 |
+| `readonly description`       | `string`                                                                 | —      | 面向作者与工具的稳定语义说明                                       |
+| `readonly kinds?`            | `ReadonlyArray<string>`                                                  | —      | 可选允许的 Relation kind keys；省略表示该 role 的全部 kind         |
+| `readonly name`              | `string`                                                                 | —      | 全局唯一的 predicate definition name                               |
+| `readonly paramsSchema`      | `TSchema`                                                                | —      | Source params 的 JSON object schema                                |
+| `readonly resolveStructure?` | `(params: ZodOutput<TSchema>) => IRGraphRelationStructureTokenOverrides` | —      | 根据已校验 Canonical params 解析稀疏结构 delta                     |
+| `readonly role`              | `string`                                                                 | —      | predicate 所属的 Relation role                                     |
 
 </ApiTable>
 
@@ -788,13 +728,13 @@ export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>
 
 <ApiTable>
 
-| 成员                         | 类型                                                                                | 默认值 | 说明                                   |
-| ---------------------------- | ----------------------------------------------------------------------------------- | ------ | -------------------------------------- |
-| `readonly allowedDirections` | `ReadonlyArray<RelationDirectionValue>`                                             | —      | role 允许的全部有效方向                |
-| `readonly defaultDirection`  | `RelationDirectionValue`                                                            | —      | 省略 Source direction 时使用的有效方向 |
-| `readonly description`       | `string`                                                                            | —      | 面向作者与工具的稳定语义说明           |
-| `readonly directions`        | `Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationRoleTokenRecipe>>>` | —      | 每个允许方向对应的完整结构 recipe      |
-| `readonly role`              | `string`                                                                            | —      | 开放的 Relation role key               |
+| 成员                         | 类型                                                                           | 默认值 | 说明                                   |
+| ---------------------------- | ------------------------------------------------------------------------------ | ------ | -------------------------------------- |
+| `readonly allowedDirections` | `ReadonlyArray<RelationDirection>`                                             | —      | role 允许的全部有效方向                |
+| `readonly defaultDirection`  | `RelationDirection`                                                            | —      | 省略 Source direction 时使用的有效方向 |
+| `readonly description`       | `string`                                                                       | —      | 面向作者与工具的稳定语义说明           |
+| `readonly directions`        | `Readonly<Partial<Record<RelationDirection, IRGraphRelationRoleTokenRecipe>>>` | —      | 每个允许方向对应的完整结构 recipe      |
+| `readonly role`              | `string`                                                                       | —      | 开放的 Relation role key               |
 
 </ApiTable>
 
@@ -806,38 +746,10 @@ export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>
 export type RelationRoleDefinition = Readonly<{
   role: string;
   description: string;
-  defaultDirection: RelationDirectionValue;
-  allowedDirections: ReadonlyArray<RelationDirectionValue>;
-  directions: Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationRoleTokenRecipe>>>;
+  defaultDirection: RelationDirection;
+  allowedDirections: ReadonlyArray<RelationDirection>;
+  directions: Readonly<Partial<Record<RelationDirection, IRGraphRelationRoleTokenRecipe>>>;
 }>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### RelationRoleValue
-
-<p>
-  <ApiSourceLink label={'RelationRoleValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={12}>
-    Relation 内置角色词汇值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type RelationRoleValue = 'association' | 'dependency' | 'generalization' | 'flow' | 'influence';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type RelationRoleValue = ValueOf<typeof RelationRole>;
 ```
 
 </DocTab>
@@ -847,7 +759,7 @@ export type RelationRoleValue = ValueOf<typeof RelationRole>;
 ### GraphStatus
 
 <p>
-  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={57}>
+  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={59}>
     Graph Entity 与 Relation 共享的图式语义状态
   </ApiSourceLink>
 </p>
@@ -859,6 +771,8 @@ export const GraphStatus = {
   Warning: 'warning',
   Disabled: 'disabled',
 } as const;
+
+export type GraphStatus = ValueOf<typeof GraphStatus>;
 ```
 
 ### RelationDirection
@@ -867,7 +781,7 @@ export const GraphStatus = {
   <ApiSourceLink
     label={'RelationDirection'}
     path={'packages/schematic/graph/src/schemas/relation/constants.ts'}
-    startLine={2}
+    startLine={4}
   >
     Relation 有向性词汇
   </ApiSourceLink>
@@ -880,12 +794,14 @@ export const RelationDirection = {
   Reverse: 'reverse',
   Both: 'both',
 } as const;
+
+export type RelationDirection = ValueOf<typeof RelationDirection>;
 ```
 
 ### RelationRole
 
 <p>
-  <ApiSourceLink label={'RelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={43}>
+  <ApiSourceLink label={'RelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={45}>
     Relation 的内置语义角色
   </ApiSourceLink>
 </p>
@@ -898,6 +814,8 @@ export const RelationRole = {
   Flow: 'flow',
   Influence: 'influence',
 } as const;
+
+export type RelationRole = ValueOf<typeof RelationRole>;
 ```
 
 ### createGraphDefinitions

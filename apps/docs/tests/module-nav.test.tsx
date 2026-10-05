@@ -42,6 +42,7 @@ vi.mock('../src/app/header/MobileNav', () => ({
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
+
 const getLinkLabel = (link: HTMLAnchorElement | null): string | undefined =>
   link?.querySelector('[data-slot="header-section-label"]')?.textContent ?? link?.firstChild?.textContent ?? undefined;
 
@@ -145,6 +146,7 @@ describe('<ModulePicker>', () => {
     const container = renderInRouter(<ModulePicker value="kernel" />, '/kernel');
 
     const trigger = container.querySelector<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]');
+
     expect(trigger?.classList.contains('text-muted-foreground')).toBe(true);
     expect(trigger?.classList.contains('h-8')).toBe(true);
     expect(trigger?.classList.contains('focus-visible:ring-0')).toBe(true);
@@ -189,6 +191,7 @@ describe('<ModulePicker>', () => {
   it('选择首页或模块时更新 scope 并导航到对应根路径', () => {
     useDocModuleStore.setState({ scope: 'kernel' });
     const container = renderInRouter(<ModulePicker value="kernel" />, '/kernel/components/node');
+
     expect(container.querySelector('button[data-slot="header-navigation-trigger"]')?.textContent).toContain(
       'retikz.kernel',
     );
@@ -287,6 +290,7 @@ describe('<SectionNav>', () => {
     );
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
+
     expect(links.map(link => getLinkLabel(link))).toEqual(['kernel.components', 'kernel.packages', 'kernel.gallery']);
     expect(links.map(link => link.getAttribute('href'))).toEqual([
       '/kernel/components',
@@ -321,16 +325,21 @@ describe('<Header>', () => {
   it('首页使用模块选择器、带分组面板的模块入口，并将 About 作为普通链接展示', () => {
     const home = renderInRouter(<Header />, '/');
     const header = home.querySelector('header');
+
     expect(header?.firstElementChild?.classList.contains('lg:gap-2')).toBe(true);
     expect(header?.firstElementChild?.firstElementChild?.classList.contains('lg:gap-2')).toBe(true);
     expect(home.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz');
     expect(home.querySelector('a[aria-label="retikz home"]')).toBeNull();
     expect(home.querySelectorAll('nav[data-slot="navigation-menu"]')).toHaveLength(1);
+
     const navigationList = home.querySelector('[data-slot="navigation-menu-list"]');
+
     expect(home.querySelectorAll('[data-slot="navigation-menu-list"]')).toHaveLength(1);
     expect(navigationList?.classList.contains('gap-x-2')).toBe(true);
     expect(navigationList?.classList.contains('gap-y-2')).toBe(true);
+
     const aboutLink = home.querySelector<HTMLAnchorElement>('a[href="/about/introduction"]');
+
     expect(aboutLink?.textContent).toBe('about.label');
     expect(aboutLink?.classList.contains('text-muted-foreground')).toBe(true);
     expect(aboutLink?.classList.contains('hover:bg-accent')).toBe(true);
@@ -349,11 +358,13 @@ describe('<Header>', () => {
     ]);
 
     const page = renderInRouter(<Header />, '/viz/chart');
+
     expect(page.querySelector('a[aria-label="retikz home"]')).toBeNull();
     expect(page.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz.viz');
     expect(getLinkLabel(page.querySelector('a[href="/viz/chart"][data-active]'))).toBe('viz.chart');
 
     const about = renderInRouter(<Header />, '/about/introduction');
+
     expect(about.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz');
     expect(
       Array.from(about.querySelectorAll<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]')).map(

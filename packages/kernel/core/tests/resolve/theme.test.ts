@@ -82,6 +82,7 @@ describe('resolve theme', () => {
     );
 
     categorical[0] = '#mutated';
+
     expect(resolved.colors.categorical).toEqual(['#112233']);
     expect(resolved.colors.semantic).toEqual(DEFAULT_RESOLVED_THEME.colors.semantic);
     expect(Object.isFrozen(resolved.colors.categorical)).toBe(true);

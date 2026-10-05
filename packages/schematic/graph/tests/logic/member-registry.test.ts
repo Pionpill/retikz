@@ -71,6 +71,7 @@ describe('Relation definition registry', () => {
       paramsSchema: strictObject({ open: boolean() }),
       resolveStructure: params => ({ targetMarker: { shape: params.open ? 'open' : 'normal' } }),
     });
+
     expect(Graph.defineRelationRole(role)).toBe(role);
     expect(Graph.defineRelationPredicate(predicate)).toBe(predicate);
     expect(() => Graph.resolveGraphDefinitionOptions({ relationRoles: [role], relationKinds: [invalidKind] })).toThrow(

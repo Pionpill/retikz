@@ -14,9 +14,13 @@ export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
 
 /** path rotate / scale transform 构造输入 */
 export type BuildPathTransformsInput = {
+  /** 绕路径包围盒中心旋转的角度，单位为度；未指定时不生成旋转 */
   rotate: number | undefined;
+  /** 绕路径包围盒中心应用的统一或分轴缩放 */
   scale: IRPathScale | undefined;
+  /** 旋转和缩放共用的路径包围盒中心 */
   center: IRPosition;
+  /** 统一变换中心与平移量的数值精度 */
   round: (n: number) => number;
 };
 
@@ -26,9 +30,11 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathT
   if (rotate !== undefined) {
     out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });
   }
+
   if (scale !== undefined) {
     const sx = typeof scale === 'number' ? scale : scale.x;
     const sy = typeof scale === 'number' ? undefined : scale.y;
+
     // 绕 bbox center 缩放：translate(center) ∘ scale ∘ translate(-center)
     const scaleT: Transform = { kind: 'scale', x: sx };
     if (sy !== undefined) scaleT.y = sy;
@@ -38,6 +44,7 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathT
       y: round(-center[1]),
     });
   }
+
   return out;
 };
 
@@ -56,6 +63,7 @@ export const buildPathOwnerOutputTransforms = ({
       typeof scale === 'number' ? { kind: 'scale', x: scale, pivot } : { kind: 'scale', x: scale.x, y: scale.y, pivot },
     );
   }
+
   return out;
 };
 
@@ -65,6 +73,7 @@ export const projectPathTransformPoints = (
   transforms: ReadonlyArray<Transform>,
 ): Array<IRPosition> => {
   const transformedPoints = points.map(p => applyTransformChain(p, transforms));
+
   // scale × 坐标可能把 finite 输入放大溢出成 Infinity；非 finite 会污染 layout（round-trip 失真）
   if (!transformedPoints.every(isFinitePoint)) {
     throw new RetikzCoreError(
@@ -72,5 +81,6 @@ export const projectPathTransformPoints = (
       'Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.',
     );
   }
+
   return transformedPoints;
 };

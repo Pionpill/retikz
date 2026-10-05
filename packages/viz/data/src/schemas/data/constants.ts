@@ -1,5 +1,7 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /**
- * 字段测量类型关键字。
+ * 字段测量类型关键字
  * @description 字段测量种类；驱动 lowering 的缺省推断、type-driven scale 选型与 guide 格式化
  */
 export const DataFieldType = {
@@ -36,3 +38,12 @@ export const DataFieldFormat = {
   /** continuous：百分比串 */
   Percent: 'percent',
 } as const;
+
+/** 字段测量类型取值 */
+export type DataFieldType = ValueOf<typeof DataFieldType>;
+
+/** 分类字段顺序策略取值 */
+export type FieldOrderMode = ValueOf<typeof FieldOrderMode>;
+
+/** 内置字段值解析格式名取值 */
+export type DataFieldFormat = ValueOf<typeof DataFieldFormat>;

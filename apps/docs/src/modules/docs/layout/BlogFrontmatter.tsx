@@ -11,6 +11,7 @@ export type BlogFrontmatterProps = {
 export const BlogFrontmatter: FC<BlogFrontmatterProps> = props => {
   const { date, tags } = props;
   if (!date && (!tags || tags.length === 0)) return null;
+
   return (
     <div className="mb-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
       {date && <time dateTime={date}>{date}</time>}

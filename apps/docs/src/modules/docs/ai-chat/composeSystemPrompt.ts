@@ -262,5 +262,6 @@ export const composeSystem = async (
 
   const llms = await fetchLlmsTxt();
   if (!llms) return intro + diagramBlock + pageBlock + extrasBlock;
+
   return `${intro}${diagramBlock}${pageBlock}\n\n## Site index (other pages)\n\n${llms}${extrasBlock}`;
 };

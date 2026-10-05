@@ -12,6 +12,7 @@ const cross = definePattern({
   emit: ({ size, color, lineWidth }) => {
     const lw = lineWidth ?? 1.5;
     const c = size / 2;
+
     return [
       {
         type: 'path',

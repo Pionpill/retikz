@@ -48,6 +48,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
         : { [datasetReference]: datasetSource as ExternalDatasets[string] },
     [datasetReference, datasetSource],
   );
+
   const {
     formatterDefinitions,
     presentationDefinitions,
@@ -64,12 +65,14 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     rowSelectorImplementations,
     regressionImplementations,
   } = lowerOptions;
+
   const ambientTableThemeStyles = useTableThemeStyles();
   const effectiveTableThemeStyles = useMemo(() => {
     if (ambientTableThemeStyles === undefined) return tableThemeStyles;
     if (tableThemeStyles === undefined) return ambientTableThemeStyles;
     return [...ambientTableThemeStyles, ...tableThemeStyles];
   }, [ambientTableThemeStyles, tableThemeStyles]);
+
   const stableLowerOptions = useMemo(
     () => ({
       ...(formatterDefinitions === undefined ? {} : { formatterDefinitions }),
@@ -104,6 +107,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       regressionImplementations,
     ],
   );
+
   const input = useMemo<InputTable<unknown>>(
     () => ({
       table: stableTable,
@@ -124,6 +128,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     ],
   );
   const inputChild = useMemo(() => <TableRuntimeEmbed {...input} />, [input]);
+
   const notifiedManifestKey = useRef<string>();
   const handleArtifacts = useCallback(
     (artifacts: ReadonlyArray<CompileArtifact>): void => {
@@ -133,9 +138,11 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
           `table react: standalone Table expected exactly one root table.table artifact, received ${matches.length}`,
         );
       }
+
       const manifest = matches[0].value;
       const manifestKey = JSON.stringify(manifest);
       if (notifiedManifestKey.current === manifestKey) return;
+
       notifiedManifestKey.current = manifestKey;
       onManifest?.(manifest);
     },

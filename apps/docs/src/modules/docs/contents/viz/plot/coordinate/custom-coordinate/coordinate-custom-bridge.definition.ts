@@ -32,13 +32,17 @@ export const bridgeCoordinate = defineCoordinate({
       [context.height - 30, 30],
     );
     const archHeight = operation.archHeight ?? 60;
+
     const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
       const screenX = xScale.coordinate(values[0]);
       const screenY = yScale.coordinate(values[1]);
       if (!Number.isFinite(screenX) || !Number.isFinite(screenY)) return null;
+
       const t = screenX / context.width;
+
       return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
     };
+
     const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, {
       roleScales: { x: xScale, y: yScale },
     });
@@ -46,6 +50,7 @@ export const bridgeCoordinate = defineCoordinate({
       const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
       return lowered.axisLayer ? [lowered.axisLayer] : [];
     });
+
     return {
       frame,
       plotArea: { x: 0, y: 0, width: context.width, height: context.height },

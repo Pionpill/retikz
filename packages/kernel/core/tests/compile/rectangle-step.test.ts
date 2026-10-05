@@ -16,6 +16,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 };
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
+
 const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', children: steps as never }]);
 
 describe('rectangle step：直角', () => {
@@ -24,6 +25,7 @@ describe('rectangle step：直角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] },
     );
+
     expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
@@ -42,6 +44,7 @@ describe('rectangle step：直角', () => {
       { type: 'step', kind: 'move', to: [10, 6] },
       { type: 'step', kind: 'rectangle', from: [10, 6], to: [0, 0] },
     );
+
     expect(findPathPrim(compileToScene(b, silent).scene.primitives).commands).toEqual(
       findPathPrim(compileToScene(a, silent).scene.primitives).commands,
     );
@@ -56,6 +59,7 @@ describe('rectangle step：直角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 0 },
     );
+
     expect(findPathPrim(compileToScene(zero, silent).scene.primitives).commands).toEqual(
       findPathPrim(compileToScene(sharp, silent).scene.primitives).commands,
     );
@@ -68,6 +72,7 @@ describe('rectangle step：圆角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 2 },
     );
+
     expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([2, 0]),
       line([8, 0]),
@@ -92,6 +97,7 @@ describe('rectangle step：圆角', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 3 },
     );
+
     expect(findPathPrim(compileToScene(clamped, silent).scene.primitives).commands).toEqual(
       findPathPrim(compileToScene(r3, silent).scene.primitives).commands,
     );
@@ -105,6 +111,7 @@ describe('rectangle step：pen / 组合', () => {
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
+
     expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
@@ -122,6 +129,7 @@ describe('rectangle step：pen / 组合', () => {
       { type: 'step', kind: 'rectangle', from: [5, 0], to: [15, 6] },
       { type: 'step', kind: 'line', to: [20, 20] },
     );
+
     expect(findPathPrim(compileToScene(ir, silent).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([5, 0]),
@@ -139,6 +147,7 @@ describe('rectangle step：pen / 组合', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] },
     );
+
     expect(compileToScene(ir, { padding: 10, onWarn: () => {} }).scene.layout).toEqual({
       x: -10,
       y: -10,
@@ -153,6 +162,7 @@ describe('rectangle step：单步自包含（无前置 move）', () => {
     const warnings: Array<CompileWarning> = [];
     const ir = path({ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] });
     const commands = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w) }).scene.primitives).commands;
+
     expect(commands).toEqual([move([0, 0]), line([10, 0]), line([10, 6]), line([0, 6]), close()]);
     expect(warnings.find(w => w.code === CompileWarningCode.PathTooShort)).toBeUndefined();
   });
@@ -161,6 +171,7 @@ describe('rectangle step：单步自包含（无前置 move）', () => {
     const warnings: Array<CompileWarning> = [];
     const ir = path({ type: 'step', kind: 'move', to: [0, 0] });
     const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+
     expect(result.primitives.find(p => p.type === 'path')).toBeUndefined();
     expect(warnings.find(w => w.code === CompileWarningCode.PathTooShort)).toBeDefined();
   });
@@ -172,6 +183,7 @@ describe('rectangle step：node ref 角 + schema', () => {
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'rectangle', from: { id: 'ghost' }, to: [10, 6] },
     );
+
     expect(compileToScene(ir, silent).scene.primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 

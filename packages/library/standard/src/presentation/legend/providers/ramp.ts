@@ -25,7 +25,12 @@ export type LegendRampTickStructure = Readonly<{
   /** tick 在 authored ticks 数组中的来源索引 */
   sourceIndex: number;
   /** tick 在 sample 边缘上的结构锚点 */
-  anchor: Readonly<{ x: number; y: number }>;
+  anchor: Readonly<{
+    /** 刻度结构锚点在图例正文局部坐标中的 x */
+    x: number;
+    /** 刻度结构锚点在图例正文局部坐标中的 y */
+    y: number;
+  }>;
   /** tick label 的结构 slot，缺少 label 时为 null */
   labelSlot: LayoutRect | null;
 }>;
@@ -89,12 +94,15 @@ export const createLegendRampStructure = (
               tick.label.slotSize.width,
               tick.label.slotSize.height,
             );
+
     return Object.freeze({ key: tick.key, sourceIndex: tick.sourceIndex, anchor, labelSlot });
   });
+
   const provisionalUnion = unionLayoutArtifactRects([
     provisionalSample,
     ...provisionalTicks.flatMap(tick => (tick.labelSlot === null ? [] : [tick.labelSlot])),
   ]);
+
   const translation = Object.freeze({ x: -provisionalUnion.x, y: -provisionalUnion.y });
   const translateRect = (rect: LayoutRect): LayoutRect =>
     Object.freeze({
@@ -103,6 +111,7 @@ export const createLegendRampStructure = (
       width: rect.width,
       height: rect.height,
     });
+
   const canonicalTicks = provisionalTicks.map(tick =>
     Object.freeze({
       ...tick,
@@ -110,6 +119,7 @@ export const createLegendRampStructure = (
       labelSlot: tick.labelSlot === null ? null : translateRect(tick.labelSlot),
     }),
   );
+
   return Object.freeze({
     bounds: Object.freeze({ x: 0, y: 0, width: provisionalUnion.width, height: provisionalUnion.height }),
     sampleSlot: translateRect(provisionalSample),

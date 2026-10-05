@@ -58,6 +58,7 @@ describe('Core minimal builtin providers', () => {
       },
       { kind: 'path', commands: [{ kind: 'move', to: [0, 0] }] },
     ];
+
     for (const clip of optionalClips) {
       expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] } as never]), { padding: 0 })).toThrow(
         new RegExp(`Unknown clip '${clip.kind}'.*options\\.clips`, 'i'),

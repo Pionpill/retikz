@@ -16,9 +16,11 @@ export const resolveScopeFrame = (
   context: PaintResolveContext & Pick<ContextualColorResolveContext, 'mode'>,
 ) => {
   let masterColor: string | undefined;
+
   for (const entry of stack) {
     if (entry.cascade.color !== undefined) masterColor = entry.cascade.color;
   }
+
   masterColor = frame.style?.color ?? masterColor;
   const defaults = ScopeFrameStyleSchema.parse({});
   const style = {
@@ -38,6 +40,7 @@ export const resolveScopeFrame = (
             }),
       context,
     );
+
   return {
     padding: frame.padding ?? ScopeFrameSchema.shape.padding.parse(undefined),
     fill: paint(style.fill, 'fill'),

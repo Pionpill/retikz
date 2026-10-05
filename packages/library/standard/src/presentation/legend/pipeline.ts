@@ -87,6 +87,7 @@ const authoredScopePropsOf = (node: CanonicalLegend): CompositeCompileScopeProps
   void padding;
   void overflow;
   void content;
+
   return scopeProps;
 };
 
@@ -161,6 +162,7 @@ const rootProfile = (
   const profile = stackTitle
     ? resolveFlexLineMainProfile(profileItems, [0, 1], titleGap)
     : flexCrossProfileOf(title, body);
+
   return Object.freeze({
     minimum: compensatedLayoutSum([paddingSize, profile.minimum]),
     natural: compensatedLayoutSum([paddingSize, profile.natural]),
@@ -240,6 +242,7 @@ const alignedContentX = (
   if (alignment === LayoutAlignment.Center) {
     return contentBounds.x + (contentBounds.width - structuralWidth) / 2;
   }
+
   return contentBounds.x;
 };
 
@@ -289,6 +292,7 @@ const geometryOf = (children: ReadonlyArray<FinalPlacedChild>): LegendArtifactGe
   const visible = children.flatMap(child =>
     child.artifact.visibleBounds === null ? [] : [child.artifact.visibleBounds],
   );
+
   return Object.freeze({
     allocationBounds,
     visualBounds,
@@ -308,6 +312,7 @@ const compileLegendRamp = (
       details: { contentKind: node.content.kind },
     });
   }
+
   const authoredScopeProps = authoredScopePropsOf(node);
   const ramp = node.content;
   let nextOccurrence = 0;
@@ -319,6 +324,7 @@ const compileLegendRamp = (
       tick.label === undefined ? undefined : Object.freeze({ child: tick.label, occurrence: nextOccurrence++ });
     return Object.freeze({ ...(labelHandle === undefined ? {} : { labelHandle }) });
   });
+
   const titleMeasured = titleHandle === undefined ? undefined : measureLayoutChild(context, titleHandle);
   const sampleMeasured = measureLayoutChild(context, sampleHandle);
   const measuredTicks = ramp.ticks.map((tick, sourceIndex) => {
@@ -330,10 +336,12 @@ const compileLegendRamp = (
       ...(labelHandle === undefined ? {} : { labelHandle, label: measureLayoutChild(context, labelHandle).natural }),
     });
   });
+
   const localStructure = createLegendRampStructure(ramp, sampleMeasured.natural, measuredTicks);
   const padding = normalizeLayoutSpacing(node.padding);
   const paddingX = paddingAxisSize(padding, 'x');
   const paddingY = paddingAxisSize(padding, 'y');
+
   const titleX = titleAxisProfile(titleMeasured, 'x');
   const bodyX = { minimum: localStructure.bounds.width, natural: localStructure.bounds.width };
   const allocationWidth = resolveAxis(node, context, 'x', rootProfile(titleX, bodyX, paddingX, 0, false));
@@ -348,12 +356,14 @@ const compileLegendRamp = (
     'y',
     rootProfile({ minimum: titleHeight, natural: titleHeight }, bodyY, paddingY, effectiveTitleGap, true),
   );
+
   const allocation = Object.freeze({ x: 0, y: 0, width: allocationWidth, height: allocationHeight });
   const contentBounds = contentRectOf(allocation, padding);
   const structure = translateLegendRampStructure(localStructure, {
     x: alignedContentX(contentBounds, localStructure.bounds.width, node.contentAlign),
     y: contentBounds.y + titleHeight + effectiveTitleGap,
   });
+
   const sample = placeFinalChild(
     context,
     sampleHandle,
@@ -377,10 +387,13 @@ const compileLegendRamp = (
             allocation,
             node.overflow,
           );
+
     return Object.freeze({ tick, label });
   });
+
   const bodyChildren = [sample, ...finalTicks.flatMap(tick => (tick.label === null ? [] : [tick.label]))];
   const bodyBounds = unionLayoutArtifactRects(bodyChildren.map(child => child.artifact.allocationBounds));
+
   const titleSlot =
     titleResult === undefined
       ? undefined
@@ -394,11 +407,13 @@ const compileLegendRamp = (
     titleHandle === undefined || titleResult === undefined || titleSlot === undefined
       ? null
       : placeFinalChild(context, titleHandle, titleSlot, 'title', 0, allocation, node.overflow, titleResult);
+
   const allPlaced = [
     ...(title === null ? [] : [title]),
     sample,
     ...finalTicks.flatMap(tick => (tick.label === null ? [] : [tick.label])),
   ];
+
   const allocationScope = replayLayoutChildren(context, allPlaced, allocation, node.overflow);
   const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
 
@@ -434,6 +449,7 @@ export const compileLegend = (
 ): LayoutCompositeCompileResult<LegendArtifact> => {
   const node = resolveLegend(sourceLegend);
   if (node.content.kind === LegendContentKind.Ramp) return compileLegendRamp(node, context);
+
   const authoredScopeProps = authoredScopePropsOf(node);
 
   let nextOccurrence = 0;
@@ -443,8 +459,10 @@ export const compileLegend = (
     const sampleHandle = Object.freeze({ child: item.sample, occurrence: nextOccurrence++ });
     const labelHandle =
       item.label === undefined ? undefined : Object.freeze({ child: item.label, occurrence: nextOccurrence++ });
+
     return Object.freeze({ sampleHandle, ...(labelHandle === undefined ? {} : { labelHandle }) });
   });
+
   const titleMeasured = titleHandle === undefined ? undefined : measureLayoutChild(context, titleHandle);
   const measured: Array<CompileMeasuredItem> = node.content.items.map((authored: IRLegendItem, sourceIndex) => {
     const handles = itemHandles[sourceIndex];
@@ -456,12 +474,14 @@ export const compileLegend = (
       ...handles,
     });
   });
+
   const padding = normalizeLayoutSpacing(node.padding);
   const paddingX = paddingAxisSize(padding, 'x');
   const paddingY = paddingAxisSize(padding, 'y');
   const hasBody = measured.length > 0;
   const effectiveTitleGap = titleMeasured !== undefined && hasBody ? node.titleGap : 0;
   const titleX = titleAxisProfile(titleMeasured, 'x');
+
   const flowItems = pairedFlowItemsOf(measured);
   const flowOptions = pairedFlowOptionsOf(node.content, flowItems);
   const intrinsicMain = resolvePairedFlowIntrinsicMainProfile(flowOptions);
@@ -486,6 +506,7 @@ export const compileLegend = (
       const formedMain = pairedFlowAxisProfileOf(flowPlan, node.content.direction, 'x');
       allocationWidth = resolveAxis(node, context, 'x', rootProfile(titleX, formedMain, paddingX, 0, false));
     }
+
     const contentWidth = Math.max(0, allocationWidth - paddingX);
     titleResult = finalTitleProbe(context, titleHandle, contentWidth);
     const finalTitleY = {
@@ -521,6 +542,7 @@ export const compileLegend = (
         rootProfile(finalTitleY, formedMain, paddingY, effectiveTitleGap, true),
       );
     }
+
     if (node.size.x.kind === LayoutAxisSizeKind.Content && context.proposal.x.kind !== LayoutAxisProposalKind.Exact) {
       const reconciledCross = pairedFlowAxisProfileOf(flowPlan, node.content.direction, 'x');
       const reconciled = resolveAxis(node, context, 'x', rootProfile(titleX, reconciledCross, paddingX, 0, false));
@@ -537,6 +559,7 @@ export const compileLegend = (
     y: contentBounds.y + titleHeight + effectiveTitleGap,
   });
   const structuralPlacement = translatePairedFlowPlan(flowPlan, bodyOrigin);
+
   const finalItems = structuralPlacement.slots.map(slots => {
     const measuredItem = measured[slots.sourceIndex];
     const sample = placeFinalChild(
@@ -561,13 +584,16 @@ export const compileLegend = (
             node.overflow,
           );
     const children = label === null ? [sample] : [sample, label];
+
     return Object.freeze({ measured: measuredItem, sample, label, geometry: geometryOf(children) });
   });
+
   const bodyAllocationRects = finalItems.map(item => item.geometry.allocationBounds);
   const bodyBounds =
     structuralPlacement.lines.length === 0
       ? null
       : unionLayoutArtifactRects([structuralPlacement.bounds, ...bodyAllocationRects]);
+
   const titleSlot =
     titleResult === undefined
       ? undefined
@@ -581,12 +607,15 @@ export const compileLegend = (
     titleHandle === undefined || titleResult === undefined || titleSlot === undefined
       ? null
       : placeFinalChild(context, titleHandle, titleSlot, 'title', 0, allocation, node.overflow, titleResult);
+
   const allPlaced = [
     ...(titlePlaced === null ? [] : [titlePlaced]),
     ...finalItems.flatMap(item => (item.label === null ? [item.sample] : [item.sample, item.label])),
   ];
+
   const allocationScope = replayLayoutChildren(context, allPlaced, allocation, node.overflow);
   const authoredRootScope = context.scope(authoredScopeProps, [allocationScope]);
+
   const artifactItems = finalItems.map(item =>
     Object.freeze({
       key: item.measured.authored.key,

@@ -20,6 +20,7 @@ export type DocPageNode = {
 /** 从文档路由位置解析当前 section / page / target。 */
 export const resolveDocPageNode = (loc: DocLocation | null): DocPageNode => {
   if (!loc) return { sections: [] };
+
   const sections = getSectionsByArea(loc.moduleId);
   const section = loc.sectionId ? sections.find(item => item.id === loc.sectionId) : sections.find(item => !item.label);
   if (loc.pageId === null) {
@@ -27,8 +28,10 @@ export const resolveDocPageNode = (loc: DocLocation | null): DocPageNode => {
       section?.document && section.id && section.label ? { id: section.id, label: section.label } : undefined;
     return { sections, section, target };
   }
+
   const page = section?.pages.find(item => item.id === loc.pageId);
   const subPage = loc.subPageId ? page?.children?.find(item => item.id === loc.subPageId) : undefined;
+
   return { sections, section, page, subPage, target: loc.subPageId ? subPage : page };
 };
 

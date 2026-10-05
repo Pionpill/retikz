@@ -4,10 +4,7 @@ import pkg from './package.json' with { type: 'json' };
 export default defineRetikzLibraryConfig({
   packageRoot: __dirname,
   manifest: pkg,
-  entry: [
-    'src/index.ts',
-    'src/point/index.ts',
-  ],
+  entry: ['src/index.ts', 'src/point/index.ts'],
   test: {
     environment: 'node',
     fsModuleCache: true,

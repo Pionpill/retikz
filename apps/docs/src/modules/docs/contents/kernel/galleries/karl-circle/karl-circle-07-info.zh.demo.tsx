@@ -8,7 +8,9 @@ import { Fragment } from 'react';
 import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
 
 const COS30 = Math.cos((30 * Math.PI) / 180);
+
 const SIN30 = Math.sin((30 * Math.PI) / 180);
+
 const TAN30 = SIN30 / COS30;
 
 export const previewSource = {

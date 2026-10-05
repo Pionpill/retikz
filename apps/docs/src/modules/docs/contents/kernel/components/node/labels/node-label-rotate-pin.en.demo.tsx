@@ -17,6 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           strokeWidth: values.pinWidth,
           ...(values.pinStyle === 'dashed' ? { dashPattern: [4, 3], dashOffset: values.pinDashOffset } : {}),
         };
+
   return (
     <Layout>
       <Node
@@ -40,5 +41,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 });
 
 export const previewSource = controlledPreview.source;
+
 const Demo = controlledPreview.Component;
 export default Demo;

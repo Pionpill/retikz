@@ -94,6 +94,7 @@ export const ReportHistory: FC<ReportHistoryProps> = props => {
   const visibleSession = selectedRunId === undefined ? session : selectedSession;
   const inspectedResult =
     visibleSession?.results.find(result => result.policyId === LabPolicyId.RetainedAuto) ?? visibleSession?.results[0];
+
   return (
     <div className="grid min-h-0 gap-4 bg-muted/20 p-4 sm:p-5 xl:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="lab-panel space-y-1 p-2.5">

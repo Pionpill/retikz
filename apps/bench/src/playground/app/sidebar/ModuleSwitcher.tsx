@@ -29,6 +29,7 @@ export const ModuleSwitcher: FC<ModuleSwitcherProps> = props => {
   const navigate = useNavigate();
   const { isMobile } = useSidebar();
   const SelectedIcon = module.icon;
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>

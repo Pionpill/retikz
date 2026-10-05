@@ -38,5 +38,6 @@ export const renderConnectedScatterMarksPreview = (
       />
     </ConnectedScatterChart>
   );
+
   return chart;
 };

@@ -27,7 +27,9 @@ describe('drawScene 弧扫描方向（缺省按 startAngle/endAngle 推断，与
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
     const ell = context.calls.find(c => c.name === 'ellipse');
+
     expect(ell).toBeDefined();
+
     // ctx.ellipse(x, y, rx, ry, rotation, start, end, anticlockwise)：末位推断为 true（30° 短弧，非 330°）
     expect(ell!.args[7]).toBe(true);
   });

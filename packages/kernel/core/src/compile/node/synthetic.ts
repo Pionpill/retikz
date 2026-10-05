@@ -35,7 +35,7 @@ export type SyntheticLayoutRegistryContext = {
 
 /** synthetic rectangle layout 输入 */
 export type SyntheticRectangleLayoutInput = {
-  /** layout id */
+  /** 布局对象的标识 */
   id: string;
   /** layout 矩形 */
   rect: Rect;
@@ -43,7 +43,7 @@ export type SyntheticRectangleLayoutInput = {
 
 /** synthetic scope rectangle layout 输入 */
 export type ScopeRectangleLayoutInput = {
-  /** layout id */
+  /** 布局对象的标识 */
   id: string;
   /** 已计算的 bbox rect；空 scope 时传 null */
   bbox: Rect | null;
@@ -57,7 +57,7 @@ export type ScopeCircleLayoutInput = {
   cornerPoints: ReadonlyArray<IRPosition>;
   /** 空点集时使用的回退原点 */
   fallbackOrigin: IRPosition;
-  /** layout id */
+  /** 布局对象的标识 */
   id: string;
 };
 
@@ -102,6 +102,7 @@ const resolveSyntheticLayout = (
     measureText: fallbackMeasurer,
     positionContext: SYNTHETIC_POSITION_CONTEXT,
   });
+
   return {
     ...layout,
     textWidth: input.rect.width,
@@ -156,6 +157,7 @@ export const createScopeCircleLayout = (
   const mec = input.cornerPoints.length > 0 ? circle.minimalEnclosing([...input.cornerPoints]) : null;
   const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : input.fallbackOrigin;
   const diameter = mec ? mec.radius * 2 : 0;
+
   return resolveSyntheticLayout(
     { id: input.id, rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 } },
     'ellipse',

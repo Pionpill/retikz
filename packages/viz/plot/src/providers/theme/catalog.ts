@@ -1,4 +1,4 @@
-import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue } from '@retikz/core';
+import type { CssColorValue, NonEmptyReadonlyArray, ThemeMode } from '@retikz/core';
 import { resolveDefaultCoreThemeColors } from '@retikz/core';
 
 import type { IRPlotDefaults } from '../../schemas';
@@ -12,7 +12,7 @@ import {
 
 /** 读取一个 mode-aware Neutral Plot defaults 片段 */
 export const getNeutralPlotDefaults = (
-  mode: ThemeModeValue,
+  mode: ThemeMode,
   categorical: NonEmptyReadonlyArray<CssColorValue> = resolveDefaultCoreThemeColors(mode).categorical,
 ): IRPlotDefaults =>
   structuredClone({

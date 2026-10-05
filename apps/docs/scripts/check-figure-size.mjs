@@ -19,6 +19,7 @@ const source = await readFile(
   new URL('../src/modules/docs/components/component-preview/constants.ts', import.meta.url),
   'utf8',
 );
+
 const sizeBlock = source.match(/export const sizeClass[^=]*=\s*\{([\s\S]*?)\};/)?.[1];
 if (!sizeBlock) throw new Error('Cannot read sizeClass from the preview constants');
 const sizes = [...sizeBlock.matchAll(/(\w+):\s*'([^']+)'/g)].map(([, name, classes]) => ({ name, classes }));
@@ -28,11 +29,13 @@ const browser = await chromium.launch({
   headless: true,
   ...(values.browser ? { executablePath: values.browser } : { channel: 'chrome' }),
 });
+
 const samples = [];
 try {
   for (const language of ['zh', 'en']) {
     for (const width of [1440]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
+
       try {
         const page = await context.newPage();
         const errors = [];
@@ -43,12 +46,15 @@ try {
         await page.evaluate(() => document.fonts.ready);
         const frames = page.locator('[data-slot="component-preview-frame"]');
         await frames.first().waitFor();
+
         for (const frame of await frames.all()) {
           const name = await frame.getAttribute('data-preview-name');
           if (values.figure && name !== values.figure) continue;
+
           await frame.scrollIntoViewIfNeeded();
           const openControlPanel = frame.getByRole('button', { name: 'Open controls panel' });
           if (await openControlPanel.isVisible().catch(() => false)) await openControlPanel.click();
+
           // 只测 SVG 图；Canvas、动画和 controls 的其它状态需要单独取样
           const svg = frame
             .locator('svg')
@@ -58,6 +64,7 @@ try {
           await page.evaluate(
             () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))),
           );
+
           const measurement = await frame.evaluate(async (element, sizeOptions) => {
             const waitForLayout = () =>
               new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -69,6 +76,7 @@ try {
             if (scene.getBoundingClientRect().width <= 0 || scene.getBoundingClientRect().height <= 0) {
               throw new Error('SVG has no measurable size');
             }
+
             const workspace = element.querySelector('[data-slot="preview-workspace"]');
             const previewPanel = [...element.querySelectorAll('div')].find(node =>
               node.classList.contains('group/preview'),
@@ -84,16 +92,20 @@ try {
             const controlGroupCount = controlColumns?.querySelectorAll('section').length ?? 0;
             const originalControlPanelStyle = controlPanel?.getAttribute('style') ?? null;
             const measurements = [];
+
             for (const size of sizeOptions) {
               workspace.classList.remove(...sizeClasses);
               workspace.classList.add(...size.classes.split(' '));
               const controls = [];
+
               for (const panelSize of CONTROL_PANEL_SIZES) {
                 if (controlPanel) {
                   controlPanel.style.setProperty('flex', `0 0 ${panelSize}%`, 'important');
                 }
+
                 await waitForLayout();
                 if (!controlColumns || !controlPanel) continue;
+
                 const columnsStyle = getComputedStyle(controlColumns);
                 const firstSection = controlColumns.querySelector('section');
                 const sectionStyle = firstSection ? getComputedStyle(firstSection) : null;
@@ -121,10 +133,12 @@ try {
                   requiredWorkspaceHeight: workspace.getBoundingClientRect().height + remainingOverflow,
                 });
               }
+
               if (controlPanel) {
                 controlPanel.style.setProperty('flex', '0 0 25%', 'important');
                 await waitForLayout();
               }
+
               await waitForLayout();
               const figureBounds = scene.getBoundingClientRect();
               const panelBounds = previewPanel.getBoundingClientRect();
@@ -141,6 +155,7 @@ try {
                 fitsVertically: figureBounds.top >= panelBounds.top && figureBounds.bottom <= panelBounds.bottom,
               });
             }
+
             workspace.className = originalClasses.join(' ');
             if (controlPanel) {
               if (originalControlPanelStyle === null) controlPanel.removeAttribute('style');
@@ -150,6 +165,7 @@ try {
 
             const bounds = scene.getBoundingClientRect();
             const panelBounds = previewPanel.getBoundingClientRect();
+
             return {
               figureHeight: bounds.height,
               figureWidth: bounds.width,
@@ -161,8 +177,10 @@ try {
               horizontalOverflow: bounds.left < panelBounds.left || bounds.right > panelBounds.right,
             };
           }, sizes);
+
           samples.push({ name, language, width, ...measurement });
         }
+
         if (errors.length) throw new Error(`${language}/${width}: ${errors.join('; ')}`);
       } finally {
         await context.close();
@@ -177,6 +195,7 @@ if (samples.length === 0) throw new Error('No matching figures found');
 const recommendations = [...new Set(samples.map(sample => sample.name))].map(name => {
   const cases = samples.filter(sample => sample.name === name);
   if (cases.length !== 2) throw new Error(`${name}: expected two language samples, got ${cases.length}`);
+
   const measuredSize =
     sizes.find(candidate =>
       cases.every(

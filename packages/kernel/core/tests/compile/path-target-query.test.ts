@@ -41,6 +41,7 @@ it('queries real child targets with smooth cursor semantics without publishing p
     { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'query' }] },
     { composites: [definition] },
   );
+
   expect(observed).toEqual({
     source: [10, 10],
     points: [
@@ -65,6 +66,7 @@ it('fails a target query at the missing point instead of silently dropping it', 
       return { children: [] };
     },
   });
+
   expect(() =>
     compileToScene(
       { version: 1, type: 'scene', children: [{ namespace: 'test', type: 'query' }] },
@@ -118,7 +120,9 @@ it('uses caller transforms and world node offsets with nested absolute expressio
     },
     { composites: [definition] },
   );
+
   expect(observed?.source).toEqual([10, 5]);
+
   // NodeTarget.offset 是世界向量；polar / offset-position 沿用局部坐标位移
   expect(observed?.points).toEqual([
     [110, 50],
@@ -155,6 +159,7 @@ it('queries registered shape anchors rather than rectangle approximations', () =
     { type: 'scene', version: 1, children: [{ namespace: 'test', type: 'query' }] },
     { composites: [definition], shapes: [shape] },
   );
+
   expect(observed?.points).toEqual([[103, 57]]);
 });
 
@@ -182,5 +187,6 @@ it('resolves inside a queried root Scope namespace and returns its local coordin
     { type: 'scene', version: 1, children: [{ namespace: 'test', type: 'query' }] },
     { composites: [definition] },
   );
+
   expect(observed).toEqual({ source: [100, 50], points: [[110, 50]] });
 });

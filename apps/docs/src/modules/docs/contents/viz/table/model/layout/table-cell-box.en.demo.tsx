@@ -3,14 +3,23 @@ import { Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const BOX_HALF_WIDTH = 100;
+
 const BOX_HALF_HEIGHT = 55;
+
 const CONTENT_WIDTH = 150;
+
 const CONTENT_HEIGHT = 70;
+
 const ALLOCATION_WIDTH = 90;
+
 const ALLOCATION_HEIGHT = 34;
+
 const VISUAL_WIDTH = 170;
+
 const VISUAL_HEIGHT = 50;
+
 const TITLE_FONT = { size: 14, weight: 'bold' as const };
+
 const NOTE_FONT = { size: 12 };
 
 /** Geometry of the Cell box, content area, child allocation, and final visible bounds */

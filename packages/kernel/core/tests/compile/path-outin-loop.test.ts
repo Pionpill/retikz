@@ -15,6 +15,7 @@ const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim => {
       }
     }
   }
+
   throw new Error('expected a PathPrim in scene');
 };
 
@@ -57,11 +58,13 @@ describe('out/in 角编译为 cubic 控制点方向', () => {
           },
         ],
       }).scene;
+
     expect(render({ outAngle: 45 })).toEqual(render({ outAngle: 45, inAngle: 180, looseness: 1 }));
     expect(render({ inAngle: 135 })).toEqual(render({ outAngle: 0, inAngle: 135, looseness: 1 }));
     expect(render({})).toEqual(render({ bendDirection: 'left', bendAngle: 30 }));
     expect(render({})).not.toEqual(render({ outAngle: 0 }));
   });
+
   it('outAngle/inAngle → control1 沿 outAngle、control2 沿 inAngle', () => {
     const ir: IRScene = {
       version: 1,
@@ -87,11 +90,15 @@ describe('out/in 角编译为 cubic 控制点方向', () => {
     const from = firstMove(path);
     const cubic = firstCubic(path);
     const to = cubic.to;
+
     // control1 从 from 出发的方向 ≈ outAngle
     const outDir = angleDeg(cubic.control1[0] - from[0], cubic.control1[1] - from[1]);
+
     expect(angleDiff(outDir, 45)).toBeLessThan(1);
+
     // control2 从 to 出发（回看入射）的方向 ≈ inAngle
     const inDir = angleDeg(cubic.control2[0] - to[0], cubic.control2[1] - to[1]);
+
     expect(angleDiff(inDir, 135)).toBeLessThan(1);
   });
 });
@@ -123,6 +130,7 @@ describe('out/in 与 bendDirection 同给 → out/in 优先', () => {
     const from = firstMove(path);
     const cubic = firstCubic(path);
     const outDir = angleDeg(cubic.control1[0] - from[0], cubic.control1[1] - from[1]);
+
     // out/in 优先：control1 方向跟随 outAngle=60，而非 bend right 的对称弯
     expect(angleDiff(outDir, 60)).toBeLessThan(1);
   });
@@ -156,6 +164,7 @@ describe('looseness 调控制点距离', () => {
     const from = [0, 0];
     const distTight = Math.hypot(tight.control1[0] - from[0], tight.control1[1] - from[1]);
     const distLoose = Math.hypot(loose.control1[0] - from[0], loose.control1[1] - from[1]);
+
     expect(distLoose).toBeGreaterThan(distTight);
   });
 });
@@ -184,9 +193,11 @@ describe('self-loop（from==to）成环（非退化直线）', () => {
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
     const cubic = firstCubic(path);
+
     // 退化判定：两控制点都贴住端点 (5,5) 则是退化直线/点。自环要求至少一个控制点显著偏离
     const off1 = Math.hypot(cubic.control1[0] - 5, cubic.control1[1] - 5);
     const off2 = Math.hypot(cubic.control2[0] - 5, cubic.control2[1] - 5);
+
     expect(Math.max(off1, off2)).toBeGreaterThan(0.5);
   });
 
@@ -214,8 +225,10 @@ describe('self-loop（from==to）成环（非退化直线）', () => {
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
     const cubic = firstCubic(path);
+
     // 控制点张角：自环时两控制点不应重合
     const span = Math.hypot(cubic.control1[0] - cubic.control2[0], cubic.control1[1] - cubic.control2[1]);
+
     expect(span).toBeGreaterThan(0.5);
   });
 });

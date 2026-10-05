@@ -54,6 +54,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { width: 260, basis: 90, wrap: 'wrap', slots: true, allocation: true, gaps: true },
@@ -67,5 +68,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     ],
   } satisfies PreviewControlContract;
 };
+
 /** 默认语言的注册契约 */
 export const previewControlContract = createPreviewControlContract('zh');

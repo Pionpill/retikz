@@ -7,10 +7,12 @@ import type { IRScene } from '../../src/schemas';
 
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   const out: Array<TextPrim> = [];
+
   for (const p of prims) {
     if (p.type === 'text') out.push(p);
     if (p.type === 'group') out.push(...collectTexts(p.children));
   }
+
   return out;
 };
 

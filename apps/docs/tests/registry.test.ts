@@ -81,6 +81,7 @@ describe('SCHEMA_REGISTRY', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
+
       if (entry.url !== undefined) expect(entry.url, name).toMatch(/^\/.+/);
     }
   });
@@ -105,8 +106,10 @@ describe('SCHEMA_REGISTRY', () => {
       process.cwd(),
       'src/modules/docs/contents/library/layout/flex-layout/schema-reference',
     );
+
     for (const lang of ['zh', 'en']) {
       const source = readFileSync(resolve(referenceRoot, `index.${lang}.mdx`), 'utf8');
+
       expect(source).toContain('## LayoutInspectSpacingOptionsSchema');
       expect(source).toContain('<ZodSchema name="LayoutInspectSpacingOptionsSchema"');
     }
@@ -121,7 +124,9 @@ describe('SCHEMA_REGISTRY', () => {
 
       for (const [name, entry] of entries) {
         const [route, anchor] = entry.url!.split('#');
+
         expect(anchor, name).toBeTruthy();
+
         const source = readFileSync(
           resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
           'utf8',
@@ -142,7 +147,9 @@ describe('SCHEMA_REGISTRY', () => {
 
     for (const [name, entry] of entries) {
       const [route, anchor] = entry.url!.split('#');
+
       expect(anchor, name).toBeTruthy();
+
       const source = readFileSync(
         resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
         'utf8',

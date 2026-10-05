@@ -8,6 +8,7 @@ import {
   RegressionChart,
   StripChart,
 } from '@retikz/chart-react/point';
+import { BranchDiagram } from '@retikz/diagram-react/branch';
 import type { FlowDiagramLayoutHostProps } from '@retikz/diagram-react/flow';
 import { FlowDiagram } from '@retikz/diagram-react/flow';
 import type { AssertEqual } from '@retikz/foundation';
@@ -32,12 +33,14 @@ const PLOT_STANDALONE_PROP_KEYS = [
 ] as const satisfies ReadonlyArray<keyof PlotStandaloneProps>;
 
 type PlotStandalonePropKeysCheck = AssertEqual<(typeof PLOT_STANDALONE_PROP_KEYS)[number], keyof PlotStandaloneProps>;
+
 const plotStandalonePropKeysCheck: PlotStandalonePropKeysCheck = true;
 void plotStandalonePropKeysCheck;
 
 const plotStandalonePropKeys = new Set<string>(PLOT_STANDALONE_PROP_KEYS);
 
 type PreviewHostDimensions = Pick<LayoutProps, 'width' | 'height'>;
+
 const FLOW_HOST_PROP_KEYS = [
   'authoring',
   'compileDriver',
@@ -75,6 +78,7 @@ const FLOW_HOST_PROP_KEYS = [
 const flowHostPropKeys = new Set<string>(FLOW_HOST_PROP_KEYS);
 
 type FlowHostPropKeysCheck = AssertEqual<(typeof FLOW_HOST_PROP_KEYS)[number], keyof FlowDiagramLayoutHostProps>;
+
 const flowHostPropKeysCheck: FlowHostPropKeysCheck = true;
 void flowHostPropKeysCheck;
 
@@ -90,11 +94,13 @@ const preparePreviewChartProps = (
   props: Readonly<Record<string, unknown>>,
 ): Readonly<{ props: Readonly<Record<string, unknown>>; host: PreviewHostDimensions }> => {
   let host: PreviewHostDimensions = {};
+
   const visit = (value: ReactNode): ReactNode => {
     if (Array.isArray(value)) return value.map(visit);
     if (!isValidElement(value)) return value;
     if (value.type === Fragment) return createElement(Fragment, { key: value.key }, visit(value.props.children));
     if (value.type !== ChartLayout) return value;
+
     const layoutProps = value.props as ChartLayoutProps;
     host = {
       ...(layoutProps.width === undefined ? {} : { width: layoutProps.width }),
@@ -108,8 +114,10 @@ const preparePreviewChartProps = (
             ...(layoutProps.width === undefined ? {} : { width: layoutProps.width }),
             ...(layoutProps.height === undefined ? {} : { height: layoutProps.height }),
           });
+
     return layout === undefined ? null : createElement(ChartLayout, { key: value.key, layout });
   };
+
   return { props: { ...props, children: visit(props.children as ReactNode) }, host };
 };
 
@@ -126,7 +134,10 @@ export const previewEmbedPropsOf = (
     )
   )
     return preparePreviewChartProps(props).props;
-  if (adapter === FlowDiagram.inputEmbedAdapter) return omitPreviewHostProps(props, flowHostPropKeys);
+
+  if (adapter === FlowDiagram.inputEmbedAdapter || adapter === BranchDiagram.inputEmbedAdapter)
+    return omitPreviewHostProps(props, flowHostPropKeys);
+
   return props;
 };
 
@@ -142,6 +153,7 @@ export const previewHostDimensionsOf = (
     )
   )
     return preparePreviewChartProps(props).host;
+
   return {
     ...(props.width === undefined ? {} : { width: props.width as LayoutProps['width'] }),
     ...(props.height === undefined ? {} : { height: props.height as LayoutProps['height'] }),

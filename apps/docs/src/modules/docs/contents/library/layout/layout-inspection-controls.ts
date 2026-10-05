@@ -3,6 +3,7 @@ import type { BaseLayoutInspectOptions } from '@retikz/layout/inspect';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 type PreviewControlValues = PreviewControlContract['canonicalValues'];
+
 type PreviewControlPreset = NonNullable<PreviewControlContract['presets']>[number];
 
 /** 单个布局 family 的辅助层开关配置 */

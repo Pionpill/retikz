@@ -17,6 +17,7 @@ const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, 
 
 const collectNodes = (scope: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -24,12 +25,15 @@ const collectNodes = (scope: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(scope.children);
+
   return out;
 };
 
 const collectPaths = (scope: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -37,21 +41,27 @@ const collectPaths = (scope: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(scope.children);
+
   return out;
 };
 
 const collectScopes = (scope: IRScope): Array<IRScope> => {
   const out: Array<IRScope> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
       if (node.type !== 'scope') continue;
+
       out.push(node as IRScope);
       if (node.children) walk(node.children);
     }
   };
+
   walk(scope.children);
+
   return out;
 };
 
@@ -78,11 +88,14 @@ describe('channel core coverage (contract)', () => {
         },
       ],
     });
+
     expect(firstLayer(spec, { d: [{ x: 0, y: 0 }] })).toMatchObject({
       zIndex: 0,
       style: { strokeWidth: 2, opacity: 0.7, fillOpacity: 0.5, strokeOpacity: 0.4 },
     });
+
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0 }] }));
+
     expect(node).toMatchObject({
       zIndex: 3,
     });
@@ -118,6 +131,7 @@ describe('channel core coverage (contract)', () => {
         ],
       }),
     );
+
     expect(path).toMatchObject({
       roundedCorners: 4,
       style: { strokeWidth: 3, opacity: 0.6, lineCap: 'round', lineJoin: 'bevel' },
@@ -152,6 +166,7 @@ describe('channel core coverage (contract)', () => {
         ],
       }),
     );
+
     expect(nodes[0].style?.strokeWidth).toBeCloseTo(0.5, 6);
     expect(nodes[1].style?.strokeWidth).toBeCloseTo(4, 6);
     expect(nodes[0].style?.fillOpacity).toBeCloseTo(0.2, 6);
@@ -190,6 +205,7 @@ describe('channel core coverage (contract)', () => {
       ],
     });
     const [node] = collectNodes(firstLayer(spec, { d: [{ cat: 'A', value: 1, label: 'A' }] }));
+
     expect(node.label).toMatchObject({
       text: 'A',
       position: 'top',
@@ -229,6 +245,7 @@ describe('channel core coverage (contract)', () => {
         ],
       }),
     );
+
     expect(nodes.map(node => node.style?.textColor)).toEqual(['#ef4444', '#2563eb']);
   });
 
@@ -260,6 +277,7 @@ describe('channel core coverage (contract)', () => {
       ],
     });
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0, label: 'A', align: 'start' }] }));
+
     expect(node).toMatchObject({
       cornerRadius: 4,
       scale: { default: 1.1, x: 1.2, y: 0.9 },
@@ -302,6 +320,7 @@ describe('channel core coverage (contract)', () => {
         ],
       }),
     ).map(scope => scope.defaults?.node);
+
     expect(nodeDefaults).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ style: expect.objectContaining({ color: '#ef4444', fill: '#ef4444' }) }),
@@ -335,6 +354,7 @@ describe('channel core coverage (contract)', () => {
       ],
     });
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0, dashed: true }] }));
+
     expect(node).toMatchObject({
       boundary: 'shape',
       shape: { type: 'rectangle', params: { cornerRadius: 8 } },
@@ -382,6 +402,7 @@ describe('channel core coverage (contract)', () => {
         ],
       }),
     );
+
     expect(path).toMatchObject({
       zIndex: 7,
       rotate: 15,

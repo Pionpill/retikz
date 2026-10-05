@@ -20,12 +20,14 @@ const compileNode = (node: Record<string, unknown>): TextPrim => {
   };
   const t = findText(compileToScene(ir, opts).scene.primitives);
   if (!t) throw new Error('expected TextPrim');
+
   return t;
 };
 
 describe('maxTextWidth 西文按词折行', () => {
   it('"aaa bbb ccc" + maxTextWidth=7 → ["aaa bbb", "ccc"]', () => {
     const t = compileNode({ text: 'aaa bbb ccc', maxTextWidth: 7 });
+
     expect(t.lines.map(l => l.text)).toEqual(['aaa bbb', 'ccc']);
   });
 });
@@ -33,6 +35,7 @@ describe('maxTextWidth 西文按词折行', () => {
 describe('maxTextWidth CJK 按字折行', () => {
   it('"中文换行测试" + maxTextWidth=3 → ["中文换", "行测试"]', () => {
     const t = compileNode({ text: '中文换行测试', maxTextWidth: 3 });
+
     expect(t.lines.map(l => l.text)).toEqual(['中文换', '行测试']);
   });
 });
@@ -40,6 +43,7 @@ describe('maxTextWidth CJK 按字折行', () => {
 describe('maxTextWidth 短文本盒收缩', () => {
   it('"ab" + maxTextWidth=100 → 单行、measuredWidth=2（不撑满）', () => {
     const t = compileNode({ text: 'ab', maxTextWidth: 100 });
+
     expect(t.lines.map(l => l.text)).toEqual(['ab']);
     expect(t.measuredWidth).toBe(2);
   });
@@ -48,6 +52,7 @@ describe('maxTextWidth 短文本盒收缩', () => {
 describe('未给 maxTextWidth 行为不变', () => {
   it('"aaa bbb ccc" 无 maxTextWidth → 单行', () => {
     const t = compileNode({ text: 'aaa bbb ccc' });
+
     expect(t.lines.map(l => l.text)).toEqual(['aaa bbb ccc']);
   });
 });
@@ -63,6 +68,7 @@ describe('layout.width 固定可见外框时正文自动折行', () => {
 describe('折出物理行继承 IRLine 样式', () => {
   it('[{text:"aaa bbb", fill:"red"}] + maxTextWidth=3 → ["aaa","bbb"] 均 fill red', () => {
     const t = compileNode({ text: [{ text: 'aaa bbb', fill: 'red' }], maxTextWidth: 3 });
+
     expect(t.lines.map(l => ({ text: l.text, fill: l.fill }))).toEqual([
       { text: 'aaa', fill: 'red' },
       { text: 'bbb', fill: 'red' },
@@ -73,6 +79,7 @@ describe('折出物理行继承 IRLine 样式', () => {
 describe('长不可断 token 溢出不硬断', () => {
   it('"abcdefgh"（单词 8 字符）+ maxTextWidth=3 → 单行溢出', () => {
     const t = compileNode({ text: 'abcdefgh', maxTextWidth: 3 });
+
     expect(t.lines.map(l => l.text)).toEqual(['abcdefgh']);
   });
 });

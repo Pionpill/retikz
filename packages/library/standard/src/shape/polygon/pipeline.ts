@@ -3,6 +3,7 @@ import { pointAtEllipseArcAngle } from '@retikz/math';
 
 import { ShapeVertexAngleSchema, shapeVertexPath } from '../shared';
 import type { IRPolygon } from './types';
+
 /** 将 Polygon 意图下沉为单一 Core Path */
 export const lowerPolygon = (source: IRPolygon): IRPath => {
   const radius = 'radius' in source ? source.radius : source.sideLength / (2 * Math.sin(Math.PI / source.sides));
@@ -15,5 +16,6 @@ export const lowerPolygon = (source: IRPolygon): IRPath => {
       angleDeg: rotate + (index * 360) / source.sides,
     }),
   );
+
   return shapeVertexPath(source, vertices);
 };

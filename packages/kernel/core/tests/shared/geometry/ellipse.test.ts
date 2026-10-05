@@ -11,6 +11,7 @@ describe('ellipse 退化（零半轴）不产 NaN', () => {
   it('contains → false（不除零产 NaN）', () => {
     expect(ellipse.contains(degenerate, [1, 2])).toBe(false);
   });
+
   it('boundaryPoint → 塌缩到中心', () => {
     expect(ellipse.boundaryPoint(degenerate, [5, 5])).toEqual([1, 2]);
   });
@@ -47,6 +48,7 @@ describe('ellipse.anchor', () => {
 
   it('对角 anchor 取参数 t=π/4 处：(rx/√2, ry/√2)', () => {
     const ne = ellipse.anchor(e, Anchor.TopRight);
+
     expect(ne[0]).toBeCloseTo(10 * Math.SQRT1_2);
     expect(ne[1]).toBeCloseTo(-5 * Math.SQRT1_2);
   });
@@ -55,12 +57,14 @@ describe('ellipse.anchor', () => {
 describe('ellipse.boundaryPoint', () => {
   it('沿 +x → right', () => {
     const p = ellipse.boundaryPoint(e, [100, 0]);
+
     expect(p[0]).toBeCloseTo(10);
     expect(p[1]).toBeCloseTo(0);
   });
 
   it('沿 +y → bottom', () => {
     const p = ellipse.boundaryPoint(e, [0, 100]);
+
     expect(p[0]).toBeCloseTo(0);
     expect(p[1]).toBeCloseTo(5);
   });
@@ -73,6 +77,7 @@ describe('ellipse.boundaryPoint', () => {
     ] as Array<[number, number]>) {
       const p = ellipse.boundaryPoint(e, toward);
       const v = (p[0] / e.rx) ** 2 + (p[1] / e.ry) ** 2;
+
       expect(v).toBeCloseTo(1);
     }
   });

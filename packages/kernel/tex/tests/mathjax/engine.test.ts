@@ -15,10 +15,13 @@ describe('[mathjax-engine] initialization failure', () => {
   it('统一包装为 RetikzTexError，并保留原始 cause 与通用诊断', async () => {
     try {
       await createMathJaxEngine();
+
       expect.fail('expected MathJax initialization to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzTexError);
+
       const texError = error as RetikzTexError;
+
       expect(texError.code).toBe(RetikzTexErrorCode.MathJax);
       expect(texError.cause).toBeInstanceOf(Error);
       expect((texError.cause as Error & { cause?: unknown }).cause).toBe(initializationFailure);

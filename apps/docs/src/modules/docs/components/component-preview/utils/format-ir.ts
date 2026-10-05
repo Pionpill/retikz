@@ -1,7 +1,9 @@
 type JsonScalar = string | number | boolean | null;
+
 type JsonValue = JsonScalar | Array<JsonValue> | { [key: string]: JsonValue };
 
 const INLINE_MAX = 60;
+
 const INDENT = '  ';
 
 const isScalar = (value: JsonValue): value is JsonScalar =>
@@ -17,15 +19,19 @@ const formatJsonValue = (value: JsonValue, depth: number): string => {
 
   if (Array.isArray(value)) {
     if (value.length === 0) return '[]';
+
     const indentation = INDENT.repeat(depth + 1);
     const closingIndentation = INDENT.repeat(depth);
+
     return `[\n${value.map(item => `${indentation}${formatJsonValue(item, depth + 1)}`).join(',\n')}\n${closingIndentation}]`;
   }
 
   const entries = Object.entries(value);
   if (entries.length === 0) return '{}';
+
   const indentation = INDENT.repeat(depth + 1);
   const closingIndentation = INDENT.repeat(depth);
+
   return `{\n${entries
     .map(([key, item]) => `${indentation}${JSON.stringify(key)}: ${formatJsonValue(item, depth + 1)}`)
     .join(',\n')}\n${closingIndentation}}`;

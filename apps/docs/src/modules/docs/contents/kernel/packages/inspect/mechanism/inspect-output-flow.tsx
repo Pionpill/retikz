@@ -8,9 +8,11 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 import { inspectOutputFlowI18n } from './inspect-output-flow.i18n';
 
 export type InspectOutputFlowProps = Readonly<{ lang?: Lang }>;
+
 const InspectOutputFlow: FC<InspectOutputFlowProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = inspectOutputFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout kind="linear" id="all" direction="down" gap={48} align="center">

@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 图中步骤与辅助说明 */
 export const figureI18n: Record<Lang, Array<readonly [string, string]>> = {
   zh: [

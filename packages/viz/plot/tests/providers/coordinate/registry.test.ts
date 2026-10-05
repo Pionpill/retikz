@@ -23,6 +23,7 @@ const archDefinition = defineCoordinate({
     const values = ctx.collectRoleValues('x');
     const scaleDef = ctx.resolveScaleForRole('x', undefined, values);
     const scale = ctx.buildPositionScale(scaleDef, values, [0, ctx.width]);
+
     return {
       frame: createCoordinateFrame('arch', ['x'], ([value]) => {
         const x = scale.coordinate(value);
@@ -53,8 +54,11 @@ describe('coordinate registry（contract spec）', () => {
 
   it('coordinate_scale_binding_defaults_to_role_named_operation_fields', () => {
     const definition = resolveCoordinateRegistry().get(PlotCoordinate.Cartesian2D);
+
     expect(definition).toBeDefined();
+
     if (definition === undefined) return;
+
     const operation = { type: PlotCoordinate.Cartesian2D, x: 'horizontal' } as const;
 
     expect(readCoordinateScaleNames(definition, operation)).toEqual({ x: 'horizontal' });
@@ -67,8 +71,11 @@ describe('coordinate registry（contract spec）', () => {
 
   it('polar_coordinate_scale_binding_aliases_x/y_roles_to_angle/radius_fields', () => {
     const definition = resolveCoordinateRegistry().get(PlotCoordinate.Polar2D);
+
     expect(definition).toBeDefined();
+
     if (definition === undefined) return;
+
     const operation = {
       type: PlotCoordinate.Polar2D,
       startAngle: 0,
@@ -108,6 +115,7 @@ describe('coordinate registry（contract spec）', () => {
 
   it('resolveCoordinateRegistry 接受自定义 definition 数组并按 type 注册', () => {
     const registry = resolveCoordinateRegistry([archDefinition]);
+
     expect(registry.get('arch')).toBe(archDefinition);
   });
 
@@ -129,6 +137,7 @@ describe('coordinate registry（contract spec）', () => {
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
+
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/duplicate coordinate registration: "cartesian2D"/);
   });
 
@@ -138,6 +147,7 @@ describe('coordinate registry（contract spec）', () => {
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
+
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/ZodObject/);
   });
 
@@ -147,6 +157,7 @@ describe('coordinate registry（contract spec）', () => {
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
+
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/z\.literal/);
   });
 
@@ -156,16 +167,19 @@ describe('coordinate registry（contract spec）', () => {
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
+
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty z\.literal string/);
   });
 
   it('empty_coordinate_role_throws', () => {
     const malformed: AnyCoordinateDefinition = { ...archDefinition, roles: [''] };
+
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty coordinate role/);
   });
 
   it('duplicate_coordinate_role_throws', () => {
     const malformed: AnyCoordinateDefinition = { ...archDefinition, roles: ['x', 'x'] };
+
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/duplicate coordinate role: "x"/);
   });
 
@@ -176,6 +190,7 @@ describe('coordinate registry（contract spec）', () => {
 
   it('definition_operation_json_round_trip', () => {
     const operation = { type: 'arch', archHeight: 30 };
+
     expect(archDefinition.schema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 });

@@ -31,6 +31,7 @@ describe('rectangle — cornerRadius 入 params', () => {
       scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } } })]),
     ).scene;
     const r = findByType(compiled.primitives, 'rect');
+
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(6);
   });
@@ -40,6 +41,7 @@ describe('rectangle — cornerRadius 入 params', () => {
       scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 0 } } })]),
     ).scene;
     const r = findByType(compiled.primitives, 'rect');
+
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(0);
   });
@@ -50,7 +52,9 @@ describe('rectangle — cornerRadius 入 params', () => {
 describe('rectangle — 错误路径（strictObject）', () => {
   it('rectangle_extra_params_rejected：{type:"rectangle", params:{foo:1}} → strictObject reject（编译期 throw）', () => {
     const ir = scene([rectNode({ shape: { type: 'rectangle', params: { foo: 1 } } })]);
+
     expect(() => compileToScene(ir).scene).toThrow();
+
     // 裸 schema 同样拒
     expect(() => rectangle.paramsSchema.parse({ foo: 1 })).toThrow();
   });
@@ -67,6 +71,7 @@ describe('rectangle — 顶层 cornerRadius 迁移期兼容', () => {
     // 迁移期：未给 params.cornerRadius 时，顶层 Node.cornerRadius 仍画圆角（回退）。
     const compiled = compileToScene(scene([rectNode({ cornerRadius: 5 })])).scene;
     const r = findByType(compiled.primitives, 'rect');
+
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(5);
   });
@@ -76,6 +81,7 @@ describe('rectangle — 顶层 cornerRadius 迁移期兼容', () => {
       scene([rectNode({ cornerRadius: 5, shape: { type: 'rectangle', params: { cornerRadius: 9 } } })]),
     ).scene;
     const r = findByType(compiled.primitives, 'rect');
+
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(9);
   });
@@ -93,25 +99,30 @@ describe('rectangle — round-trip / scaleParams', () => {
     };
     const parsed = NodeSchema.parse(node);
     const roundTripped = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(roundTripped).toEqual(parsed);
     expect(roundTripped.shape).toEqual({ type: 'rectangle', params: { cornerRadius: 6 } });
   });
 
   it('ShapeRefSchema 解析 rectangle cornerRadius params', () => {
     const ref = { type: 'rectangle', params: { cornerRadius: 4 } };
+
     expect(ShapeRefSchema.parse(ref)).toEqual(ref);
   });
 
   it('rectangle_rounded_scaled：node scale=2 → cornerRadius 随长度协同 ×2', () => {
     // cornerRadius 是长度（与半径同性），scaleParams 用 uniform 几何均值因子缩放。
     expect(rectangle.scaleParams!({ cornerRadius: 6 }, 2, 2)).toEqual({ cornerRadius: 12 });
+
     // 无 cornerRadius 时 scaleParams 返回原 params 不变
     expect(rectangle.scaleParams!({}, 2, 2)).toEqual({});
+
     // 端到端：compile scale:2 → emit cornerRadius ×2
     const compiled = compileToScene(
       scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } }, scale: 2 })]),
     ).scene;
     const r = findByType(compiled.primitives, 'rect');
+
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(12);
   });

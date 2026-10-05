@@ -10,7 +10,9 @@ import type { StandardEmbeddableComponent } from '../../shared';
 import { convertLegendItemsChildren, convertLegendRampChildren } from './convert-children';
 
 type LegendItemsContentInput = Extract<LegendInput['content'], { kind: 'items' }>;
+
 type LegendRampContentInput = Extract<LegendInput['content'], { kind: 'ramp' }>;
+
 type LegendSharedProps = Omit<LegendInput, 'title' | 'content'>;
 
 /** React items Legend 的显式组合式 authoring 属性 */
@@ -40,6 +42,7 @@ export type LegendProps = LegendItemsFormProps | LegendRampFormProps;
 const createItemsLegend = (props: LegendItemsFormProps, context: ReactInputEmbedContext) => {
   const { kind, children, direction, wrap, gap, sampleGap, sampleAlign, ...legend } = props;
   const converted = convertLegendItemsChildren(children, context);
+
   return {
     input: {
       ...legend,
@@ -62,6 +65,7 @@ const createItemsLegend = (props: LegendItemsFormProps, context: ReactInputEmbed
 const createRampLegend = (props: LegendRampFormProps, context: ReactInputEmbedContext) => {
   const { kind, children, direction, sampleGap, ...legend } = props;
   const converted = convertLegendRampChildren(children, context);
+
   return {
     input: {
       ...legend,

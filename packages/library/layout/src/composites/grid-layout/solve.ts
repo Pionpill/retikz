@@ -4,28 +4,36 @@ import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { LayoutInsets, LayoutRect } from '../internal';
 import { compensatedLayoutSum } from '../internal';
-import type { LayoutAlignmentValue } from '../shared';
 import { LayoutAlignment } from '../shared';
 import type { IRGridTrack } from './types';
 
 /** Grid track 在 container-local 坐标中的确定位置 */
 export type PositionedGridTrack = Readonly<{
+  /** 轨道在容器局部坐标中的起始位置 */
   start: number;
+  /** 轨道最终分配的尺寸 */
   size: number;
 }>;
 
 /** 单行 baseline 求解所需的 child 结构量 */
 export type GridBaselineParticipant = Readonly<{
+  /** 参与基线对齐的作者输入项索引 */
   sourceIndex: number;
-  alignment: LayoutAlignmentValue;
+  /** 该项要求的对齐方式 */
+  alignment: LayoutAlignment;
+  /** 该项四边外边距 */
   margin: LayoutInsets;
+  /** 包含槽位尺寸与对齐线的子布局测量结果 */
   result: LayoutChildResult;
 }>;
 
 /** 单行结构尺寸与 first/last baseline target */
 export type GridRowMetrics = Readonly<{
+  /** 满足行内尺寸及基线约束的行高 */
   size: number;
+  /** 首基线目标相对行起始边的偏移 */
   firstTarget?: number;
+  /** 末基线目标相对行起始边的偏移 */
   lastTarget?: number;
 }>;
 
@@ -42,6 +50,7 @@ export const materializeGridTracks = (
       details: { count, explicitCount: explicit.length },
     });
   }
+
   return Object.freeze(Array.from({ length: count }, (_, index) => explicit[index] ?? implicit));
 };
 
@@ -77,6 +86,7 @@ export const gridSpanRange = (
       details: { start, span, trackCount: tracks.length },
     });
   }
+
   return Object.freeze({ start: first.start, size: last.start + last.size - first.start });
 };
 
@@ -98,6 +108,7 @@ export const gridStructuralGuideOffset = (
       real: false,
     });
   }
+
   return Object.freeze({
     offset: Math.min(Math.max(guide.position - result.allocationBounds.y, 0), slotHeight),
     real: true,
@@ -113,6 +124,7 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
   let lastDescent = 0;
   let hasFirst = false;
   let hasLast = false;
+
   for (const participant of participants) {
     const slotHeight = slotHeightOf(participant.result);
     ordinary = Math.max(
@@ -125,6 +137,7 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
       firstDescent = Math.max(firstDescent, slotHeight - guide.offset + participant.margin.bottom);
       hasFirst = true;
     }
+
     if (participant.alignment === LayoutAlignment.LastBaseline) {
       const guide = gridStructuralGuideOffset(participant.result, LayoutAlignmentGuideName.LastBaseline);
       lastAscent = Math.max(lastAscent, participant.margin.top + guide.offset);
@@ -132,7 +145,9 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
       hasLast = true;
     }
   }
+
   const size = Math.max(ordinary, firstAscent + firstDescent, lastAscent + lastDescent);
+
   return Object.freeze({
     size,
     ...(hasFirst ? { firstTarget: firstAscent } : {}),

@@ -65,7 +65,7 @@ export const cellLayer = (
 };
 
 /**
- * CellGeometry → core Node（统一装配）。
+ * CellGeometry → core Node（统一装配）
  * @description rect → Node{position, minimumSize}；sector → Node{position:center, shape:sector}
  *   （半径 swap 保 outer>inner）；contour → Node{position: 顶点 AABB 中心, shape:contour{points}}；不可锚定 contour 返回 null
  */
@@ -77,6 +77,7 @@ export const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
       layout: { minimumSize: { width: geometry.width, height: geometry.height } },
     };
   }
+
   if (geometry.kind === 'sector') {
     return {
       type: 'node',
@@ -92,8 +93,10 @@ export const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
       },
     };
   }
+
   const position = cellGeometryAnchor(geometry);
   if (position === null) return null;
+
   return {
     type: 'node',
     position,

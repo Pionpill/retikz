@@ -12,7 +12,10 @@ export const detailTable = (input: DetailTableInput): IRDetailTable => createDet
 /** 从 plain manual 输入构造 Table spec */
 export const manualTable = (input: ManualTableInput): IRManualTable => createManualTableIR(input);
 
-/** 构造可由 Table Vanilla adapter 消费的标准 embed spec */
+/**
+ * 构造可由 Table Vanilla adapter 消费的标准 embed spec
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const embedTable = <TSource = never>(
   spec: IRTable,
   options: Omit<InputTable<TSource>, 'table'> = {},

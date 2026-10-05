@@ -52,6 +52,7 @@ export const docPathSegments = (loc: DocLocation): Array<string> => {
   if (loc.sectionId) parts.push(loc.sectionId);
   if (loc.pageId !== null) parts.push(loc.pageId);
   if (loc.subPageId) parts.push(loc.subPageId);
+
   return parts;
 };
 
@@ -74,6 +75,7 @@ const collectFromSubPage = (
     for (const child of subPage.children) {
       collectFromSubPage(moduleId, sectionId, pageId, child, acc);
     }
+
     return;
   }
 
@@ -96,6 +98,7 @@ const collectFromPage = (
     for (const child of page.children) {
       collectFromSubPage(moduleId, sectionId, page.id, child, acc);
     }
+
     return;
   }
 
@@ -110,6 +113,7 @@ const collectFromPage = (
 /** 按 sidebar 展示顺序拍平 sections 中的所有叶子节点 */
 export const flattenLeaves = (moduleId: DocNavigationAreaId, sections: Array<Section>): Array<LeafNode> => {
   const acc: Array<LeafNode> = [];
+
   for (const section of sections) {
     const sectionId = section.label ? (section.id ?? null) : null;
     if (section.document && section.id && section.label) {
@@ -120,10 +124,12 @@ export const flattenLeaves = (moduleId: DocNavigationAreaId, sections: Array<Sec
         path: buildDocPath(moduleId, section.id, null),
       });
     }
+
     for (const page of section.pages) {
       collectFromPage(moduleId, sectionId, page, acc);
     }
   }
+
   return acc;
 };
 

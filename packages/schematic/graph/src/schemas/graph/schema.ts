@@ -4,6 +4,7 @@ import { array, literal, strictObject } from 'zod';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphDefaultsSchema, GraphRuleSchema } from '../theme';
 
+/** 校验结合 Core Scope 完整能力与图局部上下文的图根组合节点 */
 export const GraphSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Graph).describe('Graph Source assembly discriminator.'),

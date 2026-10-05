@@ -1,0 +1,143 @@
+---
+title: Chain · 链
+description: 连接文字和图形，以有序分叉与汇合展示串并联结构，并控制分支对齐与正交连接。
+---
+
+`Chain` 将内容单元串联，允许分叉、嵌套分叉并重新汇合。单元可以是文字、空格或已有绘图组件，适合处理链、算法示意和论文插图。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，从 collection 入口导入。最小链只需提供 items。
+
+<ComponentPreview files="chain-basic" size="sm" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Chain } from '@retikz/standard-react/collection';
+
+<Layout>
+  <Chain items={['A', 'B', 'C']} />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
+  adapters: [ChainInputEmbedAdapter],
+});
+```
+
+</DocTab>
+<DocTab value="ir" label="Source IR">
+
+```json
+{ "namespace": "standard", "type": "chain", "items": ["A", "B", "C"] }
+```
+
+直接 IR 注册 ChainProvider 及 PathClipProvider；嵌套内容提供自己的依赖，data 展开还需 ArrayProvider、MapProvider。
+
+</DocTab>
+</DocTabs>
+
+## 选择输入与分支骨架
+
+items、data、skeleton 三选一。items 的字符串原样显示，显式单元用 `{ kind: 'cell', content?, id?, style?, layout? }`。data 中每个 JSON 值形成线性单元，嵌套对象或数组不会被猜测为分支；dataExpand 默认 true，可用 false 或 map/array 数组控制展开。
+
+| 骨架形式                                                         | 效果                         |
+| ---------------------------------------------------------------- | ---------------------------- |
+| `skeleton={{ count: 4 }}`                                        | 四个线性空单元               |
+| `skeleton={{ labels: ['A', '', 'C'] }}`                          | 线性符号，空字符串保留空单元 |
+| `skeleton={{ items: ['A', { branches: [['B'], ['C']] }, 'D'] }}` | 分叉后汇合，可递归嵌套       |
+
+骨架的三个形式互斥。分支骨架只含符号，不携带图形、id 或局部样式。显式分叉用 `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`，可配置局部 layout 与 connection。
+
+<ComponentPreview
+  files={['chain-inputs', 'chain-inputs.preview.tsx']}
+  defaultSourceFile="chain-inputs.preview.tsx"
+  size="md"
+/>
+
+每个分叉至少两条非空支路，前后必须有普通单元，支路首尾也必须是普通单元。空字符串或空 cell 是单元，空数组不是直通支路。根空序列无连线，单单元不会自连。
+
+## 对齐分支与步骤
+
+根 layout.direction 默认 right，也支持 down。gap 和 branchGap 分别控制主轴与支路间距，均为正数，默认 24。
+
+branchAlign 决定整个分支包围盒相对前一个单元的位置：start、center、end 或 `{ branch: 0 }`。默认 center；指定分支时，其主干与父链保持直线。横向链的起端／末端为上／下，纵向链为左／右。
+
+spacing 默认 steps，直属项共享步骤轨道；compact 让各支路独立紧凑排列。justify 用 start、center、end 控制短支路的位置，默认 start。嵌套分叉整体占父级一步；中心对齐遇到奇数空轨道时，多余空位放在末端，不生成虚假节点。
+
+<ComponentPreview
+  files={['chain-alignment', 'chain-alignment.preview.tsx']}
+  defaultSourceFile="chain-alignment.preview.tsx"
+  size="xl"
+/>
+
+## 组合图形与嵌套分支
+
+JSX 的结构关系为：
+
+```text
+Chain
+├── ChainCell
+├── ChainParallel
+│   ├── ChainBranch → ChainCell / ChainParallel
+│   └── ChainBranch → ChainCell / ChainParallel
+└── ChainCell
+```
+
+ChainCell 的 text 与唯一图形 children 互斥，都省略表示空单元。ChainBranch 只分组，不绘制边框。items 属性用于文字，复杂图形使用 children；Vanilla 的 items.content 则接受 drawable 输入。
+
+下面通过 Matrix 作为一个单元，并在另一条支路再次分叉。示例将宽度设为 64，固定尺寸默认裁切；auto 尺寸按内容测量，内容始终不缩放。overflow visible 可让内容超出单元，但不会触发自动避障。
+
+<ComponentPreview
+  files={['chain-content', 'chain-content.preview.tsx']}
+  defaultSourceFile="chain-content.preview.tsx"
+  size="lg"
+/>
+
+## 连接、标签与引用
+
+connection.route 默认 auto。横向分叉使用 `|-`、汇合使用 `-|`；纵向相反。自动连接在节点间距中预留折转位置，短支路也连接到公共汇合通道。显式 straight、`|-` 或 `-|` 直接连接端点，可能穿过其它内容。
+
+<ComponentPreview
+  files={['chain-connection', 'chain-connection.preview.tsx']}
+  defaultSourceFile="chain-connection.preview.tsx"
+  size="md"
+/>
+
+示例将连接设为蓝色。React／Vanilla 的 connection.path.arrow 支持 none、单向或双向箭头，通过现有路径归一化转换成 Source marks；IR 用 marks，空数组关闭默认末端箭头。路径标签字段是 label。path 配置不能改写路径的身份、类型或步骤。
+
+显式 cell id 可用于外部路径引用：React／Vanilla 使用 `target.right`，Source IR 使用 `{ id: 'target', anchor: 'right' }`，指向单元实际边框，而非内部内容或整条支路。根 label 附着在整个 Chain 上；分支配置逐字段继承，显式 marks 数组替换继承的标记列表。
+
+## 错误与限制
+
+输入混用、空支路、没有前后单元的分叉、非法主干下标、非正间距会失败并提供结构位置。父级空间不足不会压缩单元或 gap。Chain 不支持任意跨支路边、回边、闭合链或自动避障；图式关系使用 Graph。
+
+## 实现原理
+
+Standard 将三入口解析成统一结构，复用 Cell 测量内容，再递归汇总支路包围盒和步骤轨道。摆放后通过普通路径输出连接，Core 负责箭头、标签、裁切、命名空间和最终空间引用。
+
+<SourceLinks
+  sources={[{ label: 'Chain 编译', path: 'packages/library/standard/src/collection/chain/pipeline.ts', startLine: 1 }]}
+/>
+
+## API 参考
+
+{/* @include library/standard/collection/chain/generated */}
+
+## Schema 参考
+
+Source 保留作者选择的输入形式；工厂不展开骨架、不填充默认值。显式 parse 会物化静态默认。
+
+#### ChainSchema
+
+<ZodSchema name="ChainSchema" description="串并联结构、JSON 数据或递归骨架" expandNested />

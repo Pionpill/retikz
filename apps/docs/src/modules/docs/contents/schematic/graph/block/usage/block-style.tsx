@@ -10,10 +10,14 @@ export const previewControls = blockStyleControls;
 
 const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => BlockStylePreview(values, lang));
+
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
+
 /** 示例语言 */
 export type BlockStyleProps = { lang?: Lang };
+
 /** 结构块交互示例 */
 const Demo: FC<BlockStyleProps> = props => {
   const { lang = 'zh' } = props;

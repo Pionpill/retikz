@@ -92,6 +92,7 @@ const ExternalSelectorOperationObjectSchema = looseObject({
   }).describe('Discriminator: custom selector kind'),
 });
 
+/** 校验带 JSON 配置的自定义数据选择操作 */
 export const ExternalSelectorOperationSchema = ExternalSelectorOperationObjectSchema.catchall(JsonValueSchema).describe(
   'Custom selector operation with JSON config',
 );

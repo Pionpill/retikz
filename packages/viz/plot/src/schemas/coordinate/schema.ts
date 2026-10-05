@@ -3,6 +3,7 @@ import { discriminatedUnion, enum as zodEnum, literal, looseObject, number, obje
 
 import { BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, PlotCoordinate, PolarInterpolation } from './constants';
 
+/** 校验二维笛卡尔坐标系及其 x、y 位置比例尺绑定 */
 export const Cartesian2DSchema = object({
   type: literal(PlotCoordinate.Cartesian2D).describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
   x: NonBlankStringSchema.optional().describe(
@@ -13,6 +14,7 @@ export const Cartesian2DSchema = object({
   ),
 }).describe('2D cartesian coordinate system; owns the positional scale bindings for x and y');
 
+/** 校验二维极坐标系的角度、半径比例尺与角度范围、内半径几何 */
 export const Polar2DSchema = object({
   type: literal(PlotCoordinate.Polar2D).describe(
     'Discriminator: 2D polar space, angle around the center / radius outward',
@@ -43,6 +45,7 @@ export const Polar2DSchema = object({
   '2D polar coordinate system; owns the angle / radius scale bindings and the angular sweep / inner-radius geometry',
 );
 
+/** 校验沿直线排列的一维坐标系，另一屏幕轴固定在基线上 */
 export const Cartesian1DSchema = object({
   type: literal(PlotCoordinate.Cartesian1D).describe(
     'Discriminator: 1D cartesian line; one position dimension, the other screen axis collapses to a fixed baseline',
@@ -59,6 +62,7 @@ export const Cartesian1DSchema = object({
   '1D cartesian coordinate system: a single position dimension on a straight line (rug / timeline / 1D strip); the collapsed screen axis is pinned to a fixed baseline',
 );
 
+/** 校验将单个角度维度投影到固定半径圆周的一维极坐标系 */
 export const Polar1DSchema = object({
   type: literal(PlotCoordinate.Polar1D).describe(
     'Discriminator: 1D polar circle; one angular position dimension on a fixed-radius circle (cyclic / periodic data)',
@@ -95,10 +99,12 @@ const CustomCoordinateObjectSchema = looseObject({
   ),
 });
 
+/** 校验自定义坐标操作的开放配置，具体约束由匹配的运行时定义处理 */
 export const CustomCoordinateSchema = CustomCoordinateObjectSchema.catchall(JsonValueSchema).describe(
   'Custom coordinate operation: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the operation.',
 );
 
+/** 校验内置一维、二维笛卡尔或极坐标配置 */
 export const CoordinateSchema = discriminatedUnion('type', [
   Cartesian2DSchema,
   Polar2DSchema,
@@ -106,6 +112,7 @@ export const CoordinateSchema = discriminatedUnion('type', [
   Polar1DSchema,
 ]).describe('Built-in coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D');
 
+/** 校验内置坐标配置或运行时定义支持的自定义坐标操作 */
 export const CoordinateOperationSchema = union([CoordinateSchema, CustomCoordinateSchema]).describe(
   'Coordinate operation union: built-in coordinate configs plus custom type open config operations validated by a runtime CoordinateDefinition',
 );

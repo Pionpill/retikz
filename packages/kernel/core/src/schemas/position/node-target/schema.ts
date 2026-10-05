@@ -5,6 +5,7 @@ import { Anchor, CenterAnchor, Side } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
 import { AngleDegreesSchema } from '../../scalar';
 
+/** 校验真实形状边界上按边及比例指定的锚点 */
 export const BoundaryAnchorRefSchema = object({
   side: zodEnum(Side).describe('Canonical edge of the shape boundary.'),
   fraction: NormalizedFractionSchema.describe(
@@ -14,6 +15,7 @@ export const BoundaryAnchorRefSchema = object({
 
 const NamedAnchorRefSchema = createOpenStringSchema({ ...CenterAnchor, ...Anchor });
 
+/** 校验命名锚点、角度或边界比例点形式的锚点引用 */
 export const AnchorRefSchema = union([
   NamedAnchorRefSchema.describe(
     'Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.',
@@ -24,6 +26,7 @@ export const AnchorRefSchema = union([
   'Anchor reference: named anchor, angle in degrees, or proportional point { side, fraction } on the boundary',
 );
 
+/** 校验对节点、坐标或已解析作用域的标识引用及可选锚点和世界坐标偏移 */
 export const NodeTargetSchema = object({
   id: NonBlankStringSchema.describe('Referenced Node, Coordinate, or resolved Scope id.'),
   anchor: AnchorRefSchema.optional().describe(

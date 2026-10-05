@@ -6,9 +6,9 @@ import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { RAD_TO_DEG } from '../../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../../constants';
+import type { CompileWarningCode } from '../../constants';
 import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import { combineOpacity, layoutInlineLine, normalizeTextMetrics, toAlphabeticBaselineY } from '../../text';
-import type { CompileWarningCodeValue } from '../../warning';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
@@ -19,7 +19,8 @@ export type LabelTexContext = {
   lowerTex?: LowerTex;
   /** `$...$` 解析门控 */
   gatingOn: boolean;
-  warn: (code: CompileWarningCodeValue, message: string) => void;
+  /** 接收公式解析与排版产生的编译诊断 */
+  warn: (code: CompileWarningCode, message: string) => void;
 };
 
 /** step label 放置时额外需要的宿主几何信息 */
@@ -33,11 +34,20 @@ export type LabelPlacementContext = {
 
 /** step label emit 所需上下文 */
 export type EmitLabelPrimitiveContext = {
+  /** 按实际字体测量标签文字 */
   measureText: TextMeasurer;
+  /** 统一输出坐标与尺寸的数值精度 */
   round: (n: number) => number;
+  /**
+   * 解析预设与 rem 字号时使用的根字号
+   * @default DEFAULT_FONT_SIZE
+   */
   rootFontSize?: number;
+  /** 与标签自身透明度合成的宿主透明度 */
   hostOpacity?: number;
+  /** 公式识别、降解和诊断能力；省略时不启用公式识别 */
   tex?: LabelTexContext;
+  /** 面状宿主的边界偏移，用于计算标签内外放置位置 */
   placement?: LabelPlacementContext;
 };
 
@@ -58,6 +68,7 @@ export const emitLabelPrimitive = (
     tex: texCtx,
     placement: placementCtx,
   } = context;
+
   // label.font / textColor / opacity 已由 resolve/style 解析（fold scope labelDefault + 宿主 path 主色）
   const font: CanonicalFont = resolveFont(label.font, {
     rootFontSize,
@@ -105,6 +116,7 @@ export const emitLabelPrimitive = (
     const slots = laidLines.map(line => Math.max(fontSize * LABEL_LINE_HEIGHT_FACTOR, line.ascent + line.descent));
     const blockWidth = Math.max(...laidLines.map(line => line.width));
     const blockHeight = slots.reduce((height, slot) => height + slot, 0);
+
     const ax = sample.point[0];
     const ay = sample.point[1];
     let left: number;
@@ -125,12 +137,14 @@ export const emitLabelPrimitive = (
       left = ax - blockWidth / 2;
       top = ay - sideOffset - blockHeight;
     }
+
     let verticalOffset = 0;
     const children = laidLines.flatMap((laid, index) => {
       const slot = slots[index];
       const naturalHeight = laid.ascent + laid.descent;
       const baselineY = top + verticalOffset + (slot - naturalHeight) / 2 + laid.ascent;
       verticalOffset += slot;
+
       return laid.emit(left + (blockWidth - laid.width) / 2, baselineY, round);
     });
     const group: GroupPrim = { type: 'group', children };
@@ -153,11 +167,13 @@ export const emitLabelPrimitive = (
         [left, bottom],
         [right, bottom],
       ].map(([x, y]): IRPosition => [ax + (x - ax) * cos - (y - ay) * sin, ay + (x - ax) * sin + (y - ay) * cos]);
+
       return {
         primitive: rotated,
         boundsPoints,
       };
     }
+
     return {
       primitive: group,
       boundsPoints: [
@@ -231,8 +247,10 @@ export const emitLabelPrimitive = (
       ],
       children: [textPrim],
     };
+
     // sloped 旋转后用半径外接近似四角点
     const r = Math.max(measuredWidth / 2, measuredHeight / 2);
+
     return {
       primitive: groupPrim,
       boundsPoints: [
@@ -253,6 +271,7 @@ export const emitLabelPrimitive = (
   const right = align === 'start' ? x + measuredWidth : align === 'end' ? x : x + halfW;
   const top = baseline === 'top' ? y : baseline === 'bottom' ? y - measuredHeight : y - halfH;
   const bottom = baseline === 'top' ? y + measuredHeight : baseline === 'bottom' ? y : y + halfH;
+
   return {
     primitive: textPrim,
     boundsPoints: [

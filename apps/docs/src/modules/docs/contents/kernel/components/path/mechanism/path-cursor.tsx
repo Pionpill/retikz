@@ -1,5 +1,5 @@
 import { Draw, Layout, Node, Path, Scope, Step } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react/collection';
+import { Array, Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -13,9 +13,10 @@ export type PathCursorProps = { lang?: Lang };
 const PathCursor: FC<PathCursorProps> = props => {
   const { lang = 'zh' } = props;
   const t = pathCursorI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      <List
+      <Array
         label={{ text: t.steps, opacity: 0.8, font: { size: 12 } }}
         data={[
           { kind: 'move', to: [0, 0] },

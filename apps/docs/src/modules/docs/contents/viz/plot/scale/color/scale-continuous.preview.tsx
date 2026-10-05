@@ -13,6 +13,7 @@ const buildColorScale = (values: typeof previewControlContract.canonicalValues):
       scheme: values.divergingScheme,
     };
   }
+
   return {
     type: 'sequential',
     name: 'color',

@@ -42,6 +42,7 @@ export const emitBoundaryLabelPrimitive = (
     center[1] + (x - origin[0]) * sin + (y - origin[1]) * cos,
   ]);
   const round = context.round;
+
   return {
     primitive: {
       type: 'group',

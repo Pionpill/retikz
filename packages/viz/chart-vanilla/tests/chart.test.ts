@@ -139,6 +139,7 @@ describe('Chart Vanilla authoring', () => {
 
   it('does not expose a generic Chart authoring path', async () => {
     const module = await import('../src');
+
     expect(module).not.toHaveProperty('createChart');
     expect(module).not.toHaveProperty('normalizeChart');
   });
@@ -242,6 +243,7 @@ describe('Chart Vanilla authoring', () => {
 
     for (const create of factories) {
       const result = create();
+
       expect(result.props.theme).toEqual({ mode: 'dark' });
       expect(sourceOf(result)).not.toHaveProperty('theme');
       expect(sourceOf(result)).not.toHaveProperty('theme');
@@ -320,6 +322,7 @@ describe('Chart Vanilla authoring', () => {
     });
     const rendered = renderChart(chart, { adapters });
     const scaled = renderChart(chart, { adapters, output: { width: 640, height: 400 } });
+
     expect(rendered.compileResult.scene.layout).toEqual({ x: 0, y: 0, width: 320, height: 200 });
     expect(rendered.svg).toContain('viewBox="0 0 320 200"');
     expect(scaled.compileResult.scene.layout).toEqual(rendered.compileResult.scene.layout);
@@ -331,6 +334,7 @@ describe('Chart Vanilla authoring', () => {
     const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' }, layout });
     const automatic = renderChart(chart, { adapters }).compileResult.scene.layout;
     const unpadded = renderChart(chart, { adapters, compile: { padding: 0 } }).compileResult.scene.layout;
+
     expect(automatic.width).toBeCloseTo(unpadded.width + 20);
     expect(automatic.height).toBeCloseTo(unpadded.height + 20);
   });
@@ -357,6 +361,7 @@ describe('custom regression SSR', () => {
       lowerOptions: { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] },
     });
     const rendered = renderChart(chart, { adapters });
+
     expect(rendered.svg).toContain('<svg');
     expect((rendered.svg.match(/<ellipse\b/g) ?? []).length).toBe(regressionRows.length);
     expect(JSON.stringify(sourceOf(chart))).not.toMatch(/regressionDefinitions|predict|schema/);

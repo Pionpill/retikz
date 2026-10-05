@@ -53,13 +53,23 @@ const ChartSourceShellSchema = strictObject({
   recipe: ChartRecipeShellSchema,
 }).describe('Common strict Chart Source shell before a recipe-specific schema is selected');
 
-/** 精确 recipe schema 组装所用的 root shape */
+/**
+ * 精确 recipe schema 组装所用的 root shape
+ * @template TFamily Chart family 判别字段的字面量类型
+ * @template TRecipe 校验具体 chartType recipe 的 schema 类型
+ */
 export type ChartSourceShape<TFamily extends string, TRecipe extends ZodType> = typeof ChartSourceFieldsSchema.shape & {
+  /** 校验具体 Chart family 字面量的 schema */
   type: ZodLiteral<TFamily>;
+  /** 校验具体 chartType recipe 的 schema */
   recipe: TRecipe;
 };
 
-/** 按 family 与精确 recipe schema 创建 strict Source schema */
+/**
+ * 按 family 与精确 recipe schema 创建 strict Source schema
+ * @template TFamily Chart family 判别字段的字面量类型
+ * @template TRecipe 校验具体 chartType recipe 的 schema 类型
+ */
 export const createChartSourceSchema = <TFamily extends string, TRecipe extends ZodType>(
   family: TFamily,
   recipe: TRecipe,
@@ -87,6 +97,7 @@ type IRChartSourceShell = ZodInfer<typeof ChartSourceShellSchema>;
  */
 export type IRChartSource = Omit<IRChartSourceShell, 'recipe'> &
   Readonly<{
+    /** 经具体 chartType schema 校验的字段映射、属性与有序 mark 声明 */
     recipe: Readonly<{
       /** 当前exact recipe Definition的全局key */
       chartType: string;

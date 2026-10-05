@@ -61,6 +61,7 @@ export const AiChatInputAutoRepairPicker: FC = () => {
           {MODES.map(m => {
             const isActive = m === mode;
             const Icon = MODE_ICON[m];
+
             return (
               <li key={m}>
                 <button

@@ -33,6 +33,9 @@ export type IRCascadingGraphicStyle = ZodInfer<typeof CascadingGraphicStyleSchem
 export type IRGraphicStyle = ZodInfer<typeof GraphicStyleSchema>;
 
 export type IRGraphicColor = ZodInfer<typeof GraphicColorSchema>;
+
 export type IRGraphicElementOpacity = ZodInfer<typeof GraphicElementOpacitySchema>;
+
 export type IRGraphicFill = ZodInfer<typeof GraphicFillSchema>;
+
 export type IRGraphicStroke = ZodInfer<typeof GraphicStrokeSchema>;

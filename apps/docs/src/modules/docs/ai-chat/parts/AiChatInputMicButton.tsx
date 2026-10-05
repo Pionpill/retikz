@@ -11,11 +11,14 @@ type SpeechRecognitionResult = {
   isFinal: boolean;
   0: { transcript: string };
 };
+
 type SpeechRecognitionEvent = {
   resultIndex: number;
   results: ArrayLike<SpeechRecognitionResult>;
 };
+
 type SpeechRecognitionErrorEvent = { error: string };
+
 type SpeechRecognitionInstance = {
   lang: string;
   interimResults: boolean;
@@ -26,7 +29,9 @@ type SpeechRecognitionInstance = {
   start: () => void;
   stop: () => void;
 };
+
 type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
 type WindowWithSpeech = Window & {
   SpeechRecognition?: SpeechRecognitionConstructor;
   webkitSpeechRecognition?: SpeechRecognitionConstructor;
@@ -64,6 +69,7 @@ export const AiChatInputMicButton: FC = () => {
 
   const start = useCallback(() => {
     if (!Constructor) return;
+
     const recognition = new Constructor();
     recognition.lang = i18n.language === 'en' ? 'en-US' : 'zh-CN';
     recognition.interimResults = true;
@@ -73,9 +79,11 @@ export const AiChatInputMicButton: FC = () => {
 
     recognition.onresult = event => {
       let transcript = '';
+
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
         transcript += event.results[i][0].transcript;
       }
+
       const base = draftAtStartRef.current;
       const separator = base.length > 0 && !base.endsWith(' ') ? ' ' : '';
       setDraft(`${base}${separator}${transcript}`);

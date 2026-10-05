@@ -9,6 +9,7 @@ import { literal, string } from 'zod';
 import { Layout, Node } from '../../../src';
 
 type FixtureProps = { id: string; data: unknown };
+
 type DefinitionMaker = CoreDependencyProvider['makeDefinition'];
 
 type EmbeddableFixture = FC<FixtureProps> & {
@@ -65,6 +66,7 @@ const makeFixture = (options: {
   Fixture.displayName = options.displayName;
   Fixture.isTier2Embeddable = true;
   Fixture.inputEmbedAdapter = adapter;
+
   return Fixture;
 };
 
@@ -161,6 +163,7 @@ describe('<Layout> Composite provider graph', () => {
       makeDefinition,
       dependencies: [dependency],
     });
+
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100}>
@@ -178,6 +181,7 @@ describe('<Layout> Composite provider graph', () => {
       dependencies: [dependency],
       extraProviders: [providerOf(dependency, dependencyMaker, {}, [key])],
     });
+
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100}>
@@ -190,6 +194,7 @@ describe('<Layout> Composite provider graph', () => {
 
     const First = makeFixture({ displayName: 'FirstDataset', key, makeDefinition, datasets: { shared: { x: 1 } } });
     const Second = makeFixture({ displayName: 'SecondDataset', key, makeDefinition, datasets: { shared: { x: 1 } } });
+
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100}>
@@ -200,6 +205,7 @@ describe('<Layout> Composite provider graph', () => {
     ).toThrow(/demo\.panel.*dataset.*shared/i);
 
     const Valid = makeFixture({ displayName: 'Valid', key, makeDefinition });
+
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100} extensions={{ composites: [definitionOf(key)] }}>

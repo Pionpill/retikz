@@ -72,7 +72,9 @@ describe('Graph status preview', () => {
       act(() => container.querySelector<HTMLButtonElement>('button')?.click());
 
       expect(container.querySelector('[data-testid="status"]')?.textContent).toBe(GraphStatus.Error);
+
       const entityShape = container.querySelector('svg [fill]');
+
       expect(entityShape?.getAttribute('fill')).not.toBe(initialFill);
       expect(entityShape?.getAttribute('stroke')).toBe(
         compositeOpaqueColor(resolveCoreThemeStyleColors(mode, {}).semantic.error, '#ffffff', 1),

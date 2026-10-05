@@ -64,6 +64,7 @@ describe('shared Flex engine', () => {
     expect(formFlexLines(items, { wrap: FlexLayoutWrap.Wrap, gap: 5 })).toEqual([[0, 1, 2]]);
 
     const fittingItems = [mainItem('item-0', 20), mainItem('item-1', 20), mainItem('item-2', 20)] as const;
+
     expect(formFlexLines(fittingItems, { wrap: FlexLayoutWrap.Wrap, availableMainSize: 45, gap: 5 })).toEqual([
       [0, 1],
       [2],

@@ -2,6 +2,7 @@ import type { IRPath, IRTarget } from '@retikz/core';
 
 import { shapePathProperties } from '../shared';
 import type { IRRectangle } from './types';
+
 /** 将 Rectangle 意图下沉为单一 Core Path */
 export const lowerRectangle = (source: IRRectangle): IRPath => {
   let from: IRTarget;
@@ -18,6 +19,7 @@ export const lowerRectangle = (source: IRRectangle): IRPath => {
     from = source.corner1;
     to = [from[0] + source.width, from[1] + source.height];
   }
+
   return {
     ...shapePathProperties(source),
     type: 'path',

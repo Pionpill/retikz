@@ -78,11 +78,13 @@ describe('runtime runtime validation', () => {
         sources: [forged],
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.SourceCommandInvalid }));
+
     const mismatched = createRuntimeSourceUpdate(
       owner,
       2,
       createRuntimeChangeSet(1 as ReturnType<typeof runtime.revision>, []),
     );
+
     expect(() =>
       runtime.update({
         baseRevision: runtime.revision(),
@@ -168,6 +170,7 @@ describe('runtime runtime validation', () => {
     });
 
     runtime.dispose();
+
     expect(() => runtime.snapshot(owner)).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.Disposed }),
     );

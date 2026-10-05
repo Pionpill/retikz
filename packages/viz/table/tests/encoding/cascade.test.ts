@@ -6,6 +6,7 @@ import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 
 const tableDefaults = resolveTableThemeDefaults();
+
 const sequential = tableDefaults.defaults.visualDefaults?.sequential;
 if (sequential === undefined || sequential === null)
   throw new Error('test fixture requires the default sequential palette');
@@ -27,7 +28,9 @@ describe('Table visual encoding cascade', () => {
       optionsSchema: strictObject({}),
       resolve: (_options, values) => {
         resolves += 1;
+
         expect(values).toEqual([2, 2]);
+
         return {
           of: value => {
             evaluated.push(value);

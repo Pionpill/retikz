@@ -7,10 +7,12 @@ import { blendOrderI18n } from './blend-order.i18n';
 
 /** 混合顺序图的语言参数 */
 export type BlendOrderProps = { lang?: Lang };
+
 /** 固定颜色和模式，只改变两个矩形的绘制先后 */
 const BlendOrder: FC<BlendOrderProps> = props => {
   const { lang = 'zh' } = props;
   const text = blendOrderI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {text.titles.map((title, index) => (

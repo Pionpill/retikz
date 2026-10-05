@@ -181,11 +181,13 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     showAskAi = true,
     onClose,
   } = props;
+
   const [previewWidth, setPreviewWidth] = useState(0);
   const [globalDefaults] = useState(() => {
     const { rendererMode, dragEnabled } = useComponentPreviewStore.getState();
     return { rendererMode, dragEnabled };
   });
+
   const sourceState = useSourcePanelState(source, defaultSourceFile);
   const previewState = usePreviewPanelState({
     controlState,
@@ -197,10 +199,12 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     hovered: true,
     pinned: true,
   });
+
   const openAi = useRightPanelStore(state => state.openAi);
   const fillAiDraft = useAiChatStore(state => state.fillDraftAndFocus);
   const aiCurrentPage = useAiChatStore(state => state.currentPage);
   const hasCode = sourceState.views.length > 0;
+
   const previewToolSlots = buildDialogPreviewToolSlots(previewState);
   const resolvedDialogControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots, [
     buildPreviewControlsLockSlot(),
@@ -213,6 +217,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     openAi();
     fillAiDraft(buildAskAiPrompt(promptLang, pageTitle, '', name));
   };
+
   const previewPanel = (
     <PreviewWorkspace
       definition={controlDefinition}

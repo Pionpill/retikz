@@ -16,6 +16,7 @@ export async function* readSse(stream: ReadableStream<Uint8Array>): AsyncGenerat
       buffer += decoder.decode(value, { stream: true });
 
       let boundary = buffer.indexOf('\n\n');
+
       while (boundary !== -1) {
         const rawBlock = buffer.slice(0, boundary);
         buffer = buffer.slice(boundary + 2);
@@ -24,6 +25,7 @@ export async function* readSse(stream: ReadableStream<Uint8Array>): AsyncGenerat
         boundary = buffer.indexOf('\n\n');
       }
     }
+
     const trailing = buffer.trim();
     if (trailing) {
       const parsed = parseEventBlock(trailing);
@@ -36,8 +38,10 @@ export async function* readSse(stream: ReadableStream<Uint8Array>): AsyncGenerat
 
 const parseEventBlock = (block: string): SseEvent | null => {
   if (!block) return null;
+
   let event: string | null = null;
   const dataLines: Array<string> = [];
+
   for (const rawLine of block.split('\n')) {
     const line = rawLine.replace(/\r$/, '');
     if (line.startsWith('event:')) {
@@ -46,6 +50,8 @@ const parseEventBlock = (block: string): SseEvent | null => {
       dataLines.push(line.slice(5).replace(/^ /, ''));
     }
   }
+
   if (dataLines.length === 0 && event === null) return null;
+
   return { event, data: dataLines.join('\n') };
 };

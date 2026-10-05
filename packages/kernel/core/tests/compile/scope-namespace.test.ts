@@ -20,9 +20,11 @@ const compileWithWarnings = (ir: IRScene): { compiled: Scene; warnings: Array<Co
 /** 取第一条 line 命令的 to 端点 */
 const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined => {
   if (!prim || prim.type !== 'path') return undefined;
+
   for (const cmd of prim.commands) {
     if (cmd.kind === 'line') return cmd.to;
   }
+
   return undefined;
 };
 
@@ -37,9 +39,11 @@ const collectVisualLineEnds = (
       collectVisualLineEnds(primitive.children, [...scopeChain, ...(primitive.transforms ?? [])], out);
       continue;
     }
+
     const end = lineTo(primitive);
     if (end !== undefined) out.push(applyTransformChain(end, scopeChain));
   }
+
   return out;
 };
 
@@ -71,14 +75,19 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { compiled, warnings } = compileWithWarnings(ir);
+
     // 两个 A 跨 frame 不算 duplicate
     expect(warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(0);
+
     const ends = collectVisualLineEnds(compiled.primitives);
+
     expect(ends).toHaveLength(2);
+
     // 第一条 path（来自 scope 内）：内层 A 全局中心 ≈ (200, 0)
     // 第二条 path（顶层）：外层 A 全局中心 ≈ (0, 0)
     // 一条视觉端点 x 接近 200（内层 A），另一条接近 0（外层 A）
     const sorted = ends.map(p => p[0]).sort((a, b) => a - b);
+
     expect(Math.abs(sorted[0] - 0)).toBeLessThan(30);
     expect(Math.abs(sorted[1] - 200)).toBeLessThan(30);
   });
@@ -103,8 +112,11 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { compiled, warnings } = compileWithWarnings(ir);
+
     expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
+
     const [end] = collectVisualLineEnds(compiled.primitives);
+
     expect(end).toBeDefined();
     expect(Math.abs(end[0] - 0)).toBeLessThan(20);
   });
@@ -126,6 +138,7 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
+
     expect(warnings.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
   });
 
@@ -164,12 +177,16 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { compiled, warnings } = compileWithWarnings(ir);
+
     // 三个 A 跨 frame，全部 shadowing，没有 duplicate warn
     expect(warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(0);
+
     const ends = collectVisualLineEnds(compiled.primitives)
       .map(p => p[0])
       .sort((a, b) => a - b);
+
     expect(ends).toHaveLength(2);
+
     // 中层 A 全局 ≈ 100；最内层 A 全局 ≈ 200
     expect(Math.abs(ends[0] - 100)).toBeLessThan(30);
     expect(Math.abs(ends[1] - 200)).toBeLessThan(30);
@@ -191,6 +208,7 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
+
     // at-translate 解析成功 → 不发 AT_TARGET_UNRESOLVED warn
     expect(warnings.filter(w => w.code === CompileWarningCode.AtTargetUnresolved)).toHaveLength(0);
   });
@@ -205,6 +223,7 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
+
     expect(warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(0);
   });
 });
@@ -228,6 +247,7 @@ describe('scope.id 始终注册到父 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
+
     // cluster 必须解析成功（在父 frame）；A 在内层 frame 不被外层访问
     expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
@@ -248,6 +268,7 @@ describe('scope.id 始终注册到父 frame', () => {
       },
     ]);
     const { warnings: w2 } = compileWithWarnings(ir2);
+
     expect(w2.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
   });
 
@@ -266,6 +287,7 @@ describe('scope.id 始终注册到父 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
+
     expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
   });
 });
@@ -282,6 +304,7 @@ describe('GroupPrim 形态仍随 localNamespace 不变（仅命名空间隔离�
     ]);
     const compiled = compileToScene(ir).scene;
     const group = compiled.primitives.find(p => p.type === 'group');
+
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 30, y: 0 }]);
   });
 });

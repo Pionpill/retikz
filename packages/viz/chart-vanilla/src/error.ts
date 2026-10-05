@@ -8,7 +8,7 @@ export const RetikzChartVanillaErrorCode = {
 } as const;
 
 /** Chart Vanilla 包稳定错误码取值 */
-export type RetikzChartVanillaErrorCodeValue = ValueOf<typeof RetikzChartVanillaErrorCode>;
+export type RetikzChartVanillaErrorCode = ValueOf<typeof RetikzChartVanillaErrorCode>;
 
 /** Chart Vanilla 包运行时错误的可选构造参数 */
 type RetikzChartVanillaErrorOptions = Readonly<{
@@ -17,10 +17,7 @@ type RetikzChartVanillaErrorOptions = Readonly<{
 }>;
 
 /** Chart Vanilla 包未细分领域错误的统一结构化错误 */
-export class RetikzChartVanillaError extends RetikzError<
-  RetikzChartVanillaErrorCodeValue,
-  Readonly<{ message: string }>
-> {
+export class RetikzChartVanillaError extends RetikzError<RetikzChartVanillaErrorCode, Readonly<{ message: string }>> {
   /** 创建保留原始消息与 cause 的 Chart Vanilla 包错误 */
   constructor(message: string, options?: RetikzChartVanillaErrorOptions) {
     super({

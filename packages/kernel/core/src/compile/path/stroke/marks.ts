@@ -22,24 +22,35 @@ const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
   return markerFillUsesContextStroke(prim.fill) || markerFillUsesContextStroke(prim.stroke);
 };
 
+/**
+ * 检查箭头是否能继承路径描边色
+ * @throws RetikzCoreError 路径使用结构化 paint 且箭头内存在继承描边色的图元时抛出
+ */
 export const assertArrowCanInheritStroke = (
   stroke: PaintValue | undefined,
   arrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
 ): void => {
   if (stroke === undefined || typeof stroke === 'string') return;
+
   const usesContextStroke =
     (arrows.arrowStart?.marker.some(markerPrimUsesContextStroke) ?? false) ||
     (arrows.arrowEnd?.marker.some(markerPrimUsesContextStroke) ?? false);
   if (!usesContextStroke) return;
+
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Compile,
     'Path arrow cannot inherit a IRPaint stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
   );
 };
 
+/**
+ * 取得标记可继承的 CSS 描边色；缺省时使用 currentColor
+ * @throws RetikzCoreError 描边是渐变或图案等结构化 paint 时抛出
+ */
 export const markerContextStroke = (stroke: PaintValue | undefined): string => {
   if (stroke === undefined) return 'currentColor';
   if (typeof stroke === 'string') return stroke;
+
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Compile,
     'Path mark cannot inherit a IRPaint stroke; set the mark or arrow color to an explicit CSS color.',
@@ -48,8 +59,11 @@ export const markerContextStroke = (stroke: PaintValue | undefined): string => {
 
 /** marker 放置所需上下文 */
 export type BuildMarkMarkerGroupContext = {
+  /** 用于将标记宽高倍率换算为场景尺寸的路径线宽 */
   strokeWidth: number;
+  /** 舍入标记放置变换中的数值 */
   round: (n: number) => number;
+  /** 替换标记内部继承描边色占位的 CSS 颜色 */
   contextStroke: string;
 };
 
@@ -58,6 +72,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
   if (prim.type === 'group') {
     return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke)) };
   }
+
   // marker 窄子集 ⊂ Scene 图元；解析 contextStroke 后即合法 Scene 图元，cast 作用域仅此一处
   return {
     ...prim,
@@ -86,5 +101,6 @@ export const buildMarkMarkerGroup = (
     { kind: 'scale', x: round(sx), y: round(sy) },
     { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
   ];
+
   return { type: 'group', transforms, children: spec.marker.map(p => markerPrimToScene(p, contextStroke)) };
 };

@@ -16,6 +16,7 @@ export const resolveGrid = (source: IRGrid): CanonicalGrid => {
           vertical: typeof line === 'object' ? line : {},
           horizontal: typeof line === 'object' ? line : {},
         };
+
   return {
     ...source,
     bounds,
@@ -43,5 +44,6 @@ const resolveGridLine = (source: IRGridLine, min: number, max: number, direction
       message: error,
       details: { path: ['line', direction, 'spacing'] },
     });
+
   return line;
 };

@@ -24,7 +24,9 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 Object.assign(globalThis, {
   ResizeObserver: class {
     observe() {}
+
     unobserve() {}
+
     disconnect() {}
   },
 });

@@ -8,10 +8,15 @@ const MATH_FONT = {
 };
 
 const COS30 = Math.cos((30 * Math.PI) / 180);
+
 const SIN30 = Math.sin((30 * Math.PI) / 180);
+
 const TAN30 = SIN30 / COS30;
+
 const SEC30 = 1 / COS30;
+
 const CSC30 = 1 / SIN30;
+
 const COT30 = 1 / TAN30;
 
 const Demo: FC = () => (

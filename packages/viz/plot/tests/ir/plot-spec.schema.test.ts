@@ -17,12 +17,14 @@ type RuntimeSchemaContract = {
 
 const runtimeSchemaOf = (name: string): RuntimeSchemaContract => {
   const schema = (plotSchemas as Record<string, unknown>)[name];
+
   expect(schema, `Plot schemas must export ${name}`).toBeDefined();
   return schema as RuntimeSchemaContract;
 };
 
 const plotFacetConfigurationSchema = (): FacetConfigurationSchemaContract => {
   const schema = (plotSchemas as Record<string, unknown>).PlotFacetConfigurationSchema;
+
   expect(schema, 'Plot schemas must export PlotFacetConfigurationSchema').toBeDefined();
   return schema as FacetConfigurationSchemaContract;
 };
@@ -47,6 +49,7 @@ describe('PlotSchema (contract)', () => {
 
   it('plot_root_with_id_and_meta_valid', () => {
     const spec = { ...baseLine, id: 'sales-chart', meta: { source: 'contract-example' } };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
@@ -63,6 +66,7 @@ describe('PlotSchema (contract)', () => {
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'xs' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
@@ -76,6 +80,7 @@ describe('PlotSchema (contract)', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues).toEqual(
         expect.arrayContaining([expect.objectContaining({ path: ['scales', 1, 'name'] })]),
@@ -90,6 +95,7 @@ describe('PlotSchema (contract)', () => {
 
   it('plot_meta_nested_json_valid', () => {
     const spec = { ...baseLine, meta: { a: { b: [1, true, null] } } };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
@@ -102,6 +108,7 @@ describe('PlotSchema (contract)', () => {
       coordinate: baseLine.coordinate,
       marks: baseLine.marks,
     };
+
     expect(() => PlotSchema.parse(rest)).toThrow();
   });
 
@@ -127,17 +134,20 @@ describe('PlotSchema (contract)', () => {
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
     };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
   it('coordinate_references_unknown_scale_name_schema_passes', () => {
     // 引用完整性是 lowering 的校验，非 schema 职责
     const spec = { ...baseLine, coordinate: { type: 'cartesian2D', x: 'nope', y: 'missing' } };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
   it('custom_coordinate_op_type_schema_passes_and_round_trips', () => {
     const spec = { ...baseLine, coordinate: { type: 'arch', x: 'xMonth', archHeight: 30 } };
+
     expect(PlotSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
   });
 
@@ -146,6 +156,7 @@ describe('PlotSchema (contract)', () => {
       ...baseLine,
       coordinate: { type: 'custom', name: 'arch', roles: ['x'], params: { archHeight: 30 } },
     };
+
     expect(() => PlotSchema.parse(spec)).toThrow();
   });
 
@@ -158,6 +169,7 @@ describe('PlotSchema (contract)', () => {
         { type: 'axis', dimension: 'y', grid: true },
       ],
     };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
@@ -168,6 +180,7 @@ describe('PlotSchema (contract)', () => {
 
   it('plot_empty_guides_valid', () => {
     const spec = { ...baseLine, guides: [] };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
@@ -196,6 +209,7 @@ describe('PlotSchema (contract)', () => {
       ],
       guides: [{ type: 'axis', dimension: 'x' }],
     };
+
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 });
@@ -219,6 +233,7 @@ describe('PlotFacetConfigurationSchema', () => {
     const result = plotFacetConfigurationSchema().safeParse({ id: 'species' });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues).toEqual(expect.arrayContaining([expect.objectContaining({ path: ['row'] })]));
     }
@@ -232,6 +247,7 @@ describe('PlotFacetConfigurationSchema', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues).toEqual(
         expect.arrayContaining([expect.objectContaining({ code: 'unrecognized_keys', keys: [field], path: [] })]),

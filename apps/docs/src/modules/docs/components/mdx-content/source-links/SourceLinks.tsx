@@ -19,7 +19,9 @@ export type SourceLinksProps = {
 const sourceHref = (source: SourceLinkItem): string => {
   const href = buildBlobUrl(source.path);
   if (source.startLine === undefined) return href;
+
   const end = source.endLine === undefined ? '' : `-L${source.endLine}`;
+
   return `${href}#L${source.startLine}${end}`;
 };
 

@@ -6,6 +6,7 @@ export const computeDisplaySize = (
 ): { width: number | string; height: number | string } => {
   const intrinsicWidth = layout.width > 0 ? layout.width : 1;
   const intrinsicHeight = layout.height > 0 ? layout.height : 1;
+
   return {
     width:
       width ??

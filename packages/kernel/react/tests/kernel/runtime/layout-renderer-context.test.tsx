@@ -19,12 +19,14 @@ describe('<Layout> 渲染目标 context 回退', () => {
 
   it('无 renderer prop 时跟随 RendererModeProvider 切到 canvas', () => {
     const html = renderToStaticMarkup(<RendererModeProvider mode="canvas">{chart}</RendererModeProvider>);
+
     expect(html).toContain('<canvas');
     expect(html).not.toContain('<svg');
   });
 
   it('默认（无 provider、无 prop）仍是 svg', () => {
     const html = renderToStaticMarkup(chart);
+
     expect(html).toContain('<svg');
     expect(html).not.toContain('<canvas');
   });
@@ -39,6 +41,7 @@ describe('<Layout> 渲染目标 context 回退', () => {
         </Layout>
       </RendererModeProvider>,
     );
+
     expect(html).toContain('<svg');
     expect(html).not.toContain('<canvas');
   });

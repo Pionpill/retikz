@@ -21,12 +21,16 @@ export const applySceneCamera = (
   easings: EasingRegistry | undefined,
 ): void => {
   const { x: lx, y: ly, width: lw, height: lh } = scene.layout;
+
   for (const track of scene.animations ?? []) {
     if (track.property !== 'viewBox' || !isAutoplayTrigger(track)) continue;
+
     const result = evaluateTrack(track, time, { easings });
     if (!result || !Array.isArray(result.value)) continue;
+
     const [vx, vy, vw, vh] = result.value as Array<number>;
     if (!vw || !vh) continue;
+
     const sx = lw / vw;
     const sy = lh / vh;
     ctx.translate(lx - sx * vx, ly - sy * vy);

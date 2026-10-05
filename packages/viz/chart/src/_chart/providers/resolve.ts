@@ -18,6 +18,7 @@ export const resolveChartFromProvider = (
       details: { path: ['recipe', 'chartType'], chartType: source.recipe.chartType },
     });
   }
+
   if (source.type !== context.registry.family) {
     throw new RetikzChartError({
       code: RetikzChartErrorCode.FamilyMismatch,
@@ -25,6 +26,7 @@ export const resolveChartFromProvider = (
       details: { path: ['type'], family: source.type, expected: context.registry.family },
     });
   }
+
   return resolveSelectedChart(source, {
     theme: context.theme,
     recipe,

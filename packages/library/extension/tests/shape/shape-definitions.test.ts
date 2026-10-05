@@ -30,6 +30,7 @@ const firstPath = (
       if (path !== undefined) return path;
     }
   }
+
   return undefined;
 };
 
@@ -58,6 +59,7 @@ describe('Extension optional shape definitions', () => {
     ).scene;
 
     const path = firstPath(compiled.primitives);
+
     expect(path?.commands).toEqual([
       { kind: 'move', to: [-4, -20] },
       { kind: 'line', to: [4, -20] },
@@ -88,6 +90,7 @@ describe('Extension optional shape definitions', () => {
     ).scene;
 
     const path = firstPath(compiled.primitives);
+
     expect(path?.commands).toEqual([
       { kind: 'move', to: [-3, -10] },
       { kind: 'line', to: [3, -10] },
@@ -124,6 +127,7 @@ describe('Extension optional shape definitions', () => {
     ).scene;
 
     const path = firstPath(compiled.primitives);
+
     expect(path?.commands).toEqual([
       { kind: 'move', to: [-2, -14] },
       { kind: 'line', to: [2, -14] },
@@ -154,6 +158,7 @@ describe('Extension optional shape definitions', () => {
     ).scene;
 
     const path = firstPath(compiled.primitives);
+
     expect(path?.commands).toEqual([
       { kind: 'move', to: [20, 0] },
       { kind: 'arc', center: [0, 0], radius: 20, startAngle: 0, endAngle: 90 },
@@ -213,6 +218,7 @@ describe('Extension optional shape definitions', () => {
     ).scene;
 
     const paths = pathsOf(compiled.primitives);
+
     expect(paths).toHaveLength(4);
     expect(
       paths.find(primitive => primitive.fillRule === 'evenodd')?.commands.filter(command => command.kind === 'arc'),

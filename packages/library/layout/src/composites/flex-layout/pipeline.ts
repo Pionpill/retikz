@@ -118,6 +118,7 @@ const mainMarginsOf = (
   if (direction === FlexLayoutDirection.Row) return { start: margin.left, end: margin.right };
   if (direction === FlexLayoutDirection.RowReverse) return { start: margin.right, end: margin.left };
   if (direction === FlexLayoutDirection.Column) return { start: margin.top, end: margin.bottom };
+
   return { start: margin.bottom, end: margin.top };
 };
 
@@ -176,11 +177,14 @@ const finiteCrossLimitOf = (
       naturalContribution: 0,
     }).allocationSize;
   }
+
   if (allocation === undefined) return undefined;
+
   const paddingSize =
     crossAxis === 'x'
       ? compensatedLayoutSum([padding.left, padding.right])
       : compensatedLayoutSum([padding.top, padding.bottom]);
+
   return Math.max(0, allocation - paddingSize);
 };
 
@@ -192,9 +196,11 @@ const definiteCrossSizeOf = (
   finiteCrossLimit: number | undefined,
 ): number | undefined => {
   if (finiteCrossLimit === undefined) return undefined;
+
   const policy = node.size[crossAxis];
   if (policy.kind === LayoutAxisSizeKind.Fixed || policy.kind === LayoutAxisSizeKind.Fill) return finiteCrossLimit;
   if (crossProposal.kind === LayoutAxisProposalKind.Exact) return finiteCrossLimit;
+
   return crossProposal.kind === LayoutAxisProposalKind.Range && crossProposal.max === crossProposal.min
     ? finiteCrossLimit
     : undefined;
@@ -246,6 +252,7 @@ const structuralGuideOffset = (
   const slotSize = slotSizeOn(result, axis);
   if (guide === undefined)
     return { offset: name === LayoutAlignmentGuideName.FirstBaseline ? 0 : slotSize, real: false };
+
   return {
     offset: Math.min(Math.max(guide.position - allocationStartOn(result, axis), 0), slotSize),
     real: true,
@@ -261,10 +268,12 @@ const placedGuideCoordinate = (
     value => value.dimension === LayoutAlignmentGuideDimension.Y && value.name === name,
   );
   if (guide !== undefined) return { coordinate: guide.position + placed.translation.y, real: true };
+
   const edge =
     name === LayoutAlignmentGuideName.FirstBaseline
       ? placed.result.allocationBounds.y
       : placed.result.allocationBounds.y + placed.result.allocationBounds.height;
+
   return { coordinate: edge + placed.translation.y, real: false };
 };
 
@@ -284,6 +293,7 @@ const outgoingLineGuide = (
       .sort((first, second) => first.sourceIndex - second.sourceIndex)
       .map(placed => ({ placed, ...placedGuideCoordinate(placed, name) }));
     const canonical = candidates.find(candidate => candidate.real) ?? candidates[0];
+
     for (const candidate of candidates) {
       if (
         Math.abs(candidate.coordinate - canonical.coordinate) >
@@ -296,14 +306,18 @@ const outgoingLineGuide = (
         });
       }
     }
+
     return canonical.coordinate;
   }
+
   const placedTraversal = traversal
     .map(index => placedBySource[index])
     .filter((placed): placed is PlacedFlexItem => placed !== undefined);
   const real = placedTraversal.map(placed => placedGuideCoordinate(placed, name)).find(candidate => candidate.real);
   if (real !== undefined) return real.coordinate;
+
   const fallback = placedTraversal[0];
+
   return placedGuideCoordinate(fallback, name).coordinate;
 };
 
@@ -346,6 +360,7 @@ export const compileFlexLayout = (
     const effectiveMax = authored.max;
     const effectiveMin =
       authored.min ?? (effectiveMax !== undefined && childMinimum > effectiveMax ? effectiveMax : childMinimum);
+
     return Object.freeze({
       authored,
       sourceIndex,
@@ -355,6 +370,7 @@ export const compileFlexLayout = (
       ...(effectiveMax === undefined ? {} : { effectiveMax }),
     });
   });
+
   const mainItems = measured.map(item => mainSolverItemOf(item, node.direction));
   const mainGap = axes.main === 'x' ? node.gap.column : node.gap.row;
   const crossGap = axes.cross === 'x' ? node.gap.column : node.gap.row;
@@ -362,6 +378,7 @@ export const compileFlexLayout = (
     axes.main === 'x' ? { start: padding.left, end: padding.right } : { start: padding.top, end: padding.bottom };
   const crossPadding =
     axes.cross === 'x' ? { start: padding.left, end: padding.right } : { start: padding.top, end: padding.bottom };
+
   const minimumOuter = measured.map((item, index) => {
     const margins = mainMarginsOf(item.margin, node.direction);
     return compensatedLayoutSum([margins.start, mainItems[index].min, margins.end]);
@@ -373,8 +390,10 @@ export const compileFlexLayout = (
       itemSpec.max === undefined
         ? Math.max(itemSpec.flexBaseSlot, itemSpec.min)
         : Math.min(Math.max(itemSpec.flexBaseSlot, itemSpec.min), itemSpec.max);
+
     return compensatedLayoutSum([margins.start, slot, margins.end]);
   });
+
   const mainMinimumContent =
     node.wrap === FlexLayoutWrap.NoWrap
       ? totalOuterMainContribution(minimumOuter, mainGap, mainPadding.start, mainPadding.end)
@@ -391,6 +410,7 @@ export const compileFlexLayout = (
     minimumContribution: mainMinimumContent,
     naturalContribution: mainNaturalContent,
   }).allocationSize;
+
   const preliminaryAllocation: LayoutRect =
     axes.main === 'x'
       ? { x: 0, y: 0, width: mainAllocation, height: 0 }
@@ -404,6 +424,7 @@ export const compileFlexLayout = (
     (mainProposal.kind === LayoutAxisProposalKind.Range && mainProposal.max !== undefined) ||
     (mainProposal.kind === LayoutAxisProposalKind.Intrinsic && mainProposal.mode === LayoutIntrinsicMode.Minimum) ||
     ('max' in mainSizePolicy && mainSizePolicy.max !== undefined);
+
   const lineIndexes = formFlexLines(mainItems, {
     wrap: node.wrap,
     ...(hasFiniteWrapSpace ? { availableMainSize: mainContent.size } : {}),
@@ -412,6 +433,7 @@ export const compileFlexLayout = (
   const lineStates: Array<FlexLineState> = lineIndexes.map(itemIndexes => {
     const items = itemIndexes.map(index => mainItems[index]);
     const distribution = resolveFlexLineMainSizes(items, mainContent.size, mainGap);
+
     return {
       itemIndexes,
       mainSlots: distribution.values,
@@ -421,10 +443,12 @@ export const compileFlexLayout = (
       crossStart: 0,
     };
   });
+
   const mainSlotBySource: Array<number> = Array.from({ length: measured.length }, () => 0);
   lineStates.forEach(line =>
     line.itemIndexes.forEach((sourceIndex, index) => (mainSlotBySource[sourceIndex] = line.mainSlots[index])),
   );
+
   const crossResults = measured.map((item, sourceIndex) =>
     requiredProbe(
       context,
@@ -438,6 +462,7 @@ export const compileFlexLayout = (
       ),
     ),
   );
+
   lineStates.forEach(line => {
     const metrics = resolveFlexLineCrossMetrics(
       line.itemIndexes.map(index => {
@@ -445,6 +470,7 @@ export const compileFlexLayout = (
         const result = crossResults[index];
         const margins = crossMarginsOf(item.margin, axes.cross);
         const alignment = item.authored.alignSelf ?? node.alignItems;
+
         return {
           slotSize: slotSizeOn(result, axes.cross),
           marginStart: margins.start,
@@ -460,6 +486,7 @@ export const compileFlexLayout = (
     line.firstTarget = metrics.firstTarget;
     line.lastTarget = metrics.lastTarget;
   });
+
   const initialLineCrossTotal = compensatedLayoutSum([
     ...lineStates.map(line => line.initialCrossSize),
     crossGap * Math.max(0, lineStates.length - 1),
@@ -472,6 +499,7 @@ export const compileFlexLayout = (
     minimumContribution: crossContribution,
     naturalContribution: crossContribution,
   }).allocationSize;
+
   const allocation: LayoutRect =
     axes.main === 'x'
       ? { x: 0, y: 0, width: mainAllocation, height: crossAllocation }
@@ -481,6 +509,7 @@ export const compileFlexLayout = (
   if (lineStates.length === 1) {
     lineStates[0].finalCrossSize = crossContent.size;
   }
+
   const crossRemaining = crossContent.size - initialLineCrossTotal;
   const lineDistribution =
     lineStates.length > 1
@@ -489,6 +518,7 @@ export const compileFlexLayout = (
   if (lineStates.length > 1 && lineDistribution.stretch !== 0) {
     lineStates.forEach(line => (line.finalCrossSize += lineDistribution.stretch));
   }
+
   lineStates.forEach(line => {
     if (line.lastTarget !== undefined) {
       line.lastTarget += line.finalCrossSize - line.initialCrossSize;
@@ -498,6 +528,7 @@ export const compileFlexLayout = (
   let crossCursor = crossReverse
     ? crossContent.start + crossContent.size - lineDistribution.leading
     : crossContent.start + lineDistribution.leading;
+
   for (const line of lineStates) {
     if (crossReverse) {
       crossCursor -= line.finalCrossSize;
@@ -510,6 +541,7 @@ export const compileFlexLayout = (
   }
 
   const placedBySource: Array<PlacedFlexItem | undefined> = Array.from({ length: measured.length });
+
   for (const line of lineStates) {
     const mainDistribution = resolveFlexSpaceDistribution(
       node.justifyContent,
@@ -520,6 +552,7 @@ export const compileFlexLayout = (
     let mainCursor = mainReverse
       ? mainContent.start + mainContent.size - mainDistribution.leading
       : mainContent.start + mainDistribution.leading;
+
     for (let lineIndex = 0; lineIndex < line.itemIndexes.length; lineIndex += 1) {
       const sourceIndex = line.itemIndexes[lineIndex];
       const item = measured[sourceIndex];
@@ -537,6 +570,7 @@ export const compileFlexLayout = (
         mainSlotStart = mainCursor;
         mainCursor += mainSlot + mainMargins.end + mainGap + mainDistribution.between;
       }
+
       const alignment = item.authored.alignSelf ?? node.alignItems;
       let finalResult = crossResults[sourceIndex];
       if (alignment === LayoutAlignment.Stretch) {
@@ -547,6 +581,7 @@ export const compileFlexLayout = (
           physicalProposal(axes.main, exactProposal(mainSlot), exactProposal(itemCrossSlot)),
         );
       }
+
       const crossSlotSize = slotSizeOn(finalResult, axes.cross);
       const guideName =
         alignment === LayoutAlignment.LastBaseline
@@ -554,10 +589,12 @@ export const compileFlexLayout = (
           : LayoutAlignmentGuideName.FirstBaseline;
       const guideOffset = structuralGuideOffset(finalResult, axes.cross, guideName).offset;
       const crossSlotStart = resolveFlexItemCrossSlotStart(line, crossSlotSize, crossMargins, alignment, guideOffset);
+
       const physicalSlot: LayoutRect =
         axes.main === 'x'
           ? { x: mainSlotStart, y: crossSlotStart, width: mainSlot, height: crossSlotSize }
           : { x: crossSlotStart, y: mainSlotStart, width: crossSlotSize, height: mainSlot };
+
       const mainTranslation = mainSlotStart - allocationStartOn(finalResult, axes.main);
       let crossTranslation: number;
       if (alignment === LayoutAlignment.FirstBaseline || alignment === LayoutAlignment.LastBaseline) {
@@ -583,6 +620,7 @@ export const compileFlexLayout = (
       } else {
         crossTranslation = alignAllocationInSlot(physicalSlot, finalResult.allocationBounds, axes.cross, alignment);
       }
+
       const translation =
         axes.main === 'x' ? { x: mainTranslation, y: crossTranslation } : { x: crossTranslation, y: mainTranslation };
       placedBySource[sourceIndex] = Object.freeze({
@@ -595,6 +633,7 @@ export const compileFlexLayout = (
       });
     }
   }
+
   const outputChildren = placedBySource.map(placed => {
     if (placed === undefined) {
       throw new RetikzLayoutError({
@@ -603,6 +642,7 @@ export const compileFlexLayout = (
         details: { layout: 'flex', phase: 'placement' },
       });
     }
+
     return context.replay(placed.result, {
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     });
@@ -630,6 +670,7 @@ export const compileFlexLayout = (
       }),
     ]);
   }
+
   const physicalLines = [...lineStates].sort(
     (first, second) => first.crossStart - second.crossStart || lineStates.indexOf(first) - lineStates.indexOf(second),
   );
@@ -637,6 +678,7 @@ export const compileFlexLayout = (
   physicalLines.forEach((line, lineIndex) =>
     line.itemIndexes.forEach(sourceIndex => lineIndexBySource.set(sourceIndex, lineIndex)),
   );
+
   const items = placedBySource.map((placed, sourceIndex) => {
     if (placed === undefined) {
       throw new RetikzLayoutError({
@@ -645,11 +687,13 @@ export const compileFlexLayout = (
         details: { layout: 'flex', phase: 'artifact' },
       });
     }
+
     const authored = measured[sourceIndex].authored;
     const alignmentGuide =
       placed.alignment === LayoutAlignment.FirstBaseline || placed.alignment === LayoutAlignment.LastBaseline
         ? createLayoutArtifactAlignmentGuide(placed.result, placed.translation, placed.alignment, axes.cross)
         : undefined;
+
     return Object.freeze({
       ...createLayoutArtifactItem({
         key: authored.key,
@@ -665,6 +709,7 @@ export const compileFlexLayout = (
       line: lineIndexBySource.get(sourceIndex) ?? 0,
     });
   });
+
   const lines = physicalLines.map((line, index) =>
     Object.freeze({
       index,
@@ -676,12 +721,15 @@ export const compileFlexLayout = (
       crossSize: line.finalCrossSize,
     }),
   );
+
   const spacing: Array<LayoutSpacingArtifact> = [];
+
   for (const line of physicalLines) {
     const outer = line.itemIndexes
       .map(sourceIndex => rectAxis(items[sourceIndex].marginBounds, axes.main))
       .sort((first, second) => first.start - second.start || first.size - second.size);
     if (outer.length === 0) continue;
+
     appendLayoutSpacing(spacing, {
       kind: LayoutSpacingKind.Distributed,
       axis: axes.main,
@@ -690,6 +738,7 @@ export const compileFlexLayout = (
       crossStart: line.crossStart,
       crossSize: line.finalCrossSize,
     });
+
     for (let index = 1; index < outer.length; index += 1) {
       const previous = outer[index - 1];
       appendLayoutSpacingInterval(spacing, {
@@ -701,6 +750,7 @@ export const compileFlexLayout = (
         crossSize: line.finalCrossSize,
       });
     }
+
     const last = outer.at(-1)!;
     appendLayoutSpacing(spacing, {
       kind: LayoutSpacingKind.Distributed,
@@ -711,6 +761,7 @@ export const compileFlexLayout = (
       crossSize: line.finalCrossSize,
     });
   }
+
   if (physicalLines.length > 0) {
     appendLayoutSpacing(spacing, {
       kind: LayoutSpacingKind.Distributed,
@@ -720,6 +771,7 @@ export const compileFlexLayout = (
       crossStart: mainContent.start,
       crossSize: mainContent.size,
     });
+
     for (let index = 1; index < physicalLines.length; index += 1) {
       const previous = physicalLines[index - 1];
       appendLayoutSpacingInterval(spacing, {
@@ -731,6 +783,7 @@ export const compileFlexLayout = (
         crossSize: mainContent.size,
       });
     }
+
     const last = physicalLines.at(-1)!;
     appendLayoutSpacing(spacing, {
       kind: LayoutSpacingKind.Distributed,
@@ -741,6 +794,7 @@ export const compileFlexLayout = (
       crossSize: mainContent.size,
     });
   }
+
   return {
     children: [scope],
     allocationBounds: allocation,

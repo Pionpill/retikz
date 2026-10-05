@@ -71,7 +71,7 @@ export type GroupPrim = {
    * 裁剪资源 id：指向 `Scene.resources` 里某 ClipResource
    * @description 有值时该 group 的所有子原语被裁到该资源描述的区域（adapter → `<g clip-path="url(#id)">`）；
    *   裁剪区坐标在该 group 的局部坐标系（与 children 同帧）。缺省 = 不裁
-   * @default 不裁剪
+   * @default undefined
    */
   clipRef?: string;
   /** 组内子原语 */

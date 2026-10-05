@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const rangedDotMarksI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '替换端点外观，保留比较方向', subtitle: '橙色圆为 2000 年，蓝色菱形为 2022 年' },

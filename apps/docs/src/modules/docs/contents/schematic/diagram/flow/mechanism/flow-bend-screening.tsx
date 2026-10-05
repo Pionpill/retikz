@@ -13,6 +13,7 @@ export type FlowBendScreeningProps = Readonly<{ lang?: Lang }>;
 const FlowBendScreening: FC<FlowBendScreeningProps> = props => {
   const { lang = 'zh' } = props;
   const t = copy[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {t.stages.map((title, stage) => {
@@ -30,6 +31,7 @@ const FlowBendScreening: FC<FlowBendScreeningProps> = props => {
                     box.y <= node.y + node.height &&
                     node.y <= box.y + box.height,
                 );
+
                 return (
                   <Path
                     key={index}
@@ -48,6 +50,7 @@ const FlowBendScreening: FC<FlowBendScreeningProps> = props => {
               (stage === 2 ? (['left', 'right'] as const) : (['left'] as const)).map(direction => {
                 const segment = bendFigureCurve(angle, direction);
                 const selected = stage !== 2 || (angle === 30 && direction === 'right');
+
                 return (
                   <Path
                     key={`${direction}-${angle}`}

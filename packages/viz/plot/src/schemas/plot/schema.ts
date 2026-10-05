@@ -29,6 +29,7 @@ import {
 } from './constants';
 import { PlotPartitionDimensionsSchema } from './partition';
 
+/** 校验绘图组合中面板、轨道、坐标轴、标签及外缘间距 */
 export const CompositionSpacingSchema = strictObject({
   panelGap: NonNegativeNumberSchema.optional().describe('Gap between generated facet panels in user units'),
   trackGap: NonNegativeNumberSchema.optional().describe('Gap between tracks in a track arrangement in user units'),
@@ -39,6 +40,7 @@ export const CompositionSpacingSchema = strictObject({
   padding: BoxPaddingSchema.optional().describe('Optional outer padding applied to composition frame calculation'),
 }).describe('Plot composition spacing configuration');
 
+/** 校验组合层级的比例尺、坐标轴与网格解析策略 */
 export const CompositionResolveSchema = strictObject({
   scale: record(NonBlankStringSchema, zodEnum(CompositionScaleResolve))
     .optional()
@@ -73,12 +75,14 @@ const CoordinateViewOverlayPlacementSchema = strictObject({
     .describe('Relative mark-layer z-order hint inside the shared overlay panel; omit to use view declaration order'),
 }).describe('Overlay coordinate view placement');
 
+/** 校验坐标视图的放置种类与对应载荷 */
 export const CoordinateViewPlacementSchema = discriminatedUnion('kind', [
   CoordinateViewRootPlacementSchema,
   CoordinateViewSlotPlacementSchema,
   CoordinateViewOverlayPlacementSchema,
 ]).describe('Coordinate view placement kind and payload');
 
+/** 校验组合内注册的坐标视图、放置方式与元数据 */
 export const CoordinateViewSchema = strictObject({
   id: NonBlankStringSchema.describe('Stable coordinate view id referenced by marks and axis guides'),
   coordinate: CoordinateOperationSchema.describe('Coordinate operation owned by this view'),
@@ -102,6 +106,7 @@ const FacetHeaderSchema = strictObject({
   column: FacetHeaderLabelValueSchema.optional().describe('Whether generated column labels are visible or styled'),
 }).describe('Facet header visibility and text style');
 
+/** 校验分面空值、标题、解析与间距选项，不包含排列身份或分区维度 */
 export const PlotFacetOptionsSchema = strictObject({
   empty: zodEnum(FacetEmptyPolicy)
     .optional()
@@ -135,10 +140,12 @@ const refinePlotFacetConfiguration = (
   }
 };
 
+/** 校验 Plot 与上层分面编写入口共用的可序列化事实 */
 export const PlotFacetConfigurationSchema = PlotFacetConfigurationBaseSchema.superRefine(
   refinePlotFacetConfiguration,
 ).describe('JSON-safe authored facts shared by Plot and higher-level facet authoring');
 
+/** 校验从数据行派生面板坐标视图的分面排列 */
 export const FacetArrangementSchema = strictObject({
   kind: literal(CoordinateArrangementKind.Facet).describe('Arrangement discriminator: data-driven facet panels'),
   ...PlotFacetConfigurationBaseSchema.shape,
@@ -159,6 +166,7 @@ const ScaffoldTrackBandSchema = strictObject({
   end: NormalizedFractionSchema.describe('Track band end fraction in arrangement-local coordinates'),
 }).describe('Fractional role band occupied by one track arrangement lane');
 
+/** 校验共享轨道排列中的单条轨道定义 */
 export const TrackArrangementTrackSchema = strictObject({
   id: NonBlankStringSchema.describe('Stable track id within its track arrangement'),
   view: NonBlankStringSchema.optional().describe('Explicit coordinate view id for this track; omit to derive one'),
@@ -172,6 +180,7 @@ const TrackHeaderSchema = strictObject({
   track: boolean().optional().describe('Whether generated track labels are visible'),
 }).describe('Track arrangement header visibility');
 
+/** 校验为共享轨道派生坐标视图的排列配置 */
 export const TrackArrangementSchema = strictObject({
   kind: literal(CoordinateArrangementKind.Tracks).describe('Arrangement discriminator: shared coordinate tracks'),
   id: NonBlankStringSchema.describe('Stable track arrangement id used to derive track view ids and provenance'),
@@ -191,11 +200,13 @@ export const TrackArrangementSchema = strictObject({
   ),
 }).describe('Shared track arrangement that derives coordinate views for tracks');
 
+/** 校验分面或共享轨道两类坐标排列生成配置 */
 export const CoordinateArrangementSchema = discriminatedUnion('kind', [
   FacetArrangementSchema,
   TrackArrangementSchema,
 ]).describe('Coordinate arrangement generator for facets or shared tracks');
 
+/** 校验供标记与坐标轴共同使用的坐标视图注册集合与排列 */
 export const CoordinateCompositionSchema = strictObject({
   defaultView: NonBlankStringSchema.describe('Coordinate view id used when a mark or axis guide omits coordinateView'),
   views: array(CoordinateViewSchema)
@@ -210,6 +221,7 @@ export const CoordinateCompositionSchema = strictObject({
   .superRefine((composition, ctx) => {
     const ids = new Set<string>();
     const views = composition.views ?? [];
+
     for (let index = 0; index < views.length; index += 1) {
       const view = views[index];
       if (ids.has(view.id)) {
@@ -219,8 +231,10 @@ export const CoordinateCompositionSchema = strictObject({
           message: `duplicate coordinate view id "${view.id}"`,
         });
       }
+
       ids.add(view.id);
     }
+
     for (let index = 0; index < views.length; index += 1) {
       const view = views[index];
       if (view.placement?.kind === CoordinateViewPlacementKind.Overlay && !ids.has(view.placement.target)) {
@@ -230,6 +244,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `overlay target "${view.placement.target}" does not reference a registered coordinate view`,
         });
       }
+
       if (view.placement?.kind === CoordinateViewPlacementKind.Overlay && view.placement.target === view.id) {
         ctx.addIssue({
           code: 'custom',
@@ -238,14 +253,17 @@ export const CoordinateCompositionSchema = strictObject({
         });
       }
     }
+
     const overlayTargetOf = new Map(
       views.flatMap(view =>
         view.placement?.kind === CoordinateViewPlacementKind.Overlay ? [[view.id, view.placement.target] as const] : [],
       ),
     );
+
     for (const view of views) {
       const visiting = new Set<string>();
       let current: string | undefined = view.id;
+
       while (current !== undefined) {
         if (visiting.has(current)) {
           const index = views.findIndex(candidate => candidate.id === view.id);
@@ -256,10 +274,12 @@ export const CoordinateCompositionSchema = strictObject({
           });
           break;
         }
+
         visiting.add(current);
         current = overlayTargetOf.get(current);
       }
     }
+
     const arrangementIds = new Set<string>();
     const registeredViewIds = new Set(ids);
     const arrangementKinds = new Set((composition.arrangements ?? []).map(arrangement => arrangement.kind));
@@ -273,6 +293,7 @@ export const CoordinateCompositionSchema = strictObject({
         message: 'composition cannot mix facet and track arrangements in the same plot',
       });
     }
+
     composition.arrangements?.forEach((arrangement, arrangementIndex) => {
       if (arrangementIds.has(arrangement.id)) {
         ctx.addIssue({
@@ -281,6 +302,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `duplicate arrangement id "${arrangement.id}"`,
         });
       }
+
       arrangementIds.add(arrangement.id);
       if (ids.has(arrangement.id)) {
         ctx.addIssue({
@@ -289,6 +311,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `arrangement id "${arrangement.id}" conflicts with a registered coordinate view id`,
         });
       }
+
       if (arrangement.kind === CoordinateArrangementKind.Facet && !ids.has(arrangement.view)) {
         ctx.addIssue({
           code: 'custom',
@@ -296,6 +319,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `facet view "${arrangement.view}" does not reference a registered coordinate view`,
         });
       }
+
       if (arrangement.kind === CoordinateArrangementKind.Tracks) {
         if (arrangement.sharedRoles.length === 0 && arrangement.frame === ScaffoldFrameMode.Independent) {
           ctx.addIssue({
@@ -304,6 +328,7 @@ export const CoordinateCompositionSchema = strictObject({
             message: `tracks arrangement "${arrangement.id}" with independent frame must declare at least one shared role`,
           });
         }
+
         const trackIds = new Set<string>();
         const tracksByRole = new Map<string, Array<(typeof arrangement.tracks)[number]>>();
         arrangement.tracks.forEach((track, trackIndex) => {
@@ -319,6 +344,7 @@ export const CoordinateCompositionSchema = strictObject({
               message: `track view id "${trackView}" conflicts with another coordinate view id`,
             });
           }
+
           registeredViewIds.add(trackView);
           if (trackIds.has(track.id)) {
             ctx.addIssue({
@@ -327,6 +353,7 @@ export const CoordinateCompositionSchema = strictObject({
               message: `duplicate track id "${track.id}" in arrangement "${arrangement.id}"`,
             });
           }
+
           trackIds.add(track.id);
           if (track.band.start >= track.band.end) {
             ctx.addIssue({
@@ -335,6 +362,7 @@ export const CoordinateCompositionSchema = strictObject({
               message: `track "${track.id}" band start must be less than end`,
             });
           }
+
           if (arrangement.sharedRoles.includes(track.band.role)) {
             ctx.addIssue({
               code: 'custom',
@@ -342,12 +370,15 @@ export const CoordinateCompositionSchema = strictObject({
               message: `track "${track.id}" band role "${track.band.role}" must not appear in sharedRoles`,
             });
           }
+
           const roleTracks = tracksByRole.get(track.band.role) ?? [];
           roleTracks.push(track);
           tracksByRole.set(track.band.role, roleTracks);
         });
+
         for (const [role, tracks] of tracksByRole) {
           const sorted = [...tracks].sort((a, b) => a.band.start - b.band.start || a.band.end - b.band.end);
+
           for (let trackIndex = 1; trackIndex < sorted.length; trackIndex += 1) {
             const previous = sorted[trackIndex - 1];
             const current = sorted[trackIndex];
@@ -369,6 +400,7 @@ export const CoordinateCompositionSchema = strictObject({
         message: 'composition requires at least one explicit or arrangement-derived coordinate view',
       });
     }
+
     if (!registeredViewIds.has(composition.defaultView)) {
       ctx.addIssue({
         code: 'custom',
@@ -379,6 +411,7 @@ export const CoordinateCompositionSchema = strictObject({
   })
   .describe('Plot-level coordinate view registry used by marks and axis guides');
 
+/** 校验不携带实际数据的可序列化绘图组合节点，编译时绑定外部数据并降低为 Core 图元 */
 export const PlotSchema = CompositeBaseSchema.extend({
   namespace: literal(PLOT_NAMESPACE).describe(
     'Tier 2 domain namespace; routes this node to the plot lowering registered via CompileOptions.composites',
@@ -441,6 +474,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
           message: `scale name "${scale.name}" must be unique within a plot`,
         });
       }
+
       scaleNames.add(scale.name);
     });
     if (spec.coordinate === undefined && spec.composition === undefined) {
@@ -450,6 +484,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
         message: 'IRPlot requires either coordinate shorthand or composition',
       });
     }
+
     if (spec.coordinate !== undefined && spec.composition !== undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -457,6 +492,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
         message: 'IRPlot cannot use coordinate shorthand and composition together',
       });
     }
+
     const viewIds =
       spec.composition !== undefined
         ? new Set([
@@ -474,6 +510,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
             ),
           ])
         : new Set(['default']);
+
     spec.marks.forEach((mark, index) => {
       if (mark.coordinateView !== undefined && !viewIds.has(mark.coordinateView)) {
         ctx.addIssue({
@@ -483,6 +520,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
         });
       }
     });
+
     spec.guides?.forEach((guide, index) => {
       if (guide.type !== 'axis') return;
       if (guide.coordinateView !== undefined && !viewIds.has(guide.coordinateView)) {

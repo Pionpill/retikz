@@ -14,6 +14,7 @@ export const splitSubPathsForEndpointArrows = (
   endpointArrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
 ): { primitive: ScenePrimitive; isGrouped: boolean } => {
   const hasArrows = !!endpointArrows.arrowStart || !!endpointArrows.arrowEnd;
+
   // 每个 sub-path 起始命令索引（每个 move 都是新 sub-path）
   const subPathStarts: Array<number> = [];
   commands.forEach((cmd, idx) => {
@@ -33,14 +34,17 @@ export const splitSubPathsForEndpointArrows = (
 
   // 多 sub-path + 有箭头：首段挂 arrowStart，末段挂 arrowEnd，中间段不挂箭头。
   const subPathSlices: Array<Array<PathCommand>> = [];
+
   for (let s = 0; s < subPathStarts.length; s++) {
     const start = subPathStarts[s];
     const end = s + 1 < subPathStarts.length ? subPathStarts[s + 1] : commands.length;
     subPathSlices.push(commands.slice(start, end));
   }
+
   const subPathPrims: Array<PathPrim> = subPathSlices.map((sub, i) => {
     const isFirst = i === 0;
     const isLast = i === subPathSlices.length - 1;
+
     return {
       type: 'path',
       commands: sub,
@@ -54,6 +58,7 @@ export const splitSubPathsForEndpointArrows = (
     type: 'group',
     children: subPathPrims,
   };
+
   return { primitive: groupPrim, isGrouped: true };
 };
 
@@ -81,5 +86,6 @@ export const emitInterruptedPathFragments = (
     };
   });
   if (pathPrimitives.length === 1) return pathPrimitives[0];
+
   return { type: 'group', children: pathPrimitives };
 };

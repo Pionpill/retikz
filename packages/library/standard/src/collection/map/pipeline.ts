@@ -12,6 +12,7 @@ export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext):
   void _type;
   if (entries.length === 0)
     return compileCells([], { width: 0, height: 0, scope, decoration: { label, style } }, context);
+
   const measured = entries
     .flatMap(entry => [entry.key, entry.value])
     .map((cell, index) => measureCell(cell, context, index, scope));
@@ -25,6 +26,7 @@ export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext):
   );
   const cells: Array<CellPlacement> = [];
   let y = 0;
+
   for (let index = 0; index < entries.length; index++) {
     const key = measured[index * 2];
     const value = measured[index * 2 + 1];
@@ -47,6 +49,7 @@ export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext):
     });
     y += height + layout.gap.row;
   }
+
   return compileCells(
     cells,
     {

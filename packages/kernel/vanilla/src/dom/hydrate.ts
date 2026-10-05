@@ -24,5 +24,6 @@ export const hydrate = (root: SVGSVGElement, options: HydrateOptions): Hydration
     makeAnimation: scene ? id => createSvgAnimationControls(root, id) : () => noopAnimationControls,
   });
   const controller = createHydrationController(root, options.handlers, locateSvg, buildContext);
+
   return { dispose: controller.dispose };
 };

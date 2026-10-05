@@ -34,6 +34,7 @@ import {
   createChartDirectMappingSchema,
   createChartScaleBindingSchema,
 } from '../../_chart/schemas/encoding';
+
 /** Point 位置通道允许使用的尺度 operation */
 export const PointPositionScaleOperationSchema = union([
   LinearScaleSchema,
@@ -91,6 +92,7 @@ const createPointJitterMappingSchema = (role: 'x' | 'y', chartType: string) =>
           message: `${chartType} ${role} jitter must target only the ${role} axis`,
         });
       }
+
       if (mapping.output !== field) {
         context.addIssue({
           code: 'custom',
@@ -173,7 +175,9 @@ export const refinePointFacetEncodings = (
       message: `${chartType} facet options require row or column encoding`,
     });
   }
+
   if (!hasFacet) return;
+
   for (const role of ['x', 'y'] as const) {
     const mapping = encodings[role];
     if (typeof mapping !== 'string' && 'transform' in mapping && mapping.transform.operation.kind === 'bin') {

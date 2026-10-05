@@ -15,13 +15,13 @@ export type CompositeBinding =
   | Readonly<{
       /** registry 中不存在对应 provider */
       kind: 'unregistered';
-      /** `namespace.type` provider key */
+      /** 以 namespace.type 表示的能力提供者注册键 */
       key: string;
     }>
   | Readonly<{
       /** 无布局展开分支 */
       kind: 'expand';
-      /** `namespace.type` provider key */
+      /** 以 namespace.type 表示的能力提供者注册键 */
       key: string;
       /** provider 定义的 namespace */
       namespace: string;
@@ -37,7 +37,7 @@ export type CompositeBinding =
   | Readonly<{
       /** layout-aware compile 分支 */
       kind: 'compile';
-      /** `namespace.type` provider key */
+      /** 以 namespace.type 表示的能力提供者注册键 */
       key: string;
       /** provider 定义的 namespace */
       namespace: string;
@@ -56,7 +56,10 @@ export type CompositeBinding =
 /** registry 中已找到 provider 的 composite binding */
 export type RegisteredCompositeBinding = Exclude<CompositeBinding, { kind: 'unregistered' }>;
 
-/** provider payload 已按 owner schema 解析的 composite 结果 */
+/**
+ * provider payload 已按 owner schema 解析的 composite 结果
+ * @template TBinding 解析前的注册绑定类型，结果保留其身份与执行分支
+ */
 export type CompositeResolution<TBinding extends RegisteredCompositeBinding = RegisteredCompositeBinding> = TBinding &
   Readonly<{
     /** provider callback 消费的已解析节点 */

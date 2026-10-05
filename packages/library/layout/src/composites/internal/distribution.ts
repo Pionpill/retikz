@@ -2,15 +2,21 @@ import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 
 /** 可参与稳定加权分配的数值项 */
 export type WeightedLayoutSize = Readonly<{
+  /** 参与加权增减前的基础尺寸 */
   base: number;
+  /** 分配后允许的最小尺寸 */
   min: number;
+  /** 可选最大尺寸，省略时不设上限 */
   max?: number;
+  /** 吸收剩余空间的相对权重，零表示不参与分配 */
   weight: number;
 }>;
 
 /** 加权分配后的数值与无法吸收的剩余空间 */
 export type WeightedLayoutDistribution = Readonly<{
+  /** 与输入顺序一致的最终尺寸 */
   values: ReadonlyArray<number>;
+  /** 尺寸上下限约束后仍未被吸收的空间 */
   remaining: number;
 }>;
 
@@ -23,6 +29,7 @@ export const layoutEpsilon = (first: number, second: number): number => {
       details: { first, second },
     });
   }
+
   return Math.max(1, Math.abs(first), Math.abs(second)) * Number.EPSILON * 64;
 };
 
@@ -30,6 +37,7 @@ export const layoutEpsilon = (first: number, second: number): number => {
 export const compensatedLayoutSum = (values: ReadonlyArray<number>): number => {
   let sum = 0;
   let compensation = 0;
+
   for (const [index, value] of values.entries()) {
     if (!Number.isFinite(value)) {
       throw new RetikzLayoutError({
@@ -38,6 +46,7 @@ export const compensatedLayoutSum = (values: ReadonlyArray<number>): number => {
         details: { index, value },
       });
     }
+
     const next = sum + value;
     if (!Number.isFinite(next)) {
       throw new RetikzLayoutError({
@@ -46,6 +55,7 @@ export const compensatedLayoutSum = (values: ReadonlyArray<number>): number => {
         details: { next, value },
       });
     }
+
     compensation += Math.abs(sum) >= Math.abs(value) ? sum - next + value : value - next + sum;
     if (!Number.isFinite(compensation)) {
       throw new RetikzLayoutError({
@@ -54,8 +64,10 @@ export const compensatedLayoutSum = (values: ReadonlyArray<number>): number => {
         details: { compensation, value },
       });
     }
+
     sum = next;
   }
+
   const result = sum + compensation;
   if (!Number.isFinite(result)) {
     throw new RetikzLayoutError({
@@ -64,6 +76,7 @@ export const compensatedLayoutSum = (values: ReadonlyArray<number>): number => {
       details: { compensation, result, sum },
     });
   }
+
   return result;
 };
 
@@ -82,6 +95,7 @@ const initialValueOf = (item: WeightedLayoutSize, index: number): number => {
       });
     }
   }
+
   if (item.max !== undefined && (!Number.isFinite(item.max) || item.max < item.min)) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.GeometryInvalid,
@@ -89,6 +103,7 @@ const initialValueOf = (item: WeightedLayoutSize, index: number): number => {
       details: { index, max: item.max, min: item.min },
     });
   }
+
   return clampWeightedValue(item.base, item);
 };
 
@@ -114,6 +129,7 @@ export const distributeWeightedLayoutSizes = (
       details: { total },
     });
   }
+
   const values = items.map(initialValueOf);
   let remaining = total - compensatedLayoutSum(values);
 
@@ -130,11 +146,13 @@ export const distributeWeightedLayoutSizes = (
       const proposed = values[index] + (remaining * item.weight) / weightSum;
       values[index] = clampWeightedValue(proposed, item);
     }
+
     remaining = total - compensatedLayoutSum(values);
   }
 
   if (remaining !== 0) {
     const direction = remaining > 0 ? 1 : -1;
+
     for (let index = items.length - 1; index >= 0; index -= 1) {
       const item = items[index];
       const proposed = values[index] + remaining;
@@ -149,5 +167,6 @@ export const distributeWeightedLayoutSizes = (
   }
 
   if (Math.abs(remaining) <= layoutEpsilon(total, total - remaining)) remaining = 0;
+
   return Object.freeze({ values: Object.freeze(values), remaining });
 };

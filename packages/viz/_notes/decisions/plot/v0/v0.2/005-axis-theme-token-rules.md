@@ -129,7 +129,7 @@ rule 只覆盖自己包含的 token；未出现的 Axis token 继续继承前一
 ```ts
 type PlotThemeTokenRuleSourceRecord = Readonly<{
   rule: IRPlotAxisThemeTokenRule;
-  kind: ThemeTokenSourceValue;
+  kind: ThemeTokenSource;
   path: string;
 }>;
 

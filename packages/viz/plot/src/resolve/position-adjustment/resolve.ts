@@ -14,6 +14,8 @@ export const resolvePositionAdjustmentOperation = (
       `lowerPlots: position adjustment kind "${operation.kind}" is not registered; pass a PositionAdjustmentDefinition via options.positionAdjustmentDefinitions`,
     );
   }
+
   const parsed = definition.schema.parse(operation) as IRPlotPositionAdjustmentOperation;
+
   return { definition, operation: parsed };
 };

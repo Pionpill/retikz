@@ -20,6 +20,7 @@ export const createProcessingControllerAsync = async (
   if (lifecycle?.aborted) abortInitial();
   lifecycle?.addEventListener('abort', abortInitial, { once: true });
   let input;
+
   try {
     input = await prepareProcessingInputAsync(source, fixed, initialAbort.signal);
     assertPreparationActive(initialAbort.signal);
@@ -27,7 +28,9 @@ export const createProcessingControllerAsync = async (
     lifecycle?.removeEventListener('abort', abortInitial);
     throw cause;
   }
+
   let controller;
+
   try {
     controller = createPreparedInputProcessingController(input, { ...fixed, adapters: undefined }, () =>
       assertPreparationActive(initialAbort.signal),
@@ -35,26 +38,32 @@ export const createProcessingControllerAsync = async (
   } finally {
     lifecycle?.removeEventListener('abort', abortInitial);
   }
+
   let disposed = false;
   let request = 0;
   let pending: AbortController | undefined;
   const diagnostics: Array<unknown> = [];
+
   const assertActive = (): void => {
     if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Processing controller is disposed');
   };
+
   const dispose = (): void => {
     if (disposed) return;
+
     disposed = true;
     request++;
     pending?.abort();
     lifecycle?.removeEventListener('abort', dispose);
     controller.dispose();
   };
+
   lifecycle?.addEventListener('abort', dispose, { once: true });
   if (lifecycle?.aborted) {
     dispose();
     assertActive();
   }
+
   return Object.freeze({
     read: controller.read,
     subscribe: listener => {
@@ -74,12 +83,15 @@ export const createProcessingControllerAsync = async (
       const abort = new AbortController();
       pending = abort;
       let transactionStarted = false;
+
       try {
         const prepared = await prepareProcessingInputAsync(nextSource, fixed, abort.signal);
         if (disposed || current !== request) return { kind: 'superseded' };
+
         assertPreparationActive(abort.signal);
         transactionStarted = true;
         controller.updatePrepared(prepared, () => assertPreparationActive(abort.signal));
+
         return { kind: 'committed', result: controller.read() };
       } catch (cause) {
         if (disposed || current !== request) return { kind: 'superseded' };

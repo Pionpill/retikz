@@ -68,10 +68,12 @@ export const buildMarkLabel = (props: InputPlotDatumLabel): IRPlotMarkNodeLabel 
     labelKeepUpright,
   } = props;
   if (label === undefined) return undefined;
+
   const content: IRPlotTextChannel = {
     field: label,
     ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}),
   };
+
   return {
     content,
     ...(labelPosition !== undefined ? { position: labelPosition } : {}),
@@ -97,6 +99,7 @@ export const recordResolveLabel = (
       'buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop',
     );
   }
+
   into.resolveLabels[id] = resolveLabel;
 };
 
@@ -116,9 +119,11 @@ export const canonicalReferenceLabel = (
   if (usesNodeHost && hasGeometryOnlyField) {
     throw new RetikzPlotVanillaError('buildPlotIR: reference band / region expects node label fields');
   }
+
   if (!usesNodeHost && hasNodeOnlyField) {
     throw new RetikzPlotVanillaError('buildPlotIR: reference line expects geometry label fields');
   }
+
   return label;
 };
 
@@ -168,6 +173,7 @@ export const collectReference = (
     fillOpacity,
     opacity,
   } = props;
+
   const region = kind === 'region';
   const hasX = x !== undefined;
   const hasY = y !== undefined;
@@ -177,6 +183,7 @@ export const collectReference = (
         'buildPlotIR: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area',
       );
     }
+
     if (extentField !== undefined || extentToField !== undefined) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
@@ -187,21 +194,25 @@ export const collectReference = (
       'buildPlotIR: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither',
     );
   }
+
   if (!region && hasX && yTo !== undefined) {
     throw new RetikzPlotVanillaError(
       'buildPlotIR: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
     );
   }
+
   if (!region && hasY && xTo !== undefined) {
     throw new RetikzPlotVanillaError(
       'buildPlotIR: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
     );
   }
+
   if ((extentField === undefined) !== (extentToField === undefined)) {
     throw new RetikzPlotVanillaError(
       'buildPlotIR: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)',
     );
   }
+
   // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）
   const constantRule = region
     ? typeof x === 'number' && typeof y === 'number' && typeof xTo === 'number' && typeof yTo === 'number'
@@ -210,13 +221,16 @@ export const collectReference = (
   if (color !== undefined) {
     colorEnc = constantRule ? { color: { value: color } } : { color: { field: color, scale: AUTO_COLOR } };
   }
+
   const positional: IRPlotEncoding = {};
   if (hasX) {
     positional.x = ruleChannel(x);
   }
+
   if (hasY) {
     positional.y = ruleChannel(y);
   }
+
   const upper = {
     ...(xTo !== undefined ? { xTo } : {}),
     ...(yTo !== undefined ? { yTo } : {}),
@@ -237,6 +251,7 @@ export const collectReference = (
     font: props.font,
     boundary: props.boundary,
   };
+
   into.marks.push({
     type: PlotMark.Reference,
     ...(kind !== undefined ? { kind } : {}),
@@ -258,6 +273,7 @@ export const collectReference = (
     ...pathStylePropsOf(props, styleContext),
     encoding: { ...positional, ...colorEnc, ...extensionChannelEncoding(channels) },
   });
+
   // 仅 per-datum color（field）需自动色 scale；常量 color value 直落 IR，不进色 scale
   if (colorEnc && 'field' in colorEnc.color) {
     into.colored = true;

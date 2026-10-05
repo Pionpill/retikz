@@ -8,27 +8,28 @@ import type { DataExpandSchema } from './schema';
 /** 区分 JSON 联合中的只读数组 */
 const isJsonArray = (value: JsonValue): value is ReadonlyArray<JsonValue> => Array.isArray(value);
 
-/** 展开 JSON 数据单元格；仅沿自动生成的子树传递 List 内容宽度，不赋予命名身份 */
+/** 展开 JSON 数据单元格；仅沿自动生成的子树传递 Array 内容宽度，不赋予命名身份 */
 export const createDataCell = (
   value: JsonValue,
   dataExpand: output<typeof DataExpandSchema>,
   inheritContentWidth = false,
 ): IRCell => {
-  const expandList = dataExpand === true || (dataExpand !== false && dataExpand.includes(DataExpandComponent.List));
+  const expandArray = dataExpand === true || (dataExpand !== false && dataExpand.includes(DataExpandComponent.Array));
   const expandMap = dataExpand === true || (dataExpand !== false && dataExpand.includes(DataExpandComponent.Map));
   if (isJsonArray(value))
     return {
       content:
-        value.length === 0 || !expandList
+        value.length === 0 || !expandArray
           ? JSON.stringify(value)
           : {
               namespace: 'standard',
-              type: 'list',
+              type: 'array',
               data: value,
               dataExpand,
               ...(inheritContentWidth ? { layout: { width: 'content' as const } } : {}),
             },
     };
+
   if (value !== null && typeof value === 'object')
     return {
       content:
@@ -45,5 +46,6 @@ export const createDataCell = (
               }
             : { namespace: 'standard', type: 'map', data: value, dataExpand },
     };
+
   return { content: JSON.stringify(value) };
 };

@@ -14,12 +14,16 @@
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member      | Type                          | Default | Description                                                                            |
 | ----------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------- |
 | `delay?`    | `number`                      | —       | Delay before the first iteration, in milliseconds                                      |
 | `duration?` | `number`                      | —       | Duration of one iteration in milliseconds; each preset supplies its default            |
 | `easing?`   | `IRAnimationTrack['easing']`  | —       | Named easing, cubic-bezier tuple, or registered name; each preset supplies its default |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —       | Playback trigger; defaults to load                                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -50,14 +54,18 @@ export type AnimationPresetOptions = {
 
 <DocTab value="members" label="Members">
 
-| Member      | Type                               | Default | Description                                                                            |
-| ----------- | ---------------------------------- | ------- | -------------------------------------------------------------------------------------- |
-| `delay?`    | `number`                           | —       | Delay before the first iteration, in milliseconds                                      |
-| `duration?` | `number`                           | —       | Duration of one iteration in milliseconds; each preset supplies its default            |
-| `easing?`   | `IRAnimationTrack['easing']`       | —       | Named easing, cubic-bezier tuple, or registered name; each preset supplies its default |
-| `from`      | `[number, number, number, number]` | —       | Required initial view box [x, y, w, h]                                                 |
-| `to`        | `[number, number, number, number]` | —       | Required final view box [x, y, w, h]                                                   |
-| `trigger?`  | `IRAnimationTrack['trigger']`      | —       | Playback trigger; defaults to load                                                     |
+<ApiTable>
+
+| Member      | Type                                                                    | Default | Description                                                                            |
+| ----------- | ----------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------- |
+| `delay?`    | `number`                                                                | —       | Delay before the first iteration, in milliseconds                                      |
+| `duration?` | `number`                                                                | —       | Duration of one iteration in milliseconds; each preset supplies its default            |
+| `easing?`   | `IRAnimationTrack['easing']`                                            | —       | Named easing, cubic-bezier tuple, or registered name; each preset supplies its default |
+| `from`      | `[`<br />`number,`<br />`number,`<br />`number,`<br />`number`<br />`]` | —       | Required initial view box [x, y, w, h]                                                 |
+| `to`        | `[`<br />`number,`<br />`number,`<br />`number,`<br />`number`<br />`]` | —       | Required final view box [x, y, w, h]                                                   |
+| `trigger?`  | `IRAnimationTrack['trigger']`                                           | —       | Playback trigger; defaults to load                                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -86,6 +94,8 @@ export type CameraToOptions = AnimationPresetOptions & {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member      | Type                          | Default | Description                                                                            |
 | ----------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------- |
 | `channel?`  | `'fill' \| 'stroke'`          | —       | Color channel; defaults to fill                                                        |
@@ -95,6 +105,8 @@ export type CameraToOptions = AnimationPresetOptions & {
 | `from`      | `string`                      | —       | Required initial color                                                                 |
 | `to`        | `string`                      | —       | Required final color                                                                   |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —       | Playback trigger; defaults to load                                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -115,7 +127,7 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 ### IRAnimationTrack
 
 <p>
-  <ApiSourceLink label={'IRAnimationTrack'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={14}>
+  <ApiSourceLink label={'IRAnimationTrack'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={7}>
     Renderer-independent, JSON-serializable animation track without functions; keyframes contain absolute display values
     and the final frame represents the base settled state
   </ApiSourceLink>
@@ -124,6 +136,8 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member        | Type                                                                                                                                                                                                                                                                          | Default | Description |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
@@ -135,8 +149,10 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 | `iterations?` | `number \| "infinite"`                                                                                                                                                                                                                                                        | —       | —           |
 | `keyframes`   | `Array<{ at: number; value: JsonValue; easing?: OpenString<ValueOf<{ readonly Linear: "linear"; readonly Ease: "ease"; readonly EaseIn: "ease-in"; readonly EaseOut: "ease-out"; readonly EaseInOut: "ease-in-out"; }>> \| [number, number, number, number] \| undefined; }>` | —       | —           |
 | `origin?`     | `"center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number]`                                                                                                                                      | —       | —           |
-| `property`    | `…`                                                                                                                                                                                                                                                                           | —       | —           |
+| `property`    | `ZodInfer<typeof AnimationTrackSchema.shape["property"]>`                                                                                                                                                                                                                     | —       | —           |
 | `trigger?`    | `"load" \| "visible" \| "manual" \| { onEvent: string; }`                                                                                                                                                                                                                     | —       | —           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -153,7 +169,7 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 ### IRKeyframe
 
 <p>
-  <ApiSourceLink label={'IRKeyframe'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={17}>
+  <ApiSourceLink label={'IRKeyframe'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={10}>
     One animation keyframe
   </ApiSourceLink>
 </p>
@@ -162,11 +178,15 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member    | Type                                                                                                                | Default | Description |
 | --------- | ------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
 | `at`      | `number`                                                                                                            | —       | —           |
 | `easing?` | `string & {} \| "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]` | —       | —           |
 | `value`   | `JsonValue`                                                                                                         | —       | —           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -192,10 +212,14 @@ export type IRKeyframe = ZodInfer<typeof KeyframeSchema>;
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member        | Type                             | Default | Description                                    |
 | ------------- | -------------------------------- | ------- | ---------------------------------------------- |
 | `direction?`  | `IRAnimationTrack['direction']`  | —       | Direction of each iteration, such as alternate |
 | `iterations?` | `IRAnimationTrack['iterations']` | —       | Iteration count; defaults to infinite          |
+
+</ApiTable>
 
 </DocTab>
 
@@ -224,6 +248,8 @@ export type LoopOptions = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member      | Type                          | Default | Description                                                                            |
 | ----------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------- |
 | `delay?`    | `number`                      | —       | Delay before the first iteration, in milliseconds                                      |
@@ -232,6 +258,8 @@ export type LoopOptions = {
 | `from?`     | `number`                      | —       | Initial scale; the final value is always 1 (base); defaults to 0.8                     |
 | `origin?`   | `IRAnimationOrigin`           | —       | Scale origin; defaults to the geometry center                                          |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —       | Playback trigger; defaults to load                                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -260,6 +288,8 @@ export type ScaleInOptions = AnimationPresetOptions & {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member      | Type                          | Default | Description                                                                            |
 | ----------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------- |
 | `axis?`     | `'x' \| 'y'`                  | —       | Slide axis; defaults to x                                                              |
@@ -268,6 +298,8 @@ export type ScaleInOptions = AnimationPresetOptions & {
 | `easing?`   | `IRAnimationTrack['easing']`  | —       | Named easing, cubic-bezier tuple, or registered name; each preset supplies its default |
 | `offset?`   | `number`                      | —       | Initial offset; the final value is always 0 (base); defaults to -20                    |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —       | Playback trigger; defaults to load                                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -290,7 +322,7 @@ export type SlideInOptions = AnimationPresetOptions & {
   <ApiSourceLink
     label={'AnimationDirection'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={33}
+    startLine={35}
   >
     Playback direction per iteration, following WAAPI/CSS animation-direction
   </ApiSourceLink>
@@ -303,6 +335,8 @@ export const AnimationDirection = {
   Alternate: 'alternate',
   AlternateReverse: 'alternate-reverse',
 } as const;
+
+export type AnimationDirection = ValueOf<typeof AnimationDirection>;
 ```
 
 ### AnimationEasing
@@ -311,7 +345,7 @@ export const AnimationDirection = {
   <ApiSourceLink
     label={'AnimationEasing'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={24}
+    startLine={26}
   >
     Named easing presets matching CSS; tracks and keyframes can instead use a cubic-bezier tuple
   </ApiSourceLink>
@@ -325,6 +359,8 @@ export const AnimationEasing = {
   EaseOut: 'ease-out',
   EaseInOut: 'ease-in-out',
 } as const;
+
+export type AnimationEasing = ValueOf<typeof AnimationEasing>;
 ```
 
 ### AnimationFill
@@ -333,7 +369,7 @@ export const AnimationEasing = {
   <ApiSourceLink
     label={'AnimationFill'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={41}
+    startLine={43}
   >
     Values outside the active interval, following WAAPI/CSS animation-fill-mode
   </ApiSourceLink>
@@ -346,6 +382,8 @@ export const AnimationFill = {
   Backwards: 'backwards',
   Both: 'both',
 } as const;
+
+export type AnimationFill = ValueOf<typeof AnimationFill>;
 ```
 
 ### AnimationProperty
@@ -354,7 +392,7 @@ export const AnimationFill = {
   <ApiSourceLink
     label={'AnimationProperty'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={8}
+    startLine={10}
   >
     Renderer-independent animation channels represented by const names and derived types; literals such as opacity
     remain supported
@@ -378,6 +416,8 @@ export const AnimationProperty = {
   PathDraw: 'pathDraw',
   ViewBox: 'viewBox',
 } as const;
+
+export type AnimationProperty = ValueOf<typeof AnimationProperty>;
 ```
 
 ### AnimationTrigger
@@ -386,7 +426,7 @@ export const AnimationProperty = {
   <ApiSourceLink
     label={'AnimationTrigger'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={49}
+    startLine={51}
   >
     Playback trigger names implemented by the runtime, using the same const-and-derived-type convention as other
     animation enums
@@ -395,6 +435,8 @@ export const AnimationProperty = {
 
 ```ts
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
+
+export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;
 ```
 
 ## Presets and orchestration
@@ -407,63 +449,30 @@ export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'man
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name   | Type / signature   | Description |
+| ---------- | ------ | ------------------ | ----------- |
+| Parameters | `opts` | `CameraToOptions`  | —           |
+| Returns    | —      | `IRAnimationTrack` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const cameraTo: (opts: CameraToOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const cameraTo: (opts: CameraToOptions) => IRAnimationTrack;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type              | Description |
-| --------- | ----------------- | ----------- |
-| `opts`    | `CameraToOptions` | —           |
+</DocTabs>
 
 ### colorShift
 
@@ -473,63 +482,30 @@ export declare const cameraTo: (opts: CameraToOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name   | Type / signature    | Description |
+| ---------- | ------ | ------------------- | ----------- |
+| Parameters | `opts` | `ColorShiftOptions` | —           |
+| Returns    | —      | `IRAnimationTrack`  | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const colorShift: (opts: ColorShiftOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const colorShift: (opts: ColorShiftOptions) => IRAnimationTrack;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                | Description |
-| --------- | ------------------- | ----------- |
-| `opts`    | `ColorShiftOptions` | —           |
+</DocTabs>
 
 ### drawOn
 
@@ -539,63 +515,30 @@ export declare const colorShift: (opts: ColorShiftOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature         | Description |
+| ---------- | ------- | ------------------------ | ----------- |
+| Parameters | `opts?` | `AnimationPresetOptions` | —           |
+| Returns    | —       | `IRAnimationTrack`       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const drawOn: (opts: AnimationPresetOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const drawOn: (opts?: AnimationPresetOptions) => IRAnimationTrack;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                     | Description |
-| --------- | ------------------------ | ----------- |
-| `opts`    | `AnimationPresetOptions` | —           |
+</DocTabs>
 
 ### fadeIn
 
@@ -605,63 +548,30 @@ export declare const drawOn: (opts: AnimationPresetOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature         | Description |
+| ---------- | ------- | ------------------------ | ----------- |
+| Parameters | `opts?` | `AnimationPresetOptions` | —           |
+| Returns    | —       | `IRAnimationTrack`       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const fadeIn: (opts: AnimationPresetOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const fadeIn: (opts?: AnimationPresetOptions) => IRAnimationTrack;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                     | Description |
-| --------- | ------------------------ | ----------- |
-| `opts`    | `AnimationPresetOptions` | —           |
+</DocTabs>
 
 ### loop
 
@@ -671,121 +581,31 @@ export declare const fadeIn: (opts: AnimationPresetOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature   | Description |
+| ---------- | ------- | ------------------ | ----------- |
+| Parameters | `track` | `IRAnimationTrack` | —           |
+|            | `opts?` | `LoopOptions`      | —           |
+| Returns    | —       | `IRAnimationTrack` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const loop: (
-  track: {
-    delay?: number;
-    direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-    duration: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    fill?: 'none' | 'forwards' | 'backwards' | 'both';
-    iterations?: number | 'infinite';
-    keyframes: Array<{
-      at: number;
-      easing?:
-        | OpenString<
-            ValueOf<{
-              Ease: 'ease';
-              EaseIn: 'ease-in';
-              EaseInOut: 'ease-in-out';
-              EaseOut: 'ease-out';
-              Linear: 'linear';
-            }>
-          >
-        | [number, number, number, number];
-      value: JsonValue;
-    }>;
-    origin?:
-      | 'center'
-      | 'top'
-      | 'right'
-      | 'bottom'
-      | 'left'
-      | 'top-right'
-      | 'top-left'
-      | 'bottom-right'
-      | 'bottom-left'
-      | [number, number];
-    property: OpenString<
-      ValueOf<{
-        Fill: 'fill';
-        Opacity: 'opacity';
-        PathDraw: 'pathDraw';
-        Rotate: 'rotate';
-        Scale: 'scale';
-        ScaleX: 'scaleX';
-        ScaleY: 'scaleY';
-        Stroke: 'stroke';
-        StrokeWidth: 'strokeWidth';
-        TranslateX: 'translateX';
-        TranslateY: 'translateY';
-        ViewBox: 'viewBox';
-      }>
-    >;
-    trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-  },
-  opts: LoopOptions,
-) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const loop: (track: IRAnimationTrack, opts?: LoopOptions) => IRAnimationTrack;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Description |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `track`   | `{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }` | —           |
-| `opts`    | `LoopOptions`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | —           |
+</DocTabs>
 
 ### scaleIn
 
@@ -795,63 +615,30 @@ export declare const loop: (
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature   | Description |
+| ---------- | ------- | ------------------ | ----------- |
+| Parameters | `opts?` | `ScaleInOptions`   | —           |
+| Returns    | —       | `IRAnimationTrack` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const scaleIn: (opts: ScaleInOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const scaleIn: (opts?: ScaleInOptions) => IRAnimationTrack;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type             | Description |
-| --------- | ---------------- | ----------- |
-| `opts`    | `ScaleInOptions` | —           |
+</DocTabs>
 
 ### slideIn
 
@@ -861,63 +648,30 @@ export declare const scaleIn: (opts: ScaleInOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature   | Description |
+| ---------- | ------- | ------------------ | ----------- |
+| Parameters | `opts?` | `SlideInOptions`   | —           |
+| Returns    | —       | `IRAnimationTrack` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const slideIn: (opts: SlideInOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const slideIn: (opts?: SlideInOptions) => IRAnimationTrack;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type             | Description |
-| --------- | ---------------- | ----------- |
-| `opts`    | `SlideInOptions` | —           |
+</DocTabs>
 
 ### stagger
 
@@ -929,130 +683,43 @@ export declare const slideIn: (opts: SlideInOptions) => {
 
 Overrides existing track delays; this helper owns the staggered timing
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name       | Type / signature                  | Description |
+| ---------- | ---------- | --------------------------------- | ----------- |
+| Parameters | `tracks`   | `ReadonlyArray<IRAnimationTrack>` | —           |
+|            | `stepMs`   | `number`                          | —           |
+|            | `startMs?` | `number`                          | —           |
+| Returns    | —          | `Array<IRAnimationTrack>`         | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const stagger: (
-  tracks: readonly Array<{
-    delay?: number;
-    direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-    duration: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    fill?: 'none' | 'forwards' | 'backwards' | 'both';
-    iterations?: number | 'infinite';
-    keyframes: Array<{
-      at: number;
-      easing?:
-        | OpenString<
-            ValueOf<{
-              Ease: 'ease';
-              EaseIn: 'ease-in';
-              EaseInOut: 'ease-in-out';
-              EaseOut: 'ease-out';
-              Linear: 'linear';
-            }>
-          >
-        | [number, number, number, number];
-      value: JsonValue;
-    }>;
-    origin?:
-      | 'center'
-      | 'top'
-      | 'right'
-      | 'bottom'
-      | 'left'
-      | 'top-right'
-      | 'top-left'
-      | 'bottom-right'
-      | 'bottom-left'
-      | [number, number];
-    property: OpenString<
-      ValueOf<{
-        Fill: 'fill';
-        Opacity: 'opacity';
-        PathDraw: 'pathDraw';
-        Rotate: 'rotate';
-        Scale: 'scale';
-        ScaleX: 'scaleX';
-        ScaleY: 'scaleY';
-        Stroke: 'stroke';
-        StrokeWidth: 'strokeWidth';
-        TranslateX: 'translateX';
-        TranslateY: 'translateY';
-        ViewBox: 'viewBox';
-      }>
-    >;
-    trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-  }>,
+  tracks: ReadonlyArray<IRAnimationTrack>,
   stepMs: number,
-  startMs: number,
-) => Array<{
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-}>;
+  startMs?: number,
+) => Array<IRAnimationTrack>;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Description |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `tracks`  | `readonly Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>` | —           |
-| `stepMs`  | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | —           |
-| `startMs` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | —           |
+</DocTabs>
 
 ## Playback and extensions
 
 ### AnimationControls
 
 <p>
-  <ApiSourceLink label={'AnimationControls'} path={'packages/kernel/render/src/animation/runtime.ts'} startLine={27}>
+  <ApiSourceLink label={'AnimationControls'} path={'packages/kernel/render/src/animation/runtime.ts'} startLine={28}>
     Playback handle exposed for manual triggers and runtime control
   </ApiSourceLink>
 </p>
@@ -1060,6 +727,8 @@ export declare const stagger: (
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member             | Type                       | Default | Description                                                 |
 | ------------------ | -------------------------- | ------- | ----------------------------------------------------------- |
@@ -1069,6 +738,8 @@ export declare const stagger: (
 | `readonly running` | `boolean`                  | —       | Whether playback is active                                  |
 | `seek`             | `(timeMs: number) => void` | —       | Seek to a time in milliseconds and render that frame        |
 | `readonly time`    | `number`                   | —       | Current time in milliseconds                                |
+
+</ApiTable>
 
 </DocTab>
 
@@ -1105,10 +776,14 @@ export type AnimationControls = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member        | Type                                                                            | Default | Description                                                                                           |
 | ------------- | ------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
 | `applyCanvas` | `(ctx: CanvasRenderingContext2D, prim: ScenePrimitive, value: unknown) => void` | —       | Apply the current value to the Canvas context before drawing the primitive, inside save/restore       |
 | `interpolate` | `(from: unknown, to: unknown, t: number) => unknown`                            | —       | Map two keyframe values and segment progress to the current value for evaluateTrack.interpolateCustom |
+
+</ApiTable>
 
 </DocTab>
 
@@ -1137,30 +812,58 @@ export type AnimationPropertyDefinition = {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member          | Type                                         | Default | Description |
+| --------------- | -------------------------------------------- | ------- | ----------- |
+| Index signature | `[key: string]: AnimationPropertyDefinition` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type AnimationPropertyRegistry = Record<string, AnimationPropertyDefinition>;
 ```
 
-#### Index signatures
+</DocTab>
 
-```ts
-[key: string]: AnimationPropertyDefinition
-```
+</DocTabs>
 
 ### EasingRegistry
 
 <p>
-  <ApiSourceLink label={'EasingRegistry'} path={'packages/kernel/render/src/animation/types.ts'} startLine={12}>
+  <ApiSourceLink label={'EasingRegistry'} path={'packages/kernel/render/src/animation/types.ts'} startLine={14}>
     Custom easing registry mapping names to cubic-bezier tuples (CSS/WAAPI) or functions (Canvas/JavaScript only)
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member          | Type                                     | Default | Description |
+| --------------- | ---------------------------------------- | ------- | ----------- |
+| Index signature | `[key: string]: CubicBezier \| EasingFn` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export type EasingRegistry = Record<string, CubicBezier | EasingFn>;
 ```
 
-#### Index signatures
+</DocTab>
 
-```ts
-[key: string]: CubicBezier | EasingFn
-```
+</DocTabs>

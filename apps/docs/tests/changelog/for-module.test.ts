@@ -9,28 +9,38 @@ const membersOf = (id: 'kernel' | 'standard' | 'layout' | 'viz' | 'other'): Set<
 describe('changelogForModule', () => {
   it('Extension 分区只展示自身的首个 Alpha 发布记录', () => {
     const releases = changelogForModule('library', 'extension');
+
     expect(releases).toHaveLength(1);
     expect(releases[0].packages.map(block => block.pkg)).toEqual(['@retikz/extension']);
     expect(releases[0].stableDate).toBeNull();
     expect(releases[0].packages[0].subVersions.map(release => release.version)).toEqual(['alpha.1']);
   });
+
   it('core 模块只含 core 组包', () => {
     const releases = changelogForModule('kernel');
+
     expect(releases.length).toBeGreaterThan(0);
+
     const core = membersOf('kernel');
+
     for (const r of releases) for (const b of r.packages) expect(core.has(b.pkg), b.pkg).toBe(true);
   });
 
   it('viz 模块只含 viz 组包', () => {
     const releases = changelogForModule('viz');
+
     expect(releases.length).toBeGreaterThan(0);
+
     const plot = membersOf('viz');
+
     for (const r of releases) for (const b of r.packages) expect(plot.has(b.pkg), b.pkg).toBe(true);
   });
 
   it('Plot 更新日志只含三个 Plot 包', () => {
     const releases = changelogForModule('viz', 'plot');
+
     expect(releases).toHaveLength(2);
+
     for (const release of releases) {
       expect(release.packages.map(block => block.pkg)).toEqual([
         '@retikz/plot',
@@ -42,6 +52,7 @@ describe('changelogForModule', () => {
 
   it('Chart 更新日志只含三个 Chart 包', () => {
     const releases = changelogForModule('viz', 'chart');
+
     expect(releases).toHaveLength(1);
     expect(releases[0]?.packages.map(block => block.pkg)).toEqual([
       '@retikz/chart',
@@ -52,12 +63,15 @@ describe('changelogForModule', () => {
 
   it('Data 更新日志只含 Data 包', () => {
     const releases = changelogForModule('viz', 'data');
+
     expect(releases).toHaveLength(2);
+
     for (const release of releases) expect(release.packages.map(block => block.pkg)).toEqual(['@retikz/data']);
   });
 
   it('Table 更新日志只含三个 Table 包', () => {
     const releases = changelogForModule('viz', 'table');
+
     expect(releases).toHaveLength(1);
     expect(releases[0]?.packages.map(block => block.pkg)).toEqual([
       '@retikz/table',
@@ -79,15 +93,21 @@ describe('changelogForModule', () => {
 
   it('Library Standard 分区只含 Standard 组包', () => {
     const releases = changelogForModule('library', 'standard');
+
     expect(releases.length).toBeGreaterThan(0);
+
     const standard = membersOf('standard');
+
     for (const r of releases) for (const b of r.packages) expect(standard.has(b.pkg), b.pkg).toBe(true);
   });
 
   it('Library Layout 分区只含 Layout 组包', () => {
     const releases = changelogForModule('library', 'layout');
+
     expect(releases.length).toBeGreaterThan(0);
+
     const layout = membersOf('layout');
+
     for (const r of releases) for (const b of r.packages) expect(layout.has(b.pkg), b.pkg).toBe(true);
   });
 
@@ -95,6 +115,7 @@ describe('changelogForModule', () => {
     for (const moduleId of ['kernel', 'viz']) {
       for (const r of changelogForModule(moduleId)) expect(r.packages.length).toBeGreaterThan(0);
     }
+
     for (const sectionId of ['standard', 'layout']) {
       for (const r of changelogForModule('library', sectionId)) expect(r.packages.length).toBeGreaterThan(0);
     }
@@ -115,10 +136,13 @@ describe('changelogVersionSlug', () => {
   it('每个模块内各中版本 slug 唯一（保证侧边栏子页 id 不撞）', () => {
     for (const moduleId of ['kernel', 'viz']) {
       const slugs = changelogForModule(moduleId).map(r => changelogVersionSlug(r.minor));
+
       expect(new Set(slugs).size).toBe(slugs.length);
     }
+
     for (const sectionId of ['standard', 'layout']) {
       const slugs = changelogForModule('library', sectionId).map(r => changelogVersionSlug(r.minor));
+
       expect(new Set(slugs).size).toBe(slugs.length);
     }
   });

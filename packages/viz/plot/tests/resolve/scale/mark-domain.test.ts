@@ -22,6 +22,7 @@ const pointPositions = (scope: IRScope): Array<[number, number]> =>
     if (child.type === 'node' && 'position' in child) return [(child as IRNode).position as [number, number]];
     return [];
   });
+
 const plotOf = (padding: unknown = { kind: 'mark', marks: ['dots'] }, guides: Array<unknown> = []) =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -51,17 +52,22 @@ describe('mark padding 编译闭环', () => {
     const result = lowerPlotWithDataArtifact(plotOf(), { rows });
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales?.x;
+
     expect(scale).toBeDefined();
+
     const [left, right] = scale!.range();
+
     expect(scale!.coordinate(0) - left).toBeGreaterThanOrEqual(2);
     expect(scale!.coordinate(0) - left).toBeLessThan(2.1);
     expect(right - scale!.coordinate(10)).toBeGreaterThanOrEqual(2);
     expect(scale!.coordinate(5) - left).toBeGreaterThanOrEqual(30);
     expect(right - scale!.coordinate(5)).toBeGreaterThanOrEqual(30);
   });
+
   it('未知 mark 不回退', () => {
     expect(() => lowerPlotWithDataArtifact(plotOf({ kind: 'mark', marks: ['missing'] }), { rows })).toThrow(/missing/);
   });
+
   it('非法 schema 保留诊断', () => {
     expect(() => plotOf({ kind: 'mark', marks: [] })).toThrow();
     expect(() => plotOf({ kind: 'mark', marks: ['dots', 'dots'] })).toThrow();
@@ -101,16 +107,23 @@ describe('shared mark padding', () => {
     ];
     const result = lowerPlotWithDataArtifact(spec, { rows: data });
     const frames = [...result.dataArtifact.frameByCoordinateScopeId.values()].slice(1);
+
     expect(frames.length).toBeGreaterThanOrEqual(2);
+
     const domains = frames.map(frame => frame.roleScales?.x?.domain());
+
     expect(domains.every(domain => JSON.stringify(domain) === JSON.stringify(domains[0]))).toBe(true);
+
     for (const frame of frames) {
       const scale = frame.roleScales!.x!;
+
       expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(10);
       expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(17);
     }
+
     expect(frames[0].roleScales!.y!.domain()).not.toEqual(frames[1].roleScales!.y!.domain());
   });
+
   it.each(['log', 'pow', 'sqrt', 'symlog', 'radial'])('protects glyphs with %s position mapping', type => {
     const base = plotOf();
     const spec = PlotSchema.parse({
@@ -121,6 +134,7 @@ describe('shared mark padding', () => {
     const result = lowerPlotWithDataArtifact(spec, { rows: data });
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales!.x!;
+
     for (const row of data) {
       expect(scale.coordinate(row.x) - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(row.r));
       expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r));
@@ -139,6 +153,7 @@ describe('mark padding final geometry', () => {
     });
     const scale = [...lowerPlotWithDataArtifact(spec, { rows }).dataArtifact.frameByCoordinateScopeId.values()][0]
       .roleScales!.x!;
+
     expect(scale.domain()[0]).toBe(0);
     expect(scale.ticks().values.every(value => typeof value === 'number' && value >= 0)).toBe(true);
     expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
@@ -155,6 +170,7 @@ describe('mark padding final geometry', () => {
     });
     const scale = [...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values()][0]
       .roleScales!.x!;
+
     for (const row of data) {
       expect(100 - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r) + 3);
       expect(scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r) + 9);
@@ -172,11 +188,13 @@ describe('mark padding final geometry', () => {
     });
     const scale = [...lowerPlotWithDataArtifact(spec, { rows }).dataArtifact.frameByCoordinateScopeId.values()][0]
       .roleScales!.y!;
+
     for (const row of rows) {
       expect(scale.coordinate(row.y) - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(row.r) + 4);
       expect(scale.range()[1] - scale.coordinate(row.y)).toBeGreaterThanOrEqual(radiusOf(row.r) + 4);
     }
   });
+
   it.each(['band', 'point'])('protects categorical %s edges without changing category order', type => {
     const base = plotOf();
     const data = [
@@ -192,7 +210,9 @@ describe('mark padding final geometry', () => {
       ...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
     ][0];
     const scale = frame.roleScales!.x!;
+
     expect(scale.domain()).toEqual(['a', 'b', 'c']);
+
     for (const row of data) {
       expect(scale.coordinate(row.x) - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(row.r));
       expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r));
@@ -210,18 +230,24 @@ describe('mark padding final geometry', () => {
     const frame = [...lowerPlotWithDataArtifact(spec, { rows }).dataArtifact.frameByCoordinateScopeId.values()][0];
     const radial = frame.roleScales!.y!;
     const angular = frame.roleScales!.x!;
+
     for (const row of rows) {
       const radius = radial.coordinate(row.y);
+
       expect(radial.range()[1] - radius).toBeGreaterThanOrEqual(radiusOf(row.r));
+
       if (endAngle !== 360) {
         const angle = (Math.abs(angular.coordinate(row.x)) * Math.PI) / 180;
         const sweep = (Math.abs(endAngle) * Math.PI) / 180;
+
         expect(radius * Math.sin(Math.min(Math.PI / 2, angle))).toBeGreaterThanOrEqual(radiusOf(row.r) - 1e-10);
         expect(radius * Math.sin(Math.min(Math.PI / 2, sweep - angle))).toBeGreaterThanOrEqual(radiusOf(row.r) - 1e-10);
       }
     }
+
     if (endAngle === 360) expect(angular.domain()).toEqual([0, 10]);
   });
+
   it('contains discrete polar points inside their chord boundary', () => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: 3 });
     const data = ['a', 'b', 'c', 'd'].map((x, index) => ({ x, y: index * 3, r: 8 }));
@@ -238,11 +264,14 @@ describe('mark padding final geometry', () => {
       ...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
     ][0];
     const radial = frame.roleScales!.y!;
+
     for (const row of data) {
       const mapped = frame.mapRoles!([row.x, row.y])!;
       const extent = frame.placementBoundary!.glyphExtentInRoleUnits('y', mapped, radiusOf(row.r) + 3)!;
+
       expect(radial.range()[1] - mapped[1]).toBeGreaterThanOrEqual(extent);
     }
+
     expect(frame.roleScales!.x!.domain()).toEqual(data.map(row => row.x));
   });
 
@@ -256,6 +285,7 @@ describe('mark padding final geometry', () => {
   it('preserves a fixed zero end while protecting the opposite end', () => {
     const scale = frameOf(plotOf({ kind: 'mark', marks: ['dots'], lower: 0 })).roleScales!.x!;
     const [start, end] = scale.range();
+
     expect(scale.coordinate(0)).toBe(start);
     expect(end - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
   });
@@ -269,6 +299,7 @@ describe('mark padding final geometry', () => {
       ),
     };
     const outside = [...rows, { x: -1, y: 5, r: 30 }];
+
     expect(frameOf(spec, outside).roleScales!.x!.domain()).toEqual(frameOf(spec).roleScales!.x!.domain());
     expect(lowerPlotWithDataArtifact(PlotSchema.parse(spec), { rows: outside }).dataArtifact).toBeDefined();
   });
@@ -277,6 +308,7 @@ describe('mark padding final geometry', () => {
     const base = plotOf();
     const narrow = frameOf(base).roleScales!.x!;
     const wide = frameOf({ ...base, width: 300 }).roleScales!.x!;
+
     expect(wide.domain()).not.toEqual(narrow.domain());
     expect(wide.coordinate(0) - wide.range()[0]).toBeGreaterThanOrEqual(2);
     expect(wide.coordinate(0) - wide.range()[0]).toBeLessThan(2.02);
@@ -289,6 +321,7 @@ describe('mark padding final geometry', () => {
       scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'time', domain: [0, 10] } : scale)),
     };
     const scale = frameOf(spec).roleScales!.x!;
+
     expect(scale.tickKind).toBe('time');
     expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
     expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
@@ -301,6 +334,7 @@ describe('mark padding final geometry', () => {
       scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, range: [100, 0] } : scale)),
     };
     const scale = frameOf(spec).roleScales!.x!;
+
     expect(Math.abs(scale.coordinate(0) - scale.range()[0])).toBeGreaterThanOrEqual(2);
     expect(Math.abs(scale.coordinate(10) - scale.range()[1])).toBeGreaterThanOrEqual(2);
   });
@@ -313,6 +347,7 @@ describe('mark padding final geometry', () => {
         scale.name === 'x' || scale.name === 'y' ? { ...scale, domain: [0, 10] } : scale,
       ),
     };
+
     expect(frameOf(spec, []).roleScales!.x!.domain()).toEqual([0, 10]);
   });
 
@@ -338,6 +373,7 @@ describe('mark padding final geometry', () => {
       ],
     };
     const scale = frameOf(spec).roleScales!.x!;
+
     expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(12);
     expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(12);
   });
@@ -372,6 +408,7 @@ describe('mark padding capabilities', () => {
     );
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales!.x!;
+
     expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
   });
 
@@ -389,8 +426,10 @@ describe('mark padding capabilities', () => {
     const result = lowerPlotWithDataArtifact(spec, { rows });
     const scale = [...result.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales!.x!;
     const positions = pointPositions(result.child as IRScope);
+
     expect(positions).toHaveLength(rows.length);
     expect(positions.some((position, index) => position[0] !== scale.coordinate(rows[index].x))).toBe(true);
+
     positions.forEach((position, index) => {
       expect(position[0] - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(rows[index].r));
       expect(scale.range()[1] - position[0]).toBeGreaterThanOrEqual(radiusOf(rows[index].r));
@@ -423,14 +462,17 @@ describe('mark padding effective observations', () => {
       [
         ...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
       ][0].roleScales!.x!.domain();
+
     expect(domainOf(transformed, duplicateRows)).toEqual(domainOf(base, compactRows));
   });
+
   it('ignores missing positions and mapped sizes', () => {
     const base = plotOf();
     const getDomain = (data: Array<Record<string, number | null>>) =>
       [
         ...lowerPlotWithDataArtifact(base, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
       ][0].roleScales!.x!.domain();
+
     expect(getDomain([...rows, { x: null, y: 0, r: 30 }, { x: 0, y: 0, r: null }])).toEqual(getDomain(rows));
   });
 });
@@ -458,8 +500,10 @@ describe('mark padding shared coordinate views', () => {
     });
     const result = lowerPlotWithDataArtifact(spec, { rows });
     const frames = [...result.dataArtifact.frameByCoordinateScopeId.values()];
+
     expect(frames.length).toBe(2);
     expect(frames[0].roleScales!.x!.domain()).toEqual(frames[1].roleScales!.x!.domain());
+
     for (const frame of frames)
       expect(frame.roleScales!.x!.coordinate(0) - frame.roleScales!.x!.range()[0]).toBeGreaterThanOrEqual(8);
   });
@@ -472,14 +516,18 @@ describe('mark padding clearance', () => {
     });
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales!.x!;
+
     expect(scale.coordinate(0)).toBe(scale.range()[0]);
+
     for (const row of rows)
       expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r) + 8);
   });
+
   it('rejects impossible clearance and invalid JSON numbers', () => {
     expect(() => lowerPlotWithDataArtifact(plotOf({ kind: 'mark', marks: ['dots'], clearance: 60 }), { rows })).toThrow(
       /feasible/,
     );
+
     for (const clearance of [-1, Infinity, NaN])
       expect(() => plotOf({ kind: 'mark', marks: ['dots'], clearance })).toThrow();
   });
@@ -492,10 +540,12 @@ describe('directional mark clearance', () => {
       { rows },
     );
     const scale = [...result.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales!.x!;
+
     expect(scale.coordinate(0)).toBe(scale.range()[0]);
     expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(10);
     expect(() => plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: -1 } })).toThrow();
   });
+
   it.each([
     [0, 100],
     [100, 0],
@@ -507,10 +557,12 @@ describe('directional mark clearance', () => {
     });
     const result = lowerPlotWithDataArtifact(plot, { rows });
     const scale = [...result.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales!.x!;
+
     for (const row of rows) {
       expect(Math.abs(scale.coordinate(row.x) - scale.range()[0])).toBeGreaterThanOrEqual(radiusOf(row.r) + 3);
       expect(Math.abs(scale.range()[1] - scale.coordinate(row.x))).toBeGreaterThanOrEqual(radiusOf(row.r) + 15);
     }
+
     expect(Math.abs(scale.coordinate(0) - scale.range()[0])).toBeLessThan(5.02);
   });
 });

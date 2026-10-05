@@ -23,6 +23,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { width: 280, basis: 80, grow: 2, shrink: 1, min: 40, max: 120 },
@@ -36,5 +37,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     ],
   } satisfies PreviewControlContract;
 };
+
 /** 默认语言的注册契约 */
 export const previewControlContract = createPreviewControlContract('zh');

@@ -31,5 +31,6 @@ export const styledPrimitiveFromOutline = (
     primitive.strokeLinecap = appearance.strokeLinecap;
     primitive.strokeLinejoin = appearance.strokeLinejoin;
   }
+
   return primitive;
 };

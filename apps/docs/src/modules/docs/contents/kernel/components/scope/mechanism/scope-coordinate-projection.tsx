@@ -15,6 +15,7 @@ export type ScopeCoordinateProjectionProps = Readonly<{ lang?: Lang }>;
 const ScopeCoordinateProjection: FC<ScopeCoordinateProjectionProps> = props => {
   const { lang = 'zh' } = props;
   const t = scopeCoordinateProjectionI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

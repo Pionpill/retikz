@@ -46,6 +46,7 @@ describe('Layout child default position', () => {
           )}
         </Layout>,
       );
+
     expect(render(false)).toEqual(render(true));
     expect(render(false)).toContain('<svg');
   });

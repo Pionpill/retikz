@@ -18,6 +18,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { lowerOffset: 0 },

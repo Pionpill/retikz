@@ -9,11 +9,13 @@ import { parseHexColor } from '../shared';
 
 /** 线性 sRGB 三元组（各 0..1）+ alpha（0..1） */
 type LinearRgb = { r: number; g: number; b: number; alpha: number };
+
 /** oklch 三元组：L 0..1、C ≥0、H 角度（度）+ alpha（0..1） */
 type Oklch = { L: number; C: number; H: number; alpha: number };
 
 /** sRGB gamma 分量 → 线性分量 */
 const gammaToLinear = (c: number): number => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+
 /** 线性分量 → sRGB gamma 分量 */
 const linearToGamma = (c: number): number => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
 
@@ -33,6 +35,7 @@ const parseToLinear = (color: string): LinearRgb | null => {
   if (hex8) {
     let h = hex8[1];
     if (h.length === 4) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2] + h[3] + h[3];
+
     return {
       r: gammaToLinear(parseInt(h.slice(0, 2), 16) / 255),
       g: gammaToLinear(parseInt(h.slice(2, 4), 16) / 255),
@@ -40,6 +43,7 @@ const parseToLinear = (color: string): LinearRgb | null => {
       alpha: parseInt(h.slice(6, 8), 16) / 255,
     };
   }
+
   const bytes = parseHexColor(value);
   if (bytes) {
     return {
@@ -49,6 +53,7 @@ const parseToLinear = (color: string): LinearRgb | null => {
       alpha: 1,
     };
   }
+
   const rgb = /^rgba?\(([^)]+)\)$/.exec(value);
   if (rgb) {
     const parts = rgb[1].split(/[,\s/]+/).filter(Boolean);
@@ -62,6 +67,7 @@ const parseToLinear = (color: string): LinearRgb | null => {
       };
     }
   }
+
   return null;
 };
 
@@ -69,12 +75,15 @@ const parseToLinear = (color: string): LinearRgb | null => {
 const parseOklchLiteral = (color: string): Oklch | null => {
   const match = /^oklch\(([^)]+)\)$/i.exec(color.trim());
   if (!match) return null;
+
   const parts = match[1].split(/[\s/]+/).filter(Boolean);
   if (parts.length < 2) return null;
+
   const L = parts[0].endsWith('%') ? parseFloat(parts[0]) / 100 : parseFloat(parts[0]);
   const C = parseFloat(parts[1]);
   const H = parts.length >= 3 ? parseFloat(parts[2]) : 0;
   if (!Number.isFinite(L) || !Number.isFinite(C) || !Number.isFinite(H)) return null;
+
   return { L, C, H, alpha: parseAlpha(parts[3]) };
 };
 
@@ -88,6 +97,7 @@ const linearToOklch = ({ r, g, b, alpha }: LinearRgb): Oklch => {
   const okB = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
   const C = Math.hypot(okA, okB);
   const H = (Math.atan2(okB, okA) * 180) / Math.PI;
+
   return { L: okL, C, H: (H + 360) % 360, alpha };
 };
 
@@ -110,6 +120,7 @@ const oklchToHex = ({ L, C, H, alpha }: Oklch): string => {
   const lb = -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_;
   const toByte = (linear: number): string => byteToHex(linearToGamma(clamp01(linear)));
   const rgb = `#${toByte(lr)}${toByte(lg)}${toByte(lb)}`;
+
   return alpha < 1 ? `${rgb}${byteToHex(alpha)}` : rgb;
 };
 
@@ -117,7 +128,9 @@ const oklchToHex = ({ L, C, H, alpha }: Oklch): string => {
 const colorToOklch = (color: string): Oklch | null => {
   const literal = parseOklchLiteral(color);
   if (literal) return literal;
+
   const linear = parseToLinear(color);
+
   return linear ? linearToOklch(linear) : null;
 };
 
@@ -143,6 +156,7 @@ export const lerpColorOklch = (from: string, to: string, t: number): string => {
   const a = colorToOklch(from);
   const b = colorToOklch(to);
   if (!a || !b) return t < 0.5 ? from : to;
+
   return oklchToHex(lerpOklch(a, b, t));
 };
 
@@ -155,9 +169,12 @@ export const sampleColorOklch = (from: string, to: string, segments: number): Ar
   const a = colorToOklch(from);
   const b = colorToOklch(to);
   if (!a || !b || segments < 1) return [from, to];
+
   const out: Array<string> = [];
+
   for (let i = 0; i <= segments; i++) {
     out.push(oklchToHex(lerpOklch(a, b, i / segments)));
   }
+
   return out;
 };

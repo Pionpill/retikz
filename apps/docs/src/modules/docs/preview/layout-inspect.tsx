@@ -47,6 +47,7 @@ export const createLayoutInspectPreviewSource = (
         compileDriver: createLayoutInspectionVanillaDriver({ selection }),
       },
     );
+
     const selectionCode = formatVanillaValue(selection);
     const code = `import { renderToSvgString } from '@retikz/vanilla';
 import { createLayoutInspectionVanillaDriver } from '@retikz/layout-vanilla/inspect';
@@ -59,7 +60,9 @@ export const svg = renderToSvgString(input, {
 
 
 `;
+
     const renderSource = () => <RawSvgFrame svg={svg} />;
+
     return {
       vanilla: {
         files: [{ filename: 'layout.vanilla.ts', code, lang: 'ts' }],
@@ -91,5 +94,6 @@ export const defineControlledLayoutInspectPreview = <const TDefinition extends P
       return createLayoutInspectPreviewSource(() => render(values), selection(values)).buildViews!(context);
     },
   };
+
   return { Component: controlled.Component, source };
 };

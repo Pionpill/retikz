@@ -15,6 +15,7 @@ const readDataProperty = (value: object, key: keyof VanillaRetainedRuntimeOption
   const descriptor = Object.getOwnPropertyDescriptor(value, key);
   if (descriptor === undefined) return undefined;
   if (!Object.hasOwn(descriptor, 'value')) return invalidRuntimeOptions({ key, descriptor });
+
   return descriptor.value;
 };
 
@@ -24,17 +25,21 @@ export const captureVanillaRuntimeOptions = (options: object): VanillaRuntimeOpt
     const runtimeDescriptor = Object.getOwnPropertyDescriptor(options, 'runtime');
     if (runtimeDescriptor === undefined) return Object.freeze({ mode: VanillaViewMode.Retained });
     if (!Object.hasOwn(runtimeDescriptor, 'value')) return invalidRuntimeOptions(runtimeDescriptor);
+
     const runtime: unknown = runtimeDescriptor.value;
     if (runtime === undefined) return Object.freeze({ mode: VanillaViewMode.Retained });
     if (typeof runtime !== 'object' || runtime === null) return invalidRuntimeOptions(runtime);
+
     const prototype = Object.getPrototypeOf(runtime);
     if (prototype !== Object.prototype && prototype !== null) return invalidRuntimeOptions(runtime);
+
     const mode = readDataProperty(runtime, 'mode') ?? VanillaViewMode.Retained;
     const updateStrategy = readDataProperty(runtime, 'updateStrategy');
     const rendererFactory = readDataProperty(runtime, 'rendererFactory');
     if (mode === VanillaViewMode.Static) {
       return Object.freeze({ mode });
     }
+
     return Object.freeze({
       mode: VanillaViewMode.Retained,
       ...(updateStrategy === undefined ? {} : { updateStrategy }),

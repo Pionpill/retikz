@@ -40,6 +40,7 @@ export const AiChatHistory: FC = () => {
   const handleSwitch = (id: string) => {
     if (isGenerating) return;
     if (editingId === id) return;
+
     switchConversation(id);
     setView('main');
   };
@@ -51,6 +52,7 @@ export const AiChatHistory: FC = () => {
 
   const commitRename = () => {
     if (editingId === null) return;
+
     const trimmed = editingDraft.trim();
     if (trimmed) renameConversation(editingId, trimmed);
     setEditingId(null);
@@ -122,6 +124,7 @@ export const AiChatHistory: FC = () => {
               const isActive = conv.id === activeId;
               const isEditing = conv.id === editingId;
               const messageCount = conv.messages.length;
+
               return (
                 <li key={conv.id}>
                   <ContextMenu>
@@ -198,11 +201,15 @@ const formatRelativeTime = (timestamp: number, locale: string): string => {
   const diffSec = Math.round(diffMs / 1000);
   const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
   if (diffSec < 60) return rtf.format(-diffSec, 'second');
+
   const diffMin = Math.round(diffSec / 60);
   if (diffMin < 60) return rtf.format(-diffMin, 'minute');
+
   const diffHour = Math.round(diffMin / 60);
   if (diffHour < 24) return rtf.format(-diffHour, 'hour');
+
   const diffDay = Math.round(diffHour / 24);
   if (diffDay < 7) return rtf.format(-diffDay, 'day');
+
   return new Date(timestamp).toLocaleDateString(locale);
 };

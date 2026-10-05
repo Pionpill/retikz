@@ -71,6 +71,7 @@ const ScaleSchema = strictObject({
   ),
 }).describe('Scale transform with x and optional y factors around an intrinsic Scope self point.');
 
+/** 校验按 kind 区分的平移、旋转与缩放；引用式平移在编译时解析 */
 export const TransformSchema = discriminatedUnion('kind', [
   TranslateSchema,
   PolarTranslateSchema,

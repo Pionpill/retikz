@@ -46,7 +46,7 @@ export type IRFlexLayoutItem = Readonly<{
   shrink: number;
   min?: number;
   max?: number;
-  alignSelf?: LayoutAlignmentValue;
+  alignSelf?: LayoutAlignment;
 }>;
 
 export type IRFlexLayout = Readonly<{
@@ -54,21 +54,21 @@ export type IRFlexLayout = Readonly<{
   type: 'flexLayout';
   size: IRLayoutSize;
   padding: number | IRBoxSpacing;
-  overflow: LayoutOverflowValue;
-  direction: FlexLayoutDirectionValue;
-  wrap: FlexLayoutWrapValue;
+  overflow: LayoutOverflow;
+  direction: FlexLayoutDirection;
+  wrap: FlexLayoutWrap;
   gap: {
     column: number;
     row: number;
   };
-  justifyContent: FlexMainDistributionValue;
-  alignItems: LayoutAlignmentValue;
-  alignContent: LayoutDistributionValue;
+  justifyContent: FlexMainDistribution;
+  alignItems: LayoutAlignment;
+  alignContent: LayoutDistribution;
   children: ReadonlyArray<IRFlexLayoutItem>;
 }>;
 ```
 
-`IRFlexLayout`/`IRFlexLayoutItem` 是schema parsed output；`FlexLayoutInput`/`FlexLayoutItemInput` 使用 `z.input` 并允许省略下列默认字段。`FlexLayoutInput.gap` 接受非负数字或严格的 `{ column, row }` 对象，数字在 schema 边界归一化为两个轴相同的 canonical 对象。`createFlexLayout(input)` 接收去掉namespace/type的Input并返回canonical IR。`FlexMainDistributionValue` 从shared distribution排除stretch，不能用宽类型掩盖schema限制。
+`IRFlexLayout`/`IRFlexLayoutItem` 是schema parsed output；`FlexLayoutInput`/`FlexLayoutItemInput` 使用 `z.input` 并允许省略下列默认字段。`FlexLayoutInput.gap` 接受非负数字或严格的 `{ column, row }` 对象，数字在 schema 边界归一化为两个轴相同的 canonical 对象。`createFlexLayout(input)` 接收去掉namespace/type的Input并返回canonical IR。`FlexMainDistribution` 从shared distribution排除stretch，不能用宽类型掩盖schema限制。
 
 默认值：
 

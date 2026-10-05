@@ -35,7 +35,7 @@ export const apiReferenceBranchLabels: Readonly<
     {
       value: 'regular',
       field: 'kind',
-      type: "Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>",
+      type: "Exclude<FlowRoutingKind, 'curve' | 'cubic'>",
       label: { zh: '常规路由', en: 'Regular routing' },
     },
     {
@@ -139,28 +139,168 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
     { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
   ],
+  '@retikz/standard-react/collection#ChainCellProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
+    { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
+  ],
+  '@retikz/standard-react/collection#MatrixCellProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
+    { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
+  ],
+  '@retikz/standard/collection#IRMatrixAxisIndex': [
+    { value: 'automatic', field: 'start', type: 'number', label: { zh: '自动编号', en: 'Automatic numbering' } },
+    { value: 'labels', field: 'start', type: 'never', label: { zh: '显式标号', en: 'Explicit labels' } },
+  ],
+  '@retikz/standard/collection#IRChain': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<IRChainItem>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      type: `NonNullable<input<typeof ChainSchema>['data']>`,
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: `IRChainSkeleton`,
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
+  ],
+  '@retikz/standard-vanilla/collection#InputChain': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<InputChainItem>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      type: `NonNullable<IRChain['data']>`,
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: `NonNullable<IRChain['skeleton']>`,
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
+  ],
+  '@retikz/standard/collection#IRMatrix': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<Array<string | IRCell>>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      type: `NonNullable<input<typeof MatrixSchema>['data']>`,
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: `NonNullable<input<typeof MatrixSchema>['skeleton']>`,
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
+  ],
+  '@retikz/standard-vanilla/collection#InputMatrix': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<Array<string | InputCell>>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      type: `NonNullable<IRMatrix['data']>`,
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: `NonNullable<IRMatrix['skeleton']>`,
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
+  ],
+  '@retikz/standard/collection#IRArrayIndexOptions': [
+    { value: 'automatic', field: 'start', type: 'number', label: { zh: '自动编号', en: 'Automatic numbering' } },
+    { value: 'labels', field: 'start', type: 'never', label: { zh: '显式标号', en: 'Explicit labels' } },
+  ],
   '@retikz/standard/collection#IRMap': [
-    { value: 'entries', field: 'data', type: 'never', label: { zh: '显式键值记录', en: 'Explicit entries' } },
-    { value: 'data', field: 'entries', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
+    {
+      value: 'entries',
+      field: 'entries',
+      type: `Array<{
+    key: string | IRCell;
+    value: string | IRCell;
+}>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      type: "NonNullable<input<typeof MapSchema>['data']>",
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: "NonNullable<input<typeof MapSchema>['skeleton']>",
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
   ],
   '@retikz/standard-vanilla/collection#InputMap': [
-    { value: 'entries', field: 'data', type: 'never', label: { zh: '显式键值记录', en: 'Explicit entries' } },
-    { value: 'data', field: 'entries', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
+    {
+      value: 'entries',
+      field: 'entries',
+      type: `Array<{
+    key: string | InputCell;
+    value: string | InputCell;
+}>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    { value: 'data', field: 'data', type: "NonNullable<IRMap['data']>", label: { zh: 'JSON 数据', en: 'JSON data' } },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: "NonNullable<IRMap['skeleton']>",
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
   ],
   '@retikz/standard-react/collection#MapKeyProps': [
-    { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],
   '@retikz/standard-react/collection#MapValueProps': [
-    { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],
-  '@retikz/standard-vanilla/collection#InputList': [
-    { value: 'items', field: 'data', type: 'never', label: { zh: '显式单元格', en: 'Explicit cells' } },
-    { value: 'data', field: 'items', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
+  '@retikz/standard-vanilla/collection#InputArray': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<string | InputCell<IRArrayCell>>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    { value: 'data', field: 'data', type: "NonNullable<IRArray['data']>", label: { zh: 'JSON 数据', en: 'JSON data' } },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: "NonNullable<IRArray['skeleton']>",
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
   ],
-  '@retikz/standard-react/collection#ListItemProps': [
-    { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+  '@retikz/standard-react/collection#ArrayItemProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],
   '@retikz/graph#BlockRowCreateOptions': [

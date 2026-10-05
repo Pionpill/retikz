@@ -38,6 +38,7 @@ const resolveNodeShapePreset = (shape: IRNode['shape']): NodeShapePresetResoluti
   if (shape === BuiltinShape.Circle) return { type: BuiltinShape.Ellipse, params: { circumscribe: 'equal' } };
   if (shape === BuiltinShape.Diamond) return { type: 'polygon', params: { sides: 4, rotate: 0 } };
   if (typeof shape === 'string') return { type: shape, params: {} };
+
   const ref: IRShapeRef = shape;
   if (ref.type === BuiltinShape.Diamond) {
     const rawParams = ref.params ?? {};
@@ -48,8 +49,10 @@ const resolveNodeShapePreset = (shape: IRNode['shape']): NodeShapePresetResoluti
         `Diamond shape only accepts aspectRatio; received ${unsupported.join(', ')}`,
       );
     }
+
     return { type: 'polygon', params: { sides: 4, rotate: 0, ...rawParams } };
   }
+
   return { type: ref.type, params: ref.params ?? {} };
 };
 
@@ -62,6 +65,7 @@ const scaleJsonNumbers = (value: JsonValue, factor: number): JsonValue => {
     for (const [key, childValue] of Object.entries(value)) out[key] = scaleJsonNumbers(childValue, factor);
     return out;
   }
+
   return value;
 };
 

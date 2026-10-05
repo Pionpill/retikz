@@ -25,6 +25,7 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
     const [a, b, c, d, e, f] = matrix;
     return [a * x + c * y + e, b * x + d * y + f];
   };
+
   const multiply = (m: [number, number, number, number, number, number]): void => {
     const [a, b, c, d, e, f] = matrix;
     const [a2, b2, c2, d2, e2, f2] = m;
@@ -37,11 +38,13 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
       b * e2 + d * f2 + f,
     ];
   };
+
   const ensure = (): SubPath => {
     if (current === null) {
       current = { points: [cursor], closed: false };
       subPaths.push(current);
     }
+
     return current;
   };
 
@@ -80,6 +83,7 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
       const from = cursor;
       const ctrl = apply(cx, cy);
       const to = apply(x, y);
+
       for (let i = 1; i <= 8; i++) {
         const t = i / 8;
         const mt = 1 - t;
@@ -88,6 +92,7 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
           mt * mt * from[1] + 2 * mt * t * ctrl[1] + t * t * to[1],
         ]);
       }
+
       cursor = to;
     },
     bezierCurveTo(c1x: number, c1y: number, c2x: number, c2y: number, x: number, y: number): void {
@@ -96,6 +101,7 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
       const c1 = apply(c1x, c1y);
       const c2 = apply(c2x, c2y);
       const to = apply(x, y);
+
       for (let i = 1; i <= 12; i++) {
         const t = i / 12;
         const mt = 1 - t;
@@ -104,20 +110,24 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
           mt * mt * mt * from[1] + 3 * mt * mt * t * c1[1] + 3 * mt * t * t * c2[1] + t * t * t * to[1],
         ]);
       }
+
       cursor = to;
     },
     arc(cx: number, cy: number, r: number, start: number, end: number): void {
       const sp = ensure();
       const steps = 24;
+
       for (let i = 0; i <= steps; i++) {
         const ang = start + ((end - start) * i) / steps;
         sp.points.push(apply(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r));
       }
+
       sp.closed = true;
     },
     ellipse(cx: number, cy: number, rx: number, ry: number, rot: number, start: number, end: number): void {
       const sp = ensure();
       const steps = 24;
+
       for (let i = 0; i <= steps; i++) {
         const ang = start + ((end - start) * i) / steps;
         const ex = Math.cos(ang) * rx;
@@ -126,6 +136,7 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
         const ry2 = ex * Math.sin(rot) + ey * Math.cos(rot);
         sp.points.push(apply(cx + rx2, cy + ry2));
       }
+
       sp.closed = true;
     },
     save(): void {
@@ -164,9 +175,11 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
     font: '',
     isPointInPath(px: number, py: number): boolean {
       let inside = false;
+
       for (const sp of subPaths) {
         const pts = sp.points;
         if (pts.length < 3) continue;
+
         for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
           const xi = pts[i][0];
           const yi = pts[i][1];
@@ -176,13 +189,16 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
           if (intersect) inside = !inside;
         }
       }
+
       return inside;
     },
     isPointInStroke(px: number, py: number): boolean {
       const half = lineWidth / 2;
+
       for (const sp of subPaths) {
         const pts = sp.points;
         const limit = sp.closed ? pts.length : pts.length - 1;
+
         for (let i = 0; i < limit; i++) {
           const a = pts[i];
           const b = pts[(i + 1) % pts.length];
@@ -196,8 +212,10 @@ export const createGeometryContext = (): CanvasRenderingContext2D => {
           if (dist <= half) return true;
         }
       }
+
       return false;
     },
   };
+
   return ctx as unknown as CanvasRenderingContext2D;
 };

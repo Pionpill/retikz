@@ -37,6 +37,7 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const clips = clipResources(compiled.resources);
+
     expect(clips).toHaveLength(1);
     expect(clips[0]).toMatchObject({
       kind: 'clip',
@@ -51,7 +52,9 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
         fillRule: 'nonzero',
       },
     });
+
     const group = firstGroup(compiled.primitives);
+
     expect(group?.clipRef).toBe(clips[0].id);
   });
 
@@ -64,6 +67,7 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
       },
     ]);
     const compiled = compileToScene(ir).scene;
+
     expect(clipResources(compiled.resources)[0].id).toBe('clip-1');
   });
 });
@@ -85,8 +89,11 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const clips = clipResources(compiled.resources);
+
     expect(clips).toHaveLength(1);
+
     const groups = compiled.primitives.filter((p): p is GroupPrim => p.type === 'group');
+
     expect(groups).toHaveLength(2);
     expect(groups[0].clipRef).toBe(clips[0].id);
     expect(groups[1].clipRef).toBe(clips[0].id);
@@ -107,9 +114,12 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const clips = clipResources(compiled.resources);
+
     expect(clips).toHaveLength(2);
     expect(new Set(clips.map(c => c.id)).size).toBe(2);
+
     const groups = compiled.primitives.filter((p): p is GroupPrim => p.type === 'group');
+
     expect(groups[0].clipRef).not.toBe(groups[1].clipRef);
   });
 });
@@ -125,6 +135,7 @@ describe('带 clip 的 scope 不被 prune', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const group = firstGroup(compiled.primitives);
+
     expect(group).toBeDefined();
     expect(group?.transforms).toBeUndefined();
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
@@ -140,6 +151,7 @@ describe('带 clip 的 scope 不被 prune', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const group = firstGroup(compiled.primitives);
+
     expect(group).toBeDefined();
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
   });
@@ -164,11 +176,14 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
     const compiled = compileToScene(ir).scene;
     const paints = (compiled.resources ?? []).filter(r => r.kind === 'paint');
     const clips = clipResources(compiled.resources);
+
     expect(paints).toHaveLength(1);
     expect(clips).toHaveLength(1);
     expect(paints[0].id).toBe('paint-1');
     expect(clips[0].id).toBe('clip-1');
+
     const allIds = (compiled.resources ?? []).map(r => r.id);
+
     expect(new Set(allIds).size).toBe(allIds.length);
   });
 
@@ -193,10 +208,15 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
     ]);
     const compiled = compileToScene(ir).scene;
     const topPath = compiled.primitives.find(p => p.type === 'path');
+
     expect(topPath).toBeUndefined();
+
     const group = firstGroup(compiled.primitives);
+
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
+
     const innerPath = group?.children.find(c => c.type === 'path');
+
     expect(innerPath).toBeDefined();
   });
 
@@ -220,9 +240,12 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
     ]);
     const compiled = compileToScene(ir).scene;
     const group = firstGroup(compiled.primitives);
+
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
+
     // 无 transforms scope 内 path 留在 group.children（受 clipRef 裁剪）
     const innerPath = group?.children.find(c => c.type === 'path');
+
     expect(innerPath).toBeDefined();
   });
 });
@@ -236,6 +259,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
@@ -247,6 +271,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
@@ -264,6 +289,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 });

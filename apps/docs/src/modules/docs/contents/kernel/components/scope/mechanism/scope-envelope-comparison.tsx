@@ -18,15 +18,18 @@ const outline: Array<Position> = [
   [-34, 14],
   [-34, -14],
 ];
+
 const transforms: Array<InputTransform> = [
   { kind: 'rotate', degrees: 30, pivot: 'origin' },
   { kind: 'scale', x: 1.4, y: 1.4, pivot: 'origin' },
 ];
+
 const right = localToWorld({ x: 0, y: 0, rotate: Math.PI / 6 }, [34 * 1.4, 0]);
 
 const ScopeEnvelopeComparison: FC<ScopeEnvelopeComparisonProps> = props => {
   const { lang } = props;
   const i18n = scopeEnvelopeComparisonI18n[lang ?? 'zh'];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[false, true].map((transformed, index) => (

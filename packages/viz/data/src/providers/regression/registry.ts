@@ -11,7 +11,10 @@ import type { IRRegressionMethod } from '../../schemas';
 import { resolveImplementationRegistry } from '../shared';
 import { BUILTIN_REGRESSIONS, BUILTIN_REGRESSION_IMPLEMENTATIONS } from './definitions';
 
-/** 注册独立拟合计算 */
+/**
+ * 注册独立拟合计算
+ * @template TImplementation 自定义拟合实现类型，默认限定同步模型结果
+ */
 export const resolveRegressionImplementationRegistry = <
   TImplementation extends AnyRegressionImplementation = AnySynchronousRegressionImplementation,
 >(
@@ -28,7 +31,9 @@ export const resolveRegressionDependency = (
   return regressionBoundary(operation, () => {
     const definition = registry.get(operation.kind);
     if (definition === undefined) throw new RetikzDataError(`data: regression "${operation.kind}" is not registered`);
+
     const parsed = definition.schema.parse(operation) as IRRegressionMethod;
+
     return { type: 'regression', operation: parsed, definition };
   });
 };
@@ -38,11 +43,13 @@ export const resolveRegressionRegistry = (
   custom: ReadonlyArray<AnyRegressionDefinition> = [],
 ): Map<string, AnyRegressionDefinition> => {
   const registry = new Map<string, AnyRegressionDefinition>();
+
   for (const definition of [...BUILTIN_REGRESSIONS, ...custom]) {
     const kind = extractRegressionKind(definition.schema);
     if (registry.has(kind)) throw new RetikzDataError(`data: duplicate regression registration: "${kind}"`);
     registry.set(kind, definition);
   }
+
   return registry;
 };
 
@@ -52,6 +59,7 @@ const regressionBoundary = <T>(method: IRRegressionMethod, action: () => T): T =
     return action();
   } catch (cause) {
     if (cause instanceof RetikzDataError && cause.details.regressionMethod !== undefined) throw cause;
+
     throw new RetikzDataError(
       `data: regression "${method.kind}" failed${cause instanceof RetikzDataError ? `: ${cause.message}` : ''}`,
       { cause, regressionMethod: method },
@@ -73,6 +81,7 @@ export const resolveRegression = (
     throw new RetikzDataError(`data: regression "${method.kind}" is not registered; pass regressionDefinitions`, {
       regressionMethod: method,
     });
+
   return regressionBoundary(method, () => {
     const operation = definition.schema.parse(method) as never;
     return {
@@ -82,13 +91,16 @@ export const resolveRegression = (
           const implementation = implementations.get(method.kind);
           if (implementation === undefined)
             throw new RetikzDataError(`data: regression "${method.kind}" has no local implementation`);
+
           const model = implementation.fit(pairs, operation);
+
           return {
             predict: x =>
               regressionBoundary(method, () => {
                 const prediction = model.predict(x);
                 if (!Number.isFinite(prediction))
                   throw new RetikzDataError(`data: regression "${method.kind}" produced a non-finite prediction`);
+
                 return prediction;
               }),
           };

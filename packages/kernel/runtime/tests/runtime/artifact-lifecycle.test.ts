@@ -20,6 +20,7 @@ const defineSource = (dispose = vi.fn()) =>
   });
 
 type Artifact = Readonly<{ value: number }>;
+
 type ArtifactDefinition = RuntimeComputationArtifactDefinitionInput<number, Artifact, number, number>;
 
 describe('runtime Computation artifact lifecycle', () => {

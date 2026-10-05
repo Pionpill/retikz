@@ -12,7 +12,7 @@ export const RetikzExtensionErrorCode = {
 } as const;
 
 /** Extension 包结构化错误码取值 */
-export type RetikzExtensionErrorCodeValue = ValueOf<typeof RetikzExtensionErrorCode>;
+export type RetikzExtensionErrorCode = ValueOf<typeof RetikzExtensionErrorCode>;
 
 /** Extension 包错误的结构化详情 */
 export type RetikzExtensionErrorDetails = Readonly<Record<string, unknown>>;
@@ -20,7 +20,7 @@ export type RetikzExtensionErrorDetails = Readonly<Record<string, unknown>>;
 /** Extension 包错误的构造参数 */
 export type RetikzExtensionErrorOptions = Readonly<{
   /** 机器可判定的错误码 */
-  code: RetikzExtensionErrorCodeValue;
+  code: RetikzExtensionErrorCode;
   /** 面向调用方的错误消息 */
   message: string;
   /** 与错误码关联的结构化详情 */
@@ -30,7 +30,7 @@ export type RetikzExtensionErrorOptions = Readonly<{
 }>;
 
 /** Extension 包在 authoring、几何和 lowering 阶段报告的结构化错误 */
-export class RetikzExtensionError extends RetikzError<RetikzExtensionErrorCodeValue, RetikzExtensionErrorDetails> {
+export class RetikzExtensionError extends RetikzError<RetikzExtensionErrorCode, RetikzExtensionErrorDetails> {
   /** 创建 Extension 包结构化错误 */
   constructor(options: RetikzExtensionErrorOptions) {
     super(options);

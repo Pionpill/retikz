@@ -58,9 +58,11 @@ const materializeElements = (
       if ('probe' in measurement) return translatedElement(element, parentOrigin, bounds, measurement);
       return materializationFailure(element.id, element.path, 'leaf received Flow scope measurement.');
     }
+
     if ('probe' in measurement) {
       return materializationFailure(element.id, element.path, 'Flow scope received leaf measurement.');
     }
+
     const contentWidth = bounds.width - measurement.contentInsets.left - measurement.contentInsets.right;
     const contentHeight = bounds.height - measurement.contentInsets.top - measurement.contentInsets.bottom;
     const contentOrigin: Position = [
@@ -81,6 +83,7 @@ const materializeElements = (
         children: materializeElements(element.elements, contentOrigin, boundsById, measurements),
       };
     }
+
     return {
       ...element.graph,
       transforms,
@@ -110,6 +113,7 @@ const materializeRelation = (
         ? { outAngle: routing.outAngle, inAngle: routing.inAngle, looseness: routing.looseness }
         : { bendDirection: routing.bendDirection, bendAngle: routing.bendAngle }
       : undefined;
+
   return {
     ...relation.graph,
     source: output.source,

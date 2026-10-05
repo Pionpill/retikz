@@ -25,6 +25,7 @@ import type { FC, ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 type ForeignProps = Readonly<{ id: string }>;
+
 type ForeignComponent = FC<ForeignProps> & {
   isTier2Embeddable: true;
   inputEmbedAdapter: AnyInputEmbedAdapter;
@@ -192,6 +193,7 @@ describe('Layout React layout family', () => {
         </>
       </GridLayout>,
     );
+
     expect(result.ir.children[0]).toMatchObject({
       type: 'gridLayout',
       children: [

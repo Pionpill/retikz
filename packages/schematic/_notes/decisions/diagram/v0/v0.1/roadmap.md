@@ -2,7 +2,7 @@
 
 ## 版本目标
 
-建立完整 Diagram 外层表达与 Flow 自动制图能力。
+建立完整 Diagram 外层表达与 Flow 自动制图能力，并规划 Branch 有序分支图。
 
 ## 重点功能
 
@@ -10,11 +10,15 @@
 | ----------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 外层表达    | 统一 Presentation、Frame、间距、外观与 Theme                 | [001](./001-diagram-assembly-presentation.md)、[002](./002-diagram-frame-spacing-appearance.md)、[008](./008-theme-source-fragments.md)                                                                                             |
 | Flow Source | 声明实体、关系、分组、布局意图与可复用目录                   | [003](./003-flow-source-model.md)、[007](./007-flow-catalog-source-layout-groups.md)、[009](./009-flow-graph-rules.md)、[014](./014-flow-group-graph-surface.md)                                                                    |
-| 布局        | 建立开放布局接入，支持网格、边界计算与节点宽度               | [004](./004-flow-layout-definition-registry.md)、[010](./010-flow-grid-layout.md)、[012](./012-flow-layout-bounds.md)、[013](./013-flow-item-width.md)                                                                              |
+| 布局        | 建立开放布局接入，支持网格、边界计算与节点宽度               | [004](./004-flow-layout-definition-registry.md)、[010](./010-flow-grid-layout.md)、[012](./012-flow-layout-bounds.md)、[013](./013-flow-item-width.md)、[020](./020-flow-container-width.md)                                        |
 | 路由        | 支持折线与曲线路由、端点选侧及自动分离                       | [011](./011-flow-elbow-routing.md)、[015](./015-flow-bend-routing.md)、[016](./016-flow-bezier-routing.md)、[017](./017-flow-smooth-routing.md)、[018](./018-flow-orthogonal-avoidance.md)、[019](./019-flow-endpoint-placement.md) |
 | 结果与绘图  | 编排布局结果和 artifact，复用 Graph materialization 与富文本 | [005](./005-flow-orchestration-result-artifact.md)、[006](./006-flow-entity-rich-text.md)                                                                                                                                           |
 
 ## 功能规划
+
+### Branch 分支图
+
+面向版本路线图、提交历史和文档阅读关系，以节点目录与有序分支表达相邻连接、共享节点和分叉汇合，通过主分支引用与自动轨道布局保持主线连续。节点标记与外侧标注分离，复用 Core Node、Graph Relation 和 Diagram 外层装配。公开默认值、共享线段规则、布局扩展契约与测量闭环须先完成设计确认，见 [021](./021-branch-diagram.md)。
 
 ### 外层表达
 
@@ -58,6 +62,7 @@
 规划内容：
 
 - 建立开放布局接入，并覆盖 Grid、布局边界与条目宽度。
+- 支持同级容器按自然最大宽度对齐，内部横向节点按需吸收新增空间。
 - 让布局结果可用于后续路由和绘制，不建立 docs 专用布局模型。
 
 预期效果：

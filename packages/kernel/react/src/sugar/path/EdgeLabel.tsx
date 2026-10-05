@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import { TIKZ_EDGE_LABEL } from '../../kernel/protocol';
 
+/** 以子文本声明路径段标签，并配置沿段位置、偏移和描边中断 */
 export type EdgeLabelProps = {
   /** 段上位置（TikZ `midway` / `near start` / `near end`），缺省 'midway' */
   position?: InputStepLabel['position'];

@@ -17,6 +17,7 @@ export type FirstChartPreviewOptions = {
 export const renderFirstChartPreview = (options: FirstChartPreviewOptions) => {
   const { lang, layout } = options;
   const i18n = firstChartI18n[lang];
+
   return (
     <ScatterChart
       {...(layout ? { layout } : {})}

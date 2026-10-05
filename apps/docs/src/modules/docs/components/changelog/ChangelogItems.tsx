@@ -27,6 +27,7 @@ export const ChangelogItems: FC<ChangelogItemsProps> = ({ items, lang }) => (
     {items.map((item, i) => {
       const content = item.content[lang];
       const blockContent = hasBlockContent(content);
+
       return (
         <li key={i} className={cn('leading-relaxed', blockContent && 'space-y-1.5')}>
           <span className="font-medium">

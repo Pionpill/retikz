@@ -23,6 +23,7 @@ describe('@retikz/chart-vanilla public surface', () => {
       expect(point).toHaveProperty(`${prefix}ChartInputEmbedAdapter`);
       expect(point).not.toHaveProperty(`create${prefix}Chart`);
     }
+
     expect(point).not.toHaveProperty('createChart');
     expect(point).not.toHaveProperty('normalizeChart');
   });

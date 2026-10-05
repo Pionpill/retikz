@@ -32,12 +32,14 @@ const RecursiveClipDefinition = defineClip<RecursiveClip, RecursiveClipShape>({
   schema: strictObject({ kind: literal('recursive'), depth: number().int().nonnegative() }),
   resolve: (spec, context) => {
     if (spec.depth > 0) return context.resolve({ kind: 'recursive', depth: spec.depth - 1 }) as RecursiveClipShape;
+
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [10, 0] },
       { kind: 'line', to: [10, 10] },
       { kind: 'close' },
     ];
+
     return { kind: 'recursive', commands };
   },
   shapeSchema: strictObject({ kind: literal('recursive'), commands: array(PathCommandSchema) }),

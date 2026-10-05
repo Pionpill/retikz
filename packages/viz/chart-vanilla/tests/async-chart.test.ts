@@ -17,7 +17,9 @@ describe('Chart async data preparation', () => {
           execute: async input => {
             await Promise.resolve();
             if (input.kind !== 'result') throw new Error('canonical fixture required');
+
             execute();
+
             return { rows: input.result.rows.map(row => ({ ...row, ratio: 0.75 })), model: stage.outputModel };
           },
         },
@@ -40,6 +42,7 @@ describe('Chart async data preparation', () => {
       adapters: [ScatterChartInputEmbedAdapter],
     });
     const svg = result.svg;
+
     expect(svg).toContain('Prepared chart');
     expect(svg.match(/<ellipse/g)).toHaveLength(2);
     expect(execute).toHaveBeenCalledOnce();
@@ -79,12 +82,15 @@ describe('Chart async data preparation', () => {
     const result = await renderChartAsync(input, {
       adapters: [ScatterChartInputEmbedAdapter],
     });
+
     expect(result.svg.match(/<ellipse/g)).toHaveLength(1);
     expect(external).not.toHaveBeenCalled();
+
     const inherited = scatterChart({
       ...input.props,
       encodings: { x: 'x', y: { aggregate: { kind: 'mean', field: 'y', as: 'meanY' } } },
     });
+
     await expect(
       processToStaticInputResultAsync(scene({ children: [inherited] }), { adapters: [ScatterChartInputEmbedAdapter] }),
     ).rejects.toThrow(/unsupported fixture/);

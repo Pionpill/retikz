@@ -1,5 +1,5 @@
 import { FlowEntity, FlowGroup, FlowLayout, FlowRelation } from '@retikz/diagram-react/flow';
-import type { FlowDirectionValue } from '@retikz/diagram/flow';
+import type { FlowDirection } from '@retikz/diagram/flow';
 import type { FC, ReactElement } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -13,10 +13,10 @@ import { flowCompoundI18n } from './flow-compound.i18n';
 /** 注册 controls 自动发现的回退导出 */
 export const previewControls = flowCompoundControls;
 
-const flowDirections: ReadonlyArray<FlowDirectionValue> = ['up', 'right', 'down', 'left'];
+const flowDirections: ReadonlyArray<FlowDirection> = ['up', 'right', 'down', 'left'];
 
 /** 将 controls 值收窄为公开 Flow direction */
-const flowDirectionOf = (value: string): FlowDirectionValue => {
+const flowDirectionOf = (value: string): FlowDirection => {
   const direction = flowDirections.find(candidate => candidate === value);
   if (direction === undefined) throw new Error(`Unsupported Flow direction: ${value}`);
   return direction;
@@ -58,10 +58,12 @@ const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => renderFlowCompoundPreview(values, lang));
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
 
 /** Flow 示例语言 */
 export type FlowPreviewProps = Readonly<{ lang?: Lang }>;
+
 /** 当前语言的 Flow 交互示例 */
 const Demo: FC<FlowPreviewProps> = props => {
   const { lang = 'zh' } = props;

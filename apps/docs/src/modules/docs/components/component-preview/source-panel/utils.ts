@@ -8,14 +8,17 @@ export const availableSourceViews = (source: ComponentRenderSource): Array<Sourc
 /** 按模式过滤 unified diff。 */
 export const filterDiffByMode = (diff: UnifiedDiff, mode: Exclude<DiffMode, 'off'>): UnifiedDiff => {
   if (mode === 'full') return diff;
+
   const lines = diff.code.split('\n');
   const skipKind: DiffLineKind = mode === 'added' ? 'removed' : 'added';
   const outLines: Array<string> = [];
   const outKinds: Array<DiffLineKind> = [];
+
   for (let index = 0; index < lines.length; index++) {
     if (diff.lineKinds[index] === skipKind) continue;
     outLines.push(lines[index]);
     outKinds.push(diff.lineKinds[index]);
   }
+
   return { code: outLines.join('\n'), lineKinds: outKinds };
 };

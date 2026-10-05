@@ -1,5 +1,5 @@
 import { Draw, Layout, Node } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react/collection';
+import { Array, Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -13,9 +13,10 @@ export type PathDeferredProps = { lang?: Lang };
 const PathDeferred: FC<PathDeferredProps> = props => {
   const { lang = 'zh' } = props;
   const t = pathDeferredI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      <List
+      <Array
         transforms={[{ kind: 'translate', x: 0, y: 0 }]}
         label={{ text: t.queue, opacity: 0.8, font: { size: 12 } }}
         layout={{ width: 150, height: 36 }}
@@ -48,7 +49,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
           },
         ]}
       />
-      <List
+      <Array
         id="sink"
         transforms={[{ kind: 'translate', x: 0, y: 165 }]}
         label={{ text: t.before, opacity: 0.8, font: { size: 12 } }}
@@ -60,7 +61,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
           { content: 'Node b …' },
         ]}
       />
-      <List
+      <Array
         transforms={[{ kind: 'translate', x: 0, y: 385 }]}
         label={{ text: t.after, opacity: 0.8, font: { size: 12 } }}
         layout={{ direction: 'column', width: 170, height: 34 }}

@@ -10,14 +10,19 @@ import { scopeTransformStepsI18n } from './scope-transform-steps.i18n';
 export type ScopeTransformStepsProps = Readonly<{ lang?: Lang }>;
 
 const scale: InputTransform = { kind: 'scale', x: 1.4, y: 1.4, pivot: 'origin' };
+
 const rotate: InputTransform = { kind: 'rotate', degrees: 30, pivot: 'origin' };
+
 const stages: ReadonlyArray<ReadonlyArray<InputTransform>> = [[], [scale], [rotate, scale], [rotate, scale]];
+
 const positions = [60, 245, 430, 615];
+
 const coordinates = ['B = [14, 0]', 'B = [19.6, 0]', 'B ≈ [17, 9.8]', 'B ≈ [33, 23.8]'];
 
 const ScopeTransformSteps: FC<ScopeTransformStepsProps> = props => {
   const { lang } = props;
   const i18n = scopeTransformStepsI18n[lang ?? 'zh'];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {stages.map((transforms, index) => (

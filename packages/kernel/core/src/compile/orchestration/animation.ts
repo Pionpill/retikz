@@ -22,6 +22,7 @@ export const filterAnimations = (
 ): Array<IRAnimationTrack> | undefined => {
   const { target, onWarn, irPath } = context;
   if (tracks === undefined) return undefined;
+
   const kept = tracks.filter((track, index) => {
     const isViewBox = track.property === 'viewBox';
     const valid = target === 'root' ? isViewBox : !isViewBox;
@@ -36,7 +37,9 @@ export const filterAnimations = (
       });
       return false;
     }
+
     return true;
   });
+
   return kept.length > 0 ? kept : undefined;
 };

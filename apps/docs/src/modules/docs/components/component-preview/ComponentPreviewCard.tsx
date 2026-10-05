@@ -132,13 +132,16 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     onThemeStyleChange,
     caption,
   } = props;
+
   const [localMode, setLocalMode] = useState(initialMode);
   const mode = onModeChange ? initialMode : localMode;
+
   const toggleMode = () => {
     const nextMode = mode === 'showcase' ? 'default' : 'showcase';
     if (onModeChange) onModeChange(nextMode);
     else setLocalMode(nextMode);
   };
+
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [localControlPanelOpen, setLocalControlPanelOpen] = useState<boolean>();
@@ -156,12 +159,14 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const globalRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const globalControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
   const globalRangePlaybackDuration = useComponentPreviewStore(s => s.rangePlaybackDuration);
+
   const resolvedControlDefinition = controlContract?.controls ?? controlDefinition;
   const controlState = usePreviewControlState(
     resolvedControlDefinition,
     controlContract?.canonicalValues,
     globalRangePlaybackDuration,
   );
+
   const source = useMemo(
     () =>
       initialSource && buildSourceViews
@@ -171,6 +176,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   );
   const sourceState = useSourcePanelState(source, defaultSourceFile);
   const hasCode = sourceState.views.length > 0;
+
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalRendererMode,
@@ -179,6 +185,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     dragEnabled: globalDragEnabled,
     expanded: isMaximized,
   });
+
   const isCodeVisible = resolvePreviewCodeVisible(globalHideCode, localIsCodeVisible);
   useEffect(() => {
     if (mode === 'default' && (!codeInitiallyHidden || isCodeVisible || isMaximized)) onSourceRequested?.();
@@ -202,6 +209,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     fillAiDraft(prompt);
   }, [aiCurrentPage, fillAiDraft, name, openAi]);
   const handleShowCode = useCallback(() => setLocalIsCodeVisible(true), []);
+
   const previewToolSlots = showTools
     ? buildPreviewToolSlots({
         compactSizes: mode === 'showcase',
@@ -224,6 +232,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
         toggleRendererMode: previewState.toggleRendererMode,
       })
     : [];
+
   const resolvedCardControlSlots = mergePreviewControlSlots(
     controlSlots,
     previewToolSlots,

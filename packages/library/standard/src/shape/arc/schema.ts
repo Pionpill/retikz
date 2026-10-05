@@ -8,6 +8,7 @@ import {
   ShapeRadiusSchema,
   ShapeArcCloseSchema,
 } from '../shared';
+
 /** Arc 的持久化几何契约 */
 export const ArcSchema = strictObject({
   ...ShapePathSchema.shape,

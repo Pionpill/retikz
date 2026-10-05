@@ -8,6 +8,7 @@ import { previewControlContract } from './overlay-position.controls';
 
 export { createPreviewControlContract } from './overlay-position.controls';
 export const previewControls = previewControlContract.controls;
+
 const preview = defineOverlayPreview(
   previewControlContract,
   values => (
@@ -51,7 +52,9 @@ const preview = defineOverlayPreview(
     ],
   }),
 );
+
 export const previewSource = preview.source;
+
 /** 本节 API 的交互示例，所有入口共享场景与检查配置 */
 const Demo: FC = preview.Component;
 export default Demo;

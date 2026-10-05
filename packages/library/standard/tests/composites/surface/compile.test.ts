@@ -34,6 +34,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
     compile: (node, context) => {
       logs.push({ id: node.id, proposal: context.proposal });
       if (node.reject) throw new Error(`Leaf '${node.id}' rejected its proposal`);
+
       return {
         allocationBounds: {
           x: node.originX,
@@ -96,7 +97,9 @@ const compileSurface = (
     compile: (node, context) => {
       const result = context.layoutChild(node.child, proposal);
       if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
+
       observed = result.result;
+
       return { children: [context.replay(result.result)] };
     },
   });
@@ -116,6 +119,7 @@ const compileSurface = (
     { composites: [SurfaceDefinition, createLeafDefinition(logs), harness], padding: 0 },
   );
   if (observed === undefined) throw new Error('Expected Surface probe to resolve');
+
   return { logs, observed, output };
 };
 
@@ -245,6 +249,7 @@ it('Surface 完整 Scope 属性透传独立外框', () => {
     { composites: [SurfaceDefinition] },
   );
   const serialized = JSON.stringify(scene.primitives);
+
   expect(serialized).toContain('"hitTest":false');
   expect(serialized).toContain('"fill":"red"');
 });

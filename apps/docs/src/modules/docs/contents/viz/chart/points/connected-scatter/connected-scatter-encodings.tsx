@@ -6,6 +6,7 @@ import { createPreviewControlContract } from './connected-scatter-encodings.cont
 import { renderConnectedScatterEncodingsPreview } from './connected-scatter-encodings.preview';
 
 const contract = createPreviewControlContract();
+
 const controlled = defineControlledPreview(contract, (values, dimensions) =>
   renderConnectedScatterEncodingsPreview(
     {
@@ -14,8 +15,10 @@ const controlled = defineControlledPreview(contract, (values, dimensions) =>
     dimensions,
   ),
 );
+
 /** 映射交互示例 */
 const Demo: FC = controlled.Component;
+
 /** 预览使用的控件 */
 export const previewControls = contract.controls;
 export { createPreviewControlContract } from './connected-scatter-encodings.controls';

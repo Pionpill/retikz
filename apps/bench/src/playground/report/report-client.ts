@@ -26,6 +26,7 @@ const readResponseError = async (response: Response): Promise<string> => {
   } catch {
     // 非 JSON 错误响应回退到 HTTP 状态
   }
+
   return `Report API request failed with ${response.status.toString()}`;
 };
 
@@ -39,8 +40,10 @@ export const listBenchReports = async (
   if (caseId !== undefined) query.set('caseId', caseId);
   const response = await fetcher(`${reportApiPath}?${query.toString()}`);
   if (!response.ok) throw new Error(await readResponseError(response));
+
   const value: unknown = await response.json();
   if (!isBenchReportList(value)) throw new Error('Report list response is invalid');
+
   return value;
 };
 
@@ -54,10 +57,12 @@ export const getBenchReport = async (
   const query = new URLSearchParams({ moduleId, caseId, runId });
   const response = await fetcher(`${reportApiPath}?${query.toString()}`);
   if (!response.ok) throw new Error(await readResponseError(response));
+
   const value: unknown = await response.json();
   if (typeof value !== 'object' || value === null || !('report' in value) || !isBenchLabReport(value.report)) {
     throw new Error('Report detail response is invalid');
   }
+
   return value.report;
 };
 
@@ -72,9 +77,11 @@ export const saveBenchReport = async (
     body: JSON.stringify(input),
   });
   if (!response.ok) throw new Error(await readResponseError(response));
+
   const value: unknown = await response.json();
   if (typeof value !== 'object' || value === null || !('report' in value) || !isBenchLabReport(value.report)) {
     throw new Error('Report write response is invalid');
   }
+
   return value.report;
 };

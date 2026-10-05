@@ -31,10 +31,12 @@ type Resolved =
 
 /** AI 生成图的默认尺寸。 */
 const DEFAULT_TIKZ_WIDTH = 400;
+
 const DEFAULT_TIKZ_HEIGHT = 300;
 
 const resolveIr = (source: string): Resolved => {
   let raw: unknown;
+
   try {
     raw = JSON.parse(source);
   } catch (err) {
@@ -44,6 +46,7 @@ const resolveIr = (source: string): Resolved => {
       errorDetail: err instanceof Error ? err.message : String(err),
     };
   }
+
   const parsed = SceneSchema.safeParse(raw);
   if (!parsed.success) {
     return {
@@ -52,8 +55,10 @@ const resolveIr = (source: string): Resolved => {
       errorDetail: `schema mismatch — ${formatZodError(parsed.error)}`,
     };
   }
+
   const ir: IRScene = parsed.data;
   const Component: FC = () => <Layout ir={ir} />;
+
   return {
     ok: true,
     Component,
@@ -64,6 +69,7 @@ const resolveIr = (source: string): Resolved => {
 const resolveTsx = (source: string): Resolved => {
   const parsed = parseRetikzJsx(source);
   if (!parsed.ok) return { ok: false, errorKind: 'tsx', errorDetail: parsed.error };
+
   const element = parsed.element as ReactElement<{ children?: ReactNode; width?: number; height?: number }>;
   const enriched = isValidElement(element)
     ? cloneElement(element, {
@@ -73,12 +79,14 @@ const resolveTsx = (source: string): Resolved => {
     : element;
   const Component: FC = () => enriched;
   let irJson: string;
+
   try {
     const input = createInputScene(element.props.children);
     irJson = formatIR(normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) }).ir);
   } catch (err) {
     irJson = `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
   }
+
   return {
     ok: true,
     Component,
@@ -105,6 +113,7 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
         </div>
       );
     }
+
     return (
       <RetikzPreviewError
         format={format}
@@ -114,6 +123,7 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
       />
     );
   }
+
   return (
     <RetikzRenderErrorBoundary key={source} format={format} source={source}>
       <ComponentPreviewCard
@@ -151,6 +161,7 @@ class RetikzRenderErrorBoundary extends ReactComponent<RetikzRenderErrorBoundary
   override render(): ReactNode {
     const { error } = this.state;
     if (!error) return this.props.children;
+
     return (
       <RetikzPreviewError
         format={this.props.format}
@@ -176,6 +187,7 @@ const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
   const [expanded, setExpanded] = useState(false);
   const lang = format === 'ir' ? 'json' : 'tsx';
   const prefix = errorKind === 'ir' ? t('ai.diagramErrorIr') : t('ai.diagramErrorJsx');
+
   return (
     <div className="my-3 w-full min-w-0 max-w-full overflow-hidden rounded-lg border border-destructive/30 bg-destructive/5">
       <div className="flex items-start gap-2 px-3 py-2 text-xs text-destructive">
@@ -207,6 +219,7 @@ const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
 export const RetikzPreviewPending: FC<{ format: RetikzPreviewFormat }> = props => {
   const { format } = props;
   const { t } = useTranslation();
+
   return (
     <div className="my-3 overflow-hidden rounded-xl border">
       <div className="relative flex h-44 w-full items-center justify-center overflow-hidden bg-muted/20 p-6 sm:h-56 sm:p-10">

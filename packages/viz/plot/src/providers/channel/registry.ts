@@ -4,7 +4,7 @@ import type { BuiltinTextChannelOptions } from './features';
 import { createBuiltinPaintChannels, createBuiltinTextChannels, DELIVERY_CHANNELS } from './features';
 
 /**
- * 保留的内置通道名集：扩展通道的 `channel` 不得撞这些。
+ * 保留的内置通道名集：扩展通道的 `channel` 不得撞这些
  * @description 含内置 mark / scope / node / path channel + 位置通道 x/y/z；同名内置通道可按 kind 注册多个 definition
  */
 export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
@@ -48,7 +48,9 @@ export const BUILTIN_CHANNEL_NAMES: ReadonlySet<string> = new Set<string>([
 
 /** 解析通道 registry 时可传入的自定义 definition 与文本选项 */
 export type ChannelRegistryOptions = {
+  /** 加入当前注册表的自定义通道定义 */
   custom?: ReadonlyArray<AnyChannelDefinition>;
+  /** 按 mark id 注入内置标签通道的运行时回调 */
   resolveLabel?: BuiltinTextChannelOptions['resolveLabel'];
 };
 
@@ -60,35 +62,44 @@ const createBuiltinChannels = (options: BuiltinTextChannelOptions = {}): Readonl
 
 /** 包含 definition 顺序视图的通道 registry */
 export type ChannelRegistry = Map<string, AnyChannelDefinition> & {
+  /** 当前注册表持有的完整通道定义列表 */
   readonly definitions: ReadonlyArray<AnyChannelDefinition>;
 };
 
 /**
- * 解析通道 registry：内置 definition 先注册，自定义 definition 再合并。
+ * 解析通道 registry：内置 definition 先注册，自定义 definition 再合并
  * @description 所有通道类型共用一张 registry；kind 决定解析结果进入 mark values、scope/node/path deliveries，或由坐标系 role 消费
  */
 export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): ChannelRegistry => {
   const registry = new Map<string, AnyChannelDefinition>() as ChannelRegistry;
   const definitions: Array<AnyChannelDefinition> = [];
+
   const addDefinition = (def: AnyChannelDefinition): void => {
     if (def.channel.trim() === '') {
       throw new RetikzPlotError('lowerPlots: channel definition must use a non-empty channel name');
     }
+
     definitions.push(def);
     if (!registry.has(def.channel)) registry.set(def.channel, def);
   };
+
   for (const def of createBuiltinChannels({ resolveLabel: options.resolveLabel })) {
     addDefinition(def);
   }
+
   for (const def of options.custom ?? []) {
     if (BUILTIN_CHANNEL_NAMES.has(def.channel)) {
       throw new RetikzPlotError(`lowerPlots: custom channel "${def.channel}" collides with a built-in channel name`);
     }
+
     if (definitions.some(registered => registered.channel === def.channel)) {
       throw new RetikzPlotError(`lowerPlots: duplicate custom channel registration: "${def.channel}"`);
     }
+
     addDefinition(def);
   }
+
   Object.defineProperty(registry, 'definitions', { value: definitions, enumerable: false });
+
   return registry;
 };

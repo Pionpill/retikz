@@ -52,6 +52,7 @@ export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaseline
           fontSize: layout.fontSize,
         });
   const observedFirstBaseline = round(firstBaseline);
+
   return {
     emitted: [firstBaseline],
     observed: Array.from({ length: lineCount }, (_value, index) => observedFirstBaseline + index * emittedLineHeight),
@@ -83,6 +84,7 @@ const emitNodeShapePrimitives = (
 ): Array<ScenePrimitive> => {
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
   let emitted: unknown;
+
   try {
     emitted = layout.shapeDef.emit(
       axisAlignedRect,
@@ -92,11 +94,13 @@ const emitNodeShapePrimitives = (
     );
   } catch (thrown) {
     if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+
     throw createLayoutProbeRecoverableError(`Shape '${layout.shapeName}' emit failed: ${safeThrownDetail(thrown)}`, {
       cause: thrown,
       providerKey: `shape:${layout.shapeName}`,
     });
   }
+
   return validateScenePrimitives(`Shape '${layout.shapeName}'`, emitted, validateMarkerPrimitives);
 };
 
@@ -105,6 +109,7 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
   if (layout.inlineBlock) {
     const baselineYs = nodeBaselineYsOf(layout, round).emitted;
     const halfBlockW = layout.textWidth / 2;
+
     return layout.inlineBlock.lines.flatMap(({ laid }, index) => {
       const originX =
         layout.align === 'start'
@@ -124,6 +129,7 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
   const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
   const lineHeight = round(layout.lineHeight);
   const baselineYs = nodeBaselineYsOf(layout, round).emitted;
+
   /** 用现有 grouped TextPrim 合同发出 authoritative physical-line baselines */
   const textPrimitive = (
     lines: NonNullable<NodeLayout['lines']>,
@@ -146,6 +152,7 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
     measuredWidth: round(layout.textWidth),
     measuredHeight: round(measuredHeight),
   });
+
   return [textPrimitive(layout.lines, baselineYs[0], layout.textHeight)];
 };
 
@@ -157,6 +164,7 @@ const emitNodeLabelPinPrimitive = (
   round: Round,
 ): ScenePrimitive | undefined => {
   if (!label.pin) return undefined;
+
   const style = typeof label.pin === 'object' ? label.pin : undefined;
   const [lx, ly] = labelCenterPosition;
   const [bx, by] = labelBorderPoint(layout, label);
@@ -167,6 +175,7 @@ const emitNodeLabelPinPrimitive = (
     halfHeight: label.measuredHeight / 2,
     rotateDeg: label.rotateDeg,
   });
+
   return {
     type: 'path',
     commands: [
@@ -193,10 +202,12 @@ const emitNodeLabelContentPrimitive = (
     const laid = label.laid;
     const originX = lx - laid.width / 2;
     const baselineY = ly + (laid.ascent - laid.descent) / 2;
+
     return { type: 'group', children: laid.emit(originX, baselineY, round) };
   }
 
   const labelLineHeight = round(label.fontSize * DEFAULT_LINE_HEIGHT_FACTOR);
+
   return {
     type: 'text',
     x: round(lx),
@@ -235,6 +246,7 @@ const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, rou
           children: [labelContent],
         },
   );
+
   return primitives;
 };
 
@@ -243,9 +255,11 @@ const stampNodeShapePrimitives = (layout: NodeLayout, primitives: Array<ScenePri
   if (layout.id !== undefined) {
     for (const prim of primitives) prim.id = layout.id;
   }
+
   if (layout.meta !== undefined) {
     for (const prim of primitives) prim.meta = layout.meta;
   }
+
   if (layout.animations !== undefined) {
     for (const prim of primitives) prim.animations = layout.animations;
   }
@@ -267,11 +281,12 @@ const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimiti
       },
     ];
   }
+
   return group;
 };
 
 /**
- * NodeLayout → Scene primitives
+ * 将节点布局转换为场景图元
  * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
  */
 export const emitNodePrimitives = (

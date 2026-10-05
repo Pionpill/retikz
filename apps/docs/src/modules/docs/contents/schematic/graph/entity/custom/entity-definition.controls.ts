@@ -3,6 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { entityDefinitionI18n } from './entity-definition.i18n';
+
 /** 可用性输入的双语控件 */
 export const createPreviewControlContract = (lang: Lang) => {
   const copy = entityDefinitionI18n[lang];
@@ -27,10 +28,12 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { status: 'available', critical: false },
     relatedApis: ['Entity.predicate', 'Graph.graphRules'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

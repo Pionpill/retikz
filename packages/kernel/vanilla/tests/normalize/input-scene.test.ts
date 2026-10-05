@@ -29,6 +29,7 @@ it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入�
       ],
     }),
   );
+
   expect(result.ir.children).toEqual([
     {
       type: 'scope',
@@ -480,8 +481,10 @@ describe('@retikz/vanilla InputScene', () => {
       lower: (props, context) => {
         const normalizeChildren = context.normalizeChildren;
         if (normalizeChildren === undefined) throw new Error('expected embedded child normalizer');
+
         const slots = props.slots.map(slot => normalizeChildren(slot));
         void slots;
+
         return {
           node: {
             namespace: 'fixture',
@@ -530,7 +533,9 @@ describe('@retikz/vanilla InputScene', () => {
       lower: (props, context) => {
         const normalizeChildren = context.normalizeChildren;
         if (normalizeChildren === undefined) throw new Error('expected embedded child normalizer');
+
         props.slots.forEach(slot => normalizeChildren(slot));
+
         return {
           node: {
             namespace: 'fixture',
@@ -565,7 +570,9 @@ describe('@retikz/vanilla InputScene', () => {
       lower: (_props, context) => {
         const normalizeChildren = context.normalizeChildren;
         if (normalizeChildren === undefined) throw new Error('expected embedded child normalizer');
+
         normalizeChildren([scope({ theme: { mode: ThemeMode.Dark } }, [node({ id: 'child', position: [0, 0] })])]);
+
         return {
           node: { type: 'scope', children: [] },
           providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,

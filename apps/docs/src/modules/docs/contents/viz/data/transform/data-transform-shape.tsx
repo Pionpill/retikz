@@ -6,6 +6,7 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 import type { FC } from 'react';
 
 const COLUMN_WIDTH = 64;
+
 const ROW_HEIGHT = 26;
 
 const TABLE_LAYOUT = {

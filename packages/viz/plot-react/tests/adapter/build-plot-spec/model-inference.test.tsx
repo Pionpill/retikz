@@ -13,6 +13,7 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
         { name: 'revenue', type: 'continuous' },
       ],
     });
+
     expect(spec.scales).toEqual([]);
     expect(spec.coordinate).toEqual({ type: 'cartesian2D' });
     expect(spec.data).toEqual({
@@ -26,6 +27,7 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
 
   it('无 model 时沿用 AUTO 绑定（向后兼容）', () => {
     const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot');
+
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
     expect(spec.scales.length).toBeGreaterThan(0);
   });
@@ -34,6 +36,7 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
     const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', {
       deferPositionScaleInference: true,
     });
+
     expect(spec.coordinate).toEqual({ type: 'cartesian2D' });
     expect(spec.scales).toEqual([]);
     expect(spec.data).toEqual({ reference: '__plot' });
@@ -46,6 +49,7 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
       height: 180,
       deferPositionScaleInference: true,
     });
+
     expect(spec).toMatchObject({ id: 'panelA', width: 320, height: 180, data: { reference: 'panelA' } });
   });
 
@@ -56,6 +60,7 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
         { name: 'revenue', type: 'continuous' },
       ],
     });
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
@@ -73,6 +78,7 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
         ],
       },
     );
+
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x' });
     expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
   });
@@ -129,6 +135,7 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
       </>,
       '__plot',
     );
+
     expect(spec.scales).toContainEqual({ type, name: '__x', domainPadding });
     expect(PlotSchema.parse(spec).scales).toContainEqual({ type, name: '__x', domainPadding });
   });

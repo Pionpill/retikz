@@ -1,11 +1,6 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { BuiltinShape } from './constants';
 import type { ShapeNameSchema, ShapeRefSchema, ShapeValueSchema } from './schema';
-
-/** Core 内置 shape 名联合 */
-export type BuiltinShapeValue = ValueOf<typeof BuiltinShape>;
 
 /** Core 内置 shape 或自定义注册名 */
 export type ShapeName = ZodInfer<typeof ShapeNameSchema>;

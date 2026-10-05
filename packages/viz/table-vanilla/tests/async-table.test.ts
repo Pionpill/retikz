@@ -17,6 +17,7 @@ describe('async Table authoring', () => {
     const spec = table();
     const rows = [{ value: 2 }, { value: 6 }];
     const expected = renderTable(spec, { data: { rows }, artifacts: true });
+
     expect(await renderTableAsync(spec, { data: { rows }, artifacts: true })).toEqual(expected);
     expect(await renderTableAsync(spec, { data: { rows } })).toBe(expected.svg);
     expect(expected.svg).toContain('0.75');
@@ -38,6 +39,7 @@ describe('async Table authoring', () => {
                   await Promise.resolve();
                   executions++;
                   if (input.kind !== 'source') throw new Error('native source expected');
+
                   return {
                     rows: input.source.values.map(value => ({ value, ratio: value / 8 })),
                     model: stage.outputModel,
@@ -57,6 +59,7 @@ describe('async Table authoring', () => {
       adapters: [TableInputEmbedAdapter],
     });
     const svg = renderToSvgString(result.scene);
+
     expect(svg).toContain('0.25');
     expect(svg).toContain('0.75');
     expect(svg).toContain('0.5');

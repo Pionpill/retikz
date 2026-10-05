@@ -64,6 +64,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
       ) {
         throw new Error(`Leaf '${node.id}' rejected an exact proposal`);
       }
+
       const width =
         context.proposal.x.kind === LayoutAxisProposalKind.Intrinsic && context.proposal.x.mode === 'minimum'
           ? (node.minimumWidth ?? node.width)
@@ -76,6 +77,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
           : context.proposal.y.kind === LayoutAxisProposalKind.Exact && node.exactAllocationHeight !== undefined
             ? node.exactAllocationHeight
             : node.height;
+
       return {
         allocationBounds: { x: node.originX, y: node.originY, width, height },
         children: [context.scope({ id: node.id }, [])],
@@ -132,7 +134,9 @@ const compileLegend = (child: IRChild, proposal: LayoutProposal = naturalProposa
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -145,14 +149,17 @@ const compileLegend = (child: IRChild, proposal: LayoutProposal = naturalProposa
     { composites: [LegendDefinition, createLeafDefinition(logs), harness], padding: 0 },
   );
   if (observed === undefined) throw new Error('Expected Legend probe to resolve');
+
   return { logs, observed, output };
 };
 
 const legendArtifactOf = (output: ReturnType<typeof compileToScene>): LegendItemsArtifact => {
   const artifact = output.artifacts.find(value => value.kind === 'composite' && value.type === 'legend');
   if (artifact === undefined) throw new Error('Expected Legend compile artifact');
+
   const value = (artifact as LegendCompileArtifact).value;
   if (value.kind !== LegendContentKind.Items) throw new Error('Expected Legend items artifact');
+
   return value;
 };
 
@@ -164,19 +171,24 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   ): Readonly<{ x: number; y: number }> | undefined => {
     for (const primitive of children) {
       if (primitive.type !== 'group') continue;
+
       const translations = (primitive.transforms ?? []).filter(
         (transform): transform is TranslateTransform => transform.kind === 'translate',
       );
       const nextX = x + translations.reduce((sum, transform) => sum + transform.x, 0);
       const nextY = y + translations.reduce((sum, transform) => sum + transform.y, 0);
       if (primitive.id === id) return { x: nextX, y: nextY };
+
       const nested = visit(primitive.children, nextX, nextY);
       if (nested !== undefined) return nested;
     }
+
     return undefined;
   };
+
   const result = visit(primitives, 0, 0);
   if (result === undefined) throw new Error(`Expected Scene group '${id}'`);
+
   return result;
 };
 
@@ -209,7 +221,9 @@ describe('Legend items compile contract', () => {
     const root = groupsOf(output.scene.primitives).find(group => group.id === 'legend-root');
 
     expect(root).toBeDefined();
+
     if (root === undefined) throw new Error('Expected authored Legend root Scope');
+
     expect(root).toMatchObject({
       id: 'legend-root',
       meta: { source: 'scope-props-test' },
@@ -218,6 +232,7 @@ describe('Legend items compile contract', () => {
     expect(root.clipRef).toBeDefined();
 
     const allocation = root.children.find(child => child.type === 'group' && child.id === undefined);
+
     expect(allocation).toMatchObject({ type: 'group', clipRef: expect.any(String) });
     expect(allocation).not.toHaveProperty('meta');
     expect(allocation).not.toHaveProperty('zIndex');
@@ -344,6 +359,7 @@ describe('Legend items compile contract', () => {
         }),
       ).output,
     );
+
     expect(clipped.items[0]?.sample.slotBounds.x).toBe(expectedX);
     expect(visible.items[0]?.sample.slotBounds.x).toBe(expectedX);
     expect(clipped.container.allocationBounds.width).toBe(100);
@@ -661,6 +677,7 @@ describe('Legend items compile contract', () => {
 
   it('raises an unresolved Path reference with the child provider and probe occurrence', () => {
     let thrown: unknown;
+
     try {
       compileToScene(
         {
@@ -799,7 +816,9 @@ describe('Legend items compile contract', () => {
     if (label === null) throw new Error('Expected label artifact');
 
     expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+
     const path = output.scene.primitives.find(primitive => primitive.type === 'path');
+
     expect(path?.commands.find(command => command.kind === 'line')).toMatchObject({
       to: [20 + label.translation.x, label.translation.y],
     });

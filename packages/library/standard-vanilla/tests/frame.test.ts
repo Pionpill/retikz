@@ -33,6 +33,7 @@ describe('frame()', () => {
     const result = normalizeScene(scene([frame({ children: [{ type: 'node', text: 'origin' }] })]), {
       adapters: [FrameInputEmbedAdapter],
     });
+
     expect(result.ir.children[0]).toMatchObject({ children: [{ type: 'node', text: 'origin' }] });
     expect(JSON.stringify(result.ir)).not.toContain('position');
   });
@@ -77,6 +78,7 @@ describe('frame()', () => {
     const explicit = normalizeScene(scene({ children: [frame({ ...input, id: 'frame-model' })] }), {
       adapters: [FrameInputEmbedAdapter],
     });
+
     expect(explicit.ir.children[0]).toHaveProperty('id', 'frame-model');
   });
 

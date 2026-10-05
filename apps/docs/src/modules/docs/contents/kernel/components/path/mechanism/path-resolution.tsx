@@ -1,20 +1,23 @@
 import { Draw, Layout, Node, Path, Scope, Step } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react/collection';
+import { Array, Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
 
 import { cutCurve, cutLength, cutNumber } from './path-cut.data';
 import { pathResolutionI18n } from './path-resolution.i18n';
+
 /** 路径解析示意图的语言 */
 export type PathResolutionProps = { lang?: Lang };
+
 /** 从作者步骤到具体命令，再展开绘制段的来源与距离 */
 const PathResolution: FC<PathResolutionProps> = props => {
   const { lang = 'zh' } = props;
   const t = pathResolutionI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      <List
+      <Array
         id="steps"
         label={{
           text: t.steps,
@@ -32,7 +35,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
         ]}
         index
       />
-      <List
+      <Array
         id="commands"
         transforms={[{ kind: 'translate', x: 0, y: 180 }]}
         label={{

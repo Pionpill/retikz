@@ -20,8 +20,11 @@ import { DEG_TO_RAD } from './path-geometry';
 
 /** 应用动画所需的子集选项 */
 export type AnimateContext = {
+  /** 用于解析自定义缓动名称的注册表 */
   easings?: EasingRegistry;
+  /** 自定义动画属性的插值与 Canvas 应用能力 */
   animationProperties?: AnimationPropertyRegistry;
+  /** 报告跳过或无法完整执行的动画能力 */
   warn: (message: string) => void;
   /** 是否施加非自动播（manual / visible / onEvent）track（per-id 激活时为 true；缺省仅自动播） */
   includeNonAutoplay?: boolean;
@@ -37,9 +40,12 @@ const approxLength = (prim: ScenePrimitive): number => {
     const b = prim.ry;
     return Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
   }
+
   if (prim.type !== 'path') return 0;
+
   let len = 0;
   let prev: [number, number] | null = null;
+
   for (const cmd of prim.commands) {
     if (cmd.kind === 'close') continue;
     if (cmd.kind === 'arc') {
@@ -47,11 +53,13 @@ const approxLength = (prim: ScenePrimitive): number => {
       prev = commandEndpoint(cmd);
       continue;
     }
+
     const end = commandEndpoint(cmd);
     if (end === null) continue;
     if (prev && cmd.kind !== 'move') len += dist(prev, end);
     prev = end;
   }
+
   return len;
 };
 
@@ -74,9 +82,11 @@ export const applyPrimAnimations = (
   context: AnimateContext,
 ): ScenePrimitive => {
   const overrides: Record<string, unknown> = {};
+
   for (const track of prim.animations ?? []) {
     // 按 trigger 过滤：默认只施加 auto（load/缺省）track；manual / onEvent / visible 仅在该 id 被 per-id 激活时播
     if (!isAutoplayTrigger(track) && !context.includeNonAutoplay) continue;
+
     const cls = classifyProperty(track.property);
     if (cls === 'custom') {
       const def =
@@ -89,24 +99,30 @@ export const applyPrimAnimations = (
         );
         continue;
       }
+
       const result = evaluateTrack(track, time, { easings: context.easings, interpolateCustom: def.interpolate });
       if (result) def.applyCanvas(ctx, prim, result.value);
       continue;
     }
+
     if (cls === 'viewBox') continue; // 元素级 viewBox 由 compile drop，这里防御性跳过
     if (cls === 'pathDraw' && !primHasStroke(prim)) {
       context.warn('Canvas animation: pathDraw requires a stroked element; skipping (rendering base).');
       continue;
     }
+
     if (isUnsupportedGroupStyleProperty(prim, track.property)) {
       context.warn(
         `Canvas animation: group property "${track.property}" cannot be inherited by children; skipping (rendering base).`,
       );
       continue;
     }
+
     const result = evaluateTrack(track, time, { easings: context.easings });
     if (!result) continue;
+
     const value = result.value;
+
     switch (track.property) {
       case AnimationProperty.Opacity:
         overrides.opacity = asNumber(value);
@@ -136,11 +152,13 @@ export const applyPrimAnimations = (
         else if (track.property === AnimationProperty.ScaleX) ctx.scale(asNumber(value), 1);
         else if (track.property === AnimationProperty.ScaleY) ctx.scale(1, asNumber(value));
         else ctx.scale(asNumber(value), asNumber(value));
+
         ctx.translate(-ox, -oy);
         break;
       }
       case AnimationProperty.PathDraw: {
         const v = asNumber(value);
+
         // 完全揭示（settled）时不加 dash override，渲染完整 base 描边——approxLength 对曲线低估时，
         // dashPattern=[len] 会让真实弧长尾部 (len, trueLen] 落进 gap、留永久缺口；v≥1 直接走 base 即可。
         if (v >= 1) break;
@@ -152,5 +170,6 @@ export const applyPrimAnimations = (
       }
     }
   }
+
   return Object.keys(overrides).length > 0 ? { ...prim, ...overrides } : prim;
 };

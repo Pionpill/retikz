@@ -22,11 +22,16 @@ const copyConfigValue = <T>(value: T, ancestors: ReadonlySet<object>): T => {
   }
 
   const copy = Object.create(Object.getPrototypeOf(value)) as Record<string, unknown>;
+
   for (const [key, item] of Object.entries(value)) copy[key] = copyConfigValue(item, nextAncestors);
+
   return copy as T;
 };
 
-/** 隔离 factory 输入与 Computation 生命周期配置的所有权 */
+/**
+ * 隔离 factory 输入与 Computation 生命周期配置的所有权
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export const copyCoreComputationOptions = <TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
   options: CoreComputationOptions<TComposites>,
 ): CoreComputationOptions<TComposites> => {
@@ -35,5 +40,6 @@ export const copyCoreComputationOptions = <TComposites extends ReadonlyArray<Any
     new Set(),
   );
   if (options.compositeInputs !== undefined) copied.compositeInputs = options.compositeInputs;
+
   return copied;
 };

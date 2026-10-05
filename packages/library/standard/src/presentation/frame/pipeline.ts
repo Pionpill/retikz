@@ -68,6 +68,7 @@ const unionBounds = (left: BoundsRect, right: BoundsRect): BoundsRect => {
   const y = Math.min(left.y, right.y);
   const maxX = Math.max(left.x + left.width, right.x + right.width);
   const maxY = Math.max(left.y + left.height, right.y + right.height);
+
   return { x, y, width: maxX - x, height: maxY - y };
 };
 
@@ -82,6 +83,7 @@ const placeChild = (
   const sourceY =
     anchor === 'top-left' ? result.allocationBounds.y : result.allocationBounds.y + result.allocationBounds.height;
   const translation = { x: target.x - sourceX, y: target.y - sourceY };
+
   return {
     result,
     bounds: translateBounds(result.allocationBounds, translation.x, translation.y),
@@ -114,6 +116,7 @@ const authoredScopePropsOf = (frame: CanonicalFrame): CompositeCompileScopeProps
   void _title;
   void _description;
   void _children;
+
   return scopeProps;
 };
 
@@ -143,6 +146,7 @@ export const compileFrame = (
     bounds: bodyResult.allocationBounds,
     replay: context.replay(bodyResult),
   } satisfies PlacedFrameChild;
+
   const titleResult =
     frame.title === undefined
       ? undefined
@@ -165,6 +169,7 @@ export const compileFrame = (
           },
           NaturalLayoutProposal,
         );
+
   const contentTop = { x: body.bounds.x, y: body.bounds.y - frame.gap };
   let title: PlacedFrameChild | undefined;
   let description: PlacedFrameChild | undefined;
@@ -204,6 +209,7 @@ export const compileFrame = (
     width: contentBounds.width + insets.left + insets.right,
     height: contentBounds.height + insets.top + insets.bottom,
   };
+
   const { zIndex: borderZIndex, ...borderStyle } = frame.border.style;
   const border: IRPath = {
     style: borderStyle,
@@ -219,6 +225,7 @@ export const compileFrame = (
       },
     ],
   };
+
   const root = context.scope(authoredScopePropsOf(frame), [
     border,
     body.replay,

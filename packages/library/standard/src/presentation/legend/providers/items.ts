@@ -5,15 +5,21 @@ import type { IRLegendItem } from '../types';
 
 /** Legend child 在 minimum 与 natural probe 下的结构结果 */
 export type MeasuredLegendChild = Readonly<{
+  /** 按最小尺寸提案得到的子内容测量结果 */
   minimum: LayoutChildResult;
+  /** 按自然尺寸提案得到的子内容测量结果 */
   natural: LayoutChildResult;
 }>;
 
 /** 已取得结构 contribution 的离散 Legend item */
 export type MeasuredLegendItem = Readonly<{
+  /** 该图例项的原始作者声明 */
   authored: IRLegendItem;
+  /** 该图例项在作者数组中的零基索引 */
   sourceIndex: number;
+  /** 图例样本的最小及自然尺寸测量结果 */
   sample: MeasuredLegendChild;
+  /** 可选标签的最小及自然尺寸测量结果 */
   label?: MeasuredLegendChild;
 }>;
 

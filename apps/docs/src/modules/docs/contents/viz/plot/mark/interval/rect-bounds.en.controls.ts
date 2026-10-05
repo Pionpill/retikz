@@ -5,7 +5,9 @@ import { matrix } from './rect-heatmap.data';
 
 /** Stable control id for rectangle bounds */
 export const RECT_BOUNDS_MODE_ID = 'rect-bounds-mode';
+
 export const RECT_BOUNDS_SHOW_COLOR_ID = 'rect-bounds-show-color';
+
 export const RECT_BOUNDS_COORDINATE_ID = 'interval-cell-coordinate';
 
 /** English panel for rectangle bound sources */

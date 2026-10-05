@@ -87,11 +87,13 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
     onAskAi,
     width: previewWidth = 0,
   } = props;
+
   const [codeExpanded, setCodeExpanded] = useState(false);
   const [tab, setTab] = useState<'preview' | 'data' | 'code'>('preview');
   const theme = usePreviewTheme(themeStyleSelection, themeMode);
   const display = sourceState.display(true);
   const views = sourceState.views;
+
   const tableFields = definition
     ? resolveVisiblePreviewControlSections(
         definition.presentation === 'panel' ? definition.sections : [{ controls: definition.controls }],
@@ -101,6 +103,7 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
         .filter(field => field.kind === 'table')
     : [];
   const activeTab = tab === 'data' && tableFields.length === 0 ? 'preview' : tab;
+
   return (
     <Tabs
       value={activeTab}

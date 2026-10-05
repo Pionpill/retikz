@@ -11,6 +11,7 @@ import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatt
 const runtime = resolveChartProviderRegistry([
   { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
 ]).runtime;
+
 const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, unknown>> = []) => {
   const source = ConnectedScatterChartSchema.parse({
     namespace: 'chart',
@@ -24,7 +25,9 @@ const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, 
       guides: { axis: false, grid: false, legend: false },
     },
   });
+
   expect(ConnectedScatterChartSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
     recipe: ConnectedScatterChartDefinition,
@@ -32,8 +35,11 @@ const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, 
     runtime,
   }).plot;
 };
+
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';
+
 const pathsOf = (children: Array<IRChild>): Array<IRPath> =>
   children.flatMap(child => (isScope(child) ? pathsOf(child.children) : isPath(child) ? [child] : []));
 
@@ -42,6 +48,7 @@ describe('Connected Scatter connection curves', () => {
     const plot = plotOf({ curve: 'catmullRom', connectNulls: { stroke: '#ff0000', strokeWidth: 4 } });
     const path = plot.marks[0];
     if (path.type !== 'path') throw new Error('Expected path mark');
+
     path.series = 'group';
     const datasets = {
       rows: [
@@ -56,6 +63,7 @@ describe('Connected Scatter connection curves', () => {
     };
     const paths = pathsOf(lowerPlotWithLineage(plot, datasets, { width: 480, height: 320 }).children);
     const bridges = paths.filter(item => item.style?.dashPattern !== undefined);
+
     expect(paths).toHaveLength(4);
     expect(bridges).toHaveLength(1);
     expect(bridges[0].style).toMatchObject({ stroke: '#ff0000', strokeWidth: 4, dashPattern: [6, 4] });
@@ -64,6 +72,7 @@ describe('Connected Scatter connection curves', () => {
     ).toBe(true);
     expect(plot.marks[1]).toEqual(plotOf().marks[1]);
   });
+
   it('preserves the linear default and inherits or overrides the recipe curve', () => {
     expect(plotOf().marks[0]).not.toHaveProperty('curve');
     expect(plotOf({ curve: 'catmullRom' }, [{ kind: 'connected-scatter', override: true }]).marks[0]).toMatchObject({
@@ -85,7 +94,9 @@ describe('Connected Scatter connection curves', () => {
   it('changes path geometry while keeping point marks and ordering intact', () => {
     const linear = plotOf();
     const smooth = plotOf({ curve: 'catmullRom' });
+
     expect(smooth.marks[1]).toEqual(linear.marks[1]);
+
     const datasets = {
       rows: [
         { x: 0, y: 0, order: 0 },
@@ -95,6 +106,7 @@ describe('Connected Scatter connection curves', () => {
     };
     const render = (plot: typeof linear) =>
       pathsOf(lowerPlotWithLineage(plot, datasets, { width: 480, height: 320 }).children);
+
     expect(render(smooth)).not.toEqual(render(linear));
     expect(JSON.stringify(render(smooth))).toContain('"kind":"smooth"');
   });

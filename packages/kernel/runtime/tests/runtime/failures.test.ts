@@ -47,6 +47,7 @@ describe('runtime runtime failure isolation', () => {
     const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
 
     let thrown: unknown;
+
     try {
       createRuntime({
         sources,
@@ -58,7 +59,9 @@ describe('runtime runtime failure isolation', () => {
     }
 
     expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+
     if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
+
     expect(thrown).toEqual(
       expect.objectContaining({
         code: RetikzRuntimeErrorCode.ComputationRunFailed,
@@ -114,6 +117,7 @@ describe('runtime runtime failure isolation', () => {
     });
 
     let thrown: unknown;
+
     try {
       runtime.update({
         baseRevision: runtime.revision(),
@@ -124,7 +128,9 @@ describe('runtime runtime failure isolation', () => {
     }
 
     expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+
     if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
+
     expect(thrown).toEqual(
       expect.objectContaining({
         code: RetikzRuntimeErrorCode.ComputationUpdateFailed,
@@ -175,9 +181,12 @@ describe('runtime runtime failure isolation', () => {
             if (!(error instanceof RetikzRuntimeError)) throw error;
             replayed = error;
           }
+
           return { kind: RuntimeComputationKind.Incremental, artifact: 2 };
         }
+
         if (replayed === undefined) throw new Error('expected captured Runtime contract error');
+
         throw replayed;
       },
     });
@@ -187,6 +196,7 @@ describe('runtime runtime failure isolation', () => {
       computations,
       initialSnapshots: [createRuntimeSourceInput(declared, 1), createRuntimeSourceInput(hidden, 1)],
     });
+
     expect(
       runtime.update({
         baseRevision: runtime.revision(),
@@ -195,6 +205,7 @@ describe('runtime runtime failure isolation', () => {
     ).toEqual(expect.objectContaining({ revision: 1, outcome: RuntimeComputationKind.Incremental }));
 
     let thrown: unknown;
+
     try {
       runtime.update({
         baseRevision: runtime.revision(),
@@ -205,7 +216,9 @@ describe('runtime runtime failure isolation', () => {
     }
 
     expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+
     if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
+
     expect(thrown).toEqual(
       expect.objectContaining({
         code: RetikzRuntimeErrorCode.ComputationUpdateFailed,
@@ -247,8 +260,10 @@ describe('runtime runtime failure isolation', () => {
       }),
       observeCommit: event => {
         if (event.phase === RuntimeComputationPhase.Initial) return;
+
         const activeRuntime = sessionRef.current;
         if (activeRuntime === undefined) throw new Error('test runtime was not assigned');
+
         const reentrantCalls = [
           () => activeRuntime.snapshot(owner),
           () => activeRuntime.artifact(first),
@@ -256,9 +271,11 @@ describe('runtime runtime failure isolation', () => {
           () => activeRuntime.dispose(),
           () => activeRuntime.diagnostics(),
         ];
+
         for (const call of reentrantCalls) {
           expect(call).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.Reentrant }));
         }
+
         expect(activeRuntime.revision()).toBe(1);
         throw observerCause;
       },

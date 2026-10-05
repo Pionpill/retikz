@@ -20,6 +20,7 @@ const markLayer = (root: IRScope, index: number): IRScope => root.children[index
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -27,12 +28,15 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -40,7 +44,9 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -77,6 +83,7 @@ describe('contract mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top', sloped: true });
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
@@ -99,6 +106,7 @@ describe('contract mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top' });
   });
 
@@ -120,6 +128,7 @@ describe('contract mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.label).toEqual({ text: [{ runs: [{ text: 'trend ' }, { tex: 'x' }] }], position: 'midway' });
   });
 
@@ -136,6 +145,7 @@ describe('contract mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.label).toEqual({ text: 'target', position: 'near-end', side: 'bottom' });
   });
 
@@ -153,6 +163,7 @@ describe('contract mark host label lowering', () => {
     );
 
     const [node] = collectNodes(markLayer(root, 0));
+
     expect(node.label).toEqual({
       text: 'safe zone',
       position: { boundary: 'top', fraction: 0.5 },
@@ -176,6 +187,7 @@ describe('contract mark host label lowering', () => {
     );
 
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.label).toEqual({ text: 'A to B', position: 0.5, side: 'top' });
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
@@ -198,6 +210,7 @@ describe('contract mark host label lowering', () => {
     );
 
     const [ribbon] = collectPaths(markLayer(root, 0));
+
     expect(ribbon.kind).toBe('ribbon');
     expect(ribbon.kindOptions).toMatchObject({ width: { kind: 'fixed', value: 12 } });
     expect(ribbon.label).toEqual({ text: 'flow', position: 'midway', placement: 'inside', sloped: true });

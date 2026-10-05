@@ -1,4 +1,5 @@
 import { GraphStatus } from '@retikz/graph';
+
 /** 关系状态共用文案 */
 export const relationStatusOptions = {
   zh: [

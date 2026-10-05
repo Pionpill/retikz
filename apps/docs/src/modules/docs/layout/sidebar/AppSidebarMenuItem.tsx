@@ -57,6 +57,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
     if (!wasActiveBranch.current && isActiveBranch) {
       setOpen(true);
     }
+
     wasActiveBranch.current = isActiveBranch;
   }, [isActiveBranch]);
 

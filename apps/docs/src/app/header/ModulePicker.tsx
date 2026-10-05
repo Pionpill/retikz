@@ -28,6 +28,7 @@ export type ModulePickerProps = {
 };
 
 const RETIKZ_BRAND = 'retikz';
+
 const MODULE_PICKER_HINT_STORAGE_KEY = 'retikz-doc-module-picker-hint-dismissed';
 
 type ModulePickerItem = {
@@ -48,6 +49,7 @@ export const ModulePicker: FC<ModulePickerProps> = props => {
   const [showHint, setShowHint] = useState(
     () => typeof window === 'undefined' || window.localStorage.getItem(MODULE_PICKER_HINT_STORAGE_KEY) !== 'true',
   );
+
   const items: Array<ModulePickerItem> = [
     {
       value: 'home',
@@ -71,7 +73,9 @@ export const ModulePicker: FC<ModulePickerProps> = props => {
       }[module.id],
     })),
   ];
+
   const currentLabel = items.find(item => item.value === value)?.scopeLabel ?? RETIKZ_BRAND;
+
   const dismissHint = () => {
     if (!showHint) return;
 

@@ -56,12 +56,14 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
       pointFieldConsumersOf(ChartType.Bubble),
     );
     const spatial = pointSpatialResolutionOf(ChartType.Bubble, context.encodings);
+
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
     const slots = pointSlotsOf(context);
     const mark = resolveBubbleMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(slots.encodings);
+
     return pointResolutionOf(ChartType.Bubble, [{ kind: ChartType.Bubble, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });

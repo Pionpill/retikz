@@ -15,7 +15,9 @@ describe('Chart client preparation', () => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   });
+
   afterEach(() => vi.restoreAllMocks());
+
   it.each([false, true])('renders typed native Promise input with embedded=%s', async embedded => {
     const execute = vi.fn();
     const provider: DataTransformImplementationProvider<NativeRows> = {
@@ -26,7 +28,9 @@ describe('Chart client preparation', () => {
           execute: async input => {
             await Promise.resolve();
             if (input.kind !== 'source') throw new Error('native input required');
+
             execute();
+
             return { rows: input.source.values.map(row => ({ ...row, ratio: 0.75 })), model: stage.outputModel };
           },
         },
@@ -70,11 +74,13 @@ describe('Chart client preparation', () => {
       root.render(embedded ? <Layout runtime={{ preparation: 'async' }}>{chart}</Layout> : chart);
       await Promise.resolve();
     });
+
     expect(container.textContent).toContain('Native output');
     expect(container.querySelectorAll('svg')).toHaveLength(1);
     expect(container.querySelectorAll('ellipse')).toHaveLength(2);
     expect(new Set([...container.querySelectorAll('ellipse')].map(point => point.getAttribute('cy'))).size).toBe(1);
     expect(execute).toHaveBeenCalledOnce();
+
     act(() => root.unmount());
     container.remove();
   });

@@ -33,8 +33,7 @@ const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
 const definitionContextOf = (context: ChannelResolveContext): ChannelDefinitionResolveContext => ({
   node: context.node,
   rows: context.rows,
-  fieldTypes: context.fieldTypes,
-  ...(context.fieldTypeEvidence !== undefined ? { fieldTypeEvidence: context.fieldTypeEvidence } : {}),
+  model: context.model,
   resolveChannelScale: context.resolveChannelScale,
   resolveCategoryDomain: context.resolveCategoryDomain,
   resolveColorScheme: context.resolveColorScheme,
@@ -52,26 +51,31 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
   const operationResolution = resolveMarkOperation(mark, { registry: context.markRegistry });
   const operation = operationResolution.operation;
   const channelKinds = operationResolution.definition.channelKinds?.(operation as never);
+
   for (const channel of Object.keys(extensionChannelsOf(mark))) {
     if (BUILTIN_CHANNEL_NAMES.has(channel)) {
       throw new RetikzPlotError(
         `lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`,
       );
     }
+
     if (!context.channelRegistry.has(channel)) {
       throw new RetikzPlotError(
         `lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.channelDefinitions`,
       );
     }
   }
+
   const values: Record<string, NonNullable<MarkChannels['values']>[string]> = {};
   const defaults: Record<string, NonNullable<MarkChannels['defaults']>[string]> = { color: context.defaultColor };
   const scopeDeliveries: Array<ScopeChannelDelivery> = [];
   const nodeDeliveries: Array<NodeChannelDelivery> = [];
   const pathDeliveries: Array<PathChannelDelivery> = [];
   const descriptors: Array<ScaleDescriptor> = [];
+
   const registerDescriptor = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor === undefined) return;
+
     descriptors.push(
       descriptor.channel === 'shape' || descriptor.channel === 'size'
         ? {
@@ -83,6 +87,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
         : descriptor,
     );
   };
+
   const definitionContext = definitionContextOf(context);
 
   for (const definition of context.channelRegistry.definitions) {
@@ -91,14 +96,17 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     if (definition.kind === ChannelDefinitionKind.Mark) {
       const resolution = definition.resolve(definitionContext)(mark);
       if (!resolution) continue;
+
       values[definition.channel] = resolution.resolver;
       if (resolution.defaultValue !== undefined) defaults[definition.channel] = resolution.defaultValue;
       registerDescriptor(resolution.descriptor);
       continue;
     }
+
     if (definition.kind === ChannelDefinitionKind.Scope) {
       const resolution = definition.resolve(definitionContext)(mark);
       if (!resolution) continue;
+
       scopeDeliveries.push({
         channel: definition.channel,
         value: resolution.value,
@@ -107,9 +115,11 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
       registerDescriptor(resolution.descriptor);
       continue;
     }
+
     if (definition.kind === ChannelDefinitionKind.Path) {
       const resolution = definition.resolve(definitionContext)(mark);
       if (!resolution) continue;
+
       pathDeliveries.push({
         channel: definition.channel,
         resolver: resolution.resolver,
@@ -118,9 +128,12 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
       registerDescriptor(resolution.descriptor);
       continue;
     }
+
     if (definition.kind !== ChannelDefinitionKind.Node) continue;
+
     const resolution = definition.resolve(definitionContext)(mark);
     if (!resolution) continue;
+
     nodeDeliveries.push({
       channel: definition.channel,
       resolver: resolution.resolver,

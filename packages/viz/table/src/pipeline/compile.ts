@@ -15,7 +15,10 @@ const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompil
   artifact.occurrence.sourcePath === 'children[0]' &&
   artifact.occurrence.expansionPath.length === 0;
 
-/** 编译 canonical 单根 Table Scene，并返回同次 compile 的精确根 manifest */
+/**
+ * 编译 canonical 单根 Table Scene，并返回同次 compile 的精确根 manifest
+ * @template TComposites 额外注册的组合定义集合，决定编译结果中可出现的扩展产物类型；默认 readonly []
+ */
 export const compileTable = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   spec: IRTable,
   datasets: ExternalDatasets,
@@ -42,5 +45,6 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
       `table: compileTable expected exactly one root table.table artifact, received ${matches.length}`,
     );
   }
+
   return Object.freeze({ ...result, manifest: matches[0].value });
 };

@@ -12,6 +12,7 @@ export type DrawCompilationProps = Readonly<{ lang?: Lang }>;
 const DrawCompilation: FC<DrawCompilationProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = drawCompilationI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout kind="grid" id="draw-compilation" placements={[['input', 'normalize', 'geometry', 'output']]}>

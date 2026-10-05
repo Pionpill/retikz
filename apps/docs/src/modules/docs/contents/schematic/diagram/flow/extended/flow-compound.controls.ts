@@ -114,4 +114,5 @@ export const createPreviewControlContract = (lang: Lang = 'zh') =>
   defineFlowCompoundControlContract(flowCompoundI18n[lang].controls);
 
 export const previewControlContract = createPreviewControlContract();
+
 export const flowCompoundControls = previewControlContract.controls;

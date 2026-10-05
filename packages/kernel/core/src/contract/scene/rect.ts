@@ -1,7 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type {
-  BlendModeValue,
+  BlendMode,
   IRAnimationTrack,
   IRGraphicStyle,
   IRNode,
@@ -66,5 +66,5 @@ export type RectPrim = {
    * 混合模式：解析后值；undefined / normal = 普通 source-over
    * @default 'normal'
    */
-  blendMode?: BlendModeValue;
+  blendMode?: BlendMode;
 };

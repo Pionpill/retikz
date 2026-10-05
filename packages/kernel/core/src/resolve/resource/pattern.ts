@@ -25,6 +25,7 @@ const invalidPathOf = (prefix: string | undefined, path: ReadonlyArray<PropertyK
 const parseLineStyle = (shape: string, input: unknown, prefix?: string): IRPatternLineStyle => {
   const parsed = PatternLineStyleSchema.safeParse(input);
   if (parsed.success) return parsed.data;
+
   const path = invalidPathOf(prefix, parsed.error.issues[0]?.path ?? []);
   throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Pattern '${shape}' has an invalid ${path || 'line style'}.`);
 };
@@ -48,6 +49,7 @@ export const resolvePatternLineStyle = (
     if (dashPattern === undefined) delete resolved.dashPattern;
     else resolved.dashPattern = [...dashPattern];
   }
+
   return resolved;
 };
 
@@ -68,18 +70,21 @@ export const resolvePatternStyle = (spec: IRPatternPaint, defaultColor: string):
       parseLineStyle(spec.shape, spec.horizontalStyle, 'horizontalStyle'),
     );
   }
+
   if (spec.verticalStyle !== undefined) {
     resolved.verticalStyle = resolvePatternLineStyle(
       base,
       parseLineStyle(spec.shape, spec.verticalStyle, 'verticalStyle'),
     );
   }
+
   if (spec.lineStyleCycle !== undefined) {
     const parsedCycle = PatternLineStyleCycleSchema.safeParse(spec.lineStyleCycle);
     if (!parsedCycle.success) {
       const path = invalidPathOf('lineStyleCycle', parsedCycle.error.issues[0]?.path ?? []);
       throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Pattern '${spec.shape}' has an invalid ${path}.`);
     }
+
     const overridesByIndex = new Map(parsedCycle.data.overrides.map(override => [override.index, override.style]));
     resolved.lineStyleCycle = {
       period: parsedCycle.data.period,
@@ -89,5 +94,6 @@ export const resolvePatternStyle = (spec: IRPatternPaint, defaultColor: string):
       }),
     };
   }
+
   return resolved;
 };

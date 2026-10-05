@@ -20,6 +20,7 @@ const buildDiscretizationScale = (values: typeof previewControlContract.canonica
       scheme: values.scheme,
     };
   }
+
   if (values.scaleType === 'quantile') {
     return {
       type: 'quantile',
@@ -28,6 +29,7 @@ const buildDiscretizationScale = (values: typeof previewControlContract.canonica
       scheme: values.scheme,
     };
   }
+
   return {
     type: 'quantize',
     name: 'color',

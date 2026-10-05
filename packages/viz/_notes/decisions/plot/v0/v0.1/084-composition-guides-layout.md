@@ -44,7 +44,7 @@ const CompositionTrackLabelPolicy = {
   Inline: 'inline',
 } as const;
 
-type CompositionAxisPolicyValue = ValueOf<typeof CompositionAxisPolicy>;
+type CompositionAxisPolicy = ValueOf<typeof CompositionAxisPolicy>;
 type CompositionGridPolicyValue = ValueOf<typeof CompositionGridPolicy>;
 type CompositionFacetLabelPolicyValue = ValueOf<typeof CompositionFacetLabelPolicy>;
 type CompositionTrackLabelPolicyValue = ValueOf<typeof CompositionTrackLabelPolicy>;
@@ -58,7 +58,7 @@ type CompositionLayout = {
 };
 
 type CompositionGuidePolicy = {
-  axes?: CompositionAxisPolicyValue;
+  axes?: CompositionAxisPolicy;
   grid?: CompositionGridPolicyValue;
   facetLabels?: CompositionFacetLabelPolicyValue;
   trackLabels?: CompositionTrackLabelPolicyValue;

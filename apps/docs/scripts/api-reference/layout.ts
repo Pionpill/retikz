@@ -44,7 +44,6 @@ const layoutConfig: ApiReferencePackageConfig = {
         'LayoutProps',
         'LayoutExtensions',
         'LayoutRuntimeMode',
-        'LayoutRuntimeModeValue',
         'LayoutRuntimeOptions',
         'LayoutRetainedRuntimeOptions',
         'LayoutStaticRuntimeOptions',
@@ -97,6 +96,7 @@ export const createLayoutApiReferenceMdx = async (lang: ApiReferenceLanguage): P
 /** 写入组件的中英文 API include */
 export const writeLayoutApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const)
     writeFileSync(
       path.join(outputDirectory, `generated.${lang}.mdx`),

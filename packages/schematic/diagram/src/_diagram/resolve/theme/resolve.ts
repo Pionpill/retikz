@@ -10,7 +10,9 @@ import { DiagramDefaultsSchema } from '../../schemas';
 import type { EffectiveDiagramTextAppearance, EffectiveDiagramTheme, EffectiveDiagramThemeFrame } from './types';
 
 type DiagramDefaultsFrame = NonNullable<IRDiagramDefaults['frame']>;
+
 type DiagramDefaultsTextStyle = NonNullable<IRDiagramDefaultsPresentationText['style']>;
+
 type DiagramDefaultsTextLayout = NonNullable<IRDiagramDefaultsPresentationText['layout']>;
 
 const mergeFields = <T extends object>(base: T | undefined, override: T | undefined): T | undefined => {
@@ -30,7 +32,9 @@ const mergeTextStyle = (
 ): DiagramDefaultsTextStyle | undefined => {
   const merged = mergeFields(base, override);
   if (merged === undefined) return undefined;
+
   const font = mergeFont(base?.font, override?.font);
+
   return { ...merged, ...(font === undefined ? {} : { font }) };
 };
 
@@ -44,8 +48,10 @@ const mergePresentationText = (
   override: IRDiagramDefaultsPresentationText | undefined,
 ): IRDiagramDefaultsPresentationText | undefined => {
   if (base === undefined && override === undefined) return undefined;
+
   const style = mergeTextStyle(base?.style, override?.style);
   const layout = mergeTextLayout(base?.layout, override?.layout);
+
   return {
     ...(style === undefined ? {} : { style }),
     ...(layout === undefined ? {} : { layout }),
@@ -67,6 +73,7 @@ export const mergeDiagramDefaults = (
           ...(title === undefined ? {} : { title }),
           ...(description === undefined ? {} : { description }),
         };
+
   return {
     ...(frame === undefined ? {} : { frame }),
     ...(presentation === undefined ? {} : { presentation }),
@@ -78,6 +85,7 @@ const resolveRegisteredDefaults = (
   registry: ReadonlyMap<string, DiagramThemeStyleDefinition>,
 ): IRDiagramDefaults | undefined => {
   if (theme.style === undefined) return undefined;
+
   const definition = registry.get(theme.style);
   if (definition === undefined) {
     throw new RetikzDiagramError({
@@ -86,6 +94,7 @@ const resolveRegisteredDefaults = (
       details: { capability: 'diagram-theme-style', key: theme.style, availableKeys: [...registry.keys()] },
     });
   }
+
   try {
     return DiagramDefaultsSchema.parse(definition.resolve(theme));
   } catch (cause) {
@@ -127,6 +136,7 @@ export const resolveDiagramTheme = (
   const registered = resolveRegisteredDefaults(theme, styles);
   const source = inline === undefined ? undefined : DiagramDefaultsSchema.parse(inline);
   const defaults = mergeDiagramDefaults(mergeDiagramDefaults(neutral, registered), source);
+
   return Object.freeze({
     frame: completeFrame(defaults.frame),
     presentation: {
@@ -143,6 +153,7 @@ const mergePresentationTextOverride = (
   const style = override.style;
   const layout = override.layout;
   const font = mergeFont(base.font, style?.font);
+
   return {
     ...base,
     ...(style?.textColor === undefined ? {} : { textColor: style.textColor }),

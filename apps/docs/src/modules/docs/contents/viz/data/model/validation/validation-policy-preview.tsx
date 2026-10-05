@@ -37,6 +37,7 @@ class ValidationErrorBoundary extends Component<ValidationErrorBoundaryProps, Va
         </div>
       );
     }
+
     return this.props.children;
   }
 }

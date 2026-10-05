@@ -26,6 +26,7 @@ const validateTracks = (tracks: ReadonlyArray<TableTrackLayout>, axis: 'row' | '
     if (track.index !== index) {
       throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
     }
+
     if (
       !Number.isFinite(track.offset) ||
       !Number.isFinite(track.size) ||
@@ -34,6 +35,7 @@ const validateTracks = (tracks: ReadonlyArray<TableTrackLayout>, axis: 'row' | '
     ) {
       throw new RetikzTableError(`table: ${axis} track ${index} geometry must be finite and nonnegative`);
     }
+
     if (index > 0 && track.offset < tracks[index - 1].offset + tracks[index - 1].size) {
       throw new RetikzTableError(`table: ${axis} track ${index} overlaps the previous canonical track`);
     }
@@ -54,12 +56,15 @@ const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTab
   if (kind !== 'none' && kind !== 'line') {
     throw new RetikzTableError('table: Border candidate kind must be none or line');
   }
+
   if (!Number.isFinite(candidate.priority) || !Number.isInteger(candidate.priority)) {
     throw new RetikzTableError('table: Border candidate priority must be a finite integer');
   }
+
   if (candidate.defaults !== undefined && candidate.priority !== -100) {
     throw new RetikzTableError('table: Source defaults Border candidate priority must be -100');
   }
+
   if (candidate.kind === 'none') {
     return {
       kind: 'none',
@@ -67,6 +72,7 @@ const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTab
       ...(candidate.defaults === undefined ? {} : { defaults: structuredClone(candidate.defaults) }),
     };
   }
+
   return {
     kind: 'line',
     priority: candidate.priority,
@@ -103,9 +109,11 @@ const contributionOf = (
           defaults: candidate.defaults,
         };
   }
+
   if (candidate.defaults === undefined) {
     return { kind: 'line', origin: TableBorderContributionOrigin.Explicit, ...base, line: candidate.line };
   }
+
   return {
     kind: 'line',
     origin: TableBorderContributionOrigin.Defaults,
@@ -140,6 +148,7 @@ const buildOccupancy = (
     ) {
       throw new RetikzTableError(`table: Border Graph Cell "${label}" origin must use nonnegative integer indexes`);
     }
+
     if (
       !Number.isInteger(cell.rowSpan) ||
       !Number.isInteger(cell.columnSpan) ||
@@ -148,9 +157,11 @@ const buildOccupancy = (
     ) {
       throw new RetikzTableError(`table: Border Graph Cell "${label}" spans must be positive integers`);
     }
+
     if (cell.rowIndex + cell.rowSpan > rowCount || cell.columnIndex + cell.columnSpan > columnCount) {
       throw new RetikzTableError(`table: Border Graph Cell "${label}" span range exceeds canonical tracks`);
     }
+
     for (let row = cell.rowIndex; row < cell.rowIndex + cell.rowSpan; row += 1) {
       for (let column = cell.columnIndex; column < cell.columnIndex + cell.columnSpan; column += 1) {
         const occupied = occupancy[row][column];
@@ -159,25 +170,31 @@ const buildOccupancy = (
             `table: Border Graph Cell "${label}" overlaps Cell "${occupied.cellId ?? `${occupied.rowIndex}:${occupied.columnIndex}`}" at ${row}:${column}`,
           );
         }
+
         occupancy[row][column] = cell;
       }
     }
   });
+
   return { cells, occupancy };
 };
 
 /** 计算 collapse logical boundary 坐标 */
 const boundaryCoordinates = (tracks: ReadonlyArray<TableTrackLayout>): ReadonlyArray<number> => {
   if (tracks.length === 0) return [];
+
   const coordinates = [tracks[0].offset];
+
   for (let index = 1; index < tracks.length; index += 1) {
     const previousEnd = tracks[index - 1].offset + tracks[index - 1].size;
     coordinates.push((previousEnd + tracks[index].offset) / 2);
   }
+
   coordinates.push(tracks.at(-1)!.offset + tracks.at(-1)!.size);
   if (!coordinates.every(Number.isFinite)) {
     throw new RetikzTableError('table: Border Graph logical boundaries must be finite');
   }
+
   return coordinates;
 };
 
@@ -224,9 +241,11 @@ const collapseContributors = (
   if (before !== undefined && beforeCandidate !== undefined) {
     contributors.push(contributionOf(atomKey, cellSource(before, beforeSide), beforeCandidate, 1));
   }
+
   if (after !== undefined && afterCandidate !== undefined) {
     contributors.push(contributionOf(atomKey, cellSource(after, afterSide), afterCandidate, 0));
   }
+
   return contributors;
 };
 
@@ -238,14 +257,17 @@ const buildCollapseAtoms = (
   const rowBoundaries = boundaryCoordinates(input.rows);
   const columnBoundaries = boundaryCoordinates(input.columns);
   const atoms: Array<TableBorderAtom> = [];
+
   for (let boundary = 0; boundary <= input.rows.length; boundary += 1) {
     for (let interval = 0; interval < input.columns.length; interval += 1) {
       const before = boundary > 0 ? occupancy[boundary - 1][interval] : undefined;
       const after = boundary < input.rows.length ? occupancy[boundary][interval] : undefined;
       if (before !== undefined && before === after) continue;
+
       const key = `c:h:${boundary}:${interval}`;
       const contributors = collapseContributors(input, key, 'horizontal', boundary, before, after);
       if (contributors.length === 0) continue;
+
       atoms.push({
         key,
         orientation: 'horizontal',
@@ -255,14 +277,17 @@ const buildCollapseAtoms = (
       });
     }
   }
+
   for (let boundary = 0; boundary <= input.columns.length; boundary += 1) {
     for (let interval = 0; interval < input.rows.length; interval += 1) {
       const before = boundary > 0 ? occupancy[interval][boundary - 1] : undefined;
       const after = boundary < input.columns.length ? occupancy[interval][boundary] : undefined;
       if (before !== undefined && before === after) continue;
+
       const key = `c:v:${boundary}:${interval}`;
       const contributors = collapseContributors(input, key, 'vertical', boundary, before, after);
       if (contributors.length === 0) continue;
+
       atoms.push({
         key,
         orientation: 'vertical',
@@ -272,6 +297,7 @@ const buildCollapseAtoms = (
       });
     }
   }
+
   return atoms;
 };
 
@@ -292,6 +318,7 @@ const separateFallback = (
     const candidate = input.defaults.outer?.[side];
     return candidate === undefined ? undefined : { candidate, source: { kind: 'default', scope: 'outer', side } };
   }
+
   if (side === 'top' || side === 'bottom') {
     const boundaryIndex = side === 'top' ? cell.rowIndex : rowEnd;
     return input.defaults.horizontal === undefined
@@ -301,7 +328,9 @@ const separateFallback = (
           source: { kind: 'default', scope: 'horizontal', boundaryIndex },
         };
   }
+
   const boundaryIndex = side === 'left' ? cell.columnIndex : columnEnd;
+
   return input.defaults.vertical === undefined
     ? undefined
     : { candidate: input.defaults.vertical, source: { kind: 'default', scope: 'vertical', boundaryIndex } };
@@ -321,6 +350,7 @@ const separateSegment = (
   const right = lastColumn.offset + lastColumn.size;
   const top = firstRow.offset;
   const bottom = lastRow.offset + lastRow.size;
+
   switch (side) {
     case 'top':
       return { orientation: 'horizontal', start: { x: left, y: top }, end: { x: right, y: top } };
@@ -344,9 +374,11 @@ const buildSeparateAtoms = (
       const fallback = explicit === undefined ? separateFallback(input, cell, side) : undefined;
       const candidate = explicit ?? fallback?.candidate;
       if (candidate === undefined) return [];
+
       const key = `s:${cell.rowIndex}:${cell.columnIndex}:${side}`;
       const source = explicit === undefined ? fallback!.source : cellSource(cell, side);
       const segment = separateSegment(input, cell, side);
+
       return [
         {
           key,
@@ -364,6 +396,7 @@ export const buildTableBorderGraph = (input: BuildTableBorderGraphInput): TableB
   if (!isTableBorderMode(input.mode)) {
     throw new RetikzTableError('table: Border Graph mode must be collapse or separate');
   }
+
   const { cells, occupancy } = buildOccupancy(input.rows.length, input.columns.length, input.cells);
   Object.values(input.defaults.outer ?? {}).forEach(candidate => validateCandidate(candidate));
   if (input.defaults.horizontal !== undefined) validateCandidate(input.defaults.horizontal);
@@ -372,8 +405,10 @@ export const buildTableBorderGraph = (input: BuildTableBorderGraphInput): TableB
   if (input.rows.length === 0 || input.columns.length === 0 || input.cells.length === 0) {
     return deepFreeze({ atoms: [], edges: [] });
   }
+
   const rawAtoms = input.mode === 'collapse' ? buildCollapseAtoms(input, occupancy) : buildSeparateAtoms(input, cells);
   const atoms = resolveTableBorderAtoms(rawAtoms);
   const edges = mergeTableBorderAtoms(atoms, input.mode);
+
   return deepFreeze({ atoms, edges });
 };

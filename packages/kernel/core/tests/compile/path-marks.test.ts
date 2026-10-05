@@ -33,6 +33,7 @@ describe('marks → 中段 marker primitive', () => {
     const withMark = leafCount(
       compileToScene(linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }])).scene.primitives,
     );
+
     expect(withMark).toBeGreaterThan(without);
   });
 
@@ -46,6 +47,7 @@ describe('marks → 中段 marker primitive', () => {
         ]),
       ).scene.primitives,
     );
+
     expect(two).toBeGreaterThan(one);
   });
 
@@ -74,6 +76,7 @@ describe('marks → 中段 marker primitive', () => {
       compileToScene(ir, { arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })) })
         .scene.primitives,
     );
+
     expect(withMark).toBeGreaterThan(without);
   });
 
@@ -145,26 +148,32 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
         if (p.type === 'group') {
           const s = p.transforms?.find(t => t.kind === 'scale');
           if (s && 'x' in s && typeof s.x === 'number') return s.x;
+
           const inner = find(p.children);
           if (inner !== undefined) return inner;
         }
       }
+
       return undefined;
     };
+
     const x = find(compileToScene(ir).scene.primitives);
     if (x === undefined) throw new Error('no mark scale group found');
+
     return x;
   };
 
   it('strokeWidth=2 的中段 mark scale ≈ strokeWidth=1 的 2 倍', () => {
     const base = markScaleX(markPathIR(1));
     const thick = markScaleX(markPathIR(2));
+
     expect(thick / base).toBeCloseTo(2, 1);
   });
 
   it('strokeWidth=3 的中段 mark scale ≈ 基准的 3 倍', () => {
     const base = markScaleX(markPathIR(1));
     const thick = markScaleX(markPathIR(3));
+
     expect(thick / base).toBeCloseTo(3, 1);
   });
 
@@ -176,6 +185,7 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
 describe('段几何采样契约（marks 定向依赖的机器）', () => {
   it('直线段中点 tangent 沿线方向', () => {
     const s = curve.sampleAt({ kind: 'line', from: [0, 0], to: [10, 0] }, 0.5);
+
     expect(s.point[0]).toBeCloseTo(5, 6);
     expect(s.point[1]).toBeCloseTo(0, 6);
     expect(s.tangent[0]).toBeCloseTo(1, 6);
@@ -188,6 +198,7 @@ describe('段几何采样契约（marks 定向依赖的机器）', () => {
       { kind: 'cubicBezier', from: [0, 0], control1: [0, -10], control2: [10, -10], to: [10, 0] },
       0.5,
     );
+
     expect(s.tangent[0]).toBeCloseTo(1, 6);
     expect(s.tangent[1]).toBeCloseTo(0, 6);
   });
@@ -195,6 +206,7 @@ describe('段几何采样契约（marks 定向依赖的机器）', () => {
   it('arc 段 tangent 垂直于半径（圆弧 mark 定向）', () => {
     // 圆心(0,0) r=10，t=0 在 startAngle=0 (+x 轴)，CCW 扫向 90°，起点切线沿 +y
     const s = curve.sampleAt({ kind: 'arc', center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 }, 0);
+
     expect(s.point[0]).toBeCloseTo(10, 6);
     expect(s.point[1]).toBeCloseTo(0, 6);
     expect(s.tangent[0]).toBeCloseTo(0, 6);
@@ -203,6 +215,7 @@ describe('段几何采样契约（marks 定向依赖的机器）', () => {
 
   it('arc 段中点 tangent 方向正确（45° 处切线垂直半径）', () => {
     const s = curve.sampleAt({ kind: 'arc', center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 }, 0.5);
+
     // 45° 点切线 = (-sin45, cos45)
     expect(s.tangent[0]).toBeCloseTo(-Math.SQRT1_2, 6);
     expect(s.tangent[1]).toBeCloseTo(Math.SQRT1_2, 6);

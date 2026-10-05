@@ -47,9 +47,12 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
   it('angle-margin：A.30 沿 30° 射线打到外扩后的矩形边', () => {
     const tan30 = Math.tan((30 * Math.PI) / 180);
     const a0 = resolveAnchor(mkLayout(0), '30'); // 命中 right 边 x=20
+
     expect(a0[0]).toBeCloseTo(20, 6);
     expect(a0[1]).toBeCloseTo(20 * tan30, 6);
+
     const a10 = resolveAnchor(mkLayout(10), '30'); // 命中外边界 right 边 x=30
+
     expect(a10[0]).toBeCloseTo(30, 6);
     expect(a10[1]).toBeCloseTo(30 * tan30, 6);
   });
@@ -85,6 +88,7 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
       ],
     };
     const p = compileToScene(ir).scene.primitives.find(x => x.type === 'path');
+
     expect(p?.type === 'path' ? p.commands : undefined).toEqual([move([18, 0]), line([100, 0])]);
   });
 
@@ -103,6 +107,7 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
     });
     const l0 = compileToScene(mk(0)).scene.layout;
     const l10 = compileToScene(mk(10)).scene.layout;
+
     expect(l10.width - l0.width).toBe(20);
     expect(l10.height - l0.height).toBe(20);
     expect(l10.x - l0.x).toBe(-10);
@@ -115,10 +120,13 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
 describe('margin：边界', () => {
   it('margin-zero-identity：margin=0 时所有 anchor = 视觉 shape（同改前）', () => {
     const tan30 = Math.tan((30 * Math.PI) / 180);
+
     expect(resolveAnchor(mkLayout(0), 'top')).toEqual([0, -15]);
     expect(resolveAnchor(mkLayout(0), 'bottom')).toEqual([0, 15]);
     expect(resolveAnchor(mkLayout(0), 'right')).toEqual([20, 0]);
+
     const a0 = resolveAnchor(mkLayout(0), '30');
+
     expect(a0[0]).toBeCloseTo(20, 6);
     expect(a0[1]).toBeCloseTo(20 * tan30, 6);
   });
@@ -139,19 +147,23 @@ describe('margin：不外扩护栏 + 校验', () => {
       position: [0, 0],
       layout: { margin: 0 },
     });
+
     expect(ok.success).toBe(true);
+
     const bad = NodeSchema.safeParse({
       type: 'node',
       id: 'A',
       position: [0, 0],
       layout: { margin: -1 },
     });
+
     expect(bad.success).toBe(false);
   });
 
   it('edgePoint-no-margin：{ side, fraction } 恒走视觉 shape，不受 margin 影响', () => {
     const e0 = resolveEdgePoint(mkLayout(0), 'top', 0.5);
     const e10 = resolveEdgePoint(mkLayout(10), 'top', 0.5);
+
     expect(e10).toEqual(e0); // 视觉 top 边中点 = [0,-15]
     expect(e0).toEqual([0, -15]);
   });
@@ -171,18 +183,23 @@ describe('margin：不外扩护栏 + 校验', () => {
         },
       ],
     });
+
     const labelY = (margin: number): number | undefined => {
       const texts: Array<TextPrim> = [];
+
       const walk = (prims: Array<ScenePrimitive>): void => {
         for (const p of prims) {
           if (p.type === 'text') texts.push(p);
           else if (p.type === 'group') walk(p.children);
         }
       };
+
       walk(compileToScene(mk(margin)).scene.primitives);
       const lbl = texts.find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === 'L'));
+
       return lbl?.y;
     };
+
     expect(labelY(10)).toBe(labelY(0));
   });
 });
@@ -194,6 +211,7 @@ describe('margin：交互', () => {
     // top 半轴：margin=0 → 15，margin=10 → 25；旋转保距离
     expect(hypot(resolveAnchor(mkLayout(0, Math.PI / 2), 'top'))).toBeCloseTo(15, 6);
     expect(hypot(resolveAnchor(mkLayout(10, Math.PI / 2), 'top'))).toBeCloseTo(25, 6);
+
     // 90° 旋转把 top 转到 right 侧（x≈25），确认确有旋转
     expect(resolveAnchor(mkLayout(10, Math.PI / 2), 'top')[0]).toBeCloseTo(25, 6);
   });
@@ -212,6 +230,7 @@ describe('margin：交互', () => {
         },
       ],
     });
+
     // 借用连接面只改连接点求交，绝不改布局占位。
     expect(compileToScene(mk('circle')).scene.layout).toEqual(compileToScene(mk('shape')).scene.layout);
   });

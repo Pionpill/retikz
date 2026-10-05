@@ -78,12 +78,15 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
       },
     }),
   };
+
   const Fixture: EmbeddableFixture = () => {
     throw new Error('embeddable body must never render');
   };
+
   Fixture.displayName = displayName;
   Fixture.isTier2Embeddable = true;
   Fixture.inputEmbedAdapter = adapter;
+
   return Fixture;
 };
 
@@ -95,12 +98,14 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
  */
 const StatefulHost: FC<{ label: string; bump?: number }> = props => {
   const { label, bump = 0 } = props;
+
   // useState + useEffect 让宿主持有真实 hook 序列；bump 进 state 初值，模拟「上次 state 变更」后的渲染。
   const [count] = useState(() => bump);
   useEffect(() => {
     // 无副作用的订阅型 effect：只为占据一个宿主 hook 槽位，验证 hook 顺序不被可嵌入误调污染。
     return () => undefined;
   }, [label, bump]);
+
   return (
     <span data-host-label={label} data-host-count={count} data-host-bump={bump}>
       {label}
@@ -122,9 +127,11 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
 
     let first = '';
     let second = '';
+
     expect(() => {
       first = renderToStaticMarkup(tree('initial', 0));
     }).not.toThrow();
+
     // 模拟一次 state 变更后的重渲染（bump 变化 + 同一子树）
     expect(() => {
       second = renderToStaticMarkup(tree('initial', 1));
@@ -145,9 +152,12 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
 
     // React 只收集 Vanilla adapter，领域贡献由 Vanilla normalize / processing 统一消费
     const input = createInputScene(element);
+
     expect(input.adapters).toHaveLength(1);
+
     const children = input.scene.children;
     if (children === undefined) throw new Error('expected direct InputScene children');
+
     expect(children[0]).toMatchObject({ type: 'embed', id: 'probe' });
   });
 
@@ -164,6 +174,7 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
 
     let zh = '';
     let en = '';
+
     expect(() => {
       zh = renderToStaticMarkup(tree('你好'));
     }).not.toThrow();

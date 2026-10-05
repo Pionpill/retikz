@@ -59,9 +59,11 @@ describe('Flow Theme Definition and registry', () => {
         theme: themeWith({ style: 'missing' }),
         flowThemeStyles: registryOf(),
       });
+
       expect.unreachable('Expected missing Flow Theme style failure');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionNotRegistered);
       expect(error.details).toMatchObject({
         capability: 'flow-theme-style',
@@ -96,9 +98,11 @@ describe('Flow Theme Definition and registry', () => {
         theme: themeWith({ style: 'invalid' }),
         flowThemeStyles: registryOf(definition),
       });
+
       expect.unreachable('Expected invalid Flow Theme callback output');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionCallbackFailed);
       expect(error.details).toMatchObject({ capability: 'flow-theme-style', key: 'invalid' });
       expect(error.cause).toBeDefined();
@@ -141,6 +145,7 @@ describe('Flow Theme cascade', () => {
     });
     const group = resolved.elements[0];
     if (group.type !== 'group') throw new Error('Expected Group');
+
     const entity = group.elements[0];
     if (entity.type !== 'entity') throw new Error('Expected Entity');
 

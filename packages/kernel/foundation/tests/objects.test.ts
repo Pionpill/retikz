@@ -10,6 +10,7 @@ describe('mergeProperties', () => {
       { label: null },
       { count: undefined },
     ]);
+
     expect(result).toEqual({ enabled: false, count: undefined, label: null });
     expect(Object.hasOwn(result, 'count')).toBe(true);
     expect(mergeProperties([])).toEqual({});
@@ -21,6 +22,7 @@ describe('mergeProperties', () => {
       { count: 3, label: 'base', absent: undefined },
       { count: 0, label: null },
     ];
+
     expect(mergeProperties(sources, { shouldOverride: value => value !== undefined })).toEqual({
       count: 0,
       label: null,
@@ -37,25 +39,32 @@ describe('mergeProperties', () => {
     const nested = { color: 'red' };
     const source = Object.freeze({ nested, list: [1, 2] });
     const result = mergeProperties([source]);
+
     expect(result).not.toBe(source);
     expect(result.nested).toBe(nested);
     expect(result.list).toBe(source.list);
     expect(source).toEqual({ nested: { color: 'red' }, list: [1, 2] });
+
     const replacement = { color: 'blue' };
+
     expect(mergeProperties([source, { ...source, nested: replacement }]).nested).toBe(replacement);
   });
 
   it('copies enumerable string and symbol properties, excluding inherited and hidden properties', () => {
     const symbol = Symbol('option');
+
     class Source {
       own = 1;
       [symbol] = 2;
+
       get inherited() {
         return 3;
       }
     }
+
     const source = new Source();
     Object.defineProperty(source, 'hidden', { value: 4 });
+
     expect(Reflect.ownKeys(mergeProperties([source]))).toEqual(['own', symbol]);
   });
 
@@ -65,6 +74,7 @@ describe('mergeProperties', () => {
       ['constructor', 'value'],
     ]);
     const result = mergeProperties<Record<string, unknown>>([source]);
+
     expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
     expect(Object.hasOwn(result, '__proto__')).toBe(true);
     expect(result['__proto__']).toEqual({ injected: true });
@@ -79,15 +89,19 @@ describe('mergeProperties', () => {
         return 4;
       },
     };
+
     expect(mergeProperties([source])).toEqual({ count: 4 });
     expect(reads).toBe(1);
+
     const cause = new Error('read failed');
     const failingSource = {
       get count(): number {
         throw cause;
       },
     };
+
     expect(() => mergeProperties([failingSource])).toThrow(RetikzFoundationError);
+
     try {
       mergeProperties([failingSource]);
     } catch (error) {
@@ -97,6 +111,7 @@ describe('mergeProperties', () => {
 
   it('preserves callback failures as the cause of a Foundation error', () => {
     const cause = new Error('filter failed');
+
     expect(() =>
       mergeProperties([{ count: 1 }], {
         shouldOverride: () => {
@@ -104,6 +119,7 @@ describe('mergeProperties', () => {
         },
       }),
     ).toThrow(RetikzFoundationError);
+
     try {
       mergeProperties([{ count: 1 }], {
         shouldOverride: () => {
