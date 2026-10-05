@@ -2,7 +2,7 @@
 
 ## 版本目标
 
-建立完整 Diagram 外层表达与 Flow 自动制图能力。
+建立完整 Diagram 外层表达与 Flow 自动制图能力，并规划 Branch 有序分支图。
 
 ## 重点功能
 
@@ -15,6 +15,10 @@
 | 结果与绘图  | 编排布局结果和 artifact，复用 Graph materialization 与富文本 | [005](./005-flow-orchestration-result-artifact.md)、[006](./006-flow-entity-rich-text.md)                                                                                                                                           |
 
 ## 功能规划
+
+### Branch 分支图
+
+面向版本路线图、提交历史和文档阅读关系，以节点目录与有序分支表达相邻连接、共享节点和分叉汇合，通过主分支引用与自动轨道布局保持主线连续。节点标记与外侧标注分离，复用 Core Node、Graph Relation 和 Diagram 外层装配。公开默认值、共享线段规则、布局扩展契约与测量闭环须先完成设计确认，见 [021](./021-branch-diagram.md)。
 
 ### 外层表达
 
