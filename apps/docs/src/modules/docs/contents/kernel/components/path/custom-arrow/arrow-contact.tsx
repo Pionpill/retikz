@@ -5,6 +5,7 @@ import { Fragment } from 'react';
 import type { Lang } from '@/i18n';
 
 import { arrowContactI18n } from './arrow-contact.i18n';
+
 /** 箭头接合图的语言 */
 export type ArrowContactProps = Readonly<{ lang?: Lang }>;
 /** 对照轮廓后缘、描边接合点与尖端，展示后缘对齐端点的平移 */

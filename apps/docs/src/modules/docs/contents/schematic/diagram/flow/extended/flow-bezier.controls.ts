@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { flowBezierI18n } from './flow-bezier.i18n';
+
 /** 单条关系的自动生成与显式控制点 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const copy = flowBezierI18n[lang];

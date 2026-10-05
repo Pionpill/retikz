@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { chainI18n } from './chain-inputs.i18n';
+
 /** 本节参数及默认状态 */
 export const createPreviewControlContract = (lang: Lang) => {
   const t = chainI18n[lang];

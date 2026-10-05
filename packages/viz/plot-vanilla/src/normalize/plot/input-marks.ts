@@ -62,6 +62,7 @@ import type {
   RelationGeometryKind,
   MarkValueKind,
 } from '@retikz/plot';
+
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 Plot authoring 输入 */
 export type InputPlotFieldName = string;
 

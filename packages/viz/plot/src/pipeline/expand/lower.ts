@@ -122,6 +122,7 @@ import { resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
 import { plotMarkTransformsOf } from './preparation';
 import type { LowerPlotsOptions, MarkDataView } from './types';
+
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
   frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;

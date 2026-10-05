@@ -3,6 +3,7 @@ import { pointAtEllipseArcAngle } from '@retikz/math';
 
 import { shapePathProperties, shapeAngles } from '../shared';
 import type { IRSector } from './types';
+
 /** 将 Sector 意图下沉为单一 Core Path */
 export const lowerSector = (source: IRSector): IRPath => {
   const { startAngle, endAngle } = shapeAngles(source)!;

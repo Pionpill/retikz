@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** plot 基础 namespace */
 export const PLOT_NAMESPACE = 'plot';
 

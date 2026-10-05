@@ -24,6 +24,7 @@ import type { LowerPlotsOptions } from './expand';
 import type { PlotDataArtifact } from './expand/lower';
 import { lowerPlotWithDataArtifact } from './expand/lower';
 import { buildPlotLocatorFromDataArtifact } from './locator';
+
 /** lowerPlotWithLineage 选项 */
 export type PlotLineageLowerOptions = LowerPlotsOptions & {
   /** plot lineage 开关；false 时关闭可选摘要，只返回最小结构 */

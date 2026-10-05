@@ -187,7 +187,7 @@ describe('<Layout theme>', () => {
         ir={input}
         theme={theme}
         extensions={{ composites: [themedBox], themeStyles: testThemeStyles }}
-        
+
         width={100}
         height={100}
       />,
@@ -206,7 +206,7 @@ describe('<Layout theme>', () => {
         ir={input}
         theme={theme}
         extensions={{ composites: [themedBox], themeStyles: testThemeStyles }}
-        
+
         width={100}
         height={100}
       />,
@@ -220,7 +220,7 @@ describe('<Layout theme>', () => {
       <Layout
         ir={{ ...input, theme: { style: 'academic', mode: ThemeMode.Dark } }}
         extensions={{ composites: [themedBox], themeStyles: testThemeStyles }}
-        
+
         width={100}
         height={100}
       />,

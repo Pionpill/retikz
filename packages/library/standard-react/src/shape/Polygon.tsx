@@ -5,6 +5,7 @@ import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
 import { shapeEmbedProps } from './shared';
+
 /** React Polygon 的作者输入与宿主事件 */
 export type PolygonProps = InputPolygon & HydrationEventProps & { /** 显式路径身份 */ id?: string };
 const PolygonComponent: FC<PolygonProps> = () => null;

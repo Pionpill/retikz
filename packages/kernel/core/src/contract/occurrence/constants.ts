@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** compile occurrence 展开路径的阶段类别 */
 export const CompileExpansionKind = {
   /** composite 展开结果中的 child 序号 */

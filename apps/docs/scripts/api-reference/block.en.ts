@@ -1,4 +1,5 @@
 import { translateEntityApiReference } from './entity.en';
+
 /** Block 专属说明译文 */
 const translations: Readonly<Partial<Record<string, string>>> = {
   '将开放内容 Block Source 接入 React 编写流程': 'Integrate open-content Block Source into React authoring',

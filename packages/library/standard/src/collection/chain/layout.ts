@@ -1,5 +1,6 @@
 import type { MeasuredCell } from '../_cell';
 import type { CanonicalChainConnection, CanonicalChainLayout } from './resolve';
+
 /** 主轴坐标中的单元位置 */
 export type ChainCellPlacement = { measured: MeasuredCell; x: number; y: number; width: number; height: number };
 /** 连线的主轴点列与呈现 */

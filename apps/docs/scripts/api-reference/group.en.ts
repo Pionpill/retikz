@@ -1,4 +1,5 @@
 import { translateEntityApiReference } from './entity.en';
+
 /** Group 专属说明译文 */
 const translations: Readonly<Partial<Record<string, string>>> = {
   '将 Group Source 接入 React 编写流程': 'Integrate Group Source into React authoring',

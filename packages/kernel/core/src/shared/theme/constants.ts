@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Theme 明暗环境的闭合取值 */
 export const ThemeMode = {
   Light: 'light',

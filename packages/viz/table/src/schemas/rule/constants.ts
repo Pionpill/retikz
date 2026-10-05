@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Table value predicate 的判别值 */
 export const TableValuePredicateKind = {
   /** 严格标量相等 */

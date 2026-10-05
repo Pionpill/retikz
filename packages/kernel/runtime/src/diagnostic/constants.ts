@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Runtime 内置结构化诊断码 */
 export const RuntimeDiagnosticCode = {
   /** change set 触发 full fallback */

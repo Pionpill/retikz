@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /**
  * 内置 pattern motif 名常量（用 const + ValueOf 派生，不用 TS enum）
  * @description 内置 3 motif：`lines`（横向阴影线）/ `dots`（波点）/ `grid`（横竖网格）。

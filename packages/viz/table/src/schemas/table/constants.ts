@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Table composite namespace */
 export const TABLE_NAMESPACE = 'table';
 

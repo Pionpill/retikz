@@ -4,6 +4,7 @@ import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/
 
 import { controlI18n } from './scatter-facet.i18n';
 import { fertilityWorkData } from './scatter-fertility-work.data';
+
 /** 示例属性的双语交互契约 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const text = controlI18n[lang];

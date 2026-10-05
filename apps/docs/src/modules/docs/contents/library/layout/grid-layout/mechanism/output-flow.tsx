@@ -6,6 +6,7 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { figureI18n } from './output-flow.i18n';
+
 /** 配图语言参数 */
 export type MeasurementFlowProps = { lang?: Lang };
 /** 当前小节的处理顺序与关键边界 */

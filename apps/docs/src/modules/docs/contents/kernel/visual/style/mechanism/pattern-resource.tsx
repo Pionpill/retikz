@@ -6,6 +6,7 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { resourceI18n } from './pattern-resource.i18n';
+
 /** 资源共享图参数 */
 export type PatternResourceProps = { lang?: Lang };
 /** 展示两个消费方指向同一个资源 */

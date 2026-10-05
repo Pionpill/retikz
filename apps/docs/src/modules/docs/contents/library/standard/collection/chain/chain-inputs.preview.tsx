@@ -1,5 +1,6 @@
 import { Layout } from '@retikz/react';
 import { Chain } from '@retikz/standard-react/collection';
+
 /** 本节交互参数 */
 export type ChainPreviewValues = { mode: 'items' | 'data' | 'count' | 'labels' | 'branches' };
 /** 由公开参数绘制链 */

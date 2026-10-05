@@ -6,6 +6,7 @@ import type {
   IRDataTransform,
   IRDataExecution,
 } from '@retikz/data';
+
 /** Chart encoding mapping 允许消费的 transform capability */
 export type ChartTransformCapability = Readonly<{
   phase: DataTransformPhase;

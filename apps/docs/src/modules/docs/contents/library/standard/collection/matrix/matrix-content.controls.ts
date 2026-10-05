@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { matrixI18n } from './matrix-content.i18n';
+
 /** 本节交互参数与默认值 */
 export const createPreviewControlContract = (lang: Lang) => {
   const t = matrixI18n[lang];

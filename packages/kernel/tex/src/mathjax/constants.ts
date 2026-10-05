@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /**
  * 内置 MathJax 配置档
  * @description `base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合。它提供 `createMathJaxEngine` 与 lowerer 工厂可识别的扩展集合选择，不创建引擎，也不改变已创建实例

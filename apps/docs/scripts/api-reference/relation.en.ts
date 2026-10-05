@@ -1,4 +1,5 @@
 import { translateEntityApiReference } from './entity.en';
+
 /** 经核对的 Relation API 英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
   关系编写输入的判别字段: 'Relation authoring input discriminator',

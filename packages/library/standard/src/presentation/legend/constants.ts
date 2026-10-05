@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Legend 内容形态 */
 export const LegendContentKind = {
   Items: 'items',

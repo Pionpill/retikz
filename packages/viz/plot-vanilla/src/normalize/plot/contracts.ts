@@ -19,6 +19,7 @@ import type {
 
 import type { InputPlotFacet, InputPlotMark } from './input';
 import type { InputPlotScale } from './input-scales';
+
 /** `<Plot coordinate>` 入口形态：字符串简写、内置对象配置或自定义坐标配置 */
 export type InputPlotCoordinate =
   | 'polar2D'

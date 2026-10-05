@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const regressionFacetI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '分别观察三个物种的趋势', subtitle: '每个面板只使用当前物种的数据进行拟合' },

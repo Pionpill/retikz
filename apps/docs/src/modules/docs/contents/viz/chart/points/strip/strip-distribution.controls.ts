@@ -4,6 +4,7 @@ import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/
 
 import { controlI18n } from './strip-distribution.i18n';
 import { stripVegaBarleyData } from './strip-vega-barley.data';
+
 /** 示例属性的双语交互契约 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const text = controlI18n[lang];

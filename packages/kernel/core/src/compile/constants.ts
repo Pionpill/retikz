@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 相对定位默认距离 */
 export const DEFAULT_NODE_DISTANCE = 24;
 

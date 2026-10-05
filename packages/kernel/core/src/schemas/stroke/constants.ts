@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 路径端点线帽关键字 */
 export const PathLineCap = {
   /** 平切端点：描边精确停在路径端点，不向外延伸 */

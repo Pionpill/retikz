@@ -5,6 +5,7 @@ import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 
 import { relationFlowI18n } from './relation-flow.i18n';
+
 /** 关系链路插图的语言 */
 export type RelationFlowProps = { lang?: Lang };
 /** 仅展示 Relation 自身的处理阶段，不重复全局编译管线 */

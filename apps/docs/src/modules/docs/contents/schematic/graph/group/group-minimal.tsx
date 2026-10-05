@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { groupBasicI18n } from './group-basic.i18n';
+
 /** 最小分组示例的语言 */
 export type GroupMinimalProps = { lang?: Lang };
 /** 保留子节点位置，以外框表达包含关系 */

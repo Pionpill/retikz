@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** GridLayout 自动放置的流向 */
 export const GridAutoFlow = {
   Row: 'row',

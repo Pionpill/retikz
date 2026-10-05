@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /**
  * scope.id synthetic 包络形状（受控枚举）
  * @description 'rectangle'（轴对齐外接矩形 AABB，默认）/ 'circle'（最小外接圆 Welzl）。

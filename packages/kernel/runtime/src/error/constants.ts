@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Runtime Source 生命周期阶段 */
 export const RuntimeSourcePhase = {
   /** Source value capture 阶段 */

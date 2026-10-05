@@ -9,6 +9,7 @@ import type {
   ChainLayoutSchema,
   ChainSkeletonSchema,
 } from './schema';
+
 /** 递归结构复用精确 drawable 类型 */
 export type IRChainItem = string | (IRCell & { kind: 'cell' }) | IRChainParallel;
 /** 完整分支保留递归 drawable 内容与局部覆盖 */

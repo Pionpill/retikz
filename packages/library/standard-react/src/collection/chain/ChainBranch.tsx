@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from 'react';
 
 import { invalidCellAuthoring } from '../cell';
+
 /** 一条有序支路 */
 export type ChainBranchProps = {
   /** 单元与嵌套并行块 */

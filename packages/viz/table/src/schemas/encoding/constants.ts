@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Table Cell 视觉编码可写入的闭合颜色通道 */
 export const TableVisualChannel = {
   /** Cell 背景填充 */

@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Flow Diagram Source 的稳定类型判别值 */
 export const FLOW_TYPE = 'flow' as const;
 

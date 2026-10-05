@@ -6,6 +6,7 @@ import type { ChainBlock } from './layout';
 import { resolveChain } from './resolve';
 import type { CanonicalChainItem } from './resolve';
 import type { IRChain } from './schema';
+
 /** 测量内容后排布串并联结构，连接仍由 Core Path 编译 */
 export const compileChain = (source: IRChain, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
   const resolved = resolveChain(source);

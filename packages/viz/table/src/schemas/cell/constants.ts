@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Cell 在表格语义区域中的位置 */
 export const TableCellLocation = {
   /** 列表头区域 */

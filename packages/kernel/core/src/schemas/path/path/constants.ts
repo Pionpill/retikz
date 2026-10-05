@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 路径填充规则关键字 */
 export const PathFillRule = {
   /** 非零环绕规则：子路径方向决定嵌套区域是否抵消 */

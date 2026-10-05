@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 服务可用性示例与控件的共用文案 */
 export const entityDefinitionI18n: Record<
   Lang,

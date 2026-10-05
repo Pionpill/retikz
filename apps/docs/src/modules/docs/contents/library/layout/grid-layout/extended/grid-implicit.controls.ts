@@ -3,6 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { demoI18n } from './grid-implicit.i18n';
+
 /** 同一场景的本地化控件与重置基线 */
 export const createPreviewControlContract = (lang: Lang) => {
   const text = demoI18n[lang];

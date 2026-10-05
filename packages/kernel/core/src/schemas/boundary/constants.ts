@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 连接面内置关键字：Self 是编译期保留语义，Circle 由内置 boundary provider 解析 */
 export const BoundaryKeyword = {
   /** 连接面 = 节点自身视觉形状（默认） */

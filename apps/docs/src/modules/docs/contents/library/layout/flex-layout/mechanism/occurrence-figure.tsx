@@ -5,6 +5,7 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { figureI18n } from './occurrence-figure.i18n';
+
 /** 图示语言参数 */
 export type OccurrenceFigureProps = { lang?: Lang };
 /** 展示嵌套容器的几何包含关系与独立局部 key 空间，编号仅为读图标记 */

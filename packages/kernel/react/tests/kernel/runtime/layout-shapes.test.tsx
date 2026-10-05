@@ -132,7 +132,9 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
 
 describe('<Layout clips> complete Clip definition passthrough', () => {
   it('forwards one complete clips registry to static Vanilla processing and SSR', () => {
-    const svg = renderToStaticMarkup(<Layout ir={clippedIr} extensions={{ clips: [customClip()] }} runtime={{ mode: 'static' }} />);
+    const svg = renderToStaticMarkup(
+      <Layout ir={clippedIr} extensions={{ clips: [customClip()] }} runtime={{ mode: 'static' }} />,
+    );
     expect(svg).toContain('<clipPath');
   });
 });

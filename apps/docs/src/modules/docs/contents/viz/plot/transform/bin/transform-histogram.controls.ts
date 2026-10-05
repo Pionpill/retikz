@@ -5,6 +5,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { measurements } from './transform-histogram.data';
+
 /** 根据实时控件值创建分箱 operation */
 export const histogramOperationOf = (values: {
   strategy: 'count' | 'step' | 'thresholds';

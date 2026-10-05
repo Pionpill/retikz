@@ -80,6 +80,7 @@ import {
   TableVerticalAlignment,
 } from '@retikz/table';
 import { MathJaxExtension, MathJaxProfile } from '@retikz/tex';
+
 /** API 值集合注册项 */
 export type ApiValueRegistryEntry = {
   /** 按公开常量声明顺序展示的值 */

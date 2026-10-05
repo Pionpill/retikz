@@ -25,6 +25,7 @@ import {
   PointRecipeGuidesSchema,
 } from '../shared';
 import { RegressionChartEncodingsSchema } from './encoding-schema';
+
 /** Regression 原始观测点的完整常量 properties */
 export const RegressionPointPropertiesSchema = PointPropertiesSchema.describe(
   'Regression observation Point constant properties',

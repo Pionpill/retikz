@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Core 内置 shape 名称 */
 export const BuiltinShape = {
   Rectangle: 'rectangle',

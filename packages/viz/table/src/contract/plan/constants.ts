@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Cell plan 来源的判别值 */
 export const TableCellPlanSourceKind = {
   /** 内置默认值 */

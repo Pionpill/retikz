@@ -3,6 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { entityDefinitionI18n } from './entity-definition.i18n';
+
 /** 可用性输入的双语控件 */
 export const createPreviewControlContract = (lang: Lang) => {
   const copy = entityDefinitionI18n[lang];

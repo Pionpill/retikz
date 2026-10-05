@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 节点与多行文本共享的文字对齐关键字 */
 export const NodeTextAlign = {
   Start: 'start',

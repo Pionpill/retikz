@@ -2,6 +2,7 @@ import type { IRTarget } from '@retikz/core';
 import type { input as ZodInput } from 'zod';
 
 import type { ShapeAnglesSchema, ShapeBoxSchema, ShapePathSchema } from './schema';
+
 /** 形状的 Core Path 公共属性 */
 export type ShapePathProperties = ZodInput<typeof ShapePathSchema>;
 /** 创建 Source 时省略固定判别字段，保持几何 union 分支 */

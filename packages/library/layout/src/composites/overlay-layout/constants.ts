@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Overlay item 的 placement 模式 */
 export const OverlayPlacementKind = {
   Aligned: 'aligned',

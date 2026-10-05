@@ -3,6 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { shadowI18n } from './shadow-path.i18n';
+
 /** 按语言生成阴影控件，字段与默认值保持一致 */
 export const createPreviewControlContract = (lang: Lang) => {
   const text = shadowI18n[lang];

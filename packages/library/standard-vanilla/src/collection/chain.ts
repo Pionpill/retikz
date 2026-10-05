@@ -7,6 +7,7 @@ import { normalizePath } from '@retikz/vanilla';
 import { StandardChainEmbedKind } from '../shared/constants';
 import { normalizeCells, dataCellDependencies } from './cell';
 import type { InputCell } from './cell';
+
 /** 连接输入只增加 Kernel 箭头语法糖 */
 export type InputChainConnection = Omit<IRChainConnection, 'path'> & {
   path?: NonNullable<IRChainConnection['path']> & Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'>;

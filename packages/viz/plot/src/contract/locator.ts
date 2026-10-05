@@ -1,4 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
+
 /**
  * 逻辑地址解析结果。
  * @description position 与 lowering 摆放一致；meta 与 per-datum meta 同构；id 仅在 datumIdField 命中并已绑定具名 id 时回填

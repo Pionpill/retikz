@@ -4,6 +4,7 @@ import type { IRCell } from '../../_cell/schema';
 import { MatrixAxisIndexSchema, MatrixLayoutSchema } from '../schema';
 import type { IRMatrix, IRMatrixAxisIndex } from '../schema';
 import type { CanonicalMatrix, CanonicalMatrixAxisIndex } from './types';
+
 /** 合并集合样式并解析单轴默认值 */
 const resolveAxis = (
   axis: boolean | IRMatrixAxisIndex | undefined,

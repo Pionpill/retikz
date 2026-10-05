@@ -5,6 +5,7 @@ import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 
 import { blockComposeFlowI18n } from './block-compose-flow.i18n';
+
 /** 内容组合插图的语言 */
 export type BlockComposeFlowProps = { lang?: Lang };
 /** 展示局部主题与内容组合的先后关系 */

@@ -34,6 +34,7 @@ import {
   createChartDirectMappingSchema,
   createChartScaleBindingSchema,
 } from '../../_chart/schemas/encoding';
+
 /** Point 位置通道允许使用的尺度 operation */
 export const PointPositionScaleOperationSchema = union([
   LinearScaleSchema,

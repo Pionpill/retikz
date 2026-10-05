@@ -5,6 +5,7 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { figureI18n } from './stacking-figure.i18n';
+
 /** 图示语言 */
 export type FigureProps = { lang?: Lang };
 /** 用固定几何参照展示本节的独立事实 */

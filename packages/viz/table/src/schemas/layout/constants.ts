@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Table 轨道尺寸判别值 */
 export const TableTrackSizeKind = {
   /** 固定尺寸 */

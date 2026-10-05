@@ -10,6 +10,7 @@ import type { CellProps } from '../cell';
 import { collectCellMarkers, createCellsInput, markerCell } from '../cell';
 import { MatrixCell } from './MatrixCell';
 import { MatrixRow } from './MatrixRow';
+
 /** Matrix 的 React 输入；省略所有入口时生成空矩阵 */
 export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand'> &
   (

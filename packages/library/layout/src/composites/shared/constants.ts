@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 单轴容器尺寸策略 */
 export const LayoutAxisSizeKind = {
   /** 根据内容贡献确定尺寸 */

@@ -10,6 +10,7 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import type { previewControls } from './flow-bezier.controls';
 import { flowBezierI18n } from './flow-bezier.i18n';
 import { createObstacleLayout } from './obstacle-layout';
+
 /** 固定节点，比较自动候选与作者指定的控制点 */
 export const renderFlowBezierPreview = (
   values: PreviewControlValuesFor<typeof previewControls>,

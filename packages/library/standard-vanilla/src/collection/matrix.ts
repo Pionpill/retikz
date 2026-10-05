@@ -6,6 +6,7 @@ import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import { StandardMatrixEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
+
 /** Matrix 的三种互斥 Vanilla 输入；items 接受嵌套 drawable */
 export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand'> &
   (

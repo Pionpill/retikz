@@ -13,6 +13,7 @@ import { ChainCell } from './ChainCell';
 import type { ChainCellProps } from './ChainCell';
 import { ChainParallel } from './ChainParallel';
 import type { ChainParallelProps } from './ChainParallel';
+
 /** 属性 items 不接受 React drawable，复杂内容使用 children */
 export type ChainItemProps =
   | string

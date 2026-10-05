@@ -3,6 +3,7 @@ import type { output } from 'zod';
 import type { CanonicalCell } from '../../_cell/resolve';
 import type { IRChainConnection } from '../schema';
 import type { ChainParallelLayoutSchema } from '../schema';
+
 /** 已物化的结构排布 */
 export type CanonicalChainLayout = output<typeof ChainParallelLayoutSchema>;
 /** 已解析继承的自动连接 */

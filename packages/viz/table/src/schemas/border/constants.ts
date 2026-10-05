@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Table border 候选判别值 */
 export const TableBorderKind = {
   /** 显式抑制边线 */

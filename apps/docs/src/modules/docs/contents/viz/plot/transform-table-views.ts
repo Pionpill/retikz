@@ -3,6 +3,7 @@ import { resolveTransformRegistry } from '@retikz/data';
 
 import type { PreviewTableView, TransformTableRows, TransformTableViewOptions } from '@/modules/docs/preview';
 import { createTransformResultView, createTransformTableViews } from '@/modules/docs/preview';
+
 /** Plot transform table view 的可选运行时依赖 */
 export type PlotTransformTableViewOptions = Omit<TransformTableViewOptions, 'registry'> & {
   /** 在 Plot 内置 definitions 之后注册的自定义 transform definitions */

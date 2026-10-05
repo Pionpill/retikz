@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /**
  * 可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
  * @description `viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；

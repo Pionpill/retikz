@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /**
  * Plot 语义图层的默认 core zIndex。
  * @description 数值只表达跨语义层的默认堆叠；同层内仍由源码顺序或局部机制决定

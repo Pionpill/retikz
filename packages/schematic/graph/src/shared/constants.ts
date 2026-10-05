@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** Graph 复合元素的命名空间 */
 export const GRAPH_NAMESPACE = 'graph' as const;
 

@@ -33,6 +33,7 @@ import { resolveMarkRegistry, resolvePositionAdjustmentRegistry, resolveScaleReg
 import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
 import { collectSourceFields } from '../source-fields';
 import type { LowerPlotsOptions } from './types';
+
 /** 对单个mark应用局部transform，返回该mark实际消费的完整DataView */
 export const applyMarkTransforms = (
   mark: IRPlotMarkOperation,

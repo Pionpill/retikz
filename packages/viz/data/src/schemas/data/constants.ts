@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /**
  * 字段测量类型关键字。
  * @description 字段测量种类；驱动 lowering 的缺省推断、type-driven scale 选型与 guide 格式化

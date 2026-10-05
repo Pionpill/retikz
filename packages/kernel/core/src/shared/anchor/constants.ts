@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 中心 anchor 独立于各方向 anchor 词汇，由消费方按场景单独处理 */
 export const CenterAnchor = {
   Center: 'center',

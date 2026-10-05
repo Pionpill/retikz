@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { flowBezierControlsI18n } from './flow-bezier-controls.i18n';
+
 /** 经过点与控制点示意语言 */
 export type FlowBezierControlsProps = Readonly<{ lang?: Lang }>;
 /** 固定 τ 下反求控制点，曲线经过目标而不经过控制点 */

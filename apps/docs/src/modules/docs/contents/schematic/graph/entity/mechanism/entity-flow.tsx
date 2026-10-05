@@ -5,6 +5,7 @@ import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 
 import { entityFlowI18n } from './entity-flow.i18n';
+
 /** 实体链路插图的语言 */
 export type EntityFlowProps = { lang?: Lang };
 /** 仅展示 Entity 自身的处理阶段，不重复全局编译管线 */

@@ -29,6 +29,7 @@ import { useMemo } from 'react';
 import { RetikzPlotReactError } from './error';
 import { resolvePlotAuthoring } from './plot-runtime';
 import { usePlotThemeStyles } from './theme-context';
+
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 

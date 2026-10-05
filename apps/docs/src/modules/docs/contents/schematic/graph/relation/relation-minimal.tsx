@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { relationMinimalI18n } from './relation-minimal.i18n';
+
 /** 最小关系示例的语言 */
 export type RelationMinimalProps = { lang?: Lang };
 /** 两个命名对象之间的流动 */

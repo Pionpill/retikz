@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { branchNodesI18n } from './branch-nodes.i18n';
+
 /** 同步语言无关的字段与默认状态 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const t = branchNodesI18n[lang];

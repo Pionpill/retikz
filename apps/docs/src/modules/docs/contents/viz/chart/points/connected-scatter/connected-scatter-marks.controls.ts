@@ -5,6 +5,7 @@ import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/
 import { createPointCoordinateSection } from '../point-coordinate-control';
 import { connectedScatterData } from './connected-scatter-basic.data';
 import { controlI18n } from './connected-scatter-marks.i18n';
+
 /** 示例属性的双语交互契约 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const text = controlI18n[lang];

@@ -3,6 +3,7 @@ import type { IRChainParallel } from '@retikz/standard/collection';
 import type { FC, ReactNode } from 'react';
 
 import { invalidCellAuthoring } from '../cell';
+
 /** 并行块局部覆盖与直属支路 */
 export type ChainParallelProps = {
   /** 排布覆盖 */ layout?: IRChainParallel['layout'];

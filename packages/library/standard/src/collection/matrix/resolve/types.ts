@@ -1,5 +1,6 @@
 import type { CanonicalCell } from '../../_cell/resolve';
 import type { IRMatrix, IRMatrixAxisIndex } from '../schema';
+
 /** 已补全默认值的单轴索引 */
 export type CanonicalMatrixAxisIndex =
   | false

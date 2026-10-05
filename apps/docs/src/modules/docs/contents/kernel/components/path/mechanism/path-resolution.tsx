@@ -6,6 +6,7 @@ import type { Lang } from '@/i18n';
 
 import { cutCurve, cutLength, cutNumber } from './path-cut.data';
 import { pathResolutionI18n } from './path-resolution.i18n';
+
 /** 路径解析示意图的语言 */
 export type PathResolutionProps = { lang?: Lang };
 /** 从作者步骤到具体命令，再展开绘制段的来源与距离 */

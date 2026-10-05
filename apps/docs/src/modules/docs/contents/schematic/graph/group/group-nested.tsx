@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { groupNestedI18n } from './group-nested.i18n';
+
 /** 嵌套分组示例语言 */
 export type GroupNestedProps = { lang?: Lang };
 /** 两个实例复用局部名称，关系留在各自命名空间 */

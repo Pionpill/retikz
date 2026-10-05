@@ -6,6 +6,7 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { flowBezierSearchI18n } from './flow-bezier-search.i18n';
+
 /** 有限候选流程语言 */
 export type FlowBezierSearchProps = Readonly<{ lang?: Lang }>;
 /** 基线成功可早停，扩展时完整比较一轮再决定是否继续 */

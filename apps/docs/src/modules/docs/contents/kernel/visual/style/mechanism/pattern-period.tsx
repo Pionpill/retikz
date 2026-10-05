@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { periodI18n } from './pattern-period.i18n';
+
 /** 重复周期示意参数 */
 export type PatternPeriodProps = { lang?: Lang };
 /** 比较单个周期与平铺区域 */

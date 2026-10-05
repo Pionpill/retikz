@@ -22,6 +22,7 @@ import type { ZodType } from 'zod';
 
 import type { IRChartSource } from '../schemas';
 import type { ChartMarkBinding } from './mark';
+
 /** encoding resolve使用的owner Definition注册表 */
 export type ChartEncodingRuntime = Readonly<{
   /** Data / Plot transform Definition注册表 */

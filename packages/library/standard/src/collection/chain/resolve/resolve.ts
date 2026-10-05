@@ -3,6 +3,7 @@ import { resolveCell } from '../../_cell/resolve';
 import { ChainParallelLayoutSchema, ChainLayoutSchema, ChainConnectionSchema } from '../schema';
 import type { IRChain, IRChainItem, IRChainConnection, IRChainSkeleton } from '../schema';
 import type { CanonicalChain, CanonicalChainConnection, CanonicalChainItem, CanonicalChainLayout } from './types';
+
 /** 合并稀疏路径配置，marks 显式数组替换 */
 const resolveConnection = (
   source: IRChainConnection | undefined,

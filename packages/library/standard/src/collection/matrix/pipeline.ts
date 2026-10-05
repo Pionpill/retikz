@@ -10,6 +10,7 @@ import { compileCells, measureCell, measureCellChild } from '../_cell';
 import type { CellPlacement, MeasuredCell } from '../_cell';
 import { resolveMatrix } from './resolve';
 import type { IRMatrix } from './schema';
+
 /** 共享行列轨道的矩形布局；测量一次后复用单格与索引 */
 export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
   const { namespace: _namespace, type: _type, items, layout, index, style, label, ...scope } = resolveMatrix(node);

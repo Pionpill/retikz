@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
+
 /** 裁切路径填充规则 */
 export const ClipFillRule = {
   /** 非零环绕数规则 */
