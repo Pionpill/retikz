@@ -8,6 +8,7 @@ import {
   RegressionChart,
   StripChart,
 } from '@retikz/chart-react/point';
+import { BranchDiagram } from '@retikz/diagram-react/branch';
 import type { FlowDiagramLayoutHostProps } from '@retikz/diagram-react/flow';
 import { FlowDiagram } from '@retikz/diagram-react/flow';
 import type { AssertEqual } from '@retikz/foundation';
@@ -126,7 +127,8 @@ export const previewEmbedPropsOf = (
     )
   )
     return preparePreviewChartProps(props).props;
-  if (adapter === FlowDiagram.inputEmbedAdapter) return omitPreviewHostProps(props, flowHostPropKeys);
+  if (adapter === FlowDiagram.inputEmbedAdapter || adapter === BranchDiagram.inputEmbedAdapter)
+    return omitPreviewHostProps(props, flowHostPropKeys);
   return props;
 };
 

@@ -248,6 +248,7 @@
     "diagram": "Diagram",
     "diagramNavigationDescription": "Build flowcharts and other explanatory diagrams",
     "flowDiagram": "Flow Diagram",
+    "branchDiagram": "Branch Diagram",
     "group": "Group",
     "block": "Block",
     "basicUsage": "Basic Usage",

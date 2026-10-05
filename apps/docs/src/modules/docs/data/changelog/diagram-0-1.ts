@@ -10,6 +10,13 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '待发布 · Branch 分支图', en: 'Unreleased · Branch diagrams' },
+        content: {
+          zh: '新增 BranchDiagram、BranchNode 与 Branch，以有序节点路径表达主线、分叉和汇合。共享节点和同外观相邻段只绘制一次，支持外侧标签、四向轨道布局、展示区域和参考路由 artifact；IR、Vanilla、React 对称提供 /branch 入口，并补充路线图、提交历史与阅读路线示例。',
+          en: 'Adds BranchDiagram, BranchNode, and Branch for ordered main paths, forks, and merges. Shared nodes and matching adjacent segments are drawn once, with outside labels, four-direction lane layout, presentation regions, and reference-route artifacts. IR, Vanilla, and React expose symmetric /branch entries with roadmap, commit-history, and reading-path examples.',
+        },
+      },
+      {
         label: { zh: '待发布 · 同级容器等宽', en: 'Unreleased · Equal-width sibling containers' },
         content: {
           zh: 'FlowLayout 增加 containerWidth: match-largest，为同级横向行或单内容根 Group 分配相同宽度；内部 itemWidth: fill 在自然宽度上均分增量，固定宽度节点不增长。',

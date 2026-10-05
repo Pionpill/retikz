@@ -1,0 +1,52 @@
+---
+title: Branch · 分支图
+description: 用有序分支与共享节点绘制路线图、提交历史和阅读关系。
+---
+
+Branch 表达连续主线、分叉与汇合。节点目录定义标记，分支按顺序引用节点，相邻引用自动连接。不同分支引用同一 ID，就会复用同一个节点。
+
+## 职责一览
+
+| 内容           | 职责                   | 何时阅读       |
+| -------------- | ---------------------- | -------------- |
+| 基础用法       | 节点、标签、主线与支线 | 第一次绘图     |
+| 扩展用法       | 排布、外观与展示说明   | 将图示放入文档 |
+| 实现原理与参考 | 内部机制与公开契约     | 排查或接入     |
+
+下面的专题支线与版本主线共享起点和汇合点，每个共享版本始终只有一个标记。
+
+<ComponentPreview files="branch-roadmap" size="md" />
+
+日期、版本号、Git 引用和文章标题都属于标签，不决定等比例时间坐标。Branch 不读取仓库或处理页面跳转。任意有向关系和手工路由可查看 [Flow](/schematic/diagram/flow)。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: '基础用法',
+      description: '声明节点与有序路径',
+      url: '/schematic/diagram/branch/usage',
+    },
+    {
+      title: '扩展用法',
+      description: '配置布局与展示说明',
+      url: '/schematic/diagram/branch/extended',
+    },
+    {
+      title: '实现原理',
+      description: '理解共享节点与参考路径',
+      url: '/schematic/diagram/branch/mechanism',
+    },
+    {
+      title: 'API 参考',
+      description: '查询公开入口',
+      url: '/schematic/diagram/branch/api-reference',
+    },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入字段',
+      url: '/schematic/diagram/branch/schema-reference',
+    },
+  ]}
+/>

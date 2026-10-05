@@ -43,8 +43,12 @@ import {
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
+import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
+import type { IRBranchDiagram } from '@retikz/diagram/branch';
+import { BranchDiagramSchema } from '@retikz/diagram/branch';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
@@ -1145,6 +1149,63 @@ const buildFlowPreview = (
   };
 };
 
+const branchAuthoringInput = (source: IRBranchDiagram): InputBranchDiagram => {
+  const { namespace: _namespace, type: _type, ...input } = source;
+  void _namespace;
+  void _type;
+  return input;
+};
+
+const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: BuildVanillaPreviewOptions): string => {
+  const authoring = {
+    ...branchAuthoringInput(source),
+    entityKinds: '__GRAPH_ENTITY_KINDS__',
+    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  const authoringCode = formatVanillaValue(authoring)
+    .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
+    .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  const figureCode = formatVanillaValue({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: '__BRANCH_CHILDREN__',
+  }).replace("'__BRANCH_CHILDREN__'", `[branchDiagram(${authoringCode})]`);
+  return `import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [BranchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
+};
+
+const buildBranchPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const source = BranchDiagramSchema.parse(composite);
+  const input = scene({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: [
+      branchDiagram({
+        ...branchAuthoringInput(source),
+        entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+        diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      }),
+    ],
+  });
+  return {
+    code: buildBranchCode(source, preview, options),
+    svg: renderToSvgString(input, {
+      adapters: [BranchDiagramInputEmbedAdapter],
+      output: outputSize(preview),
+      compile: {
+        themeStyles: PreviewThemeDefinitionBundle.core,
+        measureText: options.measureText ?? browserPreviewMeasurer,
+      },
+    }),
+  };
+};
+
 /** 从统一的预览 IR 上下文生成 Core、Library、Graph、Flow、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG */
 export const buildVanillaPreview = (
   preview: PreviewIR,
@@ -1175,6 +1236,13 @@ export const buildVanillaPreview = (
     }
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
+    }
+    if (
+      effectiveComposites.length === 1 &&
+      firstComposite.namespace === 'diagram' &&
+      firstComposite.type === 'branch'
+    ) {
+      return buildBranchPreview(preview, firstComposite, options);
     }
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'diagram' && firstComposite.type === 'flow') {
       return buildFlowPreview(preview, firstComposite, options);

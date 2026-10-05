@@ -25,6 +25,8 @@ import type {
   IRStripChart,
 } from '@retikz/chart/point';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
+import { BranchDiagramEmbedKind, normalizeBranchDiagram } from '@retikz/diagram-vanilla/branch';
+import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramEmbedKind, normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import type { InputGraphChild, InputGraphMember } from '@retikz/graph-vanilla';
@@ -233,6 +235,8 @@ const sourceGraphEmbedOf = (
 ): IRChild | undefined => {
   const props = sourcePropsOf(input.props);
   switch (input.kind) {
+    case BranchDiagramEmbedKind:
+      return normalizeBranchDiagram(props as InputBranchDiagram);
     case FlowDiagramEmbedKind:
       return normalizeFlowDiagram(props as InputFlowDiagram);
     case GraphEmbedKind:

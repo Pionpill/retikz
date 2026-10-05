@@ -87,6 +87,7 @@ import {
 import { BoundaryLabelSchema } from '@retikz/core';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
+import * as BranchIR from '@retikz/diagram/branch';
 import * as DiagramIR from '@retikz/diagram/flow';
 import {
   CircleClipSchema,
@@ -1339,6 +1340,36 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/standard/presentation/surface#surfaceschema',
   },
 
+  BranchDiagramSchema: {
+    schema: BranchIR.BranchDiagramSchema,
+    label: 'BranchDiagram',
+    url: '/schematic/diagram/branch/schema-reference#branchdiagramschema',
+  },
+  BranchNodeSchema: {
+    schema: BranchIR.BranchNodeSchema,
+    label: 'BranchNode',
+    url: '/schematic/diagram/branch/schema-reference#branchnodeschema',
+  },
+  BranchSchema: {
+    schema: BranchIR.BranchSchema,
+    label: 'Branch',
+    url: '/schematic/diagram/branch/schema-reference#branchschema',
+  },
+  BranchLayoutIntentSchema: {
+    schema: BranchIR.BranchLayoutIntentSchema,
+    label: 'BranchLayoutIntent',
+    url: '/schematic/diagram/branch/schema-reference#branchlayoutintentschema',
+  },
+  BranchDiagramArtifactSchema: {
+    schema: BranchIR.BranchDiagramArtifactSchema,
+    label: 'BranchDiagramArtifact',
+    url: '/schematic/diagram/branch/api-reference',
+  },
+  BranchNodeLayoutSchema: {
+    schema: BranchIR.BranchNodeLayoutSchema,
+    label: 'BranchNodeLayout',
+    url: '/schematic/diagram/branch/schema-reference#branchnodelayoutschema',
+  },
   FlowDiagramSchema: {
     schema: DiagramIR.FlowDiagramSchema,
     label: 'FlowDiagram',

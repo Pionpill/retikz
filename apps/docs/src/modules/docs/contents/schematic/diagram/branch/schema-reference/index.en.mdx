@@ -1,0 +1,28 @@
+---
+title: Schema reference
+description: Look up Branch persistent input schemas and their defaults.
+---
+
+These schemas are exported from `@retikz/diagram/branch` and describe the serializable Source. Start with [basic usage](/schematic/diagram/branch/usage). Runtime callbacks and layout results belong to the [API reference](/schematic/diagram/branch/api-reference).
+
+Defaults are applied during parsing or resolution of omitted configuration. Shape and minimum marker size default to circle and 10. An omitted layout uses rightward progression and gaps of 48. References, cycles, and shared-style conflicts are checked with the complete diagram during compilation.
+
+## BranchDiagramSchema
+
+<ZodSchema name="BranchDiagramSchema" />
+
+## BranchNodeSchema
+
+<ZodSchema name="BranchNodeSchema" />
+
+## BranchSchema
+
+<ZodSchema name="BranchSchema" />
+
+## BranchLayoutIntentSchema
+
+<ZodSchema name="BranchLayoutIntentSchema" />
+
+## BranchNodeLayoutSchema
+
+<ZodSchema name="BranchNodeLayoutSchema" />
