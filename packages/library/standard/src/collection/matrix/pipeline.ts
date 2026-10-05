@@ -21,6 +21,7 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
   if (rows === 0 || columns === 0)
     return compileCells([], { width: 0, height: 0, scope, decoration: { label, style } }, context);
 
+  /** 每格只测量一次，以各列最大宽度、各行最大高度确定共享轨道，保留测量结果供后续放置复用 */
   const widths = Array<number>(columns).fill(0),
     heights = Array<number>(rows).fill(0);
   const measured: Array<Array<MeasuredCell>> = [];
@@ -38,11 +39,13 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
     measured.push(row);
   }
 
+  /** 测量行列索引并预留侧边空间；空标签保留索引位置，仅有可见标签时计入索引与网格之间的间距 */
   const axisResults: { row: Array<LayoutChildResult | undefined>; column: Array<LayoutChildResult | undefined> } = {
     row: [],
     column: [],
   };
   const strips = { row: 0, column: 0 };
+  /** 索引子项的 occurrence 接续单元格序号，避免与已测量的单元格重复 */
   let occurrence = rows * columns;
 
   for (const axis of ['row', 'column'] as const) {
@@ -74,6 +77,7 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
     if (visible) strips[axis] += axis === 'row' ? layout.gap.column : layout.gap.row;
   }
 
+  /** 汇总轨道与内部间距得到网格尺寸；前置索引占用的空间转为网格起点偏移 */
   const gridWidth = widths.reduce((sum, value) => sum + value, 0) + (columns - 1) * layout.gap.column;
   const gridHeight = heights.reduce((sum, value) => sum + value, 0) + (rows - 1) * layout.gap.row;
   const xOffset = index.row && index.row.position === 'before' ? strips.row : 0;
@@ -82,6 +86,7 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
     extra: Array<CompositeCompileChild> = [];
   let y = yOffset;
 
+  /** 按共享轨道推进坐标；显式指定宽高的单元格保留测量尺寸，其余单元格填满对应轨道 */
   for (let r = 0; r < rows; r++) {
     let x = xOffset;
 
@@ -101,6 +106,7 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
     y += heights[r] + layout.gap.row;
   }
 
+  /** 将索引居中放入对应轨道及侧边空间，扣除测量边界原点偏移后回放，避免重复编译 */
   for (const axis of ['row', 'column'] as const) {
     const options = index[axis];
     if (!options) continue;
@@ -137,6 +143,7 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
     }
   }
 
+  /** 合并单元格、索引及整体装饰，矩阵总尺寸包含两类索引各自预留的空间 */
   return compileCells(
     cells,
     { width: gridWidth + strips.row, height: gridHeight + strips.column, scope, extra, decoration: { label, style } },

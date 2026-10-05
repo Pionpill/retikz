@@ -95,6 +95,7 @@ export const librarySection: Array<Section> = [
             label: 'library.standardMap',
             difficulty: 'beginner',
           },
+          { id: 'mechanism', label: 'library.standardCollectionMechanism', difficulty: 'internals' },
         ],
       },
       {
