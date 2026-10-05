@@ -1,0 +1,78 @@
+---
+title: 扩展用法
+description: 配置方向、间距与外观，为完整图示添加展示说明。
+---
+
+本页接续[基础用法](/schematic/diagram/branch/usage)，继续使用相同的节点与分支模型。
+
+## 方向、间距与样式
+
+`layout.direction` 支持 right、left、down、up，默认向右。`nodeGap` 和 `laneGap` 默认均为 48，分别控制推进方向与轨道之间的净距，已考虑外侧标签占位，不是节点中心距；设为 0 允许占位相接。
+
+下面固定 A、B、C 的拓扑，只改变方向、间距和支线颜色。同轨直连，跨轨使用圆角正交过渡。节点占位不会重叠，但不保证复杂连线全局无交叉或避开所有标签。
+
+<ComponentPreview
+  files={['branch-layout', 'branch-layout.preview.tsx']}
+  defaultSourceFile="branch-layout.preview.tsx"
+  size="lg"
+/>
+
+共享有向相邻段只有一份连接；有效样式相同则合画，冲突时报错，不按声明次序覆盖。
+
+## 展示说明
+
+`presentation` 提供 title、description 和 legend，`frame` 控制外框与区域间距。图例由作者显式提供。下面可独立隐藏三部分：省略内容时移除该区域及其占位，开启后恢复。图例圆点对应蓝色专题节点。
+
+<ComponentPreview
+  files={['branch-presentation', 'branch-presentation.preview.tsx']}
+  defaultSourceFile="branch-presentation.preview.tsx"
+  size="lg"
+/>
+
+## 场景对照
+
+以下完整示例复用上述声明与配置，不引入专属业务 API。
+
+**提交历史**：commit 是节点，展示路径是分支。消费方将 parent DAG 转为有序路径；Git branch/tag 引用可作为标签。本例显式向下排列。
+
+<ComponentPreview files="/schematic/diagram/branch/branch-history" size="md" />
+
+**阅读路线**：上下篇构成主线，有序延伸阅读构成支线。任意相关链接或回指链接交给页面导航，不编码成形成环的推进路径。
+
+<ComponentPreview files="/schematic/diagram/branch/branch-reading" size="md" />
+
+## 相关属性
+
+完整定义见 [API 参考](/schematic/diagram/branch/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'BranchDiagram.layout.direction',
+      type: "'right' | 'left' | 'down' | 'up'",
+      defaultValue: "'right'",
+      description: '逻辑推进方向',
+    },
+    { name: 'BranchDiagram.layout.nodeGap', type: 'number', defaultValue: '48', description: '非负推进净距' },
+    { name: 'BranchDiagram.layout.laneGap', type: 'number', defaultValue: '48', description: '非负轨道净距' },
+    { name: 'Branch.style', type: "IRBranch['style']", description: '连接外观，共享段要求相同的有效外观' },
+    {
+      name: 'BranchDiagram.presentation',
+      type: '{ title?: IRDiagramPresentationText; description?: IRDiagramPresentationText; legend?: IRLegend }',
+      description: '省略的展示区域不占位',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '实现原理', description: '理解测量、布局与最终路径', url: '/schematic/diagram/branch/mechanism' },
+    {
+      title: 'API 参考',
+      description: '查询布局 Definition 与运行时选项',
+      url: '/schematic/diagram/branch/api-reference',
+    },
+  ]}
+/>

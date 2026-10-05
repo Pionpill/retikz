@@ -1,5 +1,6 @@
 /** Flow API 页经人工核对的英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  本次编排已确定的物理宽度约束: 'Physical width constraint resolved for this layout execution',
   '以真实 Core 边界查询布局后的端点': 'Query positioned endpoints against real Core boundaries',
   已补全默认的关系端点布局约束: 'Relation endpoint layout constraints with effective defaults',
   持久化关系端点约束: 'Persistent relation endpoint constraints',

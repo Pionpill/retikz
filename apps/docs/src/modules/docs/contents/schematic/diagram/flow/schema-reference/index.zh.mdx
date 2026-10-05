@@ -85,6 +85,8 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
 
 ## FlowLayoutSchema
 
+纵向 linear 布局按直接子容器的最大自然宽度分配空间；子容器为横向行或只有一个横向内容根的 Group。 数值固定直接 Entity 宽度；match-largest 令其最终等宽；fill 在有父级分配的横向行内均分剩余空间，保留自然宽度差异。
+
 `linear` 沿一个方向排列直接子项；`grid` 按物理行列放置。两者都不生成可见外壳，也不能作为 Relation 端点。
 
 <ZodSchema
@@ -96,7 +98,8 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
     '/case/"kind"/string/"linear"/field/"id"': '整张 Flow 图内唯一的作者 id',
     '/case/"kind"/string/"linear"/field/"excludeFromBounds"': '不计入本 Layout 对外结构边界的直接子项 id',
     '/case/"kind"/string/"linear"/field/"rank"': '父 Flow 作用域内的可选层级约束',
-    '/case/"kind"/string/"linear"/field/"itemWidth"': '直接 Entity 的固定可见宽度或 match-largest',
+    '/case/"kind"/string/"linear"/field/"itemWidth"': '直接 Entity 固定宽度、match-largest 等宽，或 fill 均分新增宽度',
+    '/case/"kind"/string/"linear"/field/"containerWidth"': '纵向容器为直接子容器分配最大自然宽度',
     '/case/"kind"/string/"linear"/field/"children"': '非空的直接子项 id 有序列表',
     '/case/"kind"/string/"linear"/field/"direction"': '直接子项的必填排列方向',
     '/case/"kind"/string/"linear"/field/"gap"': '相邻直接子项的间距',

@@ -26,7 +26,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
   it('apply_resolver_overrides_type_collects_parse', () => {
     const base = new Map([['x', DataFieldType.Continuous]]);
     const parse = (raw: unknown): ParsedFieldValue => Number(raw);
-    const { fieldTypes, parsers, resolverHit } = applyFieldResolver(
+    const { fieldTypeMap, parsers, resolverHit } = applyFieldResolver(
       base,
       new Set(['x']),
       undefined,
@@ -34,7 +34,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
       undefined,
       field => (field === 'x' ? { type: DataFieldType.Categorical, parse } : undefined),
     );
-    expect(fieldTypes.get('x')).toBe(DataFieldType.Categorical);
+    expect(fieldTypeMap.get('x')).toBe(DataFieldType.Categorical);
     expect(parsers.get('x')).toBe(parse);
     expect(resolverHit).toBe(true);
   });
@@ -43,7 +43,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
     const base = new Map([['x', DataFieldType.Continuous]]);
     const result = applyFieldResolver(base, new Set(['x']), undefined, 'd', undefined, undefined);
     expect(result.resolverHit).toBe(false);
-    expect(result.fieldTypes).toBe(base);
+    expect(result.fieldTypeMap).toBe(base);
   });
 
   it('apply_resolver_passes_dataset_context', () => {
@@ -135,26 +135,26 @@ describe('prepareRows — resolveField 集成（contract）', () => {
       { x: 0, y: 1 },
       { x: 1, y: 2 },
     ];
-    const { fieldTypes, normalized } = prepareRows(
+    const { fieldTypeMap, normalized } = prepareRows(
       spec,
       { d: rows },
       { resolveField: field => (field === 'x' ? { type: 'categorical' } : undefined) },
       rows,
     );
-    expect(fieldTypes.get('x')).toBe(DataFieldType.Categorical); // 覆盖推断的 continuous
+    expect(fieldTypeMap.get('x')).toBe(DataFieldType.Categorical); // 覆盖推断的 continuous
     expect(normalized[0].x).toBe(0); // resolver 命中 → 归一化跑，类别键原样
   });
 
   it('parse_only_with_model', () => {
     const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
     const rows = [{ x: '2024/03/04', y: 1 }];
-    const { fieldTypes, normalized } = prepareRows(
+    const { fieldTypeMap, normalized } = prepareRows(
       spec,
       { d: rows },
       { resolveField: field => (field === 'x' ? { parse: parseSlashDate } : undefined) },
       rows,
     );
-    expect(fieldTypes.get('x')).toBe(DataFieldType.Temporal); // 类型沿用 model
+    expect(fieldTypeMap.get('x')).toBe(DataFieldType.Temporal); // 类型沿用 model
     expect(normalized[0].x).toBe(Date.parse('2024-03-04'));
   });
 

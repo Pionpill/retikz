@@ -1,6 +1,6 @@
 import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
 import type {
-  DataFieldTypeMap,
+  DataTransformModel,
   DataFieldTypeValue,
   ExternalRow,
   IRDataFieldDefinition,
@@ -193,9 +193,8 @@ export type ChannelOutputSpace =
 export type ChannelDefinitionResolveContext = {
   node: IRPlot;
   rows: Array<ExternalRow>;
-  fieldTypes: DataFieldTypeMap;
-  /** 最终字段类型具有声明、resolver 或有效数据观测依据的字段；省略时由 definition 就地判断 */
-  fieldTypeEvidence?: ReadonlySet<string>;
+  /** 当前数据的完整字段模型；未定类型字段仍保留 */
+  model: DataTransformModel;
   /** 解析 channel scale；由 resolve 层注入，provider 不直接依赖 scale resolver */
   resolveChannelScale: (
     operation: IRPlotScaleOperation,

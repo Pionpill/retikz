@@ -43,8 +43,12 @@ import {
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
+import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
+import type { IRBranchDiagram } from '@retikz/diagram/branch';
+import { BranchDiagramSchema } from '@retikz/diagram/branch';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
@@ -105,7 +109,16 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import type { InputChainItem } from '@retikz/standard-vanilla/collection';
+import {
+  matrix,
+  MatrixInputEmbedAdapter,
+  array,
+  ArrayInputEmbedAdapter,
+  map,
+  MapInputEmbedAdapter,
+} from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -129,8 +142,10 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import type { IRCell, IRList, IRMap } from '@retikz/standard/collection';
-import { ListDefinition, MapDefinition } from '@retikz/standard/collection';
+import { ChainDefinition } from '@retikz/standard/collection';
+import type { IRChain, IRChainItem } from '@retikz/standard/collection';
+import type { IRCell, IRMatrix, IRArray, IRMap } from '@retikz/standard/collection';
+import { MatrixDefinition, ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
 import {
   AxesDefinition,
   AxesSchema,
@@ -270,7 +285,9 @@ type StandardKind =
   | 'frame'
   | 'surface'
   | 'legend'
-  | 'list'
+  | 'chain'
+  | 'matrix'
+  | 'array'
   | 'map';
 
 type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
@@ -387,12 +404,54 @@ const convertStandardChild = (
         content: normalizedContent,
       });
     }
-    case 'list': {
-      const { namespace: _namespace, type: _type, data, items, dataExpand, ...input } = child as IRList;
+    case 'chain': {
+      const { namespace, type, items, data, skeleton, dataExpand, ...input } = child as IRChain;
+      void namespace;
+      void type;
+      if (skeleton !== undefined) return chain({ ...input, skeleton });
+      if (data !== undefined) return chain({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+      const convert = (sequence: Array<IRChainItem>): Array<InputChainItem> =>
+        sequence.map(item =>
+          typeof item === 'string'
+            ? item
+            : item.kind === 'parallel'
+              ? { ...item, branches: item.branches.map(branch => ({ items: convert(branch.items) })) }
+              : item.content === undefined || typeof item.content === 'string'
+                ? item
+                : { ...item, content: convertPreviewChild(item.content, state, graphState) },
+        );
+      return chain({ ...input, items: convert(items) });
+    }
+    case 'matrix': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRMatrix;
       void _namespace;
       void _type;
-      if (data !== undefined) return list({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
-      return list({
+      if (skeleton !== undefined) return matrix({ ...input, skeleton });
+      if (data !== undefined) return matrix({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+      return matrix({
+        ...input,
+        items: items.map(row =>
+          row.map(cell =>
+            typeof cell === 'string'
+              ? cell
+              : {
+                  ...cell,
+                  content:
+                    cell.content === undefined || typeof cell.content === 'string'
+                      ? cell.content
+                      : convertPreviewChild(cell.content, state, graphState),
+                },
+          ),
+        ),
+      });
+    }
+    case 'array': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRArray;
+      void _namespace;
+      void _type;
+      if (skeleton !== undefined) return array({ ...input, skeleton });
+      if (data !== undefined) return array({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+      return array({
         ...input,
         items: items.map(cell =>
           typeof cell === 'string'
@@ -400,7 +459,7 @@ const convertStandardChild = (
             : {
                 ...cell,
                 content:
-                  typeof cell.content === 'string'
+                  cell.content === undefined || typeof cell.content === 'string'
                     ? cell.content
                     : convertPreviewChild(cell.content, state, graphState),
               },
@@ -408,7 +467,7 @@ const convertStandardChild = (
       });
     }
     case 'map': {
-      const { namespace: _namespace, type: _type, data, entries, dataExpand, ...input } = child as IRMap;
+      const { namespace: _namespace, type: _type, data, entries, skeleton, dataExpand, ...input } = child as IRMap;
       void _namespace;
       void _type;
       const convertCell = (cell: string | IRCell) =>
@@ -417,8 +476,11 @@ const convertStandardChild = (
           : {
               ...cell,
               content:
-                typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
+                cell.content === undefined || typeof cell.content === 'string'
+                  ? cell.content
+                  : convertPreviewChild(cell.content, state, graphState),
             };
+      if (skeleton !== undefined) return map({ ...input, skeleton });
       if (data !== undefined) return map({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
       return map({
         ...input,
@@ -635,7 +697,9 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<Synchron
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('list') ? [ListInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('chain') ? [ChainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('matrix') ? [MatrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('array') ? [ArrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('map') ? [MapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
@@ -672,7 +736,9 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
-  ListDefinition,
+  ChainDefinition,
+  MatrixDefinition,
+  ArrayDefinition,
   MapDefinition,
   SurfaceDefinition,
   LegendDefinition,
@@ -718,7 +784,9 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
-          'list',
+          'chain',
+          'matrix',
+          'array',
           'map',
           'circle',
           'ellipse',
@@ -1145,6 +1213,63 @@ const buildFlowPreview = (
   };
 };
 
+const branchAuthoringInput = (source: IRBranchDiagram): InputBranchDiagram => {
+  const { namespace: _namespace, type: _type, ...input } = source;
+  void _namespace;
+  void _type;
+  return input;
+};
+
+const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: BuildVanillaPreviewOptions): string => {
+  const authoring = {
+    ...branchAuthoringInput(source),
+    entityKinds: '__GRAPH_ENTITY_KINDS__',
+    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  const authoringCode = formatVanillaValue(authoring)
+    .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
+    .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  const figureCode = formatVanillaValue({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: '__BRANCH_CHILDREN__',
+  }).replace("'__BRANCH_CHILDREN__'", `[branchDiagram(${authoringCode})]`);
+  return `import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [BranchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
+};
+
+const buildBranchPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const source = BranchDiagramSchema.parse(composite);
+  const input = scene({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: [
+      branchDiagram({
+        ...branchAuthoringInput(source),
+        entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+        diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      }),
+    ],
+  });
+  return {
+    code: buildBranchCode(source, preview, options),
+    svg: renderToSvgString(input, {
+      adapters: [BranchDiagramInputEmbedAdapter],
+      output: outputSize(preview),
+      compile: {
+        themeStyles: PreviewThemeDefinitionBundle.core,
+        measureText: options.measureText ?? browserPreviewMeasurer,
+      },
+    }),
+  };
+};
+
 /** 从统一的预览 IR 上下文生成 Core、Library、Graph、Flow、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG */
 export const buildVanillaPreview = (
   preview: PreviewIR,
@@ -1175,6 +1300,13 @@ export const buildVanillaPreview = (
     }
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
+    }
+    if (
+      effectiveComposites.length === 1 &&
+      firstComposite.namespace === 'diagram' &&
+      firstComposite.type === 'branch'
+    ) {
+      return buildBranchPreview(preview, firstComposite, options);
     }
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'diagram' && firstComposite.type === 'flow') {
       return buildFlowPreview(preview, firstComposite, options);

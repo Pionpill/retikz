@@ -1,0 +1,88 @@
+---
+title: Basic usage
+description: Declare a flat node catalog and ordered branches to express forks and merges.
+---
+
+Start with a release path and add a feature path. For host setup, see [Diagram quick start](/schematic/diagram/get-start).
+
+## Using this topic
+
+The preview provides React, Vanilla, and IR source. Import React components from `@retikz/diagram-react/branch`. Vanilla uses `branchDiagram()` and `BranchDiagramInputEmbedAdapter` from `@retikz/diagram-vanilla/branch`. Direct IR uses `namespace: 'diagram', type: 'branch'` and registers compilation through `createBranchDiagramProviderContribution()`.
+
+React declarations are siblings. Branches reference node IDs through `nodes`:
+
+```text
+BranchDiagram
+├── BranchNode
+└── Branch
+```
+
+<ComponentPreview files="/schematic/diagram/branch/branch-roadmap" size="md" />
+
+The main path visits v1, v2, v3; the feature path visits v1, feature, v2. Shared nodes v1 and v2 are each drawn once.
+
+## Nodes, labels, and the main branch
+
+`mainBranch` identifies an existing branch whose nodes stay on one lane. Switch it below to see B join the straight main lane. Omitting this field does not infer a main branch from its name.
+
+Markers default to circles with diameter 10. Outside `labels` do not enlarge markers and can specify text, position, distance, and font. This example places labels below; their default position is above. Change marker size or hide labels to observe their effect on layout occupancy.
+
+<ComponentPreview
+  files={['branch-nodes', 'branch-nodes.preview.tsx']}
+  defaultSourceFile="branch-nodes.preview.tsx"
+  size="md"
+/>
+
+## Errors and limitations
+
+Node IDs and branch IDs must each be unique. Branches must be nonempty and reference existing nodes. A branch cannot repeat a node, and combined paths must be acyclic. Every node must be referenced; use a single-node branch for an isolated node.
+
+`BranchNode` does not accept authored positions or body cards. `Branch` does not contain nested nodes or independent relations. See the references for the full shape and style surface.
+
+## Related props
+
+Selected members are listed below; see the [API reference](/schematic/diagram/branch/api-reference) for complete definitions.
+
+<ComponentProps
+  items={[
+    {
+      name: 'Branch.nodes',
+      type: 'Array<string>',
+      required: true,
+      description: 'Ordered node IDs; adjacent references connect automatically',
+    },
+    {
+      name: 'BranchDiagram.mainBranch',
+      type: 'string',
+      description: 'ID of an existing branch whose nodes stay on one lane',
+    },
+    {
+      name: 'BranchNode.labels',
+      type: 'Array<IRNodeLabel>',
+      description: 'Outside labels with text and position; this example uses bottom',
+    },
+    {
+      name: 'BranchNode.layout.minimumSize',
+      type: 'number | { width: number; height: number }',
+      defaultValue: '10',
+      description: 'Minimum marker size; labels occupy additional space',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Control direction, spacing, and presentation',
+      url: '/schematic/diagram/branch/extended',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up node and branch inputs',
+      url: '/schematic/diagram/branch/schema-reference',
+    },
+  ]}
+/>

@@ -264,3 +264,22 @@ describe('@retikz/diagram-vanilla/flow', () => {
     });
   });
 });
+
+it('容器宽度策略通过 Vanilla 归一化和 JSON 往返保留', () => {
+  const source = FlowVanilla.normalizeFlowDiagram({
+    entities: [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ],
+    groups: [],
+    layouts: [
+      { id: 'rows', kind: 'linear', direction: 'down', containerWidth: 'match-largest', children: ['row'] },
+      { id: 'row', kind: 'linear', direction: 'right', itemWidth: 'fill', children: ['a', 'b'] },
+    ],
+    children: ['rows'],
+    relations: [{ source: 'a', target: 'b' }],
+  });
+  expect(source.layouts[0]).toMatchObject({ containerWidth: 'match-largest' });
+  expect(source.layouts[1]).toMatchObject({ itemWidth: 'fill' });
+  expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+});

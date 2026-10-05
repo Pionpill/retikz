@@ -24,10 +24,19 @@ export const MapEntrySchema = strictObject({
   value: union([string(), CellSchema]).describe('Text or drawable content for the value cell.'),
 }).describe('One key/value display pair; displayed keys may repeat.');
 
+export const MapSkeletonSchema = strictObject({
+  keys: array(string()).describe(
+    'Ordered plain-text keys; repeated and empty keys are allowed. Values have no content.',
+  ),
+}).describe('Schematic key/value rows without real data.');
+
 const MapBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('map').describe('Composite type for the map presentation.'),
   ...ScopePropsSchema.omit({ style: true }).shape,
+  skeleton: MapSkeletonSchema.optional().describe(
+    'Schematic structure without real data; excludes other content inputs.',
+  ),
   entries: array(MapEntrySchema).optional().describe('Ordered key/value pairs, not a JavaScript Map.'),
   data: JsonObjectSchema.optional().describe(
     'JSON object rendered recursively in own enumerable key order; mutually exclusive with entries.',
@@ -40,6 +49,7 @@ const MapBaseSchema = CompositeBaseSchema.extend({
 export const MapSchema = union([
   MapBaseSchema.required({ entries: true })
     .extend({
+      skeleton: never().optional().describe('Not accepted in this input branch.'),
       data: never().optional().describe('Not accepted in this input branch.'),
       dataExpand: never().optional().describe('Not accepted in this input branch.'),
     })
@@ -61,7 +71,13 @@ export const MapSchema = union([
       });
     }),
   MapBaseSchema.required({ data: true }).extend({
+    skeleton: never().optional().describe('Not accepted in this input branch.'),
     entries: never().optional().describe('Not accepted in this input branch.'),
     dataExpand: DataExpandSchema,
   }),
-]).describe('Two-column ordered key/value presentation.');
+  MapBaseSchema.required({ skeleton: true }).extend({
+    entries: never().optional().describe('Not accepted in this input branch.'),
+    data: never().optional().describe('Not accepted in this input branch.'),
+    dataExpand: never().optional().describe('Not accepted in this input branch.'),
+  }),
+]).describe('Two-column ordered key/value presentation from entries, JSON data, or a schematic skeleton.');

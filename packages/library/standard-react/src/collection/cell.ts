@@ -1,34 +1,34 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { createInputScene } from '@retikz/react';
 import type { InputCell } from '@retikz/standard-vanilla/collection';
-import type { IRCell, IRListCell } from '@retikz/standard/collection';
+import type { IRCell, IRArrayCell } from '@retikz/standard/collection';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-type CellLayoutSource = IRListCell['layout'];
+type CellLayoutSource = IRArrayCell['layout'];
 type CellWithLayout<TLayout extends CellLayoutSource> = Omit<IRCell, 'layout'> & { layout?: TLayout };
 
 /** React 数据入口的文本单元格；复杂内容使用组合组件 */
 export type CellProps<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
   CellWithLayout<TLayout>,
   'content'
-> & { content: string };
+> & { content?: string };
 
 /** 组合单元格的文本与 drawable 内容互斥 */
 export type CellMarkerProps<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
   CellWithLayout<TLayout>,
   'content'
 > &
-  ({ text: string; children?: never } | { text?: never; children: ReactNode });
+  ({ text?: string; children?: never } | { text?: never; children: ReactNode });
 
 /** 收集后的内部单元格，字符串由 Vanilla 统一归一 */
 export type DrawableCell<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
   CellWithLayout<TLayout>,
   'content'
 > & {
-  content: ReactNode;
+  content?: ReactNode;
 };
 
 /** 拒绝脱离直属容器的 marker 与非法 JSX 组合 */
@@ -71,11 +71,16 @@ export const createCellsInput = <TLayout extends CellLayoutSource>(
 ) => {
   const adapters: Array<AnyInputEmbedAdapter> = [];
   const inputs: Array<InputCell<CellWithLayout<TLayout>>> = cells.map((cell, index) => {
+    if (cell.content === undefined) {
+      const { content, ...empty } = cell;
+      void content;
+      return empty;
+    }
     if (typeof cell.content === 'string') return { ...cell, content: cell.content };
     const collected = createInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
     const children = collected.scene.children;
     if (children === undefined || children.length !== 1) {
-      return invalidCellAuthoring('Each List / Map cell requires exactly one authoring child.');
+      return invalidCellAuthoring('Each collection cell requires exactly one authoring child.');
     }
     adapters.push(...collected.adapters);
     return { ...cell, content: children[0] };

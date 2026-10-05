@@ -49,15 +49,15 @@ afterEach(() => {
 });
 
 describe('ZodSchema deep expansion', () => {
-  it('List 的超长 items 类型只显示所属 Schema 字段路径', () => {
+  it('Array 的超长 items 类型只显示所属 Schema 字段路径', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
-        <ZodSchema name="ListSchema" expandNested />
+        <ZodSchema name="ArraySchema" expandNested />
       </MemoryRouter>,
     );
     const itemsRow = markup.split('<tr').find(row => row.includes('>items<'));
 
-    expect(itemsRow).toContain('ListSchema.items');
+    expect(itemsRow).toContain('ArraySchema.items');
     expect(itemsRow).not.toContain('展开 / 收起类型');
     expect(markup).not.toContain('aria-label="展开 / 收起类型"');
   });

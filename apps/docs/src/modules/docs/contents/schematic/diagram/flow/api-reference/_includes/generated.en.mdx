@@ -490,17 +490,18 @@ export type FlowGroupProps = FlowGroupMarkerProps &
 
 <ApiTable>
 
-| Member               | Type                                  | Default | Description                                                                                                                           |
-| -------------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `align?`             | `"center" \| "start" \| "end"`        | —       | Optional cross-axis alignment; omission resolves to center.                                                                           |
-| `readonly children?` | `ReactNode`                           | —       | Recursive Flow Entity, Group, or Layout children                                                                                      |
-| `direction`          | `"right" \| "left" \| "up" \| "down"` | —       | Required authored direction for direct children placement.                                                                            |
-| `excludeFromBounds?` | `Array<string>`                       | —       | Direct child ids excluded from this Layout bounds, without removing their local placement or drawing.                                 |
-| `gap?`               | `number`                              | —       | Optional gap between direct children in user units.                                                                                   |
-| `id`                 | `string`                              | —       | Flow-wide authored Layout identity.                                                                                                   |
-| `itemWidth?`         | `number \| "match-largest"`           | —       | Optional direct Entity visible-width strategy. Numeric values are fixed widths; match-largest uses this Layout scope natural maximum. |
-| `kind`               | `"linear"`                            | —       | One-dimensional placement discriminator.                                                                                              |
-| `rank?`              | `number`                              | —       | Optional rank constraint within the parent Flow scope.                                                                                |
+| Member               | Type                                  | Default | Description                                                                                                                                                                                                                                                         |
+| -------------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `align?`             | `"center" \| "start" \| "end"`        | —       | Optional cross-axis alignment; omission resolves to center.                                                                                                                                                                                                         |
+| `readonly children?` | `ReactNode`                           | —       | Recursive Flow Entity, Group, or Layout children                                                                                                                                                                                                                    |
+| `containerWidth?`    | `"match-largest"`                     | —       | Equalize direct horizontal Layout or single-row Group widths to their natural maximum in an up/down linear Layout. Does not stretch descendants without itemWidth fill.                                                                                             |
+| `direction`          | `"right" \| "left" \| "up" \| "down"` | —       | Required authored direction for direct children placement.                                                                                                                                                                                                          |
+| `excludeFromBounds?` | `Array<string>`                       | —       | Direct child ids excluded from this Layout bounds, without removing their local placement or drawing.                                                                                                                                                               |
+| `gap?`               | `number`                              | —       | Optional gap between direct children in user units.                                                                                                                                                                                                                 |
+| `id`                 | `string`                              | —       | Flow-wide authored Layout identity.                                                                                                                                                                                                                                 |
+| `itemWidth?`         | `number \| "fill" \| "match-largest"` | —       | Direct Entity visible-width strategy: a number fixes width, match-largest equalizes natural widths, and fill shares positive free width over non-fixed Entities in a horizontal row receiving containerWidth allocation while preserving natural width differences. |
+| `kind`               | `"linear"`                            | —       | One-dimensional placement discriminator.                                                                                                                                                                                                                            |
+| `rank?`              | `number`                              | —       | Optional rank constraint within the parent Flow scope.                                                                                                                                                                                                              |
 
 </ApiTable>
 
@@ -1505,7 +1506,7 @@ export type FlowEndpointTarget = ZodInfer<typeof FlowEndpointTargetSchema>;
   <ApiSourceLink
     label={'FlowLayoutDefinition'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={399}
+    startLine={403}
   >
     Layout definition that synchronously determines Flow element bounds, relation routes, and label reservations
   </ApiSourceLink>
@@ -1551,7 +1552,7 @@ export type FlowLayoutDefinition = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutEndpoint'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={307}
+    startLine={311}
   >
     Relation endpoint layout constraints with effective defaults
   </ApiSourceLink>
@@ -1595,7 +1596,7 @@ export type FlowLayoutEndpoint = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutExecutionContext'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={263}
+    startLine={267}
   >
     Synchronous execution context for Flow placement and waypoint queries
   </ApiSourceLink>
@@ -1684,7 +1685,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
   <ApiSourceLink
     label={'FlowLayoutRelationInput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={319}
+    startLine={323}
   >
     Measured Flow layout relation input
   </ApiSourceLink>
@@ -1732,7 +1733,7 @@ export type FlowLayoutRelationInput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRelationOutput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={353}
+    startLine={357}
   >
     Layout output for one Flow relation in root coordinates
   </ApiSourceLink>
@@ -1975,7 +1976,7 @@ export type FlowLayoutRouting =
   <ApiSourceLink
     label={'FlowRoutePointsQuery'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={295}
+    startLine={299}
   >
     Real waypoint query within this layout, with no cross-compilation cache
   </ApiSourceLink>
@@ -2075,7 +2076,7 @@ export type FlowRoutingCapability =
   <ApiSourceLink
     label={'FlowSmoothRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={285}
+    startLine={289}
   >
     Resolved spline reference knots, retaining valid repeats
   </ApiSourceLink>
@@ -2117,7 +2118,7 @@ export type FlowSmoothRoute = Readonly<{
   <ApiSourceLink
     label={'FlowSmoothRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={275}
+    startLine={279}
   >
     Through-point routing intent with effective tension
   </ApiSourceLink>

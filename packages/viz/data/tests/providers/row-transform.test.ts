@@ -39,29 +39,23 @@ describe('applyTransforms (contract)', () => {
       [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       { registry: TRANSFORM_REGISTRY },
     );
-    expect(stacked.fieldTypes).toEqual(
-      new Map([
-        ['month', DataFieldType.Categorical],
-        ['product', DataFieldType.Categorical],
-        ['revenue', DataFieldType.Continuous],
-        ['y0', DataFieldType.Continuous],
-        ['y1', DataFieldType.Continuous],
-      ]),
-    );
-    expect(stacked.fieldTypeEvidence).toEqual(new Set(['month', 'product', 'revenue', 'y0', 'y1']));
+    expect(stacked.model).toEqual([
+      { name: 'month', type: DataFieldType.Categorical },
+      { name: 'product', type: DataFieldType.Categorical },
+      { name: 'revenue', type: DataFieldType.Continuous },
+      { name: 'y0', type: DataFieldType.Continuous },
+      { name: 'y1', type: DataFieldType.Continuous },
+    ]);
 
     const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', field: 'revenue' }], {
       registry: TRANSFORM_REGISTRY,
     });
-    expect(binned.fieldTypes).toEqual(
-      new Map([
-        ['revenue', DataFieldType.Continuous],
-        ['binStart', DataFieldType.Continuous],
-        ['binEnd', DataFieldType.Continuous],
-        ['binCount', DataFieldType.Continuous],
-      ]),
-    );
-    expect(binned.fieldTypeEvidence).toEqual(new Set(['revenue', 'binStart', 'binEnd', 'binCount']));
+    expect(binned.model).toEqual([
+      { name: 'revenue', type: DataFieldType.Continuous },
+      { name: 'binStart', type: DataFieldType.Continuous },
+      { name: 'binEnd', type: DataFieldType.Continuous },
+      { name: 'binCount', type: DataFieldType.Continuous },
+    ]);
   });
 
   it('transform_empty_pipeline', () => {

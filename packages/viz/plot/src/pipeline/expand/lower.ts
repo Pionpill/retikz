@@ -363,12 +363,12 @@ export const lowerPlotWithDataArtifact = (
     (provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference]);
 
   // fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
-  // 类型 Map 是 type-driven scale / coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
+  // 接入类型 Map 用于 coercion，规范视图以完整 model 为事实源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
   const preparedRootView =
     preparedData === undefined ? undefined : createDataView(preparedData.root.rows, preparedData.root.model);
   const {
     dataView: normalizedDataView,
-    fieldTypes,
+    fieldTypeMap,
     normalized,
     transformRegistry,
     transformContext,
@@ -380,19 +380,19 @@ export const lowerPlotWithDataArtifact = (
     : {
         ...preparePlotRegistries(options),
         dataView: preparedRootView,
-        fieldTypes: preparedRootView.fieldTypes,
+        fieldTypeMap: undefined,
         normalized: preparedRootView.rows,
       };
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
-  if (preparedData === undefined && options.validateData) {
+  if (fieldTypeMap !== undefined && options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100;
-    validateBoundData(normalized, fieldTypes, sampleRows);
+    validateBoundData(normalized, fieldTypeMap, sampleRows);
   }
-  // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
+  // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypeMap 键）全量校验，遇任一非法 / 缺失 fail-loud；
   //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
-  if (preparedData === undefined && options.invalid === 'error') {
-    assertAllValuesValid(normalized, fieldTypes);
+  if (fieldTypeMap !== undefined && options.invalid === 'error') {
+    assertAllValuesValid(normalized, fieldTypeMap);
   }
 
   const rootTransformResult =
@@ -496,8 +496,7 @@ export const lowerPlotWithDataArtifact = (
     coordinate: source.coordinate,
     markPadding,
     rows: frameDataView.rows,
-    fieldTypes: frameDataView.fieldTypes,
-    fieldTypeEvidence: frameDataView.fieldTypeEvidence,
+    model: frameDataView.model,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
@@ -521,8 +520,7 @@ export const lowerPlotWithDataArtifact = (
   const channelCtx: ChannelResolveContext = {
     node,
     rows: rootDataView.rows,
-    fieldTypes: rootDataView.fieldTypes,
-    fieldTypeEvidence: rootDataView.fieldTypeEvidence,
+    model: rootDataView.model,
     channelRegistry,
     markRegistry,
     defaultColor: categoricalColorAt(resolvedTheme.palette.series, 0),
@@ -628,8 +626,7 @@ export const lowerPlotWithDataArtifact = (
       const markChannels = resolveMarkChannels(mark, {
         ...channelCtx,
         rows: dataView.rows,
-        fieldTypes: dataView.fieldTypes,
-        fieldTypeEvidence: dataView.fieldTypeEvidence,
+        model: dataView.model,
         defaultColor: categoricalColorAt(
           resolvedTheme.palette.series,
           defaultColorPaletteIndices[markIndex] ?? markIndex,
@@ -1038,8 +1035,7 @@ export const lowerPlotWithDataArtifact = (
           const markChannels = resolveMarkChannels(mark, {
             ...channelCtx,
             rows: dataView.rows,
-            fieldTypes: dataView.fieldTypes,
-            fieldTypeEvidence: dataView.fieldTypeEvidence,
+            model: dataView.model,
             defaultColor: categoricalColorAt(
               resolvedTheme.palette.series,
               defaultColorPaletteIndices[markIndex] ?? markIndex,
@@ -1217,8 +1213,7 @@ export const lowerPlotWithDataArtifact = (
             const markChannels = resolveMarkChannels(mark, {
               ...channelCtx,
               rows: markRows,
-              fieldTypes: markDataView.fieldTypes,
-              fieldTypeEvidence: markDataView.fieldTypeEvidence,
+              model: markDataView.model,
               defaultColor: categoricalColorAt(
                 resolvedTheme.palette.series,
                 defaultColorPaletteIndices[markIndex] ?? markIndex,
@@ -1323,8 +1318,7 @@ export const lowerPlotWithDataArtifact = (
       const markChannels = resolveMarkChannels(mark, {
         ...channelCtx,
         rows: markRows,
-        fieldTypes: dataView.fieldTypes,
-        fieldTypeEvidence: dataView.fieldTypeEvidence,
+        model: dataView.model,
         defaultColor: categoricalColorAt(
           resolvedTheme.palette.series,
           defaultColorPaletteIndices[markIndex] ?? markIndex,

@@ -18,10 +18,4 @@ export const createDataView = (rows: Array<ExternalRow>, model: DataTransformMod
           : undefined;
     return type === undefined ? { ...field } : { ...field, type };
   }),
-  get fieldTypes() {
-    return new Map(this.model.flatMap(field => (field.type === undefined ? [] : [[field.name, field.type]])));
-  },
-  get fieldTypeEvidence() {
-    return new Set(this.model.filter(field => field.type !== undefined).map(field => field.name));
-  },
 });

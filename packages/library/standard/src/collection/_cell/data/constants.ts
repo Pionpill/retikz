@@ -4,8 +4,8 @@ import type { ValueOf } from '@retikz/foundation';
 export const DataExpandComponent = {
   /** 递归展示为 Map */
   Map: 'map',
-  /** 递归展示为 List */
-  List: 'list',
+  /** 递归展示为 Array */
+  Array: 'array',
 } as const;
 
 export type DataExpandComponentValue = ValueOf<typeof DataExpandComponent>;

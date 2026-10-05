@@ -1,0 +1,394 @@
+---
+title: Array · 数组
+description: 使用 Array 展示一维内容，配置单元格、组合图形并查询 API 与 Schema。
+---
+
+`Array` 将一维内容画成一排或一列单元格，可展示数组、队列和索引。每格可以放文字或一个图形组件。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `PathClipDefinition`。
+
+<ComponentPreview files="array-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Array } from '@retikz/standard-react/collection';
+
+export const Example = () => (
+  <Layout>
+    <Array items={['A', 'B']} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { ArrayDefinition } from '@retikz/standard/collection';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'array',
+      items: ['A', 'B'],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[ArrayDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { array, ArrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    array({
+      items: ['A', 'B'],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [ArrayInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { ArrayDefinition } from '@retikz/standard/collection';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'array',
+      items: ['A', 'B'],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, {
+  compile: { composites: [ArrayDefinition] },
+});
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 选择输入方式
+
+四种输入方式互斥，按内容的来源和编写方式选择：常规手写内容用 `items`，已有的持久化 JSON 数据用 `data`，在 React 中希望直接写子组件时用 JSX 简写，只需示意结构时用 `skeleton`。
+
+<DocTabs defaultValue="items">
+<DocTab value="items" label="items · 手写内容">
+
+常规手写内容使用 `items`：逐项编写文字，按需配置单格样式、尺寸与 id，适合数组示意图、队列等需要控制每格表现的内容。
+
+```tsx
+<Array items={['A', { content: 'B', id: 'selected', style: { fill: 'dodgerblue' } }]} />
+```
+
+`items` 的字符串默认只提供文字，例如 `'A'` 等价于 `{ content: 'A' }`，可以重复或为空。需要逐格样式时使用 `{ content?, id?, style?, layout? }`；对象省略 id 时不会从 content 推导身份。设置 `cellIdMode="string"` 后，字符串也会成为单元格 id，此时字符串必须非空白且在当前 Array 中唯一，不能与对象项的显式 id 重复。该模式不能与 `data` 或 `skeleton` 一起使用。
+
+</DocTab>
+<DocTab value="data" label="data · 持久化数据">
+
+直接传入从 JSON 文件、存储或接口读取的 JSON 数组，自动递归展示嵌套数组和对象，无需逐格转换为配置。以下以 JSON 数组表示已读取的数据。
+
+```tsx
+<Array data={['A', 42, { enabled: true }]} />
+```
+
+`data` 将输入当作要展示的数据，而不是单元格配置；数据中的 `style`、`id` 等字段也只是普通内容。需要控制某一格的样式或身份时，改用 `items` 或 JSX。这里的“持久化数据”指已保存的数据来源，`data` 本身不负责读写存储。
+
+</DocTab>
+<DocTab value="jsx" label="JSX · 声明式简写">
+
+在 React 中可用 `ArrayItem` 子组件作为声明式简写，适合与页面 JSX 一起编写的内容。用 `text` 表达文字，也可以嵌入一个图形组件；无需把子组件组织成 `items` 数组。
+
+```text
+Array
+├── ArrayItem
+└── ArrayItem
+    └── Map
+```
+
+`ArrayItem` 必须直属于 `Array`；文字由 `text` 提供，嵌套图形作为它的子组件。下例先使用两个文字单元格，图形组合见扩展用法。
+
+```tsx
+import { Array, ArrayItem } from '@retikz/standard-react/collection';
+
+<Array>
+  <ArrayItem text="A" />
+  <ArrayItem text="B" id="selected" style={{ fill: 'dodgerblue' }} />
+</Array>;
+```
+
+</DocTab>
+</DocTabs>
+
+### 绘制示意骨架
+
+没有真实数据时使用 `skeleton`，组件、Vanilla `array()` 与 IR 使用同一配置。它与 `data`、`items`、JSX children 互斥，即使其他入口为空也不能混用。
+
+| 配置                           | 效果                                     |
+| ------------------------------ | ---------------------------------------- |
+| `{ count: 4 }`                 | 四个无内容格子                           |
+| `{ labels: ['x₁', '', 'xₙ'] }` | 三个格子，第一和第三格显示文字，中间为空 |
+
+`count` 与 `labels` 二选一。count 是非负安全整数；labels 的长度决定格数，重复文字有效，空字符串表示无内容，空数组或 count 为零表示空集合。格内文字是纯文本，不添加 JSON 引号、不解析公式。
+
+`skeleton.labels` 写在格内，`index.labels` 写在格外，两者可同时使用；也可用 `index: { start: 1 }` 在格外自动编号。index.labels 与 start 互斥，数量必须与格数相同；空标号不显示，全部为空时不占索引空间或额外间距。两套文字均不生成身份；骨架可用 `cellIdMode="index"` 配合 Array id 生成直属格引用，不支持 string 模式。
+
+<ComponentPreview
+  files={['array-skeleton', 'array-skeleton.preview.tsx']}
+  defaultSourceFile="array-skeleton.preview.tsx"
+  caption="示例固定单格为 42 × 36；切换格内内容与格外标号，观察两者独立变化。连续两个分隔符表示一个空格。"
+/>
+
+无内容格仍保留背景、边框、内边距与引用区域；内容自然尺寸为零，默认 padding 仍会占空间。需要明确比例时设置 `layout.width` / `height`，需要逐格样式、id 或图形时改用 `items` 或 `ArrayItem`。显式单元格省略 content 表示无内容，`content: ''` 则仍是空文字。
+
+### 样式与尺寸
+
+整体 `style` 设置共同外观，单格 `style` 覆盖同名字段。
+
+字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
+
+<ComponentPreview
+  files={['array-styles', 'array-styles.preview.tsx']}
+  size="lg"
+  caption="切换固定、统一最大宽度与各格内容宽度，比较 A、B1、C 的单格尺寸；调整内边距可观察内容宽度模式如何留白。B1 格只覆盖颜色，不覆盖尺寸。示例初始使用固定宽高、边框和背景。"
+  defaultSourceFile="array-styles.preview.tsx"
+/>
+
+`layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零。宽度省略或设为 `'auto'` 时，所有自适应单格采用全组最大有效宽度；设为 `'content'` 时，每格按自身内容的自然宽度加内边距定宽。高度省略或设为 `'auto'` 时仍按全组最大高度。单格同名字段优先，因此可以在整体使用 `'content'`，再为某格指定固定宽度或 `'auto'`。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
+
+`layout.direction` 默认为 `row`，设为 `column` 即竖排，不自动换行。`auto` 轴取各格需求的最大值；固定轴保持指定尺寸。`style.cornerRadius` 统一设置各个单元格的圆角，单格样式可以覆盖它。
+
+`index` 省略或为 `false` 时隐藏索引，设为 `true` 或 `{}` 时显示默认索引。对象形式可设置：
+
+- `position`：`before`（默认）在横排上方、竖排左侧；`after` 在横排下方、竖排右侧。
+- `labels`：自定义格外标号，与 `start` 互斥；数量必须与格数一致，空字符串隐藏该标号。
+- `start`：起始值，默认为 `0`，必须是非负整数；索引仅用于展示，不是单元格 id。
+- `style`：通过 `font`、`textColor`、`color`、`opacity` 设置索引文本。`font` 按字段继承 Array 的整体字体，`textColor` 默认继承整体文本颜色；单格样式不影响索引。
+
+索引带按实际文字尺寸测量，与单元格之间使用 `layout.gap`。修改索引字号会改变索引带尺寸，但不会改变单元格尺寸。在上面的面板中切换横排 / 竖排和索引位置，比较四个方向的效果。
+
+### 容器标签
+
+`label` 为整个容器添加文字，支持单个对象或数组，可设置位置、距离、旋转和引线。标签不撑大布局尺寸，但计入最终绘制范围；空容器也能显示标签。
+
+<ComponentPreview
+  files={['array-labels', 'array-labels.preview.tsx']}
+  size="md"
+  caption="保持数组不变，观察标签的位置、旋转和引线。示例默认开启引线。"
+  defaultSourceFile="array-labels.preview.tsx"
+/>
+
+整体字体、文字颜色及 `defaults.label` 可作为标签默认，标签自身设置优先；单格样式不影响容器标签，`data` 中的嵌套容器也不继承根标签。
+
+<ComponentAlert
+  type="tip"
+  title="标签配置"
+  description={
+    <>
+      标签配置复用 Node label；完整位置、样式及引线选项见<a href="/kernel/components/node/labels">节点标签文档</a>。
+    </>
+  }
+/>
+
+## 扩展用法
+
+### 组合图形内容
+
+用 `ArrayItem` 为每格设置 `text` 或唯一的 drawable child，二者互斥；两者均省略时保留空格。
+
+多个图元先用 `Scope` 包成一个 child，再放入单元格。React 的数据数组只放文字配置，不嵌 JSX；Vanilla 的单格 `content` 接受文字或一个 authoring child，直接 IR 的 `content` 接受文字或一个可序列化图元。
+
+下面的 React 示例采用这组组件层级：
+
+```text
+Array
+├── ArrayItem
+└── ArrayItem
+    └── Map
+```
+
+<ComponentPreview files="array-composition" size="xs" />
+
+### 直接展示 JSON 数据
+
+`data` 接受 JSON 数组。`dataExpand` 控制嵌套对象和数组的展示方式，默认 `true`；它不改变外层 Array 的结构，只用于 `data`，不适用于显式单元格或 JSX 组合。
+
+| 配置                                | 嵌套对象  | 嵌套数组  |
+| ----------------------------------- | --------- | --------- |
+| `true`（默认）或 `['map', 'array']` | Map       | Array     |
+| `false` 或 `[]`                     | JSON 文本 | JSON 文本 |
+| `['map']`                           | Map       | JSON 文本 |
+| `['array']`                         | JSON 文本 | Array     |
+
+展开的子组件递归沿用同一选择；结构转为文本后，其整个子树都保留在紧凑 JSON 文本中，不再继续展开。空对象与空数组始终显示为 `{}` 和 `[]`。数组选项的顺序和重复项不影响结果。下例默认仅展开数组，可切换四种展示方式。 `layout.width: 'content'` 让自动生成的 Array 按各格内容定宽。
+
+<ComponentPreview
+  files={['array-data', 'array-data.preview.tsx']}
+  size="xs"
+  defaultSourceFile="array-data.preview.tsx"
+/>
+
+| 数据类型 | 输入示例        | 展示方式                                                    |
+| -------- | --------------- | ----------------------------------------------------------- |
+| 字符串值 | `"null"`        | 带引号和转义的 JSON 字面量，显示为 `"null"`，与 `null` 区分 |
+| 数字     | `42`            | 显示为 `42`                                                 |
+| 布尔值   | `true`、`false` | 显示为 `true`、`false`                                      |
+| 空值     | `null`          | 显示为 `null`                                               |
+| 非空数组 | `["A", 2]`      | 递归展示为 Array，各元素成为单元格                          |
+| 空数组   | `[]`            | 显示为文本 `[]`                                             |
+| 非空对象 | `{"a": 1}`      | 默认递归展示为 Map；`text` 模式显示为 `{"a":1}`             |
+| 空对象   | `{}`            | 显示为文本 `{}`                                             |
+
+空根结构的自然尺寸为零。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 Map 的 `entries`。
+
+数据默认不生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。需要逐格定制时，使用显式单元格。整体 style / layout 只控制当前层，但 `data` 模式下的 `layout.width: 'content'` 会沿自动生成的 Array / Map 数据树传给后代 Array，让每层的单元格按自身内容定宽；手写嵌套组件不继承。字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
+
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ArrayDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+
+### 引用单元格与控制溢出
+
+为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。默认模式下，未设 id 的格不会按数组下标自动获得身份。
+
+`cellIdMode` 决定直属格子的身份来源，默认 `explicit`：
+
+| 模式       | 用途                                                                                   |
+| ---------- | -------------------------------------------------------------------------------------- |
+| `explicit` | 只登记对象或 `ArrayItem` 显式设置的 id；文字不产生身份                                 |
+| `string`   | 将 `items` 字符串同时作为文字和 id；不接受 `data` 或 `skeleton`                        |
+| `index`    | 要求 Array 设置 id，为 `items` / `data` / `skeleton` 的直属格生成 `<array-id>-<index>` |
+
+例如 `<Array id="queue" cellIdMode="index" data={['A', 'B']} />` 的第二格可用 `queue-1` 引用。也可从 `@retikz/standard/collection` 导入 `getArrayCellId`，通过 `getArrayCellId('queue', 1)` 得到同一名称；参数必须是非空白 Array id 和非负整数，函数不检查该格是否存在。
+
+<ComponentPreview
+  files="array-cell-reference"
+  size="xs"
+  caption="箭头指向由 Array id 与下标生成的 queue-1；显示索引 1 对应第二格。"
+/>
+
+下标始终从零开始，不受显示索引的 `index.start` 影响；它表示当前排列位置，重排后该位置可能是另一项。嵌套数据的后代不会继承这些 id。单格同时显式指定 id 时，两种 id 均可引用同一矩形，不重复创建图元。同格名称相同会去重，不同格的名称冲突会报错。
+
+<ComponentAlert
+  type="tip"
+  title="Inspection 查询"
+  description={
+    <>
+      主 id <code>cell:queue-1</code> 与别名 <code>{'cell:<显式id>'}</code> 查询同一条空间记录。
+    </>
+  }
+/>
+
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+
+<ComponentPreview
+  files="array-overflow"
+  size="sm"
+  caption="相同固定宽度的单元格：左侧保留超出的文字，右侧将文字裁切在边框内。"
+/>
+
+## 错误与限制
+
+- 不混用输入方式；同一容器内显式单元格 id 必须唯一。重复文字应与身份分开配置。
+- 组合标记必须放在规定的直属父组件中，单格可无内容，提供图形时必须恰好一个；非法 JSX 组合会报错。
+- `data` 只接受 JSON 值树，不传函数、运行时实例、循环引用或稀疏数组；展示前自行投影数据。
+- 固定单格尺寸可以小于内容，但父级分配若容纳不下整组单元格与间隙，会编译失败。父级给出多余空间时，单元格仍从起点排布，不拉伸填满。
+- 这是数据结构的绘制组件，不负责数据处理、任意矩阵或合并单元格。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。" />
+
+### 尺寸如何确定
+
+`resolveArray` 先合并整体与单格设置，再补默认值；文字转为无背景、无边框、零内边距的文本节点。`compileArray` 对每格内容按自然尺寸测量一次，将内容需求与 padding 合成单格需求；`auto` 采用各格最大需求，`content` 宽度保留当前格自身需求，固定尺寸保持原值，最后沿选定方向累加单格尺寸和 gap。索引按合并后的字体单独测量，根据 `index.position` 在横排上下侧或竖排左右侧预留索引带。
+
+观察相同内容在两种宽度模式下的边框，以及边框外单独排列的索引：
+
+<ComponentPreview files="array-measurement-figure" size="sm" hideCode type="illustration" />
+
+左侧的 `auto` 让两格采用最大内容需求；右侧的 `content` 保留各格的内容宽度与内边距。索引条占用额外空间，不回写单格宽度。
+
+<SourceLinks
+  sources={[
+    {
+      label: '设置合并与默认值',
+      path: 'packages/library/standard/src/collection/array/resolve/resolve.ts',
+      startLine: 1,
+    },
+    { label: '测量与排布', path: 'packages/library/standard/src/collection/array/pipeline.ts', startLine: 1 },
+  ]}
+/>
+
+### 为什么引用和标签不改变单元格尺寸
+
+排布完成后，`compileCells` 复用测量结果，将内容居中，并分别输出背景、内容裁切层和边框。单元格 id 由不可见的矩形节点承载，使用分配给该格的尺寸，因此不受内容视觉溢出影响。另行发布的 `container` 和 `cell:<id>` 空间 handle 供 inspection 使用，不替代命名引用。
+
+容器标签由另一个不可见矩形承载，矩形大小取容器的布局分配范围，包含已启用的索引条。标签在单元格排布完成后附着，不反向参与单格测量；它只扩展最终可见范围。标签宿主不继承单元格角色样式，也不使用 `defaults.node`。
+
+图中蓝色边框是固定的单格分配与引用边界；观察箭头落点、边框外的文字和上方的容器标签：
+
+<ComponentPreview files="array-reference-figure" size="md" hideCode type="illustration" />
+
+文字溢出和标签扩大可见范围，但不会改变图中单格的 82 × 42 分配尺寸；引用箭头仍指向该矩形的下边界。
+
+<SourceLinks
+  sources={[
+    {
+      label: '内容复用、引用矩形与标签宿主',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## API 参考
+
+以下为当前组件的 React、Vanilla 和 IR 公开入口局部参考，签名与说明由源码生成。共享样式和持久化字段见后面的 Schema；不在这里复制整包公共契约。
+
+{/* @include library/standard/collection/array/generated */}
+
+## Schema 参考
+
+`ArraySchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'array'`；items、data 与 skeleton 三选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
+
+#### ArraySchema
+
+<ZodSchema name="ArraySchema" description="一维内容的单元格展示，支持显式单元格、JSON 数组或示意骨架" expandNested />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Surface · 表面',
+      description: '为单个图形添加背景、内边距和裁切',
+      url: '/library/standard/presentation/surface',
+    },
+  ]}
+/>

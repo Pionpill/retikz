@@ -92,9 +92,7 @@ export const prepareRows = (
 ): {
   /** 规范 rows 与完整逻辑字段模型 */
   dataView: DataView;
-  fieldTypes: DataFieldTypeMap;
-  /** 最终字段类型具有 model、format、resolver 或有效观测依据的字段 */
-  fieldTypeEvidence: ReadonlySet<string>;
+  fieldTypeMap: DataFieldTypeMap;
   normalized: Array<ExternalRow>;
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;
@@ -113,7 +111,7 @@ export const prepareRows = (
       ? options.fieldMaps[spec.data.reference]
       : undefined;
   const formatRegistry = resolveFormatRegistry(options.formatDefinitions);
-  const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(
+  const { fieldTypeMap: formatTypes, parsers: formatParsers } = collectFormatFields(
     spec.data.model,
     baseTypes,
     userSourceFields,
@@ -133,7 +131,7 @@ export const prepareRows = (
           if (resolution?.type !== undefined) fieldTypeEvidence.add(field);
           return resolution;
         };
-  const { fieldTypes, parsers: resolverParsers } = applyFieldResolver(
+  const { fieldTypeMap, parsers: resolverParsers } = applyFieldResolver(
     formatTypes,
     userSourceFields,
     spec.data.model,
@@ -142,7 +140,7 @@ export const prepareRows = (
     trackedResolveField,
   );
   const parsers = new Map([...formatParsers, ...resolverParsers]);
-  const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
+  const normalized = normalizeRows(ingested, fieldTypeMap, fieldMap, parsers);
   for (const field of userSourceFields) {
     const hasUsableObservation = normalized.some(row => {
       const value = resolveFieldPath(row, field);
@@ -154,13 +152,12 @@ export const prepareRows = (
     dataView: createDataView(
       normalized,
       [...userSourceFields].map(name => {
-        const type = fieldTypeEvidence.has(name) ? fieldTypes.get(name) : undefined;
+        const type = fieldTypeEvidence.has(name) ? fieldTypeMap.get(name) : undefined;
         const order = spec.data.model?.find(field => field.name === name)?.order;
         return { name, ...(type === undefined ? {} : { type }), ...(order === undefined ? {} : { order }) };
       }),
     ),
-    fieldTypes,
-    fieldTypeEvidence,
+    fieldTypeMap,
     normalized,
     transformRegistry,
     transformContext,

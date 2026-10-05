@@ -8,6 +8,12 @@ export const RetikzDiagramErrorCode = {
   DefinitionNotRegistered: 'DIAGRAM_DEFINITION_NOT_REGISTERED',
   DefinitionCallbackFailed: 'DIAGRAM_DEFINITION_CALLBACK_FAILED',
   ResolveInvalid: 'DIAGRAM_RESOLVE_INVALID',
+  BranchReferenceInvalid: 'DIAGRAM_BRANCH_REFERENCE_INVALID',
+  BranchTopologyInvalid: 'DIAGRAM_BRANCH_TOPOLOGY_INVALID',
+  BranchSharedStyleConflict: 'DIAGRAM_BRANCH_SHARED_STYLE_CONFLICT',
+  BranchMeasurementFailed: 'DIAGRAM_BRANCH_MEASUREMENT_FAILED',
+  BranchLayoutOutputInvalid: 'DIAGRAM_BRANCH_LAYOUT_OUTPUT_INVALID',
+  BranchMaterializationFailed: 'DIAGRAM_BRANCH_MATERIALIZATION_FAILED',
   FlowDuplicateId: 'DIAGRAM_FLOW_DUPLICATE_ID',
   FlowReferenceNotFound: 'DIAGRAM_FLOW_REFERENCE_NOT_FOUND',
   FlowContainmentInvalid: 'DIAGRAM_FLOW_CONTAINMENT_INVALID',
@@ -30,10 +36,11 @@ export type RetikzDiagramErrorDetails = Readonly<{
   availableKeys?: ReadonlyArray<string>;
   reason?: string;
   path?: ReadonlyArray<string | number>;
+  outputPath?: ReadonlyArray<string | number>;
   relatedIds?: ReadonlyArray<string>;
   definition?: string;
   missingCapabilities?: ReadonlyArray<string>;
-  stage?: 'measure' | 'materialize' | 'assemble';
+  stage?: 'resolve' | 'layout' | 'measure' | 'materialize' | 'assemble';
   providerKey?: string;
 }>;
 

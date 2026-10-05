@@ -6,15 +6,17 @@ import type { CanonicalMap } from './types';
 
 /** 解析 Map 的间距简写和键值角色，不改写稀疏 Source */
 export const resolveMap = (source: IRMap): CanonicalMap => {
-  const { data, entries, dataExpand, ...input } = source;
+  const { data, entries, skeleton, dataExpand, ...input } = source;
   const expansion = dataExpand ?? DataExpandSchema.parse(undefined);
   const cells =
-    data === undefined
-      ? entries
-      : Object.entries(data).map(([key, value]) => ({
-          key,
-          value: createDataCell(value, expansion),
-        }));
+    skeleton !== undefined
+      ? skeleton.keys.map(key => ({ key, value: {} }))
+      : data === undefined
+        ? entries
+        : Object.entries(data).map(([key, value]) => ({
+            key,
+            value: createDataCell(value, expansion),
+          }));
   const { key: keyStyle, value: valueStyle, ...style } = source.style ?? {};
   const { key: keyLayout, value: valueLayout, ...layout } = source.layout ?? {};
   const gap = layout.gap ?? MapLayoutSchema.shape.gap.parse(undefined);

@@ -1,5 +1,5 @@
 import { Layout, Node, Path, Scope, Step } from '@retikz/react';
-import { List } from '@retikz/standard-react/collection';
+import { Array } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -59,7 +59,7 @@ const PathCurveCut: FC<PathCurveCutProps> = props => {
           <Node position={[180, 20]} text="B" style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} />
         </Scope>
       ))}
-      <List
+      <Array
         transforms={[{ kind: 'translate', x: 115, y: 120 }]}
         label={{ text: t.fragments, opacity: 0.8, font: { size: 12 } }}
         items={[{ content: `${t.left}: move → quad` }, { content: `${t.right}: move → quad` }]}

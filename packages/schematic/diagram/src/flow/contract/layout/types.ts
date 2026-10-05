@@ -200,6 +200,8 @@ export type FlowLayoutLeafInput = Readonly<{
 export type FlowLayoutGroupInput = Readonly<{
   /** 带可见外壳分组的输入判别字段 */
   kind: 'group';
+  /** 本次编排已确定的物理宽度约束 */
+  allocatedWidth?: number;
   /** 作者指定的分组 id，与输出 id 对应 */
   id: string;
   /** 最近 Flow 作用域内的可选层级约束，省略时由布局决定 */
@@ -218,6 +220,8 @@ export type FlowLayoutGroupInput = Readonly<{
 export type FlowLayoutContainerInput = Readonly<{
   /** 无可见外壳容器的输入判别字段 */
   kind: 'layout';
+  /** 本次编排已确定的物理宽度约束 */
+  allocatedWidth?: number;
   /** 作者指定的容器 id，与输出 id 对应 */
   id: string;
   /** 父 Flow 作用域内的可选层级约束，省略时由布局决定 */

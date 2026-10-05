@@ -1,0 +1,57 @@
+---
+title: 实现原理
+description: 理解共享节点身份、标签占位布局，以及参考路由与 Scene 的边界。
+---
+
+先阅读[基础用法](/schematic/diagram/branch/usage)。本页解释同一节点为何能出现在多条路径中，同时只保留一个标记。
+
+## 共享 ID 建立唯一拓扑
+
+下图两条路径都引用 v1 和 v2。解析先校验 ID 与成员引用，再从相邻引用推导有向连接并进行拓扑排序。目录顺序只用于打破平局，不能覆盖路径先后。重复成员和合成环在布局前失败。
+
+<ComponentPreview files="/schematic/diagram/branch/branch-roadmap" hideCode type="illustration" size="md" />
+
+<SourceLinks
+  sources={[{ label: '引用校验与稳定排序', path: 'packages/schematic/diagram/src/branch/resolve/resolve.ts' }]}
+/>
+
+## 标签影响占位，不改变标记尺寸
+
+每个节点先作为真实图元测量。markerBounds 描述标记分配边界，visualBounds 包含外侧标签。布局根据可见包络计算净距，连接仍指向标记边界，因此文字测量和绘制消费同一下层契约。
+
+<SourceLinks sources={[{ label: '测量与物化', path: 'packages/schematic/diagram/src/branch/pipeline/compile.ts' }]} />
+
+## 主线得到连续轨道
+
+内置 lanes 先给主分支分配轨道，再按分支声明顺序分配未定位节点；共享节点保留已有位置。节点按稳定拓扑序推进，间距考虑标签。同轨段为直线，跨轨段输出正交参考点与半径 8；这不是全局避障算法。
+
+自定义回调收到隔离的测量与拓扑输入。结果必须完整覆盖节点和唯一相邻段，坐标有限，保留推进顺序、主线与净距；通过校验后才能绘制。
+
+<SourceLinks
+  sources={[
+    { label: '内置轨道分配', path: 'packages/schematic/diagram/src/branch/providers/lanes.ts' },
+    { label: '布局输出校验', path: 'packages/schematic/diagram/src/branch/pipeline/layout.ts' },
+  ]}
+/>
+
+## 参考路由与最终路径分工
+
+同一份有效布局同时生成 Graph 连接和 Branch artifact。共享有向段比较有效外观后只绘制一次。Diagram Foundation 装配标题、说明、图例和外框；artifact 坐标统一计入一次装配偏移，世界坐标查询使用空间句柄。
+
+artifact 的 segments 保存参考点和请求圆角半径。Core 将端点裁剪到标记边界，并将圆角展开为 Scene 命令。因此参考端点可以是节点中心，实际接点则位于边界。消费最终绘制几何时读取 Scene，不把 artifact 点列当作最终路径命令。
+
+<SourceLinks
+  sources={[
+    { label: '装配与 artifact 偏移', path: 'packages/schematic/diagram/src/branch/pipeline/compile.ts' },
+    { label: '布局输入输出契约', path: 'packages/schematic/diagram/src/branch/contract/types.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'API 参考', description: '查询布局定义和 artifact 类型', url: '/schematic/diagram/branch/api-reference' },
+    { title: 'Schema 参考', description: '查询持久化输入', url: '/schematic/diagram/branch/schema-reference' },
+  ]}
+/>

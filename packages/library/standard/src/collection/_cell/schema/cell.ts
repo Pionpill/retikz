@@ -21,7 +21,7 @@ export const CellStyleSchema = strictObject({
   ...GraphicFillSchema.shape,
   ...TextVisualSchema.shape,
   cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
-}).describe('Sparse visual overrides for a List or Map cell.');
+}).describe('Sparse visual overrides for a collection cell.');
 
 export const CellLayoutSchema = strictObject({
   width: union([NonNegativeNumberSchema, literal('auto')])
@@ -36,9 +36,9 @@ export const CellLayoutSchema = strictObject({
 
 export const CellSchema = strictObject({
   id: ScopePropsSchema.shape.id,
-  content: union([string(), ChildSchema]).describe(
-    'Text or one drawable child, including registered third-party composites.',
-  ),
+  content: union([string(), ChildSchema])
+    .optional()
+    .describe('Optional text or one drawable child; omitted content leaves an empty cell.'),
   style: CellStyleSchema.optional(),
   layout: CellLayoutSchema.optional(),
 }).describe('A drawable cell with optional allocation identity.');

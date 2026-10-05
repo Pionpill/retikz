@@ -1,5 +1,3 @@
-import { createReadonlySet } from '../../shared/collections';
-
 /**
  * transform operation kind 关键字。
  * @description 数据变换 operation 的判别字段；schema、provider definition 与 registry 诊断共用这些稳定取值
@@ -133,17 +131,13 @@ export const RowSelectorTie = {
 } as const;
 
 /** transform operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_TRANSFORM_KINDS: ReadonlySet<string> = createReadonlySet(Object.values(DataTransform));
+export const RESERVED_TRANSFORM_KINDS: ReadonlySet<string> = new Set(Object.values(DataTransform));
 
 /** 统计 reducer operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = createReadonlySet(
-  Object.values(ReducerOperationKind),
-);
+export const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(ReducerOperationKind));
 
 /** row selector operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = createReadonlySet(
-  Object.values(SelectorOperationKind),
-);
+export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(SelectorOperationKind));
 
 /** stack baseline offset 策略 */
 export const StackOffset = {

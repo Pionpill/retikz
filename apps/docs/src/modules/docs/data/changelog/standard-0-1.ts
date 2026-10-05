@@ -13,24 +13,52 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Chain 串并联', en: 'Unreleased · Chain series-parallel composition' },
+          content: {
+            zh: '新增 Chain：显式结构、JSON 数据和三种骨架表示；支持递归分叉与汇合、两层对齐、正交连接及任意单元内容。React、Vanilla 与双语交互文档同步接入。',
+            en: 'Adds Chain with explicit structures, JSON data, and three skeleton forms, nested branches and joins, independent alignment controls, orthogonal connections, and arbitrary cell content, with React, Vanilla, and bilingual interactive docs.',
+          },
+        },
+        {
+          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          content: {
+            zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+            en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+          },
+        },
+        {
+          label: { zh: '未发布 · BREAKING：Array 统一命名', en: 'Unreleased · BREAKING: Array naming' },
+          content: {
+            zh: 'List 更名为 Array，配套组件、工厂、类型、Schema 和定义同步更名。IR type 与 dataExpand 选项由 list 改为 array，文档路由改为 /library/standard/collection/array；不保留旧名或旧路由。绘制与布局行为不变。',
+            en: 'List is renamed to Array together with its components, factories, types, schemas, and definitions. The IR type and dataExpand option change from list to array, and the documentation route becomes /library/standard/collection/array. Old names and routes are removed; drawing and layout behavior are unchanged.',
+          },
+        },
+        {
+          label: { zh: '未发布 · 集合示意骨架', en: 'Unreleased · Collection skeletons' },
+          content: {
+            zh: 'Array / Map 新增 skeleton 入口：Array 用 count 或 labels 描述空格和格内符号，Map 用 keys 描述符号键与空值格；与 data、显式结构及 JSX children 互斥。显式单元格可省略内容，Map 键值角色仍必填。Array 的 index.labels 提供独立的格外标号，可与格内符号同时使用；显示文字不推导身份。',
+            en: 'Array / Map add skeleton inputs: Array uses count or labels for empty cells and inside symbols, while Map uses keys for symbolic keys and contentless values. Skeletons exclude data, explicit cells, and JSX children. Explicit cells may omit content; Map roles remain required. Array index.labels provides independent outside labels alongside inside symbols, without inferring identities from display text.',
+          },
+        },
+        {
           label: { zh: '未发布 · BREAKING：嵌套数据展开', en: 'Unreleased · BREAKING: nested data expansion' },
           content: {
-            zh: "List / Map 使用 dataExpand 统一选择嵌套对象与数组的呈现：true 默认全部展开，false 全部显示为 JSON 文本，数组选择 map / list。根结构不变，空结构保留字面量。移除 dataObjectDisplay；原 map 改用 true，原 text 改用 ['list']，不保留兼容字段。",
-            en: "List / Map use dataExpand for nested objects and arrays: true expands all by default, false renders JSON text, and an array selects map/list. Root structures remain intact and empty structures stay literal. dataObjectDisplay is removed: replace map with true and text with ['list']; no compatibility field is retained.",
+            zh: "Array / Map 使用 dataExpand 统一选择嵌套对象与数组的呈现：true 默认全部展开，false 全部显示为 JSON 文本，数组选择 map / array。根结构不变，空结构保留字面量。移除 dataObjectDisplay；原 map 改用 true，原 text 改用 ['array']，不保留兼容字段。",
+            en: "Array / Map use dataExpand for nested objects and arrays: true expands all by default, false renders JSON text, and an array selects map/array. Root structures remain intact and empty structures stay literal. dataObjectDisplay is removed: replace map with true and text with ['array']; no compatibility field is retained.",
           },
         },
         {
-          label: { zh: '未发布 · List 内容宽度', en: 'Unreleased · List content width' },
+          label: { zh: '未发布 · Array 内容宽度', en: 'Unreleased · Array content width' },
           content: {
-            zh: 'List 的整体或单格 layout.width 可设为 content，使每格按自身内容自然宽度加内边距定宽；data 模式下还会沿自动生成的数据树传给后代 List。auto 仍使用全组最大宽度，单格设置优先。Map 的宽度模式不变。',
-            en: 'List layout.width accepts content on the whole List or an individual cell, sizing each cell to its own natural content width plus padding; in data mode it also passes through the generated data tree to descendant Lists. auto still uses the shared maximum, and cell settings take precedence. Map width modes are unchanged.',
+            zh: 'Array 的整体或单格 layout.width 可设为 content，使每格按自身内容自然宽度加内边距定宽；data 模式下还会沿自动生成的数据树传给后代 Array。auto 仍使用全组最大宽度，单格设置优先。Map 的宽度模式不变。',
+            en: 'Array layout.width accepts content on the whole Array or an individual cell, sizing each cell to its own natural content width plus padding; in data mode it also passes through the generated data tree to descendant Arrays. auto still uses the shared maximum, and cell settings take precedence. Map width modes are unchanged.',
           },
         },
         {
-          label: { zh: '未发布 · BREAKING：List 索引配置', en: 'Unreleased · BREAKING: List index configuration' },
+          label: { zh: '未发布 · BREAKING：Array 索引配置', en: 'Unreleased · BREAKING: Array index configuration' },
           content: {
-            zh: 'List 统一使用 index 配置索引，支持横排上下、竖排左右位置与独立文本样式。showIndex 迁移为 index 布尔值；同时设置起点时改为 index: { start }，隐藏时使用 false。position 默认为 before，可设 after；索引 font 按字段继承整体字体，不影响单格尺寸。旧 showIndex / indexStart 字段不再接受。',
-            en: 'List uses index for visibility, positions above/below rows or left/right of columns, and independent text styles. Replace showIndex with a boolean index; use index: { start } to enable numbering with a starting value, or false to hide it. Position defaults to before and also accepts after. Index font fields inherit the shared font without changing cell dimensions. The old showIndex / indexStart fields are no longer accepted.',
+            zh: 'Array 统一使用 index 配置索引，支持横排上下、竖排左右位置与独立文本样式。showIndex 迁移为 index 布尔值；同时设置起点时改为 index: { start }，隐藏时使用 false。position 默认为 before，可设 after；索引 font 按字段继承整体字体，不影响单格尺寸。旧 showIndex / indexStart 字段不再接受。',
+            en: 'Array uses index for visibility, positions above/below rows or left/right of columns, and independent text styles. Replace showIndex with a boolean index; use index: { start } to enable numbering with a starting value, or false to hide it. Position defaults to before and also accepts after. Index font fields inherit the shared font without changing cell dimensions. The old showIndex / indexStart fields are no longer accepted.',
           },
         },
         {
@@ -41,10 +69,10 @@ export const standardV01: Release = {
           },
         },
         {
-          label: { zh: '未发布 · List / Map', en: 'Unreleased · List / Map' },
+          label: { zh: '未发布 · Array / Map', en: 'Unreleased · Array / Map' },
           content: {
-            zh: 'List / Map 新增与 Node 默认样式一致的容器 label，支持单个与多个附属标签，不扩大 allocation。List / Map 新增 data 属性，递归呈现 JSON 数组与对象，保留紧凑 Source 且不推导单元格 id。新增一维 List 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。List 的 items 字符串默认只作为 content，可用 cellIdMode 选择 explicit / string / index；index 模式配合 List id 与 getListCellId 为直属格按零基下标寻址，显式 id 作为同一图元和空间记录的别名。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ListItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
-            en: 'List / Map add container labels with Node defaults, supporting one or multiple annotations without enlarging allocation. List / Map now accept data for recursive JSON arrays and objects, preserving compact Source without inferred cell ids. Adds one-dimensional List and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. List item strings supply content only by default; cellIdMode selects explicit, string, or index identities. Index mode uses the List id and getListCellId for zero-based direct-cell references, retaining explicit ids as aliases of the same geometry and spatial record. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ListItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
+            zh: 'Array / Map 新增与 Node 默认样式一致的容器 label，支持单个与多个附属标签，不扩大 allocation。Array / Map 新增 data 属性，递归呈现 JSON 数组与对象，保留紧凑 Source 且不推导单元格 id。新增一维 Array 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。Array 的 items 字符串默认只作为 content，可用 cellIdMode 选择 explicit / string / index；index 模式配合 Array id 与 getArrayCellId 为直属格按零基下标寻址，显式 id 作为同一图元和空间记录的别名。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ArrayItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
+            en: 'Array / Map add container labels with Node defaults, supporting one or multiple annotations without enlarging allocation. Array / Map now accept data for recursive JSON arrays and objects, preserving compact Source without inferred cell ids. Adds one-dimensional Array and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. Array item strings supply content only by default; cellIdMode selects explicit, string, or index identities. Index mode uses the Array id and getArrayCellId for zero-based direct-cell references, retaining explicit ids as aliases of the same geometry and spatial record. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ArrayItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
           },
         },
         {
@@ -319,6 +347,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          content: {
+            zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+            en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+          },
+        },
+        {
           label: { zh: '显式 Vanilla 接线', en: 'Explicit Vanilla wiring' },
           content: {
             zh: '所有 builders 都构造由 Standard schema 约束的输入；`StandardVanillaAdapters` 是浅冻结的当前呈现能力便利数组。',
@@ -448,6 +483,13 @@ export const standardV01: Release = {
         en: 'React authoring for Standard presentation composites backed by static Tier 2 adapters.',
       },
       highlights: [
+        {
+          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          content: {
+            zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+            en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+          },
+        },
         {
           label: { zh: '按使用项贡献', en: 'Per-use contribution' },
           content: {

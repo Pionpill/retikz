@@ -1,0 +1,227 @@
+---
+title: Matrix · 矩阵
+description: 将二维内容画成共享行列轨道的矩阵，支持 JSON 数据、示意骨架、独立索引和单格引用。
+---
+
+`Matrix` 把二维内容画成行列对齐的单元格，适合二维数组、动态规划表和论文中的矩阵示意。每格可放文字、留空或嵌入一个图形；它不进行矩阵运算、数据聚合或合并单元格。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，从 collection 入口导入。React 与 Vanilla 自动收集组件和裁切依赖；直接 IR 需要显式注册定义。
+
+<ComponentPreview files="matrix-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Matrix } from '@retikz/standard-react/collection';
+
+export const Example = () => (
+  <Layout>
+    <Matrix
+      items={[
+        ['A', 'B'],
+        ['C', 'D'],
+      ]}
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { matrix, MatrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const svg = renderToSvgString(
+  scene({
+    children: [
+      matrix({
+        items: [
+          ['A', 'B'],
+          ['C', 'D'],
+        ],
+      }),
+    ],
+  }),
+  { adapters: [MatrixInputEmbedAdapter] },
+);
+```
+
+</DocTab>
+<DocTab value="ir" label="IR">
+
+```ts
+import { MatrixDefinition } from '@retikz/standard/collection';
+import { PathClipDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const svg = renderToSvgString(
+  {
+    type: 'scene',
+    version: 1,
+    children: [
+      {
+        namespace: 'standard',
+        type: 'matrix',
+        items: [
+          ['A', 'B'],
+          ['C', 'D'],
+        ],
+      },
+    ],
+  },
+  { compile: { composites: [MatrixDefinition], clips: [PathClipDefinition] } },
+);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 选择输入方式
+
+三种输入互斥，空输入也不能混用。前两层数组始终表示行和列，各行长度必须一致，不自动补齐、截断或转置。
+
+| 入口       | 内容语义                                                                |
+| ---------- | ----------------------------------------------------------------------- |
+| `items`    | 手写二维单元格；字符串原样显示，也可逐格设置 content、id、style、layout |
+| `data`     | 二维 JSON 数据；格内按 JSON 值语义显示，字符串带引号                    |
+| `skeleton` | 无需真实数据的空矩形或格内符号                                          |
+
+`items` 中的字符串等价于 `{ content: text }`，重复文字有效；`{}` 是没有内容的单元格，`{ content: '' }` 仍是空文字。数据中的 `id`、`style` 只是普通数据，不是单元格配置。
+
+<ComponentPreview
+  files={['matrix-inputs', 'matrix-inputs.preview.tsx']}
+  defaultSourceFile="matrix-inputs.preview.tsx"
+  size="sm"
+/>
+
+`[]` 表示 0 × 0，`[[], []]` 表示 2 × 0。任一轴为零时没有单元格、索引带或间距，自然尺寸为零；容器标签仍可绘制。
+
+### 绘制示意骨架
+
+`skeleton` 选择 `{ rows, columns }` 生成空格，或 `{ labels: [['x₁₁', 'x₁₂'], ['x₂₁', '']] }` 生成格内文字，两种配置不能混用。数量及乘积必须是非负安全整数。labels 的每行长度一致，空字符串表示无内容，其他字符串按纯文本显示，重复符号有效。
+
+<ComponentPreview
+  files={['matrix-skeleton', 'matrix-skeleton.preview.tsx']}
+  defaultSourceFile="matrix-skeleton.preview.tsx"
+  size="md"
+/>
+
+格内符号与格外索引相互独立：`skeleton.labels` 在格内，`index.row.labels` / `index.column.labels` 在格外。无内容格仍保留背景、padding 和引用区域；需要逐格样式或图形时使用 items 或 JSX。
+
+### 调整轨道、样式与索引
+
+每列宽度取该列单格需求的最大值，每行高度取该行最大值。`layout.width` / `height` 为数字或 `'auto'`，不支持 `'content'`。自适应格填满对应轨道；固定小格保持自己的尺寸，从轨道左上角放置，留下的空位不属于该格引用区域。
+
+<ComponentPreview
+  files={['matrix-layout', 'matrix-layout.preview.tsx']}
+  defaultSourceFile="matrix-layout.preview.tsx"
+  size="lg"
+/>
+
+尺寸包含内边距，`padding` 默认 8，`gap` 默认 2；gap 可为统一数字或同时包含 row、column 的对象。样式先取整体设置，再合并单格覆盖，font 按字段合并。默认背景 gray / 0.14、无边框和圆角；背景与边框按格独立绘制，不合并边线。
+
+| index 配置                                              | 效果                |
+| ------------------------------------------------------- | ------------------- |
+| `false` 或省略                                          | 隐藏两轴            |
+| `true`                                                  | 显示两轴，从 0 编号 |
+| `{}`                                                    | 隐藏两轴            |
+| `{ row: true }`                                         | 只显示行索引        |
+| `{ column: { labels: ['a', 'b'], position: 'after' } }` | 在下方显示列标号    |
+
+每轴可为 boolean 或配置对象。轴对象的 start 默认 0，与 labels 互斥；labels 数量须与对应轴相同，即使另一轴为零也要匹配。空标号隐藏，全轴为空时不保留索引带与间距。行 before / after 表示左 / 右，列表示上 / 下；默认 before。行标号在行轨道上居中，列标号在列轨道上居中，左上交角留空。
+
+行索引与格子间使用 column gap，列索引使用 row gap。轴 style 的字体与 textColor 继承整体设置，单格样式不影响索引；索引带按自身文字测量，不扩大格子。
+
+## 扩展用法
+
+### 组合图形与展示嵌套数据
+
+React 用 MatrixRow 分组，每行包含 MatrixCell；行只表达分组，不接受独立样式或 id。格子用 text 写文字，或放置唯一 drawable child，两者互斥；两者都省略表示空格。Fragment、数组与 React 空节点可用于组织 marker。
+
+```text
+Matrix
+├── MatrixRow
+│   ├── MatrixCell
+│   └── MatrixCell
+│       └── Map
+└── MatrixRow
+    ├── MatrixCell
+    └── MatrixCell
+```
+
+<ComponentPreview
+  files={['matrix-content', 'matrix-content.preview.tsx']}
+  defaultSourceFile="matrix-content.preview.tsx"
+  size="sm"
+/>
+
+React 的 items 只放文字配置，嵌套组件使用 JSX；Vanilla 的 content 接受 authoring child，IR 接受可序列化图元。多个图元先组合为一个 Scope。React 未给任何入口时生成空 items，其他入口必须明确选择一种输入。
+
+`dataExpand` 只用于 data，控制每格内部的对象与数组：
+
+| 配置            | 对象      | 数组      |
+| --------------- | --------- | --------- |
+| `true`（默认）  | Map       | Array     |
+| `false` 或 `[]` | JSON 文本 | JSON 文本 |
+| `['map']`       | Map       | JSON 文本 |
+| `['array']`     | JSON 文本 | Array     |
+
+展开选择递归沿用，转为文本的整个子树不再展开；空对象和空数组显示为 `{}` / `[]`。更深的二维数组仍嵌套为 Array，不自动推断 Matrix，也没有 matrix 展开选项。整体单格 style / layout 只控制当前层，字体与文本颜色沿内容继承。
+
+直接 IR 使用 data 时额外注入 ArrayDefinition、MapDefinition；使用裁切时注入 PathClipDefinition。React 与 Vanilla 自动装配这些依赖。
+
+### 引用格子、裁切内容与添加标签
+
+默认 `cellIdMode: 'explicit'` 只使用单格显式 id；`'index'` 要求 Matrix 有 id，生成 `<matrix-id>-<row>-<column>`。例如 `getMatrixCellId('m', 1, 0)` 返回 `m-1-0`；坐标始终从零开始，与显示索引无关。helper 从 `@retikz/standard/collection` 导入，校验参数但不检查格子是否存在。
+
+<ComponentPreview
+  files={['matrix-reference', 'matrix-reference.preview.tsx']}
+  defaultSourceFile="matrix-reference.preview.tsx"
+  size="md"
+/>
+
+显式 id 与生成 id 可引用同一格；同格同名去重，不同格冲突报错。路径引用实际单格边框，不含轨道余白、gap、索引或溢出；空间查询角色为 matrix-cell，容器为 container。
+
+固定任一轴默认裁切，自适应格默认保留溢出，可显式设置 overflow。裁切不缩放或折行。label 沿用[节点标签](/kernel/components/node/labels)契约，可为单个对象或数组，依附整个矩阵，不改变单格测量；字体、颜色与 defaults.label 可作为默认，单格样式不影响容器标签。
+
+## 错误与限制
+
+- 不接受非矩形行、混合输入、非法数量、索引数量不匹配或跨格 id 冲突。
+- data 必须是 JSON 值树，不传函数、循环引用、实例或稀疏数组。
+- 父级可用空间小于矩阵的自然布局需求时编译失败；给出多余空间也不会拉伸轨道。
+- Matrix 不提供合并格、表头建模、排序、聚合或矩阵运算；这些不属于通用格子呈现。
+
+## 实现原理
+
+解析阶段将三种输入转换为共享 Cell，合并整体与单格设置。编译阶段各测量一次内容，汇总列宽和行高，再排布格子与两条独立索引带。固定格保留自身尺寸，自适应格复用所属轨道尺寸。
+
+排布结果交给共享单格输出管线，分别绘制背景、内容裁切层与边框，并登记实际格子边界。容器标签附着在包含索引带的整体边界上，不参与单格测量。
+
+<SourceLinks
+  sources={[
+    { label: '行列测量与排布', path: 'packages/library/standard/src/collection/matrix/pipeline.ts', startLine: 1 },
+    { label: '共享单格输出', path: 'packages/library/standard/src/collection/_cell/pipeline.ts', startLine: 1 },
+  ]}
+/>
+
+## API 参考
+
+React、Vanilla 与 IR 入口的签名和说明由源码生成。
+
+{/* @include library/standard/collection/matrix/generated */}
+
+## Schema 参考
+
+MatrixSchema 是持久化 Source 真源。工厂保留稀疏输入；显式 parse 会物化静态默认，继承与动态裁切默认在解析阶段处理。
+
+#### MatrixSchema
+
+<ZodSchema name="MatrixSchema" description="矩形单元格、JSON 数据或示意骨架" expandNested />

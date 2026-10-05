@@ -66,10 +66,10 @@ const tableRowsResult = (spec: IRTable, rows: Array<ExternalRow>, options: Table
   const types = resolveFieldTypes(spec.data?.model, rows, fields);
   const formats =
     spec.transform === undefined
-      ? { fieldTypes: types, parsers: undefined }
+      ? { fieldTypeMap: types, parsers: undefined }
       : collectFormatFields(spec.data?.model, types, fields, resolveFormatRegistry(options.formatDefinitions));
   const normalized =
-    spec.transform === undefined ? rows : normalizeRows(rows, formats.fieldTypes, undefined, formats.parsers);
+    spec.transform === undefined ? rows : normalizeRows(rows, formats.fieldTypeMap, undefined, formats.parsers);
   const view = createDataView(
     normalized,
     [...fields].map(name => {
@@ -78,7 +78,7 @@ const tableRowsResult = (spec: IRTable, rows: Array<ExternalRow>, options: Table
         declared?.type ??
         ((declared?.format !== undefined && spec.transform !== undefined) ||
         rows.some(row => resolveFieldPath(row, name) != null)
-          ? formats.fieldTypes.get(name)
+          ? formats.fieldTypeMap.get(name)
           : undefined);
       return {
         name,

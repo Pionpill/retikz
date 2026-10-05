@@ -59,7 +59,7 @@ import {
   ReferenceMarkKind,
   RelationGeometryKind,
 } from '@retikz/plot';
-import { ListIndexPosition } from '@retikz/standard/collection';
+import { ArrayIndexPosition } from '@retikz/standard/collection';
 import {
   AxesArrowMode,
   AxesLabelEnd,
@@ -88,8 +88,8 @@ export type ApiValueRegistryEntry = {
 
 /** MDX 可引用的公开 API 值集合 */
 export const API_VALUE_REGISTRY = {
-  ListIndexPosition: {
-    values: Object.values(ListIndexPosition),
+  ArrayIndexPosition: {
+    values: Object.values(ArrayIndexPosition),
   },
   AnimationDirection: {
     values: Object.values(AnimationDirection),

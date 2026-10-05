@@ -27,7 +27,8 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { IRCell, IRList, IRListCell, IRMap } from '@retikz/standard/collection';
+import type { IRChain, IRChainItem } from '@retikz/standard/collection';
+import type { IRCell, IRMatrix, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
 
 import {
   entityPreviewAuthoringInput,
@@ -302,7 +303,9 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'frame',
   'surface',
   'surfaceChild',
-  'list',
+  'chain',
+  'matrix',
+  'array',
   'map',
   'legend',
   'shape',
@@ -319,7 +322,9 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'AxesInputEmbedAdapter',
   'FrameInputEmbedAdapter',
   'SurfaceInputEmbedAdapter',
-  'ListInputEmbedAdapter',
+  'ChainInputEmbedAdapter',
+  'MatrixInputEmbedAdapter',
+  'ArrayInputEmbedAdapter',
   'MapInputEmbedAdapter',
   'LegendInputEmbedAdapter',
 ];
@@ -362,7 +367,9 @@ export type StandardPreviewDefinitionName =
   | 'GridDefinition'
   | 'AxesDefinition'
   | 'FrameDefinition'
-  | 'ListDefinition'
+  | 'ChainDefinition'
+  | 'MatrixDefinition'
+  | 'ArrayDefinition'
   | 'MapDefinition'
   | 'SurfaceDefinition'
   | 'LegendDefinition';
@@ -392,7 +399,9 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
-  list: 'ListDefinition',
+  chain: 'ChainDefinition',
+  matrix: 'MatrixDefinition',
+  array: 'ArrayDefinition',
   map: 'MapDefinition',
   surface: 'SurfaceDefinition',
   legend: 'LegendDefinition',
@@ -431,14 +440,37 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const row = BlockRowSchema.parse(child);
     return 'children' in row ? [...(row.children ?? [])] : [];
   }
-  if (child.namespace === 'standard' && child.type === 'list')
-    return ((child as IRList).items ?? []).flatMap(cell =>
-      typeof cell === 'string' || typeof cell.content === 'string' ? [] : [cell.content],
+  if (child.namespace === 'standard' && child.type === 'chain') {
+    const collect = (items: Array<IRChainItem>): Array<IRChild> =>
+      items.flatMap(item =>
+        typeof item === 'string'
+          ? []
+          : item.kind === 'parallel'
+            ? item.branches.flatMap(branch => collect(branch.items))
+            : item.content === undefined || typeof item.content === 'string'
+              ? []
+              : [item.content],
+      );
+    return collect((child as IRChain).items ?? []);
+  }
+  if (child.namespace === 'standard' && child.type === 'matrix')
+    return ((child as IRMatrix).items ?? []).flatMap(row =>
+      row.flatMap(cell =>
+        typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string'
+          ? []
+          : [cell.content],
+      ),
+    );
+  if (child.namespace === 'standard' && child.type === 'array')
+    return ((child as IRArray).items ?? []).flatMap(cell =>
+      typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string' ? [] : [cell.content],
     );
   if (child.namespace === 'standard' && child.type === 'map')
     return ((child as IRMap).entries ?? []).flatMap(entry =>
       [entry.key, entry.value].flatMap(cell =>
-        typeof cell === 'string' || typeof cell.content === 'string' ? [] : [cell.content],
+        typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string'
+          ? []
+          : [cell.content],
       ),
     );
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
@@ -514,8 +546,11 @@ export const collectPreviewDefinitions = (
         }
         if (!standardAdapterKinds.has(child.type)) {
           standard.add(definitionName);
-          if ((child.type === 'list' || child.type === 'map') && (child as IRList | IRMap).data !== undefined) {
-            standard.add('ListDefinition');
+          if (
+            (child.type === 'chain' || child.type === 'array' || child.type === 'map' || child.type === 'matrix') &&
+            (child as IRChain | IRArray | IRMap | IRMatrix).data !== undefined
+          ) {
+            standard.add('ArrayDefinition');
             standard.add('MapDefinition');
           }
         }
@@ -576,25 +611,47 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
   ctx.standardAdapters.add(adapterName);
-  if (record.type === 'list' || record.type === 'map') {
-    if (record.data !== undefined)
+  if (record.type === 'chain') {
+    const source = child as IRChain;
+    if (source.items === undefined) return `chain(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
+    const itemCode = (item: IRChainItem): string => {
+      if (typeof item === 'string') return formatString(item);
+      if (item.kind === 'parallel')
+        return formatObject({ ...item, branches: '__BRANCHES__' }, indent + 1).replace(
+          "'__BRANCHES__'",
+          `[${item.branches.map(branch => `{ items: [${branch.items.map(itemCode).join(', ')}] }`).join(', ')}]`,
+        );
+      const { content, ...props } = item;
+      if (content === undefined) return formatObject(props, indent + 1);
+      return formatObject({ ...props, content: '__CONTENT__' }, indent + 1).replace(
+        "'__CONTENT__'",
+        typeof content === 'string' ? formatString(content) : childCode(content, indent + 2, ctx),
+      );
+    };
+    return `chain(${formatObject({ ...stripKeys(record, ['namespace', 'type', 'items']), items: '__ITEMS__' }, indent).replace("'__ITEMS__'", `[${source.items.map(itemCode).join(', ')}]`)})`;
+  }
+  if (record.type === 'array' || record.type === 'map' || record.type === 'matrix') {
+    if (record.data !== undefined || record.skeleton !== undefined)
       return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
-    const cellCode = (cell: string | IRCell | IRListCell) => {
+    const cellCode = (cell: string | IRCell | IRArrayCell) => {
       if (typeof cell === 'string') return formatString(cell);
       const { content, ...props } = cell;
+      if (content === undefined) return formatObject(props, indent + 2);
       return formatObject({ ...props, content: '__CELL_CONTENT__' }, indent + 2).replace(
         "'__CELL_CONTENT__'",
         typeof content === 'string' ? formatString(content) : childCode(content, indent + 3, ctx),
       );
     };
     const input = stripKeys(record, ['namespace', 'type', 'items', 'entries']);
-    const field = record.type === 'list' ? 'items' : 'entries';
+    const field = record.type === 'map' ? 'entries' : 'items';
     const values =
-      record.type === 'list'
-        ? ((child as IRList).items ?? []).map(cellCode)
-        : ((child as IRMap).entries ?? []).map(
-            entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
-          );
+      record.type === 'matrix'
+        ? ((child as IRMatrix).items ?? []).map(row => `[${row.map(cellCode).join(', ')}]`)
+        : record.type === 'array'
+          ? ((child as IRArray).items ?? []).map(cellCode)
+          : ((child as IRMap).entries ?? []).map(
+              entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
+            );
     return `${record.type}(${formatObject({ ...input, [field]: '__CELLS__' }, indent).replace("'__CELLS__'", `[${values.join(', ')}]`)})`;
   }
   if (record.type === 'surface') {
@@ -910,7 +967,16 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     );
     const members = [...standardHelpers, ...standardAdapters];
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
-    const collectionMemberNames = new Set<string>(['list', 'map', 'ListInputEmbedAdapter', 'MapInputEmbedAdapter']);
+    const collectionMemberNames = new Set<string>([
+      'chain',
+      'matrix',
+      'ChainInputEmbedAdapter',
+      'MatrixInputEmbedAdapter',
+      'array',
+      'map',
+      'ArrayInputEmbedAdapter',
+      'MapInputEmbedAdapter',
+    ]);
     const collectionMembers = members.filter(name => collectionMemberNames.has(name));
     const presentationMembers = members.filter(
       name => !shapeMembers.includes(name) && !collectionMemberNames.has(name),
@@ -939,7 +1005,12 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     const shapeDefinitions = definitions.standard.filter(name =>
       STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
     );
-    const collectionDefinitionNames = new Set<string>(['ListDefinition', 'MapDefinition']);
+    const collectionDefinitionNames = new Set<string>([
+      'ChainDefinition',
+      'MatrixDefinition',
+      'ArrayDefinition',
+      'MapDefinition',
+    ]);
     const collectionDefinitions = definitions.standard.filter(name => collectionDefinitionNames.has(name));
     const presentationDefinitions = definitions.standard.filter(
       name => !shapeDefinitions.includes(name) && !collectionDefinitionNames.has(name),

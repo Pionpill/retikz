@@ -1,0 +1,74 @@
+---
+title: Implementation
+description: Understand shared node identity, label-aware layout, and the boundary between reference routes and Scene.
+---
+
+Read [basic usage](/schematic/diagram/branch/usage) first. This page explains why one node can belong to several paths while remaining a single marker.
+
+## Shared IDs create one topology
+
+In this roadmap, both paths reference v1 and v2. Resolution validates IDs and memberships, derives adjacent directed segments, and sorts the nodes topologically. Catalog order breaks ties but cannot override path order. Repeated members and combined cycles fail before layout.
+
+<ComponentPreview files="/schematic/diagram/branch/branch-roadmap" hideCode type="illustration" size="md" />
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Reference validation and stable ordering',
+      path: 'packages/schematic/diagram/src/branch/resolve/resolve.ts',
+    },
+  ]}
+/>
+
+## Labels affect occupancy, not marker size
+
+Each node is measured as a real drawable node. markerBounds describes the marker allocation; visualBounds includes outside labels. Layout uses that visible envelope for clear gaps, while connections still target the marker boundary. Text measurement and drawing therefore use the same underlying contract.
+
+<SourceLinks
+  sources={[
+    { label: 'Measurement and materialization', path: 'packages/schematic/diagram/src/branch/pipeline/compile.ts' },
+  ]}
+/>
+
+## The main path gets a continuous lane
+
+The built-in lanes definition assigns the main path first, then assigns unallocated nodes by branch declaration order. Shared nodes keep their existing positions. Nodes advance in stable topological order, with label-aware gaps. Same-lane segments are straight; cross-lane segments use orthogonal reference points and radius 8. This is not a global obstacle-avoidance algorithm.
+
+Custom callbacks receive isolated measurement and topology input. Their output must contain every node and unique adjacent segment, remain finite, preserve progression and the main lane, and satisfy clear gaps. Only validated output can enter drawing.
+
+<SourceLinks
+  sources={[
+    { label: 'Built-in lane assignment', path: 'packages/schematic/diagram/src/branch/providers/lanes.ts' },
+    { label: 'Layout output validation', path: 'packages/schematic/diagram/src/branch/pipeline/layout.ts' },
+  ]}
+/>
+
+## Reference routes and final paths have different owners
+
+The same validated layout produces Graph connections and the Branch artifact. Shared directed segments are drawn once after comparing effective appearance. Diagram Foundation adds the title, description, legend, and frame. Artifact coordinates include the assembly offset once; world-space queries use spatial handles.
+
+Artifact segments store reference points and the requested corner radius. Core clips the endpoints to marker boundaries and expands rounded corners into Scene commands. Consequently, reference endpoints may be node centers while final path endpoints lie on marker boundaries. Read Scene when consuming final drawing geometry; do not treat artifact points as final path commands.
+
+<SourceLinks
+  sources={[
+    { label: 'Assembly and artifact offsets', path: 'packages/schematic/diagram/src/branch/pipeline/compile.ts' },
+    { label: 'Layout input and output contracts', path: 'packages/schematic/diagram/src/branch/contract/types.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Inspect layout definitions and artifact types',
+      url: '/schematic/diagram/branch/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Inspect the persistent input',
+      url: '/schematic/diagram/branch/schema-reference',
+    },
+  ]}
+/>

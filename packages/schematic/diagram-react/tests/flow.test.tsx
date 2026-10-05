@@ -924,3 +924,32 @@ it('keeps endpoint constraints and sparse defaults equal across React, Vanilla a
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
   expect(direct.relations).toEqual(relations);
 });
+
+it('容器等宽与行内填充在 React 和 Vanilla 中保留相同 Source', () => {
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowLayout id="rows" kind="linear" direction="down" containerWidth="match-largest">
+        <FlowReact.FlowLayout id="row" kind="linear" direction="right" itemWidth="fill">
+          <FlowReact.FlowEntity id="a" text="A" />
+          <FlowReact.FlowEntity id="b" text="B" />
+        </FlowReact.FlowLayout>
+      </FlowReact.FlowLayout>
+      <FlowReact.FlowRelation source="a" target="b" />
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const vanilla = normalizeFlowDiagram({
+    entities: [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ],
+    groups: [],
+    layouts: [
+      { id: 'rows', kind: 'linear', direction: 'down', containerWidth: 'match-largest', children: ['row'] },
+      { id: 'row', kind: 'linear', direction: 'right', itemWidth: 'fill', children: ['a', 'b'] },
+    ],
+    children: ['rows'],
+    relations: [{ source: 'a', target: 'b' }],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
+});

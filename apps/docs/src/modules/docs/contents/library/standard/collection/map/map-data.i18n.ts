@@ -8,7 +8,7 @@ export const mapDataI18n = {
     all: '对象与数组',
     none: '全部显示为文本',
     map: '仅对象',
-    list: '仅数组',
+    array: '仅数组',
   },
   en: {
     title: 'Nested data expansion',
@@ -16,6 +16,6 @@ export const mapDataI18n = {
     all: 'Objects and arrays',
     none: 'All as text',
     map: 'Objects only',
-    list: 'Arrays only',
+    array: 'Arrays only',
   },
 } satisfies Record<Lang, Record<string, string>>;

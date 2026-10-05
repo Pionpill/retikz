@@ -110,8 +110,8 @@ describe('field format provider runtime', () => {
       new Set(['amount', 'createdAt']),
     );
 
-    expect(result.fieldTypes.get('amount')).toBe(DataFieldType.Continuous);
-    expect(result.fieldTypes.get('createdAt')).toBe(DataFieldType.Temporal);
+    expect(result.fieldTypeMap.get('amount')).toBe(DataFieldType.Continuous);
+    expect(result.fieldTypeMap.get('createdAt')).toBe(DataFieldType.Temporal);
     expect(result.parsers.get('amount')?.('25%')).toBe(0.25);
     expect(result.parsers.get('createdAt')?.('1500')).toBe(1500);
     expect(result.parsers.has('unused')).toBe(false);

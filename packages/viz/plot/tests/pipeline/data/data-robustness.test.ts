@@ -102,11 +102,11 @@ describe('contract 数据健壮性 — bigint ingest', () => {
   it('bigint_ingested_as_continuous：无 model 下 bigint 推断 continuous 且归一化成数值', () => {
     // classify(bigint) → continuous（无 model 推断）；normalizeRows 把 42n coerce 成 42
     expect(inferFieldType([{ a: 42n }, { a: 7n }], 'a')).toBe(DataFieldType.Continuous);
-    const { fieldTypes, normalized } = prepare(specNoModel(), [
+    const { fieldTypeMap, normalized } = prepare(specNoModel(), [
       { a: 42n, b: 1n },
       { a: 7n, b: 2n },
     ]);
-    expect(fieldTypes.get('a')).toBe(DataFieldType.Continuous);
+    expect(fieldTypeMap.get('a')).toBe(DataFieldType.Continuous);
     expect(normalized[0].a).toBe(42);
     expect(normalized[1].a).toBe(7);
   });
@@ -128,8 +128,8 @@ describe('contract 数据健壮性 — bigint ingest', () => {
   });
 
   it('bigint_with_model_continuous：model 声明 continuous + bigint 数据 → coerce 成 number', () => {
-    const { fieldTypes, normalized } = prepare(specWithModel(), [{ a: 100n, b: 200n }]);
-    expect(fieldTypes.get('a')).toBe(DataFieldType.Continuous);
+    const { fieldTypeMap, normalized } = prepare(specWithModel(), [{ a: 100n, b: 200n }]);
+    expect(fieldTypeMap.get('a')).toBe(DataFieldType.Continuous);
     expect(normalized[0].a).toBe(100);
     expect(normalized[0].b).toBe(200);
   });
@@ -217,13 +217,13 @@ describe('contract 数据健壮性 — validateData 字段级报告', () => {
       { a: undefined, b: 2 },
       { a: 'nope', b: 3 },
     ];
-    const fieldTypes = new Map([
+    const fieldTypeMap = new Map([
       ['a', DataFieldType.Continuous],
       ['b', DataFieldType.Continuous],
     ]);
     let message = '';
     try {
-      validateBoundData(rows, fieldTypes, 100);
+      validateBoundData(rows, fieldTypeMap, 100);
     } catch (error) {
       message = (error as Error).message;
     }
@@ -243,8 +243,8 @@ describe('contract 数据健壮性 — 恒归一化（去门控）', () => {
       { a: 2, b: 20 },
       { a: 3, b: 30 },
     ];
-    const { fieldTypes, normalized } = prepare(spec, rows);
-    const manual = normalizeRows(rows, fieldTypes);
+    const { fieldTypeMap, normalized } = prepare(spec, rows);
+    const manual = normalizeRows(rows, fieldTypeMap);
     expect(normalized).toEqual(manual);
     // 且与现状（干净数字原样）逐字段一致
     expect(normalized[0].a).toBe(1);
@@ -254,11 +254,11 @@ describe('contract 数据健壮性 — 恒归一化（去门控）', () => {
   it('normalize_always_runs_with_inference：无 model 纯推断 → canonical 行已 coerce（time 字段成 epoch ms）', () => {
     // 无 model：t 推断 temporal，恒归一化把 ISO 串 coerce 成 epoch ms（不再走「无 model 即原始行」旧门控）
     const spec = specTemporalNoModel();
-    const { fieldTypes, normalized } = prepare(spec, [
+    const { fieldTypeMap, normalized } = prepare(spec, [
       { t: '2024-01-01', v: 5 },
       { t: '2024-02-01', v: 7 },
     ]);
-    expect(fieldTypes.get('t')).toBe(DataFieldType.Temporal);
+    expect(fieldTypeMap.get('t')).toBe(DataFieldType.Temporal);
     expect(normalized[0].t).toBe(Date.parse('2024-01-01'));
     expect(normalized[1].t).toBe(Date.parse('2024-02-01'));
     expect(normalized[0].v).toBe(5);

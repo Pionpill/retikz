@@ -13,13 +13,17 @@ export const applyFieldResolver = (
   dataReference: string,
   fieldMap: Record<string, string> | undefined,
   resolveField: ResolveField | undefined,
-): { fieldTypes: DataFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue>; resolverHit: boolean } => {
+): {
+  fieldTypeMap: DataFieldTypeMap;
+  parsers: Map<string, (raw: unknown) => ParsedFieldValue>;
+  resolverHit: boolean;
+} => {
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
-  if (resolveField === undefined) return { fieldTypes: baseTypes, parsers, resolverHit: false };
+  if (resolveField === undefined) return { fieldTypeMap: baseTypes, parsers, resolverHit: false };
   const declaredType = new Map(
     (model ?? []).flatMap(field => (field.type !== undefined ? [[field.name, field.type] as const] : [])),
   );
-  const fieldTypes: DataFieldTypeMap = new Map(baseTypes);
+  const fieldTypeMap: DataFieldTypeMap = new Map(baseTypes);
   let resolverHit = false;
   for (const field of userSourceFields) {
     const resolution: FieldResolution | undefined = resolveField(field, {
@@ -34,8 +38,8 @@ export const applyFieldResolver = (
         `data: resolveField parse for "${field}" needs a type (declare it in data.model or return type from the resolver)`,
       );
     }
-    if (resolution.type !== undefined) fieldTypes.set(field, resolution.type);
+    if (resolution.type !== undefined) fieldTypeMap.set(field, resolution.type);
     if (resolution.parse !== undefined) parsers.set(field, resolution.parse);
   }
-  return { fieldTypes, parsers, resolverHit };
+  return { fieldTypeMap, parsers, resolverHit };
 };

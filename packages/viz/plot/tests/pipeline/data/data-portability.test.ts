@@ -129,19 +129,19 @@ describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
 });
 
 describe('normalizeRows — ingest 归一化（contract）', () => {
-  const fieldTypes = new Map([
+  const fieldTypeMap = new Map([
     ['month', DataFieldType.Temporal],
     ['revenue', DataFieldType.Continuous],
   ]);
 
   it('identity_coerces_in_place', () => {
-    const out = normalizeRows([{ month: '2024-01-01', revenue: '120' }], fieldTypes);
+    const out = normalizeRows([{ month: '2024-01-01', revenue: '120' }], fieldTypeMap);
     expect(out[0].month).toBe(Date.parse('2024-01-01'));
     expect(out[0].revenue).toBe(120);
   });
 
   it('fieldmap_renames_then_coerces', () => {
-    const out = normalizeRows([{ period: '2024-01-01', amount: '90' }], fieldTypes, {
+    const out = normalizeRows([{ period: '2024-01-01', amount: '90' }], fieldTypeMap, {
       month: 'period',
       revenue: 'amount',
     });

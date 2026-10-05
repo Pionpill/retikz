@@ -12,7 +12,7 @@ describe('文档阅读统计', () => {
       '---',
       '# 标题',
       '',
-      '正文 **粗体** `List` [链接](https://example.com)',
+      '正文 **粗体** `Array` [链接](https://example.com)',
       '',
       '<ComponentAlert title="ignored > text">提示</ComponentAlert>',
       '',
@@ -28,7 +28,7 @@ describe('文档阅读统计', () => {
       '',
       '<DocTabs><DocTab label="ignored"><ComponentPreview files="demo" /></DocTab></DocTabs>',
     ].join('\n');
-    expect(computeDocStats(source, 'zh')).toEqual({ chars: 14, referenceChars: 0, examples: 1, readingMinutes: 1 });
+    expect(computeDocStats(source, 'zh')).toEqual({ chars: 15, referenceChars: 0, examples: 1, readingMinutes: 1 });
   });
 
   it.each(['API 参考', 'API reference', 'Schema 参考', 'Schema reference'])(
@@ -58,8 +58,8 @@ describe('文档阅读统计', () => {
     expect(computeDocStats('<Broken', 'zh')).toBeNull();
   });
 
-  it('List 正文与生成的参考片段展开后仍分别计数', () => {
-    const base = new URL('../src/modules/docs/contents/library/standard/collection/list/', import.meta.url);
+  it('Array 正文与生成的参考片段展开后仍分别计数', () => {
+    const base = new URL('../src/modules/docs/contents/library/standard/collection/array/', import.meta.url);
     for (const lang of ['zh', 'en']) {
       const body = readFileSync(new URL(`index.${lang}.mdx`, base), 'utf8');
       const reference = readFileSync(new URL(`_includes/generated.${lang}.mdx`, base), 'utf8');
@@ -71,7 +71,7 @@ describe('文档阅读统计', () => {
       );
       expect(expanded).not.toBeNull();
       expect(expanded?.chars).toBe(original?.chars);
-      expect(expanded?.examples).toBe(9);
+      expect(expanded?.examples).toBe(10);
       expect(expanded?.readingMinutes).toBe(original?.readingMinutes);
       expect(expanded!.referenceChars).toBeGreaterThan(original!.referenceChars);
     }

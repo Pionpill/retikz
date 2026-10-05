@@ -231,8 +231,7 @@ export const resolveCoordinateFrame = (
 ): CoordinateFrameResolution => {
   const {
     rows,
-    fieldTypes,
-    fieldTypeEvidence,
+    model,
     width,
     height,
     fontSize,
@@ -248,13 +247,7 @@ export const resolveCoordinateFrame = (
     lowerCustomAxis,
   } = context;
   const node = source;
-  const rootDataView = createDataView(
-    rows,
-    [...fieldTypes].map(([name, type]) => {
-      const order = node.data.model?.find(field => field.name === name)?.order;
-      return { name, ...(fieldTypeEvidence?.has(name) ? { type } : {}), ...(order === undefined ? {} : { order }) };
-    }),
-  );
+  const rootDataView = createDataView(rows, model);
   const markDataViews =
     context.markDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
@@ -353,17 +346,11 @@ export const resolveCoordinateFrame = (
         continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
-      const type = dataView.fieldTypes.get(channel.field);
+      const type = dataView.model.find(field => field.name === channel.field)?.type;
       if (type !== undefined) types.push(type);
     }
     return types;
   };
-
-  // 字段名 → order（来自 data.model，与 fieldTypes 同源）；缺 model / 未声明 order → 无条目
-  const fieldOrders = new Map<string, CategoryOrder>();
-  for (const field of node.data.model ?? []) {
-    if (field.order !== undefined) fieldOrders.set(field.name, field.order);
-  }
 
   /**
    * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
@@ -380,9 +367,10 @@ export const resolveCoordinateFrame = (
         continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
-      const order = fieldOrders.get(channel.field);
+      const definition = dataView.model.find(field => field.name === channel.field);
+      const order = definition?.order;
       if (order === undefined || order === FieldOrderMode.Appearance) continue;
-      const type = dataView.fieldTypes.get(channel.field);
+      const type = definition?.type;
       if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new RetikzPlotError(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,

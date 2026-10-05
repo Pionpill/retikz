@@ -1,6 +1,6 @@
 import type { IRPaint } from '@retikz/core';
 import { PaintSchema } from '@retikz/core';
-import type { DataFieldTypeMap, IRDataFieldDefinition } from '@retikz/data';
+import type { DataFieldTypeValue } from '@retikz/data';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
 import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -44,10 +44,6 @@ export const makeColorChannelDefinition = (
   kind: ChannelDefinitionKind.Mark,
   resolve: ctx => {
     const scaleByName = new Map(ctx.node.scales.map(scale => [scale.name, scale] as const));
-    const fieldOrders = new Map<string, NonNullable<IRDataFieldDefinition['order']>>();
-    for (const field of ctx.node.data.model ?? []) {
-      if (field.order !== undefined) fieldOrders.set(field.name, field.order);
-    }
     return (mark: IRPlotMarkOperation) => {
       const channel = options.pick(mark);
       if (!channel) return undefined;
@@ -57,7 +53,8 @@ export const makeColorChannelDefinition = (
       }
       if (channel.field === undefined) return undefined;
       const field = channel.field;
-      const colorFieldType = ctx.fieldTypes.get(field);
+      const definition = ctx.model.find(candidate => candidate.name === field);
+      const colorFieldType = definition?.type;
       if (
         (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
         channel.scale === undefined
@@ -83,7 +80,7 @@ export const makeColorChannelDefinition = (
         scaleOperation.type === PlotScale.Ordinal &&
         scaleOperation.domain === undefined
       ) {
-        const order = fieldOrders.get(field);
+        const order = definition?.order;
         if (order !== undefined && order !== FieldOrderMode.Appearance) {
           scaleOperation = { ...scaleOperation, domain: ctx.resolveCategoryDomain(rawValues, order) };
         }
@@ -91,7 +88,7 @@ export const makeColorChannelDefinition = (
       const resolution = ctx.resolveChannelScale(
         scaleOperation,
         rawValues,
-        colorResolveContext(ctx.fieldTypes, field, ctx.resolveColorScheme, ctx.palette),
+        colorResolveContext(colorFieldType, ctx.resolveColorScheme, ctx.palette),
       );
       return {
         resolver: row => resolution.of(resolveFieldPath(row, field)),
@@ -111,12 +108,11 @@ export const makeColorChannelDefinition = (
 });
 
 const colorResolveContext = (
-  fieldTypes: DataFieldTypeMap,
-  field: string,
+  fieldType: DataFieldTypeValue | undefined,
   resolveColorScheme: (name: string) => (t: number) => string,
   palette: ChannelPaletteContext | undefined,
 ): ChannelScaleResolveContext => ({
-  fieldType: fieldTypes.get(field),
+  fieldType,
   toNumber: value => (isFiniteNumber(value) ? value : null),
   coerceTimestamp,
   resolveColorScheme,

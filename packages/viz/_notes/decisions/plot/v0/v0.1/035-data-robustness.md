@@ -21,7 +21,7 @@ keywords: 'bigint、ingest、invalid、validateBoundData、coerceNumber'
 
 ### ① 恒归一化
 
-去掉 `model !== undefined || resolverHit` 门控，**总是**按解析出的 `fieldTypes`（无 model 时即推断类型）跑 `normalizeRows`。下游统一读 canonical、无第二处 coerce，行为单一可预测。对干净数据（数字是数、日期是 Date/ISO/epoch）产物等价；只是无 model 路径也提前 coerce 成 canonical。
+去掉 `model !== undefined || resolverHit` 门控，**总是**按解析出的 `fieldTypeMap`（无 model 时即推断类型）跑 `normalizeRows`。下游统一读 canonical、无第二处 coerce，行为单一可预测。对干净数据（数字是数、日期是 Date/ISO/epoch）产物等价；只是无 model 路径也提前 coerce 成 canonical。
 
 > 与类型推断的歧义无关：`'120'` 仍推断成 categorical（数值串语义不定，须 model/format/resolveField 才当数值）——本条只消除「归一化跑不跑」的割裂，不改推断语义。
 
