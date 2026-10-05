@@ -71,6 +71,7 @@ export const Header: FC<HeaderProps> = props => {
   const selectedPolicy = kernelLabPolicies.find(policy => policy.id === state.policyId);
   const getPolicyLabel = (policy: (typeof kernelLabPolicies)[number]) =>
     t(`policy.${policy.id}`, { defaultValue: policy.label });
+
   return (
     <Collapsible key={testCase?.id ?? module.id} className="shrink-0 border-b bg-background">
       <header className="flex h-16 items-center gap-1 px-2 transition-[width,height] ease-linear sm:gap-2 sm:px-4 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -121,6 +122,7 @@ export const Header: FC<HeaderProps> = props => {
               {caseViews.map(item => {
                 const Icon = item.icon;
                 const label = t(`caseView.${item.id}`);
+
                 return (
                   <TabsTrigger key={item.id} value={item.id} asChild>
                     <NavLink to={getBenchCasePath(module.id, testCase.id, item.id)} aria-label={label} title={label}>

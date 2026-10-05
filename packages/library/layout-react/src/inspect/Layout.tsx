@@ -22,5 +22,6 @@ export const LayoutInspectLayout: FC<LayoutInspectLayoutProps> = props => {
   ]);
   const registry =
     customRegistry === undefined ? layoutRegistry : mergeInspectorRegistries(layoutRegistry, customRegistry);
+
   return <BaseInspectLayout {...layout} registry={registry} />;
 };

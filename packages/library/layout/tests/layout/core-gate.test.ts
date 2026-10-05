@@ -85,7 +85,9 @@ const probeChild = (
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -105,6 +107,7 @@ const probeChild = (
   );
 
   if (observed === undefined) throw new Error('Expected Core to resolve the Layout probe');
+
   return observed;
 };
 
@@ -238,13 +241,16 @@ describe('Layout Core layout capability gate', () => {
           NaturalLayoutProposal,
         );
         if (withGuide.kind === LayoutChildProbeKind.Failed) return context.raise(withGuide.failure);
+
         const withoutGuide = context.layoutChild(
           { namespace: 'layout-core-gate', type: 'implicit-guide' },
           NaturalLayoutProposal,
         );
         if (withoutGuide.kind === LayoutChildProbeKind.Failed) return context.raise(withoutGuide.failure);
+
         explicitResult = withGuide.result;
         implicitResult = withoutGuide.result;
+
         return { children: [context.replay(withGuide.result)] };
       },
     });
@@ -306,6 +312,7 @@ describe('Layout Core layout capability gate', () => {
       exactAtomicProposal,
       { lowerTex },
     );
+
     expect(mixed.slotSize.width).toBe(20);
     expect(mixed.allocationBounds.width).toBe(60);
     expect(tex.slotSize.width).toBe(20);
@@ -339,6 +346,7 @@ describe('Layout Core layout capability gate', () => {
           context.proposal,
         );
         if (child.kind === LayoutChildProbeKind.Failed) return context.raise(child.failure);
+
         return {
           children: [context.replay(child.result)],
           allocationBounds: child.result.allocationBounds,
@@ -356,6 +364,7 @@ describe('Layout Core layout capability gate', () => {
       compile: (_node, context) => {
         const discarded = context.layoutChild({ namespace: 'layout-core-gate', type: 'nested' }, NaturalLayoutProposal);
         if (discarded.kind === LayoutChildProbeKind.Failed) return context.raise(discarded.failure);
+
         const selected = context.layoutChild(
           { namespace: 'layout-core-gate', type: 'nested' },
           {
@@ -364,6 +373,7 @@ describe('Layout Core layout capability gate', () => {
           },
         );
         if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
+
         return {
           children: [
             context.replay(selected.result, {
@@ -390,14 +400,19 @@ describe('Layout Core layout capability gate', () => {
       'children[0]::replay[0]',
     );
     expect(result.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
+
     const groups = groupsOf(result.scene.primitives);
     const outer = result.scene.primitives[0];
+
     expect(outer).toMatchObject({
       type: 'group',
       transforms: [{ kind: 'translate', x: 13, y: 17 }],
     });
+
     if (outer.type !== 'group') throw new Error('Expected the selected replay placement group');
+
     const nestedGroups = groupsOf(outer.children);
+
     expect(nestedGroups).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -406,7 +421,9 @@ describe('Layout Core layout capability gate', () => {
         }),
       ]),
     );
+
     const selectedPrimitives = primitivesOf(result.scene.primitives);
+
     expect(
       selectedPrimitives.filter(primitive => primitive.type === 'rect' && primitive.fill === '#2563eb'),
     ).toHaveLength(1);
@@ -442,6 +459,7 @@ describe('Layout Core layout capability gate', () => {
           NaturalLayoutProposal,
         );
         if (staged.kind === LayoutChildProbeKind.Failed) return context.raise(staged.failure);
+
         throw new Error('gate child failure');
       },
     });
@@ -454,12 +472,15 @@ describe('Layout Core layout capability gate', () => {
       }),
       compile: (_node, context) => {
         const failed = context.layoutChild({ namespace: 'layout-core-gate', type: 'failure' }, NaturalLayoutProposal);
+
         expect(failed.kind).toBe(LayoutChildProbeKind.Failed);
+
         const selected = context.layoutChild(
           { type: 'coordinate', id: 'selected-coordinate', position: [3, 4] },
           NaturalLayoutProposal,
         );
         if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
+
         return { children: [context.replay(selected.result)] };
       },
     });
@@ -489,6 +510,7 @@ describe('Layout Core layout capability gate', () => {
           NaturalLayoutProposal,
         );
         if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
+
         return { children: [context.replay(selected.result), context.replay(selected.result)] };
       },
     });
@@ -499,6 +521,7 @@ describe('Layout Core layout capability gate', () => {
       artifacts: { nodeLayouts: true },
       onWarn: warning => warnings.push(warning.code),
     });
+
     expect(discarded.scene.primitives).toEqual([]);
     expect(discarded.scene.resources ?? []).toEqual([]);
     expect(discarded.artifacts).toEqual([]);
@@ -530,7 +553,9 @@ describe('Layout Core layout capability gate', () => {
           NaturalLayoutProposal,
         );
         if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
+
         retained = result.result;
+
         return { children: [] };
       },
     });
@@ -570,6 +595,7 @@ describe('Layout Core layout capability gate', () => {
     compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'result-producer' }), {
       composites: [producer],
     });
+
     expect(() =>
       compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'result-consumer' }), {
         composites: [consumer],

@@ -12,6 +12,7 @@ import type { SourcePanelState } from './useSourcePanelState';
 
 /** 已查看源码后的折叠高度上限，等于 15 行代码。 */
 const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[calc(15*1.5em)] [&_pre]:overflow-y-auto';
+
 /** 显示展开或收起动作的最小行数。 */
 const COLLAPSE_THRESHOLD_LINES = 10;
 

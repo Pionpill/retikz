@@ -116,6 +116,7 @@ export const useSourcePanelState = (
       const diff = activeFile?.diff;
       const displayedDiff = diff !== undefined && diffMode !== 'off' ? filterDiffByMode(diff, diffMode) : undefined;
       const displayedCode = displayedDiff?.code ?? code;
+
       return {
         lang,
         code: displayedCode,

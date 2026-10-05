@@ -10,7 +10,7 @@ import type {
   FlowLayoutOutput,
   FlowLayoutRelationInput,
 } from '../../../contract';
-import type { FlowDirectionValue } from '../../../shared';
+import type { FlowDirection } from '../../../shared';
 import { routeFlowRelations } from '../routing';
 import type { LayeredRankEdge } from './topology';
 import { resolveLayeredRanks } from './topology';
@@ -45,6 +45,7 @@ const ZERO_INSETS: Readonly<BoundsInsets> = Object.freeze({ top: 0, right: 0, bo
 /** 在可见 Group 边界恢复 Layout 溢出后代的完整占位，并整体平移子树 */
 const encloseGroupContent = (content: ScopeLayoutResult): ScopeLayoutResult => {
   let bounds = rectToBounds({ x: 0, y: 0, width: content.width, height: content.height });
+
   const visit = (elements: ReadonlyArray<PlacedElement>, offsetX: number, offsetY: number): void => {
     for (const element of elements) {
       const x = element.bounds.x + offsetX;
@@ -62,8 +63,10 @@ const encloseGroupContent = (content: ScopeLayoutResult): ScopeLayoutResult => {
       if (element.input.kind === 'layout' && element.children !== undefined) visit(element.children.elements, x, y);
     }
   };
+
   visit(content.elements, 0, 0);
   const complete = boundsToRect(bounds);
+
   return {
     width: complete.width,
     height: complete.height,
@@ -77,6 +80,7 @@ const encloseGroupContent = (content: ScopeLayoutResult): ScopeLayoutResult => {
 const buildInputIndex = (elements: ReadonlyArray<FlowLayoutElementInput>): LayeredInputIndex => {
   const scopes = new Map<string, ReadonlyArray<string>>();
   const kinds = new Map<string, FlowLayoutElementInput['kind']>();
+
   const visit = (items: ReadonlyArray<FlowLayoutElementInput>, ancestors: ReadonlyArray<string>): void => {
     for (const item of items) {
       scopes.set(item.id, ancestors);
@@ -84,17 +88,21 @@ const buildInputIndex = (elements: ReadonlyArray<FlowLayoutElementInput>): Layer
       if (item.kind !== 'leaf') visit(item.elements, [...ancestors, item.id]);
     }
   };
+
   visit(elements, []);
+
   return { scopes, kinds };
 };
 
 const commonScope = (source: ReadonlyArray<string>, target: ReadonlyArray<string>): string | undefined => {
   let result: string | undefined;
   const length = Math.min(source.length, target.length);
+
   for (let index = 0; index < length; index += 1) {
     if (source[index] !== target[index]) break;
     result = source[index];
   }
+
   return result;
 };
 
@@ -113,13 +121,16 @@ const rankEdgesForScope = (
     ? []
     : relations.flatMap(relation => {
         if (relation.direction === 'none' || relation.direction === 'both') return [];
+
         const sourceScopes = index.scopes.get(relation.source.id) ?? [];
         const targetScopes = index.scopes.get(relation.target.id) ?? [];
         if (commonScope(sourceScopes, targetScopes) !== scopeId) return [];
+
         const authoredSource = directChildId(relation.source.id, sourceScopes, scopeId);
         const authoredTarget = directChildId(relation.target.id, targetScopes, scopeId);
         const source = relation.direction === 'reverse' ? authoredTarget : authoredSource;
         const target = relation.direction === 'reverse' ? authoredSource : authoredTarget;
+
         return source === target ? [] : [{ source, target }];
       });
 
@@ -133,20 +144,25 @@ const withLayoutLabelMargins = (
 ): ReadonlyArray<SizedElement> => {
   const childIndices = new Map(children.map((child, childIndex) => [child.input.id, childIndex]));
   const additions = new Map(children.map(child => [child.input.id, { ...ZERO_INSETS }]));
+
   const addMargin = (id: string, side: keyof BoundsInsets, value: number): void => {
     const margin = additions.get(id);
     if (margin !== undefined) margin[side] += value;
   };
+
   for (const relation of relations) {
     if (relation.labelSize === undefined) continue;
+
     const sourceScopes = index.scopes.get(relation.source.id) ?? [];
     const targetScopes = index.scopes.get(relation.target.id) ?? [];
     if (commonScope(sourceScopes, targetScopes) !== layoutId) continue;
+
     const source = directChildId(relation.source.id, sourceScopes, layoutId);
     const target = directChildId(relation.target.id, targetScopes, layoutId);
     const sourceIndex = childIndices.get(source);
     const targetIndex = childIndices.get(target);
     if (sourceIndex === undefined || targetIndex === undefined || sourceIndex === targetIndex) continue;
+
     const first = sourceIndex < targetIndex ? source : target;
     const second = sourceIndex < targetIndex ? target : source;
     const halfExtent =
@@ -167,6 +183,7 @@ const withLayoutLabelMargins = (
       addMargin(second, 'bottom', halfExtent);
     }
   }
+
   return children.map(child => {
     const addition = additions.get(child.input.id) ?? ZERO_INSETS;
     return {
@@ -190,6 +207,7 @@ const sizeElement = (
   if (input.kind === 'leaf') {
     return { input, width: input.size.width, height: input.size.height, margin: input.margin };
   }
+
   if (input.kind === 'layout') {
     const sizedChildren = input.elements.map(element => sizeElement(element, relations, index, context));
     const childrenWithLabelMargins =
@@ -217,6 +235,7 @@ const sizeElement = (
         ...(element.children === undefined ? {} : { children: element.children }),
       })),
     };
+
     return {
       input,
       width: input.allocatedWidth ?? placement.bounds.width,
@@ -225,7 +244,9 @@ const sizeElement = (
       children,
     };
   }
+
   const children = encloseGroupContent(layoutScope(input.elements, input.layout, relations, index, input.id, context));
+
   return {
     input,
     width:
@@ -238,7 +259,7 @@ const sizeElement = (
 };
 
 /** 把物理尺寸与margin投影到统一向右的canonical主轴 */
-const projectSizedElementToCanonicalAxes = (element: SizedElement, direction: FlowDirectionValue): SizedElement => {
+const projectSizedElementToCanonicalAxes = (element: SizedElement, direction: FlowDirection): SizedElement => {
   if (direction === 'right') return element;
   if (direction === 'left') {
     return {
@@ -246,6 +267,7 @@ const projectSizedElementToCanonicalAxes = (element: SizedElement, direction: Fl
       margin: { ...element.margin, right: element.margin.left, left: element.margin.right },
     };
   }
+
   return {
     ...element,
     width: element.height,
@@ -269,7 +291,7 @@ const projectSizedElementToCanonicalAxes = (element: SizedElement, direction: Fl
 
 const transformBounds = (
   bounds: Readonly<BoundsRect>,
-  direction: FlowDirectionValue,
+  direction: FlowDirection,
   width: number,
 ): Readonly<BoundsRect> => {
   if (direction === 'right') return bounds;
@@ -277,6 +299,7 @@ const transformBounds = (
   if (direction === 'down') {
     return { x: bounds.y, y: bounds.x, width: bounds.height, height: bounds.width };
   }
+
   return {
     x: bounds.y,
     y: width - bounds.x - bounds.width,
@@ -292,20 +315,24 @@ const rankGapsForScope = (
   scopeId: string | undefined,
   ranks: ReadonlyMap<string, number>,
   rankValues: ReadonlyArray<number>,
-  direction: FlowDirectionValue,
+  direction: FlowDirection,
   defaultGap: number,
 ): ReadonlyArray<number> => {
   const gaps = rankValues.slice(1).map(() => defaultGap);
+
   for (const relation of relations) {
     if (relation.labelSize === undefined) continue;
+
     const sourceScopes = index.scopes.get(relation.source.id) ?? [];
     const targetScopes = index.scopes.get(relation.target.id) ?? [];
     if (commonScope(sourceScopes, targetScopes) !== scopeId) continue;
+
     const source = directChildId(relation.source.id, sourceScopes, scopeId);
     const target = directChildId(relation.target.id, targetScopes, scopeId);
     const sourceRank = ranks.get(source);
     const targetRank = ranks.get(target);
     if (sourceRank === undefined || targetRank === undefined || sourceRank === targetRank) continue;
+
     const labelExtent =
       direction === 'right' || direction === 'left' ? relation.labelSize.width : relation.labelSize.height;
     const requiredGap = labelExtent + defaultGap;
@@ -315,6 +342,7 @@ const rankGapsForScope = (
       if (rank > start && rank <= end) gaps[gapIndex] = Math.max(gaps[gapIndex] ?? defaultGap, requiredGap);
     });
   }
+
   return gaps;
 };
 
@@ -336,6 +364,7 @@ const layoutScope = (
     })),
     rankEdgesForScope(relations, index, scopeId),
   );
+
   const rankValues = [...new Set(sized.map(element => ranks.get(element.input.id) ?? 0))].sort((a, b) => a - b);
   const rankGaps = rankGapsForScope(relations, index, scopeId, ranks, rankValues, layout.direction, layout.rankGap);
   const rankLayouts = rankValues.map(rank => {
@@ -350,8 +379,10 @@ const layoutScope = (
         (memberIndex < members.length - 1 ? layout.nodeGap : 0),
       0,
     );
+
     return { members, width, height };
   });
+
   const canonical: Array<PlacedElement> = [];
   let rankX = 0;
   let canonicalWidth = 0;
@@ -380,6 +411,7 @@ const layoutScope = (
 
   const width = layout.direction === 'up' || layout.direction === 'down' ? canonicalHeight : canonicalWidth;
   const height = layout.direction === 'up' || layout.direction === 'down' ? canonicalWidth : canonicalHeight;
+
   return {
     width,
     height,
@@ -404,6 +436,7 @@ const flattenElements = (
         flattenElements(element.children.elements, bounds.x, bounds.y, output);
         continue;
       }
+
       const contentWidth = bounds.width - element.input.contentInsets.left - element.input.contentInsets.right;
       const contentHeight = bounds.height - element.input.contentInsets.top - element.input.contentInsets.bottom;
       const horizontalOffset =
@@ -431,6 +464,7 @@ export const layoutLayeredFlow = (input: FlowLayoutInput, context: FlowLayoutExe
   const elements: Array<FlowLayoutElementOutput> = [];
   flattenElements(root.elements, 0, 0, elements);
   const byId = new Map(elements.map(element => [element.id, element]));
+
   return {
     elements: [...index.kinds.keys()].map(id => byId.get(id)!),
     relations: routeFlowRelations(input, elements, context),

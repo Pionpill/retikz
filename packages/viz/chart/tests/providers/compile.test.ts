@@ -459,6 +459,7 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('regression');
     expect(serialized).not.toContain('NaN');
     expect(serialized).not.toContain('Infinity');
+
     const observationPoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
     const trendPaths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
       primitive => primitive.strokeWidth === 7,
@@ -506,6 +507,7 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('regression');
     expect(serialized).not.toContain('NaN');
     expect(serialized).not.toContain('Infinity');
+
     const observationPoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
     const trendPaths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
       primitive => primitive.strokeWidth === 7,
@@ -513,7 +515,9 @@ describe('Chart providers through Core compile', () => {
 
     expect(observationPoints).toHaveLength(regressionRows.length);
     expect(trendPaths).toHaveLength(6);
+
     const ids = sceneIdsOf(result.scene.primitives);
+
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
   });
@@ -568,6 +572,7 @@ describe('Chart providers through Core compile', () => {
         { roots: [PathClipProvider.key], providers: [PathClipProvider] },
       ],
     });
+
     expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|pairs|points/i);
   });
 
@@ -612,6 +617,7 @@ describe('Chart providers through Core compile', () => {
     });
     const primitives = compileToScene(sceneOf(source), definitions).scene.primitives;
     const ids = sceneIdsOf(primitives);
+
     expect(scenePrimitivesOfType(primitives, 'ellipse')).toHaveLength(4);
     expect(scenePrimitivesOfType(primitives, 'path').filter(path => path.strokeWidth === 7)).toHaveLength(4);
 
@@ -642,9 +648,11 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('bubble');
     expect(serializedScene).not.toContain('NaN');
     expect(serializedScene).not.toContain('Infinity');
+
     const bubblePrimitives = scenePrimitivesOfType(result.scene.primitives, 'ellipse').filter(
       primitive => primitive.fillOpacity === 0.7,
     );
+
     expect(bubblePrimitives).toHaveLength(rows.length);
     expect(bubblePrimitives.every(primitive => primitive.fill === '#d946ef')).toBe(true);
     expect(bubblePrimitives.every(primitive => primitive.stroke === primitive.fill)).toBe(true);
@@ -714,6 +722,7 @@ describe('Chart providers through Core compile', () => {
         { roots: [PathClipProvider.key], providers: [PathClipProvider] },
       ],
     });
+
     expect(() => compileToScene(sceneOf(negativeSource), negativeDefinitions)).toThrow(/size|sqrt|negative|domain/i);
 
     const linearSource = BubbleChartSchema.parse({
@@ -733,6 +742,7 @@ describe('Chart providers through Core compile', () => {
         { roots: [PathClipProvider.key], providers: [PathClipProvider] },
       ],
     });
+
     expect(() => compileToScene(sceneOf(linearSource), linearDefinitions)).toThrow(/size|sqrt|linear|scale/i);
   });
 
@@ -747,6 +757,7 @@ describe('Chart providers through Core compile', () => {
         encodings: { x: 'x', y: 'y', size: 'size' },
       },
     });
+
     expect(() =>
       compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()])),
     ).toThrow(/chartType|scatter|bubble/i);
@@ -769,6 +780,7 @@ describe('Chart providers through Core compile', () => {
     const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
     const artifact = result.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
     if (artifact === undefined) throw new Error('Expected Chart presentation FlexLayout compile artifact');
+
     const flex = FlexLayoutArtifactSchema.parse(artifact.value);
     const plotItem = flex.items.find(item => item.key === 'chart.plot');
     if (plotItem === undefined) throw new Error('Expected Chart Plot presentation item');
@@ -1036,6 +1048,7 @@ describe('point-aware compile boundaries', () => {
         { roots: [PathClipProvider.key], providers: [PathClipProvider] },
       ],
     });
+
     expect(compileToScene(sceneOf(sourceOf()), definitions).scene.primitives.length).toBeGreaterThan(0);
     expect(compileToScene(sceneOf(sourceOf(0)), definitions).scene.primitives.length).toBeGreaterThan(0);
   });
@@ -1050,6 +1063,7 @@ describe('registered regression compilation', () => {
     fit: (_pairs, operation) => ({ predict: x => x ** operation.degree }),
   });
   const lowerOptions = { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] };
+
   const compile = (properties: JsonObject) => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
@@ -1064,8 +1078,10 @@ describe('registered regression compilation', () => {
         { roots: [PathClipProvider.key], providers: [PathClipProvider] },
       ],
     });
+
     return compileToScene(sceneOf(source), definitions);
   };
+
   it('uses custom methods for main and extra trends with inherited or overridden curves', () => {
     const result = compile({
       method: { kind: 'custom-polynomial' },
@@ -1077,12 +1093,14 @@ describe('registered regression compilation', () => {
       ],
     });
     const paths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(path => path.strokeWidth === 7);
+
     expect(paths).toHaveLength(3);
     expect(paths[0].commands?.some(command => command.kind === 'cubic')).toBe(true);
     expect(paths[1].commands?.some(command => command.kind === 'cubic')).toBe(true);
     expect(paths[2].commands).toHaveLength(6);
     expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(rows.length);
   });
+
   it('locates exact parameter errors in additional methods', () => {
     expect(() => compile({ extraMethods: [{ method: { kind: 'custom-polynomial', unexpected: true } }] })).toThrow(
       /extraMethods/,

@@ -49,6 +49,7 @@ const inputFromProps = <TInput,>(component: InputComponent<TInput>, props: Reado
     scene({ children: [{ type: 'embed', kind: component.inputEmbedAdapter.kind, props: input }] }),
     { adapters: [component.inputEmbedAdapter] },
   );
+
   return { source: normalized.ir.children[0] as IRChartSource, input };
 };
 
@@ -569,6 +570,7 @@ describe('Typed Point Chart React declarations', () => {
         <ConnectedScatterMark properties={{ point: { size: 5 } }} />
       </>,
     );
+
     expect(connected.source).toEqual(
       normalizeConnectedScatterChart({
         data: { reference: 'chart.data' },
@@ -587,6 +589,7 @@ describe('Typed Point Chart React declarations', () => {
         <RangedDotMark override properties={{ range: { strokeWidth: 3 } }} />
       </>,
     );
+
     expect(ranged.source).toEqual(
       normalizeRangedDotChart({
         data: { reference: 'chart.data' },
@@ -644,6 +647,7 @@ describe('Typed Point Chart React declarations', () => {
       expect(renderToStaticMarkup(<Layout>{chart}</Layout>).match(/<svg/g)).toHaveLength(1);
     }
   });
+
   it('maps exact Bubble declarations and preserves authored mark order', () => {
     const input = inputOf(
       BubbleChart,
@@ -1075,6 +1079,7 @@ describe('Typed Point Chart React declarations', () => {
         </ChartExtension>
       </>,
     );
+
     expect(input.source.plotExtension?.transform).toEqual([
       { operation: { kind: 'sort', field: 'amount', order: 'descending' } },
       { operation: { kind: 'sort', field: 'margin', order: 'ascending' } },
@@ -1158,6 +1163,7 @@ describe('Typed Point Chart React declarations', () => {
 
   it('rejects ordinary iterables and custom wrappers instead of widening direct-child semantics', () => {
     const iterableChildren = new Set<ReactNode>([<PlotAxis key="axis" dimension="x" />]);
+
     expect(() =>
       inputOf(
         ScatterChart,
@@ -1234,6 +1240,7 @@ describe('Typed Point Chart React declarations', () => {
         <ScatterChart layout={{ width: 320, height: 180 }}>{requiredDeclarations}</ScatterChart>
       </Layout>,
     );
+
     expect(root).toContain('viewBox="0 0 320 180"');
     expect(declaration).toContain('viewBox="0 0 320 180"');
     expect(embedded).toContain('viewBox="-10 -10 340 200"');
@@ -1241,6 +1248,7 @@ describe('Typed Point Chart React declarations', () => {
 
   it('仅指定一个维度时继续自动取景', () => {
     const svg = renderToStaticMarkup(<ScatterChart layout={{ width: 320 }}>{requiredDeclarations}</ScatterChart>);
+
     expect(svg).toContain('viewBox="-10 -10 340 ');
   });
 
@@ -1262,6 +1270,7 @@ describe('Typed Point Chart React declarations', () => {
         <ChartLayout layout={{ width: 320, height: 180 }} />
       </>,
     );
+
     expect(input.source.layout).toEqual({ width: 320, height: 180 });
   });
 });

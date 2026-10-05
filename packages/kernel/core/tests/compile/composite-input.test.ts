@@ -25,7 +25,9 @@ import {
 } from '../../src';
 
 const leaf = (): IRChild => ({ namespace: 'fixture', type: 'prepared' });
+
 const sceneOf = (children: Array<IRChild>): IRScene => ({ type: 'scene', version: 1, children });
+
 const prepared = defineComposite({
   namespace: 'fixture',
   type: 'prepared',
@@ -38,11 +40,13 @@ const prepared = defineComposite({
     children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput ?? 'unbound') }],
   }),
 });
+
 const probe = (context: LayoutCompositeCompileContext, child: CompositeBoundChild) => {
   const result = context.layoutChild(child, NaturalLayoutProposal);
   if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
   return result.result;
 };
+
 const container = defineComposite({
   namespace: 'fixture',
   type: 'container',
@@ -55,7 +59,9 @@ const container = defineComposite({
     const child = context.sourceChild(['child']);
     const first = probe(context, child);
     const second = probe(context, child);
+
     expect(second.allocationBounds).toEqual(first.allocationBounds);
+
     return { children: [context.scope({ theme: { mode: 'dark' } }, [context.replay(second)])] };
   },
 });
@@ -69,6 +75,7 @@ describe('composite instance runtime input', () => {
       { path: ['children', 1], input: 'second-prepared' },
     ]);
     const output = compileToScene(source, { composites: [prepared], compositeInputs });
+
     expect(JSON.stringify(output.scene)).toContain('first-prepared');
     expect(JSON.stringify(output.scene)).toContain('second-prepared');
     expect(JSON.stringify(source)).toBe(original);
@@ -81,6 +88,7 @@ describe('composite instance runtime input', () => {
       { path: ['children', 0, 'child'], input: 'nested-prepared' },
     ]);
     const output = compileToScene(source, { composites: [prepared, container], compositeInputs });
+
     expect(JSON.stringify(output.scene)).toContain('nested-prepared');
     expect(JSON.stringify(output.scene)).not.toContain('unbound');
   });
@@ -99,6 +107,7 @@ describe('composite instance runtime input', () => {
       composites: [prepared, generated],
       compositeInputs: createCompositeInputBindings(source, [{ path: ['children', 0], input: 'parent-only' }]),
     });
+
     expect(JSON.stringify(output.scene)).toContain('generated-prepared');
     expect(JSON.stringify(output.scene)).toContain('unbound');
     expect(JSON.stringify(output.scene)).not.toContain('parent-only');
@@ -116,12 +125,14 @@ describe('composite instance runtime input', () => {
         { path: ['children', 1, 'children', 0], input: 'scope-b' },
       ]),
     });
+
     expect(JSON.stringify(output.scene)).toContain('scope-a');
     expect(JSON.stringify(output.scene)).toContain('scope-b');
   });
 
   it('rejects duplicate, missing and non-composite binding paths', () => {
     const source = sceneOf([leaf(), { type: 'node', text: 'plain' }]);
+
     expect(() =>
       createCompositeInputBindings(source, [
         { path: ['children', 0], input: 1 },
@@ -135,6 +146,7 @@ describe('composite instance runtime input', () => {
   it('rejects a binding set paired with a changed Source but accepts retained JSON capture', () => {
     const source = sceneOf([leaf()]);
     const compositeInputs = createCompositeInputBindings(source, [{ path: ['children', 0], input: 'ready' }]);
+
     expect(
       JSON.stringify(
         compileToScene(JSON.parse(JSON.stringify(source)), { composites: [prepared], compositeInputs }).scene,
@@ -155,6 +167,7 @@ describe('composite instance runtime input', () => {
         return { children: [child, child] };
       },
     });
+
     expect(() =>
       compileToScene(sceneOf([{ namespace: 'fixture', type: 'duplicate' }]), { composites: [prepared, duplicate] }),
     ).toThrow(/more than once/i);
@@ -173,6 +186,7 @@ describe('composite instance runtime input', () => {
           return { children: [previous] };
         },
       });
+
       expect(() =>
         compileToScene(
           sceneOf([
@@ -203,6 +217,7 @@ describe('composite instance runtime input', () => {
         { path: ['children', 0, 'child'], input: 'lowered-ready' },
       ]),
     });
+
     expect(lowered.children).toEqual([{ type: 'node', position: [0, 0], text: 'lowered-ready' }]);
   });
 
@@ -218,6 +233,7 @@ describe('composite instance runtime input', () => {
       expand: (_node, context) => ({ children: [context.sourceChild(['child']), context.sourceChild(['child'])] }),
     });
     const source = sceneOf([{ namespace: 'fixture', type: 'duplicateSource', child: leaf() }]);
+
     expect(() => compileToScene(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
     expect(() => lowerIRToKernel(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
   });
@@ -236,6 +252,7 @@ describe('composite instance runtime input', () => {
         spatialHandles: [{ id: 'body', role: 'fixture', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
       }),
     });
+
     expect(() =>
       compileToScene(sceneOf([{ namespace: 'fixture', type: 'boundSpatial' }]), { composites: [spatial, prepared] }),
     ).toThrow(/Scope with placement or transforms/);
@@ -267,9 +284,12 @@ describe('composite instance runtime input', () => {
         createRuntimeSourceUpdate(CoreCompositeInputSourceDefinition, inputs('updated-ready')),
       ],
     });
+
     expect(JSON.stringify(session.artifact(program).value.output.result.scene)).toContain('updated-ready');
+
     const committed = session.artifact(program).value.output.result;
     const revision = session.revision();
+
     expect(() =>
       session.update({
         baseRevision: revision,
@@ -281,6 +301,7 @@ describe('composite instance runtime input', () => {
     ).toThrow(/RUNTIME_COMPUTATION_RUN_FAILED/i);
     expect(session.revision()).toBe(revision);
     expect(session.artifact(program).value.output.result).toBe(committed);
+
     session.dispose();
   });
 });

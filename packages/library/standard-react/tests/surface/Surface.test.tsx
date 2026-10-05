@@ -12,6 +12,7 @@ import { synchronousAdapters } from '../helpers/synchronous-adapters';
 const contribute = ({ children, ...props }: SurfaceProps) => {
   const input = createInputScene(<Surface {...props}>{children}</Surface>);
   const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+
   return {
     node: normalized.ir.children[0],
     providerDependencies: normalized.contributions[0],

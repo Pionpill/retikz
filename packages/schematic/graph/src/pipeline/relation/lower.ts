@@ -51,12 +51,14 @@ export const lowerRelation = (
       { type: 'step', kind: 'move', to: source.source },
       { type: 'step', kind: 'line', to: source.target },
     ] as const);
+
   const sourceMarker = marker(structure.sourceMarker, appearance.sourceMarker);
   const targetMarker = marker(structure.targetMarker, appearance.targetMarker);
   const marks: NonNullable<IRPathBase['marks']> = [
     ...(sourceMarker === undefined ? [] : [{ pos: 0 as const, mark: sourceMarker }]),
     ...(targetMarker === undefined ? [] : [{ pos: 1 as const, mark: targetMarker }]),
   ];
+
   const labels = source.labels?.map(label => {
     const textColor = label.textColor ?? appearance.labelTextForeground;
     const opacity = label.opacity ?? appearance.labelOpacity;
@@ -73,6 +75,7 @@ export const lowerRelation = (
             ...(weight === undefined ? {} : { weight }),
             ...(fontStyle === undefined ? {} : { style: fontStyle }),
           };
+
     return {
       ...label,
       ...(label.placement === undefined && label.side === undefined ? { placement: 'inside' as const } : {}),
@@ -81,7 +84,9 @@ export const lowerRelation = (
       opacity,
     };
   });
+
   const dashPattern = source.style?.dashPattern ?? structure.dashPattern;
+
   return {
     type: 'path',
     ...definedPathFields(source),

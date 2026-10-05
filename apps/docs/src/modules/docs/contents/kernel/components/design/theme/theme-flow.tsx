@@ -8,9 +8,11 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 import { themeFlowI18n } from './theme-flow.i18n';
 
 export type ThemeFlowProps = { lang?: Lang };
+
 const Demo: FC<ThemeFlowProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = themeFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="theme-flow" kind="linear" direction="right" gap={30}>

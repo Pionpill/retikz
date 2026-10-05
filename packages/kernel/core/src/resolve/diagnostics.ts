@@ -2,7 +2,9 @@ import type { CompileOccurrenceLocator } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 
 const layoutProbeRecoverableErrors = new WeakSet<object>();
+
 const compositeContractErrors = new WeakSet<object>();
+
 const additionalFatalProbeErrors = new WeakSet<object>();
 
 type LayoutProbeErrorDetails = Readonly<{
@@ -34,6 +36,7 @@ export const createLayoutProbeRecoverableError = (
     cause: options.cause,
   });
   layoutProbeRecoverableErrors.add(error);
+
   return error;
 };
 
@@ -46,6 +49,7 @@ export const createCompositeContractError = (message: string, options?: ErrorOpt
     cause: options?.cause,
   });
   compositeContractErrors.add(error);
+
   return error;
 };
 
@@ -71,11 +75,15 @@ export const isFatalProbeError = (error: unknown): error is Error =>
 /** 安全判断 ordinary Error identity，任何 prototype trap 都视为非 Error */
 const isOrdinaryError = (value: unknown): value is Error => {
   if (value === null || typeof value !== 'object') return false;
+
   const visited = new WeakSet<object>();
+
   try {
     let prototype: object | null = value;
+
     while (prototype !== null) {
       if (visited.has(prototype)) return false;
+
       visited.add(prototype);
       prototype = Object.getPrototypeOf(prototype);
       if (prototype === Error.prototype) return true;
@@ -83,12 +91,14 @@ const isOrdinaryError = (value: unknown): value is Error => {
   } catch {
     return false;
   }
+
   return false;
 };
 
 /** 单次安全读取 ordinary Error identity 与 message */
 const readOrdinaryError = (thrown: unknown): Readonly<{ ordinary: boolean; message?: string }> => {
   if (!isOrdinaryError(thrown)) return { ordinary: false };
+
   try {
     const message = Reflect.get(thrown, 'message');
     return typeof message === 'string' ? { ordinary: true, message } : { ordinary: true };
@@ -108,6 +118,7 @@ export const safeThrownDetail = (thrown: unknown, fallback = 'unknown thrown val
   const inspected = readOrdinaryError(thrown);
   if (inspected.ordinary) return inspected.message ?? fallback;
   if (thrown !== null && (typeof thrown === 'object' || typeof thrown === 'function')) return fallback;
+
   try {
     return String(thrown);
   } catch {

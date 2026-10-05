@@ -25,6 +25,7 @@ describe('docs-owned theme presets', () => {
 
   it('三个参考风格只为 Core 与 Viz owner 提供同名 definition', () => {
     const expected = [PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean];
+
     for (const definitions of [
       PreviewCoreThemeStyles,
       PreviewPlotThemeStyles,
@@ -33,6 +34,7 @@ describe('docs-owned theme presets', () => {
     ]) {
       expect(definitions.map(definition => definition.name)).toEqual(expected);
     }
+
     for (const definitions of [
       PreviewThemeDefinitionBundle.graph,
       PreviewThemeDefinitionBundle.diagram,
@@ -44,22 +46,29 @@ describe('docs-owned theme presets', () => {
 
   it.each([ThemeMode.Light, ThemeMode.Dark])('Plot reference definitions 保留关键 Axis 与 shape 视觉值：%s', mode => {
     const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
+
     for (const definition of PreviewPlotThemeStyles) {
       const core = coreByName.get(definition.name);
       if (core === undefined) throw new Error(`missing Core definition for ${definition.name}`);
+
       const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
       const resolved = resolvePlotTheme({ style: definition.name, mode, colors }, {}, [definition]);
+
       expect(resolved.defaults.axis?.line !== false).toBe(definition.name === PreviewThemeStyle.Academic);
+
       if (definition.name === PreviewThemeStyle.Academic) {
         expect(resolved.defaults.axis?.grid).toBe(false);
         expect(resolved.defaults.plotArea?.border).toEqual({ stroke: 'currentColor', strokeWidth: 1, drawOpacity: 1 });
+
         const sourceOverride = resolvePlotTheme(
           { style: definition.name, mode, colors },
           { plotDefaults: { plotArea: { border: false } } },
           [definition],
         );
+
         expect(sourceOverride.defaults.plotArea?.border).toBe(false);
       }
+
       const expectedStyleRules =
         definition.name === PreviewThemeStyle.Academic
           ? [
@@ -102,6 +111,7 @@ describe('docs-owned theme presets', () => {
                   },
                 },
               ];
+
       expect(resolved.rules.slice(1).map(source => source.rule)).toEqual(expectedStyleRules);
       expect(resolved.palette.shape).toHaveLength(8);
       expect(resolved.palette.shape[4]).toEqual({
@@ -114,6 +124,7 @@ describe('docs-owned theme presets', () => {
   it.each([ThemeMode.Light, ThemeMode.Dark])('Table reference definitions 保留关键视觉值：%s', mode => {
     const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
     const tableByName = new Map(PreviewTableThemeStyles.map(definition => [definition.name, definition]));
+
     const themeOf = (style: Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>) => {
       const core = coreByName.get(style);
       if (core === undefined) throw new Error(`missing Core definition for ${style}`);
@@ -127,6 +138,7 @@ describe('docs-owned theme presets', () => {
       throw new Error('missing Table definition');
 
     const academicDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Academic), [academic]).defaults;
+
     expect(academicDefaults.appearanceDefaults?.body?.content?.defaults?.node?.style?.font?.family).toBe('serif');
     expect(academicDefaults.layout?.borders?.outer?.top).toEqual({
       kind: 'line',
@@ -135,12 +147,14 @@ describe('docs-owned theme presets', () => {
     });
 
     const vibrantDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Vibrant), [vibrant]).defaults;
+
     expect(vibrantDefaults.appearanceDefaults?.body?.background?.fill).toBe(
       mode === ThemeMode.Light ? '#e5ecf6' : '#111827',
     );
     expect(vibrantDefaults.layout?.borders?.horizontal).toMatchObject({ kind: 'line', width: 1 });
 
     const cleanDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Clean), [clean]).defaults;
+
     expect(cleanDefaults.appearanceDefaults?.body?.background?.fill).toBe('none');
     expect(cleanDefaults.layout?.borders?.horizontal).toEqual({ kind: 'none' });
     expect(cleanDefaults.visualDefaults?.sequential).toEqual(
@@ -153,6 +167,7 @@ describe('docs-owned theme presets', () => {
     const violations = demoFiles.flatMap(file => {
       const source = readFileSync(file, 'utf8');
       if (!/<Layout\b/.test(source)) return [];
+
       const missing = [
         /<Plot\b/.test(source) && !source.includes('PreviewPlot as Plot') ? 'Plot' : undefined,
         /<DetailTable\b/.test(source) && !source.includes('PreviewDetailTable as DetailTable')
@@ -162,6 +177,7 @@ describe('docs-owned theme presets', () => {
           ? 'ManualTable'
           : undefined,
       ].filter((name): name is string => name !== undefined);
+
       return missing.length === 0 ? [] : [`${relative(process.cwd(), file)}: ${missing.join(', ')}`];
     });
 

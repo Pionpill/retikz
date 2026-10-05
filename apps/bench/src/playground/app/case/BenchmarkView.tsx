@@ -32,6 +32,7 @@ export const BenchmarkView: FC<BenchmarkViewProps> = props => {
       </main>
     );
   }
+
   return (
     <main className="min-h-0 min-w-0 flex-1 overflow-auto bg-muted/20 p-4 sm:p-5">
       <div className="mx-auto max-w-[1600px] space-y-4">

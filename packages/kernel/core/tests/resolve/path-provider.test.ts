@@ -121,6 +121,7 @@ describe('resolve/path provider bindings', () => {
       paramsSchema: strictObject({ amount: number() }),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
+
     expect(() =>
       resolveStrokePathWithBuiltinProviders(
         path({

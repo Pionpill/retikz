@@ -4,8 +4,8 @@
 
 ### BranchDiagram / BranchDiagramProps
 
-- `BranchDiagram`：<ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={60}>将 BranchDiagram Source root 接入 React 编写与 Layout 宿主</ApiSourceLink>
-- `BranchDiagramProps`：<ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={107}>Branch JSX 作者属性</ApiSourceLink>
+- `BranchDiagram`：<ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={61}>将 BranchDiagram Source root 接入 React 编写与 Layout 宿主</ApiSourceLink>
+- `BranchDiagramProps`：<ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={109}>Branch JSX 作者属性</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -43,7 +43,7 @@ export type BranchDiagramProps = Omit<InputBranchDiagram, 'nodes' | 'branches'> 
 
 ### BranchNode / BranchNodeProps
 
-- `BranchNode`：<ApiSourceLink label={"BranchNode"} path={"packages/schematic/diagram-react/src/branch/BranchNode.tsx"} startLine={7}>声明一个共享节点；位置由 Branch 布局决定</ApiSourceLink>
+- `BranchNode`：<ApiSourceLink label={"BranchNode"} path={"packages/schematic/diagram-react/src/branch/BranchNode.tsx"} startLine={8}>声明一个共享节点；位置由 Branch 布局决定</ApiSourceLink>
 - `BranchNodeProps`：<ApiSourceLink label={"BranchNodeProps"} path={"packages/schematic/diagram-react/src/branch/BranchNode.tsx"} startLine={5}>Branch 节点声明属性</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -81,7 +81,7 @@ export type BranchNodeProps = InputBranchNode;
 
 ### Branch / BranchProps
 
-- `Branch`：<ApiSourceLink label={"Branch"} path={"packages/schematic/diagram-react/src/branch/Branch.tsx"} startLine={7}>声明 BranchDiagram 内一条有序路径</ApiSourceLink>
+- `Branch`：<ApiSourceLink label={"Branch"} path={"packages/schematic/diagram-react/src/branch/Branch.tsx"} startLine={8}>声明 BranchDiagram 内一条有序路径</ApiSourceLink>
 - `BranchProps`：<ApiSourceLink label={"BranchProps"} path={"packages/schematic/diagram-react/src/branch/Branch.tsx"} startLine={5}>有序节点路径声明属性</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -165,7 +165,7 @@ export type BranchDiagramLayoutHostProps = Pick<
 
 ### branchDiagram / BranchDiagramInputEmbedProps
 
-- `branchDiagram`：<ApiSourceLink label={"branchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={54}>创建 Branch Diagram Source root 的 authoring embed 节点</ApiSourceLink>
+- `branchDiagram`：<ApiSourceLink label={"branchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={55}>创建 Branch Diagram Source root 的 authoring embed 节点</ApiSourceLink>
 - `BranchDiagramInputEmbedProps`：<ApiSourceLink label={"BranchDiagramInputEmbedProps"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={11}>Branch Diagram embed 同时携带 Source authoring 输入与 definitions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -191,11 +191,11 @@ export type BranchDiagramLayoutHostProps = Pick<
 | `frame?`                        | `InputBranchDiagram['frame']`                                                            | —      | 外框及区域间距                                                                     |
 | `readonly graphThemeStyles?`    | `ReadonlyArray<GraphThemeStyleDefinition>`                                               | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions                                 |
 | `id?`                           | `string`                                                                                 | —      | 完整图示的可选标识                                                                 |
-| `layout?`                       | `IRBranchLayoutIntent`                                                                   | —      | —                                                                                  |
+| `layout?`                       | `IRBranchLayoutIntent`                                                                   | —      | 分支方向与净间距覆盖值，由布局解析补齐缺省项                                       |
 | `localNamespace?`               | `false \| true`                                                                          | —      | 为后代引用建立局部命名空间                                                         |
 | `mainBranch?`                   | `string`                                                                                 | —      | 保持同轨的已声明分支 ID                                                            |
 | `meta?`                         | `Record<string, JsonValue>`                                                              | —      | 图示 JSON 元数据                                                                   |
-| `nodes`                         | `Array<IRBranchNode>`                                                                    | —      | —                                                                                  |
+| `nodes`                         | `Array<IRBranchNode>`                                                                    | —      | 共享节点目录，保留各节点可省略的尺寸与外观字段                                     |
 | `placement?`                    | `InputBranchDiagram['placement']`                                                        | —      | 完整图示的宿主放置方式                                                             |
 | `presentation?`                 | `InputBranchDiagram['presentation']`                                                     | —      | 标题、说明与显式图例                                                               |
 | `readonly relationKinds?`       | `ReadonlyArray<RelationKindDefinition>`                                                  | `[]`   | 自定义 Relation kind definitions                                                   |
@@ -227,7 +227,7 @@ export type BranchDiagramInputEmbedProps = InputBranchDiagram & BranchDiagramDef
 ### normalizeBranchDiagram / InputBranchDiagram
 
 - `normalizeBranchDiagram`：<ApiSourceLink label={"normalizeBranchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/normalize/normalize.ts"} startLine={6}>将类型化作者输入组装为唯一 Branch Source，不物化默认值</ApiSourceLink>
-- `InputBranchDiagram`：<ApiSourceLink label={"InputBranchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/normalize/types.ts"} startLine={8}>省略固定判别字段的 Branch Diagram 作者输入</ApiSourceLink>
+- `InputBranchDiagram`：<ApiSourceLink label={"InputBranchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/normalize/types.ts"} startLine={10}>省略固定判别字段的 Branch Diagram 作者输入</ApiSourceLink>
 
 ```ts
 export declare const normalizeBranchDiagram: (input: InputBranchDiagram) => IRBranchDiagram;
@@ -241,7 +241,7 @@ export type InputBranchDiagram = Omit<IRBranchDiagram, 'namespace' | 'type'>;
   <ApiSourceLink
     label={'InputBranch'}
     path={'packages/schematic/diagram-vanilla/src/branch/normalize/types.ts'}
-    startLine={6}
+    startLine={7}
   >
     Branch 有序路径的作者输入
   </ApiSourceLink>
@@ -338,7 +338,7 @@ export const BranchDiagramEmbedKind = 'diagram.branch';
   <ApiSourceLink
     label={'BranchDiagramInputEmbedAdapter'}
     path={'packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts'}
-    startLine={41}
+    startLine={42}
   >
     Branch Diagram Source root 的 InputEmbed adapter
   </ApiSourceLink>
@@ -431,7 +431,7 @@ export declare const createBranchDiagramVanillaAdapters: () => Array<Synchronous
   <ApiSourceLink
     label={'BranchDiagramArtifact'}
     path={'packages/schematic/diagram/src/branch/schemas/types.ts'}
-    startLine={18}
+    startLine={25}
   >
     查看源码
   </ApiSourceLink>
@@ -472,7 +472,7 @@ export type BranchDiagramArtifact = output<typeof BranchDiagramArtifactSchema>;
   <ApiSourceLink
     label={'BranchDiagramDefinitionOptions'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={70}
+    startLine={77}
   >
     Branch 与基础 Diagram / Graph 的运行时定义选项
   </ApiSourceLink>
@@ -522,7 +522,7 @@ export type BranchDiagramDefinitionOptions = DiagramDefinitionOptions &
   <ApiSourceLink
     label={'BranchLayoutDefinition'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={60}
+    startLine={67}
   >
     内置和自定义 Branch 布局的统一同步协议
   </ApiSourceLink>
@@ -654,7 +654,7 @@ export type BranchLayoutNodeInput = Readonly<{
   <ApiSourceLink
     label={'BranchLayoutNodeOutput'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={30}
+    startLine={37}
   >
     一个节点的 drawing-local 布局位置
   </ApiSourceLink>
@@ -670,7 +670,7 @@ export type BranchLayoutNodeInput = Readonly<{
 | ------------------- | -------------------- | ------ | ------------------------------ |
 | `readonly id`       | `string`             | —      | 作者节点 id                    |
 | `readonly lane`     | `number`             | —      | 非负轨道编号；不是作者分支身份 |
-| `readonly position` | `Readonly<Position>` | —      | Core Node position             |
+| `readonly position` | `Readonly<Position>` | —      | Core 节点的位置                |
 
 </ApiTable>
 
@@ -696,7 +696,7 @@ export type BranchLayoutNodeOutput = Readonly<{
   <ApiSourceLink
     label={'BranchLayoutOutput'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={52}
+    startLine={59}
   >
     原子布局结果，最终路径裁剪由 Core 执行
   </ApiSourceLink>
@@ -736,7 +736,7 @@ export type BranchLayoutOutput = Readonly<{
   <ApiSourceLink
     label={'BranchLayoutSegmentOutput'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={40}
+    startLine={47}
   >
     唯一有向相邻段的参考路由
   </ApiSourceLink>
@@ -777,7 +777,7 @@ export type BranchLayoutSegmentOutput = Readonly<{
 ### IRBranch
 
 <p>
-  <ApiSourceLink label={'IRBranch'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={16}>
+  <ApiSourceLink label={'IRBranch'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={21}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -814,9 +814,9 @@ export type IRBranch = input<typeof BranchSchema>;
   <ApiSourceLink
     label={'IRBranchDiagram'}
     path={'packages/schematic/diagram/src/branch/schemas/types.ts'}
-    startLine={11}
+    startLine={12}
   >
-    查看源码
+    保留节点与布局缺省值尚未物化的分支图作者输入
   </ApiSourceLink>
 </p>
 
@@ -828,10 +828,10 @@ export type IRBranch = input<typeof BranchSchema>;
 
 <ApiTable>
 
-| 成员      | 类型                   | 默认值 | 说明 |
-| --------- | ---------------------- | ------ | ---- |
-| `layout?` | `IRBranchLayoutIntent` | —      | —    |
-| `nodes`   | `Array<IRBranchNode>`  | —      | —    |
+| 成员      | 类型                   | 默认值 | 说明                                           |
+| --------- | ---------------------- | ------ | ---------------------------------------------- |
+| `layout?` | `IRBranchLayoutIntent` | —      | 分支方向与净间距覆盖值，由布局解析补齐缺省项   |
+| `nodes`   | `Array<IRBranchNode>`  | —      | 共享节点目录，保留各节点可省略的尺寸与外观字段 |
 
 </ApiTable>
 
@@ -856,7 +856,7 @@ export type IRBranchDiagram = Omit<output<typeof BranchDiagramSchema>, 'layout' 
   <ApiSourceLink
     label={'IRBranchLayoutIntent'}
     path={'packages/schematic/diagram/src/branch/schemas/types.ts'}
-    startLine={17}
+    startLine={23}
   >
     查看源码
   </ApiSourceLink>
@@ -891,7 +891,7 @@ export type IRBranchLayoutIntent = input<typeof BranchLayoutIntentSchema>;
 ### IRBranchNode
 
 <p>
-  <ApiSourceLink label={'IRBranchNode'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={15}>
+  <ApiSourceLink label={'IRBranchNode'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={19}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1056,7 +1056,7 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
   <ApiSourceLink
     label={'createBranchDiagramProvider'}
     path={'packages/schematic/diagram/src/branch/pipeline/provider.ts'}
-    startLine={38}
+    startLine={41}
   >
     携带布局和主题定义的 Branch provider
   </ApiSourceLink>
@@ -1093,7 +1093,7 @@ export declare const createBranchDiagramProvider: (options?: BranchDiagramDefini
   <ApiSourceLink
     label={'createBranchDiagramProviderContribution'}
     path={'packages/schematic/diagram/src/branch/pipeline/provider.ts'}
-    startLine={46}
+    startLine={49}
   >
     完整 Branch、Graph 与展示装配依赖贡献
   </ApiSourceLink>
@@ -1132,7 +1132,7 @@ export declare const createBranchDiagramProviderContribution: (
   <ApiSourceLink
     label={'defineBranchLayout'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={80}
+    startLine={87}
   >
     定义与内置项共享调用和验证链的 Branch 布局
   </ApiSourceLink>

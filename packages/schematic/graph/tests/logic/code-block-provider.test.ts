@@ -11,6 +11,7 @@ import * as Graph from '../../src';
 import { primitivesOf } from './test-utils';
 
 const schema = () => Graph.CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
+
 const serviceDefinition = () =>
   Graph.defineCodeBlock({
     namespace: 'test',
@@ -37,10 +38,12 @@ describe('Code block contribution closure', () => {
       localNamespace: true,
     });
     const output = compileToScene({ type: 'scene', version: 1, children: [source] }, providers);
+
     expect(JSON.stringify(output.scene)).toContain('Service');
     expect(JSON.stringify(output.scene)).toContain('Read source');
     expect(contribution.roots).toEqual([{ capability: 'composite', namespace: 'test', type: 'service' }]);
   });
+
   it('resolves a local named Core theme before composing content', () => {
     const definition = serviceDefinition();
     const style = Graph.defineGraphThemeStyle({
@@ -60,8 +63,10 @@ describe('Code block contribution closure', () => {
       { type: 'scene', version: 1, children: [source] },
       { ...providers, themeStyles: [defineThemeStyle({ name: 'local', resolve: () => ({}) })] },
     );
+
     expect(JSON.stringify(output.scene)).toContain('#fedcba');
   });
+
   it('diagnoses conflicting definitions instead of silently replacing them', () => {
     expect(() =>
       resolveCoreProviderDependencies({
@@ -72,6 +77,7 @@ describe('Code block contribution closure', () => {
       }),
     ).toThrow(/conflict/i);
   });
+
   it('wraps compose failures while preserving the original cause', () => {
     const cause = new Error('compose failed');
     const definition = Graph.defineCodeBlock({
@@ -85,6 +91,7 @@ describe('Code block contribution closure', () => {
     const providers = resolveCoreProviderDependencies({
       contributions: [Graph.createCodeBlockContribution(definition)],
     });
+
     expect(() =>
       compileToScene(
         {
@@ -145,9 +152,11 @@ describe('Code block root and composition semantics', () => {
       ],
     });
     const expected = compileToScene({ type: 'scene', version: 1, children: [block] }, providers);
+
     expect(actual.scene).toEqual(expected.scene);
     expect(primitivesOf(actual.scene.primitives).filter(item => item.id === 'service')).toHaveLength(1);
   });
+
   it('compiles multiple definitions and connects an explicit member without generated ids', () => {
     const a = serviceDefinition();
     const otherSchema = Graph.CodeBlockPropsSchema.safeExtend({
@@ -186,6 +195,7 @@ describe('Code block root and composition semantics', () => {
         },
       },
     );
+
     expect(primitivesOf(output.scene.primitives)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'a' }),
@@ -194,6 +204,7 @@ describe('Code block root and composition semantics', () => {
       ]),
     );
   });
+
   it('passes graphDefaults to generated descendants and keeps empty composed content as one Block', () => {
     const definition = Graph.defineCodeBlock({
       namespace: 'test',
@@ -219,7 +230,9 @@ describe('Code block root and composition semantics', () => {
       },
       providers,
     );
+
     expect(JSON.stringify(output.scene)).toContain('#fedcba');
+
     const empty = Graph.defineCodeBlock({ namespace: 'test', type: 'service', schema: schema(), compose: () => [] });
     const emptyProviders = resolveCoreProviderDependencies({
       contributions: [Graph.createCodeBlockContribution(empty)],
@@ -232,6 +245,7 @@ describe('Code block root and composition semantics', () => {
       },
       emptyProviders,
     );
+
     expect(primitivesOf(emptyOutput.scene.primitives).filter(item => item.id === 'empty')).toHaveLength(1);
   });
 });

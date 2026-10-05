@@ -10,6 +10,7 @@ import { lerpColorOklch } from './oklch';
 import type { CubicBezier, EasingFn, EasingRegistry } from './types';
 
 const LINEAR: EasingFn = t => t;
+
 const NAMED_BEZIER: Record<string, CubicBezier | undefined> = {
   ease: [0.25, 0.1, 0.25, 1],
   'ease-in': [0.42, 0, 1, 1],
@@ -28,18 +29,23 @@ const cubicBezier = (x1: number, y1: number, x2: number, y2: number): EasingFn =
   const sampleX = (t: number): number => ((ax * t + bx) * t + cx) * t;
   const sampleY = (t: number): number => ((ay * t + by) * t + cy) * t;
   const sampleDX = (t: number): number => (3 * ax * t + 2 * bx) * t + cx;
+
   const solveX = (x: number): number => {
     let t = x;
+
     for (let i = 0; i < 8; i++) {
       const dx = sampleX(t) - x;
       if (Math.abs(dx) < 1e-6) return t;
+
       const d = sampleDX(t);
       if (Math.abs(d) < 1e-6) break;
       t -= dx / d;
     }
+
     let lo = 0;
     let hi = 1;
     let tt = x;
+
     for (let i = 0; i < 20; i++) {
       const xv = sampleX(tt);
       if (Math.abs(xv - x) < 1e-6) return tt;
@@ -47,8 +53,10 @@ const cubicBezier = (x1: number, y1: number, x2: number, y2: number): EasingFn =
       else hi = tt;
       tt = (lo + hi) / 2;
     }
+
     return tt;
   };
+
   return x => (x <= 0 ? 0 : x >= 1 ? 1 : sampleY(solveX(x)));
 };
 
@@ -56,11 +64,14 @@ const cubicBezier = (x1: number, y1: number, x2: number, y2: number): EasingFn =
 const resolveEasingFn = (easing: string | CubicBezier | undefined, registry: EasingRegistry | undefined): EasingFn => {
   if (easing === undefined || easing === 'linear') return LINEAR;
   if (Array.isArray(easing)) return cubicBezier(easing[0], easing[1], easing[2], easing[3]);
+
   const named = Object.hasOwn(NAMED_BEZIER, easing) ? NAMED_BEZIER[easing] : undefined;
   if (named) return cubicBezier(named[0], named[1], named[2], named[3]);
+
   const custom = registry !== undefined && Object.hasOwn(registry, easing) ? registry[easing] : undefined;
   if (Array.isArray(custom)) return cubicBezier(custom[0], custom[1], custom[2], custom[3]);
   if (typeof custom === 'function') return custom;
+
   return LINEAR;
 };
 
@@ -84,7 +95,9 @@ const interpolateValue = (
   if (Array.isArray(from) && Array.isArray(to)) {
     return from.map((a, i) => (typeof a === 'number' && typeof to[i] === 'number' ? a + (to[i] - a) * t : a));
   }
+
   if (interpolateCustom) return interpolateCustom(from, to, t);
+
   return t < 1 ? from : to;
 };
 
@@ -92,15 +105,19 @@ const interpolateValue = (
 const valueAtProgress = (track: IRAnimationTrack, p: number, options: EvaluateTrackOptions): unknown => {
   const frames = track.keyframes;
   if (p <= frames[0].at) return frames[0].value;
+
   const last = frames[frames.length - 1];
   if (p >= last.at) return last.value;
+
   let i = 0;
+
   while (i < frames.length - 1 && !(p >= frames[i].at && p <= frames[i + 1].at)) i++;
   const a = frames[i];
   const b = frames[i + 1];
   const span = b.at - a.at;
   const u = span > 0 ? (p - a.at) / span : 0;
   const eased = resolveEasingFn(a.easing ?? track.easing, options.easings)(u);
+
   return interpolateValue(a.value, b.value, eased, options.interpolateCustom);
 };
 
@@ -135,6 +152,7 @@ export const evaluateTrack = (
         finishedIter -= 1;
         finishedProgress = 1;
       }
+
       iterationIndex = finishedIter;
       progress = finishedProgress;
     } else {
@@ -151,5 +169,6 @@ export const evaluateTrack = (
     (direction === 'alternate' && iterationIndex % 2 === 1) ||
     (direction === 'alternate-reverse' && iterationIndex % 2 === 0);
   const p = reverse ? 1 - progress : progress;
+
   return { value: valueAtProgress(track, p, options) };
 };

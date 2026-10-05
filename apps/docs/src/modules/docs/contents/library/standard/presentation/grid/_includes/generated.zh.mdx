@@ -65,7 +65,7 @@ export type GridProps = GridInput;
 </p>
 
 ```ts
-export declare const GridInputEmbedAdapter: InputEmbedAdapter<GridInput>;
+export declare const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInput>;
 ```
 
 #### grid
@@ -106,7 +106,7 @@ export declare const grid: (input: GridInput) => InputEmbed<GridInput>;
 #### GridInput
 
 <p>
-  <ApiSourceLink label={'GridInput'} path={'packages/library/standard/src/presentation/grid/types.ts'} startLine={23}>
+  <ApiSourceLink label={'GridInput'} path={'packages/library/standard/src/presentation/grid/types.ts'} startLine={18}>
     创建 Grid 时允许省略固定 discriminator 的输入
   </ApiSourceLink>
 </p>
@@ -121,7 +121,7 @@ export type GridInput = Omit<IRGrid, 'namespace' | 'type'>;
   <ApiSourceLink
     label={'GridLineInput'}
     path={'packages/library/standard/src/presentation/grid/types.ts'}
-    startLine={12}
+    startLine={7}
   >
     单个 Grid 方向的线条输入配置
   </ApiSourceLink>
@@ -158,7 +158,7 @@ export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
 #### IRGrid
 
 <p>
-  <ApiSourceLink label={'IRGrid'} path={'packages/library/standard/src/presentation/grid/types.ts'} startLine={18}>
+  <ApiSourceLink label={'IRGrid'} path={'packages/library/standard/src/presentation/grid/types.ts'} startLine={13}>
     持久化的 Standard Grid composite
   </ApiSourceLink>
 </p>

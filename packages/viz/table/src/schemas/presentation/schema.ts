@@ -8,6 +8,7 @@ export const TableCellPresentationNameSchema = createOpenStringSchema(TableCellP
   'Exact registered Cell presentation provider name. Whitespace is preserved.',
 );
 
+/** 校验单元格呈现能力的注册名称与 JSON 选项 */
 export const TablePresentationRefSchema = strictObject({
   name: TableCellPresentationNameSchema,
   options: JsonObjectSchema.optional().describe('JSON options validated by the selected presentation provider.'),

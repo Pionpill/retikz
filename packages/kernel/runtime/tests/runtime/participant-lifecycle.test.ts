@@ -40,6 +40,7 @@ describe('runtime runtime participant lifecycle', () => {
         calls.push(`prepare:${candidate.phase}:${candidate.snapshot(owner).value}`);
         const previous = liveValue;
         const next = candidate.snapshot(owner).value;
+
         return Object.freeze({
           commit: () => {
             calls.push('commit');
@@ -68,7 +69,9 @@ describe('runtime runtime participant lifecycle', () => {
     const runtime = createRuntime(options);
 
     expect(calls).toEqual(['prepare:initial:7', 'commit', 'read', 'token-dispose']);
+
     const participantRead = Reflect.get(runtime, 'participant') as (token: typeof participant) => { value: number };
+
     expect(participantRead).toBeTypeOf('function');
     expect(participantRead(participant)).toEqual({ value: 7 });
     expect(participantRead(participant)).toEqual({ value: 7 });
@@ -91,6 +94,7 @@ describe('runtime runtime participant lifecycle', () => {
         const next = candidate.snapshot(owner).value;
         const previous = liveValue;
         calls.push(`prepare:${candidate.phase}:${candidate.baseRevision}->${candidate.candidateRevision}:${next}`);
+
         return Object.freeze({
           commit: () => {
             calls.push('commit');
@@ -217,6 +221,7 @@ describe('runtime runtime participant lifecycle', () => {
       prepare: candidate => {
         const previous = liveValue;
         const next = candidate.snapshot(owner).value;
+
         return Object.freeze({
           commit: () => {
             calls.push('commit');
@@ -262,6 +267,7 @@ describe('runtime runtime participant lifecycle', () => {
     const sources = createRuntimeSourceRegistry({ builtins: [owner] });
     const computations = createRuntimeComputationRegistry({ sources });
     let failSecond = false;
+
     const define = (key: string, shouldFail: boolean) => {
       let liveValue = 1;
       return defineRuntimeCommitParticipant({
@@ -273,6 +279,7 @@ describe('runtime runtime participant lifecycle', () => {
         prepare: candidate => {
           const previous = liveValue;
           const next = candidate.snapshot(owner).value;
+
           return Object.freeze({
             commit: () => {
               liveValue = next;
@@ -290,6 +297,7 @@ describe('runtime runtime participant lifecycle', () => {
         dispose: () => undefined,
       });
     };
+
     const first = define('a', false);
     const second = define('b', true);
     const runtime = createRuntime({
@@ -321,6 +329,7 @@ describe('runtime runtime participant lifecycle', () => {
     const reentryErrors: Array<RetikzRuntimeError> = [];
     const sessionRef: { current?: Runtime } = {};
     let participantRead: Readonly<{ value: number }> = Object.freeze({ value: 1 });
+
     const captureReentry = (callback: () => void): void => {
       try {
         callback();
@@ -328,6 +337,7 @@ describe('runtime runtime participant lifecycle', () => {
         reentryErrors.push(cause as RetikzRuntimeError);
       }
     };
+
     const participant = defineRuntimeCommitParticipant({
       key: 'view',
       sources: [owner],
@@ -339,11 +349,13 @@ describe('runtime runtime participant lifecycle', () => {
         const next = Object.freeze({ value: candidate.snapshot(owner).value });
         if (candidate.phase === RuntimeComputationPhase.Update)
           captureReentry(() => sessionRef.current?.snapshot(owner));
+
         return Object.freeze({
           commit: () => {
             if (candidate.phase === RuntimeComputationPhase.Update) {
               captureReentry(() => sessionRef.current?.participant(participant));
             }
+
             participantRead = next;
           },
           rollback: () => {
@@ -361,6 +373,7 @@ describe('runtime runtime participant lifecycle', () => {
             sessionRef.current?.update({ baseRevision: sessionRef.current.revision(), sources: [] }),
           );
         }
+
         return participantRead;
       },
       dispose: () => undefined,
@@ -385,6 +398,7 @@ describe('runtime runtime participant lifecycle', () => {
       RetikzRuntimeErrorCode.Reentrant,
     ]);
     expect(runtime.participant(participant)).toEqual({ value: 2 });
+
     runtime.dispose();
   });
 
@@ -395,6 +409,7 @@ describe('runtime runtime participant lifecycle', () => {
     const sessionRef: { current?: Runtime } = {};
     const reentryCodes: Array<string> = [];
     let failRead = false;
+
     const capture = (callback: () => void): void => {
       try {
         callback();
@@ -402,6 +417,7 @@ describe('runtime runtime participant lifecycle', () => {
         reentryCodes.push((cause as RetikzRuntimeError).code);
       }
     };
+
     const participant = defineRuntimeCommitParticipant({
       key: 'view',
       sources: [owner],
@@ -432,7 +448,9 @@ describe('runtime runtime participant lifecycle', () => {
     expect(() =>
       runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(owner, 2)] }),
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantReadFailed }));
+
     runtime.dispose();
+
     expect(reentryCodes).toEqual([RetikzRuntimeErrorCode.Reentrant, RetikzRuntimeErrorCode.Reentrant]);
   });
 
@@ -451,6 +469,7 @@ describe('runtime runtime participant lifecycle', () => {
       prepare: candidate => {
         const previous = live;
         const next = { values: [candidate.snapshot(owner).value] };
+
         return Object.freeze({
           commit: () => {
             live = next;
@@ -485,9 +504,11 @@ describe('runtime runtime participant lifecycle', () => {
     });
     const oldRead = runtime.participant(participant);
     const oldValues = oldRead.values;
+
     expect(Object.isFrozen(oldRead)).toBe(true);
     expect(Object.isFrozen(oldValues)).toBe(true);
     expect(() => (oldValues as Array<number>).push(2)).toThrow();
+
     failFollower = true;
 
     expect(() =>
@@ -499,6 +520,7 @@ describe('runtime runtime participant lifecycle', () => {
     expect(runtime.participant(participant).values).toBe(oldValues);
     expect(oldRead).toEqual({ values: [1] });
     expect(live).toEqual({ values: [1] });
+
     runtime.dispose();
   });
 });

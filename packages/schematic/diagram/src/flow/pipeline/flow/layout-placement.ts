@@ -19,16 +19,17 @@ import type {
   FlowLayoutPlacementInput,
   FlowLayoutPlacementOutput,
 } from '../../contract';
-import type { FlowDirectionValue, FlowLayoutAlignmentValue } from '../../shared';
+import type { FlowDirection, FlowLayoutAlignment } from '../../shared';
 
-const flexDirection = (direction: FlowDirectionValue) => {
+const flexDirection = (direction: FlowDirection) => {
   if (direction === 'right') return FlexLayoutDirection.Row;
   if (direction === 'left') return FlexLayoutDirection.RowReverse;
   if (direction === 'down') return FlexLayoutDirection.Column;
+
   return FlexLayoutDirection.ColumnReverse;
 };
 
-const flexAlignment = (alignment: FlowLayoutAlignmentValue) => {
+const flexAlignment = (alignment: FlowLayoutAlignment) => {
   if (alignment === 'start') return LayoutAlignment.Start;
   if (alignment === 'end') return LayoutAlignment.End;
   return LayoutAlignment.Center;
@@ -53,12 +54,14 @@ const isGridPlacementMatrix = (placements: GridPlacements): placements is Readon
 /** 将 Grid 的两种公开 placement 结构投影为按 child identity 查询的位置 */
 const gridCellsById = (placements: GridPlacements): ReadonlyMap<string, GridCell> => {
   if (!isGridPlacementMatrix(placements)) return new Map(Object.entries(placements));
+
   const cells = new Map<string, { row: number; column: number }>();
   placements.forEach((row, rowIndex) => {
     row.forEach((child, columnIndex) => {
       if (child !== null) cells.set(child, { row: rowIndex, column: columnIndex });
     });
   });
+
   return cells;
 };
 
@@ -72,6 +75,7 @@ const gridTrackCount = (
     if (axis === 'row') return placements.length;
     return Math.max(...placements.map(row => row.length));
   }
+
   return Math.max(...Array.from(cellsById.values(), cell => cell[axis])) + 1;
 };
 
@@ -83,6 +87,7 @@ const projectPlacementBounds = (
 ): FlowLayoutPlacementOutput => {
   const excluded = input.layout.excludeFromBounds;
   if (excluded === undefined || excluded.length === 0) return output;
+
   const findLayout = (elements: ReadonlyArray<FlowLayoutElementInput>): FlowLayoutElementInput | undefined => {
     for (const element of elements) {
       if (element.id === input.layout.id) return element;
@@ -91,13 +96,17 @@ const projectPlacementBounds = (
         if (found !== undefined) return found;
       }
     }
+
     return undefined;
   };
+
   const owner = findLayout(flow.elements)!;
   const children = owner.kind === 'leaf' ? [] : owner.elements;
   let contribution: BoundsRect | undefined;
+
   for (const element of output.elements) {
     if (excluded.includes(element.id)) continue;
+
     const child = children.find(candidate => candidate.id === element.id)!;
     const margin = child.kind === 'leaf' ? child.margin : { top: 0, right: 0, bottom: 0, left: 0 };
     const bounds = {
@@ -111,7 +120,9 @@ const projectPlacementBounds = (
         ? bounds
         : boundsToRect(mergeBounds(rectToBounds(contribution), rectToBounds(bounds))!);
   }
+
   const bounds = contribution!;
+
   return {
     bounds: { ...bounds, x: 0, y: 0 },
     elements: output.elements.map(element => ({
@@ -131,12 +142,16 @@ export const createFlowLayoutExecutionContext = (
       for (const element of elements) {
         if (element.kind === 'leaf') continue;
         if (element.id === input.layout.id) return element.allocatedWidth;
+
         const width = findWidth(element.elements);
         if (width !== undefined) return width;
       }
+
       return undefined;
     };
+
     const allocatedWidth = findWidth(flow.elements);
+
     try {
       if (input.layout.kind === 'grid') {
         const layout = input.layout;
@@ -158,6 +173,7 @@ export const createFlowLayoutExecutionContext = (
             const cell = cellsById.get(element.id)!;
             const horizontal = Math.max(element.margin.left, element.margin.right);
             const vertical = Math.max(element.margin.top, element.margin.bottom);
+
             return {
               kind: LayoutItemKind.Grid,
               key: element.id,
@@ -168,16 +184,19 @@ export const createFlowLayoutExecutionContext = (
             };
           }),
         });
+
         const children = grid.children?.map(item => context.bindChild(item.child, [])) ?? [];
         const compileContext: LayoutCompositeCompileContext = {
           ...context,
           proposal: intrinsicLayoutProposal('natural'),
           sourceChild: path => children[path[1] as number],
         };
+
         // 所有 relation 基于同一输入取最大标签尺寸，避免遍历顺序影响结果
         let rowGap = layout.gap.row;
         let columnGap = layout.gap.column;
         const ownerById = new Map<string, string>();
+
         const visit = (elements: ReadonlyArray<FlowLayoutElementInput>, owner?: string): void => {
           for (const element of elements) {
             const directOwner = cellsById.has(element.id) ? element.id : owner;
@@ -185,12 +204,16 @@ export const createFlowLayoutExecutionContext = (
             if (element.kind !== 'leaf') visit(element.elements, directOwner);
           }
         };
+
         visit(flow.elements);
+
         for (const relation of flow.relations) {
           if (!layout.reserveLabelSpace || relation.labelSize === undefined) continue;
+
           const sourceId = ownerById.get(relation.source.id);
           const targetId = ownerById.get(relation.target.id);
           if (sourceId === undefined || targetId === undefined || sourceId === targetId) continue;
+
           const sourceCell = cellsById.get(sourceId)!;
           const targetCell = cellsById.get(targetId)!;
           const columns = Math.abs(sourceCell.column - targetCell.column);
@@ -198,12 +221,15 @@ export const createFlowLayoutExecutionContext = (
           if (columns > 0) {
             columnGap = Math.max(columnGap, layout.gap.column + relation.labelSize.width);
           }
+
           if (rows > 0) {
             rowGap = Math.max(rowGap, layout.gap.row + relation.labelSize.height);
           }
         }
+
         const artifact = compileGridLayout({ ...grid, rowGap, columnGap }, compileContext).artifact;
         if (artifact === undefined) return placementFailure(input, 'GridLayout returned no placement artifact.');
+
         return projectPlacementBounds(
           input,
           {
@@ -213,6 +239,7 @@ export const createFlowLayoutExecutionContext = (
           flow,
         );
       }
+
       const flex = createFlexLayout({
         ...(allocatedWidth === undefined ? {} : { size: { x: { kind: 'fixed' as const, value: allocatedWidth } } }),
         direction: flexDirection(input.layout.direction),
@@ -232,6 +259,7 @@ export const createFlowLayoutExecutionContext = (
         sourceChild: path => children[path[1] as number],
       }).artifact;
       if (artifact === undefined) return placementFailure(input, 'FlexLayout returned no placement artifact.');
+
       return projectPlacementBounds(
         input,
         {

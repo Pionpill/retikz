@@ -103,6 +103,7 @@ describe('IR numeric constraints', () => {
           { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle },
         ],
       }).success;
+
     expect(bendPath(180)).toBe(false);
     expect(bendPath(-180)).toBe(false);
     expect(bendPath(179)).toBe(true);

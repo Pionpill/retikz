@@ -12,6 +12,7 @@ describe('PaintSchema — linear gradient', () => {
         { offset: 1, color: '#08f' },
       ],
     };
+
     expect(PaintSchema.parse(spec)).toEqual(spec);
   });
 
@@ -156,6 +157,7 @@ describe('PaintSchema — pattern', () => {
       rotation: 45,
     };
     const parsed = PaintSchema.parse(input);
+
     expect(parsed).toEqual(input);
     expect(PaintSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
@@ -187,6 +189,7 @@ describe('PaintSchema — pattern', () => {
     };
 
     const parsed = PaintSchema.parse(input);
+
     expect(parsed).toEqual(input);
     expect(PaintSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
@@ -200,6 +203,7 @@ describe('PaintSchema — pattern', () => {
     const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues.some(issue => issue.path[0] === 'lineStyleCycle' && issue.path[1] === 'period')).toBe(
         true,
@@ -215,6 +219,7 @@ describe('PaintSchema — pattern', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(
         result.error.issues.some(issue => issue.path[0] === 'lineStyleCycle' && issue.path[1] === 'overrides'),
@@ -239,6 +244,7 @@ describe('PaintSchema — pattern', () => {
     const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(
         result.error.issues.some(
@@ -272,6 +278,7 @@ describe('PaintSchema — pattern', () => {
   it('shape 开放：接受任意非空 string（未注册名拒绝移到 compile 期）', () => {
     expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'zigzag' })).not.toThrow();
     expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'my-custom-motif' })).not.toThrow();
+
     // 内置 3 字面量仍合法
     for (const shape of ['lines', 'dots', 'grid'] as const) {
       expect(() => PaintSchema.parse({ kind: 'pattern', shape })).not.toThrow();
@@ -297,6 +304,7 @@ describe('PaintSchema — pattern', () => {
 describe('PaintSchema — image', () => {
   it('接受 href + 可选 fit', () => {
     expect(() => PaintSchema.parse({ kind: 'image', href: 'https://x/y.png' })).not.toThrow();
+
     for (const fit of ['fill', 'contain', 'cover'] as const) {
       expect(() => PaintSchema.parse({ kind: 'image', href: 'a.png', fit })).not.toThrow();
     }
@@ -320,6 +328,7 @@ describe('PaintSchema — JSON 可序列化', () => {
       ],
     };
     const parsed = PaintSchema.parse(spec);
+
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 });
@@ -343,6 +352,7 @@ describe('stroke IRPaint schema', () => {
       ],
       style: { stroke: strokePaint },
     });
+
     expect(parsed.style?.stroke).toEqual(strokePaint);
   });
 
@@ -352,6 +362,7 @@ describe('stroke IRPaint schema', () => {
       position: [0, 0],
       style: { stroke: strokePaint },
     });
+
     expect(parsed.style?.stroke).toEqual(strokePaint);
   });
 
@@ -362,6 +373,7 @@ describe('stroke IRPaint schema', () => {
       style: { stroke: strokePaint },
     };
     const parsed = ScopeSchema.parse(JSON.parse(JSON.stringify(input)));
+
     expect(parsed).toEqual(input);
   });
 

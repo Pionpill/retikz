@@ -9,11 +9,13 @@ import type { SvgNode } from '../../../src/svg/types';
  *   {animate:false} 降级；pathDraw/自定义 property/自定义 easing 降级 warn；oklch 预采样；确定性
  */
 const layout = { x: 0, y: 0, width: 100, height: 100 };
+
 const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimationTrack>): Scene => ({
   primitives,
   layout,
   ...(animations ? { animations } : {}),
 });
+
 const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
   type: 'rect',
   x: 0,
@@ -33,6 +35,7 @@ const FADE: IRAnimationTrack = {
   duration: 400,
   trigger: 'load',
 };
+
 const GROW_UP: IRAnimationTrack = {
   property: 'scaleY',
   keyframes: [
@@ -49,11 +52,14 @@ const findTag = (nodes: Array<SvgNode | string>, tag: string): SvgNode | undefin
   for (const n of nodes) {
     if (typeof n === 'string') continue;
     if (n.tag === tag) return n;
+
     const inner = findTag(n.children ?? [], tag);
     if (inner) return inner;
   }
+
   return undefined;
 };
+
 const collectWarns = () => {
   const warnings: Array<string> = [];
   return { onAnimationWarn: (m: string) => warnings.push(m), warnings };
@@ -63,13 +69,18 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   it('load opacity track → <style> 含 @keyframes，元素挂 class + animation', () => {
     const out = buildSvgFragment(scene([rect({ animations: [FADE] })]), { idPrefix: 't' });
     const style = findTag(out, 'style');
+
     expect(style).toBeDefined();
+
     const css = String(style!.children![0]);
+
     expect(css).toContain('@keyframes');
     expect(css).toContain('opacity:0');
     expect(css).toContain('opacity:1');
     expect(css).toContain('400ms');
+
     const r = findTag(out, 'rect')!;
+
     expect(typeof r.attrs.class).toBe('string');
     expect(css).toContain(`.${r.attrs.class}`);
   });
@@ -86,6 +97,7 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     };
     const out = buildSvgFragment(scene([rect({ animations: [t] })]), { idPrefix: 't' });
     const css = String(findTag(out, 'style')!.children![0]);
+
     // 旧实现丢弃 kf.easing；现逐帧透传为 CSS timing-function
     expect(css).toContain('animation-timing-function:ease-in');
   });
@@ -93,9 +105,12 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   it('transform track（scaleY + origin bottom）→ wrapper <g> + transform-origin + @keyframes scale', () => {
     const out = buildSvgFragment(scene([rect({ animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
+
     expect(g).toBeDefined();
     expect(findTag([g], 'rect')).toBeDefined(); // rect 在 g 内
+
     const css = String(findTag(out, 'style')!.children![0]);
+
     expect(css).toContain('transform:scale(1, 0)');
     expect(css).toContain('transform:scale(1, 1)');
     expect(css).toContain('transform-origin:5px 10px'); // rect 10×10 的 bottom = (5,10)
@@ -105,12 +120,14 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   it('transform wrapper 带 id 的元素 → wrapper <g> 打 data-retikz-animation-owner（供 context.animation per-id 双查）', () => {
     const out = buildSvgFragment(scene([rect({ id: 'n', animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
+
     expect(g.attrs['data-retikz-animation-owner']).toBe('n');
   });
 
   it('无 id 的元素 transform 动画 → wrapper 不打 owner 属性', () => {
     const out = buildSvgFragment(scene([rect({ animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
+
     expect(g.attrs['data-retikz-animation-owner']).toBeUndefined();
   });
 
@@ -141,9 +158,12 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     };
     const out = buildSvgFragment(scene([{ ...path, animations: [draw, sw] }]), { idPrefix: 't' });
     const p = findTag(out, 'path')!;
+
     expect(p.attrs.pathLength).toBe(1);
     expect(p.attrs['stroke-dasharray']).toBe(1);
+
     const css = String(findTag(out, 'style')!.children![0]);
+
     expect(css).toContain('stroke-dashoffset:1'); // value 0 → offset 1
     expect(css).toContain('stroke-dashoffset:0'); // value 1 → offset 0
     expect(css).toContain('stroke-width:4');
@@ -152,9 +172,12 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   it('交互 track（visible）→ 元素带 data-retikz-anim 描述，且无 <style>（无 load 规则）', () => {
     const visible: IRAnimationTrack = { ...FADE, trigger: 'visible' };
     const out = buildSvgFragment(scene([rect({ animations: [visible] })]), { idPrefix: 't' });
+
     expect(findTag(out, 'style')).toBeUndefined();
+
     const r = findTag(out, 'rect')!;
     const desc = JSON.parse(String(r.attrs['data-retikz-anim']));
+
     expect(Array.isArray(desc)).toBe(true);
     expect(desc[0].property).toBe('opacity');
     expect(desc[0].trigger).toBe('visible');
@@ -172,8 +195,11 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     };
     const out = buildSvgFragment(scene([rect()], [camera]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
+
     expect(g).toBeDefined();
+
     const css = String(findTag(out, 'style')!.children![0]);
+
     expect(css).toContain('translate(');
     expect(css).toContain('scale(2, 2)'); // 100/50 = 2
   });
@@ -204,6 +230,7 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
   it('opacity 线性 at=200/400 → rect.opacity=0.5，且无 <style> / 无 data-retikz-anim', () => {
     const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE] })]), { idPrefix: 't', snapshotAt: 200 });
     const r = findTag(out, 'rect')!;
+
     expect(r.attrs.opacity).toBe(0.5);
     expect(findTag(out, 'style')).toBeUndefined();
     expect(JSON.stringify(out)).not.toContain('data-retikz-anim');
@@ -211,12 +238,14 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
 
   it('at ≥ duration → settled（opacity = base 1）', () => {
     const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE] })]), { idPrefix: 't', snapshotAt: 999 });
+
     expect(findTag(out, 'rect')!.attrs.opacity).toBe(1);
   });
 
   it('transform 通道（scaleY 线性 + origin bottom）at=200 → wrapper <g> 静态 transform + transform-origin', () => {
     const out = buildSvgFragment(scene([rect({ animations: [LINEAR_GROW] })]), { idPrefix: 't', snapshotAt: 200 });
     const g = findTag(out, 'g')!;
+
     expect(g.style?.transform).toBe('scale(1, 0.5)');
     expect(g.style?.['transform-origin']).toBe('5px 10px'); // rect 10×10 bottom = (5,10)
     expect(findTag([g], 'rect')).toBeDefined();
@@ -242,6 +271,7 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     };
     const out = buildSvgFragment(scene([{ ...path, animations: [draw] }]), { idPrefix: 't', snapshotAt: 200 });
     const p = findTag(out, 'path')!;
+
     expect(p.attrs.pathLength).toBe(1);
     expect(p.attrs['stroke-dasharray']).toBe(1);
     expect(p.attrs['stroke-dashoffset']).toBe(0.5);
@@ -259,6 +289,7 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     };
     const out = buildSvgFragment(scene([rect()], [camera]), { idPrefix: 't', snapshotAt: 200 });
     const g = findTag(out, 'g')!;
+
     expect(typeof g.style?.transform).toBe('string');
     expect(g.style?.transform).toContain('scale(');
   });
@@ -267,6 +298,7 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     const manualFade: IRAnimationTrack = { ...LINEAR_FADE, trigger: 'manual' };
     const out = buildSvgFragment(scene([rect({ animations: [manualFade] })]), { idPrefix: 't', snapshotAt: 200 });
     const r = findTag(out, 'rect')!;
+
     expect(r.attrs.opacity).toBeUndefined(); // 未烘焙到中间值 0.5，保持 base
   });
 
@@ -277,9 +309,12 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
       snapshotAt: 200,
     });
     const r = findTag(out, 'rect')!;
+
     expect(r.attrs.opacity).toBe(0.5); // load fade 被烘焙
+
     // manual scaleX 不应产生 transform 包裹 <g>
     const g = findTag(out, 'g');
+
     expect(g === undefined || g.style?.transform === undefined).toBe(true);
   });
 });
@@ -291,6 +326,7 @@ describe('边界', () => {
       animate: false,
     });
     const plain = renderToSvgString(scene([rect()]), { idPrefix: 't' });
+
     expect(animated).toBe(plain);
     expect(animated).not.toContain('<style');
     expect(animated).not.toContain('data-retikz-anim');
@@ -298,6 +334,7 @@ describe('边界', () => {
 
   it('省略 animations → 与现状等价（无 class / style）', () => {
     const out = buildSvgFragment(scene([rect()]), { idPrefix: 't' });
+
     expect(findTag(out, 'style')).toBeUndefined();
     expect(findTag(out, 'rect')!.attrs.class).toBeUndefined();
   });
@@ -314,6 +351,7 @@ describe('边界', () => {
     };
     const out = buildSvgFragment(scene([rect({ stroke: '#000', animations: [FADE, interactive] })]), { idPrefix: 't' });
     const r = findTag(out, 'rect')!;
+
     expect(typeof r.attrs.class).toBe('string');
     expect(typeof r.attrs['data-retikz-anim']).toBe('string');
   });
@@ -334,6 +372,7 @@ describe('错误 / 降级', () => {
       scene([{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', animations: [draw] }]),
       { idPrefix: 't', ...w },
     );
+
     expect(w.warnings.some(m => m.includes('pathDraw'))).toBe(true);
     expect(findTag(out, 'style')).toBeUndefined();
   });
@@ -349,6 +388,7 @@ describe('错误 / 降级', () => {
       duration: 300,
     };
     const out = buildSvgFragment(scene([rect({ animations: [blur] })]), { idPrefix: 't', ...w });
+
     expect(w.warnings.some(m => m.includes('blur'))).toBe(true);
     expect(findTag(out, 'style')).toBeUndefined();
   });
@@ -357,6 +397,7 @@ describe('错误 / 降级', () => {
     const w = collectWarns();
     const track: IRAnimationTrack = { ...FADE, easing: 'spring' };
     const out = buildSvgFragment(scene([rect({ animations: [track] })]), { idPrefix: 't', ...w });
+
     expect(w.warnings.some(m => m.includes('spring'))).toBe(true);
     expect(String(findTag(out, 'style')!.children![0])).toContain('linear');
   });
@@ -385,6 +426,7 @@ describe('交互', () => {
       findTag(buildSvgFragment(scene([rect({ animations: [color] })]), { idPrefix: 't' }), 'style')!.children![0],
     );
     const blocks = css.match(/%\{/g) ?? [];
+
     expect(blocks.length).toBeGreaterThan(2); // 预采样 → 多于两端点
     expect(css).toContain('0%{fill:#ff0000'); // 起点原色
     expect(css).toContain('fill:#0000ff'); // 终点（采样末值 = 蓝）
@@ -393,6 +435,7 @@ describe('交互', () => {
   it('id + animations 共存（data-retikz-id 与 class 不冲突）', () => {
     const out = buildSvgFragment(scene([rect({ id: 'a', animations: [FADE] })]), { idPrefix: 't' });
     const r = findTag(out, 'rect')!;
+
     expect(r.attrs['data-retikz-id']).toBe('a');
     expect(typeof r.attrs.class).toBe('string');
   });
@@ -404,6 +447,7 @@ describe('交互', () => {
     const r = findTag(out, 'rect')!;
     const className = String(r.attrs.class);
     const keyframeName = css.match(/@keyframes ([^{]+)/)?.[1];
+
     expect(className).toMatch(/^[A-Za-z_][A-Za-z0-9_-]*$/);
     expect(keyframeName).toMatch(/^[A-Za-z_][A-Za-z0-9_-]*$/);
     expect(css).toContain(`.${className}{`);
@@ -424,6 +468,7 @@ describe('交互', () => {
         },
       ],
     );
+
     expect(renderToSvgString(s, { idPrefix: 't' })).toBe(renderToSvgString(s, { idPrefix: 't' }));
   });
 });

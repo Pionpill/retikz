@@ -41,6 +41,7 @@ const artifactElements = (
         },
       });
     }
+
     if (element.type !== 'entity') {
       return {
         id: element.id,
@@ -49,6 +50,7 @@ const artifactElements = (
         elements: artifactElements(element.elements, boundsById, drawingOffset),
       };
     }
+
     return { id: element.id, kind: element.type, bounds: translateBounds(bounds, drawingOffset) };
   });
 
@@ -84,6 +86,7 @@ const artifactRelations = (
                 points: [translatePoint(routing.points[0]), translatePoint(routing.points[1])] as [Position, Position],
               }
             : { ...routing, points: routing.points.map(translatePoint) };
+
     return {
       source: geometry.source,
       target: geometry.target,
@@ -103,6 +106,7 @@ export const createFlowSpatialHandles = (
   const handles: Array<SpatialHandleDeclaration> = [
     { id: 'frame', role: 'frame', bounds: frameBounds, payload: { kind: 'frame' } },
   ];
+
   for (const regionKind of ['title', 'description', 'drawing', 'legend'] as const) {
     const region = regions[regionKind];
     if (region !== undefined) {
@@ -114,6 +118,7 @@ export const createFlowSpatialHandles = (
       });
     }
   }
+
   const appendElements = (values: ReadonlyArray<FlowElementArtifact>): void => {
     for (const element of values) {
       const isScope = element.kind !== 'entity';
@@ -129,7 +134,9 @@ export const createFlowSpatialHandles = (
       if (isScope) appendElements(element.elements);
     }
   };
+
   appendElements(elements);
+
   return handles;
 };
 

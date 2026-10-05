@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const stripDistributionI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '极坐标中的角度散布', subtitle: '120 条大麦观测；相同角度范围在外圈对应更长弧线' },

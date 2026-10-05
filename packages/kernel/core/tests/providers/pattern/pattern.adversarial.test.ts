@@ -63,20 +63,25 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
   it('size_infinity → 抛 invalid size', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: Infinity })).toThrow(/invalid size/i);
   });
+
   it('size_nan → 抛 invalid size', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: NaN })).toThrow(/invalid size/i);
   });
+
   it('linewidth_infinity → 抛 invalid lineWidth', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', lineWidth: Infinity })).toThrow(
       /invalid lineWidth/i,
     );
   });
+
   it('dots_linewidth_infinity → 抛 invalid lineWidth', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'dots', lineWidth: Infinity })).toThrow(/invalid lineWidth/i);
   });
+
   it('rotation_nan → 抛 non-finite rotation', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: NaN })).toThrow(/non-finite rotation/i);
   });
+
   it('rotation_infinity → 抛 non-finite rotation', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: Infinity })).toThrow(
       /non-finite rotation/i,
@@ -177,8 +182,10 @@ describe('ADV — JSON round-trip', () => {
   it('infinity_size_rejected_before_scene：Infinity size 不进 Scene（编译期抛）', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: Infinity })).toThrow();
   });
+
   it('clean_pattern_scene_roundtrip：合法 pattern Scene round-trip 等价 + 全 finite', () => {
     const scene = compileToScene(patternNodeIR({ kind: 'pattern', shape: 'dots', size: 10 })).scene;
+
     expect(JSON.parse(JSON.stringify(scene))).toEqual(scene);
     expect(JSON.stringify(scene)).not.toMatch(/:null/);
   });
@@ -193,6 +200,7 @@ describe('ADV — 极端 / 非正 size', () => {
       name: 'overflowPattern',
       emit: ({ size }): Array<MarkerPrimitive> => [{ type: 'rect', x: 0, y: 0, width: size * 1e10, height: size }],
     };
+
     expect(() =>
       compilePattern(
         { kind: 'pattern', shape: 'huge', size: 1e308 },
@@ -202,9 +210,11 @@ describe('ADV — 极端 / 非正 size', () => {
       ),
     ).toThrow(/non-finite number/i);
   });
+
   it('size_negative：size=-8 → 抛 invalid size（compile 是 positive 的唯一关口）', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: -8 })).toThrow(/invalid size/i);
   });
+
   it('size_zero：size=0 → 抛 invalid size', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: 0 })).toThrow(/invalid size/i);
   });
@@ -236,6 +246,7 @@ describe('ADV — emit 产物栅栏', () => {
       name: 'nanPattern',
       emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: NaN, cy: 0, rx: 0 / 0, ry: 1, fill: 'red' }],
     };
+
     expect(() =>
       compilePattern({ kind: 'pattern', shape: 'nanmotif' }, { patterns: [{ ...nanPattern, name: 'nanmotif' }] }),
     ).toThrow(/non-finite number/i);
@@ -244,11 +255,13 @@ describe('ADV — emit 产物栅栏', () => {
   it('motif_returns_non_iterable：emit 返回 undefined → 清晰错（含 pattern 名）', () => {
     const badPattern = { emit: () => undefined } as unknown as PatternDefinition;
     let err: unknown;
+
     try {
       compilePattern({ kind: 'pattern', shape: 'noniter' }, { patterns: [{ ...badPattern, name: 'noniter' }] });
     } catch (e) {
       err = e;
     }
+
     expect(err).toBeInstanceOf(Error);
     expect(String((err as Error).message)).toMatch(/noniter|pattern/i);
   });
@@ -256,11 +269,13 @@ describe('ADV — emit 产物栅栏', () => {
   it('motif_returns_null：emit 返回 null → 清晰错（含 pattern 名）', () => {
     const badPattern = { emit: () => null } as unknown as PatternDefinition;
     let err: unknown;
+
     try {
       compilePattern({ kind: 'pattern', shape: 'nullret' }, { patterns: [{ ...badPattern, name: 'nullret' }] });
     } catch (e) {
       err = e;
     }
+
     expect(err).toBeInstanceOf(Error);
     expect(String((err as Error).message)).toMatch(/nullret|pattern/i);
   });
@@ -269,6 +284,7 @@ describe('ADV — emit 产物栅栏', () => {
     const fnPattern = {
       emit: () => [{ type: 'rect', x: 0, y: 0, width: 4, height: 4, fill: 'red', onClick: () => 1 }],
     } as unknown as PatternDefinition;
+
     expect(() =>
       compilePattern({ kind: 'pattern', shape: 'fn' }, { patterns: [{ ...fnPattern, name: 'fn' }] }),
     ).toThrow(/function/i);
@@ -315,6 +331,7 @@ describe('ADV — emit 产物栅栏', () => {
   it('empty_motif：emit 返回 [] → 空 tile，不崩', () => {
     const emptyPattern: PatternDefinition = { name: 'empty', emit: (): Array<MarkerPrimitive> => [] };
     const tile = tileOf({ kind: 'pattern', shape: 'empty' }, { patterns: [{ ...emptyPattern, name: 'empty' }] });
+
     expect(tile?.motif).toEqual([]);
     expect(tile?.size).toBeGreaterThan(0);
   });
@@ -327,11 +344,13 @@ describe('ADV — emit 产物栅栏', () => {
       },
     };
     let err: unknown;
+
     try {
       compilePattern({ kind: 'pattern', shape: 'boom' }, { patterns: [{ ...throwPattern, name: 'boom' }] });
     } catch (e) {
       err = e;
     }
+
     expect(err).toBeInstanceOf(Error);
     expect(String((err as Error).message)).toMatch(/boom/);
   });
@@ -344,6 +363,7 @@ describe('ADV — 未注册名错误质量', () => {
   it('whitespace_name：shape=" lines "（带空格）→ 未注册 throw + 可用名清单', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: ' lines ' })).toThrow(/dots, grid, lines/);
   });
+
   it('case_mismatch：shape="Lines"（大写）→ 未注册 throw，可用名含 lines', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'Lines' })).toThrow(/available:.*lines/);
   });
@@ -360,6 +380,7 @@ describe('ADV — dedup / override / 交叉', () => {
     const pats = (scene.resources ?? []).filter(
       (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
+
     expect(pats).toHaveLength(2);
     expect(pats.map(p => p.tile?.size).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([6, 10]);
   });
@@ -379,6 +400,7 @@ describe('ADV — dedup / override / 交叉', () => {
         },
       ],
     };
+
     expect(() =>
       tileOf({ kind: 'pattern', shape: 'lines' }, { patterns: [{ ...customLines, name: 'lines' }] }),
     ).toThrow(/duplicate pattern shape registration: "lines"/);
@@ -423,11 +445,14 @@ describe('ADV — dedup / override / 交叉', () => {
     };
     const scene = compileToScene(ir).scene;
     const ids = (scene.resources ?? []).map(r => r.id);
+
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(3);
+
     const withTile = (scene.resources ?? []).filter(
       (r): r is PaintResource => r.kind === 'paint' && r.tile !== undefined,
     );
+
     expect(withTile).toHaveLength(1);
     expect(withTile[0].spec.kind).toBe('pattern');
   });
@@ -450,6 +475,7 @@ describe('ADV — dedup / override / 交叉', () => {
       ],
     } as unknown as IRScene;
     const tile = firstPatternResource(compileToScene(ir).scene.resources)?.tile;
+
     expect(tile?.motif.some(m => m.type === 'ellipse')).toBe(true);
   });
 });
@@ -460,6 +486,7 @@ describe('ADV — dedup / override / 交叉', () => {
 describe('ADV — duplicate registration / background', () => {
   it('duplicate_builtin_name_rejected_even_if_unused：注册同名内置但场景未用 → 仍失败', () => {
     const customLines: PatternDefinition = { name: 'lines', emit: (): Array<MarkerPrimitive> => [] };
+
     expect(
       () =>
         compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' }), {
@@ -470,6 +497,7 @@ describe('ADV — duplicate registration / background', () => {
 
   it('background_arbitrary_string：background 任意串 → 原样进 tile（CSS 串透传）', () => {
     const tile = tileOf({ kind: 'pattern', shape: 'lines', background: 'not-a-color;}<x>' });
+
     expect(tile?.background).toBe('not-a-color;}<x>');
   });
 });

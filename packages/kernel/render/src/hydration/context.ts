@@ -36,7 +36,16 @@ export type HydrationAnimationControls = {
 /** 语义元素聚合几何（scene user units） */
 export type HydrationGeometry = {
   /** 同 id 全部图元的并集轴对齐包围盒 */
-  bbox: { x: number; y: number; width: number; height: number };
+  bbox: {
+    /** 聚合包围盒左边界的场景横坐标 */
+    x: number;
+    /** 聚合包围盒上边界的场景纵坐标 */
+    y: number;
+    /** 聚合包围盒宽度，采用场景单位 */
+    width: number;
+    /** 聚合包围盒高度，采用场景单位 */
+    height: number;
+  };
   /** 并集 bbox 中心 */
   center: [number, number];
 };
@@ -58,7 +67,12 @@ export type HydrationContext = {
   /** figure 根（svg root 或 canvas） */
   root: Element;
   /** 指针在 scene user units 的坐标（逆 meet-fit）；非指针事件 → null */
-  point: { x: number; y: number } | null;
+  point: {
+    /** 指针逆映射到场景后的横坐标 */
+    x: number;
+    /** 指针逆映射到场景后的纵坐标 */
+    y: number;
+  } | null;
   /** 语义元素聚合几何（scene user units）：同 id 全部图元的并集 bbox + 中心；无 scene 时 undefined */
   geometry?: HydrationGeometry;
   /** 动画控制（缺省作用于命中元素；传 id 控别的元素）；无 runtime / scene 时各方法为 no-op */
@@ -91,8 +105,10 @@ export const metaOf = (scene: Scene, id: string): JsonObject | undefined => {
         if (found !== undefined) return found;
       }
     }
+
     return undefined;
   };
+
   return walk(scene.primitives);
 };
 
@@ -103,6 +119,7 @@ const transformsToMatrix = (
   transforms: ReadonlyArray<{ kind: string; x?: number; y?: number; degrees?: number; cx?: number; cy?: number }>,
 ): AffineMatrix => {
   let m = AFFINE_IDENTITY;
+
   for (const t of transforms) {
     if (t.kind === 'translate') {
       m = multiplyAffine(m, [1, 0, 0, 1, t.x ?? 0, t.y ?? 0]);
@@ -119,6 +136,7 @@ const transformsToMatrix = (
       m = multiplyAffine(m, [1, 0, 0, 1, -cx, -cy]);
     }
   }
+
   return m;
 };
 
@@ -131,9 +149,11 @@ const includePoints = (
   points: Array<[number, number]>,
 ): BBox | undefined => {
   let out = bbox;
+
   for (const [px, py] of points) {
     const [x, y] = applyAffine(matrix, [px, py]);
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+
     out = out
       ? {
           minX: Math.min(out.minX, x),
@@ -143,6 +163,7 @@ const includePoints = (
         }
       : { minX: x, minY: y, maxX: x, maxY: y };
   }
+
   return out;
 };
 
@@ -163,11 +184,14 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
         [prim.cx + prim.rx, prim.cy + prim.ry],
         [prim.cx - prim.rx, prim.cy + prim.ry],
       ];
+
       // 旋转椭圆：角点绕中心旋转后并集 bbox 才不偏小（与 hitTest 端的 rotate 处理一致）
       if (!prim.rotate) return corners;
+
       const rad = prim.rotate * DEG_TO_RAD;
       const cos = Math.cos(rad);
       const sin = Math.sin(rad);
+
       return corners.map(([x, y]): [number, number] => {
         const dx = x - prim.cx;
         const dy = y - prim.cy;
@@ -187,6 +211,7 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
           : prim.baseline === 'middle'
             ? prim.y - prim.measuredHeight / 2
             : prim.y - prim.measuredHeight;
+
       return [
         [left, top],
         [left + prim.measuredWidth, top],
@@ -210,9 +235,12 @@ const accumulateSubtree = (prim: ScenePrimitive, matrix: AffineMatrix, bbox: BBo
         ? multiplyAffine(matrix, transformsToMatrix(prim.transforms))
         : matrix;
     let out = bbox;
+
     for (const child of prim.children) out = accumulateSubtree(child, childMatrix, out);
+
     return out;
   }
+
   return includePoints(bbox, matrix, leafCorners(prim));
 };
 
@@ -224,6 +252,7 @@ const accumulateSubtree = (prim: ScenePrimitive, matrix: AffineMatrix, bbox: BBo
  */
 export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefined => {
   let bbox: BBox | undefined;
+
   const walk = (prims: ReadonlyArray<ScenePrimitive>, matrix: AffineMatrix): void => {
     for (const prim of prims) {
       if (prim.id === id) bbox = accumulateSubtree(prim, matrix, bbox);
@@ -236,10 +265,13 @@ export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefi
       }
     }
   };
+
   walk(scene.primitives, AFFINE_IDENTITY);
   if (!bbox) return undefined;
+
   const width = bbox.maxX - bbox.minX;
   const height = bbox.maxY - bbox.minY;
+
   return {
     bbox: { x: bbox.minX, y: bbox.minY, width, height },
     center: [bbox.minX + width / 2, bbox.minY + height / 2],
@@ -253,17 +285,21 @@ const primitiveAtPath = (
 ): Readonly<{ primitive: ScenePrimitive; matrix: AffineMatrix }> | undefined => {
   let primitives = scene.primitives;
   let matrix = AFFINE_IDENTITY;
+
   for (let depth = 0; depth < path.length; depth += 1) {
     const candidate: unknown = Reflect.get(primitives, path[depth]);
     if (typeof candidate !== 'object' || candidate === null) return undefined;
+
     const primitive = candidate as ScenePrimitive;
     if (depth === path.length - 1) return Object.freeze({ primitive, matrix });
     if (primitive.type !== 'group') return undefined;
     if (primitive.transforms && primitive.transforms.length > 0) {
       matrix = multiplyAffine(matrix, transformsToMatrix(primitive.transforms));
     }
+
     primitives = primitive.children;
   }
+
   return undefined;
 };
 
@@ -273,19 +309,24 @@ const metaAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>):
     const meta = primitiveAtPath(scene, path)?.primitive.meta;
     if (meta !== undefined) return meta;
   }
+
   return undefined;
 };
 
 /** 按 topology 选定的 occurrence paths 聚合语义 owner 几何 */
 const geometryAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>): HydrationGeometry | undefined => {
   let bbox: BBox | undefined;
+
   for (const path of paths) {
     const located = primitiveAtPath(scene, path);
     if (located !== undefined) bbox = accumulateSubtree(located.primitive, located.matrix, bbox);
   }
+
   if (bbox === undefined) return undefined;
+
   const width = bbox.maxX - bbox.minX;
   const height = bbox.maxY - bbox.minY;
+
   return {
     bbox: { x: bbox.minX, y: bbox.minY, width, height },
     center: [bbox.minX + width / 2, bbox.minY + height / 2],
@@ -313,14 +354,17 @@ export const createSvgAnimationControls = (
     const elements = new Set<Element>(
       root.querySelectorAll(`[data-retikz-id="${escaped}"],[data-retikz-animation-owner="${escaped}"]`),
     );
+
     for (const element of resolveAdditionalElements?.(id) ?? []) elements.add(element);
     const out: Array<Animation> = [];
     elements.forEach(element => {
       const getAnimations = (element as Element & { getAnimations?: () => Array<Animation> }).getAnimations;
       if (typeof getAnimations === 'function') out.push(...getAnimations.call(element));
     });
+
     return out;
   };
+
   const forEach = (id: string | undefined, fn: (animation: Animation) => void): void => {
     for (const animation of animationsFor(id ?? defaultId)) {
       try {
@@ -330,6 +374,7 @@ export const createSvgAnimationControls = (
       }
     }
   };
+
   return {
     play: id => forEach(id, animation => animation.play()),
     pause: id => forEach(id, animation => animation.pause()),
@@ -361,6 +406,7 @@ const SETTLED_SEEK_MS = Number.MAX_SAFE_INTEGER;
  */
 export const createClockAnimationControls = (clock: ClockHandle): HydrationAnimationControls => {
   if (!clock) return noopAnimationControls;
+
   return {
     play: () => clock.play(),
     pause: () => clock.pause(),
@@ -400,10 +446,12 @@ export type CanvasIdControlsDeps = {
  */
 export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): HydrationAnimationControls => {
   const { registry, clockTime, ensurePlaying, renderFrame, defaultId, resolveIds } = deps;
+
   const targets = (id: string | undefined): ReadonlyArray<string> => {
     if (id === undefined) return resolveIds?.(defaultId) ?? [defaultId];
     return resolveIds === undefined ? [id] : (resolveIds(id) ?? []);
   };
+
   return {
     play: id => {
       for (const target of targets(id)) registry.play(target, clockTime());
@@ -441,11 +489,14 @@ export const resolvePointViaLayout =
   (event: Event): { x: number; y: number } | null => {
     const mouse = event as MouseEvent;
     if (typeof mouse.clientX !== 'number') return null;
+
     const rect = root.getBoundingClientRect();
     const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
     if (!Number.isFinite(scale) || scale <= 0) return null;
+
     const offsetX = (rect.width - layout.width * scale) / 2;
     const offsetY = (rect.height - layout.height * scale) / 2;
+
     return {
       x: (mouse.clientX - rect.left - offsetX) / scale + layout.x,
       y: (mouse.clientY - rect.top - offsetY) / scale + layout.y,
@@ -462,14 +513,18 @@ export const resolveSvgPointViaCtm =
   (event: Event): { x: number; y: number } | null => {
     const mouse = event as MouseEvent;
     if (typeof mouse.clientX !== 'number') return null;
+
     const svg = root as Element & { getScreenCTM?: () => DOMMatrix | null; createSVGPoint?: () => DOMPoint };
     if (typeof svg.getScreenCTM !== 'function' || typeof svg.createSVGPoint !== 'function') return null;
+
     const ctm = svg.getScreenCTM();
     if (!ctm) return null;
+
     const point = svg.createSVGPoint();
     point.x = mouse.clientX;
     point.y = mouse.clientY;
     const local = point.matrixTransform(ctm.inverse());
+
     return { x: local.x, y: local.y };
   };
 
@@ -511,6 +566,7 @@ export const createContextBuilder = (sources: ContextSources): BuildContext => {
   return (event, id) => {
     const currentScene = typeof scene === 'function' ? scene() : scene;
     const primitivePaths = resolvePrimitivePaths?.(id);
+
     return {
       id,
       meta: currentScene

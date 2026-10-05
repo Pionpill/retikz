@@ -25,6 +25,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([10, 0]),
@@ -63,6 +64,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
+
     expect(compileToScene(irWith).scene.layout).toEqual(compileToScene(irWithout).scene.layout);
   });
 
@@ -86,6 +88,7 @@ describe("compile path: 'cycle' 闭合", () => {
       ],
     };
     const commands = findPathPrim(compileToScene(ir).scene.primitives).commands;
+
     // 三段独立：A→B、B→C、C→A，每段都 M 开头；不出现 close
     expect(commands.some(c => c.kind === 'close')).toBe(false);
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(3);
@@ -107,6 +110,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([10, 0]),
       arc([0, 0], 10, 0, 90),
@@ -131,6 +135,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([20, 0]),
@@ -166,6 +171,7 @@ describe("compile path: 'cycle' 闭合", () => {
     expect(fragments.length).toBeGreaterThanOrEqual(2);
     expect(fragments.flatMap(fragment => fragment.commands).some(command => command.kind === 'close')).toBe(false);
     expect(fragments.filter(fragment => fragment.arrowEnd !== undefined)).toHaveLength(1);
+
     const arrowEndFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
     const arrowEndCommand = [...(arrowEndFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');
 

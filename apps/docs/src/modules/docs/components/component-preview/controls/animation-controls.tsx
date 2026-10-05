@@ -38,6 +38,7 @@ export const buildAnimationControlSlots = (): Array<PreviewControlSlot> => [
                 runtime.setActive(ANIMATION_PAUSED_CONTROL_ID, false);
                 return;
               }
+
               animations.forEach(animation => animation.pause());
               runtime.setActive(ANIMATION_PAUSED_CONTROL_ID, true);
             }}

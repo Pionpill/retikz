@@ -23,10 +23,15 @@ import { RangedDotChartSchema } from './schema';
 export const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
 
 const markPropertySlots = ['point', 'startPoint', 'endPoint', 'range'] as const;
+
 const propertySlots = [...markPropertySlots, 'domainPadding', 'autoPadding'] as const;
+
 const xScaleName = pointRecipeId(ChartType.RangedDot, 'scale.x');
+
 const yScaleName = pointRecipeId(ChartType.RangedDot, 'scale.y');
+
 const colorScaleName = pointRecipeId(ChartType.RangedDot, 'scale.color');
+
 const [xConsumer, yConsumer] = pointPositionFieldConsumersOf(ChartType.RangedDot);
 
 type RangedDotEncodingSlot = (typeof RangedDotChartEncodingSlots)[number];
@@ -59,9 +64,12 @@ const fieldConsumers: ReadonlyArray<ChartEncodingFieldConsumer<RangedDotEncoding
 
 const withColorFallback = (encodings: JsonObject): JsonObject => {
   if (!Object.hasOwn(encodings, 'color')) return encodings;
+
   const value = encodings.color;
   if (typeof value === 'string') return { ...encodings, color: { field: value, scale: colorScaleName } };
+
   const mapping = value as JsonObject;
+
   return typeof mapping.scale === 'string' ? encodings : { ...encodings, color: { ...mapping, scale: colorScaleName } };
 };
 
@@ -85,6 +93,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
       column: context.encodings.column,
       facet: context.encodings.facet,
     });
+
     return { ...resolution, encodings, ...(spatial === undefined ? {} : { spatial }) };
   },
   resolve: (context: ChartRecipeResolveContext) => {
@@ -100,6 +109,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
       ...pointAxisGuidesOf(),
       ...(hasColor ? [{ type: PlotGuide.Legend, channel: 'color' } as const] : []),
     ];
+
     return {
       scaffold: {
         scales,

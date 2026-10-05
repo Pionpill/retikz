@@ -16,11 +16,13 @@ import { FlowRoutingKind } from '../../shared';
 import { FlowEndpointTargetSchema } from '../flow';
 import { FlowOrthogonalRoutingSchema } from '../flow';
 
+/** 校验 Flow 框架或区域的分配边界与保守可视边界 */
 export const FlowArtifactBoundsSchema = strictObject({
   allocationBounds: LayoutArtifactRectSchema.describe('Final allocation rectangle in Flow-local coordinates.'),
   visualBounds: LayoutArtifactRectSchema.describe('Conservative visual rectangle in Flow-local coordinates.'),
 }).describe('Allocation and visual bounds for one Flow frame or region.');
 
+/** 校验 Flow 叶节点在局部坐标中的最终布局边界 */
 export const FlowLeafArtifactSchema = strictObject({
   id: NonBlankStringSchema.describe('Authored Flow element identity.'),
   kind: literal('entity').describe('Flow Entity artifact discriminator.'),
@@ -48,6 +50,7 @@ type FlowElementArtifactSchemaOutput =
   | FlowGroupArtifactSchemaOutput
   | FlowLayoutArtifactSchemaOutput;
 
+/** 递归校验实体、可见分组及不可见布局容器的几何结果 */
 export const FlowElementArtifactSchema: ZodType<FlowElementArtifactSchemaOutput> = lazy(() =>
   union([FlowLeafArtifactSchema, FlowGroupArtifactSchema, FlowLayoutArtifactSchema]),
 );
@@ -58,11 +61,13 @@ const FlowArtifactScopeShape = {
   elements: array(FlowElementArtifactSchema).nonempty().describe('Non-empty recursive authored containment tree.'),
 };
 
+/** 校验可见 Flow 分组及其递归子元素的布局结果 */
 export const FlowGroupArtifactSchema: ZodType<FlowGroupArtifactSchemaOutput> = strictObject({
   ...FlowArtifactScopeShape,
   kind: literal('group').describe('Flow Group artifact discriminator.'),
 }).describe('Final layout geometry and authored semantics for one recursive Flow Group.');
 
+/** 校验不可见 Flow 布局容器及其递归子元素的布局结果 */
 export const FlowLayoutArtifactSchema: ZodType<FlowLayoutArtifactSchemaOutput> = strictObject({
   ...FlowArtifactScopeShape,
   kind: literal('layout').describe('Flow Layout artifact discriminator.'),
@@ -100,6 +105,7 @@ const FlowBendRouteShape = {
   points: tuple([PositionSchema, PositionSchema]).describe('Two reference endpoint centers in Flow-local coordinates.'),
 };
 
+/** 校验仅使用一组有效参数的参考路由；边界裁剪与箭头缩短由 Core 完成 */
 export const FlowRouteArtifactSchema = union([
   strictObject({
     kind: literal(FlowRoutingKind.Smooth),
@@ -125,6 +131,7 @@ export const FlowRouteArtifactSchema = union([
   'Canonical reference route with exactly one active parameter family; boundary clipping and arrow shortening remain Core responsibilities.',
 );
 
+/** 校验关系端点、Flow 局部坐标中的路由及可选标签预留区域 */
 export const FlowRelationArtifactSchema = strictObject({
   source: FlowEndpointTargetSchema.describe('Authored source Flow element identity.'),
   target: FlowEndpointTargetSchema.describe('Authored target Flow element identity.'),
@@ -132,6 +139,7 @@ export const FlowRelationArtifactSchema = strictObject({
   labelReservation: LayoutArtifactRectSchema.optional().describe('Optional reserved label rectangle.'),
 }).describe('Final renderer-neutral geometry for one authored Flow Relation.');
 
+/** 校验统一局部坐标中的 Flow 几何结果及布局来源 */
 export const FlowDiagramArtifactSchema = strictObject({
   layout: strictObject({
     definition: NonBlankStringSchema.describe('Flow Layout Definition that produced this geometry.'),

@@ -202,6 +202,7 @@ export const PACKAGE_IDS = [
   '@retikz/diagram-vanilla',
   'docs',
 ] as const;
+
 export type PackageId = (typeof PACKAGE_IDS)[number];
 
 /** 包标识 -> 展示名(多数包名两语一致,docs 例外) */
@@ -247,6 +248,7 @@ export type PackageGroup = {
   /** 该组按序包含的包标识 */
   members: ReadonlyArray<PackageId>;
 };
+
 export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
   { id: 'extension', members: ['@retikz/extension'] },
   {

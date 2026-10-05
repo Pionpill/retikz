@@ -104,6 +104,7 @@ describe('ReferenceMark playground 坐标系切换', () => {
       const controls = scenario.contract.controls;
 
       expect(controls.presentation, scenario.name).toBe('panel');
+
       if (controls.presentation !== 'panel') continue;
 
       expect(controls.sections[0].defaultCollapsed, scenario.name).toBe(true);

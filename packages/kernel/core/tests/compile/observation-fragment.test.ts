@@ -56,12 +56,14 @@ describe('Core isolated observation fragments', () => {
       }),
     };
     const result = core.observeCompileToScene(source, { composites: [prepared], compositeInputs }, [observer]);
+
     expect(JSON.stringify(result.primary.scene)).toContain('primary-secret');
     expect(fragments).toHaveLength(1);
     expect(fragments[0]).toContain('unbound');
     expect(fragments[0]).toContain('auxiliary');
     expect(fragments[0]).not.toContain('primary-secret');
   });
+
   it('inherits compile context while isolating resources, artifacts, and observers', () => {
     let selectionCalls = 0;
     const observer: CompileObserverDefinition = {
@@ -87,6 +89,7 @@ describe('Core isolated observation fragments', () => {
               },
             },
           });
+
           expect(fragment.scene.primitives).toHaveLength(1);
           expect(fragment.scene.resources).toHaveLength(1);
           expect(fragment.artifacts).toEqual([]);
@@ -106,7 +109,9 @@ describe('Core isolated observation fragments', () => {
           observerOutputs: ReadonlyArray<{ key: string; value: unknown }>;
         })
       | undefined;
+
     expect(compile).toBeTypeOf('function');
+
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
 
     const result = compile(
@@ -114,7 +119,9 @@ describe('Core isolated observation fragments', () => {
       { composites: [observableComposite], padding: 0 },
       [observer],
     );
+
     expect(result.primary.scene.resources).toBeUndefined();
+
     // 只询问主图的 Composite 与 Node，fragment 中的 Node 不再进入 observer
     expect(result.observerOutputs).toEqual([{ key: 'fragment-test', value: { selectionCalls: 2 } }]);
   });
@@ -144,8 +151,11 @@ describe('Core isolated observation fragments', () => {
           observers: ReadonlyArray<CompileObserverDefinition>,
         ) => unknown)
       | undefined;
+
     expect(compile).toBeTypeOf('function');
+
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
+
     expect(() =>
       compile(
         scene([

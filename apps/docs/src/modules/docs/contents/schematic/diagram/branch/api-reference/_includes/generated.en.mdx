@@ -4,8 +4,8 @@
 
 ### BranchDiagram / BranchDiagramProps
 
-- `BranchDiagram`: <ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={60}>Connect a BranchDiagram Source root to React authoring and the Layout host</ApiSourceLink>
-- `BranchDiagramProps`: <ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={107}>Branch JSX authoring props</ApiSourceLink>
+- `BranchDiagram`: <ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={61}>Connect a BranchDiagram Source root to React authoring and the Layout host</ApiSourceLink>
+- `BranchDiagramProps`: <ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={109}>Branch JSX authoring props</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -43,7 +43,7 @@ export type BranchDiagramProps = Omit<InputBranchDiagram, 'nodes' | 'branches'> 
 
 ### BranchNode / BranchNodeProps
 
-- `BranchNode`: <ApiSourceLink label={"BranchNode"} path={"packages/schematic/diagram-react/src/branch/BranchNode.tsx"} startLine={7}>Declare a shared node positioned by Branch layout</ApiSourceLink>
+- `BranchNode`: <ApiSourceLink label={"BranchNode"} path={"packages/schematic/diagram-react/src/branch/BranchNode.tsx"} startLine={8}>Declare a shared node positioned by Branch layout</ApiSourceLink>
 - `BranchNodeProps`: <ApiSourceLink label={"BranchNodeProps"} path={"packages/schematic/diagram-react/src/branch/BranchNode.tsx"} startLine={5}>Branch node declaration props</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -81,7 +81,7 @@ export type BranchNodeProps = InputBranchNode;
 
 ### Branch / BranchProps
 
-- `Branch`: <ApiSourceLink label={"Branch"} path={"packages/schematic/diagram-react/src/branch/Branch.tsx"} startLine={7}>Declare an ordered path inside BranchDiagram</ApiSourceLink>
+- `Branch`: <ApiSourceLink label={"Branch"} path={"packages/schematic/diagram-react/src/branch/Branch.tsx"} startLine={8}>Declare an ordered path inside BranchDiagram</ApiSourceLink>
 - `BranchProps`: <ApiSourceLink label={"BranchProps"} path={"packages/schematic/diagram-react/src/branch/Branch.tsx"} startLine={5}>Ordered node path declaration props</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -165,7 +165,7 @@ export type BranchDiagramLayoutHostProps = Pick<
 
 ### branchDiagram / BranchDiagramInputEmbedProps
 
-- `branchDiagram`: <ApiSourceLink label={"branchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={54}>Create an authoring embed for a Branch Diagram Source root</ApiSourceLink>
+- `branchDiagram`: <ApiSourceLink label={"branchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={55}>Create an authoring embed for a Branch Diagram Source root</ApiSourceLink>
 - `BranchDiagramInputEmbedProps`: <ApiSourceLink label={"BranchDiagramInputEmbedProps"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={11}>A Branch Diagram embed carries Source authoring input and definitions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -191,11 +191,11 @@ export type BranchDiagramLayoutHostProps = Pick<
 | `frame?`                        | `InputBranchDiagram['frame']`                                                            | —       | Diagram instance-level arrangement, spacing, and Surface overrides.                                                                             |
 | `readonly graphThemeStyles?`    | `ReadonlyArray<GraphThemeStyleDefinition>`                                               | `[]`    | Graph theme definitions matching the Core theme style name                                                                                      |
 | `id?`                           | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
-| `layout?`                       | `IRBranchLayoutIntent`                                                                   | —       | —                                                                                                                                               |
+| `layout?`                       | `IRBranchLayoutIntent`                                                                   | —       | Overrides for branch direction and clear gaps; layout resolution fills omitted values                                                           |
 | `localNamespace?`               | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
 | `mainBranch?`                   | `string`                                                                                 | —       | Declared branch whose nodes remain on one lane.                                                                                                 |
 | `meta?`                         | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
-| `nodes`                         | `Array<IRBranchNode>`                                                                    | —       | —                                                                                                                                               |
+| `nodes`                         | `Array<IRBranchNode>`                                                                    | —       | Shared node catalog preserving optional size and appearance fields on each node                                                                 |
 | `placement?`                    | `InputBranchDiagram['placement']`                                                        | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
 | `presentation?`                 | `InputBranchDiagram['presentation']`                                                     | —       | Diagram presentation regions outside a concrete drawing core.                                                                                   |
 | `readonly relationKinds?`       | `ReadonlyArray<RelationKindDefinition>`                                                  | `[]`    | Custom Relation kind definitions                                                                                                                |
@@ -227,7 +227,7 @@ export type BranchDiagramInputEmbedProps = InputBranchDiagram & BranchDiagramDef
 ### normalizeBranchDiagram / InputBranchDiagram
 
 - `normalizeBranchDiagram`: <ApiSourceLink label={"normalizeBranchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/normalize/normalize.ts"} startLine={6}>Assemble typed authoring input into a single Branch Source without materializing defaults</ApiSourceLink>
-- `InputBranchDiagram`: <ApiSourceLink label={"InputBranchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/normalize/types.ts"} startLine={8}>Branch Diagram authoring input without fixed discriminators</ApiSourceLink>
+- `InputBranchDiagram`: <ApiSourceLink label={"InputBranchDiagram"} path={"packages/schematic/diagram-vanilla/src/branch/normalize/types.ts"} startLine={10}>Branch Diagram authoring input without fixed discriminators</ApiSourceLink>
 
 ```ts
 export declare const normalizeBranchDiagram: (input: InputBranchDiagram) => IRBranchDiagram;
@@ -241,7 +241,7 @@ export type InputBranchDiagram = Omit<IRBranchDiagram, 'namespace' | 'type'>;
   <ApiSourceLink
     label={'InputBranch'}
     path={'packages/schematic/diagram-vanilla/src/branch/normalize/types.ts'}
-    startLine={6}
+    startLine={7}
   >
     Authoring input for an ordered Branch path
   </ApiSourceLink>
@@ -338,7 +338,7 @@ export const BranchDiagramEmbedKind = 'diagram.branch';
   <ApiSourceLink
     label={'BranchDiagramInputEmbedAdapter'}
     path={'packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts'}
-    startLine={41}
+    startLine={42}
   >
     InputEmbed adapter for a Branch Diagram Source root
   </ApiSourceLink>
@@ -431,7 +431,7 @@ export declare const createBranchDiagramVanillaAdapters: () => Array<Synchronous
   <ApiSourceLink
     label={'BranchDiagramArtifact'}
     path={'packages/schematic/diagram/src/branch/schemas/types.ts'}
-    startLine={18}
+    startLine={25}
   >
     View source
   </ApiSourceLink>
@@ -472,7 +472,7 @@ export type BranchDiagramArtifact = output<typeof BranchDiagramArtifactSchema>;
   <ApiSourceLink
     label={'BranchDiagramDefinitionOptions'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={70}
+    startLine={77}
   >
     Runtime definition options for Branch and the underlying Diagram and Graph
   </ApiSourceLink>
@@ -522,7 +522,7 @@ export type BranchDiagramDefinitionOptions = DiagramDefinitionOptions &
   <ApiSourceLink
     label={'BranchLayoutDefinition'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={60}
+    startLine={67}
   >
     Shared synchronous protocol for built-in and custom Branch layouts
   </ApiSourceLink>
@@ -654,7 +654,7 @@ export type BranchLayoutNodeInput = Readonly<{
   <ApiSourceLink
     label={'BranchLayoutNodeOutput'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={30}
+    startLine={37}
   >
     One node position in drawing-local coordinates
   </ApiSourceLink>
@@ -696,7 +696,7 @@ export type BranchLayoutNodeOutput = Readonly<{
   <ApiSourceLink
     label={'BranchLayoutOutput'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={52}
+    startLine={59}
   >
     Atomic layout result; Core performs final path clipping
   </ApiSourceLink>
@@ -736,7 +736,7 @@ export type BranchLayoutOutput = Readonly<{
   <ApiSourceLink
     label={'BranchLayoutSegmentOutput'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={40}
+    startLine={47}
   >
     Reference route for a unique directed adjacent segment
   </ApiSourceLink>
@@ -777,7 +777,7 @@ export type BranchLayoutSegmentOutput = Readonly<{
 ### IRBranch
 
 <p>
-  <ApiSourceLink label={'IRBranch'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={16}>
+  <ApiSourceLink label={'IRBranch'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={21}>
     View source
   </ApiSourceLink>
 </p>
@@ -814,9 +814,9 @@ export type IRBranch = input<typeof BranchSchema>;
   <ApiSourceLink
     label={'IRBranchDiagram'}
     path={'packages/schematic/diagram/src/branch/schemas/types.ts'}
-    startLine={11}
+    startLine={12}
   >
-    View source
+    Branch authoring input with node and layout defaults not yet materialized
   </ApiSourceLink>
 </p>
 
@@ -828,10 +828,10 @@ The remaining members are inherited from `output<typeof BranchDiagramSchema>`, w
 
 <ApiTable>
 
-| Member    | Type                   | Default | Description |
-| --------- | ---------------------- | ------- | ----------- |
-| `layout?` | `IRBranchLayoutIntent` | —       | —           |
-| `nodes`   | `Array<IRBranchNode>`  | —       | —           |
+| Member    | Type                   | Default | Description                                                                           |
+| --------- | ---------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `layout?` | `IRBranchLayoutIntent` | —       | Overrides for branch direction and clear gaps; layout resolution fills omitted values |
+| `nodes`   | `Array<IRBranchNode>`  | —       | Shared node catalog preserving optional size and appearance fields on each node       |
 
 </ApiTable>
 
@@ -856,7 +856,7 @@ export type IRBranchDiagram = Omit<output<typeof BranchDiagramSchema>, 'layout' 
   <ApiSourceLink
     label={'IRBranchLayoutIntent'}
     path={'packages/schematic/diagram/src/branch/schemas/types.ts'}
-    startLine={17}
+    startLine={23}
   >
     View source
   </ApiSourceLink>
@@ -891,7 +891,7 @@ export type IRBranchLayoutIntent = input<typeof BranchLayoutIntentSchema>;
 ### IRBranchNode
 
 <p>
-  <ApiSourceLink label={'IRBranchNode'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={15}>
+  <ApiSourceLink label={'IRBranchNode'} path={'packages/schematic/diagram/src/branch/schemas/types.ts'} startLine={19}>
     View source
   </ApiSourceLink>
 </p>
@@ -1056,7 +1056,7 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
   <ApiSourceLink
     label={'createBranchDiagramProvider'}
     path={'packages/schematic/diagram/src/branch/pipeline/provider.ts'}
-    startLine={38}
+    startLine={41}
   >
     Branch provider carrying layout and theme definitions
   </ApiSourceLink>
@@ -1093,7 +1093,7 @@ export declare const createBranchDiagramProvider: (options?: BranchDiagramDefini
   <ApiSourceLink
     label={'createBranchDiagramProviderContribution'}
     path={'packages/schematic/diagram/src/branch/pipeline/provider.ts'}
-    startLine={46}
+    startLine={49}
   >
     Complete dependency contribution for Branch, Graph, and presentation assembly
   </ApiSourceLink>
@@ -1132,7 +1132,7 @@ export declare const createBranchDiagramProviderContribution: (
   <ApiSourceLink
     label={'defineBranchLayout'}
     path={'packages/schematic/diagram/src/branch/contract/types.ts'}
-    startLine={80}
+    startLine={87}
   >
     Define a Branch layout using the same execution and validation chain as built-in layouts
   </ApiSourceLink>

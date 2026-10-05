@@ -69,7 +69,9 @@ const probeChild = (
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -85,6 +87,7 @@ const probeChild = (
     ...options,
   });
   if (observed === undefined) throw new Error('expected a resolved built-in child probe');
+
   return {
     result: observed,
     textPrimitives: flattenPrims(compiled.scene.primitives).filter(
@@ -420,6 +423,7 @@ describe('fixed built-in geometry proposal refusal', () => {
       expect(Number.isFinite(value)).toBe(true);
       expect(Object.is(value, -0)).toBe(false);
     }
+
     expect(coordinate.result.slotSize).toEqual({ width: 0, height: 0 });
     expect(empty.result.slotSize).toEqual({ width: 0, height: 0 });
     expect(empty.result.allocationBounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });
@@ -445,6 +449,7 @@ describe('fixed built-in geometry proposal refusal', () => {
     );
 
     expect(probed.result.visualBounds).toEqual({ x: 0, y: 0, width: 10, height: 10 });
+
     for (const value of Object.values(probed.result.visualBounds)) {
       expect(Object.is(value, -0)).toBe(false);
     }

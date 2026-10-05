@@ -11,7 +11,10 @@ export type SceneClipPath = {
 
 /** 可被 primitive 或 group 引用的具名 Scene 裁剪资源 */
 export type ClipResource = {
+  /** 标识场景裁剪资源 */
   kind: 'clip';
+  /** 供场景图元引用的资源标识 */
   id: string;
+  /** 后端无关的完整裁剪路径 */
   path: SceneClipPath;
 };

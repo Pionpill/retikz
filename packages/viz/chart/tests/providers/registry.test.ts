@@ -18,10 +18,12 @@ const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, un
   positionScales: {},
   removedRecipeScales: new Set<string>(),
 });
+
 const sourceSchema = createChartSourceSchema(
   'point',
   strictObject({ chartType: literal('fixture'), encodings: strictObject({ x: string(), y: string() }) }),
 );
+
 const recipe = defineChartRecipe({
   chartType: 'fixture',
   encodingSlots: ['x', 'y'],
@@ -42,6 +44,7 @@ describe('active Chart provider registry', () => {
       { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), themeDefinitions: [] },
       { family: 'point', recipe: eraseChartRecipeDefinition(RegressionChartDefinition), themeDefinitions: [] },
     ]);
+
     expect([...registry.recipes.keys()]).toEqual(['scatter', 'bubble', 'regression']);
     expect(
       registry.schema.safeParse({
@@ -117,6 +120,7 @@ describe('active Chart provider registry', () => {
 
   it('wraps invalid Definition shapes at the registry boundary', () => {
     const invalid = Object.defineProperty({ name: 'invalid' }, 'defaults', { enumerable: true, value: { recipe: {} } });
+
     expect(() => resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [invalid] }])).toThrowError(
       expect.objectContaining({ code: RetikzChartErrorCode.InvalidRegistry, cause: expect.any(ZodError) }),
     );

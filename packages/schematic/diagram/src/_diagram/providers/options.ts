@@ -3,6 +3,7 @@ import { resolveDiagramThemeStyleRegistry } from './theme';
 
 /** 一次 Diagram definition 装配共享的已解析 registries */
 export type ResolvedDiagramDefinitionOptions = Readonly<{
+  /** 按名称索引的有效 Diagram 主题样式定义 */
   diagramThemeStyles: ReadonlyMap<string, DiagramThemeStyleDefinition>;
 }>;
 

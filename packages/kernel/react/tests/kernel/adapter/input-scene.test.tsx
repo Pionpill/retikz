@@ -12,10 +12,14 @@ describe('React JSX Input 场景', () => {
   it('preserves Node aliases through JSX, Vanilla normalization and IR round-trip', () => {
     const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
     const ir = normalizeScene(input.scene).ir;
+
     expect(ir.children[0]).toMatchObject({ id: 'primary', aliasIds: ['alternate'] });
+
     const rebuilt = createInputScene(convertIRToReactNode(ir));
+
     expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
   });
+
   it('将 Kernel JSX 收集为 Vanilla Input，并由 Vanilla 解析字符串 target', () => {
     const input = createInputScene(
       <>
@@ -162,7 +166,10 @@ it('Scope 外框在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
     </Scope>,
   );
   const ir = normalizeScene(input.scene).ir;
+
   expect(ir.children[0]).toMatchObject({ frame: { padding: 12, style: { fill: 'red' } } });
+
   const restored = normalizeScene(createInputScene(convertIRToReactNode(ir)).scene).ir;
+
   expect(compileToScene(restored).scene).toEqual(compileToScene(ir).scene);
 });

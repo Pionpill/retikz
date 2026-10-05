@@ -40,6 +40,7 @@ describe('PathMark polar interpolation controls', () => {
     expect(englishContract.canonicalValues).toEqual(chineseContract.canonicalValues);
 
     const canonical = renderWithValues(chineseContract.canonicalValues);
+
     expect(
       renderWithValues({
         ...chineseContract.canonicalValues,

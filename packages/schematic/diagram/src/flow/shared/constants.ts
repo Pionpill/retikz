@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** Flow Diagram Source 的稳定类型判别值 */
 export const FLOW_TYPE = 'flow' as const;
 
@@ -53,3 +55,15 @@ export const FlowRoutingKind = {
 
 /** 同侧连接落点的分配策略 */
 export const FlowEndpointOverlap = { Allow: 'allow', Separate: 'separate' } as const;
+
+/** Flow Layout 固定排列种类值 */
+export type FlowPlacementKind = ValueOf<typeof FlowPlacementKind>;
+
+/** Flow 自动布局作用域与 Layout 固定排列的主方向值 */
+export type FlowDirection = ValueOf<typeof FlowDirection>;
+
+/** Flow Layout 交叉轴对齐值 */
+export type FlowLayoutAlignment = ValueOf<typeof FlowLayoutAlignment>;
+
+/** Flow relation 路由值 */
+export type FlowRoutingKind = ValueOf<typeof FlowRoutingKind>;

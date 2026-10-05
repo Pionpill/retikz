@@ -44,6 +44,7 @@ vi.mock('@/modules/docs/data', async importOriginal => {
       ],
     },
   ] satisfies Array<Section>;
+
   return { ...actual, getSectionsByArea: () => sections };
 });
 
@@ -110,6 +111,7 @@ const renderTabs = (initialEntry: string): HTMLElement => {
 const clickTab = (container: HTMLElement, name: string): void => {
   const tab = Array.from(container.querySelectorAll('[role="tab"]')).find(item => item.textContent === name);
   if (!(tab instanceof HTMLElement)) throw new Error(`Tab "${name}" not found`);
+
   act(() => {
     tab.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
   });
@@ -125,6 +127,7 @@ describe('<ShowcaseTabs>', () => {
     const container = renderTabs('/viz/chart/points/scatter');
 
     expect(container.textContent).toContain('Examples body');
+
     clickTab(container, 'API');
 
     expect(container.textContent).toContain('API body');
@@ -135,11 +138,13 @@ describe('<ShowcaseTabs>', () => {
     const container = renderTabs('/viz/chart/points/scatter?example=scatter-fertility-work');
 
     clickTab(container, 'API');
+
     expect(container.querySelector('[data-location]')?.textContent).toBe(
       '/viz/chart/points/scatter?example=scatter-fertility-work&tab=api',
     );
 
     clickTab(container, 'Examples');
+
     expect(container.querySelector('[data-location]')?.textContent).toBe(
       '/viz/chart/points/scatter?example=scatter-fertility-work',
     );
@@ -147,12 +152,14 @@ describe('<ShowcaseTabs>', () => {
 
   it('刷新带 api 参数的 URL 时恢复 API，非法值回退到 Examples', () => {
     const apiContainer = renderTabs('/viz/chart/points/scatter?tab=api');
+
     expect(apiContainer.textContent).toContain('API body');
 
     act(() => roots.shift()?.unmount());
     apiContainer.remove();
 
     const invalidContainer = renderTabs('/viz/chart/points/scatter?tab=unknown');
+
     expect(invalidContainer.textContent).toContain('Examples body');
   });
 
@@ -166,6 +173,7 @@ describe('<ShowcaseTabs>', () => {
     expect(familyLink?.getAttribute('href')).toBe('/viz/chart/points/bubble');
     expect(familyThumbnail?.getAttribute('data-files')).toBe('bubble-minimal');
     expect(scatterContainer.querySelector('[data-slot="showcase-family-preview"]')).toBeNull();
+
     await vi.waitFor(() => {
       expect(scatterContainer.textContent).toContain(
         'A bubble chart adds a third numeric variable through bubble size.',

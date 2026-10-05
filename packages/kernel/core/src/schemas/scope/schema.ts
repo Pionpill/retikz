@@ -37,6 +37,7 @@ export const PathDefaultSchema = strictObject({
   ...PathTransformSchema.shape,
 });
 
+/** 校验作用域内节点标签与路径步骤标签共用的默认视觉样式 */
 export const LabelDefaultSchema = object({
   color: CssColorSchema.optional().describe('Master color for labels in this scope; textColor falls back to it.'),
   textColor: ContextualColorSchema.optional().describe(
@@ -48,6 +49,7 @@ export const LabelDefaultSchema = object({
   .strict()
   .describe('Default style applied to node labels and step labels in this scope.');
 
+/** 复用箭头细节校验规则，供作用域声明默认箭头样式 */
 export const ArrowDefaultSchema = ArrowDetailSchema;
 
 /** Scope placement 的闭合 target：父坐标系显式点或此前已完成的命名实体 */
@@ -99,6 +101,7 @@ export const ScopeFrameSchema = strictObject({
   ),
 }).describe('Non-interactive decoration derived from the intrinsic scope envelope.');
 
+/** 校验容器变换、样式继承、命名空间与最终放置等作用域属性 */
 export const ScopePropsSchema = strictObject({
   frame: ScopeFrameSchema.optional().describe(
     'Optional intrinsic-envelope decoration drawn beneath all scope children.',
@@ -144,6 +147,7 @@ export const ScopePropsSchema = strictObject({
   defaults: ScopeDefaultsSchema.optional().describe('Named descendant defaults and their inheritance barrier.'),
 }).describe('Reusable authored properties for a Scope container.');
 
+/** 递归校验分组容器及其子项，保留局部变换与级联样式描述 */
 export const ScopeSchema = strictObject({
   type: literal('scope').describe('Discriminator marking this child as a scope container.'),
   ...ScopePropsSchema.shape,

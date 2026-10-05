@@ -44,6 +44,7 @@ const finiteNonNegative = (
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
     return invalidProposal(compositeKey, occurrence, `${field} must be finite and non-negative`);
   }
+
   return canonicalizeZero(value);
 };
 
@@ -57,6 +58,7 @@ const cloneLayoutAxisProposal = (
   if (axis === null || typeof axis !== 'object' || Array.isArray(axis)) {
     return invalidProposal(compositeKey, occurrence, `${axisName} must be an object`);
   }
+
   const input = axis as Record<PropertyKey, unknown>;
   const kind = input.kind;
   if (kind === LayoutAxisProposalKind.Intrinsic) {
@@ -65,13 +67,16 @@ const cloneLayoutAxisProposal = (
     if (mode !== LayoutIntrinsicMode.Minimum && mode !== LayoutIntrinsicMode.Natural) {
       return invalidProposal(compositeKey, occurrence, `${axisName}.mode has unknown value '${String(mode)}'`);
     }
+
     return Object.freeze({ kind: LayoutAxisProposalKind.Intrinsic, mode });
   }
+
   if (kind === LayoutAxisProposalKind.Range) {
     validateKeys(input, new Set(['kind', 'min', 'max']), axisName, compositeKey, occurrence);
     if (!Object.hasOwn(input, 'min')) {
       return invalidProposal(compositeKey, occurrence, `${axisName}.min is required`);
     }
+
     const minValue = input.min;
     const maxValue = input.max;
     const min = finiteNonNegative(minValue, `${axisName}.min`, compositeKey, occurrence);
@@ -80,23 +85,28 @@ const cloneLayoutAxisProposal = (
     if (max !== undefined && min > max) {
       return invalidProposal(compositeKey, occurrence, `${axisName}.min must not exceed ${axisName}.max`);
     }
+
     return Object.freeze({
       kind: LayoutAxisProposalKind.Range,
       min,
       ...(max === undefined ? {} : { max }),
     });
   }
+
   if (kind === LayoutAxisProposalKind.Exact) {
     validateKeys(input, new Set(['kind', 'value']), axisName, compositeKey, occurrence);
     if (!Object.hasOwn(input, 'value')) {
       return invalidProposal(compositeKey, occurrence, `${axisName}.value is required`);
     }
+
     const value = input.value;
+
     return Object.freeze({
       kind: LayoutAxisProposalKind.Exact,
       value: finiteNonNegative(value, `${axisName}.value`, compositeKey, occurrence),
     });
   }
+
   return invalidProposal(compositeKey, occurrence, `${axisName}.kind has unknown value '${String(kind)}'`);
 };
 
@@ -110,13 +120,16 @@ export const cloneLayoutProposal = (
     if (proposal === null || typeof proposal !== 'object' || Array.isArray(proposal)) {
       return invalidProposal(compositeKey, occurrence, 'expected an object with x and y axes');
     }
+
     const input = proposal as Record<PropertyKey, unknown>;
     validateKeys(input, new Set(['x', 'y']), 'proposal', compositeKey, occurrence);
     if (!Object.hasOwn(input, 'x') || !Object.hasOwn(input, 'y')) {
       return invalidProposal(compositeKey, occurrence, 'both x and y axes are required');
     }
+
     const x = input.x;
     const y = input.y;
+
     return Object.freeze({
       x: cloneLayoutAxisProposal(x, 'x', compositeKey, occurrence),
       y: cloneLayoutAxisProposal(y, 'y', compositeKey, occurrence),
@@ -138,8 +151,10 @@ export const resolveLayoutSlotSize = (
       const upperBounded = axis.max === undefined ? actual : Math.min(axis.max, actual);
       return canonicalizeZero(Math.max(axis.min, upperBounded));
     }
+
     return canonicalizeZero(actual);
   };
+
   return Object.freeze({
     width: resolveAxis(allocationBounds.width, proposal.x),
     height: resolveAxis(allocationBounds.height, proposal.y),

@@ -34,6 +34,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(folded).scene.primitives).commands).toEqual(
       findPathPrim(compileToScene(manual).scene.primitives).commands,
     );
@@ -67,6 +68,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(folded).scene.primitives).commands).toEqual(
       findPathPrim(compileToScene(manual).scene.primitives).commands,
     );
@@ -89,6 +91,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
     const scene = compileToScene(ir, { padding: 10 }).scene;
+
     expect(scene.layout).toEqual({ x: -10, y: -10, width: 60, height: 50 });
   });
 
@@ -118,6 +121,7 @@ describe("compile path: 'step' 折角", () => {
     };
     const scene = compileToScene(ir).scene;
     const commands = findPathPrim(scene.primitives).commands;
+
     expect(commands.map(c => c.kind)).toEqual(['move', 'line', 'line']); // M start, L corner, L end
   });
 
@@ -142,6 +146,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([8, 0]),
       line([100, 0]),
@@ -165,6 +170,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 8]),
       line([0, 60]),
@@ -188,6 +194,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([0, 0]),
@@ -226,6 +233,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual(expected);
   });
 
@@ -254,6 +262,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual(expected);
   });
 
@@ -273,10 +282,13 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
     const tail = findPathPrim(compileToScene(ir).scene.primitives).commands.slice(-3);
+
     expect(tail.map(command => command.kind)).toEqual(['line', 'line', 'line']);
+
     if (tail[0].kind !== 'line' || tail[1].kind !== 'line' || tail[2].kind !== 'line') {
       throw new Error('expected three fold line commands');
     }
+
     expect(tail[0].to[0]).toBeCloseTo(50, 8);
     expect(tail[0].to[1]).toBeCloseTo(10, 8);
     expect(tail[1].to[0]).toBeCloseTo(50, 8);
@@ -298,6 +310,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
       move([100, 60]),
       line([75, 60]),

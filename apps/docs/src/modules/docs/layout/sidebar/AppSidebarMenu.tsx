@@ -52,6 +52,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
               </Fragment>
             );
           }
+
           return (
             <Fragment key={`${category.value}-${idx}`}>
               {idx > 0 && <Separator className="my-3" />}

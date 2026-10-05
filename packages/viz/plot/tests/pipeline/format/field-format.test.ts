@@ -44,18 +44,21 @@ describe('IRDataFieldDefinition.format 解析行为 — happy path', () => {
     // 严格 YYYY/MM/DD 按 UTC 零点 → epoch ms
     const spec = specWithField({ name: 'v', type: 'temporal', format: DataFieldFormat.SlashDate });
     const value = parseFirst(spec, { d: [{ v: '2024/01/01', y: 1 }] }, 'v');
+
     expect(value).toBe(Date.UTC(2024, 0, 1));
   });
 
   it('epoch_seconds_scaled', () => {
     // epoch 秒 → ms（*1000）
     const spec = specWithField({ name: 'v', type: 'temporal', format: DataFieldFormat.EpochSeconds });
+
     expect(parseFirst(spec, { d: [{ v: 1700000000, y: 1 }] }, 'v')).toBe(1700000000 * 1000);
   });
 
   it('percent_parses', () => {
     // 百分比串 '50%' → 0.5
     const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.Percent });
+
     expect(parseFirst(spec, { d: [{ v: '50%', y: 1 }] }, 'v')).toBe(0.5);
   });
 });
@@ -65,12 +68,14 @@ describe('IRDataFieldDefinition.format 解析行为 — 边界', () => {
     // 不写 format → 与现状内置 coerce 逐字等价（严格 ISO temporal / 严格数字串 continuous）
     const spec = specWithField({ name: 'v', type: 'temporal' });
     const value = parseFirst(spec, { d: [{ v: '2024-01-01', y: 1 }] }, 'v');
+
     expect(value).toBe(Date.parse('2024-01-01'));
   });
 
   it('numberstring_lenient', () => {
     // 宽松数字串：千分位逗号 / 前后空白
     const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.NumberString });
+
     expect(parseFirst(spec, { d: [{ v: '1,500', y: 1 }] }, 'v')).toBe(1500);
     expect(parseFirst(spec, { d: [{ v: ' 12 ', y: 1 }] }, 'v')).toBe(12);
   });
@@ -78,12 +83,14 @@ describe('IRDataFieldDefinition.format 解析行为 — 边界', () => {
   it('format_implies_type_when_omitted', () => {
     // 写 format 不写 type → format 蕴含 continuous，'50%'→0.5（不被推断成 categorical）
     const spec = specWithField({ name: 'v', format: DataFieldFormat.Percent });
+
     expect(parseFirst(spec, { d: [{ v: '50%', y: 1 }] }, 'v')).toBe(0.5);
   });
 
   it('slashdate_rejects_ambiguous_layout', () => {
     // 非 YYYY/MM/DD 的歧义布局（D/M/Y）不猜 → NaN（下游按非有限跳过）
     const spec = specWithField({ name: 'v', type: 'temporal', format: DataFieldFormat.SlashDate });
+
     expect(Number.isNaN(parseFirst(spec, { d: [{ v: '13/01/2024', y: 1 }] }, 'v') as number)).toBe(true);
   });
 });
@@ -92,13 +99,16 @@ describe('IRDataFieldDefinition.format — 错误路径', () => {
   it('format_type_mismatch_throws', () => {
     // 显式 continuous + format 蕴含 temporal（epochSeconds）冲突 → lowering fail-loud
     const spec = specWithField({ name: 'v', type: 'continuous', format: DataFieldFormat.EpochSeconds });
+
     expect(() => parseFirst(spec, { d: [{ v: 1700000000, y: 1 }] }, 'v')).toThrow();
   });
 
   it('unregistered_format_fails_at_lowering', () => {
     // 开放后 schema 接受任意非内置格式串（视作自定义名）；未注册的格式在 lowering fail-loud
     expect(() => FieldDefinitionSchema.parse({ name: 'v', type: 'continuous', format: 'comma' })).not.toThrow();
+
     const spec = specWithField({ name: 'v', type: 'continuous', format: 'comma' });
+
     expect(() => parseFirst(spec, { d: [{ v: '1,500', y: 1 }] }, 'v')).toThrow(/not registered/);
   });
 
@@ -115,8 +125,10 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
     impliedType: 'continuous',
     parse: raw => {
       if (typeof raw !== 'string') return undefined;
+
       const cleaned = raw.trim().replace(/\./g, '').replace(',', '.');
       const parsed = Number(cleaned);
+
       return Number.isFinite(parsed) ? parsed : NaN;
     },
   });
@@ -125,6 +137,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
     // data.model 写自定义 format 名；options.formatDefinitions 注入 definition → 按 parse 解析
     const spec = specWithField({ name: 'v', type: 'continuous', format: 'currency' });
     const value = parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] });
+
     expect(value).toBe(1234.56);
   });
 
@@ -132,12 +145,14 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
     // 省略 type → 由 definition.impliedType 覆盖推断（continuous），不被推断成 categorical
     const spec = specWithField({ name: 'v', format: 'currency' });
     const value = parseFirst(spec, { d: [{ v: '2.000,00', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] });
+
     expect(value).toBe(2000);
   });
 
   it('custom_format_type_mismatch_throws', () => {
     // 显式 temporal + 自定义 impliedType continuous 冲突 → lowering fail-loud
     const spec = specWithField({ name: 'v', type: 'temporal', format: 'currency' });
+
     expect(() =>
       parseFirst(spec, { d: [{ v: '1.234,56', y: 1 }] }, 'v', { formatDefinitions: [currencyFormat] }),
     ).toThrow(/incompatible/);
@@ -169,6 +184,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
       { formatDefinitions: [currencyFormat] },
       ingested,
     );
+
     expect(normalized[0].v).toBe(0.5);
     expect(normalized[0].y).toBe(1000.5);
   });
@@ -188,6 +204,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
   it('resolveFormatRegistry_has_six_builtins', () => {
     // 无自定义时 registry 恰为 6 个内置
     const registry = resolveFormatRegistry();
+
     expect(registry.size).toBe(6);
     expect(registry.has('percent')).toBe(true);
   });
@@ -210,6 +227,7 @@ describe('IRDataFieldDefinition.format — 交互', () => {
     const value = parseFirst(spec, { d: [{ v: '50%', y: 1 }] }, 'v', {
       resolveField: () => ({ parse: () => 999 }),
     });
+
     expect(value).toBe(999);
   });
 
@@ -233,6 +251,7 @@ describe('IRDataFieldDefinition.format — 交互', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'v' }, y: { field: 'y' } } }],
     });
     const value = parseFirst(spec, { d: [{ ratio: '50%', y: 1 }] }, 'v', { fieldMaps: { d: { v: 'ratio' } } });
+
     expect(value).toBe(0.5);
   });
 
@@ -244,6 +263,7 @@ describe('IRDataFieldDefinition.format — 交互', () => {
       { name: 'ratio', type: 'continuous', format: 'percent' },
     ];
     const roundTripped = DataModelSchema.parse(JSON.parse(JSON.stringify(model)));
+
     expect(roundTripped).toEqual(model);
   });
 });

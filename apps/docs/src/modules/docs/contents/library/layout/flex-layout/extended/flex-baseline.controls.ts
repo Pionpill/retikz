@@ -42,11 +42,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { alignItems: 'first-baseline', fontA: 18, fontB: 28, alignSelf: 'auto' },
     relatedApis: ['FlexLayout.alignItems', 'FlexLayoutItem.alignSelf', 'Node.style.font.size'],
   } satisfies PreviewControlContract;
 };
+
 /** 默认语言的注册契约 */
 export const previewControlContract = createPreviewControlContract('zh');

@@ -14,6 +14,7 @@ export const bendFigureCurve = (angle = 60, direction: 'left' | 'right' = 'left'
   const from: [number, number] = [0, 100];
   const to: [number, number] = [200, 100];
   const [control1, control2] = bendControlPoints(from, to, direction, angle);
+
   return { kind: 'cubicBezier', from, to, control1, control2 };
 };
 
@@ -22,5 +23,6 @@ export const bendFigureBounds = (start: number, end: number): BoundsRect => {
   const part = curve.slice(bendFigureCurve(), start, end);
   const x = curve.projectedRange(part, [1, 0]);
   const y = curve.projectedRange(part, [0, 1]);
+
   return { x: x.min, y: y.min, width: x.max - x.min, height: y.max - y.min };
 };

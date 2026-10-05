@@ -45,6 +45,7 @@ describe('Table plain authoring', () => {
     const input: DetailTableInput = { dataRef: 'people', columns, model };
     const before = structuredClone(input);
     const spec = createDetailTableIR(input);
+
     expect(input).toEqual(before);
     expect(spec.structure.kind).toBe('detail');
     expect(spec.structure.columns).not.toBe(columns);
@@ -120,6 +121,7 @@ describe('Table plain authoring', () => {
     };
     const before = structuredClone(input);
     const spec = createManualTableIR(input);
+
     expect(spec).toEqual({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -176,6 +178,7 @@ describe('Table plain authoring', () => {
     if (typeof inputCell !== 'object' || inputCell === null || !('formatter' in inputCell)) {
       throw new Error('expected rich value Cell fixture');
     }
+
     inputCell.formatter!.options!.maximumFractionDigits = 2;
     rules[0].selector.cellIds!.push('ignored');
     encodings[0].selector.locations!.push('columnHeader');

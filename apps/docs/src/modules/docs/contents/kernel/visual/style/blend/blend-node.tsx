@@ -7,10 +7,12 @@ import { blendNodeI18n } from './blend-node.i18n';
 
 /** Node 示例的语言参数 */
 export type BlendNodeProps = { lang?: Lang };
+
 /** Compare primary-shape blending while keeping text and labels independent */
 const BlendNode: FC<BlendNodeProps> = props => {
   const { lang = 'zh' } = props;
   const text = blendNodeI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {(['normal', 'multiply'] as const).map((mode, index) => (

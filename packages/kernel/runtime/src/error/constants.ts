@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** Runtime Source 生命周期阶段 */
 export const RuntimeSourcePhase = {
   /** Source value capture 阶段 */
@@ -72,9 +74,9 @@ export const RetikzRuntimeErrorCode = {
   ArtifactComputationReadFailed: 'RUNTIME_ARTIFACT_COMPUTATION_READ_FAILED',
   /** artifact public read 失败 */
   ArtifactPublicReadFailed: 'RUNTIME_ARTIFACT_PUBLIC_READ_FAILED',
-  /** Source value ownership alias */
+  /** 数据源持有值的所有权别名 */
   SourceOwnershipAlias: 'RUNTIME_SOURCE_OWNERSHIP_ALIAS',
-  /** artifact ownership alias */
+  /** 计算产物的所有权别名 */
   ArtifactOwnershipAlias: 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS',
   /** runtime 重入 */
   Reentrant: 'RUNTIME_REENTRANT',
@@ -109,3 +111,9 @@ export const RetikzRuntimeErrorCode = {
   /** participant dispose 失败 */
   ParticipantDisposeFailed: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
 } as const;
+
+/** Runtime Source 执行阶段 */
+export type RuntimeSourcePhase = ValueOf<typeof RuntimeSourcePhase>;
+
+/** Runtime transaction、Computation 与 registry 的稳定错误分类 */
+export type RetikzRuntimeErrorCode = ValueOf<typeof RetikzRuntimeErrorCode>;

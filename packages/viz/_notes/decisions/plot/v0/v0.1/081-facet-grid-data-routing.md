@@ -37,10 +37,10 @@ const FacetScaleSharing = {
   Independent: 'independent',
 } as const;
 
-type FacetScaleSharingValue = ValueOf<typeof FacetScaleSharing>;
+type FacetScaleSharing = ValueOf<typeof FacetScaleSharing>;
 
 type FacetScaleSharing = {
-  roles?: Record<string, FacetScaleSharingValue>;
+  roles?: Record<string, FacetScaleSharing>;
 };
 
 type FacetGrid = {

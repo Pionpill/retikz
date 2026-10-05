@@ -5,6 +5,7 @@ import * as Graph from '../../src';
 
 const publicSchema = (name: string): ZodType => {
   const schema = (Graph as Record<string, unknown>)[name];
+
   expect(schema, `missing public schema ${name}`).toBeDefined();
   return schema as ZodType;
 };

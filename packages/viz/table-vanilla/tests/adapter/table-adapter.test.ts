@@ -110,8 +110,11 @@ describe('Table Vanilla adapter', () => {
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
+
     const normalized = normalizeScene(inputScene, { adapters: [TableInputEmbedAdapter] });
+
     expect(new Set(normalized.runtimeMeta.layers[0].childIds).size).toBe(2);
+
     for (const child of normalized.ir.children) expect(child).not.toHaveProperty('id');
   });
 
@@ -145,9 +148,11 @@ describe('Table Vanilla adapter', () => {
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
       'table runtime contribution reference must be a non-empty string.',
     );
+
     const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]), {
       adapters: [TableInputEmbedAdapter],
     });
+
     expect(normalized.ir.children).toEqual([spec, spec]);
   });
 });

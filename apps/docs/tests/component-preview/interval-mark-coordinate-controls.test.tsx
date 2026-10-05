@@ -118,7 +118,9 @@ const angularDistance = (a: number, b: number): number => Math.abs(Math.atan2(Ma
 const viewBoxOf = (markup: string): { x: number; y: number; width: number; height: number } => {
   const match = markup.match(/<svg viewBox="([^"]+)"/);
   if (match === null) throw new Error('Expected preview SVG viewBox');
+
   const [x, y, width, height] = match[1].split(' ').map(Number);
+
   return { x, y, width, height };
 };
 
@@ -158,7 +160,9 @@ describe('IntervalMark playground 坐标系切换', () => {
     });
     expect(scenario.contract.canonicalValues[scenario.coordinateId]).toBe('cartesian2D');
     expect(scenario.contract.controls.presentation).toBe('panel');
+
     if (scenario.contract.controls.presentation !== 'panel') return;
+
     expect(scenario.contract.controls.sections[0].defaultCollapsed).toBe(true);
   });
 

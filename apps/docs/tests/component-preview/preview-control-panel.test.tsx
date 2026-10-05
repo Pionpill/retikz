@@ -92,9 +92,11 @@ class ResizeObserverMock implements ResizeObserver {
   }
 
   disconnect = (): void => this.targets.clear();
+
   observe = (target: Element): void => {
     this.targets.add(target);
   };
+
   unobserve = (target: Element): void => {
     this.targets.delete(target);
   };
@@ -112,6 +114,7 @@ class ResizeObserverMock implements ResizeObserver {
 }
 
 let nextAnimationFrameId = 1;
+
 const animationFrames = new Map<number, FrameRequestCallback>();
 
 const flushAnimationFrames = async (timestamp = 0): Promise<void> => {
@@ -129,6 +132,7 @@ Object.assign(globalThis, {
     const frameId = nextAnimationFrameId;
     nextAnimationFrameId += 1;
     animationFrames.set(frameId, callback);
+
     return frameId;
   },
   cancelAnimationFrame: (frameId: number): void => {
@@ -337,6 +341,7 @@ const mount = async (node: ReactNode): Promise<HTMLDivElement> => {
   const root = createRoot(container);
   renderedRoots.push(root);
   await act(() => root.render(node));
+
   return container;
 };
 
@@ -344,6 +349,7 @@ afterEach(async () => {
   for (const root of renderedRoots.splice(0)) {
     await act(() => root.unmount());
   }
+
   document.body.replaceChildren();
   ResizeObserverMock.instances = [];
   animationFrames.clear();
@@ -525,15 +531,18 @@ describe('PreviewControlPanel', () => {
     expect(trigger?.textContent).toContain('Colored cancellation');
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Customize source"]')?.click());
+
     expect(trigger?.textContent).toContain('Custom');
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Reset controls"]')?.click());
+
     expect(trigger?.textContent).toContain('Display sum');
   });
 
   it('merge-current preset 只覆盖声明字段并保留当前 detail', async () => {
     const container = await mount(<PreservingPresetPanelHarness />);
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Enable detail"]')?.click());
+
     expect(container.querySelector('[data-slot="preserving-preset-values"]')?.textContent).toBe(
       JSON.stringify({ enabled: true, detail: true }),
     );
@@ -574,9 +583,11 @@ describe('PreviewControlPanel', () => {
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
     await flushAnimationFrames();
+
     expect(columnCount()).toBe('2');
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Show B controls"]')?.click());
+
     expect(columnCount()).toBe('2');
     expect(container.querySelector('[data-control-id="bValue"]')).not.toBeNull();
   });
@@ -720,6 +731,7 @@ describe('PreviewControlPanel', () => {
         </>
       );
     };
+
     const container = await mount(<Harness />);
     const table = container.querySelector('[data-slot="preview-table-control"]');
     const resultTrigger = container.querySelector<HTMLButtonElement>(
@@ -731,10 +743,12 @@ describe('PreviewControlPanel', () => {
     expect(resultTrigger?.getAttribute('aria-pressed')).toBe('false');
 
     await act(() => resultTrigger?.click());
+
     expect(table?.querySelector('[data-slot="preview-table-row"]')?.textContent).toBe('6');
     expect(resultTrigger?.getAttribute('aria-pressed')).toBe('true');
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Set factor to four"]')?.click());
+
     expect(table?.querySelector('[data-slot="preview-table-row"]')?.textContent).toBe('8');
   });
 
@@ -884,7 +898,9 @@ describe('PreviewControlPanel', () => {
     const rangeValue = () => container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent;
 
     expect(playButton).not.toBeNull();
+
     await act(() => playButton?.click());
+
     expect(rangeValue()).toBe('0');
     expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="true"]')).not.toBeNull();
 
@@ -1005,12 +1021,14 @@ describe('PreviewControlPanel', () => {
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(299, 80)));
     await flushAnimationFrames();
+
     expect(columns()?.getAttribute('data-column-count')).toBe('1');
     expect(container.querySelectorAll('[data-slot="preview-control-column"]')).toHaveLength(1);
     expect(container.querySelector('[data-slot="preview-control-column-separator"]')).toBeNull();
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 80)));
     await flushAnimationFrames();
+
     expect(columns()?.getAttribute('data-column-count')).toBe('2');
     expect(container.querySelectorAll('[data-slot="preview-control-column"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-slot="preview-control-column-separator"]')).toHaveLength(1);
@@ -1027,14 +1045,17 @@ describe('PreviewControlPanel', () => {
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
     await flushAnimationFrames();
+
     expect(columnCount()).toBe('2');
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 400)));
     await flushAnimationFrames();
+
     expect(columnCount()).toBe('1');
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
     await flushAnimationFrames();
+
     expect(columnCount()).toBe('2');
   });
 
@@ -1046,6 +1067,7 @@ describe('PreviewControlPanel', () => {
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
     await flushAnimationFrames();
     const collapseButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Appearance"]');
+
     expect(collapseButtons).toHaveLength(1);
     expect(collapseButtons[0].getAttribute('aria-expanded')).toBe('true');
     expect(container.querySelectorAll('.lucide-minus')).toHaveLength(1);
@@ -1053,6 +1075,7 @@ describe('PreviewControlPanel', () => {
     await act(() => collapseButtons[0].click());
     await flushAnimationFrames();
     const expandButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Appearance"]');
+
     expect(expandButtons).toHaveLength(1);
     expect(expandButtons[0].getAttribute('aria-expanded')).toBe('false');
     expect(expandButtons[0].hasAttribute('aria-controls')).toBe(false);
@@ -1061,6 +1084,7 @@ describe('PreviewControlPanel', () => {
 
     await act(() => expandButtons[0].click());
     await flushAnimationFrames();
+
     expect(container.querySelectorAll('button[aria-label="Appearance"]')).toHaveLength(1);
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(6);
   });
@@ -1111,7 +1135,9 @@ describe('PreviewControlPanel', () => {
     const container = await mount(<DefinitionChangeHarness />);
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Appearance"]')?.click());
+
     expect(container.querySelectorAll('[data-control-id]')).toHaveLength(0);
+
     await act(() =>
       container.querySelector<HTMLButtonElement>('button[aria-label="Change controls definition"]')?.click(),
     );
@@ -1166,12 +1192,15 @@ describe('PreviewControlPanel', () => {
 
     const dashed = container.querySelector<HTMLButtonElement>('button[aria-label="Dashed"]');
     await act(() => dashed?.click());
+
     expect(setValue).toHaveBeenLastCalledWith('dashed', true);
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Reset controls"]')?.click());
+
     expect(reset).toHaveBeenCalledOnce();
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Close controls panel"]')?.click());
+
     expect(onClose).toHaveBeenCalledOnce();
   });
 });
@@ -1202,6 +1231,7 @@ describe('PreviewWorkspace', () => {
     expect(themeBoundary?.getAttribute('data-theme-mode')).toBe('inherit');
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Preview theme dark"]')?.click());
+
     expect(themeBoundary?.getAttribute('data-theme-mode')).toBe('dark');
     expect(themeBoundary?.classList.contains('dark')).toBe(true);
   });
@@ -1210,9 +1240,11 @@ describe('PreviewWorkspace', () => {
     const container = await mount(<WorkspaceHarness definition={definition} showContextBar={false} />);
 
     expect(container.querySelector('[data-slot="preview-context-bar"]')).toBeNull();
+
     const themeBoundary = container.querySelector('[data-slot="preview-theme-boundary"]');
     const previewPane = container.querySelector('[data-slot="preview-context-pane"]');
     const previewPanel = previewPane?.firstElementChild;
+
     expect(themeBoundary).not.toBeNull();
     expect(previewPane?.classList.contains('pt-10')).toBe(false);
     expect(previewPanel?.classList.contains('pt-10')).toBe(false);
@@ -1268,12 +1300,15 @@ describe('PreviewWorkspace', () => {
     const group = () => container.querySelector('[data-slot="resizable-panel-group"]');
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(479)));
+
     expect(group()).not.toBeNull();
     expect(group()?.getAttribute('data-direction')).toBe('vertical');
+
     const panels = container.querySelectorAll('[data-slot="resizable-panel"]');
     const handle = container.querySelector('[data-slot="resizable-handle"]');
     const panel = container.querySelector('aside');
     const contextBar = container.querySelector('[data-slot="preview-context-bar"]');
+
     expect(panels).toHaveLength(2);
     expect(panels[0].getAttribute('data-default-size')).toBe('35');
     expect(panels[1].getAttribute('data-default-size')).toBe('65');
@@ -1284,6 +1319,7 @@ describe('PreviewWorkspace', () => {
     expect(panel!.compareDocumentPosition(contextBar!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(480)));
+
     expect(group()).not.toBeNull();
     expect(group()?.getAttribute('data-direction')).toBe('horizontal');
   });
@@ -1296,10 +1332,13 @@ describe('PreviewWorkspace', () => {
     expect(container.firstElementChild?.getAttribute('data-panel-open')).toBe('false');
     expect(container.querySelector('[data-slot="resizable-handle"]')).toBeNull();
     expect(container.querySelectorAll('[data-slot="resizable-panel"]')).toHaveLength(1);
+
     const open = container.querySelector<HTMLButtonElement>('button[aria-label="Open controls panel"]');
+
     expect(open).not.toBeNull();
 
     await act(() => open?.click());
+
     expect(container.firstElementChild?.getAttribute('data-panel-open')).toBe('true');
     expect(container.querySelector('[data-slot="resizable-handle"]')).not.toBeNull();
   });
@@ -1315,10 +1354,13 @@ describe('PreviewWorkspace', () => {
 
   it('在当前 Workspace 生命周期内恢复最后非零宽度', async () => {
     const container = await mount(<WorkspaceHarness definition={definition} />);
+
     expect(container.querySelector('[data-slot="resizable-panel"]')?.getAttribute('data-default-size')).toBe('25');
 
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Simulate panel resize"]')?.click());
+
     expect(container.querySelector('[data-slot="resizable-panel"]')?.getAttribute('data-default-size')).toBe('25');
+
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Close controls panel"]')?.click());
     await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Open controls panel"]')?.click());
 

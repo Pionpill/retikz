@@ -16,6 +16,7 @@ const LayoutThemeOverlays: FC<LayoutThemeOverlaysProps> = props => {
     ['Layout', '—', 'light'],
     [i18n.result, 'clean', 'light'],
   ];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[i18n.source, 'theme.style', 'theme.mode'].map((title, index) => (

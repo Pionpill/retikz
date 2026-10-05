@@ -10,7 +10,7 @@ export type CoreChange =
       kind: 'add';
       /** 新实体 identity */
       identity: RuntimeIdentity;
-      /** next parent identity */
+      /** 更新后父级的身份 */
       parent: RuntimeIdentity;
       /** next 后继 sibling */
       before?: RuntimeIdentity;
@@ -32,7 +32,7 @@ export type CoreChange =
       kind: 'move';
       /** 被移动实体 identity */
       identity: RuntimeIdentity;
-      /** next parent identity */
+      /** 更新后父级的身份 */
       parent: RuntimeIdentity;
       /** next 后继 sibling */
       before?: RuntimeIdentity;

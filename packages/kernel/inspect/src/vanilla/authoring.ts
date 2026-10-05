@@ -38,6 +38,7 @@ export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthori
 const readInspectionVanillaAuthoring = (site: InputAuthoringSite): InspectionVanillaAuthoring | undefined => {
   const candidate = site.authoring;
   if (typeof candidate !== 'object' || candidate === null) return undefined;
+
   return Reflect.get(candidate, 'token') === INSPECTION_VANILLA_AUTHORING_TOKEN
     ? (candidate as InspectionVanillaAuthoring)
     : undefined;
@@ -49,6 +50,7 @@ export const inspectionSelectionRulesFromVanillaSite = (
 ): ReadonlyArray<InspectionSelectionRule> => {
   const authoring = readInspectionVanillaAuthoring(site);
   if (authoring === undefined) return Object.freeze([]);
+
   const target =
     site.kind === 'scene'
       ? ({ kind: 'scene' } as const)
@@ -61,9 +63,12 @@ export const inspectionSelectionRulesFromVanillaSite = (
         RetikzInspectErrorCode.Vanilla,
         'Inspect Vanilla barrier is only valid for figure or scope authoring',
       );
+
     return Object.freeze([Object.freeze({ kind: 'barrier', target })]);
   }
+
   const requests = Array.isArray(authoring.input) ? authoring.input : [authoring.input];
+
   return Object.freeze(
     requests.map(request =>
       Object.freeze({ kind: 'request' as const, inspector: request.inspector, target, options: request.options }),

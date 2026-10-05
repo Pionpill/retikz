@@ -6,6 +6,7 @@ import { EntityRole, GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphPredicateRefSchema } from '../predicate';
 import { GraphStatusSchema } from '../status';
 
+/** 校验由图角色注册表解析的开放实体角色键 */
 export const EntityRoleSchema = createOpenStringSchema(EntityRole).describe(
   'Open Entity role key resolved by the configured Graph role registry.',
 );
@@ -19,6 +20,7 @@ const EntityNodeShape = strictObject(NodeSchema.shape).omit({
   cornerRadius: true,
 }).shape;
 
+/** 校验由角色拥有结构、复用 Core Node 非结构字段的图实体 */
 export const EntitySchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Entity).describe('Entity Source record discriminator.'),

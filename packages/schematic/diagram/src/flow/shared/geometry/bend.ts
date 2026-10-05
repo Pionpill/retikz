@@ -3,6 +3,7 @@ import { curve, DEFAULT_EPSILON } from '@retikz/math';
 
 /** 候选比较的私有空间分辨率（用户单位），不承诺精确避障 */
 const CURVE_TOLERANCE = 0.25;
+
 const MAX_DEPTH = 8;
 
 /** 求曲线真极值包络 */
@@ -27,9 +28,11 @@ export const findFlowCurveObstacleIntervals = (
   exemptEnd = false,
 ): Array<readonly [number, number]> => {
   const intervals: Array<[number, number]> = [];
+
   const visit = (part: CurveSegment, start: number, end: number, depth: number): void => {
     const bounds = getFlowCurveBounds(part);
     if (!doFlowBoundsOverlap(bounds, obstacle)) return;
+
     const contained =
       bounds.x >= obstacle.x &&
       bounds.y >= obstacle.y &&
@@ -39,13 +42,17 @@ export const findFlowCurveObstacleIntervals = (
       const previous = intervals.at(-1);
       if (previous !== undefined && Math.abs(previous[1] - start) <= DEFAULT_EPSILON) previous[1] = end;
       else intervals.push([start, end]);
+
       return;
     }
+
     const middle = (start + end) / 2;
     visit(curve.slice(part, 0, 0.5), start, middle, depth + 1);
     visit(curve.slice(part, 0.5, 1), middle, end, depth + 1);
   };
+
   visit(segment, 0, 1, 0);
+
   return intervals.filter(([start, end]) => !(exemptStart && start === 0) && !(exemptEnd && end === 1));
 };
 

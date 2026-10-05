@@ -9,6 +9,7 @@ type FacetCompositionResolver = (
 
 const plotFacetCompositionResolver = (): FacetCompositionResolver => {
   const resolver = (composition as Record<string, unknown>).resolvePlotFacetComposition;
+
   expect(resolver, 'Plot composition must export resolvePlotFacetComposition').toBeTypeOf('function');
   return resolver as FacetCompositionResolver;
 };

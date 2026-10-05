@@ -18,6 +18,7 @@ const logarithmicPairs = (pairs: ReadonlyArray<RegressionPair>) =>
 
 /** Linear 拟合的纯语义定义 */
 const linearRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Linear });
+
 /** Linear 的内置计算 */
 const linearRegressionImplementation = defineRegressionImplementation({
   definition: linearRegressionDefinition,
@@ -26,6 +27,7 @@ const linearRegressionImplementation = defineRegressionImplementation({
 
 /** Quadratic 拟合的纯语义定义 */
 const quadraticRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Quadratic });
+
 /** Quadratic 的内置计算 */
 const quadraticRegressionImplementation = defineRegressionImplementation({
   definition: quadraticRegressionDefinition,
@@ -34,6 +36,7 @@ const quadraticRegressionImplementation = defineRegressionImplementation({
 
 /** Polynomial 拟合的纯语义定义 */
 const polynomialRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Polynomial });
+
 /** Polynomial 的内置计算 */
 const polynomialRegressionImplementation = defineRegressionImplementation({
   definition: polynomialRegressionDefinition,
@@ -45,6 +48,7 @@ const logarithmicRegressionDefinition = defineRegression({
   schema: BuiltinRegressionMethodSchemas.Logarithmic,
   validateExtent: validatePositiveExtent,
 });
+
 /** Logarithmic 的内置计算 */
 const logarithmicRegressionImplementation = defineRegressionImplementation({
   definition: logarithmicRegressionDefinition,
@@ -56,6 +60,7 @@ const logarithmicRegressionImplementation = defineRegressionImplementation({
 
 /** Exponential 拟合的纯语义定义 */
 const exponentialRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Exponential });
+
 /** Exponential 的内置计算 */
 const exponentialRegressionImplementation = defineRegressionImplementation({
   definition: exponentialRegressionDefinition,
@@ -74,6 +79,7 @@ const powerRegressionDefinition = defineRegression({
   schema: BuiltinRegressionMethodSchemas.Power,
   validateExtent: validatePositiveExtent,
 });
+
 /** Power 的内置计算 */
 const powerRegressionImplementation = defineRegressionImplementation({
   definition: powerRegressionDefinition,

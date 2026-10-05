@@ -46,6 +46,7 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
         },
       } as unknown as SceneResource,
     ]);
+
     expect(cps).toHaveLength(0);
   });
 
@@ -69,6 +70,7 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
       } as unknown as SceneResource,
       clipResource('clip-2', rectPath(5)),
     ]);
+
     expect(cps).toHaveLength(2);
     expect(cps.map(cp => cp.props.id)).toEqual(['c-clip-1', 'c-clip-2']);
   });
@@ -87,6 +89,7 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
     ]);
     const shape = (Array.isArray(cp.props.children) ? cp.props.children[0] : cp.props.children) as AnyEl;
     const d = String(shape.props.d);
+
     expect(d).toContain('M -5 -10');
     expect(d).toContain('L 40 0');
   });
@@ -100,6 +103,7 @@ describe('renderPrim group clipRef 对抗：指向不存在资源', () => {
       children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: 'red' }],
     };
     const el = renderPrim(group, 0, { clipRefUrl: (id: string) => `url(#C-${id})` }) as AnyEl;
+
     // 渲染不抛；产 url 引用（即便资源不存在，SVG 会把 group 当作无可见内容裁掉——这是 SVG 语义，非 adapter bug）
     expect(el.type).toBe('g');
     expect(el.props['clipPath']).toBe('url(#C-clip-ghost)');
@@ -112,6 +116,7 @@ describe('renderPrim group clipRef 对抗：指向不存在资源', () => {
       children: [],
     };
     const el = renderPrim(group, 0, { clipRefUrl: (id: string) => `url(#C-${id})` }) as AnyEl;
+
     // clipRef '' !== undefined，应物化（不被 `!== undefined` 守卫跳过）
     expect(el.props['clipPath']).toBe('url(#C-)');
   });
@@ -128,8 +133,11 @@ describe('renderPrim group clipRef 对抗：指向不存在资源', () => {
       children: [inner],
     };
     const el = renderPrim(outer, 0, { clipRefUrl: (id: string) => `url(#${id})` }) as AnyEl;
+
     expect(el.props['clipPath']).toBe('url(#clip-1)');
+
     const innerEl = (el.props.children as Array<AnyEl>)[0];
+
     expect(innerEl.props['clipPath']).toBe('url(#clip-2)');
   });
 });

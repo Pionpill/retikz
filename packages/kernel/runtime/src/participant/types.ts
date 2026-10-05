@@ -4,12 +4,13 @@ import type {
   RuntimeComputationToken,
   RuntimeComputationTraceReporter,
 } from '../computation';
-import type { RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import type { RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
 import type { RuntimeTracePhaseDefinition } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
 
 declare const RuntimeCommitParticipantTokenBrand: unique symbol;
+
 declare const RuntimeCommitParticipantReadBrand: unique symbol;
 
 /** 动态 runtime options 只暴露的 commit participant token */
@@ -28,7 +29,10 @@ export type RuntimeCommitParticipantToken = Readonly<{
   [RuntimeCommitParticipantTokenBrand]: true;
 }>;
 
-/** 保留 committed public read 类型的 participant token */
+/**
+ * 保留 committed public read 类型的 participant token
+ * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
+ */
 export type RuntimeCommitParticipant<TRead> = RuntimeCommitParticipantToken &
   Readonly<{
     /** phantom 函数只承载 read 类型，不存在于运行时 token */
@@ -50,7 +54,7 @@ export type RuntimeParticipantWarningInput = Readonly<{
   /** 稳定 warning 分类 */
   code: string;
   /** 产生 warning 的领域阶段 */
-  phase: RuntimeDiagnosticPhaseValue;
+  phase: RuntimeDiagnosticPhase;
   /** 面向开发者的 warning 信息 */
   message: string;
 }>;
@@ -68,11 +72,23 @@ export type RuntimeParticipantContext = Readonly<{
 
 /** participant candidate 只允许读取已声明依赖 */
 export type RuntimeParticipantCandidateLookup = Readonly<{
-  /** 读取 Source candidate Snapshot */
+  /**
+   * 读取 Source candidate Snapshot
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   snapshot: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeSnapshot<TRead>;
-  /** 读取 Computation candidate public artifact Snapshot */
+  /**
+   * 读取 Computation candidate public artifact Snapshot
+   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+   * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
+   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+   */
   artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
     computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
   ) => RuntimeSnapshot<TPublicRead>;
@@ -82,7 +98,7 @@ export type RuntimeParticipantCandidateLookup = Readonly<{
 export type RuntimeParticipantCandidateView =
   | (RuntimeParticipantCandidateLookup &
       Readonly<{
-        /** initial runtime candidate */
+        /** 初始化运行时使用的候选状态 */
         phase: typeof RuntimeComputationPhase.Initial;
         /** initial candidate 不存在 base revision */
         baseRevision?: never;
@@ -91,7 +107,7 @@ export type RuntimeParticipantCandidateView =
       }>)
   | (RuntimeParticipantCandidateLookup &
       Readonly<{
-        /** update runtime candidate */
+        /** 运行时更新使用的候选状态 */
         phase: typeof RuntimeComputationPhase.Update;
         /** update 基于的 current revision */
         baseRevision: RuntimeRevision;
@@ -99,7 +115,10 @@ export type RuntimeParticipantCandidateView =
         candidateRevision: RuntimeRevision;
       }>);
 
-/** Runtime commit participant 的作者侧输入 */
+/**
+ * Runtime commit participant 的作者侧输入
+ * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
+ */
 export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
   /** participant 的稳定唯一 key */
   key: string;
@@ -121,7 +140,10 @@ export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
 
 /** participant 私有 executor 的类型擦除视图 */
 export type RuntimeCommitParticipantExecutor = Readonly<{
+  /** 为候选状态准备可回滚的参与者提交事务 */
   prepare: RuntimeCommitParticipantDefinitionInput<unknown>['prepare'];
+  /** 读取参与者已提交的公开状态 */
   read: RuntimeCommitParticipantDefinitionInput<unknown>['read'];
+  /** 释放参与者持有的宿主状态 */
   dispose: RuntimeCommitParticipantDefinitionInput<unknown>['dispose'];
 }>;

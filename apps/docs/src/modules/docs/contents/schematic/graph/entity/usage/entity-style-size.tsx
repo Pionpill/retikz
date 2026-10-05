@@ -22,7 +22,9 @@ const createPreview = (lang: Lang) =>
   );
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewControls = previewControlContract.controls;
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
 
 /** 样式与尺寸试验场的语言 */

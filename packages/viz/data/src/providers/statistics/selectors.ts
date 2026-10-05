@@ -2,7 +2,6 @@ import { defineRowSelectorImplementation } from '../../contract';
 import type { AnySynchronousRowSelectorImplementation } from '../../contract';
 import type { AnyRowSelectorDefinition } from '../../contract';
 import { defineRowSelector } from '../../contract';
-import type { RowSelectorTieValue } from '../../schemas';
 import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
@@ -12,7 +11,7 @@ import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } 
 /** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略 */
 const selectTopBottomRows = (
   ranked: Array<ExternalRow>,
-  operation: { by: string; n: number; tie?: RowSelectorTieValue },
+  operation: { by: string; n: number; tie?: RowSelectorTie },
 ): Array<ExternalRow> => {
   const selected = ranked.slice(0, operation.n);
   if (selected.length === 0 || ranked.length <= selected.length) return selected;
@@ -24,12 +23,14 @@ const selectTopBottomRows = (
       selected.push(row);
     }
   }
+
   if (operation.tie === RowSelectorTie.Last) {
     for (const row of ranked.slice(operation.n)) {
       if (resolveFieldPath(row, operation.by) !== threshold) break;
       selected[selected.length - 1] = row;
     }
   }
+
   return selected;
 };
 
@@ -51,6 +52,7 @@ const minSelectorImplementation = defineRowSelectorImplementation({
         .filter(row => resolveFieldPath(row, operation.by) === value)
         .map((row, index) => ({ row, rank: index + 1 }));
     }
+
     const row =
       operation.tie === RowSelectorTie.Last
         ? ([...ranked]
@@ -59,6 +61,7 @@ const minSelectorImplementation = defineRowSelectorImplementation({
               candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by),
             ) ?? ranked[0])
         : ranked[0];
+
     return [{ row, rank: 1 }];
   },
 });
@@ -81,6 +84,7 @@ const maxSelectorImplementation = defineRowSelectorImplementation({
         .filter(row => resolveFieldPath(row, operation.by) === value)
         .map((row, index) => ({ row, rank: index + 1 }));
     }
+
     const row =
       operation.tie === RowSelectorTie.Last
         ? ([...ranked]
@@ -89,6 +93,7 @@ const maxSelectorImplementation = defineRowSelectorImplementation({
               candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by),
             ) ?? ranked[0])
         : ranked[0];
+
     return [{ row, rank: 1 }];
   },
 });
@@ -185,6 +190,7 @@ const outsideQuantileBandSelectorImplementation = defineRowSelectorImplementatio
     const factor = boundary.kind === 'spread' ? spreadFactorOf(boundary.factor) : 0;
     const lower = boundary.kind === 'spread' ? stats.lower - factor * stats.spread : stats.lower;
     const upper = boundary.kind === 'spread' ? stats.upper + factor * stats.spread : stats.upper;
+
     return stats.entries
       .filter(entry => entry.value < lower || entry.value > upper)
       .map((entry, index) => ({ row: entry.row, rank: index + 1 }));

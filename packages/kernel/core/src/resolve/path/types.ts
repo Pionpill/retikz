@@ -18,7 +18,7 @@ import type {
   IRTarget,
   ResolvedDropShadow,
 } from '../../schemas';
-import type { ThemeModeValue } from '../../shared';
+import type { ThemeMode } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
@@ -100,7 +100,12 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
   /** 已确定的宿主标签 */
   label?: ResolvedGeometryLabel | Array<ResolvedGeometryLabel>;
   /** 已确定 arrow 颜色的 marks */
-  marks?: Array<Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & { mark: ResolvedArrowMark }>;
+  marks?: Array<
+    Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & {
+      /** 已解析上下文颜色的箭头标记 */
+      mark: ResolvedArrowMark;
+    }
+  >;
 };
 
 type WithCanonicalStepLabel<TStep extends ResolvedStepSource> = TStep extends unknown
@@ -144,7 +149,9 @@ export type CanonicalPath = Omit<
 
 /** path kind provider 在 resolving 阶段绑定后的定义与 kindOptions */
 export type PathKindResolution = Readonly<{
+  /** 当前路径种类的注册名称 */
   name: string;
+  /** 与当前路径匹配的路径种类定义 */
   definition: AnyPathKindDefinition;
   /** 通过该 definition 完整 schema 解析后的 source subject */
   path: IRPathBase;
@@ -152,43 +159,67 @@ export type PathKindResolution = Readonly<{
 
 /** path generator step 在 resolving 阶段绑定后的定义与参数 */
 export type PathGeneratorResolution = Readonly<{
+  /** 生成器步骤在路径子步骤中的零基索引 */
   stepIndex: number;
+  /** 路径生成器的注册名称 */
   name: string;
+  /** 当前步骤匹配的生成器定义 */
   definition: PathGeneratorDefinition;
+  /** 经生成器参数 schema 校验的 JSON 参数 */
   params: JsonObject;
+  /** 用于定位生成器错误的 IR 路径 */
   irPath: string;
 }>;
 
 /** arrow mark 的有效视觉属性 */
 export type ArrowMarkVisual = Readonly<{
+  /** 箭头形状定义的注册名称 */
   shape: string;
+  /** 对有效长度与宽度共同应用的比例系数 */
   scale: number;
+  /** 应用 scale 前的箭头长度参数 */
   length: number;
+  /** 应用 scale 前的箭头宽度参数 */
   width: number;
+  /** 已解析的箭头主色 */
   color?: string;
+  /** 实心箭头的可选填充色，空心箭头不保留该值 */
   fill?: string;
+  /** 与宿主路径不透明度相乘的箭头不透明度 */
   opacity?: number;
+  /** 空心箭头在定义基准坐标中的描边宽度 */
   lineWidth: number;
 }>;
 
 /** arrow mark 在 resolving 阶段确定的几何输入 */
 export type ArrowMarkGeometry = Readonly<{
+  /** 箭头定义采用的几何基准尺寸 */
   baseSize: number;
+  /** 箭头尖端在定义基准坐标中的 x */
   tipX: number;
   /** 空心外轮廓补偿后的 marker 局部视觉后缘 */
   visualBackX: number;
+  /** 计入空心描边补偿的路径接触点 x */
   contactX: number;
+  /** 箭头长度参数乘 scale 后的有效长度 */
   resolvedLength: number;
+  /** 箭头宽度参数乘 scale 后的有效宽度 */
   resolvedWidth: number;
+  /** 为避开箭头外缘所需的边界内缩量，尚未乘宿主线宽 */
   boundaryOuterInset: number;
+  /** 路径端点向内收缩的距离，已含接触重叠补偿且尚未乘宿主线宽 */
   shrink: number;
 }>;
 
 /** arrow mark 在 resolving 阶段绑定的 provider、视觉属性与几何输入 */
 export type ArrowMarkResolution = Readonly<{
+  /** 当前箭头标记的输入声明 */
   mark: IRArrowMark;
+  /** 当前箭头匹配的形状定义 */
   definition: ArrowDefinition;
+  /** 完成默认值与颜色解析的视觉属性 */
   visual: ArrowMarkVisual;
+  /** 用于端点放置和路径收缩的几何参数 */
   geometry: ArrowMarkGeometry;
 }>;
 
@@ -219,18 +250,18 @@ export type PathResolveContext = Readonly<{
   /** 当前样式级联栈 */
   styleStack?: ReadonlyArray<StyleResolveFrame>;
   /** 当前 path 所在位置的 Theme 明暗模式 */
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   /** target/reference 解析能力 */
   targetResolver?: PathTargetResolver;
-  /** path kind provider registry */
+  /** 路径种类能力注册表 */
   pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
-  /** path generator provider registry */
+  /** 路径生成器能力注册表 */
   pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** arrow provider registry */
+  /** 箭头能力注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
-  /** pattern paint provider registry */
+  /** 图案填充能力注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
-  /** paint resource dimensions rounding */
+  /** 填充资源尺寸的数值舍入函数 */
   round: (value: number) => number;
   /** 当前 path 的 IR locator，用于 provider payload 诊断 */
   irPath?: string;
@@ -273,7 +304,12 @@ export type PathResolution = Readonly<{
   /** 已绑定的 path kind provider 与 options */
   kind: PathKindResolution;
   /** 已完成 paint provider selection 和 pattern style shaping */
-  paint: Readonly<{ fill?: PaintResolutionInput; stroke?: PaintResolutionInput }>;
+  paint: Readonly<{
+    /** 路径填充的已解析绘制输入 */
+    fill?: PaintResolutionInput;
+    /** 路径描边的已解析绘制输入 */
+    stroke?: PaintResolutionInput;
+  }>;
   /** 已完成 path kind 相关静态样式默认值解析 */
   style: PathStyleResolution;
 }>;

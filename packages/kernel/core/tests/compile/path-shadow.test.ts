@@ -18,6 +18,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 };
 
 const move = (to: [number, number]): unknown => ({ type: 'step', kind: 'move', to });
+
 const line = (to: [number, number]): unknown => ({ type: 'step', kind: 'line', to });
 
 const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
@@ -34,6 +35,7 @@ describe('[path-shadow] Happy', () => {
         style: { stroke: 'steelblue', shadow: { offsetX: 1, offsetY: 1, blur: 2, color: 'rgba(0,0,0,0.4)' } },
       }).primitives,
     );
+
     expect(prim.shadow).toEqual({ offsetX: 1, offsetY: 1, blur: 2, color: 'rgba(0,0,0,0.4)' });
   });
 
@@ -43,6 +45,7 @@ describe('[path-shadow] Happy', () => {
         style: { stroke: 'steelblue', shadow: 'md' },
       }).primitives,
     );
+
     expect(prim.shadow).toEqual(SHADOW_PRESETS.md);
   });
 
@@ -52,6 +55,7 @@ describe('[path-shadow] Happy', () => {
         style: { shadow: { offsetX: 2, offsetY: 2 } },
       }).primitives,
     );
+
     expect(prim.shadow).toMatchObject({ offsetX: 2, offsetY: 2, color: 'rgba(0,0,0,0.5)' });
   });
 });
@@ -69,6 +73,7 @@ describe('[path-shadow] 边界', () => {
         style: { shadow: { offsetX: 1, offsetY: 1, blur: 0 } },
       }).primitives,
     );
+
     expect(prim.shadow!.blur).toBe(0);
   });
 
@@ -83,6 +88,7 @@ describe('[path-shadow] 边界', () => {
         style: { shadow: { preset: 'md' } },
       }).primitives,
     );
+
     expect(a.shadow).toEqual(b.shadow);
   });
 
@@ -92,6 +98,7 @@ describe('[path-shadow] 边界', () => {
         style: { shadow: { preset: 'sm', offsetY: 99 } },
       }).primitives,
     );
+
     expect(prim.shadow).toEqual({
       offsetX: SHADOW_PRESETS.sm!.offsetX,
       offsetY: 99,
@@ -149,6 +156,7 @@ describe('[path-shadow] 交互', () => {
         style: { stroke: 'steelblue', shadow: 'md' },
       }).primitives,
     );
+
     expect(prim.shadow).toEqual(SHADOW_PRESETS.md);
     expect(prim.arrowEnd).toBeDefined();
     expect((prim.arrowEnd as unknown as { shadow?: unknown }).shadow).toBeUndefined();
@@ -160,6 +168,7 @@ describe('[path-shadow] 交互', () => {
         style: { opacity: 0.6, shadow: 'md' },
       }).primitives,
     );
+
     expect(prim.opacity).toBe(0.6);
     expect(prim.shadow).toEqual(SHADOW_PRESETS.md);
   });
@@ -169,6 +178,7 @@ describe('[path-shadow] 交互', () => {
     const shadowed = compilePath({
       style: { shadow: { offsetX: 0, offsetY: 20, blur: 10 } },
     });
+
     expect(bottomOf(shadowed.layout)).toBeGreaterThan(bottomOf(plain.layout) + 25);
   });
 });
@@ -184,6 +194,7 @@ describe('[path-shadow] round-trip', () => {
     };
     const parsed = PathSchema.parse(path);
     const round = PathSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(round.style?.shadow).toEqual(parsed.style?.shadow);
   });
 });

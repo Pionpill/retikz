@@ -28,9 +28,11 @@ describe('Branch compile', () => {
       mainBranch: 'main',
       presentation: { title: { text: 'Roadmap' } },
     });
+
     expect(result.artifacts.some(artifact => artifact.kind === 'composite')).toBe(true);
     expect(JSON.stringify(result.scene)).toContain('label-b');
   });
+
   it.each([
     { nodes: [{ id: 'a' }], branches: [{ id: 'x', nodes: ['a'] }], mainBranch: 'missing' },
     {
@@ -52,6 +54,7 @@ describe('Branch compile', () => {
     { nodes: [{ id: 'a' }, { id: 'b' }], branches: [{ id: 'x', nodes: ['a'] }] },
     { nodes: [{ id: 'a' }], branches: [{ id: 'x', nodes: ['a', 'a'] }] },
   ])('rejects invalid topology %j', source => expect(() => compile(source)).toThrow());
+
   it('rejects conflicting shared segment appearances', () => {
     expect(() =>
       compile({

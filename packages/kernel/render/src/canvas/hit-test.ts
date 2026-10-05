@@ -39,6 +39,7 @@ const resolveContext = (options: HitTestOptions | undefined): CanvasRenderingCon
   if (fallbackContext === undefined) {
     fallbackContext = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
   }
+
   return fallbackContext;
 };
 
@@ -81,11 +82,15 @@ const hitPrim = (
   if (!buildPrimPath(ctx, prim)) return false;
   if (hasFill(prim) && ctx.isPointInPath(point.x, point.y)) return true;
   if (prim.type === 'text' || prim.type === 'group') return false;
+
   const hasStroke = prim.stroke !== undefined && prim.stroke !== 'none';
   if (!hasStroke) return false;
+
   const halfWidth = strokeTolerance ?? (prim.strokeWidth ?? 0) / 2;
   if (halfWidth <= 0) return false;
+
   ctx.lineWidth = 2 * halfWidth;
+
   return ctx.isPointInStroke(point.x, point.y);
 };
 
@@ -105,6 +110,7 @@ const insideClip = (ctx: CanvasRenderingContext2D, path: SceneClipPath | undefin
 export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions): string | null => {
   const ctx = resolveContext(options);
   if (ctx === null) return null;
+
   const strokeTolerance = options?.strokeTolerance;
   const clipResources = new Map(
     (scene.resources ?? []).flatMap(r => (r.kind === 'clip' ? [[r.id, r.path] as const] : [])),
@@ -113,23 +119,30 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
   // 逆 z-order：后画的在上，先测最后画的；命中即返回最近 id-bearing 祖先 id。
   const walk = (prim: ScenePrimitive, nearestId: string | undefined): string | null => {
     if (prim.hitTest === false) return null;
+
     const selfId = prim.id ?? nearestId;
     if (prim.type === 'group') {
       ctx.save();
+
       for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
       const path = prim.clipRef !== undefined ? clipResources.get(prim.clipRef) : undefined;
       if (!insideClip(ctx, path, point)) {
         ctx.restore();
         return null;
       }
+
       let result: string | null = null;
+
       for (let i = prim.children.length - 1; i >= 0; i--) {
         result = walk(prim.children[i], selfId);
         if (result !== null) break;
       }
+
       ctx.restore();
+
       return result;
     }
+
     return hitPrim(ctx, prim, point, strokeTolerance) ? (selfId ?? null) : null;
   };
 
@@ -137,5 +150,6 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
     const result = walk(scene.primitives[i], undefined);
     if (result !== null) return result;
   }
+
   return null;
 };

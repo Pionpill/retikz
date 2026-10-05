@@ -53,11 +53,11 @@ const PolarInterpolation = {
   Chord: 'chord',
 } as const;
 
-type PolarInterpolationValue = ValueOf<typeof PolarInterpolation>;
+type PolarInterpolation = ValueOf<typeof PolarInterpolation>;
 
 type IRPlotPolar2DCoordinate = {
   type: 'polar2D';
-  interpolation?: PolarInterpolationValue;
+  interpolation?: PolarInterpolation;
   // 既有 angle / radius / startAngle / endAngle / innerRadius
 };
 
@@ -69,29 +69,29 @@ type PositionScaleDefinition = {
 
 type PolarCoordinateFrame = {
   type: 'polar2D';
-  interpolation: PolarInterpolationValue;
+  interpolation: PolarInterpolation;
   projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
-  projectCell: (cell: Cell, options?: { interpolation?: PolarInterpolationValue }) => CellGeometry;
+  projectCell: (cell: Cell, options?: { interpolation?: PolarInterpolation }) => CellGeometry;
   // 既有已解析 scale、范围与点 / 极坐标投影能力
 };
 
 type IRPlotPathMark = {
   type: 'path';
-  interpolation?: PolarInterpolationValue;
+  interpolation?: PolarInterpolation;
 };
 
 type IRPlotIntervalMark = {
   type: 'interval';
-  interpolation?: PolarInterpolationValue;
+  interpolation?: PolarInterpolation;
 };
 
 type IRPlotReferenceMark = {
   type: 'reference';
-  interpolation?: PolarInterpolationValue;
+  interpolation?: PolarInterpolation;
 };
 
 type IRPlotRelationPathGeometry = {
-  interpolation?: PolarInterpolationValue;
+  interpolation?: PolarInterpolation;
   // 既有 via / route / routing / label / options
 };
 ```

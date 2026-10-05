@@ -93,9 +93,11 @@ describe('layered Flow layout', () => {
         elements: [leaf('a', 1), leaf('b', 0)],
         relations: [relation('a', 'b')],
       });
+
       expect.unreachable('Expected an unsatisfiable rank error');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.FlowConstraintUnsatisfiable);
       expect(error.details.relatedIds).toEqual(expect.arrayContaining(['a', 'b']));
     }
@@ -152,6 +154,7 @@ describe('layered Flow layout', () => {
     });
 
     expect(centers).toEqual([34, 34, 34]);
+
     for (const route of output.relations) {
       expect(route.route.points.every(point => point[1] === 34)).toBe(true);
     }
@@ -169,6 +172,7 @@ describe('layered Flow layout', () => {
         ],
         relations: [relation('source', 'target')],
       });
+
       expect(output.relations[0]?.route.points).toEqual([
         [
           boundsOf(output, 'source').x + boundsOf(output, 'source').width / 2,
@@ -220,10 +224,13 @@ describe('layered Flow layout', () => {
     expect(first.relations[0]?.route.points).toEqual(first.relations[1]?.route.points);
     expect(first.relations[0]?.route.points).toHaveLength(2);
     expect(first.relations[0]?.labelBounds).toMatchObject({ width: 30, height: 12 });
+
     for (const route of first.relations) {
       expect(route.route.points.length).toBeGreaterThanOrEqual(2);
+
       route.route.points.slice(1).forEach((point, index) => {
         const previous = route.route.points[index];
+
         expect(point[0] === previous[0] || point[1] === previous[1]).toBe(true);
       });
     }
@@ -244,7 +251,9 @@ describe('layered Flow layout', () => {
 
     expect(target.x - (source.x + source.width)).toBeGreaterThanOrEqual(160);
     expect(labelBounds).toBeDefined();
+
     if (labelBounds === undefined) return;
+
     expect(labelBounds.x - (source.x + source.width)).toBeGreaterThanOrEqual(20);
     expect(target.x - (labelBounds.x + labelBounds.width)).toBeGreaterThanOrEqual(20);
   });
@@ -264,7 +273,9 @@ describe('layered Flow layout', () => {
 
     expect(target.y - (source.y + source.height)).toBeGreaterThanOrEqual(160);
     expect(labelBounds).toBeDefined();
+
     if (labelBounds === undefined) return;
+
     expect(labelBounds.y - (source.y + source.height)).toBeGreaterThanOrEqual(20);
     expect(target.y - (labelBounds.y + labelBounds.height)).toBeGreaterThanOrEqual(20);
   });
@@ -305,6 +316,7 @@ describe('layered Flow layout', () => {
               { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
             ],
           };
+
           return placementInput;
         },
       },
@@ -364,12 +376,14 @@ describe('layered Flow layout', () => {
     expect(output.elements.map(element => element.id)).toEqual(['group', 'a', 'b', 'outside']);
     expect(group.width).toBeGreaterThanOrEqual(120);
     expect(group.height).toBeGreaterThanOrEqual(80);
+
     for (const child of [a, b]) {
       expect(child.x).toBeGreaterThanOrEqual(group.x + 10);
       expect(child.y).toBeGreaterThanOrEqual(group.y + 20);
       expect(child.x + child.width).toBeLessThanOrEqual(group.x + group.width - 10);
       expect(child.y + child.height).toBeLessThanOrEqual(group.y + group.height - 10);
     }
+
     expect(output.relations).toHaveLength(3);
   });
 
@@ -401,8 +415,10 @@ describe('layered Flow layout', () => {
         },
         placeLayout: input => {
           calls += 1;
+
           expect(input.layout).toEqual({ kind: 'linear', id: 'lane', direction: 'down', gap: 10, align: 'end' });
           expect(input.elements.map(element => element.id)).toEqual(['first', 'second']);
+
           return {
             bounds: { x: 0, y: 0, width: 60, height: 60 },
             elements: [

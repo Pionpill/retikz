@@ -22,6 +22,7 @@ export const GroupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbe
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'Group.children');
     const dependencies = createGraphProviderDependencies(GroupProviderKey);
+
     return {
       node: normalizeGroup({
         ...input,

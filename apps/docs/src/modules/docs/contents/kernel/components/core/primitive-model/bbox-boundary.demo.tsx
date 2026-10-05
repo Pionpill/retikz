@@ -3,11 +3,17 @@ import { Circle, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const LX = -135;
+
 const RX = 135;
+
 const IFW = 78; // 内框宽（共享）
+
 const IFH = 52; // 内框高
+
 const BBW = 108; // 外接框宽 = 六边形 AABB
+
 const BBH = 93.53; // 外接框高
+
 const R = 54; // boundary="circle" 半径 = 外接框较长半轴（= 六边形外接圆）
 
 // 正六边形顶点（绕原点），circumscribe 共享内框；左右顶点贴外接框左右、横边贴外接框上下
@@ -20,6 +26,7 @@ const HEX: Array<[number, number]> = [
   [27, -46.77],
   [54, 0],
 ];
+
 const shift = (cx: number, pts: Array<[number, number]>): Array<[number, number]> =>
   pts.map(([x, y]): [number, number] => [cx + x, y]);
 

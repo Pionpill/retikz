@@ -28,18 +28,22 @@ export const objectValueOf = (value: unknown): JsonObject | undefined => {
 export const directFieldsOf = (value: unknown): ReadonlyArray<string> => {
   if (typeof value === 'string') return [value];
   if (Array.isArray(value)) return value.flatMap(item => directFieldsOf(item));
+
   const object = objectValueOf(value);
+
   return object !== undefined && typeof object.field === 'string' ? [object.field] : [];
 };
 
 /** 判断 exact mapping 的执行种类 */
 export const mappingKindOf = (value: unknown): 'direct' | 'aggregate' | 'derived' | undefined => {
   if (typeof value === 'string') return 'direct';
+
   const object = objectValueOf(value);
   if (object === undefined) return undefined;
   if (Object.hasOwn(object, 'aggregate')) return 'aggregate';
   if (Object.hasOwn(object, 'transform')) return 'derived';
   if (Object.hasOwn(object, 'field')) return 'direct';
+
   return undefined;
 };
 

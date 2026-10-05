@@ -5,6 +5,7 @@ import { rainfall } from './bar-radial.data';
 
 /** Stable control id for radial-bar inner radius */
 export const BAR_RADIAL_INNER_RADIUS_ID = 'bar-radial-inner-radius';
+
 export const BAR_RADIAL_GAP_ID = 'bar-radial-gap';
 
 /** English panel for radial-bar coordinates */

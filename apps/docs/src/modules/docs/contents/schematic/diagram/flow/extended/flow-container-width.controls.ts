@@ -20,11 +20,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { equal: true, fill: true, group: false },
     relatedApis: ['FlowLayout.containerWidth', 'FlowLayout.itemWidth'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

@@ -21,4 +21,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['Path.kindOptions.start.cap'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

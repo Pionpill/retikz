@@ -6,6 +6,7 @@ import { createPreviewControlContract } from './bubble-appearance.controls';
 import { renderBubbleAppearancePreview } from './bubble-appearance.preview';
 
 const contract = createPreviewControlContract();
+
 const controlledPreview = defineControlledPreview(contract, (values, dimensions) =>
   renderBubbleAppearancePreview(
     {
@@ -18,8 +19,10 @@ const controlledPreview = defineControlledPreview(contract, (values, dimensions)
     dimensions,
   ),
 );
+
 /** 气泡固定映射下的外观演示 */
 const Demo: FC = controlledPreview.Component;
+
 /** 注册回退使用的控件 */
 export const previewControls = contract.controls;
 export { createPreviewControlContract } from './bubble-appearance.controls';

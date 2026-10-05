@@ -59,6 +59,7 @@ const ratesOf = (records: Array<RunRecord>): PassRates => {
   const count = records.length;
   const zod = records.filter(r => r.zodOk).length;
   const compile = records.filter(r => r.compileOk).length;
+
   return {
     count,
     zodPassRate: count === 0 ? 0 : zod / count,
@@ -68,12 +69,14 @@ const ratesOf = (records: Array<RunRecord>): PassRates => {
 
 const groupBy = (records: Array<RunRecord>, key: (r: RunRecord) => string): Record<string, PassRates> => {
   const buckets = new Map<string, Array<RunRecord>>();
+
   for (const r of records) {
     const k = key(r);
     const list = buckets.get(k) ?? [];
     list.push(r);
     buckets.set(k, list);
   }
+
   return Object.fromEntries([...buckets].map(([k, list]) => [k, ratesOf(list)]));
 };
 
@@ -87,16 +90,20 @@ const summarizeL2 = (records: Array<RunRecord>): { l2: L2Summary; assertionFailu
   let candidatePass = 0;
   const byKind: Record<string, { passed: number; total: number }> = {};
   const assertionFailures: Array<AssertionFailure> = [];
+
   for (const r of reachedRecs) {
     const l2 = r.l2;
     if (l2 === null) continue;
+
     assertionsTotal += l2.total;
     assertionsPassed += l2.passed;
     if (l2.passed === l2.total) candidatePass += 1;
+
     for (const a of l2.results) {
       if (!Object.hasOwn(byKind, a.kind)) {
         byKind[a.kind] = { passed: 0, total: 0 };
       }
+
       const bucket = byKind[a.kind];
       bucket.total += 1;
       if (a.pass) bucket.passed += 1;
@@ -112,6 +119,7 @@ const summarizeL2 = (records: Array<RunRecord>): { l2: L2Summary; assertionFailu
       }
     }
   }
+
   return {
     l2: {
       reached,

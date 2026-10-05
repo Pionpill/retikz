@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** Cell 在表格语义区域中的位置 */
 export const TableCellLocation = {
   /** 列表头区域 */
@@ -61,3 +63,24 @@ export const TableCellOverflow = {
   /** 裁剪到 content box */
   Clip: 'clip',
 } as const;
+
+/** Cell 语义位置取值 */
+export type TableCellLocation = ValueOf<typeof TableCellLocation>;
+
+/** Cell 语义角色取值 */
+export type TableCellRole = ValueOf<typeof TableCellRole>;
+
+/** Table Cell payload 判别值 */
+export type TableCellPayloadKind = ValueOf<typeof TableCellPayloadKind>;
+
+/** Cell 横向对齐取值 */
+export type TableHorizontalAlignment = ValueOf<typeof TableHorizontalAlignment>;
+
+/** Cell 纵向对齐取值 */
+export type TableVerticalAlignment = ValueOf<typeof TableVerticalAlignment>;
+
+/** Cell 内容 fit 取值 */
+export type TableCellFit = ValueOf<typeof TableCellFit>;
+
+/** Cell 内容 overflow 取值 */
+export type TableCellOverflow = ValueOf<typeof TableCellOverflow>;

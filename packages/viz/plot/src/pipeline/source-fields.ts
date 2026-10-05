@@ -21,15 +21,19 @@ const collectTransformPipelineFields = (
   transformContext?: TransformContext,
 ): Set<string> => {
   const derived = new Set(initialDerived);
+
   for (const { operation: transform } of transforms) {
     const inputs = new Set<string>();
     const outputs = new Set<string>();
     collectTransformFields(transform, createFieldCollector(inputs), outputs, transformRegistry, transformContext);
+
     for (const input of inputs) {
       if (!derived.has(input)) sourceFields.add(input);
     }
+
     for (const output of outputs) derived.add(output);
   }
+
   return derived;
 };
 
@@ -48,6 +52,7 @@ export const collectSourceFields = (
     transformRegistry,
     transformContext,
   );
+
   for (const mark of spec.marks) {
     const markDerived = collectTransformPipelineFields(
       markTransformOf(mark) ?? [],
@@ -58,6 +63,7 @@ export const collectSourceFields = (
     );
     const markFields = new Set<string>();
     collectMarkFields(mark, createFieldCollector(markFields), { registry: markRegistry });
+
     for (const field of markFields) {
       if (!markDerived.has(field)) fields.add(field);
     }

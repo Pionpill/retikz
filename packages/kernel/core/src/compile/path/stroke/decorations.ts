@@ -14,11 +14,17 @@ import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
 export type PathEndpointDecorations = {
   /** 起点 / 终点箭头规格与 shrink 信息 */
   arrows: {
+    /** 选中的起点箭头规格 */
     arrowStart?: ResolvedArrowEnd;
+    /** 选中的终点箭头规格 */
     arrowEnd?: ResolvedArrowEnd;
+    /** 起点沿路径收缩的线宽倍数 */
     shrinkStart: number;
+    /** 终点沿路径收缩的线宽倍数 */
     shrinkEnd: number;
+    /** 起点箭头相对边界的外侧内缩系数，以线宽为单位 */
     boundaryOuterInsetStart: number;
+    /** 终点箭头相对边界的外侧内缩系数，以线宽为单位 */
     boundaryOuterInsetEnd: number;
   };
   /** 非端点 marks，稍后按 path 采样点 emit 成 Scene primitive */
@@ -51,6 +57,7 @@ export const emitPathEndpointDecorations = (
     boundaryOuterInsetEnd: 0,
   };
   const inlineMarks: NonNullable<IRPathBase['marks']> = [];
+
   for (const [index, item] of (path.marks ?? []).entries()) {
     if (item.pos === 0 && arrows.arrowStart === undefined) {
       const resolved = emitEndpointArrowMark(
@@ -69,6 +76,7 @@ export const emitPathEndpointDecorations = (
       arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
       continue;
     }
+
     if (item.pos === 1 && arrows.arrowEnd === undefined) {
       const resolved = emitEndpointArrowMark(
         arrowResolutions.get(item.mark) ??
@@ -86,14 +94,17 @@ export const emitPathEndpointDecorations = (
       arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
       continue;
     }
+
     if (item.endpointOverlap !== undefined) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
         `Path endpoint arrow overlap at ${irPath}.marks[${index}].endpointOverlap requires the selected start or end arrow placement.`,
       );
     }
+
     inlineMarks.push(item);
   }
+
   return { arrows, inlineMarks };
 };
 
@@ -135,9 +146,11 @@ export const emitInlineMarkPrimitives = ({
   }
 
   const strokeWidth = baseProps.strokeWidth;
+
   for (const { pos, mark } of inlineMarks) {
     const sample = sampleStrokePath({ commands, segmentSamplers, roundedCommands, position: pos });
     if (sample === undefined) continue;
+
     const resolution = arrowResolutions.get(mark);
     if (resolution === undefined) {
       throw new RetikzCoreError(
@@ -145,6 +158,7 @@ export const emitInlineMarkPrimitives = ({
         `Path arrow mark '${mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
       );
     }
+
     const spec = emitMarkArrow(resolution, round);
     primitives.push(
       buildMarkMarkerGroup(spec, sample, {
@@ -155,6 +169,7 @@ export const emitInlineMarkPrimitives = ({
     );
     boundsPoints.push(sample.point);
   }
+
   return { primitives, boundsPoints };
 };
 
@@ -165,5 +180,6 @@ export const pathEndpointArrows = (
   const endpointSpecs: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } = {};
   if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;
   if (arrows.arrowEnd) endpointSpecs.arrowEnd = arrows.arrowEnd;
+
   return endpointSpecs;
 };

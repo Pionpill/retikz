@@ -6,7 +6,9 @@ import { createInspectorRegistry, defineInspector, RetikzInspectError } from '..
 import { resolveInspectionSelection } from '../../src/compile/selection';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
+
 const key = { namespace: 'test', type: 'box' };
+
 const definition = defineInspector({
   ...key,
   owner,
@@ -15,7 +17,9 @@ const definition = defineInspector({
   mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
   inspect: () => [],
 });
+
 const registry = createInspectorRegistry([definition]);
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -29,6 +33,7 @@ const ir: IRScene = {
     },
   ],
 };
+
 const observation = (index: number): CompileObservation => ({
   owner,
   occurrence: { sourcePath: `children[0].scope.children[${index}]`, expansionPath: [] },
@@ -69,6 +74,7 @@ describe('Inspection selection', () => {
       optionsSchema: strictObject({ count: string().default('2').transform(Number) }),
       inspect: () => [],
     };
+
     for (const [options, count] of [
       [true, 2],
       [{ count: '5' }, 5],
@@ -79,6 +85,7 @@ describe('Inspection selection', () => {
         observations: [observation(0)],
         selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options }] },
       });
+
       expect(requests[0]?.options).toEqual({ count });
     }
   });
@@ -98,6 +105,7 @@ describe('Inspection selection', () => {
       observations: [observation(0)],
       selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options: true }] },
     });
+
     expect(requests[0]?.options).toEqual({ label: '2.0' });
   });
 
@@ -126,9 +134,11 @@ describe('Inspection selection', () => {
         ],
       },
     });
+
     expect(resolved.map(request => request.options.label)).toEqual(['parent!', 'parent!']);
     expect(sourceOptions).toEqual({ label: 'parent' });
   });
+
   it('merges three authored layers before transforming effective options', () => {
     const transformed = defineInspector({
       ...key,
@@ -164,6 +174,7 @@ describe('Inspection selection', () => {
         ],
       },
     });
+
     expect(resolved[0]?.options).toEqual({ label: 'once!' });
   });
 
@@ -187,6 +198,7 @@ describe('Inspection selection', () => {
       }),
     ).toThrow();
   });
+
   it('evaluates scene, outer subtree, authored self and allocates appearance after stable sorting', () => {
     const resolved = resolveInspectionSelection({
       ir,
@@ -240,6 +252,7 @@ describe('Inspection selection', () => {
         ],
       },
     });
+
     expect(resolved).toEqual([]);
   });
 
@@ -273,6 +286,7 @@ describe('Inspection selection', () => {
       inspect: () => [],
     });
     const pathRegistry = createInspectorRegistry([pathDefinition]);
+
     expect(() =>
       resolveInspectionSelection({
         ir,

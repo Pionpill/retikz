@@ -11,7 +11,10 @@ export type CoreComputationStateRead = Readonly<{
   index: CoreSnapshotIndexRead;
 }>;
 
-/** Core Computation 自身可见的 private read */
+/**
+ * Core Computation 自身可见的 private read
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreComputationRead<TComposites extends ReadonlyArray<AnyCompositeDefinition>> =
   CoreComputationPublicRead<TComposites> &
     Readonly<{
@@ -19,7 +22,10 @@ export type CoreComputationRead<TComposites extends ReadonlyArray<AnyCompositeDe
       state: CoreComputationStateRead;
     }>;
 
-/** Core Computation prepare 交给 Runtime capture 的输入 */
+/**
+ * Core Computation prepare 交给 Runtime capture 的输入
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreComputationArtifactInput<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 对外 artifact view */
   publicRead: CoreComputationPublicRead<TComposites>;
@@ -27,6 +33,9 @@ export type CoreComputationArtifactInput<TComposites extends ReadonlyArray<AnyCo
   state: CoreComputationStateRead;
 }>;
 
-/** Runtime 实际持有的 Core Computation artifact */
+/**
+ * Runtime 实际持有的 Core Computation artifact
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreComputationArtifact<TComposites extends ReadonlyArray<AnyCompositeDefinition>> =
   CoreComputationArtifactInput<TComposites>;

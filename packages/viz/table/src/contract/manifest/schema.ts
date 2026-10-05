@@ -17,7 +17,9 @@ import { TableCellSourceSchema } from '../structure';
 import { TableBorderContributionOrigin } from './constants';
 
 const TableBorderSideSchema = zodEnum(['top', 'right', 'bottom', 'left']);
+
 const TableBorderOrientationSchema = zodEnum(['horizontal', 'vertical']);
+
 const TableBorderPrioritySchema = number().refine(Number.isInteger, {
   message: 'Border priority must be a finite integer.',
 });
@@ -31,6 +33,7 @@ const TableBorderVertexSchema = strictObject({
   y: number().describe('Finite Table-local y coordinate.'),
 });
 
+/** 校验最终边框线样式，包括颜色、非负线宽、虚线与固定线帽连接方式 */
 export const ResolvedTableBorderLineSchema = strictObject({
   color: CssColorSchema.describe('Master color used to resolve contextual border paint.'),
   stroke: PaintValueSchema.refine(value => value !== 'none', {
@@ -67,6 +70,7 @@ const TableGridBorderSourceSchema = strictObject({
   boundaryIndex: NonNegativeIntegerSchema.describe('Canonical internal boundary index.'),
 });
 
+/** 校验边框贡献来自单元格、外边框或内部网格的来源描述 */
 export const TableBorderSourceSchema = union([
   TableCellBorderSourceSchema,
   TableOuterBorderSourceSchema,
@@ -82,6 +86,7 @@ const TableBorderContributionBaseShape = {
   sourceOrderKey: NonBlankStringSchema.describe('Canonical source ordering key independent of Cell id.'),
 };
 
+/** 校验显式隐藏某段边框的候选贡献 */
 export const TableNoBorderContributionSchema = strictObject({
   kind: literal('none').describe('Discriminator for an explicit hidden border candidate.'),
   origin: literal(TableBorderContributionOrigin.Explicit).describe('Explicit Table, Cell, or rule border origin.'),
@@ -112,23 +117,27 @@ const TableDefaultsLineBorderContributionSchema = strictObject({
   defaults: TableDefaultsProvenanceSchema.describe('Required Source defaults provenance.'),
 });
 
+/** 校验来自显式声明或输入默认层的已解析线边框贡献 */
 export const TableLineBorderContributionSchema = discriminatedUnion('origin', [
   TableExplicitLineBorderContributionSchema,
   TableDefaultsLineBorderContributionSchema,
 ]).describe('Explicit or Source-defaults-origin resolved line contribution.');
 
+/** 校验边框竞争中的隐藏或线条候选贡献 */
 export const TableBorderContributionSchema = union([
   TableNoBorderContributionSchema,
   TableDefaultsNoBorderContributionSchema,
   TableLineBorderContributionSchema,
 ]);
 
+/** 校验原子边段的规范键、胜出项与有序贡献来源 */
 export const TableBorderManifestAtomSchema = strictObject({
   key: NonBlankStringSchema.describe('Canonical atomic border key.'),
   winner: TableBorderContributionSchema.describe('Resolved atom winner.'),
   contributors: array(TableBorderContributionSchema).min(1).describe('Canonical ordered atom contributors.'),
 });
 
+/** 校验合并边段的局部几何、最终线样式及原子边段溯源 */
 export const TableBorderManifestEntrySchema = strictObject({
   edgeKey: NonBlankStringSchema.describe('Canonical merged edge key.'),
   orientation: TableBorderOrientationSchema.describe('Edge orientation.'),
@@ -139,6 +148,7 @@ export const TableBorderManifestEntrySchema = strictObject({
   pathId: NonBlankStringSchema.optional().describe('Optional emitted Core Path id.'),
 });
 
+/** 校验输出边框路径关联的表格标识、合并边键与原子边键 */
 export const TableBorderPathMetaSchema = strictObject({
   kind: literal('tableBorder').describe('Discriminator for emitted Table border Path metadata.'),
   tableId: NonBlankStringSchema.optional().describe('Optional owning Table id.'),
@@ -146,6 +156,7 @@ export const TableBorderPathMetaSchema = strictObject({
   atomicKeys: array(NonBlankStringSchema).min(1).describe('Canonical atomic keys represented by the Path.'),
 });
 
+/** 校验合并边键与输出路径标识之间的定位记录 */
 export const TableBorderLocatorEntrySchema = strictObject({
   edgeKey: NonBlankStringSchema.describe('Canonical merged edge key.'),
   pathId: NonBlankStringSchema.optional().describe('Optional emitted Core Path id.'),
@@ -158,6 +169,7 @@ const TableManifestBoundsSchema = strictObject({
   height: NonNegativeNumberSchema.describe('Finite nonnegative bounds height.'),
 }).describe('Detached Table-local axis-aligned bounds.');
 
+/** 校验已解析行列轨道的标识、下标、局部偏移和尺寸 */
 export const TableTrackManifestEntrySchema = strictObject({
   id: NonBlankStringSchema.optional().describe('Optional stable semantic track id.'),
   index: NonNegativeIntegerSchema.describe('Canonical track index.'),
@@ -165,6 +177,7 @@ export const TableTrackManifestEntrySchema = strictObject({
   size: NonNegativeNumberSchema.describe('Finite nonnegative track size.'),
 }).describe('Resolved Table row or column track geometry.');
 
+/** 校验已完成布局的单元格几何、身份、样式与溯源记录 */
 export const TableCellManifestEntrySchema = strictObject({
   cellId: NonBlankStringSchema.optional().describe('Optional stable semantic Cell id.'),
   rowId: NonBlankStringSchema.optional().describe('Optional stable semantic row id.'),
@@ -201,6 +214,7 @@ const TableDefaultsLayerKindSchema = zodEnum(['neutral', 'style', 'source']).des
   'Kind of Table Source defaults layer.',
 );
 
+/** 校验按有效级联顺序保留的单层表格默认值来源 */
 export const TableDefaultsSourceRecordSchema = strictObject({
   kind: TableDefaultsLayerKindSchema.describe('Resolved Table defaults source kind.'),
   path: NonBlankStringSchema.describe('Stable resolved Table defaults source path.'),
@@ -234,6 +248,7 @@ export const TableManifestStyleSchema: ReturnType<
         message: 'Table defaults cascade must begin with the effective neutral source',
       });
     }
+
     const seen = new Set<string>();
     style.layers.forEach((layer, index) => {
       if (seen.has(layer.path)) {
@@ -243,6 +258,7 @@ export const TableManifestStyleSchema: ReturnType<
           message: 'Table defaults source paths must be unique',
         });
       }
+
       seen.add(layer.path);
       if (layer.kind === 'style') {
         const expected = style.style === undefined ? undefined : `$style/${style.style}/${style.themeMode}`;
@@ -254,6 +270,7 @@ export const TableManifestStyleSchema: ReturnType<
           });
         }
       }
+
       if (layer.kind === 'source' && !layer.path.startsWith('$spec/')) {
         context.addIssue({
           code: 'custom',
@@ -266,14 +283,17 @@ export const TableManifestStyleSchema: ReturnType<
   .describe('Resolved Table defaults metadata.');
 
 type ManifestContribution = ZodInfer<typeof TableBorderContributionSchema>;
+
 type ManifestStyle = ZodInfer<typeof TableManifestStyleSchema>;
 
 const hasOwnPath = (value: unknown, path: ReadonlyArray<string>): boolean => {
   let current: unknown = value;
+
   for (const segment of path) {
     if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) return false;
     current = Reflect.get(current, segment);
   }
+
   return current !== undefined;
 };
 
@@ -295,11 +315,13 @@ const validateAppearanceDefaultsProvenance = (
   path: ReadonlyArray<string | number>,
 ): void => {
   if (trace.source.kind !== 'defaults') return;
+
   const defaultsPath = defaultsPathOfAppearanceTrace(cell, trace.path);
   const winner = [...style.layers]
     .reverse()
     .find(layer => layer.defaults !== undefined && hasOwnPath(layer.defaults, defaultsPath));
   if (winner?.path === trace.source.path) return;
+
   context.addIssue({
     code: 'custom',
     path: [...path, 'source', 'path'],
@@ -324,6 +346,7 @@ const validateBorderDefaultsProvenance = (
     });
     return;
   }
+
   const source = contribution.source;
   const defaultsPath = (() => {
     if (source.kind === 'cell') {
@@ -331,17 +354,21 @@ const validateBorderDefaultsProvenance = (
         candidate => candidate.rowIndex === source.row && candidate.columnIndex === source.column,
       );
       const location = cell?.location === 'columnHeader' ? 'columnHeader' : 'body';
+
       return ['appearanceDefaults', location, 'borders', source.side];
     }
+
     if (source.scope === 'outer') {
       return ['layout', 'borders', 'outer', source.side];
     }
+
     return ['layout', 'borders', source.scope];
   })();
   const winner = [...style.layers]
     .reverse()
     .find(layer => layer.defaults !== undefined && hasOwnPath(layer.defaults, defaultsPath));
   if (winner?.path === contribution.defaults.path) return;
+
   context.addIssue({
     code: 'custom',
     path: [...path, 'defaults', 'path'],
@@ -405,9 +432,11 @@ export const TableLayoutManifestSchema: ReturnType<
         });
         return;
       }
+
       encodingsById.set(encoding.id, encoding);
       encodingOrder.set(encoding.id, index);
     });
+
     manifest.cells.forEach((cell, cellIndex) => {
       cell.appearanceTrace.forEach((trace, traceIndex) => {
         validateAppearanceDefaultsProvenance(cell, trace, manifest.style, context, [
@@ -428,6 +457,7 @@ export const TableLayoutManifestSchema: ReturnType<
           });
           return;
         }
+
         if (order <= previousOrder) {
           context.addIssue({
             code: 'custom',
@@ -435,9 +465,11 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Cell encoding ids must be unique and follow manifest encoding order',
           });
         }
+
         previousOrder = order;
       });
     });
+
     manifest.encodings.forEach((encoding, encodingIndex) => {
       const expectedCellIndices = manifest.cells.flatMap((cell, cellIndex) =>
         cell.encodingIds.includes(encoding.id) ? [cellIndex] : [],
@@ -453,6 +485,7 @@ export const TableLayoutManifestSchema: ReturnType<
         });
       }
     });
+
     const descriptorEncodingIds = new Set<string>();
     manifest.legendDescriptors.forEach((descriptor, descriptorIndex) => {
       const encoding = encodingsById.get(descriptor.encodingId);
@@ -470,6 +503,7 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Legend descriptor channel must match its manifest encoding',
           });
         }
+
         if (descriptor.scaleName !== encoding.scaleName) {
           context.addIssue({
             code: 'custom',
@@ -478,6 +512,7 @@ export const TableLayoutManifestSchema: ReturnType<
           });
         }
       }
+
       if (descriptorEncodingIds.has(descriptor.encodingId)) {
         context.addIssue({
           code: 'custom',
@@ -485,8 +520,10 @@ export const TableLayoutManifestSchema: ReturnType<
           message: 'Each manifest encoding may produce at most one Legend descriptor',
         });
       }
+
       descriptorEncodingIds.add(descriptor.encodingId);
     });
+
     manifest.borders.forEach((border, borderIndex) => {
       border.atoms.forEach((atom, atomIndex) => {
         const contributionKeys = new Set(atom.contributors.map(contribution => contribution.key));
@@ -497,6 +534,7 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Border atom contribution keys must be unique',
           });
         }
+
         const matchingWinner = atom.contributors.find(contribution => contribution.key === atom.winner.key);
         if (matchingWinner === undefined || JSON.stringify(matchingWinner) !== JSON.stringify(atom.winner)) {
           context.addIssue({
@@ -505,6 +543,7 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Border atom winner must exactly match one contributor',
           });
         }
+
         validateBorderDefaultsProvenance(atom.winner, manifest.cells, manifest.style, context, [
           'borders',
           borderIndex,

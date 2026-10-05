@@ -8,7 +8,9 @@ import type { ExternalRow } from '../../shared';
 import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from './shared';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
+
 const DENSITY_EXTENT_BANDWIDTH_FACTOR = 3;
+
 const GAUSSIAN_NORMALIZER = 1 / Math.sqrt(2 * Math.PI);
 
 const standardDeviationOf = (values: ReadonlyArray<number>): number => {
@@ -21,11 +23,14 @@ const standardDeviationOf = (values: ReadonlyArray<number>): number => {
 const quantileOfSorted = (sorted: Array<number>, p: number): number => {
   if (sorted.length === 0) return 0;
   if (sorted.length === 1) return sorted[0];
+
   const index = (sorted.length - 1) * p;
   const lo = Math.floor(index);
   const hi = Math.ceil(index);
   if (lo === hi) return sorted[lo];
+
   const weight = index - lo;
+
   return sorted[lo] * (1 - weight) + sorted[hi] * weight;
 };
 
@@ -35,6 +40,7 @@ const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
       'data: density transform with Silverman bandwidth requires at least two finite samples; pass an explicit bandwidth for single-value groups',
     );
   }
+
   const stdDev = standardDeviationOf(sortedValues);
   const iqr = quantileOfSorted(sortedValues, 0.75) - quantileOfSorted(sortedValues, 0.25);
   const robustScale = iqr > 0 ? Math.min(stdDev, iqr / 1.34) : stdDev;
@@ -44,6 +50,7 @@ const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
       'data: density transform could not compute a positive Silverman bandwidth; values may be identical, pass an explicit bandwidth',
     );
   }
+
   return bandwidth;
 };
 
@@ -58,8 +65,10 @@ const sampleExtentOf = (
   bandwidth: number,
 ): [number, number] => {
   if (operation.extent !== undefined) return operation.extent;
+
   const min = sortedValues[0];
   const max = sortedValues[sortedValues.length - 1];
+
   return [min - DENSITY_EXTENT_BANDWIDTH_FACTOR * bandwidth, max + DENSITY_EXTENT_BANDWIDTH_FACTOR * bandwidth];
 };
 
@@ -93,9 +102,11 @@ export const applyDensity = (
     if (sortedValues.length === 0) {
       throw new RetikzDataError(`data: density transform field "${operation.field}" has no finite values`);
     }
+
     const bandwidth = bandwidthOf(operation, sortedValues);
     const extent = sampleExtentOf(operation, sortedValues, bandwidth);
     const sampleCount = operation.sampleCount ?? DEFAULT_DENSITY_SAMPLE_COUNT;
+
     return linearSamplesOf(extent, sampleCount).map(x =>
       context.groupProvenance(
         {

@@ -29,6 +29,7 @@ describe('Node default position', () => {
 
   it.each([false, true])('省略位置与显式局部原点输出等价，nested=%s', nested => {
     const node: IRNode = { type: 'node', id: 'a', text: 'A', rotate: 15, scale: 2 };
+
     expect(compileToScene(sceneWith(node, nested)).scene).toEqual(
       compileToScene(sceneWith({ ...node, position: [0, 0] }, nested)).scene,
     );
@@ -43,6 +44,7 @@ describe('Node default position', () => {
       { type: 'node', id: 'c', position: { kind: 'anchor', target: { id: 'a', anchor: 'right' }, selfAnchor: 'left' } },
     ];
     const scene: IRScene = { type: 'scene', version: 1, children };
+
     expect(compileToScene(scene).scene).toEqual(
       compileToScene({ ...scene, children: [{ ...source, position: [0, 0] }, ...children.slice(1)] }).scene,
     );

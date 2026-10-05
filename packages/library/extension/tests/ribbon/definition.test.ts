@@ -23,6 +23,7 @@ describe('Extension Ribbon definition', () => {
       children: line,
       style: { color: 'crimson', stroke: 'black' },
     });
+
     expect(scene.primitives.find(value => value.type === 'path')).toMatchObject({
       fill: 'crimson',
       stroke: 'black',
@@ -37,6 +38,7 @@ describe('Extension Ribbon definition', () => {
       marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'missing' } }],
       children: line,
     });
+
     expect(scene.primitives.filter(value => value.type === 'path')).toHaveLength(1);
   });
 
@@ -46,6 +48,7 @@ describe('Extension Ribbon definition', () => {
       kind: 'ribbon',
       kindOptions: { mode: 'boundary', upper: line, lower: line.map(step => ({ ...step, to: [step.to[0], -2] })) },
     });
+
     expect(scene.primitives.find(value => value.type === 'path')).toMatchObject({ fill: 'currentColor' });
   });
 });

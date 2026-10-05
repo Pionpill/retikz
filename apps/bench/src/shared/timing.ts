@@ -69,16 +69,19 @@ const trackedTimingScenarioIds = Object.freeze(
     left.localeCompare(right, 'en'),
   ),
 );
+
 const trackedTimingScenarioIdSet = new Set<string>(trackedTimingScenarioIds);
 
 /** 收集数组中重复的场景 id */
 const duplicateScenarioIds = (ids: ReadonlyArray<string>): ReadonlyArray<string> => {
   const seen = new Set<string>();
   const duplicates = new Set<string>();
+
   for (const id of ids) {
     if (seen.has(id)) duplicates.add(id);
     seen.add(id);
   }
+
   return Object.freeze([...duplicates].sort((left, right) => left.localeCompare(right, 'en')));
 };
 
@@ -98,6 +101,7 @@ export const createTimingBaselineCandidate = (
   const trackedReports = reports.filter(report => trackedTimingScenarioIdSet.has(report.id));
   const duplicates = duplicateScenarioIds(trackedReports.map(report => report.id));
   if (duplicates.length > 0) throw new Error(`duplicate tracked timing reports: ${duplicates.join(', ')}`);
+
   return Object.freeze({
     fingerprint,
     scenarios: Object.freeze(
@@ -117,19 +121,25 @@ export const compareTimingReports = (
   if (baseline === undefined) {
     return Object.freeze({ status: 'skipped', errors: Object.freeze(['timing baseline is unavailable']) });
   }
+
   if (baseline.fingerprint !== fingerprint) {
     return Object.freeze({ status: 'skipped', errors: Object.freeze(['timing baseline fingerprint mismatch']) });
   }
+
   const errors: Array<string> = [];
+
   for (const id of duplicateScenarioIds(reports.map(report => report.id))) {
     errors.push(`${id}: duplicate timing report`);
   }
+
   for (const id of duplicateScenarioIds(baseline.scenarios.map(scenario => scenario.id))) {
     errors.push(`${id}: duplicate tracked timing baseline`);
   }
+
   const reportById = new Map(reports.map(report => [report.id, report]));
   const baselineById = new Map(baseline.scenarios.map(scenario => [scenario.id, scenario]));
   let unstable = false;
+
   for (const id of trackedTimingScenarioIds) {
     const report = reportById.get(id);
     const scenario = baselineById.get(id);
@@ -137,26 +147,32 @@ export const compareTimingReports = (
       errors.push(`${id}: missing timing report`);
       continue;
     }
+
     if (scenario === undefined) {
       errors.push(`${id}: missing tracked timing baseline`);
       continue;
     }
+
     if (report.durationMs.median > scenario.durationMs.median * 1.2) {
       errors.push(`${id}: median exceeds tracked baseline 1.20x`);
     }
+
     if (report.durationMs.p95 > scenario.durationMs.p95 * 1.2) {
       errors.push(`${id}: p95 exceeds tracked baseline 1.20x`);
     }
+
     if (report.durationMs.max > scenario.durationMs.max * 2) {
       unstable = true;
       errors.push(`${id}: max exceeds tracked baseline 2.00x`);
     }
   }
+
   for (const scenario of baseline.scenarios) {
     if (!trackedTimingScenarioIdSet.has(scenario.id)) {
       errors.push(`${scenario.id}: untracked timing baseline scenario`);
     }
   }
+
   for (const [updateId, fullId, ratio] of relativeGuards) {
     const update = reportById.get(updateId);
     const full = reportById.get(fullId);
@@ -164,10 +180,12 @@ export const compareTimingReports = (
       errors.push(`${updateId}: relative timing pair is incomplete`);
       continue;
     }
+
     if (update.durationMs.p95 > full.durationMs.p95 * ratio) {
       errors.push(`${updateId}: p95 exceeds ${fullId} ${ratio.toFixed(2)}x`);
     }
   }
+
   return Object.freeze({
     status: unstable ? 'unstable' : errors.length > 0 ? 'failed' : 'passed',
     errors: Object.freeze(errors),
@@ -197,6 +215,7 @@ export const runTimingGateAttempts = async (
           errors: Object.freeze(['timing rerun fingerprint mismatch']),
         });
   attempts.push(Object.freeze({ attempt: second, comparison: secondComparison }));
+
   return Object.freeze({ attempts: Object.freeze(attempts), finalComparison: secondComparison });
 };
 

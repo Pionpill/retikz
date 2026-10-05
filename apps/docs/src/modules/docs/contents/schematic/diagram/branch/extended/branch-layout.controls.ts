@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { branchLayoutI18n } from './branch-layout.i18n';
+
 /** 同步语言无关的字段与默认状态 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const t = branchLayoutI18n[lang];
@@ -45,5 +46,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     ],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

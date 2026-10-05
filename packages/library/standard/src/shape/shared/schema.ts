@@ -16,40 +16,49 @@ export const ShapePathSchema = strictObject({
   ...PathDecorationSchema.shape,
   style: PathBaseSchema.shape.style,
 });
+
 /** 盒拟合策略及其默认值 */
 export const ShapeFitSchema = zodEnum(['contain', 'cover'])
   .default('contain')
   .describe('Fit inside or cover the authored bounding box.');
+
 /** 局部圆弧闭合策略 */
 export const ShapeClosedSchema = zodEnum(['open', 'chord', 'sector'])
   .default('chord')
   .describe('Closure of a partial outline: open, chord, or sector.');
+
 /** 开放弧闭合策略 */
 export const ShapeArcCloseSchema = zodEnum(['open', 'chord', 'sector'])
   .default('open')
   .describe('Arc closure: open, chord, or sector.');
+
 /** 星形内半径比例 */
 export const ShapeInnerRatioSchema = NormalizedFractionSchema.default(0.5).describe(
   'Ratio of inner to outer star radius.',
 );
+
 /** 首顶点的默认方向 */
 export const ShapeVertexAngleSchema = number().default(-90).describe('Angle of the first outer vertex in degrees.');
+
 /** 形状拟合的轴对齐盒 */
 export const ShapeBoxSchema = union([
   strictObject({ x: number(), y: number(), width: PositiveNumberSchema, height: PositiveNumberSchema }),
   strictObject({ origin: PositionSchema, width: PositiveNumberSchema, height: PositiveNumberSchema }),
 ]).describe('Axis-aligned bounding box used to fit the shape.');
+
 /** 角度字段，不在无角度完整轮廓上物化默认值 */
 export const ShapeAnglesSchema = strictObject({
   startAngle: number().optional().describe('Start angle in degrees.'),
   endAngle: number().optional().describe('End angle in degrees.'),
   sweepAngle: number().optional().describe('Signed sweep in degrees; supply exactly two angle fields.'),
 });
+
 /** 盒调整字段 */
 export const ShapeBoxAdjustmentSchema = strictObject({
   inset: NonNegativeNumberSchema.optional().describe('Uniform inward box adjustment.'),
   outset: NonNegativeNumberSchema.optional().describe('Uniform outward box adjustment.'),
 });
+
 /** 校验角度组合，完整轮廓允许不提供角度 */
 export const refineShapeAngles = (
   input: ZodInput<typeof ShapeAnglesSchema> & { closed?: string },
@@ -62,6 +71,7 @@ export const refineShapeAngles = (
   if (count === 0 && input.closed !== undefined)
     ctx.addIssue({ code: 'custom', path: ['closed'], message: 'Partial closure requires angles.' });
 };
+
 /** 校验盒调整与调整后的非退化边界 */
 export const refineShapeBox = (
   input: ZodInput<typeof ShapeBoxAdjustmentSchema> & {
@@ -82,5 +92,6 @@ export const refineShapeBox = (
 
 /** 形状轴向半径，保留显式零值 */
 export const ShapeRadiusAxesSchema = strictObject({ x: NonNegativeNumberSchema, y: NonNegativeNumberSchema });
+
 /** 圆形或椭圆形半径 */
 export const ShapeRadiusSchema = union([NonNegativeNumberSchema, ShapeRadiusAxesSchema]);

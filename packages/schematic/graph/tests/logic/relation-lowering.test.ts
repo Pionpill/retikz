@@ -28,6 +28,7 @@ const relation = (input: Record<string, unknown> = {}) =>
 const lower = (source: Graph.IRGraphRelation, definitions?: Graph.GraphDefinitionOptions) => {
   const options = Graph.resolveGraphDefinitionOptions(definitions);
   const canonical = Graph.resolveRelation(source, options);
+
   return Graph.lowerRelation(
     canonical,
     Graph.resolveRelationStructure(canonical, { ...options, theme }),
@@ -181,6 +182,7 @@ describe('Relation lowering', () => {
     { role: 'influence', shape: 'circle' },
   ])('lowers the $role default to a solid path and target marker', ({ role, shape }) => {
     const lowered = lower(relation({ role }));
+
     expect(lowered).toMatchObject({ marks: [{ pos: 1, mark: { kind: 'arrow', shape } }] });
     expect(lowered).not.toHaveProperty('style.dashPattern');
   });
@@ -195,6 +197,7 @@ describe('Relation lowering', () => {
       directions: { none: { sourceMarker: { shape: 'openDiamond' }, dashPattern: [4, 2] } },
     });
     const lowered = lower(relation({ role: 'association', kind: kind.kind }), { relationKinds: [kind] });
+
     expect(lowered).toMatchObject({
       marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'openDiamond' } }],
       style: { dashPattern: [4, 2] },
@@ -228,6 +231,7 @@ describe('Relation lowering', () => {
     );
 
     const relationPath = pathPrimitivesOf(output.scene.primitives).find(path => path.id === 'edge');
+
     expect(relationPath?.arrowEnd?.shape).toBe('straightBarb');
     expect(
       primitivesOf(output.scene.primitives).some(
@@ -283,6 +287,7 @@ describe('Relation lowering', () => {
         targetMarker: { color },
       });
       expect(structure.dashPattern).toEqual(structureDashPattern);
+
       const lowered = lower(relation({ status }));
 
       expect(lowered.style?.dashPattern).toEqual(dashPattern);

@@ -34,6 +34,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([10, 20]), line([100, 20])]);
   });
 
@@ -52,6 +53,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([8, 0]), line([100, 0])]);
   });
 
@@ -74,6 +76,7 @@ describe('compile path: axis-line', () => {
           ],
         }).scene.primitives,
       ).commands;
+
     expect(compile({ id: 'target' })).toEqual(compile({ id: 'target', anchor: 'center' }));
   });
 
@@ -102,8 +105,10 @@ describe('compile path: axis-line', () => {
       );
       const last = path.commands[path.commands.length - 1];
       if (last.kind !== 'line') throw new Error('expected line command');
+
       return last.to[0];
     };
+
     const center = endX({ id: 'target', anchor: 'center' });
     const right = endX({ id: 'target', anchor: 'right', boundary: 'rectangle' });
     const offsetRight = endX({
@@ -112,6 +117,7 @@ describe('compile path: axis-line', () => {
       boundary: 'rectangle',
       offset: [5, -3],
     });
+
     expect(right).toBeGreaterThan(center);
     expect(offsetRight).toBeCloseTo(right + 5, 6);
   });
@@ -141,6 +147,7 @@ describe('compile path: axis-line', () => {
       ],
     }).scene;
     const path = flattenPrims(scene.primitives).find(primitive => primitive.type === 'path');
+
     expect(path?.type === 'path' ? path.commands : undefined).toEqual([move([10, 20]), line([25, 20])]);
   });
 
@@ -177,6 +184,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     }).scene;
+
     expect(findPathPrim(coordinateScene.primitives).commands).toEqual([move([10, 20]), line([80, 20])]);
     expect(findPathPrim(scopeScene.primitives).commands).toEqual([move([10, 20]), line([120, 20])]);
   });
@@ -239,6 +247,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([30, 15]),
@@ -270,6 +279,7 @@ describe('compile path: axis-line', () => {
     };
     const commands = findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands;
     const last = commands[commands.length - 1];
+
     expect(last).toMatchObject({ kind: 'cubic', to: [35, 55] });
   });
 
@@ -294,6 +304,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
       move([0, 10]),
       line([20, 10]),
@@ -324,6 +335,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
       move([0, 0]),
       line([30, 15]),
@@ -379,6 +391,7 @@ describe('compile path: axis-line', () => {
     }).scene;
     const commands = findPathPrim(scene.primitives).commands;
     const last = commands[commands.length - 1];
+
     expect(last).toEqual(line(expectedEnd));
   });
 
@@ -400,6 +413,7 @@ describe('compile path: axis-line', () => {
       },
       { onWarn: warning => warnings.push(warning) },
     ).scene;
+
     expect(scene.primitives).toEqual([]);
     expect(warnings).toContainEqual(expect.objectContaining({ code: CompileWarningCode.PathTooShort }));
   });
@@ -422,6 +436,7 @@ describe('compile path: axis-line', () => {
       },
       { onWarn: warning => warnings.push(warning) },
     ).scene;
+
     expect(scene.primitives).toEqual([]);
     expect(warnings).toContainEqual(expect.objectContaining({ code: CompileWarningCode.UnresolvedNodeReference }));
   });
@@ -446,6 +461,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([100, 0])]);
   });
 
@@ -478,6 +494,7 @@ describe('compile path: axis-line', () => {
         },
       ],
     } as unknown as IRScene;
+
     expect(() => compileToScene(ir).scene).toThrow(/non-finite/i);
   });
 
@@ -502,6 +519,7 @@ describe('compile path: axis-line', () => {
       ],
     }).scene;
     const label = flattenPrims(scene.primitives).find(primitive => primitive.type === 'text');
+
     expect(label).toMatchObject({ type: 'text', x: 30 });
   });
 
@@ -521,15 +539,19 @@ describe('compile path: axis-line', () => {
       ],
     }).scene;
     const markerPoints: Array<[number, number]> = [];
+
     const visit = (primitives: ReadonlyArray<ScenePrimitive>): void => {
       for (const primitive of primitives) {
         if (primitive.type !== 'group') continue;
+
         const first = primitive.transforms?.[0];
         if (first?.kind === 'translate') markerPoints.push([first.x, first.y]);
         visit(primitive.children);
       }
     };
+
     visit(scene.primitives);
+
     expect(markerPoints).toContainEqual([50, 20]);
   });
 
@@ -542,6 +564,7 @@ describe('compile path: axis-line', () => {
       ],
       { roundedCorners: 4 },
     );
+
     expect(commands.some(command => command.kind === 'arc')).toBe(true);
   });
 });

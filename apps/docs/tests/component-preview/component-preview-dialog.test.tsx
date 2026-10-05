@@ -54,6 +54,7 @@ vi.mock('../../src/modules/docs/store', async importOriginal => {
     themeMode: 'inherit',
     controlPanelDefaultOpen: true,
   };
+
   return {
     ...actual,
     useComponentPreviewStore: Object.assign((selector: (snapshot: typeof state) => unknown) => selector(state), {
@@ -63,6 +64,7 @@ vi.mock('../../src/modules/docs/store', async importOriginal => {
 });
 
 const Demo: FC = () => null;
+
 const controlState: PreviewControlState = {
   canonicalValues: {},
   values: {},
@@ -149,8 +151,10 @@ describe('ComponentPreviewDialog', () => {
     );
 
     expect(markup).toContain('data-runtime="canvas"');
+
     const headerItems = ['runtime-dialog', 'Runtime canvas', 'Canvas renderer', 'Reset', 'Download PNG', 'Close'];
     const positions = headerItems.map(item => markup.indexOf(item));
+
     expect(positions.every(position => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((left, right) => left - right));
   });
@@ -234,16 +238,23 @@ describe('ComponentPreviewDialog', () => {
     });
 
     expect(container.querySelector('[data-dialog-action-renderer]')).toBeNull();
+
     const cardRendererButton = container.querySelector<HTMLButtonElement>('button[aria-label="Canvas renderer"]');
+
     expect(cardRendererButton).not.toBeNull();
+
     act(() => cardRendererButton!.click());
+
     expect(container.querySelector('button[aria-label="SVG renderer"]')).not.toBeNull();
 
     const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+
     expect(maximizeButton).not.toBeNull();
+
     act(() => maximizeButton!.click());
 
     const dialog = container.querySelector<HTMLElement>('[data-dialog-content]');
+
     expect(dialog).not.toBeNull();
     expect(dialog!.querySelector('[data-dialog-action-renderer="canvas"]')).not.toBeNull();
     expect(dialog!.querySelector('button[aria-label="Canvas renderer"]')).not.toBeNull();
@@ -280,11 +291,15 @@ describe('ComponentPreviewDialog', () => {
     });
 
     expect(container.textContent).toContain('renderPreview');
+
     const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+
     expect(maximizeButton).not.toBeNull();
+
     act(() => maximizeButton!.click());
 
     const dialog = container.querySelector<HTMLElement>('[data-dialog-content]');
+
     expect(dialog).not.toBeNull();
     expect(dialog!.textContent).toContain('example-preview.tsx');
     expect(dialog!.textContent).toContain('renderPreview');
@@ -355,9 +370,13 @@ describe('ComponentPreviewDialog', () => {
     });
 
     expect(container.querySelector('button[aria-label="Ask AI"]')).toBeNull();
+
     const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+
     expect(maximizeButton).not.toBeNull();
+
     act(() => maximizeButton!.click());
+
     expect(container.querySelector('[data-dialog-content]')).not.toBeNull();
     expect(container.querySelector('button[aria-label="Ask AI"]')).toBeNull();
 
@@ -389,39 +408,56 @@ describe('ComponentPreviewDialog', () => {
     });
 
     const card = container.firstElementChild!;
+
     expect(card.querySelector('[data-runtime-renderer="canvas"]')).not.toBeNull();
+
     const cardVanillaButton = card.querySelector<HTMLButtonElement>('button[aria-label="Vanilla Input code"]');
+
     expect(cardVanillaButton).not.toBeNull();
+
     act(() => cardVanillaButton!.click());
+
     expect(card.querySelector('[data-runtime-renderer="svg"]')).not.toBeNull();
     expect(card.querySelector('svg[data-fixed-renderer="svg"]')).not.toBeNull();
     expect(card.querySelector<HTMLButtonElement>('button[aria-label="SVG renderer"]')?.disabled).toBe(true);
     expect(card.querySelector('button[aria-label="Download SVG"]')).not.toBeNull();
 
     const cardReactButton = card.querySelector<HTMLButtonElement>('button[aria-label="React source"]');
+
     expect(cardReactButton).not.toBeNull();
+
     act(() => cardReactButton!.click());
+
     expect(card.querySelector('[data-runtime-renderer="canvas"]')).not.toBeNull();
     expect(card.querySelector<HTMLButtonElement>('button[aria-label="Canvas renderer"]')?.disabled).toBe(false);
 
     const maximizeButton = card.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+
     expect(maximizeButton).not.toBeNull();
+
     act(() => maximizeButton!.click());
     const dialog = card.querySelector<HTMLElement>('[data-dialog-content]');
+
     expect(dialog).not.toBeNull();
     expect(dialog!.querySelector('[data-runtime-renderer="canvas"]')).not.toBeNull();
 
     const dialogVanillaButton = dialog!.querySelector<HTMLButtonElement>('button[aria-label="Vanilla Input code"]');
+
     expect(dialogVanillaButton).not.toBeNull();
+
     act(() => dialogVanillaButton!.click());
+
     expect(dialog!.querySelector('[data-runtime-renderer="svg"]')).not.toBeNull();
     expect(dialog!.querySelector('svg[data-fixed-renderer="svg"]')).not.toBeNull();
     expect(dialog!.querySelector<HTMLButtonElement>('button[aria-label="SVG renderer"]')?.disabled).toBe(true);
     expect(dialog!.querySelector('button[aria-label="Download SVG"]')).not.toBeNull();
 
     const dialogReactButton = dialog!.querySelector<HTMLButtonElement>('button[aria-label="React source"]');
+
     expect(dialogReactButton).not.toBeNull();
+
     act(() => dialogReactButton!.click());
+
     expect(dialog!.querySelector('[data-runtime-renderer="canvas"]')).not.toBeNull();
     expect(dialog!.querySelector<HTMLButtonElement>('button[aria-label="Canvas renderer"]')?.disabled).toBe(false);
 
@@ -457,13 +493,17 @@ describe('ComponentPreviewDialog', () => {
 
     const queryButton = (label: string): HTMLButtonElement => {
       const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+
       expect(button).not.toBeNull();
       return button!;
     };
+
     act(() => queryButton('control fresh').click());
+
     expect(queryButton('control dirty')).toBeTruthy();
 
     act(() => queryButton('Maximize').click());
+
     expect(container.querySelectorAll('button[aria-label="control fresh"]')).toHaveLength(0);
     expect(container.querySelectorAll('button[aria-label="control dirty"]')).toHaveLength(2);
     expect(container.querySelector('[data-resizable-panel-group]')).toBeNull();
@@ -472,18 +512,23 @@ describe('ComponentPreviewDialog', () => {
 
     const dirtyButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="control dirty"]');
     act(() => dirtyButtons[1].click());
+
     expect(container.querySelectorAll('button[aria-label="control dialog"]')).toHaveLength(2);
     expect(container.querySelectorAll('button[aria-label="Canvas renderer"]')).toHaveLength(2);
+
     const rendererButtons = container.querySelectorAll<HTMLButtonElement>('button[aria-label="Canvas renderer"]');
     act(() => rendererButtons[1].click());
+
     expect(container.querySelectorAll('button[aria-label="Canvas renderer"]')).toHaveLength(1);
     expect(container.querySelectorAll('button[aria-label="SVG renderer"]')).toHaveLength(1);
 
     act(() => queryButton('Close').click());
+
     expect(container.querySelector('[data-dialog-content]')).toBeNull();
     expect(container.querySelectorAll('button[aria-label="control dialog"]')).toHaveLength(1);
 
     act(() => queryButton('Maximize').click());
+
     expect(container.querySelectorAll('button[aria-label="control fresh"]')).toHaveLength(0);
     expect(container.querySelectorAll('button[aria-label="control dialog"]')).toHaveLength(2);
     expect(container.querySelectorAll('button[aria-label="Canvas renderer"]')).toHaveLength(2);

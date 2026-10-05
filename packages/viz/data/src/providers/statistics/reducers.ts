@@ -147,6 +147,7 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
       operation.outputs.upper,
       ...(operation.outputs.points?.map(point => point.as) ?? []),
     ];
+
     for (const key of [
       'spread',
       'lowerFence',
@@ -160,6 +161,7 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
       const field = operation.outputs[key];
       if (field !== undefined) fields.push(field);
     }
+
     return fields.map(field => ({ field, type: DataFieldType.Continuous }));
   },
 });
@@ -184,6 +186,7 @@ const quantileBandReducerImplementation = defineStatisticsReducerImplementation(
       if (operation.outputs.whiskerMin !== undefined) out[operation.outputs.whiskerMin] = stats.min;
       if (operation.outputs.whiskerMax !== undefined) out[operation.outputs.whiskerMax] = stats.max;
     }
+
     if (operation.whisker?.kind === 'spread') {
       const factor = spreadFactorOf(operation.whisker.factor);
       const lowerFence = stats.lower - factor * stats.spread;

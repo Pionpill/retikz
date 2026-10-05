@@ -50,6 +50,7 @@ describe('runtime runtime diagnostics', () => {
         } as const;
         context.trace.report(invalidRecord);
         context.trace.report(invalidRecord);
+
         return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
       },
       observeCommit: event => {
@@ -111,11 +112,14 @@ describe('runtime runtime diagnostics', () => {
     expect(result.diagnostics[0]).not.toBe(result.diagnostics[1]);
     expect(Object.isFrozen(result.diagnostics)).toBe(true);
     expect(result.diagnostics.every(Object.isFrozen)).toBe(true);
+
     const queuedDiagnostics = runtime.diagnostics();
+
     expect(queuedDiagnostics).toEqual(result.diagnostics);
     expect(queuedDiagnostics).not.toBe(result.diagnostics);
     expect(Object.isFrozen(queuedDiagnostics)).toBe(true);
     expect(queuedDiagnostics.every(Object.isFrozen)).toBe(true);
+
     for (const [index, diagnostic] of queuedDiagnostics.entries()) {
       expect(diagnostic).toBe(result.diagnostics[index]);
     }
@@ -169,6 +173,7 @@ describe('runtime runtime diagnostics', () => {
           reused: 1,
           changed: 0,
         });
+
         return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
@@ -191,6 +196,7 @@ describe('runtime runtime diagnostics', () => {
     });
 
     let thrown: unknown;
+
     try {
       runtime.update({
         baseRevision: runtime.revision(),
@@ -214,10 +220,14 @@ describe('runtime runtime diagnostics', () => {
       }),
     );
     expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+
     if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
+
     expect(runtime.revision()).toBe(0);
     expect(runtime.artifact(upstream)).toEqual({ revision: 0, value: 1 });
+
     const queuedDiagnostics = runtime.diagnostics();
+
     expect(queuedDiagnostics).toEqual(thrown.diagnostics);
     expect(queuedDiagnostics).not.toBe(thrown.diagnostics);
     expect(queuedDiagnostics).toHaveLength(2);
@@ -259,6 +269,7 @@ describe('runtime runtime diagnostics', () => {
           diagnose(spoofedWarning);
           return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
         }
+
         return {
           kind: RuntimeComputationKind.Fallback,
           diagnostics: [spoofedWarning],
@@ -276,6 +287,7 @@ describe('runtime runtime diagnostics', () => {
       baseRevision: runtime.revision(),
       sources: [createRuntimeSourceUpdate(owner, 2)],
     });
+
     expect(contextResult.diagnostics).toEqual([
       {
         code: 'CONTEXT_WARNING',
@@ -286,12 +298,14 @@ describe('runtime runtime diagnostics', () => {
         computation: { owner: 'counter', key: 'computation' },
       },
     ]);
+
     runtime.diagnostics();
 
     const fallbackResult = runtime.update({
       baseRevision: runtime.revision(),
       sources: [createRuntimeSourceUpdate(owner, 3)],
     });
+
     expect(fallbackResult.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(fallbackResult.diagnostics).toEqual([
       {
@@ -317,6 +331,7 @@ describe('runtime runtime diagnostics', () => {
         dispose: () => {
           const activeRuntime = sessionRef.current;
           if (activeRuntime === undefined) return;
+
           const captureReentry = (action: () => unknown) => {
             try {
               action();
@@ -325,7 +340,9 @@ describe('runtime runtime diagnostics', () => {
               reentryErrors.push(cause);
             }
           };
+
           expect(activeRuntime.revision()).toBe(0);
+
           captureReentry(() => activeRuntime.snapshot(owner));
           captureReentry(() => activeRuntime.artifact(computation));
           captureReentry(() =>
@@ -513,6 +530,7 @@ describe('runtime runtime diagnostics', () => {
           reused: 0,
           changed: 1,
         });
+
         return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
       },
     });
@@ -621,6 +639,7 @@ describe('runtime runtime diagnostics', () => {
     });
 
     let thrown: unknown;
+
     try {
       runtime.update({
         baseRevision: runtime.revision(),
@@ -644,11 +663,15 @@ describe('runtime runtime diagnostics', () => {
       }),
     );
     expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+
     if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
+
     expect(runtime.revision()).toBe(0);
     expect(runtime.snapshot(first)).toEqual({ revision: 0, value: 1 });
     expect(runtime.snapshot(second)).toEqual({ revision: 0, value: 1 });
+
     const queuedDiagnostics = runtime.diagnostics();
+
     expect(queuedDiagnostics).toEqual([
       expect.objectContaining({
         code: RuntimeDiagnosticCode.SourceDisposeFailed,
@@ -709,6 +732,7 @@ describe('runtime runtime diagnostics', () => {
     });
 
     let thrown: unknown;
+
     try {
       runtime.update({
         baseRevision: runtime.revision(),

@@ -59,11 +59,13 @@ describe('Graph semantic status controls', () => {
 
       expect(controls).toBeDefined();
       expect(englishControls).toBeDefined();
+
       if (controls === undefined || englishControls === undefined) continue;
 
       const status = getPreviewControlFields(controls.previewControlContract.controls).find(
         field => field.id === 'status',
       );
+
       expect(status).toMatchObject({ kind: 'select', defaultValue: '' });
       expect(status?.kind === 'select' ? status.options.map(option => option.value) : []).toEqual(expectedStatusValues);
       expect(controls.previewControlContract.canonicalValues).toMatchObject({ status: '' });
@@ -81,11 +83,13 @@ describe('Graph semantic status controls', () => {
       const demo = roleDemos[path];
 
       expect(demo).toBeDefined();
+
       if (demo === undefined) continue;
 
       const graph = buildPreviewIR(() => demo.previewSource.canonicalRender?.() ?? null).ir.children[0] as {
         children?: ReadonlyArray<unknown>;
       };
+
       expect(graph.children).not.toEqual(
         expect.arrayContaining([expect.objectContaining({ status: expect.anything() })]),
       );

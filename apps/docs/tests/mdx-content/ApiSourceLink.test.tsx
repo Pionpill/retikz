@@ -36,6 +36,7 @@ describe('<ApiSourceLink>', () => {
     });
 
     const button = container.querySelector<HTMLButtonElement>('[data-source-link-open]');
+
     expect(button).not.toBeNull();
     expect(button?.tagName).toBe('BUTTON');
     expect(button?.className).not.toContain('font-medium');

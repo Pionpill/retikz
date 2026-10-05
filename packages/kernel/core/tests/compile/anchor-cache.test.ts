@@ -7,11 +7,11 @@ import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
 import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
-import type { BuiltinShapeValue } from '../../src/schemas';
+import type { BuiltinShape } from '../../src/schemas';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
 const makeLayout = (
-  shape: BuiltinShapeValue = 'rectangle',
+  shape: BuiltinShape = 'rectangle',
   width = 40,
   height = 30,
   cx = 0,
@@ -49,6 +49,7 @@ describe('resolveAnchor cache 命中返回同一引用', () => {
     const layout = makeLayout();
     const first = resolveAnchor(layout, 'top');
     const second = resolveAnchor(layout, 'top');
+
     expect(second).toBe(first);
   });
 
@@ -56,6 +57,7 @@ describe('resolveAnchor cache 命中返回同一引用', () => {
     const layout = makeLayout();
     const first = resolveAnchor(layout, '30');
     const second = resolveAnchor(layout, '30');
+
     expect(second).toBe(first);
   });
 });
@@ -65,9 +67,11 @@ describe('resolveAnchor 不同 key 互不串扰', () => {
     const layout = makeLayout();
     const kw = resolveAnchor(layout, 'right');
     const num = resolveAnchor(layout, '0');
+
     // right 关键字与 0 度数字角度数值上等价但缓存键不同 → 各自独立存储
     expect(resolveAnchor(layout, 'right')).toBe(kw);
     expect(resolveAnchor(layout, '0')).toBe(num);
+
     // 数值上 right 与 .0 都是 (+x, 0) 方向；不强求引用相等（key 不同）
     expect(Math.abs(kw[0] - num[0])).toBeLessThan(1e-6);
     expect(Math.abs(kw[1] - num[1])).toBeLessThan(1e-6);
@@ -78,9 +82,11 @@ describe('resolveAnchor 不同 key 互不串扰', () => {
     const n = resolveAnchor(layout, 'top');
     const s = resolveAnchor(layout, 'bottom');
     const e = resolveAnchor(layout, 'right');
+
     expect(n).not.toBe(s);
     expect(n).not.toBe(e);
     expect(s).not.toBe(e);
+
     // 各自二次 lookup 仍命中各自 cache
     expect(resolveAnchor(layout, 'top')).toBe(n);
     expect(resolveAnchor(layout, 'bottom')).toBe(s);
@@ -94,9 +100,11 @@ describe('resolveAnchor 不同 layout 独立 WeakMap entry', () => {
     const layoutB = makeLayout('rectangle', 40, 30, 100, 0);
     const aNorth = resolveAnchor(layoutA, 'top');
     const bNorth = resolveAnchor(layoutB, 'top');
+
     // 不同 layout → 不同 IRPosition 引用，且各自坐标不同（cx 差 100）
     expect(aNorth).not.toBe(bNorth);
     expect(Math.abs(bNorth[0] - aNorth[0] - 100)).toBeLessThan(1e-6);
+
     // 各自二次 lookup 仍命中各自 cache（不串）
     expect(resolveAnchor(layoutA, 'top')).toBe(aNorth);
     expect(resolveAnchor(layoutB, 'top')).toBe(bNorth);
@@ -107,8 +115,10 @@ describe('resolveAnchor 多次调用结果一致', () => {
   it('anchor_cache_consistent_across_lookups：同 layout 同 anchor 多次 lookup 都返首调结果', () => {
     const layout = makeLayout();
     const first = resolveAnchor(layout, 'top-right');
+
     // 模拟 path 引用 A.top-right 在不同 sub-path / segment 重复触发
     const refs = Array.from({ length: 5 }, () => resolveAnchor(layout, 'top-right'));
+
     for (const r of refs) {
       expect(r).toBe(first);
       expect(r[0]).toBe(first[0]);
@@ -121,6 +131,7 @@ describe('resolveAnchor 各 shape 分发正确', () => {
   it('circle layout 调 anchor 关键字返回圆周点', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
     const right = resolveAnchor(layout, 'right');
+
     // circle 半径 20 → right 应在 (20, 0)
     expect(right[0]).toBeCloseTo(20, 5);
     expect(right[1]).toBeCloseTo(0, 5);
@@ -129,6 +140,7 @@ describe('resolveAnchor 各 shape 分发正确', () => {
   it('ellipse layout 调 anchor 关键字返回椭圆周点', () => {
     const layout = makeLayout('ellipse', 60, 40, 0, 0);
     const right = resolveAnchor(layout, 'right');
+
     expect(right[0]).toBeCloseTo(30, 5);
     expect(right[1]).toBeCloseTo(0, 5);
   });
@@ -136,6 +148,7 @@ describe('resolveAnchor 各 shape 分发正确', () => {
   it('diamond (= polygon 4/0) layout 调 anchor 关键字返回外接 AABB 边点', () => {
     const layout = makeLayout('diamond', 40, 30, 0, 0);
     const top = resolveAnchor(layout, 'top');
+
     // polygon 命名 anchor 走外接 AABB：top = AABB 上边中点 (0, -height/2) = (0, -15)
     expect(top[0]).toBeCloseTo(0, 5);
     expect(top[1]).toBeCloseTo(-15, 5);
@@ -146,7 +159,9 @@ describe('resolveAnchor 数字角度支持负号 / 小数', () => {
   it('负角度作为字符串 key 正确缓存', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
     const neg = resolveAnchor(layout, '-90');
+
     expect(resolveAnchor(layout, '-90')).toBe(neg);
+
     // -90° = 局部 -y 方向 → 应在 (0, -20)
     expect(neg[0]).toBeCloseTo(0, 5);
     expect(neg[1]).toBeCloseTo(-20, 5);
@@ -155,6 +170,7 @@ describe('resolveAnchor 数字角度支持负号 / 小数', () => {
   it('小数角度作为字符串 key 正确缓存', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
     const fractional = resolveAnchor(layout, '45.5');
+
     expect(resolveAnchor(layout, '45.5')).toBe(fractional);
   });
 });
@@ -163,6 +179,7 @@ describe('resolveEdgePoint 边上比例点', () => {
   it('rect top t=0.5 = 上边中点', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
     const p = resolveEdgePoint(layout, 'top', 0.5);
+
     expect(p[0]).toBeCloseTo(0, 6);
     expect(p[1]).toBeCloseTo(-5, 6);
   });
@@ -170,6 +187,7 @@ describe('resolveEdgePoint 边上比例点', () => {
   it('缓存命中返回同一引用（key = `${side}:${t}`）', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
     const first = resolveEdgePoint(layout, 'top', 0.25);
+
     expect(resolveEdgePoint(layout, 'top', 0.25)).toBe(first);
   });
 
@@ -177,6 +195,7 @@ describe('resolveEdgePoint 边上比例点', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
     const named = resolveAnchor(layout, 'top'); // 上边中点 (0,-5)
     const edge = resolveEdgePoint(layout, 'top', 0); // NW 角 (-10,-5)
+
     expect(named).not.toBe(edge);
     expect(edge[0]).toBeCloseTo(-10, 6);
   });
@@ -204,11 +223,13 @@ describe('resolveEdgePoint 边上比例点', () => {
       fontSize: 0,
       boundaryResolution: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },
     };
+
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);
   });
 
   it('零尺寸 Coordinate → { side, fraction } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
+
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/zero-size target/);
   });
 });

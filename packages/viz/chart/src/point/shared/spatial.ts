@@ -26,6 +26,7 @@ export const pointSpatialResolutionOf = (
   const row = partitionDimensionsOf(encodings.row);
   const column = partitionDimensionsOf(encodings.column);
   if (row === undefined && column === undefined) return undefined;
+
   return {
     kind: ChartEncodingSpatialKind.Facet,
     id: pointRecipeId(chartType, 'composition.facet'),

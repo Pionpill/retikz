@@ -31,6 +31,7 @@ describe('controlled preview authoring', () => {
     const preview = defineControlledPreview(contract, (_values, dimensions) => (
       <span>{dimensions?.width ?? 'default'}</span>
     ));
+
     expect(
       renderToStaticMarkup(
         <PreviewDimensionsContext.Provider value={{ width: 360, height: 500 }}>
@@ -41,6 +42,7 @@ describe('controlled preview authoring', () => {
     expect(renderToStaticMarkup(preview.source.canonicalRender?.())).toBe('<span>default</span>');
     expect(renderToStaticMarkup(<preview.Component />)).toBe('<span>default</span>');
   });
+
   it('提供独立的短作者入口', () => {
     expect(existsSync(new URL('../../src/modules/docs/preview/index.ts', import.meta.url))).toBe(true);
   });
@@ -67,6 +69,7 @@ describe('controlled preview authoring', () => {
         <controlledPreview.Component />
       </PreviewControlStateContext.Provider>,
     );
+
     expect(liveMarkup).toBe('<span>30</span>');
   });
 });

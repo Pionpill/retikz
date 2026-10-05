@@ -10,7 +10,9 @@ import { drawScene } from '../../src/canvas';
  *   自定义未注册 / pathDraw 无描边 warn；camera viewBox 叠 ctx 变换
  */
 type Call = { name: string; args: Array<unknown>; globalAlpha: number };
+
 type SpyCtx = CanvasRenderingContext2D & { calls: Array<Call> };
+
 const createCtx = (): SpyCtx => {
   const calls: Array<Call> = [];
   const stack: Array<{ globalAlpha: number }> = [];
@@ -22,6 +24,7 @@ const createCtx = (): SpyCtx => {
         const snapshot = stack.pop();
         if (snapshot) ctx.globalAlpha = snapshot.globalAlpha;
       }
+
       calls.push({ name, args, globalAlpha: ctx.globalAlpha });
     };
   const ctx = {
@@ -37,6 +40,7 @@ const createCtx = (): SpyCtx => {
     lineCap: 'butt',
     lineJoin: 'miter',
   } as unknown as SpyCtx;
+
   for (const m of [
     'save',
     'restore',
@@ -60,14 +64,18 @@ const createCtx = (): SpyCtx => {
   ]) {
     (ctx as unknown as Record<string, unknown>)[m] = rec(m);
   }
+
   return ctx;
 };
+
 const layout = { x: 0, y: 0, width: 100, height: 100 };
+
 const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimationTrack>): Scene => ({
   primitives,
   layout,
   ...(animations ? { animations } : {}),
 });
+
 const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
   type: 'rect',
   x: 0,
@@ -77,6 +85,7 @@ const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
   fill: '#f00',
   ...extra,
 });
+
 const argsOf = (ctx: SpyCtx, name: string): Array<Array<unknown>> =>
   ctx.calls.filter(c => c.name === name).map(c => c.args);
 
@@ -92,6 +101,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect({ animations: [t] })]), { time: 200 });
+
     expect(argsOf(ctx, 'translate')).toContainEqual([50, 0]);
   });
 
@@ -107,6 +117,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect({ animations: [t] })]), { time: 200 });
+
     expect(argsOf(ctx, 'scale')).toContainEqual([1, 0.5]);
     expect(argsOf(ctx, 'translate')).toContainEqual([5, 10]); // rect 10×10 bottom 支点
   });
@@ -131,6 +142,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     const ctx = createCtx();
     drawScene(ctx, scene([{ ...path, animations: [draw] }]), { time: 200 });
     const dash = argsOf(ctx, 'setLineDash').find(a => Array.isArray(a[0]) && (a[0] as Array<number>).length === 1);
+
     expect(dash).toBeDefined();
     expect((dash![0] as Array<number>)[0]).toBeCloseTo(10); // 线长 10
     expect(ctx.lineDashOffset).toBeCloseTo(5); // len*(1-0.5)
@@ -156,6 +168,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     const ctx = createCtx();
     drawScene(ctx, scene([{ ...path, animations: [draw] }]), { time: 400 }); // 末时刻 v=1
     const dash = argsOf(ctx, 'setLineDash').find(a => Array.isArray(a[0]) && (a[0] as Array<number>).length === 1);
+
     expect(dash).toBeUndefined();
   });
 
@@ -174,9 +187,11 @@ describe('Happy：drawScene({time}) 应用通道', () => {
       duration: 400,
     };
     drawScene(createCtx(), scene([rect({ animations: [blur] })]), { time: 200, animationProperties: { blur: def } });
+
     expect(apply).toHaveBeenCalledTimes(1);
     expect(apply.mock.calls[0][2]).toBeCloseTo(2); // 中点值
   });
+
   it('group opacity track wraps child drawing in ctx.globalAlpha', () => {
     const fade: IRAnimationTrack = {
       property: 'opacity',
@@ -199,6 +214,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
       { time: 200 },
     );
     const fillCall = ctx.calls.find(c => c.name === 'fill');
+
     expect(fillCall?.globalAlpha).toBeCloseTo(0.5);
     expect(ctx.globalAlpha).toBe(1);
   });
@@ -216,6 +232,7 @@ describe('边界', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect({ animations: [t] })]));
+
     expect(argsOf(ctx, 'translate')).toHaveLength(0);
   });
 
@@ -230,6 +247,7 @@ describe('边界', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect({ animations: [t] })]), { time: 9999 });
+
     expect(argsOf(ctx, 'scale')).toContainEqual([1, 1]);
   });
 });
@@ -255,6 +273,7 @@ describe('trigger 过滤（auto 时钟只施加 load/缺省 track）', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect({ animations: [load, manual] })]), { time: 200 });
+
     expect(argsOf(ctx, 'translate')).toContainEqual([50, 0]); // load 生效
     expect(argsOf(ctx, 'translate')).not.toContainEqual([0, 50]); // manual 不自动跑
   });
@@ -280,6 +299,7 @@ describe('trigger 过滤（auto 时钟只施加 load/缺省 track）', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect({ animations: [onEvent, visible] })]), { time: 200 });
+
     expect(argsOf(ctx, 'translate')).toHaveLength(0);
   });
 });
@@ -296,6 +316,7 @@ describe('降级', () => {
       duration: 400,
     };
     drawScene(createCtx(), scene([rect({ animations: [blur] })]), { time: 200, warnUnsupported: warn });
+
     expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
   });
 
@@ -331,8 +352,10 @@ describe('降级', () => {
       duration: 400,
     };
     drawScene(createCtx(), scene([rect({ animations: [draw] })]), { time: 200, warnUnsupported: warn });
+
     expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
   });
+
   it('group fill/stroke/strokeWidth/pathDraw tracks warn and skip unsupported channels', () => {
     const warn = vi.fn();
     const tracks: Array<IRAnimationTrack> = [
@@ -374,6 +397,7 @@ describe('降级', () => {
       warnUnsupported: warn,
     });
     const messages = warn.mock.calls.map(call => String(call[0].message));
+
     expect(messages).toEqual(
       expect.arrayContaining([
         expect.stringContaining('group property "fill"'),
@@ -396,8 +420,10 @@ describe('交互', () => {
       duration: 400,
     };
     const ctx = createCtx();
+
     // t=400 末帧取景 [25,25,50,50] → sx=sy=2，translate(-50,-50)
     drawScene(ctx, scene([rect()], [camera]), { time: 400 });
+
     expect(argsOf(ctx, 'scale')).toContainEqual([2, 2]);
     expect(argsOf(ctx, 'translate')).toContainEqual([-50, -50]);
   });
@@ -414,6 +440,7 @@ describe('交互', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect()], [camera]), { time: 400 });
+
     expect(argsOf(ctx, 'scale')).not.toContainEqual([2, 2]); // manual 镜头不自动叠取景
   });
 
@@ -436,6 +463,7 @@ describe('交互', () => {
     };
     const ctx = createCtx();
     drawScene(ctx, scene([rect()], [camA, camB]), { time: 400 });
+
     // camA → scale(2,2)；camB → scale(2,1)；两条都被施加（旧实现只取首个）
     expect(argsOf(ctx, 'scale')).toContainEqual([2, 2]);
     expect(argsOf(ctx, 'scale')).toContainEqual([2, 1]);
@@ -457,6 +485,7 @@ describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
       time: 200,
       resolvePrimAnimation: () => ({ mode: 'skip' }),
     });
+
     expect(argsOf(ctx, 'translate')).not.toContainEqual([50, 0]);
   });
 
@@ -475,35 +504,50 @@ describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
       time: 200,
       resolvePrimAnimation: () => ({ mode: 'at', time: 200, includeNonAutoplay: false }),
     });
+
     expect(argsOf(off, 'translate')).not.toContainEqual([50, 0]);
+
     const on = createCtx();
     drawScene(on, scene([rect({ id: 'a', animations: [t] })]), {
       time: 200,
       resolvePrimAnimation: () => ({ mode: 'at', time: 200, includeNonAutoplay: true }),
     });
+
     expect(argsOf(on, 'translate')).toContainEqual([50, 0]);
   });
 
   it('registry：restart 归零、pause 定格、play 续播、stop 标记', () => {
     const reg = createIdClockRegistry();
     reg.restart('a', 1000);
+
     expect(reg.timeFor('a', 1000)).toBe(0);
     expect(reg.timeFor('a', 1200)).toBe(200);
+
     reg.pause('a', 1200);
+
     expect(reg.timeFor('a', 9999)).toBe(200);
+
     reg.play('a', 1300);
+
     expect(reg.timeFor('a', 1300)).toBe(200);
+
     reg.stop('a');
+
     expect(reg.isStopped('a')).toBe(true);
   });
 
   it('registry isActive：默认 false，play 后 true，stop 后 false；无 entry 用 globalTime', () => {
     const reg = createIdClockRegistry();
+
     expect(reg.isActive('a')).toBe(false);
     expect(reg.timeFor('b', 500)).toBe(500); // 无 entry → globalTime
+
     reg.play('a', 0);
+
     expect(reg.isActive('a')).toBe(true);
+
     reg.stop('a');
+
     expect(reg.isActive('a')).toBe(false);
   });
 
@@ -512,9 +556,12 @@ describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
     reg.restart('before', 100);
     reg.pause('before', 150);
     reg.rekey('before', 'after');
+
     expect(reg.timeFor('after', 999)).toBe(50);
     expect(reg.isActive('after')).toBe(true);
+
     reg.restartTimeline('after', 200);
+
     expect(reg.timeFor('after', 999)).toBe(0);
     expect(reg.isActive('after')).toBe(true);
   });
@@ -525,9 +572,12 @@ describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
     reg.stop('removed');
     const snapshot = reg.capture();
     reg.remove('removed');
+
     expect(reg.isStopped('removed')).toBe(false);
+
     reg.restartTimeline('stable', 40);
     reg.restore(snapshot);
+
     expect(reg.timeFor('stable', 50)).toBe(40);
     expect(reg.isStopped('removed')).toBe(true);
   });

@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { flowOrthogonalI18n } from './flow-orthogonal.i18n';
+
 /** 移动障碍以比较自动与显式折点 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const copy = flowOrthogonalI18n[lang];
@@ -23,11 +24,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { turnPosition: 'auto' as const, obstacleX: 260, obstacleY: 80 },
     relatedApis: ['FlowRelation.routing.turnPosition', 'routeFlowRelations'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

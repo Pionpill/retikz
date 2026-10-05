@@ -31,5 +31,6 @@ export const samplePathRoute = (
     return sampleStrokePathGeometry(createStrokePathGeometry(rounded.commands, rounded.sourceStepIndexes), position)
       ?.sample;
   }
+
   return sampleStrokePath({ commands, segmentSamplers, roundedCommands: false, position });
 };

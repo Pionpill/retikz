@@ -9,6 +9,7 @@ import type { NodeLayout } from './node';
 export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = local[0];
   let y = local[1];
+
   for (let i = chain.length - 1; i >= 0; i--) {
     const t = chain[i];
     if (t.kind === 'translate') {
@@ -30,6 +31,7 @@ export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Tran
       y *= sy;
     }
   }
+
   return [x, y];
 };
 
@@ -37,6 +39,7 @@ export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Tran
 export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
   let x = global[0];
   let y = global[1];
+
   for (const t of chain) {
     if (t.kind === 'translate') {
       x -= t.x;
@@ -56,10 +59,12 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
       if (t.x === 0 || sy === 0) {
         throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'non-invertible scope transform');
       }
+
       x /= t.x;
       y /= sy;
     }
   }
+
   return [x, y];
 };
 
@@ -75,6 +80,7 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
   let rotateAccumRad = 0;
   let scaleX = 1;
   let scaleY = 1;
+
   for (const t of chain) {
     if (t.kind === 'rotate') {
       rotateAccumRad += t.degrees * DEG_TO_RAD;
@@ -83,6 +89,7 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
       scaleY *= t.y ?? t.x;
     }
   }
+
   const globalRect: Rect = {
     ...layout.rect,
     x: gx,
@@ -91,6 +98,7 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
     width: layout.rect.width * Math.abs(scaleX),
     height: layout.rect.height * Math.abs(scaleY),
   };
+
   return {
     ...layout,
     rect: globalRect,

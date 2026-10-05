@@ -35,6 +35,7 @@ const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
         inspectorContractError('Inspector owner namespace'),
       );
       assertNonEmptyString(owner.type, 'Inspector owner type', inspectorContractError('Inspector owner type'));
+
       return;
   }
 };
@@ -42,6 +43,7 @@ const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
 /** 校验并冻结 registry 与公开 define 共用的擦除后 Definition */
 export const sealInspectorDefinition = (definition: AnyInspectorDefinitionInput): AnyInspectorDefinition => {
   if (sealedInspectorDefinitions.has(definition)) return definition as AnyInspectorDefinition;
+
   assertNonEmptyString(definition.namespace, 'Inspector namespace', inspectorContractError('Inspector namespace'));
   assertNonEmptyString(definition.type, 'Inspector type', inspectorContractError('Inspector type'));
   assertValidOwner(definition.owner);
@@ -52,6 +54,7 @@ export const sealInspectorDefinition = (definition: AnyInspectorDefinitionInput)
     resolveOptions: definition.resolveOptions ?? identityOptions,
   });
   sealedInspectorDefinitions.add(sealedDefinition);
+
   return sealedDefinition;
 };
 

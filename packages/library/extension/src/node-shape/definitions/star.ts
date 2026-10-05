@@ -56,6 +56,7 @@ const starGeometry = (params: StarShapeParams): StarGeometry => {
   const vertices: Array<Position> = [];
   let maxAbsX = 0;
   let maxAbsY = 0;
+
   for (let index = 0; index < 2 * points; index += 1) {
     const angle = (rotate + index * step - 90) * DEG_TO_RAD;
     const radius = index % 2 === 0 ? outerRadius : innerRadius;
@@ -65,6 +66,7 @@ const starGeometry = (params: StarShapeParams): StarGeometry => {
     maxAbsX = Math.max(maxAbsX, Math.abs(x));
     maxAbsY = Math.max(maxAbsY, Math.abs(y));
   }
+
   return { vertices, aabbHalfAxes: { halfWidth: maxAbsX, halfHeight: maxAbsY } };
 };
 
@@ -89,11 +91,13 @@ export const StarShapeDefinition = defineShape<StarShapeParams>({
       const index = 2 * Number(tip[1]);
       return index < geometry.vertices.length ? localToWorld(rect, geometry.vertices[index]) : undefined;
     }
+
     const notch = /^notch-(\d+)$/.exec(name);
     if (notch) {
       const index = 2 * Number(notch[1]) + 1;
       return index < geometry.vertices.length ? localToWorld(rect, geometry.vertices[index]) : undefined;
     }
+
     return undefined;
   },
   connectionEnvelope: (_rect, kind, params) => pointsConnectionEnvelope(starGeometry(params).vertices, kind),

@@ -8,7 +8,7 @@ import type {
 } from '@retikz/core';
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
 
-import type { LayoutArtifactItemBase, LayoutOverflowValue } from '../shared';
+import type { LayoutArtifactItemBase } from '../shared';
 import { LayoutOverflow } from '../shared';
 import { createLayoutArtifactItem } from './artifact';
 import type { LayoutRect } from './geometry';
@@ -16,21 +16,34 @@ import { layoutClipOf } from './geometry';
 
 /** 绑定一个待布局 child 与稳定的 authored occurrence */
 export type LayoutChildHandle = Readonly<{
+  /** 已绑定或普通的待测量子元素 */
   child: IRChild | CompositeBoundChild;
+  /** 该子元素在当前布局会话中的出现位置编号 */
   occurrence: number;
 }>;
 
 /** child 在 minimum 与 natural intrinsic proposal 下的结构结果 */
 export type MeasuredLayoutChild = Readonly<{
+  /** 最小尺寸提案下的测量结果 */
   minimum: LayoutChildResult;
+  /** 自然尺寸提案下的测量结果 */
   natural: LayoutChildResult;
 }>;
 
 /** child 最终 slot、translation 与共享布局 artifact */
 export type PlacedLayoutChild = Readonly<{
+  /** 最终采用的子元素布局结果 */
   result: LayoutChildResult;
+  /** 父布局为该子元素分配的槽位边界 */
   slotBounds: LayoutRect;
-  translation: Readonly<{ x: number; y: number }>;
+  /** 将真实分配边界定位到父槽位的平移量 */
+  translation: Readonly<{
+    /** 水平平移量 */
+    x: number;
+    /** 垂直平移量 */
+    y: number;
+  }>;
+  /** 包含身份、边界及可见范围的基础布局产物 */
   baseArtifact: LayoutArtifactItemBase;
 }>;
 
@@ -79,7 +92,7 @@ export const placeLayoutChild = (
     key: string;
     sourceIndex: number;
     containerAllocation: LayoutRect;
-    overflow: LayoutOverflowValue;
+    overflow: LayoutOverflow;
     existingResult?: LayoutChildResult;
   }>,
 ): PlacedLayoutChild => {
@@ -99,6 +112,7 @@ export const placeLayoutChild = (
     containerAllocation: input.containerAllocation,
     overflow: input.overflow,
   });
+
   return Object.freeze({
     result,
     slotBounds: input.slotBounds,
@@ -112,7 +126,7 @@ export const replayLayoutChildren = (
   context: LayoutCompositeCompileContext,
   children: ReadonlyArray<PlacedLayoutChild>,
   allocation: LayoutRect,
-  overflow: LayoutOverflowValue,
+  overflow: LayoutOverflow,
 ): CompositeCompileChild => {
   const replayed = children.map(child =>
     context.replay(child.result, {

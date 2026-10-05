@@ -25,6 +25,7 @@ export const getLatticeRangeError = ({
   if (!Number.isSafeInteger(count) || count > MAX_LATTICE_VALUES_PER_AXIS) {
     return `Grid lattice enumeration exceeds ${MAX_LATTICE_VALUES_PER_AXIS} values per axis.`;
   }
+
   return undefined;
 };
 
@@ -53,6 +54,7 @@ export const enumerateLattice = (options: LatticeOptions): Array<LatticeValue> =
   const withBoundary = [...values];
   addBoundaryIfMissing(withBoundary, min);
   addBoundaryIfMissing(withBoundary, max);
+
   return withBoundary.sort((left, right) => left.value - right.value);
 };
 

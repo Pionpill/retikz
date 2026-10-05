@@ -30,6 +30,8 @@ export const previewSource = {
   ...controlled.source,
   datasetImports: { 'chart.data': { name: 'rangedDotData', from: './ranged-dot-basic.data' } },
 };
+
 export const previewControls = previewControlContract.controls;
+
 const Demo: FC = controlled.Component;
 export default Demo;

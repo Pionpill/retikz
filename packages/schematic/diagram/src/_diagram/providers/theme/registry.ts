@@ -8,6 +8,7 @@ export const resolveDiagramThemeStyleRegistry = (
   custom: ReadonlyArray<DiagramThemeStyleDefinition> | undefined = undefined,
 ): ReadonlyMap<string, DiagramThemeStyleDefinition> => {
   const registry = new Map<string, DiagramThemeStyleDefinition>();
+
   for (const definition of custom ?? []) {
     assertNonEmptyString(
       definition.name,
@@ -29,7 +30,9 @@ export const resolveDiagramThemeStyleRegistry = (
         },
       });
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };

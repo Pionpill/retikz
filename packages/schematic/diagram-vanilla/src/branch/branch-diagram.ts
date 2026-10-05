@@ -34,6 +34,7 @@ const inputOf = (props: BranchDiagramInputEmbedProps): InputBranchDiagram => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
+
   return input;
 };
 

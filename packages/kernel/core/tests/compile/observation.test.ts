@@ -6,7 +6,7 @@ import type {
   CompileObservationContext,
   CompileObserverDefinition,
   IRScene,
-  LayoutChildProbeKindValue,
+  LayoutChildProbeKind,
 } from '../../src';
 import * as core from '../../src';
 
@@ -24,8 +24,11 @@ const observedCompile = (
         definitions: ReadonlyArray<CompileObserverDefinition>,
       ) => unknown)
     | undefined;
+
   expect(compile).toBeTypeOf('function');
+
   if (compile === undefined) throw new Error('observeCompileToScene is not available');
+
   return compile(ir, options, observers) as {
     primary: { scene: unknown; artifacts: ReadonlyArray<unknown> };
     observerOutputs: ReadonlyArray<{ key: string; value: unknown }>;
@@ -61,6 +64,7 @@ const probeReplayComposite = core.defineComposite({
       core.NaturalLayoutProposal,
     );
     if (selected.kind !== core.LayoutChildProbeKind.Resolved) return { children: [] };
+
     return {
       artifact: { chosen: 'selected' },
       children: [context.replay(selected.result)],
@@ -92,6 +96,7 @@ describe('Core observed compile', () => {
       composites: [observableComposite],
       padding: 0,
     });
+
     expect('inspection' in ordinary).toBe(false);
     expect(sessions).toBe(0);
 
@@ -144,6 +149,7 @@ describe('Core observed compile', () => {
       key: 'duplicate',
       createSession: () => ({ select: () => false, observe: () => undefined, complete: () => null }),
     };
+
     expect(() => observedCompile(scene([]), {}, [definition, definition])).toThrow(/duplicate.*key|key.*duplicate/i);
   });
 
@@ -162,6 +168,7 @@ describe('Core observed compile', () => {
         }),
       },
     ]);
+
     expect(completed).toBe(1);
     expect(result.observerOutputs).toEqual([{ key: 'empty', value: [] }]);
   });
@@ -209,4 +216,4 @@ describe('Core observed compile', () => {
   });
 });
 
-void (undefined as unknown as LayoutChildProbeKindValue);
+void (undefined as unknown as LayoutChildProbeKind);

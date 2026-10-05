@@ -7,21 +7,26 @@ import type { CanonicalCell, CellResolveContext, CellResolveSource } from './typ
 /** 只合并显式字段；字体子字段保留先前继承值 */
 const mergeStyle = (styles: Array<IRCellStyle | undefined>): IRCellStyle => {
   const result: IRCellStyle = {};
+
   for (const style of styles) {
     if (style === undefined) continue;
+
     for (const key of Object.keys(style) as Array<keyof IRCellStyle>) {
       const value = style[key];
       if (value === undefined || key === 'font') continue;
       Object.assign(result, { [key]: value });
     }
+
     if (style.font !== undefined) {
       result.font = { ...result.font };
+
       for (const key of Object.keys(style.font) as Array<keyof NonNullable<IRCellStyle['font']>>) {
         const value = style.font[key];
         if (value !== undefined) Object.assign(result.font, { [key]: value });
       }
     }
   }
+
   return result;
 };
 
@@ -33,6 +38,7 @@ export const resolveCell = (source: string | CellResolveSource, context: CellRes
   const width = cell.layout?.width ?? roleLayout?.width ?? overallLayout?.width;
   const height = cell.layout?.height ?? roleLayout?.height ?? overallLayout?.height;
   const fixed = typeof width === 'number' || typeof height === 'number';
+
   return {
     ...cell,
     content:

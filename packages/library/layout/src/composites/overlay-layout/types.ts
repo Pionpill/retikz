@@ -1,19 +1,11 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 import type {
   OverlayLayoutArtifactSchema,
   OverlayLayoutItemSchema,
   OverlayLayoutSchema,
   OverlayPlacementSchema,
 } from './schema';
-
-/** Overlay placement 判别值 */
-export type OverlayPlacementKindValue = ValueOf<typeof OverlayPlacementKind>;
-
-/** Overlay 结构尺寸参与策略值 */
-export type LayoutSizeParticipationValue = ValueOf<typeof LayoutSizeParticipation>;
 
 /** Overlay placement 的 canonical JSON IR */
 export type IROverlayPlacement = ZodInput<typeof OverlayPlacementSchema>;

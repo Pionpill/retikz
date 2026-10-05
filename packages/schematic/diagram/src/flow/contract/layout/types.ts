@@ -1,14 +1,9 @@
-import type { IRGeometryLabel, IRTarget, IRNodeTarget, SideValue } from '@retikz/core';
-import type { RelationDirectionValue } from '@retikz/graph';
+import type { IRGeometryLabel, IRTarget, IRNodeTarget, Side } from '@retikz/core';
+import type { RelationDirection } from '@retikz/graph';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
 import type { IRFlowLayout, FlowEndpointTarget } from '../../schemas';
-import type {
-  FlowDirectionValue,
-  FlowLayoutAlignmentValue,
-  FlowPlacementKindValue,
-  FlowRoutingKindValue,
-} from '../../shared';
+import type { FlowDirection, FlowLayoutAlignment, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 
 /** 已补全默认值的固定排列配置；Grid 使用物理行列，不改变流程方向 */
 export type EffectiveFlowPlacement =
@@ -16,11 +11,11 @@ export type EffectiveFlowPlacement =
       /** 沿单一方向排列 */
       kind: 'linear';
       /** 直接子项的排列方向 */
-      direction: FlowDirectionValue;
+      direction: FlowDirection;
       /** 相邻直接子项的间距，使用用户单位 */
       gap: number;
       /** 直接子项在交叉轴上的对齐方式 */
-      align: FlowLayoutAlignmentValue;
+      align: FlowLayoutAlignment;
       /** 仅排除对外结构边界贡献，不移除局部排列或绘制 */
       excludeFromBounds?: ReadonlyArray<string>;
     }>
@@ -28,7 +23,12 @@ export type EffectiveFlowPlacement =
       /** 按物理行列排列 */
       kind: 'grid';
       /** 已补全的行列最小间距，使用用户单位 */
-      gap: Readonly<{ row: number; column: number }>;
+      gap: Readonly<{
+        /** 相邻物理行之间的最小净间距 */
+        row: number;
+        /** 相邻物理列之间的最小净间距 */
+        column: number;
+      }>;
       /** 是否用关系标签的测量尺寸扩大对应轨道间距 */
       reserveLabelSpace: boolean;
       /** 每个直接子项对应的物理行列位置 */
@@ -88,7 +88,7 @@ export type FlowBezierRoute = Readonly<{
 export type FlowRoutingCapability =
   | Readonly<{
       /** 支持既有完整输入语义的常规路由 */
-      kind: Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>;
+      kind: Exclude<FlowRoutingKind, 'curve' | 'cubic'>;
     }>
   | Readonly<{
       /** 支持的贝塞尔种类 */
@@ -101,41 +101,93 @@ export type FlowRoutingCapability =
 export type FlowLayoutRouting =
   | FlowSmoothRouting
   | FlowBezierRouting
-  | Readonly<{ kind: 'straight' }>
-  | Readonly<{ kind: '-|' | '|-'; cornerRadius: number }>
   | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
+      kind: 'straight';
+    }>
+  | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
+      kind: '-|' | '|-';
+      /** 轴对齐折线转角的圆角半径 */
+      cornerRadius: number;
+    }>
+  | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
       kind: 'orthogonal';
+      /** 轴对齐折线转角的圆角半径 */
       cornerRadius: number;
       /** 显式或继承的间隙比例，省略时自动选择 */
       turnPosition?: 0.25 | 0.5 | 0.75;
     }>
   | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
       kind: 'bend';
       /** 省略时由布局比较左右候选 */
       bendDirection?: 'left' | 'right';
       /** 省略时由布局比较 30、45、60 度；显式及继承值必须保留 */
       bendAngle?: number;
     }>
-  | Readonly<{ kind: 'bend'; outAngle: number; inAngle: number; looseness: number }>;
+  | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
+      kind: 'bend';
+      /** 从起点出发的切线角，单位为度 */
+      outAngle: number;
+      /** 终点一侧控制方向的角度，单位为度 */
+      inAngle: number;
+      /** 控制曲线控制臂长度的松紧系数 */
+      looseness: number;
+    }>;
 
 /** 完整标签提供给布局的几何配置，不包含文字或外观 */
 export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
 
 /** bend 参考几何，仅保留一个生效参数族 */
-export type FlowBendRoute = Readonly<{ kind: 'bend'; points: readonly [Readonly<Position>, Readonly<Position>] }> &
+export type FlowBendRoute = Readonly<{
+  /** 标识已经确定参数的弯曲参考路线 */
+  kind: 'bend';
+  /** 按 source 到 target 排列的根局部参考端点 */
+  points: readonly [Readonly<Position>, Readonly<Position>];
+}> &
   (
-    | Readonly<{ bendDirection: 'left' | 'right'; bendAngle: number }>
-    | Readonly<{ outAngle: number; inAngle: number; looseness: number }>
+    | Readonly<{
+        /** 相对源到目标方向的弯曲侧 */
+        bendDirection: 'left' | 'right';
+        /** 弯曲角度，单位为度 */
+        bendAngle: number;
+      }>
+    | Readonly<{
+        /** 从起点出发的切线角，单位为度 */
+        outAngle: number;
+        /** 终点一侧控制方向的角度，单位为度 */
+        inAngle: number;
+        /** 控制曲线控制臂长度的松紧系数 */
+        looseness: number;
+      }>
   );
 
 /** 布局已确定的参考路由，实际端点裁剪与箭头缩短由 Core 执行 */
 export type FlowLayoutRoute =
   | FlowSmoothRoute
-  | Readonly<{ kind: 'straight'; points: ReadonlyArray<Readonly<Position>> }>
-  | Readonly<{ kind: '-|' | '|-'; points: ReadonlyArray<Readonly<Position>>; cornerRadius: number }>
   | Readonly<{
-      kind: 'orthogonal';
+      /** 选择布局已确定的参考路线种类 */
+      kind: 'straight';
+      /** 按源到目标顺序排列的 Flow 根局部参考点 */
       points: ReadonlyArray<Readonly<Position>>;
+    }>
+  | Readonly<{
+      /** 选择布局已确定的参考路线种类 */
+      kind: '-|' | '|-';
+      /** 按源到目标顺序排列的 Flow 根局部参考点 */
+      points: ReadonlyArray<Readonly<Position>>;
+      /** 轴对齐折线转角的圆角半径 */
+      cornerRadius: number;
+    }>
+  | Readonly<{
+      /** 选择布局已确定的参考路线种类 */
+      kind: 'orthogonal';
+      /** 按源到目标顺序排列的 Flow 根局部参考点 */
+      points: ReadonlyArray<Readonly<Position>>;
+      /** 轴对齐折线转角的圆角半径 */
       cornerRadius: number;
       /** 作者的有效比例；自动选择不重复存储 */
       turnPosition?: 0.25 | 0.5 | 0.75;
@@ -146,7 +198,7 @@ export type FlowLayoutRoute =
 /** Flow layout scope 已补全的有效配置 */
 export type EffectiveFlowLayout = Readonly<{
   /** 当前作用域的流程主方向 */
-  direction: FlowDirectionValue;
+  direction: FlowDirection;
   /** 同层元素之间的最小间距，使用用户单位 */
   nodeGap: number;
   /** 相邻层之间的最小间距，使用用户单位 */
@@ -158,7 +210,7 @@ export type EffectiveFlowLayout = Readonly<{
 /** Layout Definition 提供的唯一末端默认值 */
 export type FlowLayoutDefaults = Readonly<{
   /** Source 与祖先均未指定时采用的流程主方向 */
-  direction: FlowDirectionValue;
+  direction: FlowDirection;
   /** Source 与祖先均未指定时采用的同层最小间距，使用用户单位 */
   nodeGap: number;
   /** Source 与祖先均未指定时采用的层间最小间距，使用用户单位 */
@@ -173,7 +225,7 @@ export type FlowLayoutDefaults = Readonly<{
   /** Source 与祖先均未指定时采用的关系路由 */
   routing: Readonly<{
     /** 默认路由种类，必须包含在 capabilities.routing 中 */
-    kind: Exclude<FlowRoutingKindValue, 'curve' | 'cubic' | 'smooth'>;
+    kind: Exclude<FlowRoutingKind, 'curve' | 'cubic' | 'smooth'>;
     /** 所有轴对齐路由的圆角默认；支持任一轴对齐模式时必填 */
     orthogonalCornerRadius?: number;
   }>;
@@ -250,7 +302,11 @@ export type FlowLayoutPlacementElementInput = Readonly<{
 /** Flow Layout 固定 placement 的完整输入 */
 export type FlowLayoutPlacementInput = Readonly<{
   /** 待排列容器的 id 与有效固定排列配置 */
-  layout: EffectiveFlowPlacement & Readonly<{ id: string }>;
+  layout: EffectiveFlowPlacement &
+    Readonly<{
+      /** 用于关联布局输出的当前容器身份 */
+      id: string;
+    }>;
   /** 该容器全部直接子项的尺寸与外边距 */
   elements: ReadonlyArray<FlowLayoutPlacementElementInput>;
 }>;
@@ -314,7 +370,7 @@ export type FlowLayoutEndpoint = Readonly<{
   /** 同侧落点许可 */
   overlap: 'allow' | 'separate';
   /** 自动分配的指定侧 */
-  side?: SideValue;
+  side?: Side;
   /** 作者固定的 Core 锚点 */
   anchor?: IRNodeTarget['anchor'];
 }>;
@@ -326,7 +382,7 @@ export type FlowLayoutRelationInput = Readonly<{
   /** 终点 Entity 或 Group 的有效连接约束 */
   target: FlowLayoutEndpoint;
   /** 已解析的语义箭头方向 */
-  direction: RelationDirectionValue;
+  direction: RelationDirection;
   /** 已补全参数的关系路由 */
   routing: FlowLayoutRouting;
   /** 已测量的标签尺寸；无标签时省略 */
@@ -376,7 +432,7 @@ export type FlowLayoutOutput = Readonly<{
 /** Layout Definition 对结构、方向与路由的权威保证 */
 export type FlowLayoutCapabilities = Readonly<{
   /** 支持的固定排列种类，必须非空且无重复 */
-  placementKinds: ReadonlyArray<FlowPlacementKindValue>;
+  placementKinds: ReadonlyArray<FlowPlacementKind>;
   /** 是否支持包含嵌套 Group 或 Layout 的复合作用域 */
   compoundScopes: boolean;
   /** 是否允许 Group 作为关系端点；启用时必须同时支持 compoundScopes */
@@ -394,7 +450,7 @@ export type FlowLayoutCapabilities = Readonly<{
   /** 是否支持关系标签的空间预留 */
   relationLabels: boolean;
   /** 支持的语义箭头方向，必须非空且无重复 */
-  relationDirections: ReadonlyArray<RelationDirectionValue>;
+  relationDirections: ReadonlyArray<RelationDirection>;
   /** 支持的路由种类，必须非空且无重复 */
   routing: ReadonlyArray<FlowRoutingCapability>;
 }>;

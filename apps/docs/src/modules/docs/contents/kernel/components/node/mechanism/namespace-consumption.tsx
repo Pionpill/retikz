@@ -1,5 +1,5 @@
 import { Draw, Layout, Node } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react/collection';
+import { Array, Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -13,9 +13,10 @@ export type NamespaceConsumptionProps = { lang?: Lang };
 const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
   const { lang = 'zh' } = props;
   const t = namespaceConsumptionI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      <List
+      <Array
         transforms={[{ kind: 'translate', x: 24, y: 29 }]}
         layout={{ width: 192, height: 36, padding: 0 }}
         style={{ font: { size: 14 } }}
@@ -24,7 +25,7 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
           content: `[${index}]  ${text}`,
         }))}
       />
-      <List
+      <Array
         transforms={[{ kind: 'translate', x: 24, y: 135 }]}
         label={{ text: t.queue, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
         layout={{ width: 192, height: 36, padding: 0 }}

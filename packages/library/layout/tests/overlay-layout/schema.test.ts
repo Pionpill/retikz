@@ -24,9 +24,11 @@ describe('OverlayLayout schema and factory', () => {
     const item = { kind: LayoutItemKind.Overlay, key: 'plot', child } satisfies OverlayLayoutItemInput;
     const input = { children: [item] } satisfies OverlayLayoutInput;
     const source = createOverlayLayout(input);
+
     expect(source).toEqual({ namespace: 'layout', type: 'overlayLayout', ...input });
     expect(parseOverlayLayout(input)).toMatchObject({ justifyItems: 'center', alignItems: 'center' });
     expect(resolveOverlayLayout(parseOverlayLayout(input))).toEqual(resolveOverlayLayout(source));
+
     const parsed = resolveOverlayLayout(source);
 
     expect(parsed).toEqual({
@@ -59,6 +61,7 @@ describe('OverlayLayout schema and factory', () => {
       at: { x: 10, y: -5 },
       width: 20,
     } satisfies OverlayPlacementInput;
+
     expect(
       parseOverlayLayout({
         children: [{ kind: 'overlay', key: 'badge', child, placement }],
@@ -79,6 +82,7 @@ describe('OverlayLayout schema and factory', () => {
 
   it('rejects unknown fields at layout, item, placement and nested point paths', () => {
     const base = { children: [{ kind: 'overlay', key: 'badge', child }] } satisfies OverlayLayoutInput;
+
     expect(() =>
       OverlayLayoutSchema.parse({ namespace: 'layout', type: 'overlayLayout', ...base, extra: true }),
     ).toThrow();
@@ -93,6 +97,7 @@ describe('OverlayLayout schema and factory', () => {
         ],
       }),
     ).toThrow();
+
     for (const field of ['at', 'anchor'] as const) {
       expect(() =>
         parseOverlayLayout({
@@ -110,6 +115,7 @@ describe('OverlayLayout schema and factory', () => {
         }),
       ).toThrow();
     }
+
     expect(() =>
       parseOverlayLayout({ children: [{ ...base.children[0], offset: { x: 0, y: 0, extra: true } }] }),
     ).toThrow();
@@ -121,6 +127,7 @@ describe('OverlayLayout schema and factory', () => {
       at: { x: 0, y: 0 },
       ...overrides,
     });
+
     for (const placement of [
       positioned({ anchor: { x: -0.1, y: 0.5 } }),
       positioned({ anchor: { x: 0.5, y: 1.1 } }),
@@ -130,6 +137,7 @@ describe('OverlayLayout schema and factory', () => {
     ]) {
       expect(() => parseOverlayLayout({ children: [{ kind: 'overlay', key: 'bad', child, placement }] })).toThrow();
     }
+
     expect(() =>
       parseOverlayLayout({
         children: [{ kind: 'overlay', key: 'bad', child, offset: { x: Number.NaN, y: 0 } }],

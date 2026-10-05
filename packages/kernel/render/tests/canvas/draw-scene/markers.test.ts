@@ -28,16 +28,23 @@ describe('drawScene 箭头 marker', () => {
     // 定位到终点 [40,0]，并将 marker 参考点 (refX=3, refY=baseSize/2=5) 平移回原点
     expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 40 && c.args[1] === 0)).toBe(true);
     expect(context.calls.some(c => c.name === 'translate' && c.args[0] === -3 && c.args[1] === -5)).toBe(true);
+
     // 切线方向为 +x → 旋转角 0
     expect(context.calls.some(c => c.name === 'rotate' && c.args[0] === 0)).toBe(true);
+
     // 缩放 = markerWidth/baseSize × strokeWidth = 6/10 × 2 = 1.2（两轴各自）
     const scaleCall = context.calls.find(c => c.name === 'scale');
+
     expect(scaleCall?.args).toEqual([1.2, 1.2]);
+
     // 实心三角被填充，contextStroke 解析为 path 的 stroke 色
     const markerFill = [...context.calls].reverse().find(c => c.name === 'fill');
+
     expect(markerFill?.fillStyle).toBe('#222');
+
     // marker 几何按局部 baseSize 坐标绘制
     const moveTos = context.calls.filter(c => c.name === 'moveTo').map(c => c.args);
+
     expect(moveTos).toContainEqual([0, 0]);
     expect(context.calls.some(c => c.name === 'lineTo' && c.args[0] === 10 && c.args[1] === 5)).toBe(true);
   });
@@ -64,8 +71,11 @@ describe('drawScene 箭头 marker', () => {
 
     // 起点 [0,0]；离开方向 +x，反向后角度为 π
     expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 0 && c.args[1] === 0)).toBe(true);
+
     const rotateCall = context.calls.find(c => c.name === 'rotate');
+
     expect(rotateCall?.args[0]).toBeCloseTo(Math.PI);
+
     // strokeWidth=1 → 缩放 0.6
     expect(context.calls.find(c => c.name === 'scale')?.args).toEqual([0.6, 0.6]);
   });
@@ -235,6 +245,7 @@ describe('drawScene 箭头 marker', () => {
     // path 自身用 round；marker 描边应回到 canvas 默认 butt / miter（与 SVG defs marker 一致）
     const strokeCalls = context.calls.filter(c => c.name === 'stroke');
     const markerStroke = strokeCalls[strokeCalls.length - 1];
+
     expect(markerStroke.lineCap).toBe('butt');
     expect(markerStroke.lineJoin).toBe('miter');
   });
@@ -283,8 +294,10 @@ describe('drawScene 箭头 marker', () => {
 
     expect(context.calls.some(c => c.name === 'translate' && c.args[0] === -2.25 && c.args[1] === -5)).toBe(true);
     expect(context.calls.some(c => c.name === 'lineTo' && c.args[0] === 3 && c.args[1] === 5)).toBe(true);
+
     const strokeCalls = context.calls.filter(c => c.name === 'stroke');
     const markerStroke = strokeCalls[strokeCalls.length - 1];
+
     expect(markerStroke.strokeStyle).toBe('#2255aa');
     expect(markerStroke.lineJoin).toBe('miter');
     expect(context.calls.filter(c => c.name === 'fill')).toHaveLength(0);

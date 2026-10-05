@@ -47,10 +47,13 @@ describe('Graph registry-backed open string schemas', () => {
   it('exposes built-in values without closing Entity and Relation extension keys', () => {
     expectOpenStringSchema(Graph.EntityRoleSchema, Object.values(Graph.EntityRole));
     expectOpenStringSchema(Graph.RelationRoleSchema, Object.values(Graph.RelationRole));
+
     expect(toJSONSchema(Graph.RelationKindSchema)).toMatchObject({ type: 'string' });
     expect(toJSONSchema(Graph.RelationKindSchema)).not.toHaveProperty('anyOf');
     expect(toJSONSchema(Graph.RelationKindSchema)).not.toHaveProperty('enum');
+
     for (const kind of ['', '   ']) expect(Graph.RelationKindSchema.safeParse(kind).success).toBe(false);
+
     expect(Graph.RelationKindSchema.parse(JSON.parse(JSON.stringify('custom.relation-kind')))).toBe(
       'custom.relation-kind',
     );
@@ -60,6 +63,7 @@ describe('Graph registry-backed open string schemas', () => {
     const graphSchema = toJSONSchema(Graph.GraphSchema) as {
       properties?: Record<string, ZodCore.JSONSchema.BaseSchema>;
     };
+
     expect(graphSchema.properties).not.toHaveProperty('entityVariant');
 
     expect(

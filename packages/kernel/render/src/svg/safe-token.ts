@@ -2,10 +2,12 @@ const SAFE_SVG_TOKEN_RE = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
 const hashToken = (value: string): string => {
   let hash = 2166136261;
+
   for (let index = 0; index < value.length; index++) {
     hash ^= value.charCodeAt(index);
     hash = Math.imul(hash, 16777619);
   }
+
   return (hash >>> 0).toString(36);
 };
 
@@ -15,10 +17,12 @@ const hashToken = (value: string): string => {
  */
 export const toSafeSvgToken = (value: string): string => {
   if (SAFE_SVG_TOKEN_RE.test(value)) return value;
+
   const readable = value
     .replace(/[^A-Za-z0-9_-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 32);
+
   return `p-${readable || 'id'}-${hashToken(value)}`;
 };

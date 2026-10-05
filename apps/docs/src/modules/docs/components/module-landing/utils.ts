@@ -18,7 +18,9 @@ export type ModuleLandingPlacementEntry<TDemo extends ModuleLandingLayoutDemo = 
 type ModuleLandingPlacementCandidate<TDemo extends ModuleLandingLayoutDemo> = ModuleLandingPlacementEntry<TDemo>;
 
 const MAX_MODULE_LANDING_ROW_SPAN = 4;
+
 const MAX_MODULE_LANDING_SEARCH_STATES = 25_000;
+
 const MAX_MODULE_LANDING_EXTRA_ROWS = 4;
 
 /** 解析卡片在当前网格中的列跨度。 */
@@ -35,16 +37,19 @@ const resolveRowSpan = (span: ModuleLandingLayoutDemo['span'], columns: number):
   const requestedRows = Math.max(1, span.rows);
   const compressedRows =
     columns <= 4 && requestedColumns > 4 ? Math.floor((4 / requestedColumns) * requestedRows) : requestedRows;
+
   return Math.min(Math.max(1, compressedRows), MAX_MODULE_LANDING_ROW_SPAN);
 };
 
 /** 根据稳定标识生成可复现的散列排序值。 */
 const getStableHash = (value: string): number => {
   let hash = 2_166_136_261;
+
   for (const character of value) {
     hash ^= character.charCodeAt(0);
     hash = Math.imul(hash, 16_777_619);
   }
+
   return hash >>> 0;
 };
 
@@ -53,6 +58,7 @@ const getPlacementSize = (placement: ModuleLandingPlacement): 'small' | 'medium'
   const area = placement.columnSpan * placement.rowSpan;
   if (area >= 8) return 'large';
   if (area >= 3) return 'medium';
+
   return 'small';
 };
 
@@ -64,6 +70,7 @@ const getRowFillPenalty = <TDemo extends ModuleLandingLayoutDemo>(
 ): number => {
   const remainingColumns = columns - (candidate.placement.column + candidate.placement.columnSpan);
   if (remainingColumns === 0) return 0;
+
   return pendingDemos.some(
     demo => demo.id !== candidate.demo.id && resolveColumnSpan(demo.span.columns, columns) <= remainingColumns,
   )
@@ -107,17 +114,20 @@ const isPlacementAvailable = (
 ): boolean => {
   if (placement.column + placement.columnSpan > columns || placement.row + placement.rowSpan > maximumRows)
     return false;
+
   for (let row = placement.row; row < placement.row + placement.rowSpan; row += 1) {
     for (let column = placement.column; column < placement.column + placement.columnSpan; column += 1) {
       if (occupied[row]?.[column]) return false;
     }
   }
+
   return true;
 };
 
 const occupyPlacement = (occupied: Array<Array<boolean>>, placement: ModuleLandingPlacement): void => {
   for (let row = placement.row; row < placement.row + placement.rowSpan; row += 1) {
     occupied[row] ??= [];
+
     for (let column = placement.column; column < placement.column + placement.columnSpan; column += 1) {
       occupied[row][column] = true;
     }
@@ -142,6 +152,7 @@ const findFirstVacantCell = (
       if (!occupied[row]?.[column]) return { column, row };
     }
   }
+
   return undefined;
 };
 
@@ -164,6 +175,7 @@ const findCompactPlacements = <TDemo extends ModuleLandingLayoutDemo>(
 
     const vacantCell = findFirstVacantCell(occupied, columns, maximumRows);
     if (!vacantCell) return undefined;
+
     const candidates = pendingDemos
       .map(demo => ({
         demo,
@@ -188,8 +200,10 @@ const findCompactPlacements = <TDemo extends ModuleLandingLayoutDemo>(
         [...placements, candidate],
       );
       if (nextPlacements) return nextPlacements;
+
       releasePlacement(occupied, candidate.placement);
     }
+
     return undefined;
   };
 
@@ -222,6 +236,7 @@ const resolveSequentialPlacements = <TDemo extends ModuleLandingLayoutDemo>(
     const selectedCandidate = candidates.reduce<ModuleLandingPlacementCandidate<TDemo> | undefined>(
       (currentCandidate, nextCandidate) => {
         if (!currentCandidate) return nextCandidate;
+
         return getPlacementScore(nextCandidate, placements, pendingDemos, columns) <
           getPlacementScore(currentCandidate, placements, pendingDemos, columns)
           ? nextCandidate
@@ -245,6 +260,7 @@ const resolveSequentialPlacements = <TDemo extends ModuleLandingLayoutDemo>(
       row += 1;
     }
   }
+
   return placements;
 };
 

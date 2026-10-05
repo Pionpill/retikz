@@ -77,6 +77,7 @@ type TypedChartComponent<TInput> = {
 
 const sceneChildrenOf = (inputScene: InputScene): ReadonlyArray<InputChild> => {
   if ('children' in inputScene) return inputScene.children ?? [];
+
   return inputScene.layers
     .map((layer, index) => ({ layer, index }))
     .sort((left, right) => (left.layer.zIndex ?? 0) - (right.layer.zIndex ?? 0) || left.index - right.index)
@@ -114,6 +115,7 @@ const graphChildrenOf = (value: IRChild | undefined): ReadonlyArray<IRChild> | u
   if (value === undefined || !('namespace' in value) || value.type === 'blockRow' || !('children' in value)) {
     return undefined;
   }
+
   return value.children as ReadonlyArray<IRChild>;
 };
 
@@ -136,12 +138,14 @@ const sourceCoreChildOf = (
   if (input.type === 'node' || 'position' in input) {
     return normalizeNode(input);
   }
+
   if (input.type === 'scope' || runtime?.type === 'scope') {
     const { type: _type, children, ...scopeWithAuthoring } = input as InputScope;
     void _type;
     const { authoring: _authoring, ...scope } = scopeWithAuthoring;
     void _authoring;
     const runtimeChildren = runtime?.type === 'scope' && Array.isArray(runtime.children) ? runtime.children : undefined;
+
     return {
       type: 'scope',
       ...scope,
@@ -150,7 +154,9 @@ const sourceCoreChildOf = (
       ),
     } as IRScope;
   }
+
   if (input.type === 'path' || input.type === undefined) return normalizePath(input as InputPath);
+
   return runtime ?? (input as IRChild);
 };
 
@@ -202,6 +208,7 @@ const sourceGraphMemberOf = (
     }
     case 'blockRow': {
       if (input.content !== undefined) return normalizeBlockRow(input);
+
       const runtimeItems =
         runtime !== undefined &&
         'namespace' in runtime &&
@@ -209,6 +216,7 @@ const sourceGraphMemberOf = (
         Array.isArray(runtime.children)
           ? runtime.children
           : undefined;
+
       return normalizeBlockRow({
         ...input,
         ...(input.children === undefined
@@ -234,6 +242,7 @@ const sourceGraphEmbedOf = (
   chartIndex: { value: number },
 ): IRChild | undefined => {
   const props = sourcePropsOf(input.props);
+
   switch (input.kind) {
     case BranchDiagramEmbedKind:
       return normalizeBranchDiagram(props as InputBranchDiagram);
@@ -301,8 +310,10 @@ const sourceGraphChildOf = (
       chartIndex.value += 1;
       return source ?? runtime ?? (input as unknown as IRChild);
     }
+
     return sourceGraphEmbedOf(input, runtime, chartSources, chartIndex) ?? runtime ?? (input as unknown as IRChild);
   }
+
   if ('namespace' in input) return input;
   if (
     input.type === 'graph' ||
@@ -316,6 +327,7 @@ const sourceGraphChildOf = (
   ) {
     return sourceGraphMemberOf(input, runtime, chartSources, chartIndex);
   }
+
   return sourceCoreChildOf(input, runtime, chartSources, chartIndex);
 };
 
@@ -339,8 +351,10 @@ const typedChartSourceOf = <TProps, TInput>(
     { adapters: [component.inputEmbedAdapter] },
   );
   let node = result.ir.children[0];
+
   while (node.type === 'scope') node = (node as IRScope).children[0];
   if (!isPreviewChartSource(node)) throw new Error('Chart adapter must produce Chart Source IR');
+
   return node;
 };
 
@@ -349,45 +363,57 @@ const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
   if (value.type === ScatterChart) {
     return typedChartSourceOf(ScatterChart, value.props as ScatterChartProps);
   }
+
   if (value.type === BubbleChart) {
     return typedChartSourceOf(BubbleChart, value.props as BubbleChartProps);
   }
+
   if (value.type === ConnectedScatterChart) {
     return typedChartSourceOf(ConnectedScatterChart, value.props as ConnectedScatterChartProps);
   }
+
   if (value.type === RangedDotChart) {
     return typedChartSourceOf(RangedDotChart, value.props as RangedDotChartProps);
   }
+
   if (value.type === RegressionChart) {
     return typedChartSourceOf(RegressionChart, value.props as RegressionChartProps);
   }
+
   if (value.type === StripChart) {
     return typedChartSourceOf(StripChart, value.props as StripChartProps);
   }
+
   return undefined;
 };
 
 /** 从 docs 执行的 React authoring tree 收集精确 typed Chart Source IR */
 export const collectPreviewChartSources = (node: ReactNode): Array<TypedChartSource> => {
   const sources: Array<TypedChartSource> = [];
+
   const visit = (value: ReactNode): void => {
     if (Array.isArray(value)) {
       value.forEach(visit);
       return;
     }
+
     const source = sourceOf(value);
     if (source !== undefined) {
       sources.push(source);
       return;
     }
+
     if (!isValidElement(value)) return;
     if (value.type === Fragment) {
       visit(value.props.children as ReactNode);
       return;
     }
+
     visit(value.props.children as ReactNode);
   };
+
   visit(node);
+
   return sources;
 };
 
@@ -399,7 +425,9 @@ export const buildPreviewSourceIR = (
 ): IRScene => {
   const inputChildren = sceneChildrenOf(input);
   if (inputChildren.length !== runtime.children.length) return runtime;
+
   const chartIndex = { value: 0 };
+
   return {
     ...runtime,
     children: runtime.children.map((child, index) =>

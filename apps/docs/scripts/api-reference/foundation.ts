@@ -4,7 +4,9 @@ import { translateFoundationApiReference } from './foundation.en';
 import { createApiReferenceMdx, writeApiReferenceMdx } from './tex';
 
 const docsRoot = path.resolve(import.meta.dirname, '../..');
+
 const repositoryRoot = path.resolve(docsRoot, '../..');
+
 const packageRoot = path.resolve(repositoryRoot, 'packages/kernel/foundation');
 
 const config = {
@@ -26,11 +28,10 @@ const config = {
         'OpenString',
         'ParsedCssColor',
         'RetikzErrorOptions',
-        'RetikzFoundationErrorCodeValue',
+        'RetikzFoundationErrorCode',
         'ValueOf',
         'WithOptionalProperties',
         'WithRequiredProperties',
-        'RetikzFoundationErrorCode',
         'StaticCssNamedColorHexByName',
         'assertNonEmptyString',
         'assertPlainDataContainers',

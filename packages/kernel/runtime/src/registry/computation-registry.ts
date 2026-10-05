@@ -25,6 +25,7 @@ const compareComputations = (left: RuntimeComputationToken, right: RuntimeComput
   if (left.id.owner > right.id.owner) return 1;
   if (left.id.key < right.id.key) return -1;
   if (left.id.key > right.id.key) return 1;
+
   return 0;
 };
 
@@ -51,12 +52,15 @@ export const sortRuntimeComputationGraph = (
   const indegrees = new Map(definitions.map(definition => [definition, 0]));
   const dependents = new Map(definitions.map(definition => [definition, new Set<RuntimeComputationToken>()]));
   const members = new Set(definitions);
+
   for (const definition of definitions) {
     const dependencies = dependenciesFor(definition);
+
     for (const dependency of dependencies) {
       if (!members.has(dependency)) {
         throw computationError(RetikzRuntimeErrorCode.ComputationUnknown, definition.id, dependency);
       }
+
       if (!dependents.get(dependency)?.has(definition)) {
         dependents.get(dependency)?.add(definition);
         indegrees.set(definition, (indegrees.get(definition) ?? 0) + 1);
@@ -66,10 +70,12 @@ export const sortRuntimeComputationGraph = (
 
   const ready = definitions.filter(definition => indegrees.get(definition) === 0).sort(compareComputations);
   const sorted: Array<RuntimeComputationToken> = [];
+
   while (ready.length > 0) {
     const definition = ready.shift();
     if (definition === undefined) break;
     sorted.push(definition);
+
     for (const dependent of dependents.get(definition) ?? []) {
       const next = (indegrees.get(dependent) ?? 0) - 1;
       indegrees.set(dependent, next);
@@ -79,9 +85,11 @@ export const sortRuntimeComputationGraph = (
       }
     }
   }
+
   if (sorted.length !== definitions.length) {
     throw computationError(RetikzRuntimeErrorCode.ComputationCycle, undefined, definitions);
   }
+
   return Object.freeze(sorted);
 };
 
@@ -92,29 +100,36 @@ export const createRuntimeComputationRegistry = (
   if (!isRuntimeSourceRegistry(input.sources)) {
     throw computationError(RetikzRuntimeErrorCode.RegistryMismatch, undefined, input.sources);
   }
+
   const builtins = input.builtins ?? [];
   const custom = input.custom ?? [];
 
   const byId = new Map<string, RuntimeComputationToken>();
   const executors = new Map<RuntimeComputationToken, RuntimeComputationErasedExecutor>();
+
   for (const definition of [...builtins, ...custom]) {
     if (!isRuntimeComputationDefinition(definition)) {
       throw computationError(RetikzRuntimeErrorCode.ComputationTokenInvalid, undefined, definition);
     }
+
     const key = idKey(definition.id);
     if (byId.has(key)) throw computationError(RetikzRuntimeErrorCode.ComputationDuplicate, definition.id, definition);
+
     const executor = getRuntimeComputationDefinitionExecutor(definition);
     if (input.sources.find(definition.id.owner) === undefined) {
       throw computationError(RetikzRuntimeErrorCode.Unknown, definition.id, definition.id.owner);
     }
+
     for (const owner of executor.sources) {
       if (input.sources.find(owner.key) !== owner) {
         throw computationError(RetikzRuntimeErrorCode.Unknown, definition.id, owner);
       }
     }
+
     byId.set(key, definition);
     executors.set(definition, executor);
   }
+
   const sorted = sortRuntimeComputationGraph(
     [...byId.values()],
     definition => executors.get(definition)?.computations ?? [],
@@ -126,15 +141,18 @@ export const createRuntimeComputationRegistry = (
       if (!isRuntimeComputationDefinition(definition)) {
         throw computationError(RetikzRuntimeErrorCode.ComputationTokenInvalid, undefined, definition);
       }
+
       if (byId.get(idKey(definition.id)) !== definition) {
         throw computationError(RetikzRuntimeErrorCode.ComputationUnknown, definition.id, definition);
       }
+
       return definition;
     },
     find: id => byId.get(idKey(id)),
     definitions: () => Object.freeze([...sorted]),
   });
   runtimeComputationRegistries.set(registry, Object.freeze({ sources: input.sources, executors }));
+
   return registry;
 };
 
@@ -149,6 +167,7 @@ export const getRuntimeComputationSourceRegistry = (registry: RuntimeComputation
       cause: registry,
     });
   }
+
   return sources;
 };
 
@@ -160,8 +179,10 @@ export const getRuntimeComputationRegistryExecutor = (
   if (!isRuntimeComputationDefinition(definition)) {
     throw computationError(RetikzRuntimeErrorCode.ComputationTokenInvalid, undefined, definition);
   }
+
   const executor = runtimeComputationRegistries.get(registry)?.executors.get(definition);
   if (executor === undefined)
     throw computationError(RetikzRuntimeErrorCode.ComputationUnknown, definition.id, definition);
+
   return executor;
 };

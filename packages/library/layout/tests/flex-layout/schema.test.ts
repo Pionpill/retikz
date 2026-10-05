@@ -31,9 +31,11 @@ describe('FlexLayout schema and factory', () => {
     const item = { kind: LayoutItemKind.Flex, key: 'label', child } satisfies FlexLayoutItemInput;
     const input = { children: [item] } satisfies FlexLayoutInput;
     const source = createFlexLayout(input);
+
     expect(source).toEqual({ namespace: 'layout', type: 'flexLayout', ...input });
     expect(parseFlexLayout(input)).toMatchObject({ direction: 'row', wrap: 'nowrap', gap: 0 });
     expect(resolveFlexLayout(parseFlexLayout(input))).toEqual(resolveFlexLayout(source));
+
     const parsed = resolveFlexLayout(source);
 
     expect(parsed).toEqual({
@@ -136,9 +138,12 @@ describe('FlexLayout schema and factory', () => {
     });
 
     expect(duplicate.success).toBe(false);
+
     if (!duplicate.success)
       expect(duplicate.error.issues.some(issue => issue.path.join('.') === 'children.1.key')).toBe(true);
+
     expect(wrongKind.success).toBe(false);
+
     if (!wrongKind.success)
       expect(wrongKind.error.issues.some(issue => issue.path.join('.') === 'children.0.kind')).toBe(true);
   });

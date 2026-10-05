@@ -135,12 +135,14 @@ describe('Extension extension collections', () => {
 
     for (const [providers, definitions] of pairs) {
       expect(providers).toHaveLength(definitions.length);
+
       providers.forEach((provider, index) => {
         expect(provider.makeDefinition({})).toBe(definitions[index]);
       });
     }
 
     expect(ExtensionClipProviders).toHaveLength(ExtensionClipDefinitions.length);
+
     ExtensionClipProviders.forEach((provider, index) => {
       expect(provider.makeDefinition({})).toBe(ExtensionClipDefinitions[index]);
     });

@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 处理阶段及其数据含义 */
 export const figureI18n = {
   zh: [

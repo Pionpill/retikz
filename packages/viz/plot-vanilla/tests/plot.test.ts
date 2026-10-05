@@ -143,6 +143,7 @@ describe('plot', () => {
       plotDefaults: { palette: { series: ['#2563eb'] } },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
+
     expect(spec.plotDefaults).toEqual({ palette: { series: ['#2563eb'] } });
   });
 

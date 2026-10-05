@@ -57,6 +57,7 @@ const createHarness = (
   const prepareMount = vi.fn((frame: RenderFrameSnapshot) => {
     options.onPrepareMount?.(frame);
     const previous = current;
+
     return Object.freeze({
       commit: () => {
         current = frame;
@@ -113,13 +114,16 @@ const createHarness = (
       createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
     ],
   });
+
   return { coreComputation, handle, prepare, prepareMount, renderer, session };
 };
 
 describe('retained render frame contract', () => {
   it('exposes readonlyLayerCapability on the nominal token', () => {
     const harness = createHarness('supported');
+
     expect(harness.renderer.readonlyLayerCapability).toBe('supported');
+
     harness.session.dispose();
   });
 
@@ -130,11 +134,13 @@ describe('retained render frame contract', () => {
     expect(frame.layers).toEqual([]);
     expect(Object.isFrozen(frame.layers)).toBe(true);
     expect(harness.handle.read(harness.session).frame).toBe(frame);
+
     harness.session.dispose();
   });
 
   it('rejects non-empty layers on unsupported renderers before prepareMount', () => {
     const onPrepareMount = vi.fn();
+
     expect(() => createHarness('unsupported', { onPrepareMount, resolveReadonlyLayers: layersFrom })).toThrowError(
       expect.objectContaining({
         cause: expect.objectContaining({
@@ -165,6 +171,7 @@ describe('retained render frame contract', () => {
     });
     const updatedOutput = harness.session.artifact(harness.coreComputation).value.output;
     const updatedFrame = harness.handle.read(harness.session).frame;
+
     expect(outputs.at(-1)).toBe(updatedOutput);
     expect(updatedFrame.primary.revision).toBe(harness.session.revision());
 
@@ -173,9 +180,11 @@ describe('retained render frame contract', () => {
       sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { animation: { enabled: false } })],
     });
     const configFrame = harness.handle.read(harness.session).frame;
+
     expect(outputs.at(-1)).toBe(updatedOutput);
     expect(configFrame.primary.revision).toBe(harness.session.revision());
     expect(configFrame.layers).not.toBe(updatedFrame.layers);
+
     harness.session.dispose();
   });
 
@@ -204,6 +213,7 @@ describe('retained render frame contract', () => {
     );
     expect(harness.prepare).toHaveBeenCalledTimes(prepareCalls);
     expect(harness.handle.read(harness.session).frame).toBe(previous);
+
     harness.session.dispose();
   });
 

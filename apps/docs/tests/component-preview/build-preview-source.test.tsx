@@ -159,7 +159,9 @@ const ManualTableDemo: FC = () => (
 );
 
 const staticIR = buildPreviewIR(StaticDemo).ir;
+
 const alternateIR = buildPreviewIR(AlternateDemo).ir;
+
 const PathInspectorCanonical: FC = () => pathInspectorPreviewSource.canonicalRender();
 
 const createInput = (overrides: Record<string, unknown> = {}) => ({
@@ -178,11 +180,14 @@ describe('buildPreviewSource', () => {
   it('仅准备预览时保留必要 IR，打开源码后才提供 Vanilla SVG', () => {
     const input = createInput({ Component: ChartDemo });
     const initial = buildPreviewSource({ ...input, includeGeneratedSources: false });
+
     expect(initial.previewIr).not.toBeNull();
     expect(initial.source?.react?.files.length).toBeGreaterThan(0);
     expect(initial.source?.vanilla).toBeUndefined();
     expect(initial.source?.ir).toBeUndefined();
+
     const complete = buildPreviewSource(input);
+
     expect(complete.previewIr?.sourceIr).toEqual(initial.previewIr?.sourceIr);
     expect(complete.source?.vanilla?.files[0]?.code).toContain('renderChart');
     expect(renderToStaticMarkup(complete.source?.vanilla?.render?.('svg'))).toContain('<svg');
@@ -268,6 +273,7 @@ describe('buildPreviewSource', () => {
     if (!isValidElement(chart) || typeof chart.type !== 'function') {
       throw new Error('ChartDemo must return one function-component root');
     }
+
     const input = createInputScene(
       createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
     );
@@ -464,6 +470,7 @@ describe('buildPreviewSource', () => {
 
   it('deriveIR false 时不执行 demo 并保持 React-only', () => {
     let executions = 0;
+
     const ThrowingDemo: FC = () => {
       executions++;
       throw new Error('must not execute');
@@ -480,6 +487,7 @@ describe('buildPreviewSource', () => {
 
   it('hideCode 时不执行 demo 也不构造源码', () => {
     let executions = 0;
+
     const ThrowingDemo: FC = () => {
       executions++;
       throw new Error('must not execute');
@@ -493,10 +501,12 @@ describe('buildPreviewSource', () => {
 
   it('irJsonOverride 优先于模块导出和自动派生', () => {
     let executions = 0;
+
     const ThrowingDemo: FC = () => {
       executions++;
       throw new Error('must not execute');
     };
+
     const irJsonOverride = formatIR(alternateIR);
 
     const result = buildPreviewSource(
@@ -510,6 +520,7 @@ describe('buildPreviewSource', () => {
 
   it('previewIR 优先于自动派生', () => {
     let executions = 0;
+
     const ThrowingDemo: FC = () => {
       executions++;
       throw new Error('must not execute');
@@ -531,6 +542,7 @@ describe('buildPreviewSource', () => {
 
   it('deriveIR false 时可从 canonicalRender 生成默认状态的 IR 与 Vanilla', () => {
     let executions = 0;
+
     const ThrowingDemo: FC = () => {
       executions++;
       throw new Error('must not execute');

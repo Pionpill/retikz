@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 关系样式面板文案 */
 export const relationStyleI18n: Record<Lang, { controls: Array<string> }> = {
   zh: {

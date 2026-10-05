@@ -70,12 +70,16 @@ describe('Extension root entry integration', () => {
         },
       ],
     });
+
     expect(() => renderToSvgString(input)).toThrow(/cross/);
+
     const svg = renderToSvgString(input, { compile: { shapes: [CrossShapeDefinition] } });
+
     expect(svg).toContain('<svg');
     expect(svg).toContain('#38bdf8');
     expect(svg).toContain('<path');
   });
+
   it('keeps direct Core compile and Vanilla compilation scene-equivalent with exact capability entries', () => {
     const direct = compileToScene(source, definitions);
     const vanilla = toSceneResult(source, { compile: definitions });

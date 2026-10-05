@@ -35,7 +35,10 @@ const dispatchDefaultWarning = (warning: CompileWarning): void => {
   console.warn(formatCompileWarning(warning));
 };
 
-/** 创建保留 full oracle 语义的 Core Runtime Computation */
+/**
+ * 创建保留 full oracle 语义的 Core Runtime Computation
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export const createCoreComputation = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   options: CoreComputationOptions<TComposites>,
   runtimeOptions: CoreComputationRuntimeOptions = {},
@@ -47,6 +50,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
       RetikzCoreErrorCode.Contract,
       'createCoreComputation: composite inputs must come from either fixed options or the runtime owner',
     );
+
   const invalidationSources = Object.freeze([...(runtimeOptions.invalidationSources ?? [])]);
   const observers = Object.freeze([...(runtimeOptions.observers ?? [])]);
   const warningSink = fixedOptions.onWarn ?? dispatchDefaultWarning;
@@ -111,6 +115,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
           'createCoreComputation: full compile did not produce Runtime primitive metadata',
         );
       }
+
       const snapshot = createFullSceneRuntimeSnapshot(
         compiled.result.scene,
         view.candidateRevision,
@@ -134,6 +139,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
             }
           : {}),
       });
+
       context.trace.report({
         phase: PerformanceTracePhase.Update,
         unit: PerformanceTraceUnit.IrChild,
@@ -152,6 +158,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
           changed: 1,
         });
       }
+
       return {
         kind: RuntimeComputationKind.Full,
         artifact: Object.freeze({
@@ -167,7 +174,9 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
       if (invalidationSources.some(owner => view.changed(owner))) {
         return { kind: RuntimeComputationKind.Fallback };
       }
+
       if (observers.length > 0) return { kind: RuntimeComputationKind.Fallback };
+
       const changeSet = view.changeSet(CoreSourceDefinition);
       const nextSource = view.snapshot(CoreSourceDefinition).value;
       resolveCompositeInputScope(
@@ -187,6 +196,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
           ],
         };
       }
+
       const incremental = tryCompileRootNodeStyleUpdate(
         previous,
         nextSource,
@@ -196,6 +206,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         view.candidateRevision,
       );
       if (incremental === undefined) return { kind: RuntimeComputationKind.Fallback };
+
       context.trace.report({
         phase: PerformanceTracePhase.Update,
         unit: PerformanceTraceUnit.IrChild,
@@ -212,11 +223,13 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         reused: 0,
         changed: incremental.operationCount,
       });
+
       return { kind: RuntimeComputationKind.Incremental, artifact: incremental.artifact };
     },
     observeCommit: event => {
       event.artifact.value.output.diagnostics.forEach(warningSink);
     },
   });
+
   return definition;
 };

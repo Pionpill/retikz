@@ -11,9 +11,11 @@ describe('Branch Source', () => {
   };
   it('round-trips a single-node branch and defaults layout intent', () => {
     const parsed = BranchDiagramSchema.parse(source);
+
     expect(BranchDiagramSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
     expect(BranchLayoutIntentSchema.parse({})).toEqual({ direction: 'right', nodeGap: 48, laneGap: 48 });
   });
+
   it.each([
     { ...source, relations: [] },
     { ...source, nodes: [] },

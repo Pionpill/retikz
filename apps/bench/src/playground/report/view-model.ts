@@ -44,6 +44,7 @@ export const createLabSummary = (results: ReadonlyArray<LabPolicyResult>): LabSu
   if (results.length === 0) {
     return Object.freeze({ bestPolicyId: undefined, incrementalActive: false, speedupPercent: undefined });
   }
+
   const best = results.reduce((current, candidate) =>
     candidate.timing.medianMs < current.timing.medianMs ? candidate : current,
   );
@@ -53,6 +54,7 @@ export const createLabSummary = (results: ReadonlyArray<LabPolicyResult>): LabSu
     staticResult === undefined || autoResult === undefined || staticResult.timing.medianMs === 0
       ? undefined
       : Math.round((1 - autoResult.timing.medianMs / staticResult.timing.medianMs) * 1_000) / 10;
+
   return Object.freeze({
     bestPolicyId: best.policyId,
     incrementalActive: autoResult?.outcome === LabOutcome.Incremental && autoResult.work.reused > 0,
@@ -123,6 +125,7 @@ const isLabPolicyResult = (value: unknown): value is LabPolicyResult => {
   ) {
     return false;
   }
+
   return (
     value.patch === undefined ||
     (isRecord(value.patch) &&
@@ -147,8 +150,10 @@ export const getLabRunSessionPayload = (report: BenchLabReport): LabRunSession |
   ) {
     return undefined;
   }
+
   const policyIds = value.results.map(result => result.policyId);
   if (new Set(policyIds).size !== policyIds.length) return undefined;
+
   return Object.freeze({
     id: value.id,
     mode: value.mode,

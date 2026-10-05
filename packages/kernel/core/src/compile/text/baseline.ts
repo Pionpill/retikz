@@ -24,6 +24,7 @@ export const toAlphabeticBaselineY = (input: AlphabeticBaselineInput): number =>
   const asc = fontSize * ASCENT_FACTOR;
   const desc = fontSize * DESCENT_FACTOR;
   const span = (lineCount - 1) * lineHeight;
+
   switch (baseline) {
     case 'top':
       return y + asc;

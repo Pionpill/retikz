@@ -15,6 +15,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       </>,
       '__plot',
     );
+
     expect(spec.transform).toEqual([{ operation: { kind: 'bin', field: 'measurement', count: 20 } }]);
   });
 
@@ -28,12 +29,16 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     );
     const expected = createHistogramSpec('__plot', { x: '__x', y: '__y' }, 5);
     const mark = spec.marks[0];
+
     expect(spec.transform).toEqual(expected.transform);
     expect(mark).toMatchObject(expected.marks[0]);
+
     if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
+
     // histogram：仅 y 高度通道、无 encoding.x
     expect(mark.encoding.y).toEqual({ field: 'binCount' });
     expect(mark.encoding.x).toBeUndefined();
+
     // 连续 x linear scale（非 band）
     expect(spec.scales).toContainEqual({ type: 'linear', name: '__x' });
     expect(spec.scales.find(s => s.name === '__x')?.type).not.toBe('band');
@@ -42,6 +47,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
   it('bar_width_proportional_keeps_x_as_axis_label_field', () => {
     const spec = buildPlotIR(<IntervalMark x="country" y="cost" width="gdp" color="country" />, '__plot');
     const mark = spec.marks[0];
+
     expect(mark).toMatchObject({
       type: 'interval',
       bounds: { x: { kind: 'proportional', field: 'gdp' } },
@@ -64,6 +70,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       </>,
       '__plot',
     );
+
     expect(spec.transform).toEqual([
       {
         operation: {
@@ -73,6 +80,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
         },
       },
     ]);
+
     // 普通分类柱（x band）
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
@@ -92,6 +100,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
         },
       ],
     });
+
     expect(spec.transform).toEqual([
       {
         operation: {
@@ -113,7 +122,9 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       '__plot',
     );
     const stacks = (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack');
+
     expect(stacks).toHaveLength(1);
+
     // mark 仍标记为 stack 排布（bounds.y extent 读 y0/y1）
     expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
   });
@@ -122,6 +133,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     const spec = buildPlotIR(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
       transforms: [{ operation: { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' } }],
     });
+
     expect(
       (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack'),
     ).toHaveLength(1);
@@ -142,6 +154,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       </>,
       '__plot',
     );
+
     expect(spec.transform?.[0].operation).toMatchObject({ kind: 'summarize' });
     expect(spec.transform?.[1].operation).toMatchObject({ kind: 'stack' });
   });
@@ -154,6 +167,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       </>,
       '__plot',
     );
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

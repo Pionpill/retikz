@@ -5,6 +5,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { createPointCoordinateSection } from '../point-coordinate-control';
 import { rangedDotData } from './ranged-dot-basic.data';
 import { rangedDotEncodingsI18n } from './ranged-dot-encodings.i18n';
+
 /** 仅控制当前示例的数据映射 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const i18n = rangedDotEncodingsI18n[lang];

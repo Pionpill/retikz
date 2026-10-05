@@ -74,6 +74,7 @@ describe('timing baseline gate', () => {
     expect(
       createTimingEnvironmentFingerprint(expected, 'v24.18.0', { ...browser, browserVersion: 'other' }, runner),
     ).not.toBe(fingerprint);
+
     for (const changedRunner of [
       { ...runner, runnerId: 'workstation-b' },
       { ...runner, platform: 'linux' },
@@ -84,6 +85,7 @@ describe('timing baseline gate', () => {
     ]) {
       expect(createTimingEnvironmentFingerprint(expected, 'v24.18.0', browser, changedRunner)).not.toBe(fingerprint);
     }
+
     expect(
       createTimingEnvironmentFingerprint(expected, 'v24.18.0', { ...browser, hardwareConcurrency: 8 }, runner),
     ).not.toBe(fingerprint);
@@ -92,6 +94,7 @@ describe('timing baseline gate', () => {
   it('candidate与compare拒绝重复tracked场景', () => {
     const duplicateReport = passingReports.find(candidate => candidate.id === 'svg-retained-full-5000');
     if (duplicateReport === undefined) throw new Error('expected tracked SVG full report');
+
     const duplicate = [...passingReports, duplicateReport];
 
     expect(() => createTimingBaselineCandidate('fingerprint', duplicate)).toThrow(/duplicate/i);
@@ -115,6 +118,7 @@ describe('timing baseline gate', () => {
 
   it('compare模式只有明确passed可作为机器成功，skipped同样抛错', () => {
     expect(() => assertTimingGatePassed({ status: 'passed', errors: [] })).not.toThrow();
+
     for (const status of ['failed', 'unstable', 'skipped'] as const) {
       expect(() => assertTimingGatePassed({ status, errors: ['reason'] })).toThrow(
         new RegExp(`timing benchmark ${status}`, 'i'),
@@ -128,6 +132,7 @@ describe('timing baseline gate', () => {
     );
 
     expect(compareTimingReports('fingerprint', absoluteFailure, baseline)).toMatchObject({ status: 'failed' });
+
     for (const [id, p95] of [
       ['core-single-entity-update-5000', 51],
       ['svg-single-entity-update-5000', 26],
@@ -141,6 +146,7 @@ describe('timing baseline gate', () => {
         candidate.id === id ? report(candidate.id, p95) : candidate,
       );
       const selfBaseline = createTimingBaselineCandidate('fingerprint', relativeFailure);
+
       expect(compareTimingReports('fingerprint', relativeFailure, selfBaseline)).toMatchObject({ status: 'failed' });
     }
   });
@@ -166,6 +172,7 @@ describe('timing baseline gate', () => {
         return Promise.resolve({ fingerprint: 'fingerprint', reports: passingReports });
       },
     );
+
     expect(reruns).toBe(1);
     expect(passAfterRerun.finalComparison.status).toBe('passed');
 
@@ -174,6 +181,7 @@ describe('timing baseline gate', () => {
       baseline,
       () => Promise.resolve({ fingerprint: 'fingerprint', reports: unstableReports }),
     );
+
     expect(stillUnstable.finalComparison.status).toBe('unstable');
 
     const drifted = await runTimingGateAttempts(
@@ -181,6 +189,7 @@ describe('timing baseline gate', () => {
       baseline,
       () => Promise.resolve({ fingerprint: 'other', reports: passingReports }),
     );
+
     expect(drifted.finalComparison).toEqual({
       status: 'skipped',
       errors: ['timing rerun fingerprint mismatch'],
@@ -195,14 +204,18 @@ describe('timing baseline gate', () => {
         return Promise.resolve({ fingerprint: 'fingerprint', reports: passingReports });
       },
     );
+
     expect(reruns).toBe(0);
     expect(noRerun.finalComparison.status).toBe('passed');
   });
 
   it('报告或 baseline 缺场景时失败', () => {
     const incompleteReports = passingReports.filter(candidate => candidate.id !== 'core-retained-full-5000');
+
     expect(compareTimingReports('fingerprint', incompleteReports, baseline)).toMatchObject({ status: 'failed' });
+
     const incompleteBaseline = createTimingBaselineCandidate('fingerprint', incompleteReports);
+
     expect(compareTimingReports('fingerprint', passingReports, incompleteBaseline)).toMatchObject({ status: 'failed' });
   });
 });

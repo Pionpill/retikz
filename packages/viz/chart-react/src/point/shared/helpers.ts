@@ -10,7 +10,9 @@ export const lowerOptionsWithAmbientThemeOf = (
   ambientThemeStyles: NonNullable<LowerPlotsOptions['plotThemeStyles']> | undefined,
 ): LowerPlotsOptions | undefined => {
   if (ambientThemeStyles === undefined || ambientThemeStyles.length === 0) return lowerOptions;
+
   const explicit = lowerOptions?.plotThemeStyles;
+
   return {
     ...(lowerOptions ?? {}),
     plotThemeStyles: explicit === undefined ? ambientThemeStyles : [...ambientThemeStyles, ...explicit],
@@ -23,6 +25,7 @@ export const lowerOptionsWithPlotRuntimeOf = (
   runtime: PlotAuthoringRuntime,
 ): LowerPlotsOptions | undefined => {
   if (runtime.resolveLabel === undefined) return lowerOptions;
+
   return {
     ...(lowerOptions ?? {}),
     resolveLabel: { ...runtime.resolveLabel, ...(lowerOptions?.resolveLabel ?? {}) },

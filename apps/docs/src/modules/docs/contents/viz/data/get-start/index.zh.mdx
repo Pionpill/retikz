@@ -13,7 +13,7 @@ description: 安装 @retikz/data，声明字段模型，归一化外部数据，
 
 ## 处理第一份数据
 
-这个例子把地区视为类别、收入视为可求和的连续量。`DataFieldType` 描述的是[字段的测量含义](/viz/data/basic/field-types)，不取决于收入在外部数据里是否存成字符串。
+这个例子把地区视为类别、收入视为可求和的连续量。`DataFieldType` 描述的是[字段的测量含义](/viz/data/model/fields-and-types)，不取决于收入在外部数据里是否存成字符串。
 
 ```ts
 import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
@@ -30,8 +30,8 @@ const model: IRDataModel = [
   { name: 'region', type: DataFieldType.Categorical },
   { name: 'revenue', type: DataFieldType.Continuous },
 ];
-const fieldTypes = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
-const canonicalRows = normalizeRows(rows, fieldTypes);
+const fieldTypeMap = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
+const canonicalRows = normalizeRows(rows, fieldTypeMap);
 
 const transforms: Array<IRDataTransform> = [
   {
@@ -54,5 +54,7 @@ console.log(summary);
 `model` 与 `transforms` 可以保存为 JSON。`rows` 以及可能的自定义 parser、Definition 和 registry 则只在运行时参与处理。
 
 ## 接下来
+
+使用 `createDataView(rows, model)` 交付规范数据时，视图只包含 `rows` 和完整字段模型 `model`。通过 `view.model.find(field => field.name === name)` 查找字段：结果为 `undefined` 表示字段不存在，字段存在但 `type` 为 `undefined` 表示类型尚未确定。空数据保留模型中的显式类型与分类顺序，不为未定字段补入默认类型。
 
 需要字段映射、格式或校验时阅读[数据模型](/viz/data/model)；需要更多内置操作时阅读[数据变换](/viz/data/transform)。将结果交给视图时，继续阅读[绘图语法](/viz/plot)或对应的 Table 文档。

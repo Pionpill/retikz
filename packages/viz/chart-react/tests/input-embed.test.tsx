@@ -231,6 +231,7 @@ describe('custom Regression adapter parity', () => {
       ),
     });
     const vanilla = regressionChart({ data: rows, encodings: { x: 'x', y: 'y' }, properties, lowerOptions }).props;
+
     expect(react).toEqual(vanilla);
     expect(react.lowerOptions?.regressionDefinitions?.[0]).toBe(definition);
   });

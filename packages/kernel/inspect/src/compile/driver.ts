@@ -38,6 +38,7 @@ import type {
 } from './types';
 
 type CapturedObservation = Readonly<{ observation: CompileObservation; context: CompileObservationContext }>;
+
 type InspectionObserverOutput = Readonly<{
   inspection: InspectionCompileResult['inspection'];
   diagnostics: ReadonlyArray<InspectionDiagnostic>;
@@ -108,8 +109,10 @@ const compileInspectionObserverOutput = (
     );
     if (capturedObservation === undefined)
       throw createInspectionCompileError('Inspection complete failed: observation is missing', { stage: 'complete' });
+
     const appearance = inspectionAppearanceOf(request.colorScope, capturedObservation.context.theme);
     let subject: JsonValue;
+
     try {
       subject = cloneAndFreezeInspectionJson(
         definition.subjectSchema.parse(capturedObservation.observation.value),
@@ -118,11 +121,13 @@ const compileInspectionObserverOutput = (
     } catch (cause) {
       throw wrapInspectionError(createInspectionDiagnosticOrigin('subject', request), cause);
     }
+
     return { request, definition, capturedObservation, subject, appearance };
   });
 
   const entries: Array<InspectionPlaneEntry> = [];
   const diagnostics: Array<InspectionDiagnostic> = [];
+
   for (const preparedRequest of preparedRequests) {
     const context: InspectorContext = Object.freeze({
       round: preparedRequest.capturedObservation.context.round,
@@ -144,12 +149,14 @@ const compileInspectionObserverOutput = (
       },
     });
     let outputChildren: ReturnType<typeof snapshotInspectorOutput>;
+
     try {
       const inspect = preparedRequest.definition.inspect as unknown as (
         subject: JsonValue,
         context: InspectorContext,
       ) => Parameters<typeof snapshotInspectorOutput>[0];
       const callbackOutput = inspect(preparedRequest.subject, context);
+
       try {
         outputChildren = snapshotInspectorOutput(callbackOutput);
       } catch (cause) {
@@ -158,8 +165,10 @@ const compileInspectionObserverOutput = (
     } catch (cause) {
       throw wrapInspectionError(createInspectionDiagnosticOrigin('inspect', preparedRequest.request), cause);
     }
+
     for (const [outputIndex, outputFragment] of outputChildren.entries()) {
       let fragment: ReturnType<CompileObservationContext['compileFragment']>;
+
       try {
         fragment = preparedRequest.capturedObservation.context.compileFragment(outputFragment.child);
       } catch (cause) {
@@ -168,6 +177,7 @@ const compileInspectionObserverOutput = (
           cause,
         );
       }
+
       const scene = sealInspectionScene(fragment.scene);
       entries.push(
         Object.freeze({
@@ -182,6 +192,7 @@ const compileInspectionObserverOutput = (
               : preparedRequest.capturedObservation.observation.transform,
         }),
       );
+
       for (const diagnostic of fragment.diagnostics) {
         diagnostics.push(
           Object.freeze({
@@ -192,8 +203,10 @@ const compileInspectionObserverOutput = (
       }
     }
   }
+
   const frozenDiagnostics = Object.freeze(diagnostics);
   const inspection = entries.length === 0 ? null : Object.freeze({ entries: Object.freeze(entries) });
+
   return Object.freeze({ inspection, diagnostics: frozenDiagnostics });
 };
 
@@ -205,6 +218,7 @@ export const createInspectionObserver = (
 ): CompileObserverDefinition<InspectionObserverOutput> => {
   const capturedSelection = structuredClone(selection);
   const admittedRules = admitInspectionSelection(ir, registry, capturedSelection);
+
   return Object.freeze({
     key: INSPECTION_OBSERVER_KEY,
     createSession: () => {
@@ -232,18 +246,21 @@ export const resolveInspectionObserverOutput = (
       stage: 'complete',
     });
   }
+
   const value = matches[0]?.value;
   if (value === null || typeof value !== 'object') {
     throw createInspectionCompileError('Inspection complete failed: invalid observer output', {
       stage: 'complete',
     });
   }
+
   const output = value as InspectionObserverOutput;
   if (!Array.isArray(output.diagnostics) || !('inspection' in output)) {
     throw createInspectionCompileError('Inspection complete failed: invalid observer output', {
       stage: 'complete',
     });
   }
+
   return Object.freeze({ primary, inspection: output.inspection, diagnostics: output.diagnostics });
 };
 

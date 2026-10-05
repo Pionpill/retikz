@@ -18,7 +18,19 @@ export type CanvasWarning = {
  * @description `skip` 渲染 base 静止态（跳过全部 track）；`at` 按 `time` 求值，`includeNonAutoplay` 控制是否
  *   施加 manual / visible / onEvent 等非自动播 track（被 per-id play / restart 激活时为 true）
  */
-export type PrimAnimationResolution = { mode: 'skip' } | { mode: 'at'; time: number; includeNonAutoplay: boolean };
+export type PrimAnimationResolution =
+  | {
+      /** 跳过动画或在指定时刻采样的判别方式 */
+      mode: 'skip';
+    }
+  | {
+      /** 跳过动画或在指定时刻采样的判别方式 */
+      mode: 'at';
+      /** 用于动画采样的时间，单位为毫秒 */
+      time: number;
+      /** 是否连同未启用 autoplay 的动画一起采样 */
+      includeNonAutoplay: boolean;
+    };
 
 /** Canvas Scene 绘制选项 */
 export type DrawOptions = {

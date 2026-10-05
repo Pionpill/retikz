@@ -8,11 +8,15 @@ import type { Rect } from '../../../src/shared/geometry/rect';
 import { localToWorld, worldToLocal } from '../../../src/shared/geometry/transform';
 
 const SQRT2 = Math.SQRT2;
+
 const id = (n: number): number => n;
+
 /** 无参形状（rectangle）忽略 params；调用点传空对象满足新签名 */
 const NO_PARAMS = {} as const;
+
 /** circle 是内置 shape preset；compile 解析后由 ellipse + 此 params 提供几何 */
 const EQUAL_PARAMS = { circumscribe: 'equal' } as const;
+
 /** diamond 是内置 shape preset；compile 解析后由 polygon + 此 params 提供几何 */
 const DIAMOND_PARAMS = { sides: 4, rotate: 0 } as const;
 
@@ -20,19 +24,24 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   it('rectangle is identity', () => {
     expect(BUILTIN_SHAPES.rectangle.circumscribe(10, 6, NO_PARAMS)).toEqual({ halfWidth: 10, halfHeight: 6 });
   });
+
   it('circle (= ellipse equal) = √(hw²+hh²) on both axes', () => {
     const r = Math.hypot(10, 6);
+
     expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, EQUAL_PARAMS)).toEqual({ halfWidth: r, halfHeight: r });
   });
+
   it('ellipse = inner × √2', () => {
     expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, NO_PARAMS)).toEqual({
       halfWidth: 10 * SQRT2,
       halfHeight: 6 * SQRT2,
     });
   });
+
   it('diamond (= polygon 4/0) 外接 AABB：顶点在坐标轴上，AABB 半轴相等', () => {
     // polygon{4,0} 是视觉菱形：外接圆 R = (hw + hh)，顶点在东西南北方向。
     const r = BUILTIN_SHAPES.polygon.circumscribe(10, 6, DIAMOND_PARAMS);
+
     expect(r.halfWidth).toBeCloseTo(16, 6);
     expect(r.halfHeight).toBeCloseTo(16, 6);
   });
@@ -46,10 +55,12 @@ describe('BUILTIN_SHAPES.anchor returns canonical anchors, undefined otherwise',
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
+
   it('canonical directional anchors remain accepted by built-in providers', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
+
   it('unknown anchor name → undefined (caller throws clear error)', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'foobar', NO_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.ellipse.anchor(rect, 'middle', EQUAL_PARAMS)).toBeUndefined();
@@ -61,6 +72,7 @@ describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
   it('rectangle rotated 90° clips toward +x at the rotated short half-axis', () => {
     const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: Math.PI / 2 };
     const [px, py] = BUILTIN_SHAPES.rectangle.boundaryPoint(rect, [100, 0], NO_PARAMS);
+
     expect(px).toBeCloseTo(5, 6);
     expect(py).toBeCloseTo(0, 6);
   });
@@ -71,23 +83,32 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
   const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
   it('rectangle → single RectPrim', () => {
     const prims = [...BUILTIN_SHAPES.rectangle.emit(rect, style, id, NO_PARAMS)];
+
     expect(prims).toHaveLength(1);
     expect(prims[0].type).toBe('rect');
   });
+
   it('circle (= ellipse equal) emit → EllipsePrim with rx === ry', () => {
     const square: Rect = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
     const prims = [...BUILTIN_SHAPES.ellipse.emit(square, style, id, EQUAL_PARAMS)];
+
     expect(prims[0].type).toBe('ellipse');
+
     if (prims[0].type === 'ellipse') expect(prims[0].rx).toBe(prims[0].ry);
   });
+
   it('diamond (= polygon 4/0) → PathPrim with 4 vertices + close', () => {
     const prims = [...BUILTIN_SHAPES.polygon.emit(rect, style, id, DIAMOND_PARAMS)];
+
     expect(prims[0].type).toBe('path');
+
     if (prims[0].type === 'path') {
       expect(prims[0].commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
+
       const points = prims[0].commands
         .filter((c): c is Extract<PathCommand, { to: [number, number] }> => 'to' in c)
         .map(c => c.to);
+
       expect(points[0][0]).toBeCloseTo(10, 6);
       expect(points[0][1]).toBeCloseTo(0, 6);
       expect(points[1][0]).toBeCloseTo(0, 6);
@@ -113,6 +134,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
         const [lx, ly] = worldToLocal(rect, toward);
         const len = Math.hypot(lx, ly) || 1;
         const r = rect.width / 2;
+
         return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
       },
       anchor: (rect, name) => (name === 'origin' ? [rect.x, rect.y] : undefined),
@@ -137,21 +159,26 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
 
   it('a returned plain object satisfies ShapeDefinition', () => {
     const poly = createPolygonShape();
+
     expect(poly.circumscribe(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
     expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'origin', NO_PARAMS)).toEqual([0, 0]);
     expect(poly.anchor({ x: 0, y: 0, width: 10, height: 10 }, 'top', NO_PARAMS)).toBeUndefined();
+
     const prims = [...poly.emit({ x: 0, y: 0, width: 10, height: 10 }, {}, id, NO_PARAMS)];
+
     expect(prims).toHaveLength(1);
   });
 
   it('edgePoint is optional —— custom shape may omit it', () => {
     const poly = createPolygonShape();
+
     expect(poly.edgePoint).toBeUndefined();
   });
 
   it('outline and keyPoints are optional geometry capabilities with JSON-safe results', () => {
     const poly = createPolygonShape();
     const rect: Rect = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
+
     expect(poly.outline?.(rect, NO_PARAMS)).toEqual([
       { kind: 'move', to: [-1, 2] },
       { kind: 'line', to: [9, 2] },
@@ -209,6 +236,7 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
   it('circle (= ellipse equal) edgePoint（外接框 20×20 → radius 10，right t=0.5）', () => {
     const square: Rect = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
     const p = BUILTIN_SHAPES.ellipse.edgePoint!(square, 'right', 0.5, EQUAL_PARAMS);
+
     expect(p[0]).toBeCloseTo(10, 6);
     expect(p[1]).toBeCloseTo(0, 6);
   });
@@ -216,6 +244,7 @@ describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实�
   it('ellipse.edgePoint：外接框 ×√2 后落椭圆周（right t=0.5 = (rx, 0)）', () => {
     // shapes/ellipse 把 Rect(width) → rx = width/2 / √2？实际由 toEllipse 决定，仅校验在周长上
     const p = BUILTIN_SHAPES.ellipse.edgePoint!(r, 'right', 0.5, NO_PARAMS);
+
     // right 中点必在 +x 轴上
     expect(p[1]).toBeCloseTo(0, 6);
     expect(p[0]).toBeGreaterThan(0);

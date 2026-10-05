@@ -14,16 +14,21 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
     const main = input.branches.find(branch => branch.id === input.mainBranch);
     const branches = main === undefined ? input.branches : [main, ...input.branches.filter(branch => branch !== main)];
     let nextLane = 0;
+
     for (const branch of branches) {
       let added = false;
+
       for (const id of branch.nodes)
         if (!lanes.has(id)) {
           lanes.set(id, nextLane);
           added = true;
         }
+
       if (added) nextLane += 1;
     }
+
     const cross = Array.from({ length: nextLane }, () => ({ before: 0, after: 0 }));
+
     for (const node of input.nodes) {
       const bounds = node.visualBounds;
       const start = vertical ? bounds.x : bounds.y;
@@ -32,6 +37,7 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
       lane.before = Math.max(lane.before, -start);
       lane.after = Math.max(lane.after, start + size);
     }
+
     const centers: Array<number> = [];
     cross.forEach((lane, index) =>
       centers.push(
@@ -50,17 +56,20 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
       const lane = lanes.get(node.id)!;
       const position: Position = vertical ? [centers[lane], progress] : [progress, centers[lane]];
       cursor += after + input.layout.nodeGap;
+
       return { id: node.id, position, lane };
     });
     const byId = new Map(nodes.map(node => [node.id, node]));
     const seen = new Set<string>();
     const segments: Array<BranchLayoutOutput['segments'][number]> = [];
+
     for (const branch of input.branches)
       for (let index = 1; index < branch.nodes.length; index += 1) {
         const source = branch.nodes[index - 1];
         const target = branch.nodes[index];
         const key = JSON.stringify([source, target]);
         if (seen.has(key)) continue;
+
         seen.add(key);
         const from = byId.get(source)!;
         const to = byId.get(target)!;
@@ -84,6 +93,7 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
           cornerRadius: bends.length === 0 ? 0 : 8,
         });
       }
+
     return { nodes, segments };
   },
 });

@@ -201,6 +201,7 @@ const createSession = (
       createRuntimeSourceInput(RenderRuntimeSourceDefinition, options.config ?? {}),
     ],
   });
+
   return { handle, session };
 };
 
@@ -222,6 +223,7 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   const artifact = session.artifact(coreComputation).value;
   session.dispose();
   if (artifact.patch === undefined) throw new Error('expected incremental Core patch');
+
   return Object.freeze({ current, next: artifact.snapshot, patch: artifact.patch });
 };
 
@@ -238,6 +240,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
     const initialFrame = Object.freeze({ primary: pair.current, layers: readonlyLayersAt(4) });
     const nextFrame = Object.freeze({ primary: pair.next, layers: readonlyLayersAt(14) });
     const mount = executor.prepareMount(initialFrame, {}, 'create');
@@ -245,6 +248,7 @@ describe('builtin retained renderers', () => {
     mount.commit();
     mount.dispose();
     const committedFrame = executor.read().frame;
+
     expect(host.querySelector('[data-retikz-readonly-layer="guide"] rect')?.getAttribute('x')).toBe('4');
     expect(host.querySelector('[data-retikz-readonly-layer="guide"]')?.getAttribute('pointer-events')).toBe('none');
     expect(host.querySelector('[data-retikz-readonly-layer="guide"]')?.getAttribute('aria-hidden')).toBe('true');
@@ -265,6 +269,7 @@ describe('builtin retained renderers', () => {
         },
       },
     ] as unknown as ReadonlyArray<RenderReadonlyLayer>;
+
     expect(() =>
       executor.prepare(pair.patch, Object.freeze({ primary: pair.next, layers: invalidLayers }), {}),
     ).toThrow('invalid auxiliary Scene');
@@ -273,9 +278,13 @@ describe('builtin retained renderers', () => {
 
     const prepared = executor.prepare(pair.patch, nextFrame, {});
     prepared.commit();
+
     expect(host.querySelector('[data-retikz-readonly-layer="guide"] rect')?.getAttribute('x')).toBe('14');
+
     prepared.rollback();
+
     expect(host.querySelector('[data-retikz-readonly-layer="guide"] rect')?.getAttribute('x')).toBe('4');
+
     prepared.dispose();
     executor.dispose();
   });
@@ -290,7 +299,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -320,6 +331,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(
       Object.freeze({ primary, layers: readonlyLayersAt(0) }),
       {
@@ -333,6 +345,7 @@ describe('builtin retained renderers', () => {
     host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100, clientY: 50 }));
 
     expect(click).toHaveBeenCalledTimes(1);
+
     executor.dispose();
   });
 
@@ -342,10 +355,12 @@ describe('builtin retained renderers', () => {
       onload: ((event: Event) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
       src = '';
+
       constructor() {
         TestImage.latest = this;
       }
     }
+
     vi.stubGlobal('Image', TestImage);
     const drawImage = vi.fn();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
@@ -356,7 +371,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -373,6 +390,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(
       Object.freeze({ primary, layers: imageReadonlyLayers('layer.png') }),
       {},
@@ -381,10 +399,13 @@ describe('builtin retained renderers', () => {
     const image = TestImage.latest;
 
     expect(image?.src).toBe('layer.png');
+
     mount.commit();
     mount.dispose();
     image?.onload?.(new Event('load'));
+
     expect(drawImage.mock.calls.some(([source]) => source === image)).toBe(true);
+
     executor.dispose();
   });
 
@@ -412,6 +433,7 @@ describe('builtin retained renderers', () => {
     expect(host.querySelector('defs')).not.toBeNull();
     expect(host.querySelector('[data-retikz-id="nested"]')).not.toBeNull();
     expect(handle.read(session).frame.primary.topology.length).toBeGreaterThan(1);
+
     session.dispose();
   });
 
@@ -451,6 +473,7 @@ describe('builtin retained renderers', () => {
 
     expect(host.querySelector('[data-retikz-id="animated-group"]')).not.toBeNull();
     expect(handle.read(session).frame.primary.topology.length).toBeGreaterThan(1);
+
     session.dispose();
   });
 
@@ -477,6 +500,7 @@ describe('builtin retained renderers', () => {
     });
 
     expect(host.querySelector('[data-retikz-id="camera-child"]')).not.toBeNull();
+
     session.dispose();
   });
 
@@ -487,7 +511,9 @@ describe('builtin retained renderers', () => {
     host.style.setProperty('background-color', 'rgb(1, 2, 3)');
     const { session } = createSession('svg', host);
     const staticRead = createSession('svg', document.createElementNS(SVG_NAMESPACE, 'svg'));
+
     expect(staticRead.handle.read(staticRead.session).animation).toBeUndefined();
+
     staticRead.session.dispose();
 
     expect(host.getAttribute('aria-label')).toBe('external');
@@ -499,8 +525,10 @@ describe('builtin retained renderers', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
     });
+
     expect(host.getAttribute('aria-label')).toBe('external');
     expect(host.style.getPropertyValue('background-color')).toBe('rgb(1, 2, 3)');
+
     session.dispose();
   });
 
@@ -511,7 +539,9 @@ describe('builtin retained renderers', () => {
     first.session.dispose();
 
     const adopted = createSession('svg', matchingHost, { mountMode: 'adopt' });
+
     expect(matchingHost.querySelector('[data-retikz-id="node-a"]')).toBe(adoptedNode);
+
     adopted.session.dispose();
 
     const mismatchingHost = document.createElementNS(SVG_NAMESPACE, 'svg');
@@ -520,8 +550,10 @@ describe('builtin retained renderers', () => {
     staleNode?.setAttribute('data-stale', 'true');
     seed.session.dispose();
     const mismatching = createSession('svg', mismatchingHost, { mountMode: 'adopt' });
+
     expect(mismatchingHost.querySelector('[data-retikz-id="node-a"]')).not.toBe(staleNode);
     expect(mismatchingHost.querySelector('[data-stale]')).toBeNull();
+
     mismatching.session.dispose();
   });
 
@@ -539,6 +571,7 @@ describe('builtin retained renderers', () => {
     });
     const node = host.querySelector('[data-retikz-id="node-a"]');
     node?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(calls).toEqual(['first']);
 
     const throwing = vi.fn(() => {
@@ -556,6 +589,7 @@ describe('builtin retained renderers', () => {
       ],
     });
     node?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(reportError).toHaveBeenCalledWith(expect.objectContaining({ message: 'isolated' }));
     expect(calls).toEqual(['first', 'second']);
 
@@ -568,10 +602,14 @@ describe('builtin retained renderers', () => {
       ],
     });
     node?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(calls).toEqual(['first', 'second', 'second']);
+
     session.dispose();
     node?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(calls).toEqual(['first', 'second', 'second']);
+
     vi.unstubAllGlobals();
   });
 
@@ -609,8 +647,10 @@ describe('builtin retained renderers', () => {
         }),
       ],
     });
+
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
+
     session.dispose();
   });
 
@@ -717,6 +757,7 @@ describe('builtin retained renderers', () => {
     });
     const svgExecutor = getRetainedRendererExecutor(svgRenderer);
     if (svgExecutor === undefined) throw new Error('expected builtin SVG renderer executor');
+
     const svgMount = svgExecutor.prepareMount(frameOf(snapshot), svgConfig, 'create');
     svgMount.commit();
     svgMount.dispose();
@@ -729,22 +770,31 @@ describe('builtin retained renderers', () => {
         currentTime: 0 as number | null,
       };
       Object.defineProperty(element, 'getAnimations', { configurable: true, value: () => [animationRecord] });
+
       return animationRecord;
     });
+
     expect(svgAnimations).toHaveLength(3);
+
     svgHost
       .querySelectorAll('rect')
       .item(2)
       .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(svgHandler).toHaveBeenCalledTimes(1);
     expect(svgContext?.meta).toEqual({ source: 'anonymous' });
     expect(svgContext?.geometry?.bbox).toEqual({ x: 0, y: 0, width: 100, height: 20 });
+
     svgAnimation?.restart();
+
     expect(svgAnimations.every(item => item.cancel.mock.calls.length === 1 && item.play.mock.calls.length === 1)).toBe(
       true,
     );
+
     svgAnimation?.seek(150, 'owner');
+
     expect(svgAnimations.map(item => item.currentTime)).toEqual([150, 150, 150]);
+
     svgExecutor.dispose();
 
     const alphaValues: Array<number> = [];
@@ -754,6 +804,7 @@ describe('builtin retained renderers', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       const state = { canvas: this, globalAlpha: 1 };
       const alphaStack: Array<number> = [];
+
       return new Proxy(state as unknown as CanvasRenderingContext2D, {
         get: (target, key) => {
           if (key === 'save') return () => alphaStack.push(target.globalAlpha);
@@ -764,7 +815,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -803,21 +856,32 @@ describe('builtin retained renderers', () => {
     });
     const canvasExecutor = getRetainedRendererExecutor(canvasRenderer);
     if (canvasExecutor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const canvasMount = canvasExecutor.prepareMount(frameOf(snapshot), canvasConfig, 'create');
+
     expect(() => canvasMount.commit()).not.toThrow();
+
     canvasMount.dispose();
+
     expect(requestFrame).not.toHaveBeenCalled();
+
     canvasHost.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 90, clientY: 10 }));
+
     expect(canvasHandler).toHaveBeenCalledTimes(1);
     expect(requestFrame).toHaveBeenCalledTimes(1);
     expect(canvasContext?.meta).toEqual({ source: 'anonymous' });
     expect(canvasContext?.geometry?.bbox).toEqual({ x: 0, y: 0, width: 100, height: 20 });
+
     alphaValues.length = 0;
     canvasAnimation?.restart();
+
     expect(alphaValues.filter(value => value === 0)).toHaveLength(3);
+
     alphaValues.length = 0;
     canvasAnimation?.seek(150, 'owner');
+
     expect(alphaValues.filter(value => Math.abs(value - 0.5) < 0.01)).toHaveLength(3);
+
     canvasExecutor.dispose();
   });
 
@@ -858,6 +922,7 @@ describe('builtin retained renderers', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       const state = { canvas: this, globalAlpha: 1, currentX: 0 };
       const alphaStack: Array<number> = [];
+
       return new Proxy(state as unknown as CanvasRenderingContext2D, {
         get: (target, key) => {
           if (key === 'save') return () => alphaStack.push(target.globalAlpha);
@@ -870,7 +935,9 @@ describe('builtin retained renderers', () => {
             return () => {
               if (this.isConnected) fills.push(Object.freeze({ x: state.currentX, alpha: target.globalAlpha }));
             };
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -914,29 +981,38 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(snapshot), config, 'create');
     mount.commit();
     mount.dispose();
 
     host.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 10, clientY: 10 }));
     host.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 50, clientY: 10 }));
+
     expect(leaveA).toBeDefined();
+
     fills.length = 0;
     leaveA?.seek(150);
+
     expect(fills.slice(-2)).toEqual([
       { x: 0, alpha: 0.5 },
       { x: 40, alpha: 1 },
     ]);
+
     leaveA?.stop();
 
     host.dispatchEvent(new MouseEvent('pointerleave', { clientX: 120, clientY: 50 }));
+
     expect(leaveB).toBeDefined();
+
     fills.length = 0;
     leaveB?.seek(150);
+
     expect(fills.slice(-2)).toEqual([
       { x: 0, alpha: 1 },
       { x: 40, alpha: 0.5 },
     ]);
+
     executor.dispose();
   });
 
@@ -953,6 +1029,7 @@ describe('builtin retained renderers', () => {
         throw new Error('reject SVG animation commit');
       },
     });
+
     try {
       expect(() =>
         svg.session.update({
@@ -960,7 +1037,9 @@ describe('builtin retained renderers', () => {
           sources: [createRuntimeSourceUpdate(CoreSourceDefinition, animatedScene('#22c55e', 'manual'))],
         }),
       ).toThrow();
+
       svgHost.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
       expect(svgHandler).toHaveBeenCalledTimes(1);
     } finally {
       svg.session.dispose();
@@ -977,7 +1056,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -1026,14 +1107,18 @@ describe('builtin retained renderers', () => {
         },
       ],
     };
+
     expect(() =>
       canvas.session.update({
         baseRevision: canvas.session.revision(),
         sources: [createRuntimeSourceUpdate(CoreSourceDefinition, autoplayScene)],
       }),
     ).toThrow();
+
     canvasHost.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100, clientY: 50 }));
+
     expect(canvasHandler).toHaveBeenCalledTimes(1);
+
     canvas.session.dispose();
     vi.unstubAllGlobals();
   });
@@ -1056,6 +1141,7 @@ describe('builtin retained renderers', () => {
         rejectDoubleClickRemoval = false;
         throw new Error('old dblclick removal rejected');
       }
+
       originalRemove(type, listener, options);
     });
 
@@ -1074,8 +1160,10 @@ describe('builtin retained renderers', () => {
     const target = host.querySelector('[data-retikz-id="node-a"]');
     target?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     target?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(onDoubleClick).toHaveBeenCalledTimes(1);
+
     session.dispose();
   });
 
@@ -1094,6 +1182,7 @@ describe('builtin retained renderers', () => {
         rejectedRemovals += 1;
         throw new Error(`old dblclick removal rejected ${rejectedRemovals.toString()}`);
       }
+
       originalRemove(type, listener, options);
     });
 
@@ -1121,7 +1210,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -1139,6 +1230,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const config = {
       handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: vi.fn(), doubleClick: vi.fn() } } }],
     };
@@ -1153,6 +1245,7 @@ describe('builtin retained renderers', () => {
         rejectDoubleClickRemoval = false;
         throw new Error('old Canvas dblclick removal rejected');
       }
+
       originalRemove(type, listener, options);
     });
     const prepared = executor.prepare(pair.patch, frameOf(pair.next), config);
@@ -1160,6 +1253,7 @@ describe('builtin retained renderers', () => {
     expect(() => prepared.commit()).toThrow('old Canvas dblclick removal rejected');
     expect(() => prepared.rollback()).not.toThrow();
     expect(add.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick']);
+
     prepared.dispose();
     executor.dispose();
   });
@@ -1182,6 +1276,7 @@ describe('builtin retained renderers', () => {
         candidateSetupFailed = true;
         throw new Error('candidate dblclick registration rejected');
       }
+
       originalAdd(type, listener, options);
     });
     vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
@@ -1189,6 +1284,7 @@ describe('builtin retained renderers', () => {
         rejectCandidateClickCleanup = false;
         throw new Error('candidate click cleanup rejected');
       }
+
       originalRemove(type, listener, options);
     });
 
@@ -1214,8 +1310,10 @@ describe('builtin retained renderers', () => {
     );
 
     host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(previous).toHaveBeenCalledTimes(1);
     expect(candidateClick).not.toHaveBeenCalled();
+
     session.dispose();
   });
 
@@ -1236,6 +1334,7 @@ describe('builtin retained renderers', () => {
         candidateSetupFailed = true;
         throw new Error('candidate dblclick registration rejected');
       }
+
       originalAdd(type, listener, options);
     });
     vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
@@ -1243,6 +1342,7 @@ describe('builtin retained renderers', () => {
         rejectedCandidateCleanups += 1;
         throw new Error(`candidate click cleanup rejected ${rejectedCandidateCleanups.toString()}`);
       }
+
       originalRemove(type, listener, options);
     });
 
@@ -1272,7 +1372,9 @@ describe('builtin retained renderers', () => {
       }),
     );
     expect(host.innerHTML).toBe(committedMarkup);
+
     host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(previous).toHaveBeenCalledTimes(1);
     expect(candidateClick).not.toHaveBeenCalled();
     expect(() => session.dispose()).not.toThrow();
@@ -1294,6 +1396,7 @@ describe('builtin retained renderers', () => {
         candidateSetupFailed = true;
         throw new Error('candidate dblclick registration rejected');
       }
+
       originalAdd(type, listener, options);
     });
     vi.spyOn(host, 'removeEventListener').mockImplementation((type, listener, options) => {
@@ -1301,6 +1404,7 @@ describe('builtin retained renderers', () => {
         rejectedCandidateCleanups += 1;
         throw new Error(`candidate click cleanup rejected ${rejectedCandidateCleanups.toString()}`);
       }
+
       originalRemove(type, listener, options);
     });
 
@@ -1321,7 +1425,9 @@ describe('builtin retained renderers', () => {
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
 
     expect(() => session.dispose()).not.toThrow();
+
     host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(previous).not.toHaveBeenCalled();
     expect(candidateClick).not.toHaveBeenCalled();
     expect(rejectedCandidateCleanups).toBe(3);
@@ -1336,6 +1442,7 @@ describe('builtin retained renderers', () => {
       configurable: true,
       value: () => ({ pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'running' }),
     });
+
     try {
       const renderer = builtinRetainedRendererFactory({
         backend: 'svg',
@@ -1344,6 +1451,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(
         frameOf(snapshot),
         { handlerContributions: [{ registration: 1, handlers: { 'node-a': { click: vi.fn() } } }] },
@@ -1359,6 +1467,7 @@ describe('builtin retained renderers', () => {
           rejectRemoval = false;
           throw new Error('final hydration cleanup rejected');
         }
+
         originalRemove(type, listener, options);
       });
 
@@ -1430,13 +1539,16 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
     const remove = vi.spyOn(window, 'removeEventListener');
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1446,6 +1558,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
@@ -1488,6 +1601,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -1497,6 +1611,7 @@ describe('builtin retained renderers', () => {
     expect(() => controls?.dispose()).not.toThrow();
     expect(cancelFrame).toHaveBeenCalledTimes(2);
     expect(new Set(cancelFrame.mock.calls.map(([frame]) => frame)).size).toBe(2);
+
     executor.dispose();
     vi.unstubAllGlobals();
   });
@@ -1524,6 +1639,7 @@ describe('builtin retained renderers', () => {
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1533,6 +1649,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
@@ -1544,7 +1661,9 @@ describe('builtin retained renderers', () => {
       expect(() => prepared.commit()).not.toThrow();
       expect(requestFrame).toHaveBeenCalledTimes(requestedBeforeCommit);
       expect(controls?.running).toBe(false);
+
       prepared.dispose();
+
       expect(() => executor.dispose()).not.toThrow();
     } finally {
       vi.unstubAllGlobals();
@@ -1570,7 +1689,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -1583,8 +1704,10 @@ describe('builtin retained renderers', () => {
         rejectScrollRemoval = false;
         throw new Error('scroll cleanup rejected');
       }
+
       originalRemove(type, listener, options);
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1594,6 +1717,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
@@ -1602,8 +1726,11 @@ describe('builtin retained renderers', () => {
       expect(() => executor.dispose()).toThrow('scroll cleanup rejected');
       expect(remove.mock.calls.filter(([type]) => type === 'resize')).toHaveLength(1);
       expect(cancelFrame).toHaveBeenCalledTimes(1);
+
       window.dispatchEvent(new Event('scroll'));
+
       for (const callback of pendingFrames.values()) callback(0);
+
       expect(getBoundingClientRect).not.toHaveBeenCalled();
 
       expect(() => executor.dispose()).not.toThrow();
@@ -1632,6 +1759,7 @@ describe('builtin retained renderers', () => {
         reentrantFrame = frame;
         controlsRef.current?.dispose();
       }
+
       return frame;
     });
     const cancelFrame = vi.fn((frame: number) => {
@@ -1639,6 +1767,7 @@ describe('builtin retained renderers', () => {
         rejectReentrantCleanup = false;
         throw new Error('reentrant visibility frame cleanup rejected');
       }
+
       pendingFrames.delete(frame);
     });
     vi.stubGlobal('requestAnimationFrame', requestFrame);
@@ -1655,6 +1784,7 @@ describe('builtin retained renderers', () => {
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1664,6 +1794,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
@@ -1671,8 +1802,10 @@ describe('builtin retained renderers', () => {
       controlsRef.current = controls;
       const initialFrame = requestFrame.mock.results[0]?.value;
       if (initialFrame === undefined) throw new Error('expected initial visibility frame');
+
       const initialCallback = pendingFrames.get(initialFrame);
       if (initialCallback === undefined) throw new Error('expected initial visibility callback');
+
       pendingFrames.delete(initialFrame);
       initialCallback(0);
       reenterOnRequest = true;
@@ -1706,6 +1839,7 @@ describe('builtin retained renderers', () => {
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1715,14 +1849,17 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
+
       expect(requestFrame).toHaveBeenCalledTimes(1);
 
       window.dispatchEvent(new Event('scroll'));
 
       expect(requestFrame).toHaveBeenCalledTimes(2);
+
       executor.dispose();
     } finally {
       vi.unstubAllGlobals();
@@ -1754,8 +1891,10 @@ describe('builtin retained renderers', () => {
         cleanupRejects -= 1;
         throw new Error(`visibility cleanup rejected ${String(4 - cleanupRejects)}`);
       }
+
       originalRemove(type, listener, options);
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1765,6 +1904,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
 
       expect(() => mount.commit()).toThrow('visibility setup rejected');
@@ -1806,6 +1946,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -1820,13 +1961,17 @@ describe('builtin retained renderers', () => {
     });
 
     expect(() => prepared.commit()).toThrow('candidate hydration rejected');
+
     const candidateFrame = requestFrame.mock.results.at(-1)?.value;
     if (candidateFrame === undefined) throw new Error('expected candidate Canvas clock frame');
+
     candidateFrameRef.current = candidateFrame;
+
     expect(() => prepared.rollback()).toThrow();
     expect(() => prepared.dispose()).toThrow();
     expect(() => executor.dispose()).not.toThrow();
     expect(cancelFrame.mock.calls.filter(([frame]) => frame === candidateFrame)).toHaveLength(3);
+
     vi.unstubAllGlobals();
   });
 
@@ -1851,11 +1996,14 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
     const previousControls = executor.read().animation;
+
     expect(previousControls?.running).toBe(true);
+
     const originalRemove = window.removeEventListener.bind(window);
     let rejectScrollRemoval = true;
     vi.spyOn(window, 'removeEventListener').mockImplementation((type, listener, options) => {
@@ -1863,15 +2011,19 @@ describe('builtin retained renderers', () => {
         rejectScrollRemoval = false;
         throw new Error('previous visibility suspend rejected');
       }
+
       originalRemove(type, listener, options);
     });
     const prepared = executor.prepare(pair.patch, frameOf(pair.next), { animation: { enabled: true } });
 
     expect(() => prepared.commit()).toThrow('previous visibility suspend rejected');
     expect(() => prepared.rollback()).not.toThrow();
+
     prepared.dispose();
+
     expect(executor.read().animation).toBe(previousControls);
     expect(previousControls?.running).toBe(true);
+
     executor.dispose();
     vi.unstubAllGlobals();
   });
@@ -1900,6 +2052,7 @@ describe('builtin retained renderers', () => {
         reenterOnScrollRegistration = false;
         controlsRef.current?.dispose();
       }
+
       originalWindowAdd(type, listener, options);
       if (type === 'scroll') activeScrollListeners.add(listener);
     });
@@ -1907,6 +2060,7 @@ describe('builtin retained renderers', () => {
       originalWindowRemove(type, listener, options);
       if (type === 'scroll') activeScrollListeners.delete(listener);
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1916,6 +2070,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
@@ -1930,14 +2085,18 @@ describe('builtin retained renderers', () => {
         animation: { enabled: true },
         handlerContributions: [{ registration: 1, handlers: { visible: { click: vi.fn() } } }],
       });
+
       expect(() => prepared.commit()).toThrow('candidate hydration rejected');
+
       reenterOnScrollRegistration = true;
 
       expect(() => prepared.rollback()).not.toThrow();
 
       expect(activeScrollListeners.size).toBe(0);
       expect(previousControls?.running).toBe(false);
+
       prepared.dispose();
+
       expect(() => executor.dispose()).not.toThrow();
     } finally {
       vi.unstubAllGlobals();
@@ -1972,6 +2131,7 @@ describe('builtin retained renderers', () => {
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -1981,19 +2141,23 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const controls = executor.read().animation;
       controls?.play();
       rejectPause = true;
+
       expect(() => controls?.pause()).toThrow('public pause rejected');
       expect(controls?.running).toBe(true);
+
       const prepared = executor.prepare(patch, frameOf(next), {});
 
       prepared.commit();
 
       expect(controls?.running).toBe(true);
+
       prepared.dispose();
       executor.dispose();
     } finally {
@@ -2017,6 +2181,7 @@ describe('builtin retained renderers', () => {
         rejectPreviousClockCleanup = false;
         throw new Error('previous clock pause rejected');
       }
+
       pendingFrames.delete(frame);
     });
     vi.stubGlobal('requestAnimationFrame', requestFrame);
@@ -2027,6 +2192,7 @@ describe('builtin retained renderers', () => {
         set: (target, key, value) => Reflect.set(target, key, value),
       });
     });
+
     try {
       const host = document.createElement('canvas');
       const renderer = builtinRetainedRendererFactory({
@@ -2036,25 +2202,32 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
       const previousControls = executor.read().animation;
       previousClockFrame = requestFrame.mock.results[1]?.value;
       if (previousClockFrame === undefined) throw new Error('expected committed Canvas clock frame');
+
       const previousTick = pendingFrames.get(previousClockFrame);
       if (previousTick === undefined) throw new Error('expected pending Canvas clock callback');
+
       const prepared = executor.prepare(pair.patch, frameOf(pair.next), { animation: { enabled: true } });
 
       expect(() => prepared.commit()).toThrow('previous clock pause rejected');
       expect(() => prepared.rollback()).not.toThrow();
       expect(pendingFrames.size).toBe(2);
+
       pendingFrames.delete(previousClockFrame);
       previousTick(0);
+
       expect(pendingFrames.size).toBe(2);
       expect(previousControls?.running).toBe(true);
+
       prepared.dispose();
       executor.dispose();
+
       expect(pendingFrames.size).toBe(0);
     } finally {
       vi.unstubAllGlobals();
@@ -2099,26 +2272,34 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
     const previousControls = executor.read().animation;
     const visibilityFrame = requestFrame.mock.results[0]?.value;
     if (visibilityFrame === undefined) throw new Error('expected committed Canvas visibility frame');
+
     visibilityFrameRef.current = visibilityFrame;
     const prepared = executor.prepare(patch, frameOf(next), {});
 
     expect(() => prepared.commit()).toThrow('clock replacement cleanup rejected 1');
+
     let rollbackFailure: unknown;
+
     try {
       prepared.rollback();
     } catch (cause) {
       rollbackFailure = cause;
     }
+
     expect(rollbackFailure).toBeUndefined();
     expect(cancelFrame.mock.calls.filter(([frame]) => frame === visibilityFrame)).toHaveLength(3);
+
     prepared.dispose();
+
     expect(executor.read().animation).toBe(previousControls);
+
     executor.dispose();
     vi.unstubAllGlobals();
   });
@@ -2133,12 +2314,14 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
     host.querySelector('[data-retikz-id="node-a"]')?.remove();
 
     expect(() => executor.prepare(pair.patch, frameOf(pair.next), {})).toThrow('SVG update target is missing');
+
     executor.dispose();
   });
 
@@ -2153,6 +2336,7 @@ describe('builtin retained renderers', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       const state = { canvas: this, globalAlpha: 1 };
       const alphaStack: Array<number> = [];
+
       return new Proxy(state as unknown as CanvasRenderingContext2D, {
         get: (target, key) => {
           if (key === 'save') return () => alphaStack.push(target.globalAlpha);
@@ -2164,7 +2348,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -2252,6 +2438,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), config, 'create');
     mount.commit();
     mount.dispose();
@@ -2277,6 +2464,7 @@ describe('builtin retained renderers', () => {
     expect(executor.read().animation).toBe(controls);
     expect(alphaValues.some(value => Math.abs(value - 0.4) < 0.01)).toBe(true);
     expect(scaleCalls.at(-1)).toEqual([1, 1]);
+
     executor.dispose();
     vi.unstubAllGlobals();
   });
@@ -2310,14 +2498,21 @@ describe('builtin retained renderers', () => {
     host.appendChild(target);
 
     const controls = bindWaapiDescriptors(host);
+
     expect(target.style.transformOrigin).toBe('10px 20px');
     expect(target.style.transformBox).toBe('view-box');
+
     target.setAttribute('data-retikz-anim', target.getAttribute('data-retikz-anim')!.replace('10px 20px', '30px 40px'));
     const replacementControls = bindWaapiDescriptors(host);
+
     expect(target.style.transformOrigin).toBe('30px 40px');
+
     controls.dispose();
+
     expect(target.style.transformOrigin).toBe('30px 40px');
+
     replacementControls.dispose();
+
     expect(target.style.transformOrigin).toBe('3px 4px');
     expect(target.style.transformBox).toBe('fill-box');
 
@@ -2325,8 +2520,11 @@ describe('builtin retained renderers', () => {
     target.setAttribute('data-retikz-anim', target.getAttribute('data-retikz-anim')!.replace('30px 40px', '50px 60px'));
     const rollbackCandidate = bindWaapiDescriptors(host);
     rollbackCandidate.dispose();
+
     expect(target.style.transformOrigin).toBe('30px 40px');
+
     rollbackBase.dispose();
+
     expect(target.style.transformOrigin).toBe('3px 4px');
   });
 
@@ -2366,7 +2564,9 @@ describe('builtin retained renderers', () => {
     expect(() => controls.dispose()).toThrow('animation cancel rejected');
     expect(target.style.transformOrigin).toBe('3px 4px');
     expect(target.style.transformBox).toBe('fill-box');
+
     target.dispatchEvent(new MouseEvent('click'));
+
     expect(play).not.toHaveBeenCalled();
 
     expect(() => controls.dispose()).not.toThrow();
@@ -2433,14 +2633,18 @@ describe('builtin retained renderers', () => {
       },
     });
     let observeVisibility: ((entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) | undefined;
+
     class TestIntersectionObserver {
       constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
         observeVisibility = callback;
       }
+
       observe = vi.fn();
       disconnect = vi.fn();
     }
+
     vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+
     try {
       host.appendChild(target);
       const controls = bindWaapiDescriptors(host);
@@ -2480,13 +2684,16 @@ describe('builtin retained renderers', () => {
     }));
     Object.defineProperty(target, 'animate', { value: animate });
     let observeVisibility: ((entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) | undefined;
+
     class TestIntersectionObserver {
       constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
         observeVisibility = callback;
       }
+
       observe = vi.fn();
       disconnect = vi.fn();
     }
+
     vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
     let reenterOnGateRead = false;
     const controlsRef: { current?: Readonly<{ dispose: () => void }> } = {};
@@ -2495,10 +2702,12 @@ describe('builtin retained renderers', () => {
         reenterOnGateRead = false;
         controlsRef.current?.dispose();
       }
+
       return true;
     });
     controlsRef.current = controls;
     reenterOnGateRead = true;
+
     try {
       if (triggerKind === 'visible') observeVisibility?.([{ isIntersecting: true }]);
       else target.dispatchEvent(new MouseEvent('click'));
@@ -2567,6 +2776,7 @@ describe('builtin retained renderers', () => {
     const disconnect = vi.fn(() => {
       observerRegistered = false;
     });
+
     class TestIntersectionObserver {
       private readonly callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void;
 
@@ -2581,12 +2791,15 @@ describe('builtin retained renderers', () => {
 
       disconnect = disconnect;
     }
+
     vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+
     try {
       const controls = bindWaapiDescriptors(target);
 
       expect(observerRegistered).toBe(false);
       expect(disconnect).toHaveBeenCalledTimes(2);
+
       controls.dispose();
     } finally {
       vi.unstubAllGlobals();
@@ -2625,6 +2838,7 @@ describe('builtin retained renderers', () => {
     });
 
     expect(() => bindWaapiDescriptors(target)).toThrow('listener registration rejected');
+
     target.dispatchEvent(new MouseEvent('click'));
 
     expect(animate).not.toHaveBeenCalled();
@@ -2650,20 +2864,25 @@ describe('builtin retained renderers', () => {
     });
     const disconnect = vi.fn();
     let observeVisibility: ((entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) | undefined;
+
     class TestIntersectionObserver {
       constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
         observeVisibility = callback;
       }
+
       observe = vi.fn();
       disconnect = disconnect;
     }
+
     vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+
     try {
       host.appendChild(target);
       const controls = bindWaapiDescriptors(host);
       observeVisibility?.([{ isIntersecting: true }]);
       controls.dispose();
       controls.dispose();
+
       expect(disconnect).toHaveBeenCalledTimes(1);
     } finally {
       vi.unstubAllGlobals();
@@ -2691,18 +2910,23 @@ describe('builtin retained renderers', () => {
     let reentered = false;
     const disconnect = vi.fn(() => {
       if (reentered) return;
+
       reentered = true;
       observeVisibility?.([{ isIntersecting: true }]);
       throw new Error('observer disconnect rejected');
     });
+
     class TestIntersectionObserver {
       constructor(callback: (entries: Array<Readonly<{ isIntersecting: boolean }>>) => void) {
         observeVisibility = callback;
       }
+
       observe = vi.fn();
       disconnect = disconnect;
     }
+
     vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+
     try {
       host.appendChild(target);
       const controls = bindWaapiDescriptors(host);
@@ -2750,11 +2974,13 @@ describe('builtin retained renderers', () => {
     host.append(first, second);
 
     let failure: unknown;
+
     try {
       bindWaapiDescriptors(host);
     } catch (cause) {
       failure = cause;
     }
+
     expect(failure).toMatchObject({
       name: 'RetikzRenderError',
       code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
@@ -2763,8 +2989,11 @@ describe('builtin retained renderers', () => {
         cleanupCause: expect.objectContaining({ message: 'setup cleanup rejected' }),
       }),
     });
+
     if (!(failure instanceof RetikzRenderError)) throw new Error('expected WAAPI setup error');
+
     const controls = failure.details.controls as Readonly<{ dispose: () => void }>;
+
     expect(() => controls.dispose()).not.toThrow();
     expect(cancel).toHaveBeenCalledTimes(2);
   });
@@ -2804,11 +3033,13 @@ describe('builtin retained renderers', () => {
     host.appendChild(target);
 
     let failure: unknown;
+
     try {
       bindWaapiDescriptors(host);
     } catch (cause) {
       failure = cause;
     }
+
     expect(failure).toMatchObject({
       name: 'RetikzRenderError',
       code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
@@ -2817,8 +3048,11 @@ describe('builtin retained renderers', () => {
         cleanupCause: expect.objectContaining({ message: 'pause cleanup rejected' }),
       }),
     });
+
     if (!(failure instanceof RetikzRenderError)) throw new Error('expected WAAPI setup error');
+
     const controls = failure.details.controls as Readonly<{ dispose: () => void }>;
+
     expect(() => controls.dispose()).not.toThrow();
     expect(cancel).toHaveBeenCalledTimes(2);
   });
@@ -2939,6 +3173,7 @@ describe('builtin retained renderers', () => {
         return { pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'paused' };
       },
     });
+
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
       const renderer = builtinRetainedRendererFactory({
@@ -2948,12 +3183,14 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const aggregate = executor.read().animation;
       const stable = records.find(record => record.duration === 200);
       const changedOld = records.find(record => record.duration === 300);
+
       expect(stable).toBeDefined();
       expect(changedOld).toBeDefined();
 
@@ -2966,6 +3203,7 @@ describe('builtin retained renderers', () => {
       const preparedStable = executor.prepare(stablePatch, frameOf(stableSnapshot), {});
       preparedStable.commit();
       preparedStable.dispose();
+
       expect(executor.read().animation).toBe(aggregate);
 
       const update: ScenePatch = {
@@ -2993,9 +3231,12 @@ describe('builtin retained renderers', () => {
       };
       const preparedUpdate = executor.prepare(update, frameOf(changed), {});
       preparedUpdate.commit();
+
       expect(records.map(record => record.duration)).toEqual([200, 300, 600]);
       expect(changedOld?.cancel).not.toHaveBeenCalled();
+
       preparedUpdate.dispose();
+
       expect(changedOld?.cancel).toHaveBeenCalledTimes(1);
       expect(stable?.cancel).not.toHaveBeenCalled();
 
@@ -3007,6 +3248,7 @@ describe('builtin retained renderers', () => {
       const preparedRemove = executor.prepare(remove, frameOf(removed), {});
       preparedRemove.commit();
       preparedRemove.dispose();
+
       expect(records.find(record => record.duration === 600)?.cancel).toHaveBeenCalledTimes(1);
       expect(stable?.cancel).not.toHaveBeenCalled();
 
@@ -3018,9 +3260,12 @@ describe('builtin retained renderers', () => {
       const preparedReplace = executor.prepare(replace, frameOf(replaced), {});
       preparedReplace.commit();
       preparedReplace.dispose();
+
       expect(records.map(record => record.duration)).toEqual([200, 300, 600, 200]);
       expect(stable?.cancel).toHaveBeenCalledTimes(1);
+
       executor.dispose();
+
       expect(records.at(-1)?.cancel).toHaveBeenCalledTimes(1);
     } finally {
       if (previousAnimate === undefined) delete (SVGElement.prototype as { animate?: unknown }).animate;
@@ -3080,6 +3325,7 @@ describe('builtin retained renderers', () => {
         return { pause: vi.fn(), play: vi.fn(), cancel: vi.fn(), currentTime: 0, playState: 'paused' };
       },
     });
+
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
       const renderer = builtinRetainedRendererFactory({
@@ -3089,6 +3335,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
@@ -3115,6 +3362,7 @@ describe('builtin retained renderers', () => {
       prepared.dispose();
 
       expect(animatedElements.map(element => element.localName)).toEqual(['rect', 'path']);
+
       executor.dispose();
     } finally {
       if (previousAnimate === undefined) delete (SVGElement.prototype as { animate?: unknown }).animate;
@@ -3137,6 +3385,7 @@ describe('builtin retained renderers', () => {
     }));
     const previousAnimate = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'animate');
     Object.defineProperty(SVGElement.prototype, 'animate', { configurable: true, value: animate });
+
     try {
       const renderer = builtinRetainedRendererFactory({
         backend: 'svg',
@@ -3145,12 +3394,15 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
       const target = host.querySelector('[data-retikz-id="node-a"]');
       if (!(target instanceof SVGElement)) throw new Error('expected animated SVG target');
+
       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
       expect(animate).toHaveBeenCalledTimes(1);
 
       const prepared = executor.prepare(
@@ -3160,13 +3412,16 @@ describe('builtin retained renderers', () => {
       );
       prepared.commit();
       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
       expect(animate).toHaveBeenCalledTimes(1);
       expect(play).not.toHaveBeenCalled();
 
       prepared.rollback();
       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
       expect(animate).toHaveBeenCalledTimes(1);
       expect(play).toHaveBeenCalledTimes(2);
+
       prepared.dispose();
       executor.dispose();
     } finally {
@@ -3189,6 +3444,7 @@ describe('builtin retained renderers', () => {
       configurable: true,
       value: () => ({ pause, play, cancel: vi.fn(), currentTime: 0, playState: 'running' }),
     });
+
     try {
       const renderer = builtinRetainedRendererFactory({
         backend: 'svg',
@@ -3197,6 +3453,7 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
       mount.commit();
       mount.dispose();
@@ -3208,11 +3465,15 @@ describe('builtin retained renderers', () => {
         frameOf(next),
         { animation: { enabled: false } },
       );
+
       expect(() => prepared.commit()).toThrow('pause rejected');
+
       rejectPause = false;
       prepared.rollback();
       target?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
       expect(play).toHaveBeenCalledTimes(2);
+
       prepared.dispose();
       executor.dispose();
     } finally {
@@ -3231,6 +3492,7 @@ describe('builtin retained renderers', () => {
       configurable: true,
       value: () => ({ pause: svgPause, play: svgPlay, cancel: vi.fn(), currentTime: 0, playState: 'paused' }),
     });
+
     try {
       const svgRenderer = builtinRetainedRendererFactory({
         backend: 'svg',
@@ -3239,6 +3501,7 @@ describe('builtin retained renderers', () => {
       });
       const svgExecutor = getRetainedRendererExecutor(svgRenderer);
       if (svgExecutor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const svgMount = svgExecutor.prepareMount(frameOf(svgPair.current), {}, 'create');
       svgMount.commit();
       svgMount.dispose();
@@ -3248,6 +3511,7 @@ describe('builtin retained renderers', () => {
       svgControls?.play();
       svgControls?.pause();
       svgControls?.seek(150);
+
       expect(svgPlay).not.toHaveBeenCalled();
       expect(svgPause).not.toHaveBeenCalled();
     } finally {
@@ -3269,7 +3533,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -3282,6 +3548,7 @@ describe('builtin retained renderers', () => {
     });
     const canvasExecutor = getRetainedRendererExecutor(canvasRenderer);
     if (canvasExecutor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const canvasMount = canvasExecutor.prepareMount(frameOf(canvasPair.current), {}, 'create');
     canvasMount.commit();
     canvasMount.dispose();
@@ -3302,16 +3569,21 @@ describe('builtin retained renderers', () => {
     retired.commit();
     connectedClears.mockClear();
     canvasControls?.seek(100);
+
     expect(connectedClears).not.toHaveBeenCalled();
+
     retired.rollback();
     connectedClears.mockClear();
     canvasControls?.seek(100);
+
     expect(connectedClears).toHaveBeenCalled();
+
     retired.dispose();
     canvasExecutor.dispose();
     connectedClears.mockClear();
     canvasControls?.seek(150);
     canvasControls?.play();
+
     expect(connectedClears).not.toHaveBeenCalled();
   });
 
@@ -3339,10 +3611,13 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
+
     expect(() => mount.commit()).toThrow('resize listener rejected');
     expect(add).toHaveBeenCalledWith('scroll', expect.any(Function), true);
     expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function), true);
+
     mount.rollback();
     mount.dispose();
     executor.dispose();
@@ -3390,6 +3665,7 @@ describe('builtin retained renderers', () => {
       configurable: true,
       value: () => ({ pause: vi.fn(), play: vi.fn(), cancel: vi.fn(), currentTime: 0, playState: 'paused' }),
     });
+
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
       const renderer = builtinRetainedRendererFactory({
@@ -3399,13 +3675,16 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(frameOf(current), {}, 'create');
       mount.commit();
       mount.dispose();
       const element = host.querySelector('[data-retikz-anim]');
       if (!(element instanceof SVGElement)) throw new Error('expected animated SVG element');
+
       const controls = executor.read().animation;
       const transformOrigin = element.style.transformOrigin;
+
       expect(transformOrigin).not.toBe('');
       expect(element.style.transformBox).toBe('view-box');
       expect(isWaapiAnimationStyleOwned(element, 'transform-origin')).toBe(true);
@@ -3427,6 +3706,7 @@ describe('builtin retained renderers', () => {
       expect(isWaapiAnimationStyleOwned(element, 'transform-origin')).toBe(true);
       expect(element.style.transformOrigin).toBe(transformOrigin);
       expect(element.style.transformBox).toBe('view-box');
+
       executor.dispose();
     } finally {
       if (previousAnimate === undefined) delete (SVGElement.prototype as { animate?: unknown }).animate;
@@ -3489,6 +3769,7 @@ describe('builtin retained renderers', () => {
         return { pause: vi.fn(), play: vi.fn(), cancel, currentTime: 0, playState: 'paused' };
       },
     });
+
     try {
       const host = document.createElementNS(SVG_NAMESPACE, 'svg');
       const renderer = builtinRetainedRendererFactory({
@@ -3498,10 +3779,14 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
+
       expect(() => mount.commit()).toThrow('second occurrence failed');
+
       mount.rollback();
       mount.dispose();
+
       expect(cancel).toHaveBeenCalledTimes(1);
       expect(() => executor.dispose()).not.toThrow();
       expect(cancel).toHaveBeenCalledTimes(2);
@@ -3552,6 +3837,7 @@ describe('builtin retained renderers', () => {
       configurable: true,
       value: animate,
     });
+
     try {
       host = document.createElementNS(SVG_NAMESPACE, 'svg');
       const renderer = builtinRetainedRendererFactory({
@@ -3561,11 +3847,13 @@ describe('builtin retained renderers', () => {
       });
       const executor = getRetainedRendererExecutor(renderer);
       if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
       const mount = executor.prepareMount(frameOf(snapshot), {}, 'create');
       mount.commit();
       mount.dispose();
 
       executor.dispose();
+
       expect(animate).toHaveBeenCalledTimes(1);
     } finally {
       if (previousAnimate === undefined) delete (SVGElement.prototype as { animate?: unknown }).animate;
@@ -3578,6 +3866,7 @@ describe('builtin retained renderers', () => {
     const { handle, session } = createSession('svg', host);
     const nodeA = host.querySelector('[data-retikz-id="node-a"]');
     const nodeB = host.querySelector('[data-retikz-id="node-b"]');
+
     expect(nodeA).not.toBeNull();
     expect(nodeB).not.toBeNull();
 
@@ -3585,17 +3874,20 @@ describe('builtin retained renderers', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
     });
+
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(nodeA);
 
     session.update({
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e', true))],
     });
+
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(nodeA);
     expect(host.querySelector('[data-retikz-id="node-b"]')).toBe(nodeB);
     expect(handle.read(session).frame.primary.revision).toBe(2);
 
     session.dispose();
+
     expect(() => handle.read(session)).toThrow();
   });
 
@@ -3639,6 +3931,7 @@ describe('builtin retained renderers', () => {
           : {}),
       };
     };
+
     const duplicatePrimitiveIds = (primitive: RuntimeScenePrimitive): RuntimeScenePrimitive =>
       Object.freeze({
         ...primitive,
@@ -3679,6 +3972,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
+
     const pointerEnter = vi.fn();
     const pointerLeave = vi.fn();
     const runtimeConfig = {
@@ -3695,10 +3989,13 @@ describe('builtin retained renderers', () => {
     const occurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
     const nodeA = occurrences.find(element => element.textContent === 'A');
     const nodeB = occurrences.find(element => element.textContent === 'B');
+
     expect(nodeA).toBeDefined();
     expect(nodeB).toBeDefined();
+
     nodeA?.dispatchEvent(new MouseEvent('pointermove', { bubbles: true }));
     nodeB?.dispatchEvent(new MouseEvent('pointermove', { bubbles: true }));
+
     expect(pointerEnter).toHaveBeenCalledTimes(2);
     expect(pointerLeave).toHaveBeenCalledTimes(1);
 
@@ -3711,9 +4008,11 @@ describe('builtin retained renderers', () => {
     prepared.commit();
     prepared.dispose();
     const nextOccurrences = Array.from(host.querySelectorAll('[data-retikz-id="duplicate"]'));
+
     expect(nextOccurrences.find(element => element.textContent === 'A')).toBe(nodeA);
     expect(nextOccurrences.find(element => element.textContent === 'B')).toBe(nodeB);
     expect(nextOccurrences[0]).toBe(nodeB);
+
     executor.dispose();
   });
 
@@ -3723,6 +4022,7 @@ describe('builtin retained renderers', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       const existing = contexts.get(this);
       if (existing !== undefined) return existing;
+
       const functions = new Map<PropertyKey, ReturnType<typeof vi.fn>>();
       const context = new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
         get: (target, key) => {
@@ -3731,14 +4031,18 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           const callback = functions.get(key) ?? vi.fn();
           functions.set(key, callback);
+
           return callback;
         },
         set: (target, key, value) => Reflect.set(target, key, value),
       });
       contexts.set(this, context);
+
       return context;
     });
     const host = document.createElement('canvas');
@@ -3746,6 +4050,7 @@ describe('builtin retained renderers', () => {
     host.height = 100;
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host);
+
     expect(drawImage).toHaveBeenCalledTimes(1);
 
     session.update({
@@ -3755,6 +4060,7 @@ describe('builtin retained renderers', () => {
 
     expect(drawImage).toHaveBeenCalledTimes(2);
     expect(handle.read(session).frame.primary.revision).toBe(1);
+
     session.dispose();
   });
 
@@ -3768,7 +4074,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -3780,6 +4088,7 @@ describe('builtin retained renderers', () => {
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host);
     const previousRead = handle.read(session);
+
     expect(drawImage).toHaveBeenCalledTimes(1);
 
     session.update({
@@ -3794,6 +4103,7 @@ describe('builtin retained renderers', () => {
     expect(drawImage).toHaveBeenCalledTimes(1);
     expect(handle.read(session)).not.toBe(previousRead);
     expect(handle.read(session).frame.primary.revision).toBe(1);
+
     session.dispose();
   });
 
@@ -3821,7 +4131,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -3836,27 +4148,35 @@ describe('builtin retained renderers', () => {
     host.height = 100;
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host, { ir: animatedScene('currentColor', 'manual') });
+
     expect(strokeStyles).toContain('rgb(1, 2, 3)');
     expect(fonts.some(font => String(font).includes('Retikz Test'))).toBe(true);
+
     strokeStyles.length = 0;
     fonts.length = 0;
     handle.read(session).animation?.play();
     frames.at(-1)?.(0);
+
     expect(strokeStyles).toContain('rgb(1, 2, 3)');
     expect(fonts.some(font => String(font).includes('Retikz Test'))).toBe(true);
+
     computedStyle = { color: 'rgb(4, 5, 6)', fontFamily: 'Retikz Changed' } as CSSStyleDeclaration;
     session.update({
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { cachePolicy: 'static' })],
     });
+
     expect(strokeStyles).toContain('rgb(4, 5, 6)');
     expect(fonts.some(font => String(font).includes('Retikz Changed'))).toBe(true);
+
     session.dispose();
   });
 
   it('Canvas display list 按 primitivePath 建索引，不依赖 topology 数组顺序', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
+
     expect(pair.patch.operations.every(operation => operation.kind === 'update')).toBe(true);
+
     const reverseTopology = (snapshot: SceneRuntimeSnapshot): SceneRuntimeSnapshot =>
       Object.freeze({ ...snapshot, topology: Object.freeze([...snapshot.topology].reverse()) });
     const fillStyles: Array<unknown> = [];
@@ -3867,7 +4187,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -3887,6 +4209,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(reverseTopology(pair.current)), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -3894,8 +4217,10 @@ describe('builtin retained renderers', () => {
     const prepared = executor.prepare(pair.patch, frameOf(reverseTopology(pair.next)), {});
     prepared.commit();
     prepared.dispose();
+
     expect(fillStyles).toContain('#22c55e');
     expect(fillStyles).not.toContain('#3b82f6');
+
     executor.dispose();
   });
 
@@ -3921,7 +4246,9 @@ describe('builtin retained renderers', () => {
       ],
     });
     const pair = createCorePair(overlapScene('#ef4444'), overlapScene('#22c55e'));
+
     expect(pair.patch.operations.every(operation => operation.kind === 'update')).toBe(true);
+
     const fillStyles: Array<unknown> = [];
     const clip = vi.fn();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
@@ -3932,7 +4259,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -3952,6 +4281,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -3959,9 +4289,11 @@ describe('builtin retained renderers', () => {
     const prepared = executor.prepare(pair.patch, frameOf(pair.next), {});
     prepared.commit();
     prepared.dispose();
+
     expect(clip).toHaveBeenCalled();
     expect(fillStyles).toContain('#22c55e');
     expect(fillStyles).toContain('#3b82f6');
+
     executor.dispose();
   });
 
@@ -3995,7 +4327,9 @@ describe('builtin retained renderers', () => {
             return (...arguments_: Array<unknown>) =>
               drawImageCalls.push(Object.freeze({ target: this, arguments: Object.freeze(arguments_) }));
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4011,6 +4345,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(pair.current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -4023,6 +4358,7 @@ describe('builtin retained renderers', () => {
 
     expect(drawImageCalls.length).toBeGreaterThan(0);
     expect(drawImageCalls.every(call => call.arguments.length === 9)).toBe(true);
+
     const copiedRegions = drawImageCalls.map(call => ({
       sourceWidth: call.arguments[3],
       sourceHeight: call.arguments[4],
@@ -4031,6 +4367,7 @@ describe('builtin retained renderers', () => {
       destinationWidth: call.arguments[7],
       destinationHeight: call.arguments[8],
     }));
+
     expect(
       copiedRegions.every(
         region =>
@@ -4044,9 +4381,12 @@ describe('builtin retained renderers', () => {
           region.destinationHeight === region.sourceHeight,
       ),
     ).toBe(true);
+
     const hostRegions = drawImageCalls.filter(call => call.target === host).map(call => call.arguments.slice(5, 9));
+
     expect(hostRegions).toHaveLength(2);
     expect(hostRegions[1]).toEqual(hostRegions[0]);
+
     executor.dispose();
   });
 
@@ -4095,6 +4435,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -4102,11 +4443,15 @@ describe('builtin retained renderers', () => {
 
     const prepared = executor.prepare(pair.patch, frameOf(next), {});
     prepared.commit();
+
     expect(executor.read().frame.primary).toBe(next);
     expect(drawImage).not.toHaveBeenCalled();
+
     prepared.rollback();
+
     expect(executor.read().frame.primary).toBe(current);
     expect(drawImage).not.toHaveBeenCalled();
+
     prepared.dispose();
     executor.dispose();
   });
@@ -4120,11 +4465,14 @@ describe('builtin retained renderers', () => {
           if (key === 'drawImage') {
             return (...arguments_: Array<unknown>) => drawImageArgumentCounts.push(arguments_.length);
           }
+
           if (key === 'measureText') return () => ({ width: 0 });
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4140,6 +4488,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(pair.current), { animation: { snapshotAt: 100 } }, 'create');
     mount.commit();
     mount.dispose();
@@ -4149,23 +4498,29 @@ describe('builtin retained renderers', () => {
     prepared.commit();
     prepared.rollback();
     prepared.dispose();
+
     expect(drawImageArgumentCounts.length).toBeGreaterThan(0);
     expect(drawImageArgumentCounts.every(count => count === 3)).toBe(true);
+
     executor.dispose();
   });
 
   it('Canvas dirty output 与 full oracle 在 overlap、miter path 与 italic text 下逐像素一致', async () => {
     const { createCanvas } = await import('@napi-rs/canvas');
     const backings = new WeakMap<HTMLCanvasElement, NapiCanvas>();
+
     const backingOf = (element: HTMLCanvasElement): NapiCanvas => {
       const existing = backings.get(element);
       if (existing !== undefined && existing.width === element.width && existing.height === element.height) {
         return existing;
       }
+
       const backing = createCanvas(element.width, element.height);
       backings.set(element, backing);
+
       return backing;
     };
+
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       const context = backingOf(this).getContext('2d');
       return new Proxy(context as unknown as CanvasRenderingContext2D, {
@@ -4179,7 +4534,9 @@ describe('builtin retained renderers', () => {
               ]);
             };
           }
+
           const value = Reflect.get(target, key, target);
+
           return typeof value === 'function' ? value.bind(target) : value;
         },
         set: (target, key, value) => Reflect.set(target, key, value, target),
@@ -4285,6 +4642,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -4298,7 +4656,9 @@ describe('builtin retained renderers', () => {
     renderToCanvas(oracle, next.scene as unknown as Scene, { devicePixelRatio: 1 });
     const actual = backingOf(host).getContext('2d').getImageData(0, 0, 120, 80).data;
     const expected = backingOf(oracle).getContext('2d').getImageData(0, 0, 120, 80).data;
+
     expect(Buffer.from(actual)).toEqual(Buffer.from(expected));
+
     executor.dispose();
   });
 
@@ -4312,7 +4672,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4337,6 +4699,7 @@ describe('builtin retained renderers', () => {
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host, { participants: [failure] });
     const previousRead = handle.read(session);
+
     expect(drawImage).toHaveBeenCalledTimes(1);
 
     expect(() =>
@@ -4347,6 +4710,7 @@ describe('builtin retained renderers', () => {
     ).toThrow();
     expect(drawImage).toHaveBeenCalledTimes(1);
     expect(handle.read(session)).toBe(previousRead);
+
     session.dispose();
   });
 
@@ -4361,11 +4725,14 @@ describe('builtin retained renderers', () => {
               if (connectedPaintCount === 2) throw new Error('host draw failed after clear');
             };
           }
+
           if (key === 'measureText') return () => ({ width: 0 });
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4386,6 +4753,7 @@ describe('builtin retained renderers', () => {
     ).toThrow();
     expect(connectedPaintCount).toBe(3);
     expect(handle.read(session)).toBe(previousRead);
+
     session.dispose();
   });
 
@@ -4399,7 +4767,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4410,13 +4780,17 @@ describe('builtin retained renderers', () => {
     host.height = 100;
     document.body.appendChild(host);
     const { session } = createSession('canvas', host);
+
     expect(drawImage).toHaveBeenCalledTimes(1);
+
     host.width = 300;
     session.update({
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { cachePolicy: 'static' })],
     });
+
     expect(drawImage).toHaveBeenCalledTimes(2);
+
     session.dispose();
   });
 
@@ -4430,7 +4804,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4439,6 +4815,7 @@ describe('builtin retained renderers', () => {
     const host = document.createElement('canvas');
     document.body.appendChild(host);
     const { session } = createSession('canvas', host, { config: { canvas: { width: 200, height: 100 } } });
+
     expect([host.width, host.height]).toEqual([200, 100]);
     expect(drawImage).toHaveBeenCalledTimes(1);
 
@@ -4449,6 +4826,7 @@ describe('builtin retained renderers', () => {
 
     expect([host.width, host.height]).toEqual([300, 120]);
     expect(drawImage).toHaveBeenCalledTimes(2);
+
     session.dispose();
   });
 
@@ -4462,7 +4840,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4474,6 +4854,7 @@ describe('builtin retained renderers', () => {
       config: { canvas: { width: 100, height: 50 } },
       useAmbientDevicePixelRatio: true,
     });
+
     expect([host.width, host.height]).toEqual([100, 50]);
 
     Object.defineProperty(globalThis, 'devicePixelRatio', { configurable: true, value: 2 });
@@ -4488,6 +4869,7 @@ describe('builtin retained renderers', () => {
     });
 
     expect([host.width, host.height]).toEqual([100, 50]);
+
     session.dispose();
     if (descriptor === undefined) Reflect.deleteProperty(globalThis, 'devicePixelRatio');
     else Object.defineProperty(globalThis, 'devicePixelRatio', descriptor);
@@ -4501,7 +4883,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4541,6 +4925,7 @@ describe('builtin retained renderers', () => {
     ).toThrow();
     expect([host.width, host.height]).toEqual([200, 100]);
     expect(handle.read(session)).toBe(previous);
+
     session.dispose();
   });
 
@@ -4557,7 +4942,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -4581,9 +4968,13 @@ describe('builtin retained renderers', () => {
     const { session } = createSession('canvas', host, {
       ir: animatedScene('#ef4444', { onEvent: 'click' }),
     });
+
     expect(requestFrame).not.toHaveBeenCalled();
+
     host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100, clientY: 50 }));
+
     expect(requestFrame).toHaveBeenCalledTimes(1);
+
     session.dispose();
   });
 
@@ -4605,7 +4996,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -4630,10 +5023,14 @@ describe('builtin retained renderers', () => {
     });
     document.body.appendChild(host);
     const { session } = createSession('canvas', host, { ir: animatedScene('#ef4444', 'visible') });
+
     expect(frames).toHaveLength(1);
+
     globalAlphaValues.length = 0;
     frames[0](0);
+
     expect(globalAlphaValues).toContain(0);
+
     session.dispose();
   });
 
@@ -4651,7 +5048,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -4666,17 +5065,23 @@ describe('builtin retained renderers', () => {
     document.body.appendChild(host);
     const { handle, session } = createSession('canvas', host, { ir: animatedScene('#ef4444', 'manual') });
     const before = handle.read(session).animation;
+
     expect(before).toBeDefined();
+
     before?.seek(123);
     session.update({
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, animatedScene('#22c55e', 'manual'))],
     });
+
     expect(handle.read(session).animation?.time).toBe(123);
+
     fillStyles.length = 0;
     handle.read(session).animation?.seek(124);
+
     expect(fillStyles).toContain('#22c55e');
     expect(fillStyles).not.toContain('#ef4444');
+
     session.dispose();
   });
 
@@ -4763,7 +5168,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -4783,6 +5190,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -4791,18 +5199,24 @@ describe('builtin retained renderers', () => {
     const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
+
     expect(executor.read().animation).toBe(controls);
     expect(controls?.time).toBe(123);
+
     alphas.length = 0;
     controls?.seek(124);
+
     expect(alphas.some(alpha => alpha < 0.01)).toBe(true);
     expect(alphas.some(alpha => Math.abs(alpha - 124 / 300) < 0.01)).toBe(true);
+
     alphas.length = 0;
     now = 400;
     frames.at(-1)?.(now);
+
     expect(controls?.time).toBe(524);
     expect(alphas.some(alpha => Math.abs(alpha - 1) < 0.01)).toBe(true);
     expect(alphas.some(alpha => Math.abs(alpha - 401 / 600) < 0.01)).toBe(true);
+
     executor.dispose();
   });
 
@@ -4875,6 +5289,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -4900,8 +5315,10 @@ describe('builtin retained renderers', () => {
     prepared.dispose();
     alphas.length = 0;
     controls?.seek(124);
+
     expect(alphas.some(alpha => alpha < 0.01)).toBe(true);
     expect(alphas.some(alpha => Math.abs(alpha - 124 / 300) < 0.01)).toBe(true);
+
     executor.dispose();
   });
 
@@ -4965,6 +5382,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -4995,6 +5413,7 @@ describe('builtin retained renderers', () => {
     frames.at(-1)?.(now);
 
     expect(controls?.time).toBe(850);
+
     executor.dispose();
   });
 
@@ -5056,12 +5475,16 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
+
     expect(requestFrame).toHaveBeenCalledTimes(1);
+
     now = 300;
     frames.shift()?.(now);
+
     expect(executor.read().animation?.running).toBe(false);
 
     const prepared = executor.prepare(
@@ -5088,6 +5511,7 @@ describe('builtin retained renderers', () => {
 
     expect(executor.read().animation?.running).toBe(true);
     expect(requestFrame).toHaveBeenCalledTimes(2);
+
     executor.dispose();
   });
 
@@ -5150,10 +5574,13 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
+
     expect(requestFrame).not.toHaveBeenCalled();
+
     const patch: ScenePatch = {
       baseRevision: current.revision,
       nextRevision: next.revision,
@@ -5172,7 +5599,9 @@ describe('builtin retained renderers', () => {
     const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
+
     expect(requestFrame).toHaveBeenCalledTimes(1);
+
     executor.dispose();
   });
 
@@ -5224,6 +5653,7 @@ describe('builtin retained renderers', () => {
           if (key === 'isPointInPath') return () => true;
           if (key === 'isPointInStroke') return () => false;
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => {
@@ -5254,6 +5684,7 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
@@ -5278,7 +5709,9 @@ describe('builtin retained renderers', () => {
     const prepared = executor.prepare(patch, frameOf(next), {});
     prepared.commit();
     prepared.dispose();
+
     expect(committedAlphas.some(alpha => Math.abs(alpha - 0.4) < 0.01)).toBe(true);
+
     executor.dispose();
   });
 
@@ -5293,7 +5726,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -5307,8 +5742,10 @@ describe('builtin retained renderers', () => {
       ir: animatedScene('#ef4444', 'manual'),
       config: { animation: { snapshotAt: 150 } },
     });
+
     expect(handle.read(session).animation).toBeUndefined();
     expect(requestFrame).not.toHaveBeenCalled();
+
     session.dispose();
   });
 
@@ -5318,10 +5755,12 @@ describe('builtin retained renderers', () => {
       onload: ((event: Event) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
       src = '';
+
       constructor() {
         TestImage.latest = this;
       }
     }
+
     vi.stubGlobal('Image', TestImage);
     const drawImage = vi.fn();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
@@ -5332,7 +5771,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -5357,13 +5798,18 @@ describe('builtin retained renderers', () => {
       },
     });
     const image = TestImage.latest;
+
     expect(image).toBeDefined();
+
     const lateLoad = image?.onload;
     lateLoad?.(new Event('load'));
+
     expect(drawImage.mock.calls.some(([source]) => source === image)).toBe(true);
+
     const committedDrawCount = drawImage.mock.calls.length;
     session.dispose();
     lateLoad?.(new Event('load'));
+
     expect(drawImage).toHaveBeenCalledTimes(committedDrawCount);
     expect(image?.onload).toBeNull();
   });
@@ -5374,10 +5820,12 @@ describe('builtin retained renderers', () => {
       onload: ((event: Event) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
       src = '';
+
       constructor() {
         TestImage.latest = this;
       }
     }
+
     vi.stubGlobal('Image', TestImage);
     const drawImage = vi.fn();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
@@ -5388,7 +5836,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -5417,18 +5867,25 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     const mount = executor.prepareMount(frameOf(current), {}, 'create');
     mount.commit();
     mount.dispose();
 
     const prepared = executor.prepare(patch, frameOf(next), {});
     const image = TestImage.latest;
+
     expect(image).toBeDefined();
+
     image?.onload?.(new Event('load'));
+
     expect(drawImage.mock.calls.some(([source]) => source === image)).toBe(false);
+
     prepared.commit();
     prepared.dispose();
+
     expect(drawImage.mock.calls.some(([source]) => source === image)).toBe(true);
+
     executor.dispose();
   });
 
@@ -5438,10 +5895,12 @@ describe('builtin retained renderers', () => {
       onload: ((event: Event) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
       src = '';
+
       constructor() {
         TestImage.instances.push(this);
       }
     }
+
     vi.stubGlobal('Image', TestImage);
     const drawImage = vi.fn();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
@@ -5452,7 +5911,9 @@ describe('builtin retained renderers', () => {
           if (key === 'createLinearGradient' || key === 'createRadialGradient') {
             return () => ({ addColorStop: vi.fn() });
           }
+
           if (key in target) return Reflect.get(target, key);
+
           return vi.fn();
         },
         set: (target, key, value) => Reflect.set(target, key, value),
@@ -5491,14 +5952,18 @@ describe('builtin retained renderers', () => {
     rollbackHost.height = 100;
     document.body.appendChild(rollbackHost);
     const rollbackSession = createSession('canvas', rollbackHost, { participants: [failure] }).session;
+
     expect(() =>
       rollbackSession.update({
         baseRevision: rollbackSession.revision(),
         sources: [createRuntimeSourceUpdate(CoreSourceDefinition, imageScene)],
       }),
     ).toThrow();
+
     const rolledBackImage = TestImage.instances.at(-1);
+
     expect(rolledBackImage?.onload).toBeNull();
+
     rollbackSession.dispose();
 
     const removalHost = document.createElement('canvas');
@@ -5507,12 +5972,16 @@ describe('builtin retained renderers', () => {
     document.body.appendChild(removalHost);
     const removalSession = createSession('canvas', removalHost, { ir: imageScene }).session;
     const committedImage = TestImage.instances.at(-1);
+
     expect(committedImage?.onload).not.toBeNull();
+
     removalSession.update({
       baseRevision: removalSession.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#ef4444'))],
     });
+
     expect(committedImage?.onload).toBeNull();
+
     removalSession.dispose();
   });
 
@@ -5522,10 +5991,12 @@ describe('builtin retained renderers', () => {
       onload: ((event: Event) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
       src = '';
+
       constructor() {
         TestImage.latest = this;
       }
     }
+
     vi.stubGlobal('Image', TestImage);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => {
       throw new Error('bitmap prepare failed');
@@ -5553,8 +6024,10 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     expect(() => executor.prepareMount(frameOf(snapshot), {}, 'create')).toThrow('bitmap prepare failed');
     expect(TestImage.latest?.onload).toBeNull();
+
     executor.dispose();
   });
 
@@ -5564,17 +6037,21 @@ describe('builtin retained renderers', () => {
       onload: ((event: Event) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
       private value = '';
+
       constructor() {
         TestImage.instances.push(this);
       }
+
       set src(value: string) {
         this.value = value;
         if (value === 'second.png') throw new Error('second image rejected');
       }
+
       get src(): string {
         return this.value;
       }
     }
+
     vi.stubGlobal('Image', TestImage);
     const imageScene: IRScene = {
       version: 1,
@@ -5605,9 +6082,11 @@ describe('builtin retained renderers', () => {
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
+
     expect(() => executor.prepareMount(frameOf(snapshot), {}, 'create')).toThrow('second image rejected');
     expect(TestImage.instances).toHaveLength(2);
     expect(TestImage.instances.every(image => image.onload === null && image.onerror === null)).toBe(true);
+
     executor.dispose();
   });
 
@@ -5643,6 +6122,7 @@ describe('builtin retained renderers', () => {
     expect(handle.read(session)).toBe(previousRead);
     expect(host.innerHTML).toBe(previousMarkup);
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(node);
+
     session.dispose();
   });
 });
@@ -5662,17 +6142,22 @@ it('Scope 外框在 SVG retained 更新与移除时保持命中隔离', () => {
     ],
   });
   const { session } = createSession('svg', host, { ir: source(4) });
+
   expect(host.querySelectorAll('[pointer-events="none"]')).toHaveLength(1);
+
   const frame = host.querySelector('[pointer-events="none"]');
   session.update({
     baseRevision: session.revision(),
     sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(20))],
   });
+
   expect(host.querySelector('[pointer-events="none"]')).toBe(frame);
   expect(host.querySelector('[data-retikz-id="child"]')).not.toBeNull();
+
   session.update({
     baseRevision: session.revision(),
     sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source())],
   });
+
   expect(host.querySelector('[pointer-events="none"]')).toBeNull();
 });

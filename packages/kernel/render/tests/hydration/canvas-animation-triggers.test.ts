@@ -64,6 +64,7 @@ const context = (restart: (id?: string) => void): HydrationContext => ({
 describe('Canvas animation trigger helpers', () => {
   it('collects onEvent and visible trigger ids from Scene primitives', () => {
     const events = collectCanvasAnimationEventTriggers(scene);
+
     expect(events.get('box')?.has('click')).toBe(true);
     expect(collectCanvasVisibleAnimationIds(scene).has('box')).toBe(true);
   });
@@ -106,7 +107,9 @@ describe('Canvas animation trigger helpers', () => {
 
       expect(Object.hasOwn(merged, specialId)).toBe(true);
       expect(Object.hasOwn(Object.prototype, 'click')).toBe(false);
+
       merged[specialId].click?.(new MouseEvent('click'), { ...context(restart), id: specialId, scene: specialScene });
+
       expect(restart).toHaveBeenCalledWith(specialId);
       expect(user).toHaveBeenCalledTimes(1);
     } finally {

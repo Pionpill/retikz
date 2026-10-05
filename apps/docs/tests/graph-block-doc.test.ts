@@ -34,16 +34,23 @@ import { createPreviewControlContract as createBlockStyleContract } from '../src
 import { createGraphPreviewSource } from '../src/modules/docs/preview';
 
 const BlockBuiltinPreviewEn = (values: Parameters<typeof BlockBuiltinPreview>[0]) => BlockBuiltinPreview(values, 'en');
+
 const BlockStylePreviewEn = (values: Parameters<typeof BlockStylePreview>[0]) => BlockStylePreview(values, 'en');
+
 const blockBuiltinControlsEn = createBlockBuiltinContract('en').controls;
+
 const blockStyleContractEn = createBlockStyleContract('en');
+
 const blockBuiltinPreviewSourceEn = createGraphPreviewSource(() =>
   BlockBuiltinPreviewEn(blockBuiltinContract.canonicalValues),
 );
+
 const blockStylePreviewSourceEn = createGraphPreviewSource(() =>
   BlockStylePreviewEn(blockStyleContract.canonicalValues),
 );
+
 const blockConnectionPreviewSourceEn = createGraphPreviewSource(() => BlockConnection({ lang: 'en' }));
+
 const blockCustomPreviewModuleEn = {
   ...blockCustomPreviewModule,
   previewSource: createGraphPreviewSource(() =>
@@ -52,7 +59,9 @@ const blockCustomPreviewModuleEn = {
   BlockCustomPreview: (values: Parameters<typeof blockCustomPreviewModule.BlockCustomPreview>[0]) =>
     blockCustomPreviewModule.BlockCustomPreview(values, 'en'),
 };
+
 const { previewSource: blockCustomPreviewSourceEn } = blockCustomPreviewModuleEn;
+
 const { previewSource: blockCustomPreviewSource } = blockCustomPreviewModule;
 
 type ControlledBlockCustomPreviewModule = {
@@ -111,6 +120,7 @@ const arrowTipOf = (path: Extract<ScenePrimitive, { type: 'path' }>): readonly [
 describe('Graph Block documentation', () => {
   it('keeps the built-in example minimal in executable IR and Vanilla code views', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
     try {
       const preview = buildPreviewIR(() => blockBuiltinPreviewSource.canonicalRender?.() ?? null);
       const vanilla = buildVanillaPreview(preview);
@@ -163,12 +173,17 @@ describe('Graph Block documentation', () => {
     });
 
     expect(result.status).toBe('ready');
+
     if (result.status !== 'ready') return;
 
     const contract = resolvePreviewControlContract(result.resources.controlModule);
+
     expect(contract).toBeDefined();
+
     if (contract === undefined) return;
+
     expect(contract.controls.presentation).toBe('panel');
+
     if (contract.controls.presentation !== 'panel') return;
 
     expect(
@@ -243,6 +258,7 @@ describe('Graph Block documentation', () => {
     ['en', blockCustomPreviewModuleEn, 'Queue depth 42'],
   ] as const)('%s compiles edited custom Node content into Source IR and Vanilla', (_lang, module, content) => {
     expect(isControlledBlockCustomPreviewModule(module)).toBe(true);
+
     if (!isControlledBlockCustomPreviewModule(module)) return;
 
     const source = createGraphPreviewSource(() =>
@@ -303,6 +319,7 @@ describe('Graph Block documentation', () => {
     ['en', blockCustomPreviewModuleEn],
   ] as const)('%s keeps the custom viewport at a natural 1:1 scale', (_lang, module) => {
     expect(isControlledBlockCustomPreviewModule(module)).toBe(true);
+
     if (!isControlledBlockCustomPreviewModule(module)) return;
 
     const element = module.BlockCustomPreview({
@@ -470,10 +487,12 @@ describe('Graph Block documentation', () => {
       '标题区文字',
       '行内容',
     ]);
+
     const styleControls: Array<PreviewPanelControlItem> = [];
     blockStyleContract.controls.sections.forEach(section => {
       section.controls.forEach(control => styleControls.push(control));
     });
+
     expect(
       styleControls
         .filter(control => control.id.endsWith('FontSize'))
@@ -613,12 +632,15 @@ describe('Graph Block documentation', () => {
     expect(arrowPaths).toHaveLength(2);
     expect(blockBounds).toBeDefined();
     expect(sectionBounds).toBeDefined();
+
     if (blockBounds === undefined || sectionBounds === undefined) return;
 
     const blockTip = arrowTipOf(arrowPaths[0]);
     const sectionTip = arrowTipOf(arrowPaths[1]);
+
     expect(blockTip).toBeDefined();
     expect(sectionTip).toBeDefined();
+
     if (blockTip === undefined || sectionTip === undefined) return;
 
     expect(blockTip[0]).toBeCloseTo(blockBounds.x, 5);
@@ -633,6 +655,7 @@ describe('Graph Block documentation', () => {
     ['style', blockStylePreviewSource],
   ] as const)('renders the %s preview canonical state', (_name, previewSource) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
     try {
       expect(buildPreviewIR(() => previewSource.canonicalRender?.() ?? null)).not.toBeNull();
       expect(warn).not.toHaveBeenCalled();
@@ -649,13 +672,18 @@ describe('Graph Block documentation', () => {
   ] as const)('centers the %s viewBox on its compiled visual layout', (_name, previewSource) => {
     const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
     const rendered = buildVanillaPreview(preview);
+
     expect(rendered.svg, rendered.code).toBeDefined();
+
     const dimensions = rendered.svg
       ?.match(/viewBox="([^"]+)"/)?.[1]
       .split(' ')
       .map(Number);
+
     expect(dimensions).toHaveLength(4);
+
     if (dimensions === undefined) return;
+
     const [x, y, width, height] = dimensions;
     const viewBox = { x, y, width, height };
 
@@ -672,6 +700,7 @@ describe('Graph Block documentation', () => {
       x: layout.x + layout.width / 2,
       y: layout.y + layout.height / 2,
     };
+
     // Node 与浏览器字体度量存在小幅差异；容差仍远小于未居中时 25–142 px 的偏移
     expect(Math.abs(viewCenter.x - layoutCenter.x)).toBeLessThanOrEqual(16);
     expect(Math.abs(viewCenter.y - layoutCenter.y)).toBeLessThanOrEqual(16);

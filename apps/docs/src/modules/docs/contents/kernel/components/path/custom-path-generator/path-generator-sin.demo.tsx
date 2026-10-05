@@ -13,12 +13,14 @@ const sin = definePathGenerator({
     if (to === undefined) {
       throw new Error('path generator "sin" requires step.to.');
     }
+
     const amplitude = typeof params.amplitude === 'number' ? params.amplitude : 0;
     const waves = typeof params.waves === 'number' ? params.waves : 1;
     const dx = to[0] - from[0];
     const dy = to[1] - from[1];
     const length = Math.hypot(dx, dy);
     const normal: [number, number] = length === 0 ? [0, 0] : [-dy / length, dx / length];
+
     const pointAt = (t: number): [number, number] => {
       const offset = Math.sin(t * Math.PI * 2 * waves) * amplitude;
       return [from[0] + dx * t + normal[0] * offset, from[1] + dy * t + normal[1] * offset];

@@ -4,11 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { createBenchRoutes } from '../src/playground/app/routes';
 
 type MemoryRouter = ReturnType<typeof createMemoryRouter>;
+
 const benchRoutes = createBenchRoutes(() => null);
 
 /** 等待 memory router 完成 loader 与重定向 */
 const waitForRouterIdle = async (router: MemoryRouter): Promise<void> => {
   if (router.state.initialized && router.state.navigation.state === 'idle') return;
+
   await new Promise<void>(resolve => {
     const unsubscribe = router.subscribe(state => {
       if (!state.initialized || state.navigation.state !== 'idle') return;
@@ -21,6 +23,7 @@ const waitForRouterIdle = async (router: MemoryRouter): Promise<void> => {
 /** 返回指定初始地址经过 Bench routes 解析后的路径 */
 const resolvePath = async (path: string): Promise<string> => {
   const router = createMemoryRouter(benchRoutes, { initialEntries: [path] });
+
   try {
     await waitForRouterIdle(router);
     return router.state.location.pathname;
@@ -32,6 +35,7 @@ const resolvePath = async (path: string): Promise<string> => {
 /** 返回指定初始地址经过 Bench routes 解析后的路由参数 */
 const resolveParams = async (path: string): Promise<Readonly<Record<string, string | undefined>>> => {
   const router = createMemoryRouter(benchRoutes, { initialEntries: [path] });
+
   try {
     await waitForRouterIdle(router);
     return router.state.matches.at(-1)?.params ?? {};
@@ -51,6 +55,7 @@ describe('Bench module routes', () => {
 
   it.each(['preview', 'benchmark', 'reports'])('保留合法用例页面 %s', async view => {
     const path = `/kernel/cases/node-selection/${view}`;
+
     await expect(resolvePath(path)).resolves.toBe(path);
   });
 

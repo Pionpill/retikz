@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const bubbleFacetI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '按洲比较收入、寿命与人口', subtitle: '五个面板共享尺度；人口仍决定气泡大小' },

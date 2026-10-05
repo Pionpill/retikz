@@ -19,6 +19,7 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
     { key: { content: 'color' }, value: { content: entryColor } },
     { key: { content: 'strokeWidth' }, value: { content: strokeWidth } },
   ];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node position={[120, 18]} text={t.authorStage} style={{ fill: 'none', stroke: 'none', font: { size: 13 } }} />

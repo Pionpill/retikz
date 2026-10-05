@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 同尺度冻结示意图的文案 */
 export const figureI18n: Record<Lang, { rows: Array<string>; notes: Array<string>; reference: string }> = {
   zh: {

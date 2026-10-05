@@ -6,9 +6,24 @@ import type { LowerPlotsOptions } from '@retikz/plot';
 import type { InputChartCoordinate, InputChartPresentation } from '../../normalize/chart';
 import type { InputChartPanel } from '../../shared';
 
-/** Point family 各 concrete chartType 共用的 Vanilla 输入字段 */
+/**
+ * Point family 各 concrete chartType 共用的 Vanilla 输入字段
+ * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never> = InputChartPresentation &
-  ({ data: Array<ExternalRow>; dataBindings?: never } | { dataBindings: DataInputBindings<TNative>; data?: never }) &
+  (
+    | {
+        /** 直接输入的行数据，与 dataBindings 互斥 */
+        data: Array<ExternalRow>;
+        dataBindings?: never;
+      }
+    | {
+        /** 具名行数据、结果或原生源绑定，与 data 互斥 */
+        dataBindings: DataInputBindings<TNative>;
+        data?: never;
+      }
+  ) &
   Readonly<{
     /** 根级执行配置 */
     dataExecution?: TSource['dataExecution'];
@@ -26,9 +41,9 @@ export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never
     coordinate?: InputChartCoordinate;
     /** Chart Source 身份 */
     id?: string;
-    /** Chart surface background */
+    /** 图表表面的背景样式 */
     background?: TSource['background'];
-    /** Chart Source-shaped sparse defaults */
+    /** 沿用图表输入结构的稀疏默认值 */
     chartDefaults?: TSource['chartDefaults'];
     /** Core host Theme 环境 */
     theme?: IRScene['theme'];
@@ -38,14 +53,20 @@ export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never
     lowerOptions?: LowerPlotsOptions;
     /** Chart Source 外层宿主 Scope */
     panel?: InputChartPanel;
-    /** Core host Theme definitions */
+    /** Core 宿主的主题定义 */
     themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
     /** 显式 Plot-owned fragment */
     plotExtension?: TSource['plotExtension'];
   }>;
 
-/** 从精确 Chart Source 推导对应的 plain normalizer 输入 */
+/**
+ * 从精确 Chart Source 推导对应的 plain normalizer 输入
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type InputTypedChart<TSource extends { data: object; recipe: object }> = InputChartPresentation &
   Omit<TSource, 'namespace' | 'type' | 'presentation' | 'recipe' | 'coordinate'> &
-  Readonly<{ coordinate?: InputChartCoordinate }> &
+  Readonly<{
+    /** 接受作者简写的根坐标系输入 */
+    coordinate?: InputChartCoordinate;
+  }> &
   Omit<TSource['recipe'], 'chartType'>;

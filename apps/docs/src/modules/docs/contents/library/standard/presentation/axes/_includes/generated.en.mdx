@@ -65,7 +65,7 @@ export type AxesProps = AxesInput;
 </p>
 
 ```ts
-export declare const AxesInputEmbedAdapter: InputEmbedAdapter<AxesInput>;
+export declare const AxesInputEmbedAdapter: SynchronousInputEmbedAdapter<AxesInput>;
 ```
 
 #### axes
@@ -106,7 +106,7 @@ export declare const axes: (input: AxesInput) => InputEmbed<AxesInput>;
 #### AxesInput
 
 <p>
-  <ApiSourceLink label={'AxesInput'} path={'packages/library/standard/src/presentation/axes/types.ts'} startLine={27}>
+  <ApiSourceLink label={'AxesInput'} path={'packages/library/standard/src/presentation/axes/types.ts'} startLine={10}>
     Input for creating Axes with fixed discriminators omitted
   </ApiSourceLink>
 </p>
@@ -118,7 +118,7 @@ export type AxesInput = Omit<IRAxes, 'namespace' | 'type'>;
 #### IRAxes
 
 <p>
-  <ApiSourceLink label={'IRAxes'} path={'packages/library/standard/src/presentation/axes/types.ts'} startLine={24}>
+  <ApiSourceLink label={'IRAxes'} path={'packages/library/standard/src/presentation/axes/types.ts'} startLine={7}>
     Persistent Standard Axes composite
   </ApiSourceLink>
 </p>

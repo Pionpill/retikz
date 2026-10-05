@@ -660,6 +660,7 @@ test('Foundation belongs to the kernel release group with its Zod-only publish c
   assert.deepEqual(foundationRecord.manifest.peerDependencies ?? {}, {});
 
   const kernelRecords = packageRecords.filter(({ manifest }) => releaseGroups.kernel.packages.includes(manifest.name));
+
   assert.ok(kernelRecords.length > 0);
   assert.ok(kernelRecords.every(({ manifest }) => manifest.version === foundationRecord.manifest.version));
 });

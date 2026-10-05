@@ -50,7 +50,9 @@ describe('benchmark fixtures', () => {
     expect(countPrimitives(compileToScene(current).scene.primitives)).toBe(5_000);
     expect(currentGroup.type).toBe('node');
     expect(nextGroup.type).toBe('node');
+
     if (currentGroup.type !== 'node' || nextGroup.type !== 'node') throw new Error('expected node fixture');
+
     expect(compileToScene(current).scene.primitives[0]).toMatchObject({
       type: 'group',
       children: [{ type: 'rect' }, { type: 'text' }],

@@ -1,15 +1,25 @@
 import { definePreviewControls } from '@/modules/docs/preview';
 
 const AxisMode = ['both', 'x', 'y'] as const;
+
 const ExtentMode = ['symmetric', 'directional'] as const;
+
 const GridSpacingMode = ['uniform', 'separate'] as const;
+
 const DashMode = ['solid', 'dashed', 'dotted'] as const;
+
 const LineCapMode = ['butt', 'round', 'square'] as const;
+
 const AxisLineMode = ['off', 'none', 'positive', 'negative', 'both'] as const;
+
 const TickMode = ['none', 'spacing', 'spacingLabels', 'values', 'valuesLabels'] as const;
+
 const TickExtent = ['positive', 'negative', 'both'] as const;
+
 const TickSide = ['positive', 'negative', 'both'] as const;
+
 const LabelMode = ['off', 'positive', 'negative'] as const;
+
 const ArrowShape = [
   'normal',
   'open',
@@ -94,8 +104,11 @@ const AxisFieldSuffix = [
 ] as const;
 
 type ValueOfTuple<T extends ReadonlyArray<string>> = T[number];
+
 type AxisFieldId = `${'x' | 'y'}${ValueOfTuple<typeof AxisFieldSuffix>}`;
+
 type FieldIdValue = ValueOfTuple<typeof FieldId> | AxisFieldId;
+
 type OptionCopy<T extends ReadonlyArray<string>> = Record<ValueOfTuple<T>, string>;
 
 /** Axes 双语 controls 共享结构使用的可见文案 */

@@ -5,8 +5,11 @@ import { sales } from './bar-grouped.data';
 
 /** Stable control id for multi-series bars */
 export const BAR_SERIES_MODE_ID = 'bar-series-mode';
+
 export const BAR_SERIES_STACK_OFFSET_ID = 'bar-series-stack-offset';
+
 export const BAR_SERIES_GAP_ID = 'bar-series-gap';
+
 export const BAR_SERIES_COORDINATE_ID = 'interval-series-coordinate';
 
 /** English panel for multi-series arrangements */

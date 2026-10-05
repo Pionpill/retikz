@@ -129,15 +129,30 @@ console.log(svg);
 
 ### 选择输入方式
 
-三种输入方式互斥；根据是否需要单格样式、命名或图形内容选择。
+四种输入方式互斥；根据是否需要单格样式、命名或图形内容选择。
 
 | 输入           | 适用场景                                     |
 | -------------- | -------------------------------------------- |
+| `skeleton`     | 无真实数据的符号键与空值格                   |
 | `entries`      | 明确配置文字、单格样式与 id                  |
 | `data`         | 直接递归展示 JSON 对象                       |
 | JSX `children` | 用 MapEntry / MapKey / MapValue 组合图形内容 |
 
-`entries` 按数组顺序展示；每项包含 `key` 和 `value`，二者均可为字符串或 `{ content, id?, style?, layout? }`。文字 key 可以重复，字符串不会自动成为单元格 id。
+`entries` 按数组顺序展示；每项包含 `key` 和 `value`，二者均可为字符串或 `{ content?, id?, style?, layout? }`。文字 key 可以重复，字符串不会自动成为单元格 id。
+
+### 绘制示意骨架
+
+没有真实值、只需要示意键值结构时，使用 `skeleton: { keys: ['k₁', 'k₂', 'kₙ'] }`。组件、Vanilla `map()` 与 IR 使用同一配置；不能与 data、entries 或 JSX children 混用。
+
+keys 的长度决定行数，键以原始纯文本显示，值格无内容；保留顺序，允许重复键和空字符串，不添加 JSON 引号，不从键推导身份。`keys: []` 表示空集合，不保留行间距。
+
+<ComponentPreview
+  files={['map-skeleton', 'map-skeleton.preview.tsx']}
+  defaultSourceFile="map-skeleton.preview.tsx"
+  caption="示例固定单格为 64 × 32；修改符号键或切换空集合，值格始终保留为空。"
+/>
+
+空值格继续使用整体与角色样式、尺寸和内边距。需要给某个键格或值格设置 id、单独样式或图形时，使用 entries；key、value 角色仍必填，但内容可省略，例如 `{ key: 'k₁', value: {} }`。JSX 可写空的 MapKey / MapValue，但不能省略角色组件。显式 `content: ''` 仍表示空文字，与无内容不同。
 
 ### 样式与尺寸
 
@@ -175,14 +190,14 @@ console.log(svg);
 
 ### 组合图形内容
 
-每个 `MapEntry` 必须恰好包含一个 `MapKey` 和一个 `MapValue`；每格设置 `text` 或唯一的 drawable child，二者互斥。
+每个 `MapEntry` 必须恰好包含一个 `MapKey` 和一个 `MapValue`；每格设置 `text` 或唯一的 drawable child，二者互斥；两者均省略时保留空格。
 
 ```text
 Map
 └── MapEntry
     ├── MapKey
     └── MapValue
-        └── List
+        └── Array
 ```
 
 `MapEntry` 是一条记录，`MapKey` 和 `MapValue` 分别占据键列和值列。组合组件只声明内容，不能脱离上述父子关系单独渲染。
@@ -195,12 +210,12 @@ Map
 
 `data` 接受 JSON 对象。`dataExpand` 控制嵌套对象和数组的展示方式，默认 `true`；它不改变外层 Map 的结构，只用于 `data`，不适用于显式单元格或 JSX 组合。
 
-| 配置                               | 嵌套对象  | 嵌套数组  |
-| ---------------------------------- | --------- | --------- |
-| `true`（默认）或 `['map', 'list']` | Map       | List      |
-| `false` 或 `[]`                    | JSON 文本 | JSON 文本 |
-| `['map']`                          | Map       | JSON 文本 |
-| `['list']`                         | JSON 文本 | List      |
+| 配置                                | 嵌套对象  | 嵌套数组  |
+| ----------------------------------- | --------- | --------- |
+| `true`（默认）或 `['map', 'array']` | Map       | Array     |
+| `false` 或 `[]`                     | JSON 文本 | JSON 文本 |
+| `['map']`                           | Map       | JSON 文本 |
+| `['array']`                         | JSON 文本 | Array     |
 
 展开的子组件递归沿用同一选择；结构转为文本后，其整个子树都保留在紧凑 JSON 文本中，不再继续展开。空对象与空数组始终显示为 `{}` 和 `[]`。数组选项的顺序和重复项不影响结果。下例默认仅展开数组，可切换四种展示方式。
 
@@ -210,7 +225,7 @@ Map
 
 数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。要连线或逐格定制，改用显式单元格，在其中嵌套带 `data` 的组件。整体 style / layout 只控制当前层，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
 
-React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ListDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ArrayDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
 
 ### 引用单元格与控制溢出
 
@@ -221,7 +236,7 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 ## 错误与限制
 
 - 不混用输入方式；同一容器内显式单元格 id 必须唯一。重复文字应与身份分开配置。
-- 组合标记必须放在规定的直属父组件中，单格图形必须恰好一个；非法 JSX 组合会报错。
+- 组合标记必须放在规定的直属父组件中，单格可无内容，提供图形时必须恰好一个；非法 JSX 组合会报错。
 - `data` 只接受 JSON 值树，不传函数、运行时实例、循环引用或稀疏数组；展示前自行投影数据。
 - 固定单格尺寸可以小于内容，但父级分配若容纳不下整组单元格与间隙，会编译失败。父级给出多余空间时，单元格仍从起点排布，不拉伸填满。
 - 这是数据结构的绘制组件，不负责数据处理、任意矩阵或合并单元格。
@@ -234,11 +249,11 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 
 ## Schema 参考
 
-`MapSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'map'`；entries 与 data 二选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
+`MapSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'map'`；entries、data 与 skeleton 三选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
 
 #### MapSchema
 
-<ZodSchema name="MapSchema" description="有序键值对的双列展示，支持显式记录或 JSON 对象" expandNested />
+<ZodSchema name="MapSchema" description="有序键值对的双列展示，支持显式记录、JSON 对象或示意骨架" expandNested />
 
 ## 延伸阅读
 

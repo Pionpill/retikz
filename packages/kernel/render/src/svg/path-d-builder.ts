@@ -4,6 +4,7 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { commandArcStart, commandArcSweep, commandEndpoint, ellipseArcPointAt } from '../shared';
 
 type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
+
 type Point = [number, number];
 
 /** 默认 round：保留 2 位小数，配 compile/scene/precision 的默认 */
@@ -48,13 +49,16 @@ const ellipseArcTokens = (command: ArcCommand, round: (n: number) => number): Ar
     const endPt = arcPointAt(command, endAngle);
     const flags1 = arcSvgFlags(startAngle, mid, direction);
     const flags2 = arcSvgFlags(mid, endAngle, direction);
+
     return [
       `A ${round(rx)} ${round(ry)} ${round(rotation)} ${flags1.largeArc} ${flags1.sweep} ${round(midPt[0])} ${round(midPt[1])}`,
       `A ${round(rx)} ${round(ry)} ${round(rotation)} ${flags2.largeArc} ${flags2.sweep} ${round(endPt[0])} ${round(endPt[1])}`,
     ];
   }
+
   const endPt = arcPointAt(command, endAngle);
   const flags = arcSvgFlags(startAngle, endAngle, direction);
+
   return [
     `A ${round(rx)} ${round(ry)} ${round(rotation)} ${flags.largeArc} ${flags.sweep} ${round(endPt[0])} ${round(endPt[1])}`,
   ];
@@ -72,10 +76,12 @@ export const buildPathD = (
   round: (n: number) => number = defaultRound,
 ): string => {
   if (commands.length === 0) return '';
+
   const tokens: Array<string> = [];
   let cursor: Point | null = null;
   let subpathStart: Point | null = null;
   let activeSubpath = false;
+
   for (const cmd of commands) {
     switch (cmd.kind) {
       case 'move':
@@ -115,7 +121,9 @@ export const buildPathD = (
         } else if (!pointsEqual(cursor, startPt)) {
           tokens.push(`L ${round(startPt[0])} ${round(startPt[1])}`);
         }
+
         const arcTokens = ellipseArcTokens(cmd, round);
+
         for (const t of arcTokens) tokens.push(t);
         cursor = commandEndpoint(cmd);
         activeSubpath = true;
@@ -128,5 +136,6 @@ export const buildPathD = (
       }
     }
   }
+
   return tokens.join(' ');
 };

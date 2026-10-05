@@ -8,6 +8,7 @@ import type { previewControls } from './branch-layout.controls';
 
 const directionOf = (value: string): 'right' | 'left' | 'down' | 'up' =>
   value === 'left' || value === 'down' || value === 'up' ? value : 'right';
+
 /** 根据控件值绘制方向与间距 */
 export const renderPreview = (values: PreviewControlValuesFor<typeof previewControls>): ReactElement => {
   return (

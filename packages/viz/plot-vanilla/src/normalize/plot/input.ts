@@ -11,7 +11,9 @@ import type {
 } from '@retikz/plot';
 
 type PlotComposition = NonNullable<IRPlot['composition']>;
+
 type PlotArrangement = NonNullable<PlotComposition['arrangements']>[number];
+
 type SharedScaffold = Extract<PlotArrangement, { kind: 'tracks' }>;
 
 /** 支持按坐标轴分配 coordinate view 的内置 position mark */

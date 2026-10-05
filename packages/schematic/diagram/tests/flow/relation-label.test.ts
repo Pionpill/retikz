@@ -10,6 +10,7 @@ describe('Flow relation geometry labels', () => {
   it('forwards interruption and gap to the actual cubic stroke', () => {
     const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
       items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
+
     const compile = (interrupt: boolean, gap: number) => {
       const source = FlowDiagramSchema.parse({
         namespace: 'diagram',
@@ -37,12 +38,15 @@ describe('Flow relation geometry labels', () => {
         ).scene.primitives,
       ).filter(item => item.type === 'path' && item.commands.some(command => command.kind === 'cubic'));
     };
+
     const continuous = compile(false, 4);
     const interrupted = compile(true, 4);
+
     expect(continuous).toHaveLength(1);
     expect(interrupted).toHaveLength(2);
     expect(compile(true, 12)).not.toEqual(interrupted);
   });
+
   it('complete label font overrides size while inheriting family during measurement', () => {
     const fonts: Array<{ size: number; family?: string }> = [];
     const provider = {
@@ -90,10 +94,12 @@ describe('Flow relation geometry labels', () => {
         },
       },
     );
+
     expect(fonts.length).toBeGreaterThan(0);
     expect(fonts.every(font => font.size === 24 && font.family === 'serif')).toBe(true);
     expect(JSON.stringify(result.scene)).toContain('unique-label');
   });
+
   it('full labels preserve an empty geometry projection distinct from compact labels', () => {
     const projections: Array<FlowLayoutInput> = [];
     const provider = {
@@ -127,12 +133,15 @@ describe('Flow relation geometry labels', () => {
         ],
       }),
     );
+
     expect(projections[0].relations[0]).not.toHaveProperty('labelPlacement');
     expect(projections[0].relations[1].labelPlacement).toEqual({});
+
     const empty = FlowDiagramSchema.safeParse({
       ...source,
       relations: [{ source: 'a', target: 'b', label: { text: ' ' } }],
     });
+
     expect(empty.success).toBe(false);
   });
 
@@ -155,6 +164,7 @@ describe('Flow relation geometry labels', () => {
       labelPlacement: { sloped: true },
     };
     const bounds = flowRouteLabelBounds(route, relation)!;
+
     expect(bounds.width).toBeCloseTo(50 / Math.sqrt(2));
     expect(bounds.height).toBeCloseTo(50 / Math.sqrt(2));
     expect(bounds.x + bounds.width / 2).toBeCloseTo(50);
@@ -195,6 +205,7 @@ describe('Flow relation geometry labels', () => {
       { type: 'scene', version: 1, children: [source] },
       resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
     );
+
     expect(JSON.stringify(result.scene.primitives)).toContain('#123456');
     expect(JSON.stringify(result.scene.primitives)).toContain('serif');
   });

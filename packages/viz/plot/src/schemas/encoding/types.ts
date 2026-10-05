@@ -18,47 +18,47 @@ import type {
   TextChannelSchema,
 } from './schema';
 
-/** Channel binding: exactly one of field (data-driven) or value (constant). */
+/** 通道绑定，在数据字段 field 与常量 value 中恰好选择一种 */
 export type IRPlotChannel = ZodInfer<typeof ChannelSchema>;
 
-/** Positional channel bindings; built-ins use x / y / z, custom coordinates may add role keys. */
+/** 位置通道绑定；内置坐标系使用 x、y、z，自定义坐标系可扩展角色键 */
 export type IRPlotPositionEncoding = ZodInfer<typeof PositionEncodingSchema>;
 
-/** Mark channel bindings for non-position channels. */
+/** 标记的非位置通道绑定 */
 export type IRPlotMarkChannelEncoding = ZodInfer<typeof MarkChannelEncodingSchema>;
 
-/** Mark channel bindings: positional channels plus shared mark channels. */
+/** 标记的位置通道与共享通道绑定 */
 export type IRPlotEncoding = ZodInfer<typeof EncodingSchema>;
 
-/** Legacy size channel helper schema type. PointMark canonical size is a schema-defined style field. */
+/** 尺寸通道辅助 schema 的推导类型；PointMark 的规范尺寸由样式字段 schema 定义 */
 export type IRPlotSizeChannel = ZodInfer<typeof SizeChannelSchema>;
 
-/** Legacy opacity channel helper schema type. PointMark canonical opacity is a schema-defined style field. */
+/** 透明度通道辅助 schema 的推导类型；PointMark 的规范透明度由样式字段 schema 定义 */
 export type IRPlotOpacityChannel = ZodInfer<typeof OpacityChannelSchema>;
 
-/** Legacy shape channel helper schema type. PointMark canonical shape is a schema-defined style field. */
+/** 形状通道辅助 schema 的推导类型；PointMark 的规范形状由样式字段 schema 定义 */
 export type IRPlotShapeChannel = ZodInfer<typeof ShapeChannelSchema>;
 
-/** PointMark encoding: positional channels plus optional text only. */
+/** 点标记编码，仅包含位置通道与可选文本通道 */
 export type IRPlotPointEncoding = ZodInfer<typeof PointEncodingSchema>;
 
-/** Text content channel binding. */
+/** 文本内容的通道绑定 */
 export type IRPlotTextChannel = ZodInfer<typeof TextChannelSchema>;
 
-/** Mark label content binding. */
+/** 标记标签内容的绑定 */
 export type IRPlotMarkLabelContent = ZodInfer<typeof MarkLabelContentSchema>;
 
-/** Host datum label config aligned with core NodeLabelSchema. */
+/** 与 Core NodeLabelSchema 对齐的宿主数据项标签配置 */
 export type IRPlotMarkNodeLabel = ZodInfer<typeof MarkNodeLabelSchema>;
 
-/** Host geometry label config aligned with core GeometryLabelSchema. */
+/** 与 Core GeometryLabelSchema 对齐的宿主几何标签配置 */
 export type IRPlotMarkGeometryLabel = ZodInfer<typeof MarkGeometryLabelSchema>;
 
-/** Single or array node label declaration. */
+/** 单个或数组形式的节点标签声明 */
 export type IRPlotMarkNodeLabelList = ZodInfer<typeof MarkNodeLabelListSchema>;
 
-/** Single or array geometry label declaration. */
+/** 单个或数组形式的几何标签声明 */
 export type IRPlotMarkGeometryLabelList = ZodInfer<typeof MarkGeometryLabelListSchema>;
 
-/** Host-inferred mark label config. */
+/** 由宿主推导的标记标签配置 */
 export type IRPlotMarkLabel = ZodInfer<typeof MarkLabelSchema>;

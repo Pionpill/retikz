@@ -6,6 +6,7 @@ import { storeRevenue } from './bar-transform.data';
 
 /** 区间派生基线 playground 的稳定控件 id */
 export const BAR_TRANSFORM_BASELINE_ID = 'bar-transform-offset';
+
 export const BAR_TRANSFORM_GAP_ID = 'bar-transform-gap';
 
 /** 根据实时控件值创建区间派生 operation */

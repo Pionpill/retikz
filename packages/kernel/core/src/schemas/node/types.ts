@@ -1,9 +1,7 @@
-import type { OpenString, ValueOf } from '@retikz/foundation';
+import type { OpenString } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { BuiltinShapeValue } from '../shape';
-import type { NodeTextAlign } from '../text';
-import type { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode, NodeTextColor } from './constants';
+import type { BuiltinShape } from '../shape';
 import type {
   AxisScaleSchema,
   BoxSizeSchema,
@@ -40,20 +38,10 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 /**
  * 节点形状名：开放字符串
- * @description 内置 `BuiltinShapeValue`，或经 `CompileOptions.shapes` 注册的扩展 shape 名
+ * @description 内置 `BuiltinShape`，或经 `CompileOptions.shapes` 注册的扩展 shape 名
  */
-export type NodeShape = OpenString<BuiltinShapeValue>;
-
-export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
-
-export type NodeTextColorValue = ValueOf<typeof NodeTextColor>;
-
-export type NodeLabelPositionValue = ValueOf<typeof NodeLabelPosition>;
-
-export type NodeLabelPlacementValue = ValueOf<typeof NodeLabelPlacement>;
-
-/** 节点标签自身旋转模式取值 */
-export type NodeLabelRotateModeValue = ValueOf<typeof NodeLabelRotateMode>;
+export type NodeShape = OpenString<BuiltinShape>;
 
 export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
+
 export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;

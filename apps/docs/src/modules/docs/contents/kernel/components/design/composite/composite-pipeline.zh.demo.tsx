@@ -38,6 +38,7 @@ const pipeline = defineComposite({
         },
       ],
     }));
+
     return { children: [...boxes, ...edges] };
   },
 });

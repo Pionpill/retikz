@@ -18,10 +18,10 @@ export const layoutComponentApiReferenceConfigs = (
     name === 'FlexLayout'
       ? [
           'FlexLayoutDirection',
-          'FlexLayoutDirectionValue',
+          'FlexLayoutDirection',
           'FlexLayoutWrap',
-          'FlexLayoutWrapValue',
-          'FlexMainDistributionValue',
+          'FlexLayoutWrap',
+          'FlexMainDistribution',
           'LayoutAxisSizeKind',
           'LayoutAxisSizeInput',
           'LayoutSizeInput',
@@ -33,24 +33,25 @@ export const layoutComponentApiReferenceConfigs = (
       : name === 'GridLayout'
         ? [
             'GridAutoFlow',
-            'GridAutoFlowValue',
+            'GridAutoFlow',
             'GridOverlap',
-            'GridOverlapValue',
+            'GridOverlap',
             'GridTrackInput',
             'GridTrackBreadthInput',
             'GridPlacementInput',
             'LayoutTrackArtifact',
             'LayoutTrackSourceKind',
-            'LayoutTrackSourceKindValue',
+            'LayoutTrackSourceKind',
             'GRID_LAYOUT_MAX_TRACKS_PER_AXIS',
           ]
         : [
             'OverlayPlacementKind',
-            'OverlayPlacementKindValue',
+            'OverlayPlacementKind',
             'OverlayPlacementInput',
             'LayoutSizeParticipation',
-            'LayoutSizeParticipationValue',
+            'LayoutSizeParticipation',
           ];
+
   const owners = [
     {
       suffix: '-react',
@@ -90,9 +91,11 @@ export const layoutComponentApiReferenceConfigs = (
       pairs: [[`create${name}`, `${name}Input`]],
     },
   ];
+
   return owners.map(owner => {
     const packageDirectory = `packages/library/layout${owner.suffix}`;
     const packageName = `@retikz/layout${owner.suffix}${owner.entry}`;
+
     return {
       packageName,
       packageDirectory,
@@ -117,8 +120,10 @@ export const writeLayoutComponentApiReferences = async (outputRoot: string): Pro
     const slug = name.replace('Layout', '-layout').toLowerCase();
     const directory = path.resolve(outputRoot, slug, 'api-reference/_includes');
     mkdirSync(directory, { recursive: true });
+
     for (const lang of ['zh', 'en'] as const) {
       const sections: Array<string> = [];
+
       for (const config of layoutComponentApiReferenceConfigs(name))
         sections.push(await createApiReferenceMdx(config, lang));
       writeFileSync(

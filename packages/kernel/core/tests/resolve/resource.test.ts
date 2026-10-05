@@ -34,6 +34,7 @@ const sceneWithPaint = (paint: IRPaint): IRScene => ({
 describe('resolve/resource paint', () => {
   it('binds builtin pattern and materializes defaults before compile', () => {
     const resolved = resolvePaint({ kind: 'pattern', shape: 'lines' }, patternContext());
+
     expect(typeof resolved).toBe('object');
     expect(resolved).toMatchObject({ kind: 'paint', pattern: { name: 'lines', size: 8 } });
   });
@@ -55,6 +56,7 @@ describe('resolve/resource paint', () => {
       },
       patternContext([custom]),
     );
+
     expect(resolved).toMatchObject({
       kind: 'paint',
       pattern: {
@@ -96,6 +98,7 @@ describe('resolve/resource paint', () => {
         },
       ],
     }).scene;
+
     expect(scene.resources).toHaveLength(1);
   });
 
@@ -128,6 +131,7 @@ describe('resolve/resource paint', () => {
 
   it('preserves the missing pattern emit diagnostic at the compile boundary', () => {
     const pattern = { name: 'missing-emit', emit: undefined } as unknown as PatternDefinition;
+
     expect(
       () => compileToScene(sceneWithPaint({ kind: 'pattern', shape: 'missing-emit' }), { patterns: [pattern] }).scene,
     ).toThrow("Pattern 'missing-emit' is missing an emit function (PatternDefinition.emit is required).");
@@ -172,6 +176,7 @@ describe('resolve/resource clip', () => {
       },
       { clips: resolveClipRegistry([polygon]), irPath: 'children[0].scope.clip' },
     );
+
     expect(resolved.kind).toBe('polygon');
     expect(resolved.params).toEqual({
       kind: 'polygon',
@@ -232,7 +237,9 @@ describe('resolve/resource clip', () => {
 
     expect(wrapperResolve).not.toHaveBeenCalled();
     expect(leafResolve).not.toHaveBeenCalled();
+
     const nested = resolution.resolve({ kind: 'leaf', radius: 2 });
+
     expect(nested.kind).toBe('leaf');
     expect(nested.definition).toBe(leaf);
 
@@ -251,6 +258,7 @@ describe('resolve/resource clip', () => {
       { clips: [wrapper, leaf] },
     ).scene;
     const resource = scene.resources?.find(item => item.kind === 'clip');
+
     expect(resource).toMatchObject({
       kind: 'clip',
       path: {

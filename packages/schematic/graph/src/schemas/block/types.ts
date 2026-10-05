@@ -5,14 +5,14 @@ import type { BlockHeaderSchema, BlockRowSchema, BlockSchema, BlockSectionSchema
 /** Block 结构文字 Source */
 export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 
-/** Block Header Source */
+/** 块标题的持久化输入 */
 export type IRBlockHeader = ZodInfer<typeof BlockHeaderSchema>;
 
-/** Block Row Source */
+/** 块行的持久化输入 */
 export type IRBlockRow = ZodInfer<typeof BlockRowSchema>;
 
-/** Block Section Source */
+/** 块分节的持久化输入 */
 export type IRBlockSection = ZodInfer<typeof BlockSectionSchema>;
 
-/** Block semantic composite Source */
+/** 块语义组合节点的持久化输入 */
 export type IRBlock = ZodInfer<typeof BlockSchema>;

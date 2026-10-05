@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const bubbleMarksI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '轮廓气泡保留人口尺寸', subtitle: 'Gapminder 2007；用替换图元改变轮廓，不改变人口映射' },

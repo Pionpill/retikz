@@ -7,12 +7,15 @@ import type { Lang } from '@/i18n';
 import { scopeOffsetRulersI18n } from './scope-offset-rulers.i18n';
 
 export type ScopeOffsetRulersProps = Readonly<{ lang?: Lang }>;
+
 const ticks = [80, 90, 100, 110, 120, 130];
+
 const xOf = (worldX: number) => 150 + (worldX - 80) * 6;
 
 const ScopeOffsetRulers: FC<ScopeOffsetRulersProps> = props => {
   const { lang } = props;
   const i18n = scopeOffsetRulersI18n[lang ?? 'zh'];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[100, 120].map(x => (

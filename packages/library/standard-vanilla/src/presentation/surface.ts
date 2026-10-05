@@ -39,6 +39,7 @@ const createSurfaceContribution = (props: InputSurface, normalized: NormalizedIn
       message: 'Standard Surface requires exactly one normalized child.',
       details: { childCount: normalized.children.length },
     });
+
   return {
     node: createSurface({
       namespace: 'standard',
@@ -73,7 +74,9 @@ export const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface
         details: { operation: 'SurfaceInputEmbedAdapter' },
       });
     }
+
     const normalized = normalizeChildren([child]);
+
     return createSurfaceContribution(props, normalized);
   },
   prepare: async (props, context) => {

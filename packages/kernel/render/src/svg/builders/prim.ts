@@ -1,4 +1,4 @@
-import type { BlendModeValue, IRDropShadow, PaintValue, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
+import type { BlendMode, IRDropShadow, PaintValue, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
 
 import { firstLineDy } from '../../shared';
 import { buildPathD } from '../path-d-builder';
@@ -53,7 +53,9 @@ const paintToSvg = (
   if (typeof paint === 'string') {
     return paint.includes('var(') ? { attr: undefined, stylePaint: paint } : { attr: paint, stylePaint: undefined };
   }
+
   if (paint.kind === 'resourceRef') return { attr: paintRefUrl(paint.id), stylePaint: undefined };
+
   return { attr: 'context-stroke', stylePaint: undefined };
 };
 
@@ -70,6 +72,7 @@ const mergeFillStrokeStyle = (styleFill: string | undefined, styleStroke: string
   const out: SvgStyle = {};
   if (styleFill !== undefined) out.fill = styleFill;
   if (styleStroke !== undefined) out.stroke = styleStroke;
+
   return out.fill !== undefined || out.stroke !== undefined ? out : undefined;
 };
 
@@ -84,7 +87,7 @@ const withStyle = (node: SvgNode, style: SvgStyle | undefined): SvgNode => (styl
  * 把可选 blendMode 合进（可能已含 fill/stroke 的）几何图元 style
  * @description `normal` / 省略不出 `mix-blend-mode`（逐字不变）；其余 emit CSS `mix-blend-mode`，与 var() 颜色共存
  */
-const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendModeValue | undefined): SvgStyle | undefined => {
+const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendMode | undefined): SvgStyle | undefined => {
   if (blendMode === undefined || blendMode === 'normal') return style;
   return { ...(style ?? {}), 'mix-blend-mode': blendMode };
 };
@@ -103,16 +106,18 @@ const shadowFilterRef = (
   shadow ? `url(#${shadowIdFor ? shadowIdFor(shadow) : `retikz-shadow-${shadowHash(shadow)}`})` : undefined;
 
 /**
- * Scene primitive → `SvgNode`
+ * 将场景图元转换为 SVG 描述节点
  * @description 不读 IR，只读 Scene。属性名一律 SVG 真名（呈现属性 kebab、结构属性规范拼写）；含 `var()` 的
  *   颜色值落 `style`、其余落 `attrs`。group 递归并跳过 undefined 子槽位（防御非法 Scene）
  */
 const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
   const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
+
   switch (p.type) {
     case 'rect': {
       const f = paintToSvg(p.fill, paintRefUrl);
       const s = paintToSvg(p.stroke, paintRefUrl);
+
       return withStyle(
         {
           tag: 'rect',
@@ -142,6 +147,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
       const transform = p.rotate ? `rotate(${p.rotate} ${p.cx} ${p.cy})` : undefined;
       const f = paintToSvg(p.fill, paintRefUrl);
       const s = paintToSvg(p.stroke, paintRefUrl);
+
       return withStyle(
         {
           tag: 'ellipse',
@@ -189,6 +195,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
           fillOnlyStyle(line.fill),
         ),
       );
+
       return withStyle(
         {
           tag: 'text',
@@ -215,6 +222,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
       const endId = p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
       const f = paintToSvg(p.fill, paintRefUrl);
       const s = paintToSvg(p.stroke, paintRefUrl);
+
       return withStyle(
         {
           tag: 'path',
@@ -243,8 +251,10 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
     case 'group': {
       const clipRefUrl = context.clipRefUrl ?? ((id: string) => `url(#${id})`);
       const clipPath = p.clipRef !== undefined ? clipRefUrl(p.clipRef) : undefined;
+
       // 防御：跳过 undefined 子槽位（非法 Scene 不致抛）
       const children = p.children.filter((c): c is ScenePrimitive => Boolean(c)).map(c => buildPrim(c, context));
+
       return {
         tag: 'g',
         attrs: compact({
@@ -267,5 +277,6 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
   const node = buildPrimRaw(p, context);
   const decorated = context.decorate ? context.decorate(node, p) : node;
   if (p.hitTest === false) decorated.attrs['pointer-events'] = 'none';
+
   return decorated;
 };

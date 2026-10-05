@@ -114,6 +114,7 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   const previewTheme = usePreviewTheme(effectiveThemeStyleSelection);
   const controlsDisabled = controlOptions.name === false;
   const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
+
   const resourceRequest = useMemo(
     () =>
       segments === null
@@ -134,6 +135,7 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   const mod = resources?.module;
   const rawSource = resources?.rawSource;
   const Component = mod?.default;
+
   const controlModule = resources?.controlModule;
   const controlContract: PreviewControlContract | undefined = controlsDisabled
     ? undefined
@@ -141,6 +143,7 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
       ? (resolvePreviewControlContract(controlModule, lang) ?? resolvePreviewControlContract(mod, lang))
       : resolvePreviewControlContract(controlModule, lang);
   const controlDefinition: PreviewControlsDefinition | undefined = controlContract?.controls;
+
   const codeInitiallyHidden = hideCode ?? controlDefinition !== undefined;
   const baselineRawSource = resources?.baselineRawSource;
   const irJsonOverride = resources?.irJsonOverride;
@@ -149,6 +152,7 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   const vanillaSvg = typeof vanillaModule?.svg === 'string' ? vanillaModule.svg : undefined;
   const previewSource = mod?.previewSource;
   const exportedPreviewIR = mod?.previewIR;
+
   const sourceResult = useMemo(
     () =>
       Component && resourcesState.status === 'ready' && segments && rawSource !== undefined

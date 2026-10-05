@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const connectedScatterOrderFigureI18n: Record<
   Lang,

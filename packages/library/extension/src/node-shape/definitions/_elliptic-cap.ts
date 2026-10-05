@@ -15,6 +15,7 @@ export const EllipticCapShapeParamsSchema = strictObject({
 export type EllipticCapShapeParams = ZodInfer<typeof EllipticCapShapeParamsSchema>;
 
 const axisOf = (params: EllipticCapShapeParams): 'vertical' | 'horizontal' => params.axis ?? 'vertical';
+
 const capDepthOf = (params: EllipticCapShapeParams): number => params.capDepth ?? 8;
 
 /** 沿局部中心射线求两点线段的最近正向交点参数 */
@@ -23,8 +24,10 @@ const rayLineParameter = (direction: Position, from: Position, to: Position): nu
   const edgeY = to[1] - from[1];
   const determinant = direction[0] * -edgeY + edgeX * direction[1];
   if (Math.abs(determinant) < 1e-12) return undefined;
+
   const rayParameter = (from[0] * -edgeY + edgeX * from[1]) / determinant;
   const edgeParameter = (direction[0] * from[1] - from[0] * direction[1]) / determinant;
+
   return rayParameter > 1e-12 && edgeParameter >= -1e-9 && edgeParameter <= 1 + 1e-9 ? rayParameter : undefined;
 };
 
@@ -36,13 +39,16 @@ const rayEllipseParameters = (
   radiusY: number,
 ): Array<number> => {
   if (radiusX <= 0 || radiusY <= 0) return [];
+
   const a = (direction[0] * direction[0]) / (radiusX * radiusX) + (direction[1] * direction[1]) / (radiusY * radiusY);
   const b =
     (-2 * direction[0] * center[0]) / (radiusX * radiusX) + (-2 * direction[1] * center[1]) / (radiusY * radiusY);
   const c = (center[0] * center[0]) / (radiusX * radiusX) + (center[1] * center[1]) / (radiusY * radiusY) - 1;
   const discriminant = b * b - 4 * a * c;
   if (a <= 0 || discriminant < 0) return [];
+
   const root = Math.sqrt(discriminant);
+
   return [(-b - root) / (2 * a), (-b + root) / (2 * a)].filter(value => value > 1e-12);
 };
 
@@ -50,9 +56,11 @@ const rayEllipseParameters = (
 export const ellipticCapLocalBoundary = (bounds: Rect, toward: Position, params: EllipticCapShapeParams): Position => {
   const direction = worldToLocal(bounds, toward);
   if (Math.hypot(...direction) < 1e-12) return [0, 0];
+
   const halfWidth = bounds.width / 2;
   const halfHeight = bounds.height / 2;
   const candidates: Array<number> = [];
+
   const consider = (value: number | undefined): void => {
     if (value !== undefined && Number.isFinite(value) && value > 1e-12) candidates.push(value);
   };
@@ -66,9 +74,11 @@ export const ellipticCapLocalBoundary = (bounds: Rect, toward: Position, params:
       );
       return Number.isFinite(scale) ? [direction[0] * scale, direction[1] * scale] : [0, 0];
     }
+
     const bodyHalfHeight = halfHeight - depth;
     consider(rayLineParameter(direction, [-halfWidth, -bodyHalfHeight], [-halfWidth, bodyHalfHeight]));
     consider(rayLineParameter(direction, [halfWidth, -bodyHalfHeight], [halfWidth, bodyHalfHeight]));
+
     for (const centerY of [-bodyHalfHeight, bodyHalfHeight]) {
       for (const parameter of rayEllipseParameters(direction, [0, centerY], halfWidth, depth)) {
         const y = direction[1] * parameter;
@@ -84,9 +94,11 @@ export const ellipticCapLocalBoundary = (bounds: Rect, toward: Position, params:
       );
       return Number.isFinite(scale) ? [direction[0] * scale, direction[1] * scale] : [0, 0];
     }
+
     const bodyHalfWidth = halfWidth - depth;
     consider(rayLineParameter(direction, [-bodyHalfWidth, -halfHeight], [bodyHalfWidth, -halfHeight]));
     consider(rayLineParameter(direction, [-bodyHalfWidth, halfHeight], [bodyHalfWidth, halfHeight]));
+
     for (const centerX of [-bodyHalfWidth, bodyHalfWidth]) {
       for (const parameter of rayEllipseParameters(direction, [centerX, 0], depth, halfHeight)) {
         const x = direction[0] * parameter;
@@ -96,6 +108,7 @@ export const ellipticCapLocalBoundary = (bounds: Rect, toward: Position, params:
   }
 
   const nearest = Math.min(...candidates);
+
   return Number.isFinite(nearest) ? [direction[0] * nearest, direction[1] * nearest] : [0, 0];
 };
 
@@ -120,6 +133,7 @@ export const ellipticCapCommands = (
         { kind: 'close' },
       ];
     }
+
     const bodyHalfHeight = halfHeight - depth;
     const commands: Array<PathCommand> = [
       { kind: 'move', to: point([-halfWidth, -bodyHalfHeight]) },
@@ -155,6 +169,7 @@ export const ellipticCapCommands = (
         },
       );
     }
+
     return commands;
   }
 
@@ -168,6 +183,7 @@ export const ellipticCapCommands = (
       { kind: 'close' },
     ];
   }
+
   const bodyHalfWidth = halfWidth - depth;
   const commands: Array<PathCommand> = [
     { kind: 'move', to: point([-bodyHalfWidth, -halfHeight]) },
@@ -206,6 +222,7 @@ export const ellipticCapCommands = (
       },
     );
   }
+
   return commands;
 };
 

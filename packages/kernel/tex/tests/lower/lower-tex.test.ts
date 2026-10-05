@@ -15,6 +15,7 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
   it('returns paths and a bbox', () => {
     const lower = createLowerTex({ convert: tex => fakeSvg(tex) });
     const result = lower({ tex: 'ab' }, { fontSize: 1000 });
+
     expect(result).not.toBeNull();
     expect(result!.width).toBe(200);
     expect(result!.paths.length).toBeGreaterThan(0);
@@ -33,6 +34,7 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
     lower({ tex: 'x' }, { fontSize: 14 });
     lower({ tex: 'x', displayMode: true }, { fontSize: 14 });
     lower({ tex: 'x' }, { fontSize: 28 });
+
     expect(calls).toBe(3);
   });
 
@@ -42,11 +44,13 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
         throw new Error('boom');
       },
     });
+
     expect(lower({ tex: 'x' }, { fontSize: 14 })).toBeNull();
   });
 
   it('returns null when the SVG has no viewBox', () => {
     const lower = createLowerTex({ convert: () => '<svg><path d="M0 0"/></svg>' });
+
     expect(lower({ tex: 'x' }, { fontSize: 14 })).toBeNull();
   });
 
@@ -54,6 +58,7 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
     const lower = createLowerTex({
       convert: () => '<svg viewBox="0 0 100 100"><g data-mml-node="merror"><path d="M0 0 L1 1"/></g></svg>',
     });
+
     expect(lower({ tex: '{', displayMode: false }, { fontSize: 14 })).toBeNull();
   });
 });
@@ -65,12 +70,14 @@ describe('[lower-tex] MathJax integration', () => {
       const engine = await createMathJaxEngine();
       const lower = createLowerTex(engine);
       const x = lower({ tex: 'x' }, { fontSize: 14 });
+
       expect(x).not.toBeNull();
       expect(x!.paths.length).toBeGreaterThan(0);
       expect(x!.width).toBeGreaterThan(0);
       expect(x!.height).toBeGreaterThan(0);
 
       const frac = lower({ tex: '\\frac{a}{b}', displayMode: true }, { fontSize: 14 });
+
       expect(frac).not.toBeNull();
       expect(frac!.paths.length).toBeGreaterThanOrEqual(x!.paths.length);
     },
@@ -82,6 +89,7 @@ describe('[lower-tex] MathJax integration', () => {
     async () => {
       const engine = await createMathJaxEngine();
       const lower = createLowerTex(engine);
+
       expect(lower({ tex: '{', displayMode: false }, { fontSize: 14 })).toBeNull();
     },
     MATHJAX_INTEGRATION_TIMEOUT,
@@ -92,6 +100,7 @@ describe('[lower-tex] MathJax integration', () => {
     async () => {
       const engine = await createMathJaxEngine();
       const lower = createLowerTex(engine);
+
       expect(lower({ tex: '\\nonexistentcmd', displayMode: false }, { fontSize: 14 })).toBeNull();
     },
     MATHJAX_INTEGRATION_TIMEOUT,
@@ -107,6 +116,7 @@ describe('[lower-tex] MathJax integration', () => {
         children: [{ type: 'node', id: 'eq', position: [0, 0], text: '$$\\frac{a}{b}$$' }],
       };
       const scene = compileToScene(ir, { lowerTex }).scene;
+
       expect(JSON.stringify(scene.primitives)).toContain('"fillRule":"evenodd"');
     },
     MATHJAX_INTEGRATION_TIMEOUT,

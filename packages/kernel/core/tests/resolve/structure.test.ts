@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
 const root = resolve(here, '../..');
+
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
 const sourceFiles = (directory: string): Array<string> => {
@@ -20,6 +22,7 @@ const sourceFiles = (directory: string): Array<string> => {
 describe('resolve source structure', () => {
   it('keeps builtin path emitters resolution-only', () => {
     const stroke = source('src/compile/path/stroke/emit.ts');
+
     expect(stroke).not.toContain('normalizePath(');
     expect(stroke).not.toContain('resolvePathValue');
     expect(stroke).not.toContain('resolvePath(');
@@ -32,6 +35,7 @@ describe('resolve source structure', () => {
 
   it('keeps node layout free of provider lookup orchestration', () => {
     const text = source('src/compile/node/layout.ts');
+
     expect(text).not.toContain('providerDefinitionOf(');
     expect(text).not.toContain('resolveShapeRegistry(');
   });
@@ -58,6 +62,7 @@ describe('resolve source structure', () => {
 
     const lower = source('src/compile/orchestration/composite.ts');
     const traversal = source('src/compile/orchestration/traversal.ts');
+
     expect(lower).not.toContain('parseProviderPayload');
     expect(lower).not.toContain('registry.get(');
     expect(traversal).not.toContain('parseProviderPayload');
@@ -74,6 +79,7 @@ describe('resolve source structure', () => {
       source('src/compile/node/label/layout.ts'),
     ].join('\n');
     const pathLabel = source('src/compile/path/host/label.ts');
+
     expect(compileText).not.toContain('parseInlineRuns');
     expect(compileText).not.toContain('resolveFontSize');
     expect(nodeLayout).not.toContain('resolveLineRunsWithWarning');
@@ -84,6 +90,7 @@ describe('resolve source structure', () => {
 
   it('keeps Scope translate Source IR determination in position resolve', () => {
     const scope = source('src/compile/scope.ts');
+
     expect(scope).toContain('resolveTransformTranslation');
     expect(scope).not.toContain('resolvePosition(');
     expect(scope).not.toContain('IRAtPosition');

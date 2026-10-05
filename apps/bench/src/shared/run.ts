@@ -41,6 +41,7 @@ export const toResult = (
 /** 在 Node 环境运行 Core full-path 确定性 benchmark */
 export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmarkResult> => {
   const results: Array<DeterministicBenchmarkResult> = [];
+
   for (const size of fullBaselineSizes) {
     const coreRecords: Array<PerformanceTraceRecord> = [];
     const reporter = createRuntimeTraceReporter({
@@ -63,6 +64,7 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     const sceneOracle = stableHash(compiled.scene);
     results.push(toResult(`core-full-${size}`, sceneOracle, coreRecord));
   }
+
   const current = createSimpleNodeScene(5_000);
   const next = updateSimpleNodeFill(current, 2_500, '#22c55e');
   const program = createCoreComputation({ onWarn: () => undefined });
@@ -75,6 +77,7 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, current)],
     trace: record => records.push(record),
   });
+
   try {
     records.length = 0;
     session.update({
@@ -107,9 +110,11 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     ) {
       throw new Error('core-single-entity-update-5000: incremental patch or full oracle mismatch');
     }
+
     results.push(toResult('core-single-entity-update-5000', stableHash(artifact.output.result.scene), record));
   } finally {
     session.dispose();
   }
+
   return Object.freeze(results);
 };

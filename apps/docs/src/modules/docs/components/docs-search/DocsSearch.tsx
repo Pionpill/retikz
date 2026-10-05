@@ -17,6 +17,7 @@ import { DocsSearchPanel } from './DocsSearchPanel';
  *   DocsSearchPanel 提供，与 AI Chat 的 Add Context 共用一份匹配 / 渲染逻辑
  */
 export type DocsSearchProps = { className?: string };
+
 export const DocsSearch: FC<DocsSearchProps> = props => {
   const { className } = props;
   const { t } = useTranslation();
@@ -30,7 +31,9 @@ export const DocsSearch: FC<DocsSearchProps> = props => {
         setOpen(prev => !prev);
       }
     };
+
     window.addEventListener('keydown', onKey);
+
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 

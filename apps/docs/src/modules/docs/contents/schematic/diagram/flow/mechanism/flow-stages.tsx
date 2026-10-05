@@ -9,10 +9,12 @@ import { flowStagesI18n } from './flow-stages.i18n';
 
 /** Flow 阶段图语言 */
 export type FlowStagesProps = Readonly<{ lang?: Lang }>;
+
 /** 编译阶段的数据交接 */
 const Demo: FC<FlowStagesProps> = props => {
   const { lang = 'zh' } = props;
   const copy = flowStagesI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

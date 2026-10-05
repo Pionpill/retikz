@@ -13,13 +13,21 @@ import { createSurface, STANDARD_NAMESPACE, SURFACE_TYPE } from '@retikz/standar
 import type { IRBlockHeader, IRBlockRow, IRBlockSection, IRBlockText } from '../../schemas';
 
 const DEFAULT_HEADER_GAP = 8;
+
 const DEFAULT_HEADER_TEXT_GAP = 4;
+
 const DEFAULT_SECTION_GAP = 4;
+
 const DEFAULT_SECTION_PADDING = 8;
+
 const DEFAULT_SECTION_BACKGROUND = { fill: 'currentColor', fillOpacity: 0.037 } as const;
+
 const DEFAULT_SECTION_BORDER = { stroke: 'none' } as const;
+
 const DEFAULT_SECTION_CORNER_RADIUS = 8;
+
 const DEFAULT_ROW_GAP = 8;
+
 const DEFAULT_ROW_PADDING = 0;
 
 const structureTextNode = (text: IRBlockText, kind: 'title' | 'description' | 'section'): IRNode => {
@@ -126,6 +134,7 @@ const sectionScopeProps = (source: IRBlockSection): Omit<IRScope, 'type' | 'chil
   void _border;
   void _cornerRadius;
   void _overflow;
+
   return scope;
 };
 
@@ -152,8 +161,10 @@ const rowScopeProps = (source: IRBlockRow): Omit<IRScope, 'type' | 'children'> =
     void _border;
     void _cornerRadius;
     void _overflow;
+
     return scope;
   }
+
   const {
     namespace: _namespace,
     type: _type,
@@ -175,6 +186,7 @@ const rowScopeProps = (source: IRBlockRow): Omit<IRScope, 'type' | 'children'> =
   void _border;
   void _cornerRadius;
   void _overflow;
+
   return scope;
 };
 
@@ -184,6 +196,7 @@ export const lowerBlockHeaderLayout = (source: IRBlockHeader): IRFlexLayout => {
   if (source.description !== undefined) {
     textItems.push(flexItem('description', structureText(source.description, 'description')));
   }
+
   const textColumn = createFlexLayout({
     direction: source.direction === 'horizontal' ? FlexLayoutDirection.Row : FlexLayoutDirection.Column,
     gap: source.itemGap ?? DEFAULT_HEADER_TEXT_GAP,
@@ -195,6 +208,7 @@ export const lowerBlockHeaderLayout = (source: IRBlockHeader): IRFlexLayout => {
   if (source.icon !== undefined) headerItems.push(flexItem('icon', source.icon));
   headerItems.push(flexItem('text', textColumn, { grow: 1 }));
   if (source.trail !== undefined) headerItems.push(flexItem('trail', source.trail));
+
   return createFlexLayout({
     direction: FlexLayoutDirection.Row,
     gap: DEFAULT_HEADER_GAP,
@@ -208,6 +222,7 @@ export const lowerBlockSectionSurface = (source: IRBlockSection): IRSurface => {
   const items: Array<IRFlexLayoutItem> = [];
   if (source.title !== undefined) items.push(flexItem('title', structureText(source.title, 'section')));
   source.children?.forEach((child, childIndex) => items.push(flexItem(`child:${childIndex}`, child)));
+
   return createSurface({
     namespace: STANDARD_NAMESPACE,
     type: SURFACE_TYPE,

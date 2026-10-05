@@ -5,6 +5,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { revenue } from './transform-normalize.data';
+
 /** 根据实时控件值创建归一化与堆叠流水线 */
 export const normalizeOperationsOf = (values: {
   basis: 'fraction' | 'percent';

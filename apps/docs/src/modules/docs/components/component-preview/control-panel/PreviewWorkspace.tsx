@@ -85,6 +85,7 @@ export type PreviewWorkspaceProps = {
 };
 
 const DEFAULT_CONTROL_PANEL_SIZE = 25;
+
 const MOBILE_WORKSPACE_BREAKPOINT = 480;
 
 type PreviewWorkspaceDirection = 'horizontal' | 'vertical';
@@ -104,6 +105,7 @@ const usePreviewWorkspaceDirection = (): {
     const updateDirection = (width: number) => {
       if (width > 0) setDirection(width < MOBILE_WORKSPACE_BREAKPOINT ? 'vertical' : 'horizontal');
     };
+
     updateDirection(workspace.getBoundingClientRect().width);
 
     if (typeof ResizeObserver === 'undefined') return undefined;
@@ -112,6 +114,7 @@ const usePreviewWorkspaceDirection = (): {
       entries.forEach(entry => updateDirection(entry.contentRect.width));
     });
     observer.observe(workspace);
+
     return () => observer.disconnect();
   }, []);
 
@@ -147,6 +150,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     previewStyle,
     pinControlsOnClick,
   } = props;
+
   const previewTheme = usePreviewTheme(themeStyleSelection, themeMode);
   const controlsLocked = useComponentPreviewStore(state => state.controlsLocked);
   const { direction, workspaceRef } = usePreviewWorkspaceDirection();
@@ -155,8 +159,10 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     (definition?.presentation === 'panel'
       ? (definition.defaultSize ?? DEFAULT_CONTROL_PANEL_SIZE)
       : DEFAULT_CONTROL_PANEL_SIZE);
+
   const panelSizeRef = useRef(defaultControlPanelSize);
   const [panelSize, setPanelSize] = useState(defaultControlPanelSize);
+
   const handleControlPanelOpenChange = useCallback(
     (open: boolean) => {
       if (!open) setPanelSize(panelSizeRef.current);

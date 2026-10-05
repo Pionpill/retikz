@@ -7,4 +7,4 @@ export const RuntimeUpdateStrategy = {
 } as const;
 
 /** Runtime Runtime 更新策略取值 */
-export type RuntimeUpdateStrategyValue = ValueOf<typeof RuntimeUpdateStrategy>;
+export type RuntimeUpdateStrategy = ValueOf<typeof RuntimeUpdateStrategy>;

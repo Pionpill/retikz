@@ -4,7 +4,7 @@
 
 ### Block / BlockProps
 
-- `Block`：<ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={101}>将开放内容 Block Source 接入 React 编写流程</ApiSourceLink>
+- `Block`：<ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={103}>将开放内容 Block Source 接入 React 编写流程</ApiSourceLink>
 - `BlockProps`：<ApiSourceLink label={"BlockProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={23}>Block Source 的 React 编写参数</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -42,7 +42,7 @@ export type BlockProps = Omit<BlockInputEmbedProps, 'type' | 'children'> &
 
 ### BlockHeader / BlockHeaderProps
 
-- `BlockHeader`：<ApiSourceLink label={"BlockHeader"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={125}>将独立 Block Header Source 接入 React 编写流程</ApiSourceLink>
+- `BlockHeader`：<ApiSourceLink label={"BlockHeader"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={128}>将独立 Block Header Source 接入 React 编写流程</ApiSourceLink>
 - `BlockHeaderProps`：<ApiSourceLink label={"BlockHeaderProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={30}>Block Header 的 React 编写参数</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -51,15 +51,15 @@ export type BlockProps = Omit<BlockInputEmbedProps, 'type' | 'children'> &
 
 <ApiTable>
 
-| 成员              | 类型                                                                                  | 默认值 | 说明                          |
-| ----------------- | ------------------------------------------------------------------------------------- | ------ | ----------------------------- |
-| `description?`    | `BlockHeaderInputEmbedProps['description']`                                           | —      | —                             |
-| `direction?`      | `"horizontal" \| "vertical"`                                                          | —      | —                             |
-| `readonly icon?`  | `ReactNode`                                                                           | —      | Header 左侧至多一个任意 child |
-| `itemGap?`        | `number`                                                                              | —      | —                             |
-| `justifyContent?` | `"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | —      | —                             |
-| `title`           | `BlockHeaderInputEmbedProps['title']`                                                 | —      | —                             |
-| `readonly trail?` | `ReactNode`                                                                           | —      | Header 右侧至多一个任意 child |
+| 成员              | 类型                                                                                  | 默认值 | 说明                                    |
+| ----------------- | ------------------------------------------------------------------------------------- | ------ | --------------------------------------- |
+| `description?`    | `BlockHeaderInputEmbedProps['description']`                                           | —      | 可选次要说明                            |
+| `direction?`      | `"horizontal" \| "vertical"`                                                          | —      | 标题与说明的排列方向，省略使用 vertical |
+| `readonly icon?`  | `ReactNode`                                                                           | —      | Header 左侧至多一个任意 child           |
+| `itemGap?`        | `number`                                                                              | —      | 标题与说明的最小物理间距                |
+| `justifyContent?` | `"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | —      | 文字区主轴剩余空间分配                  |
+| `title`           | `BlockHeaderInputEmbedProps['title']`                                                 | —      | 必填主标题，字符串或文字对象            |
+| `readonly trail?` | `ReactNode`                                                                           | —      | Header 右侧至多一个任意 child           |
 
 </ApiTable>
 
@@ -85,7 +85,7 @@ export type BlockHeaderProps = Omit<BlockHeaderInputEmbedProps, 'type' | 'icon' 
 
 ### BlockSection / BlockSectionProps
 
-- `BlockSection`：<ApiSourceLink label={"BlockSection"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={147}>将独立 Block Section Source 接入 React 编写流程</ApiSourceLink>
+- `BlockSection`：<ApiSourceLink label={"BlockSection"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={151}>将独立 Block Section Source 接入 React 编写流程</ApiSourceLink>
 - `BlockSectionProps`：<ApiSourceLink label={"BlockSectionProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={39}>Block Section 的 React 编写参数</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -123,7 +123,7 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 
 ### BlockRow / BlockRowProps
 
-- `BlockRow`：<ApiSourceLink label={"BlockRow"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={178}>将独立 Block Row Source 接入 React 编写流程</ApiSourceLink>
+- `BlockRow`：<ApiSourceLink label={"BlockRow"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={185}>将独立 Block Row Source 接入 React 编写流程</ApiSourceLink>
 - `BlockRowProps`：<ApiSourceLink label={"BlockRowProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={56}>Block Row 的 React 编写参数</ApiSourceLink>
 
 ```ts
@@ -138,7 +138,7 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 
 ### block / BlockInputEmbedProps
 
-- `block`：<ApiSourceLink label={"block"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={44}>创建 Block Source 的 authoring embed 节点</ApiSourceLink>
+- `block`：<ApiSourceLink label={"block"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={45}>创建 Block Source 的 authoring embed 节点</ApiSourceLink>
 - `BlockInputEmbedProps`：<ApiSourceLink label={"BlockInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={12}>Block embed 的 Source authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -147,32 +147,32 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 
 <ApiTable>
 
-| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`        | `BlockInputEmbedProps["animations"]`                                                                                                                                                                               | —      | —    |
-| `background?`        | `BlockInputEmbedProps["background"]`                                                                                                                                                                               | —      | —    |
-| `border?`            | `BlockInputEmbedProps["border"]`                                                                                                                                                                                   | —      | —    |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | —    |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —      | —    |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | —    |
-| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | —    |
-| `defaults?`          | `BlockInputEmbedProps["defaults"]`                                                                                                                                                                                 | —      | —    |
-| `frame?`             | `BlockInputEmbedProps["frame"]`                                                                                                                                                                                    | —      | —    |
-| `gap?`               | `number`                                                                                                                                                                                                           | —      | —    |
-| `graphDefaults?`     | `BlockInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —      | —    |
-| `graphRules?`        | `BlockInputEmbedProps["graphRules"]`                                                                                                                                                                               | —      | —    |
-| `id?`                | `string`                                                                                                                                                                                                           | —      | —    |
-| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —      | —    |
-| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | —    |
-| `minWidth?`          | `number`                                                                                                                                                                                                           | —      | —    |
-| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | —    |
-| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | —    |
-| `placement?`         | `BlockInputEmbedProps["placement"]`                                                                                                                                                                                | —      | —    |
-| `style?`             | `BlockInputEmbedProps["style"]`                                                                                                                                                                                    | —      | —    |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | —    |
-| `transforms?`        | `BlockInputEmbedProps["transforms"]`                                                                                                                                                                               | —      | —    |
-| `width?`             | `number`                                                                                                                                                                                                           | —      | —    |
-| `zIndex?`            | `number`                                                                                                                                                                                                           | —      | —    |
+| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------- |
+| `animations?`        | `BlockInputEmbedProps["animations"]`                                                                                                                                                                               | —      | 作用于整体的动画轨道，不参与布局或向后代继承             |
+| `background?`        | `BlockInputEmbedProps["background"]`                                                                                                                                                                               | —      | 外框背景覆盖                                             |
+| `border?`            | `BlockInputEmbedProps["border"]`                                                                                                                                                                                   | —      | 外框描边覆盖，整体替换主题值                             |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                   |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —      | 块容器内按作者顺序排列的绘制子内容                       |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                   |
+| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | 外框圆角                                                 |
+| `defaults?`          | `BlockInputEmbedProps["defaults"]`                                                                                                                                                                                 | —      | 后代默认样式及继承屏障                                   |
+| `frame?`             | `BlockInputEmbedProps["frame"]`                                                                                                                                                                                    | —      | 固有包络装饰，不参与布局                                 |
+| `gap?`               | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                           |
+| `graphDefaults?`     | `BlockInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —      | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
+| `graphRules?`        | `BlockInputEmbedProps["graphRules"]`                                                                                                                                                                               | —      | 可见后代 Entity / Relation 的有序条件规则                |
+| `id?`                | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                            |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级   |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                       |
+| `minWidth?`          | `number`                                                                                                                                                                                                           | —      | 含水平 padding 的最小外层总宽度，省略时 resolve 使用 240 |
+| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                            |
+| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                       |
+| `placement?`         | `BlockInputEmbedProps["placement"]`                                                                                                                                                                                | —      | 布局与局部变换后的最终对齐放置                           |
+| `style?`             | `BlockInputEmbedProps["style"]`                                                                                                                                                                                    | —      | 后代的级联视觉覆盖                                       |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                       |
+| `transforms?`        | `BlockInputEmbedProps["transforms"]`                                                                                                                                                                               | —      | 局部变换，数组最后一项先作用于局部点                     |
+| `width?`             | `number`                                                                                                                                                                                                           | —      | 含水平 padding 的固定外层总宽度                          |
+| `zIndex?`            | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                               |
 
 </ApiTable>
 
@@ -192,7 +192,7 @@ export type BlockInputEmbedProps = WithoutInputType<InputBlock>;
 
 ### blockHeader / BlockHeaderInputEmbedProps
 
-- `blockHeader`：<ApiSourceLink label={"blockHeader"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={49}>创建 Block Header Source 的 authoring embed 节点</ApiSourceLink>
+- `blockHeader`：<ApiSourceLink label={"blockHeader"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={50}>创建 Block Header Source 的 authoring embed 节点</ApiSourceLink>
 - `BlockHeaderInputEmbedProps`：<ApiSourceLink label={"BlockHeaderInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={12}>Block Header embed 的 Source authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -201,15 +201,15 @@ export type BlockInputEmbedProps = WithoutInputType<InputBlock>;
 
 <ApiTable>
 
-| 成员              | 类型                                                                                  | 默认值 | 说明 |
-| ----------------- | ------------------------------------------------------------------------------------- | ------ | ---- |
-| `description?`    | `BlockHeaderInputEmbedProps["description"]`                                           | —      | —    |
-| `direction?`      | `"horizontal" \| "vertical"`                                                          | —      | —    |
-| `readonly icon?`  | `InputGraphChild`                                                                     | —      | —    |
-| `itemGap?`        | `number`                                                                              | —      | —    |
-| `justifyContent?` | `"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | —      | —    |
-| `title`           | `BlockHeaderInputEmbedProps["title"]`                                                 | —      | —    |
-| `readonly trail?` | `InputGraphChild`                                                                     | —      | —    |
+| 成员              | 类型                                                                                  | 默认值 | 说明                                    |
+| ----------------- | ------------------------------------------------------------------------------------- | ------ | --------------------------------------- |
+| `description?`    | `BlockHeaderInputEmbedProps["description"]`                                           | —      | 可选次要说明                            |
+| `direction?`      | `"horizontal" \| "vertical"`                                                          | —      | 标题与说明的排列方向，省略使用 vertical |
+| `readonly icon?`  | `InputGraphChild`                                                                     | —      | 标题前方的可选绘制内容                  |
+| `itemGap?`        | `number`                                                                              | —      | 标题与说明的最小物理间距                |
+| `justifyContent?` | `"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | —      | 文字区主轴剩余空间分配                  |
+| `title`           | `BlockHeaderInputEmbedProps["title"]`                                                 | —      | 必填主标题，字符串或文字对象            |
+| `readonly trail?` | `InputGraphChild`                                                                     | —      | 标题尾部的可选绘制内容                  |
 
 </ApiTable>
 
@@ -229,7 +229,7 @@ export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 
 ### blockSection / BlockSectionInputEmbedProps
 
-- `blockSection`：<ApiSourceLink label={"blockSection"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={44}>创建 Block Section Source 的 authoring embed 节点</ApiSourceLink>
+- `blockSection`：<ApiSourceLink label={"blockSection"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={45}>创建 Block Section Source 的 authoring embed 节点</ApiSourceLink>
 - `BlockSectionInputEmbedProps`：<ApiSourceLink label={"BlockSectionInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={12}>Block Section embed 的 Source authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -238,29 +238,29 @@ export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 
 <ApiTable>
 
-| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`        | `BlockSectionInputEmbedProps["animations"]`                                                                                                                                                                        | —      | —    |
-| `background?`        | `BlockSectionInputEmbedProps["background"]`                                                                                                                                                                        | —      | —    |
-| `border?`            | `BlockSectionInputEmbedProps["border"]`                                                                                                                                                                            | —      | —    |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | —    |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —      | —    |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | —    |
-| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | —    |
-| `defaults?`          | `BlockSectionInputEmbedProps["defaults"]`                                                                                                                                                                          | —      | —    |
-| `frame?`             | `BlockSectionInputEmbedProps["frame"]`                                                                                                                                                                             | —      | —    |
-| `gap?`               | `number`                                                                                                                                                                                                           | —      | —    |
-| `id?`                | `string`                                                                                                                                                                                                           | —      | —    |
-| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —      | —    |
-| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | —    |
-| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | —    |
-| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | —    |
-| `placement?`         | `BlockSectionInputEmbedProps["placement"]`                                                                                                                                                                         | —      | —    |
-| `style?`             | `BlockSectionInputEmbedProps["style"]`                                                                                                                                                                             | —      | —    |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | —    |
-| `title?`             | `BlockSectionInputEmbedProps["title"]`                                                                                                                                                                             | —      | —    |
-| `transforms?`        | `BlockSectionInputEmbedProps["transforms"]`                                                                                                                                                                        | —      | —    |
-| `zIndex?`            | `number`                                                                                                                                                                                                           | —      | —    |
+| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `animations?`        | `BlockSectionInputEmbedProps["animations"]`                                                                                                                                                                        | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`        | `BlockSectionInputEmbedProps["background"]`                                                                                                                                                                        | —      | 外框背景覆盖                                           |
+| `border?`            | `BlockSectionInputEmbedProps["border"]`                                                                                                                                                                            | —      | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —      | 当前区段按作者顺序排列的绘制子内容                     |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
+| `defaults?`          | `BlockSectionInputEmbedProps["defaults"]`                                                                                                                                                                          | —      | 后代默认样式及继承屏障                                 |
+| `frame?`             | `BlockSectionInputEmbedProps["frame"]`                                                                                                                                                                             | —      | 固有包络装饰，不参与布局                               |
+| `gap?`               | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                         |
+| `id?`                | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
+| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                          |
+| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                     |
+| `placement?`         | `BlockSectionInputEmbedProps["placement"]`                                                                                                                                                                         | —      | 布局与局部变换后的最终对齐放置                         |
+| `style?`             | `BlockSectionInputEmbedProps["style"]`                                                                                                                                                                             | —      | 后代的级联视觉覆盖                                     |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
+| `title?`             | `BlockSectionInputEmbedProps["title"]`                                                                                                                                                                             | —      | 可选分区标题，位于 children 前                         |
+| `transforms?`        | `BlockSectionInputEmbedProps["transforms"]`                                                                                                                                                                        | —      | 局部变换，数组最后一项先作用于局部点                   |
+| `zIndex?`            | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
 
 </ApiTable>
 
@@ -280,7 +280,7 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 
 ### blockRow / BlockRowInputEmbedProps
 
-- `blockRow`：<ApiSourceLink label={"blockRow"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={53}>创建 Block Row Source 的 authoring embed 节点</ApiSourceLink>
+- `blockRow`：<ApiSourceLink label={"blockRow"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={54}>创建 Block Row Source 的 authoring embed 节点</ApiSourceLink>
 - `BlockRowInputEmbedProps`：<ApiSourceLink label={"BlockRowInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={12}>Block Row embed 的 Source authoring 输入</ApiSourceLink>
 
 ```ts
@@ -291,8 +291,8 @@ export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 
 ### normalizeBlock / InputBlock
 
-- `normalizeBlock`：<ApiSourceLink label={"normalizeBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={150}>将 Block 开放内容 authoring 输入组装为单个 Source composite</ApiSourceLink>
-- `InputBlock`：<ApiSourceLink label={"InputBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={82}>与 Block Source 对齐、但允许开放 children 使用 Vanilla child authoring sugar 的输入</ApiSourceLink>
+- `normalizeBlock`：<ApiSourceLink label={"normalizeBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={158}>将 Block 开放内容 authoring 输入组装为单个 Source composite</ApiSourceLink>
+- `InputBlock`：<ApiSourceLink label={"InputBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={98}>与 Block Source 对齐、但允许开放 children 使用 Vanilla child authoring sugar 的输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -302,10 +302,10 @@ export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 
 <ApiTable>
 
-| 成员                 | 类型                             | 默认值 | 说明 |
-| -------------------- | -------------------------------- | ------ | ---- |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —      | —    |
-| `readonly type?`     | `'block'`                        | —      | —    |
+| 成员                 | 类型                             | 默认值 | 说明                               |
+| -------------------- | -------------------------------- | ------ | ---------------------------------- |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —      | 块容器内按作者顺序排列的绘制子内容 |
+| `readonly type?`     | `'block'`                        | —      | 可省略的 Block 作者输入判别值      |
 
 </ApiTable>
 
@@ -329,8 +329,8 @@ export type InputBlock = Omit<BlockCreateOptions, 'children'> &
 
 ### normalizeBlockHeader / InputBlockHeader
 
-- `normalizeBlockHeader`：<ApiSourceLink label={"normalizeBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={108}>将 Block Header authoring 输入组装为独立 Source composite</ApiSourceLink>
-- `InputBlockHeader`：<ApiSourceLink label={"InputBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={74}>与 Block Header Source 对齐、但允许 icon / trail 使用 Vanilla child authoring sugar 的输入</ApiSourceLink>
+- `normalizeBlockHeader`：<ApiSourceLink label={"normalizeBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={111}>将 Block Header authoring 输入组装为独立 Source composite</ApiSourceLink>
+- `InputBlockHeader`：<ApiSourceLink label={"InputBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={87}>与 Block Header Source 对齐、但允许 icon / trail 使用 Vanilla child authoring sugar 的输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -342,12 +342,12 @@ export type InputBlock = Omit<BlockCreateOptions, 'children'> &
 | ----------------- | ------------------------------------------------------------------------------------- | ------ | --------------------------------------- |
 | `description?`    | `BlockHeaderCreateOptions['description']`                                             | —      | 可选次要说明                            |
 | `direction?`      | `"horizontal" \| "vertical"`                                                          | —      | 标题与说明的排列方向，省略使用 vertical |
-| `readonly icon?`  | `InputGraphChild`                                                                     | —      | —                                       |
+| `readonly icon?`  | `InputGraphChild`                                                                     | —      | 标题前方的可选绘制内容                  |
 | `itemGap?`        | `number`                                                                              | —      | 标题与说明的最小物理间距                |
 | `justifyContent?` | `"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | —      | 文字区主轴剩余空间分配                  |
 | `title`           | `BlockHeaderCreateOptions['title']`                                                   | —      | 必填主标题，字符串或文字对象            |
-| `readonly trail?` | `InputGraphChild`                                                                     | —      | —                                       |
-| `readonly type?`  | `'blockHeader'`                                                                       | —      | —                                       |
+| `readonly trail?` | `InputGraphChild`                                                                     | —      | 标题尾部的可选绘制内容                  |
+| `readonly type?`  | `'blockHeader'`                                                                       | —      | 可省略的 BlockHeader 作者输入判别值     |
 
 </ApiTable>
 
@@ -372,8 +372,8 @@ export type InputBlockHeader = Omit<BlockHeaderCreateOptions, 'icon' | 'trail'> 
 
 ### normalizeBlockSection / InputBlockSection
 
-- `normalizeBlockSection`：<ApiSourceLink label={"normalizeBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={119}>将 Block Section authoring 输入组装为独立 Source composite</ApiSourceLink>
-- `InputBlockSection`：<ApiSourceLink label={"InputBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={67}>与 Block Section Source 对齐、但允许任意 Vanilla child authoring sugar 的输入</ApiSourceLink>
+- `normalizeBlockSection`：<ApiSourceLink label={"normalizeBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={123}>将 Block Section authoring 输入组装为独立 Source composite</ApiSourceLink>
+- `InputBlockSection`：<ApiSourceLink label={"InputBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={78}>与 Block Section Source 对齐、但允许任意 Vanilla child authoring sugar 的输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -383,10 +383,10 @@ export type InputBlockHeader = Omit<BlockHeaderCreateOptions, 'icon' | 'trail'> 
 
 <ApiTable>
 
-| 成员                 | 类型                             | 默认值 | 说明 |
-| -------------------- | -------------------------------- | ------ | ---- |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —      | —    |
-| `readonly type?`     | `'blockSection'`                 | —      | —    |
+| 成员                 | 类型                             | 默认值 | 说明                                 |
+| -------------------- | -------------------------------- | ------ | ------------------------------------ |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —      | 当前区段按作者顺序排列的绘制子内容   |
+| `readonly type?`     | `'blockSection'`                 | —      | 可省略的 BlockSection 作者输入判别值 |
 
 </ApiTable>
 
@@ -410,8 +410,8 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 
 ### normalizeBlockRow / InputBlockRow
 
-- `normalizeBlockRow`：<ApiSourceLink label={"normalizeBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={129}>将 Block Row authoring 输入组装为独立 Source composite</ApiSourceLink>
-- `InputBlockRow`：<ApiSourceLink label={"InputBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={60}>与 Block Row Source 对齐、但允许 children 使用 Vanilla child authoring sugar 的输入</ApiSourceLink>
+- `normalizeBlockRow`：<ApiSourceLink label={"normalizeBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={134}>将 Block Row authoring 输入组装为独立 Source composite</ApiSourceLink>
+- `InputBlockRow`：<ApiSourceLink label={"InputBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={63}>与 Block Row Source 对齐、但允许 children 使用 Vanilla child authoring sugar 的输入</ApiSourceLink>
 
 ```ts
 export declare const normalizeBlockRow: (input: InputBlockRow) => IRBlockRow;
@@ -442,7 +442,7 @@ export type InputBlockRow = InputBlockRowFields &
 </p>
 
 ```ts
-export declare const BlockHeaderInputEmbedAdapter: InputEmbedAdapter<BlockHeaderInputEmbedProps>;
+export declare const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps>;
 ```
 
 ### BlockInputEmbedAdapter
@@ -454,7 +454,7 @@ export declare const BlockHeaderInputEmbedAdapter: InputEmbedAdapter<BlockHeader
 </p>
 
 ```ts
-export declare const BlockInputEmbedAdapter: InputEmbedAdapter<BlockInputEmbedProps>;
+export declare const BlockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbedProps>;
 ```
 
 ### BlockRowInputEmbedAdapter
@@ -470,7 +470,7 @@ export declare const BlockInputEmbedAdapter: InputEmbedAdapter<BlockInputEmbedPr
 </p>
 
 ```ts
-export declare const BlockRowInputEmbedAdapter: InputEmbedAdapter<BlockRowInputEmbedProps>;
+export declare const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps>;
 ```
 
 ### BlockSectionInputEmbedAdapter
@@ -486,7 +486,7 @@ export declare const BlockRowInputEmbedAdapter: InputEmbedAdapter<BlockRowInputE
 </p>
 
 ```ts
-export declare const BlockSectionInputEmbedAdapter: InputEmbedAdapter<BlockSectionInputEmbedProps>;
+export declare const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps>;
 ```
 
 ### createGraphVanillaAdapters
@@ -495,7 +495,7 @@ export declare const BlockSectionInputEmbedAdapter: InputEmbedAdapter<BlockSecti
   <ApiSourceLink
     label={'createGraphVanillaAdapters'}
     path={'packages/schematic/graph-vanilla/src/adapters.ts'}
-    startLine={22}
+    startLine={24}
   >
     创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
   </ApiSourceLink>
@@ -507,9 +507,9 @@ export declare const BlockSectionInputEmbedAdapter: InputEmbedAdapter<BlockSecti
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称 | 类型 / 签名                         | 说明                                                                |
-| ------ | ---- | ----------------------------------- | ------------------------------------------------------------------- |
-| 返回值 | —    | `Array<InputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
+| 类别   | 名称 | 类型 / 签名                                    | 说明                                                                |
+| ------ | ---- | ---------------------------------------------- | ------------------------------------------------------------------- |
+| 返回值 | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
 
 </ApiTable>
 
@@ -518,7 +518,7 @@ export declare const BlockSectionInputEmbedAdapter: InputEmbedAdapter<BlockSecti
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGraphVanillaAdapters: () => Array<InputEmbedAdapter<unknown>>;
+export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
 ```
 
 </DocTab>
@@ -597,28 +597,28 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 
 <ApiTable>
 
-| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明 |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`     | `BlockRowCreateOptions["animations"]`                                                                                                                                                                              | —      | —    |
-| `background?`     | `BlockRowCreateOptions["background"]`                                                                                                                                                                              | —      | —    |
-| `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —      | —    |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | —    |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | —    |
-| `content`         | `BlockRowCreateOptions["content"]`                                                                                                                                                                                 | —      | —    |
-| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | —    |
-| `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —      | —    |
-| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —      | —    |
-| `gap?`            | `number`                                                                                                                                                                                                           | —      | —    |
-| `id?`             | `string`                                                                                                                                                                                                           | —      | —    |
-| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | —    |
-| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | —    |
-| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | —    |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | —    |
-| `placement?`      | `BlockRowCreateOptions["placement"]`                                                                                                                                                                               | —      | —    |
-| `style?`          | `BlockRowCreateOptions["style"]`                                                                                                                                                                                   | —      | —    |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | —    |
-| `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —      | —    |
-| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | —    |
+| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------- |
+| `animations?`     | `BlockRowCreateOptions["animations"]`                                                                                                                                                                              | —      | 作用于整体的动画轨道，不参与布局或向后代继承             |
+| `background?`     | `BlockRowCreateOptions["background"]`                                                                                                                                                                              | —      | 外框背景覆盖                                             |
+| `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —      | 外框描边覆盖，整体替换主题值                             |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                   |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                   |
+| `content`         | `BlockRowCreateOptions["content"]`                                                                                                                                                                                 | —      | 文本项或文本项数组，单项占满，多项等分，与 children 互斥 |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                                 |
+| `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —      | 后代默认样式及继承屏障                                   |
+| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —      | 固有包络装饰，不参与布局                                 |
+| `gap?`            | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                           |
+| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                            |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级   |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                       |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                            |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                       |
+| `placement?`      | `BlockRowCreateOptions["placement"]`                                                                                                                                                                               | —      | 布局与局部变换后的最终对齐放置                           |
+| `style?`          | `BlockRowCreateOptions["style"]`                                                                                                                                                                                   | —      | 后代的级联视觉覆盖                                       |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                       |
+| `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —      | 局部变换，数组最后一项先作用于局部点                     |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                               |
 
 </ApiTable>
 
@@ -628,28 +628,28 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 
 <ApiTable>
 
-| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明 |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`     | `BlockRowCreateOptions["animations"]`                                                                                                                                                                              | —      | —    |
-| `background?`     | `BlockRowCreateOptions["background"]`                                                                                                                                                                              | —      | —    |
-| `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —      | —    |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | —    |
-| `children?`       | `Array<IRChild>`                                                                                                                                                                                                   | —      | —    |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | —    |
-| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | —    |
-| `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —      | —    |
-| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —      | —    |
-| `gap?`            | `number`                                                                                                                                                                                                           | —      | —    |
-| `id?`             | `string`                                                                                                                                                                                                           | —      | —    |
-| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | —    |
-| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | —    |
-| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | —    |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | —    |
-| `placement?`      | `BlockRowCreateOptions["placement"]`                                                                                                                                                                               | —      | —    |
-| `style?`          | `BlockRowCreateOptions["style"]`                                                                                                                                                                                   | —      | —    |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | —    |
-| `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —      | —    |
-| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | —    |
+| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `animations?`     | `BlockRowCreateOptions["animations"]`                                                                                                                                                                              | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`     | `BlockRowCreateOptions["background"]`                                                                                                                                                                              | —      | 外框背景覆盖                                           |
+| `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —      | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
+| `children?`       | `Array<IRChild>`                                                                                                                                                                                                   | —      | 按声明顺序保存的任意绘图子元素                         |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
+| `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —      | 后代默认样式及继承屏障                                 |
+| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —      | 固有包络装饰，不参与布局                               |
+| `gap?`            | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                         |
+| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                          |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                     |
+| `placement?`      | `BlockRowCreateOptions["placement"]`                                                                                                                                                                               | —      | 布局与局部变换后的最终对齐放置                         |
+| `style?`          | `BlockRowCreateOptions["style"]`                                                                                                                                                                                   | —      | 后代的级联视觉覆盖                                     |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
+| `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —      | 局部变换，数组最后一项先作用于局部点                   |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
 
 </ApiTable>
 
@@ -814,13 +814,13 @@ export type CodeBlockTokens = Readonly<{
 
 | 成员                           | 类型                                         | 默认值 | 说明                                               |
 | ------------------------------ | -------------------------------------------- | ------ | -------------------------------------------------- |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | —      | 自定义 Entity kind definitions                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | —      | 自定义 Entity predicate definitions                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | —      | 自定义 Entity role definitions                     |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | —      | 与 Core Theme style 同名的 Graph Theme definitions |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | —      | 自定义 Relation kind definitions                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —      | 自定义 Relation predicate definitions              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —      | 自定义 Relation role definitions                   |
+| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions                     |
+| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions                |
+| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions                     |
+| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions |
+| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions                   |
+| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions              |
+| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions                   |
 
 </ApiTable>
 
@@ -848,7 +848,7 @@ export type GraphDefinitionOptions = Readonly<{
 
 <p>
   <ApiSourceLink label={'IRBlock'} path={'packages/schematic/graph/src/schemas/block/types.ts'} startLine={18}>
-    Block semantic composite Source
+    块语义组合节点的持久化输入
   </ApiSourceLink>
 </p>
 
@@ -905,7 +905,7 @@ export type IRBlock = ZodInfer<typeof BlockSchema>;
 
 <p>
   <ApiSourceLink label={'IRBlockHeader'} path={'packages/schematic/graph/src/schemas/block/types.ts'} startLine={9}>
-    Block Header Source
+    块标题的持久化输入
   </ApiSourceLink>
 </p>
 
@@ -945,7 +945,7 @@ export type IRBlockHeader = ZodInfer<typeof BlockHeaderSchema>;
 
 <p>
   <ApiSourceLink label={'IRBlockRow'} path={'packages/schematic/graph/src/schemas/block/types.ts'} startLine={12}>
-    Block Row Source
+    块行的持久化输入
   </ApiSourceLink>
 </p>
 
@@ -957,7 +957,7 @@ export type IRBlockRow = ZodInfer<typeof BlockRowSchema>;
 
 <p>
   <ApiSourceLink label={'IRBlockSection'} path={'packages/schematic/graph/src/schemas/block/types.ts'} startLine={15}>
-    Block Section Source
+    块分节的持久化输入
   </ApiSourceLink>
 </p>
 
@@ -1022,7 +1022,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 ### IRCodeBlock
 
 <p>
-  <ApiSourceLink label={'IRCodeBlock'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={20}>
+  <ApiSourceLink label={'IRCodeBlock'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={25}>
     代码实体共享事实与开放 composite 标识；具体实体由独立 schema 派生
   </ApiSourceLink>
 </p>
@@ -1053,7 +1053,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                       |
 | `minWidth?`       | `number`                                                                                                                                                                                                           | —      | 含水平 padding 的最小外层总宽度，省略时 resolve 使用 240 |
 | `name`            | `string`                                                                                                                                                                                                           | —      | 非空代码实体名称                                         |
-| `namespace`       | `string`                                                                                                                                                                                                           | —      | —                                                        |
+| `namespace`       | `string`                                                                                                                                                                                                           | —      | 代码块组件定义的注册命名空间                             |
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                            |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                       |
 | `placement?`      | `IRCodeBlockProps['placement']`                                                                                                                                                                                    | —      | 布局与局部变换后的最终对齐放置                           |
@@ -1061,7 +1061,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                       |
 | `trail?`          | `IRCodeBlockProps['trail']`                                                                                                                                                                                        | —      | 省略使用实体默认尾项，null 隐藏，child 替换              |
 | `transforms?`     | `IRCodeBlockProps['transforms']`                                                                                                                                                                                   | —      | 局部变换，数组最后一项先作用于局部点                     |
-| `type`            | `string`                                                                                                                                                                                                           | —      | —                                                        |
+| `type`            | `string`                                                                                                                                                                                                           | —      | 代码块组件定义的注册类型                                 |
 | `width?`          | `number`                                                                                                                                                                                                           | —      | 含水平 padding 的固定外层总宽度                          |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                               |
 
@@ -1143,7 +1143,7 @@ export type IRCodeBlockProps = ZodInfer<typeof CodeBlockPropsSchema>;
 ### IRCodeLogic
 
 <p>
-  <ApiSourceLink label={'IRCodeLogic'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={16}>
+  <ApiSourceLink label={'IRCodeLogic'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={20}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1177,7 +1177,7 @@ export type IRCodeLogic = ZodInfer<typeof CodeLogicSchema>;
 ### IRCodeMethod
 
 <p>
-  <ApiSourceLink label={'IRCodeMethod'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={17}>
+  <ApiSourceLink label={'IRCodeMethod'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={22}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1212,7 +1212,7 @@ export type IRCodeMethod = ZodInfer<typeof CodeMethodSchema>;
 ### IRCodeParameter
 
 <p>
-  <ApiSourceLink label={'IRCodeParameter'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={13}>
+  <ApiSourceLink label={'IRCodeParameter'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={14}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1247,7 +1247,7 @@ export type IRCodeParameter = ZodInfer<typeof CodeParameterSchema>;
 ### IRCodeProperty
 
 <p>
-  <ApiSourceLink label={'IRCodeProperty'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={15}>
+  <ApiSourceLink label={'IRCodeProperty'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={18}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1284,7 +1284,7 @@ export type IRCodeProperty = ZodInfer<typeof CodePropertySchema>;
 ### IRCodeSignature
 
 <p>
-  <ApiSourceLink label={'IRCodeSignature'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={14}>
+  <ApiSourceLink label={'IRCodeSignature'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={16}>
     查看源码
   </ApiSourceLink>
 </p>

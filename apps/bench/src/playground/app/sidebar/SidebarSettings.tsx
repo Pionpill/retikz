@@ -34,11 +34,14 @@ export const SidebarSettings: FC<SidebarSettingsProps> = props => {
   const setTheme = useThemeStore(state => state.setTheme);
   const language: LanguageValue =
     i18n.resolvedLanguage?.startsWith(Language.English) === true ? Language.English : Language.Chinese;
+
   const changeLanguage = (nextLanguage: LanguageValue): void => {
     void i18n.changeLanguage(nextLanguage);
   };
+
   const themeLabel = theme === Theme.Light ? t('settings.light') : t('settings.dark');
   const languageLabel = language === Language.Chinese ? t('settings.chinese') : t('settings.english');
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>

@@ -12,12 +12,12 @@ export const RetikzReactErrorCode = {
 } as const;
 
 /** React 包稳定错误码取值 */
-export type RetikzReactErrorCodeValue = ValueOf<typeof RetikzReactErrorCode>;
+export type RetikzReactErrorCode = ValueOf<typeof RetikzReactErrorCode>;
 
 /** React 包错误的结构化构造参数 */
 export type RetikzReactErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzReactErrorCodeValue;
+  code: RetikzReactErrorCode;
   /** 面向调用方的原始错误消息 */
   message: string;
   /** 失败上下文的结构化详情 */
@@ -29,13 +29,13 @@ export type RetikzReactErrorOptions = Readonly<{
 type RetikzReactErrorCauseOptions = Readonly<Pick<RetikzReactErrorOptions, 'details' | 'cause'>>;
 
 /** React 包未被更精确错误类型覆盖的结构化错误 */
-export class RetikzReactError extends RetikzError<RetikzReactErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzReactError extends RetikzError<RetikzReactErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 React 错误 */
   constructor(message: string);
   /** 使用结构化参数创建 React 错误 */
   constructor(options: RetikzReactErrorOptions);
   /** 使用显式错误码创建 React 错误 */
-  constructor(code: RetikzReactErrorCodeValue, message: string, options?: RetikzReactErrorCauseOptions);
+  constructor(code: RetikzReactErrorCode, message: string, options?: RetikzReactErrorCauseOptions);
   constructor(
     optionsOrMessageOrCode: RetikzReactErrorOptions | string,
     message?: string,
@@ -46,7 +46,7 @@ export class RetikzReactError extends RetikzError<RetikzReactErrorCodeValue, Rea
         ? optionsOrMessageOrCode
         : message === undefined
           ? { code: RetikzReactErrorCode.Default, message: optionsOrMessageOrCode }
-          : { code: optionsOrMessageOrCode as RetikzReactErrorCodeValue, message, ...causeOptions };
+          : { code: optionsOrMessageOrCode as RetikzReactErrorCode, message, ...causeOptions };
     super({
       code: options.code,
       message: options.message,

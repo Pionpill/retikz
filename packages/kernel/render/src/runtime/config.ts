@@ -1,4 +1,5 @@
 import type { RuntimeDeepReadonly } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeSourceDefinition } from '@retikz/runtime';
 import { defineRuntimeSource } from '@retikz/runtime';
 
@@ -19,7 +20,7 @@ export const RenderCachePolicy = {
 } as const;
 
 /** Retained renderer layer cache 策略取值 */
-export type RenderCachePolicyValue = (typeof RenderCachePolicy)[keyof typeof RenderCachePolicy];
+export type RenderCachePolicy = ValueOf<typeof RenderCachePolicy>;
 
 /** 一份按注册顺序叠加的 hydration handlers */
 export type RenderHandlerContribution = Readonly<{
@@ -52,7 +53,7 @@ export type RenderRuntimeConfigInput = Readonly<{
     height?: number;
   }>;
   /** layer cache 策略 */
-  cachePolicy?: RenderCachePolicyValue;
+  cachePolicy?: RenderCachePolicy;
 }>;
 
 /** Session-owned deeply immutable renderer 配置 */
@@ -65,6 +66,7 @@ const invalidRuntimeInput = (cause: unknown): never => {
 /** 只从 own data descriptors 捕获稠密数组，避免继承方法或 accessor 参与校验 */
 const captureDenseArray = (value: unknown): ReadonlyArray<unknown> | undefined => {
   if (!Array.isArray(value)) return undefined;
+
   const keys = Reflect.ownKeys(value);
   const lengthDescriptor = Object.getOwnPropertyDescriptor(value, 'length');
   if (
@@ -79,12 +81,15 @@ const captureDenseArray = (value: unknown): ReadonlyArray<unknown> | undefined =
   ) {
     return undefined;
   }
+
   const captured: Array<unknown> = [];
+
   for (let index = 0; index < lengthDescriptor.value; index += 1) {
     const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
     if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) return undefined;
     captured.push(descriptor.value);
   }
+
   return captured;
 };
 
@@ -100,6 +105,7 @@ const readDataProperty = (value: object, key: PropertyKey): unknown => {
   if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
     return invalidRuntimeInput(value);
   }
+
   return descriptor.value;
 };
 
@@ -123,21 +129,28 @@ const captureHandlers = (handlers: unknown): HydrationHandlers => {
   assertPlainRecord(handlers);
   const captured = Object.create(null) as Record<PropertyKey, unknown>;
   const eventNames = new Set<string>(Object.values(RetikzEvent));
+
   for (const identifier of Reflect.ownKeys(handlers)) {
     if (typeof identifier !== 'string') return invalidRuntimeInput(handlers);
+
     const elementHandlers = readDataProperty(handlers, identifier);
     assertPlainRecord(elementHandlers);
     const capturedElement = Object.create(null) as Record<PropertyKey, unknown>;
+
     for (const eventName of Reflect.ownKeys(elementHandlers)) {
       if (typeof eventName !== 'string' || !eventNames.has(eventName)) {
         return invalidRuntimeInput(elementHandlers);
       }
+
       const handler = readDataProperty(elementHandlers, eventName);
       if (typeof handler !== 'function') return invalidRuntimeInput(elementHandlers);
+
       defineCapturedValue(capturedElement, eventName, handler);
     }
+
     defineCapturedValue(captured, identifier, capturedElement);
   }
+
   return captured as HydrationHandlers;
 };
 
@@ -146,17 +159,21 @@ const captureRegistry = <TValue>(
   captureEntry: (entry: unknown) => TValue,
 ): Record<string, TValue> | undefined => {
   if (value === undefined) return undefined;
+
   assertPlainRecord(value);
   const captured = Object.create(null) as Record<PropertyKey, unknown>;
+
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key !== 'string') return invalidRuntimeInput(value);
     defineCapturedValue(captured, key, captureEntry(readDataProperty(value, key)));
   }
+
   return captured as Record<string, TValue>;
 };
 
 const captureEasing = (entry: unknown): EasingRegistry[string] => {
   if (typeof entry === 'function') return entry as EasingRegistry[string];
+
   const tuple = captureDenseArray(entry);
   if (
     tuple === undefined ||
@@ -165,6 +182,7 @@ const captureEasing = (entry: unknown): EasingRegistry[string] => {
   ) {
     return invalidRuntimeInput(entry);
   }
+
   return tuple as EasingRegistry[string];
 };
 
@@ -174,6 +192,7 @@ const captureAnimationProperty = (entry: unknown): AnimationPropertyRegistry[str
   const interpolate = readDataProperty(entry, 'interpolate');
   const applyCanvas = readDataProperty(entry, 'applyCanvas');
   if (typeof interpolate !== 'function' || typeof applyCanvas !== 'function') return invalidRuntimeInput(entry);
+
   return {
     interpolate: interpolate as AnimationPropertyRegistry[string]['interpolate'],
     applyCanvas: applyCanvas as AnimationPropertyRegistry[string]['applyCanvas'],
@@ -182,8 +201,10 @@ const captureAnimationProperty = (entry: unknown): AnimationPropertyRegistry[str
 
 const normalizeContributions = (value: unknown): ReadonlyArray<RenderHandlerContribution> | undefined => {
   if (value === undefined) return undefined;
+
   const captured = captureDenseArray(value);
   if (captured === undefined) return invalidRuntimeInput(value);
+
   const registrations = new Set<number>();
   const contributions = captured.map(candidate => {
     assertPlainRecord(candidate);
@@ -198,9 +219,12 @@ const normalizeContributions = (value: unknown): ReadonlyArray<RenderHandlerCont
     ) {
       return invalidRuntimeInput(candidate);
     }
+
     registrations.add(registration);
+
     return { registration, handlers: captureHandlers(handlers) };
   });
+
   return contributions.sort((left, right) => left.registration - right.registration);
 };
 
@@ -212,12 +236,10 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
     const cachePolicy = Object.hasOwn(candidate, 'cachePolicy')
       ? readDataProperty(candidate, 'cachePolicy')
       : undefined;
-    if (
-      cachePolicy !== undefined &&
-      !Object.values(RenderCachePolicy).includes(cachePolicy as RenderCachePolicyValue)
-    ) {
+    if (cachePolicy !== undefined && !Object.values(RenderCachePolicy).includes(cachePolicy as RenderCachePolicy)) {
       return invalidRuntimeInput(input);
     }
+
     const contributions = normalizeContributions(
       Object.hasOwn(candidate, 'handlerContributions')
         ? readDataProperty(candidate, 'handlerContributions')
@@ -245,6 +267,7 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
       ) {
         return invalidRuntimeInput(animation);
       }
+
       normalizedAnimation = {
         ...(enabled === undefined ? {} : { enabled }),
         ...(snapshotAt === undefined ? {} : { snapshotAt }),
@@ -252,6 +275,7 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
         ...(properties === undefined ? {} : { properties }),
       };
     }
+
     const canvas = Object.hasOwn(candidate, 'canvas') ? readDataProperty(candidate, 'canvas') : undefined;
     let normalizedCanvas: RenderRuntimeConfigInput['canvas'];
     if (canvas !== undefined) {
@@ -262,20 +286,24 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
       if (width !== undefined && (typeof width !== 'number' || !Number.isFinite(width) || width < 0)) {
         return invalidRuntimeInput(canvas);
       }
+
       if (height !== undefined && (typeof height !== 'number' || !Number.isFinite(height) || height < 0)) {
         return invalidRuntimeInput(canvas);
       }
+
       normalizedCanvas = {
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
       };
     }
+
     const normalized = {
       ...(contributions === undefined ? {} : { handlerContributions: contributions }),
       ...(normalizedAnimation === undefined ? {} : { animation: normalizedAnimation }),
       ...(normalizedCanvas === undefined ? {} : { canvas: normalizedCanvas }),
-      ...(cachePolicy === undefined ? {} : { cachePolicy: cachePolicy as RenderCachePolicyValue }),
+      ...(cachePolicy === undefined ? {} : { cachePolicy: cachePolicy as RenderCachePolicy }),
     };
+
     return cloneAndFreezeRuntimeValue(normalized);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;

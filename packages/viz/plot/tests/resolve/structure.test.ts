@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
 const root = resolve(here, '../..');
+
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
 describe('resolve source structure', () => {
@@ -20,6 +22,7 @@ describe('resolve source structure', () => {
     ]) {
       expect(existsSync(resolve(root, path))).toBe(true);
     }
+
     for (const path of ['src/providers/channel/registry.ts', 'src/providers/mark/registry.ts']) {
       expect(source(path)).not.toMatch(
         /resolveMarkChannels|markDefinitionOf|parseMarkOperation|channelKindsForMark|datumAnchor/,

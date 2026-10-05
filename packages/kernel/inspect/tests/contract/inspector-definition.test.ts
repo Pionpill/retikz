@@ -5,11 +5,13 @@ import { defineInspector, RetikzInspectError, RetikzInspectErrorCode } from '../
 
 const expectInspectNonEmptyError = (action: () => unknown, label: string): void => {
   let caught: unknown;
+
   try {
     action();
   } catch (error) {
     caught = error;
   }
+
   expect(caught).toBeInstanceOf(RetikzInspectError);
   expect(caught).toMatchObject({
     code: RetikzInspectErrorCode.Contract,

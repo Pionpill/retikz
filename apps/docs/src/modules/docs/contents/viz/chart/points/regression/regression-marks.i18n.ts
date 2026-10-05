@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const regressionMarksI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '替换为分组二次拟合', subtitle: 'UCI Iris；同时保留原始观测点与每组二次趋势' },

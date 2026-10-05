@@ -9,6 +9,7 @@ export const resolveRibbonWidthProfileRegistry = (
   custom: ReadonlyArray<RibbonWidthProfileDefinition> = [],
 ): ReadonlyMap<string, RibbonWidthProfileDefinition> => {
   const registry = new Map<string, RibbonWidthProfileDefinition>();
+
   for (const definition of [...builtins, ...custom]) {
     assertNonEmptyString(
       definition.name,
@@ -27,7 +28,9 @@ export const resolveRibbonWidthProfileRegistry = (
         details: { name: definition.name },
       });
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };

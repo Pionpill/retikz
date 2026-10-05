@@ -12,6 +12,7 @@ export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unk
   lower: (props, context) => {
     if (props.dataBindings !== undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)
       throw new RetikzTableVanillaError('Table bindings, executor or signal require async processing');
+
     const spec = normalizeTable(props.table);
     const contribution = createTableRuntimeContribution({
       reference: context.id,
@@ -19,11 +20,13 @@ export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unk
       lowerOptions: props.lowerOptions,
       composites: props.composites,
     });
+
     return { node: spec, providerDependencies: contribution };
   },
   prepare: async (props, context) => {
     if (props.data !== undefined && props.dataBindings !== undefined)
       throw new RetikzTableVanillaError('Table data and dataBindings are mutually exclusive');
+
     const spec = normalizeTable(props.table);
     const signal = props.signal === undefined ? context.signal : AbortSignal.any([props.signal, context.signal]);
     const preparation = await prepareTableData(
@@ -44,6 +47,7 @@ export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unk
       lowerOptions: props.lowerOptions,
       composites: props.composites,
     });
+
     return {
       execute: async () => ({
         node: spec,

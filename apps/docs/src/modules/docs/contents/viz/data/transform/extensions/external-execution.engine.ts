@@ -10,7 +10,9 @@ export const createScaleFieldProvider = (onComplete: () => void): DataTransformI
         kind: 'unsupported',
         diagnostics: [{ code: 'UNSUPPORTED', message: 'This provider supports scale-field on canonical rows only' }],
       };
+
     const operation = scaleField.schema.parse(stage.operation);
+
     return {
       kind: 'supported',
       implementation: {
@@ -18,6 +20,7 @@ export const createScaleFieldProvider = (onComplete: () => void): DataTransformI
         execute: async input => {
           await Promise.resolve();
           if (input.kind !== 'result') throw new Error('Expected canonical rows');
+
           const result = {
             rows: input.result.rows.map(row => ({
               ...row,
@@ -26,6 +29,7 @@ export const createScaleFieldProvider = (onComplete: () => void): DataTransformI
             model: stage.outputModel,
           };
           onComplete();
+
           return result;
         },
       },

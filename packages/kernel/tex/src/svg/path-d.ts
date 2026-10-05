@@ -23,14 +23,17 @@ const tokenizePathData = (source: string): Array<string> => {
   const tokenPattern = /[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g;
   let cursor = 0;
   let match: RegExpExecArray | null;
+
   while ((match = tokenPattern.exec(source)) !== null) {
     const separator = source.slice(cursor, match.index);
     if (!/^[\s,]*$/.test(separator)) throwMalformedPathError(`Malformed path d near: ${separator.trim()}`);
     tokens.push(match[0]);
     cursor = tokenPattern.lastIndex;
   }
+
   const trailing = source.slice(cursor);
   if (!/^\s*$/.test(trailing)) throwMalformedPathError(`Malformed path d near: ${trailing.trim()}`);
+
   return tokens;
 };
 
@@ -52,12 +55,15 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
   let lastControlX = 0;
   let lastControlY = 0;
   let lastCommand = '';
+
   const readNumber = (): number => {
     const token = tokens[tokenIndex++];
     const numberValue = Number(token);
     if (!Number.isFinite(numberValue)) throwMalformedPathError(`Invalid number in path d: ${String(token)}`);
+
     return numberValue;
   };
+
   while (tokenIndex < tokens.length) {
     const token = tokens[tokenIndex];
     if (/[a-zA-Z]/.test(token)) {
@@ -69,8 +75,10 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
       // 隐式后续坐标对在 M 后视作 L
       currentCommand = currentCommand === 'M' ? 'M' : 'm';
     }
+
     const activeCommand = currentCommand;
     const isRelative = activeCommand === activeCommand.toLowerCase();
+
     switch (activeCommand.toUpperCase()) {
       case 'M': {
         let x = readNumber();
@@ -79,6 +87,7 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
           x += currentX;
           y += currentY;
         }
+
         currentX = x;
         currentY = y;
         startX = x;
@@ -94,6 +103,7 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
           x += currentX;
           y += currentY;
         }
+
         currentX = x;
         currentY = y;
         commands.push({ kind: 'line', to: [x, y] });
@@ -128,6 +138,7 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
           x += currentX;
           y += currentY;
         }
+
         commands.push({ kind: 'cubic', control1: [x1, y1], control2: [x2, y2], to: [x, y] });
         lastControlX = x2;
         lastControlY = y2;
@@ -149,6 +160,7 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
           x += currentX;
           y += currentY;
         }
+
         commands.push({ kind: 'cubic', control1: [x1, y1], control2: [x2, y2], to: [x, y] });
         lastControlX = x2;
         lastControlY = y2;
@@ -167,6 +179,7 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
           x += currentX;
           y += currentY;
         }
+
         commands.push({ kind: 'quad', control: [x1, y1], to: [x, y] });
         lastControlX = x1;
         lastControlY = y1;
@@ -184,6 +197,7 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
           x += currentX;
           y += currentY;
         }
+
         commands.push({ kind: 'quad', control: [x1, y1], to: [x, y] });
         lastControlX = x1;
         lastControlY = y1;
@@ -201,8 +215,10 @@ export const parsePathD = (d: string): Array<SvgPathCommand> => {
       default:
         throwUnsupportedPathError(`Unsupported path command: ${activeCommand}`);
     }
+
     lastCommand = activeCommand;
   }
+
   return commands;
 };
 
@@ -216,6 +232,7 @@ export const transformSvgPathCommands = (
     const [worldX, worldY] = applyAffine(matrix, [x, y]);
     return pointMapper(worldX, worldY);
   };
+
   return commands.map(command => {
     switch (command.kind) {
       case 'move':

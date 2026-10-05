@@ -14,6 +14,7 @@ export type RegressionFittingFlowProps = Readonly<{ lang?: Lang }>;
 const Demo: FC<RegressionFittingFlowProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = regressionFittingFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="fitting-flow" kind="linear" direction="right" align="start" gap={24}>

@@ -31,18 +31,23 @@ export const generateLlmsTxt = (rootDir: string): string => {
   for (const module of modules) {
     const entries = manifest.filter(entry => entry.module === module.id);
     if (entries.length === 0) continue;
+
     lines.push(`## ${translate(module.label)}`, '');
+
     for (const entry of entries) {
       const localized = entry.content.en ?? entry.content.zh;
       if (localized === undefined) continue;
+
       const metadata = `type=${entry.pageType}; audience=${entry.audience}; capability=${entry.capability}`;
       const description = localized.description ? ` ${localized.description}` : '';
       lines.push(
         `- [${localized.title}](${localized.url}) (${metadata}).${description} Interactive: ${entry.interactiveUrl}`,
       );
     }
+
     lines.push('');
   }
+
   return lines.join('\n');
 };
 

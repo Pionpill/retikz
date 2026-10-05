@@ -3,6 +3,7 @@ import { enum as zodEnum, object } from 'zod';
 
 import { Anchor } from '../../../shared';
 
+/** 校验从引用对象沿指定方向与间距放置的位置 */
 export const AtPositionSchema = object({
   direction: zodEnum(Anchor).describe(
     'Canonical direction from the referenced node toward this node, in visual convention.',

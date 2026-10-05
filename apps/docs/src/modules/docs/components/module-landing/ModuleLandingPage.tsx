@@ -65,6 +65,7 @@ export type ModuleLandingPageProps = {
 };
 
 type ResolvedModuleLandingGrid = { columns: number; minRows: number };
+
 type MeasuredModuleLandingGrid = ResolvedModuleLandingGrid & { cellSize: number };
 
 /** 根据容器宽度选择离散列数：12 列在指定上限内继续填满宽度。 */
@@ -79,6 +80,7 @@ const resolveModuleLandingGrid = (width: number, grid: ModuleLandingGrid): Measu
     columns === 12
       ? Math.max(0, (Math.min(width, grid.maxWidth) - (columns - 1) * grid.gap) / columns)
       : availableCellSize;
+
   return { columns, minRows: grid.minRows[columns], cellSize };
 };
 
@@ -92,6 +94,7 @@ const useModuleLandingGrid = (
   useLayoutEffect(() => {
     const container = gridRef.current;
     if (typeof ResizeObserver === 'undefined') return undefined;
+
     const updateGrid = (): void => {
       const nextGrid = resolveModuleLandingGrid(container.clientWidth, grid);
       container.style.setProperty(MODULE_LANDING_CELL_SIZE_VARIABLE, `${nextGrid.cellSize}px`);
@@ -101,9 +104,11 @@ const useModuleLandingGrid = (
           : { columns: nextGrid.columns, minRows: nextGrid.minRows },
       );
     };
+
     const observer = new ResizeObserver(updateGrid);
     observer.observe(container);
     updateGrid();
+
     return () => observer.disconnect();
   }, [grid]);
 

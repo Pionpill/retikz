@@ -20,11 +20,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { first: true, second: true, third: true },
     relatedApis: ['FlowEntities.items', 'FlowRelations.items'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

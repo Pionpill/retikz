@@ -24,6 +24,7 @@ export const createFlowBendCurve = (route: FlowBendRoute): CurveSegment => {
     'outAngle' in route
       ? outInControlPoints(from, to, route.outAngle, route.inAngle, route.looseness)
       : bendControlPoints(from, to, route.bendDirection, route.bendAngle);
+
   return { kind: 'cubicBezier', from, to, control1, control2 };
 };
 
@@ -52,6 +53,7 @@ export const flowSmoothConflicts = (
   return obstacles
     .filter(obstacle => {
       const intervals: Array<[number, number]> = [];
+
       for (const [index, segment] of segments.entries()) {
         for (const [start, end] of findFlowCurveObstacleIntervals(
           { kind: 'cubicBezier', from: index === 0 ? [...route.points[0]] : segments[index - 1].to, ...segment },
@@ -62,6 +64,7 @@ export const flowSmoothConflicts = (
           else intervals.push([index + start, index + end]);
         }
       }
+
       return intervals.some(
         ([start, end]) =>
           !(obstacle.id === relation.source.id && start === 0) &&
@@ -94,6 +97,7 @@ const routeCommands = (route: FlowLayoutRoute): Array<PathCommand> => {
       to: [...route.points[1]],
     });
   else for (const point of route.points.slice(1)) commands.push({ kind: 'line', to: [...point] });
+
   return commands;
 };
 
@@ -103,6 +107,7 @@ export const flowRouteLabelBounds = (
   relation: FlowLayoutRelationInput,
 ): BoundsRect | undefined => {
   if (relation.labelSize === undefined) return undefined;
+
   const placement = resolveGeometryLabelPlacement(relation.labelPlacement ?? {}, true);
   const sample = samplePathRoute(
     routeCommands(route),
@@ -110,6 +115,7 @@ export const flowRouteLabelBounds = (
     placement.position,
   );
   if (sample === undefined) return undefined;
+
   const { width, height } = relation.labelSize;
   const distance = placement.placement === 'inside' ? 0 : placement.distance;
   const [x, y] = sample.point;
@@ -119,12 +125,14 @@ export const flowRouteLabelBounds = (
   if (placement.side === 'left') rectangle.x = x - distance - width;
   if (placement.side === 'right') rectangle.x = x + distance;
   if (!placement.sloped) return rectangle;
+
   const angle = Math.atan2(sample.tangent[1], sample.tangent[0]);
   const cosine = Math.cos(angle),
     sine = Math.sin(angle);
   const corners = cornersOfBounds(rectToBounds(rectangle)).map(point =>
     applyAffine([cosine, sine, -sine, cosine, x - cosine * x + sine * y, y - sine * x - cosine * y], point),
   );
+
   return boundsToRect(boundsOf(corners)!);
 };
 
@@ -136,6 +144,7 @@ export const flowRelationObstacles = (
 ): Array<Readonly<{ id: string; bounds: BoundsRect }>> => {
   const bounds = new Map(output.elements.map(element => [element.id, element.bounds]));
   const ancestors = new Set<string>();
+
   const visitAncestors = (elements: ReadonlyArray<FlowLayoutElementInput>, path: ReadonlyArray<string>): void => {
     for (const element of elements) {
       if (element.id === relation.source.id || element.id === relation.target.id)
@@ -143,6 +152,7 @@ export const flowRelationObstacles = (
       if (element.kind !== 'leaf') visitAncestors(element.elements, [...path, element.id]);
     }
   };
+
   visitAncestors(input.elements, []);
   const collect = (
     elements: ReadonlyArray<FlowLayoutElementInput>,
@@ -158,11 +168,13 @@ export const flowRelationObstacles = (
               height: box.height + element.margin.top + element.margin.bottom,
             }
           : { ...box };
+
       return [
         ...(element.kind === 'layout' || ancestors.has(element.id) ? [] : [{ id: element.id, bounds: obstacle }]),
         ...(element.kind === 'leaf' ? [] : collect(element.elements)),
       ];
     });
+
   return collect(input.elements);
 };
 
@@ -176,9 +188,11 @@ export const scoreFlowBendNodes = (
   const bounds = getFlowCurveBounds(segment);
   let count = 0,
     span = 0;
+
   for (const obstacle of obstacles) {
     // 每条候选只计算一次包围盒；相交仅代表需要继续检测，不直接计为冲突
     if (!doFlowBoundsOverlap(bounds, obstacle.bounds)) continue;
+
     const intervals = findFlowCurveObstacleIntervals(
       segment,
       obstacle.bounds,
@@ -188,6 +202,7 @@ export const scoreFlowBendNodes = (
     if (intervals.length > 0) count += 1;
     span += intervals.reduce((total, [start, end]) => total + end - start, 0);
   }
+
   return [count, span];
 };
 

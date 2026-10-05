@@ -9,6 +9,7 @@ const pathOf = (prefix: ReadonlyArray<string | number>, error: ZodError): Readon
   const issue = error.issues.at(0);
   const issuePath = (issue?.path ?? []).map(segment => (typeof segment === 'symbol' ? String(segment) : segment));
   const unknownKey = issue?.code === 'unrecognized_keys' ? issue.keys.at(0) : undefined;
+
   return unknownKey === undefined
     ? [...prefix, ...issuePath]
     : [...prefix, ...issuePath, typeof unknownKey === 'symbol' ? String(unknownKey) : unknownKey];
@@ -28,6 +29,7 @@ export const parseChartThemeDefinition = (
   recipes: ReadonlyMap<string, unknown>,
 ): ChartThemeDefinition => {
   void recipes;
+
   try {
     return ChartThemeDefinitionSchema.parse(theme);
   } catch (error) {
@@ -41,6 +43,7 @@ export const validateChartThemeBases = (themes: ReadonlyMap<string, ChartThemeDe
   for (const theme of themes.values()) {
     const visiting = new Set<string>();
     let current: string | undefined = theme.name;
+
     while (current !== undefined) {
       if (visiting.has(current)) {
         throw new RetikzChartError({
@@ -49,6 +52,7 @@ export const validateChartThemeBases = (themes: ReadonlyMap<string, ChartThemeDe
           details: { path: ['themes', theme.name, 'base'], theme: current },
         });
       }
+
       visiting.add(current);
       const definition = themes.get(current);
       if (definition === undefined) {
@@ -58,6 +62,7 @@ export const validateChartThemeBases = (themes: ReadonlyMap<string, ChartThemeDe
           details: { path: ['themes', theme.name, 'base'], base: current },
         });
       }
+
       current = definition.base;
     }
   }
@@ -71,6 +76,7 @@ const chartThemeChainOf = (
   const chain: Array<ChartThemeDefinition> = [];
   const visiting = new Set<string>();
   let current: string | undefined = name;
+
   while (current !== undefined) {
     if (visiting.has(current)) {
       throw new RetikzChartError({
@@ -79,6 +85,7 @@ const chartThemeChainOf = (
         details: { path },
       });
     }
+
     visiting.add(current);
     const definition = themes.get(current);
     if (definition === undefined) {
@@ -88,9 +95,11 @@ const chartThemeChainOf = (
         details: { path },
       });
     }
+
     chain.unshift(definition);
     current = definition.base;
   }
+
   return chain;
 };
 

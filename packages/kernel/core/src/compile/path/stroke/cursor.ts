@@ -79,6 +79,7 @@ export const isStrokeTargetStep = (step: CanonicalStep): step is StrokeTargetSte
 export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: CreateStrokeCursorInput): StrokeCursor => {
   const anchors: Array<IRPosition | null> = steps.map((step, index) => {
     if (!isStrokeTargetStep(step)) return null;
+
     const anchor = pointOfTarget(step.to, targetView, scopeChain);
     const targetId = nodeIdFromResolvableTarget(step.to);
     if (!anchor && targetId !== undefined) {
@@ -88,6 +89,7 @@ export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: Crea
         `children[${index}].to`,
       );
     }
+
     return anchor;
   });
 
@@ -97,6 +99,7 @@ export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: Crea
 
   const advance = (index: number): void => {
     if (index <= 0) return;
+
     const previousStep = steps[index - 1];
     if (isStrokeTargetStep(previousStep)) lastTargetIndex = index - 1;
     if (previousStep.kind === 'move') lastMoveTarget = previousStep.to;
@@ -104,10 +107,13 @@ export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: Crea
 
   const previous = (): StrokePreviousTarget | null => {
     if (lastTargetIndex === -1) return null;
+
     const step = steps[lastTargetIndex];
     if (!isStrokeTargetStep(step)) return null;
+
     const anchor = anchors[lastTargetIndex];
     if (!anchor) return null;
+
     return { step, anchor };
   };
 

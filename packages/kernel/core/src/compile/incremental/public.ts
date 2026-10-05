@@ -31,7 +31,10 @@ export type CoreComputationRuntimeOptions = Readonly<{
   observers?: ReadonlyArray<CompileObserverDefinition>;
 }>;
 
-/** Core Computation 对外提供的完整编译输出 */
+/**
+ * Core Computation 对外提供的完整编译输出
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreComputationOutput<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 与 full oracle 等价的完整 compile result */
   result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
@@ -41,7 +44,10 @@ export type CoreComputationOutput<TComposites extends ReadonlyArray<AnyComposite
   observerOutputs: ReadonlyArray<CompileObserverOutput>;
 }>;
 
-/** 下游 Computation、participant 与 runtime caller 可见的 Core artifact */
+/**
+ * 下游 Computation、participant 与 runtime caller 可见的 Core artifact
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreComputationPublicRead<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 完整编译输出 */
   output: CoreComputationOutput<TComposites>;
@@ -51,7 +57,10 @@ export type CoreComputationPublicRead<TComposites extends ReadonlyArray<AnyCompo
   patch?: ScenePatch;
 }>;
 
-/** 保留 composite artifact 泛型的 Core Runtime Computation Definition */
+/**
+ * 保留 composite artifact 泛型的 Core Runtime Computation Definition
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreComputationDefinition<TComposites extends ReadonlyArray<AnyCompositeDefinition>> =
   RuntimeComputationDefinition<
     CoreComputationArtifactInput<TComposites>,

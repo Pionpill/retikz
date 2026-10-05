@@ -51,6 +51,7 @@ const createIncrementalPair = () => {
   });
   const artifact = session.artifact(program).value;
   if (artifact.patch === undefined) throw new Error('expected incremental patch');
+
   return { current, next: artifact.snapshot, patch: artifact.patch };
 };
 
@@ -108,6 +109,7 @@ describe('Scene Patch validator', () => {
         ],
       },
     };
+
     expect(() => validateSceneRuntimeSnapshot(canonical)).not.toThrow();
 
     for (const resource of [
@@ -122,6 +124,7 @@ describe('Scene Patch validator', () => {
         ...valid,
         scene: { ...valid.scene, resources: [resource] },
       } as unknown as SceneRuntimeSnapshot;
+
       expect(() => validateSceneRuntimeSnapshot(invalid)).toThrowError(
         expect.objectContaining({ code: RetikzRenderErrorCode.SceneTopologyInvalid }),
       );
@@ -149,6 +152,7 @@ describe('Scene Patch validator', () => {
       ...next,
       scene: { ...next.scene, resources: oldResources },
     } as unknown as SceneRuntimeSnapshot;
+
     expect(() =>
       validateScenePatch(
         current,
@@ -164,6 +168,7 @@ describe('Scene Patch validator', () => {
 
   it('接受 Core canonical incremental Patch 与 config-only empty Patch', () => {
     const { current, next, patch } = createIncrementalPair();
+
     expect(() => validateSceneRuntimeSnapshot(current)).not.toThrow();
     expect(() => validateScenePatch(current, patch, next)).not.toThrow();
 
@@ -173,6 +178,7 @@ describe('Scene Patch validator', () => {
       root: current.root,
       topology: current.topology,
     });
+
     expect(() =>
       validateScenePatch(
         current,
@@ -200,6 +206,7 @@ describe('Scene Patch validator', () => {
 
   it('拒绝 revision gap、未知 operation 与非独占 replace', () => {
     const { current, next, patch } = createIncrementalPair();
+
     expect(() =>
       validateScenePatch(current, { ...patch, nextRevision: (next.revision + 1) as typeof next.revision }, next),
     ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch }));
@@ -225,6 +232,7 @@ describe('Scene Patch validator', () => {
 
   it('拒绝 operation 固定顺序错误与 Patch/next coherence 漏项', () => {
     const { current, next, patch } = createIncrementalPair();
+
     expect(() =>
       validateScenePatch(
         current,
@@ -247,6 +255,7 @@ describe('Scene Patch validator', () => {
         layout: { ...next.scene.layout, width: next.scene.layout.width + 10 },
       },
     };
+
     expect(() => validateScenePatch(current, patch, mismatchingNext)).toThrowError(
       expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch }),
     );
@@ -279,6 +288,7 @@ describe('Scene Patch validator', () => {
         },
       ],
     };
+
     expect(() => validateScenePatch(initial, insertPatch, inserted)).not.toThrow();
 
     const moved = createRectSnapshot(2, ['b', 'a']);
@@ -294,6 +304,7 @@ describe('Scene Patch validator', () => {
         },
       ],
     };
+
     expect(() => validateScenePatch(inserted, movePatch, moved)).not.toThrow();
 
     const removed = createRectSnapshot(3, ['b']);
@@ -302,6 +313,7 @@ describe('Scene Patch validator', () => {
       nextRevision: removed.revision,
       operations: [{ kind: 'remove', identity: moved.topology[1].identity }],
     };
+
     expect(() => validateScenePatch(moved, removePatch, removed)).not.toThrow();
   });
 
@@ -341,12 +353,14 @@ describe('Scene Patch validator', () => {
         expect.objectContaining({ code: RetikzRenderErrorCode.SceneTopologyInvalid }),
       );
     }
+
     expect(() => validateScenePatch(valid, null as unknown as ScenePatch, valid)).toThrowError(
       expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }),
     );
 
     const next = { ...valid, revision: 1 as SceneRuntimeSnapshot['revision'] };
     const sparseResources = Array<SceneRuntimeSnapshot['scene']['resources'][number]>(1);
+
     expect(() =>
       validateScenePatch(
         valid,

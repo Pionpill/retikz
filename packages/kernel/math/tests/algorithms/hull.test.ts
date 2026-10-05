@@ -11,6 +11,7 @@ describe('convexHull（Andrew monotone chain，CCW，不含共线中间点）', 
       [0, 4],
       [2, 2],
     ];
+
     expect(convexHull(pts)).toEqual([
       [0, 0],
       [4, 0],
@@ -18,6 +19,7 @@ describe('convexHull（Andrew monotone chain，CCW，不含共线中间点）', 
       [0, 4],
     ]);
   });
+
   it('共线点剔除', () => {
     const pts: Array<[number, number]> = [
       [0, 0],
@@ -26,6 +28,7 @@ describe('convexHull（Andrew monotone chain，CCW，不含共线中间点）', 
       [2, 2],
       [0, 2],
     ];
+
     expect(convexHull(pts)).toEqual([
       [0, 0],
       [2, 0],
@@ -33,6 +36,7 @@ describe('convexHull（Andrew monotone chain，CCW，不含共线中间点）', 
       [0, 2],
     ]);
   });
+
   it('少于 3 点原样（排序去重后）返回', () => {
     expect(
       convexHull([
@@ -44,6 +48,7 @@ describe('convexHull（Andrew monotone chain，CCW，不含共线中间点）', 
       [1, 1],
     ]);
   });
+
   it('空 / 全重复 / 全共线退化', () => {
     expect(convexHull([])).toEqual([]);
     expect(

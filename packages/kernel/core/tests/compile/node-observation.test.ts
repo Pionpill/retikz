@@ -28,6 +28,7 @@ const capture = (ir: IRScene, options: CompileOptions, selected = true) => {
       }),
     },
   ]);
+
   return { result, observations };
 };
 
@@ -48,8 +49,10 @@ describe('Node 观测几何', () => {
       },
       { precision: 0 },
     );
+
     expect(NodeOwnerOutputSchema.parse(observations[0]?.value).rect.rotate).toBeCloseTo(Math.PI / 6, 12);
   });
+
   it.each([
     ['ellipse', 'ellipse'],
     ['圆角 rectangle', { type: 'rectangle', params: { cornerRadius: 120 } }],
@@ -79,6 +82,7 @@ describe('Node 观测几何', () => {
     expect(fractionalOutput.shape.keyPoints).toEqual(wholeOutput.shape.keyPoints);
     expect(fractionalOutput.boundary).toEqual(wholeOutput.boundary);
   });
+
   it('观测边界不新增或吞掉主图后续连接面 warning', () => {
     const { connectionEnvelope: omitted, ...shape } = BUILTIN_SHAPES.rectangle;
     void omitted;
@@ -92,6 +96,7 @@ describe('Node 观测几何', () => {
         boundary: { type: 'circle', params: { fit: 'tight' } },
       },
     ];
+
     for (const withPath of [false, true]) {
       const ir: IRScene = {
         version: 1,
@@ -116,10 +121,12 @@ describe('Node 观测几何', () => {
       const options = { shapes: [{ ...shape, name: 'custom' }] };
       const primary = compileToScene(ir, { ...options, onWarn: warning => ordinaryWarnings.push(warning.code) });
       const { result } = capture(ir, { ...options, onWarn: warning => observedWarnings.push(warning.code) });
+
       expect(result.primary).toEqual(primary);
       expect(observedWarnings).toEqual(ordinaryWarnings);
     }
   });
+
   it.each([
     ['plain', ['a', 'bb', 'ccc']],
     ['mixed', [{ runs: [{ text: 'a' }] }, { runs: [{ text: 'bb' }] }, { runs: [{ text: 'ccc' }] }]],
@@ -142,13 +149,16 @@ describe('Node 观测几何', () => {
         primitive.lines.map((_line, index) => primitive.y + index * primitive.lineHeight),
       );
       const output = NodeOwnerOutputSchema.parse(observations[0]?.value);
+
       expect(output.content?.baselines).toHaveLength(3);
+
       output.content?.baselines.forEach((baseline, index) => {
         expect(baseline.from[1]).toBeCloseTo(renderedBaselines[index], 8);
         expect(baseline.to[1]).toBeCloseTo(renderedBaselines[index], 8);
       });
     },
   );
+
   it('不启用或不选择时不调用几何出口；启用不增加文字度量或改变 primary', () => {
     const outline = vi.fn((): Array<PathCommand> => []);
     const keyPoints = vi.fn(() => []);
@@ -157,11 +167,16 @@ describe('Node 观测几何', () => {
     const options = { shapes: [definition], measureText };
     const primary = compileToScene(source, options);
     const measurementCount = measureText.mock.calls.length;
+
     expect(outline).not.toHaveBeenCalled();
+
     capture(source, options, false);
+
     expect(outline).not.toHaveBeenCalled();
+
     measureText.mockClear();
     const { result, observations } = capture(source, options);
+
     expect(result.primary).toEqual(primary);
     expect(measureText).toHaveBeenCalledTimes(measurementCount);
     expect(keyPoints).toHaveBeenCalledTimes(1);
@@ -177,6 +192,7 @@ describe('Node 观测几何', () => {
       { version: 1, type: 'scene', children: [{ type: 'node', position: [0, 0], shape: 'custom' }] },
       { shapes: [{ ...base, name: 'custom' }] },
     );
+
     expect(NodeOwnerOutputSchema.parse(observations[0]?.value)).toMatchObject({
       shape: { outline: null, keyPoints: null },
       boundary: { outline: null },

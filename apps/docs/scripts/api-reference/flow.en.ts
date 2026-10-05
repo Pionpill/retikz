@@ -1,5 +1,17 @@
 /** Flow API 页经人工核对的英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '弯曲角度，单位为度': 'Bend angle in degrees',
+  相对源到目标方向的弯曲侧: 'Bend side relative to the source-to-target direction',
+  标识已经确定参数的弯曲参考路线: 'Identifies a bend reference route with resolved parameters',
+  '按 source 到 target 排列的根局部参考端点':
+    'Reference endpoints in root-local coordinates, ordered from source to target',
+  '终点一侧控制方向的角度，单位为度': 'Control direction at the target endpoint, in degrees',
+  控制曲线控制臂长度的松紧系数: 'Looseness factor controlling curve control-arm lengths',
+  '从起点出发的切线角，单位为度': 'Outgoing tangent angle at the source endpoint, in degrees',
+  选择布局已确定的参考路线种类: 'Selects the reference route kind resolved by layout',
+  '按源到目标顺序排列的 Flow 根局部参考点':
+    'Reference points in Flow root-local coordinates, ordered from source to target',
+  轴对齐折线转角的圆角半径: 'Corner radius for axis-aligned polyline turns',
   本次编排已确定的物理宽度约束: 'Physical width constraint resolved for this layout execution',
   '以真实 Core 边界查询布局后的端点': 'Query positioned endpoints against real Core boundaries',
   已补全默认的关系端点布局约束: 'Relation endpoint layout constraints with effective defaults',
@@ -194,12 +206,16 @@ const translations: Readonly<Partial<Record<string, string>>> = {
 };
 
 const missing = new Set<string>();
+
 /** 缺译时记录原文，完成整页投影后统一报错 */
 export const translateFlowApiReference = (source: string): string => {
   if (['', '—', 'false', '[]', 'LayeredFlowLayoutDefinition.name'].includes(source)) return source;
+
   const value = translations[source.replace(/\r/g, '')];
   if (value !== undefined) return value;
+
   missing.add(source);
+
   return source;
 };
 

@@ -183,4 +183,5 @@ export const createPreviewControlContract = (lang: Lang = 'zh') =>
   defineFlowBasicControlContract(flowBasicI18n[lang].controls);
 
 export const previewControlContract = createPreviewControlContract();
+
 export const flowBasicControls = previewControlContract.controls;

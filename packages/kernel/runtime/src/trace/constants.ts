@@ -11,7 +11,7 @@ export const PerformanceTracePhase = {
 } as const;
 
 /** 性能 trace 的执行阶段取值类型 */
-export type PerformanceTracePhaseValue = ValueOf<typeof PerformanceTracePhase>;
+export type PerformanceTracePhase = ValueOf<typeof PerformanceTracePhase>;
 
 /** 性能 trace 的计数单位常量 */
 export const PerformanceTraceUnit = {
@@ -26,7 +26,7 @@ export const PerformanceTraceUnit = {
 } as const;
 
 /** 性能 trace 的计数单位取值类型 */
-export type PerformanceTraceUnitValue = ValueOf<typeof PerformanceTraceUnit>;
+export type PerformanceTraceUnit = ValueOf<typeof PerformanceTraceUnit>;
 
 /** 性能 trace 的执行结果常量 */
 export const PerformanceTraceOutcome = {
@@ -43,4 +43,4 @@ export const PerformanceTraceOutcome = {
 } as const;
 
 /** 性能 trace 的执行结果取值类型 */
-export type PerformanceTraceOutcomeValue = ValueOf<typeof PerformanceTraceOutcome>;
+export type PerformanceTraceOutcome = ValueOf<typeof PerformanceTraceOutcome>;

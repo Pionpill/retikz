@@ -35,10 +35,14 @@ describe('TeX API Reference MDX', () => {
     expect(source).toContain('| `onDiagnostic?` |');
     expect(source).toContain('### LowerTexOptions');
     expect(source).not.toContain('```ts\n{ onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void }\n```');
+
     const lowerTexState = source.split('### MathJaxLowerTexState\n')[1]?.split('\n### ')[0] ?? '';
+
     expect(lowerTexState).not.toContain('#### 展开类型');
+
     for (const value of ['loading', 'ready', 'error', 'definition'])
       expect(lowerTexState).toContain(`value="${value}"`);
+
     expect(lowerTexState).toContain('初始化失败的诊断，source 为空字符串');
     expect(source).toContain(
       '<p><ApiSourceLink label={"createLowerTex"} path={"packages/kernel/tex/src/lower/lower-tex.ts"}',
@@ -51,7 +55,7 @@ describe('TeX API Reference MDX', () => {
 
     expect(source).toContain('`base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合');
     expect(source).toContain('| 成员 | 类型 | 默认值 | 说明 |');
-    expect(source).toContain("| `profile?` | `MathJaxProfileValue` | `'base'` | 选择基础或数学扩展集合的内置配置档 |");
+    expect(source).toContain("| `profile?` | `MathJaxProfile` | `'base'` | 选择基础或数学扩展集合的内置配置档 |");
     expect(source).toContain('> **备注：** 使用字面量 dynamic import 支持打包器分包');
     expect(source).toContain('| 类别 | 名称 | 类型 / 签名 | 说明 |');
     expect(source).not.toContain('#### 参数');
@@ -90,10 +94,13 @@ describe('TeX API Reference MDX', () => {
 
   it('写出的 include 可由站点的 MDX 编译器直接编译', async () => {
     const outputDirectory = mkdtempSync(resolve(tmpdir(), 'retikz-tex-api-reference-'));
+
     try {
       await writeTexApiReferenceMdx(outputDirectory);
+
       for (const lang of ['zh', 'en'] as const) {
         const source = readFileSync(resolve(outputDirectory, `generated.${lang}.mdx`), 'utf8');
+
         await expect(compile(source, compileOptions)).resolves.toBeTruthy();
       }
     } finally {

@@ -17,6 +17,7 @@ const createDefinition = (
 ): PathKindDefinition<IRRibbonPath> => {
   const capRegistry = resolveRibbonCapRegistry(ExtensionRibbonCapDefinitions, caps);
   const profileRegistry = resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);
+
   return definePathKind<IRRibbonPath>({
     name: 'ribbon',
     schema: RibbonPathSchema,

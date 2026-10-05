@@ -6,6 +6,7 @@ import type { SharedPolarPosition } from '../../../shared';
 import { AngleDegreesSchema } from '../../scalar';
 import { PositionSchema } from '../position';
 
+/** 校验可嵌套原点引用的极坐标；角度从正 x 轴沿屏幕坐标方向计量 */
 export const PolarPositionSchema: ZodType<SharedPolarPosition> = lazy(() =>
   object({
     origin: union([NonBlankStringSchema, PositionSchema, PolarPositionSchema])

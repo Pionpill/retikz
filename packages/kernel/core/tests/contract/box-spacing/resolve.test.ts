@@ -43,7 +43,9 @@ describe('resolveBoxSpacing', () => {
 
     expect(result).not.toBe(value);
     expect(second).not.toBe(result);
+
     result.left = 10;
+
     expect(value).toEqual({ default: 1, x: 2, top: 3 });
   });
 
@@ -53,6 +55,7 @@ describe('resolveBoxSpacing', () => {
         'resolveBoxSpacing: fallback must be a finite non-negative number',
       );
     }
+
     expect(() => resolveBoxSpacing(1, -1)).toThrow('resolveBoxSpacing: fallback must be a finite non-negative number');
   });
 });

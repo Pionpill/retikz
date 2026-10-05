@@ -64,10 +64,13 @@ describe('Diagram Theme Definition and registry', () => {
     ]) {
       try {
         run();
+
         expect.unreachable('Expected a Diagram registry error');
       } catch (error) {
         if (!(error instanceof RetikzDiagramError)) throw error;
+
         expect(error.details).toMatchObject({ capability: 'diagram-theme-style' });
+
         if (error.code === RetikzDiagramErrorCode.DefinitionDuplicate) {
           expect(error.details).toMatchObject({ key: 'brand', availableKeys: ['brand'] });
         }
@@ -174,15 +177,18 @@ describe('Diagram Theme cascade', () => {
       frame: { padding: undefined },
       presentation: { title: { style: { font: {}, opacity: undefined }, layout: {} } },
     });
+
     expect(empty).toEqual(baseline);
   });
 
   it('fails when the effective Core style lacks a same-named Diagram Definition', () => {
     try {
       resolveDiagramTheme(themeWith({ style: 'missing' }), registryOf());
+
       expect.unreachable('Expected missing Diagram style failure');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionNotRegistered);
       expect(error.details).toMatchObject({
         capability: 'diagram-theme-style',
@@ -203,9 +209,11 @@ describe('Diagram Theme cascade', () => {
 
     try {
       resolveDiagramTheme(themeWith({ style: 'broken' }), registryOf(definition));
+
       expect.unreachable('Expected callback failure');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionCallbackFailed);
       expect(error.cause).toBe(cause);
     }
@@ -213,6 +221,7 @@ describe('Diagram Theme cascade', () => {
 
   it('accepts empty Definition defaults as a no-op', () => {
     const definition = defineDiagramThemeStyle({ name: 'empty', resolve: () => ({}) });
+
     expect(resolveDiagramTheme(themeWith({ style: 'empty' }), registryOf(definition))).toEqual(
       resolveDiagramTheme(themeWith({}), registryOf()),
     );
@@ -232,9 +241,11 @@ describe('Diagram Theme cascade', () => {
 
     try {
       resolveDiagramTheme(themeWith({ style: 'invalid' }), registryOf(definition));
+
       expect.unreachable('Expected invalid Definition output');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionCallbackFailed);
       expect(error.cause).toBeDefined();
     }

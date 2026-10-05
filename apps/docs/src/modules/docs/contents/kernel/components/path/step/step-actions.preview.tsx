@@ -28,6 +28,7 @@ const actionOf = (values: StepActionsPreviewValues): ReactNode => {
           </Path>
         );
       }
+
       return (
         <Path style={{ stroke: 'dodgerblue', strokeWidth: 2 }}>
           <Step kind="move" to="A" />

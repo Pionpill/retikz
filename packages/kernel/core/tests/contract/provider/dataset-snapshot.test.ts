@@ -37,6 +37,7 @@ describe('Core provider dataset snapshot', () => {
             expect(Object.isFrozen(datasets)).toBe(true);
             expect(Reflect.set(datasets, 'other', {})).toBe(false);
             expect(datasets).not.toHaveProperty('other');
+
             return makeDefinition();
           }),
         ),

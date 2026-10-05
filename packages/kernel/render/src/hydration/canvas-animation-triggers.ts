@@ -1,12 +1,12 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 
 import { geometryOf } from './context';
-import type { ElementHandlers, HydrationHandlers, RetikzEventValue } from './events';
+import type { ElementHandlers, HydrationHandlers } from './events';
 import { RetikzEvent } from './events';
 
 const EVENT_NAMES = new Set<string>(Object.values(RetikzEvent));
 
-const isRetikzEventName = (event: string): event is RetikzEventValue => EVENT_NAMES.has(event);
+const isRetikzEventName = (event: string): event is RetikzEvent => EVENT_NAMES.has(event);
 
 const walkPrimitives = (
   primitives: ReadonlyArray<ScenePrimitive>,
@@ -19,19 +19,22 @@ const walkPrimitives = (
 };
 
 /** Scene 中含 canvas `{ onEvent }` trigger 的 id → 事件名集合 */
-export const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEventValue>> => {
-  const triggers = new Map<string, Set<RetikzEventValue>>();
+export const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEvent>> => {
+  const triggers = new Map<string, Set<RetikzEvent>>();
   walkPrimitives(scene.primitives, primitive => {
     if (primitive.id === undefined || primitive.animations === undefined) return;
+
     for (const track of primitive.animations) {
       const trigger = track.trigger;
       if (typeof trigger !== 'object') continue;
       if (!isRetikzEventName(trigger.onEvent)) continue;
-      const set = triggers.get(primitive.id) ?? new Set<RetikzEventValue>();
+
+      const set = triggers.get(primitive.id) ?? new Set<RetikzEvent>();
       set.add(trigger.onEvent);
       triggers.set(primitive.id, set);
     }
   });
+
   return triggers;
 };
 
@@ -43,8 +46,10 @@ export const withCanvasAnimationEventHandlers = (
   const merged = new Map<string, ElementHandlers>(
     Object.entries(handlers ?? {}).map(([id, elementHandlers]) => [id, { ...elementHandlers }]),
   );
+
   for (const [id, events] of collectCanvasAnimationEventTriggers(scene)) {
     const target = merged.get(id) ?? {};
+
     for (const eventName of events) {
       const userHandler = target[eventName];
       target[eventName] = (event, context) => {
@@ -52,8 +57,10 @@ export const withCanvasAnimationEventHandlers = (
         userHandler?.(event, context);
       };
     }
+
     merged.set(id, target);
   }
+
   return Object.fromEntries(merged);
 };
 
@@ -64,18 +71,22 @@ export const collectCanvasVisibleAnimationIds = (scene: Scene): Set<string> => {
     if (primitive.id === undefined || primitive.animations === undefined) return;
     if (primitive.animations.some(track => track.trigger === 'visible')) ids.add(primitive.id);
   });
+
   return ids;
 };
 
 /** 判断某 id 的 Scene 聚合 bbox 投到 canvas client rect 后是否与 viewport 相交 */
 export const isCanvasAnimationIdVisible = (canvas: HTMLCanvasElement, scene: Scene, id: string): boolean => {
   if (typeof window === 'undefined') return false;
+
   const geometry = geometryOf(scene, id);
   if (!geometry) return false;
+
   const rect = canvas.getBoundingClientRect();
   const { layout } = scene;
   const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
   if (!Number.isFinite(scale) || scale <= 0) return false;
+
   const offsetX = (rect.width - layout.width * scale) / 2;
   const offsetY = (rect.height - layout.height * scale) / 2;
   const left = rect.left + offsetX + (geometry.bbox.x - layout.x) * scale;
@@ -84,5 +95,6 @@ export const isCanvasAnimationIdVisible = (canvas: HTMLCanvasElement, scene: Sce
   const bottom = top + geometry.bbox.height * scale;
   const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
   return right >= 0 && bottom >= 0 && left <= viewportWidth && top <= viewportHeight;
 };

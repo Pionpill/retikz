@@ -16,6 +16,7 @@ const AnimationPlayback: FC<AnimationPlaybackProps> = props => {
   const labels = animationPlaybackI18n[lang];
   const text = (index: number) =>
     labels[index].map((line, row) => ({ text: line, ...(row === 0 ? {} : { fill: 'gray', font: { size: 12 } }) }));
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

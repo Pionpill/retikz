@@ -22,17 +22,21 @@ export const reducerOutputFieldsOf = (operation: unknown): Array<ReducerOutputFi
 
   const outputs = recordOf(record.outputs);
   if (outputs === undefined) return [];
+
   const fields: Array<ReducerOutputField> = [];
+
   for (const key of ['lower', 'upper'] as const) {
     const field = outputs[key];
     if (typeof field === 'string') fields.push({ field, path: ['outputs', key] });
   }
+
   if (Array.isArray(outputs.points)) {
     outputs.points.forEach((point, pointIndex) => {
       const field = recordOf(point)?.as;
       if (typeof field === 'string') fields.push({ field, path: ['outputs', 'points', pointIndex, 'as'] });
     });
   }
+
   for (const key of [
     'spread',
     'lowerFence',
@@ -46,5 +50,6 @@ export const reducerOutputFieldsOf = (operation: unknown): Array<ReducerOutputFi
     const field = outputs[key];
     if (typeof field === 'string') fields.push({ field, path: ['outputs', key] });
   }
+
   return fields;
 };

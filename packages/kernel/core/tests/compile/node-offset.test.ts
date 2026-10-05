@@ -21,11 +21,13 @@ const ellipseCenter = (e: EllipsePrim): [number, number] => [e.cx, e.cy];
 describe('OffsetPosition: schema 校验', () => {
   it('合法 of=string + offset 通过校验', () => {
     const valid: IROffsetPosition = { of: 'A', offset: [10, 20] };
+
     expect(() => OffsetPositionSchema.parse(valid)).not.toThrow();
   });
 
   it('合法 of=Position + offset 通过校验', () => {
     const valid: IROffsetPosition = { of: [50, 50], offset: [5, 0] };
+
     expect(() => OffsetPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -34,6 +36,7 @@ describe('OffsetPosition: schema 校验', () => {
       of: { origin: 'A', angle: 45, radius: 30 },
       offset: [0, 5],
     };
+
     expect(() => OffsetPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -46,6 +49,7 @@ describe('OffsetPosition: schema 校验', () => {
       },
       offset: [1, -2],
     };
+
     expect(() => OffsetPositionSchema.parse(valid)).not.toThrow();
   });
 
@@ -86,6 +90,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(b[0]).toBeCloseTo(30);
       expect(b[1]).toBeCloseTo(10);
     });
@@ -97,6 +102,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         children: [{ type: 'node', position: { of: [50, 50], offset: [10, 0] }, text: 'X' }],
       };
       const [x] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(x[0]).toBeCloseTo(60);
       expect(x[1]).toBeCloseTo(50);
     });
@@ -118,6 +124,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       // polar(A=(0,0), angle=0, r=50) = (50, 0)，+offset(0, 20) = (50, 20)
       expect(b[0]).toBeCloseTo(50);
       expect(b[1]).toBeCloseTo(20);
@@ -144,6 +151,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       // inner polar = (30, 0); outer polar from (30,0) angle=90 r=20 = (30, 20); + offset(5, 0) = (35, 20)
       expect(b[0]).toBeCloseTo(35);
       expect(b[1]).toBeCloseTo(20);
@@ -159,6 +167,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(b[0]).toBeCloseTo(30);
       expect(b[1]).toBeCloseTo(40);
     });
@@ -174,6 +183,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [, b, c] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(b[0]).toBeCloseTo(10);
       expect(b[1]).toBeCloseTo(0);
       expect(c[0]).toBeCloseTo(15);
@@ -192,6 +202,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [a, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(b[0]).toBeCloseTo(a[0]);
       expect(b[1]).toBeCloseTo(a[1]);
     });
@@ -203,6 +214,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         children: [{ type: 'node', position: { of: [0, 0], offset: [10, 0] }, text: 'X' }],
       };
       const [x] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(x[0]).toBeCloseTo(10);
       expect(x[1]).toBeCloseTo(0);
     });
@@ -220,6 +232,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [, , c] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(c[0]).toBeCloseTo(35);
       expect(c[1]).toBeCloseTo(5);
     });
@@ -242,6 +255,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [, , c] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
       expect(c[0]).toBeCloseTo(12);
       expect(c[1]).toBeCloseTo(-3);
     });
@@ -257,6 +271,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         ],
       };
+
       expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
     });
 
@@ -276,6 +291,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         ],
       };
+
       expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
     });
 
@@ -285,6 +301,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         type: 'scene',
         children: [{ type: 'node', id: 'B', position: { of: 'nonexistent', offset: [0, 0] } }],
       };
+
       expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
     });
   });
@@ -308,8 +325,11 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
       };
       const scene = compileToScene(ir).scene;
       const pathPrim = scene.primitives.find(p => p.type === 'path');
+
       expect(pathPrim).toBeDefined();
+
       const [, b] = rects(scene.primitives).map(rectCenter);
+
       expect(b[0]).toBeCloseTo(40);
       expect(b[1]).toBeCloseTo(0);
     });
@@ -348,6 +368,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
       };
       const cs = rects(compileToScene(ir).scene.primitives).map(rectCenter);
       const [a, b, c, d, e, f] = cs;
+
       expect(a[0]).toBeCloseTo(0);
       expect(a[1]).toBeCloseTo(0);
       expect(b[0]).toBeCloseTo(40);
@@ -358,6 +379,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
       expect(d[1]).toBeCloseTo(0);
       expect(e[0]).toBeCloseTo(95);
       expect(e[1]).toBeCloseTo(100);
+
       // polar(A, 90, 50) = (0, 50)，+ [0, 0]
       expect(f[0]).toBeCloseTo(0);
       expect(f[1]).toBeCloseTo(50);
@@ -389,6 +411,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
         ],
       };
       const [c] = ellipses(compileToScene(ir).scene.primitives).map(ellipseCenter);
+
       expect(c[0]).toBeCloseTo(40);
       expect(c[1]).toBeCloseTo(5);
     });
@@ -409,6 +432,7 @@ describe('OffsetPosition: Coordinate.position', () => {
       ],
     };
     const [n] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
     expect(n[0]).toBeCloseTo(50);
     expect(n[1]).toBeCloseTo(30);
   });

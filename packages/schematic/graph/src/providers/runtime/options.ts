@@ -48,6 +48,7 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
   type Definition = NonNullable<GraphDefinitionOptions[TKey]>[number];
   const definitions = new Map<string, Definition>();
   const keyOf = definitionKeyOf[collectionKey] as (definition: Definition) => string;
+
   for (const options of optionSets) {
     for (const definition of options[collectionKey] ?? []) {
       const key = keyOf(definition);
@@ -56,6 +57,7 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
         definitions.set(key, definition);
         continue;
       }
+
       if (!Object.is(existing, definition)) {
         throw new RetikzGraphError({
           code: RetikzGraphErrorCode.DefinitionConflict,
@@ -65,17 +67,25 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
       }
     }
   }
+
   return Object.freeze([...definitions.values()]) as NonNullable<GraphDefinitionOptions[TKey]>;
 };
 
 /** 一次 Graph definition 装配共享的已解析 registries */
 export type ResolvedGraphDefinitionOptions = Readonly<{
+  /** 按 role 键索引的实体角色定义 */
   entityRoles: ReadonlyMap<string, EntityRoleDefinition>;
+  /** 已解析的实体 kind 定义注册表 */
   entityKinds: EntityKindRegistry;
+  /** 按名称索引的实体 predicate 定义 */
   entityPredicates: ReadonlyMap<string, EntityPredicateDefinition>;
+  /** 按 role 键索引的关系角色定义 */
   relationRoles: ReadonlyMap<string, RelationRoleDefinition>;
+  /** 按 kind 键索引的关系种类定义 */
   relationKinds: ReadonlyMap<string, RelationKindDefinition>;
+  /** 按名称索引的关系 predicate 定义 */
   relationPredicates: ReadonlyMap<string, RelationPredicateDefinition>;
+  /** 按名称索引的 Graph 主题样式定义 */
   graphThemeStyles: ReadonlyMap<string, GraphThemeStyleDefinition>;
 }>;
 
@@ -100,6 +110,7 @@ export const resolveGraphDefinitionOptions = (options: GraphDefinitionOptions = 
   const relationRoles = resolveRelationRoleRegistry(options.relationRoles);
   const relationKinds = resolveRelationKindRegistry(options.relationKinds, relationRoles);
   const relationPredicates = resolveRelationPredicateRegistry(options.relationPredicates, relationRoles, relationKinds);
+
   return {
     entityRoles,
     entityKinds,

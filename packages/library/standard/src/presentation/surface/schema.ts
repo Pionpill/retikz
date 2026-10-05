@@ -17,11 +17,13 @@ import { literal, strictObject, union } from 'zod';
 import { STANDARD_NAMESPACE } from '../../shared';
 import { SURFACE_TYPE } from './constants';
 
+/** 校验覆盖 Surface 完整分配区域的背景填充 */
 export const SurfaceBackgroundSchema = strictObject({
   fill: PaintValueSchema.describe('Fill paint covering the complete Surface allocation box.'),
   fillOpacity: GraphicFillSchema.shape.fillOpacity,
 }).describe('Optional fill appearance for the Surface allocation box.');
 
+/** 校验 Surface 边框的颜色、透明度与描边配置 */
 export const SurfaceBorderSchema = strictObject({
   ...GraphicColorSchema.shape,
   ...GraphicElementOpacitySchema.shape,
@@ -33,6 +35,7 @@ const SurfacePaddingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).
   'Uniform or side-specific non-negative Surface padding.',
 );
 
+/** 校验单个绘图子项的背景、内边距、边框、圆角与溢出包装配置 */
 export const SurfaceSchema = CompositeBaseSchema.extend({
   namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),

@@ -40,9 +40,11 @@ const containsGeneratedSpatialScope = (children: ReadonlyArray<IRChild>): boolea
 /** 从 Scope schema 失败中提取可读的 Theme 字段路径 */
 const readThemeIssuePath = (error: unknown): string | undefined => {
   if (!(error instanceof ZodError)) return undefined;
+
   const issue = error.issues[0];
   const segments = issue.path.map(String);
   if (issue.code === 'unrecognized_keys') segments.push(issue.keys[0]);
+
   return segments.join('.');
 };
 
@@ -54,6 +56,7 @@ const snapshotCompositeCallbackChild = (owner: string, value: unknown, location:
       `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
     );
   }
+
   const child = snapshot as Record<string, unknown>;
   const type = child.type;
   const isBuiltin = typeof type === 'string' && builtinChildTypes.has(type);
@@ -64,6 +67,7 @@ const snapshotCompositeCallbackChild = (owner: string, value: unknown, location:
       `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
     );
   }
+
   return snapshot as IRChild;
 };
 
@@ -87,14 +91,17 @@ export const validateExpandCompositeOutput = (
     if (produced === null || typeof produced !== 'object' || Array.isArray(produced)) {
       throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
     }
+
     const raw = produced as Record<string, unknown>;
     const unsupported = Object.keys(raw).filter(field => !['children', 'spatialHandles'].includes(field));
     if (unsupported.length > 0) {
       throw createCompositeContractError(`${owner} returned unsupported expand result field '${unsupported[0]}'.`);
     }
+
     if (!Array.isArray(raw.children)) {
       throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
     }
+
     const children = Object.freeze(raw.children.map(snapshotChild));
     const spatialHandles =
       raw.spatialHandles === undefined ? undefined : validateCompositeSpatialHandles(owner, raw.spatialHandles);
@@ -103,6 +110,7 @@ export const validateExpandCompositeOutput = (
         `${owner} cannot declare result-level spatial handles while its generated output contains a Scope with placement or transforms; use layout-aware Scope attachment.`,
       );
     }
+
     return Object.freeze({ children, ...(spatialHandles === undefined ? {} : { spatialHandles }) });
   });
 
@@ -111,7 +119,9 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
   if (props === null || typeof props !== 'object' || Array.isArray(props)) {
     throw createCompositeContractError(`${owner.label} received invalid runtime Scope props.`);
   }
+
   let parsed: ReturnType<typeof ScopePropsSchema.parse>;
+
   try {
     parsed = ScopePropsSchema.parse(props);
   } catch (error) {
@@ -124,6 +134,7 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
       { cause: error },
     );
   }
+
   return parsed;
 };
 
@@ -134,22 +145,27 @@ const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, inde
       `${owner.label} received an invalid replay wrapper transform at index ${index}.`,
     );
   }
+
   const fail = (): never => {
     throw createCompositeContractError(
       `${owner.label} received an invalid or non-finite replay wrapper transform at index ${index}.`,
     );
   };
+
   const assertFinite: (number: unknown) => asserts number is number = number => {
     if (typeof number !== 'number' || !Number.isFinite(number)) fail();
   };
+
   const input = value as Record<string, unknown>;
   const keys = Object.keys(input);
+
   switch (input.kind) {
     case 'translate': {
       const { x, y } = input;
       if (keys.some(key => !['kind', 'x', 'y'].includes(key))) fail();
       assertFinite(x);
       assertFinite(y);
+
       return { kind: 'translate', x, y };
     }
     case 'scale': {
@@ -157,6 +173,7 @@ const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, inde
       if (keys.some(key => !['kind', 'x', 'y'].includes(key))) fail();
       assertFinite(x);
       if (y !== undefined) assertFinite(y);
+
       return { kind: 'scale', x, ...(y === undefined ? {} : { y }) };
     }
     case 'rotate': {
@@ -165,6 +182,7 @@ const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, inde
       assertFinite(degrees);
       if (cx !== undefined) assertFinite(cx);
       if (cy !== undefined) assertFinite(cy);
+
       return {
         kind: 'rotate',
         degrees,
@@ -183,6 +201,7 @@ const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): Com
   if (wrapper === null || typeof wrapper !== 'object' || Array.isArray(wrapper)) {
     throw createCompositeContractError(`${owner.label} received an invalid replay wrapper.`);
   }
+
   const raw = wrapper as Record<string, unknown>;
   const unsupportedKeys = Object.keys(raw).filter(key => !['transforms', 'clip'].includes(key));
   if (unsupportedKeys.length > 0) {
@@ -190,21 +209,26 @@ const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): Com
       `${owner.label} received unsupported replay wrapper fields: ${unsupportedKeys.map(key => `'${key}'`).join(', ')}.`,
     );
   }
+
   const rawTransforms = raw.transforms;
   const rawClip = raw.clip;
   if (rawTransforms !== undefined && !Array.isArray(rawTransforms)) {
     throw createCompositeContractError(`${owner.label} received invalid replay wrapper transforms; expected an array.`);
   }
+
   let parsed: ReturnType<typeof ScopePropsSchema.parse>;
+
   try {
     parsed = ScopePropsSchema.parse(rawClip === undefined ? {} : { clip: rawClip });
   } catch (error) {
     throw createCompositeContractError(`${owner.label} received an invalid replay wrapper clip.`, { cause: error });
   }
+
   const transforms =
     rawTransforms === undefined
       ? undefined
       : Array.from(rawTransforms, (transform, index) => cloneReplayTransform(transform, owner, index));
+
   return {
     ...(transforms === undefined ? {} : { transforms }),
     ...(parsed.clip === undefined ? {} : { clip: parsed.clip }),
@@ -222,15 +246,18 @@ export const createCompositeReplayChild = (
     if (result === null || typeof result !== 'object') {
       throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
     }
+
     const layoutResult = session.layoutResults.get(result);
     if (layoutResult === undefined) {
       throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
     }
+
     if (layoutResult.owner !== owner) {
       throw createCompositeContractError(
         `${owner.label} received a layout result that does not belong to this composite callback.`,
       );
     }
+
     const clonedWrapper = cloneReplayWrapper(wrapper, owner);
     const child: CompositeRuntimeOutputChild = {
       kind: 'replay',
@@ -239,6 +266,7 @@ export const createCompositeReplayChild = (
     };
     const handle = Object.freeze({}) as CompositeCompileChild;
     session.outputChildren.set(handle, { owner, child, used: false });
+
     return handle;
   });
 
@@ -254,6 +282,7 @@ export const createCompositeScopeChild = (
     if (!Array.isArray(children)) {
       throw createCompositeContractError(`${owner.label} received invalid runtime Scope children.`);
     }
+
     const clonedChildren = Array.from(children, (child: unknown, index) => {
       if (child !== null && typeof child === 'object') {
         const entry = session.outputChildren.get(child);
@@ -263,9 +292,11 @@ export const createCompositeScopeChild = (
               `${owner.label} received an output child that does not belong to this composite callback.`,
             );
           }
+
           return child as CompositeCompileChild | CompositeBoundChild;
         }
       }
+
       return snapshotCompositeOutputChild(owner.label, child, index);
     });
     const child: CompositeRuntimeOutputChild = {
@@ -278,6 +309,7 @@ export const createCompositeScopeChild = (
     };
     const handle = Object.freeze({}) as CompositeCompileChild;
     session.outputChildren.set(handle, { owner, child, used: false });
+
     return handle;
   });
 
@@ -290,5 +322,6 @@ export const createCompositeBoundChild = (
   const child = snapshotCompositeLayoutChild(owner.label, scope.source, 0);
   const handle = Object.freeze({}) as CompositeBoundChild;
   session.outputChildren.set(handle, { owner, child: { kind: 'bound', child, runtimeInputs: scope }, used: false });
+
   return handle;
 };

@@ -2,7 +2,6 @@ import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contra
 import type { CanonicalInlineRun } from '../../resolve';
 import { isMathRun } from '../../resolve';
 import { CompileWarningCode } from '../constants';
-import type { CompileWarningCodeValue } from '../warning';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import type { TextFont, TextMeasurer } from './metrics';
 import { normalizeTextMetrics } from './metrics';
@@ -16,6 +15,7 @@ type Round = (n: number) => number;
 
 /** 混排行布局上下文：注入的度量 / 降解 + 块级字体 / 色 + warn 发射器 */
 export type LineLayoutContext = {
+  /** 测量每个文本片段在指定字体下的尺寸 */
   measureText: TextMeasurer;
   /** TeX 降解能力 */
   lowerTex?: LowerTex;
@@ -31,7 +31,8 @@ export type LineLayoutContext = {
    * @default 1
    */
   opacity?: number;
-  warn: (code: CompileWarningCodeValue, message: string) => void;
+  /** 接收混排行布局与公式降解产生的诊断 */
+  warn: (code: CompileWarningCode, message: string) => void;
 };
 
 /** run 自身 opacity 与宿主 opacity 相乘（任一缺省取另一个） */
@@ -89,6 +90,7 @@ type MathPiece = {
    */
   opacity?: number;
 };
+
 type Piece = TextPiece | MathPiece;
 
 /** 把 TeX paint 三态解析为 Scene paint */
@@ -104,6 +106,7 @@ export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayou
   let ascent = 0;
   let descent = 0;
   const pieces: Array<Piece> = [];
+
   for (const run of runs) {
     if (isMathRun(run)) {
       if (!ctx.lowerTex) {
@@ -113,6 +116,7 @@ export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayou
         );
         continue;
       }
+
       const rawLowered = ctx.lowerTex(
         { tex: run.tex, displayMode: run.displayMode },
         { fontSize: ctx.font.size, color: run.fill ?? ctx.color },
@@ -121,6 +125,7 @@ export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayou
         ctx.warn(CompileWarningCode.TexInvalid, `Failed to render inline tex: ${run.tex}`);
         continue;
       }
+
       const lowered = snapshotLoweredTex(rawLowered);
       const above = lowered.height - lowered.depth;
       ascent = Math.max(ascent, above);
@@ -154,12 +159,15 @@ export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayou
       x += m.width;
     }
   }
+
   // 全部 run 被跳过 / 空行：给一个 fontSize 高度的空盒，避免 0 高行
   if (ascent === 0 && descent === 0) {
     ascent = ctx.font.size * ASCENT_FACTOR;
     descent = ctx.font.size * DESCENT_FACTOR;
   }
+
   const isPlain = pieces.every((p): p is TextPiece => p.kind === 'text');
+
   return {
     width: x,
     ascent,
@@ -167,6 +175,7 @@ export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayou
     isPlain,
     emit: (originX, baselineY, round) => {
       const out: Array<ScenePrimitive> = [];
+
       for (const p of pieces) {
         if (p.kind === 'text') {
           const tp: TextPrim = {
@@ -201,17 +210,21 @@ export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayou
               glyph.fill = fill;
               if (path.fillOpacity !== undefined) glyph.fillOpacity = path.fillOpacity;
             }
+
             const stroke = resolveTexPaint(path.stroke, hostColor);
             if (stroke !== undefined) {
               glyph.stroke = stroke;
               if (path.strokeWidth !== undefined) glyph.strokeWidth = path.strokeWidth;
               if (path.strokeOpacity !== undefined) glyph.strokeOpacity = path.strokeOpacity;
             }
+
             const hostOpacity = combineOpacity(p.opacity, ctx.opacity);
             const opacity = combineOpacity(path.opacity, hostOpacity);
             if (opacity !== undefined) glyph.opacity = opacity;
+
             return glyph;
           });
+
           const group: GroupPrim = {
             type: 'group',
             transforms: [{ kind: 'translate', x: round(originX + p.x), y: round(baselineY - (p.height - p.depth)) }],
@@ -220,6 +233,7 @@ export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayou
           out.push(group);
         }
       }
+
       return out;
     },
   };

@@ -63,6 +63,7 @@ export const normalizeRelation = (input: InputRelation): IRGraphRelation => {
     target: normalizeRelationEndpoint(target),
   };
   if (way === undefined) return createRelation(endpointRelation);
+
   return createRelation({
     ...endpointRelation,
     route: normalizePath({ way }).children,
@@ -72,6 +73,7 @@ export const normalizeRelation = (input: InputRelation): IRGraphRelation => {
 /** 将 Graph-family semantic child 或普通 Vanilla child 组装为 Source child */
 export const normalizeGraphChild = (child: InputGraphChild) => {
   if ('namespace' in child) return child;
+
   switch (child.type) {
     case 'graph':
       return normalizeGraph(child);
@@ -99,6 +101,7 @@ export const normalizeGraphChild = (child: InputGraphChild) => {
           details: { label: 'Graph child' },
         });
       }
+
       return normalized.ir.children[0];
     }
   }
@@ -108,6 +111,7 @@ export const normalizeGraphChild = (child: InputGraphChild) => {
 export const normalizeBlockHeader = (input: InputBlockHeader): IRBlockHeader => {
   const { type: _type, icon, trail, ...header } = input;
   void _type;
+
   return createBlockHeader({
     ...header,
     ...(icon === undefined ? {} : { icon: normalizeGraphChild(icon) }),
@@ -119,6 +123,7 @@ export const normalizeBlockHeader = (input: InputBlockHeader): IRBlockHeader => 
 export const normalizeBlockSection = (input: InputBlockSection): IRBlockSection => {
   const { type: _type, children, ...section } = input;
   void _type;
+
   return createBlockSection({
     ...section,
     ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
@@ -131,11 +136,14 @@ export const normalizeBlockRow = (input: InputBlockRow): IRBlockRow => {
     const { type: _type, content, children: _children, ...row } = input;
     void _type;
     void _children;
+
     return createBlockRow({ ...row, content });
   }
+
   const { type: _type, content: _content, children, ...row } = input;
   void _type;
   void _content;
+
   return createBlockRow({
     ...row,
     ...(children === undefined
@@ -150,6 +158,7 @@ export const normalizeBlockRow = (input: InputBlockRow): IRBlockRow => {
 export const normalizeBlock = (input: InputBlock): IRBlock => {
   const { type: _type, children, ...block } = input;
   void _type;
+
   return createBlock({
     ...block,
     ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
@@ -160,6 +169,7 @@ export const normalizeBlock = (input: InputBlock): IRBlock => {
 export const normalizeGroup = (input: InputGroup): IRGroup => {
   const { type: _type, children, ...group } = input;
   void _type;
+
   return createGroup({
     ...group,
     ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
@@ -170,6 +180,7 @@ export const normalizeGroup = (input: InputGroup): IRGroup => {
 export const normalizeGraph = (input: InputGraph): IRGraph => {
   const { type: _type, children, ...graph } = input;
   void _type;
+
   return createGraph({
     ...graph,
     ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),

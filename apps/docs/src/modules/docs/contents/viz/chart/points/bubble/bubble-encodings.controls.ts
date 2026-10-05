@@ -5,6 +5,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { createPointCoordinateSection } from '../point-coordinate-control';
 import { gapminderBubbleData } from './bubble-basic.data';
 import { bubbleEncodingsI18n } from './bubble-encodings.i18n';
+
 /** 只提供当前映射示例的相关控件 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const i18n = bubbleEncodingsI18n[lang];

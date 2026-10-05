@@ -25,8 +25,10 @@ const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: EffectiveL
   if (label.textColor !== undefined || labelDefault.textColor !== undefined || labelDefault.color !== undefined) {
     return false;
   }
+
   const textInherits = typeof label.text === 'string' || label.text.runs.some(run => run.fill === undefined);
   const pinInherits = label.pin === true || (typeof label.pin === 'object' && label.pin.stroke === undefined);
+
   return textInherits || pinInherits;
 };
 
@@ -34,7 +36,9 @@ const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: EffectiveL
 const hasNodeTextColorConsumer = (node: IRNode, labelDefault: EffectiveLabelDefault): boolean => {
   if (bodyInheritsNodeTextColor(node.text)) return true;
   if (node.label === undefined) return false;
+
   const labels = Array.isArray(node.label) ? node.label : [node.label];
+
   return labels.some(label => labelInheritsNodeTextColor(label, labelDefault));
 };
 
@@ -45,6 +49,7 @@ const fallbackTextColor = (reason: string, warn: (code: string, message: string)
     'TEXT_AUTO_CONTRAST_UNRESOLVED',
     `Cannot resolve Node auto-contrast text color: ${reason}; using fallback '${fallback}'`,
   );
+
   return fallback;
 };
 
@@ -65,7 +70,10 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
   return chooseBlackOrWhiteForLuminance(luminance);
 };
 
-/** 解析 Node auto-contrast 关键字，供 layout 消费具体 CSS color */
+/**
+ * 解析 Node auto-contrast 关键字，供 layout 消费具体 CSS color
+ * @template TNode 需要解析对比文字色的节点类型，保留其它节点字段
+ */
 export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
   node: TNode,
   labelDefault: EffectiveLabelDefault,
@@ -77,6 +85,7 @@ export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
     const style = { ...node.style };
     delete style.textColor;
     const resolved = { ...node, style };
+
     return resolved;
   }
 
@@ -87,12 +96,14 @@ export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
       style: { ...node.style, textColor: fallbackTextColor('fill is missing, so the background is unknown', warn) },
     };
   }
+
   if (typeof fill !== 'string') {
     return {
       ...node,
       style: { ...node.style, textColor: fallbackTextColor(`unsupported fill paint kind '${fill.kind}'`, warn) },
     };
   }
+
   const parsedFill = parseStaticCssColor(fill);
   if (!parsedFill) {
     return {
@@ -100,6 +111,7 @@ export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
       style: { ...node.style, textColor: fallbackTextColor(`unsupported fill '${fill}'`, warn) },
     };
   }
+
   const effectiveAlpha = parsedFill.a * (node.style.fillOpacity ?? 1);
   if (effectiveAlpha !== 1) {
     return {

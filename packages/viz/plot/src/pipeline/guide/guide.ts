@@ -19,7 +19,7 @@ import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
-import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
+import type { IRPlotAxisGuide, LegendChannelValue, LegendOrient, LegendPosition } from '../../schemas';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
@@ -45,7 +45,7 @@ import {
   layoutPolarAngularLabel,
 } from '../../shared';
 
-/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 pointAtArcAngle */
+/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 `@retikz/math` 的 pointAtArcAngle */
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 一段直线（首尾两点） */
@@ -59,12 +59,14 @@ type GuideLineStyle = Partial<
 > & {
   drawOpacity?: number;
 };
+
 type GuidePathStyle = Partial<
   Pick<
     NonNullable<IRPath['style']>,
     'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'
   >
 >;
+
 type GuideTextStyle = Partial<
   Pick<
     NonNullable<IRNode['style']> & NonNullable<IRNode['layout']> & Pick<IRNode, 'rotate'>,
@@ -137,25 +139,38 @@ const axisArrowMarkOf = (
 const axisLineMarksOf = (guide: IRPlotAxisGuide): IRPath['marks'] | undefined => {
   const arrow = axisLineTokenOf(guide)?.arrow;
   if (arrow === undefined) return undefined;
+
   const negative = axisArrowMarkOf(arrow.negative);
   const positive = axisArrowMarkOf(arrow.positive);
   const marks: NonNullable<IRPath['marks']> = [];
   if (negative !== null) marks.push(negative);
   if (positive !== null) marks.push({ ...positive, pos: 1 });
+
   return marks.length > 0 ? marks : undefined;
 };
 
 type AxisTicksToken = NonNullable<IRPlotAxisGuide['ticks']>;
+
 type AxisTickMarkToken = Exclude<NonNullable<AxisTicksToken['mark']>, false>;
+
 type AxisShapeTickMarkToken = Exclude<AxisTickMarkToken, { kind: 'line' }>;
+
 type AxisCrossingToken = Exclude<NonNullable<IRPlotAxisGuide['crossing']>, false>;
+
 type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint']>, false>;
+
 type AxisGuideValue = IRDataScalarValue;
+
 type AxisTitleToken = Exclude<NonNullable<IRPlotAxisGuide['title']>, string>;
+
 type AxisTitlePlacementValue = NonNullable<AxisTitleToken['placement']>;
-type AxisTitleOrientationValue = NonNullable<AxisTitleToken['orientation']>;
-type AxisTitleAnchorValue = NonNullable<AxisTitleToken['anchor']>;
+
+type AxisTitleTokenOrientation = NonNullable<AxisTitleToken['orientation']>;
+
+type AxisTitleTokenAnchor = NonNullable<AxisTitleToken['anchor']>;
+
 type AxisTitleShiftValue = NonNullable<AxisTitleToken['shift']>;
+
 type AxisTitleLayoutValue = NonNullable<AxisTitleToken['layout']>;
 
 const axisTickLineMarkOf = (
@@ -169,7 +184,9 @@ const axisTickLineMarkOf = (
       line: guide.ticks?.line === false ? false : lineStyleProps(guide.ticks?.line),
     };
   }
+
   if (mark.kind !== AxisTickMarkKind.Line) return null;
+
   return {
     length: mark.length ?? DEFAULT_AXIS_TICK_LENGTH,
     line: mark.line === false ? false : lineStyleProps(mark.line),
@@ -185,15 +202,19 @@ const shapeMarkSizeOf = (mark: AxisShapeTickMarkToken): { width: number; height:
   const size = mark.size ?? 4;
   const width = mark.width ?? size;
   const height = mark.height ?? size;
+
   return { width, height, offset: mark.offset ?? Math.max(width, height) / 2 };
 };
 
 const axisTickLengthOf = (guide: IRPlotAxisGuide): number => {
   const line = axisTickLineMarkOf(guide);
   if (line !== null) return line === false ? 0 : line.length;
+
   const shape = axisShapeTickMarkOf(guide);
   if (shape === null) return DEFAULT_AXIS_TICK_LENGTH;
+
   const size = shapeMarkSizeOf(shape);
+
   return size.offset + Math.max(size.width, size.height) / 2;
 };
 
@@ -232,6 +253,7 @@ const crossingCornerVectorOf = (corner: AxisCrossingToken['corner']): readonly [
   if (corner === AxisCrossingCorner.TopLeft) return [-1, -1];
   if (corner === AxisCrossingCorner.TopRight) return [1, -1];
   if (corner === AxisCrossingCorner.BottomRight) return [1, 1];
+
   return [-1, 1];
 };
 
@@ -251,12 +273,16 @@ const shouldHideEndpointTickMark = (
   tickLength: number,
 ): boolean => {
   if (guide.ticks?.endpoint === false) return false;
+
   const arrow = axisLineTokenOf(guide)?.arrow;
   if (arrow === undefined) return false;
+
   const endpoint = axisTickEndpointPolicyOf(guide);
   if (endpoint?.hideWhenArrow === false) return false;
+
   const distance = endpoint?.distance ?? tickLength + 6;
   const [negative, positive] = range;
+
   return (
     (hasAxisArrowEnd(arrow.negative) && Math.abs(projected - negative) <= distance) ||
     (hasAxisArrowEnd(arrow.positive) && Math.abs(projected - positive) <= distance)
@@ -280,6 +306,7 @@ const axisTitlePlacementRatioOf = (placement: AxisTitlePlacementValue | undefine
   if (placement === AxisTitlePlacementKeyword.NearEnd) return 0.75;
   if (placement === AxisTitlePlacementKeyword.VeryNearEnd) return 0.875;
   if (placement === AxisTitlePlacementKeyword.AtEnd) return 1;
+
   return 0.5;
 };
 
@@ -298,6 +325,7 @@ const axisTitleRotateOf = (
   if (title.rotate !== undefined) return title.rotate;
   if (title.orientation === AxisTitleOrientation.Horizontal) return 0;
   if (title.orientation === AxisTitleOrientation.Axis && axisTangent !== undefined) return angleOf(axisTangent);
+
   return fallback;
 };
 
@@ -309,6 +337,7 @@ const shiftedAxisTitlePosition = (
 ): [number, number] => {
   const along = shift?.along ?? 0;
   const outward = shift?.normal ?? 0;
+
   return [
     position[0] + tangent[0] * along + normal[0] * outward,
     position[1] + tangent[1] * along + normal[1] * outward,
@@ -316,7 +345,7 @@ const shiftedAxisTitlePosition = (
 };
 
 const axisTitleAnchorAlignTokenOf = (
-  anchor: AxisTitleAnchorValue | undefined,
+  anchor: AxisTitleTokenAnchor | undefined,
 ): 'start' | 'center' | 'end' | undefined => {
   if (anchor === undefined || anchor === AxisTitleAnchor.Auto) return undefined;
   if (typeof anchor === 'string') return anchor;
@@ -331,8 +360,10 @@ const axisTitleAlignOf = (
   if (align === undefined) return undefined;
   if (align === AxisTitleAnchor.Center) return 'middle';
   if (Math.abs(tangent[0]) < Math.abs(tangent[1])) return 'middle';
+
   const positiveDirectionGoesRight = tangent[0] >= 0;
   if (align === AxisTitleAnchor.Start) return positiveDirectionGoesRight ? 'start' : 'end';
+
   return positiveDirectionGoesRight ? 'end' : 'start';
 };
 
@@ -355,6 +386,7 @@ const axisTickShapeRefOf = (mark: AxisShapeTickMarkToken): IRNode['shape'] => {
   if (mark.kind === AxisTickMarkKind.Square) return 'rectangle';
   if (mark.kind === AxisTickMarkKind.Triangle) return { type: 'polygon', params: { sides: 3 } };
   if (mark.kind === AxisTickMarkKind.Diamond) return 'diamond';
+
   return 'shape' in mark ? mark.shape : 'rectangle';
 };
 
@@ -363,16 +395,20 @@ const axisTickShapeRotationOf = (mark: AxisShapeTickMarkToken, placement: TickSh
     if (mark.orientation === AxisTickShapeOrientation.Outward) return angleOf(placement.normal);
     if (mark.orientation === AxisTickShapeOrientation.Inward) return angleOf(placement.normal) + 180;
     if (mark.orientation === AxisTickShapeOrientation.Axis) return angleOf(placement.tangent);
+
     return 0;
   })();
   const rotate = base + (mark.rotate ?? 0);
+
   return rotate === 0 ? undefined : rotate;
 };
 
 const axisTickShapeNodesOf = (guide: IRPlotAxisGuide, placements: ReadonlyArray<TickShapePlacement>): Array<IRNode> => {
   const mark = axisShapeTickMarkOf(guide);
   if (mark === null) return [];
+
   const { width, height, offset } = shapeMarkSizeOf(mark);
+
   return placements.map((placement): IRNode => {
     const rotate = axisTickShapeRotationOf(mark, placement);
     return {
@@ -402,9 +438,13 @@ const axisTickLabelGapOf = (guide: IRPlotAxisGuide): number =>
   guide.tickLabels !== false ? (guide.tickLabels?.gap ?? DEFAULT_AXIS_LABEL_GAP) : DEFAULT_AXIS_LABEL_GAP;
 
 type AxisTickLabelsToken = Exclude<NonNullable<IRPlotAxisGuide['tickLabels']>, false>;
+
 type AxisTickLabelLayoutToken = NonNullable<AxisTickLabelsToken['layout']>;
+
 type AxisTickLabelLayoutObject = Exclude<AxisTickLabelLayoutToken, false>;
+
 type TickLabelLayoutAxis = 'x' | 'y' | 'both';
+
 type TickLabelLayoutMode = 'cartesian-x' | 'cartesian-y' | 'generic';
 
 type TickLabelBox = {
@@ -444,6 +484,7 @@ const rotatedLabelSizeOf = (node: IRNode, fontSize: number, rotate: number): { w
   const radians = Math.abs(rotate) * DEG_TO_RAD;
   const cos = Math.abs(Math.cos(radians));
   const sin = Math.abs(Math.sin(radians));
+
   return { width: width * cos + height * sin, height: width * sin + height * cos };
 };
 
@@ -457,6 +498,7 @@ const nodePointOf = (node: IRNode): [number, number] => {
 const tickLabelBoxOf = (node: IRNode, index: number, fontSize: number, rotate: number): TickLabelBox => {
   const [x, y] = nodePointOf(node);
   const size = rotatedLabelSizeOf(node, fontSize, rotate);
+
   return {
     index,
     node,
@@ -480,6 +522,7 @@ const tickLabelBoxesOverlap = (
   const yOverlap = a.y0 - separation < b.y1 && a.y1 + separation > b.y0;
   if (axis === 'x') return xOverlap;
   if (axis === 'y') return yOverlap;
+
   return xOverlap && yOverlap;
 };
 
@@ -494,7 +537,9 @@ const sampleTickLabelBoxes = (
 ): Array<TickLabelBox> => {
   if (sampleSize === undefined || boxes.length <= sampleSize) return [...boxes];
   if (sampleSize === 1) return [boxes[0]];
+
   const last = boxes.length - 1;
+
   return Array.from({ length: sampleSize }, (_unused, index) => boxes[Math.round((index * last) / (sampleSize - 1))]);
 };
 
@@ -510,13 +555,16 @@ const tickLabelAutoRotateOf = (
   const token = axisTickLabelsTokenOf(guide);
   if (token?.rotate !== undefined) return token.rotate;
   if (layout?.rotate === false) return 0;
+
   const rotate = layout?.rotate;
   const angles = rotate?.angles ?? defaultTickLabelAutoAnglesOf(options.mode);
   const recoverWhenFailed = rotate?.recoverWhenFailed ?? true;
+
   for (const angle of angles) {
     const boxes = sampleTickLabelBoxes(tickLabelBoxesOf(nodes, options.fontSize, angle), layout?.sampleSize);
     if (!hasTickLabelOverlap(boxes, options.axis)) return angle;
   }
+
   return recoverWhenFailed ? 0 : (angles[angles.length - 1] ?? 0);
 };
 
@@ -538,6 +586,7 @@ const flushTickLabelBounds = (
     else if (box.y0 < lo) position[1] += lo - box.y0;
     else if (box.y1 > hi) position[1] -= box.y1 - hi;
   }
+
   return { ...box.node, position };
 };
 
@@ -548,9 +597,11 @@ const applyTickLabelBounds = (
   layout: AxisTickLabelLayoutObject | undefined,
 ): Array<IRNode> => {
   if (range === undefined || axis === 'both' || layout?.bounds === false) return boxes.map(box => box.node);
+
   const bounds = layout?.bounds;
   const overflow = bounds?.overflow ?? AxisTickLabelOverflow.Flush;
   if (overflow === AxisTickLabelOverflow.Allow) return boxes.map(box => box.node);
+
   const tolerance = bounds?.tolerance ?? 1;
   const [lo, hi] = range[0] <= range[1] ? [range[0], range[1]] : [range[1], range[0]];
   if (overflow === AxisTickLabelOverflow.Hide) {
@@ -562,6 +613,7 @@ const applyTickLabelBounds = (
       )
       .map(box => box.node);
   }
+
   return boxes.map(box => flushTickLabelBounds(box, axis, range));
 };
 
@@ -572,15 +624,19 @@ const hideGreedyTickLabels = (
   separation: number,
 ): Array<IRNode> => {
   if (boxes.length <= 2) return boxes.map(box => box.node);
+
   const kept: Array<TickLabelBox> = preserveEnds ? [boxes[0]] : [];
   const last = preserveEnds ? boxes[boxes.length - 1] : undefined;
+
   for (const box of boxes.slice(preserveEnds ? 1 : 0, preserveEnds ? -1 : undefined)) {
     const conflicts =
       kept.some(keptBox => tickLabelBoxesOverlap(keptBox, box, axis, separation)) ||
       (last !== undefined && tickLabelBoxesOverlap(last, box, axis, separation));
     if (!conflicts) kept.push(box);
   }
+
   if (last !== undefined && !kept.includes(last)) kept.push(last);
+
   return kept.sort((a, b) => a.index - b.index).map(box => box.node);
 };
 
@@ -591,12 +647,14 @@ const hideParityTickLabels = (
   separation: number,
 ): Array<IRNode> => {
   if (!hasTickLabelOverlap(boxes, axis, separation)) return boxes.map(box => box.node);
+
   for (let stride = 2; stride < boxes.length; stride *= 2) {
     const picked = boxes.filter(
       (_box, index) => index % stride === 0 || (preserveEnds && (index === 0 || index === boxes.length - 1)),
     );
     if (!hasTickLabelOverlap(picked, axis, separation)) return picked.map(box => box.node);
   }
+
   return hideGreedyTickLabels(boxes, axis, preserveEnds, separation);
 };
 
@@ -607,6 +665,7 @@ const applyTickLabelHide = (
   rotate: number,
 ): Array<IRNode> => {
   if (layout?.hide === false) return [...nodes];
+
   const hide = layout?.hide;
   const strategy = hide?.strategy ?? AxisTickLabelHideStrategy.Greedy;
   const preserveEnds = hide?.preserveEnds ?? true;
@@ -614,6 +673,7 @@ const applyTickLabelHide = (
   const boxes = tickLabelBoxesOf(nodes, options.fontSize, rotate);
   if (strategy === AxisTickLabelHideStrategy.Parity)
     return hideParityTickLabels(boxes, options.axis, preserveEnds, separation);
+
   return hideGreedyTickLabels(boxes, options.axis, preserveEnds, separation);
 };
 
@@ -624,9 +684,11 @@ const alignRotatedTickLabelEndpoint = (
   sideNormal: readonly [number, number] | undefined,
 ): IRNode => {
   if (sideNormal === undefined || rotate === 0) return node;
+
   const size = rotatedLabelSizeOf(node, fontSize, rotate);
   const shift = Math.abs(sideNormal[0]) > 0 ? size.width / 2 : size.height / 2;
   const [x, y] = nodePointOf(node);
+
   return { ...node, position: [x + sideNormal[0] * shift, y + sideNormal[1] * shift] };
 };
 
@@ -636,6 +698,7 @@ const layoutTickLabelNodes = (
   options: TickLabelLayoutOptions,
 ): Array<IRNode> => {
   if (nodes.length === 0) return [];
+
   const token = axisTickLabelsTokenOf(guide) ?? {};
   const layout = token.layout;
   if (layout === false) {
@@ -644,6 +707,7 @@ const layoutTickLabelNodes = (
       .map(node => ({ ...node, ...(token.rotate !== undefined ? { rotate: token.rotate } : {}) }))
       .map(node => alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal));
   }
+
   const layoutObject = layout === undefined ? undefined : layout;
   const rotate = tickLabelAutoRotateOf(guide, nodes, layoutObject, options);
   const hasFixedRotate = token.rotate !== undefined;
@@ -651,7 +715,9 @@ const layoutTickLabelNodes = (
     .map(node => ({ ...node, ...(rotate !== 0 || hasFixedRotate ? { rotate } : {}) }))
     .map(node => alignRotatedTickLabelEndpoint(node, options.fontSize, rotate, options.sideNormal));
   if (nodes.length === 1) return rotated;
+
   const visible = applyTickLabelHide(rotated, layoutObject, options, rotate);
+
   return applyTickLabelBounds(
     tickLabelBoxesOf(visible, options.fontSize, rotate),
     options.axis,
@@ -667,14 +733,15 @@ const axisTitleOf = (
       text: IRNode['text'];
       padding?: number;
       placement?: AxisTitlePlacementValue;
-      orientation?: AxisTitleOrientationValue;
-      anchor?: AxisTitleAnchorValue;
+      orientation?: AxisTitleTokenOrientation;
+      anchor?: AxisTitleTokenAnchor;
       shift?: AxisTitleShiftValue;
       layout?: AxisTitleLayoutValue;
     } & GuideTextStyle)
   | null => {
   if (guide.title === undefined) return null;
   if (typeof guide.title === 'string') return { text: guide.title };
+
   return {
     text: guide.title.text,
     padding: guide.title.padding,
@@ -690,6 +757,7 @@ const axisTitleOf = (
 const textBlockMeasureText = (text: IRNode['text']): string => {
   if (text === undefined) return '';
   if (typeof text === 'string') return text;
+
   return text
     .map(line => {
       if (typeof line === 'string') return line;
@@ -700,7 +768,9 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
 };
 
 type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
+
 type AxisMinorGridToken = Exclude<NonNullable<AxisGridToken['minor']>, false>;
+
 type AxisGridTickOptions = Pick<AxisGridToken, 'ticks' | 'density' | 'includeDomain' | 'bandPosition'>;
 
 const axisGridTokenOf = (guide: IRPlotAxisGuide): AxisGridToken | undefined =>
@@ -745,6 +815,7 @@ const resolveAxisGridCoordinates = (
       ? candidateTicks
       : resolveVisibleGuideTicks(candidateTicks, { density: options.density }, coordinate);
   const coordinates = visibleTicks.values.map(coordinate);
+
   return options?.includeDomain === true ? appendMissingScaleRangeBoundaries(scale, coordinates) : coordinates;
 };
 
@@ -762,10 +833,12 @@ const filterOverlappingGridCoordinates = (
 /** 把若干直线段拼成一条多子路径 Path（每段一对 move/line）；空段返回 null */
 const segmentsToPath = (segments: Array<Segment>, style?: GuideLineStyle): IRPath | null => {
   if (segments.length === 0) return null;
+
   const steps: Array<IRStep> = segments.flatMap(([from, to]) => [
     { type: 'step', kind: 'move', to: [from[0], from[1]] },
     { type: 'step', kind: 'line', to: [to[0], to[1]] },
   ]);
+
   return { type: 'path', style: lineStyleProps(style), children: steps };
 };
 
@@ -785,6 +858,7 @@ const cartesianAxisSideFromEdge = (edge: string): CartesianAxisSide => {
       `lowerPlots: cartesian axis edge placement must be one of top, right, bottom, or left (got "${edge}")`,
     );
   }
+
   return edge;
 };
 
@@ -794,6 +868,7 @@ const assertCartesianAxisSideCompatible = (side: CartesianAxisSide, isX: boolean
       `lowerPlots: cartesian x axis only supports top or bottom side placement (got "${side}")`,
     );
   }
+
   if (!isX && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
     throw new RetikzPlotError(
       `lowerPlots: cartesian y axis only supports left or right side placement (got "${side}")`,
@@ -806,6 +881,7 @@ const cartesianAxisSideOf = (guide: IRPlotAxisGuide, isX: boolean): CartesianAxi
   if (placement === undefined || placement.kind === AxisPlacementKind.Auto) {
     return isX ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;
   }
+
   const side =
     placement.kind === AxisPlacementKind.Edge
       ? cartesianAxisSideFromEdge(placement.edge)
@@ -816,11 +892,14 @@ const cartesianAxisSideOf = (guide: IRPlotAxisGuide, isX: boolean): CartesianAxi
     if (isX && side !== AxisCardinalSide.Top && side !== AxisCardinalSide.Bottom) {
       throw new RetikzPlotError(`lowerPlots: cartesian x origin axis tickSide must be top or bottom (got "${side}")`);
     }
+
     if (!isX && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
       throw new RetikzPlotError(`lowerPlots: cartesian y origin axis tickSide must be left or right (got "${side}")`);
     }
   }
+
   assertCartesianAxisSideCompatible(side, isX);
+
   return side;
 };
 
@@ -835,7 +914,7 @@ const axisPlacementOffsetOf = (guide: IRPlotAxisGuide): number =>
 const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number => (side === AxisCardinalSide.Right ? -90 : 90);
 
 /**
- * 极坐标点投影的窄返回值 helper。
+ * 极坐标点投影的窄返回值 helper
  * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露
  */
 const finitePolarPoint = (center: Position, angleDeg: number, radius: number): Position =>
@@ -853,7 +932,9 @@ const guideScopeProps = (
 ): { id?: string; meta?: ReturnType<typeof guideLayerMeta>; zIndex: number } => {
   const zIndex = layer === 'grid' ? PlotLayerZIndex.Grid : (guide.layer?.zIndex ?? PlotLayerZIndex.Axis);
   if (!context) return { ...(layer === 'axis' && guide.id ? { id: guide.id } : {}), zIndex };
+
   const id = guideLayerId(context.plotId, guide.id, layer, guide.dimension, guide.coordinateView);
+
   return { ...(id !== undefined ? { id } : {}), meta: guideLayerMeta(layer, guide.dimension), zIndex };
 };
 
@@ -903,6 +984,7 @@ const lowerCartesianGuide = (
     if (extent !== undefined && extent !== AxisLineExtentTarget.PlotArea) {
       const from = project.coordinate(extent.from);
       const to = project.coordinate(extent.to);
+
       return isX
         ? [
             [from, axisY],
@@ -913,6 +995,7 @@ const lowerCartesianGuide = (
             [axisX, to],
           ];
     }
+
     return isX
       ? [
           [left, axisY],
@@ -926,6 +1009,7 @@ const lowerCartesianGuide = (
   const axisRange: readonly [number, number] = isX
     ? [axisLine[0][0], axisLine[1][0]]
     : [axisLine[0][1], axisLine[1][1]];
+
   const tickEntries = ticks.values.map((value, index) => ({
     value,
     label: ticks.labels[index],
@@ -953,6 +1037,7 @@ const lowerCartesianGuide = (
       ? { point: [p, axisY], normal: [0, tickDirection], tangent: [1, 0] }
       : { point: [axisX, p], normal: [tickDirection, 0], tangent: [0, -1] };
   });
+
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
   const axisLinePath =
@@ -965,12 +1050,14 @@ const lowerCartesianGuide = (
         })();
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
+
   const labels: Array<IRNode> = showLabels
     ? (() => {
         const cornerLabels: Array<IRNode> = [];
         const layoutLabels = tickEntries.flatMap((entry): Array<IRNode> => {
           if (shouldHideCrossingTickLabel(guide, entry.value)) return [];
           if (shouldHideEndpointTickLabel(guide, entry.projected, axisRange, tickLength)) return [];
+
           const p = entry.projected;
           const text = entry.label;
           const isCornerLabel = shouldUseCrossingCornerLabel(guide, entry.value);
@@ -978,10 +1065,12 @@ const lowerCartesianGuide = (
             if (isCornerLabel) {
               const vector = crossingCornerVectorOf(axisCrossingTokenOf(guide)?.corner);
               const distance = tickLength + tickLabelGap + fontSize / 2;
+
               return isX
                 ? [p + vector[0] * distance, axisY + vector[1] * distance]
                 : [axisX + vector[0] * distance, p + vector[1] * distance];
             }
+
             return isX
               ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
               : [axisX + tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2), p];
@@ -991,8 +1080,10 @@ const lowerCartesianGuide = (
             cornerLabels.push(node);
             return [];
           }
+
           return [node];
         });
+
         return [
           ...layoutTickLabelNodes(guide, layoutLabels, {
             fontSize,
@@ -1009,6 +1100,7 @@ const lowerCartesianGuide = (
   const titleNode = ((): IRNode | null => {
     const title = axisTitleOf(guide);
     if (title === null) return null;
+
     const titlePadding = title.padding ?? labelGap;
     const yLabelBandWidth =
       showLabels && ticks.labels.length > 0
@@ -1028,6 +1120,7 @@ const lowerCartesianGuide = (
     const position = shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift);
     const rotate = axisTitleRotateOf(title, isX ? undefined : cartesianYAxisTitleRotateOf(side), axisTangent);
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
+
     return {
       type: 'node',
       position,
@@ -1036,6 +1129,7 @@ const lowerCartesianGuide = (
       ...(rotate !== undefined ? { rotate } : {}),
     };
   })();
+
   const axisChildren: Array<IRPath | IRNode> = [
     ...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>),
     ...tickShapeNodes,
@@ -1082,6 +1176,7 @@ const lowerCartesianGuide = (
           ];
     });
     const gridPath = segmentsToPath(gridSegments, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
+
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
     const minorTicks =
@@ -1108,6 +1203,7 @@ const lowerCartesianGuide = (
                 ];
           });
     const minorGridPath = segmentsToPath(minorSegments, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
+
     const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
     if (gridChildren.length > 0) {
       gridLayer = {
@@ -1162,19 +1258,23 @@ const lowerAngularAxis = (
     const theta = scale.coordinate(value);
     const point = finitePolarPoint(frame.center, theta, outer);
     const radians = theta * DEG_TO_RAD;
+
     return { point, normal: [Math.cos(radians), Math.sin(radians)], tangent: [-Math.sin(radians), Math.cos(radians)] };
   });
+
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
   const fixedRadiusAxis = fixedRadiusPath(frame, outer);
+
   const axisChildren: Array<IRPath | IRNode> =
     axisLineStyle === false || fixedRadiusAxis === null
       ? []
       : [{ ...fixedRadiusAxis, style: { ...fixedRadiusAxis.style, ...lineStyleProps(axisLineStyle) } }];
   if (tickPath) axisChildren.push(tickPath);
   axisChildren.push(...tickShapeNodes);
+
   const labels: Array<IRNode> = showLabels
     ? layoutTickLabelNodes(
         guide,
@@ -1188,6 +1288,7 @@ const lowerAngularAxis = (
             fontSize,
             tickLength + tickLabelGap,
           );
+
           return {
             type: 'node',
             position: labelLayout.position,
@@ -1198,6 +1299,7 @@ const lowerAngularAxis = (
         { fontSize, mode: 'generic', axis: 'both' },
       )
     : [];
+
   const title = axisTitleOf(guide);
   if (title !== null) {
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
@@ -1249,6 +1351,7 @@ const lowerAngularAxis = (
       return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
     });
     const gridPath = segmentsToPath(spokes, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
+
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
     const minorTicks =
@@ -1270,6 +1373,7 @@ const lowerAngularAxis = (
             ];
           });
     const minorGridPath = segmentsToPath(minorSpokes, { drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) });
+
     const gridChildren = [gridPath, minorGridPath].filter((path): path is IRPath => path !== null);
     if (gridChildren.length > 0) {
       gridLayer = {
@@ -1308,6 +1412,7 @@ const lowerRadialAxis = (
   const tickLabelGap = axisTickLabelGapOf(guide);
   const tickLabelStyle = axisTickLabelStyleOf(guide);
   const showLabels = tickLabelStyle !== false;
+
   // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致
   // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）
   const tangent: [number, number] = [-Math.sin(baseAngle * DEG_TO_RAD), Math.cos(baseAngle * DEG_TO_RAD)];
@@ -1325,17 +1430,20 @@ const lowerRadialAxis = (
   const tickShapePlacements: Array<TickShapePlacement> = ticks.values.map(value => {
     const radius = scale.coordinate(value);
     const point = finitePolarPoint(frame.center, baseAngle, radius);
+
     return {
       point,
       normal: [-tangent[0], -tangent[1]],
       tangent: [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)],
     };
   });
+
   const axisLineStyle = axisLineStyleOf(guide);
   const tickLineStyle = axisTickLineStyleOf(guide);
   const axisLinePath = axisLineStyle === false ? null : segmentsToPath([axisLine], axisLineStyle);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
+
   const labels: Array<IRNode> = showLabels
     ? layoutTickLabelNodes(
         guide,
@@ -1343,14 +1451,17 @@ const lowerRadialAxis = (
           const radius = scale.coordinate(value);
           const point = finitePolarPoint(frame.center, baseAngle, radius);
           const text = ticks.labels[index];
+
           // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
           const offset = tickLength + tickLabelGap + fontSize / 2;
           const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
+
           return { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle) };
         }),
         { fontSize, mode: 'generic', axis: 'both' },
       )
     : [];
+
   const title = axisTitleOf(guide);
   if (title !== null) {
     const placementRatio = axisTitlePlacementRatioOf(title.placement);
@@ -1413,6 +1524,7 @@ const lowerRadialAxis = (
           ? []
           : [{ ...path, style: { ...path.style, ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }) } }];
       });
+
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
     const minorTicks =
@@ -1440,6 +1552,7 @@ const lowerRadialAxis = (
                     },
                   ];
             });
+
     const gridChildren = [...rings, ...minorRings];
     if (gridChildren.length > 0) {
       gridLayer = {
@@ -1461,10 +1574,12 @@ const lowerRadialAxis = (
 /** 把一串屏幕点连成一条折线 Path（move + line steps）；点数 < 2 返回 null */
 const polylinePath = (points: ReadonlyArray<readonly [number, number]>): IRPath | null => {
   if (points.length < 2) return null;
+
   const steps: Array<IRStep> = [
     { type: 'step', kind: 'move', to: [points[0][0], points[0][1]] },
     ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: [point[0], point[1]] })),
   ];
+
   return { type: 'path', children: steps };
 };
 
@@ -1487,14 +1602,17 @@ export const lowerCustomAxis = (
   if (guide.placement?.kind === AxisPlacementKind.Origin) {
     throw new RetikzPlotError('lowerPlots: origin axis placement is only supported for cartesian axes');
   }
+
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
+
   const candidateTicks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels || undefined);
   const ticks = resolveVisibleGuideTicks(candidateTicks, guide.ticks, value => scale.coordinate(value));
   const numericTicks = ticks.values
     .map((value, index) => ({ value: Number(value), label: ticks.labels[index] }))
     .filter(tick => Number.isFinite(tick.value));
   if (numericTicks.length === 0) return { gridLayer: null, axisLayer: null };
+
   const tickLength = axisTickLengthOf(guide);
   const tickLabelGap = axisTickLabelGapOf(guide);
   const tickLabelStyle = axisTickLabelStyleOf(guide);
@@ -1506,6 +1624,7 @@ export const lowerCustomAxis = (
     const roleScale = frame.roleScales?.[role];
     return roleScale ? roleScale.ticks().values[0] : 0;
   };
+
   const projectAt = (value: number): [number, number] | null =>
     frame.projectRoles(frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role))));
 
@@ -1515,34 +1634,43 @@ export const lowerCustomAxis = (
 
   // 轴线：在维度范围内密采样连折线（任意投影曲线）
   const linePoints: Array<[number, number]> = [];
+
   for (let i = 0; i <= CUSTOM_AXIS_SAMPLES; i += 1) {
     const point = projectAt(lo + (span * i) / CUSTOM_AXIS_SAMPLES);
     if (point) linePoints.push(point);
   }
+
   const axisLinePath = polylinePath(linePoints);
 
   // 刻度 + 标签：沿局部切向的法线摆。切向优先取工厂回传的解析 frameAlong，缺则邻近采样数值差分回落
   const epsilon = span === 0 ? 1 : span * 1e-3;
   const valuesAt = (value: number): Array<unknown> =>
     frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role)));
+
   // 该刻度点的 [屏幕点, 切向]：有 frameAlong 用解析切向，否则中心差分；非有限 → null
   const pointAndTangent = (value: number): [[number, number], [number, number]] | null => {
     if (frame.frameAlong) {
       const local = frame.frameAlong(guide.dimension, valuesAt(value));
       return local ? [local.origin, local.tangent] : null;
     }
+
     const point = projectAt(value);
     if (!point) return null;
+
     const before = projectAt(value - epsilon) ?? point;
     const after = projectAt(value + epsilon) ?? point;
+
     return [point, [after[0] - before[0], after[1] - before[1]]];
   };
+
   const tickSegments: Array<Segment> = [];
   const tickShapePlacements: Array<TickShapePlacement> = [];
   const tickLabelNodes: Array<IRNode> = [];
+
   for (const tick of numericTicks) {
     const resolved = pointAndTangent(tick.value);
     if (!resolved) continue;
+
     const [point, tangent] = resolved;
     const length = Math.hypot(tangent[0], tangent[1]) || 1;
     const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
@@ -1559,6 +1687,7 @@ export const lowerCustomAxis = (
       });
     }
   }
+
   const labels: Array<IRNode> = layoutTickLabelNodes(guide, tickLabelNodes, {
     fontSize,
     mode: 'generic',
@@ -1612,6 +1741,7 @@ export const lowerCustomAxis = (
       },
     },
   };
+
   return { gridLayer: null, axisLayer };
 };
 
@@ -1625,14 +1755,17 @@ export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: 
   if (ctx.frame) {
     assertNoCartesianOnlyAxisLineGeometry(guide);
   }
+
   if (guide.placement?.kind === AxisPlacementKind.Origin && ctx.frame) {
     throw new RetikzPlotError('lowerPlots: origin axis placement is only supported for cartesian axes');
   }
+
   if (ctx.frame) {
     return isPrimaryDimension(guide.dimension)
       ? lowerAngularAxis(guide, ctx, ctx.frame, context)
       : lowerRadialAxis(guide, ctx, ctx.frame, context);
   }
+
   return lowerCartesianGuide(guide, ctx, context);
 };
 
@@ -1640,14 +1773,19 @@ export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: 
 
 /** legend swatch 边长（user units）；离散色块 / 形状框 / size 符号格的基准格尺寸 */
 export const LEGEND_SWATCH_SIZE = 14;
+
 /** legend swatch 到标签的水平间距（user units） */
 export const LEGEND_LABEL_GAP = 6;
+
 /** legend 条目间的行 / 列距（user units） */
 export const LEGEND_ENTRY_GAP = 6;
+
 /** legend 标题到首条目的间距（user units） */
 export const LEGEND_TITLE_GAP = 6;
+
 /** 连续色带 ramp 的长边长度（user units） */
 export const LEGEND_RAMP_LENGTH = 100;
+
 /** 连续色带 ramp 的短边宽度（user units） */
 export const LEGEND_RAMP_THICKNESS = 12;
 
@@ -1658,7 +1796,12 @@ export const LEGEND_RAMP_THICKNESS = 12;
  */
 export type LegendEntry = {
   /** 按声明顺序叠加的分类图例符号 */
-  symbols?: Array<{ kind: 'point' | 'line'; paint: NonNullable<NonNullable<IRNode['style']>['fill']> }>;
+  symbols?: Array<{
+    /** 选择点状或线状图例符号 */
+    kind: 'point' | 'line';
+    /** 该符号与实际图元共用的绘制输入 */
+    paint: NonNullable<NonNullable<IRNode['style']>['fill']>;
+  }>;
   /** 条目标签（类别串 / 代表值 / 区间） */
   label: string;
   /** 色块填充色（color / 分箱 swatch） */
@@ -1678,7 +1821,12 @@ export type LegendRamp = {
   /** 渐变 stop（喂 core linearGradient paint server） */
   stops: Array<IRGradientStop>;
   /** 沿带刻度标签（offset 0..1） */
-  ticks: Array<{ offset: number; label: string }>;
+  ticks: Array<{
+    /** 刻度在连续色带上的归一化位置 */
+    offset: number;
+    /** 该刻度显示的格式化文字 */
+    label: string;
+  }>;
 };
 
 /**
@@ -1698,9 +1846,9 @@ export type LowerLegendOptions = {
   /** 连续色带（form==='ramp'） */
   ramp?: LegendRamp;
   /** 摆放位置（预留带所在边） */
-  position: LegendPositionValue;
+  position: LegendPosition;
   /** 条目排布方向 */
-  orient: LegendOrientValue;
+  orient: LegendOrient;
   /** label 字号 */
   fontSize: number;
   /** 预留带矩形（plotArea 旁的 legend 带；条目从带左上角起摆） */
@@ -1753,6 +1901,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
     label: labelStyle,
   } = options.style;
   const children: Array<IRNode> = [];
+
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
   if (options.title !== undefined) {
@@ -1776,10 +1925,12 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
     const ramp = vertical
       ? rectNode(rampX, rampY, rampThickness, rampLength)
       : rectNode(rampX, rampY, rampLength, rampThickness);
+
     // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
     const angle = vertical ? 90 : 0;
     ramp.style = { ...ramp.style, fill: { kind: 'linearGradient', stops: options.ramp.stops, angle } };
     children.push(ramp);
+
     // 沿带刻度标签
     for (const tick of options.ramp.ticks) {
       const position: [number, number] = vertical
@@ -1795,6 +1946,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
     const vertical = orient === 'vertical';
     let cursorX = band.x;
     let rowY = cursorY;
+
     for (const entry of options.entries) {
       const symbolSide =
         entry.radius !== undefined
@@ -1843,8 +1995,10 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
           swatch.style = { ...swatch.style, fill: 'currentColor' };
           swatch.style = { ...swatch.style, fillOpacity: entry.opacity };
         }
+
         children.push(swatch);
       }
+
       // 标签：swatch 右侧
       const labelX = cursorX + symbolSide + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;
       const labelY = rowY + symbolSide / 2;

@@ -116,6 +116,7 @@ describe('Entity lowering', () => {
 
       expect(appearance).toMatchObject({ style: { color } });
       expect(appearance.style?.dashPattern).toEqual(dashPattern);
+
       const lowered = Graph.lowerEntity(canonical, appearance);
 
       expect(lowered.style?.dashPattern).toEqual(dashPattern);
@@ -152,6 +153,7 @@ describe('Entity lowering', () => {
     );
 
     const scene = JSON.stringify(output.scene);
+
     expect(scene).toContain('#7c3aed');
     expect(scene).not.toContain(theme.colors.semantic.error);
   });

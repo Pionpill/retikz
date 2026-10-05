@@ -66,6 +66,7 @@ const compile = (
   );
   const gridArtifact = artifact.elements[0];
   if (gridArtifact.kind !== 'layout') throw new Error('Expected Layout artifact');
+
   return { result, grid: gridArtifact, children: gridArtifact.elements };
 };
 
@@ -78,10 +79,13 @@ describe('Flow Grid', () => {
       ]);
       const vertical = compile(layout, 'right', 0, {}, [{ source: 'a', target: 'c', label: 'Vertical' }]);
       const [a, b, c, d] = horizontal.children.map(child => child.bounds);
+
       expect(b.x - a.x - a.width).toBeGreaterThanOrEqual(25 * 8 + 17);
       expect(a.x + a.width / 2).toBeCloseTo(c.x + c.width / 2, 8);
       expect(b.x + b.width / 2).toBeCloseTo(d.x + d.width / 2, 8);
+
       const [top, , bottom] = vertical.children.map(child => child.bounds);
+
       expect(bottom.y - top.y - top.height).toBeGreaterThanOrEqual(12);
     },
   );
@@ -89,6 +93,7 @@ describe('Flow Grid', () => {
   it('applies the same measured label constraints for a custom provider', () => {
     const provider = defineFlowLayout({ ...LayeredFlowLayoutDefinition, name: 'custom-labels' });
     const relations = [{ source: 'b', target: 'a', label: 'x'.repeat(40) }];
+
     expect(
       compile(layout, 'right', 17, { flowLayouts: [provider], defaultFlowLayout: provider.name }, relations).children,
     ).toEqual(compile(layout, 'right', 17, {}, relations).children);
@@ -99,6 +104,7 @@ describe('Flow Grid', () => {
     const baseline = compile(configured);
     const horizontal = compile(configured, 'right', 17, {}, [{ source: 'a', target: 'b', label: 'xy' }]);
     const vertical = compile(configured, 'right', 17, {}, [{ source: 'a', target: 'c', label: 'xy' }]);
+
     expect(horizontal.grid.bounds.width - baseline.grid.bounds.width).toBe(16);
     expect(vertical.grid.bounds.height - baseline.grid.bounds.height).toBeCloseTo(16.8, 8);
   });
@@ -110,6 +116,7 @@ describe('Flow Grid', () => {
       { source: 'a', target: 'b', label: 'long label' },
       { source: 'a', target: 'c', label: 'long label' },
     ]);
+
     expect(labeled.grid.bounds).toEqual(baseline.grid.bounds);
     expect(labeled.children).toEqual(baseline.children);
   });
@@ -124,19 +131,26 @@ describe('Flow Grid', () => {
     };
     const baseline = compile(sparse, 'right', 100);
     const short = compile(sparse, 'right', 100, {}, [{ source: 'a', target: 'b', label: 'x' }]);
+
     expect(short.children[1].bounds.x - baseline.children[1].bounds.x).toBe(24);
+
     const relations = [
       { source: 'a', target: 'b', label: 'x'.repeat(100) },
       { source: 'c', target: 'd', label: 'short' },
     ];
     const first = compile(sparse, 'right', 0, {}, relations);
     const reversed = compile(sparse, 'right', 0, {}, [...relations].reverse());
+
     expect(first.children).toEqual(reversed.children);
+
     const [a, b] = first.children.map(child => child.bounds);
+
     expect(b.x - a.x - a.width).toBeGreaterThanOrEqual(2400);
   });
+
   it('declares both placement kinds in the builtin catalog and rejects unsupported kinds before callbacks', () => {
     expect(getFlowLayoutCatalog()[0].capabilities.placementKinds).toEqual(['linear', 'grid']);
+
     let calls = 0;
     const linear = defineFlowLayout({
       ...LayeredFlowLayoutDefinition,
@@ -147,6 +161,7 @@ describe('Flow Grid', () => {
         return LayeredFlowLayoutDefinition.layout(input, context);
       },
     });
+
     expect(() => compile(layout, 'right', 17, { flowLayouts: [linear], defaultFlowLayout: linear.name })).toThrow();
     expect(calls).toBe(0);
   });
@@ -159,6 +174,7 @@ describe('Flow Grid', () => {
         name: 'invalid-kinds',
         capabilities: { ...LayeredFlowLayoutDefinition.capabilities, placementKinds },
       });
+
       expect(() => getFlowLayoutCatalog({ flowLayouts: [provider] })).toThrow();
     },
   );
@@ -178,13 +194,17 @@ describe('Flow Grid', () => {
           },
           placeLayout: placement => {
             calls += 1;
+
             expect(placement.layout.kind).toBe('grid');
+
             if (placement.layout.kind === 'grid') expect(placement.layout.reserveLabelSpace).toBe(true);
+
             return context.placeLayout(placement);
           },
         }),
     });
     const customResult = compile(layout, 'right', 17, { flowLayouts: [custom], defaultFlowLayout: custom.name });
+
     expect(calls).toBe(1);
     expect(customResult.children).toEqual(compile().children);
   });
@@ -214,9 +234,11 @@ describe('Flow Grid', () => {
             }),
         }),
     });
+
     expect(() =>
       compile(layout, 'right', 17, { flowLayouts: [changedCells], defaultFlowLayout: changedCells.name }),
     ).toThrow();
+
     const shifted = defineFlowLayout({
       ...LayeredFlowLayoutDefinition,
       name: 'shift-child',
@@ -230,16 +252,20 @@ describe('Flow Grid', () => {
         };
       },
     });
+
     expect(() => compile(layout, 'right', 17, { flowLayouts: [shifted], defaultFlowLayout: shifted.name })).toThrow();
   });
+
   it('round-trips Grid placement rows without deriving containment or sorting children', () => {
     const source = FlowLayoutSchema.parse({ ...layout, gap: { row: 12, column: 24 } });
+
     expect(FlowLayoutSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
   });
 
   it('uses a numeric Grid gap for both axes and accepts a complete axis object', () => {
     const numeric = compile({ ...layout, gap: 24 }, 'right', 0);
     const axes = compile({ ...layout, gap: { row: 24, column: 24 } }, 'right', 0);
+
     expect(numeric.children).toEqual(axes.children);
     expect(compile({ ...layout, gap: { row: 0, column: 24 } }, 'right', 0).grid.bounds.height).toBeLessThan(
       numeric.grid.bounds.height,
@@ -264,7 +290,9 @@ describe('Flow Grid', () => {
       placements: objectPlacements,
     };
     const parsed = FlowLayoutSchema.safeParse(source);
+
     expect(parsed.success).toBe(true);
+
     if (!parsed.success || parsed.data.kind !== 'grid') return;
 
     expect(parsed.data.placements).toEqual(source.placements);
@@ -336,7 +364,9 @@ describe('Flow Grid', () => {
         ['c', null],
       ],
     });
+
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) expect(parsed.error.issues.map(issue => issue.path)).toContainEqual(['placements']);
   });
 
@@ -345,6 +375,7 @@ describe('Flow Grid', () => {
     direction => {
       const { children } = compile(layout, direction);
       const [a, b, c, d] = children.map(child => child.bounds);
+
       expect(a.x + a.width / 2).toBeCloseTo(c.x + c.width / 2, 8);
       expect(b.x + b.width / 2).toBeCloseTo(d.x + d.width / 2, 8);
       expect(a.y + a.height / 2).toBeCloseTo(b.y + b.height / 2, 8);
@@ -360,6 +391,7 @@ describe('Flow Grid', () => {
     const implicit = compile().grid.bounds;
     const explicit = compile({ ...layout, gap: 17 }).grid.bounds;
     const zero = compile({ ...layout, gap: 0 }).grid.bounds;
+
     expect(implicit).toEqual(explicit);
     expect(explicit.width - zero.width).toBeCloseTo(17, 8);
     expect(explicit.height - zero.height).toBeCloseTo(17, 8);
@@ -373,6 +405,7 @@ describe('Flow Grid', () => {
     };
     const dense = compile();
     const result = compile(sparse);
+
     expect(result.children.map(child => child.id)).toEqual(['d', 'c', 'b', 'a']);
     expect(result.grid.bounds.width - dense.grid.bounds.width).toBeCloseTo(17, 8);
     expect(result.grid.bounds.height - dense.grid.bounds.height).toBeCloseTo(17, 8);

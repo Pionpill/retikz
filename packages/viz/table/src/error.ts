@@ -10,12 +10,12 @@ export const RetikzTableErrorCode = {
 } as const;
 
 /** Table 包稳定错误码取值 */
-export type RetikzTableErrorCodeValue = ValueOf<typeof RetikzTableErrorCode>;
+export type RetikzTableErrorCode = ValueOf<typeof RetikzTableErrorCode>;
 
 /** Table 包运行时错误的可选构造参数 */
 export type RetikzTableErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzTableErrorCodeValue;
+  code: RetikzTableErrorCode;
   /** 面向调用方的错误消息 */
   message?: string;
   /** 失败上下文的结构化详情 */
@@ -27,7 +27,7 @@ export type RetikzTableErrorOptions = Readonly<{
 type RetikzTableErrorCauseOptions = Readonly<Pick<RetikzTableErrorOptions, 'cause'>>;
 
 /** Table 包统一的结构化错误 */
-export class RetikzTableError extends RetikzError<RetikzTableErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzTableError extends RetikzError<RetikzTableErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 Table 错误 */
   constructor(message: string, options?: RetikzTableErrorCauseOptions);
   /** 使用结构化参数创建 Table 错误 */

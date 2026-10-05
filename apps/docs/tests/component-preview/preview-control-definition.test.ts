@@ -75,6 +75,7 @@ describe('preview controls definition', () => {
         },
       ],
     });
+
     expect(getPreviewControlFields(definition).map(field => field.id)).toEqual(['title']);
     expect(buildPreviewControlDefaults(definition)).toEqual({ title: 'Cities' });
   });
@@ -114,6 +115,7 @@ describe('preview controls definition', () => {
         },
       ],
     });
+
     expect(getPreviewControlFields(definition).map(field => field.id)).toEqual(['factor']);
     expect(buildPreviewControlDefaults(definition)).toEqual({ factor: 2 });
   });

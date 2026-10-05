@@ -9,6 +9,7 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import type { previewControls } from './flow-orthogonal.controls';
 import { flowOrthogonalI18n } from './flow-orthogonal.i18n';
 import { createObstacleLayout } from './obstacle-layout';
+
 /** 固定矩形起终点，移动椭圆障碍观察自动选路 */
 export const renderFlowOrthogonalPreview = (
   values: PreviewControlValuesFor<typeof previewControls>,

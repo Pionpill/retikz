@@ -21,22 +21,23 @@ export type InputPlotAxis = {
   tickLabels?: IRPlotAxisGuide['tickLabels'];
   /** 是否画对齐本轴刻度的网格线，以及在组合坐标中投放到哪些目标；缺省 = false */
   grid?: IRPlotAxisGuide['grid'];
+  /** 选择坐标轴所属的具名坐标视图 */
   coordinateView?: string;
+  /** 将坐标轴限定到指定分面 */
   facetId?: string;
+  /** 选择坐标轴所属的共享坐标骨架 */
   scaffoldId?: string;
+  /** 在共享坐标骨架中选择目标轨道 */
   trackId?: string;
+  /** 控制轴线的放置侧或交叉位置 */
   placement?: IRPlotAxisGuide['placement'];
+  /** 坐标轴标题的内容与外观 */
   title?: IRPlotAxisGuide['title'];
   /** 语义图层覆盖；控制坐标轴外层 scope 在 plot 内的 zIndex */
   layer?: IRPlotAxisGuide['layer'];
   /** 可选 guide 句柄，用于稳定标识生成的坐标轴 */
   id?: string;
 };
-
-/**
- * 坐标轴声明组件
- * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 IRPlot.guides
- */
 
 /** <PlotLegend> props：图例配置；channel 指定非位置通道，颜色形态来自 scale，其它形态来自 ChannelDefinition.legend */
 export type InputPlotLegend = {

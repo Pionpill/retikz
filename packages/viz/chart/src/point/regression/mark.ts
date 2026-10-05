@@ -11,6 +11,7 @@ import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
 import { RegressionChartMarkSchema, RegressionTrendCurveSchema } from './schema';
 
 const trendXField = pointRecipeId('regression', 'trend.x');
+
 const trendYField = pointRecipeId('regression', 'trend.y');
 
 type RegressionSeriesMapping = Readonly<{
@@ -20,10 +21,13 @@ type RegressionSeriesMapping = Readonly<{
 
 const seriesMappingOf = (encodings: JsonObject): RegressionSeriesMapping | undefined => {
   if (!Object.hasOwn(encodings, 'series')) return undefined;
+
   const value = encodings.series;
   const fallbackScale = pointRecipeId('regression', 'scale.series');
   if (typeof value === 'string') return { field: value, scale: fallbackScale };
+
   const mapping = value as JsonObject;
+
   return {
     field: mapping.field as string,
     scale: typeof mapping.scale === 'string' ? mapping.scale : fallbackScale,
@@ -40,15 +44,18 @@ const regressionPropertiesOf = (
   if (inherited.point !== undefined || explicit.point !== undefined) {
     properties.point = { ...(inherited.point ?? {}), ...(explicit.point ?? {}) };
   }
+
   if (inherited.trend !== undefined || explicit.trend !== undefined) {
     properties.trend = { ...(inherited.trend ?? {}), ...(explicit.trend ?? {}) };
   }
+
   return properties;
 };
 
 const constantPathPropertiesOf = (properties: IRRegressionChartProperties): JsonObject => {
   const trend = properties.trend ?? {};
   const result: JsonObject = {};
+
   for (const name of [
     'strokeWidth',
     'strokeOpacity',
@@ -62,6 +69,7 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): Json
   ] as const) {
     if (trend[name] !== undefined) result[name] = { kind: 'constant', value: trend[name] };
   }
+
   return result;
 };
 
@@ -114,8 +122,10 @@ export const resolveRegressionMarkGroup = (
     };
 
     const resolved = PathMarkSchema.parse(path);
+
     return series === undefined ? { ...resolved, defaultColorGroup: 'trend' } : resolved;
   };
+
   const point = hidePoints ? undefined : resolvePointMark(pointEncodings, pointProperties);
   const trends: [IRPlotMarkOperation, ...Array<IRPlotMarkOperation>] = [
     createTrend(properties),
@@ -130,12 +140,13 @@ export const resolveRegressionMarkGroup = (
       ),
     ),
   ];
+
   return point === undefined
     ? trends
     : [series === undefined ? { ...point, defaultColorGroup: 'observation' } : point, ...trends];
 };
 
-/** Regression authored mark Definition */
+/** 回归标记的作者定义 */
 export const RegressionMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'regression',
   schema: RegressionChartMarkSchema,

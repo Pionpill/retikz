@@ -37,6 +37,7 @@ export type AnyPathKindCompileResult = Readonly<{
 
 /** 内置 stroke emitter 的可选 owner output 捕获请求 */
 export type EmitStrokeOwnerOutputOptions = Readonly<{
+  /** 接收标准描边编译完成后的所属者产物 */
   captureOwnerOutput: (value: StrokePathOwnerOutput) => void;
 }>;
 
@@ -50,14 +51,16 @@ export type EmitStroke = {
 
 /** Core 将 Path steps 物化后的 renderer-neutral 几何事实 */
 export type MaterializedPath = Readonly<{
+  /** 物化后的结构化路径命令 */
   commands: ReadonlyArray<PathCommand>;
+  /** 用于计算路径几何边界的点集 */
   boundsPoints: ReadonlyArray<IRPosition>;
 }>;
 
 /** Path kind 可消费的宿主外观，不包含领域专属字段 */
 export type ResolvedPathKindAppearance = Readonly<
   Readonly<{
-    /** Effective host master color, retained until the selected kind consumes it */
+    /** 宿主生效的主色，保留至选定的路径种类消费 */
     color?: NonNullable<IRPathBase['style']>['color'];
   }> &
     Pick<
@@ -94,17 +97,33 @@ export type PathKindLabel = Omit<
   IRGeometryLabel,
   'position' | 'side' | 'distance' | 'textColor' | 'text' | 'interrupt'
 > & {
+  /** 标签在宿主路径上的归一化位置 */
   position: number;
+  /** 标签相对路径的放置侧，center 表示居中 */
   side: NonNullable<IRGeometryLabel['side']> | 'center';
+  /** 标签相对宿主边界的间距 */
   distance: number;
+  /** 已解析为颜色字符串的可选文字色 */
   textColor?: string;
+  /** 待排版的标签文本及行内内容 */
   text: PathKindLabelText;
 };
 
 /** Path kind 请求宿主标签编译时提供的已定位几何信息 */
 export type PathKindLabelInput = Readonly<{
+  /** 按请求顺序排列的宿主标签 */
   labels: ReadonlyArray<PathKindLabel>;
-  samples: ReadonlyArray<Readonly<{ point: IRPosition; tangent: IRPosition; boundaryOffset?: number }>>;
+  /** 与标签逐项对应的几何采样点及切线 */
+  samples: ReadonlyArray<
+    Readonly<{
+      /** 宿主局部坐标中的采样位置 */
+      point: IRPosition;
+      /** 宿主在采样点的切向量 */
+      tangent: IRPosition;
+      /** 从采样线到宿主边界的偏移，省略时视为零 */
+      boundaryOffset?: number;
+    }>
+  >;
 }>;
 
 /** 由宿主几何确定边界基点的标签请求 */
@@ -154,6 +173,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 /**
  * path kind 注册项
  * @description 扩展 path 的 `kind` 编译能力；定义本身不进入 IR
+ * @template TOwnerOutput 路径所属者发布的 JSON 产物类型，never 禁止声明 ownerOutput
  */
 export type PathKindOwnerOutputBranch<TOwnerOutput extends JsonValue> = [TOwnerOutput] extends [never]
   ? Readonly<{ ownerOutput?: never }>

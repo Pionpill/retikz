@@ -8,6 +8,8 @@ import type { Locate } from './events';
 export const locateSvg: Locate = event => {
   const target = event.target;
   if (target === null || !(target instanceof Element)) return null;
+
   const hit = target.closest('[data-retikz-id]');
+
   return hit?.getAttribute('data-retikz-id') ?? null;
 };

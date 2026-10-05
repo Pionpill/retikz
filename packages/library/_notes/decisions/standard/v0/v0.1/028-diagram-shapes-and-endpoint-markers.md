@@ -24,7 +24,7 @@ Core 提供基础 Shape、Arrow Definition、registry、resolve、boundary、mar
 
 | 名称              | 参数与默认值                                                                         | 长期几何语义                                                          |
 | ----------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `trapezoid`       | `shortSide: SideValue = 'top'`、`shortSideRatio = 0.72`、`cornerRadius = 0`          | `shortSideRatio` 取 `(0, 1]`；`1` 退化为矩形                          |
+| `trapezoid`       | `shortSide: Side = 'top'`、`shortSideRatio = 0.72`、`cornerRadius = 0`               | `shortSideRatio` 取 `(0, 1]`；`1` 退化为矩形                          |
 | `parallelogram`   | `slantDirection: 'left' \| 'right' = 'right'`、`slantAngle = 70`、`cornerRadius = 0` | `slantAngle` 取 `(0, 90]`；`90` 退化为矩形，纵向形态使用 Node rotate  |
 | `hexagon`         | `shoulderDepth = 12`、`cornerRadius = 0`                                             | 表达可变宽高的长六边形；每侧肩部沿水平方向固定延伸非负 user-unit 长度 |
 | `cylinder`        | `axis: 'vertical' \| 'horizontal' = 'vertical'`、`capDepth = 8`                      | 每个端盖沿主轴预留非负 user-unit 深度；最终深度不超过主轴长度一半     |
@@ -32,7 +32,7 @@ Core 提供基础 Shape、Arrow Definition、registry、resolve、boundary、mar
 
 公开参数类型分别为 `TrapezoidShapeParams`、`ParallelogramShapeParams`、`HexagonShapeParams`、`CylinderShapeParams` 与 `EllipticCapsuleShapeParams`；对应公开 Definition 为 `TrapezoidShapeDefinition`、`ParallelogramShapeDefinition`、`HexagonShapeDefinition`、`CylinderShapeDefinition` 与 `EllipticCapsuleShapeDefinition`，并提供匹配的静态 provider 与 `StandardShapeName` 成员
 
-`SideValue` 复用 Core 的 `top | right | bottom | left` 共享词汇。参数均为 JSON-safe strict object；ratio、angle 与 direction 是无量纲语义，`shoulderDepth`、`cornerRadius` 与 `capDepth` 是随 Shape 缩放的 user-unit 长度
+`Side` 复用 Core 的 `top | right | bottom | left` 共享词汇。参数均为 JSON-safe strict object；ratio、angle 与 direction 是无量纲语义，`shoulderDepth`、`cornerRadius` 与 `capDepth` 是随 Shape 缩放的 user-unit 长度
 
 五个 Shape 都从内容内框计算能够完整容纳内容的最终外框。梯形、平行四边形与长六边形的圆角不得裁掉内容；圆角按无自交上限裁剪。圆柱端盖分隔弧只参与描边，不形成内部连接边界或独立 identity，近端端盖与主体使用同一 fill
 

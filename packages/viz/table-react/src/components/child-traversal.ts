@@ -12,6 +12,7 @@ export const visitTableChildren = (children: ReactNode, visit: TableChildVisitor
       visitTableChildren(child.props.children, visit);
       return;
     }
+
     visit(child);
   });
 };

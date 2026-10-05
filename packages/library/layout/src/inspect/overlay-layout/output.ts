@@ -28,6 +28,7 @@ export const inspectOverlayLayoutArtifact = (
     if (context.options.placements) {
       structure.push(inspectLayoutOutline('overlay.placement', item.slotBounds, context.appearance.scopeColor));
     }
+
     if (context.options.anchors && item.position !== undefined) {
       const { x, y } = item.position.target;
       guides.push(
@@ -35,6 +36,7 @@ export const inspectOverlayLayoutArtifact = (
         inspectLayoutLine('overlay.anchor', x, y - 5, x, y + 5, context.appearance.semanticColors.guide, false),
       );
     }
+
     if (context.options.stacking) {
       labels.push({
         kind: 'label',
@@ -46,11 +48,13 @@ export const inspectOverlayLayoutArtifact = (
       });
     }
   });
+
   const [boxes = [], normalizedStructure = [], underlay = []] = normalizeLayoutBoundaryGroups([
     base.boxes,
     structure,
     base.underlay,
   ]);
+
   return lowerLayoutInspectionMarks([
     ...underlay,
     ...normalizedStructure,

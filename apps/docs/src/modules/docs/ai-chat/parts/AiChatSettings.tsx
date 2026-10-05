@@ -82,9 +82,11 @@ export const AiChatSettings: FC = () => {
 
   const saveDraft = () => {
     if (!draft) return;
+
     const trimmedLabel = draft.label.trim();
     const trimmedBase = draft.baseUrl.trim();
     if (!trimmedLabel || !trimmedBase) return;
+
     const id = draft.id ?? slugify(trimmedLabel);
     const models = draft.modelsText
       .split(',')

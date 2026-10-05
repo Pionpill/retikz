@@ -41,12 +41,15 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
         `Duplicate Inspector key '${candidateDefinition.namespace}/${candidateDefinition.type}' at index ${index}`,
       );
     }
+
     definitionsByKey.set(definitionKey, candidateDefinition);
+
     return candidateDefinition;
   });
   const frozenDefinitions = Object.freeze(sealedDefinitions);
   const get = (key: InspectorKey): AnyInspectorDefinition | undefined =>
     definitionsByKey.get(formatInspectorRegistryKey(key));
+
   return Object.freeze({
     [inspectorRegistryBrand]: true as const,
     definitions: frozenDefinitions,
@@ -58,6 +61,7 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
           RetikzInspectErrorCode.Registry,
           `Inspector '${key.namespace}/${key.type}' is not registered`,
         );
+
       return definition;
     },
   });

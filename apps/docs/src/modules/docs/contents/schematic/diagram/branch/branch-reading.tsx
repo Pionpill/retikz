@@ -8,6 +8,7 @@ import { branchReadingI18n } from './branch-reading.i18n';
 
 /** 阅读路线示例属性 */
 export type BranchReadingProps = { lang?: Lang };
+
 /** 上下篇主线与有序延伸阅读 */
 const BranchReading: FC<BranchReadingProps> = props => {
   const t = branchReadingI18n[props.lang ?? 'zh'];

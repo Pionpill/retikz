@@ -58,7 +58,9 @@ const compileWithProposal = (
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observations.push(probe.result);
+
       return {
         children: [context.replay(probe.result)],
         allocationBounds: probe.result.allocationBounds,

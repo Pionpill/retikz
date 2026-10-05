@@ -11,18 +11,27 @@ import { lowerDiagramFoundation } from './lower';
 
 /** Diagram Foundation 中一个实际 authored region 的几何 */
 export type DiagramFoundationRegionGeometry = Readonly<{
+  /** 区域在 Foundation 框架坐标中的布局分配范围 */
   allocationBounds: Readonly<BoundsRect>;
+  /** 区域在 Foundation 框架坐标中的可见几何范围 */
   visualBounds: Readonly<BoundsRect>;
 }>;
 
 /** 同一次 Foundation probe 产生的完整 frame、regions 与drawing平移 */
 export type DiagramFoundationComposition = Readonly<{
+  /** 完整框架的布局探测结果，供最终放置时重放 */
   frame: LayoutChildResult;
+  /** 将绘图区局部坐标转换为 Foundation 框架坐标的平移 */
   drawingOffset: Readonly<Position>;
+  /** 实际存在的标题、说明、绘图和图例区域几何 */
   regions: Readonly<{
+    /** 存在标题时的标题区域几何 */
     title?: DiagramFoundationRegionGeometry;
+    /** 存在说明时的说明区域几何 */
     description?: DiagramFoundationRegionGeometry;
+    /** 必需绘图区的布局与可见范围 */
     drawing: DiagramFoundationRegionGeometry;
+    /** 存在显式图例时的图例区域几何 */
     legend?: DiagramFoundationRegionGeometry;
   }>;
 }>;
@@ -86,9 +95,11 @@ const captureSurfaceContentPlacement = (
       if (child === content && probe.kind === LayoutChildProbeKind.Resolved) {
         placement = { proposal, result: probe.result };
       }
+
       return probe;
     },
   });
+
   return placement ?? foundationCompositionFailure('Surface content placement is missing.');
 };
 
@@ -112,12 +123,14 @@ const collectFoundationFlexRegions = (
   artifact.items.forEach(item => {
     const authoredItem = flex.children?.[item.sourceIndex];
     if (authoredItem === undefined) return foundationCompositionFailure('FlexLayout artifact has no authored child.');
+
     const childOffset: Position = [containerOffset[0] + item.translation.x, containerOffset[1] + item.translation.y];
     if (item.key === 'title' || item.key === 'description' || item.key === 'drawing' || item.key === 'legend') {
       state.regions[item.key] = translateFoundationRegion(item, containerOffset);
       if (item.key === 'drawing') state.drawingOffset = childOffset;
       return;
     }
+
     if (item.key === 'heading') {
       const title = resolution.presentation?.title;
       const description = resolution.presentation?.description;
@@ -126,10 +139,12 @@ const collectFoundationFlexRegions = (
         state.regions[regionKey] = translateFoundationRegion(item, containerOffset);
         return;
       }
+
       const headingChild = isScope(authoredItem.child) ? authoredItem.child.children[0] : authoredItem.child;
       if (!isFlexLayout(headingChild)) {
         return foundationCompositionFailure('Heading with title and description did not lower to FlexLayout.');
       }
+
       collectFoundationFlexRegions(
         headingChild,
         exactLayoutProposal(item.slotBounds),
@@ -138,17 +153,21 @@ const collectFoundationFlexRegions = (
         resolution,
         state,
       );
+
       return;
     }
+
     if (item.key === 'main') {
       if (resolution.presentation?.legend === undefined) {
         state.regions.drawing = translateFoundationRegion(item, containerOffset);
         state.drawingOffset = childOffset;
         return;
       }
+
       if (!isFlexLayout(authoredItem.child)) {
         return foundationCompositionFailure('Drawing and Legend did not lower to FlexLayout.');
       }
+
       collectFoundationFlexRegions(
         authoredItem.child,
         exactLayoutProposal(item.slotBounds),
@@ -200,6 +219,7 @@ export const composeDiagramFoundation = (
   if (state.regions.drawing === undefined || state.drawingOffset === undefined) {
     return foundationCompositionFailure('Drawing placement is missing.');
   }
+
   return {
     frame: frameProbe,
     drawingOffset: state.drawingOffset,

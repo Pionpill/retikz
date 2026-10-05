@@ -7,7 +7,7 @@ import type { ProvenanceContext } from './provenance';
 import type { PositionScale, TickSet } from './scale';
 
 /**
- * lowerGuide 上下文。
+ * lowerGuide 上下文
  * @description cartesian 使用 plotArea / projectX / projectY / ticks；polar 由 frame 驱动圆心、半径和角度几何。
  *   该类型只描述 coordinate provider 与 pipeline guide lowering 之间的协议，不承载具体下沉实现
  */
@@ -27,7 +27,7 @@ export type GuideContext = {
   /** axis title / composition label 与 axis 的固定间距；省略时复用默认 axis label gap */
   labelGap?: number;
   /**
-   * 直线轴向覆盖（仅 cartesian1D 给）。
+   * 直线轴向覆盖（仅 cartesian1D 给）
    * @description cartesian1D 单维角色恒为 x，但轴可竖排；给此值时 lowerCartesianGuide 按它选屏幕方向，而非按 dimension
    */
   axisOrientation?: 'horizontal' | 'vertical';

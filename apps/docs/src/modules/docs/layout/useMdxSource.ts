@@ -26,10 +26,12 @@ type ResolvedLoader = { loader: MdxLoader; lang: Lang };
 /** 优先取当前语言；该语言缺文件时按 LANGS 顺序回退；返回命中的语言以便上层判 fallback */
 const resolveLoader = (segments: Array<string>, lang: Lang): ResolvedLoader | null => {
   const candidates = [lang, ...LANGS.filter(l => l !== lang)];
+
   for (const candidate of candidates) {
     const loader = mdxLoaders[buildKey(segments, candidate)];
     if (loader) return { loader, lang: candidate };
   }
+
   return null;
 };
 
@@ -59,8 +61,10 @@ export const useMdxSource = (): UseMdxSourceResult => {
 
   const resolved = useMemo(() => {
     if (!loc) return null;
+
     const segments = docPathSegments(loc);
     const r = resolveLoader(segments, lang);
+
     return r ? { loader: r.loader, lang: r.lang, segments } : null;
   }, [loc, lang]);
 
@@ -79,8 +83,10 @@ export const useMdxSource = (): UseMdxSourceResult => {
 
   useEffect(() => {
     if (!loader) return;
+
     const controller = new AbortController();
     const { signal } = controller;
+
     // 快照本 loader 对应的 segments：loader 与 segments 一一对应（同 key 同 loader），在 effect 入口闭包捕获即正确
     const segments = pendingSegments ?? [];
     const sourceLang = resolvedLang ?? lang;
@@ -92,6 +98,7 @@ export const useMdxSource = (): UseMdxSourceResult => {
       })
       .catch(error => {
         if (signal.aborted) return;
+
         setState({
           loader,
           source: '',
@@ -99,6 +106,7 @@ export const useMdxSource = (): UseMdxSourceResult => {
           error: error instanceof Error ? error.message : String(error),
         });
       });
+
     return () => {
       controller.abort();
     };
@@ -108,6 +116,7 @@ export const useMdxSource = (): UseMdxSourceResult => {
 
   const isCurrent = state.loader === loader;
   const error = loader && isCurrent ? state.error : null;
+
   return {
     source: loader && isCurrent && error === null ? state.source : null,
     segments: loader && isCurrent && error === null ? state.segments : null,

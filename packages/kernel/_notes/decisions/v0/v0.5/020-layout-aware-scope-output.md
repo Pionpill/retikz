@@ -52,7 +52,7 @@ type IRScopeProps = {
   resetStyle?: boolean | Array<StyleChannel>;
   zIndex?: number;
   clip?: IRClip;
-  boundingShape?: ScopeBoundingShapeValue;
+  boundingShape?: ScopeBoundingShape;
   meta?: IRJsonObject;
   animations?: Array<IRAnimationTrack>;
 };

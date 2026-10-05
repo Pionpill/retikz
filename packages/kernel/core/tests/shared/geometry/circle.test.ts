@@ -40,6 +40,7 @@ describe('circle.anchor', () => {
 
   it('对角 anchor 在 45° 处（圆周等距分布）', () => {
     const ne = circle.anchor(c10, Anchor.TopRight);
+
     expect(ne[0]).toBeCloseTo(10 * Math.SQRT1_2);
     expect(ne[1]).toBeCloseTo(-10 * Math.SQRT1_2);
   });
@@ -48,12 +49,14 @@ describe('circle.anchor', () => {
 describe('circle.boundaryPoint', () => {
   it('沿 +x 方向射线 → right', () => {
     const p = circle.boundaryPoint(c10, [1000, 0]);
+
     expect(p[0]).toBeCloseTo(10);
     expect(p[1]).toBeCloseTo(0);
   });
 
   it('沿对角方向射线 → 半径处对角点', () => {
     const p = circle.boundaryPoint(c10, [1, 1]);
+
     expect(p[0]).toBeCloseTo(10 * Math.SQRT1_2);
     expect(p[1]).toBeCloseTo(10 * Math.SQRT1_2);
   });
@@ -69,6 +72,7 @@ describe('circle.boundaryPoint', () => {
       [0.5, -100],
     ] as Array<[number, number]>) {
       const p = circle.boundaryPoint(c10, toward);
+
       expect(Math.sqrt(p[0] * p[0] + p[1] * p[1])).toBeCloseTo(10);
     }
   });

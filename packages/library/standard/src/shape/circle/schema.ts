@@ -21,7 +21,9 @@ const properties = {
   ...ShapeAnglesSchema.shape,
   closed: ShapeClosedSchema.unwrap().optional().describe('Closure of a partial outline: open, chord, or sector.'),
 };
+
 const fitProperties = { ...ShapeBoxAdjustmentSchema.shape, fit: ShapeFitSchema };
+
 /** 持久化圆形 composite 的互斥几何输入 */
 export const CircleSchema = union([
   strictObject({

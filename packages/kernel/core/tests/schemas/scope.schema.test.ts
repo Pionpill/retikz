@@ -5,6 +5,7 @@ import { ChildSchema, ScopeSchema, TransformSchema } from '../../src/schemas';
 describe('ScopeSchema 合法形态', () => {
   it('最简 scope：仅 children 空数组', () => {
     const parsed = ScopeSchema.safeParse({ type: 'scope', children: [] });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -13,6 +14,7 @@ describe('ScopeSchema 合法形态', () => {
       type: 'scope',
       children: [{ type: 'node', position: [0, 0] }],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -28,6 +30,7 @@ describe('ScopeSchema 合法形态', () => {
         },
       ],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -37,6 +40,7 @@ describe('ScopeSchema 合法形态', () => {
       transforms: [],
       children: [],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -46,6 +50,7 @@ describe('ScopeSchema 合法形态', () => {
       id: 'cluster',
       children: [],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -55,6 +60,7 @@ describe('ScopeSchema 合法形态', () => {
       localNamespace: true,
       children: [],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -65,7 +71,9 @@ describe('ScopeSchema 合法形态', () => {
       boundingShape: 'circle',
       children: [],
     });
+
     expect(parsed.success).toBe(true);
+
     if (parsed.success) {
       expect(parsed.data.boundingShape).toBe('circle');
     }
@@ -78,7 +86,9 @@ describe('ScopeSchema 合法形态', () => {
       boundingShape: 'rectangle',
       children: [],
     });
+
     expect(parsed.success).toBe(true);
+
     if (parsed.success) {
       expect(parsed.data.boundingShape).toBe('rectangle');
     }
@@ -86,7 +96,9 @@ describe('ScopeSchema 合法形态', () => {
 
   it('scope 缺省 boundingShape 仍合法且字段为 undefined', () => {
     const parsed = ScopeSchema.safeParse({ type: 'scope', children: [] });
+
     expect(parsed.success).toBe(true);
+
     if (parsed.success) {
       expect(parsed.data.boundingShape).toBeUndefined();
     }
@@ -149,6 +161,7 @@ describe('ScopeSchema 合法形态', () => {
 describe('ScopeSchema 拒绝非法形态', () => {
   it('缺失 children 字段拒绝', () => {
     const parsed = ScopeSchema.safeParse({ type: 'scope' });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -158,6 +171,7 @@ describe('ScopeSchema 拒绝非法形态', () => {
       id: '',
       children: [],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -167,6 +181,7 @@ describe('ScopeSchema 拒绝非法形态', () => {
       localNamespace: 'true',
       children: [],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -176,6 +191,7 @@ describe('ScopeSchema 拒绝非法形态', () => {
       transforms: [{ kind: 'unknown', x: 1, y: 2 }],
       children: [],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -184,6 +200,7 @@ describe('ScopeSchema 拒绝非法形态', () => {
       type: 'scope',
       children: [{ type: 'bogus', foo: 1 }],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -193,6 +210,7 @@ describe('ScopeSchema 拒绝非法形态', () => {
       boundingShape: 123,
       children: [],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -202,6 +220,7 @@ describe('ScopeSchema 拒绝非法形态', () => {
       boundingShape: 'polygon',
       children: [],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -211,6 +230,7 @@ describe('ScopeSchema 拒绝非法形态', () => {
       boundingShape: { type: 'circle' },
       children: [],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -267,6 +287,7 @@ describe('ChildSchema discriminated union 含 scope', () => {
       type: 'scope',
       children: [],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -279,6 +300,7 @@ describe('ChildSchema discriminated union 含 scope', () => {
 describe('TransformSchema 各变体合法形态', () => {
   it('translate', () => {
     const parsed = TransformSchema.safeParse({ kind: 'translate', x: 5, y: 3 });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -288,6 +310,7 @@ describe('TransformSchema 各变体合法形态', () => {
       angle: 30,
       radius: 50,
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -298,6 +321,7 @@ describe('TransformSchema 各变体合法形态', () => {
       angle: 0,
       radius: 30,
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -308,6 +332,7 @@ describe('TransformSchema 各变体合法形态', () => {
       angle: 90,
       radius: 20,
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -318,6 +343,7 @@ describe('TransformSchema 各变体合法形态', () => {
       of: 'A',
       distance: 20,
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -327,6 +353,7 @@ describe('TransformSchema 各变体合法形态', () => {
       direction: 'top',
       of: 'A',
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -351,6 +378,7 @@ describe('TransformSchema 各变体合法形态', () => {
       of: 'A',
       offset: [10, 5],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -359,6 +387,7 @@ describe('TransformSchema 各变体合法形态', () => {
       kind: 'offset-translate',
       of: [50, 50],
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -368,6 +397,7 @@ describe('TransformSchema 各变体合法形态', () => {
       between: [[0, 0], { id: 'B' }],
       fraction: 0.5,
     });
+
     expect(parsed.success).toBe(true);
   });
 
@@ -377,26 +407,31 @@ describe('TransformSchema 各变体合法形态', () => {
       degrees: 45,
       pivot: 'center',
     });
+
     expect(parsed.success).toBe(true);
   });
 
   it('rotate 缺省 pivot', () => {
     const parsed = TransformSchema.safeParse({ kind: 'rotate', degrees: 90 });
+
     expect(parsed.success).toBe(true);
   });
 
   it('scale 含 y 与 pivot', () => {
     const parsed = TransformSchema.safeParse({ kind: 'scale', x: 2, y: 3, pivot: [4, 5] });
+
     expect(parsed.success).toBe(true);
   });
 
   it('scale 缺省 y', () => {
     const parsed = TransformSchema.safeParse({ kind: 'scale', x: 2 });
+
     expect(parsed.success).toBe(true);
   });
 
   it('rotate 旧 cx/cy 写法被严格拒绝', () => {
     const parsed = TransformSchema.safeParse({ kind: 'rotate', degrees: 45, cx: 10, cy: 5 });
+
     expect(parsed.success).toBe(false);
   });
 });
@@ -404,6 +439,7 @@ describe('TransformSchema 各变体合法形态', () => {
 describe('TransformSchema 各变体拒绝缺字段', () => {
   it('translate 缺 y 拒绝', () => {
     const parsed = TransformSchema.safeParse({ kind: 'translate', x: 5 });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -412,6 +448,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       kind: 'polar-translate',
       radius: 50,
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -420,6 +457,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       kind: 'polar-translate',
       angle: 30,
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -428,6 +466,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       kind: 'at-translate',
       direction: 'right',
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -436,6 +475,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       kind: 'at-translate',
       of: 'A',
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -445,6 +485,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       direction: 'diagonal',
       of: 'A',
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -453,6 +494,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       kind: 'offset-translate',
       offset: [10, 0],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -462,6 +504,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       of: 'A',
       offset: [1, 2, 3],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -473,6 +516,7 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
         [10, 0],
       ],
     });
+
     expect(parsed.success).toBe(false);
   });
 
@@ -485,16 +529,19 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       ],
       fraction: 1.5,
     });
+
     expect(parsed.success).toBe(false);
   });
 
   it('rotate 缺 degrees 拒绝', () => {
     const parsed = TransformSchema.safeParse({ kind: 'rotate' });
+
     expect(parsed.success).toBe(false);
   });
 
   it('scale 缺 x 拒绝', () => {
     const parsed = TransformSchema.safeParse({ kind: 'scale' });
+
     expect(parsed.success).toBe(false);
   });
 });

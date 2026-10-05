@@ -41,7 +41,7 @@ export type LowerTexOptions = {
 ### MathJaxEngineOptions
 
 <p>
-  <ApiSourceLink label={'MathJaxEngineOptions'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={34}>
+  <ApiSourceLink label={'MathJaxEngineOptions'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={18}>
     MathJax engine configuration
   </ApiSourceLink>
 </p>
@@ -54,10 +54,10 @@ Selects a built-in profile and extra extensions for `createMathJaxEngine`, `crea
 
 <ApiTable>
 
-| Member        | Type                           | Default  | Description                                                                                  |
-| ------------- | ------------------------------ | -------- | -------------------------------------------------------------------------------------------- |
-| `extensions?` | `Array<MathJaxExtensionValue>` | `[]`     | Appends extensions after the selected profile; duplicates are removed before initialization. |
-| `profile?`    | `MathJaxProfileValue`          | `'base'` | Selects the built-in profile for the base or math extension set.                             |
+| Member        | Type                      | Default  | Description                                                                                  |
+| ------------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `extensions?` | `Array<MathJaxExtension>` | `[]`     | Appends extensions after the selected profile; duplicates are removed before initialization. |
+| `profile?`    | `MathJaxProfile`          | `'base'` | Selects the built-in profile for the base or math extension set.                             |
 
 </ApiTable>
 
@@ -67,28 +67,14 @@ Selects a built-in profile and extra extensions for `createMathJaxEngine`, `crea
 
 ```ts
 export type MathJaxEngineOptions = {
-  profile?: MathJaxProfileValue;
-  extensions?: Array<MathJaxExtensionValue>;
+  profile?: MathJaxProfile;
+  extensions?: Array<MathJaxExtension>;
 };
 ```
 
 </DocTab>
 
 </DocTabs>
-
-### MathJaxExtensionValue
-
-<p>
-  <ApiSourceLink label={'MathJaxExtensionValue'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={17}>
-    MathJax extension values
-  </ApiSourceLink>
-</p>
-
-A constrained string set derived from `MathJaxExtension`, which can be appended after the built-in profile. Configuration resolution deduplicates and loads values in a stable order, so callers do not need to manage package order.
-
-```ts
-export type MathJaxExtensionValue = ValueOf<typeof MathJaxExtension>;
-```
 
 ### MathJaxLowerTexOptions
 
@@ -112,9 +98,9 @@ Combines the resolution configuration from `MathJaxEngineOptions` with the diagn
 
 | Member          | Type                                          | Default  | Description                                                                                                |
 | --------------- | --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| `extensions?`   | `Array<MathJaxExtensionValue>`                | `[]`     | Appends extensions after the selected profile; duplicates are removed before initialization.               |
+| `extensions?`   | `Array<MathJaxExtension>`                     | `[]`     | Appends extensions after the selected profile; duplicates are removed before initialization.               |
 | `onDiagnostic?` | `(diagnostic: TexLoweringDiagnostic) => void` | —        | Receives one diagnostic for each public lowering failure so the application can log, notify, or report it. |
-| `profile?`      | `MathJaxProfileValue`                         | `'base'` | Selects the built-in profile for the base or math extension set.                                           |
+| `profile?`      | `MathJaxProfile`                              | `'base'` | Selects the built-in profile for the base or math extension set.                                           |
 
 </ApiTable>
 
@@ -130,40 +116,10 @@ export type MathJaxLowerTexOptions = MathJaxEngineOptions & LowerTexOptions;
 
 </DocTabs>
 
-### MathJaxProfileValue
-
-<p>
-  <ApiSourceLink label={'MathJaxProfileValue'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={10}>
-    MathJax profile values
-  </ApiSourceLink>
-</p>
-
-A constrained string set derived from `MathJaxProfile` for selecting a built-in extension set. It describes configuration values only; the MathJax factory performs the actual extension loading.
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type MathJaxProfileValue = 'base' | 'math';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type MathJaxProfileValue = ValueOf<typeof MathJaxProfile>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### MathJaxSvgEngine
 
 <p>
-  <ApiSourceLink label={'MathJaxSvgEngine'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={24}>
+  <ApiSourceLink label={'MathJaxSvgEngine'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={8}>
     Synchronous TeX-to-SVG engine interface
   </ApiSourceLink>
 </p>
@@ -302,7 +258,7 @@ export type TexLoweringDiagnostic =
 ### MathJaxExtension
 
 <p>
-  <ApiSourceLink label={'MathJaxExtension'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={16}>
+  <ApiSourceLink label={'MathJaxExtension'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={18}>
     MathJax TeX extensions that can be loaded on demand
   </ApiSourceLink>
 </p>
@@ -321,12 +277,14 @@ export const MathJaxExtension = {
   Mathtools: 'mathtools',
   Color: 'color',
 } as const;
+
+export type MathJaxExtension = ValueOf<typeof MathJaxExtension>;
 ```
 
 ### MathJaxProfile
 
 <p>
-  <ApiSourceLink label={'MathJaxProfile'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={5}>
+  <ApiSourceLink label={'MathJaxProfile'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={7}>
     Built-in MathJax profiles
   </ApiSourceLink>
 </p>
@@ -338,6 +296,8 @@ export const MathJaxProfile = {
   Base: 'base',
   Math: 'math',
 } as const;
+
+export type MathJaxProfile = ValueOf<typeof MathJaxProfile>;
 ```
 
 ### createLowerTex
@@ -390,7 +350,7 @@ export declare const createLowerTex: (engine: MathJaxSvgEngine, options?: LowerT
 ### createMathJaxEngine
 
 <p>
-  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={42}>
+  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={51}>
     Creates a synchronous TeX-to-SVG engine from the optional `mathjax-full` peer dependency
   </ApiSourceLink>
 </p>
@@ -563,7 +523,7 @@ export type MathJaxLowerTexState =
 ### useLowerTex
 
 <p>
-  <ApiSourceLink label={'useLowerTex'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={88}>
+  <ApiSourceLink label={'useLowerTex'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={90}>
     Shares a MathJax engine by effective configuration and asynchronously creates the current component’s lowerer
   </ApiSourceLink>
 </p>

@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /**
  * scale 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'linear'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 z.enum）
@@ -70,3 +72,12 @@ export const PlotColorScheme = {
   RdYlGn: 'rdylgn',
   Spectral: 'spectral',
 } as const;
+
+/** scale 类型 */
+export type PlotScale = ValueOf<typeof PlotScale>;
+
+/** 内置命名配色方案名 */
+export type PlotColorScheme = ValueOf<typeof PlotColorScheme>;
+
+/** position scale 的 domain padding 单位 */
+export type PlotDomainPaddingKind = ValueOf<typeof PlotDomainPaddingKind>;

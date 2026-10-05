@@ -42,6 +42,7 @@ describe('drawScene clip 裁剪', () => {
     expect(context.calls.some(c => c.name === 'clip')).toBe(true);
     expect(context.calls.find(c => c.name === 'moveTo')?.args).toEqual([0, 0]);
     expect(context.calls.filter(c => c.name === 'lineTo')).toHaveLength(3);
+
     // 子 ellipse 仍绘制
     expect(context.calls.some(c => c.name === 'ellipse')).toBe(true);
     expect(warnings).not.toContain('clip');
@@ -80,8 +81,10 @@ describe('drawScene clip 裁剪', () => {
     const names = context.calls.map(c => c.name);
     const translateIdx = names.indexOf('translate');
     const clipIdx = names.indexOf('clip');
+
     expect(translateIdx).toBeGreaterThanOrEqual(0);
     expect(clipIdx).toBeGreaterThan(translateIdx);
+
     // circle 裁剪用 arc
     expect(context.calls.some(c => c.name === 'arc')).toBe(true);
   });

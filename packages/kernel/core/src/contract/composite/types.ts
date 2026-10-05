@@ -1,4 +1,4 @@
-import type { JsonValue, ValueOf } from '@retikz/foundation';
+import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import type { ZodType } from 'zod';
 
@@ -8,18 +8,11 @@ import type { Transform } from '../scene';
 import type { SpatialHandleDeclaration } from '../spatial-handle';
 import type {
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
 } from './constants';
 import type { CompositeBoundChild, CompositeRuntimeInputContext } from './input';
-
-/** 单轴 layout proposal 的判别值 */
-export type LayoutAxisProposalKindValue = ValueOf<typeof LayoutAxisProposalKind>;
-
-/** intrinsic contribution 查询模式 */
-export type LayoutIntrinsicModeValue = ValueOf<typeof LayoutIntrinsicMode>;
 
 /** 父布局传给 child 单轴的上下文化尺寸 proposal */
 export type LayoutAxisProposal =
@@ -27,7 +20,7 @@ export type LayoutAxisProposal =
       /** 查询 child 的 intrinsic contribution */
       kind: typeof LayoutAxisProposalKind.Intrinsic;
       /** 查询最小或自然 contribution */
-      mode: LayoutIntrinsicModeValue;
+      mode: LayoutIntrinsicMode;
     }>
   | Readonly<{
       /** 在可用区间内解析 allocation slot */
@@ -52,18 +45,12 @@ export type LayoutProposal = Readonly<{
   y: LayoutAxisProposal;
 }>;
 
-/** alignment guide 所属维度的判别值 */
-export type LayoutAlignmentGuideDimensionValue = ValueOf<typeof LayoutAlignmentGuideDimension>;
-
-/** Core 内置 alignment guide 的稳定名称 */
-export type LayoutAlignmentGuideNameValue = ValueOf<typeof LayoutAlignmentGuideName>;
-
 /** child-local allocation coordinate 中的一维 alignment guide */
 export type LayoutAlignmentGuide = Readonly<{
   /** 开放的 guide 名称 */
   name: string;
   /** guide 所属的一维坐标轴 */
-  dimension: LayoutAlignmentGuideDimensionValue;
+  dimension: LayoutAlignmentGuideDimension;
   /** child-local allocation coordinate 中的有限位置 */
   position: number;
 }>;
@@ -71,7 +58,7 @@ export type LayoutAlignmentGuide = Readonly<{
 declare const replayBrand: unique symbol;
 
 /**
- * compile-local replay token
+ * 仅在当前编译内有效的重放令牌
  * @description 只能在创建它的同一次 compile 中放置一次，不能序列化或伪造
  */
 export type CompositeReplay = Readonly<{
@@ -103,9 +90,6 @@ declare const layoutChildFailureBrand: unique symbol;
 export type LayoutChildFailure = Readonly<{
   [layoutChildFailureBrand]: never;
 }>;
-
-/** child probe 的结果判别值 */
-export type LayoutChildProbeKindValue = ValueOf<typeof LayoutChildProbeKind>;
 
 /** layoutChild 的 resolved 或 failed outcome */
 export type LayoutChildProbe =
@@ -226,7 +210,10 @@ export type CompositeExpandResult = Readonly<{
   spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
 }>;
 
-/** layout-aware composite 的最终输出 */
+/**
+ * layout-aware composite 的最终输出
+ * @template TArtifact 组件可返回的 JSON 产物类型，默认 never 禁止提供产物
+ */
 export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 child 继续编译，opaque child 在当前 callback 的 runtime output tree 中解析 */
   children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
@@ -252,6 +239,10 @@ type LayoutCompositeBranch<TNode, TArtifact extends JsonValue> = [TArtifact] ext
 /**
  * Tier 2 composite 注册项
  * @description 精确描述单个 composite 的 schema，以及互斥的轻量 expand 或完整编译期 compile 分支
+ * @template TNode schema 解析后传入组件执行回调的节点类型
+ * @template TNamespace 复合组件注册命名空间的字面量类型
+ * @template TType 复合组件注册类型的字面量类型
+ * @template TArtifact 完整编译分支的 JSON 产物类型，默认 never 表示不声明产物
  */
 export type CompositeDefinition<
   TNode,
@@ -292,9 +283,13 @@ export type LayoutCompositeDefinition<
 
 /** 异构 registry 中擦除后的轻量 expand composite */
 export type AnyExpandCompositeDefinition = {
+  /** 复合组件的注册命名空间 */
   namespace: string;
+  /** 复合组件的注册类型 */
   type: string;
+  /** 调用展开回调前校验完整节点的 schema */
   schema: ZodType;
+  /** 将经 schema 校验的节点展开为下一层 IR；调用前需恢复节点类型关联 */
   expand: (node: never, context: CompositeExpandContext) => CompositeExpandResult;
   compile?: never;
   artifactSchema?: never;
@@ -303,19 +298,28 @@ export type AnyExpandCompositeDefinition = {
 /** 异构 registry 中擦除后的 layout-aware composite */
 export type AnyLayoutCompositeDefinition =
   | {
+      /** 复合组件的注册命名空间 */
       namespace: string;
+      /** 复合组件的注册类型 */
       type: string;
+      /** 调用编译回调前校验完整节点的 schema */
       schema: ZodType;
       expand?: never;
+      /** 在布局上下文中编译已校验节点；调用前需恢复节点类型关联 */
       compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<never>;
       artifactSchema?: never;
     }
   | {
+      /** 复合组件的注册命名空间 */
       namespace: string;
+      /** 复合组件的注册类型 */
       type: string;
+      /** 调用编译回调前校验完整节点的 schema */
       schema: ZodType;
       expand?: never;
+      /** 在布局上下文中编译已校验节点；调用前需恢复节点类型关联 */
       compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
+      /** 校验组件返回的 JSON 领域产物 */
       artifactSchema: ZodType<JsonValue>;
     };
 

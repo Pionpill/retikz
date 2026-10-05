@@ -18,10 +18,12 @@ const scene = (children: IRScene['children']): IRScene => ({
 
 const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
+
   for (const primitive of primitives) {
     out.push(primitive);
     if (primitive.type === 'group') out.push(...flatten(primitive.children));
   }
+
   return out;
 };
 
@@ -67,6 +69,7 @@ describe('Path kind registry', () => {
       compile: context => {
         const base = context.emitStroke(context.path);
         if (base === null) return null;
+
         return {
           ...base,
           primitives: base.primitives.map(primitive =>
@@ -104,6 +107,7 @@ describe('Path kind registry', () => {
     const output = compileToScene(scene([{ type: 'path', kind: 'empty', style: { stroke: 'blue' } }]), {
       pathKinds: [empty],
     });
+
     expect(output.scene.primitives).toEqual([]);
     expect(observed).toMatchObject({ type: 'path', kind: 'empty', style: { stroke: 'blue' } });
     expect(observed).not.toHaveProperty('stroke');
@@ -121,6 +125,7 @@ describe('Path kind registry', () => {
         observedPosition = line && 'label' in line ? line.label?.position : undefined;
         observedStyle = context.path.style;
         observedStroke = context.appearance.stroke;
+
         return context.emitStroke();
       },
     });
@@ -307,9 +312,13 @@ describe('Path kind registry', () => {
     ).scene;
 
     expect(compiled.primitives).toHaveLength(1);
+
     const [group] = compiled.primitives;
+
     expect(group.type).toBe('group');
+
     if (group.type !== 'group') throw new Error('expected transformed owner group');
+
     expect(group.transforms).toEqual([{ kind: 'translate', x: 100, y: 20 }]);
     expect(group.children).toEqual([{ type: 'rect', x: 0, y: 0, width: 10, height: 6, fill: 'gold' }]);
   });
@@ -349,6 +358,7 @@ describe('Path kind output wrapping', () => {
         const labels = context.emitBoundaryLabels([
           { label: { text: 'target' }, point: [100, 0], outward: [1, 0], sourcePath: 'kindOptions.label' },
         ]);
+
         return context.wrapOutput({
           primitives: [{ type: 'path', commands: [...geometry.commands] }, ...labels],
           boundsPoints: [...geometry.boundsPoints],
@@ -368,12 +378,14 @@ describe('Path kind output wrapping', () => {
       ]),
       { pathKinds: [custom], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
     ).scene;
+
     expect(output.layout.x).toBeCloseTo(62);
     expect(output.layout.y).toBeCloseTo(-72);
     expect(output.layout.width).toBeCloseTo(20);
     expect(output.layout.height).toBeCloseTo(144);
     expect(output.primitives[0]).toMatchObject({ type: 'group', id: 'host', meta: { source: 'custom' } });
   });
+
   it('does not wrap a delegated stroke result twice', () => {
     const custom = definePathKind({
       name: 'delegated',
@@ -386,6 +398,7 @@ describe('Path kind output wrapping', () => {
       padding: 0,
       pathKinds: [custom],
     }).scene;
+
     expect(delegated).toEqual(builtin);
   });
 });

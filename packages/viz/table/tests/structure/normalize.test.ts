@@ -124,6 +124,7 @@ describe('normalizeTableStructure', () => {
         [null, null],
       ],
     });
+
     expect(empty.rows).toHaveLength(2);
     expect(empty.columns).toHaveLength(2);
     expect(empty.cells).toEqual([]);
@@ -282,6 +283,7 @@ describe('normalizeTableStructure', () => {
           mutate: () => undefined,
         }) as unknown as TableStructureOutput,
     });
+
     expect(() => normalizeTableStructure({ kind: 'invalid' }, { structureDefinitions: [invalid] })).toThrow(
       /table: structure "invalid"/,
     );
@@ -302,6 +304,7 @@ describe('normalizeTableStructure', () => {
         schema: strictObject({ kind: literal(kind) }),
         build: () => ({ rows: [], columns: [], cells: [] }),
       });
+
       expect(() => resolveTableStructureRegistry([reserved])).toThrow(new RegExp(kind, 'i'));
     }
   });

@@ -60,6 +60,7 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
  */
 const collectAxisAngles = (lowerAngle: number, upperAngle: number): Array<number> => {
   if (!Number.isFinite(lowerAngle) || !Number.isFinite(upperAngle) || upperAngle < lowerAngle) return [];
+
   const span = upperAngle - lowerAngle;
   if (!Number.isFinite(span) || span >= 360) return [0, 90, 180, 270];
 
@@ -68,9 +69,11 @@ const collectAxisAngles = (lowerAngle: number, upperAngle: number): Array<number
   const startAxisIndex = Math.ceil(normalizedLowerAngle / 90);
   const endAxisIndex = Math.floor(normalizedUpperAngle / 90);
   const angles: Array<number> = [];
+
   for (let axisIndex = startAxisIndex; axisIndex <= endAxisIndex; axisIndex++) {
     angles.push(normalizeAngleDegrees(axisIndex * 90));
   }
+
   return angles;
 };
 
@@ -105,11 +108,13 @@ export const collectArcBoundingCandidates = ({
   const upperAngle = Math.max(startAngleDeg, endAngleDeg);
   const normalizedStartAngle = normalizeAngleDegrees(startAngleDeg);
   const normalizedEndAngle = normalizeAngleDegrees(endAngleDeg);
+
   for (const angle of collectAxisAngles(lowerAngle, upperAngle)) {
     // 端角已通过端点投影包含
     if (angle === normalizedStartAngle || angle === normalizedEndAngle) continue;
     points.push(pointAtArcAngle(center, radius, angle));
   }
+
   return points;
 };
 
@@ -127,9 +132,11 @@ export const isAngleWithinArcSweep = ({
   const span = endAngleDeg - startAngleDeg;
   const total = Math.abs(span);
   if (total >= 360 - toleranceDeg) return true; // 整圆
+
   const ccw = span < 0;
   const raw = ccw ? startAngleDeg - angleDeg : angleDeg - startAngleDeg;
   const swept = normalizeAngleDegrees(raw);
+
   return swept <= total + toleranceDeg || swept >= 360 - toleranceDeg;
 };
 
@@ -163,9 +170,11 @@ export const collectEllipseArcBoundingCandidates = ({
   const upperAngle = Math.max(startAngleDeg, endAngleDeg);
   const normalizedStartAngle = normalizeAngleDegrees(startAngleDeg);
   const normalizedEndAngle = normalizeAngleDegrees(endAngleDeg);
+
   for (const angle of collectAxisAngles(lowerAngle, upperAngle)) {
     if (angle === normalizedStartAngle || angle === normalizedEndAngle) continue;
     points.push(pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: angle }));
   }
+
   return points;
 };

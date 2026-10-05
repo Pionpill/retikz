@@ -23,7 +23,7 @@ export const InputLayerCache = {
 } as const;
 
 /** 输入分层缓存提示取值 */
-export type InputLayerCacheValue = ValueOf<typeof InputLayerCache>;
+export type InputLayerCache = ValueOf<typeof InputLayerCache>;
 
 /** 作者侧 Layer 输入 */
 export type InputLayer = {
@@ -34,7 +34,7 @@ export type InputLayer = {
   /** 运行时缓存提示
    * @default InputLayerCache.Auto
    */
-  cache?: InputLayerCacheValue;
+  cache?: InputLayerCache;
   /** 同值保持声明顺序的分层排序值
    * @default 0
    */
@@ -94,29 +94,43 @@ export type InputAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'node' | 'coor
 
 /** 框架无关的作者来源信息 */
 export type InputAuthoringSite = Readonly<{
+  /** 作者输入所属的节点或容器类别 */
   kind: InputAuthoringSiteKind;
+  /** 该作者位置对应的 Source 路径 */
   sourcePath: string;
   /** 对应的 Core 编译观察所属者 */
   owner?: CompileObservationOwner;
+  /** 当前输入的具体类型标识 */
   type: string;
+  /** 由编译驱动解释的原始作者载荷，不进入 Core IR */
   authoring: unknown;
 }>;
 
 /** 运行时记录的单个 Layer metadata */
 export type InputLayerMeta = Readonly<{
+  /** 图层的稳定身份标识 */
   id: string;
-  cache: InputLayerCacheValue;
+  /** 已补齐缺省值的图层缓存提示 */
+  cache: InputLayerCache;
+  /** 图层稳定排序后的顺序编号 */
   order: number;
+  /** 已补齐缺省值的绘制层级 */
   zIndex: number;
+  /** 该图层直属子项中可识别的身份列表 */
   childIds: ReadonlyArray<string>;
+  /** 该图层是否包含未声明身份的直属子项 */
   hasAnonymousChildren: boolean;
+  /** 用于运行时失效传播的图层边界身份 */
   invalidationBoundary: string;
 }>;
 
 /** 输入归一化产生的运行时 metadata */
 export type InputRuntimeMeta = Readonly<{
+  /** 按最终图层顺序保存的运行时元数据 */
   layers: ReadonlyArray<InputLayerMeta>;
+  /** 从规范身份键到完整身份路径的索引 */
   identityIndex: ReadonlyMap<string, ReadonlyArray<string>>;
+  /** 从规范身份键到父身份的索引 */
   parentIndex: ReadonlyMap<string, string>;
 }>;
 

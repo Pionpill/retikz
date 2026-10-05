@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { ChannelDefinitionKind } from '../../../src/contract';
 import {
@@ -21,11 +21,16 @@ describe('node channel registry', () => {
 
   it('暴露 size / opacity / strokeWidth / shape 四个内置 node 通道', () => {
     expect([...registry.keys()]).toEqual(expect.arrayContaining(['opacity', 'shape', 'size', 'strokeWidth']));
+
     for (const key of ['size', 'opacity', 'strokeWidth', 'shape'] as const) {
       expect(registry.get(key)?.channel).toBe(key);
+
       const def = registry.get(key);
+
       expect(def?.kind).toBe(ChannelDefinitionKind.Node);
+
       if (def?.kind !== ChannelDefinitionKind.Node) throw new Error(`${key} should be a node channel`);
+
       expect(typeof def.resolve).toBe('function');
       expect(typeof def.deliver).toBe('function');
     }
@@ -34,6 +39,7 @@ describe('node channel registry', () => {
   it('size：number 输出 + [MIN, MAX] 半径范围 + size legend', () => {
     const size = registry.get('size');
     if (size?.kind !== ChannelDefinitionKind.Node) throw new Error('size should be a node channel');
+
     expect(size.output).toEqual({ outputKind: 'number', range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS] });
     expect(size.legend).toBe('size');
   });
@@ -41,6 +47,7 @@ describe('node channel registry', () => {
   it('opacity：number 输出 + [OPACITY_MIN, 1] clamp + ramp legend', () => {
     const opacity = registry.get('opacity');
     if (opacity?.kind !== ChannelDefinitionKind.Node) throw new Error('opacity should be a node channel');
+
     expect(opacity.output).toEqual({ outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true });
     expect(opacity.legend).toBe('ramp');
   });
@@ -48,6 +55,7 @@ describe('node channel registry', () => {
   it('strokeWidth：number 输出 + [MIN, MAX] clamp + 无 legend（无 descriptor 不进图例）', () => {
     const strokeWidth = registry.get('strokeWidth');
     if (strokeWidth?.kind !== ChannelDefinitionKind.Node) throw new Error('strokeWidth should be a node channel');
+
     expect(strokeWidth.output).toEqual({
       outputKind: 'number',
       range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
@@ -59,6 +67,7 @@ describe('node channel registry', () => {
   it('shape：symbol 输出 + glyph palette + symbol legend（复用 ordinal 数学）', () => {
     const shape = registry.get('shape');
     if (shape?.kind !== ChannelDefinitionKind.Node) throw new Error('shape should be a node channel');
+
     expect(shape.output).toEqual({ outputKind: 'symbol', palette: [...PLOT_SHAPE_PALETTE] });
     expect(shape.legend).toBe('symbol');
   });
@@ -66,6 +75,7 @@ describe('node channel registry', () => {
   it('size 常量编码：直接产最终半径、无 descriptor（不入 legend）', () => {
     const size = registry.get('size');
     if (size?.kind !== ChannelDefinitionKind.Node) throw new Error('size should be a node channel');
+
     const resolve = size.resolve({
       node: {
         namespace: 'plot',
@@ -76,7 +86,7 @@ describe('node channel registry', () => {
         marks: [],
       },
       rows: [],
-      fieldTypes: new Map(),
+      model: [],
       resolveChannelScale: () => ({
         of: () => undefined,
         legendForm: 'swatch',
@@ -89,6 +99,7 @@ describe('node channel registry', () => {
       resolveColorScheme: () => () => '#000000',
     });
     const resolution = resolve({ type: 'point', size: { kind: 'constant', value: 7 }, encoding: {} });
+
     expect(resolution?.resolver({})).toBe(7);
     expect(resolution?.descriptor).toBeUndefined();
   });

@@ -51,10 +51,16 @@ export type ChartResolveWarning = Readonly<{
   subPath?: string;
 }>;
 
-/** 已选定 recipe 与命名主题链的 Chart resolve context */
+/**
+ * 已选定 recipe 与命名主题链的 Chart resolve context
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type SelectedChartResolveContext<TSource extends IRChartSource = IRChartSource> = Readonly<{
+  /** 当前位置已解析的 Core 主题上下文 */
   theme: ResolvedTheme;
+  /** 与当前精确 Chart Source 配对的 recipe 定义 */
   recipe: ChartRecipeDefinition<TSource>;
+  /** 当前编译边界可见的 Chart 主题定义 */
   themeDefinitions: ReadonlyArray<ChartThemeDefinition>;
   /** 与当前Plot lowering共享的owner Definition注册表 */
   runtime: ChartEncodingRuntime;
@@ -62,6 +68,8 @@ export type SelectedChartResolveContext<TSource extends IRChartSource = IRChartS
 
 /** Mark slot 继承后的值；显式 mark payload 由 mark resolver 自己覆盖 */
 export type InheritedChartMarkSlots = Readonly<{
+  /** 从 recipe 继承给 mark 的字段映射槽位 */
   encodings: JsonObject;
+  /** 从 recipe 继承给 mark 的常量属性槽位 */
   properties: JsonObject;
 }>;

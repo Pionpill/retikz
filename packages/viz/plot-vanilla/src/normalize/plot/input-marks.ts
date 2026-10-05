@@ -1,5 +1,5 @@
 import type {
-  BlendModeValue,
+  BlendMode,
   IRAxisScale,
   IRBoundary,
   IRBoxSize,
@@ -12,8 +12,8 @@ import type {
   IRPathScale,
   IRShapeRef,
   IRStepLabel,
-  NodeTextAlignValue,
-  ShadowPresetValue,
+  NodeTextAlign,
+  ShadowPreset,
 } from '@retikz/core';
 import type { ExternalRow, IRDataTransformDeclaration } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
@@ -57,11 +57,12 @@ import type {
   IRPlotRelationStepLabel,
   IRPlotShadowStyle,
   IRPlotTargetRef,
-  PathCurveValue,
-  PolarInterpolationValue,
-  RelationGeometryKindValue,
+  PathCurve,
+  PolarInterpolation,
+  RelationGeometryKind,
   MarkValueKind,
 } from '@retikz/plot';
+
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 Plot authoring 输入 */
 export type InputPlotFieldName = string;
 
@@ -70,27 +71,23 @@ type InputPlotMarkValue<T> =
   | { kind: typeof MarkValueKind.Field; value: string; scale?: string }
   | { kind: typeof MarkValueKind.Constant; value: T };
 
-/** mark 样式值输入：字段名、直接常量或显式的字段 / 常量绑定 */
+/**
+ * mark 样式值输入：字段名、直接常量或显式的字段 / 常量绑定
+ * @template T 该视觉属性允许的常量值类型
+ */
 export type InputPlotMarkValueProp<T> = InputPlotFieldName | T | InputPlotMarkValue<T>;
 
 /** 路径端点样式 */
-export type InputPlotLineCapValue = 'butt' | 'round' | 'square';
+export type InputPlotLineCap = 'butt' | 'round' | 'square';
 
 /** 路径折点连接样式 */
-export type InputPlotLineJoinValue = 'miter' | 'round' | 'bevel';
+export type InputPlotLineJoin = 'miter' | 'round' | 'bevel';
 
 /** 路径填充规则 */
-export type InputPlotFillRuleValue = 'nonzero' | 'evenodd';
+export type InputPlotFillRule = 'nonzero' | 'evenodd';
 
 /** 路径预设粗细 */
-export type InputPlotThicknessValue =
-  | 'ultraThin'
-  | 'veryThin'
-  | 'thin'
-  | 'semithick'
-  | 'thick'
-  | 'veryThick'
-  | 'ultraThick';
+export type InputPlotThickness = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | 'thick' | 'veryThick' | 'ultraThick';
 
 /** 节点形状通道值：内置 / 自定义形状名或完整形状引用 */
 export type InputPlotNodeShapeChannelValue = string | IRShapeRef;
@@ -119,7 +116,7 @@ export type InputPlotCoordinateScope = {
 /** 可通过通道逐 datum 下发到 core Node 的样式属性 */
 export type InputPlotCoreNodeChannels = {
   /** 文本水平对齐方式 */
-  align?: InputPlotMarkValueProp<NodeTextAlignValue> | IRPlotNodeTextAlignStyle;
+  align?: InputPlotMarkValueProp<NodeTextAlign> | IRPlotNodeTextAlignStyle;
   /** 文本行高 */
   lineHeight?: InputPlotMarkValueProp<number> | IRPlotNodePositiveNumberStyle;
   /** 文本最大宽度 */
@@ -143,9 +140,9 @@ export type InputPlotCoreNodeChannels = {
   /** 节点边界策略 */
   boundary?: InputPlotMarkValueProp<IRBoundary> | IRPlotNodeBoundaryStyle;
   /** 节点阴影 */
-  shadow?: InputPlotMarkValueProp<ShadowPresetValue | IRDropShadow> | IRPlotShadowStyle;
+  shadow?: InputPlotMarkValueProp<ShadowPreset | IRDropShadow> | IRPlotShadowStyle;
   /** 节点混合模式 */
-  blendMode?: InputPlotMarkValueProp<BlendModeValue> | IRPlotBlendModeStyle;
+  blendMode?: InputPlotMarkValueProp<BlendMode> | IRPlotBlendModeStyle;
 };
 
 /** 可通过通道逐 datum 下发到 core Path 的样式属性 */
@@ -163,47 +160,53 @@ export type InputPlotCorePathChannels = {
   /** 路径缩放配置 */
   scale?: InputPlotMarkValueProp<IRPathScale> | IRPlotPathScaleStyle;
   /** 路径填充规则 */
-  fillRule?: InputPlotMarkValueProp<InputPlotFillRuleValue> | IRPlotPathFillRuleStyle;
+  fillRule?: InputPlotMarkValueProp<InputPlotFillRule> | IRPlotPathFillRuleStyle;
   /** 路径预设粗细 */
-  thickness?: InputPlotMarkValueProp<InputPlotThicknessValue> | IRPlotPathThicknessStyle;
+  thickness?: InputPlotMarkValueProp<InputPlotThickness> | IRPlotPathThicknessStyle;
   /** 路径上的标记配置 */
   marks?: IRPlotRelationPathSpecificOptions['marks'];
   /** 自定义描边间隔 */
   dashPattern?: InputPlotMarkValueProp<Array<number>> | IRPlotNodeDashPatternStyle;
   /** 路径阴影 */
-  shadow?: InputPlotMarkValueProp<ShadowPresetValue | IRDropShadow> | IRPlotShadowStyle;
+  shadow?: InputPlotMarkValueProp<ShadowPreset | IRDropShadow> | IRPlotShadowStyle;
   /** 路径混合模式 */
-  blendMode?: InputPlotMarkValueProp<BlendModeValue> | IRPlotBlendModeStyle;
+  blendMode?: InputPlotMarkValueProp<BlendMode> | IRPlotBlendModeStyle;
 };
 
 /** Plot Node 宿主标签的 framework-neutral authoring 输入 */
 export type InputPlotMarkNodeLabel = Omit<IRNodeLabel, 'text'> & {
+  /** 标签的常量、字段或格式化内容来源 */
   content: IRPlotMarkLabelContent;
 };
 
 /** Plot geometry 宿主标签的 framework-neutral authoring 输入 */
 export type InputPlotMarkGeometryLabel = Omit<IRGeometryLabel, 'text'> & {
+  /** 几何标签的常量、字段或格式化内容来源 */
   content: IRPlotMarkLabelContent;
 };
 
 /** Relation 路由步骤标签的 framework-neutral authoring 输入 */
 export type InputPlotRelationStepLabel = Omit<IRStepLabel, 'text'> & {
+  /** 关系步骤标签的文字或数据内容引用 */
   text: IRPlotRelationStepLabel['text'];
 };
 
 /** Relation 路由步骤的 framework-neutral authoring 输入 */
 export type InputPlotRelationRouteStep = Omit<IRPlotRelationRouteStep, 'label'> & {
+  /** 仅应用于当前路由步骤的标签 */
   label?: InputPlotRelationStepLabel;
 };
 
 /** Relation 路径几何的 framework-neutral authoring 输入 */
 export type InputPlotRelationPathGeometry = Omit<IRPlotRelationPathGeometry, 'label' | 'route'> & {
+  /** 应用于关系路径的标签 */
   label?: InputPlotRelationStepLabel;
+  /** 按源到目标顺序声明的路径步骤 */
   route?: Array<InputPlotRelationRouteStep>;
 };
 
 /**
- * 宿主 datum label 扁平属性：给位置 mark（point / interval / path）添加最高优先级的 datum 标签。
+ * 宿主 datum label 扁平属性：给位置 mark（point / interval / path）添加最高优先级的 datum 标签
  * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelDisplayFormat 进 IR（d3-format / d3-time-format 串）；
  *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）
  */
@@ -219,16 +222,34 @@ export type InputPlotDatumLabel = {
   /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
   labelDistance?: number;
   /** 从宿主边框拉引线到标签（core leader）；缺省 false */
-  labelPin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number> };
+  labelPin?:
+    | boolean
+    | {
+        /** 标签引线的描边颜色 */
+        stroke?: string;
+        /** 标签引线的描边宽度 */
+        strokeWidth?: number;
+        /** 标签引线交替绘制与留白的长度序列 */
+        dashPattern?: Array<number>;
+      };
+  /** 数据标签的文字颜色覆盖 */
   labelTextColor?: string;
+  /** 数据标签的透明度覆盖 */
   labelOpacity?: number;
+  /** 数据标签的字体属性覆盖 */
   labelFont?: {
+    /** 文字使用的字体族 */
     family?: string;
+    /** 文字字号，使用绘图坐标单位 */
     size?: number;
+    /** 文字字重，支持 normal、bold 或数值 */
     weight?: 'normal' | 'bold' | number;
+    /** 文字使用正常、斜体或倾斜样式 */
     style?: 'normal' | 'italic' | 'oblique';
   };
+  /** 标签的固定旋转角度或相对宿主边界的旋转方式；数值单位为度 */
   labelRotate?: 'none' | 'radial' | 'tangent' | number;
+  /** 是否翻转朝下的标签，使文字保持正向可读 */
   labelKeepUpright?: boolean;
   /** 完全自定义标签逃生舱（运行时函数，不进 IR；最高优先，覆盖 label/labelDisplayFormat）；需配 mark id 经 options 注入 */
   resolveLabel?: (row: ExternalRow) => string;
@@ -252,12 +273,19 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     series?: InputPlotFieldName;
     /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多条线；缺省取 series。连续 / 时间字段报错 */
     color?: InputPlotFieldName;
+    /** 按路径几何放置的单个或多个标签 */
     label?: InputPlotMarkGeometryLabel | Array<InputPlotMarkGeometryLabel>;
+    /** 按有效数据行生成标签文字的运行时回调，需配合 mark id 使用 */
     resolveLabel?: (row: ExternalRow) => string;
+    /** 路径描边宽度的常量或数据映射 */
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
+    /** 路径整体透明度的常量或数据映射 */
     opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
-    lineCap?: InputPlotFieldName | InputPlotLineCapValue | InputPlotMarkValue<InputPlotLineCapValue>;
-    lineJoin?: InputPlotFieldName | InputPlotLineJoinValue | InputPlotMarkValue<InputPlotLineJoinValue>;
+    /** 路径端点形状的常量或字段映射 */
+    lineCap?: InputPlotFieldName | InputPlotLineCap | InputPlotMarkValue<InputPlotLineCap>;
+    /** 路径连接处形状的常量或字段映射 */
+    lineJoin?: InputPlotFieldName | InputPlotLineJoin | InputPlotMarkValue<InputPlotLineJoin>;
+    /** 路径折角圆角半径的常量或数据映射 */
     roundedCorners?: InputPlotMarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；cartesian 缺省 false，polar2D 缺省 true */
     closed?: boolean;
@@ -266,11 +294,12 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     /** 构建闭合路径：cycle 首尾闭合，baseline 回到基线，stack 回到逐行基线字段；是否填充由 fill 控制 */
     closure?: IRPlotPathClosure;
     /** 相邻点连接方式；缺省 linear */
-    curve?: PathCurveValue;
+    curve?: PathCurve;
     /** Polar2D 连接空间局部覆盖；省略时继承坐标系 */
-    interpolation?: PolarInterpolationValue;
+    interpolation?: PolarInterpolation;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
+    /** 为路径数据目标生成可引用锚点的命名规则 */
     anchorId?: IRPlotAnchorId;
     /** 扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理 */
     channels?: Record<string, InputPlotExtensionChannel>;
@@ -296,6 +325,7 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     yAxisId?: string;
     /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
     color?: InputPlotFieldName | IRPlotPointColorStyle;
+    /** 点图元文字颜色的字段或常量映射 */
     textColor?: InputPlotFieldName | IRPlotPointColorStyle;
     /** 填充：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
     fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
@@ -331,13 +361,14 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     dy?: number;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
+    /** 为点图元数据目标生成可引用锚点的命名规则 */
     anchorId?: IRPlotAnchorId;
     /** position scale 后、mark geometry 前执行的有序位置调整 */
     placement?: IRPlotMarkPlacement;
   };
 
 /**
- * <IntervalMark> props：区间图层；统一柱 / 直方 / 饼环 / heatmap。
+ * <IntervalMark> props：区间图层；统一柱 / 直方 / 饼环 / heatmap
  * @description 便捷 props 是 authoring 糖（自动拼 transform + 抽象 bounds）：x/y 画柱、angle 画饼/环、x0/x1 画直方、
  *   series(+stack) 分组/堆叠；heatmap（双 band）经显式 bounds={{x:{kind:'band'},y:{kind:'band'}}}
  */
@@ -380,11 +411,16 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */
     bounds?: IRPlotIntervalBounds;
     /** Polar2D cell 边界局部覆盖；省略时继承坐标系 */
-    interpolation?: PolarInterpolationValue;
+    interpolation?: PolarInterpolation;
+    /** 区间图元填充的字段、常量或绘制资源输入 */
     fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
+    /** 区间图元描边的字段、常量或绘制资源输入 */
     stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
+    /** 区间描边宽度的常量或数据映射 */
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
+    /** 区间填充透明度的常量或数据映射 */
     fillOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
+    /** 区间整体透明度的常量或数据映射 */
     opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 极坐标 cell 之间的角度间隔，先于 sector 或 chord contour 投影应用 */
     padAngle?: number;
@@ -392,6 +428,7 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     pull?: InputPlotMarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
+    /** 为区间数据目标生成可引用锚点的命名规则 */
     anchorId?: IRPlotAnchorId;
   };
 
@@ -401,7 +438,7 @@ export type InputPlotRelationMark = InputPlotMarkTransform &
     /** 可选 mark 句柄，用于生成稳定的关系图层 id */
     id?: string;
     /** 关系几何类型 */
-    kind?: RelationGeometryKindValue;
+    kind?: RelationGeometryKind;
     /** 关系起点引用 */
     source: IRPlotTargetRef;
     /** 关系终点引用 */
@@ -427,7 +464,7 @@ type InputPlotReferenceMarkLabel =
   | Array<InputPlotMarkGeometryLabel>;
 
 /**
- * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）。
+ * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）
  * @description 扁平 props：数字 → IR 常量 value、字符串 → IR field（per-datum）。只给下界（x / y）→ line；
  *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。kind="region" 时 x/xTo/y/yTo 围出二维区域。
  *   extent 给对侧维起止字段截成部分长度
@@ -439,7 +476,7 @@ export type InputPlotReferenceMark = InputPlotMarkTransform &
     /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
     kind?: 'region';
     /** Polar2D band / region 边界局部覆盖；line 保持直线 */
-    interpolation?: PolarInterpolationValue;
+    interpolation?: PolarInterpolation;
     /** 竖直参考的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
     x?: number | InputPlotFieldName;
     /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
@@ -454,25 +491,16 @@ export type InputPlotReferenceMark = InputPlotMarkTransform &
     extentToField?: InputPlotFieldName;
     /** 颜色：数字 / 颜色串常量 → value（line→stroke / band→fill）；字段名 → field（per-datum 按色分组） */
     color?: string;
+    /** 参考线或参考区域的标签配置 */
     label?: InputPlotReferenceMarkLabel;
+    /** 参考图元描边宽度的常量或数据映射 */
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
+    /** 参考区域填充透明度的常量或数据映射 */
     fillOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
+    /** 参考图元整体透明度的常量或数据映射 */
     opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 转发到 `encoding.channels` 的扩展通道绑定；字符串值按字段名处理 */
     channels?: Record<string, InputPlotExtensionChannel>;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
   };
-
-/**
- * 折线图层声明组件
- * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 type + props 装配进 IRPlot
- */
-
-/** 散点 / 文本图层声明组件（给 text → 无边框文本 Node） */
-
-/** 区间图层声明组件（柱 / 直方 / 饼环 / heatmap，统一） */
-
-/** 参考标注（阈值线 / 容差带）图层声明组件 */
-
-/** 起点到终点的关系路径图层声明组件 */

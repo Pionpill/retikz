@@ -61,6 +61,7 @@ const translate = (lang: DocLanguage, key: I18nKey): string => {
 
 const collectRouteDocuments = (moduleId: string, sections: Array<Section>): Array<RouteDocument> => {
   const documents: Array<RouteDocument> = [];
+
   const visit = (node: SubPage, prefix: Array<string>, sectionId: string | undefined) => {
     const parts = [...prefix, node.id];
     documents.push({
@@ -70,6 +71,7 @@ const collectRouteDocuments = (moduleId: string, sections: Array<Section>): Arra
       meta: node.meta,
       group: node.children !== undefined,
     });
+
     for (const child of node.children ?? []) visit(child, parts, sectionId);
   };
 
@@ -84,8 +86,10 @@ const collectRouteDocuments = (moduleId: string, sections: Array<Section>): Arra
         group: true,
       });
     }
+
     for (const page of section.pages) visit(page, sectionPrefix, section.id);
   }
+
   return documents;
 };
 
@@ -93,6 +97,7 @@ const inferPageType = (document: RouteDocument): DocPageType => {
   if (document.meta?.pageType) return document.meta.pageType;
   if (document.group) return 'group';
   if (document.sectionId === undefined) return 'entry';
+
   switch (document.sectionId) {
     case 'concepts':
       return 'concept';
@@ -117,6 +122,7 @@ const inferAudience = (pageType: DocPageType): DocAudience => {
   if (pageType === 'extension') return 'extension-author';
   if (pageType === 'architecture' || pageType === 'release') return 'maintainer';
   if (pageType === 'reference') return 'integrator';
+
   return 'user';
 };
 
@@ -126,6 +132,7 @@ const inferSourceOfTruth = (document: RouteDocument, pageType: DocPageType): Doc
   if (pageType === 'release') return 'changelog';
   if (pageType === 'reference' && document.parts.includes('schema')) return 'schema';
   if (pageType === 'reference') return 'runtime';
+
   return 'docs';
 };
 
@@ -134,13 +141,17 @@ const toPosix = (value: string): string => value.replaceAll(path.sep, '/');
 /** 收集站点导航中存在正文的页面，并归一为语言无关 manifest。 */
 export const collectDocManifest = (rootDir: string): Array<DocManifestEntry> => {
   const entries: Array<DocManifestEntry> = [];
+
   for (const module of modules) {
     const documents = collectRouteDocuments(module.id, getSectionsByArea(module.id));
+
     for (const document of documents) {
       const content: Partial<Record<DocLanguage, DocLanguageEntry>> = {};
+
       for (const lang of ['zh', 'en'] as const) {
         const sourcePath = path.resolve(rootDir, 'src/modules/docs/contents', ...document.parts, `index.${lang}.mdx`);
         if (!existsSync(sourcePath)) continue;
+
         const source = readFileSync(sourcePath, 'utf8');
         const { frontmatter } = parseDocSource(source);
         content[lang] = {
@@ -150,6 +161,7 @@ export const collectDocManifest = (rootDir: string): Array<DocManifestEntry> => 
           source: toPosix(path.relative(rootDir, sourcePath)),
         };
       }
+
       if (content.zh === undefined && content.en === undefined) continue;
 
       const contentDir = path.resolve(rootDir, 'src/modules/docs/contents', ...document.parts);
@@ -183,6 +195,7 @@ export const collectDocManifest = (rootDir: string): Array<DocManifestEntry> => 
       });
     }
   }
+
   return entries;
 };
 
@@ -197,16 +210,19 @@ export const writeDocArtifacts = (rootDir: string, outDir = path.resolve(rootDir
   const manifest = collectDocManifest(rootDir);
   rmSync(resolvedOut, { recursive: true, force: true });
   mkdirSync(resolvedOut, { recursive: true });
+
   for (const entry of manifest) {
     for (const [lang, localized] of Object.entries(entry.content) as Array<[DocLanguage, DocLanguageEntry]>) {
       const target = path.resolve(resolvedOut, ...entry.path.split('/').filter(Boolean), `index.${lang}.mdx`);
       mkdirSync(path.dirname(target), { recursive: true });
       writeFileSync(target, readFileSync(path.resolve(rootDir, localized.source), 'utf8'), 'utf8');
     }
+
     for (const asset of entry.assets) {
       const target = path.resolve(resolvedOut, ...entry.path.split('/').filter(Boolean), path.basename(asset.source));
       writeFileSync(target, readFileSync(path.resolve(rootDir, asset.source)));
     }
   }
+
   writeFileSync(path.resolve(resolvedOut, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 };

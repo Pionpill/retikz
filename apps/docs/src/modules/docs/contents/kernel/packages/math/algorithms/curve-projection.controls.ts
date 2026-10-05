@@ -56,5 +56,7 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['curve.projectedRange'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');
+
 export const previewControls = previewControlContract.controls;

@@ -23,7 +23,10 @@ export type RuntimeSourceUpdate = Readonly<{
   [RuntimeSourceCommandBrand]: true;
 }>;
 
-/** 绑定所属 runtime revision 的 immutable read envelope */
+/**
+ * 绑定所属 runtime revision 的 immutable read envelope
+ * @template TRead 快照中 value 承载的 Source 或计算产物只读视图类型
+ */
 export type RuntimeSnapshot<TRead> = Readonly<{
   /** 当前 view 所属的 runtime revision */
   revision: RuntimeRevision;

@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /**
  * 内置 pattern motif 名常量（用 const + ValueOf 派生，不用 TS enum）
  * @description 内置 3 motif：`lines`（横向阴影线）/ `dots`（波点）/ `grid`（横竖网格）。
@@ -18,3 +20,12 @@ export const ImageFit = {
   /** 保持比例覆盖目标区域，允许裁切 */
   Cover: 'cover',
 } as const;
+
+/**
+ * 内置 3 pattern motif 名联合
+ * @description `BUILTIN_PATTERNS` 的 Record key（保穷尽性约束，不随 `PatternShapeName` 开放而退化为 `string`）
+ */
+export type PatternShape = ValueOf<typeof PatternShape>;
+
+/** 图片填充适配方式取值 */
+export type ImageFit = ValueOf<typeof ImageFit>;

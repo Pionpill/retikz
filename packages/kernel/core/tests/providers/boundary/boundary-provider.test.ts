@@ -39,10 +39,12 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
       p.type === 'path' && !p.commands.some(command => command.kind === 'close'),
   );
   if (prim === undefined) throw new Error('expected connection path');
+
   const line = prim.commands.find(
     (command): command is Extract<(typeof prim.commands)[number], { kind: 'line' }> => command.kind === 'line',
   );
   if (line === undefined) throw new Error('expected line command');
+
   return [line.to[0], line.to[1]];
 };
 
@@ -137,12 +139,14 @@ describe('Boundary provider contract', () => {
 
   it('boundary_json_round_trip：boundary IR 只保存 JSON-safe 引用和 params', () => {
     const boundary = { type: 'pin', params: { offset: 11 } };
+
     expect(BoundarySchema.parse(JSON.parse(JSON.stringify(boundary)))).toEqual(boundary);
   });
 
   it('custom boundary may publish an explicit closed outline', () => {
     const boundary = outlinedBoundary();
     const rect: Rect = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
+
     expect(boundary.outline?.(rect, {})).toEqual([
       { kind: 'move', to: [-1, 2] },
       { kind: 'line', to: [9, 2] },
@@ -154,8 +158,10 @@ describe('Boundary provider contract', () => {
 
   it('built-in circle, rectangle, and ellipse boundaries publish explicit closed outlines', () => {
     const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+
     for (const boundary of BUILTIN_BOUNDARIES) {
       const outline = boundary.outline?.(rect, { fit: 'tight', gap: 0 });
+
       expect(outline).toBeDefined();
       expect(outline?.at(-1)).toEqual({ kind: 'close' });
     }

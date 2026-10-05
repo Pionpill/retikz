@@ -14,6 +14,7 @@ describe('normalizePlot', () => {
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius' },
       marks: [],
     });
+
     expect(source.coordinate).toEqual({ type: 'polar2D', angle: 'angle', radius: 'radius' });
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(source.coordinate)))).toEqual({
       ...source.coordinate,
@@ -21,6 +22,7 @@ describe('normalizePlot', () => {
       endAngle: 360,
       innerRadius: 0,
     });
+
     const explicit = normalizePlot({
       data: { reference: 'polar' },
       scales: [
@@ -30,6 +32,7 @@ describe('normalizePlot', () => {
       coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 0, innerRadius: 0 },
       marks: [],
     });
+
     expect(explicit.coordinate).toMatchObject({ startAngle: 0, endAngle: 0, innerRadius: 0 });
   });
 

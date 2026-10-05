@@ -13,14 +13,18 @@ import { buildPreviewIR } from '../../src/modules/docs/components/component-prev
 import { controlModules, demoModules } from './load-preview-registry';
 
 const segments = ['kernel', 'components', 'path', 'arrow'];
+
 const name = 'arrow-endpoint-overlap';
 
 const demoModule = demoModules[resolveDemoKey(segments, name, 'zh')];
+
 const chineseContract = resolvePreviewControlContract(controlModules[resolveControlsKey(segments, name, 'zh')]);
+
 const englishContract = resolvePreviewControlContract(controlModules[resolveControlsKey(segments, name, 'en')]);
 
 const renderWithValues = (Component: FC, values: PreviewControlValues) => {
   if (chineseContract === undefined) return '';
+
   return renderToStaticMarkup(
     <PreviewControlStateContext.Provider
       value={{
@@ -46,8 +50,10 @@ describe('Arrow endpoint-overlap controlled demo', () => {
 
     const chineseControls = chineseContract?.controls;
     const englishControls = englishContract?.controls;
+
     expect(chineseControls?.presentation).toBe('panel');
     expect(englishControls?.presentation).toBe('panel');
+
     if (chineseControls?.presentation !== 'panel' || englishControls?.presentation !== 'panel') return;
 
     const chineseShapeControl = chineseControls.sections
@@ -59,16 +65,20 @@ describe('Arrow endpoint-overlap controlled demo', () => {
 
     expect(chineseShapeControl).toMatchObject({ kind: 'select', defaultValue: 'openCircle' });
     expect(englishShapeControl).toMatchObject({ kind: 'select', defaultValue: 'openCircle' });
+
     if (chineseShapeControl?.kind !== 'select' || englishShapeControl?.kind !== 'select') return;
 
     const builtinShapes = ['normal', 'open', 'stealth', 'openStealth', 'circle', 'openCircle'];
+
     expect(chineseShapeControl.options.map(option => option.value)).toEqual(builtinShapes);
     expect(englishShapeControl.options.map(option => option.value)).toEqual(builtinShapes);
   });
 
   it('canonical 画面只保留一个箭头，并连接到带 pattern 的矩形', () => {
     const canonicalRender = demoModule?.previewSource?.canonicalRender;
+
     expect(canonicalRender).toBeTypeOf('function');
+
     if (canonicalRender === undefined) return;
 
     const CanonicalDemo = (): ReactNode => canonicalRender();
@@ -91,8 +101,10 @@ describe('Arrow endpoint-overlap controlled demo', () => {
 
   it('滑块改变箭头进入深度，同时保持固定取景和 pattern 矩形', () => {
     const Demo = demoModule?.default;
+
     expect(Demo).toBeTypeOf('function');
     expect(chineseContract).toBeDefined();
+
     if (Demo === undefined || chineseContract === undefined) return;
 
     const outside = renderWithValues(Demo, { overlap: 0 });
@@ -109,14 +121,17 @@ describe('Arrow endpoint-overlap controlled demo', () => {
 
   it('切换 Core 箭头形状，同时保持单箭头、重叠比例与 Pattern 矩形', () => {
     const Demo = demoModule?.default;
+
     expect(Demo).toBeTypeOf('function');
     expect(chineseContract).toBeDefined();
+
     if (Demo === undefined || chineseContract === undefined) return;
 
     const normal = renderWithValues(Demo, { shape: 'normal', overlap: 0.5 });
     const openCircle = renderWithValues(Demo, { shape: 'openCircle', overlap: 0.5 });
 
     expect(normal).not.toBe(openCircle);
+
     for (const markup of [normal, openCircle]) {
       expect(markup).toContain('viewBox="-170 -75 340 150"');
       expect(markup).toContain('<pattern');

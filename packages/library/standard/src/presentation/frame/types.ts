@@ -1,12 +1,7 @@
 import type { IRNode, IRScopeProps } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { FrameHeaderDirection } from './constants';
 import type { FrameDescriptionSchema, FrameSchema, FrameTitleSchema } from './schema';
-
-/** Frame 标题区排列方向取值 */
-export type FrameHeaderDirectionValue = ValueOf<typeof FrameHeaderDirection>;
 
 /** Frame 主标题的持久化 Node-like 输入 */
 export type IRFrameTitle = ZodInfer<typeof FrameTitleSchema>;

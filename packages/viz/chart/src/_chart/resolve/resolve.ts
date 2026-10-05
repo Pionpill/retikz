@@ -16,8 +16,10 @@ const assertConsumedSlots = (
   for (const owner of ['encodings', 'properties'] as const) {
     const consumers = new Set([...recipe.consumes[owner], ...markConsumption[owner]]);
     const values = owner === 'encodings' ? source.recipe.encodings : (source.recipe.properties ?? {});
+
     for (const slot of Object.keys(values)) {
       if (consumers.has(slot)) continue;
+
       throw new RetikzChartError({
         code: RetikzChartErrorCode.InvalidChartIR,
         message: `Chart ${owner} slot "${slot}" has no active consumer`,
@@ -27,7 +29,10 @@ const assertConsumedSlots = (
   }
 };
 
-/** 将 typed Chart Source 解析为唯一完整 Plot 与固定 presentation 结果 */
+/**
+ * 将 typed Chart Source 解析为唯一完整 Plot 与固定 presentation 结果
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export const resolveSelectedChart = <TSource extends IRChartSource>(
   source: TSource,
   context: SelectedChartResolveContext<TSource>,
@@ -66,5 +71,6 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     theme.plotDefaults,
   );
   const presentation = resolveChartPresentation(source, plot, theme.defaults);
+
   return { source, theme, plot, warnings: semanticMarkResolution.warnings, presentation };
 };

@@ -17,12 +17,12 @@ const createControls = (lang: Lang) => {
             kind: 'select',
             id: 'dataExpand',
             label: t.dataExpand,
-            defaultValue: 'list',
+            defaultValue: 'array',
             options: [
               { value: 'all', label: t.all },
               { value: 'none', label: t.none },
               { value: 'map', label: t.map },
-              { value: 'list', label: t.list },
+              { value: 'array', label: t.array },
             ],
           },
         ],
@@ -35,7 +35,7 @@ const createControls = (lang: Lang) => {
 export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
-    canonicalValues: { dataExpand: 'list' },
+    canonicalValues: { dataExpand: 'array' },
     relatedApis: ['Map.dataExpand'],
   }) satisfies PreviewControlContract;
 

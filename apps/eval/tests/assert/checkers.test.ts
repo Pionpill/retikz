@@ -42,6 +42,7 @@ describe('CHECKERS.textPresent', () => {
   it('contains 命中', () => {
     expect(CHECKERS.textPresent(scene, { kind: 'textPresent', text: 'Hell' }).pass).toBe(true);
   });
+
   it('exact 不命中子串', () => {
     expect(CHECKERS.textPresent(scene, { kind: 'textPresent', text: 'Hell', match: 'exact' }).pass).toBe(false);
   });
@@ -53,6 +54,7 @@ describe('CHECKERS.primitiveCount', () => {
       true,
     );
   });
+
   it('rect == 3 失败', () => {
     const r = CHECKERS.primitiveCount(scene, {
       kind: 'primitiveCount',
@@ -60,6 +62,7 @@ describe('CHECKERS.primitiveCount', () => {
       op: '==',
       value: 3,
     });
+
     expect(r.pass).toBe(false);
     expect(r.actual).toContain('2');
   });
@@ -75,6 +78,7 @@ describe('CHECKERS.stylePresent', () => {
   it('dashed 命中', () => {
     expect(CHECKERS.stylePresent(scene, { kind: 'stylePresent', style: 'dashed' }).pass).toBe(true);
   });
+
   it('fill 命中', () => {
     expect(CHECKERS.stylePresent(scene, { kind: 'stylePresent', style: 'fill' }).pass).toBe(true);
   });

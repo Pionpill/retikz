@@ -26,12 +26,12 @@ export const RetikzChartErrorCode = {
 } as const;
 
 /** Chart 包稳定错误码取值 */
-export type RetikzChartErrorCodeValue = ValueOf<typeof RetikzChartErrorCode>;
+export type RetikzChartErrorCode = ValueOf<typeof RetikzChartErrorCode>;
 
 /** Chart 包运行时错误的可选构造参数 */
 export type RetikzChartErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzChartErrorCodeValue;
+  code: RetikzChartErrorCode;
   /** 面向调用方的错误消息 */
   message?: string;
   /** 失败上下文的结构化详情 */
@@ -43,7 +43,7 @@ export type RetikzChartErrorOptions = Readonly<{
 type RetikzChartErrorCauseOptions = Readonly<Pick<RetikzChartErrorOptions, 'cause'>>;
 
 /** Chart 包统一的结构化错误 */
-export class RetikzChartError extends RetikzError<RetikzChartErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzChartError extends RetikzError<RetikzChartErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 Chart 错误 */
   constructor(message: string, options?: RetikzChartErrorCauseOptions);
   /** 使用结构化参数创建 Chart 错误 */

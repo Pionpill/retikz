@@ -16,7 +16,7 @@ import { readSourceIndicesOf } from './provenance';
 const DEFAULT_SOURCE_IDENTITY_LIMIT = 20;
 
 /**
- * data lineage recorder 的归一化消费选项。
+ * data lineage recorder 的归一化消费选项
  * @description 已补齐公开开关默认值，并把需要记录 row 值的选项收敛为显式白名单形态
  */
 type ResolvedDataLineageOptions = {
@@ -49,18 +49,21 @@ const normalizeSampleOptions = (
   if (!Number.isInteger(value.maxRows) || value.maxRows < 1) {
     throw new RetikzDataError(`data lineage: ${label}.maxRows must be a positive integer`);
   }
+
   if (value.fields.length === 0) {
     throw new RetikzDataError(`data lineage: ${label}.fields must be a non-empty field whitelist`);
   }
+
   value.fields.forEach((field, index) => {
     if (field.length === 0) {
       throw new RetikzDataError(`data lineage: ${label}.fields[${index}] must be a non-empty string`);
     }
   });
+
   return { maxRows: value.maxRows, fields: [...value.fields] };
 };
 
-/** 解析 source identity 开关；默认 summary + 固定上限。 */
+/** 解析 source identity 开关；默认 summary + 固定上限 */
 const normalizeSourceIdentityOptions = (
   value: DataLineageOptions['sourceIdentity'],
 ): false | Required<DataSourceIdentityOptions> => {
@@ -68,15 +71,17 @@ const normalizeSourceIdentityOptions = (
   if (value === true || value === undefined) {
     return { mode: DataSourceIdentityMode.Summary, maxIndices: DEFAULT_SOURCE_IDENTITY_LIMIT };
   }
+
   const mode = value.mode ?? DataSourceIdentityMode.Summary;
   const maxIndices = value.maxIndices ?? DEFAULT_SOURCE_IDENTITY_LIMIT;
   if (!Number.isInteger(maxIndices) || maxIndices < 1) {
     throw new RetikzDataError('data lineage: sourceIdentity.maxIndices must be a positive integer');
   }
+
   return { mode, maxIndices };
 };
 
-/** 归一化 lineage 开关默认值。 */
+/** 归一化 lineage 开关默认值 */
 const normalizeLineageOptions = (options: DataLineageOptions = {}): ResolvedDataLineageOptions => ({
   sourceIdentity: normalizeSourceIdentityOptions(options.sourceIdentity),
   transformSteps: options.transformSteps ?? true,
@@ -89,7 +94,7 @@ const normalizeLineageOptions = (options: DataLineageOptions = {}): ResolvedData
   retainEvents: options.sink === undefined || options.retainEvents === true,
 });
 
-/** 按字段白名单裁剪 row 样本。 */
+/** 按字段白名单裁剪 row 样本 */
 const sampleRows = (rows: Array<ExternalRow>, options: DataValueSampleOptions): Array<ExternalRow> =>
   rows.slice(0, options.maxRows).map(row => {
     const out: ExternalRow = {};
@@ -97,15 +102,17 @@ const sampleRows = (rows: Array<ExternalRow>, options: DataValueSampleOptions): 
     return out;
   });
 
-/** 生成来源索引摘要。 */
+/** 生成来源索引摘要 */
 const sourceIdentityOf = (
   rows: Array<ExternalRow>,
   options: false | Required<DataSourceIdentityOptions>,
 ): DataSourceIdentity | undefined => {
   if (options === false) return undefined;
+
   const indices = readSourceIndicesOf(rows);
   const full = options.mode === DataSourceIdentityMode.Full;
   const visible = full ? indices : indices.slice(0, options.maxIndices);
+
   return {
     mode: options.mode,
     count: indices.length,
@@ -114,7 +121,7 @@ const sourceIdentityOf = (
   };
 };
 
-/** 创建 data lineage recorder。 */
+/** 创建 data lineage recorder */
 export const createDataLineageRecorder = (options: DataLineageOptions = {}): DataLineageRecorder & DataLineageRun => {
   const resolved = normalizeLineageOptions(options);
   const events: Array<DataLineageEvent> = [];
@@ -146,6 +153,7 @@ export const createDataLineageRecorder = (options: DataLineageOptions = {}): Dat
           rows: sampleRows(input.inputRows, resolved.rowSamples),
         });
       }
+
       if (resolved.transformSteps) {
         record({
           kind: 'transformStep',
@@ -163,6 +171,7 @@ export const createDataLineageRecorder = (options: DataLineageOptions = {}): Dat
             : {}),
         });
       }
+
       if (resolved.fieldFlow) {
         record({
           kind: 'fieldFlow',
@@ -172,6 +181,7 @@ export const createDataLineageRecorder = (options: DataLineageOptions = {}): Dat
           outputFields: [...input.outputFields],
         });
       }
+
       if (resolved.rowSamples !== false) {
         record({
           kind: 'rowSample',
@@ -184,6 +194,7 @@ export const createDataLineageRecorder = (options: DataLineageOptions = {}): Dat
     },
     recordReducerOperation: input => {
       if (!resolved.reducerOperations) return;
+
       record({
         kind: 'reducerOperation',
         operationKind: input.operation.kind,
@@ -201,6 +212,7 @@ export const createDataLineageRecorder = (options: DataLineageOptions = {}): Dat
     },
     recordSelectorOperation: input => {
       if (!resolved.selectorOperations) return;
+
       record({
         kind: 'selectorOperation',
         operationKind: input.operation.kind,
@@ -229,10 +241,13 @@ export const importDataLineageEvents = (
 ): Array<DataLineageEvent> => {
   const resolved = normalizeLineageOptions(options);
   const retained: Array<DataLineageEvent> = [];
+
   const identity = (value?: DataSourceIdentity): DataSourceIdentity | undefined => {
     if (value === undefined || resolved.sourceIdentity === false) return undefined;
+
     const full = resolved.sourceIdentity.mode === 'full';
     const indices = full ? [...value.indices] : value.indices.slice(0, resolved.sourceIdentity.maxIndices);
+
     return {
       mode: resolved.sourceIdentity.mode,
       count: value.count,
@@ -240,6 +255,7 @@ export const importDataLineageEvents = (
       truncated: value.truncated || indices.length < value.count,
     };
   };
+
   for (const event of events) {
     if (
       (event.kind === 'transformStep' && !resolved.transformSteps) ||
@@ -249,7 +265,9 @@ export const importDataLineageEvents = (
       (event.kind === 'rowSample' && resolved.rowSamples === false)
     )
       continue;
+
     let safe: DataLineageEvent;
+
     switch (event.kind) {
       case 'source':
         safe = { ...event, sourceIdentity: identity(event.sourceIdentity) };
@@ -267,6 +285,7 @@ export const importDataLineageEvents = (
         break;
       case 'rowSample': {
         if (resolved.rowSamples === false) continue;
+
         safe = {
           ...event,
           operationIndex: operationIndex ?? event.operationIndex,
@@ -296,8 +315,10 @@ export const importDataLineageEvents = (
         };
         break;
     }
+
     resolved.sink?.(safe);
     if (resolved.retainEvents) retained.push(safe);
   }
+
   return retained;
 };

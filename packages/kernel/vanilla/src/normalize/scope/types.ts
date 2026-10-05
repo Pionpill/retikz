@@ -1,4 +1,4 @@
-import type { AnchorValue, IRScope, IRTransform } from '@retikz/core';
+import type { Anchor, IRScope, IRTransform } from '@retikz/core';
 
 import type { InputChild } from '../scene';
 
@@ -6,7 +6,8 @@ import type { InputChild } from '../scene';
 export type InputTransform =
   | Exclude<IRTransform, { kind: 'at-translate' }>
   | (Omit<Extract<IRTransform, { kind: 'at-translate' }>, 'direction'> & {
-      direction: AnchorValue;
+      /** 相对平移的目标方向，接受 Anchor 枚举值 */
+      direction: Anchor;
     });
 
 /** 作者侧 Scope 输入的公共字段 */

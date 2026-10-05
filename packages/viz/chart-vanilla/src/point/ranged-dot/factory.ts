@@ -22,6 +22,7 @@ export const RangedDotChartInputEmbedAdapter = createChartInputEmbedAdapter(
       ...(input.guides === undefined ? {} : { guides: input.guides }),
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
+
     return buildPointChartRuntime(
       source,
       parts,
@@ -30,7 +31,10 @@ export const RangedDotChartInputEmbedAdapter = createChartInputEmbedAdapter(
   },
 );
 
-/** 创建可直接组合到 Vanilla Scene 的 RangedDot 节点 */
+/**
+ * 创建可直接组合到 Vanilla Scene 的 RangedDot 节点
+ * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const rangedDotChart = <TNative = never>(
   input: RangedDotChartInputEmbedProps<TNative>,
 ): InputEmbed<RangedDotChartInputEmbedProps<TNative>> => ({

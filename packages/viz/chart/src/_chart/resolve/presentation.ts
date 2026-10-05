@@ -16,6 +16,7 @@ import type { IRChartDefaults, IRChartPresentation, IRChartSource } from '../sch
 import type { ChartPresentationResolution, EffectiveChartLayout } from './types';
 
 const DEFAULT_CARTESIAN_CHART_LAYOUT: EffectiveChartLayout = { width: 800, height: 500 };
+
 const DEFAULT_POLAR_CHART_LAYOUT: EffectiveChartLayout = { width: 400, height: 500 };
 
 type TextSlot = 'title' | 'subtitle' | 'note' | 'source';
@@ -34,6 +35,7 @@ const resolveChartLayout = (source: IRChartSource, plot: IRPlot): EffectiveChart
     coordinateType === 'polar-1d' || coordinateType === 'polar-2d'
       ? DEFAULT_POLAR_CHART_LAYOUT
       : DEFAULT_CARTESIAN_CHART_LAYOUT;
+
   return { ...defaults, ...source.layout };
 };
 
@@ -74,9 +76,11 @@ const flexOf = (
 ): Readonly<{ content: IRFlexLayout; slots: ReadonlyArray<'title' | 'subtitle' | 'plot' | 'note' | 'source'> }> => {
   const children: Array<FlexLayoutItemInput> = [];
   const slots: Array<'title' | 'subtitle' | 'plot' | 'note' | 'source'> = [];
+
   const appendText = (slot: TextSlot): void => {
     const region = presentation[slot];
     if (region === undefined) return;
+
     slots.push(slot);
     children.push({
       kind: LayoutItemKind.Flex,
@@ -125,6 +129,7 @@ export const resolveChartPresentation = (
     padding: source.layout?.padding ?? defaults.layout?.padding,
     background: source.background ?? defaults.background,
   });
+
   return {
     content,
     surface,

@@ -41,8 +41,10 @@ describe('[path-d] parsePathD', () => {
 
   it('Q + T（T 反射控制点）', () => {
     const cmds = parsePathD('M0 0 Q5 10 10 0 T20 0');
+
     expect(cmds[0]).toEqual({ kind: 'move', to: [0, 0] });
     expect(cmds[1]).toEqual({ kind: 'quad', control: [5, 10], to: [10, 0] });
+
     // T 反射：control = 2*current(10,0) - lastCtrl(5,10) = (15,-10)
     expect(cmds[2]).toEqual({ kind: 'quad', control: [15, -10], to: [20, 0] });
   });
@@ -94,6 +96,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
 
   it('坐标：scale(1,-1) 翻转 + viewBox 归一到左上原点 y-down', () => {
     const r = lowerSvgForTest(svg, 1000);
+
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [200, 0] },
@@ -104,6 +107,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
 
   it('bbox：width/height = viewBox×scale，depth = (vbY+vbH)×scale', () => {
     const r = lowerSvgForTest(svg, 1000);
+
     expect(r.width).toBe(200);
     expect(r.height).toBe(150);
     expect(r.depth).toBe(50);
@@ -111,6 +115,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
 
   it('fontSize 缩放：fontSize=500 → 尺寸减半', () => {
     const r = lowerSvgForTest(svg, 500);
+
     expect(r.width).toBe(100);
     expect(r.height).toBe(75);
   });
@@ -118,6 +123,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
   it('嵌套 translate 字形偏移累积', () => {
     const s = '<svg viewBox="0 0 100 100"><g transform="translate(10,20)">' + '<path d="M0 0 L5 0"></path></g></svg>';
     const r = lowerSvgForTest(s, 1000);
+
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [10, 20] },
       { kind: 'line', to: [15, 20] },
@@ -129,6 +135,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
       '<svg viewBox="0 0 100 100"><g transform="translate(10,20)">' +
       '<g transform="scale(2,3)"><path d="M1 2 L3 4"></path></g></g></svg>';
     const r = lowerSvgForTest(s, 1000);
+
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [12, 26] },
       { kind: 'line', to: [16, 32] },
@@ -140,6 +147,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
       '<svg viewBox="0 0 100 100"><g transform="translate(0,10) scale(1,-1)">' +
       '<path d="M2 3 L4 5"></path></g></svg>';
     const r = lowerSvgForTest(s, 1000);
+
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [2, 7] },
       { kind: 'line', to: [4, 5] },
@@ -149,6 +157,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
   it('rect（分数线）→ 矩形子路径', () => {
     const s = '<svg viewBox="0 0 100 100"><g><rect x="0" y="0" width="50" height="4"></rect></g></svg>';
     const r = lowerSvgForTest(s, 1000);
+
     expect(r.paths[0].commands.filter(c => c.kind === 'move')).toHaveLength(1);
     expect(r.paths[0].commands.some(c => c.kind === 'close')).toBe(true);
   });
@@ -159,6 +168,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
       '<defs><path id="g1" d="M0 0 L10 0"></path></defs>' +
       '<g><use data-c="67" xlink:href="#g1" x="5" y="20"></use></g></svg>';
     const r = lowerSvgForTest(s, 1000);
+
     // defs 内的 path 不直接 emit；仅经 use 解引用一次（+ x/y 偏移）
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [5, 20] },
@@ -172,6 +182,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
       '<defs><path id="g1" d="M0 0 L10 0"></path></defs>' +
       '<use xlink:href="#g1" x="5" y="10" transform="scale(2)"></use></svg>';
     const r = lowerSvgForTest(s, 1000);
+
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [10, 20] },
       { kind: 'line', to: [30, 20] },
@@ -185,6 +196,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
       '<g transform="translate(10,20)"><use xlink:href="#g1" x="5" y="7" transform="scale(2)"></use></g>' +
       '</svg>';
     const r = lowerSvgForTest(s, 1000);
+
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [22, 38] },
       { kind: 'line', to: [26, 42] },
@@ -207,6 +219,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
 
   it('合法但未支持的 transform 归为 unsupported-svg', () => {
     const s = '<svg viewBox="0 0 100 100"><g transform="rotate(90)"><path d="M0 0 L5 0"></path></g></svg>';
+
     expect(lowerMathJaxSvg(s, 1000)).toMatchObject({
       ok: false,
       diagnostic: { kind: 'unsupported-svg' },
@@ -215,6 +228,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
 
   it('合法但未支持的 path 命令归为 unsupported-svg', () => {
     const s = '<svg viewBox="0 0 100 100"><path d="M0 0 A1 1 0 0 1 10 10"></path></svg>';
+
     expect(lowerMathJaxSvg(s, 1000)).toMatchObject({
       ok: false,
       diagnostic: { kind: 'unsupported-svg' },
@@ -223,6 +237,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
 
   it('transform 参数为 NaN 时归为 malformed-svg', () => {
     const s = '<svg viewBox="0 0 100 100"><g transform="translate(foo,20)"><path d="M0 0 L5 0"></path></g></svg>';
+
     expect(lowerMathJaxSvg(s, 1000)).toMatchObject({
       ok: false,
       diagnostic: { kind: 'malformed-svg' },
@@ -231,6 +246,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
 
   it('matrix transform 参数不足时归为 malformed-svg', () => {
     const s = '<svg viewBox="0 0 100 100"><g transform="matrix(1 0 0)"><path d="M0 0 L5 0"></path></g></svg>';
+
     expect(lowerMathJaxSvg(s, 1000)).toMatchObject({ ok: false });
   });
 

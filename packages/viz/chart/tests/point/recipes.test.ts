@@ -36,18 +36,23 @@ import { StripChartSchema } from '../../src/point/strip/schema';
 const runtime = resolveChartProviderRegistry([
   { family: 'point', recipe: ScatterChartDefinition, themeDefinitions: [] },
 ]).runtime;
+
 const bubbleRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: BubbleChartDefinition, themeDefinitions: [] },
 ]).runtime;
+
 const regressionRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: RegressionChartDefinition, themeDefinitions: [] },
 ]).runtime;
+
 const connectedScatterRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
 ]).runtime;
+
 const rangedDotRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: RangedDotChartDefinition, themeDefinitions: [] },
 ]).runtime;
+
 const stripRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: StripChartDefinition, themeDefinitions: [] },
 ]).runtime;
@@ -787,6 +792,7 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     const result = resolveChart(axisPadding, ScatterChartDefinition, runtime);
+
     expect(result.plot.scales.slice(0, 2)).toEqual([
       expect.objectContaining({ domainPadding: { kind: 'range', lower: 2, upper: 2 } }),
       expect.objectContaining({ domainPadding: { kind: 'range', lower: 3, upper: 3 } }),
@@ -872,6 +878,7 @@ describe('Point Chart recipe Definitions', () => {
       { x: 'x', y: 'y', order: 'year' },
       { point: { size: 4 }, path: { strokeWidth: 2, dashPattern: [4, 2], connectNulls: true } },
     );
+
     expect(result.semanticMarks).toEqual([
       {
         kind: 'connected-scatter',
@@ -892,6 +899,7 @@ describe('Point Chart recipe Definitions', () => {
   it('Connected Scatter series groups Path and shares one color scale with Point', () => {
     const result = resolve(ConnectedScatterChartDefinition, { x: 'x', y: 'y', order: 'year', series: 'country' });
     const [path, point] = result.semanticMarks[0].plotMarks;
+
     expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
     expect(path).toMatchObject({
       series: 'country',
@@ -1054,6 +1062,7 @@ describe('Point Chart recipe Definitions', () => {
       target: { project: { x: 'earlier', y: 'category' } },
     });
   });
+
   it('composes the unchanged Point consumers from the reusable x/y atom', () => {
     const positionConsumers = pointPositionFieldConsumersOf('scatter');
     const allConsumers = pointFieldConsumersOf('scatter');
@@ -1097,6 +1106,7 @@ describe('Point Chart recipe Definitions', () => {
       },
     );
     const marks = result.semanticMarks[0].plotMarks;
+
     expect(marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
     expect(marks[2]).toMatchObject({
       strokeWidth: { value: 3 },
@@ -1124,11 +1134,13 @@ describe('Point Chart recipe Definitions', () => {
       },
     );
     const marks = result.semanticMarks[0].plotMarks;
+
     for (const mark of marks.slice(1))
       expect(mark).toMatchObject({
         series: 'species',
         transform: [{ operation: expect.objectContaining({ groupBy: ['species'] }) }],
       });
+
     expect(marks[1]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
     expect(marks[2]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
     expect(marks[3]).toMatchObject({ stroke: { kind: 'constant', value: '#00f' } });
@@ -1155,9 +1167,11 @@ describe('Point Chart recipe Definitions', () => {
         },
       });
       const result = resolveChart(source, RegressionChartDefinition, regressionRuntime);
+
       expect(result.plot.marks.map(mark => mark.type)).toEqual(
         extraMethods?.length === 0 ? ['point', 'path'] : ['point', 'path', 'path'],
       );
+
       if (extraMethods?.length !== 0)
         expect(result.plot.marks[2]).toMatchObject({
           strokeWidth: { value: 2 },
@@ -1519,6 +1533,7 @@ describe('Point Chart recipe Definitions', () => {
 
   it('Scatter creates a Point semantic mark and a Cartesian scaffold', () => {
     const result = resolve(ScatterChartDefinition, { x: 'amount', y: 'margin', size: 'weight' });
+
     expect(result.semanticMarks).toHaveLength(1);
     expect(result.semanticMarks[0]).toMatchObject({
       kind: 'scatter',
@@ -1612,6 +1627,7 @@ describe('Point Chart marks', () => {
         properties: { opacity: 0.5 },
       },
     });
+
     expect(result.marks[0]).toMatchObject({
       type: 'point',
       encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
@@ -1656,7 +1672,9 @@ describe('Point autoPadding strategies', () => {
       ScatterChartDefinition,
       runtime,
     ).plot;
+
     expect(explicit).toEqual(original);
+
     const aware = resolveChart(
       ScatterChartSchema.parse({
         ...source,
@@ -1665,9 +1683,11 @@ describe('Point autoPadding strategies', () => {
       ScatterChartDefinition,
       runtime,
     ).plot;
+
     expect(aware.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], lower: 0 } });
     expect(aware.marks[0].id).toBe('__chart.mark.0');
   });
+
   it('does not identify or scan marks when explicit padding covers every end', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
@@ -1680,6 +1700,7 @@ describe('Point autoPadding strategies', () => {
       },
     });
     const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
+
     expect(result.marks[0].id).toBeUndefined();
     expect(result.scales).toEqual(
       expect.arrayContaining([expect.objectContaining({ domainPadding: { kind: 'range', lower: 0, upper: 0 } })]),
@@ -1707,6 +1728,7 @@ describe('Point recipe autoPadding exposure', () => {
       },
     };
     const parsed = schema.parse(JSON.parse(JSON.stringify(source)));
+
     expect(parsed.recipe.properties?.autoPadding).toEqual({
       kind: 'point-aware',
       clearance: { default: 8, top: 20, left: 0 },
@@ -1742,6 +1764,7 @@ describe('point-aware final mark selection', () => {
     });
     const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
     const ids = result.marks.map(mark => mark.id);
+
     expect(new Set(ids).size).toBe(3);
     expect(result.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ids.slice(0, 2) } });
     expect(result.marks[0]).toMatchObject({ size: { kind: 'constant', value: 2 } });
@@ -1767,6 +1790,7 @@ describe('Point autoPadding clearance', () => {
   it.each(['max-radius', 'point-aware'])('preserves %s shorthand semantics with zero clearance', kind => {
     expect(resolvePadding({ kind })).toEqual(resolvePadding(kind));
   });
+
   it('adds clearance only to automatic range ends', () => {
     expect(resolvePadding({ kind: 'max-radius', clearance: 8 }, { left: 0 }).scales[0]).toMatchObject({
       domainPadding: { kind: 'range', lower: 0, upper: 18 },
@@ -1779,12 +1803,16 @@ describe('Point autoPadding clearance', () => {
       resolvePadding('max-radius', { kind: 'ratio', left: 0.1 }),
     );
   });
+
   it('resolves side, axis, default and explicit zero for both policies', () => {
     const clearance = { default: 8, x: 12, top: 20, left: 0 };
     const maximum = resolvePadding({ kind: 'max-radius', clearance });
+
     expect(maximum.scales[0]).toMatchObject({ domainPadding: { lower: 10, upper: 22 } });
     expect(maximum.scales[1]).toMatchObject({ domainPadding: { lower: 18, upper: 30 } });
+
     const aware = resolvePadding({ kind: 'point-aware', clearance });
+
     expect(aware.scales[0]).toMatchObject({ domainPadding: { clearance: { lower: 0, upper: 12 } } });
     expect(aware.scales[1]).toMatchObject({ domainPadding: { clearance: { lower: 8, upper: 20 } } });
     expect(resolvePadding({ kind: 'point-aware', clearance: {} })).toEqual(resolvePadding('point-aware'));
@@ -1792,6 +1820,7 @@ describe('Point autoPadding clearance', () => {
       resolvePadding({ kind: 'point-aware', clearance: 8 }),
     );
   });
+
   it('maps visual clearance to reversed position ranges', () => {
     const plot = resolveChart(
       ScatterChartSchema.parse({
@@ -1810,6 +1839,7 @@ describe('Point autoPadding clearance', () => {
       ScatterChartDefinition,
       runtime,
     ).plot;
+
     expect(plot.scales.find(scale => scale.name === 'xScale')).toMatchObject({
       domainPadding: { clearance: { lower: 8, upper: 2 } },
     });
@@ -1817,6 +1847,7 @@ describe('Point autoPadding clearance', () => {
       domainPadding: { clearance: { lower: 3, upper: 9 } },
     });
   });
+
   it('rejects missing strategy and invalid clearance at the Source boundary', () => {
     for (const value of [
       { clearance: 8 },
@@ -1855,11 +1886,15 @@ describe('Regression hidden observations', () => {
     for (const value of [undefined, false])
       expect(plotOf(value).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path']);
   });
+
   it('omits only the selected observation mark and preserves every fitting transform', () => {
     const plot = plotOf(true);
+
     expect(plot.marks.map(mark => mark.type)).toEqual(['path', 'path']);
+
     for (const mark of plot.marks)
       expect(mark.transform).toEqual([{ operation: expect.objectContaining({ kind: 'smooth', x: 'x', y: 'y' }) }]);
+
     expect(plotOf(true, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
   });
 });

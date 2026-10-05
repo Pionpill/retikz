@@ -18,9 +18,11 @@ export const BUILTIN_SCALES: ReadonlyArray<AnyScaleDefinition> = [
  */
 export const resolveScaleRegistry = (custom?: ReadonlyArray<AnyScaleDefinition>): Map<string, AnyScaleDefinition> => {
   const registry = new Map<string, AnyScaleDefinition>();
+
   for (const def of BUILTIN_SCALES) {
     registry.set(extractScaleType(def.schema), def);
   }
+
   for (const def of custom ?? []) {
     const continuity = Reflect.get(def, 'continuity');
     if (
@@ -30,11 +32,14 @@ export const resolveScaleRegistry = (custom?: ReadonlyArray<AnyScaleDefinition>)
     ) {
       throw new RetikzPlotError('lowerPlots: position scale definition continuity must be "continuous" or "discrete"');
     }
+
     const type = extractScaleType(def.schema);
     if (registry.has(type)) {
       throw new RetikzPlotError(`lowerPlots: duplicate scale registration: "${type}"`);
     }
+
     registry.set(type, def);
   }
+
   return registry;
 };

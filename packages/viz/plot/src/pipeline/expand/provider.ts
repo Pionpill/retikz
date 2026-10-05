@@ -8,7 +8,9 @@ import { lowerPlots } from './lower';
 import type { LowerPlotsOptions } from './types';
 
 const PlotRuntimeOptions = Symbol('retikz.plot.runtimeOptions');
+
 const PlotRuntimeReferencePrefix = '@@retikz/plot/runtime/';
+
 const LocalLowerOptionKeys = new Set(['width', 'height', 'fieldMaps', 'resolveLabel']);
 
 type PlotRuntimeEnvelope = {
@@ -33,40 +35,49 @@ const runtimeOptionsOf = (value: unknown): LowerPlotsOptions | undefined => {
 /** 合并多个 Plot contribution 的 field map */
 const mergeFieldMaps = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions['fieldMaps'] => {
   const merged: NonNullable<LowerPlotsOptions['fieldMaps']> = {};
+
   for (const options of optionSets) {
     for (const [reference, fieldMap] of Object.entries(options.fieldMaps ?? {})) {
       const current = merged[reference] ?? {};
+
       for (const [field, path] of Object.entries(fieldMap)) {
         if (Object.hasOwn(current, field) && current[field] !== path) {
           throw new RetikzPlotError(
             `[retikz] Plot provider: fieldMaps["${reference}"].${field} resolves to both "${current[field]}" and "${path}".`,
           );
         }
+
         current[field] = path;
       }
+
       merged[reference] = current;
     }
   }
+
   return Object.keys(merged).length > 0 ? merged : undefined;
 };
 
 /** 合并多个 Plot contribution 的 mark label resolver */
 const mergeResolveLabels = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions['resolveLabel'] => {
   const merged: NonNullable<LowerPlotsOptions['resolveLabel']> = {};
+
   for (const options of optionSets) {
     for (const [markId, resolveLabel] of Object.entries(options.resolveLabel ?? {})) {
       if (Object.hasOwn(merged, markId) && merged[markId] !== resolveLabel) {
         throw new RetikzPlotError(`[retikz] Plot provider: mark "${markId}" received multiple resolveLabel functions.`);
       }
+
       merged[markId] = resolveLabel;
     }
   }
+
   return Object.keys(merged).length > 0 ? merged : undefined;
 };
 
 /** 合并同一 compile assembly 内所有 Plot 共用的 lowering 选项 */
 const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions => {
   const shared: Record<string, unknown> = {};
+
   for (const options of optionSets) {
     for (const [key, value] of Object.entries(options as Record<string, unknown>)) {
       if (value === undefined || LocalLowerOptionKeys.has(key)) continue;
@@ -75,12 +86,14 @@ const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpti
           `[retikz] Plot provider: plots in one compile assembly must share lower option "${key}".`,
         );
       }
+
       shared[key] = value;
     }
   }
 
   const fieldMaps = mergeFieldMaps(optionSets);
   const resolveLabel = mergeResolveLabels(optionSets);
+
   return {
     ...(shared as LowerPlotsOptions),
     ...(fieldMaps === undefined ? {} : { fieldMaps }),
@@ -92,11 +105,13 @@ const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpti
 const makePlotDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
   const optionSets: Array<LowerPlotsOptions> = [];
   const datasetEntries: Array<[string, unknown]> = [];
+
   for (const [reference, value] of Object.entries(mergedDatasets)) {
     const lowerOptions = runtimeOptionsOf(value);
     if (lowerOptions === undefined) datasetEntries.push([reference, value]);
     else optionSets.push(lowerOptions);
   }
+
   return lowerPlots(Object.fromEntries(datasetEntries) as ExternalDatasets, mergeLowerOptions(optionSets))[0];
 };
 
@@ -106,12 +121,14 @@ export const createPlotProvider = (
   lowerOptions: LowerPlotsOptions = {},
 ): CoreDependencyProvider => {
   let runtimeReference: string;
+
   do {
     runtimeReference = `${PlotRuntimeReferencePrefix}${plotRuntimeReferenceSeed}`;
     plotRuntimeReferenceSeed += 1;
   } while (Object.hasOwn(datasets, runtimeReference));
 
   const runtimeEnvelope: PlotRuntimeEnvelope = { [PlotRuntimeOptions]: lowerOptions };
+
   return Object.freeze({
     key: PlotProviderKey,
     dependencies: Object.freeze([SectorShapeProvider.key, ContourShapeProvider.key]),
@@ -127,6 +144,7 @@ export const createPlotProviderContribution = (
 ): CoreProviderContribution => {
   const plotProvider = createPlotProvider(datasets, lowerOptions);
   const ribbonContribution = createRibbonProviderContribution();
+
   return Object.freeze({
     roots: Object.freeze([PlotProviderKey, ...ribbonContribution.roots]),
     providers: Object.freeze([

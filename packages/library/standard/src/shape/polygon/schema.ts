@@ -12,6 +12,7 @@ const properties = {
   sides: number().int().min(3).describe('Number of polygon sides; at least three.'),
   rotate: ShapeVertexAngleSchema,
 };
+
 /** Polygon 的持久化几何契约 */
 export const PolygonSchema = union([
   strictObject({

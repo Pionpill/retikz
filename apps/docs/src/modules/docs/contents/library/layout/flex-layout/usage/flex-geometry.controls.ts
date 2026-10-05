@@ -69,6 +69,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: {
@@ -83,5 +84,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['FlexLayout.direction', 'FlexLayout.size', 'FlexLayout.padding', 'FlexLayout.gap'],
   } satisfies PreviewControlContract;
 };
+
 /** 默认语言的注册契约 */
 export const previewControlContract = createPreviewControlContract('zh');

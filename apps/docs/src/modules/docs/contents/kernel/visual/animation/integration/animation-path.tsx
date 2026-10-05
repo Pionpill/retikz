@@ -9,10 +9,12 @@ import { animationPathI18n } from './animation-path.i18n';
 
 /** 路径动画示例的语言参数 */
 export type AnimationPathProps = { lang?: Lang };
+
 /** Stroke reveal and rotation leave independently emitted labels unchanged */
 const AnimationPath: FC<AnimationPathProps> = props => {
   const { lang = 'zh' } = props;
   const text = animationPathI18n[lang];
+
   return (
     <Layout viewBox={{ x: -255, y: -100, width: 510, height: 195 }} style={{ maxWidth: '100%', height: 'auto' }}>
       <Node position={[-140, -74]} style={{ fill: 'none', stroke: 'none', font: { size: 14 } }}>

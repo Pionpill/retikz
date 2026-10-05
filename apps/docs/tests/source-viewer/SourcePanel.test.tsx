@@ -107,6 +107,7 @@ describe('<SourcePanel>', () => {
     await act(async () => {
       await Promise.resolve();
     });
+
     expect(container.querySelector('[data-source-retry]')).not.toBeNull();
 
     await act(async () => {

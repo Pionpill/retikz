@@ -23,18 +23,18 @@ ADR-012～014 已建立同步 Runtime Runtime、Core 增量编译和 SVG / Canva
 React 与 Vanilla 的 runtime options 增加两个参数。两包拥有各自的 adapter options，不导出一个错误暗示 Runtime 拥有 host mode 的共享 `RuntimeMode`：
 
 ```ts
-type RuntimeUpdateStrategyValue = 'auto' | 'full';
+type RuntimeUpdateStrategy = 'auto' | 'full';
 
 const LayoutRuntimeMode = {
   Retained: 'retained',
   Static: 'static',
 } as const;
-type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
+type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 type LayoutRuntimeOptions =
   | Readonly<{
       mode?: 'retained';
-      updateStrategy?: RuntimeUpdateStrategyValue;
+      updateStrategy?: RuntimeUpdateStrategy;
       rendererFactory?: RetainedRendererFactory;
       onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
     }>
@@ -48,7 +48,7 @@ type LayoutRuntimeOptions =
 type VanillaRuntimeOptions =
   | Readonly<{
       mode?: typeof VanillaViewMode.Retained;
-      updateStrategy?: RuntimeUpdateStrategyValue;
+      updateStrategy?: RuntimeUpdateStrategy;
       rendererFactory?: RetainedRendererFactory;
     }>
   | Readonly<{
@@ -64,7 +64,7 @@ type VanillaRuntimeOptions =
 - `full` 仍保留完整 Snapshot、candidate 隔离、原子 commit、rollback、diagnostics、retained renderer 和资源生命周期，因此不是低内存模式。Core full update 产生独占 `replaceScene` Patch；renderer 执行完整物化。
 - `static` 使用现有 `compileToScene`、SVG document / React mapping、CanvasHost、Vanilla static mount 和 static update，不建立第二套 compile 或 renderer 语义。
 
-`@retikz/runtime`公开 const object `RuntimeUpdateStrategy`及其`RuntimeUpdateStrategyValue`。`RuntimeComputationContext`增加当前 invocation 的`execution: 'full' | 'incremental' | 'fallback'`，让 Computation 对 forced full 与安全失败 fallback 使用准确 trace；它不允许 callback 改写调度结果。
+`@retikz/runtime`公开 const object `RuntimeUpdateStrategy`及其`RuntimeUpdateStrategy`。`RuntimeComputationContext`增加当前 invocation 的`execution: 'full' | 'incremental' | 'fallback'`，让 Computation 对 forced full 与安全失败 fallback 使用准确 trace；它不允许 callback 改写调度结果。
 
 Runtime Runtime 的策略在创建时复制并固定。`full` 只改变有实际依赖变化的 Computation：无关 Computation 仍复用 committed artifact，continuous participant 仍按既有规则推进 revision。Computation graph 中任一 upstream full 仍使依赖 Computation full；invalid ChangeSet 仍标为 fallback，不被 forced full 隐藏。
 

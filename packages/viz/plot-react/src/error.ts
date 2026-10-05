@@ -8,7 +8,7 @@ export const RetikzPlotReactErrorCode = {
 } as const;
 
 /** Plot React 包稳定错误码取值 */
-export type RetikzPlotReactErrorCodeValue = ValueOf<typeof RetikzPlotReactErrorCode>;
+export type RetikzPlotReactErrorCode = ValueOf<typeof RetikzPlotReactErrorCode>;
 
 /** Plot React 包运行时错误的可选构造参数 */
 type RetikzPlotReactErrorOptions = Readonly<{
@@ -17,7 +17,7 @@ type RetikzPlotReactErrorOptions = Readonly<{
 }>;
 
 /** Plot React 包未细分领域错误的统一结构化错误 */
-export class RetikzPlotReactError extends RetikzError<RetikzPlotReactErrorCodeValue, Readonly<{ message: string }>> {
+export class RetikzPlotReactError extends RetikzError<RetikzPlotReactErrorCode, Readonly<{ message: string }>> {
   /** 创建保留原始消息与 cause 的 Plot React 包错误 */
   constructor(message: string, options?: RetikzPlotReactErrorOptions) {
     super({

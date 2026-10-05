@@ -10,8 +10,10 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
     [LanesBranchLayoutDefinition.name, LanesBranchLayoutDefinition],
   ]);
   const names = new Set<string>();
+
   for (const options of optionSets) {
     if (options.defaultBranchLayout !== undefined) names.add(options.defaultBranchLayout);
+
     for (const definition of options.branchLayouts ?? []) {
       if (definition.name.trim().length === 0)
         throw new RetikzDiagramError({
@@ -19,6 +21,7 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
           message: 'Branch layout name must not be empty.',
           details: { capability: 'branch-layout' },
         });
+
       const previous = registry.get(definition.name);
       if (previous !== undefined && previous !== definition)
         throw new RetikzDiagramError({
@@ -26,15 +29,18 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
           message: `Duplicate Branch layout '${definition.name}'.`,
           details: { key: definition.name },
         });
+
       registry.set(definition.name, definition);
     }
   }
+
   if (names.size > 1)
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.DefinitionInvalid,
       message: 'Conflicting default Branch layouts.',
       details: { availableKeys: [...names] },
     });
+
   const name = [...names][0] ?? LanesBranchLayoutDefinition.name;
   const definition = registry.get(name);
   if (definition === undefined)
@@ -43,9 +49,11 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
       message: `Unknown Branch layout '${name}'.`,
       details: { key: name, availableKeys: [...registry.keys()] },
     });
+
   const options: BranchDiagramDefinitionOptions = {
     ...mergeGraphDefinitionOptions(optionSets),
     diagramThemeStyles: [...new Set(optionSets.flatMap(value => value.diagramThemeStyles ?? []))],
   };
+
   return { definition, options };
 };

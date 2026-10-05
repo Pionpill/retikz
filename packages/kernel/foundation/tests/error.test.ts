@@ -8,9 +8,9 @@ const RetikzDemoErrorCode = {
   Failed: 'DEMO_FAILED',
 } as const;
 
-type RetikzDemoErrorCodeValue = ValueOf<typeof RetikzDemoErrorCode>;
+type RetikzDemoErrorCode = ValueOf<typeof RetikzDemoErrorCode>;
 
-class RetikzDemoError extends RetikzError<RetikzDemoErrorCodeValue, DemoDetails> {
+class RetikzDemoError extends RetikzError<RetikzDemoErrorCode, DemoDetails> {
   constructor(details: DemoDetails, cause?: unknown, includeCause = cause !== undefined) {
     super(
       includeCause

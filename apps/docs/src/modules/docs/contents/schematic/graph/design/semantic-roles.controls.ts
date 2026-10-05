@@ -32,10 +32,12 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { entityRole: 'activity', relationRole: 'flow', emphasis: false },
     relatedApis: ['Entity.role', 'Relation.role', 'Entity.style.strokeWidth'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

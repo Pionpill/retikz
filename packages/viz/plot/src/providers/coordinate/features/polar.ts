@@ -14,7 +14,7 @@ import type {
 } from '../../../contract';
 import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotCoordinate, IRPlotPolar1DCoordinate, PolarInterpolationValue } from '../../../schemas';
+import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../schemas';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema, PolarInterpolation } from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
@@ -42,7 +42,7 @@ const isContinuousAngleScale = (scaleType: string): boolean =>
   scaleType === PlotScale.Radial;
 
 /**
- * 极坐标输出空间点 → 屏幕点。
+ * 极坐标输出空间点 → 屏幕点
  * @description 角度约定由 `@retikz/math` 的 pointAtArcAngle 统一维护；plot 侧只保留坐标帧的 nullable 契约，
  *   让 mark lowering 可以跳过非有限输入点
  */
@@ -62,7 +62,7 @@ export type PolarCoordinateInput = {
   /** 角向终止角（度） */
   endAngle: number;
   /** 固定半径边界与插值敏感 mark 共用的已解析连接空间 */
-  interpolation: PolarInterpolationValue;
+  interpolation: PolarInterpolation;
   /** 固定半径 chord 边界使用的有序角向结构骨架，单位为度 */
   angularSkeleton: ReadonlyArray<number>;
   /** angle 位置 scale */
@@ -72,7 +72,7 @@ export type PolarCoordinateInput = {
 };
 
 /**
- * 建二维极坐标运行时坐标帧。
+ * 建二维极坐标运行时坐标帧
  * @description θ=primary.coordinate(angleValue)（度）、r=secondary.coordinate(radiusValue)；
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
  *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用
@@ -80,22 +80,27 @@ export type PolarCoordinateInput = {
 export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
     polarPoint(input.center, thetaDeg, radius);
+
   const mapRoles = (values: ReadonlyArray<unknown>): ReadonlyArray<number> | null => {
     const theta = input.primary.coordinate(values[0]);
     const radius = input.secondary.coordinate(values[1]);
     return Number.isFinite(theta) && Number.isFinite(radius) ? [theta, radius] : null;
   };
+
   const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => {
     const [thetaDeg, radius] = values;
     if (input.interpolation === PolarInterpolation.Chord && input.primary.step > 0) {
       return projectPolarChord(input, thetaDeg, radius) ?? projectPolar(thetaDeg, radius);
     }
+
     return projectPolar(thetaDeg, radius);
   };
+
   const project = (angleValue: unknown, radiusValue: unknown): Position | null => {
     const mapped = mapRoles([angleValue, radiusValue]);
     return mapped === null ? null : projectMappedRoles(mapped);
   };
+
   return {
     type: PlotCoordinate.Polar2D,
     roles: ['x', 'y'],
@@ -126,9 +131,11 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
             return null;
           }
         }
+
         const radians = (theta * Math.PI) / 180;
         if (role === 'x') return [-Math.sin(radians), Math.cos(radians)];
         if (role === 'y') return [Math.cos(radians), Math.sin(radians)];
+
         return null;
       },
       glyphExtentInRoleUnits: (role, mappedRoles, screenExtent) => {
@@ -136,10 +143,13 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
           const chordExtent = polarChordGlyphExtentInRoleUnits(input, role, mappedRoles, screenExtent);
           if (chordExtent !== null) return chordExtent;
         }
+
         if (role === 'y') return screenExtent;
         if (role !== 'x') return null;
+
         const radius = Math.abs(mappedRoles[1]);
         if (!Number.isFinite(radius) || radius <= screenExtent) return null;
+
         return (Math.asin(screenExtent / radius) * 180) / Math.PI;
       },
     },
@@ -153,11 +163,13 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
       if (interpolation === PolarInterpolation.Polar) {
         return { kind: 'sector', center, innerRadius, outerRadius, startAngle, endAngle };
       }
+
       const fullSweep = isClosedPolarSweep(startAngle, endAngle);
       const angles = fullSweep ? input.angularSkeleton : [startAngle, endAngle];
       if ((fullSweep && angles.length < 3) || (!fullSweep && angles.length < 2)) {
         return { kind: 'contour', points: [] };
       }
+
       const collapsedInnerBoundary = Math.abs(innerRadius) <= DEFAULT_EPSILON;
       const innerPoints = collapsedInnerBoundary
         ? fullSweep
@@ -168,6 +180,7 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
         ...innerPoints,
         ...[...angles].reverse().map(angle => polarPoint(center, angle, outerRadius)),
       ].filter((point): point is Position => point !== null);
+
       return { kind: 'contour', points };
     },
   };
@@ -176,6 +189,7 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
 const samePolarDirection = (left: number, right: number): boolean => {
   const leftRadians = (left * Math.PI) / 180;
   const rightRadians = (right * Math.PI) / 180;
+
   return (
     Math.abs(Math.cos(leftRadians) - Math.cos(rightRadians)) <= DEFAULT_EPSILON &&
     Math.abs(Math.sin(leftRadians) - Math.sin(rightRadians)) <= DEFAULT_EPSILON
@@ -195,8 +209,10 @@ type PolarChordSegment = {
 /** 在 angular skeleton 中定位合成角度所属的直弦段 */
 const polarChordSegmentOf = (input: PolarCoordinateInput, thetaDeg: number): PolarChordSegment | null => {
   if (!Number.isFinite(thetaDeg) || input.angularSkeleton.length < 2) return null;
+
   const sweep = input.endAngle - input.startAngle;
   if (Math.abs(sweep) <= DEFAULT_EPSILON) return null;
+
   const direction = Math.sign(sweep);
   const sweepSpan = Math.abs(sweep);
   const skeleton = input.angularSkeleton
@@ -213,18 +229,23 @@ const polarChordSegmentOf = (input: PolarCoordinateInput, thetaDeg: number): Pol
       ...skeleton,
       { angle: skeleton[0].angle + sweep, distance: skeleton[0].distance + sweepSpan },
     ];
+
     for (let index = 0; index < extended.length - 1; index += 1) {
       const start = extended[index];
       const end = extended[index + 1];
       if (targetDistance < start.distance - DEFAULT_EPSILON || targetDistance > end.distance + DEFAULT_EPSILON) {
         continue;
       }
+
       const span = end.distance - start.distance;
       if (span <= DEFAULT_EPSILON) return null;
+
       return { startAngle: start.angle, endAngle: end.angle, ratio: (targetDistance - start.distance) / span };
     }
+
     return null;
   }
+
   const first = skeleton[0];
   const last = skeleton[skeleton.length - 1];
   const startIndex =
@@ -236,10 +257,12 @@ const polarChordSegmentOf = (input: PolarCoordinateInput, thetaDeg: number): Pol
             (entry, index) => index < skeleton.length - 1 && targetDistance <= skeleton[index + 1].distance,
           );
   if (startIndex < 0) return null;
+
   const start = skeleton[startIndex];
   const end = skeleton[startIndex + 1];
   const span = end.distance - start.distance;
   if (span <= DEFAULT_EPSILON) return null;
+
   return { startAngle: start.angle, endAngle: end.angle, ratio: (targetDistance - start.distance) / span };
 };
 
@@ -257,7 +280,9 @@ const polarChordTangent = (
   const start = polarPoint(input.center, segment.startAngle, 1);
   const end = polarPoint(input.center, segment.endAngle, 1);
   if (start === null || end === null) return null;
+
   const numericDirection = Math.sign(segment.endAngle - segment.startAngle);
+
   return normalizedVector([(end[0] - start[0]) * numericDirection, (end[1] - start[1]) * numericDirection]);
 };
 
@@ -269,11 +294,14 @@ const polarChordOutwardNormal = (
   const start = polarPoint(input.center, segment.startAngle, 1);
   const end = polarPoint(input.center, segment.endAngle, 1);
   if (start === null || end === null) return null;
+
   const edge = [end[0] - start[0], end[1] - start[1]] as const;
   const candidate = normalizedVector([edge[1], -edge[0]]);
   if (candidate === null) return null;
+
   const midpoint = [(start[0] + end[0]) / 2 - input.center[0], (start[1] + end[1]) / 2 - input.center[1]] as const;
   const orientation = midpoint[0] * candidate[0] + midpoint[1] * candidate[1] >= 0 ? 1 : -1;
+
   return [candidate[0] * orientation, candidate[1] * orientation];
 };
 
@@ -281,6 +309,7 @@ const polarChordOutwardNormal = (
 const polarChordSegmentsAround = (input: PolarCoordinateInput, thetaDeg: number): ReadonlyArray<PolarChordSegment> => {
   const sampleOffset = Math.max(DEFAULT_EPSILON * 10, Math.abs(input.endAngle - input.startAngle) * 1e-9);
   const segments: Array<PolarChordSegment> = [];
+
   for (const sampleAngle of [thetaDeg, thetaDeg - sampleOffset, thetaDeg + sampleOffset]) {
     const segment = polarChordSegmentOf(input, sampleAngle);
     if (
@@ -294,6 +323,7 @@ const polarChordSegmentsAround = (input: PolarCoordinateInput, thetaDeg: number)
       segments.push(segment);
     }
   }
+
   return segments;
 };
 
@@ -306,8 +336,10 @@ const polarChordGlyphExtentInRoleUnits = (
 ): number | null => {
   const [thetaDeg, radius] = mappedRoles;
   if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
+
   const segments = polarChordSegmentsAround(input, thetaDeg);
   if (segments.length === 0) return null;
+
   const roleExtents = segments.flatMap(segment => {
     const start = polarPoint(input.center, segment.startAngle, role === 'x' ? radius : 1);
     const end = polarPoint(input.center, segment.endAngle, role === 'x' ? radius : 1);
@@ -315,19 +347,25 @@ const polarChordGlyphExtentInRoleUnits = (
     if (role === 'x') {
       const chordLength = Math.hypot(end[0] - start[0], end[1] - start[1]);
       const angleSpan = Math.abs(segment.endAngle - segment.startAngle);
+
       return chordLength <= DEFAULT_EPSILON || angleSpan <= DEFAULT_EPSILON
         ? []
         : [(screenExtent * angleSpan) / chordLength];
     }
+
     if (role === 'y') {
       const outwardNormal = polarChordOutwardNormal(input, segment);
       if (outwardNormal === null) return [];
+
       const radialVector = [start[0] - input.center[0], start[1] - input.center[1]] as const;
       const screenUnitsPerRoleUnit = Math.abs(radialVector[0] * outwardNormal[0] + radialVector[1] * outwardNormal[1]);
+
       return screenUnitsPerRoleUnit <= DEFAULT_EPSILON ? [] : [screenExtent / screenUnitsPerRoleUnit];
     }
+
     return [];
   });
+
   return roleExtents.length === 0 ? null : Math.max(...roleExtents);
 };
 
@@ -335,9 +373,11 @@ const polarChordGlyphExtentInRoleUnits = (
 const projectPolarChord = (input: PolarCoordinateInput, thetaDeg: number, radius: number): Position | null => {
   const segment = polarChordSegmentOf(input, thetaDeg);
   if (segment === null) return null;
+
   const start = polarPoint(input.center, segment.startAngle, radius);
   const end = polarPoint(input.center, segment.endAngle, radius);
   if (start === null || end === null) return null;
+
   return [start[0] + (end[0] - start[0]) * segment.ratio, start[1] + (end[1] - start[1]) * segment.ratio];
 };
 
@@ -348,7 +388,7 @@ const projectPolarChord = (input: PolarCoordinateInput, thetaDeg: number, radius
 export const polarFixedRadiusSteps = (
   frame: PolarCoordinateFrame,
   radius: number,
-  interpolation: PolarInterpolationValue = frame.interpolation,
+  interpolation: PolarInterpolation = frame.interpolation,
   angleSpan: readonly [number, number] = [frame.startAngle, frame.endAngle],
 ): Array<IRStep> | null => {
   const [startAngle, endAngle] = angleSpan;
@@ -359,8 +399,10 @@ export const polarFixedRadiusSteps = (
         { type: 'step', kind: 'circlePath', radius },
       ];
     }
+
     const start = frame.projectPolar(startAngle, radius);
     if (start === null) return null;
+
     return [
       { type: 'step', kind: 'move', to: start },
       {
@@ -373,6 +415,7 @@ export const polarFixedRadiusSteps = (
       },
     ];
   }
+
   const closed = isClosedPolarSweep(startAngle, endAngle);
   const angles = frame.angularSkeleton.filter(angle =>
     endAngle >= startAngle
@@ -380,25 +423,30 @@ export const polarFixedRadiusSteps = (
       : angle <= startAngle + DEFAULT_EPSILON && angle >= endAngle - DEFAULT_EPSILON,
   );
   if ((closed && angles.length < 3) || (!closed && angles.length < 2)) return null;
+
   const points = angles
     .map(angle => frame.projectPolar(angle, radius))
     .filter((point): point is Position => point !== null);
   if ((closed && points.length < 3) || (!closed && points.length < 2)) return null;
+
   const steps: Array<IRStep> = [
     { type: 'step', kind: 'move', to: points[0] },
     ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
   ];
   if (closed) steps.push({ type: 'step', kind: 'cycle' });
+
   return steps;
 };
 
 const angularSkeleton = (scale: PositionScale, ticks: TickSet): Array<number> => {
   const angles: Array<number> = [];
+
   for (const value of ticks.values) {
     const angle = scale.coordinate(value);
     if (!isFiniteNumber(angle) || angles.some(existing => samePolarDirection(existing, angle))) continue;
     angles.push(angle);
   }
+
   return angles;
 };
 
@@ -410,7 +458,7 @@ const polarAngularLayoutLabelsOf = (
   ticks?.values.map((value, index) => ({ angle: scale.coordinate(value), text: ticks.labels[index] ?? '' })) ?? [];
 
 /**
- * 一维极坐标运行时坐标帧。
+ * 一维极坐标运行时坐标帧
  * @description 用单一角向 scale 把 x 角色投影到固定半径的圆周上；它不提供 cell 几何投影能力
  */
 export type Polar1DCoordinateFrame = {
@@ -463,22 +511,26 @@ export type Polar1DCoordinateInput = {
 };
 
 /**
- * 建一维极坐标运行时坐标帧。
+ * 建一维极坐标运行时坐标帧
  * @description 单一 x 角色被解释为角向值，并投影到固定 radius 的圆周上。该 frame 只表达点/路径位置，
  *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame
  */
 export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
     polarPoint(input.center, thetaDeg, radius);
+
   const mapRoles = (values: ReadonlyArray<unknown>): ReadonlyArray<number> | null => {
     const theta = input.primary.coordinate(values[0]);
     return Number.isFinite(theta) ? [theta] : null;
   };
+
   const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => projectPolar(values[0], input.radius);
+
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const mapped = mapRoles(values);
     return mapped === null ? null : projectMappedRoles(mapped);
   };
+
   return {
     type: PlotCoordinate.Polar1D,
     roles: ['x'],
@@ -510,10 +562,15 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DC
 };
 
 /** 一行数据在极坐标 scale 输出空间中的顶点：θ（度）+ r（user units） */
-export type PolarVertex = { theta: number; radius: number };
+export type PolarVertex = {
+  /** 尺度映射后的极角，单位为度 */
+  theta: number;
+  /** 尺度映射后的径向距离 */
+  radius: number;
+};
 
 /**
- * 把一行的角向 / 径向原始值映射成 PolarVertex。
+ * 把一行的角向 / 径向原始值映射成 PolarVertex
  * @description PolarVertex 保留的是 scale 输出空间的 θ（度）和 r（user units），还不是屏幕点；
  *   path 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null
  */
@@ -525,6 +582,7 @@ export const toPolarVertex = (
   const theta = frame.primary.coordinate(angleValue);
   const radius = frame.secondary.coordinate(radiusValue);
   if (!isFiniteNumber(theta) || !isFiniteNumber(radius)) return null;
+
   return { theta, radius };
 };
 
@@ -542,6 +600,7 @@ export const densifyPolarSegments = (
   if (vertices.length < 2) {
     return vertices.map(v => frame.projectPolar(v.theta, v.radius)).filter((p): p is Position => p !== null);
   }
+
   const sampledVertices = [...vertices];
   if (options?.closed) {
     const first = vertices[0];
@@ -554,14 +613,18 @@ export const densifyPolarSegments = (
         while (closureTheta >= last.theta - DEFAULT_EPSILON) closureTheta -= 360;
       }
     }
+
     sampledVertices.push({ theta: closureTheta, radius: first.radius });
   }
+
   const points: Array<Position> = [];
   const first = frame.projectPolar(sampledVertices[0].theta, sampledVertices[0].radius);
   if (first) points.push(first);
+
   for (let i = 1; i < sampledVertices.length; i += 1) {
     const a = sampledVertices[i - 1];
     const b = sampledVertices[i];
+
     // 段内中间点 + 段终点：t 从 1/(N+1) 走到 1（含终点）
     for (let step = 1; step <= RETIKZ_POLAR_SEGMENT_SAMPLES + 1; step += 1) {
       const t = step / (RETIKZ_POLAR_SEGMENT_SAMPLES + 1);
@@ -571,6 +634,7 @@ export const densifyPolarSegments = (
       if (point) points.push(point);
     }
   }
+
   return points;
 };
 
@@ -580,16 +644,21 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     measure: ({ frame, role, mappedRoles, extent, clearance }) => {
       const boundary = frame.placementBoundary!;
       if (boundary.isCyclic(role)) return null;
+
       const range = frame.roleScales![role]!.range();
+
       const measure = (screenExtent: number): number => {
         if (screenExtent === 0) return 0;
+
         const measured = boundary.glyphExtentInRoleUnits(role, mappedRoles, screenExtent);
         if (measured === null || !Number.isFinite(measured))
           throw new RetikzPlotError(
             `polar domainPadding cannot contain glyph extent ${screenExtent} on role "${role}"`,
           );
+
         return measured;
       };
+
       if (role === 'y') {
         const angularRange = frame.roleScales!.x!.range();
         const sweep = Math.abs(angularRange[1] - angularRange[0]);
@@ -601,10 +670,12 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
               ? 0
               : screenExtent / Math.sin((Math.min(90, sweep / 4) * Math.PI) / 180)
             : measure(screenExtent);
+
         return range[1] > range[0]
           ? { lower: inner(extent + clearance.lower), upper: measure(extent + clearance.upper) }
           : { lower: measure(extent + clearance.lower), upper: inner(extent + clearance.upper) };
       }
+
       return { lower: measure(extent + clearance.lower), upper: measure(extent + clearance.upper) };
     },
   },
@@ -647,6 +718,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
           angleScale.coordinate(value),
         )
       : undefined;
+
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
@@ -658,6 +730,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       },
       { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
+
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     const radiusScale = ctx.buildPositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
     const radiusRangeOverride = ctx.roleRangeOverrides?.y;
@@ -666,6 +739,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       ? (ctx.collectAxisTicks('y') ??
         ctx.resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
       : undefined;
+
     const visibleAngularTicks = angularAxis
       ? ctx.resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value =>
           angleScale.coordinate(value),
@@ -676,6 +750,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
           radiusScale.coordinate(value),
         )
       : undefined;
+
     const [radiusRangeStart, radiusRangeEnd] = radiusScale.range();
     const frameInnerRadius = Math.min(radiusRangeStart, radiusRangeEnd);
     const frameOuterRadius = Math.max(radiusRangeStart, radiusRangeEnd);
@@ -708,6 +783,7 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       radialTicks: visibleRadialTicks ?? EMPTY_TICKS,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+
     return {
       frame,
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
@@ -749,6 +825,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
           angleScale.coordinate(value),
         )
       : undefined;
+
     const layout = computePolarCoordinate(
       ctx.width,
       ctx.height,
@@ -760,6 +837,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
       },
       { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
+
     const radius = radiusFraction * layout.outerRadius;
     const continuousAngle = isContinuousAngleScale(angleScaleDef.type);
     const frame = createPolar1DCoordinate({
@@ -795,6 +873,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
       radialTicks: EMPTY_TICKS,
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+
     return {
       frame,
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },

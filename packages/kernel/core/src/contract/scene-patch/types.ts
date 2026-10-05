@@ -2,7 +2,10 @@ import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type { Scene, ScenePrimitive, SceneResource } from '../scene';
 
-/** 把 Runtime 公开 DTO 递归收窄为只读结构，同时保留 callback identity */
+/**
+ * 把 Runtime 公开 DTO 递归收窄为只读结构，同时保留 callback identity
+ * @template T 递归映射为只读对象及数组的原始类型，函数签名保持不变
+ */
 export type RuntimeDeepReadonly<T> = T extends (...args: infer TArgs) => infer TResult
   ? (...args: TArgs) => TResult
   : T extends ReadonlyArray<infer TItem>
@@ -74,7 +77,7 @@ export type SceneRuntimeSnapshot = Readonly<{
 export type SceneRuntimeSubtree = Readonly<{
   /** 对应 subtree primitive 的 root identity */
   root: RuntimeIdentity;
-  /** subtree root primitive */
+  /** 子树根图元 */
   primitive: RuntimeScenePrimitive;
   /** 以 subtree root 为原点的相对 topology */
   topology: ReadonlyArray<SceneRuntimeSubtreeNode>;

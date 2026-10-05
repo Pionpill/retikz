@@ -63,6 +63,7 @@ const parseStoredReport = (value: unknown, identity: ReadBenchReportInput): Benc
   if (value.moduleId !== identity.moduleId || value.caseId !== identity.caseId || value.runId !== identity.runId) {
     throw new BenchReportValidationError('Report identity does not match its storage path');
   }
+
   return value;
 };
 
@@ -86,6 +87,7 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
     assertSafeSegment('moduleId', input.moduleId);
     assertSafeSegment('caseId', input.caseId);
     if (!isBenchReportStatus(input.status)) throw new BenchReportValidationError(`Invalid status: ${input.status}`);
+
     assertIsoDate('startedAt', input.startedAt);
     assertIsoDate('completedAt', input.completedAt);
     const runId = createRunId();
@@ -96,6 +98,7 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
     const reportPath = join(reportDirectory, 'report.json');
     const temporaryPath = join(reportDirectory, `.report-${randomUUID()}.tmp`);
     let serialized: string;
+
     try {
       serialized = `${JSON.stringify(report, null, 2)}\n`;
     } catch (error) {
@@ -103,8 +106,10 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
         `Report payload is not JSON serializable: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+
     await writeFile(temporaryPath, serialized, { encoding: 'utf8', flag: 'wx' });
     await rename(temporaryPath, reportPath);
+
     return report;
   };
 
@@ -115,10 +120,13 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
     const caseIds = input.caseId === undefined ? await listDirectories(moduleDirectory) : [input.caseId];
     const reports = [];
     const diagnostics: Array<string> = [];
+
     for (const caseId of caseIds) {
       const caseDirectory = join(moduleDirectory, caseId);
+
       for (const runId of await listDirectories(caseDirectory)) {
         const reportPath = join(caseDirectory, runId, 'report.json');
+
         try {
           const parsed: unknown = JSON.parse(await readFile(reportPath, 'utf8'));
           reports.push(
@@ -131,7 +139,9 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
         }
       }
     }
+
     reports.sort((left, right) => Date.parse(right.completedAt) - Date.parse(left.completedAt));
+
     return Object.freeze({ reports: Object.freeze(reports), diagnostics: Object.freeze(diagnostics) });
   };
 
@@ -141,6 +151,7 @@ export const createReportStore = (resultsRoot: string, options: CreateReportStor
     assertSafeSegment('runId', input.runId);
     const reportPath = join(runsRoot, input.moduleId, input.caseId, input.runId, 'report.json');
     const parsed: unknown = JSON.parse(await readFile(reportPath, 'utf8'));
+
     return parseStoredReport(parsed, input);
   };
 

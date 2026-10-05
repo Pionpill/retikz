@@ -43,7 +43,9 @@ export const readInspectionRows = (
   });
   const envelope = output.artifacts.find(item => item.kind === 'composite');
   if (envelope === undefined) throw new Error('Flex inspection demo did not emit its layout artifact.');
+
   const artifact = FlexLayoutArtifactSchema.parse(envelope.value);
+
   return artifact.items.map(item => ({
     [labels.key]: item.key,
     [labels.line]: item.line,

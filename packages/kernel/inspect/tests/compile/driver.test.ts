@@ -12,7 +12,9 @@ import {
 } from '../../src';
 
 const key = { namespace: 'test', type: 'artifact' };
+
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'artifact' };
+
 const composite = defineComposite({
   namespace: owner.namespace,
   type: owner.type,
@@ -20,7 +22,9 @@ const composite = defineComposite({
   artifactSchema: strictObject({ label: string() }),
   compile: () => ({ artifact: { label: 'settled' }, children: [{ type: 'node', position: [0, 0], text: 'primary' }] }),
 });
+
 const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: owner.namespace, type: owner.type }] };
+
 const selection = {
   rules: [
     {
@@ -47,6 +51,7 @@ describe('Inspection compile driver', () => {
       selection: { rules: [{ ...selection.rules[0], options: { label: 'once' } }] },
       compileOptions: { composites: [composite] },
     });
+
     expect(JSON.stringify(result.inspection)).toContain('once!');
     expect(JSON.stringify(result.inspection)).not.toContain('once!!');
   });
@@ -63,6 +68,7 @@ describe('Inspection compile driver', () => {
       },
       inspect: () => [],
     });
+
     expect(() =>
       compileInspectionToScene(ir, {
         registry: createInspectorRegistry([inspector]),
@@ -76,6 +82,7 @@ describe('Inspection compile driver', () => {
       }),
     );
   });
+
   it('resolves appearance from the captured occurrence Theme', () => {
     let appearance:
       | {
@@ -149,6 +156,7 @@ describe('Inspection compile driver', () => {
       selection,
       compileOptions: { composites: [composite], padding: 0 },
     });
+
     expect(result.primary.scene.primitives).toHaveLength(1);
     expect(result.inspection?.entries).toHaveLength(2);
     expect(result.inspection?.entries[0]?.scene.primitives[0]).not.toHaveProperty('id');
@@ -172,6 +180,7 @@ describe('Inspection compile driver', () => {
       }),
     ]);
     const result = compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
+
     expect(result.inspection).toBeNull();
     expect(Object.isFrozen(result.diagnostics)).toBe(true);
   });
@@ -233,10 +242,12 @@ describe('Inspection compile driver', () => {
         },
       }),
     ]);
+
     expect(() =>
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } }),
     ).toThrow(RetikzInspectError);
     expect(callbacks).toBe(0);
+
     try {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
     } catch (error) {
@@ -266,6 +277,7 @@ describe('Inspection compile driver', () => {
         children: [{ type: 'node', id: 'primary-node', position: [0, 0], text: 'primary' }],
       }),
     });
+
     try {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [primaryWithId] } });
       throw new Error('expected compile to fail');
@@ -292,6 +304,7 @@ describe('Inspection compile driver', () => {
           }) as unknown as { type: 'node'; position: [number, number]; text: string },
       }),
     ]);
+
     try {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
       throw new Error('expected compile to fail');
@@ -327,7 +340,9 @@ describe('Inspection compile driver', () => {
         expect(context.ancestors).toHaveLength(1);
         expect(context.ancestors[0]?.owner).toEqual({ kind: 'scope' });
         expect(typeof context.warn).toBe('function');
+
         context.warn('OptionalGeometry', 'key points are unavailable');
+
         return [
           {
             type: 'fragment',

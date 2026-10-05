@@ -8,6 +8,7 @@ import type { CanonicalBlock } from '../../resolve';
 import type { IRBlock } from '../../schemas';
 
 const DEFAULT_BLOCK_GAP = 8;
+
 const DEFAULT_BLOCK_PADDING = 8;
 
 /** 从 Block Source 提取完整 Core Scope props，移除 Graph、布局与 Surface 字段 */
@@ -41,6 +42,7 @@ export const blockScopeProps = (source: IRBlock): Omit<IRScope, 'type' | 'childr
   void _border;
   void _cornerRadius;
   void _overflow;
+
   return scope;
 };
 

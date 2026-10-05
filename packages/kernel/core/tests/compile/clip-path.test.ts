@@ -47,6 +47,7 @@ const compilePath = (
   }).scene;
   const resource = (scene.resources ?? []).find(entry => entry.kind === 'clip');
   if (resource?.kind !== 'clip') throw new Error('Expected one clip resource.');
+
   return resource.path;
 };
 

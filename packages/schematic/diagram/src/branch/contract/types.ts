@@ -17,7 +17,14 @@ export type BranchLayoutNodeInput = Readonly<{
 /** 同步布局的输入；节点保持稳定拓扑序，分支保持声明序 */
 export type BranchLayoutInput = Readonly<{
   /** 已解析的布局意图 */
-  layout: Readonly<{ direction: 'right' | 'left' | 'down' | 'up'; nodeGap: number; laneGap: number }>;
+  layout: Readonly<{
+    /** 各分支中节点推进的主方向 */
+    direction: 'right' | 'left' | 'down' | 'up';
+    /** 同一分支相邻节点沿主方向的净间距 */
+    nodeGap: number;
+    /** 相邻分支沿交叉轴的净间距 */
+    laneGap: number;
+  }>;
   /** 共享节点只出现一次 */
   nodes: ReadonlyArray<BranchLayoutNodeInput>;
   /** 唯一有序连接事实源 */
@@ -30,7 +37,7 @@ export type BranchLayoutInput = Readonly<{
 export type BranchLayoutNodeOutput = Readonly<{
   /** 作者节点 id */
   id: string;
-  /** Core Node position */
+  /** Core 节点的位置 */
   position: Readonly<Position>;
   /** 非负轨道编号；不是作者分支身份 */
   lane: number;

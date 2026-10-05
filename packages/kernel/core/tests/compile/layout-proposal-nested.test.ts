@@ -40,7 +40,9 @@ const gradient = (first: string, second: string): IRPaint => ({
 });
 
 const discardedPaint = gradient('#100', '#200');
+
 const failedPaint = gradient('#300', '#400');
+
 const selectedPaint = gradient('#500', '#600');
 
 const minimumRangeProposal: LayoutProposal = {
@@ -57,10 +59,12 @@ const exactNaturalProposal: LayoutProposal = {
 const errorChainOf = (error: unknown): Array<Error> => {
   const chain: Array<Error> = [];
   let current = error;
+
   while (current instanceof Error) {
     chain.push(current);
     current = current.cause;
   }
+
   return chain;
 };
 
@@ -141,7 +145,9 @@ const runNestedFixture = (): FixtureRun => {
         },
         context.proposal,
       );
+
       expect(failedProbe.kind).toBe(LayoutChildProbeKind.Failed);
+
       if (failedProbe.kind === LayoutChildProbeKind.Resolved) {
         throw new Error('expected the nested candidate to fail recoverably');
       }
@@ -163,6 +169,7 @@ const runNestedFixture = (): FixtureRun => {
         context.proposal,
       );
       if (textProbe.kind === LayoutChildProbeKind.Failed) return context.raise(textProbe.failure);
+
       const selectedGuide = textProbe.result.alignmentGuides?.find(
         guide => guide.name === LayoutAlignmentGuideName.FirstBaseline,
       );
@@ -174,6 +181,7 @@ const runNestedFixture = (): FixtureRun => {
         path: pathProbe.result,
         failureKind: failedProbe.kind,
       });
+
       return {
         children: [context.replay(textProbe.result)],
         allocationBounds: textProbe.result.allocationBounds,
@@ -197,15 +205,20 @@ const runNestedFixture = (): FixtureRun => {
     artifactSchema: strictObject({ role: literal('parent') }),
     compile: (_node, context) => {
       dispatches.parent += 1;
+
       expect(context.proposal).toEqual({
         x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
       });
+
       const discarded = context.layoutChild({ namespace: 'nested-gate', type: 'nested' }, minimumRangeProposal);
       if (discarded.kind === LayoutChildProbeKind.Failed) return context.raise(discarded.failure);
+
       const selected = context.layoutChild({ namespace: 'nested-gate', type: 'nested' }, exactNaturalProposal);
       if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
+
       parentResults.push(discarded.result, selected.result);
+
       return {
         children: [context.replay(selected.result)],
         allocationBounds: selected.result.allocationBounds,
@@ -236,6 +249,7 @@ const runNestedFixture = (): FixtureRun => {
     artifacts: { nodeLayouts: true },
     onWarn: warning => warnings.push(warning),
   });
+
   return { result, warnings, nestedObservations, parentResults, dispatches };
 };
 
@@ -255,8 +269,10 @@ describe('three-level layout proposal closure', () => {
 
     const selectedObservation = run.nestedObservations[1];
     const selectedParentResult = run.parentResults[1];
+
     expect(selectedObservation.text.slotSize).toEqual({ width: 50, height: 20 });
     expect(selectedObservation.text.allocationBounds).toEqual({ x: -25, y: -10, width: 50, height: 20 });
+
     // 首行 baseline 使用 measurer 的 ascent；视觉范围仍包含文字与节点描边
     expect(selectedObservation.text.visualBounds).toEqual({ x: -25.5, y: -12, width: 51, height: 22.5 });
     expect(selectedObservation.path.slotSize).toEqual({ width: 50, height: 10 });
@@ -265,9 +281,11 @@ describe('three-level layout proposal closure', () => {
     expect(selectedParentResult.slotSize).toEqual({ width: 50, height: 20 });
     expect(selectedParentResult.allocationBounds).toEqual(selectedObservation.text.allocationBounds);
     expect(selectedParentResult.visualBounds).toEqual(selectedObservation.text.visualBounds);
+
     const selectedLeafGuide = selectedObservation.text.alignmentGuides?.find(
       guide => guide.name === LayoutAlignmentGuideName.FirstBaseline,
     );
+
     expect(selectedLeafGuide).toBeDefined();
     expect(selectedParentResult.alignmentGuides).toEqual([selectedLeafGuide]);
     expect(selectedLeafGuide?.dimension).toBe(LayoutAlignmentGuideDimension.Y);
@@ -280,12 +298,16 @@ describe('three-level layout proposal closure', () => {
     expect(run.warnings).toEqual([]);
     expect(run.warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toEqual([]);
     expect(run.warnings.filter(warning => warning.code === CompileWarningCode.UnresolvedNodeReference)).toEqual([]);
+
     const selectedNodeArtifact = run.result.artifacts.find(isNodeLayoutCompileArtifact);
+
     expect(selectedNodeArtifact?.value.id).toBe('shared-identity');
     expect(formatCompileOccurrence(selectedNodeArtifact?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
       'children[0]::replay[0]::replay[0]',
     );
+
     const referencePath = run.result.scene.primitives.find(primitive => primitive.type === 'path');
+
     expect(
       referencePath?.type === 'path' ? referencePath.commands.find(command => command.kind === 'line') : undefined,
     ).toMatchObject({ to: [25, 0] });
@@ -307,6 +329,7 @@ describe('three-level layout proposal closure', () => {
       artifact => artifact.kind === 'composite' && artifact.type === 'nested',
     );
     const selectedNodeArtifact = first.result.artifacts.find(isNodeLayoutCompileArtifact);
+
     expect(parentArtifact?.value).toEqual({ role: 'parent' });
     expect(nestedArtifact?.value).toEqual({ role: 'nested', x: 'exact', y: 'intrinsic' });
     expect(formatCompileOccurrence(nestedArtifact?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
@@ -358,6 +381,7 @@ describe('three-level layout proposal closure', () => {
     });
 
     let thrown: unknown;
+
     try {
       compileToScene(
         {
@@ -370,6 +394,7 @@ describe('three-level layout proposal closure', () => {
     } catch (error) {
       thrown = error;
     }
+
     const chain = errorChainOf(thrown);
 
     expect(chain).toContain(rootCause);

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const ASCENT_FACTOR = 0.8;
+
 const DESCENT_FACTOR = 0.2;
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -26,6 +27,7 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
       ([, value]) => value !== undefined,
     ),
   );
+
   return {
     type: 'path',
     kind: 'ribbon',
@@ -48,6 +50,7 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.pathKinds ?? [];
   const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+
   return compileCoreToScene(input, {
     ...options,
     pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
@@ -56,10 +59,12 @@ const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreTo
 
 const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
+
   for (const primitive of primitives) {
     out.push(primitive);
     if (primitive.type === 'group') out.push(...flatten(primitive.children));
   }
+
   return out;
 };
 
@@ -69,6 +74,7 @@ const textOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): TextPr
   );
 
 const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
+
 const visualMiddle = (t: TextPrim): number => t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const slopedGroupOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string): GroupPrim | undefined =>
@@ -117,6 +123,7 @@ describe('Ribbon label compile', () => {
 
     const paths = pathPrims(compiled.primitives);
     const label = textOf(compiled.primitives, 'mid');
+
     expect(paths).toHaveLength(1);
     expect(compiled.primitives[0].type).toBe('path');
     expect(label?.x).toBeCloseTo(50);
@@ -201,6 +208,7 @@ describe('Ribbon label compile', () => {
     }).scene;
     const label = textOf(compiled.primitives, 'outside');
     if (label === undefined) throw new Error('Expected outside label');
+
     expect(visualBottom(label)).toBeCloseTo(top, 2);
   });
 
@@ -232,6 +240,7 @@ describe('Ribbon label compile', () => {
     ).scene;
 
     const group = slopedGroupOf(compiled.primitives, 'flow');
+
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 90 });
   });
 
@@ -257,7 +266,9 @@ describe('Ribbon label compile', () => {
     ).scene;
 
     const group = slopedGroupOf(compiled.primitives, '128');
+
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate' });
+
     const geometry = {
       kind: 'cubicBezier' as const,
       from: [-210, -48] as [number, number],
@@ -270,6 +281,7 @@ describe('Ribbon label compile', () => {
       curve.parameterAtDistance(geometry, curve.approximateLength(geometry) * 0.05),
     ).tangent;
     const expected = Math.round(((Math.atan2(tangent[1], tangent[0]) * 180) / Math.PI) * 100) / 100;
+
     expect(group?.transforms?.[0]).toHaveProperty('degrees', expected);
   });
 
@@ -288,6 +300,7 @@ describe('Ribbon label compile', () => {
     ).scene;
 
     const group = slopedGroupOf(compiled.primitives, 'legacy');
+
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 90 });
   });
 
@@ -308,6 +321,7 @@ describe('Ribbon label compile', () => {
     ).scene;
 
     const label = textOf(compiled.primitives, 'styled');
+
     expect(label?.fill).toBe('crimson');
     expect(label?.fontSize).toBe(12);
     expect(label?.fontWeight).toBe('bold');

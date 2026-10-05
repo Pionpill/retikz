@@ -1,4 +1,4 @@
-import type { DataFieldTypeValue, IRDataFieldDefinition } from '@retikz/data';
+import type { IRDataFieldDefinition } from '@retikz/data';
 import { coerceTimestamp, DataFieldType, FieldOrderMode, inferCategoryDomain } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
@@ -7,7 +7,7 @@ import type {
   ChannelScaleResolution,
   ChannelScaleResolveContext,
   PositionScale,
-  PositionScaleContinuityValue,
+  PositionScaleContinuity,
 } from '../../contract';
 import { isBuiltinScaleOperation } from '../../contract';
 import { RetikzPlotError } from '../../error';
@@ -31,6 +31,7 @@ export const resolveScaleDefinition = (
       `lowerPlots: scale type "${operation.type}" is not registered; pass a ScaleDefinition via options.scaleDefinitions`,
     );
   }
+
   return def;
 };
 
@@ -49,7 +50,9 @@ export const resolveBuiltinPositionOperation = (
   fallbackRange: readonly [number, number],
 ): IRPlotScaleOperation => {
   if (!isBuiltinScaleOperation(operation)) return operation;
+
   const numericValues = values.filter(isFiniteNumber);
+
   switch (operation.type) {
     case PlotScale.Linear:
       return {
@@ -66,6 +69,7 @@ export const resolveBuiltinPositionOperation = (
     case PlotScale.Log: {
       const positiveValues = numericValues.filter(value => value > 0);
       const [lo, hi] = positiveValues.length === 0 ? [1, 10] : safeExtent(positiveValues);
+
       return {
         ...operation,
         domain: resolvePaddedDomain({
@@ -87,6 +91,7 @@ export const resolveBuiltinPositionOperation = (
           `lowerPlots: pow scale "${operation.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${sourceDomain[0]}, ${sourceDomain[1]}])`,
         );
       }
+
       return {
         ...operation,
         domain: resolvePaddedDomain({
@@ -172,7 +177,9 @@ export const resolvePositionScale = (
       `resolvePositionScale: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`,
     );
   }
+
   const effectiveOperation = resolveBuiltinPositionOperation(operation, values, fallbackRange);
+
   return def.resolve(parseScaleOperation(def, effectiveOperation), values, fallbackRange);
 };
 
@@ -183,13 +190,14 @@ export const resolvePositionScale = (
 export const resolvePositionScaleContinuity = (
   operation: IRPlotScaleOperation,
   context: ScaleResolveContext,
-): PositionScaleContinuityValue => {
+): PositionScaleContinuity => {
   const def = resolveScaleDefinition(operation, context);
   if (def.family !== 'position') {
     throw new RetikzPlotError(
       `resolvePositionScaleContinuity: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales do not declare position continuity`,
     );
   }
+
   return def.continuity;
 };
 
@@ -210,11 +218,13 @@ export const resolveChannelScale = (
       `lowerPlots: scale "${operation.name}" of type "${operation.type}" is not a color scale (color channels bind ordinal / sequential / diverging / quantize / threshold / quantile)`,
     );
   }
+
   if (options.checkFieldCompatible !== false && !def.isFieldCompatible(context.fieldType)) {
     throw new RetikzPlotError(
       `lowerPlots: color scale "${operation.name}" (${operation.type}) is incompatible with a ${context.fieldType ?? 'untyped'} field`,
     );
   }
+
   return def.resolve(parseScaleOperation(def, operation), values, context);
 };
 
@@ -225,7 +235,7 @@ export const resolveChannelScale = (
 export const assertScaleFieldCompatible = (
   role: string,
   scaleType: string,
-  fieldType: DataFieldTypeValue,
+  fieldType: DataFieldType,
   scaleName: string,
   context: ScaleResolveContext,
 ): void => {
@@ -249,6 +259,7 @@ export const assertBaselineScaleCompatible = (
 ): void => {
   const def = context.registry.get(valueScaleType);
   if (def === undefined || def.family !== 'position' || def.allowsBaseline !== false) return;
+
   const hasBaselineMark = marks.some(
     mark =>
       isBuiltinMark(mark) &&
@@ -267,7 +278,7 @@ export const assertBaselineScaleCompatible = (
  * 按字段类型派生默认 position scale operation
  * @description continuous→linear、temporal→time、categorical→band；无字段绑定时使用 linear
  */
-export const derivePositionScale = (fieldType: DataFieldTypeValue | undefined, name: string): IRPlotScale => {
+export const derivePositionScale = (fieldType: DataFieldType | undefined, name: string): IRPlotScale => {
   switch (fieldType) {
     case DataFieldType.Temporal:
       return { type: PlotScale.Time, name };
@@ -296,9 +307,12 @@ export const orderedCategoryDomain = (
     const sorted = [...deduped].sort((a, b) =>
       allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b)),
     );
+
     return order === FieldOrderMode.Descending ? sorted.reverse() : sorted;
   }
+
   const inArray = new Set<string | number>(order);
   const appended = deduped.filter(value => !inArray.has(value));
+
   return [...order, ...appended];
 };

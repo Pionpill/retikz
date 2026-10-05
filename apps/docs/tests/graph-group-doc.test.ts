@@ -9,6 +9,7 @@ import { previewSource as groupStylePreviewSource } from '../src/modules/docs/co
 describe('Graph Group documentation', () => {
   it('keeps Group children in the executable canonical preview and Vanilla code view', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
     try {
       const preview = buildPreviewIR(() => groupPreviewSource.canonicalRender?.() ?? null);
       const vanilla = buildVanillaPreview(preview);
@@ -30,8 +31,10 @@ describe('Graph Group documentation', () => {
     ['style', groupStylePreviewSource],
   ] as const)('renders the %s preview canonical state', (_name, previewSource) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
     try {
       const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
+
       expect(preview).not.toBeNull();
       expect(warn).not.toHaveBeenCalled();
     } finally {

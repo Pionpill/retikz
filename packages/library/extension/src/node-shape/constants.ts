@@ -23,4 +23,4 @@ export const ExtensionShapeName = {
 } as const;
 
 /** Extension 形状 provider 名称取值 */
-export type ExtensionShapeNameValue = ValueOf<typeof ExtensionShapeName>;
+export type ExtensionShapeName = ValueOf<typeof ExtensionShapeName>;

@@ -12,7 +12,10 @@ import { CORE_SOURCE_KEY } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { RuntimePrimitiveMetadataTable } from '../orchestration';
 
-/** 递归冻结 Computation 新创建且尚未对外暴露的 plain output */
+/**
+ * 递归冻结 Computation 新创建且尚未对外暴露的 plain output
+ * @template T 递归冻结且原样返回的计算输出类型
+ */
 export const freezeComputationOutput = <T>(value: T): T => {
   if (value === null || typeof value !== 'object') return value;
   if (Array.isArray(value)) {
@@ -20,6 +23,7 @@ export const freezeComputationOutput = <T>(value: T): T => {
   } else {
     Object.values(value).forEach(item => freezeComputationOutput(item));
   }
+
   return Object.isFrozen(value) ? value : Object.freeze(value);
 };
 
@@ -31,6 +35,7 @@ const createFullTopology = (
   metadata: RuntimePrimitiveMetadataTable,
 ): ReadonlyArray<SceneRuntimeNode> => {
   const topology: Array<SceneRuntimeNode> = [];
+
   const visit = (
     items: ReadonlyArray<RuntimeScenePrimitive>,
     parent: SceneRuntimeNode['parent'],
@@ -45,6 +50,7 @@ const createFullTopology = (
           `createFullSceneRuntimeSnapshot: missing primitive identity at ${primitivePath.join('.')}`,
         );
       }
+
       topology.push(
         Object.freeze({
           identity: record.identity,
@@ -58,7 +64,9 @@ const createFullTopology = (
       if (primitive.type === 'group') visit(primitive.children, record.identity, primitivePath);
     });
   };
+
   visit(primitives, rootIdentity, []);
+
   return Object.freeze(topology);
 };
 

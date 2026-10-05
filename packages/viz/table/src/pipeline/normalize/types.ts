@@ -2,7 +2,7 @@ import type { ExternalDatasets, IRDataReference, DataTransformResult } from '@re
 
 import type { AnyTableStructureDefinition } from '../../contract';
 
-/** Table structure normalization options */
+/** 表格结构归一化选项 */
 export type NormalizeTableStructureOptions = Readonly<{
   /** 根 Table 外部数据引用 */
   data?: IRDataReference;

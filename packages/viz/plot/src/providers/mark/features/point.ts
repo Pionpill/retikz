@@ -36,6 +36,7 @@ const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
   const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
   const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
+
   return {
     ...(rotate !== undefined ? { rotate } : {}),
     style: {
@@ -53,7 +54,7 @@ const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
 };
 
 /**
- * point mark：每行一个 circle glyph 或无边框文本 Node（坐标系无关，经 frame.projectRoles 投影；吸收旧 text mark）。
+ * point mark：每行一个 circle glyph 或无边框文本 Node（坐标系无关，经 frame.projectRoles 投影；吸收旧 text mark）
  * @description encoding.text 设 → 无边框带 text 的 Node（内容走 labelOf、缺失跳过、dx/dy 微调），样式走 textStyle（textColor）；
  *   否则 → circle glyph（size / opacity / shape 通道 per-datum、datum label 经 attachDatumLabel），样式走 pointStyle（fill）
  */
@@ -65,6 +66,7 @@ export const lowerPoint = (
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
   if (mark.type !== PlotMark.Point) return null;
+
   const markProvenance = ctx?.provenance;
   const colorOf = channelValueOf<string>(channels, 'color');
   const fillOf = mark.fill?.kind === 'field' && !colorOf ? channelValueOf<MarkPaint>(channels, 'fill') : undefined;
@@ -78,27 +80,33 @@ export const lowerPoint = (
   const dy = mark.dy ?? 0;
   const constantZIndex = mark.zIndex?.kind === 'constant' ? mark.zIndex.value : undefined;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
     const resolveChannelDeliveries = () =>
       (channels.nodeDeliveries ?? []).map(entry => ({ entry, value: entry.resolver(row) }));
+
     const applyChannelDeliveries = (
       node: IRNode,
       nodeKind: 'pointGlyph' | 'pointText',
       deliveries: ReturnType<typeof resolveChannelDeliveries>,
     ): void => {
       if (constantZIndex !== undefined) node.zIndex = constantZIndex;
+
       for (const { entry, value } of deliveries) {
         if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind });
       }
     };
+
     if (isText) {
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
       const point =
         ctx?.positions?.positionFor(String(transformedIndex)) ?? frame.projectRoles(roleValues(mark, row, frame));
       if (!point) continue;
+
       const text = textOf?.(row);
       if (text === undefined) continue;
+
       const deliveries = resolveChannelDeliveries();
       const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
       const base: IRNode = { type: 'node', position, text };
@@ -115,11 +123,14 @@ export const lowerPoint = (
       });
       continue;
     }
+
     // 散点 glyph：锚点与 locator 共享同一 role 投影（point → frame.projectRoles），杜绝两套投影漂移
     const point = ctx?.positions?.positionFor(String(transformedIndex)) ?? roleAnchor(mark, row, frame);
     if (!point) continue;
+
     const deliveries = resolveChannelDeliveries();
     if (deliveries.some(({ entry, value }) => entry.channel === 'size' && value === undefined)) continue;
+
     const base: IRNode = { type: 'node', position: point };
     const fill = fillOf?.(row);
     if (fill !== undefined) base.style = { ...base.style, fill };
@@ -140,7 +151,9 @@ export const lowerPoint = (
     );
     placed.push({ color: colorOf?.(row), node });
   }
+
   if (placed.length === 0) return null;
+
   const fillConstant =
     channelDefaultOf<MarkPaint>(channels, 'fill') ?? (mark.fill?.kind === 'constant' ? mark.fill.value : undefined);
   const layer: IRScope = !colorOf
@@ -156,6 +169,7 @@ export const lowerPoint = (
     : colorGroupedScope(placed, fill =>
         isText ? textStyle(textColorConstant ?? fill, mark) : pointGlyphStyle(fillConstant ?? fill, mark),
       );
+
   return attachMarkLayer(layer, mark, ctx);
 };
 
@@ -178,7 +192,9 @@ const minimumSizeRadiusOf = (minimumSize: number | IRBoxSize): number => {
 const maximumScaleOf = (scale: number | IRAxisScale | undefined): number => {
   if (scale === undefined) return 1;
   if (typeof scale === 'number') return Math.abs(scale);
+
   const fallback = scale.default ?? 1;
+
   return Math.max(Math.abs(scale.x ?? fallback), Math.abs(scale.y ?? fallback));
 };
 
@@ -188,7 +204,9 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
   domainPadding: (mark, rows, roles, channels) => {
     if (mark.encoding.text !== undefined)
       throw new RetikzPlotError('Text points do not provide size-only domain padding');
+
     const size = channels.nodeDeliveries?.find(delivery => delivery.channel === 'size');
+
     return rows.flatMap((row, index) => {
       const radius =
         size === undefined
@@ -197,6 +215,7 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
             : POINT_DEFAULT_RADIUS
           : (size.resolver(row) as number | undefined);
       if (radius === undefined) return [];
+
       return [
         {
           key: String(index),
@@ -217,6 +236,7 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
       rows.map((row, index) => ({ key: String(index), row, roleValues: roleValues(mark, row, frame) })),
     normalExtent: (mark, target, _unitNormal, channels) => {
       if (mark.encoding.text !== undefined) return undefined;
+
       const sizeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'size');
       const minimumSizeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'minimumSize');
       const scaleDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'scale');
@@ -234,6 +254,7 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
       const strokeWidth =
         (strokeDelivery?.resolver(target.row) as number | undefined) ??
         (mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : 0);
+
       return radius * maximumScaleOf(scale) + strokeWidth / 2;
     },
   },

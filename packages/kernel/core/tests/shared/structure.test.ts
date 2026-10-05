@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
 const root = resolve(here, '../..');
+
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
 describe('shared source structure', () => {
@@ -24,6 +26,7 @@ describe('shared source structure', () => {
         return importLines.some(line => /\b(Position|Vector2|CenteredShape)\b/.test(line));
       }),
     ];
+
     expect(offenders).toEqual([]);
   });
 });

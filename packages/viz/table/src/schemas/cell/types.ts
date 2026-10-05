@@ -1,15 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type {
-  TableCellFit,
-  TableCellLocation,
-  TableCellOverflow,
-  TableCellPayloadKind,
-  TableCellRole,
-  TableHorizontalAlignment,
-  TableVerticalAlignment,
-} from './constants';
 import type {
   ManualTableCellSchema,
   TableCellContentPayloadSchema,
@@ -18,27 +8,6 @@ import type {
   TableCellSpanSchema,
   TableCellValuePayloadSchema,
 } from './schema';
-
-/** Cell 语义位置取值 */
-export type TableCellLocationValue = ValueOf<typeof TableCellLocation>;
-
-/** Cell 语义角色取值 */
-export type TableCellRoleValue = ValueOf<typeof TableCellRole>;
-
-/** Table Cell payload 判别值 */
-export type TableCellPayloadKindValue = ValueOf<typeof TableCellPayloadKind>;
-
-/** Cell 横向对齐取值 */
-export type TableHorizontalAlignmentValue = ValueOf<typeof TableHorizontalAlignment>;
-
-/** Cell 纵向对齐取值 */
-export type TableVerticalAlignmentValue = ValueOf<typeof TableVerticalAlignment>;
-
-/** Cell 内容 fit 取值 */
-export type TableCellFitValue = ValueOf<typeof TableCellFit>;
-
-/** Cell 内容 overflow 取值 */
-export type TableCellOverflowValue = ValueOf<typeof TableCellOverflow>;
 
 /** Table Cell 矩形跨度 IR */
 export type IRTableCellSpan = ZodInfer<typeof TableCellSpanSchema>;

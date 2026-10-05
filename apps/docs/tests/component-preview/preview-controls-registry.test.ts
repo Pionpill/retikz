@@ -63,6 +63,7 @@ const renderControlledDemo = (
   const Demo = demoModules[resolveDemoKey(segments, name, language)]?.default;
   const contract = resolvePreviewControlContract(controlModules[resolveControlsKey(segments, name, language)]);
   if (!Demo || !contract) throw new Error(`Missing controlled demo: ${segments.join('/')}/${name}/${language}`);
+
   return renderToStaticMarkup(
     createElement(
       PreviewControlStateContext.Provider,
@@ -87,8 +88,10 @@ const viewBoxArea = (markup: string): number => {
     .split(/[ ,]+/)
     .map(Number);
   if (!values || values.length !== 4 || !values.every(Number.isFinite)) throw new Error('Invalid SVG viewBox');
+
   expect(values[2]).toBeGreaterThan(0);
   expect(values[3]).toBeGreaterThan(0);
+
   return values[2] * values[3];
 };
 
@@ -218,6 +221,7 @@ const compileGeometryNode = (
   const artifact = result.artifacts.find(isNodeLayoutCompileArtifact);
   const layout = artifact?.value;
   if (!layout) throw new Error('Missing compiled Node geometry layout');
+
   return { layout, bounds: scene.layout };
 };
 
@@ -230,6 +234,7 @@ const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrim 
       if (nested) return nested;
     }
   }
+
   return undefined;
 };
 
@@ -260,6 +265,7 @@ const compileBuiltinText = (
   const layout = result.artifacts.find(isNodeLayoutCompileArtifact)?.value;
   const textPrimitive = findTextPrimitive(result.scene.primitives);
   if (!layout || !textPrimitive) throw new Error('Missing compiled builtin text layout');
+
   return { layout, text: textPrimitive };
 };
 
@@ -366,11 +372,15 @@ describe('preview controls registry', () => {
     expect(resolveControlsKey(segments, 'line-curve', 'fr')).toBe(buildControlsKey(segments, 'line-curve'));
 
     const controls = resolvePreviewControls(controlModules[englishKey]);
+
     expect(controls?.presentation).toBe('panel');
+
     if (!controls || controls.presentation !== 'panel') return;
 
     expect(controls.sections.map(section => section.label)).toEqual(['Data', 'Coordinate', 'Connection', 'Path style']);
+
     const fields = controls.sections.flatMap(section => section.controls);
+
     expect(fields).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: 'table', id: 'curveSamples', label: 'Curve samples' }),
@@ -442,7 +452,9 @@ describe('preview controls registry', () => {
 
     for (const key of [buildControlsKey(segments, 'line-curve'), buildLangControlsKey(segments, 'line-curve', 'en')]) {
       const controls = resolvePreviewControls(controlModules[key]);
+
       expect(controls?.presentation, key).toBe('panel');
+
       if (!controls || controls.presentation !== 'panel') continue;
 
       expect(controls.sections[0].controls[0].kind, key).toBe('table');
@@ -462,7 +474,9 @@ describe('preview controls registry', () => {
 
     for (const key of dataOnlyKeys) {
       const controls = resolvePreviewControls(controlModules[key]);
+
       expect(controls?.presentation, key).toBe('panel');
+
       if (!controls || controls.presentation !== 'panel') continue;
 
       expect(controls.sections[0].controls[0].kind, key).toBe('table');
@@ -477,6 +491,7 @@ describe('preview controls registry', () => {
     const visibleFieldIds = (segments: Array<string>, name: string, values: PreviewControlValues) => {
       const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, name)]);
       if (definition?.presentation !== 'panel') throw new Error(`${name} must use panel controls`);
+
       return resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
         section.controls.map(control => control.id),
       );
@@ -510,13 +525,16 @@ describe('preview controls registry', () => {
     for (const { name, writableIds } of cases) {
       for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
         const controls = resolvePreviewControls(controlModules[key]);
+
         expect(controls?.presentation, key).toBe('panel');
+
         if (!controls || controls.presentation !== 'panel') continue;
 
         const actualIds = controls.sections
           .flatMap(section => section.controls)
           .filter(control => control.kind !== 'table')
           .map(control => control.id);
+
         expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
       }
 
@@ -533,12 +551,15 @@ describe('preview controls registry', () => {
     ]) {
       const definition = resolvePreviewControls(controlModules[key]);
       if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
+
       const position = definition.sections
         .flatMap(section => section.controls)
         .find(control => control.id === 'point-label-position');
 
       expect(position?.kind, key).toBe('select');
+
       if (position?.kind !== 'select') continue;
+
       expect(
         position.options.map(option => option.value),
         key,
@@ -552,6 +573,7 @@ describe('preview controls registry', () => {
     for (const key of [buildControlsKey(segments, 'point-text'), buildLangControlsKey(segments, 'point-text', 'en')]) {
       const definition = resolvePreviewControls(controlModules[key]);
       if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
+
       const visibleFieldIds = (values: PreviewControlValues) =>
         resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
           section.controls.map(control => control.id),
@@ -643,13 +665,16 @@ describe('preview controls registry', () => {
     for (const { name, writableIds } of cases) {
       for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
         const controls = resolvePreviewControls(controlModules[key]);
+
         expect(controls?.presentation, key).toBe('panel');
+
         if (!controls || controls.presentation !== 'panel') continue;
 
         const actualIds = controls.sections
           .flatMap(section => section.controls)
           .filter(control => control.kind !== 'table')
           .map(control => control.id);
+
         expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
       }
 
@@ -694,13 +719,16 @@ describe('preview controls registry', () => {
         buildLangControlsKey(segments, controlsName, 'en'),
       ]) {
         const controls = resolvePreviewControls(controlModules[key]);
+
         expect(controls?.presentation, key).toBe('panel');
+
         if (!controls || controls.presentation !== 'panel') continue;
 
         const actualIds = controls.sections
           .flatMap(section => section.controls)
           .filter(control => control.kind !== 'table')
           .map(control => control.id);
+
         expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
       }
 
@@ -721,13 +749,16 @@ describe('preview controls registry', () => {
     for (const { name, writableIds } of cases) {
       for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
         const controls = resolvePreviewControls(controlModules[key]);
+
         expect(controls?.presentation, key).toBe('panel');
+
         if (!controls || controls.presentation !== 'panel') continue;
 
         const actualIds = controls.sections
           .flatMap(section => section.controls)
           .filter(control => control.kind !== 'table')
           .map(control => control.id);
+
         expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
       }
 
@@ -748,13 +779,16 @@ describe('preview controls registry', () => {
     for (const { name, writableIds } of cases) {
       for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
         const controls = resolvePreviewControls(controlModules[key]);
+
         expect(controls?.presentation, key).toBe('panel');
+
         if (!controls || controls.presentation !== 'panel') continue;
 
         const actualIds = controls.sections
           .flatMap(section => section.controls)
           .filter(control => control.kind !== 'table')
           .map(control => control.id);
+
         expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
       }
 
@@ -766,6 +800,7 @@ describe('preview controls registry', () => {
     const segments = ['kernel', 'components', 'node', 'usage'];
     const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-styled')]);
     const enDefinition = resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-styled', 'en')]);
+
     expect(zhDefinition?.presentation).toBe('panel');
     expect(enDefinition?.presentation).toBe('panel');
 
@@ -898,7 +933,9 @@ describe('preview controls registry', () => {
 
       expect(zhDefinition?.presentation, `${item.name} zh`).toBe(item.presentation);
       expect(enDefinition?.presentation, `${item.name} en`).toBe(item.presentation);
+
       if (!zhDefinition || !enDefinition) throw new Error(`Missing controls definition: ${item.name}`);
+
       expect(contractOf(zhDefinition)).toEqual(contractOf(enDefinition));
     }
   });
@@ -912,8 +949,10 @@ describe('preview controls registry', () => {
       { id: 'zIndexB', label: 'b zIndex', defaultValue: 0, min: -2, max: 4, step: 1 },
       { id: 'zIndexC', label: 'c zIndex', defaultValue: 0, min: -2, max: 4, step: 1 },
     ];
+
     const contractOf = (definition: PreviewControlsDefinition | undefined) => {
       if (!definition || definition.presentation !== 'panel') return [];
+
       return getPreviewControlFields(definition).map(field => ({
         id: field.id,
         label: field.label,
@@ -960,8 +999,10 @@ describe('preview controls registry', () => {
         expected: [{ id: 'fraction', defaultValue: 0.5, min: 0, max: 1, step: 0.05 }],
       },
     ] as const;
+
     const contractOf = (definition: PreviewControlsDefinition | undefined) => {
       if (!definition || definition.presentation !== 'panel') return [];
+
       return getPreviewControlFields(definition).map(field => ({
         id: field.id,
         defaultValue: field.defaultValue,
@@ -1015,12 +1056,14 @@ describe('preview controls registry', () => {
 
     const contractOf = (definition: PreviewControlsDefinition | undefined) => {
       if (!definition || definition.presentation !== 'panel') return [];
+
       return getPreviewControlFields(definition).map(field => ({
         id: field.id,
         defaultValue: field.defaultValue,
         optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
       }));
     };
+
     const shapeOptions = ['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector'];
     const boundaryOptions = ['shape', 'circle', 'rectangle', 'ellipse'];
     const fitOptions = ['tight', 'bounds'];
@@ -1058,22 +1101,26 @@ describe('preview controls registry', () => {
     const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-geometry')]);
 
     expect(definition?.presentation).toBe('panel');
+
     if (!definition || definition.presentation !== 'panel') return;
 
     const defaults = Object.fromEntries(
       getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
     );
+
     expect(defaults).toMatchObject({
       paddingX: 18,
       paddingY: 10,
       minimumWidth: 40,
       minimumHeight: 24,
     });
+
     const numericDefault = (id: string) => {
       const value = defaults[id];
       if (typeof value !== 'number') throw new Error(`Missing numeric default: ${id}`);
       return value;
     };
+
     const common = {
       margin: numericDefault('margin'),
       minimumWidth: numericDefault('minimumWidth'),
@@ -1098,16 +1145,22 @@ describe('preview controls registry', () => {
     const render = (values: PreviewControlValues) =>
       renderControlledDemo(segments, 'primitive-model-playground', 'zh', values);
     const outlines = (markup: string) => markup.match(/<ellipse\b[^>]*stroke-dasharray="[^"]+"[^>]*>/g) ?? [];
+
     expect(outlines(render({ boundary: 'shape' }))).toHaveLength(0);
+
     const tight = outlines(render({ boundary: 'circle', gap: 0 }));
     const expanded = outlines(render({ boundary: 'circle', gap: 10 }));
+
     expect(tight).toHaveLength(1);
     expect(expanded).toHaveLength(1);
+
     const tightOutline = tight[0];
     const expandedOutline = expanded[0];
     if (tightOutline === undefined || expandedOutline === undefined) throw new Error('Missing boundary outline');
+
     for (const axis of ['rx', 'ry']) {
       const radius = (element: string) => Number(element.match(new RegExp(`\\b${axis}="([^"]+)"`))?.[1]);
+
       expect(radius(expandedOutline) - radius(tightOutline)).toBeCloseTo(10);
     }
   });
@@ -1128,13 +1181,16 @@ describe('preview controls registry', () => {
     const shapeValues = { shapeB: 'circle', boundaryA: 'shape', boundaryB: 'shape' };
     const shapeArea = (shapeA: string) =>
       viewBoxArea(renderControlledDemo(positioningSegments, 'node-shape-connection', 'zh', { ...shapeValues, shapeA }));
+
     expect(shapeArea('star')).toBeGreaterThan(shapeArea('circle'));
+
     for (const language of ['zh', 'en'] as const) {
       for (const [segments, name] of [
         [usageSegments, 'node-styled'],
         [textSegments, 'text-attrs'],
       ] as const) {
         const area = (fontSize: number) => viewBoxArea(renderControlledDemo(segments, name, language, { fontSize }));
+
         expect(area(28), `${name} ${language}`).toBeGreaterThan(area(10));
       }
     }
@@ -1159,11 +1215,14 @@ describe('preview controls registry', () => {
       resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-styled', 'en')]),
     ]) {
       expect(definition?.presentation).toBe('panel');
+
       if (!definition || definition.presentation !== 'panel') continue;
+
       expect(definition.sections.flatMap(section => section.controls.map(field => field.id))).toEqual(expectedIds);
     }
 
     const markup = renderControlledDemo(segments, 'node-styled', 'zh', {});
+
     expect(markup).toContain('<rect');
     expect(markup).toContain('Node');
   });
@@ -1216,16 +1275,19 @@ describe('preview controls registry', () => {
 
     for (const item of cases) {
       const source = demoSources[resolveDemoKey([...item.segments], item.name, item.language)];
+
       expect(source, `${item.name} ${item.language}`).toContain('export const previewControls =');
     }
   });
 
   it('Grid playground 覆盖完整语义并按状态隐藏无效字段', () => {
     const segments = ['library', 'standard', 'presentation', 'grid'];
+
     expect(Object.keys(controlModules).filter(key => key.includes('/library/standard/presentation/grid/'))).toEqual([
       buildControlsKey(segments, 'grid-playground'),
       buildLangControlsKey(segments, 'grid-playground', 'en'),
     ]);
+
     const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'grid-playground')]);
     const enDefinition = resolvePreviewControls(
       controlModules[buildLangControlsKey(segments, 'grid-playground', 'en')],
@@ -1293,12 +1355,14 @@ describe('preview controls registry', () => {
       majorEnabled: true,
       borderEnabled: true,
     });
+
     expect(enabledIds).not.toContain('spacing');
     expect(enabledIds).toEqual(
       expect.arrayContaining(['spacingX', 'spacingY', 'originX', 'originY', 'majorEvery', 'borderPadding']),
     );
 
     const source = demoSourceOf(segments, 'grid-playground');
+
     expect(source).toContain('export const previewControls =');
     expect(source).toContain('defineControlledPreview(previewControlContract');
     expect(source).toMatch(/viewBox=\{\{ x: 0, y: 0, width: 400, height: 280 \}\}/u);
@@ -1348,6 +1412,7 @@ describe('preview controls registry', () => {
     ]);
 
     const playgroundSource = demoSourceOf(segments, 'frame-playground');
+
     expect(playgroundSource).toContain('export const previewControls =');
     expect(playgroundSource).toContain('defineControlledPreview(previewControlContract');
     expect(playgroundSource).toMatch(/viewBox=\{\{ x: 0, y: 0, width: 420, height: 260 \}\}/u);
@@ -1360,6 +1425,7 @@ describe('preview controls registry', () => {
     expect(playgroundSource).toContain("way={['A', 'B']}");
 
     const contentRoot = resolve('src/modules/docs/contents/library/standard/presentation/frame');
+
     for (const locale of ['zh', 'en']) {
       const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
       const previewNames = Array.from(
@@ -1387,14 +1453,18 @@ describe('preview controls registry', () => {
             : buildLangControlsKey(segments, 'builtin-node-text', 'en')
         ],
       );
+
       expect(definition?.presentation, language).toBe('panel');
+
       if (!definition || definition.presentation !== 'panel') continue;
 
       const fields = getPreviewControlFields(definition);
       const padding = fields.find(field => field.id === 'padding');
       const minimumSize = fields.find(field => field.id === 'minimumSize');
+
       expect(padding?.kind, language).toBe('range');
       expect(minimumSize?.kind, language).toBe('range');
+
       if (padding?.kind !== 'range' || minimumSize?.kind !== 'range') continue;
 
       const compileGlyph = (paddingValue: number): CompiledNodeLayout => {
@@ -1418,6 +1488,7 @@ describe('preview controls registry', () => {
         );
         const layout = result.artifacts.find(isNodeLayoutCompileArtifact)?.value;
         if (!layout) throw new Error('Missing compiled point glyph layout');
+
         return layout;
       };
 
@@ -1432,7 +1503,9 @@ describe('preview controls registry', () => {
   it('内置节点 playground 的文本默认形成宽度不同的多行，使文字对齐可见', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
     const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+
     expect(definition?.presentation).toBe('panel');
+
     if (!definition || definition.presentation !== 'panel') return;
 
     const defaults = Object.fromEntries(
@@ -1453,7 +1526,9 @@ describe('preview controls registry', () => {
   it('内置节点 playground 的默认行高不会让多行文字重叠', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
     const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+
     expect(definition?.presentation).toBe('panel');
+
     if (!definition || definition.presentation !== 'panel') return;
 
     const defaults = Object.fromEntries(
@@ -1475,7 +1550,9 @@ describe('preview controls registry', () => {
   it('内置节点 playground 的文字宽度范围会改变实际折行数', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
     const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+
     expect(definition?.presentation).toBe('panel');
+
     if (!definition || definition.presentation !== 'panel') return;
 
     const fields = getPreviewControlFields(definition);
@@ -1483,10 +1560,12 @@ describe('preview controls registry', () => {
     const fontSize = fields.find(field => field.id === 'fontSize');
     const lineHeight = fields.find(field => field.id === 'lineHeight');
     const maxTextWidth = fields.find(field => field.id === 'maxTextWidth');
+
     expect(align?.kind).toBe('select');
     expect(fontSize?.kind).toBe('range');
     expect(lineHeight?.kind).toBe('range');
     expect(maxTextWidth?.kind).toBe('range');
+
     if (
       align?.kind !== 'select' ||
       fontSize?.kind !== 'range' ||
@@ -1528,9 +1607,11 @@ describe('preview controls registry', () => {
 
     for (const definition of definitions) {
       expect(definition?.presentation).toBe('panel');
+
       if (!definition || definition.presentation !== 'panel') continue;
 
       const roundedCorners = getPreviewControlFields(definition).find(field => field.id === 'roundedCorners');
+
       expect(roundedCorners?.kind).toBe('range');
       expect(roundedCorners?.defaultValue).toBe(0);
       expect(visibleIds(definition, 0)).toContain('lineJoin');
@@ -1548,6 +1629,7 @@ describe('preview controls registry', () => {
       const definition = resolvePreviewControls(controlModules[controlsKey]);
 
       expect(definition?.presentation, language).toBe('panel');
+
       if (!definition || definition.presentation !== 'panel') continue;
 
       const firstSection = definition.sections[0];
@@ -1556,20 +1638,28 @@ describe('preview controls registry', () => {
         resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
           section.controls.map(control => control.id),
         );
+
       expect(Boolean(firstSection.defaultCollapsed), language).toBe(true);
       expect(firstControl.kind, language).toBe('table');
+
       if (firstControl.kind !== 'table') continue;
 
       const sourceRows = sourceRowsOf(firstControl);
+
       expect(sourceRows, language).toHaveLength(12);
+
       const targetGroupSizes = sourceRows.reduce<Record<string, number>>((groupSizes, row) => {
         const practiceId = Reflect.get(row, 'practiceId');
+
         expect(typeof practiceId, `${language}: practiceId`).toBe('string');
+
         if (typeof practiceId !== 'string') return groupSizes;
 
         groupSizes[practiceId] = (groupSizes[practiceId] ?? 0) + 1;
+
         return groupSizes;
       }, {});
+
       expect(Object.values(targetGroupSizes).sort(), language).toEqual([4, 4, 4]);
       expect(
         firstControl.columns?.map(column => column.key),
@@ -1621,6 +1711,7 @@ describe('preview controls registry', () => {
       ).not.toEqual(expect.arrayContaining(['axisStroke', 'axisStrokeWidth']));
 
       const source = demoSourceOf(segments, name, language);
+
       expect(source, language).toContain('defineControlledPreview(previewControlContract');
       expect(source, language).toContain("anchorId={{ prefix: 'thing', field: 'thingId' }}");
       expect(source, language).toContain("anchorId={{ prefix: 'practice', field: 'practiceId' }}");
@@ -1709,12 +1800,15 @@ describe('preview controls registry', () => {
         const definition = resolvePreviewControls(controlModules[key]);
 
         expect(definition?.presentation, `${name}:${language}`).toBe('panel');
+
         if (!definition || definition.presentation !== 'panel') continue;
 
         const firstSection = definition.sections[0];
         const firstControl = firstSection.controls[0];
+
         expect(firstControl.kind, `${name}:${language}`).toBe('table');
         expect(Boolean(firstSection.defaultCollapsed), `${name}:${language}`).toBe(defaultCollapsed);
+
         if (firstControl.kind !== 'table') continue;
 
         expect(sourceRowsOf(firstControl), `${name}:${language}`).toHaveLength(rowCount);
@@ -1828,6 +1922,7 @@ describe('preview controls registry', () => {
         const definition = resolvePreviewControls(controlModules[key]);
 
         expect(definition?.presentation, `${name}:${language}`).toBe('panel');
+
         if (!definition || definition.presentation !== 'panel') continue;
 
         expect(definition.sections.length, `${name}:${language}`).toBeGreaterThan(1);
@@ -1906,6 +2001,7 @@ describe('preview controls registry', () => {
     );
 
     expect(entries.length).toBeGreaterThan(0);
+
     for (const [key, mod] of entries) {
       expect(mod, key).toBeDefined();
       expect(
@@ -1914,14 +2010,18 @@ describe('preview controls registry', () => {
       ).toBe(true);
 
       const contract = resolvePreviewControlContract(mod);
+
       expect(contract, key).toBeDefined();
+
       if (!contract) continue;
 
       const englishKey = key.replace(/\.controls\.ts$/u, '.en.controls.ts');
       if (controlModules[englishKey] === undefined) {
         expect(mod?.createPreviewControlContract, key).toBeTypeOf('function');
       }
+
       const englishModule = controlModules[englishKey] ?? mod;
+
       expect(englishModule, englishKey).toBeDefined();
       expect(
         Object.hasOwn(englishModule ?? {}, 'previewControlContract') ||
@@ -1930,24 +2030,29 @@ describe('preview controls registry', () => {
       ).toBe(true);
 
       const englishContract = resolvePreviewControlContract(englishModule, 'en');
+
       expect(englishContract, englishKey).toBeDefined();
+
       if (!englishContract) continue;
 
       const ids = [
         ...getPreviewControlFields(contract.controls).map(field => field.id),
         ...(contract.stateOnlyIds ?? []),
       ].sort();
+
       expect(Object.keys(contract.canonicalValues).sort(), key).toEqual(ids);
       expect(contract.relatedApis.length, key).toBeGreaterThan(0);
       expect(controlDefinitionContractOf(englishContract.controls, { ignoreTextDefaults: true }), englishKey).toEqual(
         controlDefinitionContractOf(contract.controls, { ignoreTextDefaults: true }),
       );
       expect(englishContract.stateOnlyIds, englishKey).toEqual(contract.stateOnlyIds);
+
       const textControlIds = new Set(
         getPreviewControlFields(contract.controls)
           .filter(field => field.kind === 'text')
           .map(field => field.id),
       );
+
       expect(
         Object.fromEntries(Object.entries(englishContract.canonicalValues).filter(([id]) => !textControlIds.has(id))),
         englishKey,
@@ -1978,10 +2083,12 @@ describe('preview controls registry', () => {
     const enDefinition = resolvePreviewControls(enModule);
     const zhContract = resolvePreviewControlContract(zhModule);
     const enContract = resolvePreviewControlContract(enModule);
+
     expect(zhDefinition?.presentation).toBe('panel');
     expect(enDefinition?.presentation).toBe('panel');
     expect(zhContract).toBeDefined();
     expect(enContract).toBeDefined();
+
     if (!zhContract || !enContract) return;
 
     expect(zhContract.canonicalValues.placementEnabled).toBe(false);
@@ -2006,6 +2113,7 @@ describe('preview controls registry', () => {
             controls: section.controls.map(field => ({ id: field.id, visibleWhen: field.visibleWhen })),
           }))
         : [];
+
     expect(conditionContractOf(zhDefinition)).toEqual(conditionContractOf(enDefinition));
 
     const visibleFieldIds = (
@@ -2027,6 +2135,7 @@ describe('preview controls registry', () => {
       'rotate',
       'scale',
     ];
+
     for (const operation of operations) {
       expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: true })).toContain('selfAnchor');
       expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: false })).not.toContain('selfAnchor');

@@ -46,7 +46,9 @@ export const ChartPresentationDefaultsSchema = strictObject({
 
 /** Chart presentation 的 IR 类型 */
 export type IRChartPresentation = ZodInfer<typeof ChartPresentationSchema>;
+
 /** Chart presentation 单个正式区域的 IR 类型 */
 export type IRChartPresentationRegion = ZodInfer<typeof ChartPresentationRegionSchema>;
+
 /** Chart presentation 稀疏默认片段的 IR 类型 */
 export type IRChartPresentationDefaults = ZodInfer<typeof ChartPresentationDefaultsSchema>;

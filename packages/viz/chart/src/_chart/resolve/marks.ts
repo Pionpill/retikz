@@ -36,6 +36,7 @@ const withDefaultColorGroup = (
       localColorGroup === undefined
         ? `__chart.default-color.${groupIndex}`
         : `__chart.default-color.${groupIndex}.${localColorGroup}`;
+
     return { ...mark, defaultColorGroup };
   });
 
@@ -49,8 +50,11 @@ const invalidMark = (message: string, path: ReadonlyArray<string | number>, caus
 
 const pickSlots = (values: JsonObject, names?: ReadonlyArray<string>): JsonObject => {
   if (names === undefined) return {};
+
   const picked: JsonObject = {};
+
   for (const name of names) if (Object.hasOwn(values, name)) picked[name] = structuredClone(values[name]);
+
   return picked;
 };
 
@@ -78,6 +82,7 @@ const resolveOneMark = (
   if (resolution.marks.length === 0) {
     throw invalidMark('Chart mark resolver must produce at least one Plot mark', ['recipe', 'marks', index]);
   }
+
   return resolution.marks;
 };
 
@@ -92,11 +97,13 @@ export const resolveChartMarks = (
   const encodings = new Set<string>();
   const properties = new Set<string>();
   const overrideIndices = new Map<string, number>();
+
   for (const [index, mark] of authoredMarks.entries()) {
     const kind = mark.kind;
     if (typeof kind !== 'string' || kind.length === 0) {
       throw invalidMark('Chart mark kind must be a non-empty string', ['recipe', 'marks', index, 'kind']);
     }
+
     const binding = recipe.marks.find(candidate => candidate.definition.kind === kind);
     if (binding === undefined) {
       throw new RetikzChartError({
@@ -105,6 +112,7 @@ export const resolveChartMarks = (
         details: { path: ['recipe', 'marks', index, 'kind'], kind },
       });
     }
+
     const override = mark.override === true;
     if (override) {
       const previousIndex = overrideIndices.get(kind);
@@ -116,8 +124,10 @@ export const resolveChartMarks = (
           'override',
         ]);
       }
+
       overrideIndices.set(kind, index);
     }
+
     binding.inherit.encodings?.forEach(slot => encodings.add(slot));
     binding.inherit.properties?.forEach(slot => properties.add(slot));
     marks.push({
@@ -127,6 +137,7 @@ export const resolveChartMarks = (
       plotMarks: resolveOneMark(source, index, mark, binding, resolvedEncodings),
     });
   }
+
   return {
     authoredMarks: marks,
     consumption: { encodings: [...encodings], properties: [...properties] },
@@ -143,6 +154,7 @@ export const resolveChartSemanticMarks = (
     if (group.kind.length === 0) {
       throw invalidMark('Chart semantic mark kind must be non-empty', ['recipe', 'semanticMarks', index, 'kind']);
     }
+
     if (group.plotMarks.length === 0) {
       throw new RetikzChartError({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
@@ -150,6 +162,7 @@ export const resolveChartSemanticMarks = (
         details: { path: ['recipe', 'semanticMarks', index, 'plotMarks'], kind: group.kind },
       });
     }
+
     if (semanticIndices.has(group.kind)) {
       throw new RetikzChartError({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
@@ -157,7 +170,9 @@ export const resolveChartSemanticMarks = (
         details: { path: ['recipe', 'semanticMarks', index, 'kind'], kind: group.kind },
       });
     }
+
     semanticIndices.set(group.kind, index);
+
     return { kind: group.kind, plotMarks: [...group.plotMarks] };
   });
   const additions: Array<ReadonlyArray<IRPlotMarkOperation>> = [];
@@ -168,6 +183,7 @@ export const resolveChartSemanticMarks = (
       additions.push(mark.plotMarks);
       continue;
     }
+
     const semanticIndex = semanticIndices.get(mark.kind);
     if (semanticIndex === undefined) {
       additions.push(mark.plotMarks);
@@ -178,6 +194,7 @@ export const resolveChartSemanticMarks = (
       });
       continue;
     }
+
     groups[semanticIndex] = { kind: mark.kind, plotMarks: [...mark.plotMarks] };
   }
 

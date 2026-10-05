@@ -136,6 +136,7 @@ const AxesBaseSchema = CompositeBaseSchema.extend({
 });
 
 type AxesRefinementInput = ZodInfer<typeof AxesBaseSchema>;
+
 type AxesAxisInput = AxesRefinementInput['x'];
 
 const valuesEqual = (left: number, right: number): boolean =>
@@ -168,6 +169,7 @@ const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: Refinemen
         });
         return;
       }
+
       if (value < -extent.negative || value > extent.positive) {
         ctx.addIssue({
           code: 'custom',
@@ -176,6 +178,7 @@ const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: Refinemen
         });
         return;
       }
+
       if (index > 0 && value <= source.values[index - 1]) {
         ctx.addIssue({
           code: 'custom',
@@ -198,6 +201,7 @@ const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: Refinemen
         message: 'Tick label values must refer to an emitted tick.',
       });
     }
+
     if (index > 0 && labels.entries.slice(0, index).some(previous => valuesEqual(previous.value, entry.value))) {
       ctx.addIssue({
         code: 'custom',
@@ -249,4 +253,5 @@ const refineAxes = (axes: AxesRefinementInput, ctx: RefinementCtx): void => {
   refineAxis(axes.y, 'y', ctx);
 };
 
+/** 校验坐标轴、刻度与网格配置，并检查跨字段的坐标范围约束 */
 export const AxesSchema = AxesBaseSchema.superRefine(refineAxes);

@@ -62,6 +62,7 @@ describe('cloneAndFreezeJson', () => {
 
   it('classifies invalid JSON data with a stable code and path detail', () => {
     let failure: unknown;
+
     try {
       cloneAndFreezeJson({ nested: Number.POSITIVE_INFINITY }, 'payload');
     } catch (error) {
@@ -109,6 +110,7 @@ describe('assertPlainDataContainers', () => {
     for (const value of [cyclic, sparse, arrayWithExtra, symbolKey, accessor, hidden, classInstance, new Date(0)]) {
       expect(() => assertPlainDataContainers(value, 'provider output')).toThrowError(RetikzFoundationError);
     }
+
     expect(getterReadCount).toBe(0);
   });
 

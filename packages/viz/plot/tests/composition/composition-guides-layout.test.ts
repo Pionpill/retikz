@@ -145,7 +145,9 @@ const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, un
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';
 
 const allScopes = (child: IRChild): Array<IRScope> => {
@@ -186,6 +188,7 @@ const nodeYSpanOf = (scope: IRScope): number => {
 describe('composition guides layout schema', () => {
   it('layout_and_guide_policy_round_trip', () => {
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(facetSpec)));
+
     expect(parsed).toEqual(facetSpec);
   });
 
@@ -205,6 +208,7 @@ describe('composition guides layout schema', () => {
       ],
     };
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(spec)));
+
     expect(parsed.guides?.[0]).toEqual(spec.guides[0]);
   });
 
@@ -225,6 +229,7 @@ describe('composition guides layout schema', () => {
         spacing: { panelGap: -1 },
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
@@ -236,6 +241,7 @@ describe('composition guides layout schema', () => {
         spacing: { panelGap: 0, trackGap: 0, axisGap: 0, labelGap: 0 },
       },
     };
+
     expect(parsePlotIR(spec).composition?.spacing).toEqual({
       panelGap: 0,
       trackGap: 0,
@@ -249,6 +255,7 @@ describe('composition guides layout lowering', () => {
   it('facet_outer_shared_axes_keeps_only_outer_shared_axis', () => {
     const outer = expandOf(parsePlotIR(facetSpec), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
+
     expect(yAxes).toHaveLength(1);
   });
 
@@ -307,12 +314,14 @@ describe('composition guides layout lowering', () => {
     };
     const outer = expandOf(parsePlotIR(spec), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
+
     expect(yAxes).toHaveLength(2);
   });
 
   it('panel_gap_changes_panel_translation_without_changing_panel_order', () => {
     const outer = expandOf(parsePlotIR(facetSpec), { sales: salesRows });
     const panels = panelScopesOf(outer);
+
     expect(panels.map(panel => String(panel.meta?.column))).toEqual(['north', 'south']);
     expect(panels[1].transforms).toEqual([{ kind: 'translate', x: 252, y: 0 }]);
   });
@@ -320,6 +329,7 @@ describe('composition guides layout lowering', () => {
   it('overlay_same_side_axis_gap_offsets_axes', () => {
     const outer = expandOf(parsePlotIR(overlaySpec), { weather: weatherRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
+
     expect(yAxes).toHaveLength(2);
     expect(firstMoveX(yAxes[0]) - firstMoveX(yAxes[1])).toBeCloseTo(12, 6);
   });
@@ -340,6 +350,7 @@ describe('composition guides layout lowering', () => {
     };
     const outer = expandOf(parsePlotIR(spec), { weather: weatherRows });
     const axis = axisLayersOf(outer)[0];
+
     expect(allNodes(axis).some(node => node.text === longTitle)).toBe(true);
   });
 
@@ -353,6 +364,7 @@ describe('composition guides layout lowering', () => {
     };
     const outer = expandOf(parsePlotIR(JSON.parse(JSON.stringify(spec))), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
+
     expect(yAxes).toHaveLength(1);
   });
 
@@ -362,6 +374,7 @@ describe('composition guides layout lowering', () => {
       guides: facetSpec.guides.map(guide => ({ ...guide, grid: false })),
     };
     const outer = expandOf(parsePlotIR(spec), { sales: salesRows });
+
     expect(gridLayersOf(outer)).toHaveLength(0);
   });
 
@@ -549,6 +562,7 @@ describe('composition guides layout lowering', () => {
     const withoutGapDistance =
       Math.min(...allNodes(withoutGap[0]).map(node => (node.position as [number, number])[1])) -
       Math.max(...allNodes(withoutGap[1]).map(node => (node.position as [number, number])[1]));
+
     expect(withGapDistance).toBeGreaterThan(withoutGapDistance);
   });
 
@@ -611,6 +625,7 @@ describe('composition guides layout lowering', () => {
   it('scaffold_shared_grid_keeps_one_grid_per_dimension', () => {
     const outer = expandOf(parsePlotIR(lanesSpec), { lanes: laneRows });
     const trackGridScopes = gridLayersOf(outer).map(layer => layer.meta?.track);
+
     expect(trackGridScopes).toEqual(['events', 'volume']);
   });
 
@@ -624,6 +639,7 @@ describe('composition guides layout lowering', () => {
     };
     const outer = expandOf(parsePlotIR(JSON.parse(JSON.stringify(spec))), { lanes: laneRows });
     const trackGridScopes = gridLayersOf(outer).map(layer => layer.meta?.track);
+
     expect(trackGridScopes).toEqual(['events', 'volume']);
   });
 
@@ -643,6 +659,7 @@ describe('composition guides layout lowering', () => {
       ],
     };
     const outer = expandOf(parsePlotIR(spec), { lanes: laneRows });
+
     expect(gridLayersOf(outer).map(layer => layer.meta?.track)).toEqual(['volume']);
   });
 
@@ -661,6 +678,7 @@ describe('composition guides layout lowering', () => {
         },
       ],
     };
+
     expect(() => expandOf(parsePlotIR(spec), { lanes: laneRows })).toThrow(/grid selector/i);
   });
 });

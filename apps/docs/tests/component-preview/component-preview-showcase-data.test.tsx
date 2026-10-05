@@ -13,6 +13,7 @@ import type { ComponentRenderSource } from '../../src/modules/docs/components/co
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const Demo: FC = () => <div>图形预览</div>;
+
 const source: ComponentRenderSource = {
   react: { files: [{ filename: 'example.tsx', code: 'export default null;', lang: 'tsx' }] },
 };
@@ -58,22 +59,31 @@ describe('ComponentPreview showcase data tab', () => {
     );
 
     const tabs = [...container.querySelectorAll<HTMLButtonElement>('[aria-label="展示视图"] [role="tab"]')];
+
     expect(tabs.map(tab => tab.textContent)).toEqual(['预览', '数据', '代码']);
+
     const bottomBar = container.querySelector('[data-slot="preview-control-bar"]');
+
     expect(bottomBar?.textContent).toContain('输入输出');
 
     act(() => tabs[1].dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 })));
     const dataPanel = container.querySelector('[data-slot="showcase-data"]');
+
     expect(dataPanel?.textContent).toContain('输入输出');
     expect(dataPanel?.textContent).toContain('1');
     expect(dataPanel?.classList.contains('h-full')).toBe(true);
+
     const scrollArea = dataPanel?.querySelector<HTMLElement>('[data-slot="preview-table-scroll-area"]');
+
     expect(scrollArea?.classList.contains('flex-1')).toBe(true);
     expect(scrollArea?.style.maxHeight).toBe('');
 
     const outputButton = dataPanel?.querySelector<HTMLButtonElement>('[data-view-id="output"]');
+
     expect(outputButton).not.toBeNull();
+
     act(() => outputButton!.click());
+
     expect(dataPanel?.querySelector('[data-slot="preview-table-row"]')?.textContent).toBe('2');
 
     act(() => root.unmount());
@@ -102,6 +112,7 @@ describe('ComponentPreview showcase data tab', () => {
     );
 
     const tabs = [...container.querySelectorAll<HTMLButtonElement>('[aria-label="展示视图"] [role="tab"]')];
+
     expect(tabs.map(tab => tab.textContent)).toEqual(['预览', '代码']);
 
     act(() => root.unmount());

@@ -24,7 +24,7 @@ export const defineRelationKind = (definition: RelationKindDefinition): Relation
 
 /**
  * 定义一个类型安全并可注册的 Relation predicate
- * @typeParam TSchema 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约
+ * @template TSchema 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约
  * @param definition 传给 GraphDefinitionOptions.relationPredicates 的定义；此函数不执行注册或校验
  * @returns 原样返回 definition，不复制或修改输入对象
  */

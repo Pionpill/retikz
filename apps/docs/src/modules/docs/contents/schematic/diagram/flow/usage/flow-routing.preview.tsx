@@ -1,6 +1,6 @@
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import type { FlowRoutingKindValue, IRFlowRouting } from '@retikz/diagram/flow';
+import type { FlowRoutingKind, IRFlowRouting } from '@retikz/diagram/flow';
 import type { ReactElement } from 'react';
 
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
@@ -8,7 +8,7 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { previewControls } from './flow-routing.controls';
 
-const routingKinds: ReadonlyArray<FlowRoutingKindValue> = [
+const routingKinds: ReadonlyArray<FlowRoutingKind> = [
   'straight',
   'orthogonal',
   '-|',
@@ -20,7 +20,7 @@ const routingKinds: ReadonlyArray<FlowRoutingKindValue> = [
 ];
 
 /** 将面板选项收窄为公开的路由模式 */
-const routingKindOf = (value: string): FlowRoutingKindValue => {
+const routingKindOf = (value: string): FlowRoutingKind => {
   const kind = routingKinds.find(candidate => candidate === value);
   if (kind === undefined) throw new Error(`Unsupported Flow routing kind: ${value}`);
   return kind;
@@ -72,6 +72,7 @@ export const renderFlowRoutingPreview = (
               : kind === 'straight'
                 ? { kind }
                 : { kind, cornerRadius: values.cornerRadius };
+
   return (
     <PreviewFlowDiagram
       viewBox={{ x: -48, y: -56, width: 400, height: 330 }}

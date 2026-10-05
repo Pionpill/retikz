@@ -47,6 +47,7 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
       { a: 2, b: 10 },
     ];
     const positions = positionsOf(firstLayer(spec, { d: rows }, opts));
+
     // x[0,2]→[0,480]、y[0,10]→[300,0]
     expect(positions[0]).toEqual([0, 300]);
     expect(positions[1]).toEqual([480, 0]);
@@ -70,6 +71,7 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
       { theta: 0, value: 10 },
     ];
     const [center, rightmost] = positionsOf(firstLayer(spec, { d: rows }, opts));
+
     expect(rightmost[1]).toBeCloseTo(center[1], 6);
     expect(rightmost[0]).toBeGreaterThan(center[0]);
   });
@@ -116,6 +118,7 @@ describe('coordinate 必填角色校验 fail-loud (contract)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ value: 1 }] }, opts)).toThrow(/polar2D|requires|x/i);
   });
 });
@@ -135,6 +138,7 @@ describe('guide 维度校验 fail-loud', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
+
     expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
   });
 
@@ -152,6 +156,7 @@ describe('guide 维度校验 fail-loud', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
       guides: [{ type: 'axis', dimension: 'radius' }],
     });
+
     expect(() => expandOf(spec, { d: [{ a: 0, b: 0 }] }, opts)).toThrow(/does not support axis dimension "radius"/);
   });
 
@@ -167,6 +172,7 @@ describe('guide 维度校验 fail-loud', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' }, size: { field: 's' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ a: 0, b: 0, s: 1 }] }, opts)).toThrow(/does not support encoding role "size"/);
   });
 
@@ -185,6 +191,7 @@ describe('guide 维度校验 fail-loud', () => {
         marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
         guides: [{ type: 'axis', dimension }],
       });
+
     for (const dim of ['x', 'y']) {
       expect(() => expandOf(makeSpec(dim), { d: [{ theta: 0, value: 1 }] }, opts)).not.toThrow();
     }
@@ -207,6 +214,7 @@ describe('guide 维度校验 fail-loud', () => {
         { type: 'axis', dimension: 'y' },
       ],
     });
+
     expect(() => expandOf(spec, { d: [{ a: 1, b: 2 }] }, opts)).not.toThrow();
   });
 });

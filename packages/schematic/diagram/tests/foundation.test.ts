@@ -193,7 +193,9 @@ describe('Diagram Foundation resolve', () => {
     const outer = flexOf(lowerDiagramFoundation(result, drawing).child);
     const heading = outer.children?.[0]?.child;
     if (!isScope(heading)) throw new Error('Expected heading Scope');
+
     const title = heading.children[0];
+
     expect(title).toMatchObject({
       style: { font: { size: 13 }, textColor: '#123456', opacity: 0 },
       layout: { lineHeight: 28 },
@@ -207,9 +209,11 @@ describe('Diagram Foundation resolve', () => {
     frame => {
       try {
         resolveFoundation({ frame: DiagramFrameSchema.parse(frame) });
+
         expect.unreachable('Expected invalid Legend structure failure');
       } catch (error) {
         if (!(error instanceof RetikzDiagramError)) throw error;
+
         expect(error.code).toBe(RetikzDiagramErrorCode.ResolveInvalid);
         expect(error.details.reason).toMatch(/legend/i);
       }
@@ -243,10 +247,14 @@ describe('Diagram Foundation lowering', () => {
     expect(outer.direction).toBe(FlexLayoutDirection.Column);
     expect(outer.gap).toBe(16);
     expect(outer.children).toHaveLength(2);
+
     const headingScope = outer.children?.[0]?.child;
     if (!isScope(headingScope)) throw new Error('Expected presentation reset Scope');
+
     expect(headingScope.defaults?.reset).toEqual(['node']);
+
     const heading = flexOf(headingScope.children[0]);
+
     expect(heading.direction).toBe(FlexLayoutDirection.Column);
     expect(heading.gap).toBe(6);
     expect(heading.children?.[0]?.child).toMatchObject({
@@ -384,13 +392,16 @@ describe('Diagram Foundation provider integration', () => {
     expect(flexItems.map(item => item.key)).toEqual(
       expect.arrayContaining(['heading', 'main', 'title', 'description', 'drawing', 'legend']),
     );
+
     for (const key of ['title', 'description', 'drawing', 'legend']) {
       const item = flexItems.find(candidate => candidate.key === key);
+
       expect(item?.allocationBounds.width).toBeGreaterThan(0);
       expect(item?.allocationBounds.height).toBeGreaterThan(0);
       expect(item?.visualBounds.width).toBeGreaterThan(0);
       expect(item?.visibleBounds).not.toBeNull();
     }
+
     expect(legendArtifact).toMatchObject({ kind: 'items', items: [{ key: 'critical', sourceIndex: 0 }] });
     expect(textLines).toEqual(expect.arrayContaining(['Title', 'Description', 'Drawing', 'Critical']));
     expect(JSON.stringify(output.artifacts)).not.toContain('drawing-source-only');

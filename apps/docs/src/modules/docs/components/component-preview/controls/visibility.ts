@@ -19,6 +19,7 @@ export const resolveVisiblePreviewControlSections = (
     if (!isPreviewControlVisible(section.visibleWhen, values)) return [];
 
     const controls = section.controls.filter(control => isPreviewControlVisible(control.visibleWhen, values));
+
     return controls.length === 0 ? [] : [{ ...section, controls }];
   });
 
@@ -31,6 +32,7 @@ export const buildPreviewControlVisibilityKey = (
 
   for (const section of sections) {
     if (section.visibleWhen) controlIds.add(section.visibleWhen.controlId);
+
     for (const control of section.controls) {
       if (control.visibleWhen) controlIds.add(control.visibleWhen.controlId);
     }

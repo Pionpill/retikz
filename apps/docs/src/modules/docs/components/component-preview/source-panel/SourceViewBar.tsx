@@ -35,6 +35,7 @@ const FileKindIcon: FC<FileKindIconProps> = props => {
 
   if (DATA_FILE_PATTERN.test(filename)) return <Database className={className} />;
   if (isMain) return <FileCode2 className={className} />;
+
   return <FileSymlink className={className} />;
 };
 
@@ -154,6 +155,7 @@ export const SourceViewBar: FC<SourceViewBarProps> = props => {
             </ButtonGroup>
           );
         }
+
         return <ViewButton key={target} target={target} active={active} onClick={() => onViewChange(target)} />;
       })}
     </div>

@@ -76,6 +76,7 @@ const assertGeometryLabelInterruption = (
       `Path label interruption at ${labelPath}.interrupt is only supported by an unfilled built-in Stroke path.`,
     );
   }
+
   if (label.interrupt && !hasNoEffectivePathFill(path)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
@@ -95,6 +96,7 @@ const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: str
       assertGeometryLabelInterruption(path.label, path, `${irPath}.label`);
     }
   }
+
   for (const [index, step] of (path.children ?? []).entries()) {
     if ('label' in step && step.label !== undefined) {
       assertGeometryLabelInterruption(step.label, path, `${irPath}.children[${index}].label`);
@@ -105,8 +107,10 @@ const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: str
 /** 在 provider 消费前拒绝非内置 Stroke Path 上的端点箭头重叠声明 */
 const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string): void => {
   if (isBuiltinStrokePath(path)) return;
+
   for (const [index, placement] of (path.marks ?? []).entries()) {
     if (placement.endpointOverlap === undefined) continue;
+
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
       `Path endpoint arrow overlap at ${irPath}.marks[${index}].endpointOverlap is only supported by a built-in Stroke path.`,
@@ -146,6 +150,7 @@ const canonicalizeLabel = (
 
 const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
+
   const label = step.label === undefined ? undefined : canonicalizeLabel(step.label, canAutomaticallyInterrupt);
   if (step.kind === 'fold') {
     switch (step.via) {
@@ -157,6 +162,7 @@ const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: b
         return { ...step, label };
     }
   }
+
   if (step.kind === 'smooth') return { ...step, label, tension: step.tension ?? SmoothTensionSchema.parse(undefined) };
   if (step.kind === 'bend') {
     return {
@@ -166,9 +172,11 @@ const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: b
       bendAngle: step.bendAngle ?? BendAngleSchema.parse(undefined),
     };
   }
+
   if (step.kind === 'circlePath' || step.kind === 'ellipsePath') {
     return { ...step, label, closed: step.closed ?? 'chord' };
   }
+
   return { ...step, label };
 };
 
@@ -239,7 +247,9 @@ const resolveGeometryLabelTextLine = (
       ),
     };
   }
+
   const { fill, ...style } = text;
+
   return {
     ...style,
     ...(fill === undefined
@@ -276,6 +286,7 @@ export const resolveGeometryLabelColors = (
           fieldPath: `${fieldPath}.textColor`,
         });
   const textMaster = resolvedTextColor ?? masterColor;
+
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
@@ -291,8 +302,10 @@ const resolveStepLabelColors = (
   fieldPath: string,
 ): ResolvedStepSource => {
   if (!('label' in step)) return step as ResolvedStepSource;
+
   const { label, ...source } = step;
   if (label === undefined) return source;
+
   return {
     ...source,
     label: resolveGeometryLabelColors(label, masterColor, context, `${fieldPath}.label`),
@@ -315,6 +328,7 @@ const resolveArrowColors = (
           mode: context.mode,
           fieldPath: `${fieldPath}.color`,
         });
+
   return {
     ...source,
     ...(resolvedColor === undefined ? {} : { color: resolvedColor }),
@@ -348,6 +362,7 @@ const resolvePathContextualColors = (
             resolveGeometryLabelColors(item, labelMasterColor, context, `${irPath}.label[${index}]`),
           )
         : resolveGeometryLabelColors(label, labelMasterColor, context, `${irPath}.label`);
+
   return {
     ...source,
     style: {
@@ -389,8 +404,10 @@ const bindTarget = (
 ): TargetResolution => {
   const bound = context.targetResolver?.bindTarget?.(target, scopeChain);
   if (bound !== null && bound !== undefined) return bound;
+
   const point = pointOfTarget(target, context.targetResolver, scopeChain);
   const referencePoint = context.targetResolver?.refPointOfTarget?.(target, scopeChain) ?? point;
+
   return { target, point, referencePoint };
 };
 
@@ -406,6 +423,7 @@ const resolveSteps = (
   let previous: IRPosition | null = null;
   let deferRelative = false;
   const out: Array<CanonicalStep> = [];
+
   const resolve = (target: IRTarget, key: string): IRTarget => {
     let value = target;
     if (isRelativeTargetLike(target) && !deferRelative) {
@@ -415,9 +433,12 @@ const resolveSteps = (
       const base = previous ?? [0, 0];
       value = [base[0] + target.relativeAccumulate[0], base[1] + target.relativeAccumulate[1]];
     }
+
     targets.set(key, bindTarget(value, context, scopeChain));
+
     return value;
   };
+
   const bindNestedTargets = (value: unknown, key: string): void => {
     const targetLike =
       typeof value === 'string' ||
@@ -433,6 +454,7 @@ const resolveSteps = (
       targets.set(key, bindTarget(value as IRTarget, context, scopeChain));
       return;
     }
+
     if (value !== null && typeof value === 'object') {
       for (const [childKey, childValue] of Object.entries(value as Record<string, unknown>)) {
         bindNestedTargets(childValue, `${key}.${childKey}`);
@@ -446,12 +468,14 @@ const resolveSteps = (
       out.push(step);
       continue;
     }
+
     if (step.kind === 'axis-line') {
       deferRelative = true;
       const value = resolve(step.to, `${prefix}.children[${index}].to`) as typeof step.to;
       out.push({ ...step, to: value });
       continue;
     }
+
     if (step.kind === 'arc') {
       const center =
         step.center === undefined ? undefined : resolve(step.center, `${prefix}.children[${index}].center`);
@@ -461,6 +485,7 @@ const resolveSteps = (
       }
       continue;
     }
+
     if (step.kind === 'smooth') {
       let smoothPrevious: IRPosition | null = previous;
       const points = step.points.map((target, pointIndex) => {
@@ -473,11 +498,13 @@ const resolveSteps = (
           const base = smoothPrevious ?? [0, 0];
           value = [base[0] + target.relativeAccumulate[0], base[1] + target.relativeAccumulate[1]];
         }
+
         const binding = bindTarget(value, context, scopeChain);
         targets.set(key, binding);
         const point = binding.point;
         if (point && !isRelativeTargetLike(target)) smoothPrevious = point;
         if (point && isRelativeAccumulateTargetLike(target)) smoothPrevious = point;
+
         return value;
       });
       previous = smoothPrevious;
@@ -485,6 +512,7 @@ const resolveSteps = (
       out.push({ ...step, points });
       continue;
     }
+
     if (step.kind === 'generator') {
       bindNestedTargets(step.params, `${prefix}.children[${index}].params`);
       const to = step.to === undefined ? undefined : resolve(step.to, `${prefix}.children[${index}].to`);
@@ -494,15 +522,18 @@ const resolveSteps = (
         const point = pointOfTarget(to, resolver, scopeChain);
         if (point) previous = point;
       }
+
       deferRelative = true;
       continue;
     }
+
     if (step.kind === 'rectangle') {
       const from = resolve(step.from, `${prefix}.children[${index}].from`);
       const to = resolve(step.to, `${prefix}.children[${index}].to`);
       out.push({ ...step, from, to });
       continue;
     }
+
     const value = resolve(step.to, `${prefix}.children[${index}].to`);
     out.push({ ...step, to: value });
     if (!isRelativeTargetLike(step.to)) {
@@ -510,9 +541,11 @@ const resolveSteps = (
       if (point) previous = point;
     }
   }
+
   return out;
 };
 
+/** 合并路径级联样式，解析路径种类、目标与绘制样式，产出编译消费的确定化路径 */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
   const irPath = context.irPath ?? 'path';
@@ -540,6 +573,7 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   };
   const fill = resolvePaint(resolvedPath.fill, paintContext);
   const stroke = resolvePaint(resolvedPath.stroke, paintContext);
+
   return {
     path: resolvedPath,
     targets,

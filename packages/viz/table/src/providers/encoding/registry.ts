@@ -9,6 +9,7 @@ export const resolveCellVisualScaleRegistry = (
   custom?: ReadonlyArray<AnyCellVisualScaleDefinition>,
 ): ReadonlyMap<string, AnyCellVisualScaleDefinition> => {
   const registry = new Map<string, AnyCellVisualScaleDefinition>();
+
   for (const definition of [...BUILTIN_CELL_VISUAL_SCALES, ...(custom ?? [])]) {
     assertNonEmptyString(
       definition.name,
@@ -18,8 +19,10 @@ export const resolveCellVisualScaleRegistry = (
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell visual scale registration: "${definition.name}"`);
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };
 
@@ -30,6 +33,7 @@ export const cellVisualScaleDefinitionOf = (
 ): AnyCellVisualScaleDefinition => {
   const definition = registry.get(name);
   if (definition !== undefined) return definition;
+
   throw new RetikzTableError(
     `Cell visual scale "${name}" is not registered; pass a definition via options.visualScaleDefinitions`,
   );

@@ -7,6 +7,7 @@ describe('default Table Source defaults', () => {
   it('provides two detached defaults fragments', () => {
     for (const mode of Object.values(ThemeMode)) {
       const defaults = getDefaultTableDefaults(mode);
+
       expect(TableDefaultsSchema.parse(defaults)).toEqual(defaults);
       expect(Object.isFrozen(defaults)).toBe(false);
       expect(Object.isFrozen(defaults.appearanceDefaults)).toBe(false);

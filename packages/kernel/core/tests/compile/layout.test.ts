@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { computeLayout, computeLayoutFromBounds, createRound } from '../../src/compile/scene';
 
 const round2 = createRound(2);
+
 const noRound = (n: number) => n;
 
 describe('computeLayout', () => {

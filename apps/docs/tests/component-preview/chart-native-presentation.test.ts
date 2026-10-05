@@ -131,7 +131,9 @@ describe('Chart-native Scatter presentation', () => {
       const chart = canonicalScatterChartOf(source);
 
       expect(chart.type).toBe(ScatterChart);
+
       const contribution = scatterContributionOf(chart);
+
       expect(contribution.node).toMatchObject({
         namespace: 'chart',
         type: 'point',

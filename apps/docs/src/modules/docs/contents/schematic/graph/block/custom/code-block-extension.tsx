@@ -24,6 +24,7 @@ const ServiceSchema = CodeBlockPropsSchema.safeExtend({
   type: literal('serviceBlock'),
   logic: CodeLogicSchema,
 });
+
 type ServiceSource = ZodInfer<typeof ServiceSchema>;
 
 const service = defineCodeBlock({
@@ -64,6 +65,7 @@ const service = defineCodeBlock({
 });
 
 const coreStyle = defineThemeStyle({ name: 'service-example', resolve: () => ({}) });
+
 const graphStyle = defineGraphThemeStyle({
   name: coreStyle.name,
   resolve: theme => ({
@@ -75,12 +77,16 @@ const graphStyle = defineGraphThemeStyle({
     },
   }),
 });
+
 const contribution = createCodeBlockContribution(service, { graphThemeStyles: [graphStyle] });
+
 const adapter: InputEmbedAdapter<ServiceSource> = {
   kind: 'example.serviceBlock',
   lower: source => ({ node: { ...source }, providerDependencies: contribution }),
 };
+
 const ServiceView: FC<ServiceSource> = () => null;
+
 const ServiceBlock = Object.assign(ServiceView, {
   displayName: 'ServiceBlock',
   isTier2Embeddable: true,
@@ -97,6 +103,7 @@ export type CodeBlockExtensionProps = { lang?: Lang };
 const Demo: FC<CodeBlockExtensionProps> = props => {
   const { lang } = props;
   const i18n = codeBlockExtensionI18n[lang ?? 'zh'];
+
   return (
     <Layout viewBox={{ x: -12, y: -12, width: 584, height: 190 }} extensions={{ themeStyles: [coreStyle] }}>
       {(['light', 'dark'] as const).map((mode, index) => (

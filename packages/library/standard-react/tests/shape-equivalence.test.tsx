@@ -10,12 +10,15 @@ const ir = (jsx: ReactNode) => {
   const input = createInputScene(jsx);
   return { children: processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene };
 };
+
 const polarXY = (center: [number, number], rx: number, ry: number, angle: number): [number, number] => [
   center[0] + rx * Math.cos((angle * Math.PI) / 180),
   center[1] + ry * Math.sin((angle * Math.PI) / 180),
 ];
+
 const polygonVertices = (center: [number, number], rx: number, ry: number, sides: number, rotate: number) =>
   Array.from({ length: sides }, (_, i) => polarXY(center, rx, ry, rotate + (i * 360) / sides));
+
 const starVertices = (center: [number, number], outer: number, inner: number, points: number, rotate: number) =>
   Array.from({ length: points * 2 }, (_, i) =>
     polarXY(center, i % 2 ? inner : outer, i % 2 ? inner : outer, rotate + (i * 180) / points),
@@ -230,6 +233,7 @@ describe('Sector equivalence', () => {
 
   it('donut sector', () => {
     const c: [number, number] = [0, 0];
+
     expect(ir(<Sector center={c} radius={60} innerRadius={30} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -277,6 +281,7 @@ describe('Rectangle equivalence', () => {
 describe('Polygon equivalence', () => {
   it('sides=4', () => {
     const verts = polygonVertices([0, 0], 30, 30, 4, -90);
+
     expect(ir(<Polygon center={[0, 0]} radius={30} sides={4} />).children).toEqual(
       ir(
         <Path>
@@ -292,6 +297,7 @@ describe('Polygon equivalence', () => {
 
   it('sides=6（顶点数随 sides 变）', () => {
     const verts = polygonVertices([0, 0], 30, 30, 6, -90);
+
     expect(verts).toHaveLength(6);
     expect(ir(<Polygon center={[0, 0]} radius={30} sides={6} />).children).toEqual(
       ir(
@@ -309,6 +315,7 @@ describe('Polygon equivalence', () => {
   it('显式 rotate 只烘焙进顶点、不再透传给 Path（不二次旋转）', () => {
     const verts = polygonVertices([0, 0], 30, 30, 4, 30);
     const out = ir(<Polygon center={[0, 0]} radius={30} sides={4} rotate={30} />);
+
     expect(out.children).toEqual(
       ir(
         <Path>
@@ -335,12 +342,15 @@ describe('Star equivalence', () => {
         <Step kind="cycle" />
       </Path>,
     );
+
     expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} />).children).toEqual(hand.children);
   });
 
   it('points=6（顶点数随 points 变：2×points）', () => {
     const verts = starVertices([0, 0], 30, 12, 6, -90);
+
     expect(verts).toHaveLength(12);
+
     const hand = ir(
       <Path>
         <Step kind="move" to={verts[0]} />
@@ -350,6 +360,7 @@ describe('Star equivalence', () => {
         <Step kind="cycle" />
       </Path>,
     );
+
     expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={6} />).children).toEqual(hand.children);
   });
 
@@ -365,6 +376,7 @@ describe('Star equivalence', () => {
       </Path>,
     );
     const out = ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} rotate={30} />);
+
     expect(out.children).toEqual(hand.children);
   });
 });

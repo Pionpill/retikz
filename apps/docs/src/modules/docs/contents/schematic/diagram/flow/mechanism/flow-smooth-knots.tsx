@@ -7,6 +7,7 @@ import { flowSmoothKnotsI18n } from './flow-smooth-knots.i18n';
 
 /** 样条几何图语言 */
 export type FlowSmoothKnotsProps = Readonly<{ lang?: Lang }>;
+
 /** 同一组 knots 的参考点链与真实样条，展示多障碍绕行 */
 const Demo: FC<FlowSmoothKnotsProps> = props => {
   const { lang = 'zh' } = props;
@@ -18,6 +19,7 @@ const Demo: FC<FlowSmoothKnotsProps> = props => {
     [330, 170],
     [420, 110],
   ];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node position={[220, -15]} text={copy.title} style={{ stroke: 'none', font: { size: 14 } }} />

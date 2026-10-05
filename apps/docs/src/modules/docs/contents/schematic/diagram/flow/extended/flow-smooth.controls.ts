@@ -20,11 +20,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { count: 2, height: 80, tension: 1 },
     relatedApis: ['FlowRelation.routing.points', 'FlowRelation.routing.tension'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

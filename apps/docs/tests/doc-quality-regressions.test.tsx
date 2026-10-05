@@ -20,6 +20,7 @@ import { previewSource as LegendColorFormsPreviewSource } from '../src/modules/d
 /** 验证文档 demo 的 canonical IR 能通过 Runtime owner 的 JSON 快照边界 */
 const expectCanonicalPreviewToBeJsonSafe = (Demo: FC) => {
   const preview = buildPreviewIR(Demo);
+
   expect(() => cloneAndFreezeJson(preview.ir, 'Docs canonical preview')).not.toThrow();
 };
 

@@ -16,6 +16,7 @@ const createRandom = (seed: number): (() => number) => {
     let value = state;
     value = Math.imul(value ^ (value >>> 15), value | 1);
     value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+
     return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
   };
 };
@@ -29,6 +30,7 @@ const normalCdf = (value: number, sigma: number): number => {
   const density = 0.3989422804014327 * Math.exp(-(absoluteValue * absoluteValue) / 2);
   const tail = density * ((((1.330274429 * t - 1.821255978) * t + 1.781477937) * t - 0.356563782) * t + 0.31938153) * t;
   const probability = 1 - tail;
+
   return sign === 1 ? probability : 1 - probability;
 };
 
@@ -39,6 +41,7 @@ const truncatedNormalSample = (unit: number, sigma: number): number => {
   const probability = lowerProbability + unit * (upperProbability - lowerProbability);
   let lower = -1;
   let upper = 1;
+
   for (let iteration = 0; iteration < 32; iteration += 1) {
     const midpoint = (lower + upper) / 2;
     if (normalCdf(midpoint, sigma) < probability) {
@@ -47,6 +50,7 @@ const truncatedNormalSample = (unit: number, sigma: number): number => {
       upper = midpoint;
     }
   }
+
   return (lower + upper) / 2;
 };
 
@@ -56,17 +60,21 @@ const jitterRoleOf = (operation: IRPlotJitterPositionAdjustment, context: RolePo
     if (!context.roles.includes(operation.role)) {
       throw new RetikzPlotError(`lowerPlots: jitter role "${operation.role}" is not provided by the coordinate frame`);
     }
+
     if (context.roleScales[operation.role] === undefined) {
       throw new RetikzPlotError(`lowerPlots: jitter role "${operation.role}" does not expose a position scale`);
     }
+
     return operation.role;
   }
+
   const candidates = context.roles.filter(role => (context.roleScales[role]?.step ?? 0) > 0);
   if (candidates.length !== 1) {
     throw new RetikzPlotError(
       `lowerPlots: jitter without role requires exactly one discrete coordinate role, found ${candidates.length}`,
     );
   }
+
   return candidates[0];
 };
 
@@ -78,10 +86,12 @@ const jitterSpanOf = (
 ): number => {
   const span = operation.span ?? { kind: 'ratio', value: 0.3 };
   if (typeof span === 'number') return span;
+
   const step = context.roleScales[role]?.step ?? 0;
   if (!Number.isFinite(step) || step <= 0) {
     throw new RetikzPlotError(`lowerPlots: ratio jitter on role "${role}" requires a positive discrete scale step`);
   }
+
   return span.value * step;
 };
 
@@ -102,11 +112,13 @@ const jitterDefinition = {
     const roleIndex = context.roles.indexOf(role);
     const span = jitterSpanOf(operation, context, role);
     const random = createRandom(operation.seed ?? 0);
+
     return context.targets.map(target => {
       const unit = random();
       if (target.mappedRoles === null || span === 0) {
         return { key: target.key, mappedRoles: target.mappedRoles };
       }
+
       const mappedRoles = [...target.mappedRoles];
       const distribution = operation.distribution ?? { kind: 'uniform' };
       if (distribution.kind === 'uniform') {
@@ -114,11 +126,13 @@ const jitterDefinition = {
       } else {
         mappedRoles[roleIndex] += truncatedNormalSample(unit, distribution.sigma ?? 0.5) * (span / 2);
       }
+
       return { key: target.key, mappedRoles };
     });
   },
 } satisfies RolePositionAdjustmentDefinition<IRPlotJitterPositionAdjustment>;
 
+/** 在角色空间生成确定性随机位移的 jitter 定义，保留具体操作参数类型 */
 export const jitterPositionAdjustmentDefinition =
   definePositionAdjustment<IRPlotJitterPositionAdjustment>(jitterDefinition);
 

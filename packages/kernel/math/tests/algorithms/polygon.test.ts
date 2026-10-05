@@ -13,9 +13,11 @@ describe('polygon.containsPoint', () => {
   it('内部点为真', () => {
     expect(polygon.containsPoint(square, [2, 2])).toBe(true);
   });
+
   it('外部点为假', () => {
     expect(polygon.containsPoint(square, [5, 2])).toBe(false);
   });
+
   it('少于 3 顶点为假', () => {
     expect(
       polygon.containsPoint(
@@ -27,6 +29,7 @@ describe('polygon.containsPoint', () => {
       ),
     ).toBe(false);
   });
+
   it('凹多边形（L 形）正确——含凹口剔除', () => {
     // L 形：横臂 y∈[0,2]×x∈[0,4]，竖臂 x∈[0,2]×y∈[0,4]，缺口在右上 (x>2,y>2)
     // 测试点刻意避开顶点所在的 y=0/2/4 与 x=0/2/4，规避 ray-casting 顶点退化
@@ -38,6 +41,7 @@ describe('polygon.containsPoint', () => {
       [2, 4],
       [0, 4],
     ];
+
     expect(polygon.containsPoint(lshape, [3, 1])).toBe(true); // 横臂内
     expect(polygon.containsPoint(lshape, [1, 3])).toBe(true); // 竖臂内
     expect(polygon.containsPoint(lshape, [1, 1])).toBe(true); // 两臂交叠角

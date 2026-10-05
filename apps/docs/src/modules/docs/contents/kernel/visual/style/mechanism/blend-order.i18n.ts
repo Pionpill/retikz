@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 同一组图元的绘制顺序文案 */
 export const blendOrderI18n: Record<Lang, { titles: Array<string>; notes: Array<string>; background: string }> = {
   zh: {

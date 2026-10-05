@@ -10,11 +10,14 @@ import type { LegendItemProps, LegendRampProps, LegendTickProps, LegendTitleProp
 import { LegendItem, LegendRamp, LegendTick, LegendTitle } from './LegendMarkers';
 
 type LegendChild = NonNullable<InputLegend['title']>;
+
 type CollectedLegend<T> = Readonly<{ value: T; adapters: ReadonlyArray<AnyInputEmbedAdapter> }>;
+
 type LegendItemsChildren = Readonly<{
   title?: LegendChild;
   items: Array<Readonly<{ key: string; sample: LegendChild; label?: LegendChild }>>;
 }>;
+
 type LegendRampChildren = Readonly<{
   title?: LegendChild;
   sample: LegendChild;
@@ -30,8 +33,10 @@ const flattenLegendNodes = (children: ReactNode): Array<ReactNode> => {
       flattened.push(...flattenLegendNodes((child as ReactElement<{ children?: ReactNode }>).props.children));
       return;
     }
+
     flattened.push(child);
   });
+
   return flattened;
 };
 
@@ -53,6 +58,7 @@ const collectRequiredSlot = (
       details: { count: nodes.length, label },
     });
   }
+
   const input = createInputScene(nodes[0], { embedIdPrefix });
   const childrenInput = input.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
@@ -62,6 +68,7 @@ const collectRequiredSlot = (
       details: { count: childrenInput?.length ?? 0, label },
     });
   }
+
   return { value: childrenInput[0], adapters: input.adapters };
 };
 
@@ -80,6 +87,7 @@ const collectOptionalSlot = (
       details: { count: nodes.length, label },
     });
   }
+
   const input = createInputScene(nodes[0], { embedIdPrefix });
   const childrenInput = input.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
@@ -89,6 +97,7 @@ const collectOptionalSlot = (
       details: { count: childrenInput?.length ?? 0, label },
     });
   }
+
   return { value: childrenInput[0], adapters: input.adapters };
 };
 
@@ -104,6 +113,7 @@ export const convertLegendItemsChildren = (
   let title: LegendChild | undefined;
   const items: LegendItemsChildren['items'] = [];
   const parts: Array<CollectedLegend<unknown>> = [];
+
   for (const [index, child] of flattenLegendNodes(children).entries()) {
     if (isValidElement<LegendTitleProps>(child) && child.type === LegendTitle) {
       if (title !== undefined) {
@@ -113,11 +123,13 @@ export const convertLegendItemsChildren = (
           details: { form: 'items', marker: 'LegendTitle' },
         });
       }
+
       const slot = collectRequiredSlot(child.props.children, 'LegendTitle', `${context.id}:title`);
       title = slot.value;
       parts.push(slot);
       continue;
     }
+
     if (isValidElement<LegendItemProps>(child) && child.type === LegendItem) {
       const sample = collectRequiredSlot(
         child.props.sample,
@@ -133,12 +145,14 @@ export const convertLegendItemsChildren = (
       });
       continue;
     }
+
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
       message: 'Items Legend accepts only LegendTitle and LegendItem as direct children.',
       details: { form: 'items' },
     });
   }
+
   return {
     value: { ...(title === undefined ? {} : { title }), items },
     adapters: adaptersOf(parts),
@@ -154,6 +168,7 @@ export const convertLegendRampChildren = (
   let sample: LegendChild | undefined;
   const ticks: LegendRampChildren['ticks'] = [];
   const parts: Array<CollectedLegend<unknown>> = [];
+
   for (const [index, child] of flattenLegendNodes(children).entries()) {
     if (isValidElement<LegendTitleProps>(child) && child.type === LegendTitle) {
       if (title !== undefined) {
@@ -163,11 +178,13 @@ export const convertLegendRampChildren = (
           details: { form: 'ramp', marker: 'LegendTitle' },
         });
       }
+
       const slot = collectRequiredSlot(child.props.children, 'LegendTitle', `${context.id}:title`);
       title = slot.value;
       parts.push(slot);
       continue;
     }
+
     if (isValidElement<LegendRampProps>(child) && child.type === LegendRamp) {
       if (sample !== undefined) {
         throw new RetikzStandardError({
@@ -176,11 +193,13 @@ export const convertLegendRampChildren = (
           details: { form: 'ramp', marker: 'LegendRamp' },
         });
       }
+
       const slot = collectRequiredSlot(child.props.children, 'LegendRamp', `${context.id}:ramp`);
       sample = slot.value;
       parts.push(slot);
       continue;
     }
+
     if (isValidElement<LegendTickProps>(child) && child.type === LegendTick) {
       const label = collectOptionalSlot(child.props.children, 'LegendTick label', `${context.id}:ticks:${index}:label`);
       parts.push(label);
@@ -191,12 +210,14 @@ export const convertLegendRampChildren = (
       });
       continue;
     }
+
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
       message: 'Ramp Legend accepts only LegendTitle, LegendRamp, and LegendTick as direct children.',
       details: { form: 'ramp' },
     });
   }
+
   if (sample === undefined) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
@@ -204,6 +225,7 @@ export const convertLegendRampChildren = (
       details: { form: 'ramp', marker: 'LegendRamp' },
     });
   }
+
   return {
     value: { ...(title === undefined ? {} : { title }), sample, ticks },
     adapters: adaptersOf(parts),

@@ -1,65 +1,93 @@
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
-import type { LayoutAlignmentValue, LayoutDistributionValue } from '../shared';
 import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from './distribution';
 
 /** Flex engine 支持的顺序流换行策略 */
-export type FlexEngineWrapValue = 'nowrap' | 'wrap' | 'wrap-reverse';
+export type FlexEngineWrap = 'nowrap' | 'wrap' | 'wrap-reverse';
 
 /** Flex 主轴求解所需的稳定有限 item 输入 */
 export type FlexMainItem = Readonly<{
+  /** 布局项的稳定身份键 */
   key: string;
+  /** 对应作者输入数组的零基索引 */
   sourceIndex: number;
+  /** 应用弹性增减前的主轴槽位尺寸 */
   flexBaseSlot: number;
+  /** 主轴槽位允许的最小尺寸 */
   min: number;
+  /** 主轴槽位可选的最大尺寸 */
   max?: number;
+  /** 主轴剩余空间的增长权重 */
   grow: number;
+  /** 主轴空间不足时的收缩系数 */
   shrink: number;
+  /** 主轴起始侧外边距 */
   marginStart: number;
+  /** 主轴结束侧外边距 */
   marginEnd: number;
 }>;
 
 /** Flex line formation 的有限空间选项 */
 export type FlexLineFormationOptions = Readonly<{
-  wrap: FlexEngineWrapValue;
+  /** 是否换行及交叉轴行序方向 */
+  wrap: FlexEngineWrap;
+  /** 有限的主轴可用空间，省略时不以宽度触发换行 */
   availableMainSize?: number;
+  /** 同一行相邻项目之间的固定间距 */
   gap: number;
 }>;
 
 /** 主轴 distribution 产生的起始偏移与附加 item 间距 */
 export type FlexSpaceDistribution = Readonly<{
+  /** 首项之前分配的附加空间 */
   leading: number;
+  /** 相邻项之间分配的附加空间，不包含固定 gap */
   between: number;
 }>;
 
 /** Flex line 的 minimum / natural 主轴结构 profile */
 export type FlexLineMainProfile = Readonly<{
+  /** 包含外边距和间距的最小主轴尺寸 */
   minimum: number;
+  /** 包含外边距和间距的自然主轴尺寸 */
   natural: number;
 }>;
 
 /** 参与单条 line 交叉轴求值的纯贡献输入 */
 export type FlexCrossItem = Readonly<{
+  /** 当前子项的交叉轴槽位尺寸 */
   slotSize: number;
+  /** 交叉轴起始侧外边距 */
   marginStart: number;
+  /** 交叉轴结束侧外边距 */
   marginEnd: number;
-  alignment: LayoutAlignmentValue;
+  /** 子项在当前行内的交叉轴对齐方式 */
+  alignment: LayoutAlignment;
+  /** 首基线相对槽位起始边的偏移 */
   firstBaselineOffset?: number;
+  /** 末基线相对槽位起始边的偏移 */
   lastBaselineOffset?: number;
 }>;
 
 /** Flex line 的结构交叉轴指标 */
 export type FlexLineCrossMetrics = Readonly<{
+  /** 满足子项尺寸与基线约束的行交叉轴尺寸 */
   size: number;
+  /** 首基线对齐目标相对行起始边的偏移 */
   firstTarget?: number;
+  /** 末基线对齐目标相对行起始边的偏移 */
   lastTarget?: number;
 }>;
 
 /** 已确定交叉轴尺寸的 line slot */
 export type FlexCrossLine = Readonly<{
+  /** 行槽位在交叉轴上的起始位置 */
   crossStart: number;
+  /** 行槽位最终分配的交叉轴尺寸 */
   finalCrossSize: number;
+  /** 该行首基线对齐目标的局部偏移 */
   firstTarget?: number;
+  /** 该行末基线对齐目标的局部偏移 */
   lastTarget?: number;
 }>;
 
@@ -86,6 +114,7 @@ export const resolveFlexLineMainProfile = (
       details: { gap },
     });
   }
+
   const gapTotal = gap * Math.max(0, itemIndexes.length - 1);
   const minimum = compensatedLayoutSum([
     ...itemIndexes.map(index => {
@@ -98,6 +127,7 @@ export const resolveFlexLineMainProfile = (
     ...itemIndexes.map(index => hypotheticalOuterMainSizeOf(items[index])),
     gapTotal,
   ]);
+
   return Object.freeze({ minimum, natural });
 };
 
@@ -120,7 +150,9 @@ export const resolveFlexLinesCrossProfile = (
       details: { gap },
     });
   }
+
   const gapTotal = gap * Math.max(0, lines.length - 1);
+
   return Object.freeze({
     minimum: compensatedLayoutSum([...lines.map(line => line.minimum), gapTotal]),
     natural: compensatedLayoutSum([...lines.map(line => line.natural), gapTotal]),
@@ -139,6 +171,7 @@ export const formFlexLines = (
       details: { gap: options.gap },
     });
   }
+
   if (
     options.availableMainSize !== undefined &&
     (!Number.isFinite(options.availableMainSize) || options.availableMainSize < 0)
@@ -149,6 +182,7 @@ export const formFlexLines = (
       details: { availableMainSize: options.availableMainSize },
     });
   }
+
   const traversal = items.map((_, index) => index);
   if (traversal.length === 0) return Object.freeze([]);
   if (options.wrap === 'nowrap' || options.availableMainSize === undefined) {
@@ -158,6 +192,7 @@ export const formFlexLines = (
   const lines: Array<ReadonlyArray<number>> = [];
   let current: Array<number> = [];
   let used = 0;
+
   for (const index of traversal) {
     const outerSize = hypotheticalOuterMainSizeOf(items[index]);
     const candidate = current.length === 0 ? outerSize : compensatedLayoutSum([used, options.gap, outerSize]);
@@ -173,7 +208,9 @@ export const formFlexLines = (
       used = candidate;
     }
   }
+
   lines.push(Object.freeze(current));
+
   return Object.freeze(lines);
 };
 
@@ -190,6 +227,7 @@ export const resolveFlexLineMainSizes = (
       details: { availableMainSize },
     });
   }
+
   if (!Number.isFinite(gap) || gap < 0) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.GeometryInvalid,
@@ -197,6 +235,7 @@ export const resolveFlexLineMainSizes = (
       details: { gap },
     });
   }
+
   const outerFixed = compensatedLayoutSum([
     ...items.flatMap(item => [item.marginStart, item.marginEnd]),
     gap * Math.max(0, items.length - 1),
@@ -208,6 +247,7 @@ export const resolveFlexLineMainSizes = (
       details: { outerFixed },
     });
   }
+
   const distributable = Math.max(0, availableMainSize - outerFixed);
   const hypothetical = items.map(hypotheticalMainSlotOf);
   const initialFree = distributable - compensatedLayoutSum(hypothetical);
@@ -219,6 +259,7 @@ export const resolveFlexLineMainSizes = (
     weight: growing ? item.grow : item.shrink * item.flexBaseSlot,
   }));
   const distributed = distributeWeightedLayoutSizes(weighted, distributable);
+
   return Object.freeze({
     values: distributed.values,
     remaining: availableMainSize - outerFixed - compensatedLayoutSum(distributed.values),
@@ -227,7 +268,7 @@ export const resolveFlexLineMainSizes = (
 
 /** 把 line 剩余 main space 解析为确定的起始偏移和附加 item 间距 */
 export const resolveFlexSpaceDistribution = (
-  distribution: LayoutDistributionValue,
+  distribution: LayoutDistribution,
   remaining: number,
   itemCount: number,
 ): FlexSpaceDistribution => {
@@ -238,6 +279,7 @@ export const resolveFlexSpaceDistribution = (
       details: { remaining },
     });
   }
+
   if (!Number.isInteger(itemCount) || itemCount < 0) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.GeometryInvalid,
@@ -245,24 +287,29 @@ export const resolveFlexSpaceDistribution = (
       details: { itemCount },
     });
   }
+
   if (remaining <= 0) {
     if (distribution === LayoutDistribution.End) return Object.freeze({ leading: remaining, between: 0 });
     if (distribution === LayoutDistribution.Center) return Object.freeze({ leading: remaining / 2, between: 0 });
     return Object.freeze({ leading: 0, between: 0 });
   }
+
   if (distribution === LayoutDistribution.End) return Object.freeze({ leading: remaining, between: 0 });
   if (distribution === LayoutDistribution.Center) return Object.freeze({ leading: remaining / 2, between: 0 });
   if (distribution === LayoutDistribution.SpaceBetween && itemCount > 1) {
     return Object.freeze({ leading: 0, between: remaining / (itemCount - 1) });
   }
+
   if (distribution === LayoutDistribution.SpaceAround && itemCount > 0) {
     const between = remaining / itemCount;
     return Object.freeze({ leading: between / 2, between });
   }
+
   if (distribution === LayoutDistribution.SpaceEvenly && itemCount > 0) {
     const between = remaining / (itemCount + 1);
     return Object.freeze({ leading: between, between });
   }
+
   return Object.freeze({ leading: 0, between: 0 });
 };
 
@@ -275,6 +322,7 @@ export const resolveFlexLineCrossMetrics = (items: ReadonlyArray<FlexCrossItem>)
   let lastDescent = 0;
   let hasFirst = false;
   let hasLast = false;
+
   for (const item of items) {
     const offset = item.firstBaselineOffset ?? 0;
     const lastOffset = item.lastBaselineOffset ?? item.slotSize;
@@ -284,13 +332,16 @@ export const resolveFlexLineCrossMetrics = (items: ReadonlyArray<FlexCrossItem>)
       firstDescent = Math.max(firstDescent, item.slotSize - offset + item.marginEnd);
       hasFirst = true;
     }
+
     if (item.alignment === LayoutAlignment.LastBaseline) {
       lastAscent = Math.max(lastAscent, item.marginStart + lastOffset);
       lastDescent = Math.max(lastDescent, item.slotSize - lastOffset + item.marginEnd);
       hasLast = true;
     }
   }
+
   const size = Math.max(ordinary, firstAscent + firstDescent, lastAscent + lastDescent);
+
   return Object.freeze({
     size,
     ...(hasFirst ? { firstTarget: firstAscent } : {}),
@@ -300,14 +351,16 @@ export const resolveFlexLineCrossMetrics = (items: ReadonlyArray<FlexCrossItem>)
 
 /** 把 alignContent 剩余空间解析为 line slot 扩张、起始偏移与附加 gap */
 export const resolveFlexLineDistribution = (
-  distribution: LayoutDistributionValue,
+  distribution: LayoutDistribution,
   remaining: number,
   lineCount: number,
 ): Readonly<{ leading: number; between: number; stretch: number }> => {
   if (distribution === LayoutDistribution.Stretch && remaining > 0 && lineCount > 0) {
     return Object.freeze({ leading: 0, between: 0, stretch: remaining / lineCount });
   }
+
   const nonStretch = distribution === LayoutDistribution.Stretch ? LayoutDistribution.Start : distribution;
+
   return Object.freeze({ ...resolveFlexSpaceDistribution(nonStretch, remaining, lineCount), stretch: 0 });
 };
 
@@ -316,7 +369,7 @@ export const resolveFlexItemCrossSlotStart = (
   line: FlexCrossLine,
   slotSize: number,
   margins: Readonly<{ start: number; end: number }>,
-  alignment: LayoutAlignmentValue,
+  alignment: LayoutAlignment,
   guideOffset: number,
 ): number => {
   if (alignment === LayoutAlignment.End) return line.crossStart + line.finalCrossSize - margins.end - slotSize;
@@ -324,11 +377,14 @@ export const resolveFlexItemCrossSlotStart = (
     const available = Math.max(0, line.finalCrossSize - margins.start - margins.end);
     return line.crossStart + margins.start + (available - slotSize) / 2;
   }
+
   if (alignment === LayoutAlignment.FirstBaseline && line.firstTarget !== undefined) {
     return line.crossStart + line.firstTarget - guideOffset;
   }
+
   if (alignment === LayoutAlignment.LastBaseline && line.lastTarget !== undefined) {
     return line.crossStart + line.lastTarget - guideOffset;
   }
+
   return line.crossStart + margins.start;
 };

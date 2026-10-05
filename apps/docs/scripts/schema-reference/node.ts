@@ -109,6 +109,7 @@ export const writeNodeSchemaReferenceMdx = (outputDirectory: string): void => {
   for (const name of Object.keys(nodeSchemas) as Array<keyof typeof nodeSchemas>) {
     const schema = IR[name];
     if (!(schema instanceof z.ZodObject)) continue;
+
     const fields = Object.keys(schema.shape);
     const translatedFields = Object.keys(nodeSchemas[name].descriptions);
     if (
@@ -118,7 +119,9 @@ export const writeNodeSchemaReferenceMdx = (outputDirectory: string): void => {
       throw new Error(`Node schema translation fields do not match public schema: ${name}`);
     }
   }
+
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const zh = lang === 'zh';
     const intro = zh

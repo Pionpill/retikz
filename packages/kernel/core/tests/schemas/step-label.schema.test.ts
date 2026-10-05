@@ -12,6 +12,7 @@ describe('StepLabelSchema 新增样式字段', () => {
 
     expect(StepLabelSchema.parse({ text })).toMatchObject({ text });
   });
+
   it('接受 interrupt 布尔开关', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', interrupt: true }).success).toBe(true);
     expect(StepLabelSchema.safeParse({ text: 'x', interrupt: false }).success).toBe(true);
@@ -60,6 +61,7 @@ describe('StepLabelSchema 错误路径', () => {
   it('拒绝空的多行 TextBlock', () => {
     expect(StepLabelSchema.safeParse({ text: [] }).success).toBe(false);
   });
+
   it('interrupt 非布尔值拒绝', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', interrupt: 'always' }).success).toBe(false);
     expect(StepLabelSchema.safeParse({ text: 'x', interrupt: 1 }).success).toBe(false);
@@ -117,6 +119,7 @@ describe('StepLabel JSON round-trip', () => {
       opacity: 0.8,
       font: { size: 10, family: 'serif' },
     };
+
     expect(StepLabelSchema.parse(JSON.parse(JSON.stringify(label)))).toEqual({
       ...label,
       side: 'bottom',

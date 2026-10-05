@@ -25,6 +25,7 @@ const arrowMarkFromDetail = (detail: InputPath['arrowDetail'], endpoint: 'start'
   const fill = side?.fill ?? base.fill;
   const opacity = side?.opacity ?? base.opacity;
   const lineWidth = side?.lineWidth ?? base.lineWidth;
+
   return {
     kind: 'arrow',
     ...(shape === undefined ? {} : { shape }),
@@ -50,12 +51,14 @@ const normalizePathMarks = (input: InputPath): IRPathBase['marks'] | undefined =
         'normalizePath: arrowPlacement requires arrow to create at least one endpoint',
       );
     }
+
     if (input.arrowPlacement.start !== undefined && !hasStartArrow) {
       throw new RetikzVanillaError(
         RetikzVanillaErrorCode.Normalize,
         'normalizePath: arrowPlacement.start requires a start arrow',
       );
     }
+
     if (input.arrowPlacement.end !== undefined && !hasEndArrow) {
       throw new RetikzVanillaError(
         RetikzVanillaErrorCode.Normalize,
@@ -63,6 +66,7 @@ const normalizePathMarks = (input: InputPath): IRPathBase['marks'] | undefined =
       );
     }
   }
+
   if (input.arrow !== undefined && input.arrow !== 'none') {
     if (hasStartArrow) {
       const endpointOverlap = input.arrowPlacement?.start?.overlap ?? input.arrowPlacement?.overlap;
@@ -72,6 +76,7 @@ const normalizePathMarks = (input: InputPath): IRPathBase['marks'] | undefined =
         mark: arrowMarkFromDetail(input.arrowDetail, 'start'),
       });
     }
+
     if (hasEndArrow) {
       const endpointOverlap = input.arrowPlacement?.end?.overlap ?? input.arrowPlacement?.overlap;
       marks.push({
@@ -81,7 +86,9 @@ const normalizePathMarks = (input: InputPath): IRPathBase['marks'] | undefined =
       });
     }
   }
+
   if (input.marks !== undefined) marks.push(...input.marks);
+
   return marks.length === 0 ? undefined : marks;
 };
 
@@ -101,6 +108,7 @@ const normalizeAxisLineTarget = (input: InputAxisLineTarget): IRAxisLineTarget =
       },
     );
   }
+
   return result.data;
 };
 
@@ -128,6 +136,7 @@ const normalizeStep = (input: InputStep): IRStep => {
         ...(center === undefined ? {} : { center: normalizeTarget(center) }),
         ...(label === undefined ? {} : { label }),
       };
+
       return normalized;
     }
     case 'rectangle':
@@ -145,6 +154,7 @@ const normalizeStep = (input: InputStep): IRStep => {
         ...(to === undefined ? {} : { to: normalizeTarget(to) }),
         ...(label === undefined ? {} : { label }),
       };
+
       return normalized;
     }
     case 'cycle':
@@ -163,10 +173,12 @@ const normalizePathChildren = (children: ReadonlyArray<IRStep>): Array<IRStep> =
   if (children.length < 2 && !selfContainedRectangle) {
     throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'normalizePath: path requires at least 2 steps');
   }
+
   if (selfContainedRectangle || children[0]?.kind === 'move') return [...children];
 
   const [first, ...rest] = children;
   const target = 'to' in first && first.to !== undefined ? first.to : ([0, 0] as [number, number]);
+
   return [{ type: 'step', kind: 'move', to: target }, ...rest];
 };
 
@@ -196,14 +208,17 @@ export const normalizePath = (input: InputPath): IRPath => {
       'normalizePath: use either way or children, not both',
     );
   }
+
   const authoredChildren =
     way === undefined ? (children === undefined ? undefined : children.map(normalizeStep)) : parseWay(way);
   if (authoredChildren === undefined) {
     throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'normalizePath: path requires way or children');
   }
+
   const normalizedChildren = normalizePathChildren(authoredChildren);
   const marks = normalizePathMarks(input);
   const strokeWidth = path.style?.strokeWidth;
+
   return {
     type: 'path',
     ...path,

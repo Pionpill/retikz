@@ -18,6 +18,7 @@ import {
 describe('Core value atom schemas', () => {
   it('preserves non-blank CSS color strings and rejects blank values', () => {
     expect(CssColorSchema.parse(' currentColor ')).toBe(' currentColor ');
+
     for (const color of ['', '   ']) {
       expect(CssColorSchema.safeParse(color).success).toBe(false);
     }
@@ -27,9 +28,11 @@ describe('Core value atom schemas', () => {
     for (const color of ['currentColor', '#336699', 0, 0.4, 1]) {
       expect(ContextualColorSchema.safeParse(color).success).toBe(true);
     }
+
     for (const color of [-0.01, 1.01, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(ContextualColorSchema.safeParse(color).success).toBe(false);
     }
+
     expect(PaintValueSchema.parse(0.4)).toBe(0.4);
   });
 
@@ -56,16 +59,19 @@ describe('Core value atom schemas', () => {
     for (const family of ['', 'serif', 'Inter, sans-serif']) {
       expect(FontFamilySchema.safeParse(family).success).toBe(true);
     }
+
     expect(FontFamilySchema.safeParse(12).success).toBe(false);
 
     for (const weight of ['normal', 'bold', -100, 450]) {
       expect(FontWeightSchema.safeParse(weight).success).toBe(true);
     }
+
     expect(FontWeightSchema.safeParse('semibold').success).toBe(false);
 
     for (const style of ['normal', 'italic', 'oblique']) {
       expect(FontStyleSchema.safeParse(style).success).toBe(true);
     }
+
     expect(FontStyleSchema.safeParse('slanted').success).toBe(false);
   });
 
@@ -73,6 +79,7 @@ describe('Core value atom schemas', () => {
     for (const align of ['start', 'middle', 'end']) {
       expect(TextAlignSchema.safeParse(align).success).toBe(true);
     }
+
     expect(TextAlignSchema.safeParse('center').success).toBe(false);
 
     expect(LineHeightSchema.safeParse(1).success).toBe(true);

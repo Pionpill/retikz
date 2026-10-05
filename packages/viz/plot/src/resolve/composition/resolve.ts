@@ -5,7 +5,7 @@ import type { IRPlot, IRPlotAxisGuide, IRPlotFacetConfiguration, IRPlotGuide } f
 import { AxisGridApplyTo, CoordinateArrangementKind, CoordinateViewPlacementKind, PlotGuide } from '../../schemas';
 import type { Margins } from '../../shared';
 import type {
-  CompositionAxisPolicyValue,
+  CompositionAxisPolicy,
   CompositionLayout,
   CompositionPolicyContext,
   CompositionResolution,
@@ -79,18 +79,22 @@ export const resolveCoordinateScopeRegistry = (node: IRPlot): CoordinateScopeReg
       })),
     );
     const seen = new Set<string>();
+
     for (const scope of [...explicitScopes, ...generatedTrackScopes]) {
       if (seen.has(scope.id)) throw new RetikzPlotError(`lowerPlots: coordinate view "${scope.id}" is duplicated`);
       seen.add(scope.id);
     }
+
     return {
       defaultScope: node.composition.defaultView,
       scopes: [...explicitScopes, ...generatedTrackScopes],
     };
   }
+
   if (node.coordinate === undefined) {
     throw new RetikzPlotError('lowerPlots: IRPlot requires either coordinate shorthand or composition');
   }
+
   return {
     defaultScope: DEFAULT_COORDINATE_SCOPE_ID,
     scopes: [{ id: DEFAULT_COORDINATE_SCOPE_ID, coordinate: node.coordinate }],
@@ -114,6 +118,7 @@ export const resolveComposition = (node: IRPlot): CompositionResolution => {
     hasFacets: facets.length > 0,
     hasScaffolds: scaffolds.length > 0,
   };
+
   return {
     coordinateScopes: resolveCoordinateScopeRegistry(node),
     ...(node.composition?.spacing !== undefined ? { layout: node.composition.spacing } : {}),
@@ -141,11 +146,12 @@ export const compositionAxisPolicyOf = (
   resolve: CompositionResolve | undefined,
   context: CompositionPolicyContext,
   dimension: DimensionRole,
-): CompositionAxisPolicyValue => {
+): CompositionAxisPolicy => {
   const mode = resolve?.axis?.[dimension];
   if (mode === 'none') return 'none';
   if (mode === 'outer') return 'outerShared';
   if (mode === 'local') return 'perScope';
+
   return context.hasFacets || context.hasScaffolds ? 'outerShared' : 'perScope';
 };
 
@@ -183,6 +189,7 @@ export const mergeCompositionResolve = (
   override: CompositionResolve | undefined,
 ): CompositionResolve | undefined => {
   if (override === undefined) return base;
+
   return {
     ...(mergeCompositionResolveRecord(base?.scale, override.scale) !== undefined
       ? { scale: mergeCompositionResolveRecord(base?.scale, override.scale) }
@@ -229,9 +236,11 @@ const facetScalarKey = (value: FacetScalar): string => JSON.stringify(value);
 export const scalarSelectorIncludes = (values: FacetPanelValue, value: FacetPanelValue): boolean => {
   if (values === undefined) return true;
   if (value === undefined) return false;
+
   const selectorValues = Array.isArray(values) ? values : [values];
   const panelValues = Array.isArray(value) ? value : [value];
   const accepted = new Set(selectorValues.map(facetScalarKey));
+
   return panelValues.some(item => accepted.has(facetScalarKey(item)));
 };
 
@@ -242,20 +251,25 @@ const axisGapKeyOf = (guide: IRPlotAxisGuide): string | null => {
   if (placement.kind === 'origin') {
     return `${guide.dimension}:origin:${String(placement.origin ?? 0)}:${placement.tickSide ?? defaultOriginAxisTickSideOf(guide.dimension)}`;
   }
+
   return `edge:${placement.edge}`;
 };
 
-/** 为同侧或同 edge 的多根 axis 累加 composition axis gap。 */
+/** 为同侧或同 edge 的多根 axis 累加 composition axis gap */
 export const withAxisGapOffsets = (
   guides: ReadonlyArray<IRPlotGuide>,
   axisGap: number | undefined,
 ): Array<IRPlotGuide> => {
   if (axisGap === undefined || axisGap === 0) return [...guides];
+
   const counts = new Map<string, number>();
+
   return guides.map(guide => {
     if (!isAxisGuide(guide)) return guide;
+
     const key = axisGapKeyOf(guide);
     if (key === null) return guide;
+
     const index = counts.get(key) ?? 0;
     counts.set(key, index + 1);
     if (
@@ -263,6 +277,7 @@ export const withAxisGapOffsets = (
       (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin')
     )
       return guide;
+
     if (guide.placement?.kind === 'side' || guide.placement?.kind === 'edge' || guide.placement?.kind === 'origin') {
       return {
         ...guide,
@@ -272,11 +287,12 @@ export const withAxisGapOffsets = (
         },
       };
     }
+
     return guide;
   });
 };
 
-/** 把 composition padding 作为默认 margin，并让 runtime margin 覆盖。 */
+/** 把 composition padding 作为默认 margin，并让 runtime margin 覆盖 */
 export const mergeCompositionMargin = (
   padding: CompositionLayout['padding'] | undefined,
   margin: Partial<Margins> | undefined,

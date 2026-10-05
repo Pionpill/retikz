@@ -20,6 +20,7 @@ import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 
 const FLEX_LAYOUT_CONTENT_BASIS = 'content' as const;
 
+/** 校验 Flex 主轴的剩余空间分配方式，不包含拉伸轨道模式 */
 export const FlexMainDistributionSchema = zodEnum([
   LayoutDistribution.Start,
   LayoutDistribution.Center,
@@ -29,6 +30,7 @@ export const FlexMainDistributionSchema = zodEnum([
   LayoutDistribution.SpaceEvenly,
 ]).describe('Distribution of remaining main-axis space between flex items.');
 
+/** 校验 Flex 子项的基础尺寸、伸缩权重、尺寸限制与交叉轴对齐 */
 export const FlexLayoutItemSchema = LayoutItemBaseSchema.extend({
   kind: literal(LayoutItemKind.Flex).describe('Discriminator for a FlexLayout item.'),
   basis: union([literal(FLEX_LAYOUT_CONTENT_BASIS), NonNegativeNumberSchema])
@@ -100,6 +102,7 @@ const refineFlexLayout = (layout: FlexLayoutRefinementInput, context: Refinement
         message: `Duplicate FlexLayout item key '${item.key}'.`,
       });
     }
+
     if (item.key !== undefined) seenKeys.add(item.key);
     if (isColumn && isBaseline(item.alignSelf)) {
       context.addIssue({
@@ -111,6 +114,7 @@ const refineFlexLayout = (layout: FlexLayoutRefinementInput, context: Refinement
   });
 };
 
+/** 校验 Flex 容器的稀疏输入及跨字段布局约束 */
 export const FlexLayoutSchema = FlexLayoutBaseSchema.superRefine(refineFlexLayout).describe(
   'Sparse JSON-safe Layout FlexLayout composite.',
 );
@@ -148,16 +152,20 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
         message: 'sourceIndex must be contiguous.',
       });
     }
+
     if (keys.has(item.key)) {
       context.addIssue({ code: 'custom', path: ['items', index, 'key'], message: `Duplicate item key '${item.key}'.` });
     }
+
     keys.add(item.key);
   });
+
   const partition = new Map<string, number>();
   artifact.lines.forEach((line, index) => {
     if (line.index !== index) {
       context.addIssue({ code: 'custom', path: ['lines', index, 'index'], message: 'Line index must be contiguous.' });
     }
+
     line.itemKeys.forEach((key, keyIndex) => {
       if (!keys.has(key)) {
         context.addIssue({
@@ -166,6 +174,7 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
           message: `Unknown item key '${key}'.`,
         });
       }
+
       if (partition.has(key)) {
         context.addIssue({
           code: 'custom',
@@ -173,9 +182,11 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
           message: `Duplicate line item key '${key}'.`,
         });
       }
+
       partition.set(key, index);
     });
   });
+
   artifact.items.forEach((item, index) => {
     if (item.line >= artifact.lines.length || partition.get(item.key) !== item.line) {
       context.addIssue({
@@ -187,6 +198,7 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
   });
 };
 
+/** 校验 Flex 编译产物中子项顺序、行归属与布局观测结果的一致性 */
 export const FlexLayoutArtifactSchema = FlexLayoutArtifactBaseSchema.superRefine(refineFlexLayoutArtifact).describe(
   'Canonical JSON-safe FlexLayout compile artifact payload.',
 );

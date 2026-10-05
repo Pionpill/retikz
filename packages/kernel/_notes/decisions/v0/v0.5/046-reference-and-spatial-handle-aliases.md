@@ -7,7 +7,7 @@ keywords: Node、aliasIds、命名引用、SpatialHandle、id、key、别名、i
 
 - 状态：Accepted
 - 决策日期：2026-09-23
-- 关联：[roadmap](./roadmap.md) · [ADR-028](./028-qualified-spatial-handles.md) · [Standard ADR-034](../../../../../library/_notes/decisions/standard/v0/v0.1/034-list-cell-identities.md)
+- 关联：[roadmap](./roadmap.md) · [ADR-028](./028-qualified-spatial-handles.md) · [Standard ADR-034](../../../../../library/_notes/decisions/standard/v0/v0.1/034-array-cell-identities.md)
 
 ## 背景与目标
 

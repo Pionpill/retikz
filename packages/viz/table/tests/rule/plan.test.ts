@@ -250,6 +250,7 @@ describe('resolved Table Cell plans', () => {
     expect(Object.isFrozen(rules[0].appearance)).toBe(false);
 
     rules[0].appearance = { background: { fill: '#00ffff' } };
+
     expect(plans[0]).toEqual(original);
   });
 
@@ -281,10 +282,14 @@ describe('resolved Table Cell plans', () => {
     const formatted = formatTable(model, { cells: plans });
 
     expect(formatted.cells[0]).toMatchObject({ rawValue: 12, value: 12, formatterName: 'identity' });
+
     const malformed = [{ ...plans[0], cellId: 'other' }, plans[1]];
+
     expect(() => formatTable(model, { cells: malformed })).toThrow(/plan Cell 0 identity differs/i);
     expect(() => formatTable(model, { cells: plans.slice(0, 1) })).toThrow(/plan Cell count differs/i);
+
     const wrongKind = [{ ...plans[0], kind: 'content' }, plans[1]] as unknown as typeof plans;
+
     expect(() => formatTable(model, { cells: wrongKind })).toThrow(/plan Cell 0 kind differs/i);
   });
 });

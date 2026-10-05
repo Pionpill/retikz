@@ -8,6 +8,7 @@ import { branchHistoryI18n } from './branch-history.i18n';
 
 /** 提交历史示例属性 */
 export type BranchHistoryProps = { lang?: Lang };
+
 /** 用共享节点声明分叉和合并 */
 const BranchHistory: FC<BranchHistoryProps> = props => {
   const t = branchHistoryI18n[props.lang ?? 'zh'];

@@ -19,7 +19,10 @@ export type CellPresentationInput = Readonly<{
   appearance: DeepReadonly<IRTableCellAppearance>;
 }>;
 
-/** Cell presentation provider 定义 */
+/**
+ * Cell presentation provider 定义
+ * @template TOptions optionsSchema 解析后交给能力回调的 JSON 选项类型；默认 JsonObject
+ */
 export type CellPresentationDefinition<TOptions extends JsonObject = JsonObject> = {
   /** provider 注册名 */
   name: string;

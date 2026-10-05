@@ -4,7 +4,6 @@ import type {
   PlotAxisRuleSourceRecordSchema,
   PlotDefaultsSourceRecordSchema,
   PlotPaletteResolutionSchema,
-  PlotThemeLayerKind,
   PlotThemeResolutionSchema,
 } from './inspection';
 import type {
@@ -47,9 +46,6 @@ export type IRPlotAxisRule = ZodInfer<typeof PlotAxisRuleSchema>;
 
 /** Plot Source Axis rule 列表 */
 export type IRPlotAxisRules = ZodInfer<typeof PlotAxisRulesSchema>;
-
-/** Plot defaults inspection 来源分类 */
-export type PlotThemeLayerKindValue = (typeof PlotThemeLayerKind)[keyof typeof PlotThemeLayerKind];
 
 /** 一个保留在 resolver inspection 中的 Plot defaults 来源 */
 export type IRPlotDefaultsSourceRecord = ZodInfer<typeof PlotDefaultsSourceRecordSchema>;

@@ -29,6 +29,7 @@ const setupRoot = (): { root: SVGSVGElement; element: SVGElement } => {
   element.setAttribute('data-retikz-id', 'm');
   root.appendChild(element);
   document.body.appendChild(root);
+
   return { root, element };
 };
 
@@ -60,6 +61,7 @@ describe('metaOf（按 id 取 provenance）', () => {
         },
       ],
     };
+
     expect(metaOf(scene, 'm')).toEqual({ series: 'sales', i: 3 });
     expect(metaOf(scene, 'inner')).toEqual({ tag: 'deep' });
     expect(metaOf(scene, 'absent')).toBeUndefined();
@@ -76,6 +78,7 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
       ],
     };
     const geometry = geometryOf(scene, 'm');
+
     expect(geometry?.bbox).toEqual({ x: 0, y: 0, width: 30, height: 10 });
     expect(geometry?.center).toEqual([15, 5]);
   });
@@ -93,6 +96,7 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
       ],
     };
     const geometry = geometryOf(scene, 'g');
+
     expect(geometry?.bbox).toEqual({ x: 100, y: 0, width: 10, height: 10 });
   });
 
@@ -134,6 +138,7 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
       primitives: [{ type: 'ellipse', id: 'e', cx: 50, cy: 50, rx: 20, ry: 10, rotate: 90 }],
     };
     const geometry = geometryOf(scene, 'e');
+
     // 旋转 90° 后，原本横向 rx=20 → 纵向，ry=10 → 横向：bbox 宽 20、高 40
     expect(geometry?.bbox.x).toBeCloseTo(40, 6);
     expect(geometry?.bbox.y).toBeCloseTo(30, 6);
@@ -164,6 +169,7 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
     };
 
     const geometry = geometryOf(scene, 'arc');
+
     expect(geometry?.bbox.x).toBeCloseTo(-2, 8);
     expect(geometry?.bbox.y).toBeCloseTo(-10, 8);
     expect(geometry?.bbox.width).toBeCloseTo(4, 8);
@@ -172,6 +178,7 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
 
   it('无匹配 id → undefined', () => {
     const scene: Scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
+
     expect(geometryOf(scene, 'x')).toBeUndefined();
   });
 });
@@ -211,6 +218,7 @@ describe('createContextBuilder 经控制器注入 (event, context)', () => {
     expect(received?.element).toBe(element);
     expect(received?.point).toEqual({ x: 1, y: 2 });
     expect(received?.geometry?.bbox).toEqual({ x: 0, y: 0, width: 10, height: 10 });
+
     controller.dispose();
   });
 
@@ -240,9 +248,11 @@ describe('createContextBuilder 经控制器注入 (event, context)', () => {
 
     const event = new Event('click', { bubbles: true });
     Object.defineProperty(event, 'target', { value: element, configurable: true });
+
     expect(() => element.dispatchEvent(event)).not.toThrow();
     expect(received?.meta).toBeUndefined();
     expect(received?.point).toBeNull();
+
     controller.dispose();
   });
 });
@@ -250,11 +260,13 @@ describe('createContextBuilder 经控制器注入 (event, context)', () => {
 describe('SVG 动画 owner 双查（per-id 控制）', () => {
   it('restart() 命中元素本身 + data-retikz-animation-owner wrapper 的动画并 cancel+play', () => {
     const root = document.createElementNS(SVG_NS, 'svg');
+
     // 元素本身（opacity load 动画）
     const element = document.createElementNS(SVG_NS, 'rect');
     element.setAttribute('data-retikz-id', 'n');
     const ownAnim = fakeAnimation();
     (element as unknown as { getAnimations: () => Array<unknown> }).getAnimations = () => [ownAnim];
+
     // transform wrapper（无 data-retikz-id，挂 owner）
     const wrapper = document.createElementNS(SVG_NS, 'g');
     wrapper.setAttribute('data-retikz-animation-owner', 'n');
@@ -266,12 +278,14 @@ describe('SVG 动画 owner 双查（per-id 控制）', () => {
 
     const controls = createSvgAnimationControls(root, 'n');
     controls.restart();
+
     expect(ownAnim.cancel).toHaveBeenCalledTimes(1);
     expect(ownAnim.play).toHaveBeenCalledTimes(1);
     expect(wrapperAnim.cancel).toHaveBeenCalledTimes(1);
     expect(wrapperAnim.play).toHaveBeenCalledTimes(1);
 
     controls.seek(120);
+
     expect(ownAnim.currentTime).toBe(120);
     expect(wrapperAnim.currentTime).toBe(120);
   });
@@ -289,6 +303,7 @@ describe('SVG 动画 owner 双查（per-id 控制）', () => {
     document.body.appendChild(root);
 
     const controls = createSvgAnimationControls(root, 'n');
+
     expect(() => controls.stop()).not.toThrow();
     expect(throwing.finish).toHaveBeenCalledTimes(1);
   });
@@ -316,6 +331,7 @@ describe('最小 context 降级（控制器无 buildContext）', () => {
     expect(received?.meta).toBeUndefined();
     expect(received?.renderer).toBe('svg'); // 缺省后端
     expect(() => received?.animation.play()).not.toThrow();
+
     controller.dispose();
   });
 
@@ -336,6 +352,7 @@ describe('最小 context 降级（控制器无 buildContext）', () => {
     element.dispatchEvent(event);
 
     expect(received?.renderer).toBe('canvas');
+
     controller.dispose();
   });
 });
@@ -346,7 +363,9 @@ describe('createClockAnimationControls（scene 级 coarse 降级）', () => {
   it('stop 落 settled 末态：seek 到远超时长处再 pause（不只是 pause 定格当前帧）', () => {
     const clock = makeClock();
     createClockAnimationControls(clock).stop();
+
     expect(clock.seek).toHaveBeenCalledTimes(1);
+
     // seek 时刻须远超任何有限动画时长（fill-forward 到末态）
     expect(clock.seek.mock.calls[0][0]).toBeGreaterThan(1e12);
     expect(clock.pause).toHaveBeenCalledTimes(1);
@@ -356,14 +375,18 @@ describe('createClockAnimationControls（scene 级 coarse 降级）', () => {
     const clock = makeClock();
     const controls = createClockAnimationControls(clock);
     controls.restart();
+
     expect(clock.seek).toHaveBeenCalledWith(0);
     expect(clock.play).toHaveBeenCalledTimes(1);
+
     controls.seek(120);
+
     expect(clock.seek).toHaveBeenLastCalledWith(120);
   });
 
   it('无时钟 → no-op（各操作不抛）', () => {
     const controls = createClockAnimationControls(undefined);
+
     expect(() => {
       controls.play();
       controls.pause();

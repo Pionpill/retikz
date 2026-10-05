@@ -6,6 +6,7 @@ const createBuiltinRetainedRenderer = (input: RetainedRendererFactoryInput): Ret
   if (input.backend === 'svg') {
     return createBuiltinSvgRetainedRenderer(input.host, input.immutableOptions);
   }
+
   return createBuiltinCanvasRetainedRenderer(input.host, input.immutableOptions);
 };
 

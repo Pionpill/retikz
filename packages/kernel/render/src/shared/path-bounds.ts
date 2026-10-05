@@ -3,6 +3,7 @@ import type { ArcPathCommand, EllipseArcPathCommand, PathCommand } from '@retikz
 import { commandArcStart, commandArcSweep, commandEndpoint, ellipseArcPointAt } from './path-command';
 
 type Point = [number, number];
+
 type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
 
 const ROOT_EPSILON = 1e-12;
@@ -37,9 +38,11 @@ const quadraticPoint = (from: Point, control: Point, to: Point, t: number): Poin
 const collectQuadraticBounds = (points: Array<Point>, from: Point, control: Point, to: Point): void => {
   addPoint(points, from);
   addPoint(points, to);
+
   for (const axis of [0, 1] as const) {
     const denominator = from[axis] - 2 * control[axis] + to[axis];
     if (Math.abs(denominator) <= ROOT_EPSILON) continue;
+
     const t = (from[axis] - control[axis]) / denominator;
     if (t > 0 && t < 1) addPoint(points, quadraticPoint(from, control, to, t));
   }
@@ -66,15 +69,18 @@ const unitQuadraticRoots = (a: number, b: number, c: number): Array<number> => {
     const root = -c / b;
     return root > 0 && root < 1 ? [root] : [];
   }
+
   const discriminant = b * b - 4 * a * c;
   if (discriminant < -ROOT_EPSILON) return [];
   if (Math.abs(discriminant) <= ROOT_EPSILON) {
     const root = -b / (2 * a);
     return root > 0 && root < 1 ? [root] : [];
   }
+
   const squareRoot = Math.sqrt(discriminant);
   const q = -0.5 * (b + (b >= 0 ? squareRoot : -squareRoot));
   const roots = Math.abs(q) <= ROOT_EPSILON ? [-b / (2 * a)] : [q / a, c / q];
+
   return roots.filter(root => root > 0 && root < 1);
 };
 
@@ -82,12 +88,15 @@ const collectCubicBounds = (points: Array<Point>, from: Point, control1: Point, 
   addPoint(points, from);
   addPoint(points, to);
   const roots = new Set<number>();
+
   for (const axis of [0, 1] as const) {
     const a = -from[axis] + 3 * control1[axis] - 3 * control2[axis] + to[axis];
     const b = 2 * (from[axis] - 2 * control1[axis] + control2[axis]);
     const c = control1[axis] - from[axis];
+
     for (const root of unitQuadraticRoots(a, b, c)) roots.add(root);
   }
+
   for (const root of roots) addPoint(points, cubicPoint(from, control1, control2, to, root));
 };
 
@@ -103,7 +112,9 @@ const alignedCandidates = (baseAngle: number, start: number, end: number): Array
   const first = Math.ceil((low - baseAngle) / 360);
   const last = Math.floor((high - baseAngle) / 360);
   const candidates: Array<number> = [];
+
   for (let turn = first; turn <= last; turn += 1) candidates.push(baseAngle + turn * 360);
+
   return candidates;
 };
 
@@ -117,6 +128,7 @@ const collectArcBounds = (points: Array<Point>, command: ArcCommand): void => {
   const rotation = ((command.kind === 'ellipseArc' ? (command.rotation ?? 0) : 0) * Math.PI) / 180;
   const xExtreme = (Math.atan2(-radiusY * Math.sin(rotation), radiusX * Math.cos(rotation)) * 180) / Math.PI;
   const yExtreme = (Math.atan2(radiusY * Math.cos(rotation), radiusX * Math.sin(rotation)) * 180) / Math.PI;
+
   for (const base of [xExtreme, xExtreme + 180, yExtreme, yExtreme + 180]) {
     for (const angle of alignedCandidates(base, sweep.start, sweep.end)) addPoint(points, arcPointAt(command, angle));
   }
@@ -124,16 +136,19 @@ const collectArcBounds = (points: Array<Point>, command: ArcCommand): void => {
 
 const boundsOf = (points: ReadonlyArray<Point>): PathBounds => {
   if (points.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
+
   let minX = Number.POSITIVE_INFINITY;
   let minY = Number.POSITIVE_INFINITY;
   let maxX = Number.NEGATIVE_INFINITY;
   let maxY = Number.NEGATIVE_INFINITY;
+
   for (const [x, y] of points) {
     minX = Math.min(minX, x);
     minY = Math.min(minY, y);
     maxX = Math.max(maxX, x);
     maxY = Math.max(maxY, y);
   }
+
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 };
 
@@ -170,6 +185,7 @@ export const pathBounds = (commands: ReadonlyArray<PathCommand>): PathBounds => 
           addPoint(points, cursor);
           addPoint(points, arcStart);
         }
+
         collectArcBounds(points, command);
         cursor = commandEndpoint(command);
         break;
@@ -179,6 +195,7 @@ export const pathBounds = (commands: ReadonlyArray<PathCommand>): PathBounds => 
           addPoint(points, cursor);
           addPoint(points, subpathStart);
         }
+
         cursor = subpathStart;
         break;
     }

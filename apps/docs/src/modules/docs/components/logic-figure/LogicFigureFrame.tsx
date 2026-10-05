@@ -4,6 +4,7 @@ import type { FC, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
 type LogicFigureFrameCaption = NonNullable<GroupProps['caption']>;
+
 type LogicFigureFrameCaptionText = NonNullable<LogicFigureFrameCaption['title']>;
 
 /** 文档逻辑图分组框接受的 Graph Group 属性 */
@@ -72,27 +73,35 @@ const readLogicFigureFrameParts = (children: ReactNode): LogicFigureFrameParts =
   } = {
     body: [],
   };
+
   const visit = (nodes: ReactNode): void => {
     Children.forEach(nodes, child => {
       if (isValidElement(child) && child.type === Fragment) {
         visit((child.props as { children?: ReactNode }).children);
         return;
       }
+
       if (isValidElement<LogicFigureFrameTitleProps>(child) && child.type === LogicFigureFrameTitle) {
         if (result.title !== undefined) throw new Error('LogicFigureFrame accepts at most one LogicFigureFrameTitle.');
         result.title = child.props;
         return;
       }
+
       if (isValidElement<LogicFigureFrameDescriptionProps>(child) && child.type === LogicFigureFrameDescription) {
         if (result.description !== undefined)
           throw new Error('LogicFigureFrame accepts at most one LogicFigureFrameDescription.');
+
         result.description = child.props;
+
         return;
       }
+
       result.body.push(child);
     });
   };
+
   visit(children);
+
   return result;
 };
 

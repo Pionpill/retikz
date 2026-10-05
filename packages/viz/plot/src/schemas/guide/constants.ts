@@ -1,4 +1,5 @@
-﻿import { GeometryLabelPosition } from '@retikz/core';
+import { GeometryLabelPosition } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /**
  * guide 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'axis'` 同样可用）
@@ -12,7 +13,7 @@ export const PlotGuide = {
 } as const;
 
 /**
- * 坐标轴摆放方式关键字。
+ * 坐标轴摆放方式关键字
  * @description auto 由坐标系按维度推断；side 使用笛卡尔式四边；edge 使用坐标系原生边
  */
 export const AxisPlacementKind = {
@@ -27,7 +28,7 @@ export const AxisPlacementKind = {
 } as const;
 
 /**
- * 笛卡尔式四方向轴位置。
+ * 笛卡尔式四方向轴位置
  * @description 只表达 top/right/bottom/left；非四边形坐标系应使用 auto 或 edge
  */
 export const AxisCardinalSide = {
@@ -48,7 +49,7 @@ export const AxisLineExtentTarget = {
 } as const;
 
 /**
- * 坐标轴网格投放模式。
+ * 坐标轴网格投放模式
  * @description `local` 只投放到坐标轴绑定的坐标视图；`all` 投放到组合结构选中的坐标视图；`selected` 使用显式选择器
  */
 export const AxisGridApplyTo = {
@@ -239,7 +240,7 @@ export const LegendOrient = {
 } as const;
 
 /**
- * 图例符号尺寸适配策略。
+ * 图例符号尺寸适配策略
  * @description fit 会把 size legend 的符号压入 symbolSize 盒子；preserve 保留通道 descriptor 的原始半径
  */
 export const LegendSymbolFit = {
@@ -248,3 +249,72 @@ export const LegendSymbolFit = {
   /** 保留 descriptor 半径 */
   Preserve: 'preserve',
 } as const;
+
+/** guide 类型 */
+export type PlotGuide = ValueOf<typeof PlotGuide>;
+
+/** 坐标轴摆放方式 */
+export type AxisPlacementKind = ValueOf<typeof AxisPlacementKind>;
+
+/** 笛卡尔式四方向轴位置 */
+export type AxisCardinalSide = ValueOf<typeof AxisCardinalSide>;
+
+/** 坐标轴网格投放模式取值 */
+export type AxisGridApplyTo = ValueOf<typeof AxisGridApplyTo>;
+
+/** 坐标轴线范围关键字取值 */
+export type AxisLineExtentTarget = ValueOf<typeof AxisLineExtentTarget>;
+
+/** 固定间隔 tick source kind 取值 */
+export type GuideTickIntervalKind = ValueOf<typeof GuideTickIntervalKind>;
+
+/** 时间间隔单位取值 */
+export type GuideTickTimeUnit = ValueOf<typeof GuideTickTimeUnit>;
+
+/** tick 可见密度策略 kind 取值 */
+export type AxisTickDensityKind = ValueOf<typeof AxisTickDensityKind>;
+
+/** tick mark 形态 kind 取值 */
+export type AxisTickMarkKind = ValueOf<typeof AxisTickMarkKind>;
+
+/** tick 端点避让影响范围取值 */
+export type AxisTickEndpointAffect = ValueOf<typeof AxisTickEndpointAffect>;
+
+/** shape tick mark 方向策略取值 */
+export type AxisTickShapeOrientation = ValueOf<typeof AxisTickShapeOrientation>;
+
+/** tick label 重叠隐藏策略取值 */
+export type AxisTickLabelHideStrategy = ValueOf<typeof AxisTickLabelHideStrategy>;
+
+/** tick label 超出轴范围时的处理策略取值 */
+export type AxisTickLabelOverflow = ValueOf<typeof AxisTickLabelOverflow>;
+
+/** axis title 沿轴线的定位关键字取值 */
+export type AxisTitlePlacementKeyword = ValueOf<typeof AxisTitlePlacementKeyword>;
+
+/** axis title 对齐锚点取值 */
+export type AxisTitleAnchor = ValueOf<typeof AxisTitleAnchor>;
+
+/** axis title 纵向锚点取值 */
+export type AxisTitleBaseline = ValueOf<typeof AxisTitleBaseline>;
+
+/** axis title 旋转策略取值 */
+export type AxisTitleOrientation = ValueOf<typeof AxisTitleOrientation>;
+
+/** axis 交叉值处 tick mark 策略取值 */
+export type AxisCrossingTickPolicy = ValueOf<typeof AxisCrossingTickPolicy>;
+
+/** axis 交叉值处 tick label 策略取值 */
+export type AxisCrossingLabelPolicy = ValueOf<typeof AxisCrossingLabelPolicy>;
+
+/** axis 交叉值 label 的角落位置取值 */
+export type AxisCrossingCorner = ValueOf<typeof AxisCrossingCorner>;
+
+/** 图例位置 */
+export type LegendPosition = ValueOf<typeof LegendPosition>;
+
+/** 图例排布方向 */
+export type LegendOrient = ValueOf<typeof LegendOrient>;
+
+/** 图例符号尺寸适配策略 */
+export type LegendSymbolFit = ValueOf<typeof LegendSymbolFit>;

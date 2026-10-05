@@ -12,6 +12,7 @@ const properties = {
     'Corner radius; clamped to half the shorter rectangle side.',
   ),
 };
+
 /** Rectangle 的持久化几何契约 */
 export const RectangleSchema = union([
   strictObject({

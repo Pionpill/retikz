@@ -38,11 +38,13 @@ export const RibbonCapSchema = strictObject({
   params: JsonObjectSchema.optional().describe('JSON-safe cap parameters.'),
 }).describe('Reference to a registered ribbon cap.');
 
+/** 校验中心线上归一化位置与该处非负宽度组成的控制点 */
 export const RibbonWidthStopSchema = strictObject({
   offset: NormalizedFractionSchema.describe('Normalized position along the centerline.'),
   value: NonNegativeNumberSchema.describe('Ribbon width in user units at this stop.'),
 }).describe('One stop in a sampled ribbon width curve.');
 
+/** 校验至少两个宽度控制点及其插值方式，后续解析按位置排序 */
 export const StopsRibbonWidthSchema = strictObject({
   kind: literal('stops').describe('Discriminator for stop-based width rules.'),
   stops: array(RibbonWidthStopSchema)
@@ -53,6 +55,7 @@ export const StopsRibbonWidthSchema = strictObject({
     .describe('Interpolation curve between adjacent stops.'),
 }).describe('A multi-stop ribbon width rule.');
 
+/** 校验已注册宽度函数的名称与可序列化参数 */
 export const ProfileRibbonWidthSchema = strictObject({
   kind: literal('profile').describe('Discriminator for registered width profiles.'),
   name: RibbonWidthProfileNameSchema,
@@ -64,6 +67,7 @@ export const FixedRibbonWidthSchema = strictObject({
   kind: literal('fixed').describe('Fixed width discriminator.'),
   value: NonNegativeNumberSchema.describe('Constant ribbon width.'),
 });
+
 /** 首尾宽度渐变 */
 export const TaperRibbonWidthSchema = strictObject({
   kind: literal('taper').describe('Endpoint taper discriminator.'),
@@ -71,6 +75,7 @@ export const TaperRibbonWidthSchema = strictObject({
   end: NonNegativeNumberSchema.describe('Width at the centerline end.'),
   interpolation: zodEnum(RibbonTaperInterpolation).default('linear').describe('Width interpolation along arc length.'),
 });
+
 /** 四种互斥宽度策略 */
 export const RibbonWidthSchema = discriminatedUnion('kind', [
   FixedRibbonWidthSchema,
@@ -93,6 +98,7 @@ export const RibbonDirectionSchema = union([
   IRRibbonDirection
 >;
 
+/** 校验带状路径端面的标签、轴向和端帽；自动轴向沿中心线法向 */
 export const RibbonEndpointSchema = strictObject({
   label: BoundaryLabelSchema.optional().describe('Label attached to the final endpoint cap boundary.'),
   direction: union([literal('auto'), RibbonDirectionSchema])
@@ -103,6 +109,7 @@ export const RibbonEndpointSchema = strictObject({
   ),
 }).describe('Endpoint-local ribbon properties such as section direction and cap.');
 
+/** 校验固定横截面采样策略，采样数限定为 2 到 512 的整数 */
 export const RibbonFixedSamplingSchema = strictObject({
   kind: literal('fixed').describe('Use a fixed number of cross-section samples.'),
   samples: number()
@@ -112,12 +119,14 @@ export const RibbonFixedSamplingSchema = strictObject({
     .describe('Number of cross-section samples used to approximate the ribbon polygon.'),
 }).describe('Fixed ribbon sampling strategy.');
 
+/** 校验按路径长度与目标段长估算采样数的策略，并限制最大采样数 */
 export const RibbonAdaptiveSamplingSchema = strictObject({
   kind: literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
   tolerance: PositiveNumberSchema.describe('Approximate target segment length in user units.'),
   maxSamples: number().int().min(2).max(512).default(512).describe('Optional upper bound for generated samples.'),
 }).describe('Length-aware adaptive ribbon sampling strategy.');
 
+/** 校验固定或自适应的基础采样策略，几何特征点另行保留 */
 export const RibbonSamplingSchema = discriminatedUnion('kind', [
   RibbonFixedSamplingSchema,
   RibbonAdaptiveSamplingSchema,
@@ -136,6 +145,7 @@ export const CenterlineRibbonPathOptionsSchema = strictObject({
   ),
   align: zodEnum(RibbonAlignment).default('center').describe('Width distribution relative to the centerline.'),
 });
+
 /** 复用 Core Step 校验，将坐标预处理的 unknown 输入收窄到公开 JSON Step 类型 */
 const ribbonBoundaryStepSchema = StepSchema as ZodType<IRStep, IRStep>;
 
@@ -145,6 +155,7 @@ export const BoundaryRibbonPathOptionsSchema = strictObject({
   upper: array(ribbonBoundaryStepSchema).min(2).describe('Open upper boundary steps.'),
   lower: array(ribbonBoundaryStepSchema).min(2).describe('Open lower boundary steps.'),
 });
+
 /** 由 mode 区分的流带构造契约 */
 export const RibbonPathOptionsSchema = discriminatedUnion('mode', [
   CenterlineRibbonPathOptionsSchema,

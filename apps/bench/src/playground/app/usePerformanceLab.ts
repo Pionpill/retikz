@@ -30,6 +30,7 @@ export const usePerformanceLab = (
   const [state, dispatch] = useReducer(reduceLabState, createInitialLabState(module.id));
   const previewHostRef = useRef<HTMLDivElement>(null);
   const executionGenerationRef = useRef(0);
+
   useEffect(() => {
     executionGenerationRef.current += 1;
     dispatch({ type: LabActionType.RunInvalidated });
@@ -44,6 +45,7 @@ export const usePerformanceLab = (
     state.warmupRuns,
     testCase?.id,
   ]);
+
   const run = useCallback(async (): Promise<void> => {
     if (!module.available || testCase === undefined) {
       dispatch({
@@ -52,15 +54,18 @@ export const usePerformanceLab = (
       });
       return;
     }
+
     executionGenerationRef.current += 1;
     const executionGeneration = executionGenerationRef.current;
     const isCurrentExecution = (): boolean => executionGenerationRef.current === executionGeneration;
     dispatch({ type: LabActionType.RunStarted });
     const reportStartedAt = new Date().toISOString();
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
     try {
       const { executeBrowserKernelLabPolicy } = await import('../modules/kernel/browser');
       if (!isCurrentExecution()) return;
+
       const session = await runKernelLab(
         {
           mode,
@@ -82,6 +87,7 @@ export const usePerformanceLab = (
         executeBrowserKernelLabPolicy,
       );
       if (isCurrentExecution()) dispatch({ type: LabActionType.RunSucceeded, session });
+
       try {
         await saveBenchReport({
           moduleId: module.id,
@@ -104,6 +110,7 @@ export const usePerformanceLab = (
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (isCurrentExecution()) dispatch({ type: LabActionType.RunFailed, error: message });
+
       try {
         await saveBenchReport({
           moduleId: module.id,
@@ -139,5 +146,6 @@ export const usePerformanceLab = (
     t,
     testCase,
   ]);
+
   return Object.freeze({ state, dispatch, previewHostRef, run });
 };

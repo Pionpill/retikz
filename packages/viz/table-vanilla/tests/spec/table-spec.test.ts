@@ -31,6 +31,7 @@ describe('Table Vanilla plain authoring', () => {
 
     const detailSpec = detailTable(detailInput);
     const manualSpec = manualTable(manualInput);
+
     expect(detailSpec).toEqual(createDetailTableIR(detailInput));
     expect(manualSpec).toEqual(createManualTableIR(manualInput));
     expect(detailInput).toEqual(detailBefore);
@@ -49,7 +50,9 @@ describe('Table Vanilla plain authoring', () => {
       kind: 'table',
       props: { table: { kind: 'manual', input: { rows: [[null]] } }, data: {} },
     });
+
     const named = manualTable({ id: 'panel', rows: [[null]] });
+
     expect(embedTable(named)).toMatchObject({ id: 'panel', props: { table: { input: { id: 'panel' } } } });
     expect(spec).not.toHaveProperty('id');
   });

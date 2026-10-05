@@ -87,6 +87,7 @@ const releaseGroupVersions = packageManifests.reduce<Map<string, Set<string>>>((
   const groupVersions = versions.get(releaseGroup) ?? new Set<string>();
   groupVersions.add(packageManifest.version);
   versions.set(releaseGroup, groupVersions);
+
   return versions;
 }, new Map<string, Set<string>>());
 
@@ -115,5 +116,6 @@ export const getDocPackageVersion = (location: DocPackageLocation): string | und
   if (!location.sectionId) return undefined;
 
   const releaseGroup = docSectionReleaseGroups[`${location.moduleId}/${location.sectionId}`];
+
   return releaseGroup ? getPackageReleaseVersion(releaseGroup) : undefined;
 };

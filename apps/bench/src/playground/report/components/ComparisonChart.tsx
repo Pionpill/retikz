@@ -29,16 +29,21 @@ export const ComparisonChart: FC<ComparisonChartProps> = props => {
   useEffect(() => {
     const host = plotHostRef.current;
     if (host === null) return undefined;
+
     const updateSize = (): void => {
       const rect = host.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
+
       const next = { width: Math.floor(rect.width), height: Math.floor(rect.height) };
       setPlotSize(current => (current.width === next.width && current.height === next.height ? current : next));
     };
+
     updateSize();
     if (typeof ResizeObserver === 'undefined') return undefined;
+
     const observer = new ResizeObserver(updateSize);
     observer.observe(host);
+
     return () => observer.disconnect();
   }, [compact]);
 

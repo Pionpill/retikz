@@ -10,7 +10,9 @@ export const createInspectionSelectionDiagnosticOrigin = (
 /** 用 Inspect origin 包装任意同步失败 */
 export const wrapInspectionError = (origin: InspectionDiagnosticOrigin, cause: unknown): RetikzInspectError => {
   if (cause instanceof RetikzInspectError && cause.code === RetikzInspectErrorCode.CompileFailed) return cause;
+
   const message = cause instanceof Error ? cause.message : String(cause);
+
   return new RetikzInspectError({
     code: RetikzInspectErrorCode.CompileFailed,
     message: `Inspection ${origin.stage} failed: ${message}`,

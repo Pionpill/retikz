@@ -6,7 +6,7 @@ import type { ResolvedTableTrackSize, TableTrackContribution } from './types';
 
 /** 单个 spanning Cell 对一个 canonical 轴的自然尺寸要求 */
 export type TableSpanConstraint = Readonly<{
-  /** optional semantic Cell id */
+  /** 可选的单元格语义标识 */
   cellId?: string;
   /** span 起始 canonical track index */
   startIndex: number;
@@ -30,7 +30,7 @@ export type PropagateTableSpanContributionsInput = Readonly<{
 
 /** 单个 Cell 仍未被轨道自然尺寸覆盖的外部尺寸 */
 export type TableSpanUnmetSize = Readonly<{
-  /** optional semantic Cell id */
+  /** 可选的单元格语义标识 */
   cellId?: string;
   /** finite nonnegative 未满足尺寸 */
   size: number;
@@ -46,7 +46,7 @@ export type TableSpanContributionResult = Readonly<{
 
 /** span natural-size growth 阶段中的单轨候选 */
 type SpanGrowthCandidate = Readonly<{
-  /** canonical track index */
+  /** 规范轨道下标 */
   index: number;
   /** natural size 增长上限 */
   limit: number;
@@ -65,12 +65,15 @@ const validateConstraint = (constraint: TableSpanConstraint, trackCount: number)
   if (!Number.isInteger(constraint.startIndex) || constraint.startIndex < 0) {
     throw new RetikzTableError(`table: span Cell "${label}" startIndex must be a nonnegative integer`);
   }
+
   if (!Number.isInteger(constraint.length) || constraint.length <= 0) {
     throw new RetikzTableError(`table: span Cell "${label}" length must be a positive integer`);
   }
+
   if (constraint.startIndex + constraint.length > trackCount) {
     throw new RetikzTableError(`table: span Cell "${label}" range exceeds ${trackCount} tracks`);
   }
+
   assertFiniteNonnegative(constraint.requiredOuterSize, `span Cell "${label}" requiredOuterSize`);
 };
 
@@ -94,9 +97,11 @@ const growthCandidateOf = (track: ResolvedTableTrackSize, index: number): SpanGr
       if (track.max.kind === TableTrackSizeKind.Fraction) {
         return { index, limit: Number.POSITIVE_INFINITY, weight: track.max.weight };
       }
+
       if (track.min.kind === TableTrackSizeKind.Fixed && track.max.kind === TableTrackSizeKind.Fixed) {
         return { index, limit: Math.max(track.min.value, track.max.value), weight: 0 };
       }
+
       return { index, limit: Number.POSITIVE_INFINITY, weight: 0 };
   }
 };
@@ -141,6 +146,7 @@ const growEqualNaturalSizes = (
     }
 
     if (!(consumed > 0)) return 0;
+
     remaining = Math.max(0, remaining - consumed);
     active = active.filter(candidate => candidate.limit > naturalSizes[candidate.index]);
   }
@@ -194,6 +200,7 @@ const growFlexibleNaturalSizes = (
     }
 
     if (!(consumed > 0)) return 0;
+
     remaining = Math.max(0, remaining - consumed);
   }
 
@@ -246,6 +253,7 @@ export const propagateTableSpanContributions = (
       size: remaining,
     });
   });
+
   return deepFreeze({
     contributions: contributionSizes.map((size, trackIndex) => ({ trackIndex, size })),
     unmet,

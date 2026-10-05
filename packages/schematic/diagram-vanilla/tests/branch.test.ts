@@ -15,6 +15,7 @@ it('compiles Branch via the synchronous Vanilla embed', () => {
     },
     { adapters: [BranchDiagramInputEmbedAdapter] },
   );
+
   expect(result.artifacts.some(artifact => artifact.kind === 'composite' && artifact.type === 'branch')).toBe(true);
   expect(JSON.stringify(result.scene)).toContain('A');
 });
@@ -29,12 +30,18 @@ it('updates labels without retaining obsolete presentation content', () => {
     ],
   });
   const controller = createProcessingController(source(true), { adapters: [BranchDiagramInputEmbedAdapter] });
+
   try {
     const initial = controller.read();
+
     expect(JSON.stringify(initial.scene)).toContain('Visible label');
+
     controller.update(source(false));
+
     expect(JSON.stringify(controller.read().scene)).not.toContain('Visible label');
+
     controller.update(source(true));
+
     expect(controller.read().scene).toEqual(initial.scene);
   } finally {
     controller.dispose();

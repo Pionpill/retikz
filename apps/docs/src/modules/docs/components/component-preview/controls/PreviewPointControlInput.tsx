@@ -52,6 +52,7 @@ export const PreviewPointControlInput: FC<PreviewPointControlInputProps> = props
               if (!Number.isFinite(nextCoordinate)) {
                 return;
               }
+
               const nextPoint: PreviewControlPoint = [...value];
               nextPoint[index] = Math.min(field.max[index], Math.max(field.min[index], nextCoordinate));
               onValueChange(nextPoint);

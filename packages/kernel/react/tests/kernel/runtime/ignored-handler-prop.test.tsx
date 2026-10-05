@@ -43,6 +43,7 @@ describe('JSX 模式 handlers prop 契约', () => {
     });
 
     const target = container.querySelector('[data-retikz-id="a"]');
+
     expect(target).not.toBeNull();
 
     await act(() => {
@@ -74,6 +75,7 @@ describe('JSX 模式 handlers prop 契约', () => {
     });
 
     const target = container.querySelector('[data-retikz-id="a"]');
+
     expect(target).not.toBeNull();
 
     await act(() => {
@@ -102,6 +104,7 @@ describe('JSX 模式 handlers prop 契约', () => {
     });
 
     const target = container.querySelector('[data-retikz-id="a"]');
+
     expect(target).not.toBeNull();
 
     await act(() => {

@@ -83,8 +83,10 @@ export const point = {
   /** 将 sourcePoint 朝 targetPoint 移动指定距离 */
   shiftToward: (sourcePoint: Position, targetPoint: Position, distance: number): Position => {
     if (distance === 0) return sourcePoint;
+
     const direction = vector2.normalize(vector2.sub(targetPoint, sourcePoint), [0, 0]);
     if (direction[0] === 0 && direction[1] === 0) return sourcePoint;
+
     return vector2.add(sourcePoint, vector2.scale(direction, distance));
   },
   /** 精确相等比较，不使用容差 */

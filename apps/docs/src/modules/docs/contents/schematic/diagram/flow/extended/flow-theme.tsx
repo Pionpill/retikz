@@ -48,10 +48,12 @@ const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => renderFlowThemePreview(values, lang));
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
 
 /** Flow 示例语言 */
 export type FlowPreviewProps = Readonly<{ lang?: Lang }>;
+
 /** 当前语言的 Flow 交互示例 */
 const Demo: FC<FlowPreviewProps> = props => {
   const { lang = 'zh' } = props;

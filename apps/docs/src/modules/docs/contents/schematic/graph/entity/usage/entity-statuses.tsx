@@ -1,4 +1,4 @@
-import type { GraphStatusValue } from '@retikz/graph';
+import type { GraphStatus } from '@retikz/graph';
 import { Entity, Graph } from '@retikz/graph-react';
 import type { FC } from 'react';
 
@@ -6,7 +6,7 @@ import type { Lang } from '@/i18n';
 
 import { entityStatusesI18n } from './entity-statuses.i18n';
 
-const statuses: ReadonlyArray<GraphStatusValue | undefined> = [undefined, 'error', 'success', 'warning', 'disabled'];
+const statuses: ReadonlyArray<GraphStatus | undefined> = [undefined, 'error', 'success', 'warning', 'disabled'];
 
 /** 内置状态平铺示例的语言 */
 export type EntityStatusesProps = { lang?: Lang };

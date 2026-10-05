@@ -30,6 +30,7 @@ const inputOf = (props: GraphInputEmbedProps): InputGraph => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
+
   return { type: 'graph', ...input };
 };
 
@@ -40,6 +41,7 @@ export const GraphInputEmbedAdapter: SynchronousInputEmbedAdapter<GraphInputEmbe
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'Graph.children');
     const dependencies = createGraphProviderDependencies(GraphProviderKey, graphDefinitionOptionsOf(props));
+
     return {
       node: normalizeGraph({
         ...input,

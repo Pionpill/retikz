@@ -19,21 +19,34 @@ export const createCompileInvariantError = (message: string, options?: ErrorOpti
     cause: options?.cause,
   });
   registerFatalProbeError(error);
+
   return error;
 };
 
 /** 单个 callback 的 failure owner identity */
-export type LayoutProbeFailureOwner = Readonly<{ label: string }>;
+export type LayoutProbeFailureOwner = Readonly<{
+  /** 用于错误消息的回调所属者描述 */
+  label: string;
+}>;
 
 /** compile-local WeakMap 保存的 opaque failure 快照 */
 export type LayoutProbeFailureEntry = Readonly<{
+  /** 创建失败凭证的回调身份，限制跨回调使用 */
   owner: LayoutProbeFailureOwner;
+  /** 最接近失败位置的 provider 标识 */
   providerKey: string;
+  /** 失败子项在原始 IR 中的路径 */
   sourcePath: string;
+  /** 保留复合展开路径的完整失败位置 */
   occurrence: CompileOccurrenceLocator;
+  /** 用于重新抛出时构造诊断的失败详情 */
   detail: string;
+  /** 原始抛出值，作为最终错误的原因保留 */
   cause: unknown;
-}> & { consumed: boolean };
+}> & {
+  /** 该失败是否已被提升抛出，防止重复使用 */
+  consumed: boolean;
+};
 
 /** 将 callback/provider 的 unknown throw 规范化为 recoverable Error，同时保留原始 cause */
 export const normalizeLayoutProbeError = (thrown: unknown): LayoutProbeRecoverableError => {
@@ -54,7 +67,9 @@ export const enrichLayoutProbeError = (
       ? errorOccurrence
       : occurrence;
   if (errorOccurrence === resolvedOccurrence && errorProviderKey !== undefined) return error;
+
   const cause = Object.hasOwn(error, 'cause') ? error.cause : error;
+
   return createLayoutProbeRecoverableError(error.message, {
     cause,
     detail,
@@ -86,6 +101,7 @@ export const createLayoutChildFailure = (
     cause: Object.hasOwn(error, 'cause') ? error.cause : error,
     consumed: false,
   });
+
   return failure;
 };
 
@@ -98,20 +114,24 @@ export const raiseLayoutChildFailure = (
   if (failure === null || typeof failure !== 'object') {
     throw createCompositeContractError(`${owner.label} received an invalid or forged layout child failure`);
   }
+
   const entry = failures.get(failure);
   if (entry === undefined) {
     throw createCompositeContractError(
       `${owner.label} received a layout child failure that does not belong to this compile or was forged`,
     );
   }
+
   if (entry.owner !== owner) {
     throw createCompositeContractError(
       `${owner.label} received a layout child failure that does not belong to this composite callback`,
     );
   }
+
   if (entry.consumed) {
     throw createCompositeContractError(`${owner.label} received a layout child failure that was already raised`);
   }
+
   entry.consumed = true;
   throw createLayoutProbeRecoverableError(
     `Layout child provider '${entry.providerKey}' failed at ${entry.sourcePath} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,

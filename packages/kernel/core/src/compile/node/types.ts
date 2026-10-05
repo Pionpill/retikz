@@ -4,10 +4,10 @@ import type { BoundsInsets, Position } from '@retikz/math';
 import type { ConnectionEnvelopeKind, PathCommand, ShapeDefinition, TextLine } from '../../contract';
 import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import type { PaintResolutionInput } from '../../resolve/resource';
-import type { BlendModeValue, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
+import type { BlendMode, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
+import type { CompileWarningCode } from '../constants';
 import type { LaidLine, LowerTex, TextFont, TextMeasurer } from '../text';
-import type { CompileWarningCodeValue } from '../warning';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
 export type NodeFontWeight = NonNullable<IRFont['weight']>;
@@ -49,7 +49,7 @@ export type BoundaryGeometryResolveContext = {
   /** tight fallback warning 去重集合 */
   connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
   /** compile warning 分发函数 */
-  warn?: (code: CompileWarningCodeValue, message: string) => void;
+  warn?: (code: CompileWarningCode, message: string) => void;
 };
 
 /** 节点正文与附属 label 共享的文本布局上下文 */
@@ -70,6 +70,7 @@ export type NodeTextLayoutContext = {
   fontStyle?: TextFont['style'];
 };
 
+/** 节点内容测量、视觉边界与连接面解析完成后的布局结果，供路径连接和场景输出共同消费 */
 export type NodeLayout = {
   /** 构建本 layout 的 IR 路径 */
   irPath?: string;
@@ -92,7 +93,15 @@ export type NodeLayout = {
   /** 节点文本行；undefined 表示无文本 */
   lines?: Array<TextLine>;
   /** 含 math run 的混排块，与 lines 互斥 */
-  inlineBlock?: { lines: Array<{ laid: LaidLine; baselineOffset: number }> };
+  inlineBlock?: {
+    /** 按正文顺序排列的混排行及其基线位置 */
+    lines: Array<{
+      /** 该行的测量结果与图元生成函数 */
+      laid: LaidLine;
+      /** 相对正文块顶部的基线垂直偏移 */
+      baselineOffset: number;
+    }>;
+  };
   /** 文本块宽度 */
   textWidth: number;
   /** 文本块高度 */
@@ -174,7 +183,7 @@ export type NodeLayout = {
    * 主形状混合模式
    * @default 'normal'
    */
-  blendMode?: BlendModeValue;
+  blendMode?: BlendMode;
   /** 已解析的 label 列表 */
   labels?: Array<NodeLabelLayout>;
   /**
@@ -193,7 +202,7 @@ export type NodeLayout = {
   /** tight fallback warning 去重集合 */
   connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
   /** 当前 node 的 compile warning 分发函数 */
-  warn?: (code: CompileWarningCodeValue, message: string) => void;
+  warn?: (code: CompileWarningCode, message: string) => void;
 };
 
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
@@ -220,6 +229,7 @@ export type MeasuredNodeLabel = {
    * @default 1
    */
   opacity?: number;
+  /** 标签文本测量与输出使用的字号 */
   fontSize: number;
   /**
    * label 字体族
@@ -258,7 +268,18 @@ export type MeasuredNodeLabel = {
    * pin 引线配置
    * @default false
    */
-  pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number>; dashOffset?: number };
+  pin?:
+    | boolean
+    | {
+        /** 标注引线的描边颜色 */
+        stroke?: string;
+        /** 标注引线的描边宽度 */
+        strokeWidth?: number;
+        /** 引线交替绘制与留白的长度序列 */
+        dashPattern?: Array<number>;
+        /** 引线虚线序列的起始偏移 */
+        dashOffset?: number;
+      };
 };
 
 /** 节点附属标签的最终局部布局 */
@@ -271,6 +292,8 @@ export type NodeLabelLayout = MeasuredNodeLabel & {
 
 /** 公式渲染上下文 */
 export type TexLoweringContext = {
+  /** 将公式源码转换为可参与文本布局的结果；未提供时由公式布局分支处理缺失能力 */
   lowerTex?: LowerTex;
-  warn: (code: CompileWarningCodeValue, message: string) => void;
+  /** 分发公式降级或布局过程中产生的编译诊断 */
+  warn: (code: CompileWarningCode, message: string) => void;
 };

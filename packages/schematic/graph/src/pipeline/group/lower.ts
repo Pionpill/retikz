@@ -8,15 +8,22 @@ import type { CanonicalGroup } from '../../resolve';
 import type { IRGroup, IRGroupCaptionText } from '../../schemas';
 
 const DEFAULT_GROUP_PADDING = 10;
+
 const DEFAULT_GROUP_LABEL_POSITION: IRNodeLabelBoundaryPosition = { boundary: 'bottom', fraction: 0 };
+
 const DEFAULT_GROUP_LABEL_FONT = { size: 'xs' as const };
+
 const DEFAULT_GROUP_LABEL_TEXT_COLOR = 'gray' as const;
+
 const DEFAULT_CAPTION_GAP = 4;
 
 /** Group caption 与 body 组合所需的 canonical child、方位和间距 */
 export type GroupCaptionComposition = Readonly<{
+  /** 标题区组合后的绘制子内容 */
   child: IRChild;
+  /** 标题区位于正文上方或下方 */
   side: 'top' | 'bottom';
+  /** 标题区与正文之间的净间距 */
   bodyGap: number;
 }>;
 
@@ -49,6 +56,7 @@ export const groupScopeProps = (source: IRGroup): Omit<IRScope, 'type' | 'childr
   void _cornerRadius;
   void _overflow;
   void _children;
+
   return scope;
 };
 
@@ -96,17 +104,20 @@ const flexItem = (key: string, child: IRChild): IRFlexLayoutItem => ({
 const captionContent = (source: IRGroup): IRChild | undefined => {
   const caption = source.caption;
   if (caption === undefined) return undefined;
+
   const items: Array<IRFlexLayoutItem> = [];
   if (caption.title !== undefined) items.push(flexItem('title', captionNode(caption.title, 'title')));
   if (caption.description !== undefined) {
     items.push(flexItem('description', captionNode(caption.description, 'description')));
   }
+
   const layout = createFlexLayout({
     direction: caption.direction === 'vertical' ? FlexLayoutDirection.Column : FlexLayoutDirection.Row,
     gap: caption.itemGap ?? DEFAULT_CAPTION_GAP,
     alignItems: LayoutAlignment.Start,
     children: items,
   });
+
   return {
     type: 'scope',
     children: [layout],
@@ -118,6 +129,7 @@ const captionContent = (source: IRGroup): IRChild | undefined => {
 export const lowerGroupCaptionComposition = (source: IRGroup): GroupCaptionComposition | undefined => {
   const child = captionContent(source);
   if (child === undefined) return undefined;
+
   return {
     child,
     side: source.caption?.side === 'bottom' ? 'bottom' : 'top',
@@ -133,7 +145,9 @@ const groupContent = (group: CanonicalGroup): IRChild => {
   if (caption === undefined && body === undefined) return { type: 'scope', children: [] };
   if (caption === undefined) return body!;
   if (body === undefined) return caption.child;
+
   const top = caption.side === 'top';
+
   return createFlexLayout({
     direction: FlexLayoutDirection.Column,
     gap: caption.bodyGap,

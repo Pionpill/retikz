@@ -8,7 +8,7 @@ export const RetikzTableReactErrorCode = {
 } as const;
 
 /** Table React 包稳定错误码取值 */
-export type RetikzTableReactErrorCodeValue = ValueOf<typeof RetikzTableReactErrorCode>;
+export type RetikzTableReactErrorCode = ValueOf<typeof RetikzTableReactErrorCode>;
 
 /** Table React 包运行时错误的可选构造参数 */
 type RetikzTableReactErrorOptions = Readonly<{
@@ -17,7 +17,7 @@ type RetikzTableReactErrorOptions = Readonly<{
 }>;
 
 /** Table React 包未细分领域错误的统一结构化错误 */
-export class RetikzTableReactError extends RetikzError<RetikzTableReactErrorCodeValue, Readonly<{ message: string }>> {
+export class RetikzTableReactError extends RetikzError<RetikzTableReactErrorCode, Readonly<{ message: string }>> {
   /** 创建保留原始消息与 cause 的 Table React 包错误 */
   constructor(message: string, options?: RetikzTableReactErrorOptions) {
     super({

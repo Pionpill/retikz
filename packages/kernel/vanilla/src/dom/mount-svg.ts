@@ -54,6 +54,7 @@ const mountStaticSvg = (
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: container must be a DOM Element.');
   }
+
   const output = options.output ?? {};
   const animation = options.animation ?? {};
   const idPrefix = output.idPrefix ?? DEFAULT_ID_PREFIX;
@@ -81,15 +82,19 @@ const mountStaticSvg = (
         easings: animation.easings,
       },
     );
+
     while (root.firstChild) root.removeChild(root.firstChild);
+
     for (const attr of [...root.attributes]) root.removeAttribute(attr.name);
     applyAttrs(root, doc);
     const size = computeDisplaySize(scene.layout, output.width, output.height);
     root.setAttribute('width', String(size.width));
     root.setAttribute('height', String(size.height));
+
     for (const child of doc.children ?? []) {
       root.appendChild(typeof child === 'string' ? document.createTextNode(child) : svgNodeToDom(child));
     }
+
     animationControls?.dispose();
     animationControls = animate && sceneHasAnimations(scene) ? bindWaapiDescriptors(root) : undefined;
   };
@@ -107,15 +112,19 @@ const mountStaticSvg = (
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     const controller = createHydrationController(root, hydrateOptions.handlers, locateSvg, buildContext);
+
     const dispose = (): void => {
       controller.dispose();
       liveHydrationDisposers.delete(dispose);
     };
+
     liveHydrationDisposers.add(dispose);
+
     return { dispose };
   };
 
   let disposed = false;
+
   return {
     mode: VanillaViewMode.Static,
     root,
@@ -126,7 +135,9 @@ const mountStaticSvg = (
     hydrate,
     dispose() {
       if (disposed) return;
+
       disposed = true;
+
       for (const disposeHydration of [...liveHydrationDisposers]) disposeHydration();
       animationControls?.dispose();
       root.remove();
@@ -156,6 +167,7 @@ const mountRetainedSvg = (
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: container must be a DOM Element.');
   }
+
   const root = document.createElementNS(SVG_NS, 'svg');
   const output = options.output ?? {};
   if (output.width !== undefined) root.setAttribute('width', String(output.width));
@@ -169,6 +181,7 @@ const mountRetainedSvg = (
     idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
   });
   container.appendChild(root);
+
   return {
     mode: VanillaViewMode.Retained,
     root,
@@ -207,7 +220,9 @@ export const mountSvg: MountSvg = ((
   if ('primitives' in input) {
     return mountStaticSvg(container, input, options as StaticMountOptions);
   }
+
   const runtimeOptions = captureVanillaRuntimeOptions(options);
+
   return runtimeOptions.mode === VanillaViewMode.Static
     ? mountStaticSvg(container, input, options as RawStaticMountOptions)
     : mountRetainedSvg(container, input, options as RetainedMountOptions, runtimeOptions);

@@ -11,8 +11,11 @@ import type {
 import { defineArrow, defineClip, defineComposite, defineShape, resolveCoreProviderDependencies } from '../../../src';
 
 const shapeKey = (name: string): CoreProviderKey => ({ capability: 'shape', name });
+
 const arrowKey = (name: string): CoreProviderKey => ({ capability: 'arrow', name });
+
 const clipKey = (name: string): CoreProviderKey => ({ capability: 'clip', name });
+
 const compositeKey = (namespace: string, type: string): CoreProviderKey => ({
   capability: 'composite',
   namespace,
@@ -65,6 +68,7 @@ const definitionOf = (key: CoreProviderKey): AnyCoreProviderDefinition => {
   if (key.capability === 'shape') return shapeDefinitionOf(key.name);
   if (key.capability === 'arrow') return arrowDefinitionOf(key.name);
   if (key.capability === 'clip') return clipDefinitionOf(key.name);
+
   throw new Error(`unsupported test capability ${key.capability}`);
 };
 
@@ -188,6 +192,7 @@ describe('resolveCoreProviderDependencies', () => {
   it('allows different provider keys to reuse one dataset reference name', () => {
     const left = shapeKey('left');
     const right = shapeKey('right');
+
     expect(() =>
       resolveCoreProviderDependencies({
         contributions: [
@@ -206,6 +211,7 @@ describe('resolveCoreProviderDependencies', () => {
     const resolved = resolveCoreProviderDependencies({
       contributions: [contributionOf([shape, arrow], [providerOf(shape), providerOf(arrow)])],
     });
+
     expect(resolved.shapes?.map(definition => definition.name)).toEqual(['cross']);
     expect(resolved.arrows?.map(definition => definition.name)).toEqual(['cross']);
   });
@@ -328,6 +334,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(makeDefinition).toHaveBeenCalledTimes(1);
 
     const mismatchedName = vi.fn(() => shapeDefinitionOf('other'));
+
     expect(() =>
       resolveCoreProviderDependencies({
         contributions: [contributionOf([root], [providerOf(root, { makeDefinition: mismatchedName })])],

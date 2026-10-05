@@ -42,6 +42,7 @@ const schemas = [
 describe('builtin Inspector options schemas', () => {
   it.each(schemas)('materializes %s defaults and survives JSON round-trip', (_name, schema, expected) => {
     const parsed = schema.parse({});
+
     expect(parsed).toEqual(expected);
     expect(schema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(expected);
   });

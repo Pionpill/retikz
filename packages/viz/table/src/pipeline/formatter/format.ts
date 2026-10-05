@@ -50,8 +50,10 @@ const formatCell = (
   if (plan.kind !== TableCellPayloadKind.Value) {
     throw new RetikzTableError(`table: formatter plan for Cell ${cellLabel} kind differs`);
   }
+
   const name = plan.formatter.name;
   const prefix = `table: formatter "${name}" for cell ${cellLabel}`;
+
   try {
     const definition = cellFormatterDefinitionOf(name, registry);
     const parsedOptions = deepFreeze(definition.optionsSchema.parse(plan.formatter.options ?? {}));
@@ -59,6 +61,7 @@ const formatCell = (
     const value = ScalarValueSchema.parse(
       definition.format({ value: parsedPayload.value, context }, parsedOptions as never),
     );
+
     return deepFreeze({
       kind: TableCellPayloadKind.Value,
       ...(cell.id === undefined ? {} : { cellId: cell.id }),
@@ -83,6 +86,7 @@ export type FormatTableOptions = Readonly<{
 const assertPlanAlignment = (model: SemanticTableModel, plans: ReadonlyArray<ResolvedTableCellPlan>): void => {
   if (model.cells.length !== plans.length)
     throw new RetikzTableError('table: formatter plan Cell count differs from semantic model');
+
   model.cells.forEach((cell, index) => {
     const plan = plans[index];
     if (plan.cellId !== cell.id) throw new RetikzTableError(`table: formatter plan Cell ${index} identity differs`);
@@ -96,5 +100,6 @@ export const formatTable = (model: SemanticTableModel, options: FormatTableOptio
   const semantic = deepFreeze(structuredClone(model));
   const registry = resolveCellFormatterRegistry(options.formatterDefinitions);
   const cells = Object.freeze(semantic.cells.map((cell, index) => formatCell(cell, options.cells[index], registry)));
+
   return Object.freeze({ semantic, cells });
 };

@@ -10,7 +10,7 @@ export const RetikzDiagramReactBranchErrorCode = {
 } as const;
 
 /** Diagram React Branch 稳定错误码取值 */
-export type RetikzDiagramReactBranchErrorCodeValue = ValueOf<typeof RetikzDiagramReactBranchErrorCode>;
+export type RetikzDiagramReactBranchErrorCode = ValueOf<typeof RetikzDiagramReactBranchErrorCode>;
 
 /** Diagram React Branch 错误的结构化详情 */
 export type RetikzDiagramReactBranchErrorDetails = Readonly<{
@@ -25,7 +25,7 @@ export type RetikzDiagramReactBranchErrorDetails = Readonly<{
 /** 创建 Diagram React Branch 错误所需的参数 */
 export type RetikzDiagramReactBranchErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzDiagramReactBranchErrorCodeValue;
+  code: RetikzDiagramReactBranchErrorCode;
   /** 面向调用方的错误消息 */
   message: string;
   /** 与错误码关联的结构化详情 */
@@ -36,13 +36,15 @@ export type RetikzDiagramReactBranchErrorOptions = Readonly<{
 
 /** Diagram React Branch authoring 的统一结构化错误 */
 export class RetikzDiagramReactBranchError extends RetikzError<
-  RetikzDiagramReactBranchErrorCodeValue,
+  RetikzDiagramReactBranchErrorCode,
   RetikzDiagramReactBranchErrorDetails
 > {
   /** 稳定错误码 */
-  readonly code: RetikzDiagramReactBranchErrorCodeValue;
+  readonly code: RetikzDiagramReactBranchErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzDiagramReactBranchErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

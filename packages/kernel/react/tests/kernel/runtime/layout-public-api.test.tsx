@@ -18,6 +18,7 @@ describe('Layout public API', () => {
         </Node>
       </Layout>,
     );
+
     expect(svg).toContain('<svg');
     expect(svg).toContain('viewBox=');
   });

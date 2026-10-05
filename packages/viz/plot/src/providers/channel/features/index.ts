@@ -18,6 +18,7 @@ export * from './position';
 export { BUILTIN_SCOPE_CHANNELS, SCOPE_CHANNELS } from './scope';
 export * from './text';
 
+/** 汇集向 Core 节点、路径与作用域交付属性的内置通道定义 */
 export const DELIVERY_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
   ...NODE_CHANNELS,
   ...PATH_CHANNELS,

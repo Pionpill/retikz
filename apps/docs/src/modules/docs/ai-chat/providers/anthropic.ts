@@ -7,6 +7,7 @@ export const anthropicProvider: ChatProvider = {
   async *chat(req: ChatRequestOptions): AsyncGenerator<ChatChunk, void, void> {
     const baseUrl = (req.baseUrl?.trim() || 'https://api.anthropic.com').replace(/\/+$/, '');
     let res: Response;
+
     try {
       res = await fetch(`${baseUrl}/v1/messages`, {
         method: 'POST',
@@ -36,6 +37,7 @@ export const anthropicProvider: ChatProvider = {
       yield { type: 'error', kind: classifyHttp(res.status), message: shortError(body, res.status) };
       return;
     }
+
     if (!res.body) {
       yield { type: 'error', kind: 'network', message: 'empty response body' };
       return;
@@ -49,12 +51,15 @@ export const anthropicProvider: ChatProvider = {
       for await (const ev of readSse(res.body)) {
         if (req.signal.aborted) return;
         if (!ev.data) continue;
+
         let json: AnthropicEvent;
+
         try {
           json = JSON.parse(ev.data) as AnthropicEvent;
         } catch {
           continue;
         }
+
         if (json.type === 'message_start' && json.message?.usage) {
           input = json.message.usage.input_tokens ?? 0;
           cacheRead = json.message.usage.cache_read_input_tokens ?? 0;
@@ -87,6 +92,7 @@ const classifyHttp = (status: number): ChatErrorKind => {
   if (status === 401 || status === 403) return 'auth';
   if (status === 429) return 'rate';
   if (status === 400) return 'window';
+
   return 'unknown';
 };
 
@@ -100,11 +106,13 @@ const safeText = async (res: Response): Promise<string> => {
 
 const shortError = (body: string, status: number): string => {
   if (!body) return `HTTP ${status}`;
+
   try {
     const j = JSON.parse(body) as { error?: { message?: string } };
     if (j.error?.message) return j.error.message;
   } catch {
     // not json, ignore
   }
+
   return body.slice(0, 200);
 };

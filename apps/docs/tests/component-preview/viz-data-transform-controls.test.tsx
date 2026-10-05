@@ -52,21 +52,28 @@ const comparableContract = (contract: PreviewControlContract) => ({
 
 const expectCompletePanelContract = (contract: PreviewControlContract): void => {
   expect(contract.controls.presentation).toBe('panel');
+
   if (contract.controls.presentation !== 'panel') return;
+
   expect(contract.controls.sections[0]?.controls[0]?.kind).toBe('table');
+
   const writableIds = getPreviewControlFields(contract.controls)
     .map(control => control.id)
     .sort();
+
   expect(Object.keys(contract.canonicalValues).sort()).toEqual(writableIds);
+
   for (const preset of contract.presets ?? []) expect(Object.keys(preset.values).sort()).toEqual(writableIds);
 };
 
 const firstTableOf = (contract: PreviewControlContract): PreviewTableControlField => {
   if (contract.controls.presentation !== 'panel') throw new Error('Expected panel controls');
+
   const field = contract.controls.sections
     .flatMap(section => section.controls)
     .find(control => control.kind === 'table');
   if (field?.kind !== 'table') throw new Error('Expected table control');
+
   return field;
 };
 
@@ -77,8 +84,10 @@ const resolveTableView = (
 ): PreviewTableRows => {
   const table = firstTableOf(contract);
   if (!('views' in table) || table.views === undefined) throw new Error(`Expected table views: ${table.id}`);
+
   const view = table.views.find(candidate => candidate.id === viewId);
   if (view === undefined) throw new Error(`Expected table view: ${viewId}`);
+
   return typeof view.rows === 'function' ? view.rows(values) : view.rows;
 };
 
@@ -112,6 +121,7 @@ describe('Viz Data transform controls', () => {
   it('keeps bilingual contracts structurally identical and complete', () => {
     for (const [zh, en] of localizedPairs) {
       expect(comparableContract(zh)).toEqual(comparableContract(en));
+
       expectCompletePanelContract(zh);
       expectCompletePanelContract(en);
     }
@@ -121,9 +131,12 @@ describe('Viz Data transform controls', () => {
     for (const [zh, en] of localizedPairs) {
       const zhTable = firstTableOf(zh);
       const enTable = firstTableOf(en);
+
       expect('views' in zhTable).toBe(true);
       expect('views' in enTable).toBe(true);
+
       if (!('views' in zhTable) || !('views' in enTable)) continue;
+
       expect(zhTable.views?.length).toBeGreaterThanOrEqual(2);
       expect(enTable.views?.length).toBeGreaterThanOrEqual(2);
       expect(zhTable.views?.map(view => view.id)).toEqual(enTable.views?.map(view => view.id));
@@ -135,6 +148,7 @@ describe('Viz Data transform controls', () => {
     for (const contract of [overviewZh, sortZh, summarizeZh, selectZh, annotateZh, extensionTransformZh]) {
       const table = firstTableOf(contract);
       if (!('views' in table)) throw new Error(`Expected table views: ${table.id}`);
+
       expect(table.views?.map(view => view.label)).toEqual(['原始', '变换']);
     }
   });
@@ -233,6 +247,7 @@ describe('Viz Data transform controls', () => {
 
   it('renders sort as one categorical bar plot', () => {
     const plot = renderTransformSortPreview({ field: 'month', order: 'ascending' });
+
     expect(plot.type).toBe(Plot);
 
     const spec = buildPlotIR(plot.props.children, 'transform-sort', {
@@ -249,6 +264,7 @@ describe('Viz Data transform controls', () => {
     const sortB = renderWithValues(SortDemo, { field: 'revenue', order: 'descending' });
     const boxA = renderWithValues(BoxplotDemo, { lowerP: 0.25, upperP: 0.75, factor: 1.5 });
     const boxB = renderWithValues(BoxplotDemo, { lowerP: 0.05, upperP: 0.95, factor: 3 });
+
     expect(sortA.match(/viewBox="[^"]+"/)?.[0]).toBe(sortB.match(/viewBox="[^"]+"/)?.[0]);
     expect(boxA.match(/viewBox="[^"]+"/)?.[0]).toBe(boxB.match(/viewBox="[^"]+"/)?.[0]);
   });

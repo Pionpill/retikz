@@ -1,5 +1,6 @@
 import { number, strictObject } from 'zod';
 
+/** 校验绘图语义图层的堆叠次序覆盖 */
 export const PlotLayerSchema = strictObject({
   zIndex: number()
     .int()

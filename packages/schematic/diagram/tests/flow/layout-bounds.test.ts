@@ -65,9 +65,11 @@ describe('Flow Layout bounds contribution', () => {
     const fullCanvas = boundsOf(full, 'canvas');
     const canvas = boundsOf(excluded, 'canvas');
     const drawing = excluded.regions.drawing.allocationBounds;
+
     for (const id of ['canvas', 'png', 'jpeg']) {
       const before = boundsOf(full, id);
       const after = boundsOf(excluded, id);
+
       expect(after.x - canvas.x).toBeCloseTo(before.x - fullCanvas.x, 8);
       expect(after.y - canvas.y).toBeCloseTo(before.y - fullCanvas.y, 8);
       expect(after.x).toBeGreaterThanOrEqual(drawing.x);
@@ -93,6 +95,7 @@ describe('Flow Layout bounds contribution', () => {
     const artifact = compile({ ...source, layouts });
     const row = boundsOf(artifact, 'row');
     const canvas = boundsOf(artifact, 'canvas');
+
     expect(row).toEqual(canvas);
     expect(boundsOf(artifact, 'png').x).toBeGreaterThan(canvas.x + canvas.width);
   });
@@ -108,6 +111,7 @@ describe('Flow Layout bounds contribution', () => {
     });
     const canvas = boundsOf(artifact, 'canvas');
     const row = boundsOf(artifact, 'row');
+
     expect(row.x).toBeCloseTo(canvas.x - 13, 8);
     expect(row.y).toBeCloseTo(canvas.y - 7, 8);
     expect(row.width).toBeCloseTo(canvas.width + 16, 8);
@@ -133,6 +137,7 @@ describe('Flow Layout bounds contribution', () => {
           },
         }),
     });
+
     expect(() => compile(sourceOf(), { flowLayouts: [provider], defaultFlowLayout: provider.name })).toThrow(
       'exclusion',
     );
@@ -144,10 +149,13 @@ describe('Flow Layout bounds contribution', () => {
       const canvas = boundsOf(artifact, 'canvas');
       const svg = boundsOf(artifact, 'svg');
       const row = boundsOf(artifact, 'row');
+
       expect(canvas.x + canvas.width / 2).toBeCloseTo(svg.x + svg.width / 2, 8);
       expect(row).toEqual(canvas);
+
       const png = boundsOf(artifact, 'png');
       const jpeg = boundsOf(artifact, 'jpeg');
+
       expect(png.x + png.width / 2).toBeCloseTo(jpeg.x + jpeg.width / 2, 8);
       expect(jpeg.y).toBeGreaterThan(png.y + png.height);
       expect(artifact.relations).toHaveLength(2);
@@ -157,8 +165,10 @@ describe('Flow Layout bounds contribution', () => {
   it('preserves complete Group containment when a nested Layout overflows', () => {
     const artifact = compile(sourceOf('left', 'PNG'.repeat(20), ['formats'], true));
     const group = boundsOf(artifact, 'group');
+
     for (const id of ['canvas', 'svg', 'png', 'jpeg']) {
       const child = boundsOf(artifact, id);
+
       expect(child.x).toBeGreaterThanOrEqual(group.x);
       expect(child.y).toBeGreaterThanOrEqual(group.y);
       expect(child.x + child.width).toBeLessThanOrEqual(group.x + group.width);
@@ -175,12 +185,14 @@ describe('Flow Layout bounds contribution', () => {
         return layout;
       }),
     };
+
     expect(compile(source)).toEqual(compile(omitted));
   });
 
   it('uses the shared placement semantics for custom providers', () => {
     const provider = defineFlowLayout({ ...LayeredFlowLayoutDefinition, name: 'custom-bounds' });
     const options = { flowLayouts: [provider], defaultFlowLayout: provider.name };
+
     expect(compile(sourceOf(), options).elements).toEqual(compile(sourceOf()).elements);
   });
 
@@ -194,7 +206,9 @@ describe('Flow Layout bounds contribution', () => {
         children: ['canvas', 'formats'],
         excludeFromBounds: excluded,
       });
+
       expect(result.success).toBe(false);
+
       if (!result.success) expect(result.error.issues.some(issue => issue.path[0] === 'excludeFromBounds')).toBe(true);
     },
   );
@@ -207,6 +221,7 @@ describe('Flow Layout bounds contribution', () => {
       placements: [['canvas', 'formats']],
       excludeFromBounds: ['formats'],
     };
+
     expect(FlowLayoutSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
   });
 });

@@ -21,9 +21,11 @@ export type PaintResolver = (paint: PaintInput | undefined) => PaintValue | unde
 
 /** paint 资源注册表：仅负责 cache、去重和 Scene resource materialization */
 export type PaintRegistry = {
+  /** 解析颜色或登记可复用绘制资源，返回场景可引用的 paint */
   register: PaintResolver;
   /** 提交 probe 已解析的 paint resource，不再调用 pattern provider */
   importResolved: (resource: Extract<SceneResource, { kind: 'paint' }>) => PaintValue;
+  /** 读取当前已登记的绘制资源 */
   resources: () => Array<SceneResource>;
 };
 
@@ -42,6 +44,7 @@ const paintKeyOf = (value: unknown): string => {
       .map(key => `${JSON.stringify(key)}:${paintKeyOf(Reflect.get(value, key))}`)
       .join(',')}}`;
   }
+
   return JSON.stringify(value);
 };
 
@@ -62,7 +65,9 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
       `Pattern '${spec.shape}' is missing an emit function (PatternDefinition.emit is required).`,
     );
   }
+
   let emitted: unknown;
+
   try {
     emitted = definition.emit(ctx);
   } catch (e) {
@@ -71,6 +76,7 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
       providerKey: `pattern:${spec.shape}`,
     });
   }
+
   let tileSize = size;
   let emittedMotif = emitted;
   if (isPatternEmitResult(emitted)) {
@@ -79,13 +85,16 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
         `Pattern '${spec.shape}' emit returned an invalid tileSize (${String(emitted.tileSize)}); it must be a finite number greater than 0.`,
       );
     }
+
     tileSize = round(emitted.tileSize);
     emittedMotif = emitted.motif;
   }
+
   const motif = validateMarkerPrimitives(`Pattern '${spec.shape}' motif`, emittedMotif);
   const tile: ResolvedPatternTile = { size: tileSize, motif };
   if (spec.background !== undefined) tile.background = spec.background;
   if (spec.rotation !== undefined) tile.rotation = spec.rotation;
+
   return tile;
 };
 
@@ -94,18 +103,23 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
   const idByKey = new Map<string, string>();
   const list: Array<SceneResource> = [];
   let counter = 0;
+
   const insert = (key: string, resourceOf: (id: string) => SceneResource): string => {
     let id = idByKey.get(key);
     if (id !== undefined) return id;
+
     counter += 1;
     id = `paint-${counter}`;
     idByKey.set(key, id);
     list.push(resourceOf(id));
+
     return id;
   };
+
   const register: PaintResolver = paint => {
     if (paint === undefined) return undefined;
     if (typeof paint === 'string') return paint;
+
     const resolution: PaintResolution = paint;
     const key = paintKeyOf(resolution.spec);
     const id = insert(key, nextId => {
@@ -115,14 +129,18 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
         spec: resolution.spec,
       };
       if (resolution.pattern !== undefined) resource.tile = resolvePatternTile(resolution.pattern, round);
+
       return resource;
     });
+
     return { kind: 'resourceRef', id };
   };
+
   const importResolved = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
     const key = paintKeyOf(resource.spec);
     const id = insert(key, nextId => ({ ...resource, id: nextId }));
     return { kind: 'resourceRef', id };
   };
+
   return { register, importResolved, resources: () => list };
 };

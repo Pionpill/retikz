@@ -426,7 +426,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 | 外观 | `point`             | `IRConnectedScatterPointProperties`                      | 设置观测点外观；不开放 `zIndex`                                                                                                            |
 |      | `path`              | `IRConnectedScatterPathProperties`                       | 设置开放路径外观                                                                                                                           |
 |      | `colorMode`         | `'series'`、`'mark'`、`'muted'`                          | 默认 `series`：同一序列的点线同色；`mark`：每个序列的点线依次使用色板中相邻的两色，`muted` 同色且连线默认透明度 60%；显式颜色与透明度优先  |
-| 连接 | `path.curve`        | `PathCurveValue`                                         | 默认 `linear`；支持 linear、step、stepBefore、stepAfter、basis、cardinal、catmullRom、monotoneX、monotoneY、natural                        |
+| 连接 | `path.curve`        | `PathCurve`                                              | 默认 `linear`；支持 linear、step、stepBefore、stepAfter、basis、cardinal、catmullRom、monotoneX、monotoneY、natural                        |
 | 连接 | `path.connectNulls` | boolean 或描边对象                                       | 默认断开；`true` 或 `{}` 用虚线连接缺口两侧有效点。对象支持 stroke、strokeWidth、strokeOpacity、dashPattern、dashOffset、lineCap、lineJoin |
 | 留白 | `autoPadding`       | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空                                                                           |
 |      | `domainPadding`     | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                                                                             |

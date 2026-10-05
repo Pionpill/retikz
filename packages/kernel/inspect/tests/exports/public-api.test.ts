@@ -65,6 +65,7 @@ describe('@retikz/inspect public exports', () => {
     vi.doMock('react', () => {
       throw new Error('optional React runtime evaluated');
     });
+
     await expect(import('../../src/index')).resolves.toBeDefined();
   });
 });

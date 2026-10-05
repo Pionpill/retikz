@@ -14,6 +14,7 @@ export type LayoutViewboxResolutionProps = Readonly<{ lang?: Lang }>;
 const LayoutViewboxResolution: FC<LayoutViewboxResolutionProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = layoutViewboxResolutionI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

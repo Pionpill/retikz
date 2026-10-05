@@ -10,10 +10,13 @@ import { createRuntimeIdentityMap, runtimeStructuralEquals } from './shared';
 export const materializeEasingRegistry = (config: RenderRuntimeConfig): EasingRegistry | undefined => {
   const source = config.animation?.easings;
   if (source === undefined) return undefined;
+
   const result: EasingRegistry = {};
+
   for (const [name, easing] of Object.entries(source)) {
     result[name] = typeof easing === 'function' ? easing : [easing[0], easing[1], easing[2], easing[3]];
   }
+
   return result;
 };
 
@@ -24,10 +27,12 @@ const primitiveAtPath = (
 ): RuntimeScenePrimitive | undefined => {
   let children = snapshot.scene.primitives;
   let primitive: RuntimeScenePrimitive | undefined;
+
   for (const index of path) {
     primitive = Reflect.get(children, index);
     children = primitive.type === 'group' ? primitive.children : [];
   }
+
   return primitive;
 };
 
@@ -40,7 +45,7 @@ export const SceneAnimationOccurrenceChangeKind = {
 } as const;
 
 /** Animated occurrence descriptor 变化类型取值 */
-export type SceneAnimationOccurrenceChangeKindValue = ValueOf<typeof SceneAnimationOccurrenceChangeKind>;
+export type SceneAnimationOccurrenceChangeKind = ValueOf<typeof SceneAnimationOccurrenceChangeKind>;
 
 /** 单个 animated occurrence 在相邻 lineage 间的 descriptor/public id 变化 */
 export type SceneAnimationOccurrenceChange = Readonly<{
@@ -51,7 +56,7 @@ export type SceneAnimationOccurrenceChange = Readonly<{
   /** 下一 lineage 的 public id */
   nextPublicId?: string;
   /** descriptor 相对变化 */
-  kind: SceneAnimationOccurrenceChangeKindValue;
+  kind: SceneAnimationOccurrenceChangeKind;
 }>;
 
 /** Scene root 与各 RuntimeIdentity 动画 descriptor 的结构化 diff */
@@ -83,6 +88,7 @@ export const diffSceneAnimationDescriptors = (
   const currentByIdentity = createRuntimeIdentityMap(currentEntries);
   const nextByIdentity = createRuntimeIdentityMap(nextEntries);
   const occurrences: Array<SceneAnimationOccurrenceChange> = [];
+
   for (const [identity, entry] of currentEntries) {
     const candidate = nextByIdentity.get(identity);
     occurrences.push(
@@ -99,8 +105,10 @@ export const diffSceneAnimationDescriptors = (
       }),
     );
   }
+
   for (const [identity, entry] of nextEntries) {
     if (currentByIdentity.has(identity)) continue;
+
     occurrences.push(
       Object.freeze({
         identity,
@@ -109,6 +117,7 @@ export const diffSceneAnimationDescriptors = (
       }),
     );
   }
+
   return Object.freeze({
     rootChanged: current === undefined || !runtimeStructuralEquals(current.scene.animations, next.scene.animations),
     occurrences: Object.freeze(occurrences),

@@ -5,6 +5,7 @@ export const graphSource = (input: Readonly<Record<string, unknown>>) => {
   const { entities, relations, children, ...root } = input;
   const hasChildren = entities !== undefined || relations !== undefined || children !== undefined;
   if (!hasChildren) return Graph.GraphSchema.parse(root);
+
   return Graph.GraphSchema.parse({
     ...root,
     children: [

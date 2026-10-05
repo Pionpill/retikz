@@ -16,6 +16,7 @@ const gradientPaint: IRPaint = {
 describe('buildPlotIR paint props', () => {
   it('point paint props pass through to mark IR', () => {
     const spec = buildPlotIR(<PointMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({
       type: 'point',
       fill: { kind: 'constant', value: gradientPaint },
@@ -25,6 +26,7 @@ describe('buildPlotIR paint props', () => {
 
   it('path paint props pass through to mark IR', () => {
     const spec = buildPlotIR(<PathMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
       fill: { kind: 'constant', value: gradientPaint },
@@ -34,6 +36,7 @@ describe('buildPlotIR paint props', () => {
 
   it('path paint none passes through as constant paint', () => {
     const spec = buildPlotIR(<PathMark x="x" y="y" stroke="none" />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
       stroke: { kind: 'constant', value: 'none' },
@@ -42,6 +45,7 @@ describe('buildPlotIR paint props', () => {
 
   it('path connectNulls passes through to mark IR', () => {
     const spec = buildPlotIR(<PathMark x="x" y="y" connectNulls />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
       connectNulls: true,
@@ -53,6 +57,7 @@ describe('buildPlotIR paint props', () => {
       <IntervalMark x="month" y="revenue" fill={gradientPaint} stroke={gradientPaint} />,
       '__plot',
     );
+
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       fill: { kind: 'constant', value: gradientPaint },
@@ -62,6 +67,7 @@ describe('buildPlotIR paint props', () => {
 
   it('reference paint props pass through to mark IR', () => {
     const spec = buildPlotIR(<ReferenceMark y={8} yTo={12} fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({
       type: 'reference',
       fill: { kind: 'constant', value: gradientPaint },

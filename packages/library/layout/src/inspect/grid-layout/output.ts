@@ -41,6 +41,7 @@ export const inspectGridLayoutArtifact = (
         ),
       );
     });
+
     artifact.rows.forEach(track => {
       [track.start, track.start + track.size].forEach(y =>
         trackLines.push(
@@ -56,8 +57,10 @@ export const inspectGridLayoutArtifact = (
         ),
       );
     });
+
     structure.push(...trackLines);
   }
+
   if (context.options.cells) {
     artifact.rows.forEach(row =>
       artifact.columns.forEach(column =>
@@ -71,6 +74,7 @@ export const inspectGridLayoutArtifact = (
       ),
     );
   }
+
   if (context.options.spans) {
     artifact.items
       .filter(item => item.columnSpan > 1 || item.rowSpan > 1)
@@ -78,6 +82,7 @@ export const inspectGridLayoutArtifact = (
         structure.push(inspectLayoutOutline('grid.span', item.slotBounds, context.appearance.scopeColor)),
       );
   }
+
   const spacing = inspectLayoutSpacing('grid', artifact.spacing, context.options, context.appearance);
   const [boxes = [], normalizedStructure = [], underlay = [], normalizedSpacing = []] = normalizeLayoutBoundaryGroups([
     base.boxes,
@@ -85,6 +90,7 @@ export const inspectGridLayoutArtifact = (
     base.underlay,
     spacing,
   ]);
+
   return lowerLayoutInspectionMarks([
     ...underlay,
     ...normalizedSpacing,

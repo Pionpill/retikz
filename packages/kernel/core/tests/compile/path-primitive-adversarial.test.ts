@@ -30,8 +30,10 @@ describe('PathPrim.commands：结构化形态约束', () => {
     };
     const scene = compileToScene(ir).scene;
     const p = findPathPrim(scene.primitives);
+
     expect(p).toBeDefined();
     expect(Array.isArray(p?.commands)).toBe(true);
+
     // 旧 d 字段必须不存在（防止双源 leakage）
     expect('d' in (p ?? {})).toBe(false);
   });
@@ -67,7 +69,9 @@ describe('PathPrim.commands：结构化形态约束', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(p).toBeDefined();
+
     for (const cmd of p!.commands) {
       expect(allKinds.has(cmd.kind)).toBe(true);
     }
@@ -89,6 +93,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives)!;
     const arcCmd = p.commands.find((c): c is Extract<PathCommand, { kind: 'arc' }> => c.kind === 'arc');
+
     expect(arcCmd).toBeDefined();
     expect(arcCmd!.center).toEqual([5, 5]);
     expect(arcCmd!.radius).toBe(10);
@@ -114,6 +119,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
     const ellipseCmds = p.commands.filter(
       (c): c is Extract<PathCommand, { kind: 'ellipseArc' }> => c.kind === 'ellipseArc',
     );
+
     // 单个 ellipseArc 命令（adapter 内部拆 360° 退化）
     expect(ellipseCmds).toHaveLength(1);
     expect(ellipseCmds[0].radiusX).toBe(7);
@@ -140,6 +146,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
     const ellipseCmds = p.commands.filter(
       (c): c is Extract<PathCommand, { kind: 'ellipseArc' }> => c.kind === 'ellipseArc',
     );
+
     expect(ellipseCmds).toHaveLength(1);
     expect(ellipseCmds[0].radiusX).toBe(15);
     expect(ellipseCmds[0].radiusY).toBe(10);
@@ -162,6 +169,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives)!;
+
     expect(p.commands.at(-1)).toEqual({ kind: 'close' });
   });
 
@@ -182,12 +190,15 @@ describe('PathPrim.commands：结构化形态约束', () => {
     const p = findPathPrim(compileToScene(ir).scene.primitives)!;
     const moveCmd = p.commands[0];
     const lineCmd = p.commands[1];
+
     expect(moveCmd.kind).toBe('move');
     expect(lineCmd.kind).toBe('line');
+
     if (moveCmd.kind === 'move') {
       expect(moveCmd.to[0]).toBe(1.23);
       expect(moveCmd.to[1]).toBe(2.35);
     }
+
     if (lineCmd.kind === 'line') {
       expect(lineCmd.to[0]).toBe(3.46);
       expect(lineCmd.to[1]).toBe(4.57);
@@ -210,6 +221,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives)!;
     const quad = p.commands.find((c): c is Extract<PathCommand, { kind: 'quad' }> => c.kind === 'quad');
+
     expect(quad).toBeDefined();
     expect(quad!.control).toEqual([5, 5]);
     expect(quad!.to).toEqual([10, 0]);
@@ -231,6 +243,7 @@ describe('PathPrim.commands：结构化形态约束', () => {
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives)!;
     const cubic = p.commands.find((c): c is Extract<PathCommand, { kind: 'cubic' }> => c.kind === 'cubic');
+
     expect(cubic).toBeDefined();
   });
 });
@@ -244,18 +257,24 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
     };
     const scene = compileToScene(ir).scene;
     const grp = scene.primitives.find(p => p.type === 'group');
+
     expect(grp).toBeDefined();
     expect(grp?.type).toBe('group');
+
     if (grp?.type === 'group') {
       expect(Array.isArray(grp.transforms)).toBe(true);
       expect(grp.transforms).toHaveLength(1);
+
       const t = grp.transforms![0];
+
       expect(t.kind).toBe('rotate');
+
       if (t.kind === 'rotate') {
         expect(t.degrees).toBe(30);
         expect(t.cx).toBe(10);
         expect(t.cy).toBe(20);
       }
+
       // 旧 transform 字段必须不存在
       expect('transform' in grp).toBe(false);
     }
@@ -269,6 +288,7 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0] }],
     };
     const scene = compileToScene(ir).scene;
+
     expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
   });
 
@@ -293,7 +313,9 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
     };
     const scene = compileToScene(ir).scene;
     const grp = scene.primitives.find(p => p.type === 'group');
+
     expect(grp).toBeDefined();
+
     if (grp?.type === 'group') {
       // 这种 group 是 sub-path 分组，无 transform 需求
       expect(grp.transforms).toBeUndefined();
@@ -320,7 +342,9 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
         primitive.type === 'group' && primitive.transforms?.some(transform => transform.kind === 'rotate') === true,
     );
     const transforms = labelGroup?.transforms;
+
     expect(transforms).toBeDefined();
+
     if (transforms !== undefined) {
       expect(transforms).toHaveLength(1);
       expect(transforms[0].kind).toBe('rotate');
@@ -344,10 +368,14 @@ describe('交互：rotated node 与 path 在 rotated parent 中', () => {
     const noRotPath = findPathPrim(compileToScene(irNoRot).scene.primitives);
     const rotScene = compileToScene(irRot).scene;
     const grp = rotScene.primitives.find(p => p.type === 'group');
+
     expect(grp?.type).toBe('group');
+
     if (grp?.type === 'group') {
       const inner = grp.children.find((c): c is PathPrim => c.type === 'path');
+
       expect(inner).toBeDefined();
+
       // 内层 path 的 commands 数量与未旋转版相同
       expect(inner!.commands.length).toBe(noRotPath!.commands.length);
     }
@@ -367,6 +395,7 @@ describe('边界 / 错误路径', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(findPathPrim(scene.primitives)).toBeUndefined();
   });
 
@@ -385,6 +414,7 @@ describe('边界 / 错误路径', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(findPathPrim(scene.primitives)).toBeUndefined();
   });
 
@@ -406,6 +436,7 @@ describe('边界 / 错误路径', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives)!;
+
     expect(p.commands).toEqual([move([0, 0]), line([10, 0]), line([10, 10]), close()]);
   });
 });

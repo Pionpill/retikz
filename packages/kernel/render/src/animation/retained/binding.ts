@@ -48,6 +48,7 @@ const createWaapiBindingSetupError = (
     cause,
   });
   waapiBindingSetupFailures.set(error, Object.freeze({ cause, controls }));
+
   return error;
 };
 
@@ -74,8 +75,10 @@ export const bindWaapiDescriptorElements = (
   let cleanupStarted = false;
   let cleanupInProgress = false;
   let cleanupComplete = false;
+
   /** 外部注册或回调返回后重新读取 cleanup 状态 */
   const hasCleanupStarted = (): boolean => cleanupStarted;
+
   /** 外部 gate 回调返回后重新读取 cleanup gate */
   const isBindingActive = (): boolean => {
     if (cleanupStarted) return false;
@@ -85,10 +88,13 @@ export const bindWaapiDescriptorElements = (
 
   const disposeResources = (): void => {
     if (cleanupComplete || cleanupInProgress) return;
+
     cleanupStarted = true;
     cleanupInProgress = true;
+
     try {
       const failures: Array<unknown> = [];
+
       const attempt = (cleanup: () => void): void => {
         try {
           cleanup();
@@ -96,36 +102,43 @@ export const bindWaapiDescriptorElements = (
           failures.push(cause);
         }
       };
+
       for (const animation of [...pendingAnimations]) {
         attempt(() => {
           animation.cancel();
           pendingAnimations.delete(animation);
         });
       }
+
       for (const observer of [...pendingObservers]) {
         attempt(() => {
           observer.disconnect();
           pendingObservers.delete(observer);
         });
       }
+
       for (const cleanup of [...pendingListenerCleanups]) {
         attempt(() => {
           cleanup();
           pendingListenerCleanups.delete(cleanup);
         });
       }
+
       for (const [element, ownership] of [...ownedStyles]) {
         attempt(() => {
           if (ownership.disposed) {
             ownedStyles.delete(element);
             return;
           }
+
           if (waapiStyleOwnerships.get(element) !== ownership) {
             ownership.disposed = true;
             ownedStyles.delete(element);
             return;
           }
+
           let previous = ownership.previous;
+
           while (previous.kind === 'owner' && previous.disposed) previous = previous.previous;
           element.style.transformOrigin = previous.transformOrigin;
           element.style.transformBox = previous.transformBox;
@@ -135,7 +148,9 @@ export const bindWaapiDescriptorElements = (
           ownedStyles.delete(element);
         });
       }
+
       if (failures.length > 0) throw failures[0];
+
       cleanupComplete = true;
     } finally {
       cleanupInProgress = false;
@@ -149,13 +164,16 @@ export const bindWaapiDescriptorElements = (
       animations.push(animation);
       return true;
     }
+
     if (cleanupStarted) {
       cleanupComplete = false;
       disposeResources();
       return false;
     }
+
     animation.cancel();
     pendingAnimations.delete(animation);
+
     return false;
   };
 
@@ -191,14 +209,18 @@ export const bindWaapiDescriptorElements = (
   try {
     elements.forEach(element => {
       if (cleanupStarted) return;
+
       const raw = element.getAttribute('data-retikz-anim');
       if (!raw) return;
+
       let descriptors: Array<WaapiDescriptor>;
+
       try {
         descriptors = JSON.parse(raw) as Array<WaapiDescriptor>;
       } catch {
         return;
       }
+
       for (const descriptor of descriptors) {
         if (hasCleanupStarted()) break;
         if (descriptor.transformOrigin && element instanceof SVGElement) {
@@ -227,6 +249,7 @@ export const bindWaapiDescriptorElements = (
           element.style.transformOrigin = descriptor.transformOrigin;
           element.style.transformBox = 'view-box';
         }
+
         const timing: KeyframeAnimationOptions = {
           duration: descriptor.timing.duration,
           delay: descriptor.timing.delay,
@@ -247,28 +270,34 @@ export const bindWaapiDescriptorElements = (
         } else if (trigger === 'visible' && hasIO) {
           let consumed = false;
           let registrationInProgress = true;
+
           /** observer 注册返回后重新读取同步消费与 cleanup 状态 */
           const shouldReleaseObserver = (): boolean => consumed || hasCleanupStarted();
           const observer = new IntersectionObserver(entries => {
             if (consumed || !isBindingActive()) return;
+
             for (const entry of entries) {
               if (entry.isIntersecting) {
                 consumed = true;
                 const animation = animate();
                 if (animation && !retainAnimation(animation)) return;
                 if (!isBindingActive()) return;
+
                 observer.disconnect();
                 if (!registrationInProgress) pendingObservers.delete(observer);
+
                 return;
               }
             }
           });
           pendingObservers.add(observer);
+
           try {
             observer.observe(element);
           } finally {
             registrationInProgress = false;
           }
+
           if (shouldReleaseObserver()) {
             pendingObservers.add(observer);
             if (hasCleanupStarted()) cleanupComplete = false;
@@ -278,19 +307,25 @@ export const bindWaapiDescriptorElements = (
         } else if (typeof trigger === 'object') {
           // 复用单个 Animation：每次事件 cancel + play 从头重播，避免每次触发新建并无界堆积
           let animation: Animation | undefined;
+
           const handler = (): void => {
             if (!isBindingActive()) return;
             if (animation) {
               animation.cancel();
               if (!isBindingActive()) return;
+
               animation.play();
+
               return;
             }
+
             const created = animate();
             if (created && retainAnimation(created)) animation = created;
           };
+
           const cleanup = () => element.removeEventListener(trigger.onEvent, handler);
           pendingListenerCleanups.add(cleanup);
+
           try {
             element.addEventListener(trigger.onEvent, handler);
           } catch (cause) {
@@ -298,6 +333,7 @@ export const bindWaapiDescriptorElements = (
             if (hasCleanupStarted()) cleanupComplete = false;
             throw cause;
           }
+
           if (hasCleanupStarted()) {
             cleanupComplete = false;
             pendingListenerCleanups.add(cleanup);
@@ -312,6 +348,7 @@ export const bindWaapiDescriptorElements = (
     } catch (cleanupCause) {
       throw createWaapiBindingSetupError(cause, cleanupCause, controls);
     }
+
     throw cause;
   }
 
