@@ -4,8 +4,8 @@
 
 #### Legend / LegendProps
 
-- `Legend`: <ApiSourceLink label={"Legend"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={93}>React Tier 2 headless authoring component for Standard Legend</ApiSourceLink>
-- `LegendProps`: <ApiSourceLink label={"LegendProps"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={37}>Two explicit headless React Legend authoring forms</ApiSourceLink>
+- `Legend`: <ApiSourceLink label={"Legend"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={97}>React Tier 2 headless authoring component for Standard Legend</ApiSourceLink>
+- `LegendProps`: <ApiSourceLink label={"LegendProps"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={39}>Two explicit headless React Legend authoring forms</ApiSourceLink>
 
 ```ts
 export declare const Legend: {
@@ -163,7 +163,7 @@ export type LegendTickProps = Readonly<{
   <ApiSourceLink
     label={'InputLegend'}
     path={'packages/library/standard-vanilla/src/presentation/legend.ts'}
-    startLine={37}
+    startLine={39}
   >
     Framework-neutral Standard Legend authoring input
   </ApiSourceLink>
@@ -177,10 +177,10 @@ The remaining members are inherited from `LegendInput`, with `'title'`, `'conten
 
 <ApiTable>
 
-| Member    | Type                                                | Default | Description |
-| --------- | --------------------------------------------------- | ------- | ----------- |
-| `content` | `InputLegendItemsContent \| InputLegendRampContent` | —       | —           |
-| `title?`  | `InputLegendChild`                                  | —       | —           |
+| Member    | Type                                                | Default | Description                                                                 |
+| --------- | --------------------------------------------------- | ------- | --------------------------------------------------------------------------- |
+| `content` | `InputLegendItemsContent \| InputLegendRampContent` | —       | Mutually exclusive discrete legend entries or continuous color-ramp content |
+| `title?`  | `InputLegendChild`                                  | —       | Optional legend title accepting text or drawing content                     |
 
 </ApiTable>
 
@@ -205,20 +205,20 @@ export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
   <ApiSourceLink
     label={'LegendInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/presentation/legend.ts'}
-    startLine={78}
+    startLine={85}
   >
     InputEmbed adapter for Standard Legend
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const LegendInputEmbedAdapter: InputEmbedAdapter<InputLegend>;
+export declare const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend>;
 ```
 
 #### legend
 
 <p>
-  <ApiSourceLink label={'legend'} path={'packages/library/standard-vanilla/src/presentation/legend.ts'} startLine={131}>
+  <ApiSourceLink label={'legend'} path={'packages/library/standard-vanilla/src/presentation/legend.ts'} startLine={140}>
     Create a Standard Legend embed lowered by LegendInputEmbedAdapter
   </ApiSourceLink>
 </p>
@@ -253,7 +253,7 @@ export declare const legend: (input: InputLegend) => InputEmbed<InputLegend>;
 #### IRLegend
 
 <p>
-  <ApiSourceLink label={'IRLegend'} path={'packages/library/standard/src/presentation/legend/types.ts'} startLine={47}>
+  <ApiSourceLink label={'IRLegend'} path={'packages/library/standard/src/presentation/legend/types.ts'} startLine={34}>
     Persistent Standard Legend composite
   </ApiSourceLink>
 </p>
@@ -266,9 +266,9 @@ The remaining members are inherited from `ZodInput<typeof LegendSchema>`, `ZodIn
 
 <ApiTable>
 
-| Member    | Type                                          | Default | Description |
-| --------- | --------------------------------------------- | ------- | ----------- |
-| `content` | `IRLegendItemsContent \| IRLegendRampContent` | —       | —           |
+| Member    | Type                                          | Default | Description                                                      |
+| --------- | --------------------------------------------- | ------- | ---------------------------------------------------------------- |
+| `content` | `IRLegendItemsContent \| IRLegendRampContent` | —       | Select either discrete entries or a continuous sample with ticks |
 
 </ApiTable>
 
@@ -294,7 +294,7 @@ export type IRLegend = Omit<ZodInput<typeof LegendSchema>, keyof IRScopeProps | 
   <ApiSourceLink
     label={'IRLegendItem'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={32}
+    startLine={18}
   >
     Persistent discrete Legend item
   </ApiSourceLink>
@@ -332,7 +332,7 @@ export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
   <ApiSourceLink
     label={'IRLegendItemsContent'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={35}
+    startLine={21}
   >
     Persistent discrete Legend content
   </ApiSourceLink>
@@ -348,7 +348,7 @@ export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
 | -------------- | -------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------- |
 | `direction?`   | `"horizontal" \| "vertical"`                 | `"vertical"` | Physical main-axis direction used to place items in authored order.                       |
 | `gap?`         | `number \| { row: number; column: number; }` | `8`          | Physical gaps between adjacent rows and columns; a number applies uniformly to both axes. |
-| `items`        | `Array<IRLegendItem>`                        | —            | —                                                                                         |
+| `items`        | `Array<IRLegendItem>`                        | —            | Samples and labels in authored order                                                      |
 | `kind`         | `"items"`                                    | —            | Discriminator for a list of discrete sample-label items.                                  |
 | `sampleAlign?` | `"center" \| "start" \| "end"`               | `"center"`   | Physical y-axis alignment between each item sample and label.                             |
 | `sampleGap?`   | `number`                                     | `8`          | Horizontal gap between an item sample and its label.                                      |
@@ -376,7 +376,7 @@ export type IRLegendItemsContent = Omit<ZodInput<typeof LegendItemsContentSchema
   <ApiSourceLink
     label={'IRLegendRampContent'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={43}
+    startLine={30}
   >
     Persistent continuous Legend sample content
   </ApiSourceLink>
@@ -417,7 +417,7 @@ export type IRLegendRampContent = Omit<ZodInput<typeof LegendRampContentSchema>,
   <ApiSourceLink
     label={'IRLegendTick'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={40}
+    startLine={27}
   >
     Persistent continuous Legend tick
   </ApiSourceLink>
@@ -455,7 +455,7 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
   <ApiSourceLink
     label={'LegendArtifact'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={67}
+    startLine={57}
   >
     Typed artifact of Standard Legend
   </ApiSourceLink>
@@ -524,13 +524,13 @@ export type LegendArtifact = ZodInfer<typeof LegendArtifactSchema>;
 
 <ApiTable>
 
-| Member                | Type                                                                                       | Default | Description |
-| --------------------- | ------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `readonly kind`       | `'composite'`                                                                              | —       | —           |
-| `readonly namespace`  | `"standard"`                                                                               | —       | —           |
-| `readonly occurrence` | `Readonly<{ sourcePath: string; expansionPath: ReadonlyArray<CompileExpansionSegment>; }>` | —       | —           |
-| `readonly type`       | `"legend"`                                                                                 | —       | —           |
-| `readonly value`      | `LegendCompileArtifact["value"]`                                                           | —       | —           |
+| Member                | Type                                                                                       | Default | Description                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------- |
+| `readonly kind`       | `'composite'`                                                                              | —       | Identifies a composite component domain artifact                       |
+| `readonly namespace`  | `"standard"`                                                                               | —       | Registered namespace of the composite component that owns the artifact |
+| `readonly occurrence` | `Readonly<{ sourcePath: string; expansionPath: ReadonlyArray<CompileExpansionSegment>; }>` | —       | Final compilation occurrence that produced this artifact               |
+| `readonly type`       | `"legend"`                                                                                 | —       | Registered type of the composite component that owns the artifact      |
+| `readonly value`      | `LegendCompileArtifact["value"]`                                                           | —       | Domain result validated by the component artifact schema               |
 
 </ApiTable>
 
@@ -552,7 +552,7 @@ export type LegendCompileArtifact = CompositeArtifactOf<typeof LegendDefinition>
   <ApiSourceLink
     label={'LegendInput'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={52}
+    startLine={42}
   >
     Legend input allowing fixed discriminators and schema defaults to be omitted
   </ApiSourceLink>

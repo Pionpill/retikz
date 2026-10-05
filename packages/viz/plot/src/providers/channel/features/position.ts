@@ -4,6 +4,7 @@ import type { IRPlotChannel } from '../../../schemas';
 
 /** 内置 position channel definition 的扩展形态 */
 export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {
+  /** 创建用于读取 mark 位置绑定的函数 */
   pickWithOptions: () => PositionChannelDefinition['pick'];
 };
 

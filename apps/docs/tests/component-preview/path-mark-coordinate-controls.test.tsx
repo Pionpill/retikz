@@ -151,7 +151,9 @@ describe('PathMark playground 坐标系切换', () => {
 
   it('连接与样式开关数据点时保持固定取景，避免右侧路径被裁切', () => {
     const curveScenario = scenarios.find(scenario => scenario.name === '连接与样式');
+
     expect(curveScenario).toBeDefined();
+
     if (!curveScenario) return;
 
     const withPoints = renderScenario(curveScenario, { 'path-curve-show-points': true });

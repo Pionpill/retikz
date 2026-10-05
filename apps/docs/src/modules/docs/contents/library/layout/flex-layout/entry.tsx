@@ -24,6 +24,7 @@ const renderPreview = (inspecting: boolean, lang: Lang = 'zh') => {
   const text = entryI18n[lang];
   const PreviewLayout = inspecting ? LayoutInspectLayout : Layout;
   const Container = inspecting ? InspectFlexLayout : FlexLayout;
+
   return (
     <PreviewLayout viewBox={{ x: -20, y: -20, width: 600, height: 108 }}>
       <Container
@@ -50,6 +51,7 @@ const renderPreview = (inspecting: boolean, lang: Lang = 'zh') => {
     </PreviewLayout>
   );
 };
+
 export const previewSource = createLayoutInspectPreviewSource(lang => renderPreview(false, lang), {
   rules: [
     { kind: 'request', inspector: FLEX_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, options: inspectOptions },

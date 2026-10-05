@@ -10,7 +10,7 @@ export const RetikzDataErrorCode = {
 } as const;
 
 /** Data 包稳定错误码取值 */
-export type RetikzDataErrorCodeValue = ValueOf<typeof RetikzDataErrorCode>;
+export type RetikzDataErrorCode = ValueOf<typeof RetikzDataErrorCode>;
 
 /** Data 包运行时错误的可选构造参数 */
 type RetikzDataErrorOptions = Readonly<{
@@ -26,7 +26,7 @@ type RetikzDataErrorOptions = Readonly<{
 
 /** Data 包未细分领域错误的统一结构化错误 */
 export class RetikzDataError extends RetikzError<
-  RetikzDataErrorCodeValue,
+  RetikzDataErrorCode,
   Readonly<{ message: string; regressionMethod?: IRRegressionMethod; operationIndex?: number; path?: string }>
 > {
   /** 创建保留原始消息与 cause 的 Data 包错误 */

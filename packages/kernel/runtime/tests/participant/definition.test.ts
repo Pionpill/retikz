@@ -40,7 +40,7 @@ describe('runtime commit participant definition', () => {
   });
 
   it('校验输入并深复制冻结 trace declarations', () => {
-    const outcomes: Array<runtime.PerformanceTraceOutcomeValue> = [runtime.PerformanceTraceOutcome.Incremental];
+    const outcomes: Array<runtime.PerformanceTraceOutcome> = [runtime.PerformanceTraceOutcome.Incremental];
     const tracePhases = [
       {
         phase: runtime.PerformanceTracePhase.Update,

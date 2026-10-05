@@ -40,7 +40,9 @@ type RenderSeriesEntry = PlotAnchorResolution & {
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';
 
 const mergeMeta = (parent: JsonObject, own: JsonObject | undefined): JsonObject => ({
@@ -51,17 +53,20 @@ const mergeMeta = (parent: JsonObject, own: JsonObject | undefined): JsonObject 
 const translateOffsetOf = (scope: IRScope): [number, number] => {
   let x = 0;
   let y = 0;
+
   for (const transform of scope.transforms ?? []) {
     if (transform.kind !== 'translate') continue;
     x += transform.x;
     y += transform.y;
   }
+
   return [x, y];
 };
 
 /** 从已下沉datum Node读取与mark语义一致的锚点；sector使用环楔中心而非Node圆心 */
 const renderDatumPositionOf = (node: IRNode, offset: [number, number]): [number, number] | null => {
   if (!Array.isArray(node.position)) return null;
+
   const center: [number, number] = [node.position[0] + offset[0], node.position[1] + offset[1]];
   const shape = node.shape as
     | {
@@ -70,6 +75,7 @@ const renderDatumPositionOf = (node: IRNode, offset: [number, number]): [number,
       }
     | undefined;
   if (shape?.type !== 'sector' || shape.params === undefined) return center;
+
   return cellGeometryAnchor({ kind: 'sector', center, ...shape.params });
 };
 
@@ -84,20 +90,26 @@ const collectRenderDatumEntries = (
     const markIndex = meta.markIndex;
     if (typeof transformedIndex !== 'number' || !Number.isInteger(transformedIndex)) return [];
     if (typeof markIndex !== 'number' || !Number.isInteger(markIndex)) return [];
+
     const position = renderDatumPositionOf(child, offset);
     if (position === null) return [];
+
     const entry: RenderDatumEntry = {
       position,
       meta,
       transformedIndex,
       markIndex,
     };
+
     return child.id !== undefined ? [{ ...entry, id: child.id }] : [entry];
   }
+
   if (!isScope(child)) return [];
+
   const meta = mergeMeta(parentMeta, child.meta);
   const [dx, dy] = translateOffsetOf(child);
   const nextOffset: [number, number] = [offset[0] + dx, offset[1] + dy];
+
   return child.children.flatMap(item => collectRenderDatumEntries(item, meta, nextOffset));
 };
 
@@ -113,17 +125,23 @@ const collectRenderSeriesEntries = (
     const series = meta.series;
     if (typeof markIndex !== 'number' || !Number.isInteger(markIndex)) return [];
     if (typeof series !== 'string' && typeof series !== 'number') return [];
+
     return child.children.flatMap(step => {
       if (!('to' in step) || !Array.isArray(step.to)) return [];
+
       const [x, y] = step.to;
       if (typeof x !== 'number' || !Number.isFinite(x) || typeof y !== 'number' || !Number.isFinite(y)) return [];
+
       return [{ position: [x + offset[0], y + offset[1]], meta, markIndex } satisfies RenderSeriesEntry];
     });
   }
+
   if (!isScope(child)) return [];
+
   const meta = mergeMeta(parentMeta, child.meta);
   const [dx, dy] = translateOffsetOf(child);
   const nextOffset: [number, number] = [offset[0] + dx, offset[1] + dy];
+
   return child.children.flatMap(item => collectRenderSeriesEntries(item, meta, nextOffset));
 };
 
@@ -135,20 +153,26 @@ const isJsonObject = (value: JsonValue): value is { [key: string]: JsonValue } =
 
 const facetMatches = (meta: JsonObject, facet: PlotFacetLocatorOptions | undefined): boolean => {
   if (facet === undefined) return true;
+
   const found = meta.facet;
   if (!isJsonObject(found)) return false;
+
   const facetMeta = found;
   if (facetMeta.id !== facet.id) return false;
+
   const valueMatches = (foundValue: unknown, expected: PlotFacetLocatorValue): boolean => {
     const foundValues = Array.isArray(foundValue) ? foundValue : [foundValue];
     const expectedValues = Array.isArray(expected) ? expected : [expected];
     if (Array.isArray(expected)) {
       return JSON.stringify(foundValues) === JSON.stringify(expectedValues);
     }
+
     return foundValues.some(value => JSON.stringify(value) === JSON.stringify(expected));
   };
+
   if (facet.row !== undefined && !valueMatches(facetMeta.row, facet.row)) return false;
   if (facet.column !== undefined && !valueMatches(facetMeta.column, facet.column)) return false;
+
   return true;
 };
 
@@ -180,6 +204,7 @@ export const buildPlotLocatorFromDataArtifact = (
     const candidates = markDataViews.filter(markDataView => markDataView.markIndex === markIndex);
     return candidates.length === 1 ? candidates[0] : undefined;
   };
+
   const structuralFrameOf = (markDataView: MarkDataView): CoordinateFrame | undefined => {
     const coordinateScopeId = coordinateScopeIdOf(
       markDataView.mark,
@@ -221,24 +246,31 @@ export const buildPlotLocatorFromDataArtifact = (
     if (markDataView === undefined || !isBuiltinMark(markDataView.mark) || markDataView.mark.type !== PlotMark.Path) {
       return null;
     }
+
     const frame = structuralFrameOf(markDataView);
     if (frame === undefined) return null;
+
     const rows = markDataView.dataView.rows;
     if (!Number.isInteger(transformedIndex) || transformedIndex < 0 || transformedIndex >= rows.length) return null;
+
     const row = rows[transformedIndex];
     const position = datumAnchor(markDataView.mark, row, frame, { registry: markRegistry });
+
     return position === null ? null : { position, row, mark: markDataView.mark };
   };
 
   const datum: PlotLocator['datum'] = (transformedIndex, opts) => {
     if (!Number.isInteger(transformedIndex) || transformedIndex < 0) return null;
+
     const hasContext = hasContextOptions(opts);
     const markIndex = opts?.markIndex ?? (hasContext ? undefined : defaultMarkIndex);
     const entries = matchingDatumEntries(markIndex, transformedIndex, opts);
     if (entries.length === 1) return anchorResolutionOf(entries[0]);
     if (entries.length > 1 || hasContext || markIndex === undefined) return null;
+
     const hit = structuralPathAnchorAt(markIndex, transformedIndex);
     if (!hit) return null;
+
     const seriesField = seriesFieldOf(hit.mark);
     const seriesValue = seriesField ? resolveFieldPath(hit.row, seriesField) : undefined;
     const meta = datumMeta(
@@ -250,6 +282,7 @@ export const buildPlotLocatorFromDataArtifact = (
       seriesValue,
       readSourceIndices(hit.row),
     );
+
     return { position: hit.position, meta };
   };
 
@@ -260,7 +293,9 @@ export const buildPlotLocatorFromDataArtifact = (
       if ((markIndex !== undefined && entry.markIndex !== markIndex) || !contextMatches(entry.meta, opts)) {
         return false;
       }
+
       const seriesValue = entry.meta.series;
+
       return seriesValue === value || String(seriesValue) === String(value);
     });
     if (entries.length > 0) {
@@ -275,31 +310,41 @@ export const buildPlotLocatorFromDataArtifact = (
         ),
       );
       if (!hasContext && contexts.size > 1) return null;
+
       const position: [number, number] = [
         entries.reduce((sum, entry) => sum + entry.position[0], 0) / entries.length,
         entries.reduce((sum, entry) => sum + entry.position[1], 0) / entries.length,
       ];
+
       return { position, meta: entries[entries.length - 1].meta };
     }
+
     if (hasContext || markIndex === undefined) return null;
+
     const markDataView = structuralMarkDataViewOf(markIndex);
     if (markDataView === undefined || !isBuiltinMark(markDataView.mark)) return null;
+
     const mark = markDataView.mark;
     const seriesField = seriesFieldOf(mark);
     if (seriesField === undefined) return null;
+
     const frame = structuralFrameOf(markDataView);
     if (frame === undefined) return null;
+
     const rows = rootMarkDataViews.find(rootView => rootView.markIndex === markIndex)?.dataView.rows;
     if (rows === undefined) return null;
+
     const intervalContext: IntervalContext | undefined =
       mark.type === PlotMark.Interval ? buildIntervalContext(mark, frame, rows) : undefined;
     let sumX = 0;
     let sumY = 0;
     let count = 0;
+
     for (const row of rows) {
       // 系列值匹配：先精确相等，再宽松字符串比对（resolve 的 '5' 字符串 token 匹配数值 5；#4）
       const fieldValue = resolveFieldPath(row, seriesField);
       if (fieldValue !== value && String(fieldValue) !== String(value)) continue;
+
       const position =
         mark.type === PlotMark.Interval
           ? (() => {
@@ -308,11 +353,14 @@ export const buildPlotLocatorFromDataArtifact = (
             })()
           : datumAnchor(mark, row, frame, { registry: markRegistry }, intervalContext);
       if (!position) continue;
+
       sumX += position[0];
       sumY += position[1];
       count++;
     }
+
     if (count === 0) return null;
+
     const meta: JsonObject = {
       source: 'plot',
       dataReference: spec.data.reference,
@@ -320,12 +368,15 @@ export const buildPlotLocatorFromDataArtifact = (
       markIndex,
       series: typeof value === 'string' || typeof value === 'number' ? value : String(value),
     };
+
     return { position: [sumX / count, sumY / count], meta };
   };
 
   const resolve: PlotLocator['resolve'] = address => {
     if (typeof address !== 'string' || address.length === 0) return null;
+
     const parts = address.split('.');
+
     // 形态：'<plotId>.datum.<i>' / '<plotId>.series.<v>'；root 无 id 时 'datum.<i>' / 'series.<v>'
     let rest: Array<string>;
     if (spec.id !== undefined && parts[0] === spec.id) {
@@ -335,33 +386,41 @@ export const buildPlotLocatorFromDataArtifact = (
     } else {
       return null; // 有 plotId 但前缀不符
     }
+
     if (rest[0] === 'view' && rest.length === 4 && rest[2] === 'datum') {
       const index = Number(rest[3]);
       if (!Number.isInteger(index)) return null;
       return datum(index, { coordinateView: rest[1] });
     }
+
     if (rest[0] === 'track' && rest.length === 4 && rest[2] === 'datum') {
       const index = Number(rest[3]);
       if (!Number.isInteger(index)) return null;
       return datum(index, { track: rest[1] });
     }
+
     if (rest[0] === 'facet' && rest.length === 6 && rest[4] === 'datum') {
       const index = Number(rest[5]);
       if (!Number.isInteger(index)) return null;
       if (rest[2] === 'row') return datum(index, { facet: { id: rest[1], row: rest[3] } });
       if (rest[2] === 'column') return datum(index, { facet: { id: rest[1], column: rest[3] } });
+
       return null;
     }
+
     if (rest.length !== 2) return null;
+
     const [kind, token] = rest;
     if (kind === 'datum') {
       const index = Number(token);
       if (!Number.isInteger(index)) return null;
       return datum(index);
     }
+
     if (kind === 'series') {
       return series(token);
     }
+
     return null;
   };
 
@@ -398,5 +457,6 @@ export const createPlotLocator = (
     provenance: true,
     datumProvenance: true,
   });
+
   return buildPlotLocatorFromDataArtifact(spec, options, lowered);
 };

@@ -39,6 +39,7 @@ describe('Extension Ribbon provider contribution', () => {
     expect(firstProvider.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
 
     const definitions = resolveCoreProviderDependencies({ contributions: [first] });
+
     expect(definitions.pathKinds).toHaveLength(1);
     expect(definitions.pathKinds).toMatchObject([{ name: 'ribbon' }]);
   });
@@ -82,6 +83,7 @@ describe('Extension Ribbon provider contribution', () => {
     expect(provider.datasets['profile:__proto__']).toBe(custom);
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
+
     expect(() =>
       compileToScene(profileScene('__proto__'), {
         pathKinds: definitions.pathKinds,

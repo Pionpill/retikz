@@ -35,7 +35,7 @@ export const apiReferenceBranchLabels: Readonly<
     {
       value: 'regular',
       field: 'kind',
-      type: "Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>",
+      type: "Exclude<FlowRoutingKind, 'curve' | 'cubic'>",
       label: { zh: '常规路由', en: 'Regular routing' },
     },
     {

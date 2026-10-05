@@ -32,5 +32,6 @@ it('preserves Connected Scatter colorMode through React and Vanilla', () => {
     normalizeScene(scene({ children: [connectedScatterChart(input)] }), {
       adapters: [ConnectedScatterChartInputEmbedAdapter],
     }).ir;
+
   expect(normalize(react)).toEqual(normalize(vanilla));
 });

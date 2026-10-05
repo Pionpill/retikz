@@ -28,6 +28,7 @@ describe('fallbackMeasurer 边界', () => {
   it('多 codepoint emoji 文本：按 length（UTF-16 code unit）算宽——已知不准，但不应崩', () => {
     // '👨‍👩‍👧' 由多 codepoint 组成，length 远大于 1 视觉字符
     const res = fallbackMeasurer('👨‍👩‍👧', { size: 10 });
+
     expect(res.width).toBeGreaterThan(0);
     expect(res.height).toBe(12);
   });

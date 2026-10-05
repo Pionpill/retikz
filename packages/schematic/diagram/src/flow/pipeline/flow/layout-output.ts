@@ -84,6 +84,7 @@ const parseBounds = (
   if (!isPlainRecord(value) || !hasExactKeys(value, ['x', 'y', 'width', 'height'])) {
     return invalidOutput(definition, path, 'expected a closed bounds record.');
   }
+
   const bounds = {
     x: parseFiniteNumber(value.x, definition, [...path, 'x']),
     y: parseFiniteNumber(value.y, definition, [...path, 'y']),
@@ -91,6 +92,7 @@ const parseBounds = (
     height: parseFiniteNumber(value.height, definition, [...path, 'height']),
   };
   if (bounds.width < 0 || bounds.height < 0) invalidOutput(definition, path, 'bounds size must be non-negative.');
+
   return bounds;
 };
 
@@ -146,6 +148,15 @@ const validateElementGeometry = (
       }
       continue;
     }
+
+    if (
+      element.allocatedWidth !== undefined &&
+      Math.abs(bounds.width - element.allocatedWidth) >
+        Number.EPSILON * 64 * Math.max(1, bounds.width, element.allocatedWidth)
+    ) {
+      invalidOutput(definition, ['elements'], 'Container bounds must preserve allocated width.', [element.id]);
+    }
+
     if (
       element.kind === 'group' &&
       (bounds.width < element.minimumSize.width || bounds.height < element.minimumSize.height)
@@ -154,14 +165,18 @@ const validateElementGeometry = (
         element.id,
       ]);
     }
+
     const contentInsets = element.kind === 'group' ? element.contentInsets : { top: 0, right: 0, bottom: 0, left: 0 };
     const contentBounds = insetBounds(bounds, contentInsets);
     if (contentBounds.width < 0 || contentBounds.height < 0) {
       invalidOutput(definition, ['elements'], 'Flow scope content insets exceed its bounds.', [element.id]);
     }
+
     const containedChildren = element.kind === 'group' ? flattenElements(element.elements) : element.elements;
+
     for (const child of containedChildren) {
       if (element.kind === 'layout' && element.placement.excludeFromBounds?.includes(child.id)) continue;
+
       const childBounds = boundsById.get(child.id);
       if (childBounds === undefined || !containsBounds(contentBounds, childBounds)) {
         invalidOutput(definition, ['elements'], 'Flow scope content bounds must contain every direct child.', [
@@ -177,11 +192,14 @@ const validateElementGeometry = (
       const left = scopeElements[leftIndex];
       const leftBounds = boundsById.get(left.id);
       if (leftBounds === undefined) continue;
+
       const leftCollisionBounds = left.kind === 'leaf' ? marginBounds(leftBounds, left.margin) : leftBounds;
+
       for (let rightIndex = leftIndex + 1; rightIndex < scopeElements.length; rightIndex += 1) {
         const right = scopeElements[rightIndex];
         const rightBounds = boundsById.get(right.id);
         if (rightBounds === undefined) continue;
+
         const rightCollisionBounds = right.kind === 'leaf' ? marginBounds(rightBounds, right.margin) : rightBounds;
         if (overlaps(leftCollisionBounds, rightCollisionBounds)) {
           invalidOutput(definition, ['elements'], 'non-ancestor sibling collision bounds must not overlap.', [
@@ -190,9 +208,11 @@ const validateElementGeometry = (
           ]);
         }
       }
+
       if (left.kind !== 'leaf') visitScope(left.elements);
     }
   };
+
   visitScope(elements);
 };
 
@@ -219,6 +239,7 @@ const hasMatchingGridPlacements = (
           actualRow.every((actualCell, columnIndex) => actualCell === expected[rowIndex][columnIndex]),
       )
     );
+
   return (
     isPlainRecord(actual) &&
     hasExactKeys(actual, Object.keys(expected)) &&
@@ -254,11 +275,13 @@ const validatePlacementInput = (
   ) {
     return invalidOutput(definition, ['layouts', expected.id], 'expected a closed Layout placement input.');
   }
+
   if (input.layout.id !== expected.id || input.layout.kind !== expected.placement.kind) {
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
       expected.id,
     ]);
   }
+
   const actual = input.layout;
   const placement = expected.placement;
   if (JSON.stringify(actual.excludeFromBounds) !== JSON.stringify(placement.excludeFromBounds)) {
@@ -269,6 +292,7 @@ const validatePlacementInput = (
       [expected.id],
     );
   }
+
   const matches =
     actual.kind === 'linear' && placement.kind === 'linear'
       ? actual.direction === placement.direction && actual.gap === placement.gap && actual.align === placement.align
@@ -283,6 +307,7 @@ const validatePlacementInput = (
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
       expected.id,
     ]);
+
   if (
     input.elements.length !== expected.elements.length ||
     input.elements.some((element, index) => element.id !== expected.elements[index]?.id)
@@ -305,11 +330,13 @@ const normalizePlacementOutput = (
   if (!isPlainRecord(value) || !hasExactKeys(value, ['bounds', 'elements']) || !Array.isArray(value.elements)) {
     return invalidOutput(definition, path, 'expected a closed Layout placement output.', [input.layout.id]);
   }
+
   if (value.elements.length !== input.elements.length) {
     invalidOutput(definition, [...path, 'elements'], 'Layout placement coverage must match direct children.', [
       input.layout.id,
     ]);
   }
+
   const elements = value.elements.map((element, index) => {
     const elementPath = [...path, 'elements', index] as const;
     const expected = input.elements[index];
@@ -318,14 +345,17 @@ const normalizePlacementOutput = (
         expected.id,
       ]);
     }
+
     const bounds = parseBounds(element.bounds, definition, [...elementPath, 'bounds']);
     if (bounds.width !== expected.size.width || bounds.height !== expected.size.height) {
       invalidOutput(definition, [...elementPath, 'bounds'], 'Layout placement must preserve measured child size.', [
         expected.id,
       ]);
     }
+
     return { id: expected.id, bounds };
   });
+
   return { bounds: parseBounds(value.bounds, definition, [...path, 'bounds']), elements };
 };
 
@@ -336,6 +366,7 @@ const validateRecordedPlacements = (
   records: ReadonlyMap<string, PlacementRecord>,
 ): void => {
   const boundsById = new Map(output.elements.map(element => [element.id, element.bounds]));
+
   for (const layout of flattenElements(input.elements).filter(
     (element): element is Extract<FlowLayoutElementInput, { kind: 'layout' }> => element.kind === 'layout',
   )) {
@@ -348,10 +379,12 @@ const validateRecordedPlacements = (
         [layout.id],
       );
     }
+
     const layoutBounds = boundsById.get(layout.id)!;
     if (layoutBounds.width !== record.output.bounds.width || layoutBounds.height !== record.output.bounds.height) {
       invalidOutput(definition, ['elements'], 'Layout bounds must match placeLayout output.', [layout.id]);
     }
+
     record.output.elements.forEach(child => {
       const childBounds = boundsById.get(child.id)!;
       const expectedX = layoutBounds.x + child.bounds.x - record.output.bounds.x;
@@ -387,6 +420,7 @@ const validateRoute = (
   const relatedIds = [relation.source.id, relation.target.id];
   if (route.kind !== relation.routing.kind)
     invalidOutput(definition, [...path, 'route', 'kind'], 'route kind must match input.', relatedIds);
+
   for (const [key, value] of Object.entries(relation.routing)) {
     // smooth 输入是 Target，输出是完整数值 knots；稍后用最终布局重新查询逐项核对
     if (relation.routing.kind === 'smooth' && key === 'points') continue;
@@ -398,6 +432,7 @@ const validateRoute = (
     )
       invalidOutput(definition, [...path, 'route', key], 'route parameters must preserve effective input.', relatedIds);
   }
+
   if (relation.routing.kind === 'bend' && route.kind === 'bend') {
     if ('outAngle' in relation.routing !== 'outAngle' in route)
       invalidOutput(definition, [...path, 'route'], 'bend parameter family must preserve effective input.', relatedIds);
@@ -414,11 +449,13 @@ const validateRoute = (
         relatedIds,
       );
   }
+
   if (points.length < 2)
     invalidOutput(definition, [...path, 'points'], 'route must contain at least two distinct points.', relatedIds);
   if (relation.routing.kind === 'straight' && points.length !== 2) {
     invalidOutput(definition, [...path, 'points'], 'straight route must contain exactly two points.', relatedIds);
   }
+
   if ('cornerRadius' in relation.routing) {
     points.slice(1).forEach((point, index) => {
       const previous = points[index];
@@ -432,6 +469,7 @@ const validateRoute = (
       }
     });
   }
+
   const sourceBounds = boundsById.get(relation.source.id);
   const targetBounds = boundsById.get(relation.target.id);
   if (sourceBounds === undefined || targetBounds === undefined) {
@@ -442,6 +480,7 @@ const validateRoute = (
       relatedIds,
     );
   }
+
   const source = resolveFlowEndpointPosition(endpoints.source, elements, context);
   const target = resolveFlowEndpointPosition(endpoints.target, elements, context);
   const curve = route.kind === 'bend' || route.kind === 'curve' || route.kind === 'cubic';
@@ -468,6 +507,7 @@ const validateRoute = (
       relatedIds,
     );
   }
+
   if (
     relation.routing.kind === FlowRoutingKind.HorizontalThenVertical ||
     relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
@@ -489,9 +529,11 @@ const validateRoute = (
       );
     }
   }
+
   if (relation.labelSize === undefined && labelBounds !== undefined) {
     invalidOutput(definition, [...path, 'labelBounds'], 'unlabeled relation must not return label bounds.', relatedIds);
   }
+
   if (relation.labelSize !== undefined) {
     if (labelBounds === undefined) {
       return invalidOutput(
@@ -501,6 +543,7 @@ const validateRoute = (
         relatedIds,
       );
     }
+
     let expectedSize = relation.labelSize;
     if (relation.labelPlacement?.sloped) {
       try {
@@ -509,6 +552,7 @@ const validateRoute = (
         return flowBendGeometryFailure(relationIndex, relation, cause);
       }
     }
+
     if (
       !layoutLessThanOrEqual(labelBounds.width, expectedSize.width) ||
       !layoutLessThanOrEqual(expectedSize.width, labelBounds.width) ||
@@ -529,24 +573,29 @@ const normalizeAndValidateOutput = (
   if (!isPlainRecord(value) || !hasExactKeys(value, ['elements', 'relations'])) {
     return invalidOutput(definition, [], 'expected a closed output record.');
   }
+
   if (!Array.isArray(value.elements) || !Array.isArray(value.relations)) {
     return invalidOutput(definition, [], 'elements and relations must be arrays.');
   }
+
   const inputElements = flattenElements(input.elements);
   if (value.elements.length !== inputElements.length) {
     invalidOutput(definition, ['elements'], 'element coverage must exactly match input order.');
   }
+
   const elements = value.elements.map((elementValue, index) => {
     const path = ['elements', index] as const;
     if (!isPlainRecord(elementValue) || !hasExactKeys(elementValue, ['id', 'bounds'])) {
       return invalidOutput(definition, path, 'expected a closed element output record.');
     }
+
     const expected = inputElements[index];
     if (elementValue.id !== expected.id) {
       return invalidOutput(definition, [...path, 'id'], 'element ids and order must exactly match input.', [
         expected.id,
       ]);
     }
+
     return { id: expected.id, bounds: parseBounds(elementValue.bounds, definition, [...path, 'bounds']) };
   });
   const boundsById = new Map(elements.map(element => [element.id, element.bounds]));
@@ -555,12 +604,15 @@ const normalizeAndValidateOutput = (
   if (value.relations.length !== input.relations.length) {
     invalidOutput(definition, ['relations'], 'relation coverage must exactly match input order.');
   }
+
   const relations = value.relations.map((relationValue, index) => {
     const path = ['relations', index] as const;
     if (!isPlainRecord(relationValue) || !hasExactKeys(relationValue, ['source', 'target', 'route'], ['labelBounds'])) {
       return invalidOutput(definition, path, 'expected a closed relation output record.');
     }
+
     const expected = input.relations[index];
+
     const parseEndpoint = (end: 'source' | 'target'): FlowEndpointTarget => {
       const result = FlowEndpointTargetSchema.safeParse(relationValue[end]);
       if (!result.success)
@@ -571,6 +623,7 @@ const normalizeAndValidateOutput = (
           undefined,
           result.error,
         );
+
       const requested = expected[end];
       const actual = result.data;
       if (actual.id !== requested.id) invalidOutput(definition, [...path, end], 'endpoint id must match input.');
@@ -583,12 +636,15 @@ const normalizeAndValidateOutput = (
           : actual.anchor !== requested.anchor)
       )
         invalidOutput(definition, [...path, end], 'explicit anchor must remain fixed.');
+
       if (requested.side !== undefined && (typeof actual.anchor !== 'object' || actual.anchor.side !== requested.side))
         invalidOutput(definition, [...path, end], 'endpoint must preserve requested side.');
       if (requested.overlap === 'separate' && actual.anchor === undefined)
         invalidOutput(definition, [...path, end], 'separate endpoint must have a resolved anchor.');
+
       return actual;
     };
+
     const endpoints = { source: parseEndpoint('source'), target: parseEndpoint('target') };
     const parsed = FlowRouteArtifactSchema.safeParse(relationValue.route);
     if (!parsed.success)
@@ -599,6 +655,7 @@ const normalizeAndValidateOutput = (
         [expected.source.id, expected.target.id],
         parsed.error,
       );
+
     const normalizePoint = (point: Position): Position => [
       point[0] === 0 ? 0 : point[0],
       point[1] === 0 ? 0 : point[1],
@@ -613,6 +670,7 @@ const normalizeAndValidateOutput = (
                 ? parsed.data.points.map(normalizePoint)
                 : collapsePoints(parsed.data.points.map(normalizePoint)),
           };
+
     const labelBounds =
       relationValue.labelBounds === undefined
         ? undefined
@@ -640,8 +698,10 @@ const normalizeAndValidateOutput = (
           [expected.source.id, expected.target.id],
         );
     }
+
     return { ...endpoints, route, ...(labelBounds === undefined ? {} : { labelBounds }) };
   });
+
   const endpoints = relations.flatMap((relation, index) =>
     (['source', 'target'] as const).map(end => ({
       target: relation[end],
@@ -657,12 +717,14 @@ const normalizeAndValidateOutput = (
         (endpoint.input.overlap !== 'separate' && other.input.overlap !== 'separate')
       )
         continue;
+
       if (endpoint.target.anchor === undefined || other.target.anchor === undefined)
         invalidOutput(
           definition,
           ['relations', endpoint.index, endpoint.end],
           'separation requires all incident endpoints to be resolved.',
         );
+
       if (
         coincidentFlowEndpoints(
           resolveFlowEndpointPosition(endpoint.target, elements, context),
@@ -677,6 +739,7 @@ const normalizeAndValidateOutput = (
         );
     }
   });
+
   return { elements, relations };
 };
 
@@ -693,6 +756,7 @@ export const executeFlowLayout = (
       .map(element => [element.id, element]),
   );
   const placements = new Map<string, PlacementRecord>();
+
   const executionContext: FlowLayoutExecutionContext = Object.freeze({
     resolveEndpoint: query => {
       if (placementContext === undefined)
@@ -708,6 +772,7 @@ export const executeFlowLayout = (
       if (!isPlainRecord(value) || !isPlainRecord(value.layout) || typeof value.layout.id !== 'string') {
         return invalidOutput(definition, ['layouts'], 'expected a closed Layout placement input.');
       }
+
       const layoutId = value.layout.id;
       const expected = layouts.get(layoutId);
       if (expected === undefined) {
@@ -715,6 +780,7 @@ export const executeFlowLayout = (
           layoutId,
         ]);
       }
+
       if (placements.has(layoutId)) {
         return invalidOutput(
           definition,
@@ -723,10 +789,12 @@ export const executeFlowLayout = (
           [layoutId],
         );
       }
+
       validatePlacementInput(definition, expected, value);
       if (placementContext === undefined) {
         return invalidOutput(definition, ['layouts', layoutId], 'Layout placement context is unavailable.', [layoutId]);
       }
+
       const placementInput = cloneAndFreezeJson(value, `Flow Layout '${layoutId}' placement input`);
       const placementOutput = normalizePlacementOutput(
         definition,
@@ -735,10 +803,13 @@ export const executeFlowLayout = (
       );
       const record = cloneAndFreezeJson({ input: placementInput, output: placementOutput });
       placements.set(layoutId, record);
+
       return record.output;
     },
   });
+
   let callbackOutput: unknown;
+
   try {
     callbackOutput = definition.layout(inputSnapshot, executionContext);
   } catch (cause) {
@@ -750,8 +821,10 @@ export const executeFlowLayout = (
         cause.code === RetikzDiagramErrorCode.FlowConstraintUnsatisfiable)
     )
       throw cause;
+
     return callbackFailed(definition, 'layout callback threw.', cause);
   }
+
   if (
     callbackOutput !== null &&
     (typeof callbackOutput === 'object' || typeof callbackOutput === 'function') &&
@@ -760,18 +833,23 @@ export const executeFlowLayout = (
   ) {
     return callbackFailed(definition, 'layout callback must return synchronously.');
   }
+
   let detachedOutput: unknown;
+
   try {
     detachedOutput = cloneAndFreezeJson(callbackOutput, `Flow Layout Definition '${definition.name}' output`);
   } catch (cause) {
     return invalidOutput(definition, [], 'output must contain only JSON-safe plain data.', undefined, cause);
   }
+
   const output = cloneAndFreezeJson(
     normalizeAndValidateOutput(definition, inputSnapshot, detachedOutput, executionContext),
   );
   validateRecordedPlacements(definition, inputSnapshot, output, placements);
+
   for (const [index, relation] of inputSnapshot.relations.entries()) {
     if (relation.routing.kind !== 'smooth') continue;
+
     const route = output.relations[index].route;
     const expected = executionContext.resolveRoutePoints({
       elements: output.elements,
@@ -795,5 +873,6 @@ export const executeFlowLayout = (
       );
     }
   }
+
   return output;
 };

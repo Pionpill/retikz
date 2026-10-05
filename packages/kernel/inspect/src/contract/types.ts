@@ -59,12 +59,17 @@ export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonl
   /** 当前最终 occurrence */
   occurrence: CompileOccurrenceLocator;
   /** probe/replay 来源 */
-  provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
+  provenance: Readonly<{
+    /** 探测或重放前产生被观察结果的位置 */
+    origin: CompileOccurrenceLocator;
+    /** 重放映射后被观察结果在最终逻辑树中的位置 */
+    final: CompileOccurrenceLocator;
+  }>;
   /** observation-local 到主 Scene 的最终仿射变换 */
   transform: AffineMatrix;
   /** 从外到内排列的最终逻辑容器链条 */
   ancestors: ReadonlyArray<CompileObservationAncestor>;
-  /** canonical JSON-safe options */
+  /** 规范化后可 JSON 序列化的选项 */
   options: TOptions;
   /** callback 前分配的外观上下文 */
   appearance: InspectionAppearanceContext;
@@ -72,7 +77,13 @@ export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonl
   warn: (code: string, message: string) => void;
 }>;
 
-/** 独立于 Core owner Definition 的 Inspector 定义 */
+/**
+ * 独立于 Core owner Definition 的 Inspector 定义
+ * @template TSubject 经 subjectSchema 校验后交给 inspect 的观察对象类型
+ * @template TParsedOptions optionsSchema 应用默认与变换后的选项类型
+ * @template TResolvedOptions resolveOptions 输出、供 inspect 上下文消费的选项类型
+ * @template TSourceOptions 合并前的原始选项输入类型，默认与 TParsedOptions 相同
+ */
 export type InspectorDefinition<
   TSubject extends JsonValue = JsonValue,
   TParsedOptions extends JsonObject = JsonObject,
@@ -145,16 +156,22 @@ export type InspectorDefinitionInput<
 
 /** registry 内擦除具体泛型后的 Inspector 定义 */
 export type AnyInspectorDefinition = Readonly<{
-  /** registry namespace */
+  /** 注册项的命名空间 */
   namespace: string;
-  /** registry type */
+  /** 注册项的类型 */
   type: string;
   /** 被观察的 Core owner */
   owner: CompileObservationOwner;
   /** 擦除后仍恢复 JSON-safe subject */
-  subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
+  subjectSchema: Readonly<{
+    /** 校验被观察值并恢复可序列化的 subject */
+    parse: (value: unknown) => JsonValue;
+  }>;
   /** 擦除后仍产出已应用默认值与变换的 JSON object options */
-  optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
+  optionsSchema: Readonly<{
+    /** 校验合并后的原始选项并应用 schema 默认值与变换 */
+    parse: (value: unknown) => JsonObject;
+  }>;
   /** 具体 options 类型由准入 schema 恢复 */
   resolveOptions: (options: never) => JsonObject;
   /** 合并已准入的原始 options，不消费 schema 变换后的结果 */

@@ -7,7 +7,6 @@ import type {
   IRDataJitterTransform,
   IRDataNormalizeTransform,
   IRDataStackTransform,
-  StackOffsetValue,
 } from '../../schemas';
 import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 import type { ExternalRow } from '../../shared';
@@ -20,40 +19,47 @@ export const applySort = (rows: Array<ExternalRow>, operation: IRDataSortTransfo
 
 /** 默认堆叠下界 / 上界输出字段名 */
 export const DEFAULT_START_FIELD = 'y0';
+
 /** stack transform 默认上界输出字段名 */
 export const DEFAULT_END_FIELD = 'y1';
 
 /** derive-interval 默认输出字段名 */
 export const DEFAULT_DERIVE_START_FIELD = 'y0';
+
 /** derive-interval transform 默认终点输出字段名 */
 export const DEFAULT_DERIVE_END_FIELD = 'y1';
 
 /** jitter 默认被扰动字段名：连续数值位置字段 */
 export const DEFAULT_JITTER_X_FIELD = 'x';
+
 /** jitter transform 默认 y 轴输出字段名 */
 export const DEFAULT_JITTER_Y_FIELD = 'y';
 
 /**
- * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]。
+ * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]
  * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入；normalize offset 拒绝有限负值
  */
 export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTransform): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_START_FIELD;
   const endField = operation.endField ?? DEFAULT_END_FIELD;
-  const offset: StackOffsetValue = operation.offset ?? StackOffset.Zero;
+  const offset: StackOffset = operation.offset ?? StackOffset.Zero;
   const groupByField = operation.groupBy;
   const seriesOrder =
     groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
   const seriesRank = new Map(seriesOrder.map((series, index) => [series, index] as const));
+
   const rankOf = (row: ExternalRow): number => {
     if (groupByField === undefined) return 0;
+
     const series = resolveFieldPath(row, groupByField);
     if (typeof series !== 'string' && typeof series !== 'number') return seriesOrder.length;
+
     return seriesRank.get(series) ?? seriesOrder.length;
   };
 
   const groups = new Map<unknown, Array<ExternalRow>>();
   const SINGLE_CHAIN_KEY = Symbol('single-chain');
+
   for (const row of rows) {
     const key = operation.x === undefined ? SINGLE_CHAIN_KEY : resolveFieldPath(row, operation.x);
     const bucket = groups.get(key);
@@ -92,6 +98,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTrans
           negative += segment;
         }
       });
+
       return out;
     }
 
@@ -105,12 +112,15 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTrans
       cumulative = y1;
       out.set(row, [y0, y1]);
     });
+
     return out;
   };
 
   const bounds = new Map<ExternalRow, [number, number]>();
+
   for (const groupRows of groups.values()) {
     const ordered = [...groupRows].sort((a, b) => rankOf(a) - rankOf(b));
+
     for (const [row, bound] of stackGroupBounds(ordered)) {
       bounds.set(row, bound);
     }
@@ -123,7 +133,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTrans
 };
 
 /**
- * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数。
+ * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数
  * @description groupBy 缺省时全行单组；有限负值会报错，缺失 / 非有限值按 0；basis percent 输出 0..100，组和为 0 时输出 0
  */
 export const applyNormalize = (rows: Array<ExternalRow>, operation: IRDataNormalizeTransform): Array<ExternalRow> => {
@@ -134,6 +144,7 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: IRDataNormal
     operation.groupBy === undefined
       ? ''
       : JSON.stringify(operation.groupBy.map(field => resolveFieldPath(row, field) ?? null));
+
   for (const row of rows) {
     const value = resolveFieldPath(row, operation.field);
     if (isFiniteNumber(value) && value < 0) {
@@ -141,21 +152,24 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: IRDataNormal
         `data: normalize transform does not support negative values in field "${operation.field}"; handle signed data before normalization`,
       );
     }
+
     const segment = isFiniteNumber(value) ? value : 0;
     const key = keyOf(row);
     sums.set(key, (sums.get(key) ?? 0) + segment);
   }
+
   return rows.map(row => {
     const value = resolveFieldPath(row, operation.field);
     const segment = isFiniteNumber(value) ? value : 0;
     const sum = sums.get(keyOf(row)) ?? 0;
     const share = sum === 0 ? 0 : (segment / sum) * scale;
+
     return { ...row, [outField]: share };
   });
 };
 
 /**
- * derive-interval：每行独立算 [start, end]，保持行数。
+ * derive-interval：每行独立算 [start, end]，保持行数
  * @description 两字段模式 startFrom + endFrom 优先；否则 from 模式派生 [baseline, fromValue]
  */
 export const applyDeriveInterval = (
@@ -171,14 +185,18 @@ export const applyDeriveInterval = (
       'data: derive-interval transform requires either `from` (baseline->value) or both `startFrom` and `endFrom`',
     );
   }
+
   const finiteOr = (value: unknown, fallback: number): number => (isFiniteNumber(value) ? value : fallback);
+
   return rows.map(row => {
     if (twoField) {
       const start = finiteOr(resolveFieldPath(row, operation.startFrom as string), baseline);
       const end = finiteOr(resolveFieldPath(row, operation.endFrom as string), baseline);
       return { ...row, [startField]: start, [endField]: end };
     }
+
     const end = finiteOr(resolveFieldPath(row, operation.from as string), baseline);
+
     return { ...row, [startField]: baseline, [endField]: end };
   });
 };
@@ -192,12 +210,13 @@ const mulberry32 = (seed: number): (() => number) => {
     state = (state + 0x6d2b79f5) | 0;
     let t = Math.imul(state ^ (state >>> 15), state | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 };
 
 /**
- * jitter：给连续数值位置字段加确定性伪随机偏移，保持行数。
+ * jitter：给连续数值位置字段加确定性伪随机偏移，保持行数
  * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性
  */
 export const applyJitter = (rows: Array<ExternalRow>, operation: IRDataJitterTransform): Array<ExternalRow> => {
@@ -210,15 +229,18 @@ export const applyJitter = (rows: Array<ExternalRow>, operation: IRDataJitterTra
   const jitterY = axis === JitterAxis.Y || axis === JitterAxis.Both;
   const rng = mulberry32(seed);
   const offset = (): number => (rng() * 2 - 1) * amount;
+
   const perturb = (row: ExternalRow, field: string): unknown => {
     const delta = offset();
     const value = resolveFieldPath(row, field);
     return isFiniteNumber(value) ? value + delta : value;
   };
+
   return rows.map(row => {
     const next: ExternalRow = { ...row };
     if (jitterX) next[xField] = perturb(row, xField);
     if (jitterY) next[yField] = perturb(row, yField);
+
     return next;
   });
 };

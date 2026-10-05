@@ -6,6 +6,7 @@ import { buildPathD } from '../../src/svg';
 describe('buildPathD: 单 kind 构造', () => {
   it('move → "M x y"', () => {
     const commands: Array<PathCommand> = [{ kind: 'move', to: [3, 4] }];
+
     expect(buildPathD(commands)).toBe('M 3 4');
   });
 
@@ -14,6 +15,7 @@ describe('buildPathD: 单 kind 构造', () => {
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [10, 0] },
     ];
+
     expect(buildPathD(commands)).toBe('M 0 0 L 10 0');
   });
 
@@ -22,6 +24,7 @@ describe('buildPathD: 单 kind 构造', () => {
       { kind: 'move', to: [0, 0] },
       { kind: 'quad', control: [5, 8], to: [10, 0] },
     ];
+
     expect(buildPathD(commands)).toBe('M 0 0 Q 5 8 10 0');
   });
 
@@ -30,6 +33,7 @@ describe('buildPathD: 单 kind 构造', () => {
       { kind: 'move', to: [0, 0] },
       { kind: 'cubic', control1: [3, 3], control2: [7, -3], to: [10, 0] },
     ];
+
     expect(buildPathD(commands)).toBe('M 0 0 C 3 3 7 -3 10 0');
   });
 
@@ -40,6 +44,7 @@ describe('buildPathD: 单 kind 构造', () => {
       { kind: 'line', to: [10, 10] },
       { kind: 'close' },
     ];
+
     expect(buildPathD(commands)).toBe('M 0 0 L 10 0 L 10 10 Z');
   });
 
@@ -53,6 +58,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 90,
       },
     ];
+
     expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 0 1 0 10');
   });
 
@@ -66,6 +72,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 270,
       },
     ];
+
     expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 1 1 0 -10');
   });
 
@@ -79,6 +86,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 0,
       },
     ];
+
     // 起点 = (0,10)；终点 = (10, 0)；|Δ|=90 → largeArc=0；endAngle<startAngle → sweep=0
     expect(buildPathD(commands)).toBe('M 0 10 A 10 10 0 0 0 10 0');
   });
@@ -94,6 +102,7 @@ describe('buildPathD: 单 kind 构造', () => {
         counterClockwise: true,
       },
     ];
+
     expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 1 0 0 10');
   });
 
@@ -108,6 +117,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 180,
       },
     ];
+
     expect(buildPathD(commands)).toBe('M 15 0 A 15 10 0 0 1 -15 0');
   });
 
@@ -122,6 +132,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 360,
       },
     ];
+
     expect(buildPathD(commands)).toBe('M 15 0 A 15 10 0 0 1 -15 0 A 15 10 0 0 1 15 0');
   });
 
@@ -136,6 +147,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 360,
       },
     ];
+
     expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0');
   });
 
@@ -151,6 +163,7 @@ describe('buildPathD: 单 kind 构造', () => {
         endAngle: 180,
       },
     ];
+
     // SVG A 命令中第三个参数是 x-axis-rotation；端点仍按未旋转椭圆 polar 投影算
     expect(buildPathD(commands)).toContain('A 15 10 30 0 1');
   });
@@ -163,6 +176,7 @@ describe('buildPathD: 段组合', () => {
       { kind: 'line', to: [10, 0] },
       { kind: 'line', to: [10, 10] },
     ];
+
     expect(buildPathD(commands)).toBe('M 0 0 L 10 0 L 10 10');
   });
 
@@ -172,6 +186,7 @@ describe('buildPathD: 段组合', () => {
       { kind: 'cubic', control1: [2, 5], control2: [8, 5], to: [10, 0] },
       { kind: 'line', to: [20, 0] },
     ];
+
     expect(buildPathD(commands)).toBe('M 0 0 C 2 5 8 5 10 0 L 20 0');
   });
 
@@ -183,6 +198,7 @@ describe('buildPathD: 段组合', () => {
       { kind: 'move', to: [20, 0] },
       { kind: 'line', to: [30, 0] },
     ];
+
     expect(buildPathD(commands)).toBe('M 0 0 L 10 0 Z M 20 0 L 30 0');
   });
 });
@@ -194,6 +210,7 @@ describe('buildPathD: 边界 / 错误路径', () => {
 
   it('默认 round 保留 2 位小数（与 compile precision 一致），不传 round 时浮点噪声被裁掉', () => {
     const commands: Array<PathCommand> = [{ kind: 'move', to: [1.23456, 2.34567] }];
+
     expect(buildPathD(commands)).toBe('M 1.23 2.35');
   });
 
@@ -203,6 +220,7 @@ describe('buildPathD: 边界 / 错误路径', () => {
       { kind: 'line', to: [3.456, 4.567] },
     ];
     const r = (n: number) => Math.round(n * 100) / 100;
+
     expect(buildPathD(commands, r)).toBe('M 1.23 2.35 L 3.46 4.57');
   });
 });

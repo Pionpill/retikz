@@ -9,10 +9,12 @@ import { flowI18n } from './pattern-flow.i18n';
 
 /** 流程图的语言参数 */
 export type VisualFlowProps = { lang?: Lang };
+
 /** 展示当前视觉能力的实际处理顺序 */
 const VisualFlow: FC<VisualFlowProps> = props => {
   const { lang = 'zh' } = props;
   const labels = flowI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

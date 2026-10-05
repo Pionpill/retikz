@@ -29,6 +29,7 @@ export const createDataCell = (
               ...(inheritContentWidth ? { layout: { width: 'content' as const } } : {}),
             },
     };
+
   if (value !== null && typeof value === 'object')
     return {
       content:
@@ -45,5 +46,6 @@ export const createDataCell = (
               }
             : { namespace: 'standard', type: 'map', data: value, dataExpand },
     };
+
   return { content: JSON.stringify(value) };
 };

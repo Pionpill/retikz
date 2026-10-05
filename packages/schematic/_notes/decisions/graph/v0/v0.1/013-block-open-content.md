@@ -107,7 +107,7 @@ type IRBlockHeader = Readonly<{
   description?: IRBlockText;
   direction?: 'horizontal' | 'vertical';
   itemGap?: number;
-  justifyContent?: FlexMainDistributionValue;
+  justifyContent?: FlexMainDistribution;
   trail?: IRChild;
 }>;
 

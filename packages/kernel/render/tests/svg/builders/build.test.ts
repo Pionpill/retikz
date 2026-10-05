@@ -20,12 +20,14 @@ describe('buildPrim —— primitive → SvgNode', () => {
       dashOffset: 4,
     };
     const node = buildPrim(rect);
+
     expect(node.tag).toBe('rect');
     expect(node.attrs['stroke-width']).toBe(2);
     expect(node.attrs['stroke-dashoffset']).toBe(4);
     expect(node.attrs.rx).toBe(3);
     expect(node.attrs.ry).toBe(3);
     expect(node.attrs.fill).toBe('#f00');
+
     // React camelCase 不得泄漏进中性描述树
     expect('strokeWidth' in node.attrs).toBe(false);
     expect(node.style).toBeUndefined();
@@ -45,11 +47,14 @@ describe('buildPrim —— primitive → SvgNode', () => {
       measuredHeight: 30,
     };
     const node = buildPrim(text);
+
     expect(node.tag).toBe('text');
     expect(node.attrs['text-anchor']).toBe('middle');
     expect(node.attrs['dominant-baseline']).toBe('central');
     expect(node.children).toHaveLength(3);
+
     const [t0, t1, t2] = node.children as Array<{ tag: string; attrs: { dy: number }; children: Array<string> }>;
+
     expect(t0.tag).toBe('tspan');
     expect(t0.attrs.dy).toBe(-10); // -(3-1)/2 × 10
     expect(t1.attrs.dy).toBe(10);
@@ -72,6 +77,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
     };
     const node = buildPrim(text);
     const [t0] = node.children as Array<{ attrs: Record<string, unknown> }>;
+
     expect(t0.attrs['fill-opacity']).toBe(0.5);
     expect('opacity' in t0.attrs).toBe(false);
   });
@@ -90,6 +96,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
       measuredHeight: 14,
       fill,
     };
+
     expect(buildPrim(text).attrs.fill).toBe(fill);
   });
 
@@ -101,6 +108,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
       children: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1 }],
     };
     const node = buildPrim(group, { clipRefUrl: id => `url(#cp-${id})` });
+
     expect(node.tag).toBe('g');
     expect(node.attrs.transform).toBe('translate(5 6)');
     expect(node.attrs['clip-path']).toBe('url(#cp-c1)');
@@ -111,6 +119,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   it('paint-var-to-style：fill = var(--brand) → 落 style.fill、不落 attrs.fill', () => {
     const rect: RectPrim = { type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: 'var(--brand)' };
     const node = buildPrim(rect);
+
     expect(node.attrs.fill).toBeUndefined();
     expect(node.style?.fill).toBe('var(--brand)');
   });
@@ -120,8 +129,11 @@ describe('buildPrim —— primitive → SvgNode', () => {
       type: 'group',
       children: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1 }, undefined as unknown as ScenePrimitive],
     };
+
     expect(() => buildPrim(group)).not.toThrow();
+
     const node = buildPrim(group);
+
     expect(node.children).toHaveLength(1);
   });
 });
@@ -146,6 +158,7 @@ describe('buildMarkerPrim —— marker primitive → SvgNode', () => {
       ],
     };
     const node = buildMarkerPrim(group);
+
     expect(node.tag).toBe('g');
     expect(node.attrs.transform).toBe('translate(2 3) rotate(45)');
     expect(node.children).toHaveLength(1);
@@ -163,8 +176,11 @@ describe('buildPaintDef —— 错误路径兜底', () => {
       id: 'p1',
       spec: { kind: 'pattern', shape: 'dots' },
     };
+
     expect(() => buildPaintDef(resource, 'rid')).not.toThrow();
+
     const node = buildPaintDef(resource, 'rid');
+
     expect(node.tag).toBe('pattern');
     expect(node.attrs.id).toBe('rid');
     expect(node.children ?? []).toHaveLength(0);
@@ -179,6 +195,7 @@ describe('collectArrowEnds —— 防御', () => {
         children: [undefined as unknown as ScenePrimitive],
       },
     ];
+
     expect(() => collectArrowEnds(prims)).not.toThrow();
     expect(collectArrowEnds(prims)).toEqual([]);
   });

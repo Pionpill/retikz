@@ -13,6 +13,7 @@ const scopeDescriptions = Object.fromEntries(
     ([key]) => !['namespace', 'type', 'bounds', 'line', 'border'].includes(key.split('.')[0]),
   ),
 );
+
 /** Standard Schema 展示与 API 投影共用的中文词典 */
 const pageLocalizations = {
   AxesSchema: {

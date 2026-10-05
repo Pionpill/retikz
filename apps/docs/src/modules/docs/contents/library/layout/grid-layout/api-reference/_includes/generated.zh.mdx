@@ -4,7 +4,7 @@
 
 ### GridLayout / GridLayoutProps
 
-- `GridLayout`：<ApiSourceLink label={"GridLayout"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={34}>Layout Grid 布局的 React 声明组件</ApiSourceLink>
+- `GridLayout`：<ApiSourceLink label={"GridLayout"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={35}>Layout Grid 布局的 React 声明组件</ApiSourceLink>
 - `GridLayoutProps`：<ApiSourceLink label={"GridLayoutProps"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={13}>Grid 布局的 React 属性</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -15,10 +15,10 @@
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `readonly authoring?` | `unknown` | — | 交给可选编译驱动解释的不透明声明数据 |
-| `readonly children?` | `ReactNode` | `[]` | 必须由 Grid 类型布局项目组成的子元素；省略时容器为空 |
+| 成员                  | 类型        | 默认值 | 说明                                                 |
+| --------------------- | ----------- | ------ | ---------------------------------------------------- |
+| `readonly authoring?` | `unknown`   | —      | 交给可选编译驱动解释的不透明声明数据                 |
+| `readonly children?`  | `ReactNode` | `[]`   | 必须由 Grid 类型布局项目组成的子元素；省略时容器为空 |
 
 </ApiTable>
 
@@ -31,10 +31,11 @@ export declare const GridLayout: {
   (props: GridLayoutProps, context?: any): ReactNode;
 };
 
-export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
+export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
+  Readonly<{
     authoring?: unknown;
     children?: ReactNode;
-}>;
+  }>;
 ```
 
 </DocTab>
@@ -52,16 +53,16 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖垂直对齐 |
-| `readonly children` | `ReactNode` | — | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 列放置范围 |
-| `readonly ir?` | `never` | — | JSX 分支不接受 IR 输入 |
-| `readonly itemKey?` | `string` | — | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | 覆盖水平对齐 |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 轨道区域内缩前的子项外边距 |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 行放置范围 |
+| 成员                | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `alignSelf?`        | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —      | 覆盖垂直对齐                                           |
+| `readonly children` | `ReactNode`                                                                                                                                                                                                        | —      | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir           |
+| `column?`           | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 列放置范围                                             |
+| `readonly ir?`      | `never`                                                                                                                                                                                                            | —      | JSX 分支不接受 IR 输入                                 |
+| `readonly itemKey?` | `string`                                                                                                                                                                                                           | —      | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
+| `justifySelf?`      | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —      | 覆盖水平对齐                                           |
+| `margin?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`    | 轨道区域内缩前的子项外边距                             |
+| `row?`              | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 行放置范围                                             |
 
 </ApiTable>
 
@@ -71,16 +72,16 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖垂直对齐 |
-| `readonly children?` | `never` | — | IR 分支不接受 JSX 子元素 |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 列放置范围 |
-| `readonly ir` | `InputEmbedContribution['node']` | — | 已声明的可序列化子图形；不能同时传 children |
-| `readonly itemKey?` | `string` | — | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | 覆盖水平对齐 |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 轨道区域内缩前的子项外边距 |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 行放置范围 |
+| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —      | 覆盖垂直对齐                                           |
+| `readonly children?` | `never`                                                                                                                                                                                                            | —      | IR 分支不接受 JSX 子元素                               |
+| `column?`            | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 列放置范围                                             |
+| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                   | —      | 已声明的可序列化子图形；不能同时传 children            |
+| `readonly itemKey?`  | `string`                                                                                                                                                                                                           | —      | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
+| `justifySelf?`       | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —      | 覆盖水平对齐                                           |
+| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`    | 轨道区域内缩前的子项外边距                             |
+| `row?`               | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 行放置范围                                             |
 
 </ApiTable>
 
@@ -91,9 +92,11 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
 ```ts
 export declare const GridLayoutItem: FC<GridLayoutItemProps>;
 
-export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'kind'> & Readonly<{
+export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'kind'> &
+  Readonly<{
     itemKey?: string;
-}> & LayoutItemChildSource;
+  }> &
+  LayoutItemChildSource;
 ```
 
 </DocTab>
@@ -104,7 +107,7 @@ export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'k
 
 ### gridLayout / InputGridLayout
 
-- `gridLayout`：<ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={33}>创建GridLayout 嵌入项</ApiSourceLink>
+- `gridLayout`：<ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={55}>创建GridLayout 嵌入项</ApiSourceLink>
 - `InputGridLayout`：<ApiSourceLink label={"InputGridLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={35}>Vanilla GridLayout authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -115,12 +118,12 @@ export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'k
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `children?` | `ReadonlyArray<InputGridLayoutItem>` | `[]` | 作者声明的直属子项，省略时按空列表处理 |
-| `input` (参数) | `InputGridLayout` | — | 容器与子项输入，保留传入对象引用 |
-| `authoring?` (参数) | `unknown` | — | 交给编译驱动的不透明声明数据；省略时不附加声明 |
-| 返回值 | `InputEmbed<InputGridLayout>` | — | 由布局适配器消费的 InputEmbed，不在创建时求解布局 |
+| 成员                | 类型                                 | 默认值 | 说明                                              |
+| ------------------- | ------------------------------------ | ------ | ------------------------------------------------- |
+| `children?`         | `ReadonlyArray<InputGridLayoutItem>` | `[]`   | 作者声明的直属子项，省略时按空列表处理            |
+| `input` (参数)      | `InputGridLayout`                    | —      | 容器与子项输入，保留传入对象引用                  |
+| `authoring?` (参数) | `unknown`                            | —      | 交给编译驱动的不透明声明数据；省略时不附加声明    |
+| 返回值              | `InputEmbed<InputGridLayout>`        | —      | 由布局适配器消费的 InputEmbed，不在创建时求解布局 |
 
 </ApiTable>
 
@@ -132,7 +135,7 @@ export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'k
 export declare const gridLayout: (input: InputGridLayout, authoring?: unknown) => InputEmbed<InputGridLayout>;
 
 export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
-    children?: ReadonlyArray<InputGridLayoutItem>;
+  children?: ReadonlyArray<InputGridLayoutItem>;
 };
 ```
 
@@ -142,26 +145,32 @@ export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
 
 ### InputGridLayoutItem
 
-<p><ApiSourceLink label={"InputGridLayoutItem"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={21}>Vanilla GridLayout item 输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'InputGridLayoutItem'}
+    path={'packages/library/layout-vanilla/src/normalize/types.ts'}
+    startLine={21}
+  >
+    Vanilla GridLayout item 输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖垂直对齐 |
-| `child` | `InputChild` | — | 直属布局 child 的作者侧输入 |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 列放置范围 |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | 覆盖水平对齐 |
-| `key?` | `string` | — | 可选稳定身份；省略时按 source index 生成 |
-| `kind` | `"grid"` | — | 网格布局子项判别字段 |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 轨道区域内缩前的子项外边距 |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 行放置范围 |
+| 成员           | 类型                                                                                                                                                                                                               | 默认值 | 说明                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------- |
+| `alignSelf?`   | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —      | 覆盖垂直对齐                             |
+| `child`        | `InputChild`                                                                                                                                                                                                       | —      | 直属布局 child 的作者侧输入              |
+| `column?`      | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 列放置范围                               |
+| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —      | 覆盖水平对齐                             |
+| `key?`         | `string`                                                                                                                                                                                                           | —      | 可选稳定身份；省略时按 source index 生成 |
+| `kind`         | `"grid"`                                                                                                                                                                                                           | —      | 网格布局子项判别字段                     |
+| `margin?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`    | 轨道区域内缩前的子项外边距               |
+| `row?`         | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 行放置范围                               |
 
 </ApiTable>
 
@@ -179,10 +188,19 @@ export type InputGridLayoutItem = InputLayoutItem<GridLayoutItemInput>;
 
 ### GridLayoutInputEmbedAdapter
 
-<p><ApiSourceLink label={"GridLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={12}>Layout Grid 布局的 InputEmbed adapter</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutInputEmbedAdapter'}
+    path={'packages/library/layout-vanilla/src/grid-layout.ts'}
+    startLine={12}
+  >
+    Layout Grid 布局的 InputEmbed adapter
+  </ApiSourceLink>
+</p>
 
 ```ts
-export declare const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout>;
+export declare const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGridLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputGridLayout>, 'prepare'>>;
 ```
 
 ## `@retikz/layout`
@@ -190,7 +208,7 @@ export declare const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLay
 ### createGridLayout / GridLayoutInput
 
 - `createGridLayout`：<ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/factory.ts"} startLine={8}>创建保留省略字段与简写的 GridLayout 持久化输入</ApiSourceLink>
-- `GridLayoutInput`：<ApiSourceLink label={"GridLayoutInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={55}>GridLayout factory 接受的作者输入</ApiSourceLink>
+- `GridLayoutInput`：<ApiSourceLink label={"GridLayoutInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>GridLayout factory 接受的作者输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -198,10 +216,10 @@ export declare const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLay
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `input` (参数) | `GridLayoutInput` | — | 容器与子项配置；静态默认值由 Schema 解析时应用 |
-| 返回值 | `IRGridLayout` | — | 带 layout 命名空间与容器类型的 Source IR，不修改 input |
+| 成员           | 类型              | 默认值 | 说明                                                   |
+| -------------- | ----------------- | ------ | ------------------------------------------------------ |
+| `input` (参数) | `GridLayoutInput` | —      | 容器与子项配置；静态默认值由 Schema 解析时应用         |
+| 返回值         | `IRGridLayout`    | —      | 带 layout 命名空间与容器类型的 Source IR，不修改 input |
 
 </ApiTable>
 
@@ -219,52 +237,32 @@ export type GridLayoutInput = Omit<IRGridLayout, 'namespace' | 'type'>;
 
 </DocTabs>
 
-### GridAutoFlowValue
-
-<p><ApiSourceLink label={"GridAutoFlowValue"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={16}>GridLayout 自动放置流向取值</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type GridAutoFlowValue =
-  | "row"
-  | "column";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type GridAutoFlowValue = ValueOf<typeof GridAutoFlow>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### GridLayoutArtifact
 
-<p><ApiSourceLink label={"GridLayoutArtifact"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={58}>GridLayout 的 JSON-safe compile artifact payload</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutArtifact'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={50}
+  >
+    GridLayout 的 JSON-safe compile artifact payload
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `columns` | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | — | 按物理起点顺序排列的已求解列轨道。 |
-| `container` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["container"]>` | — | 已求解的容器几何。 |
-| `items` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["items"]>` | — | 按作者声明顺序排列的子项结果。 |
-| `kind` | `"grid"` | — | GridLayout 产物的判别字段。 |
-| `rows` | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | — | 按物理起点顺序排列的已求解行轨道。 |
-| `spacing` | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>` | — | 按 canonical 物理顺序排列的固定 gap 与内容分布区域。 |
+| 成员        | 类型                                                                                                                                                                 | 默认值 | 说明                                                 |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------- |
+| `columns`   | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —      | 按物理起点顺序排列的已求解列轨道。                   |
+| `container` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["container"]>`                                                                                                       | —      | 已求解的容器几何。                                   |
+| `items`     | `ZodInfer<typeof GridLayoutArtifactSchema.shape["items"]>`                                                                                                           | —      | 按作者声明顺序排列的子项结果。                       |
+| `kind`      | `"grid"`                                                                                                                                                             | —      | GridLayout 产物的判别字段。                          |
+| `rows`      | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —      | 按物理起点顺序排列的已求解行轨道。                   |
+| `spacing`   | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>`                                       | —      | 按 canonical 物理顺序排列的固定 gap 与内容分布区域。 |
 
 </ApiTable>
 
@@ -282,26 +280,32 @@ export type GridLayoutArtifact = ZodInfer<typeof GridLayoutArtifactSchema>;
 
 ### GridLayoutItemInput
 
-<p><ApiSourceLink label={"GridLayoutItemInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={44}>GridLayout item 的作者输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutItemInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={36}
+  >
+    GridLayout item 的作者输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖垂直对齐 |
-| `child` | `IRChild` | — | 任意可 JSON 序列化的 Core 子图形 |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 列放置范围 |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | 覆盖水平对齐 |
-| `key?` | `string` | — | 可选稳定身份；省略时按 source index 生成 |
-| `kind` | `"grid"` | — | 网格布局子项判别字段 |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 轨道区域内缩前的子项外边距 |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 行放置范围 |
+| 成员           | 类型                                                                                                                                                                                                               | 默认值 | 说明                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------- |
+| `alignSelf?`   | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —      | 覆盖垂直对齐                             |
+| `child`        | `IRChild`                                                                                                                                                                                                          | —      | 任意可 JSON 序列化的 Core 子图形         |
+| `column?`      | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 列放置范围                               |
+| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —      | 覆盖水平对齐                             |
+| `key?`         | `string`                                                                                                                                                                                                           | —      | 可选稳定身份；省略时按 source index 生成 |
+| `kind`         | `"grid"`                                                                                                                                                                                                           | —      | 网格布局子项判别字段                     |
+| `margin?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`    | 轨道区域内缩前的子项外边距               |
+| `row?`         | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 行放置范围                               |
 
 </ApiTable>
 
@@ -317,48 +321,28 @@ export type GridLayoutItemInput = IRGridLayoutItem;
 
 </DocTabs>
 
-### GridOverlapValue
-
-<p><ApiSourceLink label={"GridOverlapValue"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={19}>GridLayout fully explicit overlap 策略取值</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type GridOverlapValue =
-  | "reject"
-  | "allow";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type GridOverlapValue = ValueOf<typeof GridOverlap>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### GridPlacementInput
 
-<p><ApiSourceLink label={"GridPlacementInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={37}>Grid 单轴 placement 的作者输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridPlacementInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={29}
+  >
+    Grid 单轴 placement 的作者输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `span?` | `number` | `1` | 跨越的正整数轨道数量 |
-| `start?` | `number` | — | 从零开始的显式轨道起点；省略时自动放置 |
+| 成员     | 类型     | 默认值 | 说明                                   |
+| -------- | -------- | ------ | -------------------------------------- |
+| `span?`  | `number` | `1`    | 跨越的正整数轨道数量                   |
+| `start?` | `number` | —      | 从零开始的显式轨道起点；省略时自动放置 |
 
 </ApiTable>
 
@@ -376,7 +360,15 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 ### GridTrackBreadthInput
 
-<p><ApiSourceLink label={"GridTrackBreadthInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={25}>Grid track breadth 的作者输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridTrackBreadthInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={17}
+  >
+    Grid track breadth 的作者输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="fixed">
 
@@ -384,10 +376,10 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"fixed"` | — | 尺寸或放置形式的判别字段 |
-| `value` | `number` | — | 固定非负尺寸 |
+| 成员    | 类型      | 默认值 | 说明                     |
+| ------- | --------- | ------ | ------------------------ |
+| `kind`  | `"fixed"` | —      | 尺寸或放置形式的判别字段 |
+| `value` | `number`  | —      | 固定非负尺寸             |
 
 </ApiTable>
 
@@ -397,10 +389,10 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"content"` | — | 尺寸或放置形式的判别字段 |
-| `mode` | `"minimum" \| "natural"` | — | 使用 minimum 最小贡献或 natural 自然贡献 |
+| 成员   | 类型                     | 默认值 | 说明                                     |
+| ------ | ------------------------ | ------ | ---------------------------------------- |
+| `kind` | `"content"`              | —      | 尺寸或放置形式的判别字段                 |
+| `mode` | `"minimum" \| "natural"` | —      | 使用 minimum 最小贡献或 natural 自然贡献 |
 
 </ApiTable>
 
@@ -410,10 +402,10 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `factor` | `number` | — | 有限剩余空间中的正份额权重 |
-| `kind` | `"fraction"` | — | 尺寸或放置形式的判别字段 |
+| 成员     | 类型         | 默认值 | 说明                       |
+| -------- | ------------ | ------ | -------------------------- |
+| `factor` | `number`     | —      | 有限剩余空间中的正份额权重 |
+| `kind`   | `"fraction"` | —      | 尺寸或放置形式的判别字段   |
 
 </ApiTable>
 
@@ -431,7 +423,15 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 ### GridTrackInput
 
-<p><ApiSourceLink label={"GridTrackInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={31}>Grid track 的作者输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridTrackInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={23}
+  >
+    Grid track 的作者输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="fixed">
 
@@ -439,10 +439,10 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"fixed"` | — | 尺寸或放置形式的判别字段 |
-| `value` | `number` | — | 固定非负尺寸 |
+| 成员    | 类型      | 默认值 | 说明                     |
+| ------- | --------- | ------ | ------------------------ |
+| `kind`  | `"fixed"` | —      | 尺寸或放置形式的判别字段 |
+| `value` | `number`  | —      | 固定非负尺寸             |
 
 </ApiTable>
 
@@ -452,10 +452,10 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"content"` | — | 尺寸或放置形式的判别字段 |
-| `mode` | `"minimum" \| "natural"` | — | 使用 minimum 最小贡献或 natural 自然贡献 |
+| 成员   | 类型                     | 默认值 | 说明                                     |
+| ------ | ------------------------ | ------ | ---------------------------------------- |
+| `kind` | `"content"`              | —      | 尺寸或放置形式的判别字段                 |
+| `mode` | `"minimum" \| "natural"` | —      | 使用 minimum 最小贡献或 natural 自然贡献 |
 
 </ApiTable>
 
@@ -465,10 +465,10 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `factor` | `number` | — | 有限剩余空间中的正份额权重 |
-| `kind` | `"fraction"` | — | 尺寸或放置形式的判别字段 |
+| 成员     | 类型         | 默认值 | 说明                       |
+| -------- | ------------ | ------ | -------------------------- |
+| `factor` | `number`     | —      | 有限剩余空间中的正份额权重 |
+| `kind`   | `"fraction"` | —      | 尺寸或放置形式的判别字段   |
 
 </ApiTable>
 
@@ -478,11 +478,11 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"minmax"` | — | 尺寸或放置形式的判别字段 |
-| `max` | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; } \| { factor: number; kind: "fraction"; }` | — | 固定、内容或份额上界；固定上下界时 max 不小于 min |
-| `min` | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; }` | — | 固定或内容下界，不接受份额轨道 |
+| 成员   | 类型                                                                                                                               | 默认值 | 说明                                              |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------- |
+| `kind` | `"minmax"`                                                                                                                         | —      | 尺寸或放置形式的判别字段                          |
+| `max`  | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; } \| { factor: number; kind: "fraction"; }` | —      | 固定、内容或份额上界；固定上下界时 max 不小于 min |
+| `min`  | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; }`                                          | —      | 固定或内容下界，不接受份额轨道                    |
 
 </ApiTable>
 
@@ -500,7 +500,15 @@ export type GridTrackInput = ZodInput<typeof GridTrackSchema>;
 
 ### IRGridLayout
 
-<p><ApiSourceLink label={"IRGridLayout"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>GridLayout 的 canonical JSON IR</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRGridLayout'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={39}
+  >
+    GridLayout 的 canonical JSON IR
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
@@ -510,9 +518,9 @@ export type GridTrackInput = ZodInput<typeof GridTrackSchema>;
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `children?` | `Array<IRGridLayoutItem>` | `[]` | 作者声明的直属子项，省略时按空列表处理 |
+| 成员        | 类型                      | 默认值 | 说明                                   |
+| ----------- | ------------------------- | ------ | -------------------------------------- |
+| `children?` | `Array<IRGridLayoutItem>` | `[]`   | 作者声明的直属子项，省略时按空列表处理 |
 
 </ApiTable>
 
@@ -522,7 +530,7 @@ export type GridTrackInput = ZodInput<typeof GridTrackSchema>;
 
 ```ts
 export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> & {
-    children?: Array<IRGridLayoutItem>;
+  children?: Array<IRGridLayoutItem>;
 };
 ```
 
@@ -532,26 +540,32 @@ export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> &
 
 ### IRGridLayoutItem
 
-<p><ApiSourceLink label={"IRGridLayoutItem"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={40}>GridLayout item 的 canonical JSON IR</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRGridLayoutItem'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={32}
+  >
+    GridLayout item 的 canonical JSON IR
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖垂直对齐 |
-| `child` | `IRChild` | — | 任意可 JSON 序列化的 Core 子图形 |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 列放置范围 |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | 覆盖水平对齐 |
-| `key?` | `string` | — | 可选稳定身份；省略时按 source index 生成 |
-| `kind` | `"grid"` | — | 网格布局子项判别字段 |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 轨道区域内缩前的子项外边距 |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | 行放置范围 |
+| 成员           | 类型                                                                                                                                                                                                               | 默认值 | 说明                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------- |
+| `alignSelf?`   | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —      | 覆盖垂直对齐                             |
+| `child`        | `IRChild`                                                                                                                                                                                                          | —      | 任意可 JSON 序列化的 Core 子图形         |
+| `column?`      | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 列放置范围                               |
+| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —      | 覆盖水平对齐                             |
+| `key?`         | `string`                                                                                                                                                                                                           | —      | 可选稳定身份；省略时按 source index 生成 |
+| `kind`         | `"grid"`                                                                                                                                                                                                           | —      | 网格布局子项判别字段                     |
+| `margin?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`    | 轨道区域内缩前的子项外边距               |
+| `row?`         | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 行放置范围                               |
 
 </ApiTable>
 
@@ -560,7 +574,8 @@ export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> &
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'child'> & Pick<ZodInfer<typeof GridLayoutItemSchema>, 'child'>;
+export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'child'> &
+  Pick<ZodInfer<typeof GridLayoutItemSchema>, 'child'>;
 ```
 
 </DocTab>
@@ -569,23 +584,29 @@ export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'chil
 
 ### LayoutTrackArtifact
 
-<p><ApiSourceLink label={"LayoutTrackArtifact"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={64}>GridLayout 的 resolved track artifact</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutTrackArtifact'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={53}
+  >
+    GridLayout 的 resolved track artifact
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `implicit` | `boolean` | — | 是否为超出显式列表后生成的隐式轨道 |
-| `index` | `number` | — | 从零开始且连续的轨道序号 |
-| `size` | `number` | — | 已求解的非负轨道尺寸 |
-| `sourceKind` | `"fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"` | — | 轨道最外层的尺寸策略 |
-| `start` | `number` | — | 轨道的物理起点 |
+| 成员         | 类型                                                                          | 默认值 | 说明                               |
+| ------------ | ----------------------------------------------------------------------------- | ------ | ---------------------------------- |
+| `implicit`   | `boolean`                                                                     | —      | 是否为超出显式列表后生成的隐式轨道 |
+| `index`      | `number`                                                                      | —      | 从零开始且连续的轨道序号           |
+| `size`       | `number`                                                                      | —      | 已求解的非负轨道尺寸               |
+| `sourceKind` | `"fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"` | —      | 轨道最外层的尺寸策略               |
+| `start`      | `number`                                                                      | —      | 轨道的物理起点                     |
 
 </ApiTable>
 
@@ -601,38 +622,17 @@ export type LayoutTrackArtifact = ZodInfer<typeof LayoutTrackArtifactSchema>;
 
 </DocTabs>
 
-### LayoutTrackSourceKindValue
-
-<p><ApiSourceLink label={"LayoutTrackSourceKindValue"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={61}>GridLayout 轨道产物来源取值</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type LayoutTrackSourceKindValue =
-  | "fixed"
-  | "fraction"
-  | "content-minimum"
-  | "content-natural"
-  | "minmax";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type LayoutTrackSourceKindValue = ValueOf<typeof LayoutTrackSourceKind>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### GRID_LAYOUT_MAX_TRACKS_PER_AXIS
 
-<p><ApiSourceLink label={"GRID_LAYOUT_MAX_TRACKS_PER_AXIS"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={28}>GridLayout 单轴最多解析的显式与隐式 track 数</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GRID_LAYOUT_MAX_TRACKS_PER_AXIS'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={30}
+  >
+    GridLayout 单轴最多解析的显式与隐式 track 数
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GRID_LAYOUT_MAX_TRACKS_PER_AXIS = 10000;
@@ -640,67 +640,118 @@ export const GRID_LAYOUT_MAX_TRACKS_PER_AXIS = 10000;
 
 ### GridAutoFlow
 
-<p><ApiSourceLink label={"GridAutoFlow"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={2}>GridLayout 自动放置的流向</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridAutoFlow'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={4}
+  >
+    GridLayout 自动放置的流向
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GridAutoFlow = {
-    Row: 'row',
-    Column: 'column',
+  Row: 'row',
+  Column: 'column',
 } as const;
+
+export type GridAutoFlow = ValueOf<typeof GridAutoFlow>;
 ```
 
 ### GridLayoutDefinition
 
-<p><ApiSourceLink label={"GridLayoutDefinition"} path={"packages/library/layout/src/composites/grid-layout/definition.ts"} startLine={10}>Layout GridLayout 的官方 Core layout-aware composite definition</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutDefinition'}
+    path={'packages/library/layout/src/composites/grid-layout/definition.ts'}
+    startLine={10}
+  >
+    Layout GridLayout 的官方 Core layout-aware composite definition
+  </ApiSourceLink>
+</p>
 
 ```ts
-export const GridLayoutDefinition: LayoutCompositeDefinition<IRGridLayout, typeof LAYOUT_NAMESPACE, 'gridLayout', GridLayoutArtifact> = defineComposite({
-    namespace: LAYOUT_NAMESPACE,
-    type: 'gridLayout',
-    schema: GridLayoutSchema,
-    compile: compileGridLayout,
-    artifactSchema: GridLayoutArtifactSchema,
+export const GridLayoutDefinition: LayoutCompositeDefinition<
+  IRGridLayout,
+  typeof LAYOUT_NAMESPACE,
+  'gridLayout',
+  GridLayoutArtifact
+> = defineComposite({
+  namespace: LAYOUT_NAMESPACE,
+  type: 'gridLayout',
+  schema: GridLayoutSchema,
+  compile: compileGridLayout,
+  artifactSchema: GridLayoutArtifactSchema,
 });
 ```
 
 ### GridLayoutProvider
 
-<p><ApiSourceLink label={"GridLayoutProvider"} path={"packages/library/layout/src/composites/grid-layout/provider.ts"} startLine={8}>GridLayout 的 Core Composite dependency provider</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutProvider'}
+    path={'packages/library/layout/src/composites/grid-layout/provider.ts'}
+    startLine={8}
+  >
+    GridLayout 的 Core Composite dependency provider
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GridLayoutProvider: CoreDependencyProvider = Object.freeze({
-    key: Object.freeze({
-        capability: 'composite',
-        namespace: GridLayoutDefinition.namespace,
-        type: GridLayoutDefinition.type,
-    }),
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze({}),
-    makeDefinition: makeGridLayoutDefinition,
+  key: Object.freeze({
+    capability: 'composite',
+    namespace: GridLayoutDefinition.namespace,
+    type: GridLayoutDefinition.type,
+  }),
+  dependencies: Object.freeze([]),
+  datasets: Object.freeze({}),
+  makeDefinition: makeGridLayoutDefinition,
 });
 ```
 
 ### GridOverlap
 
-<p><ApiSourceLink label={"GridOverlap"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={8}>GridLayout 显式区域重叠策略</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridOverlap'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={10}
+  >
+    GridLayout 显式区域重叠策略
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GridOverlap = {
-    Reject: 'reject',
-    Allow: 'allow',
+  Reject: 'reject',
+  Allow: 'allow',
 } as const;
+
+export type GridOverlap = ValueOf<typeof GridOverlap>;
 ```
 
 ### LayoutTrackSourceKind
 
-<p><ApiSourceLink label={"LayoutTrackSourceKind"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={14}>GridLayout 布局产物中轨道的定义尺寸来源</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutTrackSourceKind'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={16}
+  >
+    GridLayout 布局产物中轨道的定义尺寸来源
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutTrackSourceKind = {
-    Fixed: 'fixed',
-    ContentMinimum: 'content-minimum',
-    ContentNatural: 'content-natural',
-    Fraction: 'fraction',
-    Minmax: 'minmax',
+  Fixed: 'fixed',
+  ContentMinimum: 'content-minimum',
+  ContentNatural: 'content-natural',
+  Fraction: 'fraction',
+  Minmax: 'minmax',
 } as const;
+
+export type LayoutTrackSourceKind = ValueOf<typeof LayoutTrackSourceKind>;
 ```

@@ -21,7 +21,7 @@ Callout 曾同时尝试表达目标附属说明、任意内容容器、可选 le
 本决策撤回 Callout 时的基础 discriminator 为：
 
 ```ts
-type GraphTypeValue = 'graph' | 'group' | 'entity' | 'relation';
+type GraphType = 'graph' | 'group' | 'entity' | 'relation';
 ```
 
 Callout 不再拥有 Source IR、schema、factory、Definition、provider、artifact、React / Vanilla authoring、schema registry、Docs route 或 demo。Graph 不把它降级为 Core Node、Node label、Path 或 Group，也不保留 target、placement、leader、content、appearance 或 artifact 的字段子集

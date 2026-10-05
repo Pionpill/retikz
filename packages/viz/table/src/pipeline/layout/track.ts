@@ -44,6 +44,7 @@ const validateResolvedTrack = (track: ResolvedTableTrackSize, index: number): vo
         default:
           throw new RetikzTableError(`table: track ${index} has an invalid min kind`);
       }
+
       switch (track.max.kind) {
         case TableTrackSizeKind.Fixed:
           assertFiniteNonnegative(track.max.value, `track ${index} max fixed value`);
@@ -59,6 +60,7 @@ const validateResolvedTrack = (track: ResolvedTableTrackSize, index: number): vo
         default:
           throw new RetikzTableError(`table: track ${index} has an invalid max kind`);
       }
+
       return;
     default:
       return track satisfies never;
@@ -70,6 +72,7 @@ const contributionSizesOf = (
   contributions: SolveTableTracksInput['contributions'],
 ): ReadonlyArray<number> => {
   const sizes = Array.from({ length: trackCount }, () => 0);
+
   for (const contribution of contributions) {
     if (
       !Number.isInteger(contribution.trackIndex) ||
@@ -80,9 +83,11 @@ const contributionSizesOf = (
         `table: contribution trackIndex ${String(contribution.trackIndex)} is out of range for ${trackCount} tracks`,
       );
     }
+
     assertFiniteNonnegative(contribution.size, `contribution size at track ${contribution.trackIndex}`);
     sizes[contribution.trackIndex] = Math.max(sizes[contribution.trackIndex], contribution.size);
   }
+
   return sizes;
 };
 
@@ -100,6 +105,7 @@ const unconstrainedSizeOf = (track: ResolvedTableTrackSize, contribution: number
           ? Math.min(Math.max(contribution, minimum), Math.max(minimum, track.max.value))
           : contribution;
       }
+
       return track.min.kind === TableTrackSizeKind.Fixed ? Math.max(minimum, contribution) : contribution;
     }
   }
@@ -118,9 +124,11 @@ const constrainedStateOf = (track: ResolvedTableTrackSize, contribution: number)
       if (track.max.kind === TableTrackSizeKind.Fixed) {
         return { base, growthLimit: Math.max(base, track.max.value), flexFactor: 0 };
       }
+
       if (track.max.kind === TableTrackSizeKind.Auto) {
         return { base, growthLimit: Math.max(base, contribution), flexFactor: 0 };
       }
+
       return { base, growthLimit: Number.POSITIVE_INFINITY, flexFactor: track.max.weight };
     }
   }
@@ -163,6 +171,7 @@ const growBoundedTracks = (
         }
       }
     }
+
     if (!(consumed > 0)) break;
 
     remaining = Math.max(0, remaining - consumed);
@@ -175,6 +184,7 @@ const growBoundedTracks = (
 /** 按归一化正权重分配剩余空间，并把不可均分的浮点 residual 确定性留给末轨 */
 const growFlexibleTracks = (sizes: Array<number>, states: ReadonlyArray<TrackState>, remaining: number): void => {
   if (!(remaining > 0)) return;
+
   const flexIndexes = states.flatMap((state, index) => (state.flexFactor > 0 ? [index] : []));
   if (flexIndexes.length === 0) return;
 
@@ -202,6 +212,7 @@ export const solveTableTracks = (input: SolveTableTracksInput): ReadonlyArray<nu
   if (input.availableSize !== undefined) {
     assertFiniteNonnegative(input.availableSize, 'availableSize');
   }
+
   input.tracks.forEach(validateResolvedTrack);
   const contributions = contributionSizesOf(input.tracks.length, input.contributions);
 
@@ -217,5 +228,6 @@ export const solveTableTracks = (input: SolveTableTracksInput): ReadonlyArray<nu
 
   const remaining = growBoundedTracks(sizes, states, trackSpace - baseTotal);
   growFlexibleTracks(sizes, states, remaining);
+
   return Object.freeze(sizes);
 };

@@ -104,6 +104,7 @@ describe('Node label placement', () => {
         placement: 'outside',
         distance: 4,
       });
+
       expect(SceneSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
     });
   });

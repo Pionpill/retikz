@@ -61,12 +61,15 @@ export const createFlowBezierBaseline = (
     return { kind: routing.kind, control: routing.control, points };
   if (routing.kind === 'cubic' && routing.control1 !== undefined)
     return { kind: routing.kind, control1: routing.control1, control2: routing.control2, points };
+
   const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
   if (!Number.isFinite(length) || length <= DEFAULT_EPSILON) return unavailable(relation, relationIndex);
+
   const along = (parameter: number): Position => [
     from[0] * (1 - parameter) + to[0] * parameter,
     from[1] * (1 - parameter) + to[1] * parameter,
   ];
+
   return routing.kind === 'curve'
     ? { kind: 'curve', points, control: along(0.5) }
     : { kind: 'cubic', points, control1: along(1 / 3), control2: along(2 / 3) };
@@ -85,6 +88,7 @@ export const evaluateFlowBezierConflicts = (
   const relatedIds = new Set<string>();
   let nodes = 0,
     labelConflicts = 0;
+
   for (const obstacle of obstacles) {
     if (
       findFlowCurveObstacleIntervals(
@@ -98,24 +102,28 @@ export const evaluateFlowBezierConflicts = (
       blockers.push(obstacle.bounds);
       relatedIds.add(obstacle.id);
     }
+
     if (labelBounds !== undefined && doFlowBoundsOverlap(labelBounds, obstacle.bounds)) {
       labelConflicts++;
       blockers.push(obstacle.bounds);
       relatedIds.add(obstacle.id);
     }
   }
+
   for (const label of labels) {
     if (findFlowCurveObstacleIntervals(segment, label.bounds).length > 0) {
       labelConflicts++;
       blockers.push(label.bounds);
       relatedIds.add(label.id);
     }
+
     if (labelBounds !== undefined && doFlowBoundsOverlap(labelBounds, label.bounds)) {
       labelConflicts++;
       blockers.push(label.bounds);
       relatedIds.add(label.id);
     }
   }
+
   return { nodes, labelConflicts, blockers, relatedIds: [...relatedIds], labelBounds };
 };
 
@@ -133,11 +141,13 @@ export const selectFlowBezierRoute = (
   const normal: Position = [tangent[1], -tangent[0]];
   const project = (point: Readonly<Position>, direction: Position): number =>
     (point[0] - from[0]) * direction[0] + (point[1] - from[1]) * direction[1];
+
   const evaluate = (route: FlowBezierRoute) => {
     const conflicts = evaluateFlowBezierConflicts(route, relation, obstacles, labels);
     const segment = createFlowBezierCurve(route);
     const range = curve.projectedRange(segment, normal);
     const origin = from[0] * normal[0] + from[1] * normal[1];
+
     return {
       route,
       ...conflicts,
@@ -149,14 +159,18 @@ export const selectFlowBezierRoute = (
       ],
     };
   };
+
   let best = evaluate(initial);
   const blockers = new Set<Readonly<BoundsRect>>();
+
   const consider = (route: FlowBezierRoute): void => {
     const candidate = evaluate(route);
     if (candidate.score.some(value => !Number.isFinite(value))) return;
+
     const difference = candidate.score.findIndex((value, index) => value !== best.score[index]);
     if (difference >= 0 && candidate.score[difference] < best.score[difference]) best = candidate;
   };
+
   for (let wave = 0; wave < 2 && (best.nodes > 0 || best.labelConflicts > 0); wave++) {
     for (const box of best.blockers) blockers.add(box);
     const corners = [...blockers].flatMap(
@@ -175,8 +189,10 @@ export const selectFlowBezierRoute = (
       Math.min((length * 3) / 4, (Math.min(...longitudinal) + Math.max(...longitudinal)) / 2),
     );
     const clearance = (Math.max(layout.nodeGap, layout.rankGap, 1) / 2) * (wave + 1);
+
     for (const side of [1, -1]) {
       const y = side === 1 ? Math.max(...transverse) + clearance : Math.min(...transverse) - clearance;
+
       for (const parameter of [0.25, 0.5, 0.75]) {
         const inverse = 1 - parameter;
         const world = (along: number, across: number): Position => [
@@ -195,6 +211,7 @@ export const selectFlowBezierRoute = (
             consider({ ...initial, control });
           continue;
         }
+
         for (const [outAngle, inAngle] of [
           [30, -30],
           [60, -60],
@@ -211,11 +228,13 @@ export const selectFlowBezierRoute = (
             by = -second * Math.sin(into);
           const determinant = ax * by - ay * bx;
           if (Math.abs(determinant) <= DEFAULT_EPSILON) continue;
+
           const remainderX = x - (second + parameter ** 3) * length;
           const a = (remainderX * by - y * bx) / determinant,
             b = (ax * y - ay * remainderX) / determinant;
           if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= 0 || a > 4 * length || b > 4 * length)
             continue;
+
           const control1 = world(a * Math.cos(out), a * Math.sin(out)),
             control2 = world(length - b * Math.cos(into), -b * Math.sin(into));
           if (control1.every(Number.isFinite) && control2.every(Number.isFinite))
@@ -224,5 +243,6 @@ export const selectFlowBezierRoute = (
       }
     }
   }
+
   return { route: best.route, ...(best.labelBounds === undefined ? {} : { labelBounds: best.labelBounds }) };
 };

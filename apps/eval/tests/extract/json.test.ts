@@ -9,11 +9,13 @@ describe('extractJson', () => {
 
   it('剥掉 ```json 围栏', () => {
     const text = '```json\n{"a":1}\n```';
+
     expect(extractJson(text)).toEqual({ a: 1 });
   });
 
   it('剥掉前后解释文字，取首个完整对象', () => {
     const text = 'Here you go:\n{"version":1,"type":"scene","children":[]}\nDone.';
+
     expect(extractJson(text)).toEqual({
       version: 1,
       type: 'scene',

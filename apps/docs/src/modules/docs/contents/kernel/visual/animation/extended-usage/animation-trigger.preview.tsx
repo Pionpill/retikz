@@ -36,6 +36,7 @@ export const AnimationTriggerPreview: FC<AnimationTriggerPreviewProps> = props =
     easing: 'ease-in-out',
     trigger: triggers[trigger],
   };
+
   return (
     <div className="max-h-full w-full max-w-[360px] space-y-2 overflow-y-auto p-3">
       <p className="text-sm text-muted-foreground">{text.hints[trigger]}</p>

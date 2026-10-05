@@ -56,7 +56,7 @@ type GuideTargetSelector = {
 };
 
 type AxisGridConfig = {
-  applyTo?: AxisGridApplyToValue;
+  applyTo?: AxisGridApplyTo;
   select?: GuideTargetSelector;
 };
 
@@ -65,7 +65,7 @@ type IRPlotAxisGuide = {
 };
 
 type CompositionGuidePolicy = {
-  axes?: CompositionAxisPolicyValue;
+  axes?: CompositionAxisPolicy;
   gridPlacement?: CompositionGridPlacementValue;
   facetLabels?: CompositionFacetLabelPolicyValue;
   trackLabels?: CompositionTrackLabelPolicyValue;

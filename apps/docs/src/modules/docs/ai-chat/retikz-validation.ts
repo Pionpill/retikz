@@ -25,19 +25,23 @@ export const formatZodError = (err: ZodError): string => {
     return path ? `${path}: ${issue.message}` : issue.message;
   });
   const extra = err.issues.length > 3 ? ` (+${err.issues.length - 3} more)` : '';
+
   return issues.join('; ') + extra;
 };
 
 /** 同 RetikzPreview 的 resolveIr，但只返回 error 字段（true=非法）；分离出来 store 可独立调用 */
 const validateIrSource = (source: string): string | null => {
   let raw: unknown;
+
   try {
     raw = JSON.parse(source);
   } catch (err) {
     return `JSON parse failed — ${err instanceof Error ? err.message : String(err)}`;
   }
+
   const parsed = SceneSchema.safeParse(raw);
   if (!parsed.success) return `schema mismatch — ${formatZodError(parsed.error)}`;
+
   return null;
 };
 
@@ -61,15 +65,18 @@ export const extractRetikzBlocks = (content: string): Array<RetikzBlockValidatio
   const lines = content.split('\n');
   const out: Array<RetikzBlockValidation> = [];
   let i = 0;
+
   while (i < lines.length) {
     const line = lines[i];
     if (!line.startsWith('```')) {
       i++;
       continue;
     }
+
     const lang = line.slice(3).trim();
     const start = i + 1;
     let j = start;
+
     while (j < lines.length && !lines[j].startsWith('```')) j++;
     const closed = j < lines.length;
     if (!closed) break;
@@ -79,8 +86,10 @@ export const extractRetikzBlocks = (content: string): Array<RetikzBlockValidatio
       const error = format === 'ir' ? validateIrSource(source) : validateTsxSource(source);
       out.push({ format, source, error });
     }
+
     i = j + 1;
   }
+
   return out;
 };
 
@@ -103,6 +112,7 @@ export const buildRepairPrompt = (invalid: Array<RetikzBlockValidation>, lang: '
 
 ${sections.join('\n\n')}`;
   }
+
   return `你上面的 retikz 块没通过自动校验。请重新核对系统 prompt 里的 Schema 速查，然后**只重发修正后的 fenced 块**——不要加任何前言、解释、或其他内容。
 
 ${sections.join('\n\n')}`;

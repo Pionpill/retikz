@@ -10,6 +10,7 @@ it('Matrix preview renders data and nested JSX through real Vanilla adapters', (
   for (const mode of ['data', 'jsx'] as const) {
     const preview = buildPreviewIR(() => renderContent({ mode, expand: 'all' }));
     const vanilla = buildVanillaPreview(preview);
+
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.code).toContain('matrix(');
     expect(vanilla.code).toContain('MatrixInputEmbedAdapter');
@@ -20,11 +21,14 @@ it('Matrix preview preserves skeletons and generated cell endpoints', () => {
   const skeleton = buildVanillaPreview(
     buildPreviewIR(() => renderSkeleton({ rows: 2, columns: 3, mode: 'symbols', index: 'auto' })),
   );
+
   expect(skeleton.code).toContain('skeleton:');
   expect(skeleton.svg).toContain('x11');
+
   const reference = buildVanillaPreview(
     buildPreviewIR(() => renderReference({ row: 1, column: 0, overflow: 'clip', label: 'M' })),
   );
+
   expect(reference.svg).toContain('<svg');
   expect(reference.code).toContain('m-1-0');
 });

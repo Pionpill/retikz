@@ -1,4 +1,4 @@
-import type { DataFieldTypeValue, IRDataModel, IRDataScalarValue } from '@retikz/data';
+import type { DataFieldType, IRDataModel, IRDataScalarValue } from '@retikz/data';
 import type { ZodType } from 'zod';
 
 import type { IRTableCellPayload, IRTableStructureOperation } from '../../schemas';
@@ -17,12 +17,15 @@ export type TableStructureContext = Readonly<{
     sourceIndices: ReadonlyArray<number>;
   }>;
   /** 解析当前 structure 使用的字段测量类型 */
-  resolveFieldTypes: (sourceFields: ReadonlySet<string>) => ReadonlyMap<string, DataFieldTypeValue>;
+  resolveFieldTypes: (sourceFields: ReadonlySet<string>) => ReadonlyMap<string, DataFieldType>;
   /** 按 source index 与 dotted path 读取 scalar；缺失字段返回 undefined */
   resolveField: (sourceIndex: number, field: string) => IRDataScalarValue | undefined;
 }>;
 
-/** Table structure provider 定义 */
+/**
+ * Table structure provider 定义
+ * @template TStructure 结构 schema 解析后的精确操作类型，决定 build 接收的结构字段；默认 IRTableStructureOperation
+ */
 export type TableStructureDefinition<TStructure extends IRTableStructureOperation = IRTableStructureOperation> = {
   /** operation 的精确 runtime schema，kind 必须是非空 literal */
   schema: ZodType<TStructure>;

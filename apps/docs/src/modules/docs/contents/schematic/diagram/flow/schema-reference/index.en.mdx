@@ -21,6 +21,8 @@ Source omits positions and routes derived by layout. Runtime Definition defaults
 
 ## FlowLayoutSchema
 
+A vertical linear Layout allocates the largest natural width to its direct horizontal rows or Groups with one horizontal content root. A number fixes direct Entity widths; match-largest equalizes final widths; fill shares free width in an allocated horizontal row while preserving natural width differences.
+
 `linear` arranges direct children along one direction. `grid` places them in physical rows and columns. Neither creates a visible shell or acts as a Relation endpoint.
 
 <ZodSchema name="FlowLayoutSchema" expandNested />

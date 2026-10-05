@@ -15,6 +15,7 @@ const counter = defineRuntimeSource<number, number, number, never>({
   key: 'counter',
   value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
 });
+
 const sources = createRuntimeSourceRegistry({ builtins: [counter] });
 
 describe('Computation artifact defaults', () => {
@@ -29,9 +30,12 @@ describe('Computation artifact defaults', () => {
     });
     const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
     const runtime = createRuntime({ sources, computations, initialSnapshots: [createRuntimeSourceInput(counter, 1)] });
+
     try {
       expect(runtime.artifact(computation).value.toFixed()).toBe('2');
+
       runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(counter, 3)] });
+
       expect(runtime.artifact(computation)).toEqual({ revision: 1, value: 5 });
       expect(observed).toEqual([2, 5]);
     } finally {
@@ -62,11 +66,14 @@ describe('Computation artifact defaults', () => {
     });
     const computations = createRuntimeComputationRegistry({ sources, builtins: [captured, privateRead, publicRead] });
     const runtime = createRuntime({ sources, computations, initialSnapshots: [createRuntimeSourceInput(counter, 1)] });
+
     try {
       expect(runtime.artifact(captured).value).toBe('value:1');
       expect(runtime.artifact(privateRead).value.toFixed()).toBe('1');
       expect(runtime.artifact(publicRead).value).toBe('public:1');
+
       runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(counter, 2)] });
+
       expect(runtime.artifact(captured).value).toBe('value:2');
       expect(runtime.artifact(privateRead).value).toBe(11);
       expect(runtime.artifact(publicRead).value).toBe('public:21');
@@ -85,10 +92,13 @@ describe('Computation artifact defaults', () => {
     });
     const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
     const runtime = createRuntime({ sources, computations, initialSnapshots: [createRuntimeSourceInput(counter, 1)] });
+
     try {
       expect(runtime.artifact(computation).value).toBe(value);
       expect(Object.isFrozen(value)).toBe(false);
+
       runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(counter, 2)] });
+
       expect(runtime.artifact(computation).value).toBe(value);
     } finally {
       runtime.dispose();
@@ -108,19 +118,23 @@ describe('Computation artifact defaults', () => {
     });
     const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
     const runtime = createRuntime({ sources, computations, initialSnapshots: [createRuntimeSourceInput(counter, 1)] });
+
     try {
       expect(() =>
         runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(counter, 2)] }),
       ).toThrow(expect.objectContaining({ code: RetikzRuntimeErrorCode.ArtifactOwnershipAlias }));
       expect(runtime.artifact(computation)).toEqual({ revision: 0, value: first });
       expect(disposed).toEqual([]);
+
       candidate = second;
       runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(counter, 2)] });
+
       expect(disposed).toEqual([first]);
       expect(runtime.artifact(computation).value).toBe(second);
     } finally {
       runtime.dispose();
     }
+
     expect(disposed).toEqual([first, second]);
   });
 });

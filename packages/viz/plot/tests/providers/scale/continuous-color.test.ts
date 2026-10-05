@@ -27,6 +27,7 @@ const firstLayer = (
 /** 深度收集图层内所有 point node（连续色按色分组到子 Scope，fill 落在子 Scope.nodeDefault） */
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -34,12 +35,15 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -47,7 +51,9 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -57,6 +63,7 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
  */
 const nodeFills = (layer: IRScope): Array<string | undefined> => {
   const out: Array<string | undefined> = [];
+
   const walk = (children: ReadonlyArray<unknown>, inheritedFill: string | undefined): void => {
     for (const child of children) {
       const node = child as {
@@ -70,7 +77,9 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
         walk(node.children, node.defaults?.node?.style?.fill ?? inheritedFill);
     }
   };
+
   walk(layer.children, undefined);
+
   return out;
 };
 
@@ -106,8 +115,10 @@ describe('连续色 · sequential 求值（contract）', () => {
     ];
     const layer = firstLayer(pointSpec({ type: 'sequential', domain: [0, 100] }), { d: data });
     const fills = nodeFills(layer);
+
     expect(fills).toHaveLength(3);
     expect(fills.every(f => typeof f === 'string' && f.length > 0)).toBe(true);
+
     // 端点（v=0 与 v=100）取不同颜色（单方向色带两端）
     expect(fills[0]).not.toEqual(fills[2]);
   });
@@ -122,6 +133,7 @@ describe('连续色 · sequential 求值（contract）', () => {
       firstLayer(pointSpec({ type: 'sequential', domain: [0, 100], scheme: 'blues' }), { d: data }),
     );
     const viridis = nodeFills(firstLayer(pointSpec({ type: 'sequential', domain: [0, 100] }), { d: data }));
+
     expect(blues[1]).not.toEqual(viridis[1]);
   });
 
@@ -147,6 +159,7 @@ describe('连续色 · sequential 求值（contract）', () => {
       ],
     });
     const fills = nodeFills(firstLayer(spec, { d: data }));
+
     expect(fills).toHaveLength(3);
     expect(fills[0]).not.toEqual(fills[2]);
   });
@@ -163,9 +176,12 @@ describe('连续色 · diverging 求值（contract）', () => {
     const fills = nodeFills(
       firstLayer(pointSpec({ type: 'diverging', domain: [-100, 0, 100], scheme: 'rdbu' }), { d: data }),
     );
+
     expect(fills).toHaveLength(3);
+
     // 两端异色
     expect(fills[0]).not.toEqual(fills[2]);
+
     // 中点（v=0）与两端均不同（pale center）
     expect(fills[1]).not.toEqual(fills[0]);
     expect(fills[1]).not.toEqual(fills[2]);
@@ -188,6 +204,7 @@ describe('连续色 · diverging 求值（contract）', () => {
         { d: data },
       ),
     );
+
     // range 端点颜色（覆盖 scheme）；端点取自定义 range 两端
     const lowSeq = nodeFills(
       firstLayer(pointSpec({ type: 'sequential', domain: [0, 100], range: ['#123456', '#abcdef'] }), {
@@ -197,6 +214,7 @@ describe('连续色 · diverging 求值（contract）', () => {
         ],
       }),
     );
+
     expect(lowSeq[0]?.toLowerCase()).toContain('12');
     expect(fills[0]).not.toEqual(fills[1]);
   });
@@ -253,6 +271,7 @@ describe('连续色 · domain 推断与退化（contract）', () => {
       { x: 2, y: 2, v: 11 },
     ];
     const fills = nodeFills(firstLayer(pointSpec({ type: 'sequential' }), { d: data }));
+
     expect(fills).toHaveLength(3);
     expect(fills[0]).not.toEqual(fills[2]);
   });
@@ -264,6 +283,7 @@ describe('连续色 · domain 推断与退化（contract）', () => {
       { x: 2, y: 2, v: 4 },
     ];
     const fills = nodeFills(firstLayer(pointSpec({ type: 'diverging' }), { d: data }));
+
     expect(fills).toHaveLength(3);
     expect(fills[0]).not.toEqual(fills[2]);
   });
@@ -275,8 +295,11 @@ describe('连续色 · domain 推断与退化（contract）', () => {
       { x: 1, y: 1, v: 5 },
       { x: 2, y: 2, v: 5 },
     ];
+
     expect(() => firstLayer(pointSpec({ type: 'sequential' }), { d: data })).not.toThrow();
+
     const fills = nodeFills(firstLayer(pointSpec({ type: 'sequential' }), { d: data }));
+
     expect(fills.every(f => typeof f === 'string' && f.length > 0)).toBe(true);
   });
 });
@@ -309,6 +332,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
       { x: 1, y: 3, v: 5 },
       { x: 2, y: 2, v: 10 },
     ];
+
     expect(() => expandOf(pathColorSpec('line'), { d: data })).toThrow();
   });
 
@@ -319,6 +343,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
       { x: 1, y: 3, v: 5 },
       { x: 2, y: 2, v: 10 },
     ];
+
     expect(() => expandOf(pathColorSpec('area'), { d: data })).toThrow();
   });
 
@@ -328,6 +353,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
       { x: 0, y: 0, v: -100 },
       { x: 1, y: 1, v: 100 },
     ];
+
     expect(() => expandOf(pointSpec({ type: 'diverging', domain: [100, 0, -100] }), { d: data })).toThrow();
   });
 
@@ -337,6 +363,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
       { x: 0, y: 0, v: 0 },
       { x: 1, y: 1, v: 100 },
     ];
+
     expect(() => expandOf(pointSpec({ type: 'sequential', domain: [100, 0] }), { d: data })).toThrow();
   });
 
@@ -364,6 +391,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
       { x: 0, y: 0, date: '2024-01-01' },
       { x: 1, y: 1, date: '2024-06-01' },
     ];
+
     expect(() => expandOf(spec, { d: data })).toThrow();
   });
 });
@@ -396,6 +424,7 @@ describe('连续色 · temporal sequential（contract）', () => {
     ];
     const layer = firstLayer(spec, { d: data });
     const fills = nodeFills(layer);
+
     expect(fills).toHaveLength(3);
     expect(fills[0]).not.toEqual(fills[2]);
   });
@@ -469,6 +498,7 @@ describe('连续色 · 回归：categorical 仍走 ordinal（contract）', () =>
       { x: 1, y: 1, city: 'B' },
     ];
     const fills = nodeFills(firstLayer(spec, { d: data }));
+
     expect(fills[0]).not.toEqual(fills[1]);
     expect(collectNodes(firstLayer(spec, { d: data }))).toHaveLength(2);
     expect(collectPaths(firstLayer(spec, { d: data }))).toHaveLength(0);

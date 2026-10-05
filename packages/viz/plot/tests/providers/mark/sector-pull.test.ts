@@ -31,6 +31,7 @@ const firstLayer = (
 
 const sectorNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -38,7 +39,9 @@ const sectorNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -46,16 +49,20 @@ const sectorParams = (
   node: IRNode,
 ): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
   const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
+
   expect(shape?.type).toBe('sector');
   return shape!.params as { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
 };
 
 const vectorPosition = (node: IRNode): [number, number] => {
   const { position } = node;
+
   expect(Array.isArray(position)).toBe(true);
+
   if (!Array.isArray(position) || typeof position[0] !== 'number' || typeof position[1] !== 'number') {
     throw new Error('expected cartesian node position');
   }
+
   return [position[0], position[1]];
 };
 
@@ -85,8 +92,11 @@ describe('IntervalMark.pull sector geometry', () => {
   it('constant pull moves sector node center along the final mid angle', () => {
     const spec = pieSpec({ kind: 'constant', value: 20 });
     const nodes = sectorNodes(firstLayer(spec, { share }));
+
     expect(nodes).toHaveLength(2);
+
     const params = sectorParams(nodes[0]);
+
     expect(params.startAngle).toBeCloseTo(0, 6);
     expect(params.endAngle).toBeCloseTo(90, 6);
     expect(nodes[0].position).toEqual(pointAtArcAngle([200, 200], 20, 45));
@@ -94,6 +104,7 @@ describe('IntervalMark.pull sector geometry', () => {
 
   it('field-bound pull only moves rows with a non-zero field value', () => {
     const nodes = sectorNodes(firstLayer(pieSpec({ kind: 'field', value: 'offset' }), { share }));
+
     expect(nodes[0].position).toEqual([200, 200]);
     expect(nodes[1].position).toEqual(pointAtArcAngle([200, 200], 18, 225));
   });
@@ -101,6 +112,7 @@ describe('IntervalMark.pull sector geometry', () => {
   it('padAngle and pull use the padded sector mid angle without rewriting radii', () => {
     const nodes = sectorNodes(firstLayer(pieSpec({ kind: 'constant', value: 12 }, { padAngle: 10 }, 0.5), { share }));
     const params = sectorParams(nodes[0]);
+
     expect(params.startAngle).toBeCloseTo(5, 6);
     expect(params.endAngle).toBeCloseTo(85, 6);
     expect(params.innerRadius).toBeCloseTo(100, 6);
@@ -111,6 +123,7 @@ describe('IntervalMark.pull sector geometry', () => {
   it('pull zero matches an omitted pull', () => {
     const pulled = sectorNodes(firstLayer(pieSpec({ kind: 'constant', value: 0 }), { share }));
     const plain = sectorNodes(firstLayer(pieSpec(), { share }));
+
     expect(pulled.map(node => node.position)).toEqual(plain.map(node => node.position));
     expect(pulled.map(sectorParams)).toEqual(plain.map(sectorParams));
   });
@@ -118,6 +131,7 @@ describe('IntervalMark.pull sector geometry', () => {
   it('large finite pull keeps sector radii and angles unchanged', () => {
     const nodes = sectorNodes(firstLayer(pieSpec({ kind: 'constant', value: 260 }), { share }));
     const params = sectorParams(nodes[0]);
+
     expect(params.innerRadius).toBeCloseTo(0, 6);
     expect(params.outerRadius).toBeCloseTo(200, 6);
     expect(params.startAngle).toBeCloseTo(0, 6);
@@ -143,11 +157,13 @@ describe('IntervalMark.pull sector geometry', () => {
         },
       ],
     });
+
     expect(() => expandOf(spec, { share })).toThrow(/pull|sector/i);
   });
 
   it('invalid field-bound pull fails loud', () => {
     const spec = pieSpec({ kind: 'field', value: 'offset' });
+
     expect(() => expandOf(spec, { share: [{ label: 'A', value: 1, offset: -1 }] })).toThrow(/pull|non-negative/i);
     expect(() => expandOf(spec, { share: [{ label: 'A', value: 1, offset: 'far' }] })).toThrow(/pull|numeric/i);
   });
@@ -159,18 +175,21 @@ describe('IntervalMark.pull sector geometry', () => {
     const params = sectorParams(node);
     const midRadius = (params.innerRadius + params.outerRadius) / 2;
     const midAngle = (params.startAngle + params.endAngle) / 2;
+
     expect(locator.datum(0)?.position).toEqual(pointAtArcAngle(vectorPosition(node), midRadius, midAngle));
   });
 
   it('locator series centroid uses pulled datum anchors', () => {
     const spec = pieSpec({ kind: 'field', value: 'offset' }, { series: 'label' });
     const locator = createPlotLocator(spec, { share }, opts);
+
     expect(locator.series('B')?.position).toEqual(locator.datum(1)?.position);
   });
 
   it('chord interpolation applies padAngle and pull before contour projection', () => {
     const spec = pieSpec({ kind: 'constant', value: 20 }, { interpolation: 'chord', padAngle: 10 });
     const node = sectorNodes(firstLayer(spec, { share }))[0];
+
     expect((node.shape as { type?: string } | undefined)?.type).toBe('contour');
     expect(createPlotLocator(spec, { share }, opts).datum(0)?.position).toEqual(node.position);
   });

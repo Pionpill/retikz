@@ -34,6 +34,7 @@ describe('field format provider runtime', () => {
       expect(Number.isNaN(epochSeconds.parse(value))).toBe(true);
       expect(Number.isNaN(epochMillis.parse(value))).toBe(true);
     }
+
     expect(Number.isNaN(slashDate.parse('2023/02/29'))).toBe(true);
   });
 
@@ -47,6 +48,7 @@ describe('field format provider runtime', () => {
     expect(percent.parse(50)).toBe(0.5);
 
     for (const value of ['', 'abc', Number.NaN]) expect(Number.isNaN(numberString.parse(value))).toBe(true);
+
     for (const value of ['', '50', '%', Number.POSITIVE_INFINITY]) {
       expect(Number.isNaN(percent.parse(value))).toBe(true);
     }
@@ -54,6 +56,7 @@ describe('field format provider runtime', () => {
 
   it('recognizes only built-in format names', () => {
     for (const format of Object.values(DataFieldFormat)) expect(isBuiltinFieldFormat(format)).toBe(true);
+
     expect(isBuiltinFieldFormat('currency')).toBe(false);
   });
 
@@ -110,8 +113,8 @@ describe('field format provider runtime', () => {
       new Set(['amount', 'createdAt']),
     );
 
-    expect(result.fieldTypes.get('amount')).toBe(DataFieldType.Continuous);
-    expect(result.fieldTypes.get('createdAt')).toBe(DataFieldType.Temporal);
+    expect(result.fieldTypeMap.get('amount')).toBe(DataFieldType.Continuous);
+    expect(result.fieldTypeMap.get('createdAt')).toBe(DataFieldType.Temporal);
     expect(result.parsers.get('amount')?.('25%')).toBe(0.25);
     expect(result.parsers.get('createdAt')?.('1500')).toBe(1500);
     expect(result.parsers.has('unused')).toBe(false);

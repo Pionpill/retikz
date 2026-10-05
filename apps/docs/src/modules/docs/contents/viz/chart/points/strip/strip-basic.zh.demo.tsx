@@ -26,6 +26,8 @@ export const previewSource = {
     'chart.data': { name: 'stripVegaBarleyData', from: './strip-vega-barley.data' },
   },
 };
+
 export const previewControls = previewControlContract.controls;
+
 const Demo: FC = controlled.Component;
 export default Demo;

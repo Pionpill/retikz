@@ -19,6 +19,7 @@ const referenceRoot = path.resolve(process.cwd(), 'src/modules/docs/contents/viz
 /** 收集对象 schema 中会渲染为表格行的字段路径 */
 const collectFieldPaths = (fields: Array<ObjectField>, prefix = ''): Array<string> => {
   const paths: Array<string> = [];
+
   for (const field of fields) {
     const fieldPath = prefix === '' ? field.name : `${prefix}.${field.name}`;
     paths.push(fieldPath);
@@ -26,6 +27,7 @@ const collectFieldPaths = (fields: Array<ObjectField>, prefix = ''): Array<strin
       paths.push(...collectFieldPaths(field.type.fields, fieldPath));
     }
   }
+
   return paths;
 };
 
@@ -36,12 +38,14 @@ const collectDescriptionKeys = (block: string): Set<string> => {
 
   const keys = new Set<string>();
   const propertyPattern = /(?:^|[,{]\s*)\s*(?:(['"])(.*?)\1|([A-Za-z_$][\w$]*))\s*:/g;
+
   for (const property of match[1].matchAll(propertyPattern)) {
     const quotedKey = property[2] as string | undefined;
     const identifierKey = property[3] as string | undefined;
     const key = quotedKey ?? identifierKey;
     if (key !== undefined) keys.add(key);
   }
+
   return keys;
 };
 
@@ -59,6 +63,7 @@ describe('Plot Reference schema 中文翻译', () => {
 
     for (const file of collectChineseReferenceFiles(referenceRoot)) {
       const source = fs.readFileSync(file, 'utf8');
+
       for (const match of source.matchAll(/<ZodSchema\b[\s\S]*?\/>/g)) {
         const block = match[0];
         const schema = block.match(/\bname="([^"]+)"/)?.[1];

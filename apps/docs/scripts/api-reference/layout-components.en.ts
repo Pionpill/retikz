@@ -175,6 +175,7 @@ const translations: Readonly<Record<string, string>> = {
 export const translateLayoutComponentApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
   if (translations[source]) return translations[source];
+
   try {
     return translateInspectApiReference(source);
   } catch {

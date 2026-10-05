@@ -48,14 +48,17 @@ export const createMarkPaddingContext = (
     string,
     { observations: Map<string, DomainPaddingObservation>; padding?: MarkPaddingResolution }
   >();
+
   const identityOf = (rows: Array<ExternalRow>): number => {
     let identity = identities.get(rows);
     if (identity === undefined) {
       identity = nextIdentity++;
       identities.set(rows, identity);
     }
+
     return identity;
   };
+
   return {
     get revision() {
       return revision;
@@ -67,29 +70,35 @@ export const createMarkPaddingContext = (
     /** 布局完成后统一求解共享域，返回本轮是否已稳定 */
     finishLayout: (): boolean => {
       const previousRevision = revision;
+
       // 径向等后置角色先更新；角向边界可消费其最新映射
       for (const [groupKey, group] of [...groups].reverse()) {
         if (group.observations.size === 0) continue;
+
         const constraints: Array<MarkPaddingSample> = [];
         const fixed: Partial<MarkPaddingResolution> = {};
         let maximumLength = 1;
         const observations = [...group.observations].map(
           ([scope, observation]) => [scope, { ...observation, samples: observation.samples() }] as const,
         );
+
         for (const [, observation] of observations) {
           maximumLength = Math.max(maximumLength, observation.length);
           const [start, end] = observation.range;
           const parameter = observation.mapping.parameter ?? ((position: number) => (position - start) / (end - start));
           const direction = Math.sign(end - start);
+
           for (const sample of observation.samples)
             constraints.push({
               position: sample.position,
               lower: parameter(start + direction * (sample.lower + observation.clearance.lower), observation.range),
               upper: 1 - parameter(end - direction * (sample.upper + observation.clearance.upper), observation.range),
             });
+
           for (const side of ['lower', 'upper'] as const) {
             const value = observation.fixed[side];
             if (value === undefined) continue;
+
             const ratio =
               side === 'lower'
                 ? parameter(start + direction * value, observation.range)
@@ -97,10 +106,13 @@ export const createMarkPaddingContext = (
             if (fixed[side] !== undefined && Math.abs(fixed[side] - ratio) > 1e-12) {
               throw new RetikzPlotError(`scale ${groupKey} has incompatible fixed padding across shared ranges`);
             }
+
             fixed[side] = ratio;
           }
         }
+
         let padding: MarkPaddingResolution;
+
         try {
           padding = solveMarkPadding(constraints, fixed, 0.01 / maximumLength);
         } catch (cause) {
@@ -109,6 +121,7 @@ export const createMarkPaddingContext = (
             { cause },
           );
         }
+
         const previous = group.padding;
         if (
           previous !== undefined &&
@@ -122,15 +135,18 @@ export const createMarkPaddingContext = (
           })
         )
           padding = previous;
+
         for (const [scope, observation] of observations) {
           const finalScale = observation.mapping.createScale(padding, observation.range);
           const [start, end] = finalScale.range();
+
           for (const sample of observation.samples) {
             if (
               sample.actual !== undefined &&
               (group.padding?.lower !== padding.lower || group.padding.upper !== padding.upper)
             )
               continue;
+
             const coordinate = sample.actual ?? finalScale.coordinate(sample.value);
             const distance = (coordinate - start) * Math.sign(end - start);
             if (
@@ -143,6 +159,7 @@ export const createMarkPaddingContext = (
             }
           }
         }
+
         if (
           group.padding === undefined ||
           group.padding.lower !== padding.lower ||
@@ -152,6 +169,7 @@ export const createMarkPaddingContext = (
           revision++;
         }
       }
+
       return previousRevision === revision;
     },
     mappingOf: (key: string, create: () => DomainPaddingScale): DomainPaddingScale => {
@@ -160,6 +178,7 @@ export const createMarkPaddingContext = (
         mapping = create();
         mappings.set(key, mapping);
       }
+
       return mapping;
     },
     groupOf: (name: string, role: string, views: Array<MarkDataView>): string =>
@@ -185,17 +204,21 @@ export const createMarkPaddingContext = (
         byRows = new WeakMap();
         targets.set(view.mark, byRows);
       }
+
       let byRoles = byRows.get(view.dataView.rows);
       if (byRoles === undefined) {
         byRoles = new Map();
         byRows.set(view.dataView.rows, byRoles);
       }
+
       const roleKey = roles.join('|');
       const previous = byRoles.get(roleKey);
       if (previous !== undefined) return previous;
+
       const resolved = resolveMarkOperation(view.mark, { registry: channels.markRegistry });
       if (resolved.definition.domainPadding === undefined)
         throw new RetikzPlotError(`mark "${view.mark.id}" has no domainPadding capability`);
+
       const markChannels = resolveMarkChannels(view.mark, { ...channels, ...view.dataView });
       const result = resolved.definition.domainPadding(
         resolved.operation as never,
@@ -203,6 +226,7 @@ export const createMarkPaddingContext = (
         roles,
         markChannels,
       );
+
       for (const target of result) {
         if (
           target.values.length !== roles.length ||
@@ -212,7 +236,9 @@ export const createMarkPaddingContext = (
           throw new RetikzPlotError(`mark "${view.mark.id}" returned invalid domainPadding targets`);
         }
       }
+
       byRoles.set(roleKey, result);
+
       return result;
     },
     scaleOf: (
@@ -228,11 +254,14 @@ export const createMarkPaddingContext = (
         group = { observations: new Map() };
         groups.set(groupKey, group);
       }
+
       const activeGroup = group;
+
       const resolveRange = (range: readonly [number, number]): PositionScale => {
         const length = Math.abs(range[1] - range[0]);
         if (!Number.isFinite(length) || length <= 0)
           throw new RetikzPlotError(`scale ${groupKey} domainPadding requires positive range`);
+
         activeGroup.observations.set(scopeKey, {
           samples,
           mapping,
@@ -248,18 +277,23 @@ export const createMarkPaddingContext = (
           },
           fixed: { lower: source.lower, upper: source.upper },
         });
+
         return mapping.createScale(activeGroup.padding ?? { lower: 0, upper: 0 }, range);
       };
+
       let activeRange = initialRange;
       let activePadding = activeGroup.padding;
       let current = resolveRange(initialRange);
+
       const scale = (): PositionScale => {
         if (activePadding !== activeGroup.padding) {
           activePadding = activeGroup.padding;
           current = mapping.createScale(activePadding ?? { lower: 0, upper: 0 }, activeRange);
         }
+
         return current;
       };
+
       const result: PositionScale = {
         coordinate: value => scale().coordinate(value),
         domain: () => scale().domain(),
@@ -279,6 +313,7 @@ export const createMarkPaddingContext = (
         },
       };
       protectedMarks.set(result, source.marks);
+
       return result;
     },
   };

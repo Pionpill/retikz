@@ -96,7 +96,9 @@ export const runTestBoundaryCheck = ({ cwd = process.cwd() } = {}) => {
   for (const diagnostic of diagnostics) {
     console.error(formatTestBoundaryDiagnostic(diagnostic));
   }
+
   console.error(`Found ${diagnostics.length} test boundary violation(s).`);
+
   return 1;
 };
 

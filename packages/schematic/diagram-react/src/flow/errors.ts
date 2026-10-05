@@ -10,7 +10,7 @@ export const RetikzDiagramReactFlowErrorCode = {
 } as const;
 
 /** Diagram React Flow 稳定错误码取值 */
-export type RetikzDiagramReactFlowErrorCodeValue = ValueOf<typeof RetikzDiagramReactFlowErrorCode>;
+export type RetikzDiagramReactFlowErrorCode = ValueOf<typeof RetikzDiagramReactFlowErrorCode>;
 
 /** Diagram React Flow 错误的结构化详情 */
 export type RetikzDiagramReactFlowErrorDetails = Readonly<{
@@ -25,7 +25,7 @@ export type RetikzDiagramReactFlowErrorDetails = Readonly<{
 /** 创建 Diagram React Flow 错误所需的参数 */
 export type RetikzDiagramReactFlowErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzDiagramReactFlowErrorCodeValue;
+  code: RetikzDiagramReactFlowErrorCode;
   /** 面向调用方的错误消息 */
   message: string;
   /** 与错误码关联的结构化详情 */
@@ -36,13 +36,15 @@ export type RetikzDiagramReactFlowErrorOptions = Readonly<{
 
 /** Diagram React Flow authoring 的统一结构化错误 */
 export class RetikzDiagramReactFlowError extends RetikzError<
-  RetikzDiagramReactFlowErrorCodeValue,
+  RetikzDiagramReactFlowErrorCode,
   RetikzDiagramReactFlowErrorDetails
 > {
   /** 稳定错误码 */
-  readonly code: RetikzDiagramReactFlowErrorCodeValue;
+  readonly code: RetikzDiagramReactFlowErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzDiagramReactFlowErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

@@ -5,6 +5,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { measurements } from './transform-density.data';
+
 /** 根据实时控件值创建密度估计 operation */
 export const densityOperationOf = (values: {
   bandwidthMode: 'silverman' | 'value';

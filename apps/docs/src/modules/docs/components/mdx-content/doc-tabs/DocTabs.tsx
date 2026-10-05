@@ -24,6 +24,7 @@ export const DocTabs: FC<DocTabsProps> = props => {
     tabs.length === 2 &&
     tabs.some(tab => tab.props.value === 'react') &&
     tabs.some(tab => tab.props.value === 'vanilla');
+
   const handleValueChange = (value: string) => {
     if (isHostTabs && docHost && (value === 'react' || value === 'vanilla')) {
       docHost.setHost(value);
@@ -31,6 +32,7 @@ export const DocTabs: FC<DocTabsProps> = props => {
       setLocalValue(value);
     }
   };
+
   return (
     <Tabs
       value={isHostTabs && docHost ? docHost.host : localValue}

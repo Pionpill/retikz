@@ -29,6 +29,7 @@ const firstLayer = (
 /** 深度收集图层内所有 sector node（无 color 时直接子，有 color 时藏在子 Scope 里） */
 const sectorNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -36,7 +37,9 @@ const sectorNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -45,7 +48,9 @@ const sectorParams = (
   node: IRNode,
 ): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number; cornerRadius?: number } => {
   const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
+
   expect(shape?.type).toBe('sector');
+
   return shape!.params as {
     innerRadius: number;
     outerRadius: number;
@@ -78,11 +83,15 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
   it('rose_each_row_one_sector_node', () => {
     const layer = firstLayer(roseSpec(), { sales: SALES });
     const nodes = sectorNodes(layer);
+
     expect(nodes).toHaveLength(3);
+
     for (const node of nodes) {
       const params = sectorParams(node);
+
       // 所有 sector 共享圆心 position
       expect(node.position).toEqual([200, 200]);
+
       // core 硬约束：outerRadius > innerRadius
       expect(params.outerRadius).toBeGreaterThan(params.innerRadius);
     }
@@ -97,8 +106,10 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
   it('rose_outer_radius_encodes_value', () => {
     // 半径编码值：amount 3 < 6 < 9 → outerRadius 单调递增
     const outer = sectorNodes(firstLayer(roseSpec(), { sales: SALES })).map(n => sectorParams(n).outerRadius);
+
     expect(outer[0]).toBeLessThan(outer[1]);
     expect(outer[1]).toBeLessThan(outer[2]);
+
     // 最大值（amount 9 = domain max）满铺到 outerRadius=200
     expect(Math.max(...outer)).toBeCloseTo(200, 6);
   });
@@ -107,6 +118,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     // 3 类别等分整圆 → 每片角带宽相等（band bandwidth）
     const params = sectorNodes(firstLayer(roseSpec(), { sales: SALES })).map(sectorParams);
     const arcs = params.map(p => p.endAngle - p.startAngle);
+
     expect(arcs[0]).toBeCloseTo(arcs[1], 6);
     expect(arcs[1]).toBeCloseTo(arcs[2], 6);
     expect(arcs[0]).toBeGreaterThan(0);
@@ -115,8 +127,11 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
   it('rose_single_category_occupies_full_band', () => {
     const layer = firstLayer(roseSpec(), { sales: [{ month: 'Jan', amount: 5 }] });
     const nodes = sectorNodes(layer);
+
     expect(nodes).toHaveLength(1);
+
     const params = sectorParams(nodes[0]);
+
     expect(params.endAngle - params.startAngle).toBeGreaterThan(0);
   });
 
@@ -130,11 +145,13 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
         ],
       }),
     ).map(sectorParams);
+
     for (const p of params) expect(p.outerRadius).toBeGreaterThan(p.innerRadius);
   });
 
   it('rose_empty_data_yields_no_layer', () => {
     const outer = expandOf(roseSpec(), { sales: [] });
+
     // 无可绘制 sector → mark 图层被丢弃（children 为空）
     expect(outer.children).toHaveLength(0);
   });
@@ -158,6 +175,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES });
+
     // 3 类别 → 3 子 Scope（按颜色），各持一个 sector
     expect(layer.children).toHaveLength(3);
     expect((layer.children[0] as IRScope).type).toBe('scope');
@@ -202,11 +220,14 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     });
     const params = sectorNodes(firstLayer(spec, { sales: SALES })).map(sectorParams);
     const unpaddedParams = sectorNodes(firstLayer(unpaddedSpec, { sales: SALES })).map(sectorParams);
+
     expect(params).toHaveLength(3);
     expect(unpaddedParams).toHaveLength(3);
+
     for (let index = 0; index < params.length; index++) {
       const p = params[index];
       const unpadded = unpaddedParams[index];
+
       expect(p.innerRadius).toBeGreaterThan(0);
       expect(p.cornerRadius).toBe(8);
       expect(p.startAngle).toBeCloseTo(unpadded.startAngle + 3, 6);
@@ -220,6 +241,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       { version: 1, type: 'scene', children: [roseSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts), shapes: [SectorShapeDefinition] },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });
@@ -231,6 +253,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     { label: 'B', value: 5 },
     { label: 'C', value: 2 },
   ];
+
   // 饼图：stack transform 产 y0/y1（单链）→ sector mark 读界、角度编码值
   const pieSpec = (innerRadius = 0): IRPlot =>
     PlotSchema.parse({
@@ -254,13 +277,16 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
 
   it('pie_each_row_one_sector_node', () => {
     const nodes = sectorNodes(firstLayer(pieSpec(), { share: SHARE }));
+
     expect(nodes).toHaveLength(3);
+
     for (const node of nodes) expect(node.position).toEqual([200, 200]);
   });
 
   it('pie_angles_track_cumulative_bounds', () => {
     // 累积 A[0,3] B[3,8] C[8,10]、total 10、角向 linear [0,10]→[0,360]
     const params = sectorNodes(firstLayer(pieSpec(), { share: SHARE })).map(sectorParams);
+
     expect(params[0].startAngle).toBeCloseTo(0, 6);
     expect(params[0].endAngle).toBeCloseTo(108, 6); // 3/10*360
     expect(params[1].startAngle).toBeCloseTo(108, 6);
@@ -270,9 +296,11 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
 
   it('pie_fills_full_circle', () => {
     const params = sectorNodes(firstLayer(pieSpec(), { share: SHARE })).map(sectorParams);
+
     // 各扇片角度相接、整圆铺满 [0,360]
     expect(params[0].startAngle).toBeCloseTo(0, 6);
     expect(params[params.length - 1].endAngle).toBeCloseTo(360, 6);
+
     for (let i = 1; i < params.length; i += 1) {
       expect(params[i].startAngle).toBeCloseTo(params[i - 1].endAngle, 6);
     }
@@ -281,6 +309,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
   it('pie_radius_is_constant_full_ring', () => {
     // 半径常量满铺 [frame.innerRadius, frame.outerRadius] = [0, 200]，各片相同
     const params = sectorNodes(firstLayer(pieSpec(), { share: SHARE })).map(sectorParams);
+
     for (const p of params) {
       expect(p.innerRadius).toBeCloseTo(0, 6);
       expect(p.outerRadius).toBeCloseTo(200, 6);
@@ -290,6 +319,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
   it('donut_inner_radius_from_coordinate', () => {
     // 环图：coordinate.innerRadius=0.5 → frame.innerRadius = 0.5 * 200 = 100
     const params = sectorNodes(firstLayer(pieSpec(0.5), { share: SHARE })).map(sectorParams);
+
     for (const p of params) {
       expect(p.innerRadius).toBeCloseTo(100, 6);
       expect(p.outerRadius).toBeCloseTo(200, 6);
@@ -299,6 +329,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
 
   it('pie_single_slice_full_circle', () => {
     const params = sectorNodes(firstLayer(pieSpec(), { share: [{ label: 'A', value: 7 }] })).map(sectorParams);
+
     expect(params).toHaveLength(1);
     expect(params[0].startAngle).toBeCloseTo(0, 6);
     expect(params[0].endAngle).toBeCloseTo(360, 6);
@@ -325,6 +356,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { share: SHARE });
+
     // 每片颜色由 color 编码 → 3 子 Scope
     expect(layer.children).toHaveLength(3);
     expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#a');
@@ -337,6 +369,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       { version: 1, type: 'scene', children: [pieSpec()] },
       { composites: lowerPlots({ share: SHARE }, opts), shapes: [SectorShapeDefinition] },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -360,6 +393,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
         },
       ],
     });
+
     expect(() => expandOf(spec, { share: SHARE })).toThrow();
   });
 
@@ -384,6 +418,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
         },
       ],
     });
+
     expect(() =>
       expandOf(spec, {
         share: [

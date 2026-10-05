@@ -32,6 +32,7 @@ export const AiChatInputSettingsPopover: FC = () => {
   const [open, setOpen] = useState(false);
 
   const isBuiltIn = isBuiltInProviderId(providerId);
+
   // customProviders 是 Record<string, CustomProvider>，类型上不含 undefined，
   // 但运行时缺 key 取出来就是 undefined —— 复用 resolveProvider 里的同款 cast
   const customProvider = (customProviders as Record<string, CustomProvider | undefined>)[providerId];

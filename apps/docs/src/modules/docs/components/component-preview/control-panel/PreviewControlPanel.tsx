@@ -49,8 +49,10 @@ const matchesPreviewControlPreset = (
   if (preset.applyMode === 'merge-current') {
     return Object.entries(preset.values).every(([key, value]) => previewControlValueEquals(values[key], value));
   }
+
   const expected = { ...canonicalValues, ...preset.values };
   const keys = new Set([...Object.keys(values), ...Object.keys(expected)]);
+
   return Array.from(keys).every(key => previewControlValueEquals(values[key], expected[key]));
 };
 
@@ -77,6 +79,7 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
   const controlPanelId = useId();
   const panelTitleId = `${controlPanelId}-preview-control-panel-title`;
   const compact = density === 'compact';
+
   const presets = controlContract?.presets ?? [];
   const presetSelector = controlContract?.presetSelector;
   const activePresetId =
@@ -97,6 +100,7 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
           ],
         }
       : undefined;
+
   const panelRef = useRef<HTMLElement>(null);
   const visibilityKey = buildPreviewControlVisibilityKey(definition.sections, controlState.values);
   const visibilityValues = useMemo<PreviewControlValues>(() => JSON.parse(visibilityKey), [visibilityKey]);
@@ -107,6 +111,7 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
     }),
     [definition, visibilityValues],
   );
+
   const [collapsedSections, setCollapsedSections] = useState<PreviewCollapsedSectionsState>(() => ({
     definition: visibleDefinition,
     indexes: getDefaultCollapsedSectionIndexes(visibleDefinition.sections),
@@ -127,11 +132,13 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
     density,
     panelRef,
   });
+
   const toggleSection = (sourceIndex: number) => {
     setCollapsedSections(currentState => {
       const nextIndexes = new Set(currentState.definition === visibleDefinition ? currentState.indexes : []);
       if (nextIndexes.has(sourceIndex)) nextIndexes.delete(sourceIndex);
       else nextIndexes.add(sourceIndex);
+
       return { definition: visibleDefinition, indexes: nextIndexes };
     });
   };
@@ -198,6 +205,7 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
                       compact={compact}
                       onValueChange={value => {
                         if (typeof value !== 'string') return;
+
                         const preset = presets.find(candidate => candidate.id === value);
                         if (preset) {
                           controlState.applyValues(

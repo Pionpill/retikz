@@ -36,6 +36,7 @@ const rotateNodePoint = (layout: NodeLayout, point: Position, round: Round): Pos
   const pointY = round(point[1]);
   const dx = pointX - centerX;
   const dy = pointY - centerY;
+
   return [round(centerX + dx * cos - dy * sin), round(centerY + dx * sin + dy * cos)];
 };
 
@@ -106,21 +107,26 @@ const roundPathCommand = (command: PathCommand, round: Round): PathCommand => {
 /** 断言 Shape / Boundary outline 的每个子路径都显式 close */
 const assertClosedOutline = (owner: string, commands: ReadonlyArray<PathCommand>): void => {
   let open = false;
+
   for (const [index, command] of commands.entries()) {
     if (command.kind === 'move') {
       if (open) {
         throw createCompositeContractError(`${owner} outline contains an unclosed subpath before command ${index}.`);
       }
+
       open = true;
       continue;
     }
+
     if (command.kind === 'close') {
       if (!open) throw createCompositeContractError(`${owner} outline closes without a matching move command.`);
       open = false;
       continue;
     }
+
     if (!open) throw createCompositeContractError(`${owner} outline command ${index} is outside a subpath.`);
   }
+
   if (open) throw createCompositeContractError(`${owner} outline must explicitly close every subpath.`);
 };
 
@@ -136,6 +142,7 @@ const readClosedOutline = (
     const snapshot = snapshotProviderOutputJson(owner, raw, 'outline');
     const parsed = PathCommandSchema.array().parse(snapshot);
     assertClosedOutline(owner, parsed);
+
     return parsed;
   });
 
@@ -151,6 +158,7 @@ const readKeyPoints = (
     const snapshot = snapshotProviderOutputJson(owner, raw, 'keyPoints');
     const entries = providerOutputArray(owner, snapshot, 'keyPoints');
     const names = new Set<string>();
+
     return entries.map((entry, index) => {
       const point = providerOutputRecord(owner, entry, `keyPoints[${index}]`);
       assertProviderOutputKeys(owner, point, ['name', 'position'], `keyPoints[${index}]`);
@@ -158,10 +166,13 @@ const readKeyPoints = (
       if (!parsedName.success) {
         throw createCompositeContractError(`${owner} keyPoints[${index}].name must be a non-blank string.`);
       }
+
       if (names.has(parsedName.data)) {
         throw createCompositeContractError(`${owner} keyPoints contains duplicate name '${parsedName.data}'.`);
       }
+
       names.add(parsedName.data);
+
       return { name: parsedName.data, position: snapshotProviderPosition(owner, point.position) };
     });
   });
@@ -170,6 +181,7 @@ const readKeyPoints = (
 const contentOutputOf = (layout: NodeLayout, round: Round): NodeOwnerOutput['content'] => {
   const hasContent = layout.lines !== undefined || layout.inlineBlock !== undefined;
   if (!hasContent) return null;
+
   const halfWidth = layout.textWidth / 2;
   const top = layout.contentCenter[1] - layout.textHeight / 2;
   const localCorners: NonNullable<NodeOwnerOutput['content']>['corners'] = [
@@ -187,11 +199,13 @@ const contentOutputOf = (layout: NodeLayout, round: Round): NodeOwnerOutput['con
   const baselines = baselineYs.map(baselineY => {
     const from = rotateNodePoint(layout, [layout.contentCenter[0] - halfBaselineWidth, baselineY], round);
     const to = rotateNodePoint(layout, [layout.contentCenter[0] + halfBaselineWidth, baselineY], round);
+
     return {
       from,
       to,
     };
   });
+
   return { corners, baselines };
 };
 

@@ -6,6 +6,7 @@ import { polygonContainmentControls, previewControlContract } from './polygon-co
 import { PolygonContainmentPreview } from './polygon-containment.preview';
 
 export const previewControls = polygonContainmentControls;
+
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   PolygonContainmentPreview({
     shape: values.shape,

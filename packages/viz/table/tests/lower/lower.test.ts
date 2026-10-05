@@ -157,7 +157,9 @@ describe('Table layout-aware lowering', () => {
         kind: 'line',
         line: { color: '#993333', stroke: 0.6 },
       });
+
       const serialized = JSON.stringify(result.scene);
+
       expect(serialized).toContain(cellBackground);
       expect(serialized).toContain(headerBackground);
       expect(serialized).toContain(headerBorder);

@@ -66,6 +66,7 @@ describe('data built-in operations through the package root', () => {
     },
   ])('executes $operation.kind without a host definition', ({ operation, rows, expected }) => {
     const parsed = TransformSchema.parse(JSON.parse(JSON.stringify(operation)));
+
     expect(applyTransforms(rows, [parsed])).toEqual(expected);
   });
 
@@ -80,6 +81,7 @@ describe('data built-in operations through the package root', () => {
       densityAs: 'density',
     });
     const rows = applyTransforms([{ value: 0 }, { value: 2 }], [operation]);
+
     expect(rows.map(row => row.sample)).toEqual([0, 2]);
     expect(rows[0].density).toBeCloseTo(0.226466623, 8);
     expect(rows[1].density).toBeCloseTo(0.226466623, 8);

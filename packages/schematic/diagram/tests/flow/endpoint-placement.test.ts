@@ -25,6 +25,7 @@ const compileEndpoints = (count: number, shared = false) => {
     { type: 'scene', version: 1, children: [source] },
     resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
   );
+
   return FlowDiagramArtifactSchema.parse(
     result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
   );
@@ -33,6 +34,7 @@ const compileEndpoints = (count: number, shared = false) => {
 describe('Flow 端点等分', () => {
   it.each([1, 2, 3, 4])('同侧 %i 个独立端点保留完整精度等分', count => {
     const artifact = compileEndpoints(count);
+
     expect(artifact.relations.map(relation => relation.target)).toEqual(
       Array.from({ length: count }, (_, index) => ({
         id: 'output',
@@ -43,6 +45,7 @@ describe('Flow 端点等分', () => {
 
   it('allow 共用一槽，separate 独占另一槽', () => {
     const artifact = compileEndpoints(3, true);
+
     expect(artifact.relations.map(relation => relation.target)).toEqual([
       { id: 'output', anchor: { side: 'left', fraction: 1 / 3 } },
       { id: 'output', anchor: { side: 'left', fraction: 1 / 3 } },
@@ -80,6 +83,7 @@ const compileRelations = (
       ],
     }),
   );
+
   return FlowDiagramArtifactSchema.parse(
     result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
   );
@@ -93,6 +97,7 @@ it('字符串继承端点默认，局部 allow 可覆盖 separate', () => {
     ],
     { flowDefaults: { relation: { target: { overlap: 'separate' } } } },
   );
+
   expect(artifact.relations.map(relation => relation.target.anchor)).toEqual([
     { side: 'left', fraction: 1 / 3 },
     { side: 'left', fraction: 2 / 3 },
@@ -105,6 +110,7 @@ it('固定锚点不移动，自动端点避开中点', () => {
     { source: 'a', target: { id: 'c', anchor: { side: 'left', fraction: 0.5 } } },
     { source: 'b', target: { id: 'c', side: 'left', overlap: 'separate' } },
   ]);
+
   expect(artifact.relations.map(relation => relation.target.anchor)).toEqual([
     { side: 'left', fraction: 0.5 },
     { side: 'left', fraction: 0.25 },
@@ -122,6 +128,7 @@ it('固定锚点冲突明确失败，不移动任一固定端点', () => {
 
 it.each(['top', 'right', 'bottom', 'left'] as const)('在 %s 侧自动选择中点', side => {
   const relation = compileRelations([{ source: 'a', target: { id: 'c', side } }]).relations[0];
+
   expect(relation.target.anchor).toEqual({ side, fraction: 0.5 });
 });
 
@@ -141,6 +148,7 @@ it.each<IRFlowRouting>([
   const relation = artifact.relations[0];
   const source = artifact.elements.find(element => element.id === 'a')!.bounds;
   const target = artifact.elements.find(element => element.id === 'c')!.bounds;
+
   expect(relation.route.points[0][0]).toBeCloseTo(source.x + source.width);
   expect(relation.route.points[0][1]).toBeCloseTo(source.y + source.height / 2);
   expect(relation.route.points.at(-1)![0]).toBeCloseTo(target.x);
@@ -163,6 +171,7 @@ it('不支持端点能力的 provider 在回调前拒绝请求', () => {
       return LayeredFlowLayoutDefinition.layout(input, context);
     },
   };
+
   expect(() => compileRelations([{ source: 'a', target: { id: 'c', side: 'left' } }], {}, definition)).toThrow();
   expect(called).toBe(false);
 });
@@ -182,6 +191,7 @@ it('校验 provider 必须保持指定侧', () => {
       };
     },
   };
+
   expect(() => compileRelations([{ source: 'a', target: { id: 'c', side: 'left' } }], {}, definition)).toThrow(
     'preserve requested side',
   );
@@ -195,6 +205,7 @@ it('Group 端点与 Entity 使用同一分离合同', () => {
     ],
     { groups: [{ id: 'group', children: ['c'] }], children: ['a', 'b', 'group'] },
   );
+
   expect(artifact.relations.map(relation => relation.target.anchor)).toEqual([
     { side: 'left', fraction: 1 / 3 },
     { side: 'left', fraction: 2 / 3 },
@@ -207,6 +218,7 @@ it('重复编译保持确定结果且不向 Source 回写 fraction', () => {
     { source: 'b', target: { id: 'c', side: 'left', overlap: 'separate' } },
   ];
   const snapshot = JSON.stringify(relations);
+
   expect(compileRelations(relations)).toEqual(compileRelations(relations));
   expect(JSON.stringify(relations)).toBe(snapshot);
 });
@@ -220,14 +232,17 @@ it('不支持比例锚点的形状明确失败，保留 Core 原因', () => {
         { id: 'c', text: 'Decision', role: 'gateway' },
       ],
     });
+
     expect.unreachable('Expected unsupported boundary error');
   } catch (error) {
     const messages: Array<string> = [];
     let cause = error;
+
     while (cause instanceof Error) {
       messages.push(cause.message);
       cause = cause.cause;
     }
+
     expect(messages.join(' ')).toContain('Endpoint boundary query failed');
     expect(messages.join(' ')).toContain('does not support side anchors');
   }

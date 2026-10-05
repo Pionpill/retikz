@@ -136,6 +136,7 @@ describe('published Chart release-group boundaries', () => {
     ['Vanilla', publishablePackageExpectations.vanilla],
   ])('publishes only the root and Point family entries for %s', async (_name, expectation) => {
     const manifest = await readManifest(expectation.manifest);
+
     expect(Object.keys(manifest.exports ?? {})).toEqual(['.', './point']);
     expect(Object.keys(manifest.publishConfig?.exports ?? {})).toEqual(['.', './point']);
   });

@@ -35,4 +35,5 @@ export type IRTextBlock = ZodInfer<typeof TextBlockSchema>;
 export type IRBoundaryLabel = ZodInput<typeof BoundaryLabelSchema>;
 
 export type IRTextVisual = ZodInfer<typeof TextVisualSchema>;
+
 export type IRTextLayout = ZodInfer<typeof TextLayoutSchema>;

@@ -8,9 +8,11 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 import { sugarFlowI18n } from './sugar-flow.i18n';
 
 export type SugarFlowProps = { lang?: Lang };
+
 const Demo: FC<SugarFlowProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = sugarFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="sugar-flow" kind="linear" direction="right" gap={110}>

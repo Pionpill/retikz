@@ -11,6 +11,7 @@ import { BUILTIN_INSPECTORS } from '../../src/providers';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
+
 const request = Object.freeze({ inspector: PATH_INSPECTOR_KEY, options: Object.freeze({ labels: true }) });
 
 const content = (barrier = false) =>
@@ -67,8 +68,11 @@ describe('@retikz/inspect/vanilla authoring and driver', () => {
       }),
       { compileDriver: createInspectionVanillaDriver({ registry, onCommit }) },
     );
+
     expect(svg).toContain('data-retikz-readonly-layer');
+
     const entries = onCommit.mock.calls[0]?.[0].inspection.entries;
+
     expect(entries.some((entry: { owner: { kind: string } }) => entry.owner.kind === 'node')).toBe(true);
     expect(entries.some((entry: { owner: { kind: string } }) => entry.owner.kind === 'coordinate')).toBe(true);
     expect(
@@ -77,6 +81,7 @@ describe('@retikz/inspect/vanilla authoring and driver', () => {
       ),
     ).toBe(true);
   });
+
   it('可选 authoring 复用基础 InputScene 并在 SSR 输出只读图层', () => {
     const onCommit = vi.fn();
     const svg = renderToSvgString(content(), {
@@ -100,6 +105,7 @@ describe('@retikz/inspect/vanilla authoring and driver', () => {
     expect(view.root.outerHTML).toContain('data-retikz-readonly-layer');
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(onDiagnostic).not.toHaveBeenCalled();
+
     view.dispose();
   });
 

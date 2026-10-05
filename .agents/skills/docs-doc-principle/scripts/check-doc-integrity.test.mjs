@@ -108,6 +108,7 @@ const writeShowcaseTaxonomy = fixture =>
 
 test('accepts a structurally aligned bilingual page', async () => {
   const fixture = await createFixture();
+
   try {
     await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.zh.mdx', validPage());
     await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.en.mdx', validPage());
@@ -132,6 +133,7 @@ test('accepts a structurally aligned bilingual page', async () => {
 
 test('accepts a single localized ComponentPreview figure', async () => {
   const fixture = await createFixture();
+
   try {
     await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.zh.mdx', validPage());
     await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.en.mdx', validPage());
@@ -155,6 +157,7 @@ test('accepts a single localized ComponentPreview figure', async () => {
 
 test('reports a missing English peer outside blog', async () => {
   const fixture = await createFixture();
+
   try {
     await fixture.write(
       'apps/docs/src/modules/docs/contents/kernel/components/example/index.zh.mdx',
@@ -175,6 +178,7 @@ test('reports a missing English peer outside blog', async () => {
 
 test('reports broken internal anchors', async () => {
   const fixture = await createFixture();
+
   try {
     const content = validPage({ anchor: 'missing' });
     await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.zh.mdx', content);
@@ -199,6 +203,7 @@ test('reports broken internal anchors', async () => {
 
 test('accepts an explicit HTML id as an anchor target', async () => {
   const fixture = await createFixture();
+
   try {
     const content = validPage({ anchor: 'betweenposition' }).replace(
       '## API',
@@ -226,6 +231,7 @@ test('accepts an explicit HTML id as an anchor target', async () => {
 
 test('accepts a registered data-driven route without an MDX file', async () => {
   const fixture = await createFixture();
+
   try {
     const content = `---
 title: Example
@@ -257,6 +263,7 @@ description: Example page
 
 test('reports SourceLinks ranges beyond the target file', async () => {
   const fixture = await createFixture();
+
   try {
     const content = validPage().replace('endLine: 2', 'endLine: 3');
     await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.zh.mdx', content);
@@ -281,6 +288,7 @@ test('reports SourceLinks ranges beyond the target file', async () => {
 
 test('reports a missing ComponentPreview demo file', async () => {
   const fixture = await createFixture();
+
   try {
     const content = validPage();
     await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.zh.mdx', content);
@@ -301,6 +309,7 @@ test('reports a missing ComponentPreview demo file', async () => {
 
 test('reports a Showcase metadata preview that does not resolve in the page directory', async () => {
   const fixture = await createFixture();
+
   try {
     const content = showcasePage();
     await fixture.write('apps/docs/src/modules/docs/contents/viz/chart/points/scatter/index.zh.mdx', content);
@@ -341,6 +350,7 @@ test('reports a Showcase metadata preview that does not resolve in the page dire
 
 test('reports missing Showcase Gallery attached files and localized controls with field paths', async () => {
   const fixture = await createFixture();
+
   try {
     const content = showcasePage({ attachedFile: 'missing.data.ts', controls: 'missing-controls' });
     await fixture.write('apps/docs/src/modules/docs/contents/viz/chart/points/scatter/index.zh.mdx', content);
@@ -371,6 +381,7 @@ test('reports missing Showcase Gallery attached files and localized controls wit
 
 test('reports invalid Showcase frontmatter taxonomy values with field paths', async () => {
   const fixture = await createFixture();
+
   try {
     const content = showcasePage({ family: 'unknown-family', usage: 'unknown-usage' });
     await fixture.write('apps/docs/src/modules/docs/contents/viz/chart/points/scatter/index.zh.mdx', content);
@@ -410,6 +421,7 @@ test('reports invalid Showcase frontmatter taxonomy values with field paths', as
 
 test('reports Showcase layout without showcase metadata in docs data', async () => {
   const fixture = await createFixture();
+
   try {
     const content = showcasePage();
     await fixture.write('apps/docs/src/modules/docs/contents/viz/chart/points/scatter/index.zh.mdx', content);
@@ -434,6 +446,7 @@ test('reports Showcase layout without showcase metadata in docs data', async () 
 
 test('reports Showcase metadata without a static preview in docs data', async () => {
   const fixture = await createFixture();
+
   try {
     const content = showcasePage();
     await fixture.write('apps/docs/src/modules/docs/contents/viz/chart/points/scatter/index.zh.mdx', content);
@@ -458,6 +471,7 @@ test('reports Showcase metadata without a static preview in docs data', async ()
 
 test('reports missing English Showcase controls instead of falling back to the Chinese base file', async () => {
   const fixture = await createFixture();
+
   try {
     const content = showcasePage();
     await fixture.write('apps/docs/src/modules/docs/contents/viz/chart/points/scatter/index.zh.mdx', content);
@@ -494,6 +508,7 @@ test('reports missing English Showcase controls instead of falling back to the C
 
 test('reports Showcase example syntax that cannot be checked statically', async () => {
   const fixture = await createFixture();
+
   try {
     const content = showcasePage()
       .replace('examples={[\n    {', 'examples={[\n    ...sharedExamples,\n    {')

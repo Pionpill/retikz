@@ -97,11 +97,13 @@ describe('createRuntimeTraceReporter', () => {
         sink: vi.fn(),
       }),
     ).toThrow(/createRuntimeTraceReporter/);
+
     const definition = {
       phase: PerformanceTracePhase.Compile,
       unit: PerformanceTraceUnit.IrChild,
       outcomes: [PerformanceTraceOutcome.Full],
     } as const;
+
     expect(() =>
       createRuntimeTraceReporter({ owner: '@retikz/core', phases: [definition, definition], sink: vi.fn() }),
     ).toThrow(/duplicate/i);
@@ -247,6 +249,7 @@ describe('createRuntimeTraceReporter', () => {
     ).not.toThrow();
 
     const diagnostics = reporter.diagnostics();
+
     expect(diagnostics).toEqual([{ code: 'sink-threw', owner: '@retikz/core', phase: PerformanceTracePhase.Compile }]);
     expect(Object.isFrozen(diagnostics)).toBe(true);
     expect(Object.isFrozen(diagnostics[0])).toBe(true);

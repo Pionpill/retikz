@@ -8,6 +8,7 @@ import { previewControlContract } from './grid-implicit.controls';
 
 export { createPreviewControlContract } from './grid-implicit.controls';
 export const previewControls = previewControlContract.controls;
+
 const preview = defineGridPreview(
   previewControlContract,
   values => (
@@ -60,7 +61,9 @@ const preview = defineGridPreview(
     ],
   }),
 );
+
 export const previewSource = preview.source;
+
 /** 本节 API 的交互示例，所有入口共享场景与检查配置 */
 const Demo: FC = preview.Component;
 export default Demo;

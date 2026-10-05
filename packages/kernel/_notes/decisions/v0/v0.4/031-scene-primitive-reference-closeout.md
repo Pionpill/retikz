@@ -17,7 +17,7 @@ alpha.4 已把 `shadow` / `blendMode` 加到 Scene 可渲染主几何 primitive�
 
 ScenePrimitive reference 必须明确：
 
-1. `RectPrim`、`EllipsePrim`、`PathPrim` 支持 `shadow?: ResolvedDropShadow` 与 `blendMode?: BlendModeValue`
+1. `RectPrim`、`EllipsePrim`、`PathPrim` 支持 `shadow?: ResolvedDropShadow` 与 `blendMode?: BlendMode`
 2. `TextPrim` 不支持图元级 `shadow` / `blendMode`
 3. `GroupPrim` 目前只拥有 group 结构字段，不支持 group-level effect
 4. effect 不改变 hit area

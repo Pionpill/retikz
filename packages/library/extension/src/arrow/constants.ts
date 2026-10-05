@@ -23,4 +23,4 @@ export const ExtensionArrowName = {
 } as const;
 
 /** Extension 箭头 provider 名称取值 */
-export type ExtensionArrowNameValue = ValueOf<typeof ExtensionArrowName>;
+export type ExtensionArrowName = ValueOf<typeof ExtensionArrowName>;

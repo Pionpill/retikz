@@ -47,8 +47,10 @@ describe('inferFieldType — 缺省推断（contract）', () => {
     // 数值 5 → continuous；数字串 '5' → categorical（绝不误判 temporal）
     expect(inferFieldType(rowsOf(5, 6), 'f')).toBe(DataFieldType.Continuous);
     expect(inferFieldType(rowsOf('5', '6'), 'f')).toBe(DataFieldType.Categorical);
+
     // YYYY/MM/DD 非严格 ISO → categorical
     expect(inferFieldType(rowsOf('2024/01/01'), 'f')).toBe(DataFieldType.Categorical);
+
     // 无时区 datetime → categorical（拒模糊本地时间）
     expect(inferFieldType(rowsOf('2024-01-01T08:30:00'), 'f')).toBe(DataFieldType.Categorical);
   });
@@ -70,6 +72,7 @@ describe('inferFieldType — 缺省推断（contract）', () => {
   it('sampling_dual_threshold', () => {
     // 前 1000 行全数值、第 1500 行才出现字符串 → 扫描封顶 1000，仍判 continuous
     const rows = Array.from({ length: 2000 }, (_, i) => ({ f: i < 1500 ? i : 'late-string' }));
+
     expect(inferFieldType(rows, 'f')).toBe(DataFieldType.Continuous);
   });
 });
@@ -99,6 +102,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('month')).toBe(true);
     expect(fields.has('revenue')).toBe(true);
     expect(fields.has('idx')).toBe(true);
@@ -113,6 +117,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('month')).toBe(true);
     expect(fields.has('revenue')).toBe(true);
     expect(fields.has('product')).toBe(true);
@@ -131,6 +136,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('lo')).toBe(false);
     expect(fields.has('hi')).toBe(false);
   });
@@ -139,6 +145,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     const spec = buildSpec({
       marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { value: 'red' } } }],
     });
+
     expect(collectSourceFields(spec).has('red')).toBe(false);
   });
 
@@ -155,6 +162,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('lbl')).toBe(true);
     expect(fields.has('note')).toBe(true);
   });
@@ -168,6 +176,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('lo')).toBe(true);
     expect(fields.has('hi')).toBe(true);
     expect(fields.has('a')).toBe(true);
@@ -181,6 +190,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } }],
     });
     const userFields = collectSourceFields(spec);
+
     expect(() =>
       resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields),
     ).toThrow(/unknown field/i);
@@ -207,9 +217,11 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     // 输入字段进
     expect(fields.has('measurement')).toBe(true);
     expect(fields.has('weight')).toBe(true);
+
     // 派生输出字段不进（即便被 mark 的 encoding.y / x0Field / x1Field 引用）
     expect(fields.has('binStart')).toBe(false);
     expect(fields.has('binEnd')).toBe(false);
@@ -234,6 +246,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('m')).toBe(true);
     expect(fields.has('lo')).toBe(false);
     expect(fields.has('hi')).toBe(false);
@@ -254,9 +267,11 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('region')).toBe(true);
     expect(fields.has('product')).toBe(true);
     expect(fields.has('revenue')).toBe(true);
+
     // 派生输出字段 as 不进（即便被 encoding.y 引用）
     expect(fields.has('total')).toBe(false);
   });
@@ -267,6 +282,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'count' } } }],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('count')).toBe(false);
   });
 
@@ -279,6 +295,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'share' } } }],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('amount')).toBe(true);
     expect(fields.has('quarter')).toBe(true);
     expect(fields.has('share')).toBe(false); // 派生输出
@@ -290,6 +307,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       transform: [{ operation: { kind: 'normalize', field: 'amount', groupBy: ['quarter'] } }],
       marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'amount' } } }],
     });
+
     expect(collectSourceFields(spec).has('amount')).toBe(true);
   });
 
@@ -345,6 +363,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       ],
     });
     const fields = collectSourceFields(spec);
+
     expect(fields.has('start')).toBe(true);
     expect(fields.has('end')).toBe(true);
     expect(fields.has('lo')).toBe(false);
@@ -357,6 +376,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       transform: [{ operation: { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 1 } }],
       marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
     });
+
     expect(collectSourceFields(spec).has('dose')).toBe(true);
   });
 });
@@ -367,11 +387,13 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () 
   it('model_type_overrides_inference', () => {
     // model 声明 categorical、数据是数值 → 用声明类型，不推 continuous
     const map = resolveFieldTypes([{ name: 'revenue', type: 'categorical' }], [{ revenue: 5 }], new Set(['revenue']));
+
     expect(map.get('revenue')).toBe(DataFieldType.Categorical);
   });
 
   it('no_model_infers_all', () => {
     const map = resolveFieldTypes(undefined, rows, new Set(['month', 'revenue', 'cat']));
+
     expect(map.get('month')).toBe(DataFieldType.Temporal);
     expect(map.get('revenue')).toBe(DataFieldType.Continuous);
     expect(map.get('cat')).toBe(DataFieldType.Categorical);
@@ -386,6 +408,7 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () 
       rows,
       new Set(['month', 'revenue']),
     );
+
     expect(map.size).toBe(2);
   });
 
@@ -425,6 +448,7 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
       rows,
       new Set(['month', 'revenue']),
     );
+
     expect(map.get('month')).toBe(DataFieldType.Temporal);
     expect(map.get('revenue')).toBe(DataFieldType.Continuous);
   });
@@ -436,6 +460,7 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
       [{ revenue: 5, month: '2024-01-01' }],
       new Set(['revenue', 'month']),
     );
+
     expect(map.get('revenue')).toBe(DataFieldType.Categorical);
     expect(map.get('month')).toBe(DataFieldType.Temporal);
   });
@@ -443,7 +468,9 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
   it('name_only_satisfies_strict', () => {
     // 字段仅给 name → 满足 strict、不抛，类型推断
     expect(() => resolveFieldTypes([{ name: 'revenue' }], [{ revenue: 5 }], new Set(['revenue']))).not.toThrow();
+
     const map = resolveFieldTypes([{ name: 'revenue' }], [{ revenue: 5 }], new Set(['revenue']));
+
     expect(map.get('revenue')).toBe(DataFieldType.Continuous);
   });
 
@@ -455,12 +482,14 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
       new Set(['month', 'revenue', 'cat']),
     );
     const inferred = resolveFieldTypes(undefined, rows, new Set(['month', 'revenue', 'cat']));
+
     expect(partial).toEqual(inferred);
   });
 
   it('name_only_empty_data_falls_categorical', () => {
     // name-only 字段数据空 → 推断默认 categorical
     const map = resolveFieldTypes([{ name: 'x' }], [], new Set(['x']));
+
     expect(map.get('x')).toBe(DataFieldType.Categorical);
   });
 

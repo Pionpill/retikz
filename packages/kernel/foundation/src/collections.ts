@@ -27,5 +27,6 @@ export const createReadonlyMap = <TKey, TValue>(
     values: () => storage.values(),
     [Symbol.iterator]: () => storage[Symbol.iterator](),
   };
+
   return Object.freeze(snapshot);
 };

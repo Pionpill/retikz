@@ -7,6 +7,7 @@ export const createDataView = (rows: Array<ExternalRow>, model: DataTransformMod
   rows,
   model: model.map(field => {
     if (field.type !== undefined) return { ...field };
+
     const values = rows
       .map(row => resolveFieldPath(row, field.name))
       .filter(value => value !== undefined && !(typeof value === 'number' && Number.isNaN(value)));
@@ -16,12 +17,7 @@ export const createDataView = (rows: Array<ExternalRow>, model: DataTransformMod
         : values.length > 0 && values.every(value => typeof value === 'string')
           ? 'categorical'
           : undefined;
+
     return type === undefined ? { ...field } : { ...field, type };
   }),
-  get fieldTypes() {
-    return new Map(this.model.flatMap(field => (field.type === undefined ? [] : [[field.name, field.type]])));
-  },
-  get fieldTypeEvidence() {
-    return new Set(this.model.filter(field => field.type !== undefined).map(field => field.name));
-  },
 });

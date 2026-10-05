@@ -22,10 +22,13 @@ export const diamondMark = defineMark<DiamondMark>({
     const xField = mark.encoding.x?.field;
     const yField = mark.encoding.y?.field;
     if (xField === undefined || yField === undefined) return null;
+
     const nodes: Array<IRNode> = [];
+
     for (const row of rows) {
       const point = frame.projectRoles([row[xField], row[yField]]);
       if (!point) continue;
+
       nodes.push({
         type: 'node',
         position: point,
@@ -34,6 +37,7 @@ export const diamondMark = defineMark<DiamondMark>({
         layout: { minimumSize: mark.minimumSize ?? 16, padding: 0 },
       });
     }
+
     return nodes.length === 0 ? null : ({ type: 'scope', children: nodes } satisfies IRChild);
   },
 });

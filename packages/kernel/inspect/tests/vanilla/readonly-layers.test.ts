@@ -20,6 +20,7 @@ describe('Inspection plane Vanilla adapter', () => {
       ],
     };
     const layers = inspectionPlaneToReadonlyLayers(plane);
+
     expect(layers).toHaveLength(1);
     expect(layers[0]?.key).toBe('inspect:test/points:0');
     expect(layers[0]?.scene).toBe(scene);
@@ -29,6 +30,7 @@ describe('Inspection plane Vanilla adapter', () => {
 
   it('returns a frozen empty list for a null plane', () => {
     const layers = inspectionPlaneToReadonlyLayers(null);
+
     expect(layers).toEqual([]);
     expect(Object.isFrozen(layers)).toBe(true);
   });

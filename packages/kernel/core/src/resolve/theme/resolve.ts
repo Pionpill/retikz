@@ -25,6 +25,7 @@ export const resolveTheme = (
   styles = resolveThemeStyleRegistry(),
 ): ResolvedTheme => {
   if (sparse === undefined) return parent;
+
   const style = sparse.style ?? parent.style;
   const mode = sparse.mode ?? parent.mode;
   if (style === parent.style && mode === parent.mode) return parent;
@@ -34,6 +35,7 @@ export const resolveTheme = (
   const definition = styles.get(style);
   if (definition === undefined)
     throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme style '${style}' is not registered at ${path}.`);
+
   try {
     return Object.freeze({ style, mode, colors: resolveCoreThemeStyleColors(mode, definition.resolve({ mode })) });
   } catch (cause) {

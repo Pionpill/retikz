@@ -4,7 +4,7 @@
 
 #### Array / ArrayProps
 
-- `Array`: <ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={56}>Standard Array presentation component</ApiSourceLink>
+- `Array`: <ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={77}>Standard Array presentation component</ApiSourceLink>
 - `ArrayProps`: <ApiSourceLink label={"ArrayProps"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={17}>React authoring props for Array</ApiSourceLink>
 
 The data, items, skeleton, and ArrayItem children inputs are mutually exclusive; omitting all inputs creates an empty array. dataExpand applies only to data
@@ -66,7 +66,7 @@ Text and children are mutually exclusive; omitting both leaves an empty cell, an
 | `id?`       | `string`                   | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`   | `ArrayItemProps["layout"]` | —       | —                                                                                                   |
 | `style?`    | `ArrayItemProps["style"]`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                   | —       | —                                                                                                   |
+| `text?`     | `string`                   | —       | Cell text, mutually exclusive with drawing content                                                  |
 
 </ApiTable>
 
@@ -78,7 +78,7 @@ Text and children are mutually exclusive; omitting both leaves an empty cell, an
 
 | Member     | Type                       | Default | Description                                                                                         |
 | ---------- | -------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                | —       | —                                                                                                   |
+| `children` | `ReactNode`                | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
 | `id?`      | `string`                   | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`  | `ArrayItemProps["layout"]` | —       | —                                                                                                   |
 | `style?`   | `ArrayItemProps["style"]`  | —       | Sparse visual overrides for a collection cell.                                                      |
@@ -104,7 +104,7 @@ export type ArrayItemProps = CellMarkerProps<IRArrayCell['layout']>;
 
 #### array / InputArray
 
-- `array`: <ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={59}>Create a Array embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
+- `array`: <ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={81}>Create a Array embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
 - `InputArray`: <ApiSourceLink label={"InputArray"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={14}>Vanilla authoring input for Array</ApiSourceLink>
 
 Choose items, data, or skeleton; dataExpand applies only to data. Other fields follow IRArray, and the adapter supplies namespace and type
@@ -162,7 +162,7 @@ export type InputArray = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
   <ApiSourceLink
     label={'ArrayInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/array.ts'}
-    startLine={22}
+    startLine={41}
   >
     Pass Array input and nested content to root-level traversal
   </ApiSourceLink>
@@ -180,7 +180,7 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
   <ApiSourceLink
     label={'IRArray'}
     path={'packages/library/standard/src/collection/array/schema/types.ts'}
-    startLine={20}
+    startLine={21}
   >
     Sparse Array Source preserving unmerged styles
   </ApiSourceLink>
@@ -222,7 +222,7 @@ export type IRArray = Omit<
   <ApiSourceLink
     label={'IRArrayCell'}
     path={'packages/library/standard/src/collection/array/schema/types.ts'}
-    startLine={14}
+    startLine={15}
   >
     Array cell Source supporting content-based width
   </ApiSourceLink>
@@ -317,7 +317,7 @@ export type IRArrayIndexOptions = input<typeof ArrayIndexOptionsSchema>;
   <ApiSourceLink
     label={'IRArrayIndexStyle'}
     path={'packages/library/standard/src/collection/array/schema/types.ts'}
-    startLine={11}
+    startLine={12}
   >
     Sparse index text overrides, unaffected by cell-level styles
   </ApiSourceLink>
@@ -377,7 +377,7 @@ export const ArrayDefinition: LayoutCompositeDefinition<IRArray, 'standard', 'ar
   <ApiSourceLink
     label={'ArrayProvider'}
     path={'packages/library/standard/src/collection/array/provider.ts'}
-    startLine={6}
+    startLine={7}
   >
     On-demand dependencies of Array and its cell lowering targets
   </ApiSourceLink>

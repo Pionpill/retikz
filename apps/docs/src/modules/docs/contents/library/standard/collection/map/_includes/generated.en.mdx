@@ -4,7 +4,7 @@
 
 #### Map / MapProps
 
-- `Map`: <ApiSourceLink label={"Map"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={58}>Standard Map presentation component</ApiSourceLink>
+- `Map`: <ApiSourceLink label={"Map"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={84}>Standard Map presentation component</ApiSourceLink>
 - `MapProps`: <ApiSourceLink label={"MapProps"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={14}>React authoring props for Map; key/value overrides live in style.key/value and layout.key/value</ApiSourceLink>
 
 ```ts
@@ -50,7 +50,7 @@ export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
 
 #### MapEntry / MapEntryProps
 
-- `MapEntry`: <ApiSourceLink label={"MapEntry"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={14}>Direct entry declaration for Map</ApiSourceLink>
+- `MapEntry`: <ApiSourceLink label={"MapEntry"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={19}>Direct entry declaration for Map</ApiSourceLink>
 - `MapEntryProps`: <ApiSourceLink label={"MapEntryProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={7}>One Map entry containing one MapKey and one MapValue</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -59,9 +59,9 @@ export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
 
 <ApiTable>
 
-| Member     | Type        | Default | Description |
-| ---------- | ----------- | ------- | ----------- |
-| `children` | `ReactNode` | —       | —           |
+| Member     | Type        | Default | Description                                     |
+| ---------- | ----------- | ------- | ----------------------------------------------- |
+| `children` | `ReactNode` | —       | MapKey and MapValue declarations for this entry |
 
 </ApiTable>
 
@@ -83,8 +83,8 @@ export type MapEntryProps = {
 
 #### MapKey / MapKeyProps
 
-- `MapKey`: <ApiSourceLink label={"MapKey"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={16}>Key slot of a MapEntry</ApiSourceLink>
-- `MapKeyProps`: <ApiSourceLink label={"MapKeyProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={9}>Text or drawable input for a Map key cell</ApiSourceLink>
+- `MapKey`: <ApiSourceLink label={"MapKey"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={22}>Key slot of a MapEntry</ApiSourceLink>
+- `MapKeyProps`: <ApiSourceLink label={"MapKeyProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={13}>Text or drawable input for a Map key cell</ApiSourceLink>
 
 <DocTabs defaultValue="text">
 
@@ -98,7 +98,7 @@ export type MapEntryProps = {
 | `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                    | —       | —                                                                                                   |
+| `text?`     | `string`                    | —       | Cell text, mutually exclusive with drawing content                                                  |
 
 </ApiTable>
 
@@ -110,7 +110,7 @@ export type MapEntryProps = {
 
 | Member     | Type                        | Default | Description                                                                                         |
 | ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                 | —       | —                                                                                                   |
+| `children` | `ReactNode`                 | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
 | `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
@@ -134,8 +134,8 @@ export type MapKeyProps = CellMarkerProps;
 
 #### MapValue / MapValueProps
 
-- `MapValue`: <ApiSourceLink label={"MapValue"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={18}>Value slot of a MapEntry</ApiSourceLink>
-- `MapValueProps`: <ApiSourceLink label={"MapValueProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={11}>Text or drawable input for a Map value cell</ApiSourceLink>
+- `MapValue`: <ApiSourceLink label={"MapValue"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={25}>Value slot of a MapEntry</ApiSourceLink>
+- `MapValueProps`: <ApiSourceLink label={"MapValueProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={16}>Text or drawable input for a Map value cell</ApiSourceLink>
 
 <DocTabs defaultValue="text">
 
@@ -149,7 +149,7 @@ export type MapKeyProps = CellMarkerProps;
 | `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                    | —       | —                                                                                                   |
+| `text?`     | `string`                    | —       | Cell text, mutually exclusive with drawing content                                                  |
 
 </ApiTable>
 
@@ -161,7 +161,7 @@ export type MapKeyProps = CellMarkerProps;
 
 | Member     | Type                        | Default | Description                                                                                         |
 | ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                 | —       | —                                                                                                   |
+| `children` | `ReactNode`                 | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
 | `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
@@ -187,7 +187,7 @@ export type MapValueProps = CellMarkerProps;
 
 #### map / InputMap
 
-- `map`: <ApiSourceLink label={"map"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={62}>Create a Map embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
+- `map`: <ApiSourceLink label={"map"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={84}>Create a Map embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
 - `InputMap`: <ApiSourceLink label={"InputMap"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={11}>Vanilla authoring input for Map; key/value overrides live in style.key/value and layout.key/value</ApiSourceLink>
 
 ```ts
@@ -225,7 +225,7 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   <ApiSourceLink
     label={'MapInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/map.ts'}
-    startLine={24}
+    startLine={43}
   >
     Pass Map input and nested content to root-level traversal
   </ApiSourceLink>

@@ -5,6 +5,7 @@ import type { IRCell } from '../../_cell/schema';
 import type { MatrixSchema, MatrixAxisIndexSchema } from './schema';
 
 export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
+
 /** 三种入口互斥的 Matrix Source；单元格内容沿用共享绘图契约 */
 export type IRMatrix = Omit<
   input<typeof MatrixSchema>,
@@ -12,7 +13,13 @@ export type IRMatrix = Omit<
 > &
   Omit<IRScopeProps, 'style'> &
   (
-    | { /** 显式二维单元格 */ items: Array<Array<string | IRCell>>; data?: never; skeleton?: never; dataExpand?: never }
+    | {
+        /** 显式二维单元格 */
+        items: Array<Array<string | IRCell>>;
+        data?: never;
+        skeleton?: never;
+        dataExpand?: never;
+      }
     | {
         /** 二维 JSON 数据，格内结构按 dataExpand 展示 */
         data: NonNullable<input<typeof MatrixSchema>['data']>;

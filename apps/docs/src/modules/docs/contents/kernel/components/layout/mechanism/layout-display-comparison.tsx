@@ -11,6 +11,7 @@ export type LayoutDisplayComparisonProps = Readonly<{ lang?: Lang }>;
 const LayoutDisplayComparison: FC<LayoutDisplayComparisonProps> = props => {
   const { lang } = props;
   const i18n = layoutDisplayComparisonI18n[lang ?? 'zh'];
+
   return (
     <Layout width={384} style={{ maxWidth: '100%', height: 'auto' }}>
       {[1, 2].map(scale => (

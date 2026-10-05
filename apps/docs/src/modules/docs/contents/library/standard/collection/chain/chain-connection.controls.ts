@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { chainI18n } from './chain-connection.i18n';
+
 /** 本节参数及默认状态 */
 export const createPreviewControlContract = (lang: Lang) => {
   const t = chainI18n[lang];
@@ -45,4 +46,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['Chain.layout', 'Chain.connection'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

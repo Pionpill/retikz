@@ -11,6 +11,7 @@ import { PlotSchema } from '../../../src/schemas';
 
 /** 笛卡尔使用默认画布；极坐标使用正方形画布，因此 outerRadius = 200、center = [200, 200] */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
+
 const polarOpts: LowerPlotsOptions = { width: 400, height: 400 };
 
 const expandOf = (
@@ -31,6 +32,7 @@ const firstLayer = (
 /** 深度收集图层内所有 Path；颜色分组时 Path 可能位于子 Scope */
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -38,7 +40,9 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -48,10 +52,13 @@ const stepPoint = (step: IRStep): [number, number] => (step as { to: [number, nu
 /** 判断路径是否包含 cycle step，或末点是否回到首点 */
 const isClosedSteps = (steps: ReadonlyArray<IRStep>): boolean => {
   if (steps.some(s => s.kind === 'cycle')) return true;
+
   const withTo = steps.filter(s => s.kind === 'move' || s.kind === 'line');
   if (withTo.length < 2) return false;
+
   const first = stepPoint(withTo[0]);
   const last = stepPoint(withTo[withTo.length - 1]);
+
   return Math.abs(first[0] - last[0]) < 1e-6 && Math.abs(first[1] - last[1]) < 1e-6;
 };
 
@@ -85,9 +92,12 @@ describe('lowerPlots 笛卡尔面积路径', () => {
   it('area_closure_without_fill_is_unfilled', () => {
     const layer = firstLayer(areaSpec({ order: 'month' }), { sales: SALES }, cartOpts);
     const paths = collectPaths(layer);
+
     expect(paths).toHaveLength(1);
+
     const path = paths[0];
     const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
+
     expect(fill).toBeUndefined();
   });
 
@@ -99,6 +109,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     );
     const path = collectPaths(layer)[0];
     const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
+
     expect(fill).toBe('rgba(14, 165, 233, 0.22)');
     expect(isClosedSteps(path.children)).toBe(true);
   });
@@ -106,6 +117,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
   it('area_starts_with_move_and_is_closed', () => {
     const path = collectPaths(firstLayer(areaSpec({ order: 'month' }), { sales: SALES }, cartOpts))[0];
     const steps = path.children;
+
     expect(steps[0].kind).toBe('move');
     expect(isClosedSteps(steps)).toBe(true);
   });
@@ -114,7 +126,9 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     // domain x [0,2] -> [0,480]；y [9,14] -> [300,0]；上沿首点是 (month0, revenue10) 的投影
     const path = collectPaths(firstLayer(areaSpec({ order: 'month' }), { sales: SALES }, cartOpts))[0];
     const first = stepPoint(path.children[0]);
+
     expect(first[0]).toBeCloseTo(0, 6);
+
     // revenue 10 位于 [9,14] 内，因此 y 介于 0 与 300 之间，而不是 baseline
     expect(first[1]).toBeGreaterThan(0);
     expect(first[1]).toBeLessThan(300);
@@ -126,6 +140,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
       firstLayer(areaSpec({ order: 'month', closure: { kind: 'baseline', baseline: 0 } }), { sales: SALES }, cartOpts),
     )[0];
     const ys = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(s => stepPoint(s)[1]);
+
     expect(Math.max(...ys)).toBeCloseTo(300, 6);
   });
 
@@ -155,6 +170,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     });
     const path = collectPaths(firstLayer(spec, { sales: rows }, cartOpts))[0];
     const ys = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(s => stepPoint(s)[1]);
+
     expect(Math.max(...ys)).toBeCloseTo(300, 6);
   });
 
@@ -163,17 +179,20 @@ describe('lowerPlots 笛卡尔面积路径', () => {
       { version: 1, type: 'scene', children: [areaSpec({ order: 'month' })] },
       { composites: lowerPlots({ sales: SALES }, cartOpts) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
   // 少于两个有效点时返回 null，不生成面积
   it('area_single_point_yields_no_layer', () => {
     const outer = expandOf(areaSpec(), { sales: [{ month: 1, revenue: 5 }] }, cartOpts);
+
     expect(outer.children).toHaveLength(0);
   });
 
   it('area_empty_data_yields_no_layer', () => {
     const outer = expandOf(areaSpec(), { sales: [] }, cartOpts);
+
     expect(outer.children).toHaveLength(0);
   });
 
@@ -184,8 +203,10 @@ describe('lowerPlots 笛卡尔面积路径', () => {
       { month: 'oops', revenue: 14 },
       { month: 2, revenue: 9 },
     ];
+
     // 仍有两个有效顶点，可以生成面积且不抛错
     const path = collectPaths(firstLayer(areaSpec({ order: 'month' }), { sales: rows }, cartOpts))[0];
+
     expect(path.type).toBe('path');
   });
 
@@ -218,6 +239,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
       ],
     });
     const paths = collectPaths(firstLayer(spec, { t: TREND }, cartOpts));
+
     expect(paths).toHaveLength(2);
   });
 });
@@ -244,6 +266,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
   it('line_unchanged_no_sampling', () => {
     // 笛卡尔折线不采样：三个顶点生成一个 move 和两个 line step
     const path = collectPaths(firstLayer(lineSpec(), { sales: SALES }, cartOpts))[0];
+
     expect(path.children).toEqual([
       { type: 'step', kind: 'move', to: [0, 240] },
       { type: 'step', kind: 'line', to: [240, 0] },
@@ -254,12 +277,14 @@ describe('lowerPlots 笛卡尔折线回归', () => {
   it('open_line_not_closed', () => {
     // 省略 closed 时不闭合：没有 cycle，末点也不等于首点
     const path = collectPaths(firstLayer(lineSpec(), { sales: SALES }, cartOpts))[0];
+
     expect(path.children.some(s => s.kind === 'cycle')).toBe(false);
   });
 
   // 笛卡尔 closed line 允许形成闭合多边形
   it('closed_line_returns_to_first_point', () => {
     const path = collectPaths(firstLayer(lineSpec({ closed: true }), { sales: SALES }, cartOpts))[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
   });
 
@@ -272,6 +297,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
       { month: 4, revenue: 11 },
     ];
     const paths = collectPaths(firstLayer(lineSpec(), { sales: rows }, cartOpts));
+
     expect(paths).toHaveLength(2);
     expect(paths.map(path => path.children.filter(step => step.kind === 'move').length)).toEqual([1, 1]);
     expect(paths.map(path => path.children.filter(step => step.kind === 'line').length)).toEqual([1, 1]);
@@ -286,6 +312,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
       { month: 4, revenue: 11 },
     ];
     const paths = collectPaths(firstLayer(lineSpec({ connectNulls }), { sales: rows }, cartOpts));
+
     expect(paths).toHaveLength(3);
     expect(paths.map(path => path.children.filter(step => step.kind === 'line').length)).toEqual([1, 1, 1]);
     expect(paths.map(path => path.style?.dashPattern)).toEqual([undefined, [6, 4], undefined]);
@@ -312,6 +339,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
         cartOpts,
       ),
     );
+
     expect(paths).toHaveLength(3);
     expect(paths[1].style).toMatchObject({
       stroke: '#ff0000',
@@ -337,6 +365,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
       { month: 1, revenue: null },
       { month: 2, revenue: 12 },
     ];
+
     expect(
       collectPaths(firstLayer(lineSpec({ ...extra, connectNulls: true }), { sales: rows }, cartOpts)),
     ).toHaveLength(1);
@@ -376,9 +405,12 @@ describe('lowerPlots path closure cartesian', () => {
     );
     const [path] = collectPaths(layer);
     const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
+
     expect(fill).toBeTruthy();
     expect(isClosedSteps(path.children)).toBe(true);
+
     const ys = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(s => stepPoint(s)[1]);
+
     expect(Math.max(...ys)).toBeCloseTo(300, 6);
   });
 
@@ -389,6 +421,7 @@ describe('lowerPlots path closure cartesian', () => {
       cartOpts,
     );
     const path = collectPaths(layer)[0];
+
     expect(path.style?.stroke ?? layer.defaults?.path?.style?.stroke).toBe('none');
     expect(isClosedSteps(path.children)).toBe(true);
   });
@@ -401,6 +434,7 @@ describe('lowerPlots path closure cartesian', () => {
         cartOpts,
       ),
     )[0];
+
     expect(path.children.some(step => step.kind === 'cubic')).toBe(true);
     expect(path.children[path.children.length - 1].kind).toBe('cycle');
   });
@@ -423,8 +457,11 @@ describe('lowerPlots path closure cartesian', () => {
       cartOpts,
     );
     const paths = collectPaths(layer);
+
     expect(paths).toHaveLength(2);
+
     for (const path of paths) expect(isClosedSteps(path.children)).toBe(true);
+
     expect(
       paths.every(path => (path.style?.fill ?? layer.defaults?.path?.style?.fill) === 'rgba(14, 165, 233, 0.22)'),
     ).toBe(true);
@@ -436,11 +473,16 @@ describe('lowerPlots path closure cartesian', () => {
       encoding: { x: { field: 'x' }, y: { field: 'y1' } },
     });
     const path = collectPaths(firstLayer(spec, { series: SERIES }, cartOpts))[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
+
     const linePoints = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(stepPoint);
     const stackReturnEnd = linePoints.find(([x, y]) => Math.abs(x - 480) < 1e-6 && y > 100);
+
     expect(stackReturnEnd?.[1]).toBeCloseTo(200, 6);
+
     const stackReturnStart = linePoints.find(([x, y]) => Math.abs(x) < 1e-6 && y > 250);
+
     expect(stackReturnStart?.[1]).toBeCloseTo(300, 6);
   });
 
@@ -451,6 +493,7 @@ describe('lowerPlots path closure cartesian', () => {
       encoding: { x: { field: 'x' }, y: { field: 'y1' } },
     });
     const path = collectPaths(firstLayer(spec, { series: SERIES }, cartOpts))[0];
+
     expect(path.children.filter(step => step.kind === 'cubic')).toHaveLength(4);
   });
 });
@@ -477,11 +520,13 @@ describe('lowerPlots 极坐标折线采样', () => {
 
   it('polar_path_defaults_to_closed', () => {
     const path = collectPaths(firstLayer(polarLineSpec(), { d: POLAR }, polarOpts))[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
   });
 
   it('polar_monotone_curve_falls_back_to_linear_steps', () => {
     const path = collectPaths(firstLayer(polarLineSpec({ curve: 'monotoneY' }), { d: POLAR }, polarOpts))[0];
+
     expect(path.children.some(step => step.kind === 'cubic' || step.kind === 'smooth')).toBe(false);
     expect(path.children.some(step => step.kind === 'line')).toBe(true);
   });
@@ -490,6 +535,7 @@ describe('lowerPlots 极坐标折线采样', () => {
     // 连续角轴且未闭合时，相邻顶点角差较大会在段内插入采样点
     const path = collectPaths(firstLayer(polarLineSpec({ closed: false }), { d: POLAR }, polarOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+
     expect(points.length).toBeGreaterThan(2);
   });
 
@@ -503,9 +549,11 @@ describe('lowerPlots 极坐标折线采样', () => {
         const [x, y] = stepPoint(s);
         return Math.hypot(x - center[0], y - center[1]);
       });
+
     // 端点半径：r=5 映射到 innerRadius 0，r=10 映射到 outerRadius 200
     expect(radii[0]).toBeCloseTo(0, 6);
     expect(radii[radii.length - 1]).toBeCloseTo(200, 6);
+
     // 中间采样点半径按半径空间线性插值并单调递增
     for (let i = 1; i < radii.length; i += 1) {
       expect(radii[i]).toBeGreaterThanOrEqual(radii[i - 1] - 1e-6);
@@ -532,13 +580,17 @@ describe('lowerPlots 极坐标折线采样', () => {
     });
     const path = collectPaths(firstLayer(spec, { d: CAT }, polarOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+
     expect(points).toHaveLength(3);
   });
 
   it('polar_closed_line_densifies_each_segment_and_the_closing_seam', () => {
     const path = collectPaths(firstLayer(polarLineSpec({ closed: true }), { d: POLAR }, polarOpts))[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
+
     const lines = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+
     expect(lines.length).toBeGreaterThan(2 + RETIKZ_POLAR_SEGMENT_SAMPLES);
   });
 
@@ -546,6 +598,7 @@ describe('lowerPlots 极坐标折线采样', () => {
     const path = collectPaths(
       firstLayer(polarLineSpec({ closed: true, interpolation: 'chord' }), { d: POLAR }, polarOpts),
     )[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
     expect(path.children.filter(step => step.kind === 'move' || step.kind === 'line')).toHaveLength(2);
   });
@@ -556,6 +609,7 @@ describe('lowerPlots 极坐标折线采样', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation: 'chord' },
     });
     const path = collectPaths(firstLayer(spec, { d: POLAR }, polarOpts))[0];
+
     expect(path.children.filter(step => step.kind === 'move' || step.kind === 'line').length).toBeGreaterThan(2);
   });
 
@@ -586,6 +640,7 @@ describe('lowerPlots 极坐标折线采样', () => {
     )[0];
     const points = path.children.filter(step => step.kind === 'move' || step.kind === 'line').map(stepPoint);
     const penultimate = points[points.length - 2];
+
     expect(penultimate[0]).toBeGreaterThan(200);
     expect(penultimate[1]).toBeLessThan(200);
   });
@@ -608,6 +663,7 @@ describe('lowerPlots 极坐标折线采样', () => {
         },
       ],
     });
+
     expect(() =>
       firstLayer(
         spec,
@@ -646,6 +702,7 @@ describe('lowerPlots 雷达图', () => {
 
   it('radar_is_closed_polygon', () => {
     const path = collectPaths(firstLayer(radarSpec(), { m: METRICS }, polarOpts))[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
   });
 
@@ -660,6 +717,7 @@ describe('lowerPlots 雷达图', () => {
         return Math.round(Math.atan2(y - center[1], x - center[0]) * 1e4);
       });
     const distinct = new Set(angles);
+
     expect(distinct.size).toBeGreaterThanOrEqual(4);
   });
 
@@ -668,6 +726,7 @@ describe('lowerPlots 雷达图', () => {
       { version: 1, type: 'scene', children: [radarSpec()] },
       { composites: lowerPlots({ m: METRICS }, polarOpts) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });
@@ -730,9 +789,12 @@ describe('lowerPlots 极坐标面积路径', () => {
       polarOpts,
     );
     const path = collectPaths(layer)[0];
+
     expect(path.children[0].kind).toBe('move');
     expect(isClosedSteps(path.children)).toBe(true);
+
     const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
+
     expect(fill).toBe('rgba(16, 185, 129, 0.22)');
   });
 
@@ -748,6 +810,7 @@ describe('lowerPlots 极坐标面积路径', () => {
         const [x, y] = stepPoint(s);
         return Math.hypot(x - center[0], y - center[1]);
       });
+
     // baseline 回边至少有一点贴近圆心
     expect(Math.min(...radii)).toBeCloseTo(0, 6);
   });
@@ -779,26 +842,34 @@ describe('lowerPlots 极坐标面积路径', () => {
         const [x, y] = stepPoint(s);
         return Math.hypot(x - center[0], y - center[1]);
       });
+
     expect(Math.min(...radii)).toBeCloseTo(0, 6);
   });
 
   it('polar_stack_area_defaults_to_closed_loop', () => {
     const path = collectPaths(firstLayer(polarStackSpec(), { m: STACK }, polarOpts))[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
+
     const lineSteps = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+
     expect(lineSteps.length).toBeGreaterThan(STACK.length * 2);
   });
 
   it('polar_stack_area_monotone_curve_falls_back_to_linear_steps', () => {
     const path = collectPaths(firstLayer(polarStackSpec({ curve: 'monotoneY' }), { m: STACK }, polarOpts))[0];
+
     expect(path.children.some(step => step.kind === 'cubic' || step.kind === 'smooth')).toBe(false);
     expect(path.children.some(step => step.kind === 'line')).toBe(true);
   });
 
   it('polar_stack_area_respects_closed_false', () => {
     const path = collectPaths(firstLayer(polarStackSpec({ closed: false }), { m: STACK }, polarOpts))[0];
+
     expect(isClosedSteps(path.children)).toBe(true);
+
     const lineSteps = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+
     expect(lineSteps.length).toBe(STACK.length * 2);
   });
 
@@ -807,6 +878,7 @@ describe('lowerPlots 极坐标面积路径', () => {
       { version: 1, type: 'scene', children: [polarAreaSpec()] },
       { composites: lowerPlots({ m: METRICS }, polarOpts) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });

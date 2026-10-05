@@ -9,6 +9,7 @@ export const resolveCellPresentationRegistry = (
   custom?: ReadonlyArray<AnyCellPresentationDefinition>,
 ): ReadonlyMap<string, AnyCellPresentationDefinition> => {
   const registry = new Map<string, AnyCellPresentationDefinition>();
+
   for (const definition of [...BUILTIN_CELL_PRESENTATIONS, ...(custom ?? [])]) {
     assertNonEmptyString(
       definition.name,
@@ -18,8 +19,10 @@ export const resolveCellPresentationRegistry = (
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell presentation registration: "${definition.name}"`);
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };
 
@@ -30,6 +33,7 @@ export const cellPresentationDefinitionOf = (
 ): AnyCellPresentationDefinition => {
   const definition = registry.get(name);
   if (definition !== undefined) return definition;
+
   throw new RetikzTableError(
     `Cell presentation "${name}" is not registered; pass a definition via options.presentationDefinitions`,
   );

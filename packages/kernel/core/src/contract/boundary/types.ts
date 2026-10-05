@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { AnchorValue, Rect } from '../../shared';
+import type { Anchor, Rect } from '../../shared';
 import type { PathCommand } from '../scene';
 import type { ConnectionEnvelopeKind } from '../shape';
 
@@ -10,7 +10,7 @@ import type { ConnectionEnvelopeKind } from '../shape';
  * 连接面命名 anchor 的名字
  * @description 类型接受字符串；Node 引用解析仅将非中心的标准方位名交给 boundary，中心与形状专属名称由视觉 shape 解析
  */
-export type BoundaryAnchorName = AnchorValue | (string & {});
+export type BoundaryAnchorName = Anchor | (string & {});
 
 /** Boundary provider 解析实例连接矩形时可用的视觉几何上下文 */
 export type BoundaryFitContext = {

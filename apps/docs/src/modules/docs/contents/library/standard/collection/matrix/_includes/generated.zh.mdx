@@ -4,8 +4,8 @@
 
 #### Matrix / MatrixProps
 
-- `Matrix`：<ApiSourceLink label={"Matrix"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={56}>Standard Matrix 呈现组件</ApiSourceLink>
-- `MatrixProps`：<ApiSourceLink label={"MatrixProps"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={14}>Matrix 的 React 输入；省略所有入口时生成空矩阵</ApiSourceLink>
+- `Matrix`：<ApiSourceLink label={"Matrix"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={85}>Standard Matrix 呈现组件</ApiSourceLink>
+- `MatrixProps`：<ApiSourceLink label={"MatrixProps"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={15}>Matrix 的 React 输入；省略所有入口时生成空矩阵</ApiSourceLink>
 
 ```ts
 export declare const Matrix: {
@@ -47,8 +47,8 @@ export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
 
 #### MatrixRow / MatrixRowProps
 
-- `MatrixRow`：<ApiSourceLink label={"MatrixRow"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={7}>Matrix 的直属行声明</ApiSourceLink>
-- `MatrixRowProps`：<ApiSourceLink label={"MatrixRowProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={5}>Matrix 行分组，不生成图元或附加布局</ApiSourceLink>
+- `MatrixRow`：<ApiSourceLink label={"MatrixRow"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={12}>Matrix 的直属行声明</ApiSourceLink>
+- `MatrixRowProps`：<ApiSourceLink label={"MatrixRowProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={6}>Matrix 行分组，不生成图元或附加布局</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -56,9 +56,9 @@ export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
 
 <ApiTable>
 
-| 成员        | 类型        | 默认值 | 说明 |
-| ----------- | ----------- | ------ | ---- |
-| `children?` | `ReactNode` | —      | —    |
+| 成员        | 类型        | 默认值 | 说明                     |
+| ----------- | ----------- | ------ | ------------------------ |
+| `children?` | `ReactNode` | —      | 当前行的 MatrixCell 声明 |
 
 </ApiTable>
 
@@ -80,8 +80,8 @@ export type MatrixRowProps = {
 
 #### MatrixCell / MatrixCellProps
 
-- `MatrixCell`：<ApiSourceLink label={"MatrixCell"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={8}>MatrixRow 的直属格子声明</ApiSourceLink>
-- `MatrixCellProps`：<ApiSourceLink label={"MatrixCellProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={6}>Matrix 单格的文本或唯一 drawable；同时省略表示空格</ApiSourceLink>
+- `MatrixCell`：<ApiSourceLink label={"MatrixCell"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={10}>MatrixRow 的直属格子声明</ApiSourceLink>
+- `MatrixCellProps`：<ApiSourceLink label={"MatrixCellProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={7}>Matrix 单格的文本或唯一 drawable；同时省略表示空格</ApiSourceLink>
 
 <DocTabs defaultValue="text">
 
@@ -95,7 +95,7 @@ export type MatrixRowProps = {
 | `id?`       | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
 | `layout?`   | `CellMarkerProps['layout']` | —      | —                                |
 | `style?`    | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`     | `string`                    | —      | —                                |
+| `text?`     | `string`                    | —      | 单元格文本，与绘制子内容互斥     |
 
 </ApiTable>
 
@@ -105,13 +105,13 @@ export type MatrixRowProps = {
 
 <ApiTable>
 
-| 成员       | 类型                        | 默认值 | 说明                             |
-| ---------- | --------------------------- | ------ | -------------------------------- |
-| `children` | `ReactNode`                 | —      | —                                |
-| `id?`      | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
-| `layout?`  | `CellMarkerProps['layout']` | —      | —                                |
-| `style?`   | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`    | `never`                     | —      | —                                |
+| 成员       | 类型                        | 默认值 | 说明                                     |
+| ---------- | --------------------------- | ------ | ---------------------------------------- |
+| `children` | `ReactNode`                 | —      | 恰好一个可编译的绘制子内容，与 text 互斥 |
+| `id?`      | `string`                    | —      | 当前容器内唯一的可选单元格 id            |
+| `layout?`  | `CellMarkerProps['layout']` | —      | —                                        |
+| `style?`   | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖         |
+| `text?`    | `never`                     | —      | —                                        |
 
 </ApiTable>
 
@@ -133,8 +133,8 @@ export type MatrixCellProps = CellMarkerProps;
 
 #### matrix / InputMatrix
 
-- `matrix`：<ApiSourceLink label={"matrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={58}>创建保留原始输入的 Matrix embed</ApiSourceLink>
-- `InputMatrix`：<ApiSourceLink label={"InputMatrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={10}>Matrix 的三种互斥 Vanilla 输入；items 接受嵌套 drawable</ApiSourceLink>
+- `matrix`：<ApiSourceLink label={"matrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={83}>创建保留原始输入的 Matrix embed</ApiSourceLink>
+- `InputMatrix`：<ApiSourceLink label={"InputMatrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={11}>Matrix 的三种互斥 Vanilla 输入；items 接受嵌套 drawable</ApiSourceLink>
 
 ```ts
 export declare const matrix: (input: InputMatrix) => InputEmbed<InputMatrix>;
@@ -168,7 +168,7 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
   <ApiSourceLink
     label={'MatrixInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/matrix.ts'}
-    startLine={17}
+    startLine={38}
   >
     收集矩阵及格内 drawable 的依赖
   </ApiSourceLink>
@@ -186,7 +186,7 @@ export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<Input
   <ApiSourceLink
     label={'IRMatrix'}
     path={'packages/library/standard/src/collection/matrix/schema/types.ts'}
-    startLine={9}
+    startLine={10}
   >
     三种入口互斥的 Matrix Source；单元格内容沿用共享绘图契约
   </ApiSourceLink>
@@ -301,7 +301,7 @@ export const MatrixDefinition: LayoutCompositeDefinition<IRMatrix, 'standard', '
   <ApiSourceLink
     label={'MatrixProvider'}
     path={'packages/library/standard/src/collection/matrix/provider.ts'}
-    startLine={6}
+    startLine={7}
   >
     Matrix 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>
@@ -354,7 +354,7 @@ export declare const createMatrix: (input: IRMatrix) => IRMatrix;
   <ApiSourceLink
     label={'getMatrixCellId'}
     path={'packages/library/standard/src/collection/matrix/identity.ts'}
-    startLine={12}
+    startLine={13}
   >
     返回直属格子的零基行列 id，不检查位置是否存在
   </ApiSourceLink>

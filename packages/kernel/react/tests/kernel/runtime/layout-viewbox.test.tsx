@@ -16,6 +16,7 @@ describe('<Layout viewBox> 注入显式视框', () => {
         <Node id="o" position={[0, 0]} shape="circle" style={{ fill: '#2563eb' }} layout={{ minimumSize: 40 }} />
       </Layout>,
     );
+
     expect(svg).toContain('viewBox="-100 -100 200 200"');
   });
 
@@ -25,6 +26,7 @@ describe('<Layout viewBox> 注入显式视框', () => {
         <Node id="o" position={[0, 0]} shape="circle" style={{ fill: '#2563eb' }} layout={{ minimumSize: 40 }} />
       </Layout>,
     );
+
     expect(svg).toContain('viewBox=');
     expect(svg).not.toContain('viewBox="-100 -100 200 200"');
   });
@@ -48,6 +50,7 @@ describe('viewBox prop 与 IR 内置值的优先级', () => {
       viewBox: { x: -50, y: -50, width: 100, height: 100 },
     };
     const svg = renderToStaticMarkup(<Layout ir={ir} />);
+
     expect(svg).toContain('viewBox="-50 -50 100 100"');
   });
 
@@ -68,6 +71,7 @@ describe('viewBox prop 与 IR 内置值的优先级', () => {
       viewBox: { x: -50, y: -50, width: 100, height: 100 },
     };
     const svg = renderToStaticMarkup(<Layout ir={ir} viewBox={{ x: -100, y: -100, width: 200, height: 200 }} />);
+
     expect(svg).toContain('viewBox="-100 -100 200 200"');
     expect(svg).not.toContain('viewBox="-50 -50 100 100"');
   });

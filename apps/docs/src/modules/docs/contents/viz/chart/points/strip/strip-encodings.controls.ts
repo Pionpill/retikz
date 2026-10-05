@@ -5,6 +5,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { createPointCoordinateSection } from '../point-coordinate-control';
 import { stripEncodingsI18n } from './strip-encodings.i18n';
 import { stripVegaBarleyData } from './strip-vega-barley.data';
+
 /** 仅控制当前示例的数据映射 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const i18n = stripEncodingsI18n[lang];

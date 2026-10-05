@@ -93,15 +93,16 @@ description: 配置 Flow 曲线路由、组合分组与固定布局，并统一�
 
 `FlowLayout` 是无外壳的排布容器。`kind="linear"` 按声明顺序沿一个方向放置直接子项，`kind="grid"` 则按指定行列对齐。Layout 本身不绘制边框或标题，也不能作为 Relation 端点。
 
-| 属性                | 可用值                                | 职能                                      |
-| ------------------- | ------------------------------------- | ----------------------------------------- |
-| `kind`              | `"linear"`、`"grid"`                  | 选择一维排列或行列对齐                    |
-| `direction`         | `up`、`right`、`down`、`left`         | Linear 中直接子项依次放置的方向           |
-| `gap`               | 非负数；Grid 还可用 `{ row, column }` | Linear 的相邻间距；Grid 的行列轨道间距    |
-| `itemWidth`         | `"match-largest"` 或正数，可省略      | 为直接 Entity 匹配最大自然宽度或指定宽度  |
-| `placements`        | 二维数组或子项 id 到行列的映射        | Grid 中每个直接子项所在的单元格           |
-| `reserveLabelSpace` | 布尔值，默认 `true`                   | Grid 是否为 Relation 标签扩张行列间距     |
-| `excludeFromBounds` | `Array<string>`，默认不排除           | Linear、Grid 向父级报告占位时排除直接子项 |
+| 属性                | 可用值                                      | 职能                                                |
+| ------------------- | ------------------------------------------- | --------------------------------------------------- |
+| `kind`              | `"linear"`、`"grid"`                        | 选择一维排列或行列对齐                              |
+| `direction`         | `up`、`right`、`down`、`left`               | Linear 中直接子项依次放置的方向                     |
+| `gap`               | 非负数；Grid 还可用 `{ row, column }`       | Linear 的相邻间距；Grid 的行列轨道间距              |
+| `itemWidth`         | 正数、`match-largest`；linear 另支持 `fill` | 固定或匹配直接 Entity 宽度；fill 均分父级分配的增量 |
+| `containerWidth`    | `match-largest`，仅纵向 linear              | 将直接横向子容器分配为最大自然宽度                  |
+| `placements`        | 二维数组或子项 id 到行列的映射              | Grid 中每个直接子项所在的单元格                     |
+| `reserveLabelSpace` | 布尔值，默认 `true`                         | Grid 是否为 Relation 标签扩张行列间距               |
+| `excludeFromBounds` | `Array<string>`，默认不排除                 | Linear、Grid 向父级报告占位时排除直接子项           |
 
 示例只包含“输入、校验、输出”三个实体。切换左右方向与间距，观察顺序始终由 Layout 保持；它们之间没有 Relation，固定排列不依赖连线。上下方向也可通过 `direction` 使用。
 
@@ -119,6 +120,23 @@ description: 配置 Flow 曲线路由、组合分组与固定布局，并统一�
   size="md"
   caption="切换横纵排列与自然、匹配最大或固定宽度，观察两个步骤的边缘如何对齐，以及较窄宽度下的文字换行。"
 />
+
+### 同级容器等宽
+
+纵向 `FlowLayout` 设置 `containerWidth="match-largest"`，让直接子容器取自然宽度的最大值。子容器可以是横向 Entity 行，也可以是只包含一个横向行的 Group。Group 将扣除标题与内边距后的可用宽度交给该行。
+
+行内设置 `itemWidth="fill"`，节点按自己的自然宽度均分新增空间；例如差额为 90、三个节点可伸展，就各增加 30。它不同于 `match-largest`：后者让节点最终等宽，fill 保留内容宽度差异。有效 `layout.width` 固定的节点不参与增长，间距与标签占位保持不变。
+
+<ComponentPreview
+  files={['flow-container-width', 'flow-container-width.preview.tsx']}
+  defaultSourceFile="flow-container-width.preview.tsx"
+  size="xl"
+  caption="先切换容器等宽，再比较只扩大外框与节点填充；关闭等宽时示例同时停用 fill。"
+/>
+
+此规则不跨行对齐列，也不缩放字号或形状。fill 必须有父级宽度分配；Grid、多内容根 Group、参与节点被 excludeFromBounds 排除，或有剩余空间但全部节点固定时会报错。只需外壳等宽时省略 fill，保留内部自然尺寸。
+
+### 网格对齐
 
 不同排的节点需要两两对齐时，改用 Grid。推荐将 `placements` 写成二维数组：外层下标是从 0 开始的行，内层下标是列，单元格填直接子项 id，`null` 留空；也可用子项 id 到 `{ row, column }` 的映射。React 和 Vanilla 使用相同的 `placements`；Vanilla 的 `children` 只负责包含与绘制顺序。每个直接子项都必须占一个单元格，不能重叠、跨格或引用其它容器的后代；空行列不生成占位元素。同列共享中心 x，同排共享中心 y，节点保留真实尺寸。
 
@@ -285,6 +303,19 @@ Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group �
       type: '"linear" | "grid"',
       required: true,
       description: '选择直接子项的一维排列或物理行列对齐；两种 Layout 都没有可见外壳。',
+    },
+    {
+      name: 'FlowLayout.containerWidth',
+      kind: 'property',
+      type: '"match-largest"',
+      description: '纵向 linear 布局按直接子容器的最大自然宽度分配空间；子容器为横向行或只有一个横向内容根的 Group。',
+    },
+    {
+      name: 'FlowLayout.itemWidth',
+      kind: 'property',
+      type: 'number | "match-largest" | "fill"',
+      description:
+        '数值固定直接 Entity 宽度；match-largest 令其最终等宽；fill 在有父级分配的横向行内均分剩余空间，保留自然宽度差异。',
     },
     {
       name: 'FlowLayout.placements',

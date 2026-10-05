@@ -73,9 +73,11 @@ const mountStaticCanvas = (
   const animation = options.animation ?? {};
   const canvasOptions = options.canvas ?? {};
   const ratio = resolveDevicePixelRatio(canvasOptions.devicePixelRatio);
+
   // 未显式配置时跟随系统偏好；显式 enabled 值覆盖系统偏好。
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   let clock: AnimationControls | undefined;
+
   // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
   const registry: IdClockRegistry = createIdClockRegistry();
   let visibleActivated = new Set<string>();
@@ -123,15 +125,20 @@ const mountStaticCanvas = (
   const activateVisibleTracks = (): void => {
     const ids = collectCanvasVisibleAnimationIds(currentScene);
     if (ids.size === 0) return;
+
     let changed = false;
+
     for (const id of ids) {
       if (visibleActivated.has(id)) continue;
       if (!isCanvasAnimationIdVisible(canvas, currentScene, id)) continue;
+
       registry.restart(id, clock?.time ?? 0);
       visibleActivated.add(id);
       changed = true;
     }
+
     if (!changed) return;
+
     ensureClockPlaying();
     renderFrame();
   };
@@ -141,20 +148,26 @@ const mountStaticCanvas = (
     visibleTeardown?.();
     visibleTeardown = undefined;
     if (!animate || !sceneHasAnimations(currentScene)) return;
+
     const ids = collectCanvasVisibleAnimationIds(currentScene);
     if (ids.size === 0 || typeof window === 'undefined') return;
+
     // scroll / resize 高频触发：经 rAF 合帧——同一帧内多次事件只跑一次 activateVisibleTracks（去抖到下一帧）
     let scheduledRaf: number | undefined;
+
     const runScheduled = (): void => {
       scheduledRaf = undefined;
       activateVisibleTracks();
     };
+
     const schedule = (): void => {
       if (scheduledRaf !== undefined) return;
       scheduledRaf = window.requestAnimationFrame(runScheduled);
     };
+
     window.addEventListener('scroll', schedule, true);
     window.addEventListener('resize', schedule);
+
     // 挂载即测一次相交（首帧），与 scroll/resize 同走合帧调度
     schedule();
     visibleTeardown = () => {
@@ -177,6 +190,7 @@ const mountStaticCanvas = (
     canvas.style.width = `${size.width}px`;
     canvas.style.height = `${size.height}px`;
     canvas.style.objectFit = 'contain';
+
     // 截帧（animation.snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animation.enabled。
     // animation.snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。
     if (animation.snapshotAt !== undefined) {
@@ -192,6 +206,7 @@ const mountStaticCanvas = (
       );
       return;
     }
+
     // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
     renderFrameToCanvas(canvas, { primary: scene, layers }, { devicePixelRatio: ratio });
     clock?.dispose();
@@ -214,6 +229,7 @@ const mountStaticCanvas = (
       });
       if (sceneHasAutoplayTrigger(scene)) clock.play();
     }
+
     resetVisibleBridge();
   };
 
@@ -236,6 +252,7 @@ const mountStaticCanvas = (
     const offsetY = (rect.height - layout.height * scale) / 2;
     const contentX = clientX - rect.left - offsetX;
     const contentY = clientY - rect.top - offsetY;
+
     return { x: contentX / scale + layout.x, y: contentY / scale + layout.y };
   };
 
@@ -250,13 +267,17 @@ const mountStaticCanvas = (
    */
   const hydrate = (hydrateOptions: HydrateOptions): { dispose: () => void } => {
     const context2d = canvas.getContext('2d') ?? undefined;
+
     const locate = (event: Event): string | null => {
       const scenePoint = clientToScene((event as MouseEvent).clientX, (event as MouseEvent).clientY);
+
       // hitTest 把点测点表达在 Scene user units / 各图元局部帧、自管 group transform 栈；live canvas context
       // 经 renderToCanvas 后残留 meet-fit transform，须先归一到 identity 再点测，否则路径被二次缩放偏移。
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
+
       return hitTest(currentScene, scenePoint, { context2d });
     };
+
     // canvas 富 context：无逐元素 DOM（element=null），point 经 clientToScene 逆 meet-fit，动画 coarse（scene 级单时钟）。
     // 读 live currentScene / clock，update 后自动反映新图。
     const buildContext = createContextBuilder({
@@ -279,6 +300,7 @@ const mountStaticCanvas = (
         }),
     });
     const userHandlers = hydrateOptions.handlers;
+
     // onEvent 动画 handler 表按当下 scene 合成（决定注册哪些 listener）；update 换图后经 rebindHydrations 重建。
     const bind = (): HydrationController =>
       createHydrationController(
@@ -296,6 +318,7 @@ const mountStaticCanvas = (
       unbind: () => controller.dispose(),
     };
     liveHydrations.add(live);
+
     return {
       dispose: () => {
         live.unbind();
@@ -314,15 +337,19 @@ const mountStaticCanvas = (
     root: canvas,
     update(next: RenderInput) {
       if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: view already disposed.');
+
       renderInto(next);
+
       // renderInto 已换 currentScene；按新 scene 重建存活水合，使 onEvent 动画 trigger 反映新图
       rebindHydrations();
     },
     dispose() {
       if (disposed) return;
+
       disposed = true;
       visibleTeardown?.();
       clock?.dispose();
+
       // 统一解绑未手动 dispose 的水合（兑现 CanvasView.dispose「解绑水合」语义）
       for (const live of liveHydrations) live.unbind();
       liveHydrations.clear();
@@ -355,6 +382,7 @@ const mountRetainedCanvas = (
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: container must be a DOM Element.');
   }
+
   const canvas = document.createElement('canvas');
   const output = options.output ?? {};
   const ratio = resolveDevicePixelRatio(options.canvas?.devicePixelRatio);
@@ -371,17 +399,20 @@ const mountRetainedCanvas = (
     devicePixelRatio: ratio,
   });
   container.appendChild(canvas);
+
   const clientToScene = (clientX: number, clientY: number): ScenePoint => {
     const { layout } = processing.result().scene;
     const rect = canvas.getBoundingClientRect();
     const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
     const offsetX = (rect.width - layout.width * scale) / 2;
     const offsetY = (rect.height - layout.height * scale) / 2;
+
     return {
       x: (clientX - rect.left - offsetX) / scale + layout.x,
       y: (clientY - rect.top - offsetY) / scale + layout.y,
     };
   };
+
   return {
     mode: VanillaViewMode.Retained,
     root: canvas,
@@ -424,9 +455,11 @@ export const mountCanvas: MountCanvas = ((
   if ('primitives' in input) {
     return mountStaticCanvas(container, input, options as StaticMountCanvasOptions);
   }
+
   const runtimeOptions = captureVanillaRuntimeOptions(options);
   if (runtimeOptions.mode === VanillaViewMode.Static) {
     return mountStaticCanvas(container, input, options as RawStaticMountCanvasOptions);
   }
+
   return mountRetainedCanvas(container, input, options as RetainedMountCanvasOptions, runtimeOptions);
 }) as MountCanvas;

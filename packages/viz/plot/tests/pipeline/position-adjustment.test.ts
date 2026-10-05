@@ -54,13 +54,16 @@ const positionsOf = (
 ): Array<[number, number]> => {
   const root = loweredOf(spec, options, data).child as IRScope;
   const nodes: Array<IRNode> = [];
+
   const visit = (scope: IRScope): void => {
     for (const child of scope.children) {
       if (isNodeChild(child) && Array.isArray(child.position)) nodes.push(child);
       if (isScopeChild(child)) visit(child);
     }
   };
+
   visit(root);
+
   return nodes.map(node => node.position as [number, number]);
 };
 
@@ -84,8 +87,10 @@ describe('Mark Placement pipeline', () => {
     const first = positionsOf(spec);
     const second = positionsOf(spec);
     const base = positionsOf(specOf());
+
     expect(first).toEqual(second);
     expect(first.some((position, index) => position[0] !== base[index][0])).toBe(true);
+
     for (let index = 0; index < first.length; index += 1) {
       expect(Math.abs(first[index][0] - base[index][0])).toBeLessThan(80);
       expect(first[index][1]).toBe(base[index][1]);
@@ -122,6 +127,7 @@ describe('Mark Placement pipeline', () => {
     const xScale = frame.roleScales?.x;
 
     expect(xScale).toBeDefined();
+
     const centers = sampleRows.map(row => xScale?.coordinate(row.category) ?? Number.NaN);
     const normalOffsets = normal.map((position, index) => position[0] - centers[index]);
     const uniformOffsets = uniform.map((position, index) => position[0] - centers[index]);
@@ -202,6 +208,7 @@ describe('Mark Placement pipeline', () => {
     const shifted = positionsOf(specOf([{ kind: 'screen-nudge', dx: 7 }]), {
       positionAdjustmentDefinitions: [definition],
     });
+
     expect(shifted).toEqual(base.map(([x, y]) => [x + 7, y]));
   });
 
@@ -257,8 +264,10 @@ describe('Mark Placement pipeline', () => {
       initialize: (_operation, context) =>
         context.targets.map(target => {
           if (target.position === null) return { key: target.key, position: null };
+
           const position: [number, number] = [target.position[0], target.position[1]];
           position.push(0);
+
           return { key: target.key, position };
         }),
     };
@@ -433,6 +442,7 @@ describe('Mark Placement pipeline', () => {
       { width: 200, height: 200, positionAdjustmentDefinitions: [fixedAngle] },
       polarRows,
     );
+
     expect(shifted[0][0]).toBeCloseTo(base[0][0] * 0.75 + base[1][0] * 0.25, 6);
     expect(shifted[0][1]).toBeCloseTo(base[0][1] * 0.75 + base[1][1] * 0.25, 6);
   });
@@ -582,12 +592,15 @@ describe('Mark Placement pipeline', () => {
         const values = context.collectRoleValues('x');
         const scaleOperation = context.resolveScaleForRole('x', undefined, values);
         const scale = context.buildPositionScale(scaleOperation, values, [0, context.width]);
+
         const mapRoles = (roleValues: ReadonlyArray<unknown>): ReadonlyArray<number> | null => {
           const x = scale.coordinate(roleValues[0]);
           return Number.isFinite(x) ? [x] : null;
         };
+
         const projectMappedRoles = (mappedRoles: ReadonlyArray<number>): [number, number] | null =>
           Number.isFinite(mappedRoles[0]) ? [mappedRoles[0], 20] : null;
+
         return {
           frame: createCoordinateFrame(
             'placement-line',
@@ -678,6 +691,7 @@ describe('Mark Placement pipeline', () => {
         const values = context.collectRoleValues('x');
         const scaleOperation = context.resolveScaleForRole('x', undefined, values);
         const scale = context.buildPositionScale(scaleOperation, values, [0, context.width]);
+
         return {
           frame: createCoordinateFrame(
             'legacy-projection',
@@ -803,6 +817,7 @@ describe('Mark Placement pipeline', () => {
       schema: BadSchema,
       initialize: () => [],
     };
+
     expect(() => positionsOf(specOf([{ kind: 'bad-output' }]), { positionAdjustmentDefinitions: [bad] })).toThrow(
       /preserve placement target count/,
     );

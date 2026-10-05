@@ -2,12 +2,10 @@ import type { LayoutChildResult } from '@retikz/core';
 import { LayoutAlignmentGuideDimension } from '@retikz/core';
 
 import type {
-  LayoutAlignmentValue,
   LayoutArtifactAlignmentGuide,
   LayoutArtifactContainer,
   LayoutArtifactItemBase,
   LayoutArtifactRect,
-  LayoutOverflowValue,
   LayoutSpacingArtifact,
 } from '../shared';
 import { LayoutAlignment, LayoutOverflow, LayoutSpacingKind } from '../shared';
@@ -17,14 +15,28 @@ import { outsetLayoutRect } from './geometry';
 
 /** Layout item artifact 基础字段的构造输入 */
 export type CreateLayoutArtifactItemInput = Readonly<{
+  /** 布局项的稳定身份键 */
   key: string;
+  /** 对应作者输入数组的零基索引 */
   sourceIndex: number;
+  /** 布局项的四边外边距 */
   margin: LayoutInsets;
+  /** 布局为子项分配的槽位边界 */
   slotBounds: LayoutRect;
+  /** 子项已完成的布局测量结果 */
   result: LayoutChildResult;
-  translation: Readonly<{ x: number; y: number }>;
+  /** 子项分配坐标到容器局部坐标的平移 */
+  translation: Readonly<{
+    /** 映射到容器局部坐标的水平平移量 */
+    x: number;
+    /** 映射到容器局部坐标的垂直平移量 */
+    y: number;
+  }>;
+  /** 用于计算可见范围的容器分配边界 */
   containerAllocation: LayoutRect;
-  overflow: LayoutOverflowValue;
+  /** 超出容器时的可见或裁剪策略 */
+  overflow: LayoutOverflow;
+  /** 当前子项参与的可选对齐线说明 */
   alignmentGuide?: LayoutArtifactAlignmentGuide;
 }>;
 
@@ -41,6 +53,7 @@ export const appendLayoutSpacing = (
   }>,
 ): void => {
   if (input.mainSize <= 0) return;
+
   target.push(
     Object.freeze({
       kind: input.kind,
@@ -68,6 +81,7 @@ export const appendLayoutSpacingInterval = (
 ): void => {
   const size = input.end - input.start;
   if (size <= 0) return;
+
   const gapSize = Math.min(input.gap, size);
   const gapStart = input.start + (size - gapSize) / 2;
   appendLayoutSpacing(target, {
@@ -100,13 +114,16 @@ export const appendLayoutSpacingInterval = (
 export const sortLayoutSpacing = (spacing: ReadonlyArray<LayoutSpacingArtifact>): Array<LayoutSpacingArtifact> =>
   [...spacing].sort((first, second) => {
     if (first.axis !== second.axis) return first.axis === LayoutAlignmentGuideDimension.X ? -1 : 1;
+
     const firstMain = first.axis === LayoutAlignmentGuideDimension.X ? first.bounds.x : first.bounds.y;
     const secondMain = second.axis === LayoutAlignmentGuideDimension.X ? second.bounds.x : second.bounds.y;
     if (firstMain !== secondMain) return firstMain - secondMain;
+
     const firstCross = first.axis === LayoutAlignmentGuideDimension.X ? first.bounds.y : first.bounds.x;
     const secondCross = second.axis === LayoutAlignmentGuideDimension.X ? second.bounds.y : second.bounds.x;
     if (firstCross !== secondCross) return firstCross - secondCross;
     if (first.kind === second.kind) return 0;
+
     return first.kind === LayoutSpacingKind.Gap ? -1 : 1;
   });
 
@@ -125,10 +142,12 @@ export const translateLayoutRect = (
 /** 求一组 container-local rect 的确定 union，空集返回 canonical zero */
 export const unionLayoutArtifactRects = (rects: ReadonlyArray<LayoutArtifactRect>): LayoutArtifactRect => {
   if (rects.length === 0) return Object.freeze({ x: 0, y: 0, width: 0, height: 0 });
+
   const minX = Math.min(...rects.map(rect => rect.x));
   const minY = Math.min(...rects.map(rect => rect.y));
   const maxX = Math.max(...rects.map(rect => rect.x + rect.width));
   const maxY = Math.max(...rects.map(rect => rect.y + rect.height));
+
   return Object.freeze({ x: minX, y: minY, width: maxX - minX, height: maxY - minY });
 };
 
@@ -142,6 +161,7 @@ export const intersectLayoutArtifactRects = (
   const maxX = Math.min(first.x + first.width, second.x + second.width);
   const maxY = Math.min(first.y + first.height, second.y + second.height);
   if (maxX <= x || maxY <= y) return null;
+
   return Object.freeze({ x, y, width: maxX - x, height: maxY - y });
 };
 
@@ -149,21 +169,19 @@ export const intersectLayoutArtifactRects = (
 export const alignResolvedLayoutSlot = (
   available: LayoutRect,
   result: LayoutChildResult,
-  horizontal: LayoutAlignmentValue,
-  vertical: LayoutAlignmentValue,
+  horizontal: LayoutAlignment,
+  vertical: LayoutAlignment,
 ): LayoutRect => {
-  const alignedStart = (
-    start: number,
-    availableSize: number,
-    slotSize: number,
-    alignment: LayoutAlignmentValue,
-  ): number => {
+  const alignedStart = (start: number, availableSize: number, slotSize: number, alignment: LayoutAlignment): number => {
     if (alignment === LayoutAlignment.End || alignment === LayoutAlignment.LastBaseline) {
       return start + availableSize - slotSize;
     }
+
     if (alignment === LayoutAlignment.Center) return start + (availableSize - slotSize) / 2;
+
     return start;
   };
+
   return Object.freeze({
     x: alignedStart(available.x, available.width, result.slotSize.width, horizontal),
     y: alignedStart(available.y, available.height, result.slotSize.height, vertical),
@@ -183,6 +201,7 @@ export const createLayoutArtifactAlignmentGuide = (
   const allocationStart = dimension === 'x' ? result.allocationBounds.x : result.allocationBounds.y;
   const allocationSize = dimension === 'x' ? result.allocationBounds.width : result.allocationBounds.height;
   const fallbackPosition = name === 'first-baseline' ? allocationStart : allocationStart + allocationSize;
+
   return Object.freeze({
     name,
     position: (guide?.position ?? fallbackPosition) + (dimension === 'x' ? translation.x : translation.y),
@@ -194,21 +213,26 @@ export const createLayoutArtifactAlignmentGuide = (
 export const createLayoutArtifactItem = (input: CreateLayoutArtifactItemInput): LayoutArtifactItemBase => {
   const allocationBounds = translateLayoutRect(input.result.allocationBounds, input.translation);
   const visualBounds = translateLayoutRect(input.result.visualBounds, input.translation);
+
   const outsideAxis = (rect: LayoutArtifactRect, slot: LayoutRect, axis: 'x' | 'y'): boolean => {
     const rectStart = axis === 'x' ? rect.x : rect.y;
     const rectSize = axis === 'x' ? rect.width : rect.height;
     const slotStart = axis === 'x' ? slot.x : slot.y;
     const slotSize = axis === 'x' ? slot.width : slot.height;
     const epsilon = Math.max(layoutEpsilon(rectStart, slotStart), layoutEpsilon(rectSize, slotSize));
+
     return rectStart < slotStart - epsilon || rectStart + rectSize > slotStart + slotSize + epsilon;
   };
+
   const outsideAxisExactly = (rect: LayoutArtifactRect, slot: LayoutRect, axis: 'x' | 'y'): boolean => {
     const rectStart = axis === 'x' ? rect.x : rect.y;
     const rectSize = axis === 'x' ? rect.width : rect.height;
     const slotStart = axis === 'x' ? slot.x : slot.y;
     const slotSize = axis === 'x' ? slot.width : slot.height;
+
     return rectStart < slotStart || rectStart + rectSize > slotStart + slotSize;
   };
+
   const allocationOverflow = Object.freeze({
     x: outsideAxis(allocationBounds, input.slotBounds, 'x'),
     y: outsideAxis(allocationBounds, input.slotBounds, 'y'),
@@ -228,6 +252,7 @@ export const createLayoutArtifactItem = (input: CreateLayoutArtifactItemInput): 
     hasPositiveVisualArea &&
     (outsideAxisExactly(visualBounds, input.containerAllocation, 'x') ||
       outsideAxisExactly(visualBounds, input.containerAllocation, 'y'));
+
   return Object.freeze({
     key: input.key,
     sourceIndex: input.sourceIndex,
@@ -251,5 +276,6 @@ export const createLayoutArtifactContainer = (
   const visualBounds = unionLayoutArtifactRects(items.map(item => item.visualBounds));
   const visibleItemBounds = items.flatMap(item => (item.visibleBounds === null ? [] : [item.visibleBounds]));
   const visibleBounds = visibleItemBounds.length === 0 ? null : unionLayoutArtifactRects(visibleItemBounds);
+
   return Object.freeze({ allocationBounds, contentBounds, visualBounds, visibleBounds });
 };

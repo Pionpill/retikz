@@ -20,18 +20,22 @@ const DeepSchema = z.strictObject({
 });
 
 const entryName = 'DeepSchemaFixture';
+
 const entry = {
   schema: DeepSchema,
   label: 'DeepSchemaFixture',
   url: '/fixture#deep-schema-fixture',
 };
+
 const AliasSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('a'), nested: z.strictObject({ value: z.string().describe('Alias value.') }) }),
   z.strictObject({ kind: z.literal('b'), count: z.number().describe('Alias count.') }),
 ]);
+
 const aliasEntryName = 'DeepAliasSchemaFixture';
 
 const field = (key: string) => ({ kind: 'field' as const, key });
+
 const caseOf = (value: string | number) => ({
   kind: 'case' as const,
   discriminator: 'kind',
@@ -72,6 +76,7 @@ describe('ZodSchema deep expansion', () => {
     const positionRow = (markup: string) => markup.split('<tr').find(row => row.includes('>position<'));
     const nodeRow = positionRow(render('NodeSchema'));
     const coordinateRow = positionRow(render('CoordinateSchema'));
+
     expect(nodeRow).toBeDefined();
     expect(nodeRow).not.toContain('✓');
     expect(coordinateRow).toContain('✓');
@@ -99,6 +104,7 @@ describe('ZodSchema deep expansion', () => {
     const serialized = paths.map(path => serializeSchemaPath(path));
 
     expect(new Set(serialized).size).toBe(serialized.length);
+
     serialized.forEach((path, index) => expect(parseSchemaPath(path)).toEqual(paths[index]));
   });
 
@@ -154,6 +160,7 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).toContain('case kind: 1');
     expect(markup).toContain('tuple[0]');
     expect(markup).toContain('union[0]');
+
     for (const translation of ['标签。', '数值。', '标记。', '左值。']) expect(markup).toContain(translation);
   });
 
@@ -222,6 +229,7 @@ describe('ZodSchema deep expansion', () => {
     );
 
     expect(warn.mock.calls.flat().join('\n')).not.toMatch(/invalid description path|has no field path|no override/);
+
     for (const translation of [
       '按稳定编写顺序保存的离散图例条目',
       '沿样本主轴的归一化编写位置',
@@ -230,6 +238,7 @@ describe('ZodSchema deep expansion', () => {
     ]) {
       expect(markup).toContain(translation);
     }
+
     expect(markup).not.toContain('Stable authored tick identity.');
   });
 

@@ -56,6 +56,7 @@ describe('runtime runtime participant diagnostics', () => {
           changed: 1,
         });
         context.diagnose({ code: 'RENDER_FALLBACK', phase: 'prepare', message: 'fallback' });
+
         return Object.freeze({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined });
       },
       read: () => Object.freeze({}),
@@ -72,14 +73,19 @@ describe('runtime runtime participant diagnostics', () => {
     });
 
     expect(capturedContext?.trace).not.toHaveProperty('diagnostics');
+
     if (capturedContext === undefined) throw new Error('expected participant context');
+
     const report = capturedContext.trace.report;
+
     expect(getRuntimeTraceReporterDiagnosticDrainCount(report)).toBe(4);
     expect(runtime.diagnostics().map(diagnostic => diagnostic.code)).toEqual([
       RuntimeDiagnosticCode.TraceSinkFailed,
       'RENDER_FALLBACK',
     ]);
+
     runtime.dispose();
+
     expect(getRuntimeTraceReporterDiagnosticDrainCount(report)).toBe(5);
   });
 
@@ -95,8 +101,11 @@ describe('runtime runtime participant diagnostics', () => {
       tracePhases: [],
       prepare: (_candidate, context) => {
         const diagnose = context.diagnose as (input: unknown) => void;
+
         expect(() => diagnose({ code: 'BROKEN', phase: 'prepare' })).not.toThrow();
+
         context.diagnose({ code: 'VALID', phase: 'prepare', message: 'valid' });
+
         return Object.freeze({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined });
       },
       read: () => Object.freeze({}),
@@ -113,6 +122,7 @@ describe('runtime runtime participant diagnostics', () => {
       RuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
       'VALID',
     ]);
+
     runtime.dispose();
   });
 
@@ -144,6 +154,7 @@ describe('runtime runtime participant diagnostics', () => {
     });
 
     let thrown: unknown;
+
     try {
       createRuntime({
         sources,
@@ -182,6 +193,7 @@ describe('runtime runtime participant diagnostics', () => {
       read: () => Object.freeze({}),
       dispose: () => undefined,
     });
+
     expect(() =>
       createRuntime({
         sources,
@@ -204,6 +216,7 @@ describe('runtime runtime participant diagnostics', () => {
       read: () => Object.freeze({}),
       dispose: () => undefined,
     });
+
     expect(() =>
       createRuntime({
         sources,

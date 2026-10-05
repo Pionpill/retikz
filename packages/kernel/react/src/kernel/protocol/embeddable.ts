@@ -24,6 +24,7 @@ const asMaybeEmbeddable = (type: unknown): MaybeEmbeddableType | null => {
   if (typeof type === 'function' || (typeof type === 'object' && type !== null)) {
     return type;
   }
+
   return null;
 };
 
@@ -39,6 +40,7 @@ export const resolveInputEmbedAdapter = (type: unknown): AnyInputEmbedAdapter | 
   if (candidate?.isTier2Embeddable === true) {
     const adapter = candidate.inputEmbedAdapter;
     if (typeof adapter === 'object') return adapter;
+
     const name = candidate.displayName ?? candidate.name ?? '匿名组件';
     throw new RetikzReactError(
       RetikzReactErrorCode.Kernel,

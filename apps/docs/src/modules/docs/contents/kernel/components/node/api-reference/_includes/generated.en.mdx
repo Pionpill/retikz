@@ -175,7 +175,7 @@ export type CoordinateProps = {
 ### node / InputNode
 
 - `node`: <ApiSourceLink label={"node"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={13}>Create node authoring input with identity declared by id in the configuration</ApiSourceLink>
-- `InputNode`: <ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={52}>Node authoring input</ApiSourceLink>
+- `InputNode`: <ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={53}>Node authoring input</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -267,7 +267,7 @@ export type InputCoordinate = IRCoordinate & {
 ### InputNodeLabel
 
 <p>
-  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={46}>
+  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={47}>
     Node label authoring input
   </ApiSourceLink>
 </p>
@@ -306,7 +306,7 @@ export type InputNodeLabel = Omit<IRNodeLabel, 'position'> & {
   <ApiSourceLink
     label={'InputNodeLabelBoundaryPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={32}
+    startLine={33}
   >
     Node label boundary-position authoring input
   </ApiSourceLink>
@@ -320,10 +320,10 @@ fraction is the normalized position along the selected boundary and defaults to 
 
 <ApiTable>
 
-| Member      | Type        | Default | Description                                                       |
-| ----------- | ----------- | ------- | ----------------------------------------------------------------- |
-| `boundary`  | `SideValue` | —       | Side of the node boundary to which the label attaches             |
-| `fraction?` | `number`    | —       | Normalized position along the selected boundary. Defaults to 0.5. |
+| Member      | Type     | Default | Description                                                       |
+| ----------- | -------- | ------- | ----------------------------------------------------------------- |
+| `boundary`  | `Side`   | —       | Side of the node boundary to which the label attaches             |
+| `fraction?` | `number` | —       | Normalized position along the selected boundary. Defaults to 0.5. |
 
 </ApiTable>
 
@@ -341,7 +341,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   >,
   'boundary'
 > & {
-  boundary: SideValue;
+  boundary: Side;
 };
 ```
 
@@ -355,7 +355,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   <ApiSourceLink
     label={'InputNodeLabelPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={41}
+    startLine={42}
   >
     Node label position authoring input
   </ApiSourceLink>
@@ -389,7 +389,7 @@ export type InputNodeLabelPosition =
 The type accepts strings; Node reference resolution passes only non-center standard directions to the boundary. The visual shape resolves the center and shape-specific names
 
 ```ts
-export type BoundaryAnchorName = AnchorValue | (string & {});
+export type BoundaryAnchorName = Anchor | (string & {});
 ```
 
 ### BoundaryDefinition
@@ -555,7 +555,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 ### IRNode
 
 <p>
-  <ApiSourceLink label={'IRNode'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={33}>
+  <ApiSourceLink label={'IRNode'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={31}>
     Node: a positioned shape container with optional text
   </ApiSourceLink>
 </p>
@@ -604,7 +604,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 ### IRNodeLabel
 
 <p>
-  <ApiSourceLink label={'IRNodeLabel'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={30}>
+  <ApiSourceLink label={'IRNodeLabel'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={28}>
     Node label IR type
   </ApiSourceLink>
 </p>
@@ -615,19 +615,19 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 <ApiTable>
 
-| Member         | Type                                                                                                                                                                                                                    | Default | Description                                                                                                                                                                       |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | Attachment tangent alignment for the label visual box: start, middle, or end. Defaults to middle.                                                                                 |
-| `distance?`    | `number`                                                                                                                                                                                                                | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.                                                            |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —       | Label font overrides. Missing fields inherit from the parent node font.                                                                                                           |
-| `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —       | When true, flips the rotated label 180 deg if it would otherwise read upside-down (more than 90 deg from upright). Default false (strict geometric angle).                        |
-| `opacity?`     | `number`                                                                                                                                                                                                                | —       | Label-only opacity, multiplied with node opacity when both are set.                                                                                                               |
-| `pin?`         | `false \| true \| { stroke?: string \| number \| undefined; strokeWidth?: number \| undefined; dashPattern?: Array<number> \| undefined; dashOffset?: number \| undefined; }`                                           | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                                                                                |
-| `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —       | Whether the label is offset outside or inside the selected attachment point. Default `outside`.                                                                                   |
-| `position?`    | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.                                                                  |
-| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —       | Label self-rotation: none, radial along the position direction, tangent to it, or an explicit angle in degrees. Boundary-fraction positions use the selected side outward normal. |
-| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —       | Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.                                                             |
-| `textColor?`   | `string \| number`                                                                                                                                                                                                      | —       | Label text color; falls back to currentColor.                                                                                                                                     |
+| Member         | Type                                                                                                                                                                                                                    | Default | Description                                                                                                            |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | Attachment tangent alignment: start, middle, or end. Defaults to middle.                                               |
+| `distance?`    | `number`                                                                                                                                                                                                                | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance. |
+| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —       | Label font overrides. Missing fields inherit from the parent node font.                                                |
+| `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —       | Flip upside-down labels when true. Default false.                                                                      |
+| `opacity?`     | `number`                                                                                                                                                                                                                | —       | Label-only opacity, multiplied with node opacity when both are set.                                                    |
+| `pin?`         | `false \| true \| { stroke?: string \| number \| undefined; strokeWidth?: number \| undefined; dashPattern?: Array<number> \| undefined; dashOffset?: number \| undefined; }`                                           | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                     |
+| `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —       | Outside or inside the attachment point. Default outside.                                                               |
+| `position?`    | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.       |
+| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —       | Label self-rotation: none, radial, tangent, or an explicit angle in degrees.                                           |
+| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —       | Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.  |
+| `textColor?`   | `string \| number`                                                                                                                                                                                                      | —       | Label text color; falls back to currentColor.                                                                          |
 
 </ApiTable>
 
@@ -646,7 +646,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 ### IRNodeLayout
 
 <p>
-  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={59}>
+  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={47}>
     View source
   </ApiSourceLink>
 </p>
@@ -684,7 +684,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 ### IRNodeStyle
 
 <p>
-  <ApiSourceLink label={'IRNodeStyle'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={58}>
+  <ApiSourceLink label={'IRNodeStyle'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={45}>
     View source
   </ApiSourceLink>
 </p>
@@ -750,7 +750,7 @@ All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete
 | `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`   | —                        | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                                                                                                               |
 | `circumscribeOffset?` | `(params: Record<string, JsonValue>) => Position`                                                                                      | `[0, 0]`                 | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                                                                                                                 |
 | `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `undefined`              | Return regular connection-envelope half-axes that safely contain the visual outline<br />The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning |
-| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: Record<string, JsonValue>) => Position`                                              | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
+| `edgePoint?`          | `(rect: Rect, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
 | `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
 | `keyPoints?`          | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
 | `name`                | `string`                                                                                                                               | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
@@ -800,7 +800,7 @@ Runtime capability contract shared by third-party and built-in shapes; the defin
 | `circumscribe`             | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {`<br />`halfWidth: number;`<br />`halfHeight: number;`<br />`}` | —                        | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                                                                                                               |
 | `circumscribeOffset?`      | `(params: TParams) => Position`                                                                                                         | `[0, 0]`                 | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                                                                                                                 |
 | `connectionEnvelope?`      | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                        | `undefined`              | Return regular connection-envelope half-axes that safely contain the visual outline<br />The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning |
-| `edgePoint?`               | `(rect: Rect, side: SideValue, t: number, params: TParams) => Position`                                                                 | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
+| `edgePoint?`               | `(rect: Rect, side: Side, t: number, params: TParams) => Position`                                                                      | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
 | `emit`                     | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>`                    | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
 | `keyPoints?`               | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                      | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
 | `name`                     | `string`                                                                                                                                | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
@@ -832,7 +832,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   connectionEnvelope?: (rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope | undefined;
   outline?: (rect: Rect, params: TParams) => ReadonlyArray<PathCommand>;
   keyPoints?: (rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
-  edgePoint?: (rect: Rect, side: SideValue, t: number, params: TParams) => Position;
+  edgePoint?: (rect: Rect, side: Side, t: number, params: TParams) => Position;
   emit: (
     rect: Rect,
     style: ResolvedShapeStyle,
@@ -853,7 +853,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   <ApiSourceLink
     label={'BUILTIN_BOUNDARIES'}
     path={'packages/kernel/core/src/providers/boundary/definitions.ts'}
-    startLine={116}
+    startLine={119}
   >
     Built-in boundary provider definitions
   </ApiSourceLink>
@@ -890,7 +890,7 @@ export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, Builti
 ### NodeTextColor
 
 <p>
-  <ApiSourceLink label={'NodeTextColor'} path={'packages/kernel/core/src/schemas/node/constants.ts'} startLine={4}>
+  <ApiSourceLink label={'NodeTextColor'} path={'packages/kernel/core/src/schemas/node/constants.ts'} startLine={6}>
     Host-specific keyword for node text color
   </ApiSourceLink>
 </p>
@@ -899,6 +899,8 @@ export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, Builti
 export const NodeTextColor = {
   Contrast: 'contrast',
 } as const;
+
+export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 ```
 
 ### defineBoundary

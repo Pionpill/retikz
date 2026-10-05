@@ -15,6 +15,7 @@ export const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGrid
   lower: (props, context) => {
     const { children, ...input } = props;
     const normalized = normalizeLayoutItems<GridLayoutItemInput>(children, context);
+
     return {
       runtimeInputs: normalized.runtimeInputs,
       node: createGridLayout({ ...input, children: normalized.items }),
@@ -28,6 +29,7 @@ export const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGrid
   prepare: async (props, context) => {
     const { children, ...input } = props;
     const execute = await prepareLayoutItems<GridLayoutItemInput>(children, context);
+
     return {
       execute: async () => {
         const normalized = await execute();

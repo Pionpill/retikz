@@ -81,6 +81,7 @@ export type PresentedTableTransactionInput = Readonly<{
   presented: PresentedTableModel;
   /** 同次 style resolution 与选择值 */
   theme?: LayoutCompositeCompileContext['theme'];
+  /** 当前表格布局与呈现共同采用的已解析默认值 */
   tableDefaults?: ResolvedTableDefaults;
   /** 同次 Cell/encoding plan bundle */
   plan?: ResolvedTablePlan;
@@ -99,9 +100,9 @@ type TableTransactionStage = 'intrinsic Cell layout' | 'constrained Cell layout'
 type TableTransactionCellLocator = Readonly<{
   /** 用户显式提供的可选 Cell identity */
   id?: string;
-  /** canonical row index */
+  /** 规范行下标 */
   rowIndex: number;
-  /** canonical column index */
+  /** 规范列下标 */
   columnIndex: number;
 }>;
 
@@ -140,6 +141,7 @@ const tableTransactionStageError = (
         ? `: Cell ${cellLocator.rowIndex}:${cellLocator.columnIndex}`
         : `: Cell "${cellLocator.id}" at ${cellLocator.rowIndex}:${cellLocator.columnIndex}`;
   const message = cause instanceof Error ? cause.message : String(cause);
+
   return new RetikzTableError({
     code: RetikzTableErrorCode.TransactionStageFailed,
     message: `${table}: ${stage}${cell}: ${message}`,
@@ -173,6 +175,7 @@ const runTableTransactionStage = <T>(
       error.message = contextual.message;
       throw error;
     }
+
     throw contextual;
   }
 };
@@ -201,10 +204,12 @@ const availableColumnSizeOf = (proposal: LayoutAxisProposal): number | undefined
 /** 合并两个非空可见 bounds */
 const unionBounds = (left: BoundsRect | undefined, right: BoundsRect): BoundsRect => {
   if (left === undefined) return { ...right };
+
   const x = Math.min(left.x, right.x);
   const y = Math.min(left.y, right.y);
   const maxX = Math.max(left.x + left.width, right.x + right.width);
   const maxY = Math.max(left.y + left.height, right.y + right.height);
+
   return { x, y, width: maxX - x, height: maxY - y };
 };
 
@@ -233,21 +238,26 @@ const resolveTableDefaults = (
 ): ResolvedTableDefaults => {
   const base = resolveTableThemeDefaults(theme, tableThemeStyles);
   const layers: Array<ResolvedTableDefaults['layers'][number]> = [...base.layers];
+
   const append = (path: string, defaults: IRTableDefaults): void => {
     layers.push({ kind: 'source', path, defaults: structuredClone(defaults) });
   };
+
   if (spec?.tableDefaults !== undefined) append('$spec/tableDefaults', spec.tableDefaults);
   if (spec?.appearanceDefaults !== undefined) {
     append('$spec/appearanceDefaults', { appearanceDefaults: spec.appearanceDefaults });
   }
+
   if (spec?.layout?.borders !== undefined) {
     append('$spec/layout/borders', { layout: { borders: spec.layout.borders } });
   }
+
   if (spec?.visualDefaults !== undefined) append('$spec/visualDefaults', { visualDefaults: spec.visualDefaults });
   const defaults = layers.reduce<IRTableDefaults>(
     (resolvedDefaults, layer) => mergeTableDefaults(resolvedDefaults, layer.defaults),
     {},
   );
+
   return deepFreeze({
     ...(base.style === undefined ? {} : { style: base.style }),
     mode: base.mode,
@@ -261,15 +271,19 @@ const defaultsSourcePathOf = (defaults: ResolvedTableDefaults, path: ReadonlyArr
   for (let index = defaults.layers.length - 1; index >= 0; index -= 1) {
     const layer = defaults.layers[index];
     let current: unknown = layer.defaults;
+
     for (const segment of path) {
       if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) {
         current = undefined;
         break;
       }
+
       current = Reflect.get(current, segment);
     }
+
     if (current !== undefined) return layer.path;
   }
+
   return undefined;
 };
 
@@ -279,6 +293,7 @@ const resolveBorderCandidate = (
   masterColor: string,
 ): ResolvedTableBorderCandidate => {
   if (border.kind === TableBorderKind.None) return { kind: 'none', priority: border.priority ?? 0 };
+
   return {
     kind: 'line',
     priority: border.priority ?? 0,
@@ -315,8 +330,10 @@ const resolveCellBorders = (
     (['top', 'right', 'bottom', 'left'] as const).flatMap(side => {
       const border = borders[side];
       if (border === undefined) return [];
+
       const resolved = resolveBorderCandidate(border, masterColor);
       const source = trace?.[`/borders/${side}`];
+
       return [
         [
           side,
@@ -344,6 +361,7 @@ const contributionsOf = (
       direct.push({ trackIndex: startIndex, size });
       return [];
     }
+
     return [
       {
         ...(cell.id === undefined ? {} : { cellId: cell.id }),
@@ -353,6 +371,7 @@ const contributionsOf = (
       },
     ];
   });
+
   return propagateTableSpanContributions({ tracks, contributions: direct, constraints, gap }).contributions;
 };
 
@@ -361,6 +380,7 @@ const assertPresentedAlignment = (presented: PresentedTableModel): void => {
   if (presented.semantic.cells.length !== presented.cells.length) {
     throw new RetikzTableError('table: transaction presentation Cell count differs from semantic model');
   }
+
   presented.semantic.cells.forEach((cell, index) => {
     const presentedCell = presented.cells[index];
     const guarded = PresentedTableCellSchema.safeParse(presentedCell);
@@ -371,12 +391,15 @@ const assertPresentedAlignment = (presented: PresentedTableModel): void => {
         `table: transaction presentation Cell ${index} shape differs${path}: ${issue.message}`,
       );
     }
+
     if (presentedCell.cellId !== cell.id) {
       throw new RetikzTableError(`table: transaction presentation Cell ${index} identity differs`);
     }
+
     if (presentedCell.kind !== cell.payload.kind) {
       throw new RetikzTableError(`table: transaction presentation Cell ${index} kind differs`);
     }
+
     if (
       presentedCell.kind === TableCellPayloadKind.Value &&
       cell.payload.kind === TableCellPayloadKind.Value &&
@@ -425,6 +448,7 @@ const cellOutputOf = (
   };
   if (!placement.replayContent)
     return context.scope({ ...(probe.semantic.id === undefined ? {} : { id: probe.semantic.id }), meta }, []);
+
   const replay = context.replay(probe.final);
   const transformed = context.scope(
     {
@@ -435,6 +459,7 @@ const cellOutputOf = (
     },
     [replay],
   );
+
   return context.scope(
     {
       ...(probe.semantic.id === undefined ? {} : { id: probe.semantic.id }),
@@ -495,6 +520,7 @@ export const resolvePresentedTableTransaction = (
       },
     );
   });
+
   const columnTracks = resolveTableTrackSizes(
     semantic.columns.map(() => resolved.columnSize),
     resolved.columns,
@@ -506,6 +532,7 @@ export const resolvePresentedTableTransaction = (
     'column',
     (cell, index) => computeTableCellOuterSize(intrinsic[index].allocationBounds, cell.layout.padding).width,
   );
+
   const availableColumnSize = availableColumnSizeOf(context.proposal.x);
   const columnSizes = solveTableTracks({
     tracks: columnTracks,
@@ -513,6 +540,7 @@ export const resolvePresentedTableTransaction = (
     gap: resolved.columnGap,
     ...(availableColumnSize === undefined ? {} : { availableSize: availableColumnSize }),
   });
+
   const columns = trackLayoutsOf(
     semantic.columns.map(column => column.id),
     columnSizes,
@@ -541,6 +569,7 @@ export const resolvePresentedTableTransaction = (
           },
         )
       : intrinsic[index];
+
     return { semantic: cell, content: presentedCell.content, intrinsic: intrinsic[index], final };
   });
 
@@ -574,6 +603,7 @@ export const resolvePresentedTableTransaction = (
       rowGap: resolved.rowGap,
       columnGap: resolved.columnGap,
     });
+
     const contentBox = computeTableCellContentBox(box, probe.semantic.layout.padding);
     const placement = computeTableCellContentPlacement({
       sourceAllocationBounds: probe.final.allocationBounds,
@@ -584,18 +614,21 @@ export const resolvePresentedTableTransaction = (
       fit: probe.semantic.layout.fit,
       overflow: probe.semantic.layout.overflow,
     });
+
     const background = emitTableCellBackground(
       presented.cells[index].appearance.background,
       box,
       cellContentMasterColor(index),
     );
     if (background !== undefined) backgroundOutputs.push(background);
+
     const visualOverflowBounds =
       background === undefined
         ? placement.visualOverflowBounds
         : hasArea(placement.visualOverflowBounds)
           ? unionBounds(placement.visualOverflowBounds, box)
           : { ...box };
+
     return {
       ...(probe.semantic.id === undefined ? {} : { cellId: probe.semantic.id }),
       box,
@@ -612,12 +645,14 @@ export const resolvePresentedTableTransaction = (
   const defaultHorizontalBorder = defaultBorders?.horizontal ?? undefined;
   const explicitVerticalBorder = resolved.borders?.vertical;
   const defaultVerticalBorder = defaultBorders?.vertical ?? undefined;
+
   const resolveDefaultBorder = (border: DeepReadonly<IRTableBorder>, path: ReadonlyArray<string>) => {
     const sourcePath = defaultsSourcePathOf(tableDefaults, path);
     return sourcePath === undefined
       ? resolveBorderCandidate(border, tableContentMasterColor)
       : resolveDefaultBorderCandidate(border, tableContentMasterColor, sourcePath);
   };
+
   const horizontalBorder =
     explicitHorizontalBorder === undefined
       ? defaultHorizontalBorder === undefined
@@ -630,6 +665,7 @@ export const resolvePresentedTableTransaction = (
         ? undefined
         : resolveDefaultBorder(defaultVerticalBorder, ['layout', 'borders', 'vertical'])
       : resolveBorderCandidate(explicitVerticalBorder, tableContentMasterColor);
+
   const defaults = {
     outer: Object.fromEntries(
       (['top', 'right', 'bottom', 'left'] as const).flatMap(side => {
@@ -637,7 +673,9 @@ export const resolvePresentedTableTransaction = (
         const border = explicit ?? defaultBorders?.outer?.[side] ?? undefined;
         if (border === undefined) return [];
         if (explicit !== undefined) return [[side, resolveBorderCandidate(explicit, tableContentMasterColor)] as const];
+
         const path = defaultsSourcePathOf(tableDefaults, ['layout', 'borders', 'outer', side]);
+
         return [
           [
             side,
@@ -651,6 +689,7 @@ export const resolvePresentedTableTransaction = (
     ...(horizontalBorder === undefined ? {} : { horizontal: horizontalBorder }),
     ...(verticalBorder === undefined ? {} : { vertical: verticalBorder }),
   };
+
   const graph = buildTableBorderGraph({
     rows,
     columns,
@@ -673,6 +712,7 @@ export const resolvePresentedTableTransaction = (
     mode: resolved.borders?.mode ?? defaultBorders?.mode ?? TableBorderMode.Collapse,
     defaults,
   });
+
   const borderResult =
     graph.edges.length === 0
       ? undefined
@@ -696,6 +736,7 @@ export const resolvePresentedTableTransaction = (
   if (borderResult !== undefined && borderResult.visualBounds.width > 0 && borderResult.visualBounds.height > 0) {
     visual = unionBounds(visual, borderResult.visualBounds);
   }
+
   const layout: TableLayout = deepFreeze({
     allocationBounds: { x: 0, y: 0, width, height },
     visualOverflowBounds: visual ?? zeroBounds(),
@@ -717,6 +758,7 @@ export const resolvePresentedTableTransaction = (
       ...(borderResult === undefined ? [] : [context.replay(borderResult)]),
     ],
   );
+
   return {
     children: [root],
     manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
@@ -767,6 +809,7 @@ export const resolveTableTransaction = (
     cells: presentationInputsOfTableCellPlans(plan.cells),
     presentationDefinitions: options.presentationDefinitions,
   });
+
   return resolvePresentedTableTransaction(
     {
       ...(spec.id === undefined ? {} : { tableId: spec.id }),

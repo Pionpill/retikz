@@ -8,6 +8,7 @@ describe('computePlotArea (contract)', () => {
   // Happy path
   it('area_no_axis_is_full', () => {
     const { margins, plotArea } = computePlotArea(480, 300, noAxis);
+
     expect(margins).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
     expect(plotArea).toEqual({ x: 0, y: 0, width: 480, height: 300 });
   });
@@ -19,6 +20,7 @@ describe('computePlotArea (contract)', () => {
       xLabels: ['0', '2'],
       yLabels: ['9', '14'],
     });
+
     // 有 x 轴 → bottom>0；有 y 轴 → left>0；plot area 缩进
     expect(plotArea.x).toBeGreaterThan(0);
     expect(plotArea.y).toBeGreaterThan(0);
@@ -30,6 +32,7 @@ describe('computePlotArea (contract)', () => {
   it('area_y_label_width_scales', () => {
     const short = computePlotArea(480, 300, { hasXAxis: false, hasYAxis: true, xLabels: [], yLabels: ['1'] });
     const long = computePlotArea(480, 300, { hasXAxis: false, hasYAxis: true, xLabels: [], yLabels: ['100000'] });
+
     // y label 越长 → left margin 越大
     expect(long.margins.left).toBeGreaterThan(short.margins.left);
   });
@@ -41,6 +44,7 @@ describe('computePlotArea (contract)', () => {
       xLabels: ['0', '2'],
       yLabels: [],
     });
+
     expect(margins.bottom).toBeGreaterThan(0);
     expect(margins.left).toBe(0);
   });
@@ -58,6 +62,7 @@ describe('computePlotArea (contract)', () => {
       { hasXAxis: true, hasYAxis: false, xLabels: ['0'], yLabels: [] },
       { fontSize: 20 },
     );
+
     expect(big.margins.bottom).toBeGreaterThan(small.margins.bottom);
   });
 
@@ -69,6 +74,7 @@ describe('computePlotArea (contract)', () => {
       { hasXAxis: false, hasYAxis: true, xLabels: [], yLabels: ['1'] },
       { margin: { left: 80 } },
     );
+
     expect(margins.left).toBe(80);
   });
 

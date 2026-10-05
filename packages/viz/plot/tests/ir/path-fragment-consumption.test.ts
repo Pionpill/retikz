@@ -20,6 +20,7 @@ describe('Plot atomic path fragment consumption', () => {
 
   it('accepts fragment options in RelationPathGeometry and relation mark IR', () => {
     const geometry = RelationPathGeometrySchema.parse({ options });
+
     expect(geometry.options).toEqual(options);
 
     const relation = RelationMarkSchema.parse({
@@ -28,11 +29,13 @@ describe('Plot atomic path fragment consumption', () => {
       target: { id: 'target' },
       path: { options },
     });
+
     expect(relation.path?.options).toEqual(options);
   });
 
   it('keeps relation path fragment input JSON round-trippable', () => {
     const restored = RelationPathSpecificOptionsSchema.parse(JSON.parse(JSON.stringify(options)));
+
     expect(restored).toEqual(options);
   });
 });

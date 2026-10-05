@@ -16,6 +16,7 @@ export const matchesTableValuePredicate = (value: IRDataScalarValue, predicate: 
       if (typeof value !== typeof predicate.value || (typeof value !== 'string' && typeof value !== 'number')) {
         return false;
       }
+
       switch (predicate.operator) {
         case TableValueCompareOperator.LessThan:
           return value < predicate.value;
@@ -26,13 +27,16 @@ export const matchesTableValuePredicate = (value: IRDataScalarValue, predicate: 
         case TableValueCompareOperator.GreaterThanOrEqual:
           return value >= predicate.value;
       }
+
       return false;
     }
     case TableValuePredicateKind.Between: {
       if (typeof value !== typeof predicate.min || typeof predicate.min !== typeof predicate.max) return false;
       if (typeof value !== 'string' && typeof value !== 'number') return false;
+
       const lower = predicate.includeMin === false ? value > predicate.min : value >= predicate.min;
       const upper = predicate.includeMax === false ? value < predicate.max : value <= predicate.max;
+
       return lower && upper;
     }
     case TableValuePredicateKind.Null:

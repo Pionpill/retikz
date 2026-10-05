@@ -16,6 +16,7 @@ describe('DataReferenceSchema / DataModelSchema / ScalarValueSchema (contract)',
         { name: 'region', type: 'categorical' },
       ],
     };
+
     expect(DataReferenceSchema.parse(spec)).toEqual(spec);
   });
 
@@ -52,6 +53,7 @@ describe('DataReferenceSchema / DataModelSchema / ScalarValueSchema (contract)',
   it('fielddef_name_only_valid', () => {
     // contract：type 可选，仅给 name 合法（lowering 时推断类型）
     const spec = { reference: 'd', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue' }] };
+
     expect(DataReferenceSchema.parse(spec)).toEqual(spec);
   });
 

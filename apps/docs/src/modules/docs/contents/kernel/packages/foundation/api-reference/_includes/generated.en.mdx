@@ -50,7 +50,7 @@ export class RetikzError<
 ### RetikzFoundationError
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={79}>
+  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={81}>
     Unified structured error for Foundation atomic-contract failures
   </ApiSourceLink>
 </p>
@@ -63,7 +63,7 @@ export class RetikzError<
 
 | Member                      | Signature                                                                       | Description                                                    |
 | --------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `TCode` (Type parameter)    | `extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue`       | Concrete literal type of a Foundation error code               |
+| `TCode` (Type parameter)    | `extends RetikzFoundationErrorCode = RetikzFoundationErrorCode`                 | Concrete literal type of a Foundation error code               |
 | `TDetails` (Type parameter) | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | Structured detail type associated with a Foundation error code |
 | `constructor`               | `(message: string)`                                                             | Creates a Foundation error with the default error code         |
 |                             | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | Creates a Foundation error from structured options             |
@@ -76,7 +76,7 @@ export class RetikzError<
 
 ```ts
 export class RetikzFoundationError<
-  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TCode extends RetikzFoundationErrorCode = RetikzFoundationErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends RetikzError<TCode, TDetails> {
   constructor(message: string);
@@ -358,43 +358,6 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
 
 </DocTabs>
 
-### RetikzFoundationErrorCodeValue
-
-<p>
-  <ApiSourceLink
-    label={'RetikzFoundationErrorCodeValue'}
-    path={'packages/kernel/foundation/src/error.ts'}
-    startLine={71}
-  >
-    Stable Foundation package error-code values
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type RetikzFoundationErrorCodeValue =
-  | 'FOUNDATION_ERROR'
-  | 'FOUNDATION_NON_EMPTY_STRING_REQUIRED'
-  | 'FOUNDATION_POSITIVE_NUMBER_REQUIRED'
-  | 'FOUNDATION_JSON_ERROR'
-  | 'FOUNDATION_COLOR_ERROR';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### ValueOf
 
 <p>
@@ -496,7 +459,7 @@ export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<
 ### RetikzFoundationErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={57}>
+  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={59}>
     Stable Foundation package error codes
   </ApiSourceLink>
 </p>
@@ -509,6 +472,8 @@ export const RetikzFoundationErrorCode = {
   Json: 'FOUNDATION_JSON_ERROR',
   Color: 'FOUNDATION_COLOR_ERROR',
 } as const;
+
+export type RetikzFoundationErrorCode = ValueOf<typeof RetikzFoundationErrorCode>;
 ```
 
 ### StaticCssNamedColorHexByName
@@ -575,7 +540,7 @@ export declare const assertNonEmptyString: (value: string, label: string, ownerE
 ### assertPlainDataContainers
 
 <p>
-  <ApiSourceLink label={'assertPlainDataContainers'} path={'packages/kernel/foundation/src/json.ts'} startLine={82}>
+  <ApiSourceLink label={'assertPlainDataContainers'} path={'packages/kernel/foundation/src/json.ts'} startLine={97}>
     Asserts that an external data tree uses only plain objects, plain arrays, and safe property descriptors
   </ApiSourceLink>
 </p>
@@ -611,7 +576,7 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 ### assertPositiveNumber
 
 <p>
-  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={35}>
+  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={36}>
     Rejects non-finite numbers and numbers less than or equal to zero
   </ApiSourceLink>
 </p>
@@ -647,7 +612,7 @@ export declare const assertPositiveNumber: (value: number, label: string, ownerE
 ### cloneAndFreezeJson
 
 <p>
-  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={94}>
+  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={109}>
     Validates JSON-safe plain data and creates a deeply frozen copy detached from the original input
   </ApiSourceLink>
 </p>
@@ -682,7 +647,7 @@ export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
 ### compositeOpaqueColor
 
 <p>
-  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={367}>
+  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={401}>
     Pre-composites a static CSS foreground color onto an opaque static backdrop by weight
   </ApiSourceLink>
 </p>
@@ -769,12 +734,12 @@ Copies input entries into independent storage while preserving native Map iterat
 
 <ApiTable variant="parameters">
 
-| Category        | Name      | Type / signature                    | Description                                                                                                  |
-| --------------- | --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Type parameters | `TKey`    | —                                   | Map key type                                                                                                 |
-|                 | `TValue`  | —                                   | Map value type                                                                                               |
-| Parameters      | `entries` | `Iterable<readonly [TKey, TValue]>` | Key-value entries used to create the snapshot                                                                |
-| Returns         | —         | `ReadonlyMap<TKey, TValue>`         | Independent readonly Map wrapper; keys and values retain their original references and are not deeply frozen |
+| Category        | Name      | Type / signature                                           | Description                                                                                                  |
+| --------------- | --------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Type parameters | `TKey`    | —                                                          | Map key type                                                                                                 |
+|                 | `TValue`  | —                                                          | Map value type                                                                                               |
+| Parameters      | `entries` | `Iterable<readonly [`<br />`TKey,`<br />`TValue`<br />`]>` | Key-value entries used to create the snapshot                                                                |
+| Returns         | —         | `ReadonlyMap<TKey, TValue>`                                | Independent readonly Map wrapper; keys and values retain their original references and are not deeply frozen |
 
 </ApiTable>
 
@@ -795,7 +760,7 @@ export declare const createReadonlyMap: <TKey, TValue>(
 ### isRetikzError
 
 <p>
-  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={105}>
+  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={107}>
     Determines whether a dynamic value inherits from a Retikz structured domain error
   </ApiSourceLink>
 </p>
@@ -869,7 +834,7 @@ export declare const mergeProperties: <T extends object>(
 ### parseStaticCssColor
 
 <p>
-  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={318}>
+  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={349}>
     Parses the static CSS color subset that can be resolved without a host environment
   </ApiSourceLink>
 </p>

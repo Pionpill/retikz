@@ -37,6 +37,7 @@ import {
 } from './graph-authoring-input';
 
 const INDENT = '  ';
+
 const pad = (level: number): string => INDENT.repeat(level);
 
 const INLINE_MAX = 60;
@@ -62,7 +63,9 @@ const escapeStringCharacter = (character: string): string => {
     case '\r':
       return '\\r';
   }
+
   const code = character.charCodeAt(0);
+
   return code <= 0xff ? `\\x${code.toString(16).padStart(2, '0')}` : `\\u${code.toString(16).padStart(4, '0')}`;
 };
 
@@ -86,23 +89,28 @@ const formatValue = (value: unknown, indent: number): string => {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (Array.isArray(value)) return formatArray(value, indent);
   if (typeof value === 'object') return formatObject(value as Record<string, unknown>, indent);
+
   return 'undefined';
 };
 
 const formatArray = (arr: ReadonlyArray<unknown>, indent: number): string => {
   if (arr.length === 0) return '[]';
+
   const items = arr.map(v => formatValue(v, indent + 1));
   const inline = `[${items.join(', ')}]`;
   if (inline.length <= INLINE_MAX && !inline.includes('\n')) return inline;
+
   return `[\n${items.map(it => pad(indent + 1) + it).join(',\n')},\n${pad(indent)}]`;
 };
 
 const formatObject = (obj: Record<string, unknown>, indent: number): string => {
   const keys = Object.keys(obj);
   if (keys.length === 0) return '{}';
+
   const entries = keys.map(k => `${isIdentifier(k) ? k : formatString(k)}: ${formatValue(obj[k], indent + 1)}`);
   const inline = `{ ${entries.join(', ')} }`;
   if (inline.length <= INLINE_MAX && !inline.includes('\n')) return inline;
+
   return `{\n${entries.map(e => pad(indent + 1) + e).join(',\n')},\n${pad(indent)}}`;
 };
 
@@ -133,10 +141,12 @@ type WayFrag = { text: string; comment?: boolean };
 
 const stepsToWay = (steps: ReadonlyArray<IRStep>, ctx: Ctx, indent: number): Array<WayFrag> => {
   const frags: Array<WayFrag> = [];
+
   for (const step of steps) {
     if ('label' in step && step.label !== undefined) {
       frags.push({ text: `{ label: ${formatValue(step.label, indent)} }` });
     }
+
     switch (step.kind) {
       case 'move':
       case 'line':
@@ -197,17 +207,21 @@ const stepsToWay = (steps: ReadonlyArray<IRStep>, ctx: Ctx, indent: number): Arr
         frags.push({ text: `/* not vanilla way sugar: ${step.kind} */`, comment: true });
     }
   }
+
   return frags;
 };
 
 const formatWay = (frags: ReadonlyArray<WayFrag>, indent: number): string => {
   if (frags.length === 0) return '[]';
+
   const hasComment = frags.some(f => f.comment === true);
   if (!hasComment) {
     const inline = `[${frags.map(f => f.text).join(', ')}]`;
     if (inline.length <= INLINE_MAX && !inline.includes('\n')) return inline;
   }
+
   const lines = frags.map(f => (f.comment === true ? pad(indent + 1) + f.text : `${pad(indent + 1)}${f.text},`));
+
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
@@ -268,9 +282,11 @@ const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing path steps');
   }
+
   if (!path.children.every(isWayRepresentableStep)) {
     return rawIrChildCode(path, indent, 'not vanilla way sugar');
   }
+
   ctx.used.add('path');
   const config = stripKeys(path, ['type', 'children']);
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
@@ -278,6 +294,7 @@ const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
     "'__WAY__'",
     wayStr,
   );
+
   return `path(${pathConfig})`;
 };
 
@@ -285,6 +302,7 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   ctx.used.add('scope');
   const config = stripKeys(scope, ['type', 'children']);
   const childrenStr = childListCode(scope.children, indent, ctx);
+
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
@@ -297,6 +315,7 @@ const STANDARD_SHAPE_KINDS: ReadonlyArray<string> = [
   'arc',
   'sector',
 ];
+
 const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'grid',
   'axes',
@@ -310,6 +329,7 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'legend',
   'shape',
 ];
+
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'CircleInputEmbedAdapter',
   'EllipseInputEmbedAdapter',
@@ -328,12 +348,15 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'MapInputEmbedAdapter',
   'LegendInputEmbedAdapter',
 ];
+
 const LAYOUT_HELPER_ORDER: ReadonlyArray<string> = ['flexLayout', 'gridLayout', 'overlayLayout'];
+
 const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'FlexLayoutInputEmbedAdapter',
   'GridLayoutInputEmbedAdapter',
   'OverlayLayoutInputEmbedAdapter',
 ];
+
 const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
   'graph',
   'group',
@@ -344,6 +367,7 @@ const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
   'entity',
   'relation',
 ];
+
 const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GraphInputEmbedAdapter',
   'GroupInputEmbedAdapter',
@@ -432,14 +456,17 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
   ) {
     return (record.children as Array<IRChild> | undefined) ?? [];
   }
+
   if (child.namespace === 'graph' && child.type === 'blockHeader') {
     const header = BlockHeaderSchema.parse(child);
     return [...(header.icon === undefined ? [] : [header.icon]), ...(header.trail === undefined ? [] : [header.trail])];
   }
+
   if (child.namespace === 'graph' && child.type === 'blockRow') {
     const row = BlockRowSchema.parse(child);
     return 'children' in row ? [...(row.children ?? [])] : [];
   }
+
   if (child.namespace === 'standard' && child.type === 'chain') {
     const collect = (items: Array<IRChainItem>): Array<IRChild> =>
       items.flatMap(item =>
@@ -453,6 +480,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
       );
     return collect((child as IRChain).items ?? []);
   }
+
   if (child.namespace === 'standard' && child.type === 'matrix')
     return ((child as IRMatrix).items ?? []).flatMap(row =>
       row.flatMap(cell =>
@@ -461,10 +489,12 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
           : [cell.content],
       ),
     );
+
   if (child.namespace === 'standard' && child.type === 'array')
     return ((child as IRArray).items ?? []).flatMap(cell =>
       typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string' ? [] : [cell.content],
     );
+
   if (child.namespace === 'standard' && child.type === 'map')
     return ((child as IRMap).entries ?? []).flatMap(entry =>
       [entry.key, entry.value].flatMap(cell =>
@@ -473,6 +503,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
           : [cell.content],
       ),
     );
+
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
   if (
     child.namespace === 'layout' &&
@@ -481,11 +512,14 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
     return items?.map(item => item.child) ?? [];
   }
+
   if (child.namespace === 'graph' && child.type === 'graph') {
     const children = record.children as ReadonlyArray<IRChild> | undefined;
     return [...(children ?? [])];
   }
+
   if (child.namespace !== 'standard' || child.type !== 'legend') return [];
+
   const owned: Array<IRChild> = [];
   if (record.title !== undefined) owned.push(record.title as IRChild);
   const content = record.content as Record<string, unknown>;
@@ -502,6 +536,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
       if (tick.label !== undefined) owned.push(tick.label);
     });
   }
+
   return owned;
 };
 
@@ -525,16 +560,19 @@ export const collectPreviewDefinitions = (
   if (LAYOUT_HELPER_ORDER.some(kind => layoutAdapterKinds.has(kind))) {
     LAYOUT_HELPER_ORDER.forEach(kind => providedLayoutKinds.add(kind));
   }
+
   const providedGraphKinds = new Set(graphAdapterKinds);
   if (graphAdapterKinds.has('graph')) {
     providedGraphKinds.add('group');
     providedGraphKinds.add('entity');
     providedGraphKinds.add('relation');
   }
+
   if (graphAdapterKinds.has('group')) {
     providedGraphKinds.add('entity');
     providedGraphKinds.add('relation');
   }
+
   const visit = (child: IRChild): void => {
     if ('namespace' in child) {
       if (child.namespace === 'standard') {
@@ -544,6 +582,7 @@ export const collectPreviewDefinitions = (
         if (definitionName === undefined) {
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
+
         if (!standardAdapterKinds.has(child.type)) {
           standard.add(definitionName);
           if (
@@ -561,6 +600,7 @@ export const collectPreviewDefinitions = (
         if (definitionName === undefined) {
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
+
         if (!providedLayoutKinds.has(child.type)) layout.add(definitionName);
       } else if (child.namespace === 'graph') {
         const definitionName = (
@@ -569,18 +609,24 @@ export const collectPreviewDefinitions = (
         if (definitionName === undefined) {
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
+
         if (!providedGraphKinds.has(child.type)) graph.add(definitionName);
       } else if (child.namespace === 'diagram' && child.type === 'flow') {
         return;
       } else {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
+
       previewOwnedChildren(child).forEach(visit);
+
       return;
     }
+
     if (child.type === 'scope') child.children.forEach(visit);
   };
+
   children.forEach(visit);
+
   return { standard: Array.from(standard), layout: Array.from(layout), graph: Array.from(graph) };
 };
 
@@ -614,6 +660,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   if (record.type === 'chain') {
     const source = child as IRChain;
     if (source.items === undefined) return `chain(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
+
     const itemCode = (item: IRChainItem): string => {
       if (typeof item === 'string') return formatString(item);
       if (item.kind === 'parallel')
@@ -621,27 +668,35 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
           "'__BRANCHES__'",
           `[${item.branches.map(branch => `{ items: [${branch.items.map(itemCode).join(', ')}] }`).join(', ')}]`,
         );
+
       const { content, ...props } = item;
       if (content === undefined) return formatObject(props, indent + 1);
+
       return formatObject({ ...props, content: '__CONTENT__' }, indent + 1).replace(
         "'__CONTENT__'",
         typeof content === 'string' ? formatString(content) : childCode(content, indent + 2, ctx),
       );
     };
+
     return `chain(${formatObject({ ...stripKeys(record, ['namespace', 'type', 'items']), items: '__ITEMS__' }, indent).replace("'__ITEMS__'", `[${source.items.map(itemCode).join(', ')}]`)})`;
   }
+
   if (record.type === 'array' || record.type === 'map' || record.type === 'matrix') {
     if (record.data !== undefined || record.skeleton !== undefined)
       return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
+
     const cellCode = (cell: string | IRCell | IRArrayCell) => {
       if (typeof cell === 'string') return formatString(cell);
+
       const { content, ...props } = cell;
       if (content === undefined) return formatObject(props, indent + 2);
+
       return formatObject({ ...props, content: '__CELL_CONTENT__' }, indent + 2).replace(
         "'__CELL_CONTENT__'",
         typeof content === 'string' ? formatString(content) : childCode(content, indent + 3, ctx),
       );
     };
+
     const input = stripKeys(record, ['namespace', 'type', 'items', 'entries']);
     const field = record.type === 'map' ? 'entries' : 'items';
     const values =
@@ -652,20 +707,26 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
           : ((child as IRMap).entries ?? []).map(
               entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
             );
+
     return `${record.type}(${formatObject({ ...input, [field]: '__CELLS__' }, indent).replace("'__CELLS__'", `[${values.join(', ')}]`)})`;
   }
+
   if (record.type === 'surface') {
     const surface = record as typeof record & { child: IRChild };
     ctx.standardHelpers.add('surfaceChild');
     const input = stripKeys(record, ['namespace', 'type', 'child']);
     const surfaceChildCode = childCode(surface.child, indent + 1, ctx);
+
     return `surface(${formatObject({ ...input, child: '__SURFACE_CHILD__' }, indent).replace("'__SURFACE_CHILD__'", `surfaceChild(${surfaceChildCode})`)})`;
   }
+
   if (STANDARD_SHAPE_KINDS.includes(record.type)) {
     const input = stripKeys(record, ['namespace', 'type']);
     return `shape.${record.type}(${formatObject(input, indent)})`;
   }
+
   const input = stripKeys(record, ['namespace', 'type']);
+
   return `${record.type}(${formatObject(input, indent)})`;
 };
 
@@ -681,6 +742,7 @@ const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =
   ctx.layoutHelpers.add(record.type);
   ctx.layoutAdapters.add(adapterName);
   const input = stripKeys(record, ['namespace', 'type']);
+
   return `${record.type}(${formatObject(input, indent)})`;
 };
 
@@ -688,20 +750,25 @@ const graphAuthoringCode = (graph: IRGraph, indent: number, ctx: Ctx): string =>
   const input = graphPreviewAuthoringInput(graph);
   const replacements = new Map<string, string>();
   let slot = 0;
+
   const encodeChild = (child: IRChild): string => {
     const placeholder = `__GRAPH_CONTENT_CHILD_${slot++}__`;
     replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
     return placeholder;
   };
+
   const encodeGraphChild = (child: InputGraphChild): unknown => {
     if (!('namespace' in child)) {
       if (child.type !== 'entity' && child.type !== 'relation') {
         return encodeChild(child as IRChild);
       }
+
       return child;
     }
+
     return encodeChild(child);
   };
+
   const children = input.children?.map(encodeGraphChild);
   const encoded: Record<string, unknown> = {
     ...input,
@@ -712,7 +779,9 @@ const graphAuthoringCode = (graph: IRGraph, indent: number, ctx: Ctx): string =>
   let code = formatObject(encoded, indent)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
     .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+
   return code;
 };
 
@@ -731,7 +800,9 @@ const groupAuthoringCode = (group: IRGroup, indent: number, ctx: Ctx): string =>
     ...(children === undefined ? {} : { children }),
   };
   let code = formatObject(encoded, indent);
+
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+
   return code;
 };
 
@@ -750,7 +821,9 @@ const blockAuthoringCode = (block: IRBlock, indent: number, ctx: Ctx): string =>
     ...(children === undefined ? {} : { children }),
   };
   let code = formatObject(encoded, indent);
+
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+
   return code;
 };
 
@@ -759,18 +832,22 @@ const blockHeaderAuthoringCode = (header: IRBlockHeader, indent: number, ctx: Ct
   void _namespace;
   void _type;
   const replacements = new Map<string, string>();
+
   const encodeSlot = (child: IRChild, slot: string): string => {
     const placeholder = `__BLOCK_HEADER_${slot.toUpperCase()}__`;
     replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
     return placeholder;
   };
+
   const encoded = {
     ...input,
     ...(icon === undefined ? {} : { icon: encodeSlot(icon, 'icon') }),
     ...(trail === undefined ? {} : { trail: encodeSlot(trail, 'trail') }),
   };
   let code = formatObject(encoded, indent);
+
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+
   return code;
 };
 
@@ -789,7 +866,9 @@ const blockSectionAuthoringCode = (section: IRBlockSection, indent: number, ctx:
     ...(children === undefined ? {} : { children }),
   };
   let code = formatObject(encoded, indent);
+
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+
   return code;
 };
 
@@ -798,8 +877,10 @@ const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): strin
     const { namespace: _namespace, type: _type, ...input } = row;
     void _namespace;
     void _type;
+
     return formatObject(input, indent);
   }
+
   const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
   void _namespace;
   void _type;
@@ -814,7 +895,9 @@ const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): strin
     ...(children === undefined ? {} : { children }),
   };
   let code = formatObject(encoded, indent);
+
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+
   return code;
 };
 
@@ -825,6 +908,7 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   if (!GRAPH_HELPER_ORDER.includes(helperName) || !GRAPH_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
+
   const count = (ctx.graphCounts.get(helperName) ?? 0) + 1;
   ctx.graphCounts.set(helperName, count);
   ctx.graphHelpers.add(helperName);
@@ -832,26 +916,34 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   if (helperName === 'graph') {
     return `graph(${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
   }
+
   if (helperName === 'group') {
     return `group(${groupAuthoringCode(GroupSchema.parse(child), indent, ctx)})`;
   }
+
   if (helperName === 'block') {
     return `block(${blockAuthoringCode(BlockSchema.parse(child), indent, ctx)})`;
   }
+
   if (helperName === 'blockHeader') {
     return `blockHeader(${blockHeaderAuthoringCode(BlockHeaderSchema.parse(child), indent, ctx)})`;
   }
+
   if (helperName === 'blockSection') {
     return `blockSection(${blockSectionAuthoringCode(BlockSectionSchema.parse(child), indent, ctx)})`;
   }
+
   if (helperName === 'blockRow') {
     return `blockRow(${blockRowAuthoringCode(BlockRowSchema.parse(child), indent, ctx)})`;
   }
+
   if (helperName === 'entity') {
     const input = stripKeys(entityPreviewAuthoringInput(EntitySchema.parse(child)), ['type']);
     return `entity(${formatObject(input, indent)})`;
   }
+
   const input = stripKeys(relationPreviewAuthoringInput(RelationSchema.parse(child)), ['type']);
+
   return `relation(${formatObject(input, indent)})`;
 };
 
@@ -868,6 +960,7 @@ const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => 
     flowThemeStyles: '__FLOW_THEME_STYLES__',
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
+
   return `flowDiagram(${formatObject(encoded, indent)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
     .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
@@ -881,8 +974,10 @@ const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
     if (child.namespace === 'layout') return layoutCompositeCode(child, indent, ctx);
     if (child.namespace === 'graph') return graphCompositeCode(child, indent, ctx);
     if (child.namespace === 'diagram' && child.type === 'flow') return flowCompositeCode(child, indent, ctx);
+
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
+
   switch (child.type) {
     case 'node':
       return nodeCode(child, indent, ctx);
@@ -911,6 +1006,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
       `Cannot generate Vanilla source for Path kind "${unsupportedPathKind.name}" without its Definition source.`,
     );
   }
+
   const usesRibbon = options.pathKinds?.includes(RibbonPathKindDefinition) ?? false;
   const ctx: Ctx = {
     used: new Set(['scene']),
@@ -946,6 +1042,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   const graphHelpers = GRAPH_HELPER_ORDER.filter(name => ctx.graphHelpers.has(name));
   const graphAdapters = GRAPH_ADAPTER_ORDER.filter(name => ctx.graphAdapters.has(name));
   const hasStandaloneGraphMembers = graphHelpers.length > 0 && !ctx.graphCounts.has('graph');
+
   const imports = [
     `import { ${[...helpers, ...(hasStandaloneGraphMembers ? ['normalizeScene'] : [])].join(', ')} } from '@retikz/vanilla';`,
   ];
@@ -955,6 +1052,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   ];
   if (coreImports.length > 0) imports.push(`import { ${coreImports.join(', ')} } from '@retikz/core';`);
   if (usesRibbon) imports.push("import { RibbonPathKindDefinition } from '@retikz/extension';");
+
   const definitions = collectPreviewDefinitions(
     ir.children,
     new Set(ctx.standardCounts.keys()),
@@ -988,19 +1086,23 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     if (shapeMembers.length > 0)
       imports.push(`import { ${shapeMembers.join(', ')} } from '@retikz/standard-vanilla/shape';`);
   }
+
   if (layoutHelpers.length > 0) {
     imports.push(`import { ${[...layoutHelpers, ...layoutAdapters].join(', ')} } from '@retikz/layout-vanilla';`);
   }
+
   if (graphHelpers.length > 0) {
     imports.push(`import { ${[...graphHelpers, ...graphAdapters].join(', ')} } from '@retikz/graph-vanilla';`);
     imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
   }
+
   if (ctx.flowCount > 0) {
     imports.push("import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';");
     if (graphHelpers.length === 0) {
       imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
     }
   }
+
   if (definitions.standard.length > 0) {
     const shapeDefinitions = definitions.standard.filter(name =>
       STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
@@ -1022,12 +1124,15 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     if (collectionDefinitions.length > 0)
       imports.push(`import { ${collectionDefinitions.join(', ')} } from '@retikz/standard/collection';`);
   }
+
   if (definitions.layout.length > 0) {
     imports.push(`import { ${definitions.layout.join(', ')} } from '@retikz/layout';`);
   }
+
   if (definitions.graph.length > 0 && !hasStandaloneGraphMembers) {
     imports.push(`import { ${definitions.graph.join(', ')} } from '@retikz/graph';`);
   }
+
   if (hasStandaloneGraphMembers)
     imports.push("import { createGraphProviders, GraphProviderKey } from '@retikz/graph';");
 
@@ -1059,6 +1164,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   const inputCode = hasStandaloneGraphMembers
     ? `const source = scene(${figureArgs});\n${adapterCode}const input = normalizeScene(source, { adapters }).ir;\n`
     : `const input = scene(${figureArgs});\n${adapterCode}`;
+
   return `${imports.join('\n')}\n\n${inputCode}${providerCode}${compile}`;
 };
 

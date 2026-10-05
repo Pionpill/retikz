@@ -87,6 +87,7 @@ describe('drawScene 规格', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, isolatedScene);
 
     const strokeCalls = context.calls.filter(call => call.name === 'stroke');
+
     expect(strokeCalls.map(call => call.lineWidth)).toEqual([20, 1]);
   });
 
@@ -119,6 +120,7 @@ describe('drawScene 规格', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, isolatedScene);
 
     const strokeCalls = context.calls.filter(call => call.name === 'stroke');
+
     expect(strokeCalls.map(call => call.lineCap)).toEqual(['round', 'butt']);
     expect(strokeCalls.map(call => call.lineJoin)).toEqual(['bevel', 'miter']);
   });
@@ -153,6 +155,7 @@ describe('drawScene 规格', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, isolatedScene);
 
     const strokeCalls = context.calls.filter(call => call.name === 'stroke');
+
     expect(strokeCalls.map(call => call.lineDashOffset)).toEqual([6, 0]);
   });
 

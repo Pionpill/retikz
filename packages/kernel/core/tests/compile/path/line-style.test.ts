@@ -20,6 +20,7 @@ describe('lineCap / lineJoin', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).strokeLinecap).toBe('round');
   });
 
@@ -39,6 +40,7 @@ describe('lineCap / lineJoin', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).strokeLinejoin).toBe('bevel');
   });
 
@@ -57,6 +59,7 @@ describe('lineCap / lineJoin', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(p.strokeLinecap).toBeUndefined();
     expect(p.strokeLinejoin).toBeUndefined();
   });

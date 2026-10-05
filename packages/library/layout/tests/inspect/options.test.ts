@@ -71,12 +71,14 @@ describe('Layout inspect options', () => {
         },
       },
     );
+
     expect(inspect).toHaveBeenCalledOnce();
     expect(inspect.mock.calls[0]?.[1].options).toMatchObject({
       labels: true,
       bounds: { visual: true, content: false, slot: false, container: true },
     });
   });
+
   it('preserves parent fields across sparse and undefined overrides without changing either source', () => {
     const inherited = {
       labels: true,
@@ -86,6 +88,7 @@ describe('Layout inspect options', () => {
     };
     const local = { labels: undefined, bounds: { visual: undefined, slot: false }, spacing: { padding: false } };
     const merged = FLEX_LAYOUT_INSPECTOR.mergeOptionsInput?.(inherited, local);
+
     expect(merged).toEqual({
       labels: true,
       bounds: { visual: true, content: false, slot: false },
@@ -108,6 +111,7 @@ describe('Layout inspect options', () => {
       { bounds: { visual: true }, spacing: { margin: true } },
       { bounds: false, spacing: false },
     );
+
     expect(FLEX_LAYOUT_INSPECTOR.resolveOptions(FLEX_LAYOUT_INSPECTOR.optionsSchema.parse(merged ?? {}))).toMatchObject(
       {
         bounds: { container: false, content: false, slot: false, allocation: false, visual: false },
@@ -123,6 +127,7 @@ describe('Layout inspect options', () => {
       spacing: { margin: true },
     });
   });
+
   it('exposes described strict schemas with shared and family defaults', () => {
     const schemas = [FlexLayoutInspectOptionsSchema, GridLayoutInspectOptionsSchema, OverlayLayoutInspectOptionsSchema];
 
@@ -162,6 +167,7 @@ describe('Layout inspect options', () => {
     const options = FLEX_LAYOUT_INSPECTOR.resolveOptions(
       FLEX_LAYOUT_INSPECTOR.optionsSchema.parse({ spacing: { padding: false }, labels: true }),
     );
+
     expect(options.spacing.padding).toBe(false);
     expect(options.labels).toBe(true);
   });

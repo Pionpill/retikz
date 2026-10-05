@@ -51,6 +51,7 @@ const ContentSkeleton: FC = () => (
  */
 export const MdxContent: FC<MdxContentProps> = props => {
   const { source, segments, onFrontmatter } = props;
+
   // Content 与其所属页面的 segments 配对存放：切页过渡时旧 Content 仍在屏幕上，必须配旧 segments 下发，
   // 否则用实时路由(新页)解析旧内容里的 demo 名 → 短暂 "Demo not found"
   const [state, setState] = useState<{ Content: MDXContentType | null; segments: Array<string> | null }>({
@@ -62,8 +63,10 @@ export const MdxContent: FC<MdxContentProps> = props => {
 
   useEffect(() => {
     if (source == null) return;
+
     const controller = new AbortController();
     const { signal } = controller;
+
     // 本次 source 配对的 segments；与 source 锁步变化（DocPage 同时更新 stableSource / stableSegments），故一并进 deps
     const pageSegments = segments ?? null;
 
@@ -72,6 +75,7 @@ export const MdxContent: FC<MdxContentProps> = props => {
         const compiled = await compileMdx(source);
         const mod = await run(compiled, runtime);
         if (signal.aborted) return;
+
         const fm = mod.frontmatter;
         const frontmatter = (fm && typeof fm === 'object' ? fm : {}) as MdxFrontmatter;
         onFrontmatter?.(frontmatter);
@@ -91,12 +95,15 @@ export const MdxContent: FC<MdxContentProps> = props => {
   /** MDX 运行时编译 + 异步挂载 —— 原生 hash 滚动 fail（DOM 还没注入 id）；自接 useLocation + rAF 兜底 */
   useEffect(() => {
     if (state.Content == null || !hash) return;
+
     const id = decodeURIComponent(hash.slice(1));
     if (!id) return;
+
     const rafId = requestAnimationFrame(() => {
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+
     return () => {
       cancelAnimationFrame(rafId);
     };

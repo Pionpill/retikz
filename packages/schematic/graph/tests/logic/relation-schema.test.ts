@@ -15,10 +15,14 @@ describe('Relation visual contract', () => {
       rotate: -30,
       scale: { x: 2, y: 1 },
     };
+
     expect(RelationSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+
     for (const [field, value] of Object.entries({ fill: 'red', fillOpacity: 0.3, fillRule: 'evenodd' })) {
       const result = RelationSchema.safeParse({ ...source, style: { ...source.style, [field]: value } });
+
       expect(result.success).toBe(false);
+
       if (!result.success) expect(result.error.issues[0]?.path).toEqual(['style']);
     }
   });

@@ -1,10 +1,10 @@
-import type { ThemeModeValue } from '@retikz/core';
+import type { ThemeMode } from '@retikz/core';
 
 import type { IRPlotDefaults } from '../../../schemas';
 import { LegendSymbolFit } from '../../../schemas';
 
 /** 读取 mode-aware Neutral Legend defaults */
-export const getNeutralLegendDefaults = (mode: ThemeModeValue): NonNullable<IRPlotDefaults['legend']> => {
+export const getNeutralLegendDefaults = (mode: ThemeMode): NonNullable<IRPlotDefaults['legend']> => {
   void mode;
   return {
     title: {

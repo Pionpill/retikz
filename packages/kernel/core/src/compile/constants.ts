@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** 相对定位默认距离 */
 export const DEFAULT_NODE_DISTANCE = 24;
 
@@ -34,3 +36,6 @@ export const CompileWarningCode = {
   BoundaryTightFallback: 'BOUNDARY_TIGHT_FALLBACK',
   TextAutoContrastUnresolved: 'TEXT_AUTO_CONTRAST_UNRESOLVED',
 } as const;
+
+/** 编译期 warning code：包含内置 code，并允许扩展能力提供自定义字符串 code */
+export type CompileWarningCode = ValueOf<typeof CompileWarningCode> | (string & {});

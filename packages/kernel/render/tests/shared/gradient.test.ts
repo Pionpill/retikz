@@ -13,6 +13,7 @@ describe('gradientLineFromAngle', () => {
 
   it('90deg returns a vertical center line', () => {
     const line = gradientLineFromAngle(90);
+
     expect(line.x1).toBeCloseTo(0.5);
     expect(line.x2).toBeCloseTo(0.5);
     expect(line.y1).toBeCloseTo(0);

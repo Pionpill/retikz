@@ -25,6 +25,7 @@ export const RegressionChartEncodingSlots = ['x', 'y', 'series', 'row', 'column'
 const regressionMarkPropertySlots = ['method', 'sampleCount', 'extent', 'point', 'trend', 'extraMethods'] as const;
 
 const regressionPropertySlots = [...regressionMarkPropertySlots, 'domainPadding', 'autoPadding'] as const;
+
 const seriesScaleName = pointRecipeId(ChartType.Regression, 'scale.series');
 
 const regressionFieldConsumers = [
@@ -41,9 +42,12 @@ const regressionFieldConsumers = [
 
 const withSeriesFallback = (encodings: JsonObject): JsonObject => {
   if (!Object.hasOwn(encodings, 'series')) return encodings;
+
   const series = encodings.series;
   if (typeof series === 'string') return encodings;
+
   const mapping = series as JsonObject;
+
   return typeof mapping.scale === 'string'
     ? encodings
     : { ...encodings, series: { ...mapping, scale: seriesScaleName } };
@@ -67,6 +71,7 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
   resolveEncodings: context => {
     const resolution = resolveChartEncodingMappings(context, RegressionChartEncodingSlots, regressionFieldConsumers);
     const spatial = pointSpatialResolutionOf(ChartType.Regression, context.encodings);
+
     return {
       ...resolution,
       encodings: withSeriesFallback(resolution.encodings),
@@ -77,6 +82,7 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     const slots = pointSlotsOf(context);
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
     const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
+
     return pointResolutionOf(
       ChartType.Regression,
       [{ kind: ChartType.Regression, plotMarks: resolveRegressionMarkGroup(slots.encodings, slots.properties) }],

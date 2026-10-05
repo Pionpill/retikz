@@ -16,6 +16,7 @@ const markedComponent = (displayName: string, adapter?: InputEmbedAdapter) => {
   const fn = () => null;
   fn.displayName = displayName;
   Object.assign(fn, { isTier2Embeddable: true, inputEmbedAdapter: adapter });
+
   return fn;
 };
 
@@ -23,16 +24,19 @@ describe('resolveInputEmbedAdapter', () => {
   it('标记组件返回静态 Vanilla InputEmbedAdapter', () => {
     const adapter = makeAdapter('demo.adapter');
     const fn = markedComponent('dn', adapter);
+
     expect(resolveInputEmbedAdapter(fn)).toBe(adapter);
   });
 
   it('已标记但缺 inputEmbedAdapter → fail-loud throw（含组件名）', () => {
     const fn = markedComponent('MyChart', undefined);
+
     expect(() => resolveInputEmbedAdapter(fn)).toThrow(/MyChart/);
   });
 
   it('未标记普通函数 → 返回 null', () => {
     const fn = () => null;
+
     expect(resolveInputEmbedAdapter(fn)).toBeNull();
   });
 

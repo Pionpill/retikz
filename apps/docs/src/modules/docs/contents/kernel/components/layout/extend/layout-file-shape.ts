@@ -54,6 +54,7 @@ const findFileBoundaryPoint = (vertices: Array<Position>, direction: Position): 
   }
 
   const distance = Number.isFinite(nearestDistance) ? nearestDistance : 0;
+
   return [ray[0] * distance, ray[1] * distance];
 };
 
@@ -70,6 +71,7 @@ const toPathCommands = (
     return index === 0 ? { kind: 'move', to } : { kind: 'line', to };
   });
   if (close) commands.push({ kind: 'close' });
+
   return commands;
 };
 
@@ -88,8 +90,10 @@ export const fileShape: ShapeDefinition = defineShape({
   },
   anchor: (bounds, name) => {
     if (name === CenterAnchor.Center || !isDirectionalAnchor(name)) return undefined;
+
     const toward = rect.anchor(bounds, name);
     const localToward = worldToLocal(bounds, toward);
+
     return localToWorld(bounds, findFileBoundaryPoint(createFileVertices(bounds), localToward));
   },
   *emit(bounds, style, round) {

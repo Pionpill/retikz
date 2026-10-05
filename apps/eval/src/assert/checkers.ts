@@ -4,6 +4,7 @@ import { allText, flattenPrimitives } from './primitives';
 import type { Assertion, AssertionResult } from './types';
 
 type Result = Pick<AssertionResult, 'pass' | 'actual'>;
+
 type Checker<TKind extends Assertion['kind']> = (
   scene: Scene,
   assertion: Extract<Assertion, { kind: TKind }>,
@@ -28,6 +29,7 @@ const textPresent: Checker<'textPresent'> = (scene, a) => {
   const needle = a.text.trim();
   const lines = allText(scene).map(t => t.trim());
   const hit = lines.some(t => (a.match === 'exact' ? t === needle : t.includes(needle)));
+
   return {
     pass: hit,
     actual: hit ? `命中文字 '${needle}'` : `未找到含 '${needle}' 的文字（共 ${lines.length} 段文字）`,
@@ -53,6 +55,7 @@ const stylePresent: Checker<'stylePresent'> = (scene, a) => {
     if (a.style === 'fill') return 'fill' in p && p.fill !== undefined;
     return 'stroke' in p && p.stroke !== undefined;
   });
+
   return { pass: has, actual: has ? `存在带 ${a.style} 的原语` : `无原语带 ${a.style}` };
 };
 

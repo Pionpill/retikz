@@ -30,6 +30,7 @@ describe('resolveContextualColor', () => {
 
   it('缺少主色时抛出含精确字段路径的 Core color error', () => {
     expect.assertions(5);
+
     try {
       resolveContextualColor(0.2, {
         mode: ThemeMode.Light,
@@ -37,7 +38,9 @@ describe('resolveContextualColor', () => {
       });
     } catch (thrown) {
       expect(thrown).toBeInstanceOf(RetikzCoreError);
+
       const error = thrown as RetikzCoreError;
+
       expect(error.code).toBe(RetikzCoreErrorCode.Color);
       expect(error.message).toContain('children[1].path.stroke');
       expect(error.details).toMatchObject({ fieldPath: 'children[1].path.stroke' });
@@ -47,6 +50,7 @@ describe('resolveContextualColor', () => {
 
   it('动态主色失败时保留字段路径与 Foundation cause', () => {
     expect.assertions(8);
+
     try {
       resolveContextualColor(0.2, {
         masterColor: 'currentColor',
@@ -55,7 +59,9 @@ describe('resolveContextualColor', () => {
       });
     } catch (thrown) {
       expect(thrown).toBeInstanceOf(RetikzCoreError);
+
       const error = thrown as RetikzCoreError;
+
       expect(error.code).toBe(RetikzCoreErrorCode.Color);
       expect(error.message).toContain('children[0].node.textColor');
       expect(error.details).toMatchObject({
@@ -63,7 +69,9 @@ describe('resolveContextualColor', () => {
         masterColor: 'currentColor',
       });
       expect(error.cause).toBeInstanceOf(RetikzFoundationError);
+
       const cause = error.cause as RetikzFoundationError;
+
       expect(cause.code).toBe(RetikzFoundationErrorCode.Color);
       expect(cause.details).toEqual({ input: 'foreground', value: 'currentColor' });
       expect(cause.cause).toBeUndefined();

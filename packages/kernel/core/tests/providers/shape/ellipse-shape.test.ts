@@ -30,6 +30,7 @@ describe('ellipse shape — circumscribe 策略', () => {
 
   it('ellipse_equal_isotropic：equal → halfWidth = halfHeight = √(hw²+hh²)', () => {
     const r = Math.hypot(10, 4);
+
     expect(ellipseShape.circumscribe(10, 4, { circumscribe: 'equal' })).toEqual({
       halfWidth: r,
       halfHeight: r,
@@ -39,6 +40,7 @@ describe('ellipse shape — circumscribe 策略', () => {
   it('square_inner_box_equal_equals_proportional_point：正方内框（hw=hh）下 equal 与 proportional 半轴重合（均 = √2·hw）', () => {
     const prop = ellipseShape.circumscribe(8, 8, { circumscribe: 'proportional' });
     const equal = ellipseShape.circumscribe(8, 8, { circumscribe: 'equal' });
+
     // proportional: 8·√2；equal: √(8²+8²) = 8·√2 —— 数值重合
     expect(prop.halfWidth).toBeCloseTo(8 * Math.SQRT2);
     expect(equal.halfWidth).toBeCloseTo(8 * Math.SQRT2);
@@ -48,6 +50,7 @@ describe('ellipse shape — circumscribe 策略', () => {
   it('flat_inner_box_equal_uses_diagonal：极扁内框 equal → 半径取对角线半长（不退化为某轴）', () => {
     const { halfWidth, halfHeight } = ellipseShape.circumscribe(100, 1, { circumscribe: 'equal' });
     const diagonal = Math.hypot(100, 1);
+
     expect(halfWidth).toBe(halfHeight); // 等轴
     expect(halfWidth).toBeCloseTo(diagonal);
     expect(halfWidth).toBeGreaterThan(100); // 严格大于长轴，未退化
@@ -86,7 +89,9 @@ describe('ellipse shape — equal × Node 变换交互', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const el = findByType(compiled.primitives, 'ellipse');
+
     expect(el).toBeDefined();
+
     // equal 策略 → 等轴外接 → rx == ry，即使内框非正方
     expect(el!.rx).toBe(el!.ry);
   });
@@ -103,6 +108,7 @@ describe('ellipse shape — equal × Node 变换交互', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const el = findByType(compiled.primitives, 'ellipse');
+
     expect(el).toBeDefined();
     expect(el!.rx).toBeGreaterThan(el!.ry);
   });

@@ -13,6 +13,7 @@ const createPreview = (lang: Lang) => {
   const controlled = defineControlledPreview(contract, values => (
     <FlowCurveViewport orthogonal diagram={renderFlowOrthogonalPreview(values, lang)} />
   ));
+
   return {
     ...controlled,
     source: {
@@ -21,10 +22,14 @@ const createPreview = (lang: Lang) => {
     },
   };
 };
+
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
+
 /** 正交避让示例语言 */
 export type FlowOrthogonalProps = Readonly<{ lang?: Lang }>;
+
 /** 正交候选与对齐退化试验场 */
 const Demo: FC<FlowOrthogonalProps> = props => {
   const { lang = 'zh' } = props;

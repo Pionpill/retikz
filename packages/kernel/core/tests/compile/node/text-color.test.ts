@@ -34,6 +34,7 @@ const resolvedTextColor = (
     }),
     warnings,
   );
+
   return { fill: text.fill, warnings };
 };
 
@@ -54,6 +55,7 @@ describe('Node auto-contrast static opaque color parsing', () => {
     ['hsl(3.141592653589793rad 100% 50%)', '#000000'],
   ])('把 %s 解析为稳定的 %s 前景', (fill, expected) => {
     const result = resolvedTextColor(fill);
+
     expect(result.fill).toBe(expected);
     expect(result.warnings).toHaveLength(0);
   });
@@ -73,6 +75,7 @@ describe('Node auto-contrast static opaque color parsing', () => {
     'constructor',
   ])('拒绝不在静态支持集内的 %s 并使用固定 fallback', fill => {
     const result = resolvedTextColor(fill);
+
     expect(result.fill).toBe('currentColor');
     expect(result.warnings).toHaveLength(1);
     expect(result.warnings[0]?.code).toBe(CompileWarningCode.TextAutoContrastUnresolved);
@@ -93,6 +96,7 @@ describe('Node auto-contrast opacity boundary and contrast', () => {
     [undefined, {}],
   ])('透明或缺省背景 %s 使用固定 fallback 并 warning', (fill, node) => {
     const result = resolvedTextColor(fill, node);
+
     expect(result.fill).toBe('currentColor');
     expect(result.warnings).toHaveLength(1);
   });
@@ -133,6 +137,7 @@ describe('Node auto-contrast consumers and warnings', () => {
     } as unknown as IRScene;
 
     const texts = textPrimitives(ir, warnings);
+
     expect(texts.map(text => text.fill)).toContain('currentColor');
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
@@ -159,6 +164,7 @@ describe('Node auto-contrast consumers and warnings', () => {
       },
       warnings,
     );
+
     expect(warnings).toHaveLength(0);
   });
 
@@ -184,6 +190,7 @@ describe('Node auto-contrast consumers and warnings', () => {
       },
       warnings,
     );
+
     expect(texts.some(text => text.lines.some(line => line.fill === 'red'))).toBe(true);
     expect(warnings).toHaveLength(0);
   });
@@ -198,6 +205,7 @@ describe('Node auto-contrast consumers and warnings', () => {
       style: { fill: '#000000', textColor: AUTO_CONTRAST },
     });
     const paths = flattenPrims(compileToScene(ir).scene.primitives).filter(primitive => primitive.type === 'path');
+
     expect(paths.some(path => path.stroke === '#ffffff')).toBe(true);
   });
 });
@@ -232,6 +240,7 @@ describe('Node auto-contrast cascade and precedence', () => {
         },
       ],
     };
+
     expect(textPrimitives(ir).map(text => text.fill)).toEqual(['#000000', '#ffffff']);
   });
 
@@ -244,6 +253,7 @@ describe('Node auto-contrast cascade and precedence', () => {
     const fills = flattenPrims(compileToScene(ir).scene.primitives)
       .filter(primitive => primitive.type === 'text' || primitive.type === 'path')
       .map(primitive => primitive.fill);
+
     expect(fills).toContain('#ffffff');
     expect(fills).toContain('red');
     expect(fills).toContain('blue');
@@ -269,6 +279,7 @@ describe('Node auto-contrast cascade and precedence', () => {
         },
       ],
     };
+
     expect(textPrimitives(ir).map(text => text.fill)).toEqual(['#ffffff', 'orange']);
   });
 });

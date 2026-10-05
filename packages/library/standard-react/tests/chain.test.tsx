@@ -33,6 +33,7 @@ it('JSX 与 Vanilla 的嵌套分支和空单元等价', () => {
     ],
   });
   const options = { adapters: synchronousAdapters(jsx.adapters) };
+
   expect(normalizeScene(jsx.scene, options).ir).toEqual(
     normalizeScene(vanilla, { adapters: [ChainInputEmbedAdapter] }).ir,
   );
@@ -54,6 +55,7 @@ it('任意图形与骨架依赖自动闭合', () => {
     </Chain>,
   ]) {
     const jsx = createInputScene(element);
+
     expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
   }
 });

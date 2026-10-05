@@ -53,10 +53,12 @@ type GraphContextSource = Pick<IRBlock | IRGraph | IRGroup, 'graphDefaults' | 'g
 
 const graphContext = (source: GraphContextSource, inherited: GraphProjectionContext): GraphProjectionContext => {
   if (source.graphDefaults === undefined && source.graphRules === undefined) return inherited;
+
   const layer: GraphAuthorLayer = {
     ...(source.graphDefaults === undefined ? {} : { defaults: source.graphDefaults }),
     ...(source.graphRules === undefined ? {} : { rules: source.graphRules }),
   };
+
   return { layers: [...inherited.layers, layer] };
 };
 
@@ -167,6 +169,7 @@ const projectChildren = (
     if (isGraph(child)) return projectGraph(child, context, options);
     if (isGroup(child)) return projectGroup(child, context, options);
     if (isScope(child)) return { ...child, children: projectChildren(child.children, context, options) };
+
     return child;
   });
 
@@ -184,18 +187,22 @@ const resolveGroupColor = (
 ): ResolvedTheme['colors']['categorical'][number] => {
   const existingColor = context.colorByGroup.get(group);
   if (existingColor !== undefined) return existingColor;
+
   const paletteIndex = context.nextGroupIndex % context.palette.length;
   const color = categoricalColorAt(context.palette, paletteIndex);
   context.colorByGroup.set(group, color);
   context.nextGroupIndex += 1;
+
   return color;
 };
 
 /** 为未被作者颜色覆盖的 Entity 投影所属 group 的 fallback color */
 const projectEntityGroupColor = (source: IRGraphEntity, context: GroupColorContext): IRGraphEntity => {
   if (source.group === undefined) return source;
+
   const color = resolveGroupColor(source.group, context);
   if (source.style?.color !== undefined) return source;
+
   return {
     ...source,
     style: { ...source.style, color },
@@ -205,8 +212,10 @@ const projectEntityGroupColor = (source: IRGraphEntity, context: GroupColorConte
 /** 为未被作者颜色覆盖的 Relation 投影所属 group 的 fallback color */
 const projectRelationGroupColor = (source: IRGraphRelation, context: GroupColorContext): IRGraphRelation => {
   if (source.group === undefined) return source;
+
   const color = resolveGroupColor(source.group, context);
   if (source.style?.color !== undefined || source.style?.stroke !== undefined) return source;
+
   return {
     ...source,
     style: { ...source.style, color },
@@ -226,6 +235,7 @@ const projectGroupColors = (children: ReadonlyArray<IRChild>, context: GroupColo
         ...(child.children === undefined ? {} : { children: projectGroupColors(child.children, context) }),
       };
     }
+
     if (isBlockHeader(child)) {
       const projectSlot = (slot: IRChild | undefined): IRChild | undefined =>
         slot === undefined ? undefined : projectGroupColors([slot], context)[0];
@@ -235,12 +245,14 @@ const projectGroupColors = (children: ReadonlyArray<IRChild>, context: GroupColo
         ...(child.trail === undefined ? {} : { trail: projectSlot(child.trail)! }),
       };
     }
+
     if (isBlockSection(child) || isGraph(child) || isGroup(child) || isScope(child)) {
       return {
         ...child,
         ...(child.children === undefined ? {} : { children: projectGroupColors(child.children, context) }),
       };
     }
+
     if (isBlockRow(child)) {
       return {
         ...child,
@@ -249,6 +261,7 @@ const projectGroupColors = (children: ReadonlyArray<IRChild>, context: GroupColo
           : { children: projectGroupColors(child.children, context) }),
       };
     }
+
     return child;
   });
 

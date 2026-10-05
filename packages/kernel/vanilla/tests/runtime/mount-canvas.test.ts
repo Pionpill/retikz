@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mountCanvas } from '../../src/dom';
 
-/**
+/*
  * @retikz/vanilla mountCanvas（无框架 canvas 直挂，jsdom 环境）
  * @description jsdom 的 `<canvas>.getContext('2d')` 默认返回 null（无真实 2D backend），故 spy
  *   `HTMLCanvasElement.prototype.getContext` 返回一个「录制型」proxy context 充当原生 canvas 原语——
@@ -23,6 +23,7 @@ const createRecordingContext = (): { ctx: CanvasRenderingContext2D; calls: Array
   const ctx = new Proxy(target, {
     get(t, prop) {
       if (prop in t) return t[prop];
+
       return (...args: Array<unknown>) => {
         calls.push(String(prop));
         void args;
@@ -33,6 +34,7 @@ const createRecordingContext = (): { ctx: CanvasRenderingContext2D; calls: Array
       return true;
     },
   }) as unknown as CanvasRenderingContext2D;
+
   return { ctx, calls };
 };
 
@@ -78,19 +80,25 @@ describe('@retikz/vanilla mountCanvas', () => {
       mode === 'static'
         ? mountCanvas(container, ir, { runtime: { mode } })
         : mountCanvas(container, ir, { runtime: { mode } });
+
     expect(view.root.style.width).toBe('240px');
     expect(view.root.style.height).toBe('120px');
     expect(view.root.width).toBe(480);
+
     view.update({ ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } });
+
     expect(view.root.style.width).toBe('300px');
     expect(view.root.width).toBe(600);
+
     view.dispose();
     const scaled =
       mode === 'static'
         ? mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } })
         : mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } });
+
     expect(scaled.root.style.height).toBe('240px');
     expect(scaled.root.height).toBe(480);
+
     scaled.dispose();
   });
 
@@ -98,6 +106,7 @@ describe('@retikz/vanilla mountCanvas', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, idIr);
     const canvas = container.querySelector('canvas');
+
     expect(canvas).toBeInstanceOf(HTMLCanvasElement);
     expect(view.root).toBe(canvas);
   });
@@ -105,6 +114,7 @@ describe('@retikz/vanilla mountCanvas', () => {
   it('mount-canvas-bitmap-dpr：名义尺寸 × dpr 开位图（dpr=2 → 位图 = 2×CSS）', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, idIr, { output: { width: 200, height: 150 } });
+
     // 名义 200×150、dpr=2 → 位图 400×300
     expect(view.root.width).toBe(400);
     expect(view.root.height).toBe(300);
@@ -115,12 +125,14 @@ describe('@retikz/vanilla mountCanvas', () => {
   it('mount-canvas-draws-scene：渲染链路被走（drawScene 的 setTransform 被调）', () => {
     const container = document.createElement('div');
     mountCanvas(container, idIr, { output: { width: 100, height: 100 } });
+
     expect(recorded).toContain('setTransform');
   });
 
   it('mount-canvas-fallback-size：未给数值尺寸 → 位图回退内容边界 × dpr、且为正整数', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, idIr);
+
     expect(view.root.width).toBeGreaterThan(0);
     expect(view.root.height).toBeGreaterThan(0);
     expect(Number.isInteger(view.root.width)).toBe(true);
@@ -130,8 +142,11 @@ describe('@retikz/vanilla mountCanvas', () => {
   it('mount-canvas-dispose：dispose 后 canvas 移除、再调不抛', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, idIr);
+
     expect(container.querySelector('canvas')).not.toBeNull();
+
     view.dispose();
+
     expect(container.querySelector('canvas')).toBeNull();
     expect(() => view.dispose()).not.toThrow();
   });

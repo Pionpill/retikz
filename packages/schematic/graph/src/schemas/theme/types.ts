@@ -44,17 +44,17 @@ export type IRGraphSurfaceDefaults = ZodInfer<typeof GraphSurfaceDefaultsSchema>
 /** Graph defaults 的正式 Source fragments */
 export type IRGraphDefaults = ZodInfer<typeof GraphDefaultsSchema>;
 
-/** Entity Theme/Graph semantic selector */
+/** 供主题或图规则匹配实体的语义选择器 */
 export type IRGraphEntityThemeSelector = ZodInfer<typeof GraphEntityThemeSelectorSchema>;
 
-/** Entity ordered Source rule */
+/** 按顺序应用的实体输入规则 */
 export type IRGraphEntityRule = ZodInfer<typeof GraphEntityRuleSchema>;
 
-/** Relation Theme/Graph semantic selector */
+/** 供主题或图规则匹配关系的语义选择器 */
 export type IRGraphRelationThemeSelector = ZodInfer<typeof GraphRelationThemeSelectorSchema>;
 
-/** Relation ordered Source rule */
+/** 按顺序应用的关系输入规则 */
 export type IRGraphRelationRule = ZodInfer<typeof GraphRelationRuleSchema>;
 
-/** Graph ordered Source rule */
+/** 按顺序应用的图输入规则 */
 export type IRGraphRule = ZodInfer<typeof GraphRuleSchema>;

@@ -18,12 +18,15 @@ const counter = defineRuntimeSource<number, number, number, never>({
   key: 'example/counter',
   value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
 });
+
 const doubled = defineRuntimeComputation({
   id: { owner: 'example/counter', key: 'doubled' },
   sources: [counter],
   run: view => ({ kind: 'full', artifact: view.snapshot(counter).value * 2 }),
 });
+
 const sources = createRuntimeSourceRegistry({ custom: [counter] });
+
 const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
 
 /** 一次完整更新的输入值与显示语言 */
@@ -38,6 +41,7 @@ export const CounterResultPreview: FC<CounterResultPreviewProps> = props => {
     computations,
     initialSnapshots: [createRuntimeSourceInput(counter, initial)],
   });
+
   try {
     const before = runtime.snapshot(counter);
     const beforeArtifact = runtime.artifact(doubled);
@@ -47,6 +51,7 @@ export const CounterResultPreview: FC<CounterResultPreviewProps> = props => {
     });
     const after = runtime.snapshot(counter);
     const afterArtifact = runtime.artifact(doubled);
+
     return (
       <Layout viewBox={{ x: -145, y: -40, width: 290, height: 190 }}>
         <Node

@@ -10,8 +10,11 @@ describe('布局组件 API 参考', () => {
       const config = layoutComponentApiReferenceConfigs('FlexLayout').find(
         entry => entry.packageName === '@retikz/layout-react',
       );
+
       expect(config).toBeDefined();
+
       const source = await createApiReferenceMdx(config!, lang);
+
       expect(source).toContain('### FlexLayout / FlexLayoutProps');
       expect(source).toContain('### FlexLayoutItem / FlexLayoutItemProps');
       expect(source).not.toContain('### GridLayout /');
@@ -20,6 +23,7 @@ describe('布局组件 API 参考', () => {
       expect(source).toMatch(/\| `grow\?` \| `number` \| `0` \| [^—\n]+ \|/);
       expect(source).toMatch(/\| `shrink\?` \| `number` \| `1` \| [^—\n]+ \|/);
       expect(source).toMatch(/\| `readonly itemKey\?` \| `string` \| — \| [^—\n]+ \|/);
+
       if (lang === 'en') expect(source).not.toMatch(/[\u3400-\u9fff]/u);
     },
     120_000,

@@ -20,6 +20,7 @@ describe('ellipse geometry helpers', () => {
     });
 
     const r = Math.hypot(10, 6);
+
     expect(ellipse.circumscribedHalfAxes({ halfWidth: 10, halfHeight: 6 }, 'equal')).toEqual({
       halfWidth: r,
       halfHeight: r,

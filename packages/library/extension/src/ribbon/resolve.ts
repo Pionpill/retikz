@@ -7,14 +7,18 @@ import type { CanonicalRibbonOptions, CanonicalRibbonWidth } from './types';
 
 /** Ribbon 宽度在 compile 阶段绑定的 profile 与参数 */
 export type RibbonWidthResolution = Readonly<{
+  /** 已确定模式的带宽声明 */
   width: CanonicalRibbonWidth;
+  /** profile 模式匹配的宽度定义，其它模式省略 */
   definition?: RibbonWidthProfileDefinition;
+  /** profile 参数经定义 schema 或 JSON 对象校验后的值，其它模式省略 */
   params?: JsonObject;
 }>;
 
 /** 对已解析的节点宽度排序，保留模式分支与 Schema 默认值 */
 export const resolveRibbonOptions = (options: CanonicalRibbonOptions): CanonicalRibbonOptions => {
   if (options.mode === 'boundary' || options.width.kind !== 'stops') return options;
+
   return {
     ...options,
     width: { ...options.width, stops: [...options.width.stops].sort((a, b) => a.offset - b.offset) },
@@ -37,9 +41,11 @@ export const resolveRibbonWidth = (
       details: { name: width.name, path: irPath },
     });
   }
+
   const paramsPath = `${irPath}.params`;
   const rawParams = width.params ?? {};
   let params: JsonObject;
+
   try {
     params = definition.paramsSchema?.parse(rawParams) ?? JsonObjectSchema.parse(rawParams);
   } catch (cause) {
@@ -50,5 +56,6 @@ export const resolveRibbonWidth = (
       cause,
     });
   }
+
   return { width, definition, params };
 };

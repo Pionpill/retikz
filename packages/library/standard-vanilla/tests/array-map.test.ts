@@ -14,10 +14,12 @@ describe('Array / Map provider assembly', () => {
       const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
       const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
       const result = compileToScene(normalized.ir, options);
+
       expect(normalized.ir.children[0]).toMatchObject({ dataExpand: ['array'] });
       expect(JSON.stringify(result.scene.primitives)).toContain('value');
     }
   });
+
   it('keeps Array content width in typed Vanilla inputs and compiled cell allocations', () => {
     const normalized = normalizeScene(
       scene({ children: [array({ items: [{ content: 'A', layout: { width: 'content' } }, 'longer'] })] }),
@@ -25,9 +27,11 @@ describe('Array / Map provider assembly', () => {
     );
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
     const result = compileToScene(normalized.ir, options);
+
     expect(normalized.ir.children[0]).toMatchObject({ items: [{ layout: { width: 'content' } }, 'longer'] });
     expect(result.scene.primitives.length).toBeGreaterThan(0);
   });
+
   it('compiles nested lists inside clipped map cells through the public adapter catalog', () => {
     const input = scene({
       children: [
@@ -49,6 +53,7 @@ describe('Array / Map provider assembly', () => {
     const normalized = normalizeScene(input, { adapters: StandardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
     const result = compileToScene(normalized.ir, options);
+
     expect(normalized.ir.children[0]).toMatchObject({
       layout: { key: { width: 60 }, value: { width: 100 } },
       style: { key: { fill: 'blue' }, value: { fillOpacity: 0.2 } },
@@ -68,6 +73,7 @@ it('assembles both data definitions and clipping from either root adapter', () =
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
     const result = compileToScene(normalized.ir, options);
+
     expect(result.scene.primitives.length).toBeGreaterThan(0);
     expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
     expect(normalized.ir.children[0]).toHaveProperty('data');
@@ -87,6 +93,7 @@ it('骨架与空单元格通过公开 adapter 装配裁切依赖并保留输入'
       normalized.ir,
       resolveCoreProviderDependencies({ contributions: normalized.contributions }),
     );
+
     expect(normalized.ir.children[0]).toMatchObject(child.props);
     expect(
       result.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds.width,

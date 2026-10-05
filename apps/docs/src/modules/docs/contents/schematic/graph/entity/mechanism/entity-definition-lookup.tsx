@@ -14,6 +14,7 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
   const { lang = 'zh' } = props;
   const t = entityDefinitionLookupI18n[lang];
   const label = (text: string) => ({ text, opacity: 0.8, font: { size: 12 } });
+
   return (
     <Layout style={{ height: 'auto' }}>
       <Node

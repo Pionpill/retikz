@@ -28,6 +28,7 @@ describe('TeX extensions 配置示例', () => {
   it('中英文保留相同的可操作控件', () => {
     const enContract = createPreviewControlContract('en');
     const enControls = enContract.controls;
+
     expect(fieldContract(enControls)).toEqual(fieldContract(zhControls));
     expect(enControls.sections).toHaveLength(1);
     expect(enContract.canonicalValues).toEqual(zhContract.canonicalValues);

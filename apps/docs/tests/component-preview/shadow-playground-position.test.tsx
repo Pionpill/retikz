@@ -55,7 +55,9 @@ const nodeBoundsOf = (markup: string) => {
 };
 
 const VIEW_BOX = { x: -140, y: -115, width: 280, height: 230 } as const;
+
 const BLUR = 40;
+
 const OFFSET_CORNERS = [
   [-20, -20],
   [-20, 30],

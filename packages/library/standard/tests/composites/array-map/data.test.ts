@@ -10,6 +10,7 @@ const compile = (child: IRChild) =>
     { type: 'scene', version: 1, children: [child] },
     { composites: [ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
   );
+
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
 
@@ -23,6 +24,7 @@ describe('JSON data presentation', () => {
     };
     const before = JSON.stringify(source);
     const result = compile(source);
+
     expect(
       flat(result.scene.primitives)
         .filter(node => node.type === 'text')
@@ -38,12 +40,14 @@ describe('JSON data presentation', () => {
       data: { record: { a: 1 }, values: [{ b: 2 }] },
       dataExpand: ['array'],
     });
+
     expect(
       flat(result.scene.primitives)
         .filter(node => node.type === 'text')
         .flatMap(node => node.lines.map(line => line.text)),
     ).toEqual(['record', '{"a":1}', 'values', '{"b":2}']);
   });
+
   it.each([
     { dataExpand: true, texts: ['a', '1', '2', 'b', '3'] },
     { dataExpand: false, texts: ['{"a":[1]}', '[2,{"b":3}]'] },
@@ -64,6 +68,7 @@ describe('JSON data presentation', () => {
       };
       const before = JSON.stringify(source);
       const result = compile(source);
+
       expect(
         flat(result.scene.primitives)
           .filter(node => node.type === 'text')
@@ -74,6 +79,7 @@ describe('JSON data presentation', () => {
       );
       expect(JSON.stringify(source)).toBe(before);
     }
+
     const result = compile({
       namespace: 'standard',
       type: 'map',
@@ -83,6 +89,7 @@ describe('JSON data presentation', () => {
     const rendered = flat(result.scene.primitives)
       .filter(node => node.type === 'text')
       .flatMap(node => node.lines.map(line => line.text));
+
     expect(rendered.filter(text => text !== 'first' && text !== 'second')).toEqual(texts);
     expect(rendered.filter(text => text === 'first' || text === 'second')).toEqual(['first', 'second']);
   });
@@ -90,11 +97,14 @@ describe('JSON data presentation', () => {
   it('treats component choices as a set and leaves empty structures as text', () => {
     const source = { namespace: 'standard', type: 'array', data: [{ a: [1] }, [2], {}, []] };
     const expected = compile(source).scene;
+
     for (const dataExpand of [true, ['map', 'array'], ['array', 'map', 'array']]) {
       expect(compile({ ...source, dataExpand }).scene).toEqual(expected);
     }
+
     for (const dataExpand of [true, false, [], ['map'], ['array']]) {
       const result = compile({ ...source, data: [{}, [], '', null, false, 0], dataExpand });
+
       expect(
         flat(result.scene.primitives)
           .filter(node => node.type === 'text')
@@ -113,6 +123,7 @@ describe('JSON data presentation', () => {
       values: ['', '', 0, null],
     };
     const parsed = MapSchema.parse(JSON.parse(JSON.stringify({ namespace: 'standard', type: 'map', data })));
+
     expect(parsed.data).toEqual(data);
     expect(parsed).not.toHaveProperty('entries');
     expect(ArraySchema.parse({ namespace: 'standard', type: 'array', data: ['', '', null] }).data).toEqual([
@@ -120,6 +131,7 @@ describe('JSON data presentation', () => {
       '',
       null,
     ]);
+
     for (const fields of [
       {},
       { data: {}, entries: [] },
@@ -129,10 +141,12 @@ describe('JSON data presentation', () => {
       { data: 0 },
     ])
       expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', ...fields }).success).toBe(false);
+
     for (const fields of [{}, { data: [], items: [] }, { data: {} }, { data: null }, { data: '' }])
       expect(ArraySchema.safeParse({ namespace: 'standard', type: 'array', ...fields }).success).toBe(false);
     const sparse: Array<unknown> = [];
     sparse.length = 2;
+
     for (const value of [undefined, Infinity, NaN, () => 1, new Date(), new Map(), new Set(), sparse])
       expect(ArraySchema.safeParse({ namespace: 'standard', type: 'array', data: [value] }).success).toBe(false);
   });
@@ -142,6 +156,7 @@ describe('JSON data presentation', () => {
     const source = { namespace: 'standard', type: 'array', data };
     const before = JSON.stringify(source);
     const result = compile(source);
+
     expect(
       flat(result.scene.primitives)
         .filter(node => node.type === 'text')
@@ -182,6 +197,7 @@ describe('JSON data presentation', () => {
         },
       ],
     });
+
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
     expect(actual.scene.resources).toEqual(expected.scene.resources);
     expect(actual.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
@@ -202,6 +218,7 @@ describe('JSON data presentation', () => {
         { content: { namespace: 'standard', type: 'array', layout: { width: 'content' }, data: ['A', 'longer'] } },
       ],
     });
+
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
   });
 
@@ -238,6 +255,7 @@ describe('JSON data presentation', () => {
         },
       ],
     });
+
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
   });
 
@@ -272,6 +290,7 @@ describe('JSON data presentation', () => {
         },
       ],
     });
+
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
   });
 
@@ -289,6 +308,7 @@ describe('JSON data presentation', () => {
       layout: { width: 'content' },
       items: [{ content: { ...nested, layout: { width: 'auto' } } }],
     });
+
     expect(authored.scene.primitives).toEqual(authoredWithAuto.scene.primitives);
 
     const fixed = compile({ namespace: 'standard', type: 'array', layout: { width: 180 }, data: [['A', 'longer']] });
@@ -298,6 +318,7 @@ describe('JSON data presentation', () => {
       layout: { width: 180 },
       items: [{ content: { ...nested, layout: { width: 'auto' } } }],
     });
+
     expect(fixed.scene.primitives).toEqual(fixedWithAuto.scene.primitives);
   });
 

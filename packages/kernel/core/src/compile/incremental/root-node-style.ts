@@ -22,7 +22,10 @@ import type { CoreComputationOptions } from './public';
 import { createFullSceneRuntimeSnapshot, freezeComputationOutput } from './snapshot';
 import type { CoreComputationArtifactInput, CoreComputationRead } from './types';
 
-/** 单个 root Node 样式更新产生的 private incremental candidate */
+/**
+ * 单个 root Node 样式更新产生的 private incremental candidate
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreRootNodeStyleCandidate<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 交给 Runtime capture 的完整 candidate artifact */
   artifact: CoreComputationArtifactInput<TComposites>;
@@ -43,12 +46,14 @@ const isFillOnlyUpdate = (previous: Readonly<IRNode>, next: Readonly<IRNode>): b
   const previousSolidFill = previous.style?.fill === undefined || typeof previous.style.fill === 'string';
   const nextSolidFill = next.style?.fill === undefined || typeof next.style.fill === 'string';
   if (!previousSolidFill || !nextSolidFill || previous.style?.fill === next.style?.fill) return false;
+
   const { style: previousStyle, ...previousRest } = previous;
   const { fill: previousFill, ...previousVisual } = previousStyle ?? {};
   const { style: nextStyle, ...nextRest } = next;
   const { fill: nextFill, ...nextVisual } = nextStyle ?? {};
   void previousFill;
   void nextFill;
+
   return jsonStructuralEquals(previousRest, nextRest) && jsonStructuralEquals(previousVisual, nextVisual);
 };
 
@@ -59,6 +64,7 @@ const createPrimitiveSubtree = (
   topology: ReadonlyArray<SceneRuntimeNode>,
 ): SceneRuntimeSubtree | undefined => {
   if (rootTopology.primitivePath.length !== 1) return undefined;
+
   const rootOrder = rootTopology.primitivePath[0];
   const relativeTopology = topology
     .filter(node => node.primitivePath[0] === rootOrder)
@@ -79,6 +85,7 @@ const createPrimitiveSubtree = (
   ) {
     return undefined;
   }
+
   return Object.freeze({
     root: rootTopology.identity,
     primitive,
@@ -89,6 +96,7 @@ const createPrimitiveSubtree = (
 /**
  * 尝试复用 committed root Node contribution，只重编一个 fill string 变化的稳定 Node
  * @description 任何引用、资源、artifact、diagnostic、结构或多 owner 变化都会返回 undefined 交由 full fallback
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
 export const tryCompileRootNodeStyleUpdate = <
   const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly [],
@@ -101,6 +109,7 @@ export const tryCompileRootNodeStyleUpdate = <
   candidateRevision: RuntimeRevision,
 ): CoreRootNodeStyleCandidate<TComposites> | undefined => {
   if (options.shapes !== undefined) return undefined;
+
   const { children: previousChildren, ...previousRoot } = previous.state.source;
   const { children: nextChildren, ...nextRoot } = nextSource;
   if (!jsonStructuralEquals(previousRoot, nextRoot) || previousChildren.length !== nextChildren.length)
@@ -115,6 +124,7 @@ export const tryCompileRootNodeStyleUpdate = <
 
   const seenIds = new Set<string>();
   let changedIndex = -1;
+
   for (let index = 0; index < nextChildren.length; index += 1) {
     const previousChild = previousChildren[index];
     const nextChild = nextChildren[index];
@@ -128,20 +138,26 @@ export const tryCompileRootNodeStyleUpdate = <
     ) {
       return undefined;
     }
+
     const previousId = stableRootNodeId(previousChild);
     const nextId = stableRootNodeId(nextChild);
     if (previousId === undefined || nextId !== previousId || seenIds.has(nextId)) return undefined;
+
     seenIds.add(nextId);
     if (jsonStructuralEquals(previousChild, nextChild)) continue;
     if (changedIndex >= 0 || !isFillOnlyUpdate(previousChild, nextChild)) {
       return undefined;
     }
+
     changedIndex = index;
   }
+
   if (changedIndex < 0) return undefined;
+
   const changedNode = nextChildren[changedIndex];
   const changedId = stableRootNodeId(changedNode);
   if (changedId === undefined) return undefined;
+
   let changedVisited = 0;
   const counter: RuntimeTraceReporter<'@retikz/core'> = Object.freeze({
     owner: '@retikz/core' as const,
@@ -166,6 +182,7 @@ export const tryCompileRootNodeStyleUpdate = <
   ) {
     return undefined;
   }
+
   freezeComputationOutput(isolated.result);
   const isolatedSnapshot = createFullSceneRuntimeSnapshot(
     isolated.result.scene,
@@ -187,10 +204,12 @@ export const tryCompileRootNodeStyleUpdate = <
     isolatedRootTopology.map(topology => [JSON.stringify(topology.identity.path), topology] as const),
   );
   const isolatedPrimitiveByIdentity = new Map<string, RuntimeScenePrimitive>();
+
   for (const topology of isolatedRootTopology) {
     const primitive = isolatedSnapshot.scene.primitives[topology.order];
     isolatedPrimitiveByIdentity.set(JSON.stringify(topology.identity.path), primitive);
   }
+
   if (
     previousRootTopology.some(topology => !isolatedByIdentity.has(JSON.stringify(topology.identity.path))) ||
     isolatedPrimitiveByIdentity.size !== previousRootTopology.length
@@ -200,18 +219,23 @@ export const tryCompileRootNodeStyleUpdate = <
 
   const nextPrimitives = [...previous.snapshot.scene.primitives];
   const operations: Array<ScenePatchOperation> = [];
+
   for (const previousTopology of previousRootTopology) {
     const identityKey = JSON.stringify(previousTopology.identity.path);
     const nextPrimitive = isolatedPrimitiveByIdentity.get(identityKey);
     const nextTopology = isolatedByIdentity.get(identityKey);
     const previousPrimitive = previous.snapshot.scene.primitives[previousTopology.order];
     if (nextPrimitive === undefined || nextTopology === undefined) return undefined;
+
     nextPrimitives[previousTopology.order] = nextPrimitive;
     if (jsonStructuralEquals(previousPrimitive, nextPrimitive)) continue;
+
     const subtree = createPrimitiveSubtree(nextPrimitive, nextTopology, isolatedSnapshot.topology);
     if (subtree === undefined) return undefined;
+
     operations.push(Object.freeze({ kind: 'update', identity: previousTopology.identity, subtree }));
   }
+
   if (operations.length === 0) return undefined;
 
   const runtimePrimitives = freezeComputationOutput(nextPrimitives);
@@ -240,6 +264,7 @@ export const tryCompileRootNodeStyleUpdate = <
     snapshot,
     patch,
   });
+
   return Object.freeze({
     artifact: Object.freeze({
       publicRead,

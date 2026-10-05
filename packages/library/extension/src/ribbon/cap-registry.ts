@@ -8,6 +8,7 @@ export const resolveRibbonCapRegistry = (
   custom: ReadonlyArray<RibbonCapDefinition> = [],
 ): ReadonlyMap<string, RibbonCapDefinition> => {
   const registry = new Map<string, RibbonCapDefinition>();
+
   for (const definition of [...builtins, ...custom]) {
     defineRibbonCap(definition);
     if (registry.has(definition.name))
@@ -16,7 +17,9 @@ export const resolveRibbonCapRegistry = (
         message: `Ribbon cap '${definition.name}' is defined more than once.`,
         details: { name: definition.name },
       });
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };

@@ -57,9 +57,12 @@ describe('Ribbon discriminated width inputs', () => {
     { kind: 'profile', name: 'bulge', params: { base: 12, peak: 24 } },
   ])('accepts $kind and retains its discriminator through JSON', width => {
     const result = RibbonWidthSchema.parse(JSON.parse(JSON.stringify(width)));
+
     expect(result.kind).toBe(width.kind);
+
     if (result.kind === 'taper' || result.kind === 'stops') expect(result.interpolation).toBe('linear');
   });
+
   it.each([
     12,
     {},
@@ -70,8 +73,10 @@ describe('Ribbon discriminated width inputs', () => {
   ])('rejects missing or mixed width branches: %j', width => {
     expect(RibbonWidthSchema.safeParse(width).success).toBe(false);
   });
+
   it('materializes centerline defaults and rejects removed endpoint width fields', () => {
     const width = { kind: 'fixed', value: 12 };
+
     expect(RibbonPathOptionsSchema.parse({ width })).toMatchObject({
       mode: 'centerline',
       align: 'center',
@@ -81,18 +86,24 @@ describe('Ribbon discriminated width inputs', () => {
     expect(RibbonPathOptionsSchema.safeParse({ width, interpolation: 'smooth' }).success).toBe(false);
     expect(RibbonPathOptionsSchema.safeParse({}).success).toBe(false);
   });
+
   it('materializes automatic direction and retains explicit directions through JSON', () => {
     const width = { kind: 'fixed', value: 12 };
+
     expect(RibbonPathOptionsSchema.parse({ width })).toMatchObject({
       start: { direction: 'auto', cap: { name: 'butt' } },
       end: { direction: 'auto', cap: { name: 'butt' } },
     });
+
     for (const direction of [90, [0, 1], { angle: 90, radius: 1 }]) {
       const input = { width, start: { direction }, end: { direction } };
+
       expect(RibbonPathOptionsSchema.parse(JSON.parse(JSON.stringify(input)))).toMatchObject(input);
     }
+
     expect(RibbonPathOptionsSchema.safeParse({ width, start: { direction: [0, 0] } }).success).toBe(false);
   });
+
   it('requires boundary paths and rejects centerline-only fields in boundary mode', () => {
     const upper = [
       { type: 'step', kind: 'move', to: [0, 0] },
@@ -102,6 +113,7 @@ describe('Ribbon discriminated width inputs', () => {
       { type: 'step', kind: 'move', to: [0, 5] },
       { type: 'step', kind: 'line', to: [10, 5] },
     ];
+
     expect(RibbonPathOptionsSchema.safeParse({ mode: 'boundary', upper, lower }).success).toBe(true);
     expect(RibbonPathOptionsSchema.safeParse({ mode: 'boundary', upper }).success).toBe(false);
     expect(
@@ -118,6 +130,7 @@ describe('Ribbon source subject branches', () => {
       { type: 'step', kind: 'line', to: [10, 0] },
     ];
     const base = { type: 'path', kind: 'ribbon' };
+
     expect(RibbonPathSchema.safeParse({ ...base, kindOptions: { width: { kind: 'fixed', value: 4 } } }).success).toBe(
       false,
     );
@@ -133,8 +146,10 @@ describe('Ribbon source subject branches', () => {
       }).success,
     ).toBe(false);
   });
+
   it('projects each width branch with its own discriminator and required fields', () => {
     const projected = toJSONSchema(RibbonWidthSchema, { io: 'input' });
+
     expect(projected).toMatchObject({
       oneOf: [
         { properties: { kind: { const: 'fixed' } }, required: ['kind', 'value'], additionalProperties: false },

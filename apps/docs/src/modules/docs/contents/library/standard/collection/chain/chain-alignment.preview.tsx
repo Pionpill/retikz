@@ -1,5 +1,6 @@
 import { Layout } from '@retikz/react';
 import { Chain } from '@retikz/standard-react/collection';
+
 /** 本节交互参数 */
 export type ChainPreviewValues = {
   direction: 'right' | 'down';
@@ -7,6 +8,7 @@ export type ChainPreviewValues = {
   spacing: 'compact' | 'steps';
   justify: 'start' | 'center' | 'end';
 };
+
 /** 由公开参数绘制链 */
 export const renderChainPreview = (values: ChainPreviewValues) => (
   <Layout>

@@ -173,4 +173,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     ],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

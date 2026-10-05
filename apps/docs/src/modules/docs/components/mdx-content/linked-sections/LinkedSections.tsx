@@ -15,6 +15,7 @@ export type LinkedSectionsProps = {
 };
 
 const linkedSectionMinWidth = 250;
+
 const linkedSectionGap = 16;
 
 /** 以统一的响应式网格呈现文档章节入口。 */
@@ -40,6 +41,7 @@ export const LinkedSections: FC<LinkedSectionsProps> = props => {
       );
       setMaxColumns(currentMaxColumns => (currentMaxColumns === nextMaxColumns ? currentMaxColumns : nextMaxColumns));
     };
+
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) updateMaxColumns(entry.contentRect.width);
     });

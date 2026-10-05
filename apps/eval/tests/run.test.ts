@@ -11,12 +11,14 @@ const corpus: Array<CorpusPrompt> = [
 ];
 
 const goodIr = JSON.stringify({ version: 1, type: 'scene', children: [] });
+
 const badIr = JSON.stringify({ version: 2, type: 'scene', children: [] });
 
 describe('runEval', () => {
   it('每条 prompt × 每个 client × K 产出一条记录', async () => {
     const clients = [fakeClient('fake:good', [goodIr]), fakeClient('fake:bad', [badIr])];
     const records = await runEval({ clients, corpus, schemaJson: '{}', k: 2 });
+
     expect(records).toHaveLength(2 * 2 * 2); // prompt × client × K
   });
 
@@ -24,6 +26,7 @@ describe('runEval', () => {
     const clients = [fakeClient('fake:good', [goodIr])];
     const records = await runEval({ clients, corpus, schemaJson: '{}', k: 1 });
     const r = records[0];
+
     expect(r).toMatchObject({
       promptId: 'c1',
       category: 'core',
@@ -38,6 +41,7 @@ describe('runEval', () => {
   it('模型返回非 JSON：记为 zod 失败、stage=extract', async () => {
     const clients = [fakeClient('fake:prose', ['抱歉我无法生成。'])];
     const records = await runEval({ clients, corpus, schemaJson: '{}', k: 1 });
+
     expect(records[0].zodOk).toBe(false);
     expect(records[0].compileOk).toBe(false);
     expect(records[0].failure?.stage).toBe('extract');
@@ -49,6 +53,7 @@ describe('runEval', () => {
       generate: () => Promise.reject(new Error('401 unauthorized')),
     };
     const records = await runEval({ clients: [boom], corpus, schemaJson: '{}', k: 1 });
+
     expect(records).toHaveLength(corpus.length); // 每条 prompt 仍各出一条记录
     expect(records[0].zodOk).toBe(false);
     expect(records[0].compileOk).toBe(false);
@@ -82,6 +87,7 @@ describe('runEval L2', () => {
     const records = await runEval({ clients, corpus: l2Corpus, schemaJson: '{}', k: 1 });
     const p1 = records.find(r => r.promptId === 'p1');
     const p2 = records.find(r => r.promptId === 'p2');
+
     expect(p1?.l2).toEqual({ total: 2, passed: 1, results: expect.any(Array) });
     expect(p2?.l2).toBeNull();
   });
@@ -94,6 +100,7 @@ describe('runEval L2', () => {
       schemaJson: '{}',
       k: 1,
     });
+
     expect(records[0].l2).toBeNull();
   });
 });

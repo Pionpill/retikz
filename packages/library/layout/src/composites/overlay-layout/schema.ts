@@ -42,6 +42,7 @@ const OverlayPositionedPlacementSchema = strictObject({
   height: NonNegativeNumberSchema.optional().describe('Optional exact child slot height.'),
 }).describe('Positioned OverlayLayout placement.');
 
+/** 校验叠放子项的对齐或定位模式；缺省采用对齐模式 */
 export const OverlayPlacementSchema = discriminatedUnion('kind', [
   OverlayAlignedPlacementSchema,
   OverlayPositionedPlacementSchema,
@@ -49,6 +50,7 @@ export const OverlayPlacementSchema = discriminatedUnion('kind', [
   .default({ kind: OverlayPlacementKind.Aligned })
   .describe('Closed OverlayLayout placement union.');
 
+/** 校验 Overlay 子项的放置方式、偏移与尺寸参与策略 */
 export const OverlayLayoutItemSchema = LayoutItemBaseSchema.extend({
   kind: literal(LayoutItemKind.Overlay).describe('Discriminator for an item owned by OverlayLayout.'),
   placement: OverlayPlacementSchema.describe('Aligned or positioned item placement.'),
@@ -86,6 +88,7 @@ const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: Refi
         message: `Duplicate OverlayLayout item key '${item.key}'.`,
       });
     }
+
     if (item.key !== undefined) seen.add(item.key);
     const alignment = item.alignSelf ?? layout.alignItems;
     const isBaseline = alignment === LayoutAlignment.FirstBaseline || alignment === LayoutAlignment.LastBaseline;
@@ -96,6 +99,7 @@ const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: Refi
         message: 'Positioned OverlayLayout items require an explicit edge alignment when baseline would be effective.',
       });
     }
+
     if (item.placement.kind !== OverlayPlacementKind.Positioned && isBaseline && item.offset.y !== 0) {
       context.addIssue({
         code: 'custom',
@@ -106,6 +110,7 @@ const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: Refi
   });
 };
 
+/** 校验 Overlay 容器输入及叠放相关的跨字段约束 */
 export const OverlayLayoutSchema = OverlayLayoutBaseSchema.superRefine(refineOverlayLayout).describe(
   'Sparse JSON-safe Layout OverlayLayout composite.',
 );
@@ -150,9 +155,11 @@ const refineOverlayLayoutArtifact = (
         message: 'sourceIndex must be contiguous.',
       });
     }
+
     if (keys.has(item.key)) {
       context.addIssue({ code: 'custom', path: ['items', index, 'key'], message: `Duplicate item key '${item.key}'.` });
     }
+
     keys.add(item.key);
     if (item.placement === OverlayPlacementKind.Positioned) {
       if (item.position === undefined) {
@@ -179,6 +186,7 @@ const refineOverlayLayoutArtifact = (
       });
     }
   });
+
   const expected = [...artifact.items]
     .sort((first, second) => first.zIndex - second.zIndex || first.sourceIndex - second.sourceIndex)
     .map(item => item.key);
@@ -194,6 +202,7 @@ const refineOverlayLayoutArtifact = (
   }
 };
 
+/** 校验 Overlay 编译产物中子项、绘制顺序与布局观测结果的一致性 */
 export const OverlayLayoutArtifactSchema = OverlayLayoutArtifactBaseSchema.superRefine(
   refineOverlayLayoutArtifact,
 ).describe('Canonical JSON-safe OverlayLayout compile artifact payload.');

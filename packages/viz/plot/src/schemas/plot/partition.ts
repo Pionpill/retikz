@@ -2,6 +2,7 @@ import { TextBlockSchema } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { array, boolean, null as zodNull, number, strictObject, string, union } from 'zod';
 
+/** 校验分区顺序与分面身份使用的有限 JSON 标量 */
 export const PlotPartitionScalarSchema = union([string(), number(), boolean(), zodNull()]).describe(
   'Finite JSON scalar used by Plot partition ordering and facet panel identity',
 );
@@ -11,6 +12,7 @@ const PlotPartitionLabelOverrideSchema = strictObject({
   label: TextBlockSchema.describe('Display text block used for this partition value'),
 }).describe('Display label override for one partition value');
 
+/** 校验按字段划分数据的分区维度及其顺序、标签 */
 export const PlotPartitionDimensionSchema = strictObject({
   field: NonBlankStringSchema.describe('Data field path used to partition rows'),
   order: array(PlotPartitionScalarSchema)
@@ -21,6 +23,7 @@ export const PlotPartitionDimensionSchema = strictObject({
     .describe('Optional display labels for partition values; unmatched values fall back to String(value)'),
 }).describe('Plot data partition dimension');
 
+/** 校验一个或多个数据分区维度 */
 export const PlotPartitionDimensionsSchema = union([
   PlotPartitionDimensionSchema,
   array(PlotPartitionDimensionSchema).min(1),

@@ -21,6 +21,7 @@ describe('Table Legend descriptor schema', () => {
       domain: [0, 10],
       range: ['#fff', '#000'],
     });
+
     expect(JSON.parse(JSON.stringify([swatch, ramp]))).toEqual([swatch, ramp]);
     expect(() => TableLegendDescriptorSchema.parse({ ...swatch, placement: 'right' })).toThrow();
   });
@@ -35,6 +36,7 @@ describe('Table Legend descriptor schema', () => {
       range: ['green', 'orange', 'red'],
       edges: [10, 20],
     } as const;
+
     expect(TableLegendDescriptorSchema.parse(threshold)).toEqual(threshold);
     expect(() => TableLegendDescriptorSchema.parse({ ...threshold, range: ['green', 'red'] })).toThrow();
     expect(() => TableLegendDescriptorSchema.parse({ ...threshold, edges: [20, 10] })).toThrow();

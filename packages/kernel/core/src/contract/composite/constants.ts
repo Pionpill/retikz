@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 import type { LayoutProposal } from './types';
 
 /** 单轴布局提案的判别值 */
@@ -53,3 +55,18 @@ export const NaturalLayoutProposal = Object.freeze({
     mode: LayoutIntrinsicMode.Natural,
   }),
 }) satisfies LayoutProposal;
+
+/** 单轴 layout proposal 的判别值 */
+export type LayoutAxisProposalKind = ValueOf<typeof LayoutAxisProposalKind>;
+
+/** intrinsic contribution 查询模式 */
+export type LayoutIntrinsicMode = ValueOf<typeof LayoutIntrinsicMode>;
+
+/** alignment guide 所属维度的判别值 */
+export type LayoutAlignmentGuideDimension = ValueOf<typeof LayoutAlignmentGuideDimension>;
+
+/** Core 内置 alignment guide 的稳定名称 */
+export type LayoutAlignmentGuideName = ValueOf<typeof LayoutAlignmentGuideName>;
+
+/** child probe 的结果判别值 */
+export type LayoutChildProbeKind = ValueOf<typeof LayoutChildProbeKind>;

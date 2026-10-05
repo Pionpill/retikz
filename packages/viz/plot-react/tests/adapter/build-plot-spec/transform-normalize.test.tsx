@@ -19,10 +19,12 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
       </>,
       '__plot',
     );
+
     expect(spec.transform).toEqual([
       { operation: { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' } },
       { operation: { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' } },
     ]);
+
     // 只剩一条 stack（shortcut stack 被同签名去重），且 mark 确为 stacked interval（lower 会读 y0/y1）
     expect(
       (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack'),
@@ -43,10 +45,12 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
       '__plot',
     );
     const stacks = (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack');
+
     // 显式 stack(quarter/share/product) 去重了第一根柱的同签名 shortcut stack；第二根柱(month/revenue/region)的 shortcut stack 保留 → 共两条
     expect(stacks).toHaveLength(2);
     expect(stacks).toContainEqual({ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' });
     expect(stacks).toContainEqual({ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'region' });
+
     // 两根柱都为 stacked interval（bounds.y extent 读 y0/y1）
     expect(spec.marks.every(m => isBuiltinMark(m) && m.type === 'interval' && m.bounds?.y?.kind === 'extent')).toBe(
       true,
@@ -61,6 +65,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
       </>,
       '__plot',
     );
+
     expect(spec.transform).toEqual([{ operation: { kind: 'derive-interval', startFrom: 'start', endFrom: 'end' } }]);
   });
 
@@ -72,6 +77,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
       </>,
       '__plot',
     );
+
     expect(spec.transform).toEqual([
       { operation: { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } },
     ]);
@@ -85,6 +91,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
       </>,
       '__plot',
     );
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

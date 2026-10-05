@@ -31,11 +31,14 @@ const resolvePreviewRootElement = (
   depth = COMPONENT_EXPANSION_LIMIT,
 ): ReactElement<PreviewRootProps> | null => {
   if (!isValidElement(node)) return null;
+
   const element = node as ReactElement<FunctionComponentProps>;
   if (element.type === Layout || isEmbeddableMarked(element.type) || typeof element.type !== 'function' || depth <= 0) {
     return element as ReactElement<PreviewRootProps>;
   }
+
   const component = element.type as (props: FunctionComponentProps) => ReactNode;
+
   return resolvePreviewRootElement(component(element.props), depth - 1);
 };
 
@@ -64,11 +67,13 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
   if (rootElement?.type === Layout && props.ir === undefined) {
     childNode = wrapRootScope(props.children, props.rootScope ?? {});
   }
+
   const normalized =
     props.ir === undefined
       ? (() => {
           const input = createInputScene(childNode);
           const runtime = normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
+
           return {
             ...runtime,
             sourceIr: buildPreviewSourceIR(input.scene, runtime.ir, collectPreviewChartSources(childNode)),
@@ -88,13 +93,16 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
     ir = { ...ir, viewBox };
     sourceIr = { ...sourceIr, viewBox };
   }
+
   if (rootAnimations !== undefined) {
     ir = { ...ir, animations: rootAnimations };
     sourceIr = { ...sourceIr, animations: rootAnimations };
   }
+
   const hostDimensions =
     rootElement !== null && (isLayout || isEmbeddableRoot) ? previewHostDimensionsOf(rootElement.type, props) : {};
   const pathKinds = isLayout ? props.extensions?.pathKinds : undefined;
+
   return {
     ir,
     sourceIr,
@@ -107,7 +115,9 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
 const nodeHasComposite = (node: unknown): boolean => {
   if (typeof node !== 'object' || node === null) return false;
   if ('namespace' in node) return true;
+
   const children = (node as { children?: unknown }).children;
+
   return Array.isArray(children) && children.some(nodeHasComposite);
 };
 
@@ -116,8 +126,10 @@ export const irHasComposite = (ir: IRScene): boolean => ir.children.some(nodeHas
 
 const nodeHasAnimations = (node: unknown): boolean => {
   if (typeof node !== 'object' || node === null) return false;
+
   const record = node as { animations?: unknown; children?: unknown };
   if (Array.isArray(record.animations) && record.animations.length > 0) return true;
+
   return Array.isArray(record.children) && record.children.some(nodeHasAnimations);
 };
 

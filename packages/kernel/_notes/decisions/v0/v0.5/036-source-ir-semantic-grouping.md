@@ -120,7 +120,7 @@ type IRScope = {
   transforms?: Array<IRTransform>;
   placement?: IRScopePlacement;
   clip?: IRClip;
-  boundingShape?: ScopeBoundingShapeValue;
+  boundingShape?: ScopeBoundingShape;
   children: Array<IRChild>;
   meta?: JsonObject;
   animations?: Array<IRAnimationTrack>;

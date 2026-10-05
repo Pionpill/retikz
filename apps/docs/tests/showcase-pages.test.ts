@@ -23,27 +23,37 @@ import { vizSection } from '@/modules/docs/data';
 
 const scatterContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/index.${lang}.mdx`);
+
 const scatterExamplePath = (filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/${filename}`);
+
 const bubbleContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/index.${lang}.mdx`);
+
 const bubbleExamplePath = (filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/${filename}`);
+
 const regressionContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/regression/index.${lang}.mdx`);
+
 const regressionExamplePath = (filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/regression/${filename}`);
+
 const pointChartContentPath = (chart: string, lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${chart}/index.${lang}.mdx`);
+
 const pointChartExamplePath = (chart: string, filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${chart}/${filename}`);
+
 const chartModelContentPath = (page: 'index' | 'general-structure' | 'core-structure', lang: 'zh' | 'en') =>
   resolve(
     process.cwd(),
     `src/modules/docs/contents/viz/chart/model/${page === 'index' ? '' : `${page}/`}index.${lang}.mdx`,
   );
+
 const pointContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/plot/mark/point/index.${lang}.mdx`);
+
 const compositeConceptPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/kernel/components/design/composite/index.${lang}.mdx`);
 
@@ -144,6 +154,7 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
+
     expect(zh).toContain("from '@retikz/chart-react/point'");
     expect(en).toContain("from '@retikz/chart-react/point'");
     expect(zh).toContain('`ScatterChart`');
@@ -197,12 +208,14 @@ describe('collectShowcasePages', () => {
 
   it.each(['zh', 'en'] as const)('Scatter %s 保留类型语义并链接共享模型', async lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
+
     expect(source).not.toContain('@include viz/chart/shared-api');
     expect(source).toContain('/viz/chart/model/general-structure');
     expect(source).toContain('/viz/chart/model/core-structure');
     expect(source).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
 
     const compiled = String(await compile(source, compileOptions));
+
     expect(compiled).not.toContain('ShowcaseGallery');
     expect(compiled).toContain('ComponentPreview');
     expect(compiled).toContain('DocTabs');
@@ -211,11 +224,13 @@ describe('collectShowcasePages', () => {
 
   it.each(['zh', 'en'] as const)('Bubble %s 保留必需尺寸字段语义并保持 MDX 可编译', async lang => {
     const source = readFileSync(bubbleContentPath(lang), 'utf8');
+
     expect(source).toContain('`BubbleChart`');
     expect(source).toContain('`BubbleEncodings.size`');
     expect(source).toContain('/viz/chart/points/scatter');
 
     const compiled = String(await compile(source, compileOptions));
+
     expect(compiled).not.toContain('ShowcaseGallery');
     expect(compiled).toContain('ComponentPreview');
     expect(compiled).toContain('DocTabs');
@@ -238,13 +253,16 @@ describe('collectShowcasePages', () => {
     ]) {
       expect(source, publicName).toContain(publicName);
     }
+
     for (const method of ['linear', 'quadratic', 'polynomial', 'logarithmic', 'exponential', 'power']) {
       expect(source, method).toContain(`\`${method}\``);
     }
+
     expect(source).toContain('/viz/plot/reference/transform');
     expect(source).toContain('/viz/plot/mark/path');
 
     const compiled = String(await compile(source, compileOptions));
+
     expect(compiled).not.toContain('ShowcaseGallery');
     expect(compiled).toContain('ComponentPreview');
     expect(compiled).toContain('DocTabs');
@@ -254,7 +272,9 @@ describe('collectShowcasePages', () => {
   it.each(['zh', 'en'] as const)('Scatter %s 提供类型示例，总纲承载公共原理图', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
     const previews = [...source.matchAll(/<ComponentPreview[\s\S]*?\/>/g)].map(match => match[0]);
+
     expect(previews).toHaveLength(6);
+
     for (const [index, name] of [
       'scatter-minimal',
       'scatter-fertility-work',
@@ -265,17 +285,22 @@ describe('collectShowcasePages', () => {
     ].entries()) {
       expect(previews[index]).toContain(name);
     }
+
     const groupSource = readFileSync(
       resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/index.${lang}.mdx`),
       'utf8',
     );
+
     for (const name of ['point-padding-figure', 'point-auto-padding']) {
       expect(groupSource).toContain(`files="${name}"`);
       expect(existsSync(resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${name}.tsx`))).toBe(true);
     }
+
     expect(previews[0]).not.toContain('controls=');
     expect(previews[0]).toContain('hideCode');
+
     const headings = [...source.matchAll(/^## (.+)$/gm)].map(match => match[1]);
+
     expect(headings).toEqual(
       lang === 'zh'
         ? ['接入方式', '基础用法', '扩展用法', '错误与限制', '实现原理', 'API 参考', 'Schema 参考', '延伸阅读']
@@ -359,6 +384,7 @@ describe('collectShowcasePages', () => {
         const demo = readRequiredFile(pointChartExamplePath(example.chart, `${example.id}.${lang}.demo.tsx`));
         const previewPath = pointChartExamplePath(example.chart, `${example.id}.preview.tsx`);
         const visibleSource = existsSync(previewPath) ? readRequiredFile(previewPath) : demo;
+
         expect(visibleSource).toContain(`<${example.root}`);
         expect(visibleSource).toContain('rows={');
         expect(visibleSource).not.toContain('presentation={{');
@@ -368,6 +394,7 @@ describe('collectShowcasePages', () => {
         expect(demo).not.toContain('previewControls');
         expect(visibleSource).not.toContain('Encodings ');
         expect(visibleSource).not.toContain('Properties ');
+
         if (existsSync(previewPath))
           expect(readFileSync(pointChartContentPath(example.chart, lang), 'utf8')).toContain(
             `defaultSourceFile="${example.id}.preview.tsx"`,
@@ -381,8 +408,11 @@ describe('collectShowcasePages', () => {
     async example => {
       for (const lang of ['zh', 'en'] as const) {
         const source = readFileSync(pointChartContentPath(example.chart, lang), 'utf8');
+
         await expect(compile(source, compileOptions)).resolves.toBeDefined();
+
         const previews = [...source.matchAll(/<ComponentPreview[\s\S]*?\/>/g)].map(match => match[0]);
+
         expect(previews[0]).toContain(example.id);
         expect(previews[0]).not.toContain('controls=');
         expect(previews[0]).toContain('hideCode');
@@ -397,6 +427,7 @@ describe('collectShowcasePages', () => {
 
   it('空间 Scatter 提供数据、双语 demo 与双语 controls', () => {
     const id = 'scatter-world-cup-shots';
+
     for (const filename of [
       `${id}.data.ts`,
       `${id}.controls.ts`,

@@ -7,6 +7,7 @@ import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
+
 const schemaNames = [
   'BlockSchema',
   'BlockHeaderSchema',
@@ -20,6 +21,7 @@ const schemaNames = [
   'CodeMethodSchema',
   'CodeLogicSchema',
 ];
+
 /** Block 与代码实体的公开入口切片 */
 export const blockApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   {
@@ -144,11 +146,14 @@ export const blockApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   ),
   translate: translateBlockApiReference,
 }));
+
 /** 从公开声明生成 Block 双语参考 */
 export const writeBlockApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const satisfies ReadonlyArray<ApiReferenceLanguage>) {
     const sections: Array<string> = [];
+
     for (const config of blockApiConfigs) sections.push(await createApiReferenceMdx(config, lang));
     writeFileSync(
       path.resolve(outputDirectory, `generated.${lang}.mdx`),

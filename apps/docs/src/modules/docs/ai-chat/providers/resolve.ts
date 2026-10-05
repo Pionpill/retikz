@@ -38,12 +38,15 @@ export const resolveProvider = (
       chat: getProvider(providerId).chat,
     };
   }
+
   const customProvider = (ctx.customProviders as Record<string, CustomProvider | undefined>)[providerId];
   if (!customProvider) return null;
+
   const chat =
     customProvider.apiFormat === 'anthropic'
       ? anthropicProvider.chat
       : createOpenAiCompatProvider({ id: 'openai', baseUrl: customProvider.baseUrl }).chat;
+
   return {
     apiKey: customProvider.apiKey,
     baseUrl: customProvider.baseUrl,

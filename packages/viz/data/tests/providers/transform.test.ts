@@ -52,7 +52,9 @@ describe('data transform runtime', () => {
     const sorted = applyTransforms([{ m: 3 }, { m: 1 }, { m: 2 }], [{ kind: 'sort', field: 'm' }]);
 
     expect(sorted.map(row => row.m)).toEqual([1, 2, 3]);
+
     const stacked = applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
+
     expect(stacked.map(row => [row.y0, row.y1])).toEqual([
       [0, 3],
       [3, 8],

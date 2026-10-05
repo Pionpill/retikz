@@ -41,7 +41,7 @@ type IRSurface = Readonly<{
   type: 'surface';
   child: IRChild;
   padding: Readonly<BoundsInsets>;
-  overflow: LayoutOverflowValue;
+  overflow: LayoutOverflow;
   background?: Readonly<{
     fill: IRPaintValue;
     fillOpacity?: number;

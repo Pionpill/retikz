@@ -23,11 +23,13 @@ const uniqueArray = <T extends ZodType>(item: T, message: string) =>
 
 const ComparableScalarSchema = union([string(), number()]);
 
+/** 校验对原始 JSON 标量进行无类型转换的严格相等匹配 */
 export const TableValueEqualPredicateSchema = strictObject({
   kind: literal(TableValuePredicateKind.Equal).describe('Discriminator for strict scalar equality.'),
   value: ScalarValueSchema.describe('JSON scalar compared without coercion.'),
 }).describe('Strict equality predicate over one JSON scalar.');
 
+/** 校验对原始 JSON 标量进行严格集合成员匹配 */
 export const TableValueOneOfPredicateSchema = strictObject({
   kind: literal(TableValuePredicateKind.OneOf).describe('Discriminator for strict scalar membership.'),
   values: uniqueArray(ScalarValueSchema, 'duplicate scalar predicate value').describe(
@@ -35,12 +37,14 @@ export const TableValueOneOfPredicateSchema = strictObject({
   ),
 }).describe('Strict membership predicate over unique JSON scalars.');
 
+/** 校验对同类型字符串或数值进行有序比较的谓词 */
 export const TableValueComparePredicateSchema = strictObject({
   kind: literal(TableValuePredicateKind.Compare).describe('Discriminator for ordered scalar comparison.'),
   operator: zodEnum(TableValueCompareOperator).describe('Relational comparison operator.'),
   value: ComparableScalarSchema.describe('String or number operand compared only with a raw value of the same type.'),
 }).describe('Same-type relational predicate over a raw string or number.');
 
+/** 校验上下界同类型且有序的区间谓词与边界包含选项 */
 export const TableValueBetweenPredicateSchema = strictObject({
   kind: literal(TableValuePredicateKind.Between).describe('Discriminator for an ordered inclusive range.'),
   min: ComparableScalarSchema.describe('Lower string or number bound.'),
@@ -53,17 +57,20 @@ export const TableValueBetweenPredicateSchema = strictObject({
       context.addIssue({ code: 'custom', path: ['max'], message: 'max must have the same scalar type as min' });
       return;
     }
+
     if (predicate.min > predicate.max) {
       context.addIssue({ code: 'custom', path: ['max'], message: 'max must be greater than or equal to min' });
     }
   })
   .describe('Same-type ordered range predicate over a raw string or number.');
 
+/** 校验选中 null 或所有非 null 标量的谓词 */
 export const TableValueNullPredicateSchema = strictObject({
   kind: literal(TableValuePredicateKind.Null).describe('Discriminator for null or non-null selection.'),
   isNull: boolean().optional().describe('Whether to select null. Omitted fields use true.'),
 }).describe('Predicate selecting null or every non-null JSON scalar.');
 
+/** 校验针对规范单元格原始标量值的闭合谓词集合 */
 export const TableValuePredicateSchema = discriminatedUnion('kind', [
   TableValueEqualPredicateSchema,
   TableValueOneOfPredicateSchema,
@@ -127,6 +134,7 @@ const SELECTOR_CONDITION_FIELDS = [
   'value',
 ] as const;
 
+/** 校验基于单元格元数据与原始值的扁平选择条件 */
 export const TableCellSelectorSchema = strictObject(selectorShape)
   .superRefine((selector, context) => {
     const hasCondition = SELECTOR_CONDITION_FIELDS.some(field => selector[field] !== undefined);
@@ -145,6 +153,7 @@ export const TableCellSelectorSchema = strictObject(selectorShape)
   })
   .describe('Flat JSON-safe selector over canonical Table Cell metadata and raw values.');
 
+/** 校验匹配单元格后按顺序覆盖格式化、呈现或外观的规则 */
 export const TableCellRuleSchema = strictObject({
   selector: TableCellSelectorSchema.describe('Canonical Table Cell selection conditions.'),
   formatter: TableFormatterRefSchema.optional().describe('Formatter override for matching value Cells.'),

@@ -28,7 +28,9 @@ const intensityChannel = defineNodeChannel<number>({
   resolve: () => mark => {
     const binding = extensionChannelsOf(mark).intensity;
     if (binding?.field === undefined) return undefined;
+
     const field = binding.field;
+
     return {
       resolver: row => {
         const value = Number(row[field]);

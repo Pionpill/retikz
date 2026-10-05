@@ -20,6 +20,7 @@ export const resolveMap = (source: IRMap): CanonicalMap => {
   const { key: keyStyle, value: valueStyle, ...style } = source.style ?? {};
   const { key: keyLayout, value: valueLayout, ...layout } = source.layout ?? {};
   const gap = layout.gap ?? MapLayoutSchema.shape.gap.parse(undefined);
+
   return {
     ...input,
     entries: cells.map(entry => ({

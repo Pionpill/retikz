@@ -82,6 +82,7 @@ const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.omit
   ),
 });
 
+/** 校验可在 Flow 作用域继承的常规路由意图 */
 export const FlowScopeRoutingSchema = discriminatedUnion('kind', [
   strictObject({
     kind: literal(FlowRoutingKind.Bend).describe(
@@ -137,6 +138,7 @@ export const FlowSmoothRoutingSchema = strictObject({
   'Explicit through-point curve. Prefer automatic bend, then quadratic, then cubic routing for avoidance; use smooth when intermediate passage positions are known. Smoothing may leave the waypoint corridor; inspect the rendered curve and labels.',
 );
 
+/** 校验关系路由，包含常规路由、贝塞尔控制及显式穿点曲线 */
 export const FlowRoutingSchema = union([
   ...FlowScopeRoutingSchema.options,
   ...FlowBezierRoutingSchema.options,
@@ -149,6 +151,7 @@ const FlowLayoutIntentBaseSchema = strictObject({
   rankGap: NonNegativeNumberSchema.optional().describe('Minimum gap between adjacent ranks.'),
 });
 
+/** 校验至少包含一项覆盖值的 Flow 方向与布局间距 */
 export const FlowLayoutIntentSchema = FlowLayoutIntentBaseSchema.refine(
   value => Object.keys(value).length > 0,
   requireOverrides('Flow layout intent'),
@@ -181,35 +184,42 @@ const FlowEntityLayoutFieldsSchema = EntitySchema.shape.layout.unwrap().pick({
   margin: true,
 });
 
+/** 校验至少包含一项 Graph 兼容视觉覆盖值的实体样式 */
 export const FlowEntityStyleSchema = FlowEntityStyleFieldsSchema.refine(
   value => Object.keys(value).length > 0,
   requireOverrides('Flow Entity style'),
 ).describe('Non-empty Graph-compatible visual overrides for one Flow Entity.');
 
+/** 校验至少包含一项尺寸、避碰外边距或文本布局覆盖值的实体布局 */
 export const FlowEntityLayoutSchema = FlowEntityLayoutFieldsSchema.refine(
   value => Object.keys(value).length > 0,
   requireOverrides('Flow Entity layout'),
 ).describe('Non-empty size, collision-margin, and text-layout overrides for one Flow Entity.');
 
+/** 校验至少包含一项 Graph 兼容路径样式覆盖值的关系样式 */
 export const FlowRelationStyleSchema = strictObject({
   ...RelationSchema.shape.style.unwrap().shape,
 })
   .refine(value => Object.keys(value).length > 0, requireOverrides('Flow Relation style'))
   .describe('Non-empty Graph-compatible path style overrides for one Flow Relation.');
 
+/** 校验 Flow 默认布局间距，不包含方向与路由策略 */
 export const FlowDefaultsLayoutSchema = FlowLayoutIntentBaseSchema.pick({ nodeGap: true, rankGap: true }).describe(
   'Sparse Flow layout spacing defaults without direction or routing.',
 );
 
+/** 校验按实体样式与布局路径组织的稀疏默认值 */
 export const FlowDefaultsEntitySchema = strictObject({
   style: FlowEntityStyleFieldsSchema.optional().describe('Sparse Flow Entity style defaults.'),
   layout: FlowEntityLayoutFieldsSchema.optional().describe('Sparse Flow Entity layout defaults.'),
 }).describe('Sparse Flow Entity defaults using the formal Flow Entity style and layout paths.');
 
+/** 校验分组标题或描述的文本格式默认值，不包含文本内容 */
 export const FlowDefaultsGroupCaptionTextSchema = GroupCaptionTextSchema.omit({ text: true }).describe(
   'Sparse Graph Group caption text formatting defaults without content.',
 );
 
+/** 校验分组标题区排布与文本格式的稀疏默认值 */
 export const FlowDefaultsGroupCaptionSchema = strictObject({
   side: GroupSchema.shape.caption.unwrap().shape.side,
   direction: GroupSchema.shape.caption.unwrap().shape.direction,
@@ -219,6 +229,7 @@ export const FlowDefaultsGroupCaptionSchema = strictObject({
   description: FlowDefaultsGroupCaptionTextSchema.optional().describe('Optional Group caption description defaults.'),
 }).describe('Sparse Flow Group caption defaults without content.');
 
+/** 校验分组表面与标题区默认值，不包含溢出或布局策略 */
 export const FlowDefaultsGroupSchema = strictObject({
   padding: GroupSchema.shape.padding.describe('Default Group Surface padding.'),
   background: GroupSchema.shape.background.describe('Default Group Surface background.'),
@@ -264,12 +275,14 @@ export const FlowEndpointSchema = union([
   }),
 ]);
 
+/** 校验关系样式与两端连接属性的稀疏默认值 */
 export const FlowDefaultsRelationSchema = strictObject({
   ...GraphRelationDefaultsSchema.shape,
   source: FlowEndpointDefaultsSchema.optional(),
   target: FlowEndpointDefaultsSchema.optional(),
 }).describe('Sparse Flow Relation defaults using Graph-compatible style and root fields.');
 
+/** 校验沿正式输入路径组织的布局、实体、分组与关系默认值 */
 export const FlowDefaultsSchema = strictObject({
   layout: FlowDefaultsLayoutSchema.optional().describe('Optional Flow layout spacing defaults.'),
   entity: FlowDefaultsEntitySchema.optional().describe('Optional Flow Entity defaults.'),
@@ -279,6 +292,7 @@ export const FlowDefaultsSchema = strictObject({
 
 const hasFlowEntityText = (text: IRTextBlock): boolean => {
   if (typeof text === 'string') return text.trim().length > 0;
+
   return text.some(line => {
     if (typeof line === 'string') return line.trim().length > 0;
     if ('text' in line) return line.text.trim().length > 0;
@@ -299,6 +313,7 @@ const FlowRelationLabelSchema = union([
   GeometryLabelSchema.extend({ text: FlowRelationLabelTextSchema }),
 ]);
 
+/** 校验将投影为单个 Graph 实体的 Flow 节点输入 */
 export const FlowEntitySchema = strictObject({
   id: NonBlankStringSchema.describe('Flow-wide authored Entity identity.'),
   text: FlowEntityTextSchema.describe('Required Core TextBlock with at least one non-whitespace text or TeX run.'),
@@ -311,6 +326,7 @@ export const FlowEntitySchema = strictObject({
   layout: FlowEntityLayoutSchema.optional().describe('Entity-local size, margin, and text-layout overrides.'),
 }).describe('LLM-friendly Flow Entity projected to one Graph Entity.');
 
+/** 校验引用子元素并参与自动布局的可见分组，不接受变换、显式放置或局部命名空间 */
 export const FlowGroupSchema = strictObject({
   ...GroupSchema.omit({
     namespace: true,
@@ -344,8 +360,18 @@ const FlowLayoutBaseSchema = strictObject({
 });
 
 const FlowLinearLayoutSchema = strictObject({
+  containerWidth: literal('match-largest')
+    .optional()
+    .describe(
+      'Equalize direct horizontal Layout or single-row Group widths to their natural maximum in an up/down linear Layout. Does not stretch descendants without itemWidth fill.',
+    ),
   kind: literal(FlowPlacementKind.Linear).describe('One-dimensional placement discriminator.'),
   ...FlowLayoutBaseSchema.shape,
+  itemWidth: PositiveNumberSchema.or(literal(['match-largest', 'fill']))
+    .optional()
+    .describe(
+      'Direct Entity visible-width strategy: a number fixes width, match-largest equalizes natural widths, and fill shares positive free width over non-fixed Entities in a horizontal row receiving containerWidth allocation while preserving natural width differences.',
+    ),
   direction: zodEnum(FlowDirection).describe('Required authored direction for direct children placement.'),
   gap: NonNegativeNumberSchema.optional().describe('Optional gap between direct children in user units.'),
   align: zodEnum(FlowLayoutAlignment)
@@ -393,9 +419,11 @@ const FlowGridLayoutSchema = strictObject({
   ),
 });
 
+/** 校验采用显式线性或网格排布的不可见 Flow 容器 */
 export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSchema, FlowGridLayoutSchema])
   .superRefine((layout, context) => {
     const excluded = new Set<string>();
+
     for (const [index, id] of (layout.excludeFromBounds ?? []).entries()) {
       if (excluded.has(id) || !layout.children.includes(id)) {
         context.addIssue({
@@ -404,8 +432,10 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           message: 'Excluded ids must be unique direct children.',
         });
       }
+
       excluded.add(id);
     }
+
     if (layout.children.every(id => excluded.has(id))) {
       context.addIssue({
         code: 'custom',
@@ -413,10 +443,13 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
         message: 'At least one direct child must contribute to Layout bounds.',
       });
     }
+
     if (layout.kind !== FlowPlacementKind.Grid) return;
+
     const children = new Set(layout.children);
     if (Array.isArray(layout.placements)) {
       const placed = new Set<string>();
+
       for (const [row, cells] of layout.placements.entries()) {
         for (const [column, child] of cells.entries()) {
           if (child === null) continue;
@@ -427,6 +460,7 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
               message: 'Grid cell must reference a direct child.',
             });
           }
+
           if (placed.has(child)) {
             context.addIssue({
               code: 'custom',
@@ -434,9 +468,11 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
               message: 'Grid child must appear in exactly one cell.',
             });
           }
+
           placed.add(child);
         }
       }
+
       for (const child of children) {
         if (!placed.has(child)) {
           context.addIssue({
@@ -446,9 +482,12 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           });
         }
       }
+
       return;
     }
+
     const occupied = new Set<string>();
+
     for (const [child, cell] of Object.entries(layout.placements)) {
       if (!children.has(child)) {
         context.addIssue({
@@ -457,6 +496,7 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           message: 'Grid cell must reference a direct child.',
         });
       }
+
       const coordinate = `${cell.row}:${cell.column}`;
       if (occupied.has(coordinate)) {
         context.addIssue({
@@ -465,8 +505,10 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           message: 'Grid cells must not overlap.',
         });
       }
+
       occupied.add(coordinate);
     }
+
     for (const child of children) {
       if (!Object.hasOwn(layout.placements, child)) {
         context.addIssue({
@@ -479,6 +521,7 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
   })
   .describe('Invisible Flow Layout with explicit linear or grid placement.');
 
+/** 校验根级有向端点关系及其标签、样式与路由覆盖 */
 export const FlowRelationSchema = strictObject({
   source: FlowEndpointSchema.describe('Source Entity or Group with optional connection constraints.'),
   target: FlowEndpointSchema.describe('Target Entity or Group with optional connection constraints.'),
@@ -499,6 +542,7 @@ export const FlowRelationSchema = strictObject({
   routing: FlowRoutingSchema.optional().describe('Relation-local routing override.'),
 }).describe('Ordered root Flow Relation between authored element identities.');
 
+/** 校验包含实体、容器与根级关系的 Flow 输入，不包含派生几何 */
 export const FlowDiagramSchema = strictObject({
   type: literal(FLOW_TYPE).describe('Flow Diagram Source discriminator.'),
   namespace: literal(DIAGRAM_NAMESPACE).describe('Diagram semantic element namespace.'),

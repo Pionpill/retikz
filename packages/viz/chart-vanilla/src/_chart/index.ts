@@ -44,6 +44,7 @@ const chartRenderRequest = (input: ChartRenderInput, compile: RenderChartOptions
         ? input.props.themeStyles
         : [...input.props.themeStyles, ...compile.themeStyles];
   const layout = input.props.layout;
+
   return {
     source: scene({
       ...(layout?.width !== undefined && layout.height !== undefined
@@ -63,6 +64,7 @@ export const renderChart = (input: ChartRenderInput, options: RenderChartOptions
   const result = toSceneResult(request.source, { adapters, compile: request.compile });
   if (result.compileResult === undefined)
     throw new RetikzChartVanillaError('Chart processing must produce a Core compile result');
+
   return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
 };
 
@@ -74,5 +76,6 @@ export const renderChartAsync = async (
   const { compile, adapters, signal, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
   const result = await processToStaticInputResultAsync(request.source, { adapters, signal, compile: request.compile });
+
   return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
 };

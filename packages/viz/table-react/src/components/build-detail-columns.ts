@@ -18,10 +18,12 @@ export const buildDetailColumns = (children: ReactNode): Array<TableDetailColumn
     if (!isDetailColumnElement(child)) {
       throw new RetikzTableReactError('table react: DetailTable children only accept DetailColumn');
     }
+
     columns.push({ ...child.props });
   });
   if (columns.length === 0) {
     throw new RetikzTableReactError('table react: DetailTable children require at least one DetailColumn');
   }
+
   return columns;
 };

@@ -4,8 +4,8 @@
 
 #### Polygon / PolygonProps
 
-- `Polygon`: <ApiSourceLink label={"Polygon"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={12}>Declare a Standard Polygon through its Vanilla adapter</ApiSourceLink>
-- `PolygonProps`: <ApiSourceLink label={"PolygonProps"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={9}>React Polygon authoring input and host events</ApiSourceLink>
+- `Polygon`: <ApiSourceLink label={"Polygon"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={19}>Declare a Standard Polygon through its Vanilla adapter</ApiSourceLink>
+- `PolygonProps`: <ApiSourceLink label={"PolygonProps"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={10}>React Polygon authoring input and host events</ApiSourceLink>
 
 ```ts
 export declare const Polygon: {
@@ -23,7 +23,7 @@ export type PolygonProps = InputPolygon &
 #### InputPolygon
 
 <p>
-  <ApiSourceLink label={'InputPolygon'} path={'packages/library/standard-vanilla/src/shape/polygon.ts'} startLine={8}>
+  <ApiSourceLink label={'InputPolygon'} path={'packages/library/standard-vanilla/src/shape/polygon.ts'} startLine={9}>
     Polygon Vanilla authoring input
   </ApiSourceLink>
 </p>
@@ -37,7 +37,7 @@ export type PolygonProps = InputPolygon &
 | Member            | Type                                  | Default | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputPolygon["animations"]`          | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
@@ -51,7 +51,7 @@ export type PolygonProps = InputPolygon &
 | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
 | `sides`           | `number`                              | —       | Number of polygon sides; at least three.                                                                                                                                     |
 | `style?`          | `InputPolygon["style"]`               | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -65,7 +65,7 @@ export type PolygonProps = InputPolygon &
 | Member            | Type                                  | Default | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputPolygon["animations"]`          | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
@@ -79,7 +79,7 @@ export type PolygonProps = InputPolygon &
 | `sideLength`      | `number`                              | —       | Regular polygon side length.                                                                                                                                                 |
 | `sides`           | `number`                              | —       | Number of polygon sides; at least three.                                                                                                                                     |
 | `style?`          | `InputPolygon["style"]`               | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -102,14 +102,14 @@ export type InputPolygon = InputShape<IRPolygon>;
   <ApiSourceLink
     label={'PolygonInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/polygon.ts'}
-    startLine={10}
+    startLine={12}
   >
     Normalize Polygon authoring input into persistent Standard intent
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const PolygonInputEmbedAdapter: InputEmbedAdapter<InputPolygon & { id?: string }>;
+export declare const PolygonInputEmbedAdapter: SynchronousInputEmbedAdapter<InputPolygon & { id?: string }>;
 ```
 
 **`@retikz/standard`**
@@ -117,7 +117,7 @@ export declare const PolygonInputEmbedAdapter: InputEmbedAdapter<InputPolygon & 
 #### IRPolygon
 
 <p>
-  <ApiSourceLink label={'IRPolygon'} path={'packages/library/standard/src/shape/polygon/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRPolygon'} path={'packages/library/standard/src/shape/polygon/types.ts'} startLine={7}>
     Persistent Polygon shape
   </ApiSourceLink>
 </p>
@@ -192,7 +192,7 @@ export type IRPolygon = ShapeSource<ZodInput<typeof PolygonSchema>>;
   <ApiSourceLink
     label={'PolygonDefinition'}
     path={'packages/library/standard/src/shape/polygon/definition.ts'}
-    startLine={7}
+    startLine={8}
   >
     Polygon Core composite registration
   </ApiSourceLink>
@@ -236,7 +236,7 @@ export const PolygonDefinition = defineComposite({
   <ApiSourceLink
     label={'PolygonProvider'}
     path={'packages/library/standard/src/shape/polygon/provider.ts'}
-    startLine={5}
+    startLine={6}
   >
     Polygon on-demand dependency contribution
   </ApiSourceLink>
@@ -254,7 +254,7 @@ export const PolygonProvider: CoreDependencyProvider = Object.freeze({
 #### createPolygon
 
 <p>
-  <ApiSourceLink label={'createPolygon'} path={'packages/library/standard/src/shape/polygon/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createPolygon'} path={'packages/library/standard/src/shape/polygon/factory.ts'} startLine={5}>
     Create a Polygon Source preserving geometry intent
   </ApiSourceLink>
 </p>

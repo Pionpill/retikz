@@ -68,6 +68,7 @@ const referenceOrientation = (mark: IRPlotReferenceMark): ReferenceOrientation =
       'lowerPlots: reference mark must bind exactly one of encoding.x (vertical) or encoding.y (horizontal); set one, not both / neither',
     );
   }
+
   return hasX ? 'x' : 'y';
 };
 
@@ -87,10 +88,13 @@ const referenceSpanInterval = (
       'lowerPlots: reference mark extentField / extentToField must be set together (a partial-length span needs both start and end)',
     );
   }
+
   if (!hasFrom) return oppositeRange;
+
   const lo = oppositeCoordinate(resolveFieldPath(row, mark.extentField as string));
   const hi = oppositeCoordinate(resolveFieldPath(row, mark.extentToField as string));
   if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+
   return [lo, hi];
 };
 
@@ -118,11 +122,13 @@ const isReferenceBand = (mark: IRPlotReferenceMark, orientation: ReferenceOrient
       'lowerPlots: reference mark binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
     );
   }
+
   if (orientation === 'y' && mark.xTo !== undefined) {
     throw new RetikzPlotError(
       'lowerPlots: reference mark binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
     );
   }
+
   return (orientation === 'x' ? mark.xTo : mark.yTo) !== undefined;
 };
 
@@ -131,11 +137,13 @@ const referenceShape = (mark: IRPlotReferenceMark): ReferenceShape => {
     const orientation = referenceOrientation(mark);
     return { kind: 'axis', orientation, band: isReferenceBand(mark, orientation) };
   }
+
   if (mark.extentField !== undefined || mark.extentToField !== undefined) {
     throw new RetikzPlotError(
       'lowerPlots: reference region does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
     );
   }
+
   return { kind: ReferenceMarkKind.Region };
 };
 
@@ -164,6 +172,7 @@ const referenceRegionCoordinate = (
       `lowerPlots: reference region under the ${frame.type} coordinate system requires roleScales.${role} to build cells`,
     );
   }
+
   return scale.coordinate(value);
 };
 
@@ -172,11 +181,12 @@ const referenceRegionScale = (role: string, frame: CoordinateFrame): PositionSca
     if (role === 'x') return frame.primary;
     if (role === 'y') return frame.secondary;
   }
+
   return frame.roleScales?.[role];
 };
 
 /**
- * reference 是否完全常量（单条 full-span line / band / region，不逐行）：边界均为 value/number、无 extent field。
+ * reference 是否完全常量（单条 full-span line / band / region，不逐行）：边界均为 value/number、无 extent field
  */
 const isReferenceConstant = (mark: IRPlotReferenceMark, shape: ReferenceShape, frame: CoordinateFrame): boolean => {
   if (shape.kind === ReferenceMarkKind.Region) {
@@ -185,17 +195,21 @@ const isReferenceConstant = (mark: IRPlotReferenceMark, shape: ReferenceShape, f
       if (mark.encoding[role].field !== undefined) return false;
       if (typeof referenceRegionUpperRaw(mark, role) === 'string') return false;
     }
+
     return true;
   }
+
   const { orientation } = shape;
   const constantChannel = orientation === 'x' ? mark.encoding.x : mark.encoding.y;
   if (constantChannel?.field !== undefined) return false;
+
   const upper = orientation === 'x' ? mark.xTo : mark.yTo;
   if (typeof upper === 'string') return false;
+
   return mark.extentField === undefined && mark.extentToField === undefined;
 };
 
-/** reference 的有效迭代行：全常量 → 单行代表（任取首行，无行则空对象）；per-datum → 原数据行。 */
+/** reference 的有效迭代行：全常量 → 单行代表（任取首行，无行则空对象）；per-datum → 原数据行 */
 const referenceRows = (
   mark: IRPlotReferenceMark,
   rows: Array<ExternalRow>,
@@ -203,7 +217,7 @@ const referenceRows = (
   frame: CoordinateFrame,
 ): Array<ExternalRow> => (isReferenceConstant(mark, shape, frame) ? [rows[0] ?? {}] : rows);
 
-/** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null。 */
+/** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null */
 const referenceLineSteps = (
   mark: IRPlotReferenceMark,
   row: ExternalRow,
@@ -214,30 +228,40 @@ const referenceLineSteps = (
   if (isCartesianCoordinateFrame(frame)) {
     const constant = frame[orientation === 'x' ? 'primary' : 'secondary'].coordinate(constantValue);
     if (!Number.isFinite(constant)) return null;
+
     const opposite = orientation === 'x' ? frame.secondary : frame.primary;
     const span = referenceSpanInterval(mark, row, opposite.coordinate, opposite.range());
     if (span === null) return null;
+
     const start: [number, number] = orientation === 'x' ? [constant, span[0]] : [span[0], constant];
     const end: [number, number] = orientation === 'x' ? [constant, span[1]] : [span[1], constant];
+
     return pointsToSteps([start, end], false);
   }
+
   if (orientation === 'x') {
     const theta = frame.primary.coordinate(constantValue);
     if (!Number.isFinite(theta)) return null;
+
     const span = referenceSpanInterval(mark, row, frame.secondary.coordinate, [frame.innerRadius, frame.outerRadius]);
     if (span === null) return null;
+
     const inner = frame.projectPolar(theta, span[0]);
     const outer = frame.projectPolar(theta, span[1]);
+
     return inner && outer ? pointsToSteps([inner, outer], false) : null;
   }
+
   const radius = frame.secondary.coordinate(constantValue);
   if (!Number.isFinite(radius) || radius <= 0) return null;
+
   const angleSpan = referenceSpanInterval(mark, row, frame.primary.coordinate, [frame.startAngle, frame.endAngle]);
   if (angleSpan === null) return null;
+
   return polarFixedRadiusSteps(frame, radius, mark.interpolation ?? frame.interpolation, angleSpan);
 };
 
-/** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null。 */
+/** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null */
 const referenceAxisBandCell = (
   mark: IRPlotReferenceMark,
   row: ExternalRow,
@@ -251,32 +275,41 @@ const referenceAxisBandCell = (
     const c0 = constScale.coordinate(lo);
     const c1 = constScale.coordinate(hi);
     if (!Number.isFinite(c0) || !Number.isFinite(c1)) return null;
+
     const opposite = orientation === 'x' ? frame.secondary : frame.primary;
     const span = referenceSpanInterval(mark, row, opposite.coordinate, opposite.range());
     if (span === null) return null;
+
     return { intervals: orientation === 'x' ? { x: [c0, c1], y: span } : { x: span, y: [c0, c1] } };
   }
+
   if (orientation === 'y') {
     const r0 = frame.secondary.coordinate(lo);
     const r1 = frame.secondary.coordinate(hi);
     if (!Number.isFinite(r0) || !Number.isFinite(r1)) return null;
+
     const angleSpan = referenceSpanInterval(mark, row, frame.primary.coordinate, [frame.startAngle, frame.endAngle]);
     if (angleSpan === null) return null;
+
     return { intervals: { x: angleSpan, y: [r0, r1] } };
   }
+
   const a0 = frame.primary.coordinate(lo);
   const a1 = frame.primary.coordinate(hi);
   if (!Number.isFinite(a0) || !Number.isFinite(a1)) return null;
+
   const radiusSpan = referenceSpanInterval(mark, row, frame.secondary.coordinate, [
     frame.innerRadius,
     frame.outerRadius,
   ]);
   if (radiusSpan === null) return null;
+
   return { intervals: { x: [a0, a1], y: radiusSpan } };
 };
 
 const referenceRegionCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
   const intervals: Cell['intervals'] = {};
+
   for (const role of frame.roles) {
     referenceRegionRequireRole(mark, role, frame);
     const lowerChannel = mark.encoding[role];
@@ -287,21 +320,24 @@ const referenceRegionCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame:
     const lower = referenceRegionCoordinate(lowerValue, role, scale, frame);
     const upper = referenceRegionCoordinate(upperValue, role, scale, frame);
     if (!Number.isFinite(lower) || !Number.isFinite(upper)) return null;
+
     intervals[role] = [lower, upper];
   }
+
   return { intervals };
 };
 
-/** reference cell 形态（axis band / region）某行 → 正交 Cell；line 形态返回 null。 */
+/** reference cell 形态（axis band / region）某行 → 正交 Cell；line 形态返回 null */
 export const referenceCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
   const shape = referenceShape(mark);
   if (shape.kind === ReferenceMarkKind.Region) return referenceRegionCell(mark, row, frame);
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return null;
+
   return shape.band ? referenceAxisBandCell(mark, row, frame, shape.orientation) : null;
 };
 
 /**
- * 参考标注（reference mark）下沉：line → core Path（每行一条）、band / region → projectCell Node（每行一个）。
+ * 参考标注（reference mark）下沉：line → core Path（每行一条）、band / region → projectCell Node（每行一个）
  */
 const lowerReference = (
   mark: IRPlotReferenceMark,
@@ -315,12 +351,14 @@ const lowerReference = (
   if (mark.interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError('lowerPlots: reference interpolation override is only supported under polar2D');
   }
+
   const shape = referenceShape(mark);
   if (isReferenceConstant(mark, shape, frame) && mark.encoding.color?.field !== undefined) {
     throw new RetikzPlotError(
       `lowerPlots: a constant reference cannot use a per-datum color field "${mark.encoding.color.field}"; use a constant color value, or bind a per-datum position field`,
     );
   }
+
   const cellForm = shape.kind === ReferenceMarkKind.Region || shape.band;
   const effectiveRows = referenceRows(mark, rows, shape, frame);
   const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? DEFAULT_FILL;
@@ -333,8 +371,10 @@ const lowerReference = (
     if (!hasProjectCell(frame)) {
       throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
     }
+
     const placed: Array<{ color: string | undefined; node: IRNode }> = [];
     let kind: CellGeometry['kind'] | undefined;
+
     for (let transformedIndex = 0; transformedIndex < effectiveRows.length; transformedIndex++) {
       const row = effectiveRows[transformedIndex];
       const cell =
@@ -344,13 +384,16 @@ const lowerReference = (
             ? referenceAxisBandCell(mark, row, frame, shape.orientation)
             : null;
       if (!cell) continue;
+
       const geometry = isPolarCoordinateFrame(frame)
         ? frame.projectCell(cell, { interpolation: mark.interpolation ?? frame.interpolation })
         : frame.projectCell(cell);
       if (!isRenderableCellGeometry(geometry)) continue;
+
       kind = geometry.kind;
       const cellNode = cellGeometryNode(geometry);
       if (cellNode === null) continue;
+
       const fill = fillOf?.(row);
       if (fill !== undefined) cellNode.style = { ...cellNode.style, fill };
       const stroke = strokeOf?.(row);
@@ -365,16 +408,19 @@ const lowerReference = (
       const node = decorateDatum(cellNode, row, transformedIndex, mark.type, markProvenance, undefined);
       placed.push({ color: colorOf?.(row), node });
     }
+
     if (placed.length === 0 || kind === undefined) return null;
     if (!colorOf) {
       const colorValue = mark.encoding.color?.value;
       const fill = colorValue !== undefined ? String(colorValue) : defaultFill;
+
       return {
         type: 'scope',
         children: placed.map(p => p.node),
         defaults: { node: styleForGeometry(kind, mark)(fill, channelDefaultOf<MarkPaint>(channels, 'stroke')) },
       };
     }
+
     return cellLayer(placed, kind, mark, colorOf, undefined, channelDefaultOf<MarkPaint>(channels, 'stroke'));
   }
 
@@ -383,16 +429,20 @@ const lowerReference = (
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
+
   for (let transformedIndex = 0; transformedIndex < effectiveRows.length; transformedIndex++) {
     const row = effectiveRows[transformedIndex];
     const steps = referenceLineSteps(mark, row, frame, shape.orientation);
     if (!steps) continue;
+
     placed.push({ color: colorOf?.(row), steps, row, transformedIndex });
   }
+
   if (placed.length === 0) return null;
   if (!colorOf) {
     const colorValue = mark.encoding.color?.value;
     const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
+
     return {
       type: 'scope',
       children: placed.map(p => {
@@ -415,7 +465,9 @@ const lowerReference = (
       },
     };
   }
+
   const groups = new Map<string, Array<IRChild>>();
+
   for (const { color, row, steps } of placed) {
     const stroke = color ?? DEFAULT_FILL;
     const directStroke = strokeOf?.(row);
@@ -444,6 +496,7 @@ const lowerReference = (
     if (bucket) bucket.push(path);
     else groups.set(stroke, [path]);
   }
+
   const children: Array<IRChild> = [...groups].map(([stroke, paths]) => ({
     type: 'scope',
     children: paths,
@@ -453,6 +506,7 @@ const lowerReference = (
       },
     },
   }));
+
   return {
     type: 'scope',
     children,
@@ -464,7 +518,7 @@ const lowerReference = (
   };
 };
 
-/** reference 图层下沉：line 走 core Path、band 走 projectCell；本轮仅 cartesian2D / polar2D，其余坐标系 fail-loud + attachMarkLayer。 */
+/** reference 图层下沉：line 走 core Path、band 走 projectCell；本轮仅 cartesian2D / polar2D，其余坐标系 fail-loud + attachMarkLayer */
 export const lowerReferenceLayer = (
   mark: IRPlotMark,
   rows: Array<ExternalRow>,
@@ -473,6 +527,7 @@ export const lowerReferenceLayer = (
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
   if (mark.type !== PlotMark.Reference) return null;
+
   const shape = referenceShape(mark);
   if (shape.kind === ReferenceMarkKind.Region) {
     if (!hasProjectCell(frame)) {
@@ -481,6 +536,7 @@ export const lowerReferenceLayer = (
   } else if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
+
   const layer = lowerReference(
     mark,
     rows,
@@ -490,20 +546,22 @@ export const lowerReferenceLayer = (
     channelDefaultOf<string>(channels, 'color'),
     ctx?.provenance,
   );
+
   return layer === null ? null : attachMarkLayer(layer, mark, ctx);
 };
 
-/** 收集 reference mark 的位置 / color / 扩展 encoding 字段。 */
+/** 收集 reference mark 的位置 / color / 扩展 encoding 字段 */
 const collectReferenceEncodingFields = (mark: IRPlotReferenceMark, fields: FieldCollector): void => {
   fields.addChannel(mark.encoding.x);
   fields.addChannel(mark.encoding.y);
   fields.addChannel(mark.encoding.color);
+
   for (const channel of Object.values(mark.encoding.channels ?? {})) {
     fields.addChannel(channel);
   }
 };
 
-/** 收集 reference mark 独有字段：band 上界与部分 span 范围。 */
+/** 收集 reference mark 独有字段：band 上界与部分 span 范围 */
 const collectReferenceChannelFields = (mark: IRPlotReferenceMark, fields: FieldCollector): void => {
   fields.addFields(
     typeof mark.xTo === 'string' ? mark.xTo : undefined,
@@ -513,7 +571,7 @@ const collectReferenceChannelFields = (mark: IRPlotReferenceMark, fields: FieldC
   );
 };
 
-/** 内置 reference mark definition。 */
+/** 内置 reference mark definition */
 export const referenceMarkDefinition: MarkDefinition<IRPlotReferenceMark> = {
   schema: ReferenceMarkSchema,
   channelKinds: () =>

@@ -78,10 +78,15 @@ const createTestCase = (id: string, translationKey: string): BenchTestCase =>
   });
 
 const denseNodeGrid = createTestCase(KernelLabScenarioId.DenseNodeGrid, 'denseNodeGrid');
+
 const mixedPrimitives = createTestCase(KernelLabScenarioId.MixedPrimitives, 'mixedPrimitives');
+
 const complexPaths = createTestCase(KernelLabScenarioId.ComplexPaths, 'complexPaths');
+
 const nodeDrag = createTestCase(KernelLabScenarioId.NodeDrag, 'nodeDrag');
+
 const nodeSelection = createTestCase(KernelLabScenarioId.NodeSelection, 'nodeSelection');
+
 const nodeInsertRemove = createTestCase(KernelLabScenarioId.NodeInsertRemove, 'nodeInsertRemove');
 
 const moduleGroups: Readonly<Partial<Record<BenchModuleIdValue, ReadonlyArray<BenchTestGroup>>>> = Object.freeze({
@@ -150,6 +155,7 @@ export const getBenchTestCaseContext = (
       if (testCase !== undefined) return Object.freeze({ group, direction, testCase });
     }
   }
+
   return undefined;
 };
 

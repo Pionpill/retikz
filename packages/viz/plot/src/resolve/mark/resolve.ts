@@ -17,6 +17,7 @@ export const resolveMarkDefinition = (mark: IRPlotMarkOperation, context: MarkRe
       `lowerPlots: mark type "${mark.type}" is not registered; pass a MarkDefinition via options.markDefinitions`,
     );
   }
+
   return definition;
 };
 
@@ -32,6 +33,7 @@ export const resolveMarkOperation = (
     defaultColorGroup === undefined
       ? resolved
       : { ...resolved, defaultColorGroup: NonBlankStringSchema.parse(defaultColorGroup) };
+
   return { definition, operation };
 };
 
@@ -67,8 +69,10 @@ export const datumAnchor = (
     const geometry = intervalCellGeometry(operation, row, frame, intervalContext);
     return geometry === null ? null : cellGeometryAnchor(geometry);
   }
+
   if (definition.buildCell !== undefined) {
     return cellAnchor(definition.buildCell(operation as never, row, frame, intervalContext), frame);
   }
+
   return roleAnchor(operation as IRPlotMark, row, frame);
 };

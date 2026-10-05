@@ -60,11 +60,13 @@ describe('Plot Vanilla runtime style options', () => {
     expect(renderPlot(spec, data, { themeStyles: [], plotThemeStyles: [plotThemeStyle] })).toBe('<svg />');
 
     const options = compileCalls.at(-1)?.[1] as { themeStyles?: Array<unknown> } | undefined;
+
     expect(options?.themeStyles).toEqual([]);
   });
 
   it('embedded PlotInputEmbedAdapter keeps runtime style definitions out of the contribution payload', () => {
     const contribution = PlotInputEmbedAdapter.lower({ spec, datasets: data }, contextOf('panel'));
+
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');

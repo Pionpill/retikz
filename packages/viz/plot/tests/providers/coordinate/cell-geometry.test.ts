@@ -32,8 +32,10 @@ import { isBuiltinMark, PlotSchema, PolarInterpolation } from '../../../src/sche
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const markRegistry = resolveMarkRegistry();
+
 const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
   lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), rows, frame);
+
 const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
   resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
@@ -47,6 +49,7 @@ const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
 const nodesOf = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -54,7 +57,9 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -74,6 +79,7 @@ const nodeHeight = (node: IRNode): number => {
 const linearStub = (domain: [number, number], range: [number, number], bandwidth = 0): PositionScale => {
   const [d0, d1] = domain;
   const [r0, r1] = range;
+
   return {
     coordinate: (value: unknown) =>
       typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN,
@@ -129,6 +135,7 @@ describe('Polar mapped-role projection', () => {
 
     const forward = squarePolarFrame(PolarInterpolation.Chord).projectMappedRoles([337.5, 100]);
     const reversed = squarePolarFrame(PolarInterpolation.Chord, 90, 360, 0).projectMappedRoles([337.5, 100]);
+
     expect(forward?.[0]).toBeCloseTo(expected[0], 6);
     expect(forward?.[1]).toBeCloseTo(expected[1], 6);
     expect(reversed?.[0]).toBeCloseTo(expected[0], 6);
@@ -150,9 +157,11 @@ describe('Polar mapped-role projection', () => {
 describe('projectCell 闭式快路（rect / sector）', () => {
   it('cartesian_projectcell_returns_rect', () => {
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 100], 20), linearStub([0, 10], [200, 0]));
+
     // primary 像素带 [40,60]、secondary 像素 [200,120] → rect 中心 [50,160]、width 20、height 80
     const cell: Cell = { intervals: { x: [40, 60], y: [200, 120] } };
     const geometry = frame.projectCell(cell);
+
     expect(geometry).toEqual({ kind: 'rect', position: [50, 160], width: 20, height: 80 });
   });
 
@@ -170,6 +179,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     });
     const cell: Cell = { intervals: { x: [30, 90], y: [40, 120] } };
     const geometry = frame.projectCell(cell);
+
     expect(geometry).toEqual({
       kind: 'sector',
       center: [200, 200],
@@ -194,15 +204,20 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     });
 
     const geometry = frame.projectCell({ intervals: { x: [0, 90], y: [40, 100] } });
+
     expect(geometry.kind).toBe('contour');
+
     if (geometry.kind !== 'contour') return;
+
     expect(geometry.points).toHaveLength(4);
+
     const expected = [
       [40, 0],
       [0, 40],
       [0, 100],
       [100, 0],
     ];
+
     for (let index = 0; index < expected.length; index += 1) {
       expect(geometry.points[index][0]).toBeCloseTo(expected[index][0], 9);
       expect(geometry.points[index][1]).toBeCloseTo(expected[index][1], 9);
@@ -224,7 +239,9 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     const geometry = frame.projectCell({ intervals: { x: [0, 90], y: [0, 100] } });
 
     expect(geometry.kind).toBe('contour');
+
     if (geometry.kind !== 'contour') return;
+
     expect(geometry.points).toHaveLength(3);
     expect(geometry.points.filter(point => point[0] === 0 && point[1] === 0)).toHaveLength(1);
   });
@@ -244,7 +261,9 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     const geometry = frame.projectCell({ intervals: { x: [0, 360], y: [40, 100] } });
 
     expect(geometry.kind).toBe('contour');
+
     if (geometry.kind !== 'contour') return;
+
     expect(geometry.points).toHaveLength(8);
     expect(new Set(geometry.points.map(point => point.map(value => value.toFixed(6)).join(','))).size).toBe(8);
   });
@@ -264,7 +283,9 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     const geometry = frame.projectCell({ intervals: { x: [0, 360], y: [0, 100] } });
 
     expect(geometry.kind).toBe('contour');
+
     if (geometry.kind !== 'contour') return;
+
     expect(geometry.points).toHaveLength(4);
     expect(geometry.points.every(point => Math.hypot(point[0], point[1]) === 100)).toBe(true);
   });
@@ -291,7 +312,9 @@ describe('projectCell 闭式快路（rect / sector）', () => {
 
 // ── cartesian / polar interval / sector 经 lowerPlots 的产物基线（byte-equal 回归网）─────────
 const WIDTH = 400;
+
 const HEIGHT = 400;
+
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
 const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlot =>
@@ -329,15 +352,19 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
       { m: 'C', v: 9 },
     ];
     const nodes = nodesOf(firstLayer(cartesianBarSpec(), { d: rows }, cartOpts));
+
     expect(nodes).toHaveLength(3);
+
     for (const node of nodes) {
       expect(node.type).toBe('node');
       expect(typeof nodeWidth(node)).toBe('number');
       expect(typeof nodeHeight(node)).toBe('number');
+
       // 矩形柱无 shape ref（barStyle 在 nodeDefault 给 rectangle）；position 为 [x, y]
       expect(node.shape).toBeUndefined();
       expect(Array.isArray(node.position)).toBe(true);
     }
+
     // 柱宽相等（同 bandwidth）、柱高随 value 单调
     expect(nodeWidth(nodes[0])).toBeCloseTo(nodeWidth(nodes[1]), 9);
     expect(nodeHeight(nodes[2]) > nodeHeight(nodes[0])).toBe(true);
@@ -351,9 +378,12 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
       { m: 'B', v: 2, s: 'y' },
     ];
     const nodes = nodesOf(firstLayer(cartesianBarSpec(undefined, 's'), { d: rows }, cartOpts));
+
     expect(nodes).toHaveLength(4);
+
     // dodge：子带宽 = bandwidth / 2 < plain bandwidth
     const plain = nodesOf(firstLayer(cartesianBarSpec(), { d: rows }, cartOpts));
+
     expect(nodeWidth(nodes[0]) < nodeWidth(plain[0])).toBe(true);
   });
 
@@ -363,6 +393,7 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
       { m: 'B', v: 6 },
     ];
     const layer = firstLayer(cartesianBarSpec(), { d: rows }, cartOpts);
+
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
@@ -414,9 +445,12 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
       { m: 'C', v: 9 },
     ];
     const nodes = nodesOf(firstLayer(polarBarSpec('polar'), { d: rows }, cartOpts));
+
     expect(nodes).toHaveLength(3);
+
     for (const node of nodes) {
       const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
+
       expect(shape?.type).toBe('sector');
       expect(shape!.params!.outerRadius).toBeGreaterThanOrEqual(shape!.params!.innerRadius);
     }
@@ -429,6 +463,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
       { m: 'C', v: 9 },
     ];
     const nodes = nodesOf(firstLayer(polarBarSpec(), { d: rows }, cartOpts));
+
     expect(nodes).toHaveLength(3);
     expect(nodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'contour')).toBe(true);
   });
@@ -441,6 +476,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
     ];
     const polarNodes = nodesOf(firstLayer(polarBarSpec('chord', 'polar'), { d: rows }, cartOpts));
     const chordNodes = nodesOf(firstLayer(polarBarSpec('polar', 'chord'), { d: rows }, cartOpts));
+
     expect(polarNodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'sector')).toBe(true);
     expect(chordNodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'contour')).toBe(true);
   });
@@ -456,6 +492,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
         },
       ],
     });
+
     expect(() => firstLayer(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/interpolation|polar2D/i);
   });
 
@@ -466,9 +503,12 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
       { label: 'C', value: 2 },
     ];
     const nodes = nodesOf(firstLayer(pieSpec(), { d: rows }, cartOpts));
+
     expect(nodes).toHaveLength(3);
+
     for (const node of nodes) {
       const shape = node.shape as { type?: string } | undefined;
+
       expect(shape?.type).toBe('sector');
     }
   });
@@ -478,8 +518,10 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
 /** 测试专用曲线 frame：cartesian 帧（cell 计算同 cartesian），projectCell 改返回 contour（上沿弯成抛物） */
 const curvedFrame = (): CartesianCoordinateFrame => {
   const base = createCartesianCoordinate(linearStub([0, 10], [0, 200], 40), linearStub([0, 10], [200, 0]));
+
   // 输出空间 (px, py) → 屏幕：x 原样、y 加一段随 px 变化的弯曲（使顶 / 底边非直线 → 必须密采样）
   const projectFn = (px: number, py: number): [number, number] => [px, py + 20 * Math.sin((px / 200) * Math.PI)];
+
   return {
     ...base,
     projectCell: cell => ({
@@ -514,12 +556,16 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     const cell: Cell = { intervals: { x: [0, 200], y: [200, 100] } };
     const projectFn = (px: number, py: number): [number, number] => [px, py + 20 * Math.sin((px / 200) * Math.PI)];
     const points = densifyCellContour(cell, projectFn, { curvedPrimary: true, curvedSecondary: false });
+
     // 曲边两条各 N+1 段、直边两条各 1 段 → 2·(N+1) + 2·1 顶点（每边产「终点 + 中间点」、不含起点）
     expect(points.length).toBe(2 * (RETIKZ_POLAR_SEGMENT_SAMPLES + 1) + 2);
+
     // 闭合：末点 → 首点为左边终段，环绕回起点 [0,200]
     expect(points[points.length - 1]).toEqual([0, 200]);
+
     // 顶 / 底边确实弯曲（中段点 y 偏离直线连接）
     const mid = points[Math.floor((RETIKZ_POLAR_SEGMENT_SAMPLES + 1) / 2)];
+
     expect(Math.abs(mid[1] - 200)).toBeGreaterThan(1e-6);
   });
 
@@ -533,6 +579,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
       }),
     });
     const mark = firstIntervalMark(intervalMarkSpec());
+
     expect(() => lowerMark(mark, [{ m: 2, v: 3 }], custom)).toThrow(/not supported|interval|custom/i);
   });
 
@@ -545,10 +592,14 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     const frame = curvedFrame();
     const layer = lowerMark(mark, rows, frame) as IRScope;
     const nodes = nodesOf(layer);
+
     expect(nodes).toHaveLength(2);
+
     for (const node of nodes) {
       const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
+
       expect(shape?.type).toBe('contour');
+
       // 顶点密采样（曲边）+ 闭合环 ≥ 4 顶点
       expect(shape!.params!.points?.length ?? 0).toBeGreaterThanOrEqual(4);
     }
@@ -564,13 +615,16 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
+
     for (const [x, y] of points) {
       minX = Math.min(minX, x);
       minY = Math.min(minY, y);
       maxX = Math.max(maxX, x);
       maxY = Math.max(maxY, y);
     }
+
     const position = node.position as [number, number];
+
     expect(position[0]).toBeCloseTo((minX + maxX) / 2, 9);
     expect(position[1]).toBeCloseTo((minY + maxY) / 2, 9);
   });
@@ -606,6 +660,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
       ],
     };
     const compiled = compileToScene(scene, { shapes: [ContourShapeDefinition] }).scene;
+
     expect(compiled).toBeTruthy();
   });
 });
@@ -614,6 +669,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
 describe('datumAnchor 三态与 CellGeometry 同源', () => {
   it('anchor_rect_equals_position', () => {
     const geometry = { kind: 'rect' as const, position: [50, 160] as [number, number], width: 20, height: 80 };
+
     expect(cellGeometryAnchor(geometry)).toEqual([50, 160]);
   });
 
@@ -628,6 +684,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
       endAngle: 120,
     };
     const anchor = cellGeometryAnchor(geometry);
+
     expect(anchor).not.toBeNull();
     expect(anchor![0]).toBeCloseTo(200, 6);
     expect(anchor![1]).toBeCloseTo(280, 6);
@@ -643,6 +700,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
         [0, 20],
       ] as Array<[number, number]>,
     };
+
     expect(cellGeometryAnchor(geometry)).toEqual([5, 10]);
   });
 
@@ -654,6 +712,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
         [10, 0],
       ] as Array<[number, number]>,
     };
+
     expect(cellGeometryAnchor(geometry)).toBeNull();
   });
 
@@ -670,6 +729,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     rows.forEach((row, index) => {
       const anchor = datumAnchor(mark, row, frame, ctx);
       const position = nodes[index].position as [number, number];
+
       expect(anchor).not.toBeNull();
       expect(anchor![0]).toBeCloseTo(position[0], 9);
       expect(anchor![1]).toBeCloseTo(position[1], 9);
@@ -685,6 +745,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     const anchor = datumAnchor(mark, rows[0], frame, ctx);
     const node = nodesOf(lowerMark(mark, rows, frame) as IRScope)[0];
     const position = node.position as [number, number];
+
     expect(anchor).not.toBeNull();
     expect(anchor![0]).toBeCloseTo(position[0], 9);
     expect(anchor![1]).toBeCloseTo(position[1], 9);
@@ -708,12 +769,15 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     ];
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
+
     expect(nodes).toHaveLength(2);
+
     // coord(0)=0, coord(2)=40, coord(4)=80 → 宽 40 各；中心 20 / 60；紧贴（node0 右 = node1 左）
     expect(nodeWidth(nodes[0])).toBeCloseTo(40, 9);
     expect(nodeWidth(nodes[1])).toBeCloseTo(40, 9);
     expect((nodes[0].position as [number, number])[0]).toBeCloseTo(20, 9);
     expect((nodes[1].position as [number, number])[0]).toBeCloseTo(60, 9);
+
     // secondary 高度 = coord(0)..coord(binCount)：bar0 = |200-100|=100、bar1 = |200-140|=60
     expect(nodeHeight(nodes[0])).toBeCloseTo(100, 9);
     expect(nodeHeight(nodes[1])).toBeCloseTo(60, 9);
@@ -728,6 +792,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     ];
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
+
     // coord(1)-coord(0)=20、coord(5)-coord(1)=80
     expect(nodeWidth(nodes[0])).toBeCloseTo(20, 9);
     expect(nodeWidth(nodes[1])).toBeCloseTo(80, 9);
@@ -756,6 +821,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     const rows = [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }];
     const layer = firstLayer(spec, { d: rows }, cartOpts);
     const nodes = nodesOf(layer);
+
     // step 2、域 [0,5] → 箱 [0,2),[2,4),[4,6] → 3 箱（含空箱可能）；至少有柱、且可编译
     expect(nodes.length).toBeGreaterThanOrEqual(1);
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
@@ -773,6 +839,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       scales: [{ type: 'band', name: 'cat' }],
       marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/cartesian1D|not supported|interval/i);
   });
 
@@ -785,6 +852,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       coordinate: { type: 'noproj' },
       marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
     });
+
     // custom 工厂返回无 projectCell 的 frame → interval fail-loud（指明缺 projectCell）
     const options: LowerPlotsOptions = {
       width: WIDTH,
@@ -806,6 +874,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
               ctx.height,
               0,
             ]);
+
             return {
               frame: createCoordinateFrame('noproj', ['x', 'y'], values => {
                 const x = xScale.coordinate(values[0]);
@@ -820,6 +889,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
         }),
       ],
     };
+
     expect(() => expandOf(spec, { d: [{ m: 1, v: 3 }] }, options)).toThrow(/noproj|projectCell|not supported/i);
   });
 
@@ -852,13 +922,16 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
               ctx.height,
               0,
             ]);
+
             const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
               const x = xScale.coordinate(values[0]);
               const y = yScale.coordinate(values[1]);
+
               return Number.isFinite(x) && Number.isFinite(y)
                 ? [x, y + 16 * Math.sin((x / ctx.width) * Math.PI)]
                 : null;
             };
+
             return {
               frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
                 roleScales: { x: xScale, y: yScale },
@@ -880,6 +953,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     const layer = firstLayer(spec, { d: [{ x: 3, y: 4 }] }, options);
     const node = nodesOf(layer)[0];
     const shape = node.shape as { type?: string; params?: { points?: Array<[number, number]> } } | undefined;
+
     expect(shape?.type).toBe('contour');
     expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(4);
   });
@@ -920,11 +994,13 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
               ctx.height,
               0,
             ]);
+
             const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
               const x = xScale.coordinate(values[0]);
               const y = yScale.coordinate(values[1]);
               return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
             };
+
             return {
               frame: createCoordinateFrame('curved-cell', ['x', 'y'], projectRoles, {
                 roleScales: { x: xScale, y: yScale },
@@ -944,9 +1020,12 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     ];
     const layer = firstLayer(spec, { d: rows }, options);
     const nodes = nodesOf(layer);
+
     expect(nodes).toHaveLength(2);
+
     const left = nodes[0].position as [number, number];
     const right = nodes[1].position as [number, number];
+
     expect(left[0]).toBeLessThan(right[0]);
   });
 });

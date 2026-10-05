@@ -4,6 +4,7 @@ import { enum as zodEnum, number, object } from 'zod';
 import { CssColorSchema, OpacitySchema } from '../style';
 import { ShadowPreset } from './constants';
 
+/** 校验预设阴影或显式偏移；单独指定的样式字段覆盖预设值 */
 export const DropShadowSchema = object({
   preset: zodEnum(ShadowPreset)
     .optional()

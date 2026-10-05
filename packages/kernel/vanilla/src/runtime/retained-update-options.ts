@@ -20,6 +20,7 @@ const isPlainRecord = (value: unknown): value is Record<PropertyKey, unknown> =>
 /** 校验普通对象只含可枚举 data properties */
 const assertDataRecord: (value: unknown) => asserts value is Record<string, unknown> = value => {
   if (!isPlainRecord(value)) return invalidUpdateOptions(value);
+
   for (const key of Reflect.ownKeys(value)) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
@@ -34,14 +35,18 @@ const cloneArray = (value: ReadonlyArray<unknown>, ancestors: WeakSet<object>): 
   if (keys.length !== value.length + 1 || keys.some(key => typeof key !== 'string')) {
     return invalidUpdateOptions(value);
   }
+
   const copy: Array<unknown> = [];
+
   for (let index = 0; index < value.length; index += 1) {
     const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
     if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
       return invalidUpdateOptions(value);
     }
+
     copy.push(cloneAndFreeze(descriptor.value, ancestors));
   }
+
   return Object.freeze(copy);
 };
 
@@ -50,16 +55,19 @@ const cloneAndFreeze = <T>(value: T, ancestors = new WeakSet<object>()): T => {
   if (typeof value !== 'object' || value === null) return value;
   if (!Array.isArray(value) && !isPlainRecord(value)) return value;
   if (ancestors.has(value)) return invalidUpdateOptions(value);
+
   ancestors.add(value);
   let copy: unknown;
   if (Array.isArray(value)) copy = cloneArray(value, ancestors);
   else {
     const record = Object.create(Object.getPrototypeOf(value)) as Record<PropertyKey, unknown>;
+
     for (const key of Reflect.ownKeys(value)) {
       const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
         return invalidUpdateOptions(value);
       }
+
       Object.defineProperty(record, key, {
         value: cloneAndFreeze(descriptor.value, ancestors),
         enumerable: true,
@@ -67,9 +75,12 @@ const cloneAndFreeze = <T>(value: T, ancestors = new WeakSet<object>()): T => {
         writable: false,
       });
     }
+
     copy = record;
   }
+
   ancestors.delete(value);
+
   return Object.freeze(copy) as T;
 };
 
@@ -84,6 +95,7 @@ export const captureRetainedUpdateOptions = (input: unknown): RetainedVanillaUpd
       assertDataRecord(canvas);
       if (Object.hasOwn(canvas, 'devicePixelRatio')) return invalidUpdateOptions(canvas);
     }
+
     return cloneAndFreeze(input);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;

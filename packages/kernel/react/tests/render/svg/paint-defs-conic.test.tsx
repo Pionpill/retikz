@@ -36,6 +36,7 @@ describe('PaintDefs conicGradient', () => {
     expect(pattern.props.patternContentUnits).toBe('objectBoundingBox');
 
     const wedges = (pattern.props.children as Array<AnyEl>).filter(Boolean);
+
     expect(wedges.length).toBe(360);
     expect(wedges[0].type).toBe('path');
     expect(typeof wedges[0].props.d).toBe('string');

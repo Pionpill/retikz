@@ -25,9 +25,8 @@ ADR-090 已经把 axis title 放进独立 `title` 槽位。ADR-093 又补充了 
 
 ```ts
 import { GeometryLabelPosition } from '@retikz/core';
-import type { GeometryLabelPositionValue } from '@retikz/core';
 
-type AxisTitlePlacement = GeometryLabelPositionValue | number;
+type AxisTitlePlacement = GeometryLabelPosition | number;
 
 type AxisTitleAnchor =
   | 'auto'

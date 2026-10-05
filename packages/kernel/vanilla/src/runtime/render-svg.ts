@@ -16,6 +16,7 @@ export const renderToSvgString = (input: RenderInput, options: RenderToStringOpt
   const animation = options.animation ?? {};
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   const result = toSceneResult(input, options);
+
   return buildSvgString(
     { primary: result.scene, layers: result.layers },
     {

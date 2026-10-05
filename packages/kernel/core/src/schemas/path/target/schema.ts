@@ -12,14 +12,17 @@ import {
 
 export { AnchorRefSchema, BoundaryAnchorRefSchema, NodeTargetSchema };
 
+/** 校验不更新累积参考游标的相对偏移目标 */
 export const RelativeTargetSchema = object({
   relative: tuple([number(), number()]).describe('Relative offset (dx, dy)'),
 }).describe('Relative offset from the previous step end point. Does not update the cursor position.');
 
+/** 校验更新累积参考游标的相对偏移目标 */
 export const RelativeAccumulateTargetSchema = object({
   relativeAccumulate: tuple([number(), number()]).describe('Accumulated relative offset (dx, dy)'),
 }).describe('Accumulated relative offset from the previous step end point. Updates the cursor position.');
 
+/** 校验笛卡尔、极坐标、节点引用、相对偏移或两点插值等路径目标 */
 export const TargetSchema = union([
   PositionSchema,
   PolarPositionSchema,

@@ -1,5 +1,6 @@
 import { Layout } from '@retikz/react';
 import { Matrix } from '@retikz/standard-react/collection';
+
 /** 本节图形的交互参数 */
 export type MatrixPreviewValues = {
   rowGap: number;
@@ -8,6 +9,7 @@ export type MatrixPreviewValues = {
   row: 'none' | 'before' | 'after';
   column: 'none' | 'before' | 'after';
 };
+
 /** 按当前参数绘制矩阵 */
 export const renderMatrixPreview = (values: MatrixPreviewValues) => {
   return (

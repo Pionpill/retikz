@@ -7,10 +7,12 @@ import { shadowBoundsI18n } from './shadow-bounds.i18n';
 
 /** 阴影边界图的语言参数 */
 export type ShadowBoundsProps = { lang?: Lang };
+
 /** 同一原几何、投影与估算边界保持相同尺度 */
 const ShadowBounds: FC<ShadowBoundsProps> = props => {
   const { lang = 'zh' } = props;
   const text = shadowBoundsI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {text.titles.map((title, index) => (

@@ -24,7 +24,9 @@ const compile = (
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -37,6 +39,7 @@ const compile = (
     },
   );
   if (observed === undefined) throw new Error('No layout result');
+
   return { scene, observed };
 };
 
@@ -51,6 +54,7 @@ describe('Matrix parent allocation', () => {
   };
   it('keeps cell sizes when parent gives surplus space', () => {
     const result = compile(source, { x: { kind: 'exact', value: 100 }, y: { kind: 'range', min: 80, max: 100 } });
+
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 80 });
     expect(
       result.scene.spatialHandles.entries.filter(e => e.role === 'matrix-cell').map(e => e.geometry.bounds),
@@ -61,6 +65,7 @@ describe('Matrix parent allocation', () => {
       { x: 32, y: 22, width: 30, height: 20 },
     ]);
   });
+
   it('rejects a parent smaller than the required tracks', () => {
     expect(() => compile(source, { x: { kind: 'exact', value: 20 }, y: { kind: 'exact', value: 80 } })).toThrow();
   });

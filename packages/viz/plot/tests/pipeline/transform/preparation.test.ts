@@ -29,6 +29,7 @@ const specOf = () =>
       },
     ],
   });
+
 const rows = [
   { value: 1, group: 'a' },
   { value: 2, group: 'b' },
@@ -43,20 +44,25 @@ describe('Plot whole-scope data preparation', () => {
     spec.marks[0].encoding = { x: { field: 'value' }, y: { field: 'value' } };
     const plan = await preparePlotData(spec, { dataBindings: { rows: { kind: 'rows', rows } } });
     const prepared = await plan.execute();
+
     expect(prepared.root.rows.map(row => row.value)).not.toEqual(rows.map(row => row.value));
+
     const source: IRScene = { type: 'scene', version: 1, children: [spec] };
     const options = {
       composites: lowerPlots({}),
       compositeInputs: createCompositeInputBindings(source, [{ path: ['children', 0], input: prepared }]),
     };
     const first = compileToScene(source, options).scene;
+
     expect(compileToScene(source, options).scene).toEqual(first);
+
     const expected = compileToScene(
       { ...source, children: [{ ...spec, transform: [] }] },
       {
         composites: lowerPlots({ rows: prepared.root.rows }),
       },
     ).scene;
+
     expect(first.primitives).toEqual(expected.primitives);
   });
 
@@ -78,6 +84,7 @@ describe('Plot whole-scope data preparation', () => {
       { provenance: true },
     );
     const prepared = await plan.execute();
+
     expect(prepared.root.rows.map(readSourceIndex)).toEqual([0, 1]);
     expect(upstreamRows.map(readSourceIndex)).toEqual([5, 6]);
     expect(prepared.root.lineage?.events).toEqual(lineage.events);
@@ -94,8 +101,10 @@ describe('Plot whole-scope data preparation', () => {
             definition: stage.definition,
             execute: input => {
               if (input.kind !== 'result') throw new Error('fixture requires result');
+
               calls.push(`execute:${input.result.rows.length}`);
               const operation = stage.operation as { field: string; as: string };
+
               return {
                 rows: input.result.rows.map(row => ({ ...row, [operation.as]: Number(row[operation.field]) + 10 })),
                 model: stage.outputModel,
@@ -116,10 +125,14 @@ describe('Plot whole-scope data preparation', () => {
       dataBindings: { rows: { kind: 'rows', rows } },
       dataTransformExecutor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }),
     });
+
     expect(calls).toEqual(['prepare:normalize', 'prepare:normalize']);
+
     const prepared = await plan.execute();
+
     expect(prepared.root.rows.map(row => row.root)).toEqual([11, 12]);
     expect(prepared.panels.map(panel => panel[0].rows.map(row => row.local))).toEqual([[21], [22]]);
+
     const source: IRScene = { type: 'scene', version: 1, children: [spec] };
     const options = {
       composites: lowerPlots({}),
@@ -127,6 +140,7 @@ describe('Plot whole-scope data preparation', () => {
     };
     compileToScene(source, options);
     compileToScene(source, options);
+
     expect(calls.filter(call => call.startsWith('execute'))).toEqual([
       'execute:2',
       'execute:2',
@@ -156,6 +170,7 @@ describe('Plot whole-scope data preparation', () => {
     const spec = specOf();
     spec.marks[0].transform = [{ operation: { kind: 'sort', field: 'root' } }];
     spec.marks[0].encoding = { x: { field: 'root' }, y: { field: 'value' } };
+
     await expect(
       preparePlotData(spec, {
         dataBindings: { rows: { kind: 'rows', rows } },
@@ -167,6 +182,7 @@ describe('Plot whole-scope data preparation', () => {
 
   it('rejects source parsers on canonical result bindings', async () => {
     const spec = specOf();
+
     await expect(
       preparePlotData(
         spec,

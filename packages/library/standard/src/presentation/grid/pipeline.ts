@@ -68,6 +68,7 @@ export const lowerGrid = (grid: IRGrid): IRScope => {
             children: paths,
           },
         ];
+
   return { type: 'scope', ...scopeProps, children };
 };
 

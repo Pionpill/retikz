@@ -1,7 +1,9 @@
 import { Layout } from '@retikz/react';
 import { Chain, ChainCell, ChainParallel, ChainBranch, Matrix } from '@retikz/standard-react/collection';
+
 /** 本节交互参数 */
 export type ChainPreviewValues = { width: number; overflow: 'clip' | 'visible' };
+
 /** 由公开参数绘制链 */
 export const renderChainPreview = (values: ChainPreviewValues) => (
   <Layout>

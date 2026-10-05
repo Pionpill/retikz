@@ -101,6 +101,7 @@ describe('Clip definition contract', () => {
       type: 'scene',
       children: [{ type: 'scope', clip: spec, children: [] }],
     };
+
     expect(compileToScene(scene, { clips: [definition] }).scene.resources).toMatchObject([
       {
         kind: 'clip',

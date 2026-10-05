@@ -12,6 +12,7 @@ const pointedCap = defineRibbonCap({
       context.center[1] + x * context.outward[1] + y * context.sectionAxis[1],
     ];
     const half = ((context.endpoint === 'end' ? 1 : -1) * context.width) / 2;
+
     return {
       extension: 0,
       commands: [
@@ -22,6 +23,7 @@ const pointedCap = defineRibbonCap({
     };
   },
 });
+
 const ribbonDefinition = createRibbonPathKindDefinition({ caps: [pointedCap] });
 
 /** 自定义端帽复用首尾端面基底 */

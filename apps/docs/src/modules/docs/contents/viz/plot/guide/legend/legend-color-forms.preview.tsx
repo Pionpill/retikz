@@ -10,6 +10,7 @@ const buildColorScale = (values: LegendColorFormsPreviewValues): IRPlotScale => 
   if (values.form === 'swatch') {
     return { type: 'ordinal', name: 'legendColor' };
   }
+
   if (values.form === 'binned') {
     return {
       type: 'quantize',
@@ -19,6 +20,7 @@ const buildColorScale = (values: LegendColorFormsPreviewValues): IRPlotScale => 
       scheme: values.scheme,
     };
   }
+
   return {
     type: 'sequential',
     name: 'legendColor',
@@ -61,6 +63,7 @@ export const LegendColorFormsPreview = (values: LegendColorFormsPreviewValues, l
         ? { style: { rampLength: values.rampLength, rampThickness: values.rampThickness } }
         : {}),
   };
+
   const spec: IRPlot = {
     namespace: 'plot',
     type: 'plot',

@@ -48,12 +48,12 @@ export const RetikzRenderErrorCode = {
 } as const;
 
 /** Render 包稳定错误码取值 */
-export type RetikzRenderErrorCodeValue = ValueOf<typeof RetikzRenderErrorCode>;
+export type RetikzRenderErrorCode = ValueOf<typeof RetikzRenderErrorCode>;
 
 /** Render 包错误的结构化构造参数 */
 export type RetikzRenderErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzRenderErrorCodeValue;
+  code: RetikzRenderErrorCode;
   /** 面向调用方的原始错误消息 */
   message?: string;
   /** 失败上下文的结构化详情 */
@@ -65,13 +65,13 @@ export type RetikzRenderErrorOptions = Readonly<{
 type RetikzRenderErrorCauseOptions = Readonly<Pick<RetikzRenderErrorOptions, 'details' | 'cause'>>;
 
 /** Render 包统一的结构化错误 */
-export class RetikzRenderError extends RetikzError<RetikzRenderErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzRenderError extends RetikzError<RetikzRenderErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 Render 错误 */
   constructor(message: string);
   /** 使用结构化参数创建 Render 错误 */
   constructor(options: RetikzRenderErrorOptions);
   /** 使用显式错误码创建 Render 错误 */
-  constructor(code: RetikzRenderErrorCodeValue, message: string, options?: RetikzRenderErrorCauseOptions);
+  constructor(code: RetikzRenderErrorCode, message: string, options?: RetikzRenderErrorCauseOptions);
   constructor(
     optionsOrMessageOrCode: RetikzRenderErrorOptions | string,
     message?: string,
@@ -82,7 +82,7 @@ export class RetikzRenderError extends RetikzError<RetikzRenderErrorCodeValue, R
         ? optionsOrMessageOrCode
         : message === undefined
           ? { code: RetikzRenderErrorCode.Default, message: optionsOrMessageOrCode }
-          : { code: optionsOrMessageOrCode as RetikzRenderErrorCodeValue, message, ...causeOptions };
+          : { code: optionsOrMessageOrCode as RetikzRenderErrorCode, message, ...causeOptions };
     super({
       code: options.code,
       message: options.message ?? options.code,

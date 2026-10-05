@@ -27,11 +27,13 @@ const createCircleFromDiameterPoints = (a: Position, b: Position): Circle => ({
 const createCircleFromThreePoints = (a: Position, b: Position, c: Position): Circle => {
   const circumcircle = triangle.circumCircle(a, b, c);
   if (circumcircle) return circumcircle;
+
   let largestCircle = createCircleFromDiameterPoints(a, b);
   const circleAC = createCircleFromDiameterPoints(a, c);
   const circleBC = createCircleFromDiameterPoints(b, c);
   if (circleAC.radius > largestCircle.radius) largestCircle = circleAC;
   if (circleBC.radius > largestCircle.radius) largestCircle = circleBC;
+
   return largestCircle;
 };
 
@@ -52,19 +54,26 @@ export const circle = {
   minimalEnclosing: (points: Array<Position>, epsilon = DEFAULT_EPSILON): Circle | null => {
     const n = points.length;
     if (n === 0) return null;
+
     let c: Circle = { center: [points[0][0], points[0][1]], radius: 0 };
+
     for (let i = 1; i < n; i++) {
       if (isPointWithinCircle(c, points[i], epsilon)) continue;
+
       c = { center: [points[i][0], points[i][1]], radius: 0 };
+
       for (let j = 0; j < i; j++) {
         if (isPointWithinCircle(c, points[j], epsilon)) continue;
+
         c = createCircleFromDiameterPoints(points[i], points[j]);
+
         for (let k = 0; k < j; k++) {
           if (isPointWithinCircle(c, points[k], epsilon)) continue;
           c = createCircleFromThreePoints(points[i], points[j], points[k]);
         }
       }
     }
+
     return c;
   },
 };

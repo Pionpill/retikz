@@ -9,13 +9,16 @@ import { resolveRibbonWidthProfileRegistry } from './profile-registry';
 import type { RibbonWidthProfileDefinition } from './profile-types';
 
 const ribbonKey: CoreProviderKey = { capability: 'pathKind', name: 'ribbon' };
+
 const makeRibbonDefinition: CoreDependencyProvider['makeDefinition'] = datasets => {
   const profiles: Array<RibbonWidthProfileDefinition> = [];
   const caps: Array<RibbonCapDefinition> = [];
+
   for (const [key, value] of Object.entries(datasets)) {
     if (key.startsWith('profile:')) profiles.push(value as RibbonWidthProfileDefinition);
     else caps.push(value as RibbonCapDefinition);
   }
+
   return createRibbonPathKindDefinition({ profiles, caps });
 };
 
@@ -45,8 +48,11 @@ export const createRibbonProviderContribution = (
   resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);
   resolveRibbonCapRegistry(ExtensionRibbonCapDefinitions, caps);
   const datasets: Record<string, RibbonWidthProfileDefinition | RibbonCapDefinition> = Object.create(null);
+
   for (const profile of [...BUILTIN_RIBBON_WIDTH_PROFILES, ...profiles]) datasets[`profile:${profile.name}`] = profile;
+
   for (const cap of caps) datasets[`cap:${cap.name}`] = cap;
+
   return {
     roots: [ribbonKey],
     providers: [{ key: ribbonKey, dependencies: [], datasets, makeDefinition: makeRibbonDefinition }],

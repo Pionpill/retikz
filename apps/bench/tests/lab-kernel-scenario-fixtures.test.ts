@@ -21,6 +21,7 @@ describe('Kernel Performance Lab 场景 fixture', () => {
   it('每个 Scene pair 都能通过 Kernel 编译边界', () => {
     for (const scenario of kernelLabScenarios) {
       const { first, second } = createKernelLabScenePair(scenario.id);
+
       expect(compileToScene(first).scene.primitives.length).toBeGreaterThan(0);
       expect(compileToScene(second).scene.primitives.length).toBeGreaterThan(0);
     }
@@ -50,7 +51,9 @@ describe('Kernel Performance Lab 场景 fixture', () => {
 
     expect(first.children).toHaveLength(1_000);
     expect(path).toMatchObject({ type: 'path' });
+
     if (!isKernelPath(path)) throw new Error('expected complex path fixture');
+
     expect(path.children.filter(step => step.kind === 'cubic')).toHaveLength(3);
     expect(path.children.filter(step => step.kind === 'line')).toHaveLength(3);
     expect(changedIndexes(first.children, second.children)).toHaveLength(1_000);

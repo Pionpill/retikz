@@ -4,8 +4,8 @@
 
 #### Matrix / MatrixProps
 
-- `Matrix`: <ApiSourceLink label={"Matrix"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={56}>Standard Matrix presentation component</ApiSourceLink>
-- `MatrixProps`: <ApiSourceLink label={"MatrixProps"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={14}>React inputs for Matrix; omitting all inputs creates an empty matrix</ApiSourceLink>
+- `Matrix`: <ApiSourceLink label={"Matrix"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={85}>Standard Matrix presentation component</ApiSourceLink>
+- `MatrixProps`: <ApiSourceLink label={"MatrixProps"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={15}>React inputs for Matrix; omitting all inputs creates an empty matrix</ApiSourceLink>
 
 ```ts
 export declare const Matrix: {
@@ -47,8 +47,8 @@ export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
 
 #### MatrixRow / MatrixRowProps
 
-- `MatrixRow`: <ApiSourceLink label={"MatrixRow"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={7}>Direct row declaration for Matrix</ApiSourceLink>
-- `MatrixRowProps`: <ApiSourceLink label={"MatrixRowProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={5}>Matrix row grouping without primitives or additional layout</ApiSourceLink>
+- `MatrixRow`: <ApiSourceLink label={"MatrixRow"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={12}>Direct row declaration for Matrix</ApiSourceLink>
+- `MatrixRowProps`: <ApiSourceLink label={"MatrixRowProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixRow.tsx"} startLine={6}>Matrix row grouping without primitives or additional layout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -56,9 +56,9 @@ export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
 
 <ApiTable>
 
-| Member      | Type        | Default | Description |
-| ----------- | ----------- | ------- | ----------- |
-| `children?` | `ReactNode` | —       | —           |
+| Member      | Type        | Default | Description                         |
+| ----------- | ----------- | ------- | ----------------------------------- |
+| `children?` | `ReactNode` | —       | MatrixCell declarations in this row |
 
 </ApiTable>
 
@@ -80,8 +80,8 @@ export type MatrixRowProps = {
 
 #### MatrixCell / MatrixCellProps
 
-- `MatrixCell`: <ApiSourceLink label={"MatrixCell"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={8}>Direct cell declaration for MatrixRow</ApiSourceLink>
-- `MatrixCellProps`: <ApiSourceLink label={"MatrixCellProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={6}>Text or one drawable in a Matrix cell; omitting both leaves an empty cell</ApiSourceLink>
+- `MatrixCell`: <ApiSourceLink label={"MatrixCell"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={10}>Direct cell declaration for MatrixRow</ApiSourceLink>
+- `MatrixCellProps`: <ApiSourceLink label={"MatrixCellProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={7}>Text or one drawable in a Matrix cell; omitting both leaves an empty cell</ApiSourceLink>
 
 <DocTabs defaultValue="text">
 
@@ -95,7 +95,7 @@ export type MatrixRowProps = {
 | `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                    | —       | —                                                                                                   |
+| `text?`     | `string`                    | —       | Cell text, mutually exclusive with drawing content                                                  |
 
 </ApiTable>
 
@@ -107,7 +107,7 @@ export type MatrixRowProps = {
 
 | Member     | Type                        | Default | Description                                                                                         |
 | ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                 | —       | —                                                                                                   |
+| `children` | `ReactNode`                 | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
 | `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
@@ -133,8 +133,8 @@ export type MatrixCellProps = CellMarkerProps;
 
 #### matrix / InputMatrix
 
-- `matrix`: <ApiSourceLink label={"matrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={58}>Create a Matrix embed retaining its original input</ApiSourceLink>
-- `InputMatrix`: <ApiSourceLink label={"InputMatrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={10}>Three mutually exclusive Vanilla inputs for Matrix; items accepts nested drawables</ApiSourceLink>
+- `matrix`: <ApiSourceLink label={"matrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={83}>Create a Matrix embed retaining its original input</ApiSourceLink>
+- `InputMatrix`: <ApiSourceLink label={"InputMatrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={11}>Three mutually exclusive Vanilla inputs for Matrix; items accepts nested drawables</ApiSourceLink>
 
 ```ts
 export declare const matrix: (input: InputMatrix) => InputEmbed<InputMatrix>;
@@ -168,7 +168,7 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
   <ApiSourceLink
     label={'MatrixInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/matrix.ts'}
-    startLine={17}
+    startLine={38}
   >
     Collect Matrix and nested drawable dependencies
   </ApiSourceLink>
@@ -186,7 +186,7 @@ export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<Input
   <ApiSourceLink
     label={'IRMatrix'}
     path={'packages/library/standard/src/collection/matrix/schema/types.ts'}
-    startLine={9}
+    startLine={10}
   >
     Matrix Source with three mutually exclusive inputs and shared drawable cell content
   </ApiSourceLink>
@@ -301,7 +301,7 @@ export const MatrixDefinition: LayoutCompositeDefinition<IRMatrix, 'standard', '
   <ApiSourceLink
     label={'MatrixProvider'}
     path={'packages/library/standard/src/collection/matrix/provider.ts'}
-    startLine={6}
+    startLine={7}
   >
     On-demand dependencies of Matrix and its cell lowering targets
   </ApiSourceLink>
@@ -354,7 +354,7 @@ export declare const createMatrix: (input: IRMatrix) => IRMatrix;
   <ApiSourceLink
     label={'getMatrixCellId'}
     path={'packages/library/standard/src/collection/matrix/identity.ts'}
-    startLine={12}
+    startLine={13}
   >
     Return a zero-based row/column cell id without checking existence
   </ApiSourceLink>

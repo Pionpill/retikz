@@ -9,8 +9,10 @@ const getServerSnapshot = (): boolean => false;
 /** 订阅系统减少动态效果偏好；不支持 matchMedia 的环境保持静态订阅 */
 const subscribe = (onStoreChange: () => void): (() => void) => {
   if (typeof globalThis.matchMedia !== 'function') return () => undefined;
+
   const mediaQuery = globalThis.matchMedia(REDUCED_MOTION_QUERY);
   mediaQuery.addEventListener('change', onStoreChange);
+
   return () => mediaQuery.removeEventListener('change', onStoreChange);
 };
 

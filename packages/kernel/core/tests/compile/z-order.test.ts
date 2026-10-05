@@ -33,10 +33,12 @@ const firstGroup = (result: { primitives: Array<ScenePrimitive> }): GroupPrim =>
 /** 递归收集所有 primitive 的 type（含每个 GroupPrim.children），用于占位泄漏检查 */
 const collectTypes = (primitives: Array<ScenePrimitive>): Array<string> => {
   const types: Array<string> = [];
+
   for (const prim of primitives) {
     types.push(prim.type);
     if (prim.type === 'group') types.push(...collectTypes(prim.children));
   }
+
   return types;
 };
 
@@ -51,20 +53,25 @@ describe('compile primitives 顺序严格等于 IR 声明顺序', () => {
   it('顶层 node / path 交错时 primitives 顺序等于 IR 声明顺序', () => {
     const ir = scene([node([0, 0]), line([10, 0]), node([20, 0]), line([30, 0]), node([40, 0])]);
     const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
+
     expect(types).toEqual(['rect', 'path', 'rect', 'path', 'rect']);
   });
 
   it('夹在两个 node 之间的 path 不再被顶到末尾', () => {
     const ir = scene([node([0, 0]), line([10, 0]), node([20, 0])]);
     const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
+
     expect(types).toEqual(['rect', 'path', 'rect']);
   });
 
   it('无 transform 的 scope 内部 node / path 交错时 group 子序等于 IR 声明顺序', () => {
     const ir = scene([{ type: 'scope', children: [node([0, 0]), line([10, 0]), node([20, 0])] }]);
     const result = compileToScene(ir, silent).scene;
+
     expect(result.primitives.filter(p => p.type === 'group')).toHaveLength(1);
+
     const group = firstGroup(result);
+
     expect(group.children.map(p => p.type)).toEqual(['rect', 'path', 'rect']);
   });
 });
@@ -77,15 +84,19 @@ describe('compile 占位回填的边界场景', () => {
   it('顶层仅一条 path 时占位回填后 primitives 为单元素 path', () => {
     const ir = scene([line([10, 0])]);
     const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
+
     expect(types).toEqual(['path']);
   });
 
   it('无 transform 的 scope 仅含一条可解析 path 时不被剪枝且 group 含该 path', () => {
     const ir = scene([{ type: 'scope', children: [line([10, 0])] }]);
     const result = compileToScene(ir, silent).scene;
+
     // scope 未被 prune：顶层仍得到一个 GroupPrim
     expect(result.primitives.filter(p => p.type === 'group')).toHaveLength(1);
+
     const group = firstGroup(result);
+
     expect(group.children.map(p => p.type)).toEqual(['path']);
   });
 
@@ -105,10 +116,13 @@ describe('compile 占位回填的边界场景', () => {
     ]);
     const result = compileToScene(ir, silent).scene;
     const outer = firstGroup(result);
+
     // 外层：node、内层 scope（group）、path → ['rect', 'group', 'path']
     expect(outer.children.map(p => p.type)).toEqual(['rect', 'group', 'path']);
+
     const inner = outer.children.find((p): p is GroupPrim => p.type === 'group');
     if (!inner) throw new Error('expected a nested GroupPrim');
+
     // 内层：node、path、node → 声明序保住
     expect(inner.children.map(p => p.type)).toEqual(['rect', 'path', 'rect']);
   });
@@ -139,6 +153,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
 
     // 占位被 splice 移除：输出里不存在 path-placeholder（强转 string 比较，避开公开 union 不含此 type）
     const types = result.primitives.map(p => p.type as string);
+
     expect(types).not.toContain('path-placeholder');
 
     // 两个 node 的 rect 仍按声明序在位、无空洞（toEqual 密集比较覆盖长度 / 内容 / undefined 空洞）
@@ -167,8 +182,10 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
         },
       ]),
     ];
+
     for (const ir of cases) {
       const result = compileToScene(ir, silent).scene;
+
       expect(collectTypes(result.primitives)).not.toContain('path-placeholder');
     }
   });
@@ -190,17 +207,21 @@ describe('compile transformed scope 保留 path 所有权', () => {
     const result = compileToScene(ir, silent).scene;
 
     expect(result.primitives.map(p => p.type)).toEqual(['group']);
+
     const group = firstGroup(result);
+
     expect(group.transforms).toEqual([{ kind: 'translate', x: 5, y: 3 }]);
     expect(group.children.map(p => p.type)).toEqual(['rect', 'path']);
 
     const path = group.children[1];
     if (path.type !== 'path') throw new Error('expected group child to be a path');
+
     const moveCmd = path.commands[0];
     const lineCmd = path.commands[path.commands.length - 1];
     if (moveCmd.kind !== 'move' || lineCmd.kind !== 'line') {
       throw new Error('expected move + line commands');
     }
+
     expect(moveCmd.to).toEqual([0, 0]);
     expect(lineCmd.to).toEqual([10, 0]);
   });
@@ -214,9 +235,12 @@ describe('compile transformed scope 保留 path 所有权', () => {
       },
     ]);
     const result = compileToScene(ir, silent).scene;
+
     expect(result.primitives.map(p => p.type)).toEqual(['group']);
+
     const group = firstGroup(result);
     const path = group.children.find(primitive => primitive.type === 'path');
+
     expect(path).toMatchInlineSnapshot(`
       {
         "commands": [
@@ -254,8 +278,11 @@ describe('compile transformed scope 保留 path 所有权', () => {
       node([20, 0]),
     ]);
     const types = compileToScene(ir, silent).scene.primitives.map(p => p.type);
+
     expect(types).toEqual(['rect', 'group', 'rect']);
+
     const group = firstGroup(compileToScene(ir, silent).scene);
+
     expect(group.children.map(p => p.type)).toEqual(['path']);
   });
 });

@@ -19,6 +19,7 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
   };
   if (n.text !== undefined) props.text = n.text;
   if (n.label !== undefined) props.label = n.label;
+
   return props;
 };
 
@@ -27,6 +28,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
   if (step.kind === 'cycle') {
     return createElement(Step, { key, kind: 'cycle' });
   }
+
   if (step.kind === 'fold') {
     if (step.via === '-|-' || step.via === '|-|') {
       return createElement(Step, {
@@ -38,6 +40,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
         ...(step.label !== undefined && { label: step.label }),
       });
     }
+
     return createElement(Step, {
       key,
       kind: 'fold',
@@ -46,6 +49,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'axis-line') {
     return createElement(Step, {
       key,
@@ -55,6 +59,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'curve') {
     return createElement(Step, {
       key,
@@ -64,6 +69,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'cubic') {
     return createElement(Step, {
       key,
@@ -74,6 +80,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'bend') {
     return createElement(Step, {
       key,
@@ -87,6 +94,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'arc') {
     return createElement(Step, {
       key,
@@ -98,6 +106,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'circlePath') {
     return createElement(Step, {
       key,
@@ -109,6 +118,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'ellipsePath') {
     return createElement(Step, {
       key,
@@ -120,6 +130,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'rectangle') {
     return createElement(Step, {
       key,
@@ -129,6 +140,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.cornerRadius !== undefined && { cornerRadius: step.cornerRadius }),
     });
   }
+
   if (step.kind === 'smooth') {
     return createElement(Step, {
       key,
@@ -138,9 +150,11 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   if (step.kind === 'move') {
     return createElement(Step, { key, kind: 'move', to: step.to });
   }
+
   if (step.kind === 'generator') {
     return createElement(Step, {
       key,
@@ -151,6 +165,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.label !== undefined && { label: step.label }),
     });
   }
+
   // line（默认）
   return createElement(Step, {
     key,

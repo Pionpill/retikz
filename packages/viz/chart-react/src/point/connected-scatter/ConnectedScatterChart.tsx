@@ -6,7 +6,10 @@ import type { TypedChartCommonProps } from '../shared';
 import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectConnectedScatterChartDeclarations } from './declaration-collection';
 
-/** Connected Scatter Chart React 属性 */
+/**
+ * Connected Scatter Chart React 属性
+ * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type ConnectedScatterChartProps<TNative = never> = TypedChartCommonProps<IRConnectedScatterChart, TNative>;
 
 /** 组装 Connected Scatter 声明并复用 Vanilla factory 的 React Chart 组件 */

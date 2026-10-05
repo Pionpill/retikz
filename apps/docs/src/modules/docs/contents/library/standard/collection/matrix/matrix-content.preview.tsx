@@ -1,7 +1,9 @@
 import { Layout } from '@retikz/react';
 import { Matrix, MatrixRow, MatrixCell, Map } from '@retikz/standard-react/collection';
+
 /** 本节图形的交互参数 */
 export type MatrixPreviewValues = { mode: 'data' | 'jsx'; expand: 'all' | 'none' | 'map' | 'array' };
+
 /** 按当前参数绘制矩阵 */
 export const renderMatrixPreview = (values: MatrixPreviewValues) => {
   return (

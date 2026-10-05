@@ -1,6 +1,7 @@
 import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
+
 /**
  * 返回直属格子的零基行列 id，不检查位置是否存在
  * @param matrixId 非空白 Matrix id
@@ -20,5 +21,6 @@ export const getMatrixCellId = (matrixId: string, row: number, column: number): 
       message: 'Matrix cell identity requires a nonblank id and nonnegative integer coordinates.',
       details: { matrixId, row, column },
     });
+
   return `${matrixId}-${row}-${column}`;
 };

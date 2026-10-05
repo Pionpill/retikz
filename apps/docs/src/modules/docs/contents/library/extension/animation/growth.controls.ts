@@ -38,6 +38,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { effect: 'grow', duration: 500, origin: 'bottom' },

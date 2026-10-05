@@ -9,9 +9,11 @@ const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | u
   for (const primitive of primitives) {
     if (primitive.type !== 'group') continue;
     if (primitive.children.some(child => child.type === 'path')) return primitive;
+
     const nested = findGridGroup(primitive.children);
     if (nested !== undefined) return nested;
   }
+
   return undefined;
 };
 
@@ -222,9 +224,11 @@ describe('GridDefinition', () => {
 
     expect(zeroWidth.children).toHaveLength(3);
     expect(zeroHeight.children).toHaveLength(4);
+
     for (const scope of [zeroWidth, zeroHeight]) {
       for (const child of scope.children) {
         if (child.type !== 'path') continue;
+
         for (const step of (child as IRPath).children) {
           if ('to' in step && Array.isArray(step.to)) expect(step.to.every(Number.isFinite)).toBe(true);
         }
@@ -249,7 +253,9 @@ describe('GridDefinition', () => {
     expect(
       lowered.slice(0, 4).map(child => {
         if (child.type !== 'path') throw new Error('expected a path');
+
         const firstStep = child.children[0];
+
         return {
           stroke: child.style?.stroke,
           strokeWidth: child.style?.strokeWidth,
@@ -279,6 +285,7 @@ describe('GridDefinition', () => {
     );
 
     expect(lowered[0]?.type).toBe('path');
+
     if (lowered[0]?.type === 'path') {
       expect(lowered[0].style?.stroke).toBe('#64748b');
       expect(lowered[0].children).toEqual([
@@ -290,6 +297,7 @@ describe('GridDefinition', () => {
         },
       ]);
     }
+
     expect(lowered[1]).toMatchObject({
       children: [
         { type: 'step', kind: 'move', to: [0, -2] },

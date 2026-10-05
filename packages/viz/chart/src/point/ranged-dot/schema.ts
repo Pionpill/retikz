@@ -48,7 +48,7 @@ export const RangedDotRangePropertiesSchema = strictObject({
   blendMode: zodEnum(BlendMode).optional(),
 }).describe('Ranged Dot connector constant Path appearance');
 
-/** Ranged Dot authored mark member properties */
+/** 范围点标记的作者侧成员属性 */
 const RangedDotMarkPropertiesSchema = strictObject({
   point: RangedDotPointPropertiesSchema.optional(),
   startPoint: RangedDotPointPropertiesSchema.optional(),
@@ -56,7 +56,7 @@ const RangedDotMarkPropertiesSchema = strictObject({
   range: RangedDotRangePropertiesSchema.optional(),
 }).describe('Ranged Dot member appearance properties');
 
-/** Ranged Dot recipe properties */
+/** 范围点配方的属性 */
 export const RangedDotChartPropertiesSchema = RangedDotMarkPropertiesSchema.extend({
   autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
@@ -69,7 +69,7 @@ export const RangedDotMarkEncodingsSchema = strictObject({
   end: NonBlankStringSchema.optional(),
 }).describe('Ranged Dot authored mark direct field overrides');
 
-/** Ranged Dot authored mark payload */
+/** 范围点标记的作者侧载荷 */
 export const RangedDotChartMarkSchema = strictObject({
   kind: literal(ChartType.RangedDot),
   override: boolean().optional(),
@@ -77,7 +77,7 @@ export const RangedDotChartMarkSchema = strictObject({
   properties: RangedDotMarkPropertiesSchema.optional(),
 }).describe('Ranged Dot Chart mark payload');
 
-/** Ranged Dot recipe envelope */
+/** 范围点配方的封装结构 */
 export const RangedDotChartRecipeSchema = strictObject({
   chartType: literal(ChartType.RangedDot),
   encodings: RangedDotChartEncodingsSchema,
@@ -86,15 +86,15 @@ export const RangedDotChartRecipeSchema = strictObject({
   marks: array(RangedDotChartMarkSchema).optional(),
 }).describe('Ranged Dot Chart recipe payload');
 
-/** Ranged Dot exact Source schema */
+/** 校验范围点图精确输入结构的 schema */
 export const RangedDotChartSchema = createChartSourceSchema(ChartFamily.Point, RangedDotChartRecipeSchema).describe(
   'Ranged Dot Chart Source IR',
 );
 
-/** Ranged Dot exact Source IR */
+/** 范围点图的精确输入 IR */
 export type IRRangedDotChart = ZodInfer<typeof RangedDotChartSchema>;
 
-/** Ranged Dot recipe IR */
+/** 范围点配方的 IR */
 export type IRRangedDotChartRecipe = ZodInfer<typeof RangedDotChartRecipeSchema>;
 
 /** Ranged Dot recipe 字段映射 */
@@ -109,5 +109,5 @@ export type IRRangedDotPointProperties = ZodInfer<typeof RangedDotPointPropertie
 /** Ranged Dot connector 常量属性 */
 export type IRRangedDotRangeProperties = ZodInfer<typeof RangedDotRangePropertiesSchema>;
 
-/** Ranged Dot authored mark IR */
+/** 范围点标记的作者侧 IR */
 export type IRRangedDotMark = ZodInfer<typeof RangedDotChartMarkSchema>;

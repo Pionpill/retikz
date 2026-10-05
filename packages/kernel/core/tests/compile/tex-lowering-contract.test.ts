@@ -42,9 +42,11 @@ describe('[tex-lowering] multi-path contract', () => {
     });
 
     const [group] = line.emit(0, 6, value => value) as Array<GroupPrim>;
+
     expect(group.children).toHaveLength(2);
 
     const [first, second] = group.children as Array<PathPrim>;
+
     expect(first).toMatchObject({
       type: 'path',
       fill: '#0af',
@@ -86,6 +88,7 @@ describe('[tex-lowering] multi-path contract', () => {
 
     const [group] = line.emit(0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
+
     expect(path).not.toHaveProperty('fill');
     expect(path.stroke).toBe('currentColor');
   });
@@ -116,6 +119,7 @@ describe('[tex-lowering] multi-path contract', () => {
 
     const [group] = line.emit(0, 1, value => value) as Array<GroupPrim>;
     const [path] = group.children as Array<PathPrim>;
+
     expect(path.commands).toEqual([{ kind: 'move', to: [0, 0] }]);
   });
 
@@ -131,6 +135,7 @@ describe('[tex-lowering] multi-path contract', () => {
             commandKindReads += 1;
             return commandKindReads === 1 ? 'move' : 'bogus';
           }
+
           return Reflect.get(target, property, receiver);
         },
       },
@@ -143,6 +148,7 @@ describe('[tex-lowering] multi-path contract', () => {
             paintKindReads += 1;
             return paintKindReads === 1 ? 'none' : 'bogus';
           }
+
           return Reflect.get(target, property, receiver);
         },
       },
@@ -160,6 +166,7 @@ describe('[tex-lowering] multi-path contract', () => {
             widthReads += 1;
             return widthReads === 1 ? 1 : Number.NaN;
           }
+
           return Reflect.get(target, property, receiver);
         },
       },

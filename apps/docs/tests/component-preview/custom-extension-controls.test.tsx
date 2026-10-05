@@ -34,6 +34,7 @@ const expectNaturalSize = (markup: string): void => {
     .match(/viewBox="([^"]+)"/)?.[1]
     .split(' ')
     .map(Number);
+
   expect(bounds).toBeDefined();
   expect(Number(root.match(/\swidth="([^"]+)"/)?.[1])).toBe(bounds?.[2]);
   expect(Number(root.match(/\sheight="([^"]+)"/)?.[1])).toBe(bounds?.[3]);
@@ -53,6 +54,7 @@ describe('custom extension demo controls', () => {
     expect(fieldMarkup).not.toBe(constantMarkup);
     expect(fieldMarkup).toContain('<linearGradient');
     expect(constantMarkup).not.toContain('<linearGradient');
+
     expectNaturalSize(fieldMarkup);
   });
 
@@ -64,6 +66,7 @@ describe('custom extension demo controls', () => {
     expect(flatMarkup).not.toBe(archedMarkup);
     expect(flatMarkup).toContain('viewBox="-30 -80 480 340"');
     expect(archedMarkup).toContain('viewBox="-30 -80 480 340"');
+
     expectNaturalSize(flatMarkup);
   });
 
@@ -75,6 +78,7 @@ describe('custom extension demo controls', () => {
     expect(minimumMarkup).not.toBe(maximumMarkup);
     expect(minimumMarkup).toContain('viewBox="-15 -15 450 290"');
     expect(maximumMarkup).toContain('viewBox="-15 -15 450 290"');
+
     expectNaturalSize(minimumMarkup);
   });
 
@@ -92,6 +96,7 @@ describe('custom extension demo controls', () => {
     const compactMarkup = renderWithValues(CustomScaleDemo, canonical, { 'custom-scale-exponent': 3 });
 
     expect(expandedMarkup).not.toBe(compactMarkup);
+
     expectNaturalSize(expandedMarkup);
   });
 });

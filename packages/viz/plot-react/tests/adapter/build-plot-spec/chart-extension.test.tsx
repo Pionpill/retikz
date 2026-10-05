@@ -34,11 +34,13 @@ const expectDeclarationError = (
   conflictingPath?: PlotDeclarationPath,
 ): void => {
   let thrown: unknown;
+
   try {
     run();
   } catch (error) {
     thrown = error;
   }
+
   expect(thrown).toBeInstanceOf(RetikzPlotVanillaError);
   expect(thrown).toMatchObject({
     code,
@@ -74,6 +76,7 @@ describe('Plot chart-extension declaration normalization', () => {
       code: RetikzPlotVanillaErrorCode.UnsupportedChartChild,
       details: { path },
     });
+
     expect(omittedConflict.details).toEqual({ path });
     expect(Object.hasOwn(omittedConflict, 'cause')).toBe(true);
     expect(Object.getOwnPropertyNames(omittedConflict)).toContain('cause');

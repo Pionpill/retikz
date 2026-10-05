@@ -32,6 +32,7 @@ import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './u
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
+
 const rangePlaybackDurationOptions = [500, 1000, 2000, 3000, 5000] as const;
 
 /** 顶栏右侧动作组。 */
@@ -42,6 +43,7 @@ export const HeaderActions: FC = () => {
   const { theme, handleToggleTheme, handleCycleLang } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
+
   /** 当前页无目录内容时隐藏 TOC 开关（右栏不占位，开关无意义） */
   const hasToc = useTocStore(state => state.hasToc);
   const layout = useLayoutStore(s => s.layout);

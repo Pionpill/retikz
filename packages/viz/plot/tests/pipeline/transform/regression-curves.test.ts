@@ -16,6 +16,7 @@ import { lowerPlot } from '../../../src/pipeline/expand/lower';
 const definition = defineRegression({
   schema: strictObject({ kind: literal('degree-fit'), degree: number().default(1) }),
 });
+
 const implementation = defineRegressionImplementation({
   definition,
   fit: (_pairs, operation) => ({ predict: x => x ** operation.degree }),
@@ -81,15 +82,18 @@ describe('regression curve geometry', () => {
     expect(draw(1).children[1]).toHaveProperty('points.length', 7);
     expect(draw(1, 'linear', false, 'linear').children).toHaveLength(8);
   });
+
   it('keeps sampled interpolating geometry for nonlinear methods and projections', () => {
     for (const path of [draw(2), draw(1, 'log'), draw(1, 'linear', true)]) {
       expect(path.children[1]).toMatchObject({ kind: 'smooth' });
       expect(path.children[1]).toHaveProperty('points.length', 7);
     }
   });
+
   it('keeps all samples after a subsequent transform', () => {
     expect(draw(1, 'linear', false, 'linear', true).children).toHaveLength(8);
   });
+
   it('honors explicit step interpolation', () => {
     expect(draw(1, 'linear', false, 'step').children.length).toBeGreaterThan(2);
   });
@@ -104,6 +108,7 @@ it('rejects invalid intermediate predictions', () => {
     fit: () => ({ predict: x => (x === 2 ? Infinity : x) }),
   });
   const registry = resolveRegressionRegistry([brokenDefinition]);
+
   expect(() =>
     applySmooth(
       [

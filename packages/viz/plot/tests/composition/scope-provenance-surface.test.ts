@@ -110,6 +110,7 @@ const expandOf = (spec: IRPlot): IRScope => {
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 
 const allScopes = (child: IRChild): Array<IRScope> => {
@@ -132,6 +133,7 @@ const gridLayersOf = (scope: IRScope): Array<IRScope> =>
 describe('scope provenance surface lowering', () => {
   it('mark_layer_meta_carries_coordinate_view', () => {
     const outer = expandOf(parsePlotIR(overlaySpec));
+
     expect(markLayersOf(outer).map(layer => layer.meta?.coordinateView)).toEqual(['temp', 'rain']);
     expect(markLayersOf(outer).every(layer => layer.meta?.coordinateScope === undefined)).toBe(true);
   });
@@ -139,6 +141,7 @@ describe('scope provenance surface lowering', () => {
   it('facet_datum_meta_carries_facet_context', () => {
     const outer = expandOf(parsePlotIR(facetSpec));
     const datum = allNodes(outer).find(node => node.meta?.transformedIndex === 0);
+
     expect(datum?.meta).toMatchObject({
       coordinateView: 'region.panel._.north',
       facet: { id: 'region', column: 'north' },
@@ -149,6 +152,7 @@ describe('scope provenance surface lowering', () => {
   it('track_datum_meta_carries_arrangement_and_track_context', () => {
     const outer = expandOf(parsePlotIR(trackSpec));
     const datum = allNodes(outer).find(node => node.meta?.markIndex === 1 && node.meta.transformedIndex === 0);
+
     expect(datum?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
     expect(datum?.meta?.scaffold).toBeUndefined();
   });
@@ -156,6 +160,7 @@ describe('scope provenance surface lowering', () => {
   it('track_guide_meta_carries_arrangement_and_track_context', () => {
     const outer = expandOf(parsePlotIR(trackSpec));
     const rainGridLayer = gridLayersOf(outer).find(layer => layer.meta?.coordinateView === 'rain');
+
     expect(rainGridLayer?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
     expect(rainGridLayer?.meta?.scaffold).toBeUndefined();
   });
@@ -170,6 +175,7 @@ describe('scope provenance surface lowering', () => {
       })),
     });
     const ids = gridLayersOf(expandOf(spec)).map(layer => layer.id);
+
     expect(ids).toEqual(['weather.temperature-axis.grid', 'weather.rainfall-axis.grid']);
   });
 
@@ -179,6 +185,7 @@ describe('scope provenance surface lowering', () => {
       guides: overlaySpec.guides.map(guide => ({ ...guide, grid: true })),
     });
     const ids = gridLayersOf(expandOf(spec)).map(layer => layer.id);
+
     expect(ids).toEqual(['weather.view.temp.grid.y', 'weather.view.rain.grid.y']);
   });
 });
@@ -188,6 +195,7 @@ describe('scope provenance surface locator', () => {
     const locator = createPlotLocator(parsePlotIR(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
     const temp = locator.datum(0, { coordinateView: 'temp' });
     const rain = locator.datum(0, { coordinateView: 'rain' });
+
     expect(temp?.meta.coordinateView).toBe('temp');
     expect(rain?.meta.coordinateView).toBe('rain');
     expect(rain?.position).not.toEqual(temp?.position);
@@ -197,6 +205,7 @@ describe('scope provenance surface locator', () => {
     const locator = createPlotLocator(parsePlotIR(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
     const north = locator.datum(0, { facet: { id: 'region', column: 'north' } });
     const south = locator.datum(0, { facet: { id: 'region', column: 'south' } });
+
     expect(north?.meta.facet).toEqual({ id: 'region', column: 'north' });
     expect(south?.meta.facet).toEqual({ id: 'region', column: 'south' });
     expect(south?.position[0]).toBeGreaterThan(north?.position[0] ?? 0);
@@ -205,11 +214,13 @@ describe('scope provenance surface locator', () => {
   it('locator_by_track_returns_track_context', () => {
     const locator = createPlotLocator(parsePlotIR(trackSpec), { weather: weatherRows }, { width: 480, height: 300 });
     const rain = locator.datum(0, { track: 'rain' });
+
     expect(rain?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
   });
 
   it('root_and_view_addresses_resolve', () => {
     const locator = createPlotLocator(parsePlotIR(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
+
     expect(locator.resolve('weather.datum.0')?.meta.transformedIndex).toBe(0);
     expect(locator.resolve('weather.view.rain.datum.0')?.meta.coordinateView).toBe('rain');
     expect(locator.resolve('weather.scope.rain.datum.0')).toBeNull();
@@ -217,6 +228,7 @@ describe('scope provenance surface locator', () => {
 
   it('unknown_view_or_invalid_facet_returns_null', () => {
     const locator = createPlotLocator(parsePlotIR(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
+
     expect(locator.datum(0, { coordinateView: 'missing' })).toBeNull();
     expect(locator.datum(0, { facet: { id: 'region', column: 'west' } })).toBeNull();
   });

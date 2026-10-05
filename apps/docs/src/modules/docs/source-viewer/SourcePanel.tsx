@@ -16,6 +16,7 @@ const getSourceLanguage = (path: string): string => {
   const extension = path.split('.').at(-1)?.toLowerCase();
   if (extension === 'ts' || extension === 'tsx' || extension === 'json') return extension;
   if (extension === 'sh' || extension === 'bash') return 'bash';
+
   return 'text';
 };
 
@@ -66,6 +67,7 @@ export const SourcePanel: FC<SourcePanelProps> = props => {
 
   useEffect(() => {
     if (code === undefined || source.startLine === undefined) return;
+
     sourceContentRef.current
       ?.querySelector<HTMLElement>(`[data-source-line="${source.startLine}"]`)
       ?.scrollIntoView({ block: 'center' });

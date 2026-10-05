@@ -19,6 +19,7 @@ export const resolveArray = (source: IRArray): CanonicalArray => {
         : items;
   const index = source.index === true ? {} : source.index;
   const indexStyle = index ? index.style : undefined;
+
   return {
     ...input,
     items: cells.map((cell, cellIndex) => {
@@ -29,7 +30,9 @@ export const resolveArray = (source: IRArray): CanonicalArray => {
         { overallStyle: source.style, overallLayout: source.layout },
       );
       if (cellIdMode !== ArrayCellIdMode.Index) return resolved;
+
       const id = `${source.id}-${cellIndex}`;
+
       return {
         ...resolved,
         id,

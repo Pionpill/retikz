@@ -22,6 +22,7 @@ export const midpoint = defineStatisticsReducer({
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
+
 /** midpoint的本地计算实现 */
 export const midpointImplementation = defineStatisticsReducerImplementation({
   definition: midpoint,
@@ -40,6 +41,7 @@ export const closestToMean = defineRowSelector({
   }),
   inputFields: operation => [operation.field],
 });
+
 /** closestToMean的本地计算实现 */
 export const closestToMeanImplementation = defineRowSelectorImplementation({
   definition: closestToMean,
@@ -48,10 +50,12 @@ export const closestToMeanImplementation = defineRowSelectorImplementation({
       .map(row => ({ row, value: Number(row[operation.field]) }))
       .filter(candidate => Number.isFinite(candidate.value));
     if (candidates.length === 0) return [];
+
     const mean = candidates.reduce((sum, candidate) => sum + candidate.value, 0) / candidates.length;
     const selected = candidates.reduce((best, candidate) =>
       Math.abs(candidate.value - mean) < Math.abs(best.value - mean) ? candidate : best,
     );
+
     return [{ row: selected.row }];
   },
 });

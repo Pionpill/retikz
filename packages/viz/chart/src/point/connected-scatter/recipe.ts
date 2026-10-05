@@ -22,9 +22,13 @@ import { ConnectedScatterChartSchema } from './schema';
 
 /** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */
 export const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
+
 const markPropertySlots = ['point', 'path', 'colorMode'] as const;
+
 const propertySlots = [...markPropertySlots, 'domainPadding', 'autoPadding'] as const;
+
 const seriesScaleName = pointRecipeId(ChartType.ConnectedScatter, 'scale.series');
+
 const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof ConnectedScatterChartEncodingSlots)[number]>> = [
   ...pointPositionFieldConsumersOf(ChartType.ConnectedScatter),
   { slot: 'order' },
@@ -59,6 +63,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     const slots = pointSlotsOf(context);
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
     const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
+
     return pointResolutionOf(
       ChartType.ConnectedScatter,
       [
@@ -77,6 +82,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     const scales = resolvePointScaleDefaults(context);
     if (context.source.recipe.properties?.colorMode !== 'mark' || context.source.recipe.encodings.series === undefined)
       return scales;
+
     const series = context.encodings.encodings.series;
     const name =
       typeof series === 'string' ? seriesScaleName : ((series as { scale?: string }).scale ?? seriesScaleName);
@@ -87,7 +93,9 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
         message: 'Connected Scatter mark colors require an ordinal series scale',
       });
     }
+
     const source = original;
+
     for (const role of ['point', 'path']) {
       if (scales.some(scale => scale.name === `${name}.${role}`)) {
         throw new RetikzChartError({
@@ -96,6 +104,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
         });
       }
     }
+
     return [
       ...scales,
       ...(['point', 'path'] as const).map((role, index) => ({
@@ -116,13 +125,16 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
       context.source.recipe.encodings.series === undefined
     )
       return guides;
+
     const symbolsGuides: Array<IRPlotGuide> = [];
+
     for (let index = 0; index < context.chartMarks.length - 1; index += 2) {
       const path = context.chartMarks[index];
       const point = context.chartMarks[index + 1];
       if (!isBuiltinMark(path) || path.type !== PlotMark.Path || !isBuiltinMark(point) || point.type !== PlotMark.Point)
         continue;
       if (point.color?.kind !== 'field') continue;
+
       const paint = point.fill?.kind === 'constant' ? point.fill.value : undefined;
       const linePaint = path.stroke?.kind === 'constant' ? path.stroke.value : undefined;
       symbolsGuides.push({
@@ -142,6 +154,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
         ],
       });
     }
+
     return guides.flatMap(guide => (guide.type === PlotGuide.Legend ? symbolsGuides : [guide]));
   },
 });

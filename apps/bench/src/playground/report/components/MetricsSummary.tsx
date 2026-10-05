@@ -72,6 +72,7 @@ export const MetricsSummary: FC<MetricsSummaryProps> = props => {
             : 'text-orange-600 dark:text-orange-400',
     },
   ];
+
   return (
     <section
       data-slot="lab-metrics-summary"
@@ -84,6 +85,7 @@ export const MetricsSummary: FC<MetricsSummaryProps> = props => {
       {cards.map((card, index) => {
         const Icon = card.icon;
         const primary = index === 0;
+
         return (
           <article
             key={card.id}

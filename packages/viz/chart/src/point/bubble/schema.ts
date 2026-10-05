@@ -43,6 +43,9 @@ export const BubbleChartSchema = createChartSourceSchema(ChartFamily.Point, Bubb
 );
 
 export type IRBubbleChart = ZodInfer<typeof BubbleChartSchema>;
+
 export type IRBubbleChartRecipe = ZodInfer<typeof BubbleChartRecipeSchema>;
+
 export type IRBubbleChartEncodings = ZodInfer<typeof BubbleChartEncodingsSchema>;
+
 export type IRBubbleChartProperties = ZodInfer<typeof BubbleChartPropertiesSchema>;

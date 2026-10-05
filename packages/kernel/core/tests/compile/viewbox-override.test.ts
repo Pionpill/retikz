@@ -31,6 +31,7 @@ describe('IR 根带 viewBox 时直接用作 Scene.layout', () => {
       height: 200,
     });
     const result = compileToScene(ir).scene;
+
     expect(result.layout).toEqual({ x: -100, y: -100, width: 200, height: 200 });
   });
 
@@ -39,6 +40,7 @@ describe('IR 根带 viewBox 时直接用作 Scene.layout', () => {
     const ir = scene([circleNode('o', [0, 0])], viewBox);
     const withSmallPadding = compileToScene(ir, { padding: 10 }).scene;
     const withLargePadding = compileToScene(ir, { padding: 50 }).scene;
+
     expect(withSmallPadding.layout).toEqual(viewBox);
     expect(withLargePadding.layout).toEqual(viewBox);
   });
@@ -48,6 +50,7 @@ describe('IR 根带 viewBox 时直接用作 Scene.layout', () => {
     const viewBox = { x: -100, y: -100, width: 200, height: 200 };
     const ir = scene([circleNode('far', [500, 500], 80)], viewBox);
     const result = compileToScene(ir).scene;
+
     expect(result.layout).toEqual(viewBox);
   });
 });
@@ -62,6 +65,7 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
     });
     const result = compileToScene(ir).scene;
     const r = createRound(2);
+
     expect(result.layout).toEqual({
       x: r(-12.555),
       y: r(3.214),
@@ -79,6 +83,7 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
     });
     const result = compileToScene(ir, { precision: 0 }).scene;
     const r = createRound(0);
+
     expect(result.layout).toEqual({
       x: r(-12.7),
       y: r(3.4),
@@ -92,6 +97,7 @@ describe('IR 根无 viewBox 时回退自动算 layout', () => {
   it('空场景无 viewBox → 回退 computeLayout 兜底框', () => {
     const ir = scene([]);
     const result = compileToScene(ir).scene;
+
     expect(result.layout).toEqual(computeLayout([], 10, createRound(2)));
   });
 
@@ -99,6 +105,7 @@ describe('IR 根无 viewBox 时回退自动算 layout', () => {
     const content = [circleNode('o', [0, 0])];
     const withSmallPadding = compileToScene(scene(content), { padding: 10 }).scene;
     const withLargePadding = compileToScene(scene(content), { padding: 50 }).scene;
+
     // 回退到 computeLayout：padding 越大 layout 越大（证明未走 override 分支）
     expect(withLargePadding.layout.width).toBeGreaterThan(withSmallPadding.layout.width);
     expect(withLargePadding.layout.height).toBeGreaterThan(withSmallPadding.layout.height);
@@ -109,6 +116,7 @@ describe('IR 根无 viewBox 时回退自动算 layout', () => {
     const viewBox = { x: -100, y: -100, width: 200, height: 200 };
     const withViewBox = compileToScene(scene(content, viewBox)).scene;
     const withoutViewBox = compileToScene(scene(content)).scene;
+
     expect(withViewBox.layout).toEqual(viewBox);
     expect(withoutViewBox.layout).not.toEqual(viewBox);
   });
@@ -122,6 +130,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       width: Infinity,
       height: 200,
     });
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
@@ -132,6 +141,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       width: 200,
       height: NaN,
     });
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
@@ -142,6 +152,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       width: 0,
       height: 200,
     });
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 });

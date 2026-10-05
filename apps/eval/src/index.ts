@@ -13,6 +13,7 @@ const parseK = (raw: string | undefined): number => {
   if (!/^\d+$/.test(raw) || Number(raw) < 1) {
     throw new Error(`EVAL_K 必须是 >=1 的整数，收到：${JSON.stringify(raw)}`);
   }
+
   return Number(raw);
 };
 
@@ -25,8 +26,10 @@ const main = async (): Promise<void> => {
       '无可用 provider：anthropic 设 ANTHROPIC_API_KEY 即可；openai / deepseek 需同时设 key 与 EVAL_OPENAI_MODEL / EVAL_DEEPSEEK_MODEL。',
     );
     process.exitCode = 1;
+
     return;
   }
+
   console.log(`可用 provider：${availableProviderIds().join(', ')} · K=${k}`);
 
   const corpus = loadCorpus(new URL('../corpus/core.json', import.meta.url));

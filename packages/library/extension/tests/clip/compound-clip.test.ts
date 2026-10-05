@@ -44,6 +44,7 @@ describe('Extension compound clip definition', () => {
   it('provides polygon and path definitions as explicit Extension extensions', () => {
     expect(PolygonClipDefinition.kind).toBe('polygon');
     expect(PathClipDefinition.kind).toBe('path');
+
     const scene: IRScene = {
       type: 'scene',
       version: 1,
@@ -62,6 +63,7 @@ describe('Extension compound clip definition', () => {
         },
       ],
     };
+
     expect(() => compileToScene(scene, { clips: [PolygonClipDefinition] })).not.toThrow();
   });
 
@@ -85,8 +87,11 @@ describe('Extension compound clip definition', () => {
       clips: [CompoundClipDefinition, CircleClipDefinition, EllipseClipDefinition, roundedRectClip()],
     }).scene;
     const resource = compiled.resources?.[0];
+
     expect(resource).toMatchObject({ kind: 'clip', path: { fillRule: 'evenodd' } });
+
     if (resource?.kind !== 'clip') throw new Error('Expected canonical clip resource');
+
     expect(resource.path.commands.map(command => command.kind)).toEqual([
       'move',
       'arc',

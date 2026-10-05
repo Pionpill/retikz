@@ -46,9 +46,11 @@ const lineLine = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
   const det = vector2.cross(da, db);
   if (Math.abs(det) < DEFAULT_EPSILON) return null;
+
   const dx = b1[0] - a1[0];
   const dy = b1[1] - a1[1];
   const t = (dx * db[1] - dy * db[0]) / det;
+
   return [a1[0] + da[0] * t, a1[1] + da[1] * t];
 };
 
@@ -60,15 +62,19 @@ const lineCircle = ({ origin, direction, center, radius }: LineCircleInput): Arr
   const oy = origin[1] - center[1];
   const a = direction[0] * direction[0] + direction[1] * direction[1];
   if (a <= DEFAULT_EPSILON * DEFAULT_EPSILON) return [];
+
   const b = 2 * (ox * direction[0] + oy * direction[1]);
   const c = ox * ox + oy * oy - radius * radius;
   const discriminant = b * b - 4 * a * c;
   if (discriminant < 0) return [];
+
   const discriminantRoot = Math.sqrt(discriminant);
   const intersections: Array<Position> = [];
+
   for (const lineParameter of [(-b - discriminantRoot) / (2 * a), (-b + discriminantRoot) / (2 * a)]) {
     intersections.push([origin[0] + direction[0] * lineParameter, origin[1] + direction[1] * lineParameter]);
   }
+
   return intersections;
 };
 
@@ -86,6 +92,7 @@ const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput)
   ) {
     return [];
   }
+
   const a = (radiusA * radiusA - radiusB * radiusB + d * d) / (2 * d);
   const h2 = radiusA * radiusA - a * a;
   const h = h2 > 0 ? Math.sqrt(h2) : 0;
@@ -93,6 +100,7 @@ const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput)
   const my = centerA[1] + (a * dy) / d;
   const rx = (-dy * h) / d;
   const ry = (dx * h) / d;
+
   return [
     [mx + rx, my + ry],
     [mx - rx, my - ry],
@@ -107,11 +115,13 @@ const segmentSegment = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
   const det = vector2.cross(da, db);
   if (Math.abs(det) < DEFAULT_EPSILON) return null;
+
   const dx = b1[0] - a1[0];
   const dy = b1[1] - a1[1];
   const t = (dx * db[1] - dy * db[0]) / det;
   const u = (dx * da[1] - dy * da[0]) / det;
   if (t < -DEFAULT_EPSILON || t > 1 + DEFAULT_EPSILON || u < -DEFAULT_EPSILON || u > 1 + DEFAULT_EPSILON) return null;
+
   return [a1[0] + da[0] * t, a1[1] + da[1] * t];
 };
 

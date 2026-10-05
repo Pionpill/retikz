@@ -26,6 +26,7 @@ const radialShape = (): ShapeDefinition =>
       const [lx, ly] = worldToLocal(rect, toward);
       const len = Math.hypot(lx, ly) || 1;
       const r = rect.width / 2;
+
       return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
     },
     anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
@@ -86,6 +87,7 @@ describe('<Layout shapes> 自定义 shape 注入', () => {
         <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
       </Layout>,
     );
+
     expect(svg).toContain('<ellipse');
   });
 
@@ -132,7 +134,10 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
 
 describe('<Layout clips> complete Clip definition passthrough', () => {
   it('forwards one complete clips registry to static Vanilla processing and SSR', () => {
-    const svg = renderToStaticMarkup(<Layout ir={clippedIr} extensions={{ clips: [customClip()] }} runtime={{ mode: 'static' }} />);
+    const svg = renderToStaticMarkup(
+      <Layout ir={clippedIr} extensions={{ clips: [customClip()] }} runtime={{ mode: 'static' }} />,
+    );
+
     expect(svg).toContain('<clipPath');
   });
 });

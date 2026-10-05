@@ -7,6 +7,7 @@ import { createStandardApiReferenceMdx } from './standard-schema';
 import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
+
 const groups = {
   'circle-ellipse': ['Circle', 'Ellipse'],
   rectangle: ['Rectangle'],
@@ -40,6 +41,7 @@ export const writeStandardShapeApiReferences = async (
 ): Promise<void> => {
   for (const [slug, names] of Object.entries(groups)) {
     if (!selected.includes(slug as keyof typeof groups)) continue;
+
     const configs: Array<ApiReferencePackageConfig> = [
       {
         packageName: '@retikz/standard-react/shape',
@@ -82,10 +84,13 @@ export const writeStandardShapeApiReferences = async (
         translate: translateShapeApiReference,
       },
     ];
+
     const directory = path.resolve(outputRoot, slug, '_includes');
     mkdirSync(directory, { recursive: true });
+
     for (const lang of ['zh', 'en'] as const) {
       const sections: Array<string> = [];
+
       for (const config of configs)
         sections.push(embedApiReferenceMdx(await createStandardApiReferenceMdx(config, lang)));
       writeFileSync(

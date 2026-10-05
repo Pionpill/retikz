@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 功能面板的双语文案 */
 export const demoI18n = {
   zh: {

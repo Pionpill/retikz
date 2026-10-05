@@ -28,6 +28,7 @@ const render = (lang: Lang, dimensions?: PreviewDimensions) => {
       }}
     />
   );
+
   return chart;
 };
 

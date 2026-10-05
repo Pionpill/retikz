@@ -130,6 +130,7 @@ const createControls = (lang: Lang) => {
     ],
   });
 };
+
 /** 交互示例的稳定状态和 API 覆盖 */
 export const createPreviewControlContract = (lang: Lang) =>
   ({
@@ -157,5 +158,6 @@ export const createPreviewControlContract = (lang: Lang) =>
     },
     relatedApis: ['Array.layout', 'Array.style', 'Array.index', 'Array.items'],
   }) satisfies PreviewControlContract;
+
 /** 注册与源码派生使用的默认契约 */
 export const previewControlContract = createPreviewControlContract('zh');

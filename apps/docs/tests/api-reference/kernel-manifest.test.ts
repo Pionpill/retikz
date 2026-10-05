@@ -45,6 +45,7 @@ const packageReferences = [
 describe('Kernel API Reference MDX', () => {
   it('函数重载和可调用对象的说明与定义保持对应，无参函数不出现空白页签', async () => {
     const directory = mkdtempSync(resolve(tmpdir(), 'retikz-callable-reference-'));
+
     try {
       const entry = resolve(directory, 'index.ts');
       const tsconfigPath = resolve(directory, 'tsconfig.json');
@@ -80,16 +81,20 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
         'en',
       );
       const section = (name: string): string => source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+
       for (const name of ['convert', 'Callback', 'idle']) {
         expect(section(name).match(/<DocTabs\b/g)).toHaveLength(1);
         expect(section(name)).toContain('<DocTabs defaultValue="members">');
       }
+
       const convert = section('convert');
       const members = convert.split('<DocTab value="members"')[1]?.split('</DocTab>')[0] ?? '';
       const definition = convert.split('<DocTab value="definition"')[1]?.split('</DocTab>')[0] ?? '';
+
       for (const index of [1, 2]) {
         expect(members).toContain(`| ${index} | Parameters |`);
       }
+
       expect(members).toContain('| `value` | `string` |');
       expect(members).toContain('| `value` | `number` |');
       expect(members.match(/\| Overload \| Category \|/g)).toHaveLength(1);
@@ -99,11 +104,15 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
       expect(definition).toContain('(value: string) => string');
       expect(definition).toContain('(value: number) => number');
       expect(members).not.toContain('```ts');
+
       const callbackMembers = section('Callback').split('<DocTab value="members"')[1]?.split('</DocTab>')[0] ?? '';
+
       expect(callbackMembers).toContain('| `readonly label` |');
       expect(callbackMembers).toContain('| `value` (Parameter) | `string` |');
       expect(section('idle')).toContain('| Returns | — | `void` | — |');
+
       const grouped = section('grouped').split('<DocTab value="members"')[1]?.split('</DocTab>')[0] ?? '';
+
       expect(grouped).toContain('| Type parameters | `T` | `extends string = string` |');
       expect(grouped).toContain('|  | `U` | `= number` |');
       expect(grouped).toContain('| Parameters | `first` | `T` |');
@@ -118,8 +127,10 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
   it.each(['zh', 'en'] as const)('Foundation 函数和类使用统一的单层属性与类型定义页签（%s）', async lang => {
     const source = await createFoundationApiReferenceMdx(lang);
+
     for (const [name, member] of [
       ['RetikzError', '| `readonly code` |'],
       ['RetikzFoundationError', '| `constructor` |'],
@@ -127,20 +138,25 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
       ['isRetikzError', '| `value` |'],
     ]) {
       const section = source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+
       expect(section.match(/<DocTabs\b/g)).toHaveLength(1);
       expect(section).toContain('<DocTabs defaultValue="members">');
       expect(section).toContain(`label="${lang === 'zh' ? '属性' : 'Members'}"`);
       expect(section).toContain(`label="${lang === 'zh' ? '类型定义' : 'Type definition'}"`);
+
       const members = section.split('<DocTab value="members"')[1]?.split('</DocTab>')[0] ?? '';
       const definition = section.split('<DocTab value="definition"')[1]?.split('</DocTab>')[0] ?? '';
+
       expect(members).toContain(member);
       expect(members).not.toContain('```ts');
       expect(definition).toContain('```ts\nexport');
       expect(section.split('<DocTabs')[0]).not.toContain('```ts');
     }
   });
+
   it('保留 Foundation 类型守卫、模板字符串返回类型和默认参数的可选性', async () => {
     const source = await createFoundationApiReferenceMdx('en');
+
     expect(source).toContain('(value: unknown) => value is RetikzError');
     expect(source).toContain('=> `#${string}`');
     expect(source).toContain('path?: string');
@@ -150,6 +166,7 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
     expect(source).not.toContain('=> predicate');
     expect(source).not.toContain('=> templateLiteral');
   });
+
   it.each(packageReferences)('从 $packageName 的单入口导出生成正确的双语结构', async reference => {
     const zh = await reference.create('zh');
     const en = await reference.create('en');
@@ -165,10 +182,13 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
 
   it.each(packageReferences)('写出的 $packageName include 可由 MDX 编译器编译', async reference => {
     const outputDirectory = mkdtempSync(resolve(tmpdir(), 'retikz-kernel-api-reference-'));
+
     try {
       await reference.write(outputDirectory);
+
       for (const lang of ['zh', 'en'] as const) {
         const source = readFileSync(resolve(outputDirectory, `generated.${lang}.mdx`), 'utf8');
+
         await expect(compile(source, compileOptions)).resolves.toBeTruthy();
       }
     } finally {
@@ -188,14 +208,17 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
   it('Math 工具对象展示方法说明和可选参数，曲线分支与默认值可查', async () => {
     const source = await createMathApiReferenceMdx('en');
     const section = (name: string): string => source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+
     expect(section('circle')).toContain('<DocTabs defaultValue="members">');
     expect(section('circle')).toContain('| Member | Signature | Description |');
     expect(section('circle')).toContain('Smallest enclosing circle');
     expect(section('circle')).toContain('returns null for empty input');
     expect(section('CurveSegment').match(/<DocTabs\b/g)).toHaveLength(1);
+
     for (const name of ['Line', 'Quadratic Bézier', 'Cubic Bézier', 'Circular arc', 'Elliptical arc']) {
       expect(section('CurveSegment')).toContain(`Members · ${name}`);
     }
+
     expect(section('CurveApproximationOptions')).toContain('| `sampleCount?` | `number` | `32` |');
     expect(section('vector2')).toContain('original fallback reference');
     expect(section('boundsOf')).toContain('Two-dimensional point set to evaluate');
@@ -220,8 +243,10 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
     expect(source).toContain('Creates a Foundation error from structured options');
     expect(source).not.toContain('| `captureStackTrace` |');
     expect(source).not.toContain('| `stackTraceLimit` |');
+
     const definition =
       source.split('### RetikzError\n')[1]?.split('<DocTab value="definition"')[1]?.split('</DocTab>')[0] ?? '';
+
     expect(definition).toContain('readonly code: TCode;');
     expect(definition).toContain('readonly details: TDetails;');
     expect(definition).toContain('readonly cause?: unknown;');
@@ -233,6 +258,7 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
     const section = source.split('### RetikzFoundationError\n')[1]?.split('\n### ')[0] ?? '';
     const members = section.split('<DocTab value="members"')[1]?.split('</DocTab>')[0] ?? '';
     const definition = section.split('<DocTab value="definition"')[1]?.split('</DocTab>')[0] ?? '';
+
     expect(members).toContain('| Member | Signature | Description |');
     expect(members).toContain(
       '| `constructor` | `(message: string)` | Creates a Foundation error with the default error code |',

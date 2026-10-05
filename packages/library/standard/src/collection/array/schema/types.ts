@@ -7,6 +7,7 @@ import type { ArrayCellSchema, ArrayIndexOptionsSchema, ArrayIndexStyleSchema, A
 
 /** 启用索引带时的位置、自动起点或显式标号与文本外观 */
 export type IRArrayIndexOptions = input<typeof ArrayIndexOptionsSchema>;
+
 /** 索引文本的稀疏外观覆盖，不受单格样式影响 */
 export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 
@@ -22,6 +23,7 @@ export type IRArray = Omit<
   keyof IRScopeProps | 'items' | 'data' | 'cellIdMode' | 'dataExpand' | 'skeleton'
 > &
   Omit<IRScopeProps, 'style'> & {
+    /** 供各格继承的集合视觉样式，格内显式字段可覆盖对应值 */
     style?: IRCell['style'];
     /**
      * 直属格身份：explicit 仅显式 id，string 使用 items 字符串，index 由 Array id 与零基下标生成

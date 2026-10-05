@@ -17,5 +17,6 @@ export const getArrayCellId = (arrayId: string, index: number): string => {
       details: { arrayId, index },
     });
   }
+
   return `${arrayId}-${index}`;
 };

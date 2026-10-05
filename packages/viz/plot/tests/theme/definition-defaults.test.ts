@@ -41,6 +41,7 @@ describe('Plot theme definition closure', () => {
       mode: ThemeMode.Light,
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     };
+
     expect(() => resolvePlotTheme({ ...theme, style: 'missing' })).toThrow(/not registered/);
   });
 });

@@ -15,12 +15,14 @@ import type { LegendInput } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const sample: IRChild = { type: 'node', position: [0, 0], text: 'Sample' };
+
 const label: IRChild = { type: 'node', position: [0, 0], text: 'Label' };
 
 const expectIssuePath = (value: unknown, path: string): void => {
   const parsed = LegendSchema.safeParse(value);
 
   expect(parsed.success).toBe(false);
+
   if (!parsed.success) {
     expect(parsed.error.issues.some(issue => issue.path.join('.') === path)).toBe(true);
   }
@@ -35,6 +37,7 @@ describe('Legend schema and factory', () => {
       content: { direction: 'vertical', sampleGap: 8, gap: 8 },
     });
   });
+
   it('reuses the complete Core Scope authored surface', () => {
     const parsed = LegendSchema.parse({
       namespace: 'standard',
@@ -55,7 +58,9 @@ describe('Legend schema and factory', () => {
       },
     } satisfies LegendInput;
     const source = createLegend(input);
+
     expect(source).toEqual({ namespace: 'standard', type: 'legend', ...input });
+
     const parsed = resolveLegend(source);
 
     expect(parsed).toEqual({
@@ -145,6 +150,7 @@ describe('Legend schema and factory', () => {
 
     expect(LegendSchema.parse(JSON.parse(JSON.stringify(centered))).contentAlign).toBe(LayoutAlignment.Center);
     expect(LegendSchema.parse(JSON.parse(JSON.stringify(ended))).contentAlign).toBe(LayoutAlignment.End);
+
     expectIssuePath(
       {
         namespace: 'standard',
@@ -224,6 +230,7 @@ describe('Legend schema and factory', () => {
       content: { kind: LegendContentKind.Items, items: [] },
       style: { stroke: '#334155' },
     });
+
     expect(scoped).toMatchObject({
       id: 'legend',
       localNamespace: true,
@@ -232,6 +239,7 @@ describe('Legend schema and factory', () => {
       meta: { source: 'test' },
       style: { stroke: '#334155' },
     });
+
     expectIssuePath({ ...base, title: 'Legend' }, 'title');
     expectIssuePath(
       { ...base, content: { kind: 'items', items: [{ key: 'item', sample: 'line' }] } },
@@ -254,12 +262,15 @@ describe('Legend schema and factory', () => {
       ...base,
       content: { kind: 'items', items: [{ key: '   ', sample }] },
     });
+
     expect(blank.success).toBe(false);
+
     if (!blank.success) {
       expect(blank.error.issues.filter(issue => issue.path.join('.') === 'content.items.0.key')).toEqual([
         expect.objectContaining({ message: 'String must contain at least one non-whitespace character.' }),
       ]);
     }
+
     expectIssuePath(
       {
         ...base,
@@ -311,6 +322,7 @@ describe('Legend schema and factory', () => {
         ...{ content: { ...items, gap: { row: Number.POSITIVE_INFINITY, column: 8 } } },
       }),
     ).toThrow();
+
     expectIssuePath(
       {
         namespace: 'standard',
@@ -319,6 +331,7 @@ describe('Legend schema and factory', () => {
       },
       'content.gap.column',
     );
+
     expect(() =>
       LegendSchema.parse({
         namespace: 'standard',
@@ -326,6 +339,7 @@ describe('Legend schema and factory', () => {
         ...{ content: { ...items, sampleGap: Number.NaN } },
       }),
     ).toThrow();
+
     expectIssuePath(
       {
         namespace: 'standard',

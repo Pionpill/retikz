@@ -55,7 +55,7 @@ import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from '../shared';
  *   返回 d3 ScaleLinear：可作 `(value) => number` 投影，也可 `.ticks()` / `.tickFormat()` / `.range([...])` 后续设值。
  *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致
  */
-/** 解析线性位置比例尺的 domain、range 与映射函数 */
+
 export const resolveLinearScale = (
   def: IRPlotLinearScale,
   values: Array<number>,
@@ -67,6 +67,7 @@ export const resolveLinearScale = (
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
+
   return scale;
 };
 
@@ -75,7 +76,7 @@ export const resolveLinearScale = (
  * @description 显式 domain 含 0 / 负值 → fail-loud；缺省从正值 extent 推断（空集回退 [1, 10]）。
  *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理
  */
-/** 解析对数位置比例尺的 domain、range 与映射函数 */
+
 export const resolveLogScale = (
   def: IRPlotLogScale,
   values: Array<number>,
@@ -86,6 +87,7 @@ export const resolveLogScale = (
       `lowerPlots: log scale "${def.name}" domain must be strictly positive (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
+
   const positives = values.filter(value => value > 0);
   const [lo, hi] = d3Extent(positives);
   const sourceDomain = def.domain ?? (lo === undefined ? [1, 10] : [lo, hi]);
@@ -96,6 +98,7 @@ export const resolveLogScale = (
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
+
   return scale;
 };
 
@@ -115,6 +118,7 @@ export const resolvePowScale = (
       `lowerPlots: pow scale "${def.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
+
   const sourceDomain = def.domain ?? safeExtent(values);
   const domain = [...sourceDomain];
   const scale = d3ScalePow()
@@ -123,6 +127,7 @@ export const resolvePowScale = (
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
+
   return scale;
 };
 
@@ -140,6 +145,7 @@ export const resolveSqrtScale = (
       `lowerPlots: sqrt scale "${def.name}" domain must be non-negative (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
+
   const sourceDomain = def.domain ?? safeExtent(values.filter(value => value >= 0));
   const domain = [...sourceDomain];
   const scale = d3ScalePow()
@@ -148,6 +154,7 @@ export const resolveSqrtScale = (
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
+
   return scale;
 };
 
@@ -169,6 +176,7 @@ export const resolveSymlogScale = (
   if (def.constant !== undefined) scale.constant(def.constant);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
+
   return scale;
 };
 
@@ -189,6 +197,7 @@ export const resolveRadialScale = (
     .range([...(def.range ?? fallbackRange)]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
+
   return scale;
 };
 
@@ -273,6 +282,7 @@ export const resolveTimeScale = (
     .range([fallbackRange[0], fallbackRange[1]]);
   if (def.nice) scale.nice();
   if (def.clamp) scale.clamp(true);
+
   return scale;
 };
 
@@ -323,6 +333,7 @@ export const resolveBandScale = (
   scale.paddingInner(def.paddingInner ?? DEFAULT_BAND_PADDING_INNER);
   scale.paddingOuter(def.paddingOuter ?? def.paddingInner ?? DEFAULT_BAND_PADDING_INNER);
   if (def.align !== undefined) scale.align(def.align);
+
   return scale;
 };
 
@@ -337,6 +348,7 @@ export const resolvePointScale = (
     .range([fallbackRange[0], fallbackRange[1]]);
   scale.padding(def.padding ?? DEFAULT_POINT_PADDING);
   if (def.align !== undefined) scale.align(def.align);
+
   return scale;
 };
 
@@ -406,6 +418,7 @@ const continuousDomainPadding = (
 ): DomainPaddingScale => {
   const clamp = base.clamp();
   base.range([0, 1]).clamp(false);
+
   return {
     normalize: value => (valid(value) ? base(value as number) : NaN),
     createScale: (padding, range) => {
@@ -415,11 +428,14 @@ const continuousDomainPadding = (
       );
       const resolved = base.copy().domain(domain).clamp(clamp);
       let outerRange = range;
+
       const setRange = (next: readonly [number, number]): void => {
         outerRange = next;
         resolved.range(domain.map(value => next[0] + (next[1] - next[0]) * (padding.lower + base(value) / span)));
       };
+
       setRange(range);
+
       return { ...continuousPositionScale(resolved, valid), range: () => [outerRange[0], outerRange[1]], setRange };
     },
   };
@@ -431,6 +447,7 @@ const categoryDomainPadding = (base: PositionScale): DomainPaddingScale => ({
   createScale: (padding, initialRange) => {
     let range = initialRange;
     const span = (): number => (range[1] - range[0]) * (1 - padding.lower - padding.upper);
+
     return {
       coordinate: value => range[0] + (range[1] - range[0]) * padding.lower + span() * base.coordinate(value),
       domain: base.domain,
@@ -457,18 +474,23 @@ const paddedCategoryScale = (
   initialRange: readonly [number, number],
 ): PositionScale => {
   const mapping = categoryDomainPadding(base);
+
   const resolveRange = (range: readonly [number, number]): PositionScale => {
     if (typeof padding === 'object' && padding.kind === 'mark')
       throw new RetikzPlotError('mark domainPadding requires a coordinate padding context');
+
     const lower = typeof padding === 'number' ? padding : (padding?.lower ?? 0);
     const upper = typeof padding === 'number' ? padding : (padding?.upper ?? 0);
     const divisor =
       typeof padding === 'object' && padding.kind === 'ratio' ? 1 + lower + upper : Math.abs(range[1] - range[0]);
     if (divisor <= 0 || lower + upper >= divisor)
       throw new RetikzPlotError('categorical domainPadding leaves no positive range');
+
     return mapping.createScale({ lower: lower / divisor, upper: upper / divisor }, range);
   };
+
   let current = resolveRange(initialRange);
+
   return {
     coordinate: value => current.coordinate(value),
     domain: () => current.domain(),
@@ -494,6 +516,7 @@ const linearScaleDefinition = defineScale<IRPlotLinearScale>({
   domainPadding: (def, values) => {
     const base = resolveLinearScale({ ...def, clamp: false }, values.filter(isFiniteNumber), [0, 1]).range([0, 1]);
     const [start, end] = base.domain();
+
     return {
       normalize: value => (isFiniteNumber(value) ? base(value) : NaN),
       createScale: (padding, range) => {
@@ -553,6 +576,7 @@ const powScaleDefinition = defineScale<IRPlotPowScale>({
     const isValidInput = integerExponent
       ? isFiniteNumber
       : (value: unknown): boolean => isFiniteNumber(value) && value >= 0;
+
     return continuousPositionScale(resolvePowScale(def, values.filter(isFiniteNumber), range), isValidInput);
   },
 });
@@ -598,6 +622,7 @@ const radialScaleDefinition = defineScale<IRPlotRadialScale>({
     const base = resolveRadialScale(def, values.filter(isFiniteNumber), [0, 1]);
     const mapping = continuousDomainPadding(d3ScaleLinear().domain(base.domain()));
     const square = (value: number): number => Math.sign(value) * value * value;
+
     return {
       normalize: mapping.normalize,
       parameter: (position, range) => (square(position) - square(range[0])) / (square(range[1]) - square(range[0])),
@@ -626,6 +651,7 @@ const timeScaleDefinition = defineScale<IRPlotTimeScale>({
     const [startDate, endDate] = base.domain();
     const start = startDate.getTime();
     const end = endDate.getTime();
+
     return {
       normalize: value => {
         const stamp = coerceTimestamp(value);
@@ -633,6 +659,7 @@ const timeScaleDefinition = defineScale<IRPlotTimeScale>({
       },
       createScale: (padding, range) => {
         const span = (end - start) / (1 - padding.lower - padding.upper);
+
         // Date 会截断不足一毫秒的域扩展；位置保留数值精度，时间 provider 仍负责刻度
         const domain: [number, number] = [start - span * padding.lower, end + span * padding.upper];
         const position = linearPositionScale(
@@ -642,6 +669,7 @@ const timeScaleDefinition = defineScale<IRPlotTimeScale>({
             .clamp(def.clamp ?? false),
         );
         const time = timePositionScale(resolveTimeScale({ ...def, nice: false, domain }, [], range));
+
         return {
           ...position,
           coordinate: value => {

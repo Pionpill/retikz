@@ -23,7 +23,9 @@ export const WayFoldPreview = (values: WayFoldPreviewValues) => {
         [x, End[1]],
       ];
     }
+
     const y = Start[1] + (End[1] - Start[1]) * values.fraction;
+
     return [
       [Start[0], y],
       [End[0], y],

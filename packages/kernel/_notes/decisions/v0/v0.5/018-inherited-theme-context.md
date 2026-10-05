@@ -55,12 +55,12 @@ Theme IR 是严格、JSON-safe 的稀疏对象；解析后的编译上下文始�
 ```ts
 type IRTheme = {
   style?: ThemeStyleValue;
-  mode?: ThemeModeValue;
+  mode?: ThemeMode;
 };
 
 type ResolvedTheme = Readonly<{
   style: ThemeStyleValue;
-  mode: ThemeModeValue;
+  mode: ThemeMode;
 }>;
 ```
 

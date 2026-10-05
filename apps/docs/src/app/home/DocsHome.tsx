@@ -17,7 +17,7 @@ export const DocsHome: FC = () => {
     {
       id: 'layout',
       span: { columns: 4, rows: 2 },
-      location: ['library', 'layout'],
+      location: ['library', 'layout', 'introduction'],
       preview: {
         files: 'layout-nested',
         size: 'md' as const,
@@ -45,11 +45,11 @@ export const DocsHome: FC = () => {
       },
     },
     {
-      id: 'namespace-storage',
+      id: 'flow',
       span: { columns: 4, rows: 2 },
-      location: ['kernel', 'components', 'node', 'mechanism'],
+      location: ['schematic', 'diagram', 'flow', 'usage'],
       preview: {
-        files: 'namespace-storage',
+        files: 'flow-basic',
         size: 'md' as const,
         ...MODULE_LANDING_PREVIEW,
       },

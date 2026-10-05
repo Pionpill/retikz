@@ -61,6 +61,7 @@ const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyComp
 const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {
   const adapters = options.adapters?.map(adapter => Object.freeze({ kind: adapter.kind, lower: adapter.lower }));
   const composites = options.compile?.composites?.map(captureCompositeDefinition);
+
   return Object.freeze({
     ...options,
     ...(adapters === undefined ? {} : { adapters: Object.freeze(adapters) }),
@@ -81,6 +82,7 @@ const resolveCachePolicy = (runtimeMeta: InputRuntimeMeta): 'auto' | 'static' | 
   if (runtimeMeta.layers.length > 0 && runtimeMeta.layers.every(layer => layer.cache === InputLayerCache.Static)) {
     return RenderCachePolicy.Static;
   }
+
   return RenderCachePolicy.Auto;
 };
 
@@ -158,6 +160,7 @@ const toProcessingOptions = (
 ): ProcessingOptions => {
   const { trace, ...compile } = options.compile ?? {};
   void trace;
+
   return {
     compile,
     adapters: options.adapters,
@@ -212,6 +215,7 @@ const createRenderParticipantFactory = (
         ) => ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>>;
       }>
     | undefined;
+
   const factory: ProcessingTransactionParticipantFactory = context => {
     const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
     const renderer =
@@ -240,16 +244,19 @@ const createRenderParticipantFactory = (
           });
     let current = Object.freeze({ ...initialState, runtimeMeta: context.initial.runtimeMeta });
     let currentHandlers = handlers();
+
     const updateConfig = (
       input: ProcessingParticipantUpdateInput,
     ): ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>> => {
       current =
         input.kind === 'source' ? Object.freeze({ ...state(), runtimeMeta: input.prepared.runtimeMeta }) : state();
       currentHandlers = handlers();
+
       return Object.freeze([
         createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, createRenderConfig(current, currentHandlers, canvas)),
       ]);
     };
+
     return Object.freeze({
       sources: Object.freeze([RenderRuntimeSourceDefinition]),
       initialSnapshots: Object.freeze([
@@ -272,6 +279,7 @@ const createRenderParticipantFactory = (
         }),
     }) satisfies ProcessingTransactionParticipant;
   };
+
   return Object.freeze({
     factory,
     read: () => {
@@ -294,6 +302,7 @@ const createRetainedProcessingControllerImplementation = (
     animation: fixedOptions.animation ?? {},
     ...(options.backend === 'canvas' ? { canvas: initialCanvas } : {}),
   });
+
   let state: RetainedRuntimeState = Object.freeze({
     animation: initialMutableOptions.animation ?? {},
     canvas: ('canvas' in initialMutableOptions ? initialMutableOptions.canvas : undefined) ?? {},
@@ -301,6 +310,7 @@ const createRetainedProcessingControllerImplementation = (
   });
   let handlerContributions: ReadonlyArray<RenderHandlerContribution> = Object.freeze([]);
   let nextRegistration = 0;
+
   const canvas =
     options.backend === 'canvas'
       ? Object.freeze({
@@ -308,6 +318,7 @@ const createRetainedProcessingControllerImplementation = (
           ...(fixedOptions.output?.height === undefined ? {} : { height: fixedOptions.output.height }),
         })
       : undefined;
+
   const render = createRenderParticipantFactory(
     options,
     state,
@@ -315,12 +326,15 @@ const createRetainedProcessingControllerImplementation = (
     () => state,
     () => handlerContributions,
   );
+
   const processing: InternalProcessingController = createDomProcessingController(
     options.input,
     toProcessingOptions(fixedOptions, options.runtimeOptions.updateStrategy),
     render.factory,
   );
+
   state = Object.freeze({ ...state, runtimeMeta: processing.read().runtimeMeta });
+
   // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
   const updateHostSize = (): void => {
     const size = computeDisplaySize(
@@ -336,6 +350,7 @@ const createRetainedProcessingControllerImplementation = (
       options.host.style.height = `${size.height}px`;
     }
   };
+
   updateHostSize();
 
   return Object.freeze({
@@ -347,6 +362,7 @@ const createRetainedProcessingControllerImplementation = (
         canvas: ('canvas' in captured ? captured.canvas : undefined) ?? state.canvas,
         runtimeMeta: state.runtimeMeta,
       });
+
       try {
         processing.update(next);
         updateHostSize();
@@ -360,30 +376,37 @@ const createRetainedProcessingControllerImplementation = (
       const registration = nextRegistration;
       if (!Number.isSafeInteger(registration))
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla retained hydration registration overflow');
+
       const contribution = Object.freeze({ registration, handlers: captureHydrationHandlers(hydrateOptions.handlers) });
       const previousHandlers = handlerContributions;
       handlerContributions = Object.freeze([...handlerContributions, contribution]);
+
       try {
         processing.updateParticipant();
       } catch (cause) {
         handlerContributions = previousHandlers;
         throw cause;
       }
+
       nextRegistration += 1;
       let disposed = false;
+
       return Object.freeze({
         dispose: () => {
           if (disposed) return;
+
           const handlersBeforeDispose = handlerContributions;
           handlerContributions = Object.freeze(
             handlerContributions.filter(candidate => candidate.registration !== registration),
           );
+
           try {
             processing.updateParticipant();
           } catch (cause) {
             handlerContributions = handlersBeforeDispose;
             throw cause;
           }
+
           disposed = true;
         },
       });

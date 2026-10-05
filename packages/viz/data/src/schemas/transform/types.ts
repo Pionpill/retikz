@@ -1,22 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type {
-  DensityBandwidthKind,
-  JitterAxis,
-  NormalizeBasis,
-  PairMeasureOperationKind,
-  StackOffset,
-  DataSortOrder,
-  DataTransform,
-  FieldReducerOperationKind,
-  FirstLastSelectorOperationKind,
-  MinMaxSelectorOperationKind,
-  ReducerOperationKind,
-  RowSelectorTie,
-  SelectorOperationKind,
-  TopBottomSelectorOperationKind,
-} from './constants';
 import type {
   DataScalarReducerOperationSchema,
   QuantileBandReducerOperationSchema,
@@ -44,32 +27,6 @@ import type {
   TransformSchema,
 } from './schema';
 import type { OrderBySchema, OutsideQuantileBandSelectorOperationSchema, SelectorOperationSchema } from './selector';
-/** transform operation kind 取值 */
-export type DataTransformValue = ValueOf<typeof DataTransform>;
-
-/** data 排序方向取值 */
-export type DataSortOrderValue = ValueOf<typeof DataSortOrder>;
-
-/** 内置统计 reducer operation kind 取值 */
-export type ReducerOperationKindValue = ValueOf<typeof ReducerOperationKind>;
-
-/** 读取 numeric field 的内置统计 reducer operation kind 取值 */
-export type FieldReducerOperationKindValue = ValueOf<typeof FieldReducerOperationKind>;
-
-/** 内置 row selector operation kind 取值 */
-export type SelectorOperationKindValue = ValueOf<typeof SelectorOperationKind>;
-
-/** 按数值字段取极值的 row selector operation kind 取值 */
-export type MinMaxSelectorOperationKindValue = ValueOf<typeof MinMaxSelectorOperationKind>;
-
-/** 按现有顺序或显式排序取行的 row selector operation kind 取值 */
-export type FirstLastSelectorOperationKindValue = ValueOf<typeof FirstLastSelectorOperationKind>;
-
-/** 按排序名次取行的 row selector operation kind 取值 */
-export type TopBottomSelectorOperationKindValue = ValueOf<typeof TopBottomSelectorOperationKind>;
-
-/** row selector 平局处理策略值 */
-export type RowSelectorTieValue = ValueOf<typeof RowSelectorTie>;
 
 /** 排序变换（稳定排序，保行数） */
 export type IRDataSortTransform = ZodInfer<typeof SortTransformSchema>;
@@ -112,21 +69,6 @@ export type IRDataBuiltinTransform = ZodInfer<typeof BuiltinTransformSchema>;
 
 /** transform operation（内置 ∪ 外部注册 kind 开放配置） */
 export type IRDataTransform = ZodInfer<typeof TransformSchema>;
-
-/** stack baseline offset 策略值 */
-export type StackOffsetValue = ValueOf<typeof StackOffset>;
-
-/** 配对度量操作类型取值 */
-export type PairMeasureOperationKindValue = ValueOf<typeof PairMeasureOperationKind>;
-
-/** 归一化结果的数值基准取值 */
-export type NormalizeBasisValue = ValueOf<typeof NormalizeBasis>;
-
-/** jitter 作用轴取值 */
-export type JitterAxisValue = ValueOf<typeof JitterAxis>;
-
-/** density 带宽策略类型取值 */
-export type DensityBandwidthKindValue = ValueOf<typeof DensityBandwidthKind>;
 
 /** 堆叠变换（跨行累积区间，保行数） */
 export type IRDataStackTransform = ZodInfer<typeof StackTransformSchema>;

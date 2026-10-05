@@ -60,6 +60,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
       ) {
         throw new Error(`Leaf '${node.id}' rejected an exact proposal`);
       }
+
       const width = node.responsive
         ? context.proposal.x.kind === LayoutAxisProposalKind.Exact
           ? context.proposal.x.value
@@ -70,6 +71,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
               : node.width
         : node.width;
       const height = node.responsive && node.area !== undefined ? node.area / Math.max(1, width) : node.height;
+
       return {
         allocationBounds: {
           x: node.originX,
@@ -138,7 +140,9 @@ const compileFlex = (child: IRChild, proposal: LayoutProposal) => {
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -154,6 +158,7 @@ const compileFlex = (child: IRChild, proposal: LayoutProposal) => {
     },
   );
   if (observed === undefined) throw new Error('Expected FlexLayout probe to resolve');
+
   return { logs, observed, output };
 };
 
@@ -168,19 +173,24 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   ): Readonly<{ x: number; y: number }> | undefined => {
     for (const primitive of children) {
       if (primitive.type !== 'group') continue;
+
       const translations = (primitive.transforms ?? []).filter(
         (transform): transform is TranslateTransform => transform.kind === 'translate',
       );
       const nextX = x + translations.reduce((sum, transform) => sum + transform.x, 0);
       const nextY = y + translations.reduce((sum, transform) => sum + transform.y, 0);
       if (primitive.id === id) return { x: nextX, y: nextY };
+
       const nested = visit(primitive.children, nextX, nextY);
       if (nested !== undefined) return nested;
     }
+
     return undefined;
   };
+
   const result = visit(primitives, 0, 0);
   if (result === undefined) throw new Error(`Expected Scene group '${id}'`);
+
   return result;
 };
 
@@ -349,6 +359,7 @@ describe('FlexLayout compile contract', () => {
 
     for (const direction of [FlexLayoutDirection.Row, FlexLayoutDirection.RowReverse] as const) {
       const artifact = flexArtifactOf(compileDirection(direction).output);
+
       expect(artifact.value.spacing).toEqual([
         { kind: 'distributed', axis: 'x', bounds: { x: 24, y: 0, width: 21, height: 20 } },
         { kind: 'gap', axis: 'x', bounds: { x: 45, y: 0, width: 10, height: 20 } },

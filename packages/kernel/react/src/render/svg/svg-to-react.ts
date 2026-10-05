@@ -43,9 +43,11 @@ const styleKeyToCamel = (key: string): string => key.replace(/-([a-z])/g, (_, c:
 /** SvgNode.style（kebab）→ React style 对象（camelCase） */
 const toReactStyle = (style: SvgStyle): CSSProperties => {
   const out: Record<string, string | number> = {};
+
   for (const [k, v] of Object.entries(style)) {
     if (v !== undefined) out[styleKeyToCamel(k)] = v as string | number;
   }
+
   return out;
 };
 
@@ -56,13 +58,17 @@ const toReactStyle = (style: SvgStyle): CSSProperties => {
  */
 export const svgToReact = (node: SvgNode | string, key?: Key): ReactElement | string => {
   if (typeof node === 'string') return node;
+
   const props: Record<string, unknown> = {};
   if (key !== undefined) props.key = key;
+
   for (const [k, v] of Object.entries(node.attrs)) {
     if (v !== undefined) props[toReactPropName(k)] = v;
   }
+
   if (node.style) props.style = toReactStyle(node.style);
   const children = (node.children ?? []).map((c, i) => svgToReact(c, i));
+
   // 以「数组」整体传 children（保持与旧 renderPrim 的 `{lines.map(...)}` 同语义：单子节点也是数组），
   // 让 `props.children` 形态稳定（数组），下游断言 / 渲染不因子节点数量改变结构
   return children.length > 0 ? createElement(node.tag, props, children) : createElement(node.tag, props);

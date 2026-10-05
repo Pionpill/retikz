@@ -1,6 +1,20 @@
 import { translateEntityApiReference } from './entity.en';
+
 /** Block 专属说明译文 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  块容器内按作者顺序排列的绘制子内容: 'Drawing content in the block container, in authoring order',
+  标题前方的可选绘制内容: 'Optional drawing content before the title',
+  标题尾部的可选绘制内容: 'Optional drawing content after the title',
+  当前区段按作者顺序排列的绘制子内容: 'Drawing content in this section, in authoring order',
+  '可省略的 Block 作者输入判别值': 'Optional discriminator for Block authoring input',
+  '可省略的 BlockHeader 作者输入判别值': 'Optional discriminator for BlockHeader authoring input',
+  '可省略的 BlockSection 作者输入判别值': 'Optional discriminator for BlockSection authoring input',
+  代码块组件定义的注册命名空间: 'Registered namespace of the code-block component definition',
+  代码块组件定义的注册类型: 'Registered type of the code-block component definition',
+  块标题的持久化输入: 'Block Header Source',
+  块行的持久化输入: 'Block Row Source',
+  块分节的持久化输入: 'Block Section Source',
+  块语义组合节点的持久化输入: 'Block semantic composite Source',
   '将开放内容 Block Source 接入 React 编写流程': 'Integrate open-content Block Source into React authoring',
   'Block Source 的 React 编写参数': 'React authoring props for Block Source',
   '按声明顺序进入 Block 纵向布局的任意 children':
@@ -86,6 +100,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '冻结后的同一个 Definition 对象；注册由 createCodeBlockContribution 完成':
     'The same Definition object, frozen; register through createCodeBlockContribution',
 };
+
 /** 复用共享 Graph 译文，缺失时停止生成 */
 export const translateBlockApiReference = (source: string): string =>
   translations[source.replace(/\r/g, '')] ?? translateEntityApiReference(source);

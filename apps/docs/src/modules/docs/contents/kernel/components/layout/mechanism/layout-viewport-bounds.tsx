@@ -10,6 +10,7 @@ import { layoutViewportBoundsI18n } from './layout-viewport-bounds.i18n';
 export type LayoutViewportBoundsProps = Readonly<{ lang?: Lang }>;
 
 const project = ([x, y]: Position): Position => [60 + (x - 10) * 3, 50 + (y - 20) * 3];
+
 const rectangle = (x: number, y: number, width: number, height: number): Array<Position> =>
   (
     [
@@ -24,6 +25,7 @@ const rectangle = (x: number, y: number, width: number, height: number): Array<P
 const LayoutViewportBounds: FC<LayoutViewportBoundsProps> = props => {
   const { lang } = props;
   const i18n = layoutViewportBoundsI18n[lang ?? 'zh'];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node position={[210, 16]} style={{ stroke: 'none', fill: 'none', font: { size: 14 } }}>

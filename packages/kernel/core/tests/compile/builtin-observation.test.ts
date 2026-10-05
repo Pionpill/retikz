@@ -75,6 +75,7 @@ describe('Core builtin observation contracts', () => {
     ];
 
     for (const owner of owners) expect(core.isCompileObservationOwnerEqual(owner, owner)).toBe(true);
+
     expect(
       core.isCompileObservationOwnerEqual(owners[0], { kind: 'composite', namespace: 'other', type: 'card' }),
     ).toBe(false);
@@ -99,6 +100,7 @@ describe('Core builtin observation contracts', () => {
 
   it('preserves a rotated ellipseArc in Node geometry', () => {
     const shape = core.NodeOwnerOutputSchema.parse(nodeOutput).shape;
+
     expect(shape.outline).toContainEqual({
       kind: 'ellipseArc',
       center: [0, 0],
@@ -113,6 +115,7 @@ describe('Core builtin observation contracts', () => {
 
   it('accepts an unclosed Clip subpath with cubic and rotated ellipse arc commands', () => {
     const parsed = core.ClipOwnerOutputSchema.parse(clipOutput);
+
     expect(parsed.path.commands.map(command => command.kind)).toEqual(['move', 'cubic', 'move', 'ellipseArc']);
     expect(parsed.path.commands.at(-1)).toMatchObject({ kind: 'ellipseArc', rotation: 45 });
     expect(parsed.path.commands).not.toContainEqual({ kind: 'close' });

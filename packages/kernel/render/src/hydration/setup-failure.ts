@@ -19,6 +19,7 @@ export const createHydrationSetupError = (
     cause,
   });
   hydrationSetupFailures.set(error, Object.freeze({ cause, controller }));
+
   return error;
 };
 

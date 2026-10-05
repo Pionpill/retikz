@@ -48,6 +48,7 @@ const createPreview = (inspecting: boolean) =>
         </FlexLayoutItem>
       </>
     );
+
     const layoutProps = {
       size: { x: { kind: 'fixed', value: 340 }, y: { kind: 'fixed', value: 170 } },
       padding: 12,
@@ -57,6 +58,7 @@ const createPreview = (inspecting: boolean) =>
       alignItems: values.alignItems,
       alignContent: 'center',
     } as const;
+
     const hostProps = {
       viewBox: { x: 0, y: 0, width: 440, height: 250 },
     } as const;
@@ -78,6 +80,7 @@ const createPreview = (inspecting: boolean) =>
   });
 
 const controlledPreview = createPreview(true);
+
 const canonicalPreview = createPreview(false);
 
 export const previewSource = canonicalPreview.source;

@@ -25,6 +25,7 @@ const pathPrimitive = (
     (item): item is PathPrim => item.type === 'path' && (item.arrowStart !== undefined || item.arrowEnd !== undefined),
   );
   if (primitive === undefined) throw new Error('Expected an endpoint-arrow PathPrim');
+
   return primitive;
 };
 
@@ -32,6 +33,7 @@ const terminalPoint = (commands: ReadonlyArray<PathCommand>): [number, number] =
   const command = commands.findLast(item => item.kind !== 'move' && item.kind !== 'close');
   if (command === undefined) throw new Error('Expected a drawable terminal command');
   if (command.kind === 'arc' || command.kind === 'ellipseArc') throw new Error('Expected a Cartesian endpoint command');
+
   return command.to;
 };
 
@@ -79,11 +81,13 @@ describe('compile path: endpoint arrow overlap', () => {
     const logicalChildren = structuredClone(children);
     const logicalPath = logicalChildren[2];
     if (logicalPath.type !== 'path') throw new Error('Expected Path input');
+
     logicalPath.marks = undefined;
     const logicalPrimitive = flattenPrims(
       compileToScene({ version: 1, type: 'scene', children: logicalChildren }, { padding: 0 }).scene.primitives,
     ).find((item): item is PathPrim => item.type === 'path');
     if (logicalPrimitive === undefined) throw new Error('Expected a logical PathPrim');
+
     const logicalEndX = terminalPoint(logicalPrimitive.commands)[0];
     const primitive = pathPrimitive([], { children });
     const markerEndX = terminalPoint(primitive.commands)[0];
@@ -128,6 +132,7 @@ describe('compile path: endpoint arrow overlap', () => {
     const halfPath = halfChildren[2];
     const fullPath = fullChildren[2];
     if (halfPath.type !== 'path' || fullPath.type !== 'path') throw new Error('Expected Path inputs');
+
     halfPath.marks = [{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow', shape: 'openCircle' } }];
     fullPath.marks = [{ pos: 1, endpointOverlap: 1, mark: { kind: 'arrow', shape: 'openCircle' } }];
 
@@ -205,6 +210,7 @@ describe('compile path: endpoint arrow overlap', () => {
       steps[0],
       { type: 'step', kind: 'cubic', control1: [20, 20], control2: [80, 20], to: [100, 0] },
     ];
+
     const endX = (endpointOverlap: number | undefined) => {
       const path: IRScene['children'][number] = {
         type: 'path',
@@ -246,6 +252,7 @@ describe('compile path: endpoint arrow overlap', () => {
       };
       return flattenPrims(compileToScene(ir, { padding: 0 }).scene.primitives);
     };
+
     const baseline = compile(0);
     const overlapped = compile(1);
     const baselinePath = baseline.find(

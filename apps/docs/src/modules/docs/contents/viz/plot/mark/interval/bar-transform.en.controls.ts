@@ -7,6 +7,7 @@ import { storeRevenue } from './bar-transform.data';
 
 /** Stable control id for the derived interval baseline */
 export const BAR_TRANSFORM_BASELINE_ID = 'bar-transform-offset';
+
 export const BAR_TRANSFORM_GAP_ID = 'bar-transform-gap';
 
 /** English panel for the derive-interval transform */

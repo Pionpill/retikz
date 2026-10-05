@@ -23,6 +23,7 @@ describe('BendStepSchema：out/in/looseness 合法', () => {
       inAngle: 150,
       looseness: 1.2,
     });
+
     expect(ok.success).toBe(true);
   });
 
@@ -36,6 +37,7 @@ describe('BendStepSchema：out/in/looseness 合法', () => {
       outAngle: 30,
       inAngle: 150,
     });
+
     expect(ok.success).toBe(true);
   });
 
@@ -46,6 +48,7 @@ describe('BendStepSchema：out/in/looseness 合法', () => {
       to: { id: 'B' },
       bendDirection: 'right',
     });
+
     expect(ok.success).toBe(true);
   });
 
@@ -58,6 +61,7 @@ describe('BendStepSchema：out/in/looseness 合法', () => {
       outAngle: -60,
       inAngle: -120,
     });
+
     expect(ok.success).toBe(true);
   });
 });
@@ -156,6 +160,7 @@ describe('ArrowMarkSchema：kind:arrow + 视觉子集', () => {
       opacity: 0.5,
       lineWidth: 2,
     });
+
     expect(ok.success).toBe(true);
   });
 
@@ -295,11 +300,13 @@ describe('JSON round-trip', () => {
       ],
     };
     const roundTripped = PathSchema.parse(JSON.parse(JSON.stringify(path)));
+
     expect(roundTripped).toEqual(PathSchema.parse(path));
   });
 
   it('等比 scale number 往返保持 number 形态', () => {
     const path = basePath({ scale: 2, rotate: 15 });
+
     expect(PathSchema.parse(JSON.parse(JSON.stringify(path)))).toEqual(PathSchema.parse(path));
   });
 });

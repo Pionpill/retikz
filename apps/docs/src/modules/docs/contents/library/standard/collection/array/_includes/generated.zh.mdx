@@ -4,7 +4,7 @@
 
 #### Array / ArrayProps
 
-- `Array`：<ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={56}>Standard Array 呈现组件</ApiSourceLink>
+- `Array`：<ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={77}>Standard Array 呈现组件</ApiSourceLink>
 - `ArrayProps`：<ApiSourceLink label={"ArrayProps"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={17}>Array 的 React authoring 属性</ApiSourceLink>
 
 data、items、skeleton 与 ArrayItem children 内容入口互斥；全部省略时生成空数组。dataExpand 仅用于 data 入口
@@ -66,7 +66,7 @@ text 与 children 互斥；同时省略表示空格，提供 children 时必须�
 | `id?`       | `string`                   | —      | 当前容器内唯一的可选单元格 id    |
 | `layout?`   | `ArrayItemProps["layout"]` | —      | —                                |
 | `style?`    | `ArrayItemProps["style"]`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`     | `string`                   | —      | —                                |
+| `text?`     | `string`                   | —      | 单元格文本，与绘制子内容互斥     |
 
 </ApiTable>
 
@@ -76,13 +76,13 @@ text 与 children 互斥；同时省略表示空格，提供 children 时必须�
 
 <ApiTable>
 
-| 成员       | 类型                       | 默认值 | 说明                             |
-| ---------- | -------------------------- | ------ | -------------------------------- |
-| `children` | `ReactNode`                | —      | —                                |
-| `id?`      | `string`                   | —      | 当前容器内唯一的可选单元格 id    |
-| `layout?`  | `ArrayItemProps["layout"]` | —      | —                                |
-| `style?`   | `ArrayItemProps["style"]`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`    | `never`                    | —      | —                                |
+| 成员       | 类型                       | 默认值 | 说明                                     |
+| ---------- | -------------------------- | ------ | ---------------------------------------- |
+| `children` | `ReactNode`                | —      | 恰好一个可编译的绘制子内容，与 text 互斥 |
+| `id?`      | `string`                   | —      | 当前容器内唯一的可选单元格 id            |
+| `layout?`  | `ArrayItemProps["layout"]` | —      | —                                        |
+| `style?`   | `ArrayItemProps["style"]`  | —      | Array / Map 单元格的稀疏外观覆盖         |
+| `text?`    | `never`                    | —      | —                                        |
 
 </ApiTable>
 
@@ -104,7 +104,7 @@ export type ArrayItemProps = CellMarkerProps<IRArrayCell['layout']>;
 
 #### array / InputArray
 
-- `array`：<ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={59}>创建 Array embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
+- `array`：<ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={81}>创建 Array embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
 - `InputArray`：<ApiSourceLink label={"InputArray"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={14}>Array 的 Vanilla authoring 输入</ApiSourceLink>
 
 items、data 与 skeleton 三选一；dataExpand 仅用于 data 入口。其余字段沿用 IRArray，namespace 与 type 由 adapter 补齐
@@ -162,7 +162,7 @@ export type InputArray = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
   <ApiSourceLink
     label={'ArrayInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/array.ts'}
-    startLine={22}
+    startLine={41}
   >
     将 Array 输入与嵌套内容交给根级 traversal
   </ApiSourceLink>
@@ -180,7 +180,7 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
   <ApiSourceLink
     label={'IRArray'}
     path={'packages/library/standard/src/collection/array/schema/types.ts'}
-    startLine={20}
+    startLine={21}
   >
     稀疏 Array Source，保留尚未合并的样式
   </ApiSourceLink>
@@ -222,7 +222,7 @@ export type IRArray = Omit<
   <ApiSourceLink
     label={'IRArrayCell'}
     path={'packages/library/standard/src/collection/array/schema/types.ts'}
-    startLine={14}
+    startLine={15}
   >
     Array 专属单格 Source，允许内容宽度模式
   </ApiSourceLink>
@@ -317,7 +317,7 @@ export type IRArrayIndexOptions = input<typeof ArrayIndexOptionsSchema>;
   <ApiSourceLink
     label={'IRArrayIndexStyle'}
     path={'packages/library/standard/src/collection/array/schema/types.ts'}
-    startLine={11}
+    startLine={12}
   >
     索引文本的稀疏外观覆盖，不受单格样式影响
   </ApiSourceLink>
@@ -377,7 +377,7 @@ export const ArrayDefinition: LayoutCompositeDefinition<IRArray, 'standard', 'ar
   <ApiSourceLink
     label={'ArrayProvider'}
     path={'packages/library/standard/src/collection/array/provider.ts'}
-    startLine={6}
+    startLine={7}
   >
     Array 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>

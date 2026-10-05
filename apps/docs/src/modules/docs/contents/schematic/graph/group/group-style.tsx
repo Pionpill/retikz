@@ -26,9 +26,12 @@ const createPreview = (lang: Lang) =>
   );
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
+
 /** 分组示例语言 */
 export type GroupStyleProps = { lang?: Lang };
+
 /** 分组交互示例 */
 const Demo: FC<GroupStyleProps> = props => {
   const { lang = 'zh' } = props;

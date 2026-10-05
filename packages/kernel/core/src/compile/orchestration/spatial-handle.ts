@@ -51,6 +51,7 @@ export const remapSpatialOccurrenceForReplay = (
   candidate: CompileOccurrenceLocator,
 ): CompileOccurrenceLocator => {
   if (!isOccurrenceWithin(candidate, origin)) return candidate;
+
   return freezeOccurrence({
     sourcePath: parent.sourcePath,
     expansionPath: [
@@ -95,7 +96,9 @@ const projectBounds = (
       RetikzCoreErrorCode.Compile,
       'internal: spatial handle rect projection produced no points',
     );
+
   const rect = boundsToRect(projected);
+
   return canonicalizeBoundsRect({
     x: round(rect.x),
     y: round(rect.y),

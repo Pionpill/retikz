@@ -108,7 +108,9 @@ const translations: Readonly<Record<string, string>> = {
  */
 export const translateTexApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   const translation = translations[source];
   if (translation) return translation;
+
   throw new Error(`缺少 @retikz/tex API Reference 的审阅后英文翻译：${source}`);
 };

@@ -12,11 +12,14 @@ import type { ResolvedTableTrackSize } from '../../src/pipeline/layout';
 import { resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
 
 const fixed = (value: number): IRTableFixedTrackSize => ({ kind: TableTrackSizeKind.Fixed, value });
+
 const auto = (): IRTableAutoTrackSize => ({ kind: TableTrackSizeKind.Auto });
+
 const fraction = (weight?: number): IRTableFractionTrackSize => ({
   kind: TableTrackSizeKind.Fraction,
   ...(weight === undefined ? {} : { weight }),
 });
+
 const minmax = (
   min: IRTableFixedTrackSize | IRTableAutoTrackSize,
   max: IRTableFixedTrackSize | IRTableAutoTrackSize | IRTableFractionTrackSize,

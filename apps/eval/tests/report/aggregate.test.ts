@@ -23,6 +23,7 @@ describe('aggregate', () => {
       rec({ zodOk: false, compileOk: false, failure: { stage: 'zod', reason: 'y' } }),
       rec({ zodOk: false, compileOk: false, failure: { stage: 'extract', reason: 'z' } }),
     ]);
+
     expect(r.total).toBe(4);
     expect(r.overall.zodPassRate).toBeCloseTo(0.5);
     expect(r.overall.compilePassRate).toBeCloseTo(0.25);
@@ -33,6 +34,7 @@ describe('aggregate', () => {
       rec({ model: 'a', difficulty: 'single', zodOk: true, compileOk: true }),
       rec({ model: 'b', difficulty: 'complex', zodOk: false, compileOk: false }),
     ]);
+
     expect(r.byModel.a.zodPassRate).toBe(1);
     expect(r.byModel.b.zodPassRate).toBe(0);
     expect(r.byDifficulty.single.compilePassRate).toBe(1);
@@ -46,6 +48,7 @@ describe('aggregate', () => {
       rec({ zodOk: false, compileOk: false, failure: { stage: 'zod', reason: 'c' } }),
       rec({ zodOk: false, compileOk: false, failure: { stage: 'zod', reason: 'd' } }),
     ]);
+
     expect(r.failuresByStage.llm).toBe(1);
     expect(r.failuresByStage.extract).toBe(1);
     expect(r.failuresByStage.zod).toBe(2);
@@ -64,6 +67,7 @@ describe('aggregate', () => {
         failure: { stage: 'compile', reason: 'boom' },
       }),
     ]);
+
     expect(r.failures).toHaveLength(1);
     expect(r.failures[0]).toEqual({ promptId: 'c2', model: 'b', kIndex: 1, stage: 'compile', reason: 'boom' });
   });
@@ -93,6 +97,7 @@ describe('aggregate', () => {
       }),
       rec({ l2: null }),
     ]);
+
     expect(r.l2.reached).toBe(2);
     expect(r.l2.skipped).toBe(1);
     expect(r.l2.candidatePassRate).toBe(0.5); // 1/2 候选全过

@@ -8,8 +8,10 @@ const requireAtLeastOneField = (label: string) => ({
   message: `${label} must contain at least one field.`,
 });
 
+/** 校验边框候选的线条或隐藏判别种类 */
 export const TableBorderKindSchema = zodEnum(TableBorderKind).describe('Discriminator for a Table border candidate.');
 
+/** 校验共享边合并或逐单元格独立绘制的边框模式 */
 export const TableBorderModeSchema = zodEnum(TableBorderMode).describe(
   'Shared-edge collapse or per-Cell separate mode.',
 );
@@ -18,11 +20,13 @@ const TableBorderPrioritySchema = number().refine(Number.isInteger, {
   message: 'Border priority must be a finite integer.',
 });
 
+/** 校验显式抑制边框的候选项及其冲突优先级 */
 export const TableNoBorderSchema = strictObject({
   kind: literal(TableBorderKind.None).describe('Discriminator for an explicit hidden border candidate.'),
   priority: TableBorderPrioritySchema.optional().describe('Finite integer conflict priority. Omitted fields use 0.'),
 }).describe('Explicit Table border suppression candidate.');
 
+/** 校验可输出为 Core 描边的边框候选及其冲突优先级 */
 export const TableLineBorderSchema = strictObject({
   kind: literal(TableBorderKind.Line).describe('Discriminator for a Table line border candidate.'),
   stroke: PaintValueSchema.refine(value => value !== 'none', {
@@ -40,10 +44,12 @@ export const TableLineBorderSchema = strictObject({
   priority: TableBorderPrioritySchema.optional().describe('Finite integer conflict priority. Omitted fields use 0.'),
 }).describe('Core-compatible Table line border candidate.');
 
+/** 校验显式隐藏或线条形式的边框候选 */
 export const TableBorderSchema = discriminatedUnion('kind', [TableNoBorderSchema, TableLineBorderSchema]).describe(
   'Table border candidate: explicit none or a complete line source.',
 );
 
+/** 校验单元格四条物理边各自的可选边框候选 */
 export const TableCellBordersSchema = strictObject({
   top: TableBorderSchema.optional().describe('Optional top-side border candidate.'),
   right: TableBorderSchema.optional().describe('Optional right-side border candidate.'),
@@ -69,6 +75,7 @@ export const TableCellBordersDefaultsSchema = strictObject({
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell border defaults'))
   .describe('Sparse physical-side border defaults for an existing Table Cell.');
 
+/** 校验表格整体四条外边界的稀疏边框候选 */
 export const TableOuterBordersSchema = strictObject({
   top: TableBorderSchema.optional().describe('Optional top-side outer border candidate.'),
   right: TableBorderSchema.optional().describe('Optional right-side outer border candidate.'),
@@ -92,6 +99,7 @@ export const TableOuterBordersDefaultsSchema = strictObject({
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table outer border defaults'))
   .describe('Sparse physical-side defaults for the Table outer boundary.');
 
+/** 校验表格边框拓扑模式、外边框与内部网格默认候选 */
 export const TableBordersSchema = strictObject({
   mode: TableBorderModeSchema.optional().describe('Border topology mode. Omitted fields use collapse.'),
   outer: TableOuterBordersSchema.optional().describe('Optional physical-side outer-boundary defaults.'),

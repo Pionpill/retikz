@@ -85,6 +85,7 @@ describe('finite 守卫不误伤合法值', () => {
   it('rect 负坐标 + 正尺寸合法（取景窗可在第三象限）', () => {
     const compiled = compileToScene(handcraftedScope({ kind: 'rect', x: -50, y: -40, width: 10, height: 10 })).scene;
     const clips = clipResources(compiled.resources);
+
     expect(clips).toHaveLength(1);
     expect(clips[0].path.commands[0]).toEqual({ kind: 'move', to: [-50, -40] });
     expect(clips[0].path.commands[2]).toEqual({ kind: 'line', to: [-40, -30] });
@@ -92,6 +93,7 @@ describe('finite 守卫不误伤合法值', () => {
 
   it('rect 零尺寸合法并表示空裁剪区域', () => {
     const compiled = compileToScene(handcraftedScope({ kind: 'rect', x: 0, y: 0, width: 0, height: 0 })).scene;
+
     expect(clipResources(compiled.resources)).toHaveLength(1);
   });
 });
@@ -101,6 +103,7 @@ describe('clip Scene JSON round-trip 不失真', () => {
   const assertRoundTrip = (ir: IRScene): void => {
     const compiled = compileToScene(ir, polygonOptions).scene;
     const roundTripped = JSON.parse(JSON.stringify(compiled));
+
     expect(roundTripped).toEqual(compiled);
   };
 
@@ -131,10 +134,14 @@ describe('clip Scene JSON round-trip 不失真', () => {
     const ir = handcraftedScope({ kind: 'rect', x: -0.001, y: -0.004, width: 10, height: 10 });
     const compiled = compileToScene(ir, polygonOptions).scene;
     const json = JSON.stringify(compiled);
+
     // 关键契约：序列化产物里没有 null（非 finite 会序列化成 null）
     expect(json).not.toContain('null');
+
     const first = clipResources(compiled.resources)[0].path.commands[0];
+
     expect(first.kind).toBe('move');
+
     if (first.kind === 'move') {
       expect(Object.is(first.to[0], -0)).toBe(false);
       expect(Object.is(first.to[1], -0)).toBe(false);
@@ -162,8 +169,11 @@ describe('clip dedup 边界', () => {
       } as unknown as IRScene['children'][number],
     ]);
     const compiled = compileToScene(ir, polygonOptions).scene;
+
     expect(clipResources(compiled.resources)).toHaveLength(1);
+
     const groups = allGroups(compiled.primitives);
+
     expect(groups[0].clipRef).toBe(groups[1].clipRef);
   });
 
@@ -195,6 +205,7 @@ describe('clip dedup 边界', () => {
       },
     ]);
     const compiled = compileToScene(ir, polygonOptions).scene;
+
     // 点序不同 → 不同 polygon → 2 条资源
     expect(clipResources(compiled.resources)).toHaveLength(2);
   });
@@ -214,6 +225,7 @@ describe('clip dedup 边界', () => {
       },
     ]);
     const compiled = compileToScene(ir).scene;
+
     expect(clipResources(compiled.resources)).toHaveLength(1);
   });
 
@@ -231,6 +243,7 @@ describe('clip dedup 边界', () => {
       },
     ]);
     const compiled = compileToScene(ir).scene;
+
     expect(clipResources(compiled.resources)).toHaveLength(2);
   });
 });
@@ -256,6 +269,7 @@ describe('clip 编译确定性：同 IR 编译两次产同 id', () => {
     ]);
     const a = compileToScene(ir).scene;
     const b = compileToScene(ir).scene;
+
     expect(clipResources(a.resources).map(c => c.id)).toEqual(clipResources(b.resources).map(c => c.id));
     expect(a.resources).toEqual(b.resources);
   });
@@ -300,11 +314,14 @@ describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => 
     const compiled = compileToScene(ir).scene;
     const paints = (compiled.resources ?? []).filter(r => r.kind === 'paint');
     const clips = clipResources(compiled.resources);
+
     expect(paints).toHaveLength(2);
     expect(clips).toHaveLength(2);
     expect(paints.map(p => p.id)).toEqual(['paint-1', 'paint-2']);
     expect(clips.map(c => c.id)).toEqual(['clip-1', 'clip-2']);
+
     const allIds = (compiled.resources ?? []).map(r => r.id);
+
     expect(new Set(allIds).size).toBe(allIds.length);
   });
 });
@@ -323,6 +340,7 @@ describe('clip prune / 复合 scope', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const group = firstGroup(compiled.primitives);
+
     expect(group).toBeDefined();
     expect(group?.transforms).toBeDefined();
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
@@ -344,10 +362,15 @@ describe('clip prune / 复合 scope', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const clips = clipResources(compiled.resources);
+
     expect(clips).toHaveLength(2);
+
     const outer = firstGroup(compiled.primitives);
+
     expect(outer?.clipRef).toBeDefined();
+
     const inner = outer?.children.find((c): c is GroupPrim => c.type === 'group');
+
     expect(inner).toBeDefined();
     expect(inner?.clipRef).toBeDefined();
     expect(inner?.clipRef).not.toBe(outer?.clipRef);
@@ -356,6 +379,7 @@ describe('clip prune / 复合 scope', () => {
   it('空 children + 无 id + 无 transforms 但带 clip 的 scope 不被 prune', () => {
     const compiled = compileToScene(handcraftedScope({ kind: 'rect', x: 0, y: 0, width: 20, height: 20 }, [])).scene;
     const group = firstGroup(compiled.primitives);
+
     expect(group).toBeDefined();
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
   });
@@ -369,6 +393,7 @@ describe('clip 退化几何', () => {
     ]);
     const compiled = compileToScene(handcraftedScope({ kind: 'polygon', points }), polygonOptions).scene;
     const clips = clipResources(compiled.resources);
+
     expect(clips).toHaveLength(1);
     expect(clips[0].path.commands).toHaveLength(501);
     expect(clips[0].path.commands[0]).toEqual({ kind: 'move', to: points[0] });
@@ -387,12 +412,14 @@ describe('clip 退化几何', () => {
       }),
       polygonOptions,
     ).scene;
+
     expect(clipResources(compiled.resources)).toHaveLength(1);
   });
 
   it('rect 极大坐标（finite 但巨大）→ 不抛、round-trip 等价', () => {
     const ir = handcraftedScope({ kind: 'rect', x: 1e15, y: -1e15, width: 1e10, height: 1e10 });
     const compiled = compileToScene(ir).scene;
+
     expect(clipResources(compiled.resources)).toHaveLength(1);
     expect(JSON.parse(JSON.stringify(compiled))).toEqual(compiled);
   });

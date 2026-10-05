@@ -31,6 +31,7 @@ describe('Table root spec schema', () => {
       type: 'table',
       structure: { kind: 'summaryByRegion', field: 'region' },
     });
+
     expect(detail.structure.kind).toBe('detail');
     expect(manual.structure.kind).toBe('manual');
     expect(custom.structure.kind).toBe('summaryByRegion');
@@ -38,6 +39,7 @@ describe('Table root spec schema', () => {
 
   it('round-trips a manual root without external data', () => {
     const parsed: IRTable = TableSchema.parse(JSON.parse(JSON.stringify(manualSpec)));
+
     expect(parsed).toEqual(manualSpec);
     expect(ManualTableSchema.parse({ ...manualSpec, data: undefined })).toEqual({
       ...manualSpec,

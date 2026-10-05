@@ -32,19 +32,24 @@ const formatTargetKey = (target: InspectionSelectionTarget): string => {
 const collectAuthoredPaths = (ir: IRScene) => {
   const selfPaths = new Set<string>();
   const subtreePaths = new Set<string>();
+
   const visit = (child: IRChild, basePath: string): void => {
     if ('namespace' in child) {
       selfPaths.add(basePath);
       subtreePaths.add(basePath);
       return;
     }
+
     selfPaths.add(`${basePath}.${child.type}`);
     if (child.type !== 'scope') return;
+
     const scopePath = `${basePath}.scope`;
     subtreePaths.add(scopePath);
     child.children.forEach((nested, index) => visit(nested, `${scopePath}.children[${index}]`));
   };
+
   ir.children.forEach((child, index) => visit(child, `children[${index}]`));
+
   return { selfPaths, subtreePaths };
 };
 
@@ -59,12 +64,14 @@ const assertSelectionTarget = (
       throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `Invalid inspection subtree '${target.sourcePath}'`);
     return;
   }
+
   if (!authoredPaths.selfPaths.has(target.locator.sourcePath)) {
     throw new RetikzInspectError(
       RetikzInspectErrorCode.Compile,
       `Invalid inspection self locator '${target.locator.sourcePath}'`,
     );
   }
+
   if (
     target.locator.occurrenceIndex !== undefined &&
     (!Number.isSafeInteger(target.locator.occurrenceIndex) || target.locator.occurrenceIndex < 0)
@@ -81,9 +88,11 @@ export const admitInspectionSelection = (
 ): ReadonlyArray<IndexedRule> => {
   const authoredPaths = collectAuthoredPaths(ir);
   const requestKeys = new Set<string>();
+
   return Object.freeze(
     selection.rules.map((rule, index) => {
       const target = rule.target;
+
       try {
         let options: JsonObject = {};
         let parsedOptions: JsonObject = {};
@@ -96,6 +105,7 @@ export const admitInspectionSelection = (
               RetikzInspectErrorCode.Compile,
               'Duplicate inspection target and Inspector key',
             );
+
           requestKeys.add(duplicateKey);
           if (rule.options !== false) {
             const sourceOptions = rule.options === true ? {} : rule.options;
@@ -106,6 +116,7 @@ export const admitInspectionSelection = (
             options = structuredClone(sourceOptions);
           }
         }
+
         return Object.freeze({ index, rule, options, parsedOptions });
       } catch (cause) {
         throw wrapInspectionError(createInspectionSelectionDiagnosticOrigin(index, target), cause);
@@ -128,10 +139,12 @@ const doesTargetMatchObservation = (
       observation.occurrence.sourcePath.startsWith(`${target.sourcePath}.`)
     );
   }
+
   const locator = target.locator;
   if (observation.owner.kind === 'clip') return false;
   if (observation.occurrence.sourcePath !== locator.sourcePath) return false;
   if (locator.occurrenceIndex === undefined) return true;
+
   const selectedObservation = observations
     .filter(
       candidate =>
@@ -140,6 +153,7 @@ const doesTargetMatchObservation = (
     )
     .sort((left, right) => compareCompileOccurrences(left.occurrence, right.occurrence))
     .at(locator.occurrenceIndex);
+
   return (
     selectedObservation !== undefined &&
     isCompileOccurrenceEqual(observation.occurrence, selectedObservation.occurrence)
@@ -191,9 +205,11 @@ export const resolveAdmittedInspectionSelection = ({
   const orderedObservations = [...observations].sort((left, right) =>
     compareCompileOccurrences(left.occurrence, right.occurrence),
   );
+
   /** self 是显式指向 authored 对象的请求，必须在实际遍历前确认它至少对应一个最终 owner output */
   for (const { index, rule } of admittedRules) {
     if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.options === false) continue;
+
     const sourcePath = rule.target.locator.sourcePath;
     if (
       admittedRules.some(
@@ -203,10 +219,12 @@ export const resolveAdmittedInspectionSelection = ({
     ) {
       continue;
     }
+
     const definition = getResolvedInspectorRegistry(registry).require(rule.inspector);
     const matchingObservations = orderedObservations.filter(observation =>
       doesTargetMatchObservation(rule.target, observation, orderedObservations, definition.owner),
     );
+
     try {
       if (matchingObservations.length === 0)
         throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Explicit self target has no final owner output');
@@ -225,14 +243,17 @@ export const resolveAdmittedInspectionSelection = ({
 
   /** 每项都是一个 observation 与一个 owner-matched Inspector 的最终请求，尚未分配外观颜色 */
   const pendingRequests: Array<Omit<ResolvedInspectionRequest, 'colorScope'>> = [];
+
   for (const observation of orderedObservations) {
     for (const definition of getResolvedInspectorRegistry(registry).definitions) {
       if (!isCompileObservationOwnerEqual(observation.owner, definition.owner)) continue;
+
       /** 仅保留作用到当前最终实例的规则；barrier 优先于任何 request */
       const matchingRules = admittedRules.filter(({ rule }) =>
         doesTargetMatchObservation(rule.target, observation, orderedObservations, definition.owner),
       );
       if (matchingRules.some(({ rule }) => rule.kind === 'barrier')) continue;
+
       /** 级联从宽到窄：scene → subtree（由外至内）→ self；同范围保持作者声明顺序 */
       const requests = matchingRules
         .filter(
@@ -249,11 +270,13 @@ export const resolveAdmittedInspectionSelection = ({
             const depthDifference = left.rule.target.sourcePath.length - right.rule.target.sourcePath.length;
             if (depthDifference !== 0) return depthDifference;
           }
+
           return left.index - right.index;
         });
       let isRequestActive = false;
       let mergedOptionsInput: JsonObject = {};
       let parsedOptions: JsonObject | undefined;
+
       /** false 会关闭并清空此前继承；合并时保留 sparse options，避免默认值被误当作显式覆盖 */
       for (const entry of requests) {
         try {
@@ -263,6 +286,7 @@ export const resolveAdmittedInspectionSelection = ({
             parsedOptions = undefined;
             continue;
           }
+
           const localOptionsInput = entry.options;
           const mergeOptionsInput = definition.mergeOptionsInput as
             | ((inheritedOptionsInput: JsonObject, localOptionsInput: JsonObject) => JsonObject)
@@ -277,8 +301,11 @@ export const resolveAdmittedInspectionSelection = ({
           throw wrapInspectionError(createInspectionSelectionDiagnosticOrigin(entry.index, entry.rule.target), cause);
         }
       }
+
       if (!isRequestActive) continue;
+
       let options: JsonObject;
+
       try {
         const resolveOptions = definition.resolveOptions as (source: JsonObject) => JsonObject;
         options = cloneAndFreezeInspectionJson(
@@ -301,6 +328,7 @@ export const resolveAdmittedInspectionSelection = ({
           cause,
         );
       }
+
       pendingRequests.push({
         inspector: Object.freeze({ namespace: definition.namespace, type: definition.type }),
         owner: observation.owner,
@@ -310,12 +338,14 @@ export const resolveAdmittedInspectionSelection = ({
       });
     }
   }
+
   /** 以最终实例和 Inspector key 固定输出顺序，再分配连续 colorScope */
   pendingRequests.sort(
     (left, right) =>
       compareCompileOccurrences(left.occurrence, right.occurrence) ||
       formatInspectorRegistryKey(left.inspector).localeCompare(formatInspectorRegistryKey(right.inspector)),
   );
+
   return Object.freeze(pendingRequests.map((request, colorScope) => Object.freeze({ ...request, colorScope })));
 };
 
@@ -329,10 +359,12 @@ export const canInspectionSelectionRequestSite = (
   !admittedRules.some(({ rule }) => rule.kind === 'barrier' && doesBarrierContainSourcePath(rule.target, sourcePath)) &&
   admittedRules.some(({ rule }) => {
     if (rule.kind !== 'request' || rule.options === false) return false;
+
     const definition = getResolvedInspectorRegistry(registry).get(rule.inspector);
     if (definition === undefined || !isCompileObservationOwnerEqual(owner, definition.owner)) return false;
     if (rule.target.kind === 'scene') return true;
     if (rule.target.kind === 'subtree')
       return sourcePath === rule.target.sourcePath || sourcePath.startsWith(`${rule.target.sourcePath}.`);
+
     return owner.kind !== 'clip' && sourcePath === rule.target.locator.sourcePath;
   });

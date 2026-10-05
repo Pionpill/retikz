@@ -30,6 +30,7 @@ describe('buildPlotIR composition adapter surface', () => {
       'weather',
       { composition },
     );
+
     expect(spec.coordinate).toBeUndefined();
     expect(spec.composition).toEqual(composition);
     expect(spec.marks[0]).toMatchObject({ type: 'point', coordinateView: 'temp' });

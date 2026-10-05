@@ -52,10 +52,12 @@ const makeBareMark = () =>
         position: [0, 0],
         layout: { minimumSize: 1 },
       };
+
       for (const entry of channels.nodeDeliveries ?? []) {
         const value = entry.resolver(row);
         if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind: 'pointGlyph' });
       }
+
       return { type: 'scope', children: [node] };
     },
   });
@@ -68,6 +70,7 @@ const makeBareIntensityChannel = (delivered: { value?: number }) =>
       const binding = (mark as { encoding?: { channels?: Record<string, { value?: unknown }> } }).encoding?.channels
         ?.bareIntensity;
       const value = binding?.value;
+
       return typeof value === 'number' ? { resolver: () => value } : undefined;
     },
     deliver: (_node, value) => {
@@ -100,6 +103,7 @@ describe('mark registry（contract：自定义 mark）', () => {
   it('custom_mark_type_collision_rejected', () => {
     // 自定义 type 撞内置 → IRPlotCustomMark refine 拒；内置 'point' 走内置分支但缺位置编码也不该当自定义通过
     const collide = MarkOperationSchema.safeParse({ type: 'point', foo: 1 });
+
     // 'point' 命中内置 schema（point 字段可选）→ accept；但带非法额外字段的纯自定义占用名应被内置严格 schema 兜住
     expect(MarkOperationSchema.safeParse({ type: 'path', notAField: true }).success).toBe(collide.success);
     expect(BUILTIN_MARK_TYPES.has('point')).toBe(true);
@@ -117,18 +121,21 @@ describe('mark registry（contract：自定义 mark）', () => {
   it('resolve_mark_registry_merges_builtin_and_custom', () => {
     const record = { calls: 0, rows: 0 };
     const registry = resolveMarkRegistry([makeDotMark(record)]);
+
     expect(registry.get('dot')).toBeDefined();
     expect(registry.get('point')).toBeDefined();
   });
 
   it('duplicate_mark_registration_throws（自定义撞内置）', () => {
     const collide = defineMark({ schema: strictObject({ type: literal('point') }), lower: () => null });
+
     expect(() => resolveMarkRegistry([collide])).toThrow(/duplicate mark registration: "point"/);
   });
 
   it('duplicate_mark_registration_throws（两自定义同 type）', () => {
     const a = defineMark({ schema: DotMarkSchema, lower: () => null });
     const b = defineMark({ schema: DotMarkSchema, lower: () => null });
+
     expect(() => resolveMarkRegistry([a, b])).toThrow(/duplicate mark registration: "dot"/);
   });
 
@@ -146,6 +153,7 @@ describe('mark registry（contract：自定义 mark）', () => {
       { cat: 'C', val: 9 },
     ];
     expandOf(dotSpec(), { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)] });
+
     expect(record.calls).toBe(1);
     expect(record.rows).toBe(rows.length);
   });
@@ -174,6 +182,7 @@ describe('mark registry（contract：自定义 mark）', () => {
     const spec = dotSpec({
       marks: [{ type: 'dot', strength: -1, encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
     });
+
     expect(() =>
       expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeDotMark(record)] }),
     ).toThrow();
@@ -192,6 +201,7 @@ describe('mark registry（contract：自定义 mark）', () => {
       ],
       marks: [{ type: 'bare', encoding: { channels: { ghost: { value: 1 } } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeBareMark()] })).toThrow(
       /channel "ghost" is not registered/,
     );
@@ -219,11 +229,13 @@ describe('mark registry（contract：自定义 mark）', () => {
         channelDefinitions: [makeBareIntensityChannel(delivered)],
       },
     );
+
     expect(delivered.value).toBe(0.75);
   });
 
   it('unregistered_custom_mark_fails_loud', () => {
     const rows = [{ cat: 'A', val: 3 }];
+
     expect(() => expandOf(dotSpec(), { d: rows }, opts)).toThrow(/mark type "dot" is not registered/);
   });
 
@@ -233,6 +245,7 @@ describe('mark registry（contract：自定义 mark）', () => {
       { cat: 'A', val: 3 },
       { cat: 'B', val: 6 },
     ];
+
     // strict model：custom mark 的 collectFields 登记 x=cat / y=val，否则严格校验会因未声明字段失败
     const spec = dotSpec({
       data: {
@@ -243,6 +256,7 @@ describe('mark registry（contract：自定义 mark）', () => {
         ],
       },
     });
+
     expect(() =>
       expandOf(spec, { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)], validateData: true }),
     ).not.toThrow();
@@ -255,6 +269,7 @@ describe('mark registry（contract：自定义 mark）', () => {
       { cat: 'A', val: 3 },
       { cat: 'B', val: 6 },
     ];
+
     // 自定义 dot + 内置 point 同 plot，共用同一坐标 / scale；lowering 不抛、两 mark 各产一层
     const spec = dotSpec({
       marks: [
@@ -263,6 +278,7 @@ describe('mark registry（contract：自定义 mark）', () => {
       ],
     });
     const scope = expandOf(spec, { d: rows }, { ...opts, markDefinitions: [makeDotMark(record)] });
+
     expect(record.calls).toBe(1);
     expect(scope.children.length).toBeGreaterThanOrEqual(2);
   });

@@ -11,6 +11,7 @@ import { inspectClipI18n } from './inspect-clip.i18n';
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-clip.controls';
 
 const registry = createDefaultInspectorRegistry();
+
 const preview = defineControlledBuiltinInspectPreview(
   createPreviewControlContract,
   (values, lang) => {
@@ -58,6 +59,7 @@ const preview = defineControlledBuiltinInspectPreview(
 
 /** Derive all views from the same drawing and current controls. */
 export const previewSource = preview.source;
+
 const Preview = preview.Component;
 
 export default Preview;

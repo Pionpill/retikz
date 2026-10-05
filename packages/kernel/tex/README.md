@@ -50,15 +50,15 @@ The default `base` profile keeps MathJax minimal. `math` adds `ams`, `newcommand
 
 ## API
 
-| API                     | Type                                                                        | Description                                                                                                   |
-| ----------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `createMathJaxEngine`   | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`             | Dynamically imports the optional MathJax stack and selected configurations.                                   |
-| `createMathJaxLowerTex` | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`                   | Creates the built-in engine and lowerer in one step.                                                          |
-| `MathJaxEngineOptions`  | `{ profile?: 'base' \| 'math'; extensions?: Array<MathJaxExtensionValue> }` | Selects a built-in profile and optional extensions.                                                           |
-| `MathJaxSvgEngine`      | `{ convert(tex, options): string }`                                         | Minimal engine contract consumed by this package. Custom engines can implement it directly.                   |
-| `createLowerTex`        | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`         | Adapts an engine and caches deterministic results by source, display mode, font size, and host color.         |
-| `useLowerTex`           | `(options?: MathJaxLowerTexOptions) => MathJaxLowerTexState`                | React hook from `@retikz/tex/react`; shares engines by effective extensions and reports initialization state. |
-| `MathJaxLowerTexState`  | `loading` \| `ready` \| `error`                                             | `ready` provides `lowerTex`; `error` provides the startup diagnostic.                                         |
+| API                     | Type                                                                   | Description                                                                                                   |
+| ----------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `createMathJaxEngine`   | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`        | Dynamically imports the optional MathJax stack and selected configurations.                                   |
+| `createMathJaxLowerTex` | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`              | Creates the built-in engine and lowerer in one step.                                                          |
+| `MathJaxEngineOptions`  | `{ profile?: 'base' \| 'math'; extensions?: Array<MathJaxExtension> }` | Selects a built-in profile and optional extensions.                                                           |
+| `MathJaxSvgEngine`      | `{ convert(tex, options): string }`                                    | Minimal engine contract consumed by this package. Custom engines can implement it directly.                   |
+| `createLowerTex`        | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`    | Adapts an engine and caches deterministic results by source, display mode, font size, and host color.         |
+| `useLowerTex`           | `(options?: MathJaxLowerTexOptions) => MathJaxLowerTexState`           | React hook from `@retikz/tex/react`; shares engines by effective extensions and reports initialization state. |
+| `MathJaxLowerTexState`  | `loading` \| `ready` \| `error`                                        | `ready` provides `lowerTex`; `error` provides the startup diagnostic.                                         |
 
 SVG lowering helpers such as `parsePathD` and `parseSvgTransform` are implementation details and are not exported from the root package entry.
 

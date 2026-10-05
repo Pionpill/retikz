@@ -7,6 +7,7 @@ import { parse } from 'yaml';
 /** 收集 decisions 下的正式 ADR；不扫描实现计划、模板或生成目录 */
 const collectAdrs = root => {
   const entries = [];
+
   const visit = directory => {
     for (const item of readdirSync(directory, { withFileTypes: true })) {
       const absolute = path.join(directory, item.name);
@@ -20,20 +21,26 @@ const collectAdrs = root => {
       }
     }
   };
+
   for (const group of readdirSync(path.join(root, 'packages'), { withFileTypes: true })) {
     if (!group.isDirectory()) continue;
+
     const notes = path.join(root, 'packages', group.name, '_notes');
+
     // 部分分组没有 notes 或 decisions 目录
     let children;
+
     try {
       children = readdirSync(notes, { withFileTypes: true });
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
       continue;
     }
+
     const decisions = children.find(item => item.isDirectory() && item.name === 'decisions');
     if (decisions) visit(path.join(notes, decisions.name));
   }
+
   return entries.sort((a, b) => a.path.localeCompare(b.path, 'en'));
 };
 
@@ -42,12 +49,15 @@ const readAdr = entry => {
   const content = readFileSync(entry.absolute, 'utf8');
   const frontmatter = content.match(/^\uFEFF?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
   if (!frontmatter) throw new Error(`${entry.path}: 缺少 ADR frontmatter`);
+
   let metadata;
+
   try {
     metadata = parse(frontmatter[1], { uniqueKeys: true, maxAliasCount: 0 });
   } catch (error) {
     throw new Error(`${entry.path}: YAML 无效: ${error.message}`);
   }
+
   const keywords = typeof metadata?.keywords === 'string' ? metadata.keywords.split('、').map(word => word.trim()) : [];
   if (
     !metadata ||
@@ -62,10 +72,13 @@ const readAdr = entry => {
     keywords.some(word => !word || word.length > 80)
   )
     throw new Error(`${entry.path}: description 须为 1–200 字符单行摘要，keywords 须为顿号分隔的 1–12 个单行短关键词`);
+
   const body = content.slice(frontmatter[0].length);
   const title = body.match(/^#\s+(.+)$/m)?.[1];
   if (!title) throw new Error(`${entry.path}: 缺少 ADR 标题`);
+
   const status = body.match(/^\s*-\s*状态[：:]\s*(.+)$/m)?.[1] || '未标注';
+
   return {
     path: entry.path,
     owner: entry.owner,
@@ -98,17 +111,21 @@ const run = () => {
     );
     return;
   }
+
   const limit = Number(values.limit);
   if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error('--limit 必须为 1–100 的整数');
   if (values.version && !/^v\d+\.\d+$/.test(values.version)) throw new Error('--version 格式为 v0.1');
+
   const terms = positionals.join(' ').trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (!values.check && !terms.length) throw new Error('请输入检索关键词；使用 --help 查看用法');
   if (values.check && (terms.length || values.owner || values.version || values.body))
     throw new Error('--check 校验全仓，请勿与查询或范围筛选组合');
+
   const entries = collectAdrs(process.cwd());
   if (!entries.length) throw new Error('未发现正式 ADR，请在仓库根目录运行');
   if (values.owner && !entries.some(entry => entry.owner === values.owner))
     throw new Error(`未知 owner: ${values.owner}`);
+
   const selected = entries.filter(
     entry => (!values.owner || entry.owner === values.owner) && (!values.version || entry.version === values.version),
   );
@@ -117,11 +134,13 @@ const run = () => {
     console.log(`已校验 ${records.length} 篇 ADR 元数据`);
     return;
   }
+
   const matches = records
     .flatMap(record => {
       const summary = [record.path, record.title, record.description, ...record.keywords].join(' ').toLowerCase();
       const haystack = values.body ? `${summary}\n${record.body.toLowerCase()}` : summary;
       if (!terms.every(term => haystack.includes(term))) return [];
+
       const score = terms.reduce(
         (sum, term) =>
           sum +
@@ -130,9 +149,11 @@ const run = () => {
           (summary.includes(term) ? 1 : 0),
         0,
       );
+
       return [{ record, score }];
     })
     .sort((a, b) => b.score - a.score || a.record.path.localeCompare(b.record.path, 'en'));
+
   const results = matches.slice(0, limit).map(({ record }) => ({
     path: record.path,
     owner: record.owner,
@@ -142,9 +163,11 @@ const run = () => {
     description: record.description,
     keywords: record.keywords,
   }));
+
   if (values.json) console.log(JSON.stringify({ total: matches.length, limit, results }, null, 2));
   else {
     console.log(`命中 ${matches.length} 篇，显示 ${results.length} 篇${values.body ? '（包含正文搜索）' : ''}`);
+
     for (const result of results)
       console.log(`\n${result.path}\n${result.title}\n${result.description}\n状态: ${result.status}`);
     if (matches.length > limit) console.log('\n结果已限量；请增加关键词或用 --owner / --version 缩小范围。');

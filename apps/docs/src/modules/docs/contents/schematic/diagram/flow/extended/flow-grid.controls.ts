@@ -20,6 +20,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { row: 32, column: 48, reserveLabelSpace: true },
@@ -28,4 +29,5 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
 };
 
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

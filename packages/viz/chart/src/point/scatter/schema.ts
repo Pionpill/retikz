@@ -41,6 +41,9 @@ export const ScatterChartSchema = createChartSourceSchema(ChartFamily.Point, Sca
 );
 
 export type IRScatterChart = ZodInfer<typeof ScatterChartSchema>;
+
 export type IRScatterChartRecipe = ZodInfer<typeof ScatterChartRecipeSchema>;
+
 export type IRScatterChartEncodings = ZodInfer<typeof ScatterChartEncodingsSchema>;
+
 export type IRScatterChartProperties = ZodInfer<typeof ScatterChartPropertiesSchema>;

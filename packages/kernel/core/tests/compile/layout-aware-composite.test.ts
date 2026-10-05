@@ -58,13 +58,18 @@ const createLayoutDefinition = () =>
       expect(Object.isFrozen(context.proposal)).toBe(true);
       expect(Object.isFrozen(context.proposal.x)).toBe(true);
       expect(Object.isFrozen(context.proposal.y)).toBe(true);
+
       const naturalProbe = context.layoutChild(node.child, NaturalLayoutProposal);
+
       expect(naturalProbe.kind).toBe(LayoutChildProbeKind.Resolved);
+
       if (naturalProbe.kind === LayoutChildProbeKind.Failed) return context.raise(naturalProbe.failure);
+
       const ranged = resolvedResultOf(context, node.child, {
         x: { kind: LayoutAxisProposalKind.Range, min: 0, max: node.width },
         y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
       });
+
       return {
         children: [context.replay(ranged)],
         artifact: {
@@ -210,6 +215,7 @@ describe('layout-aware composite', () => {
         ) {
           throw new Error('Expected parent proposal inside structural Scope');
         }
+
         return {
           children: [],
           artifact: { xKind: proposal.x.kind, yMode: proposal.y.mode },

@@ -292,6 +292,7 @@ describe('Scatter Chart encoding resolution', () => {
       field: 'group',
       scale: { reference: '__chart.regression.scale.series' },
     });
+
     expect(inherited.encodings.color).toEqual({
       field: 'group',
       scale: '__chart.regression.scale.series',
@@ -303,6 +304,7 @@ describe('Scatter Chart encoding resolution', () => {
       field: 'group',
       scale: { operation: { type: 'ordinal', name: 'seriesOverride' } },
     });
+
     expect(replaced.encodings.color).toEqual({ field: 'group', scale: 'seriesOverride' });
     expect(replaced.scales).toEqual([{ type: 'ordinal', name: 'seriesOverride' }]);
     expect([...replaced.removedRecipeScales]).toEqual(['__chart.regression.scale.series']);
@@ -379,6 +381,7 @@ describe('Scatter Chart encoding resolution', () => {
         facet: { empty: 'show', spacing: { panelGap: 12 } },
       },
     });
+
     expect(facet.plot.composition).toMatchObject({
       defaultView: '__chart.scatter.view.main',
       arrangements: [
@@ -408,6 +411,7 @@ describe('Scatter Chart encoding resolution', () => {
     });
 
     expect(result.plot.marks).toHaveLength(2);
+
     for (const mark of result.plot.marks) {
       expect(mark).toMatchObject({
         encoding: { x: { field: 'species' }, y: { field: 'meanMargin' } },
@@ -499,6 +503,7 @@ describe('Scatter Chart encoding resolution', () => {
       undefined,
       customRegistry.runtime,
     );
+
     expect(transformed.plot.transform).toEqual([
       { operation: { kind: 'copy-chart-field', field: 'amount', as: 'copiedAmount' } },
     ]);
@@ -515,6 +520,7 @@ describe('Scatter Chart encoding resolution', () => {
       { scales: [{ type: 'mono-chart', name: 'extensionMono' }] },
       customRegistry.runtime,
     );
+
     expect(extended.plot.scales).toContainEqual({ type: 'mono-chart', name: 'extensionMono', tone: 'mono' });
 
     const aggregated = resolveScatter(
@@ -528,6 +534,7 @@ describe('Scatter Chart encoding resolution', () => {
       undefined,
       customRegistry.runtime,
     );
+
     expect(aggregated.plot.transform).toEqual([
       {
         operation: {

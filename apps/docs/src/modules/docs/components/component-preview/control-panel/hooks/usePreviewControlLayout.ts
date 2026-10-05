@@ -6,10 +6,15 @@ import type { PreviewControlColumnSection, PreviewControlLayoutMetrics } from '.
 import { indexPreviewControlSections, layoutPreviewControlSections } from '../utils';
 
 const TWO_COLUMN_MIN_WIDTH = 300;
+
 const ITEM_GAP = 8;
+
 const SECTION_GAP = 12;
+
 const TITLE_FALLBACK_HEIGHT = 24;
+
 const COMPACT_FIELD_FALLBACK_HEIGHT = 28;
+
 const DEFAULT_FIELD_FALLBACK_HEIGHT = 36;
 
 type PreviewControlLayoutState = {
@@ -83,6 +88,7 @@ export const usePreviewControlLayout = (options: UsePreviewControlLayoutOptions)
     }
 
     let animationFrame = 0;
+
     const measure = () => {
       const cache = measurementCacheRef.current;
       columnsElement.querySelectorAll<HTMLElement>('[data-section-index]').forEach(element => {
@@ -120,10 +126,12 @@ export const usePreviewControlLayout = (options: UsePreviewControlLayoutOptions)
         return { definition, columns: nextColumns, signature: nextSignature };
       });
     };
+
     const scheduleMeasure = () => {
       cancelAnimationFrame(animationFrame);
       animationFrame = requestAnimationFrame(measure);
     };
+
     const observer = new ResizeObserver(entries => {
       entries.forEach(entry => {
         if (entry.target === panel) panelWidthRef.current = entry.contentRect.width;

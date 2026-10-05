@@ -35,6 +35,7 @@ const issuePathOf = (error: ZodError): ReadonlyArray<string | number> => {
   const issue = error.issues.at(0);
   const unknownKey = issue?.code === 'unrecognized_keys' ? issue.keys.at(0) : undefined;
   const path = (issue?.path ?? []).map(segment => (typeof segment === 'symbol' ? String(segment) : segment));
+
   return unknownKey === undefined ? path : [...path, typeof unknownKey === 'symbol' ? String(unknownKey) : unknownKey];
 };
 
@@ -43,10 +44,12 @@ const scaleNamesOf = (
   path: ReadonlyArray<string | number>,
 ): Set<string> => {
   const names = new Set<string>();
+
   for (const [index, scale] of scales.entries()) {
     if (names.has(scale.name)) throw invalidPlot(`Duplicate Plot scale "${scale.name}"`, [...path, index, 'name']);
     names.add(scale.name);
   }
+
   return names;
 };
 
@@ -73,10 +76,12 @@ export const resolveChartPlotScales = (
         authored.findIndex(scale => scale.name === entry.value.name),
       ]);
     }
+
     return authoredScale;
   });
   const encodingNames = scaleNamesOf(encodings.scales, ['recipe', 'encodings']);
   const additions = authored.filter(scale => !recipeNames.has(scale.name) && !encodingNames.has(scale.name));
+
   return [...scales, ...encodings.scales, ...additions];
 };
 
@@ -89,6 +94,7 @@ const coordinateDefinitionOf = (
   if (definition === undefined) {
     throw invalidPlot(`Plot coordinate type "${coordinate.type}" is not registered`, path);
   }
+
   return definition;
 };
 
@@ -130,6 +136,7 @@ const resolveChartCoordinate = (
   if (selectedCoordinate === undefined || selectedDefinition === undefined) {
     throw invalidPlot('Chart coordinate scale binding requires a coordinate spatial source', ['recipe', 'spatial']);
   }
+
   try {
     const scaleNames = {
       ...(recipeCoordinate === undefined || recipeDefinition === undefined
@@ -150,6 +157,7 @@ const resolveChartCoordinate = (
         error,
       );
     }
+
     throw error;
   }
 };
@@ -172,6 +180,7 @@ export const resolveChartPlotSpatial = (
         'composition',
       ]);
     }
+
     if ('composition' in spatial) {
       throw invalidPlot('Chart composition encoding requires a single recipe coordinate scaffold', [
         'recipe',
@@ -179,10 +188,13 @@ export const resolveChartPlotSpatial = (
         encodings.spatial.kind,
       ]);
     }
+
     if (authoredCoordinate !== undefined && !spatial.replaceable) {
       throw invalidPlot('Recipe spatial scaffold is not replaceable by Chart Source', ['coordinate']);
     }
+
     const coordinate = resolveChartCoordinate(spatial.coordinate, authoredCoordinate, encodings, runtime);
+
     return {
       composition: resolvePlotFacetComposition(
         {
@@ -203,6 +215,7 @@ export const resolveChartPlotSpatial = (
         authoredCoordinate === undefined ? ['plotExtension', 'composition'] : ['coordinate'],
       );
     }
+
     if (authoredCoordinate === undefined) {
       if (Object.keys(encodings.positionScales).length > 0) {
         throw invalidPlot('Chart position scale encoding requires a coordinate spatial source', [
@@ -210,8 +223,10 @@ export const resolveChartPlotSpatial = (
           'composition',
         ]);
       }
+
       return { composition: authoredComposition };
     }
+
     return {
       coordinate: resolveChartCoordinate(
         'coordinate' in spatial ? spatial.coordinate : undefined,
@@ -225,12 +240,14 @@ export const resolveChartPlotSpatial = (
   if ('coordinate' in spatial) {
     return { coordinate: resolveChartCoordinate(spatial.coordinate, undefined, encodings, runtime) };
   }
+
   if (Object.keys(encodings.positionScales).length > 0) {
     throw invalidPlot('Chart position scale encoding cannot target a recipe composition scaffold', [
       'recipe',
       'encodings',
     ]);
   }
+
   return { composition: spatial.composition };
 };
 
@@ -246,6 +263,7 @@ export const resolveChartPlotGuides = (
   if (!scaffold.replaceable) {
     throw invalidPlot('Recipe guides are not replaceable by Chart Source', ['plotExtension', 'guides']);
   }
+
   return authored;
 };
 
@@ -264,20 +282,26 @@ export const resolveChartPlot = (
   const mergedGuides = resolveChartPlotGuides(recipe, extension);
   const mergedScales = resolveChartPlotScales(recipe, encodings, extension);
   const identifiedMarks = new Map<number, IRPlot['marks'][number]>();
+
   const identifyMark = (index: number): string => {
     const previous = identifiedMarks.get(index);
     if (typeof previous?.id === 'string') return previous.id;
+
     const mark = chartMarks[index];
     let id = typeof mark.id === 'string' ? mark.id : `__chart.mark.${index}`;
     if (mark.id === undefined) {
       const occupied = new Set(
         [...chartMarks, ...(extension?.marks ?? []), ...identifiedMarks.values()].map(item => item.id),
       );
+
       while (occupied.has(id)) id += '.point';
     }
+
     identifiedMarks.set(index, { ...mark, id });
+
     return id;
   };
+
   const scales =
     definition.resolveScaleDefaults?.({
       identifyMark,
@@ -341,6 +365,7 @@ export const resolveChartPlot = (
       const rebased = new ZodError(error.issues.map(issue => ({ ...issue, path: sourcePath })));
       throw invalidPlot('Resolved Chart Plot does not match PlotSchema', sourcePath, rebased);
     }
+
     throw error;
   }
 };

@@ -30,8 +30,10 @@ const visitNoFunction = (owner: string, value: unknown, seen: WeakSet<object>): 
       `${owner} emit produced a marker containing a function; markers must be plain JSON data.`,
     );
   }
+
   if (value === null || typeof value !== 'object') return;
   if (seen.has(value)) return;
+
   seen.add(value);
   if (Array.isArray(value)) {
     for (const entry of value) visitNoFunction(owner, entry, seen);
@@ -52,10 +54,13 @@ const visitFiniteNumbers = (owner: string, value: unknown, seen: WeakSet<object>
         `${owner} emit produced a marker with a non-finite number (${String(value)}); marker coordinates must be finite.`,
       );
     }
+
     return;
   }
+
   if (value === null || typeof value !== 'object') return;
   if (seen.has(value)) return;
+
   seen.add(value);
   if (Array.isArray(value)) {
     for (const entry of value) visitFiniteNumbers(owner, entry, seen);
@@ -82,6 +87,7 @@ const assertMarkerStrokeStyle = (owner: string, candidate: Record<string, unknow
 const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<object>): void => {
   const candidate = providerOutputRecord(owner, prim, 'marker primitive');
   const path = 'marker';
+
   switch (candidate.type) {
     case 'path':
       assertProviderOutputKeys(
@@ -106,6 +112,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       assertProviderOutputPathCommands(owner, candidate.commands, 'marker path');
       assertProviderOutputPathEnums(owner, candidate, path);
       assertMarkerStrokeStyle(owner, candidate, path);
+
       return;
     case 'ellipse':
       assertProviderOutputKeys(
@@ -134,6 +141,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       assertProviderOutputFinite(owner, candidate.ry, 'marker ry', true);
       assertProviderOutputOptionalFinite(owner, candidate, 'rotate', path);
       assertMarkerStrokeStyle(owner, candidate, path);
+
       return;
     case 'rect':
       assertProviderOutputKeys(
@@ -162,6 +170,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       assertProviderOutputFinite(owner, candidate.height, 'marker height', true);
       assertProviderOutputOptionalFinite(owner, candidate, 'cornerRadius', path, true);
       assertMarkerStrokeStyle(owner, candidate, path);
+
       return;
     case 'group': {
       assertProviderOutputKeys(owner, candidate, ['type', 'transforms', 'children'], 'marker primitive');
@@ -169,6 +178,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       const children = providerOutputArray(owner, candidate.children, 'marker group.children');
       if (active.has(candidate)) failProviderOutput(owner, 'a cyclic marker group');
       active.add(candidate);
+
       try {
         for (const child of children) {
           visitMarkerPrimitive(owner, child, active);
@@ -176,6 +186,7 @@ const visitMarkerPrimitive = (owner: string, prim: unknown, active: WeakSet<obje
       } finally {
         active.delete(candidate);
       }
+
       return;
     }
     default:
@@ -203,14 +214,17 @@ export const validateMarkerPrimitives = (owner: string, emitted: unknown): Array
         `${owner} emit failed output validation: expected an iterable of marker primitives.`,
       );
     }
+
     const marker = [...(emitted as Iterable<unknown>)].map((primitive, index) =>
       snapshotProviderOutputJson(owner, primitive, `marker primitive[${index}]`),
     );
     assertNoFunction(owner, marker);
     assertFiniteNumbers(owner, marker);
     const active = new WeakSet<object>();
+
     for (const prim of providerOutputArray(owner, marker, 'marker primitive list')) {
       visitMarkerPrimitive(owner, prim, active);
     }
+
     return marker.map(primitive => omitProviderOutputUndefined(primitive)) as Array<MarkerPrimitive>;
   });

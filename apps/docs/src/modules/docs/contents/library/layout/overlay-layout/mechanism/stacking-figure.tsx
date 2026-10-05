@@ -5,12 +5,15 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 
 import { figureI18n } from './stacking-figure.i18n';
+
 /** 图示语言 */
 export type FigureProps = { lang?: Lang };
+
 /** 用固定几何参照展示本节的独立事实 */
 const Figure: FC<FigureProps> = props => {
   const { lang = 'zh' } = props;
   const text = figureI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Rectangle corner1={[0, 90]} width={160} height={65} style={{ stroke: 'dodgerblue', fill: 'dodgerblue' }} />

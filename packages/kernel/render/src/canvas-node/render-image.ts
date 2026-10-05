@@ -38,6 +38,7 @@ const getDevicePixelRatio = (options: RenderSceneToImageOptions): number => {
   if (options.devicePixelRatio !== undefined) {
     return Number.isFinite(options.devicePixelRatio) && options.devicePixelRatio > 0 ? options.devicePixelRatio : 1;
   }
+
   return 1;
 };
 
@@ -47,11 +48,13 @@ const assertSceneLayout = (scene: Scene): void => {
       RetikzRenderErrorCode.CanvasNode,
       'renderSceneToImage: scene.layout.x must be a finite number.',
     );
+
   if (!Number.isFinite(scene.layout.y))
     throw new RetikzRenderError(
       RetikzRenderErrorCode.CanvasNode,
       'renderSceneToImage: scene.layout.y must be a finite number.',
     );
+
   assertPositiveFinite('scene.layout.width', scene.layout.width);
   assertPositiveFinite('scene.layout.height', scene.layout.height);
 };
@@ -84,9 +87,11 @@ const encodeCanvas = async (
   if (typeof canvas.encode === 'function') {
     return await canvas.encode(format, quality);
   }
+
   if (typeof canvas.toBuffer === 'function') {
     return canvas.toBuffer(MIME_BY_FORMAT[format], quality);
   }
+
   throw new RetikzRenderError(
     RetikzRenderErrorCode.CanvasNode,
     'renderSceneToImage: @napi-rs/canvas canvas does not expose encode() or toBuffer().',
@@ -119,6 +124,7 @@ export const renderSceneToImage = async (scene: Scene, options: RenderSceneToIma
     ctx.fillStyle = options.background;
     ctx.fillRect(0, 0, bitmapWidth, bitmapHeight);
   }
+
   ctx.setTransform(...sceneFitMatrix(scene.layout, options.width, options.height, devicePixelRatio));
   drawScene(ctx, scene, {
     ...options,

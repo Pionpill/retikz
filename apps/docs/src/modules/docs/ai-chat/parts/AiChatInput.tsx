@@ -34,14 +34,17 @@ export const AiChatInput: FC = () => {
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
+
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
   }, [draft]);
 
   useEffect(() => {
     if (focusInputNonce === 0) return;
+
     const el = textareaRef.current;
     if (!el) return;
+
     el.focus();
     const end = el.value.length;
     el.setSelectionRange(end, end);
@@ -49,8 +52,10 @@ export const AiChatInput: FC = () => {
 
   const handleSubmit = useCallback(() => {
     if (isGenerating) return;
+
     const value = draft.trim();
     if (!value) return;
+
     setDraft('');
     void send(value);
   }, [isGenerating, send, draft, setDraft]);

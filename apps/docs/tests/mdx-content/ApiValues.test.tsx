@@ -37,6 +37,7 @@ describe('<ApiValues>', () => {
 
     expect(names).not.toHaveLength(0);
     expect(Object.keys(API_VALUE_REGISTRY)).toEqual(expect.arrayContaining(names));
+
     names.forEach(name => {
       expect(registry[name], `${name} is not registered`).toBeDefined();
       expect(registry[name]?.values.length, `${name} has no values`).toBeGreaterThan(0);
@@ -62,6 +63,7 @@ describe('<ApiValues>', () => {
     expect(warn).toHaveBeenCalledWith('[ApiValues] value set "MissingPreset" not in API_VALUE_REGISTRY');
     expect(html).toContain('Unknown API values:');
     expect(html).toContain('MissingPreset');
+
     warn.mockRestore();
   });
 });

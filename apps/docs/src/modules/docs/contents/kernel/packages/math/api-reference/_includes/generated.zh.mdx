@@ -410,7 +410,7 @@ export type CircleCircleInput = {
 ### CircularArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={55}>
+  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={56}>
     圆弧曲线段
   </ApiSourceLink>
 </p>
@@ -454,7 +454,7 @@ export type CircularArcCurveSegment = {
 ### CubicBezierCurveSegment
 
 <p>
-  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={31}>
+  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={32}>
     三次贝塞尔曲线段
   </ApiSourceLink>
 </p>
@@ -496,7 +496,7 @@ export type CubicBezierCurveSegment = {
 ### CubicSegment
 
 <p>
-  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={45}>
+  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={46}>
     一段三次贝塞尔：两控制点 + 终点（起点为上一段终点 / 首段为第一个 knot）
   </ApiSourceLink>
 </p>
@@ -537,7 +537,7 @@ export type CubicSegment = {
   <ApiSourceLink
     label={'CurveApproximationOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={109}
+    startLine={110}
   >
     曲线长度近似配置
   </ApiSourceLink>
@@ -575,7 +575,7 @@ export type CurveApproximationOptions = {
   <ApiSourceLink
     label={'CurveParameterAtDistanceOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={117}
+    startLine={118}
   >
     曲线距离到参数反解配置
   </ApiSourceLink>
@@ -613,7 +613,7 @@ export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
 ### CurveSegment
 
 <p>
-  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={93}>
+  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={94}>
     可参数化、可切片的零依赖曲线段
   </ApiSourceLink>
 </p>
@@ -719,7 +719,7 @@ export type CurveSegment =
 ### CurveSegmentSample
 
 <p>
-  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={101}>
+  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={102}>
     曲线参数采样结果
   </ApiSourceLink>
 </p>
@@ -877,7 +877,7 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 ### EllipseArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={71}>
+  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={72}>
     椭圆弧曲线段
   </ApiSourceLink>
 </p>
@@ -981,7 +981,7 @@ export type LineCircleInput = {
 ### LineCurveSegment
 
 <p>
-  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={9}>
+  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={10}>
     直线曲线段
   </ApiSourceLink>
 </p>
@@ -1074,7 +1074,7 @@ export type Position = Vector2;
   <ApiSourceLink
     label={'QuadraticBezierCurveSegment'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={19}
+    startLine={20}
   >
     二次贝塞尔曲线段
   </ApiSourceLink>
@@ -1185,7 +1185,7 @@ export const AFFINE_IDENTITY: AffineMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
 ### circle
 
 <p>
-  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={46}>
+  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={48}>
     圆相关几何算法
   </ApiSourceLink>
 </p>
@@ -1217,7 +1217,7 @@ export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilo
 ### curve
 
 <p>
-  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={479}>
+  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={509}>
     可参数化曲线的纯几何运算
   </ApiSourceLink>
 </p>
@@ -1314,7 +1314,7 @@ export declare const ellipse: {
 
 ### intersect
 
-<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={122}>求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）</ApiSourceLink></p>
+<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={132}>求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）</ApiSourceLink></p>
 
 ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc-intersection` 单独导出
 
@@ -1579,7 +1579,7 @@ export declare const boundsOf: (points: ReadonlyArray<Position>) => AxisAlignedB
 ### boundsToRect
 
 <p>
-  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={89}>
+  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={93}>
     将 min/max bounds 转成左上角 + 尺寸矩形
   </ApiSourceLink>
 </p>
@@ -1612,7 +1612,7 @@ export declare const boundsToRect: ({ maxX, maxY, minX, minY }: AxisAlignedBound
 ### centerOfBounds
 
 <p>
-  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={125}>
+  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={129}>
     轴对齐外接范围中心
   </ApiSourceLink>
 </p>
@@ -1648,7 +1648,7 @@ export declare const centerOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBou
   <ApiSourceLink
     label={'collectArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={93}
+    startLine={96}
   >
     弧的 bbox 极值候选：起点、终点，加 [startAngle,endAngle] 内所有 90°·k 方向的圆周点
   </ApiSourceLink>
@@ -1692,7 +1692,7 @@ export declare const collectArcBoundingCandidates: ({
   <ApiSourceLink
     label={'collectEllipseArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={151}
+    startLine={158}
   >
     椭圆弧 bbox 极值候选：起点、终点，加 [start,end] 区间内所有 90°·k 参数角处的椭圆周点
   </ApiSourceLink>
@@ -1772,7 +1772,7 @@ export declare const convexHull: (points: Array<Position>) => Array<Position>;
 ### cornersOfBounds
 
 <p>
-  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={159}>
+  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={163}>
     轴对齐外接范围的四个角点
   </ApiSourceLink>
 </p>
@@ -1805,7 +1805,7 @@ export declare const cornersOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBo
 ### expandBounds
 
 <p>
-  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={144}>
+  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={148}>
     按四边外扩轴对齐外接范围
   </ApiSourceLink>
 </p>
@@ -1879,7 +1879,7 @@ export declare const getAffineSimilarityScale: (matrix: AffineMatrix) => number 
 ### halfAxesOfBounds
 
 <p>
-  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={134}>
+  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={138}>
     轴对齐外接范围半轴
   </ApiSourceLink>
 </p>
@@ -1959,7 +1959,7 @@ export declare const intersectRayWithArc: ({
 ### isAngleWithinArcSweep
 
 <p>
-  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={121}>
+  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={126}>
     角度 a（度）是否落在弧的角度区间 [startAngle, endAngle] 内（含端点，带容差）
   </ApiSourceLink>
 </p>
@@ -1999,7 +1999,7 @@ export declare const isAngleWithinArcSweep: ({
 ### isFiniteBoundsRect
 
 <p>
-  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={111}>
+  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={115}>
     判断 bounds rect 四个字段是否都是 finite number
   </ApiSourceLink>
 </p>
@@ -2168,7 +2168,7 @@ export declare const isInfiniteNumber: (value: unknown) => value is number;
 ### isPositiveBoundsRect
 
 <p>
-  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={118}>
+  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={122}>
     判断 bounds rect 是否 finite 且宽高严格大于 0
   </ApiSourceLink>
 </p>
@@ -2201,7 +2201,7 @@ export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 ### lerp
 
 <p>
-  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={100}>
+  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={102}>
     线性插值：a + (b - a) * t
   </ApiSourceLink>
 </p>
@@ -2272,7 +2272,7 @@ export declare const localToWorld: (shape: CenteredShape, local: Position) => Po
 ### mergeBounds
 
 <p>
-  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={74}>
+  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={77}>
     合并两个轴对齐外接范围
   </ApiSourceLink>
 </p>
@@ -2342,7 +2342,7 @@ export declare const multiplyAffine: (outer: AffineMatrix, inner: AffineMatrix) 
 ### pointAtArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={83}>
+  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={86}>
     圆心、半径、角度（度，与 polar.toPosition 同约定）→ 圆周上对应点
   </ApiSourceLink>
 </p>
@@ -2377,7 +2377,7 @@ export declare const pointAtArcAngle: (center: Position, radius: number, angleDe
 ### pointAtEllipseArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={141}>
+  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={148}>
     椭圆弧参数点：中心 + 半轴 rx/ry + 参数角（度）→ 椭圆周上点
   </ApiSourceLink>
 </p>
@@ -2417,7 +2417,7 @@ export declare const pointAtEllipseArcAngle: ({
 ### rectToBounds
 
 <p>
-  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={100}>
+  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={104}>
     将左上角 + 尺寸矩形转成 min/max bounds
   </ApiSourceLink>
 </p>
@@ -2450,7 +2450,7 @@ export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => Axis
 ### worldToLocal
 
 <p>
-  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={35}>
+  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={37}>
     世界坐标 → 本地坐标（`localToWorld` 逆变换）
   </ApiSourceLink>
 </p>

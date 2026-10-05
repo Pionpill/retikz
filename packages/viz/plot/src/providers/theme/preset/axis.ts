@@ -1,9 +1,9 @@
-import type { ThemeModeValue } from '@retikz/core';
+import type { ThemeMode } from '@retikz/core';
 
 import type { IRPlotAxisDefaults, IRPlotAxisRules } from '../../../schemas';
 
 /** 读取 mode-aware Neutral Axis defaults */
-export const getNeutralAxisDefaults = (mode: ThemeModeValue): IRPlotAxisDefaults => {
+export const getNeutralAxisDefaults = (mode: ThemeMode): IRPlotAxisDefaults => {
   void mode;
   return {
     line: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 1 },

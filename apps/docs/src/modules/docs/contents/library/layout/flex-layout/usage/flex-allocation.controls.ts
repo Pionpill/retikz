@@ -21,11 +21,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { width: 350, basis: 64, grow: 1, shrink: 1 },
     relatedApis: ['FlexLayout.size', 'FlexLayoutItem.basis', 'FlexLayoutItem.grow', 'FlexLayoutItem.shrink'],
   } satisfies PreviewControlContract;
 };
+
 /** 默认语言的注册契约 */
 export const previewControlContract = createPreviewControlContract('zh');

@@ -5,8 +5,10 @@ import { team } from './line-radar.data';
 
 /** Stable control id for radar path closure */
 export const LINE_RADAR_CLOSED_ID = 'line-radar-closed';
+
 /** Stable control id for the left coordinate interpolation */
 export const LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID = 'line-radar-left-coordinate-interpolation';
+
 /** Stable control id for the right coordinate interpolation */
 export const LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID = 'line-radar-right-coordinate-interpolation';
 

@@ -3,6 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { demoI18n } from './overlay-participation.i18n';
+
 /** 同一场景的本地化控件与重置基线 */
 export const createPreviewControlContract = (lang: Lang) => {
   const text = demoI18n[lang];
@@ -29,11 +30,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { participation: 'exclude', offsetX: 0, offsetY: 0, zIndex: 1 },
     relatedApis: ['OverlayLayoutItem.sizeParticipation', 'OverlayLayoutItem.zIndex', 'OverlayLayoutItem.offset'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

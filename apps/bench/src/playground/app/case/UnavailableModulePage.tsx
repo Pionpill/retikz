@@ -20,6 +20,7 @@ export const UnavailableModulePage: FC<UnavailableModulePageProps> = props => {
   const { module } = props;
   const { t } = useTranslation();
   const Icon = module.icon;
+
   return (
     <main className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-auto bg-background p-6">
       <div className="flex w-full max-w-lg flex-col items-center rounded-2xl border bg-card px-8 py-10 text-center shadow-sm">

@@ -33,6 +33,7 @@ export const BlockStylePreview = (values: BlockStylePreviewValues, lang: Lang = 
   const borderWidth = typeof values.borderWidth === 'number' ? values.borderWidth : 1;
   const cornerRadius = typeof values.cornerRadius === 'number' ? values.cornerRadius : 8;
   const padding = typeof values.padding === 'number' ? values.padding : 8;
+
   const headerTitleTextColor =
     typeof values.headerTitleTextColor === 'string' ? values.headerTitleTextColor : 'currentColor';
   const headerTitleFontSize =
@@ -42,6 +43,7 @@ export const BlockStylePreview = (values: BlockStylePreviewValues, lang: Lang = 
   const headerTitleFontWeight = values.headerTitleFontWeight === 'normal' ? 'normal' : 'bold';
   const headerTitleFontStyle = values.headerTitleFontStyle === 'italic' ? 'italic' : 'normal';
   const headerTitleOpacity = typeof values.headerTitleOpacity === 'number' ? values.headerTitleOpacity : 1;
+
   const headerDescriptionTextColor =
     typeof values.headerDescriptionTextColor === 'string' ? values.headerDescriptionTextColor : 'currentColor';
   const headerDescriptionFontSize =
@@ -54,6 +56,7 @@ export const BlockStylePreview = (values: BlockStylePreviewValues, lang: Lang = 
   const headerDescriptionFontStyle = values.headerDescriptionFontStyle === 'italic' ? 'italic' : 'normal';
   const headerDescriptionOpacity =
     typeof values.headerDescriptionOpacity === 'number' ? values.headerDescriptionOpacity : 0.7;
+
   const rowContentTextColor = typeof values.rowContentTextColor === 'string' ? values.rowContentTextColor : '#64748b';
   const rowContentFontSize =
     values.rowContentFontSize === 'xs' || values.rowContentFontSize === 'base' || values.rowContentFontSize === 'lg'

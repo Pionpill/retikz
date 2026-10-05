@@ -13,6 +13,7 @@ import { literal, strictObject, string, union } from 'zod';
 
 import { SurfaceSchema } from '../../../presentation/surface/schema';
 
+/** 校验单格的稀疏视觉配置，未提供的字段留待集合样式继承 */
 export const CellStyleSchema = strictObject({
   ...GraphicColorSchema.shape,
   ...GraphicElementOpacitySchema.shape,
@@ -23,6 +24,7 @@ export const CellStyleSchema = strictObject({
   cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
 }).describe('Sparse visual overrides for a collection cell.');
 
+/** 校验单格的尺寸、内边距与溢出配置，允许由集合补全缺省字段 */
 export const CellLayoutSchema = strictObject({
   width: union([NonNegativeNumberSchema, literal('auto')])
     .optional()
@@ -34,6 +36,7 @@ export const CellLayoutSchema = strictObject({
   overflow: SurfaceSchema.shape.overflow.unwrap().optional(),
 }).describe('Sparse cell dimensions, padding and overflow overrides.');
 
+/** 校验可选文本或单个绘图子项构成的格子；省略内容时保留空格 */
 export const CellSchema = strictObject({
   id: ScopePropsSchema.shape.id,
   content: union([string(), ChildSchema])
@@ -43,6 +46,7 @@ export const CellSchema = strictObject({
   layout: CellLayoutSchema.optional(),
 }).describe('A drawable cell with optional allocation identity.');
 
+/** 在样式继承完成后补齐单格的基础填充、描边与圆角默认值 */
 export const CellDefaultsSchema = CellStyleSchema.extend({
   fill: CellStyleSchema.shape.fill.default('gray'),
   fillOpacity: CellStyleSchema.shape.fillOpacity.default(0.14),
@@ -55,6 +59,7 @@ export const KeyCellDefaultsSchema = CellDefaultsSchema.extend({
   fillOpacity: CellDefaultsSchema.shape.fillOpacity.default(0.4),
 });
 
+/** 在布局继承完成后补齐单格的内边距与溢出默认值 */
 export const CellLayoutDefaultsSchema = CellLayoutSchema.extend({
   padding: CellLayoutSchema.shape.padding.default(8),
   overflow: CellLayoutSchema.shape.overflow.default('visible'),

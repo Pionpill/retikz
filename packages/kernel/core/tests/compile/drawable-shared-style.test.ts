@@ -23,10 +23,12 @@ const linePath = (overrides: Record<string, unknown> = {}): IRScene['children'][
 
 const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
+
   for (const primitive of primitives) {
     out.push(primitive);
     if (primitive.type === 'group') out.push(...flatten(primitive.children));
   }
+
   return out;
 };
 

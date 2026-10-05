@@ -7,6 +7,7 @@ import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
 /** 物化单个轨道尺寸的运行时默认值并递归冻结 */
 export const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize => {
   const parsed = size;
+
   switch (parsed.kind) {
     case TableTrackSizeKind.Fixed:
       return Object.freeze({ kind: parsed.kind, value: parsed.value });
@@ -30,23 +31,28 @@ export const resolveTableTrackSizes = (
   overrides: ReadonlyArray<IRTableTrackOverride> = [],
 ): ReadonlyArray<ResolvedTableTrackSize> => {
   const indexes = new Set<number>();
+
   for (const override of overrides) {
     if (!Number.isInteger(override.index) || override.index < 0) {
       throw new RetikzTableError(`table: track override index ${String(override.index)} must be a nonnegative integer`);
     }
+
     if (indexes.has(override.index)) {
       throw new RetikzTableError(`table: duplicate track override index ${override.index}`);
     }
+
     if (override.index >= defaults.length) {
       throw new RetikzTableError(
         `table: track override index ${override.index} is out of range for ${defaults.length} tracks`,
       );
     }
+
     indexes.add(override.index);
   }
 
   const parsedOverrides = overrides;
   const overrideByIndex = new Map(parsedOverrides.map(override => [override.index, override.size]));
+
   return Object.freeze(defaults.map((size, index) => resolveTableTrackSize(overrideByIndex.get(index) ?? size)));
 };
 
@@ -56,6 +62,7 @@ export const resolveTableLayout = (spec?: IRTableLayout): ResolvedTableLayout =>
   const rowSize = resolveTableTrackSize(
     parsed.rowSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_ROW_HEIGHT },
   );
+
   return Object.freeze({
     columnSize: resolveTableTrackSize(
       parsed.columnSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_COLUMN_WIDTH },

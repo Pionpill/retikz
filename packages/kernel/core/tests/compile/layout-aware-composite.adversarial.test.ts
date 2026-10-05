@@ -259,6 +259,7 @@ describe('layout-aware composite constraints and bounds', () => {
         if (proposal.x.kind !== LayoutAxisProposalKind.Exact || proposal.y.kind !== LayoutAxisProposalKind.Range) {
           throw new Error('Expected exact/range proposal');
         }
+
         return {
           children: [],
           artifact: {
@@ -327,10 +328,13 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(artifact.value).toMatchObject({
       allocation: { x: 0, y: 0, width: 100, height: 0 },
     });
+
     if (artifact.kind !== 'composite') {
       throw new Error('Expected bounds artifact');
     }
+
     const { allocation, visual } = artifact.value;
+
     expect(visual.x).toBeLessThan(allocation.x);
     expect(visual.x + visual.width).toBeGreaterThanOrEqual(allocation.x + allocation.width);
     expect(visual.height).toBeGreaterThan(1);
@@ -460,6 +464,7 @@ describe('layout-aware composite constraints and bounds', () => {
           },
         });
         context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, hostileProposal);
+
         return { children: [] };
       },
     });
@@ -477,6 +482,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
 
     let thrown: unknown;
+
     try {
       compileToScene(sceneOf({ namespace: 'test', type: 'discardHostileNestedProposal' }), {
         composites: [parent, nested],
@@ -511,6 +517,7 @@ describe('layout-aware composite constraints and bounds', () => {
         const count = (reads.get(property) ?? 0) + 1;
         reads.set(property, count);
         if (count > 1) throw new Error(`proposal field '${String(property)}' was read more than once`);
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -526,7 +533,9 @@ describe('layout-aware composite constraints and bounds', () => {
           { type: 'coordinate', id: 'point', position: [0, 0] },
           { x: guardedAxis, y: NaturalLayoutProposal.y },
         );
+
         expect(probe.kind).toBe(LayoutChildProbeKind.Resolved);
+
         return { children: [] };
       },
     });
@@ -668,7 +677,9 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     expect(Object.is(received?.x.kind === 'exact' ? received.x.value : undefined, -0)).toBe(false);
     expect(result.artifacts[0]?.value).toEqual({ width: 0, height: 0 });
+
     const size = result.artifacts[0]?.value as { width: number; height: number };
+
     expect(Object.is(size.width, -0)).toBe(false);
     expect(Object.is(size.height, -0)).toBe(false);
   });
@@ -693,6 +704,7 @@ describe('layout-aware composite constraints and bounds', () => {
           NaturalLayoutProposal,
         );
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
         return { children: [] };
       },
     });
@@ -750,14 +762,17 @@ describe('layout-aware composite constraints and bounds', () => {
           context.layoutChild({ namespace: 'test', type: 'ordinaryFailure' }, NaturalLayoutProposal),
           context.layoutChild({ namespace: 'test', type: 'nonErrorFailure' }, NaturalLayoutProposal),
         ];
+
         for (const probe of probes) {
           expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+
           if (probe.kind === LayoutChildProbeKind.Failed) {
             expect(Object.keys(probe.failure)).toEqual([]);
             expect(Object.isFrozen(probe.failure)).toBe(true);
             expect(Object.isFrozen(probe)).toBe(true);
           }
         }
+
         return { children: [] };
       },
     });
@@ -789,17 +804,22 @@ describe('layout-aware composite constraints and bounds', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('rawCauseParent') }),
       compile: (_, context) => {
         const causes: Array<unknown> = [];
+
         for (let index = 0; index < 2; index += 1) {
           const probe = context.layoutChild({ namespace: 'test', type: 'rawCauseLeaf' }, NaturalLayoutProposal);
           if (probe.kind === LayoutChildProbeKind.Resolved) throw new Error('expected failed probe');
+
           try {
             context.raise(probe.failure);
           } catch (error) {
             causes.push((error as Error & { cause?: unknown }).cause);
           }
+
           expect(() => context.raise(probe.failure)).toThrow(/already.*raised|consum/i);
         }
+
         expect(causes).toEqual([null, undefined]);
+
         return { children: [] };
       },
     });
@@ -815,6 +835,7 @@ describe('layout-aware composite constraints and bounds', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('unregisteredProbeParent') }),
       compile: (_, context) => {
         const probe = context.layoutChild({ namespace: 'missing', type: 'leaf' }, NaturalLayoutProposal);
+
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
         return { children: [] };
       },
@@ -824,6 +845,7 @@ describe('layout-aware composite constraints and bounds', () => {
       composites: [parent],
       onWarn: warning => warnings.push(warning),
     });
+
     expect(warnings).toEqual([]);
   });
 
@@ -856,6 +878,7 @@ describe('layout-aware composite constraints and bounds', () => {
           NaturalLayoutProposal,
         );
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
         return { children: [] };
       },
     });
@@ -894,11 +917,13 @@ describe('layout-aware composite constraints and bounds', () => {
           NaturalLayoutProposal,
         );
         if (probe.kind === LayoutChildProbeKind.Failed) context.raise(probe.failure);
+
         return { children: [] };
       },
     });
 
     let thrown: unknown;
+
     try {
       compileToScene(sceneOf({ namespace: 'test', type: 'selectedFailureParent' }), {
         composites: [leaf, parent],
@@ -934,6 +959,7 @@ describe('layout-aware composite constraints and bounds', () => {
           if (probe.kind === LayoutChildProbeKind.Failed) retained = probe.failure;
           return { children: [] };
         }
+
         return context.raise(retained!);
       },
     });
@@ -979,11 +1005,13 @@ describe('layout-aware composite constraints and bounds', () => {
 
   it('lets branded Core invariants pierce the probe catch boundary', () => {
     const invariant = createCompileInvariantError('forced namespace invariant');
+
     expect(invariant).toBeInstanceOf(RetikzError);
     expect(invariant).toMatchObject({
       name: 'RetikzCoreError',
       code: RetikzCoreErrorCode.CompileInvariantViolation,
     });
+
     const diff = vi.spyOn(NamespaceStack.prototype, 'diffTopFrame').mockImplementation(() => {
       throw invariant;
     });
@@ -1000,6 +1028,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(() =>
       compileToScene(sceneOf({ namespace: 'test', type: 'fatalInvariantParent' }), { composites: [parent] }),
     ).toThrow(invariant);
+
     diff.mockRestore();
   });
 
@@ -1032,6 +1061,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(() => compileChildrenToPrimitives(ir.children, context, { identityTracker: outer })).toThrow(
       RetikzCoreError,
     );
+
     createProbeTracker.mockRestore();
   });
 
@@ -1144,6 +1174,7 @@ describe('layout-aware composite constraints and bounds', () => {
             childrenReads += 1;
             return childrenReads === 1 ? target.children : {};
           }
+
           return Reflect.get(target, property, receiver);
         },
       },
@@ -1263,6 +1294,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compile: (_, context) => {
         const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
         const wrapper = new Proxy(
           {},
           {
@@ -1271,6 +1303,7 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         );
+
         return { children: [context.replay(probe.result, wrapper)] };
       },
     });
@@ -1681,9 +1714,11 @@ describe('layout-aware composite constraints and bounds', () => {
                 text: [{ runs: [{ tex: 'x' }] }],
               };
         context.layoutChild(child, NaturalLayoutProposal);
+
         return { children: [] };
       },
     });
+
     const lowerTex: LowerTex = () => {
       if (variant === 'hostileBodyRoot') {
         return new Proxy(
@@ -1695,7 +1730,9 @@ describe('layout-aware composite constraints and bounds', () => {
           },
         );
       }
+
       if (variant === 'invalidLabelMetrics') return { paths: [], width: -1, height: 10, depth: 2 };
+
       return {
         paths: [
           {
@@ -1739,7 +1776,9 @@ describe('layout-aware composite constraints and bounds', () => {
           },
           NaturalLayoutProposal,
         );
+
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+
         return { children: [] };
       },
     });
@@ -1865,6 +1904,7 @@ describe('layout-aware composite constraints and bounds', () => {
           },
           NaturalLayoutProposal,
         );
+
         return { children: [] };
       },
     });
@@ -2144,6 +2184,7 @@ describe('layout-aware composite constraints and bounds', () => {
           xReads += 1;
           return xReads <= 2 ? 10 : Number.NaN;
         }
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -2155,6 +2196,7 @@ describe('layout-aware composite constraints and bounds', () => {
             boundsPointsReads += 1;
             return boundsPointsReads === 1 ? target.boundsPoints : [];
           }
+
           return Reflect.get(target, property, receiver);
         },
       },
@@ -2261,6 +2303,7 @@ describe('layout-aware composite constraints and bounds', () => {
                       ],
                     };
         context.layoutChild(child, NaturalLayoutProposal);
+
         return { children: [] };
       },
     });
@@ -2399,6 +2442,7 @@ describe('layout-aware composite constraints and bounds', () => {
                   shape: { type: value.variant, params: {} },
                 };
         context.layoutChild(child, NaturalLayoutProposal);
+
         return { children: [] };
       },
     });
@@ -2555,6 +2599,7 @@ describe('layout-aware composite constraints and bounds', () => {
                   shape: { type: value.variant, params: {} },
                 };
         context.layoutChild(child, NaturalLayoutProposal);
+
         return { children: [] };
       },
     });
@@ -2662,6 +2707,7 @@ describe('layout-aware composite constraints and bounds', () => {
                   children: [{ type: 'node', position: [0, 0] }],
                 };
         context.layoutChild(child, NaturalLayoutProposal);
+
         return { children: [] };
       },
     });
@@ -2675,11 +2721,13 @@ describe('layout-aware composite constraints and bounds', () => {
 
     for (const variant of variants) {
       let thrown: unknown;
+
       try {
         compileToScene(sceneOf({ namespace: 'test', type: 'proxyTrapParent', variant }), options);
       } catch (cause) {
         thrown = cause;
       }
+
       expect(thrown).toBeInstanceOf(RetikzCoreError);
       expect((thrown as Error & { cause?: unknown }).cause).toBe(causes[variant]);
     }
@@ -2693,6 +2741,7 @@ describe('layout-aware composite constraints and bounds', () => {
           xReads += 1;
           return xReads === 1 ? 0 : Number.NaN;
         }
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -2761,6 +2810,7 @@ describe('layout-aware composite constraints and bounds', () => {
           xReads += 1;
           return xReads === 1 ? 0 : Number.NaN;
         }
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -2797,6 +2847,7 @@ describe('layout-aware composite constraints and bounds', () => {
           kindReads += 1;
           return kindReads === 1 ? 'dynamicClipShape' : 'bogus';
         }
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -2860,6 +2911,7 @@ describe('layout-aware composite constraints and bounds', () => {
             halfWidthReads += 1;
             return halfWidthReads === 1 ? 10 : Number.NaN;
           }
+
           return Reflect.get(target, property, receiver);
         },
       },
@@ -2870,6 +2922,7 @@ describe('layout-aware composite constraints and bounds', () => {
           offsetXReads += 1;
           return offsetXReads === 1 ? 4 : Number.NaN;
         }
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -2906,6 +2959,7 @@ describe('layout-aware composite constraints and bounds', () => {
           xReads += 1;
           return xReads === 1 ? 10 : Number.NaN;
         }
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -2956,6 +3010,7 @@ describe('layout-aware composite constraints and bounds', () => {
       { shapes: [validShape] },
     );
     const rect = result.scene.primitives.find(primitive => primitive.type === 'rect');
+
     expect(rect).toBeDefined();
     expect(Object.hasOwn(rect as object, 'cornerRadius')).toBe(false);
     expect(Object.isFrozen(rect)).toBe(false);
@@ -2971,6 +3026,7 @@ describe('layout-aware composite constraints and bounds', () => {
 
   it('rejects explicit undefined and sparse Scene or Marker arrays before primitive validation', () => {
     const lossyArrays: Array<Array<unknown>> = [[undefined], new Array(1)];
+
     for (const [index, children] of lossyArrays.entries()) {
       const shape = defineShape({
         name: `lossySceneArrayShape${index}`,
@@ -3034,8 +3090,11 @@ describe('layout-aware composite constraints and bounds', () => {
           { type: 'node', position: [0, 0], shape: { type: 'throwingHostileProxyShape', params: {} } },
           NaturalLayoutProposal,
         );
+
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+
         if (value.select && probe.kind === LayoutChildProbeKind.Failed) context.raise(probe.failure);
+
         return { children: [] };
       },
     });
@@ -3046,11 +3105,13 @@ describe('layout-aware composite constraints and bounds', () => {
     ).not.toThrow();
 
     let selected: unknown;
+
     try {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileProxyFailureParent', select: true }), options);
     } catch (cause) {
       selected = cause;
     }
+
     expect(isLayoutProbeRecoverableError(selected)).toBe(true);
     expect(selected).toBeInstanceOf(RetikzError);
     expect((selected as Error & { cause?: unknown }).cause).toBe(hostileThrown.proxy);
@@ -3070,6 +3131,7 @@ describe('layout-aware composite constraints and bounds', () => {
     );
 
     const normalized = normalizeLayoutProbeError(selfReturningProxy);
+
     expect(prototypeTrapCalls).toBe(1);
     expect(normalized.cause).toBe(selfReturningProxy);
 
@@ -3096,14 +3158,18 @@ describe('layout-aware composite constraints and bounds', () => {
           { type: 'node', position: [0, 0], shape: { type: 'throwingSelfPrototypeProxyShape', params: {} } },
           NaturalLayoutProposal,
         );
+
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+
         if (value.select && probe.kind === LayoutChildProbeKind.Failed) context.raise(probe.failure);
+
         return { children: [] };
       },
     });
     const options = { composites: [parent], shapes: [throwingShape] };
 
     prototypeTrapCalls = 0;
+
     expect(() =>
       compileToScene(sceneOf({ namespace: 'test', type: 'selfPrototypeProxyParent', select: false }), options),
     ).not.toThrow();
@@ -3111,11 +3177,13 @@ describe('layout-aware composite constraints and bounds', () => {
 
     prototypeTrapCalls = 0;
     let selected: unknown;
+
     try {
       compileToScene(sceneOf({ namespace: 'test', type: 'selfPrototypeProxyParent', select: true }), options);
     } catch (cause) {
       selected = cause;
     }
+
     expect(prototypeTrapCalls).toBe(1);
     expect(isLayoutProbeRecoverableError(selected)).toBe(true);
     expect((selected as Error & { cause?: unknown }).cause).toBe(selfReturningProxy);
@@ -3134,6 +3202,7 @@ describe('layout-aware composite constraints and bounds', () => {
         shapeSchema: strictObject({ kind: literal('ordinaryThrowingClip') }),
         lower: () => {
           if (stage === 'lower') throw new Error('ordinary clip lower failure');
+
           return {
             commands: [
               { kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -3159,7 +3228,9 @@ describe('layout-aware composite constraints and bounds', () => {
             },
             NaturalLayoutProposal,
           );
+
           expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+
           return { children: [] };
         },
       });
@@ -3209,7 +3280,9 @@ describe('layout-aware composite replay ownership', () => {
     );
 
     expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+
     const path = result.scene.primitives.find(primitive => primitive.type === 'path');
+
     expect(path?.type === 'path' ? path.commands.find(command => command.kind === 'line') : undefined).toMatchObject({
       to: [20, 0],
     });
@@ -3250,7 +3323,9 @@ describe('layout-aware composite replay ownership', () => {
     );
 
     expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+
     const path = result.scene.primitives.find(primitive => primitive.type === 'path');
+
     expect(path?.type === 'path' ? path.commands.find(command => command.kind === 'line') : undefined).toMatchObject({
       to: [20, 0],
     });
@@ -3387,7 +3462,9 @@ describe('layout-aware composite replay ownership', () => {
         if (reuse) {
           return { children: [context.replay(retained!)] };
         }
+
         retained = resolvedResultOf(context, { type: 'node', position: [0, 0], text: 'first' });
+
         return { children: [] };
       },
     });
@@ -3396,6 +3473,7 @@ describe('layout-aware composite replay ownership', () => {
       composites: [definition],
     });
     reuse = true;
+
     expect(() =>
       compileToScene(sceneOf({ namespace: 'test', type: 'retainedReplay' }), {
         composites: [definition],
@@ -3645,6 +3723,7 @@ describe('layout-aware composite artifacts and lowering errors', () => {
     class ArtifactClass {
       value = true;
     }
+
     const cyclic: { self?: unknown } = {};
     cyclic.self = cyclic;
     const values: Array<unknown> = [

@@ -1,7 +1,7 @@
 import type { Ellipse, Position } from '@retikz/math';
 import { ellipse as mathEllipse } from '@retikz/math';
 
-import type { AnchorValue, SideValue } from '../anchor';
+import type { Side } from '../anchor';
 import { Anchor } from '../anchor';
 import { DEG_TO_RAD } from './angle';
 import { edgeAngleDeg } from './edge';
@@ -21,9 +21,10 @@ export const ellipse = {
    * 8 个标准方位 anchor 的世界坐标；center 请用 `ellipse.center()`
    * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
    */
-  anchor: (e: Ellipse, name: AnchorValue): Position => {
+  anchor: (e: Ellipse, name: Anchor): Position => {
     let lx = 0;
     let ly = 0;
+
     switch (name) {
       case Anchor.Top:
         ly = -e.ry;
@@ -54,6 +55,7 @@ export const ellipse = {
         ly = e.ry * SQRT_HALF;
         break;
     }
+
     return localToWorld(e, [lx, ly]);
   },
   /**
@@ -62,7 +64,7 @@ export const ellipse = {
    */
   boundaryPoint: mathEllipse.boundaryPoint,
   /** 边上比例点：side 的 90° 周长弧段 t∈[0,1] 处（等角，落真实椭圆周；含旋转） */
-  edgePoint: (e: Ellipse, side: SideValue, t: number): Position => {
+  edgePoint: (e: Ellipse, side: Side, t: number): Position => {
     const rad = edgeAngleDeg(side, t) * DEG_TO_RAD;
     return localToWorld(e, [e.rx * Math.cos(rad), e.ry * Math.sin(rad)]);
   },

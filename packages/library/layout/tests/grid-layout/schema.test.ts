@@ -32,9 +32,11 @@ describe('GridLayout schema and factory', () => {
     const item = { kind: LayoutItemKind.Grid, key: 'label', child } satisfies GridLayoutItemInput;
     const input = { columns: [{ kind: 'fixed', value: 20 }], children: [item] } satisfies GridLayoutInput;
     const source = createGridLayout(input);
+
     expect(source).toEqual({ namespace: 'layout', type: 'gridLayout', ...input });
     expect(parseGridLayout(input)).toMatchObject({ rowGap: 0, rows: [], overlap: 'reject' });
     expect(resolveGridLayout(parseGridLayout(input))).toEqual(resolveGridLayout(source));
+
     const parsed = resolveGridLayout(source);
 
     expect(parsed).toEqual({
@@ -73,6 +75,7 @@ describe('GridLayout schema and factory', () => {
     const breadth = { kind: 'content', mode: 'minimum' } satisfies GridTrackBreadthInput;
     const track = { kind: 'minmax', min: breadth, max: { kind: 'fraction', factor: 2 } } satisfies GridTrackInput;
     const placement = { start: 0 } satisfies GridPlacementInput;
+
     expect(
       parseGridLayout({ columns: [track], children: [{ kind: 'grid', key: 'a', child, column: placement }] }),
     ).toMatchObject({ columns: [track], children: [{ column: { start: 0 } }] });
@@ -114,7 +117,9 @@ describe('GridLayout schema and factory', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (result.success) throw new Error('Expected GridLayout auto span to fail schema validation');
+
     expect(result.error.issues.some(issue => issue.path.join('.') === 'children.0.column.span')).toBe(true);
   });
 
@@ -128,6 +133,7 @@ describe('GridLayout schema and factory', () => {
     ];
 
     for (const track of invalid) expect(() => parseGridLayout({ ...base, columns: [track] })).toThrow();
+
     expect(() => parseGridLayout({ ...base, columns: [{ kind: 'fixed', value: 1, extra: true }] })).toThrow();
     expect(() =>
       parseGridLayout({

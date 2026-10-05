@@ -52,7 +52,9 @@ export type GradientStrokeInput = GradientCommonInput & {
 };
 
 const MAX_TEXTURE_EDGE = 2048;
+
 const MAX_TEXTURE_PIXELS = 1_048_576;
+
 const GUTTER_PIXELS = 2;
 
 const validBBox = (bbox: GradientBBox): boolean =>
@@ -98,9 +100,11 @@ const buildUnitGradient = (
       warn('Canvas renderer does not support conicGradient paint on this host; paint is skipped.');
       return undefined;
     }
+
     const [cx, cy] = spec.center ?? [0.5, 0.5];
     gradient = createConicGradient.call(ctx, ((spec.angle ?? 0) * Math.PI) / 180, cx, cy);
   }
+
   return addStops(gradient, spec, resolveStopColor);
 };
 
@@ -134,6 +138,7 @@ const buildNativeGradient = (
       warn('Canvas renderer does not support conicGradient paint on this host; paint is skipped.');
       return undefined;
     }
+
     const [cx, cy] = spec.center ?? [0.5, 0.5];
     gradient = createConicGradient.call(
       ctx,
@@ -142,6 +147,7 @@ const buildNativeGradient = (
       bbox.y + cy * bbox.h,
     );
   }
+
   return addStops(gradient, spec, resolveStopColor);
 };
 
@@ -152,6 +158,7 @@ export const fillObjectGradient = (input: GradientFillInput): void => {
     warnInvalidBBox(warn);
     return;
   }
+
   ctx.save();
   ctx.transform(bbox.w, 0, 0, bbox.h, bbox.x, bbox.y);
   const gradient = buildUnitGradient(ctx, spec, resolveStopColor, warn);
@@ -160,6 +167,7 @@ export const fillObjectGradient = (input: GradientFillInput): void => {
     ctx.fillStyle = gradient;
     drawFill();
   }
+
   ctx.restore();
 };
 
@@ -172,7 +180,9 @@ const requiresTexture = (spec: GradientPaint, bbox: GradientBBox): boolean => {
   const bboxScale = Math.max(Math.abs(bbox.w), Math.abs(bbox.h));
   if (Math.abs(bbox.w - bbox.h) <= 1e-7 * bboxScale) return false;
   if (spec.kind !== 'linearGradient') return true;
+
   const angle = normalizedAngle(spec.angle);
+
   return ![0, 90, 180, 270, 360].some(axis => Math.abs(angle - axis) <= 1e-7);
 };
 
@@ -185,6 +195,7 @@ const textureSize = (width: number, height: number): { width: number; height: nu
   );
   const resolvedWidth = Math.floor(width * factor);
   const resolvedHeight = Math.floor(height * factor);
+
   return resolvedWidth >= 2 && resolvedHeight >= 2 ? { width: resolvedWidth, height: resolvedHeight } : undefined;
 };
 
@@ -195,6 +206,7 @@ export const buildGradientStrokeStyle = (input: GradientStrokeInput): CanvasGrad
     warnInvalidBBox(warn);
     return undefined;
   }
+
   if (!requiresTexture(spec, bbox)) return buildNativeGradient(ctx, spec, bbox, resolveStopColor, warn);
 
   const getTransform = (ctx as { getTransform?: () => DOMMatrix }).getTransform;
@@ -205,6 +217,7 @@ export const buildGradientStrokeStyle = (input: GradientStrokeInput): CanvasGrad
     warn('Canvas renderer received a non-finite transform while building gradient stroke paint; paint is skipped.');
     return undefined;
   }
+
   if (deviceScaleX <= DEFAULT_EPSILON || deviceScaleY <= DEFAULT_EPSILON) return undefined;
 
   const outset = Math.max(0, Number.isFinite(input.outset) ? input.outset : 0);
@@ -264,12 +277,14 @@ export const buildGradientStrokeStyle = (input: GradientStrokeInput): CanvasGrad
     offscreen.restore();
     return buildNativeGradient(ctx, spec, bbox, resolveStopColor, warn);
   }
+
   offscreen.fillStyle = gradient;
   offscreen.fillRect(domainX, domainY, domainWidth, domainHeight);
   offscreen.restore();
 
   const pattern = ctx.createPattern(offscreen.canvas, 'no-repeat');
   if (pattern === null) return undefined;
+
   pattern.setTransform({
     a: (bbox.w * domainWidth) / size.width,
     b: 0,
@@ -279,5 +294,6 @@ export const buildGradientStrokeStyle = (input: GradientStrokeInput): CanvasGrad
     f: bbox.y + domainY * bbox.h,
   });
   input.cache.set(patternKey, pattern);
+
   return pattern;
 };

@@ -167,6 +167,7 @@ describe('Graph Relation role controls', () => {
         renderWithValues(contract, chineseDemo.default, { ...contract.canonicalValues, color: '#2563eb' }),
         `${scenario.role}: color`,
       ).not.toBe(baseline);
+
       const changedDirection = scenario.directionOptions?.find(value => value !== contract.canonicalValues.direction);
       if (changedDirection !== undefined) {
         expect(
@@ -261,9 +262,11 @@ describe('Graph Relation style playground', () => {
     const baseline = renderStyleWithValues(styleZh.canonicalValues);
 
     expect(baseline).toContain('<svg');
+
     for (const role of ['association', 'dependency', 'generalization', 'influence']) {
       expect(renderStyleWithValues({ ...styleZh.canonicalValues, role }), `${role}: role`).not.toBe(baseline);
     }
+
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, content: 'Changed' }), 'content').not.toBe(baseline);
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, sourceColor: '#0f766e' }), 'sourceColor').not.toBe(
       baseline,

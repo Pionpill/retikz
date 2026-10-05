@@ -44,6 +44,7 @@ describe('relate transform', () => {
       [operation],
       { registry: resolveTransformRegistry() },
     );
+
     expect(rows).toEqual([
       {
         sourceX: 1,
@@ -69,6 +70,7 @@ describe('relate transform', () => {
       [{ ...operation, groupBy: ['group'] }],
       { registry: resolveTransformRegistry() },
     );
+
     expect(rows).toEqual([
       expect.objectContaining({ group: 'A', sourceId: 'a2', targetId: 'a1', delta: 8 }),
       expect.objectContaining({ group: 'B', sourceId: 'b1', targetId: 'b2', delta: 8 }),
@@ -92,6 +94,7 @@ describe('relate transform', () => {
       ],
       { registry: resolveTransformRegistry() },
     );
+
     expect(rows).toEqual([expect.objectContaining({ group: 'A', sourceId: 'last', targetId: 'first' })]);
   });
 });

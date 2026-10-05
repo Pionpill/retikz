@@ -32,8 +32,10 @@ export class RetikzError<
 > extends Error {
   /** 结构化错误的分类代码 */
   readonly code: TCode;
+
   /** 与错误代码关联的结构化错误详情 */
   readonly details: TDetails;
+
   /**
    * 导致当前错误的原始异常或值
    * @default undefined
@@ -68,7 +70,7 @@ export const RetikzFoundationErrorCode = {
 } as const;
 
 /** Foundation 包稳定错误码取值 */
-export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
+export type RetikzFoundationErrorCode = ValueOf<typeof RetikzFoundationErrorCode>;
 
 /**
  * Foundation 原子契约失败的统一结构化错误
@@ -77,7 +79,7 @@ export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErro
  * @template TDetails 与 Foundation 错误码关联的结构化详情类型
  */
 export class RetikzFoundationError<
-  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TCode extends RetikzFoundationErrorCode = RetikzFoundationErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends RetikzError<TCode, TDetails> {
   /** 使用默认错误码创建 Foundation 错误 */

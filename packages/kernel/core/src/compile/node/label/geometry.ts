@@ -32,6 +32,7 @@ const labelBoundaryPoint = (layout: NodeLayout, position: CanonicalNodeLabelBoun
   if (position.boundary === 'top') return [left + layout.rect.width * fraction, top];
   if (position.boundary === 'right') return [right, top + layout.rect.height * fraction];
   if (position.boundary === 'bottom') return [left + layout.rect.width * fraction, bottom];
+
   return [left, top + layout.rect.height * fraction];
 };
 
@@ -39,6 +40,7 @@ const labelBoundaryDirection = (position: CanonicalNodeLabelBoundaryPosition): P
   if (position.boundary === 'top') return [0, -1];
   if (position.boundary === 'right') return [1, 0];
   if (position.boundary === 'bottom') return [0, 1];
+
   return [-1, 0];
 };
 
@@ -50,6 +52,7 @@ const labelPlacementVector = (position: MeasuredNodeLabel['position']): Position
     const rad = position * DEG_TO_RAD;
     return [Math.cos(rad), Math.sin(rad)];
   }
+
   return AnchorUnitVectorByAnchor[position];
 };
 
@@ -59,40 +62,55 @@ const labelTangentVector = (position: MeasuredNodeLabel['position']): Position =
     if (position.boundary === 'top' || position.boundary === 'bottom') return [1, 0];
     return [0, 1];
   }
+
   if (position === 'top' || position === 'bottom') return [1, 0];
   if (position === 'left' || position === 'right') return [0, 1];
   if (position === 'center') return [1, 0];
+
   const radial = labelPlacementVector(position);
+
   return [-radial[1], radial[0]];
 };
 
 /** label 在 node 边界上的附着点 */
 export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLabel, 'position'>): Position => {
   if (label.position === 'center') return [layout.rect.x, layout.rect.y];
+
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
   if (isLabelBoundaryPosition(label.position)) {
     return labelBoundaryPoint(aaLayout, label.position);
   }
+
   if (typeof label.position === 'number') {
     return angleBoundaryOf(aaLayout, label.position);
   }
+
   return anchorOf(aaLayout, label.position);
 };
 
+/** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
 export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   return [layout.rect.x + label.centerOffset[0], layout.rect.y + label.centerOffset[1]];
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点 */
 export type LabelBoxEdgeTowardInput = {
+  /** 标签视觉盒的中心，与 border 使用同一坐标系 */
   center: Position;
+  /** 用于确定从标签中心向外求交方向的目标点 */
   border: Position;
+  /** 标签未旋转视觉盒的半宽 */
   halfWidth: number;
+  /** 标签未旋转视觉盒的半高 */
   halfHeight: number;
   /** label 视觉盒自旋角 */
   rotateDeg: number;
 };
 
+/**
+ * 从标签中心朝目标点求旋转矩形的边界交点
+ * @returns 射线与视觉盒的首次交点；两点距离小于几何容差时返回原 center 引用
+ */
 export const labelBoxEdgeToward = ({
   center,
   border,
@@ -104,6 +122,7 @@ export const labelBoxEdgeToward = ({
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);
   if (len < DEFAULT_EPSILON) return center;
+
   const ux = dx / len;
   const uy = dy / len;
   const rad = rotateDeg * DEG_TO_RAD;
@@ -114,6 +133,7 @@ export const labelBoxEdgeToward = ({
   const sx = alongX > DEFAULT_EPSILON ? halfWidth / alongX : Number.POSITIVE_INFINITY;
   const sy = alongY > DEFAULT_EPSILON ? halfHeight / alongY : Number.POSITIVE_INFINITY;
   const s = Math.min(sx, sy);
+
   return [center[0] + ux * s, center[1] + uy * s];
 };
 
@@ -149,6 +169,7 @@ export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNode
     height: label.measuredHeight,
     distance: label.distance,
   });
+
   return {
     ...label,
     rotateDeg: placed.rotateDeg,
@@ -162,12 +183,14 @@ export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNode
  */
 export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
+
   const cx = layout.rect.x;
   const cy = layout.rect.y;
   const rad = layout.rotateDeg * DEG_TO_RAD;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
   const pts: Array<Position> = [];
+
   for (const lab of layout.labels) {
     const [lx, ly] = labelCenter(layout, lab);
     const halfW = lab.measuredWidth / 2;
@@ -181,6 +204,7 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
       [-halfW, halfH],
       [halfW, halfH],
     ];
+
     for (const [offsetX, offsetY] of cornerOffsets) {
       const px = lx + offsetX * labelCos - offsetY * labelSin;
       const py = ly + offsetX * labelSin + offsetY * labelCos;
@@ -193,5 +217,6 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
       }
     }
   }
+
   return pts;
 };

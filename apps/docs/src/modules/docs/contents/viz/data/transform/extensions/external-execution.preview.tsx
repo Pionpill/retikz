@@ -27,6 +27,7 @@ export const ExternalExecutionPreview: FC<ExternalExecutionPreviewProps> = props
       }),
     [],
   );
+
   const chart = useMemo(
     () => (
       <Plot
@@ -47,6 +48,7 @@ export const ExternalExecutionPreview: FC<ExternalExecutionPreviewProps> = props
     ),
     [mode, factor, executor],
   );
+
   return (
     <div>
       {chart}

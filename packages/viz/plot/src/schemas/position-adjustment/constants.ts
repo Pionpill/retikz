@@ -7,7 +7,7 @@ export const PlotPositionAdjustment = {
 } as const;
 
 /** 内置位置调整类型值 */
-export type PlotPositionAdjustmentValue = ValueOf<typeof PlotPositionAdjustment>;
+export type PlotPositionAdjustment = ValueOf<typeof PlotPositionAdjustment>;
 
 /** 内置位置调整判别集合 */
 export const BUILTIN_POSITION_ADJUSTMENT_KINDS: ReadonlySet<string> = new Set(Object.values(PlotPositionAdjustment));

@@ -12,6 +12,7 @@ it('保留三种矩形入口和空轴，JSON 往返不物化派生内容', () =>
     { items: [[], []] },
   ]) {
     const source = JSON.parse(JSON.stringify({ ...base, ...input }));
+
     expect(MatrixSchema.parse(source)).toMatchObject(input);
   }
 });
@@ -43,7 +44,10 @@ it('双轴独立配置，显式文字不注入start，错误定位实际行', ()
     row: { labels: ['r'], position: 'before' },
   });
   expect(MatrixSchema.parse({ ...base, items: [], index: {} }).index).toEqual({});
+
   const result = MatrixSchema.safeParse({ ...base, data: [[1], []] });
+
   expect(result.success).toBe(false);
+
   if (!result.success) expect(result.error.issues.some(issue => issue.path.join('.') === 'data.1')).toBe(true);
 });

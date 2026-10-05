@@ -42,7 +42,9 @@ describe('Table Source defaults schema', () => {
 
   it('accepts JSON-safe root Source fragments without materializing runtime defaults', () => {
     const base = { namespace: 'table', type: 'table', structure: { kind: 'manual', rows: [[1]] } };
+
     expect(TableSchema.parse(base)).toEqual(base);
+
     const styled = TableSchema.parse({
       ...base,
       appearanceDefaults: validDefaults.appearanceDefaults,
@@ -50,6 +52,7 @@ describe('Table Source defaults schema', () => {
       visualDefaults: validDefaults.visualDefaults,
       tableDefaults: { visualDefaults: validDefaults.visualDefaults },
     });
+
     expect(JSON.parse(JSON.stringify(styled))).toEqual(styled);
     expect(() => TableSchema.parse({ ...base, tableThemeTokens: { 'cell.content.color': '#f5f5f5' } })).toThrow();
     expect(() => TableSchema.parse({ ...base, style: 'striped' })).toThrow();

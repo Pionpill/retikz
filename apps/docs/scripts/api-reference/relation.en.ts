@@ -1,6 +1,9 @@
 import { translateEntityApiReference } from './entity.en';
+
 /** 经核对的 Relation API 英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '校验 predicate 参数的 JSON 对象 schema，其输出类型传给结构解析回调':
+    'JSON object schema validating predicate arguments; its output type is passed to the structure resolution callback',
   关系编写输入的判别字段: 'Relation authoring input discriminator',
   '完整 Core Step 序列；省略时直连端点': 'Complete Core Step sequence; omission connects endpoints directly',
   'route 形式不接受 way': 'The route variant excludes way',
@@ -69,6 +72,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '传给 GraphDefinitionOptions.relationRoles 的定义；此函数不执行注册或校验':
     'Definition supplied through GraphDefinitionOptions.relationRoles; this function does not register or validate it',
 };
+
 /** 共用 Graph 字段复用已有译文，缺译时阻止生成 */
 export const translateRelationApiReference = (source: string): string =>
   translations[source.replace(/\r/g, '')] ?? translateEntityApiReference(source);

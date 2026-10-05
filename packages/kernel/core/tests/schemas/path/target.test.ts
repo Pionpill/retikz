@@ -113,6 +113,7 @@ describe('JSON round-trip', () => {
   it('NodeTarget 对象经 JSON.stringify/parse 语义不变', () => {
     const target = { id: 'A', anchor: { side: 'left', fraction: 1 / 3 }, offset: [-4, 0] };
     const round = NodeTargetSchema.parse(JSON.parse(JSON.stringify(target)));
+
     expect(round).toEqual(target);
   });
 });

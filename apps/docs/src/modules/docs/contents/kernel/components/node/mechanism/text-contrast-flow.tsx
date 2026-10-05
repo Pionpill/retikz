@@ -8,9 +8,11 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 import { textContrastFlowI18n } from './text-contrast-flow.i18n';
 
 export type TextContrastFlowProps = Readonly<{ lang?: Lang }>;
+
 const TextContrastFlow: FC<TextContrastFlowProps> = props => {
   const { lang } = props;
   const labels = textContrastFlowI18n[lang ?? 'zh'];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

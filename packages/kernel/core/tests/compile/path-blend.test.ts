@@ -18,6 +18,7 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 };
 
 const move = (to: [number, number]): unknown => ({ type: 'step', kind: 'move', to });
+
 const line = (to: [number, number]): unknown => ({ type: 'step', kind: 'line', to });
 
 const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileToScene>['scene'] =>
@@ -32,6 +33,7 @@ describe('[path-blend] Happy', () => {
         style: { stroke: 'cyan', blendMode: 'screen' },
       }).primitives,
     );
+
     expect(prim.blendMode).toBe('screen');
   });
 
@@ -42,6 +44,7 @@ describe('[path-blend] Happy', () => {
         children: [move([0, 0]), line([10, 0])],
         style: { blendMode: mode },
       });
+
       expect(parsed.success, mode).toBe(true);
     }
   });
@@ -61,6 +64,7 @@ describe('[path-blend] 边界', () => {
       }).primitives,
     );
     const omitted = findPathPrim(compilePath({}).primitives);
+
     expect(withNormal.blendMode ?? 'normal').toBe(omitted.blendMode ?? 'normal');
   });
 });
@@ -94,6 +98,7 @@ describe('[path-blend] 交互', () => {
         style: { stroke: 'cyan', blendMode: 'multiply' },
       }).primitives,
     );
+
     expect(prim.blendMode).toBe('multiply');
     expect(prim.arrowEnd).toBeDefined();
     expect((prim.arrowEnd as unknown as { blendMode?: unknown }).blendMode).toBeUndefined();
@@ -105,6 +110,7 @@ describe('[path-blend] 交互', () => {
         style: { opacity: 0.7, shadow: 'md', blendMode: 'multiply' },
       }).primitives,
     );
+
     expect(prim.opacity).toBe(0.7);
     expect(prim.blendMode).toBe('multiply');
     expect(prim.shadow).toBeDefined();
@@ -122,6 +128,7 @@ describe('[path-blend] round-trip', () => {
     };
     const parsed = PathSchema.parse(path);
     const round = PathSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(round.style?.blendMode).toBe(parsed.style?.blendMode);
   });
 });

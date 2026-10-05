@@ -30,12 +30,15 @@ describe('Table React manifest observation', () => {
 
   it('notifies after commit and deduplicates by serialized manifest content', async () => {
     const manifests: Array<TableLayoutManifest> = [];
+
     const onManifest = (manifest: TableLayoutManifest): void => {
       manifests.push(manifest);
     };
+
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
+
     const renderTable = async (rows: number, width?: number): Promise<void> => {
       await act(() => {
         root.render(
@@ -103,6 +106,7 @@ describe('Table React manifest observation', () => {
         range: ['#123456'],
       },
     ]);
+
     await act(() => root.unmount());
     container.remove();
   });
@@ -122,6 +126,7 @@ describe('Table React manifest observation', () => {
 
     expect(manifests).toHaveLength(1);
     expect(manifests[0].rows).toHaveLength(1);
+
     await act(() => root.unmount());
     container.remove();
   });
@@ -144,6 +149,7 @@ describe('Table React manifest observation', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
+
     const renderTable = async (onManifest: (manifest: TableLayoutManifest) => void): Promise<void> => {
       await act(() => {
         root.render(
@@ -167,6 +173,7 @@ describe('Table React manifest observation', () => {
     };
 
     await renderTable(firstObserver);
+
     expect(observed.slice(0, 2)).toMatchObject([
       {
         rawValue: 'plain',
@@ -181,6 +188,7 @@ describe('Table React manifest observation', () => {
         appearance: { borders: { bottom: { kind: 'line', width: 2 } } },
       },
     ]);
+
     const observedCount = observed.length;
     present.mockClear();
     await renderTable(secondObserver);
@@ -189,6 +197,7 @@ describe('Table React manifest observation', () => {
     expect(observed).toHaveLength(observedCount);
     expect(firstObserver).toHaveBeenCalledTimes(1);
     expect(secondObserver).not.toHaveBeenCalled();
+
     await act(() => root.unmount());
     container.remove();
   });
@@ -260,6 +269,7 @@ describe('Table React manifest observation', () => {
     expect(manifests[0].borders).toContainEqual(
       expect.objectContaining({ style: expect.objectContaining({ stroke: '#2563eb', width: 2 }) }),
     );
+
     await act(() => root.unmount());
     container.remove();
   });

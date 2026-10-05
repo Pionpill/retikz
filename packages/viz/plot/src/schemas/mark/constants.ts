@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）。
@@ -9,7 +11,7 @@ export const PlotMark = {
   Point: 'point',
   /** 维度 mark / 1D：有序点连成的一维轨迹（折线 / 闭合轮廓） */
   Path: 'path',
-  /** 维度 mark / 2D：边界围出的可填充区域（面积 / 填充雷达 / 置信带） */
+
   /** 维度 mark / 区间积：各位置 role 正交区间积，经坐标系投影成段 / 矩形 / 扇区 / cell（柱 / histogram / heatmap / 径向柱 / 饼环） */
   Interval: 'interval',
   /** 特殊 mark / relation：source→target 关系路径，降低为 core Path */
@@ -19,7 +21,7 @@ export const PlotMark = {
 } as const;
 
 /**
- * PathMark 相邻点连接方式。
+ * PathMark 相邻点连接方式
  * @description 面向图表层的曲线类型；底层会下沉为 core Path 的 line / cubic / smooth steps
  */
 export const PathCurve = {
@@ -46,7 +48,7 @@ export const PathCurve = {
 } as const;
 
 /**
- * PathMark 闭合策略关键字。
+ * PathMark 闭合策略关键字
  * @description cycle 首尾闭合；baseline 回到常量基线；stack 回到逐行基线字段，适合堆叠面积
  */
 export const PathClosureKind = {
@@ -58,6 +60,7 @@ export const PathClosureKind = {
   Stack: 'stack',
 } as const;
 
+/** 关系图元采用的路径或带状几何形态 */
 export const RelationGeometryKind = {
   Path: 'path',
   Ribbon: 'ribbon',
@@ -120,6 +123,7 @@ export const IntervalBoundKind = {
   Full: 'full',
 } as const;
 
+/** 视觉值来自字段、常量或其它显式映射的判别方式 */
 export const MarkValueKind = {
   /** 从数据字段解析视觉值 */
   Field: 'field',
@@ -129,3 +133,33 @@ export const MarkValueKind = {
 
 /** 内置 mark type 集合；自定义 mark 的 type 不能与之冲突 */
 export const BUILTIN_MARK_TYPES = new Set<string>(Object.values(PlotMark));
+
+/** mark 类型 */
+export type PlotMark = ValueOf<typeof PlotMark>;
+
+/** mark 值来源变体 */
+export type MarkValueKind = ValueOf<typeof MarkValueKind>;
+
+/** PathMark 相邻点连接方式 */
+export type PathCurve = ValueOf<typeof PathCurve>;
+
+/** PathMark 闭合策略 */
+export type PathClosureKind = ValueOf<typeof PathClosureKind>;
+
+/** interval 单维区间来源 */
+export type IntervalBoundKind = ValueOf<typeof IntervalBoundKind>;
+
+/** RelationMark 几何子类型值 */
+export type RelationGeometryKind = ValueOf<typeof RelationGeometryKind>;
+
+/** relation 显式路由支持的 core step 类型取值 */
+export type RelationRouteStepKind = ValueOf<typeof RelationRouteStepKind>;
+
+/** relation 自动路由策略类型取值 */
+export type RelationRoutingKind = ValueOf<typeof RelationRoutingKind>;
+
+/** relation 正交路由标签落点策略取值 */
+export type RelationOrthogonalLabelStep = ValueOf<typeof RelationOrthogonalLabelStep>;
+
+/** reference mark 显式形态取值 */
+export type ReferenceMarkKind = ValueOf<typeof ReferenceMarkKind>;

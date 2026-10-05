@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /**
  * 内置 MathJax 配置档
  * @description `base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合。它提供 `createMathJaxEngine` 与 lowerer 工厂可识别的扩展集合选择，不创建引擎，也不改变已创建实例
@@ -39,3 +41,17 @@ export const MathJaxExtension = {
  * @description profile 解析使用该顺序去重并生成确定性的扩展与 package 列表
  */
 export const MATHJAX_EXTENSION_ORDER = Object.values(MathJaxExtension);
+
+/**
+ * MathJax 配置档取值
+ *
+ * @description 由 `MathJaxProfile` 派生的受限字符串集合，用于选择内置扩展组合；它只描述配置值，实际扩展加载由 MathJax 工厂负责
+ */
+export type MathJaxProfile = ValueOf<typeof MathJaxProfile>;
+
+/**
+ * MathJax 扩展取值
+ *
+ * @description 由 `MathJaxExtension` 派生的受限字符串集合，可在内置配置档之后追加。配置解析会去重并按稳定顺序加载，调用方无需自行处理 package 顺序
+ */
+export type MathJaxExtension = ValueOf<typeof MathJaxExtension>;

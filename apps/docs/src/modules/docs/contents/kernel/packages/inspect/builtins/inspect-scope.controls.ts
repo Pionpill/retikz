@@ -38,6 +38,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: buildPreviewControlDefaults(controls),
@@ -47,4 +48,5 @@ export const createPreviewControlContract = (lang: Lang) => {
 
 /** Stable baseline and registry fallback. */
 export const previewControlContract = createPreviewControlContract('zh');
+
 export const previewControls = previewControlContract.controls;

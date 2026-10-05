@@ -41,6 +41,7 @@ const render = (node: ReactNode): HTMLElement => {
   const root = createRoot(container);
   roots.push(root);
   act(() => root.render(node));
+
   return container;
 };
 
@@ -77,9 +78,11 @@ describe('Docs module navigation domain', () => {
 
   it('允许切换 home 与真实模块 scope', () => {
     useDocModuleStore.getState().selectScope('viz');
+
     expect(useDocModuleStore.getState().scope).toBe('viz');
 
     useDocModuleStore.getState().selectScope('home');
+
     expect(useDocModuleStore.getState().scope).toBe('home');
   });
 
@@ -151,12 +154,14 @@ describe('Docs module navigation domain', () => {
 
   it('根路由按持久化 scope 选择首页或模块主页', () => {
     const home = renderRoutes('/');
+
     expect(home.textContent).toContain('docs.homeTitle');
 
     home.remove();
     useDocModuleStore.setState({ scope: 'viz' });
 
     const moduleHome = renderRoutes('/');
+
     expect(moduleHome.textContent).toContain('viz.homeDescription');
     expect(moduleHome.querySelector('[data-location]')?.textContent).toBe('/viz');
   });
@@ -165,19 +170,23 @@ describe('Docs module navigation domain', () => {
     useDocModuleStore.setState({ scope: 'kernel' });
 
     const deepLink = renderRoutes('/viz/chart/points/scatter');
+
     expect(deepLink.querySelector('[data-doc-page]')?.textContent).toBe('/viz/chart/points/scatter');
 
     deepLink.remove();
     const about = renderRoutes('/about/introduction');
+
     expect(about.querySelector('[data-doc-page]')?.textContent).toBe('/about/introduction');
     expect(useDocModuleStore.getState().scope).toBe('viz');
 
     about.remove();
     const aboutRoot = renderRoutes('/about');
+
     expect(aboutRoot.querySelector('[data-location]')?.textContent).toBe('/about/introduction');
 
     aboutRoot.remove();
     const aboutBlog = renderRoutes('/about/blog');
+
     expect(aboutBlog.querySelector('[data-location]')?.textContent).toBe('/about/blog/core-philosophy');
   });
 });

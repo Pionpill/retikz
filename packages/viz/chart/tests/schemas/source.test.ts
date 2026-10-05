@@ -17,6 +17,7 @@ const FixtureChartSchema = strictObject({
 });
 
 const FixtureSourceSchema = createChartSourceSchema('point', FixtureChartSchema);
+
 const minimalSource = {
   namespace: 'chart',
   type: 'point',
@@ -42,6 +43,7 @@ describe('Chart Source schema primitives', () => {
       },
       plotExtension: { plotDefaults: { palette: { series: ['#0f766e'] } }, plotRules: [] },
     });
+
     expect(JSON.parse(JSON.stringify(source))).toEqual(source);
   });
 

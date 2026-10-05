@@ -7,7 +7,9 @@ import { intervalHistogramOperationOf, measurements } from './interval-histogram
 
 /** Stable control ids for continuous interval modes */
 export const INTERVAL_CONTINUOUS_MODE_ID = 'interval-continuous-mode';
+
 export const INTERVAL_HISTOGRAM_COUNT_ID = 'interval-histogram-thresholds';
+
 export const INTERVAL_CONTINUOUS_COORDINATE_ID = 'interval-continuous-coordinate';
 
 /** Stable control id for horizontal continuous-interval padding */

@@ -1,4 +1,4 @@
-import type { DataFieldTypeMap, ExternalRow, IRDataFieldDefinition } from '@retikz/data';
+import type { DataTransformModel, ExternalRow, IRDataFieldDefinition } from '@retikz/data';
 
 import type { AnyMarkDefinition, ChannelPaletteContext, ChannelScaleResolution } from '../../contract';
 import type { ChannelScaleResolveContext } from '../../contract';
@@ -11,10 +11,8 @@ export type ChannelResolveContext = {
   node: IRPlot;
   /** 当前 mark 实际消费的数据行 */
   rows: Array<ExternalRow>;
-  /** 已解析字段类型表 */
-  fieldTypes: DataFieldTypeMap;
-  /** 字段类型证据集合，供 node channel 判断类型推断边界 */
-  fieldTypeEvidence?: ReadonlySet<string>;
+  /** 当前数据的完整字段模型；未定类型字段仍保留 */
+  model: DataTransformModel;
   /** 已合并的 channel definitions */
   channelRegistry: ChannelRegistry;
   /** 已合并的 mark definitions，供 channel-kind selection 与 operation validation 使用 */

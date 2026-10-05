@@ -21,7 +21,9 @@ import { buildVanillaPreview } from '../../src/modules/docs/components/component
 import { createGraphPreviewSource } from '../../src/modules/docs/preview';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
+
 const hookedProviderKey = { capability: 'composite' as const, namespace: 'hooked', type: 'demo' };
+
 const hookedCompositeDependencies = {
   roots: [hookedProviderKey],
   providers: [
@@ -107,15 +109,20 @@ describe('buildPreviewIR', () => {
         <Sector center={[240, 0]} radius={10} innerRadius={5} startAngle={0} endAngle={90} />
       </Layout>
     ));
+
     expect(preview.sourceIr.children).toHaveLength(7);
     expect(preview.sourceIr.children[0]).toMatchObject({ namespace: 'standard', type: 'circle' });
+
     const vanilla = buildVanillaPreview(preview);
+
     for (const kind of ['circle', 'ellipse', 'rectangle', 'polygon', 'star', 'arc', 'sector'])
       expect(vanilla.code).toContain(`shape.${kind}(`);
+
     expect(vanilla.code).toContain("from '@retikz/standard-vanilla/shape'");
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('<path');
   });
+
   it('preserves rootScope styles and defaults in Source IR and Vanilla output', () => {
     const preview = buildPreviewIR(() => (
       <Layout
@@ -130,6 +137,7 @@ describe('buildPreviewIR', () => {
         <Draw way={['A', 'B']} />
       </Layout>
     ));
+
     for (const scene of [preview.sourceIr, preview.ir]) {
       expect(scene.children).toHaveLength(1);
       expect(scene.children[0]).toMatchObject({
@@ -139,7 +147,9 @@ describe('buildPreviewIR', () => {
         children: [{ type: 'node', id: 'A' }, { type: 'node', id: 'B' }, { type: 'path' }],
       });
     }
+
     const vanilla = buildVanillaPreview(preview);
+
     expect(vanilla.code).toContain('scope(');
     expect(vanilla.code).toContain('#123456');
     expect(vanilla.code).toContain('padding: 12');
@@ -154,6 +164,7 @@ describe('buildPreviewIR', () => {
           <Node id="A" position={[0, 0]} />
         </Layout>
       ));
+
       expect(preview.sourceIr.children).toHaveLength(1);
       expect(preview.sourceIr.children[0]).toMatchObject({ type: 'node', id: 'A' });
     },
@@ -162,6 +173,7 @@ describe('buildPreviewIR', () => {
   it('keeps complete IR unchanged when rootScope is supplied', () => {
     const ir = { type: 'scene' as const, version: 1 as const, children: [] };
     const preview = buildPreviewIR(() => <Layout ir={ir} rootScope={{ style: { stroke: 'red' } }} />);
+
     expect(preview.sourceIr).toBe(ir);
     expect(preview.ir).toBe(ir);
   });
@@ -192,7 +204,9 @@ describe('buildPreviewIR', () => {
 
   it('promotes standalone Graph host props when deriving canonical preview IR', () => {
     const canonical = GraphStandalonePreviewSource.canonicalRender?.() ?? null;
+
     expect(isValidElement(canonical) ? canonical.type : null).toBe(Layout);
+
     const preview = buildPreviewIR(() => canonical);
 
     expect(preview).toMatchObject({

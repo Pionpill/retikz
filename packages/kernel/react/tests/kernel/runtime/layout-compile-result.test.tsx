@@ -54,6 +54,7 @@ describe('<Layout onCompileResult>', () => {
         runtime={{ mode: 'static' }}
       />,
     );
+
     expect(onCompileResult).not.toHaveBeenCalled();
   });
 
@@ -75,6 +76,7 @@ describe('<Layout onCompileResult>', () => {
 
     expect(onCompileResult).toHaveBeenCalledTimes(1);
     expect(onCompileResult.mock.calls[0]?.[0].spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
+
     await act(() => root.unmount());
   });
 
@@ -105,6 +107,7 @@ describe('<Layout onCompileResult>', () => {
     expect(resolveSpatialHandle(reactResult.spatialHandles, selector)).toEqual(
       resolveSpatialHandle(direct.spatialHandles, selector),
     );
+
     await act(() => root.unmount());
   });
 
@@ -125,6 +128,7 @@ describe('<Layout onCompileResult>', () => {
     expect(initial?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
     expect(onCompileResult.mock.calls[1]?.[0].spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
     expect(onCompileResult.mock.calls[1]?.[0]).not.toBe(initial);
+
     await act(() => root.unmount());
   });
 
@@ -147,6 +151,7 @@ describe('<Layout onCompileResult>', () => {
     expect(committed?.spatialHandles.entries).toHaveLength(1);
     expect(Object.isFrozen(committed?.spatialHandles.entries)).toBe(true);
     expect(warning).toHaveBeenCalledWith(expect.stringContaining('onCompileResult callback failed'), expect.any(Error));
+
     await act(() => root.unmount());
   });
 });

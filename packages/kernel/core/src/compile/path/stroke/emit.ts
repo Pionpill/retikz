@@ -56,15 +56,20 @@ const emitCanonicalPathPrimitive = (
   const canonicalPath = path;
   const canonicalSteps = path.children ?? [];
   const irPath = pathEmitOptions.irPath ?? 'path';
+
   const warn = (code: string, message: string, subPath = ''): void => {
     pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
+
   const scopeChain = pathEmitOptions.scopeChain ?? [];
+
   // paint 解析：有 registry 走去重派 id；无 registry 时纯色透传、IRPaint 退化为 undefined
   const resolvePaint: PaintResolver =
     pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
+
   // relative/relativeAccumulate target 已由 resolving 阶段绑定为当前 scope 的局部坐标
   const steps = [...canonicalSteps];
+
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；其余 step 至少需要起点和一段绘制
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
@@ -102,6 +107,7 @@ const emitCanonicalPathPrimitive = (
     warn,
   });
   const { labelPrimitives: labelPrims, segmentSamplers } = sampling;
+
   for (let i = 0; i < steps.length; i++) {
     cursor.advance(i);
 
@@ -124,6 +130,7 @@ const emitCanonicalPathPrimitive = (
       if (!isFinitePoint(resolved)) {
         throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Relative target produced a non-finite endpoint.');
       }
+
       const resolvedStep = { ...step, to: resolved };
       cursor.setTargetAt(i, resolvedStep, resolved);
       step = resolvedStep;
@@ -131,6 +138,7 @@ const emitCanonicalPathPrimitive = (
         cursor.relativeBaseline = resolved;
       }
     }
+
     if (
       cursor.relativeBaseline &&
       isStrokeTargetStep(step) &&
@@ -142,6 +150,7 @@ const emitCanonicalPathPrimitive = (
       const absoluteAnchor = cursor.anchorAt(i);
       if (absoluteAnchor) cursor.relativeBaseline = absoluteAnchor;
     }
+
     if (
       cursor.relativeBaseline &&
       step.kind === 'generator' &&
@@ -164,17 +173,21 @@ const emitCanonicalPathPrimitive = (
       } else {
         generatorTarget = pointOfTarget(originalStep.to, targetView, scopeChain);
       }
+
       if (generatorTarget) {
         if (!isFinitePoint(generatorTarget)) {
           throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Generator target produced a non-finite endpoint.');
         }
+
         step = { ...step, to: generatorTarget };
         if (updatesBaseline) cursor.relativeBaseline = generatorTarget;
       }
     }
+
     if (cursor.relativeBaseline && step.kind === 'smooth' && originalStep.kind === 'smooth') {
       let smoothBaseline: IRPosition = cursor.relativeBaseline;
       const points: Array<IRTarget> = [];
+
       for (const originalPoint of originalStep.points) {
         if (isRelativeTargetLike(originalPoint)) {
           const resolved: IRPosition = [
@@ -186,9 +199,11 @@ const emitCanonicalPathPrimitive = (
               RetikzCoreErrorCode.Compile,
               'Smooth relative target produced a non-finite endpoint.',
             );
+
           points.push(resolved);
           continue;
         }
+
         if (isRelativeAccumulateTargetLike(originalPoint)) {
           const resolved: IRPosition = [
             smoothBaseline[0] + originalPoint.relativeAccumulate[0],
@@ -200,18 +215,22 @@ const emitCanonicalPathPrimitive = (
               'Smooth relativeAccumulate target produced a non-finite endpoint.',
             );
           }
+
           points.push(resolved);
           smoothBaseline = resolved;
           continue;
         }
+
         const resolved = pointOfTarget(originalPoint, targetView, scopeChain);
         if (!resolved) {
           points.push(originalPoint);
           continue;
         }
+
         points.push(originalPoint);
         smoothBaseline = resolved;
       }
+
       step = { ...step, points };
       cursor.relativeBaseline = smoothBaseline;
     }
@@ -259,6 +278,7 @@ const emitCanonicalPathPrimitive = (
     if (step.kind === 'axis-line' && originalStep.kind === 'axis-line') {
       const targetReference = pointOfTarget(originalStep.to, targetView, scopeChain);
       if (!targetReference) return null;
+
       const currentReference = cursor.getPenOverride() ?? prev.anchor;
       const projected: IRPosition =
         step.axis === 'horizontal'
@@ -267,6 +287,7 @@ const emitCanonicalPathPrimitive = (
       if (!isFinitePoint(projected)) {
         throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Axis-line produced a non-finite projected endpoint.');
       }
+
       const projectedStep: Extract<CanonicalStep, { kind: 'axis-line' }> = { ...step, to: projected };
       cursor.setTargetAt(i, projectedStep, projected);
       step = projectedStep;
@@ -284,6 +305,7 @@ const emitCanonicalPathPrimitive = (
       const unhandledStep: never = step;
       return unhandledStep;
     }
+
     const lowered = lowerSegmentStep(step, {
       targetView,
       scopeChain,
@@ -308,6 +330,7 @@ const emitCanonicalPathPrimitive = (
       radius: path.roundedCorners,
       round,
     });
+
     // 原地替换 commands 内容，下游 applyArrowShrinks / split 直接消费此数组
     if (next.commands.length !== before || next.commands.some((command, index) => command !== commands[index])) {
       commands.length = 0;
@@ -329,6 +352,7 @@ const emitCanonicalPathPrimitive = (
   const hostLabels = (path.label ?? []).flatMap(label => {
     const labelSample = sampling.sampleHostLabel(logicalGeometry, label.position, roundedCommands);
     if (labelSample === undefined) return [];
+
     const result = emitLabelPrimitive(label, labelSample.visualSample, {
       measureText,
       round,
@@ -341,10 +365,12 @@ const emitCanonicalPathPrimitive = (
       },
     });
     boundsPoints.push(...result.boundsPoints);
+
     return [
       { label, primitive: result.primitive, boundsPoints: result.boundsPoints, sample: labelSample.logicalSample },
     ];
   });
+
   const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
     arrowResolutions: resolution.arrows,
     round,
@@ -372,6 +398,7 @@ const emitCanonicalPathPrimitive = (
       ),
     });
   }
+
   if (arrows.arrowEnd !== undefined && lastDrawableOccurrence !== undefined) {
     endpointProtections.push({
       subPathIndex: lastDrawableOccurrence.subPathIndex,
@@ -382,6 +409,7 @@ const emitCanonicalPathPrimitive = (
       end: lastDrawableOccurrence.logicalEnd,
     });
   }
+
   const interruptionIntervals = createStrokeInterruptionIntervals(
     [...stepLabels, ...hostLabels]
       .filter(label => label.label.interrupt)
@@ -418,10 +446,12 @@ const emitCanonicalPathPrimitive = (
       if (startFragment !== undefined) {
         applyArrowShrinks(startFragment.commands, { shrinkStart, shrinkEnd: 0, strokeWidth, round });
       }
+
       if (endFragment !== undefined) {
         applyArrowShrinks(endFragment.commands, { shrinkStart: 0, shrinkEnd, strokeWidth, round });
       }
     }
+
     primitive = emitInterruptedPathFragments(fragments, baseProps, endpointSpecs);
   }
 
@@ -453,6 +483,7 @@ const emitCanonicalPathPrimitive = (
     ...hostLabels.map(label => label.primitive),
     ...marks.primitives,
   ];
+
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });
 };
 

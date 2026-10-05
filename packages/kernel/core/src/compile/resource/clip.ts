@@ -17,6 +17,7 @@ import {
   withProviderOutputValidationBoundary,
 } from '../scene-primitive';
 
+/** 解析裁剪形状、登记可复用资源并接收隔离布局探测结果的编译期接口 */
 export type ClipRegistry = {
   /** 调用已绑定 operation provider 生成开放 ClipShape */
   resolve: (clip: ClipResolution) => ClipShape;
@@ -51,6 +52,7 @@ const consumeClipTraversalEdge = (guard: ClipTraversalGuard, stage: string): voi
       `Clip traversal exceeded CompileOptions.maxClipDepth ${guard.max} while entering ${stage}.`,
     );
   }
+
   guard.visited += 1;
 };
 
@@ -60,14 +62,17 @@ const enterClipTraversalObjects = (
   cycleName: string,
 ): Array<object> => {
   const entered: Array<object> = [];
+
   for (const value of values) {
     if (entered.includes(value)) continue;
     if (guard.active.has(value)) {
       throw createCompositeContractError(`Clip traversal detected a cyclic ${cycleName} object.`);
     }
+
     guard.active.add(value);
     entered.push(value);
   }
+
   return entered;
 };
 
@@ -110,6 +115,7 @@ const positive = ({ kind, field, value, round }: ClipRoundFieldInput): number =>
   if (!Number.isFinite(value) || value <= 0) bad({ kind, field, value, positive: true });
   const rounded = round(value);
   if (!Number.isFinite(rounded) || rounded <= 0) bad({ kind, field, value: rounded, positive: true });
+
   return Object.is(rounded, -0) ? 0 : rounded;
 };
 
@@ -168,6 +174,7 @@ const roundCommand = (command: PathCommand, round: (n: number) => number): PathC
 const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: string): void => {
   let activeSubpath = false;
   let hasDrawingSegment = false;
+
   for (const [index, command] of commands.entries()) {
     switch (command.kind) {
       case 'move':
@@ -181,6 +188,7 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
             `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
           );
         }
+
         hasDrawingSegment = true;
         continue;
       case 'arc':
@@ -194,10 +202,12 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
             `${owner} lower returned 'close' at command ${index} without an active subpath.`,
           );
         }
+
         activeSubpath = false;
         continue;
     }
   }
+
   if (!hasDrawingSegment) {
     throw createCompositeContractError(`${owner} lower returned a SceneClipPath without a drawing segment.`);
   }
@@ -211,6 +221,7 @@ const snapshotResolvedClipShape = (shape: unknown, owner: string): ClipShape =>
     if (typeof record.kind !== 'string' || record.kind.trim().length === 0) {
       throw createCompositeContractError(`${owner} resolve returned a root shape without a non-empty string kind.`);
     }
+
     return record as ClipShape;
   });
 
@@ -224,11 +235,14 @@ const canonicalizeClipPath = (path: unknown, owner: string, round: (n: number) =
     if (commands.length === 0) {
       throw createCompositeContractError(`${owner} lower returned an empty SceneClipPath.commands.`);
     }
+
     assertProviderOutputPathCommands(owner, commands, 'SceneClipPath.commands');
     if (record.fillRule !== 'nonzero' && record.fillRule !== 'evenodd') {
       throw createCompositeContractError(`${owner} lower returned an invalid SceneClipPath.fillRule.`);
     }
+
     assertClipPathGrammar(commands as Array<PathCommand>, owner);
+
     return {
       commands: (commands as Array<PathCommand>).map(command => roundCommand(command, round)),
       fillRule: record.fillRule,
@@ -249,9 +263,11 @@ export const createClipRegistry = (
   const resolveOperation = (resolution: ClipResolution, guard: ClipTraversalGuard): ClipShape => {
     const { kind, definition, params } = resolution;
     const entered = enterClipTraversalObjects(guard, [resolution.spec, params], 'clip operation');
+
     try {
       consumeClipTraversalEdge(guard, `clip operation '${kind}'`);
       let resolved: unknown;
+
       try {
         resolved = definition.resolve(params as { kind: string }, {
           round,
@@ -259,17 +275,20 @@ export const createClipRegistry = (
         });
       } catch (thrown) {
         if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+
         throw createLayoutProbeRecoverableError(`Clip '${kind}' resolve failed: ${safeThrownDetail(thrown)}`, {
           cause: thrown,
           providerKey: `clip:${kind}`,
         });
       }
+
       const shape = snapshotResolvedClipShape(resolved, `Clip provider 'clip:${kind}'`);
       if (shape.kind !== kind) {
         throw createCompositeContractError(
           `Clip provider 'clip:${kind}' resolve returned kind '${shape.kind}' instead of '${kind}'.`,
         );
       }
+
       return shape;
     } finally {
       leaveClipTraversalObjects(guard, entered);
@@ -278,13 +297,16 @@ export const createClipRegistry = (
 
   const lowerShape = (shape: ClipShape, guard: ClipTraversalGuard): SceneClipPath => {
     const enteredShape = enterClipTraversalObjects(guard, [shape], 'clip shape');
+
     try {
       consumeClipTraversalEdge(guard, `clip shape '${shape.kind}'`);
       const resolution = resolveClipShape(shape, { clips });
       const { kind, definition, params } = resolution;
       const enteredParams = params === shape ? [] : enterClipTraversalObjects(guard, [params], 'clip shape');
+
       try {
         let lowered: unknown;
+
         try {
           const lower = definition.lower;
           lowered = lower(params, {
@@ -293,6 +315,7 @@ export const createClipRegistry = (
           });
         } catch (thrown) {
           if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+
           throw createLayoutProbeRecoverableError(
             `Clip provider 'clip:${kind}' lower failed: ${safeThrownDetail(thrown)}`,
             {
@@ -301,6 +324,7 @@ export const createClipRegistry = (
             },
           );
         }
+
         return canonicalizeClipPath(lowered, `Clip provider 'clip:${kind}'`, round);
       } finally {
         leaveClipTraversalObjects(guard, enteredParams);
@@ -319,20 +343,27 @@ export const createClipRegistry = (
       idByKey.set(key, id);
       list.push({ kind: 'clip', id, path });
     }
+
     return id;
   };
+
   const importWithGuard = (shape: ClipShape, guard: ClipTraversalGuard): string => importPath(lowerShape(shape, guard));
+
   const resolve = (clip: ClipResolution): ClipShape => {
     const guard = createClipTraversalGuard(maxClipDepth);
     const shape = resolveOperation(clip, guard);
     visitedByResolvedShape.set(shape, guard.visited);
+
     return shape;
   };
+
   const importResolved = (shape: ClipShape): string =>
     importWithGuard(shape, createClipTraversalGuard(maxClipDepth, visitedByResolvedShape.get(shape) ?? 0));
+
   const register = (clip: ClipResolution): string => {
     const guard = createClipTraversalGuard(maxClipDepth);
     return importWithGuard(resolveOperation(clip, guard), guard);
   };
+
   return { resolve, register, importResolved, importPath, resources: () => list };
 };

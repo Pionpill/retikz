@@ -22,6 +22,7 @@ describe('Table Cell plan lineage contract', () => {
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Encoding, encodingId: 'status-color' }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.RootRule, ruleIndex: 0 }),
     ];
+
     expect(sources).toEqual([
       { kind: 'default' },
       { kind: 'structure' },
@@ -45,6 +46,7 @@ describe('Table Cell plan lineage contract', () => {
       TableCellAppearanceTracePath.ContentPathDefaultDashPattern,
       TableCellAppearanceTracePath.BorderBottom,
     ].map(path => TableCellAppearanceTracePathSchema.parse(path));
+
     expect(paths).toEqual([
       '/background/fill',
       '/content/defaults/node/style/font/weight',
@@ -66,6 +68,7 @@ describe('Table Cell plan lineage contract', () => {
       '/borders/bottom',
       '/borders/left',
     ]);
+
     const addLeaves = (prefix: string, fields: Array<string>) => {
       fields.forEach(field => {
         if (field === 'font') {
@@ -75,8 +78,10 @@ describe('Table Cell plan lineage contract', () => {
         }
       });
     };
+
     addLeaves('/content/style', Object.keys(TableCellContentStyleSchema.shape.style.unwrap().shape));
     expected.add('/content/defaults/reset');
+
     for (const [channel, schema] of Object.entries({ node: NodeDefaultSchema, path: PathDefaultSchema })) {
       addLeaves(
         `/content/defaults/${channel}`,
@@ -84,6 +89,7 @@ describe('Table Cell plan lineage contract', () => {
       );
       addLeaves(`/content/defaults/${channel}/style`, Object.keys(schema.shape.style.unwrap().shape));
     }
+
     addLeaves('/content/defaults/node/layout', Object.keys(NodeDefaultSchema.shape.layout.unwrap().shape));
     addLeaves('/content/defaults/label', Object.keys(LabelDefaultSchema.shape));
     addLeaves('/content/defaults/arrow', Object.keys(ArrowDefaultSchema.shape));

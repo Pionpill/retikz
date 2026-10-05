@@ -12,6 +12,7 @@ export const normalizeScopeWithChildren = (input: InputScope, normalizeChildren:
   const { type: _type, authoring: _authoring, children, transforms, ...scope } = input;
   void _type;
   void _authoring;
+
   return {
     type: 'scope',
     ...scope,

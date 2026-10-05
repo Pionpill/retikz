@@ -1,6 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { defineTransformImplementation } from '@retikz/data';
-import type { DataFieldTypeValue } from '@retikz/data';
 import { DataFieldType, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -28,6 +27,7 @@ const deriveSizeValueTransform = defineTransform({
   }).describe('Test-only transform that writes a derived size field'),
   outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
 });
+
 const deriveSizeValueTransformImplementation = defineTransformImplementation({
   definition: deriveSizeValueTransform,
   apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: operation.value })),
@@ -50,6 +50,7 @@ const firstLayer = (
 /** 深度收集图层内所有 Node；颜色分组时 Node 可能位于子 Scope */
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -57,13 +58,16 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 /** 读取 Node.minimumSize；它等于逐节点半径乘以 √2 */
 const sizeOf = (node: IRNode): number | undefined =>
   typeof node.layout?.minimumSize === 'number' ? node.layout.minimumSize : undefined;
+
 const radiusOf = (node: IRNode): number | undefined => {
   const ms = sizeOf(node);
   return ms === undefined ? undefined : ms / Math.SQRT2;
@@ -72,7 +76,7 @@ const radiusOf = (node: IRNode): number | undefined => {
 const pointSpec = (
   size: { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number } | undefined,
   extraScales: Array<Record<string, unknown>> = [],
-  model?: Array<{ name: string; type?: DataFieldTypeValue; format?: string }>,
+  model?: Array<{ name: string; type?: DataFieldType; format?: string }>,
 ): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -108,15 +112,15 @@ const sizeResolutionOf = (
   rows: Array<Record<string, unknown>>,
   extraScales: Array<Record<string, unknown>> = [],
   options: {
-    fieldType?: DataFieldTypeValue;
-    model?: Array<{ name: string; type?: DataFieldTypeValue }>;
+    fieldType?: DataFieldType;
+    model?: Array<{ name: string; type?: DataFieldType }>;
   } = {},
 ) => {
   const node = pointSpec(size, extraScales, options.model);
   const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
     node,
     rows,
-    fieldTypes: new Map([[size.value, options.fieldType ?? DataFieldType.Continuous]]),
+    model: [{ name: size.value, ...(options.fieldType === undefined ? {} : { type: options.fieldType }) }],
     resolveChannelScale: () => ({
       of: () => undefined,
       legendForm: 'swatch',
@@ -128,8 +132,11 @@ const sizeResolutionOf = (
       values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
     resolveColorScheme: () => () => '#000000',
   })(node.marks[0]);
+
   expect(resolution).toBeDefined();
+
   if (resolution === undefined) throw new Error('expected field-bound size resolution');
+
   return resolution;
 };
 
@@ -143,9 +150,12 @@ describe('size channel 映射节点半径', () => {
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
     const radii = nodes.map(radiusOf);
+
     expect(radii[0]).toBeCloseTo(SIZE_MIN_RADIUS, 6); // p=0 位于 domain 下界，映射到 MIN
     expect(radii[2]).toBeCloseTo(SIZE_MAX_RADIUS, 6); // p=16 是最大正值，映射到 MAX
+
     const mid = SIZE_MIN_RADIUS + 0.5 * (SIZE_MAX_RADIUS - SIZE_MIN_RADIUS);
+
     expect(radii[1]).toBeCloseTo(mid, 6); // p=4 是 sqrt 映射的中点
   });
 
@@ -156,6 +166,7 @@ describe('size channel 映射节点半径', () => {
       { x: 1, y: 1 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'constant', value: 8 }), { d: data }, cartOpts));
+
     expect(nodes.every(n => radiusOf(n) !== undefined && Math.abs(radiusOf(n)! - 8) < 1e-6)).toBe(true);
   });
 
@@ -185,6 +196,7 @@ describe('size channel 映射节点半径', () => {
       { x: 1, y: 1, p: 4, g: 'b' },
     ];
     const nodes = collectNodes(firstLayer(spec, { d: data }, cartOpts));
+
     expect(nodes).toHaveLength(2);
     expect(nodes.every(n => radiusOf(n) !== undefined)).toBe(true);
   });
@@ -248,6 +260,7 @@ describe('size channel 边界输入', () => {
       { x: 1, y: 1, p: 0 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
+
     expect(nodes.every(n => Math.abs(radiusOf(n)! - SIZE_MIN_RADIUS) < 1e-6)).toBe(true);
   });
 
@@ -257,11 +270,13 @@ describe('size channel 边界输入', () => {
       { x: 1, y: 1, p: 7 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts));
+
     expect(nodes.every(n => Math.abs(radiusOf(n)! - SIZE_MAX_RADIUS) < 1e-6)).toBe(true);
   });
 
   it('empty_data_no_nodes', () => {
     const outer = expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: [] }, cartOpts);
+
     expect(outer.children).toHaveLength(0);
   });
 
@@ -287,9 +302,7 @@ describe('size channel 边界输入', () => {
     ['empty', []],
     ['all-missing', [{ p: undefined }, { p: null }, { p: Number.NaN }]],
   ])('untyped_%s_rows_preserve_the_size_descriptor', (_label, rows) => {
-    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows, [], {
-      fieldType: DataFieldType.Categorical,
-    });
+    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows);
 
     expect(resolution.descriptor).toMatchObject({
       channel: 'size',
@@ -298,6 +311,10 @@ describe('size channel 边界输入', () => {
       scaleType: 'sqrt',
     });
     expect(resolution.descriptor?.fieldType).toBeUndefined();
+
+    const data = rows.map(row => ({ x: 0, y: 0, ...row }));
+
+    expect(collectNodes(expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts))).toEqual([]);
   });
 
   it('all_zero_data_uses_explicit_sqrt_range_in_resolver_and_descriptor', () => {
@@ -365,6 +382,7 @@ describe('size channel 边界输入', () => {
       { x: 1, y: 1 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec(undefined), { d: data }, cartOpts));
+
     expect(nodes.every(n => sizeOf(n) === undefined)).toBe(true);
   });
 });
@@ -392,8 +410,7 @@ describe('size channel 错误输入', () => {
     const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
       node,
       rows: [{ derivedSize: 4 }],
-      fieldTypes: new Map(),
-      fieldTypeEvidence: new Set(),
+      model: [],
       resolveChannelScale: () => ({
         of: () => undefined,
         legendForm: 'swatch',
@@ -416,7 +433,7 @@ describe('size channel 错误输入', () => {
       { name: 'y', type: DataFieldType.Continuous },
     ];
     const resolver =
-      (type: DataFieldTypeValue): LowerPlotsOptions['resolveField'] =>
+      (type: DataFieldType): LowerPlotsOptions['resolveField'] =>
       field =>
         field === 'p' ? { type } : undefined;
 
@@ -447,6 +464,7 @@ describe('size channel 错误输入', () => {
       ],
     );
     let sizeFieldCalls = 0;
+
     const resolveField: LowerPlotsOptions['resolveField'] = field => {
       if (field !== 'p') return undefined;
       sizeFieldCalls += 1;
@@ -544,11 +562,13 @@ describe('size channel 错误输入', () => {
       { x: 0, y: 0, p: 1 },
       { x: 1, y: 1, p: -3 },
     ];
+
     expect(() => expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts)).toThrow(/negative/);
   });
 
   it('unknown_size_scale_fails_loud', () => {
     const data = [{ x: 0, y: 0, p: 1 }];
+
     expect(() => expandOf(pointSpec({ kind: 'field', value: 'p', scale: 'nope' }), { d: data }, cartOpts)).toThrow(
       /unknown scale/,
     );
@@ -567,6 +587,7 @@ describe('size channel 错误输入', () => {
       { x: 1, y: 1, p: 4 },
     ];
     const spec = pointSpec({ kind: 'field', value: 'p', scale: 'mySize' }, [{ type: 'linear', name: 'mySize' }]);
+
     expect(() => expandOf(spec, { d: data }, cartOpts)).toThrow(/must be a sqrt scale/);
   });
 

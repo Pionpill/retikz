@@ -10,6 +10,7 @@ describe('@retikz/layout-react optional inspect boundary', () => {
     const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as {
       exports: Record<string, unknown>;
     };
+
     expect(Object.keys(manifest.exports)).toEqual(['.', './inspect']);
     expect(readFileSync(new URL('../../src/index.ts', import.meta.url), 'utf8')).not.toMatch(/inspect/i);
   });
@@ -20,6 +21,7 @@ describe('@retikz/layout-react optional inspect boundary', () => {
       '@retikz/layout-react',
       "if (!imported.createLayoutReactAuthoring({ namespace: 'test', name: 'item' }, true)) process.exit(9);",
     );
+
     expect(result.rootWithoutPeer).toMatchObject({ status: 0 });
     expect(result.inspectWithoutPeer.status).not.toBe(0);
     expect(result.inspectWithoutPeer.stderr).toContain('@retikz/inspect');

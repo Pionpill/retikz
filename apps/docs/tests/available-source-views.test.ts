@@ -5,6 +5,7 @@ import { availableSourceViews } from '../src/modules/docs/components/component-p
 
 /** 一个非空视图（有文件即「可用」） */
 const filled: ComponentRenderSource['react'] = { files: [{ filename: 'f.ts', code: 'x', lang: 'ts' }] };
+
 /** 空文件视图：视为不可用 */
 const empty: ComponentRenderSource['react'] = { files: [] };
 
@@ -27,8 +28,10 @@ describe('availableSourceViews：react/ir/vanilla 三者全可选，只显示有
   it('部分组合 → 保持固定顺序、跳过缺省项', () => {
     // RetikzPreview 实际场景：react + ir（无 vanilla）
     expect(availableSourceViews({ react: filled, ir: filled })).toEqual(['react', 'ir']);
+
     // react + vanilla（无 ir）
     expect(availableSourceViews({ react: filled, vanilla: filled })).toEqual(['react', 'vanilla']);
+
     // ir + vanilla（无 react）：vanilla 在 ir 之前
     expect(availableSourceViews({ ir: filled, vanilla: filled })).toEqual(['vanilla', 'ir']);
   });

@@ -7,10 +7,12 @@ import { blendPathI18n } from './blend-path.i18n';
 
 /** Path 示例的语言参数 */
 export type BlendPathProps = { lang?: Lang };
+
 /** Compare the path and its arrow over the same backdrop */
 const BlendPath: FC<BlendPathProps> = props => {
   const { lang = 'zh' } = props;
   const text = blendPathI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {(['normal', 'multiply'] as const).map((mode, index) => (

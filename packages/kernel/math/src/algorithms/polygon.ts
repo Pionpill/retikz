@@ -10,13 +10,16 @@ export const polygon = {
   containsPoint: (vertices: Array<Position>, p: Position): boolean => {
     const n = vertices.length;
     if (n < 3) return false;
+
     let inside = false;
+
     for (let i = 0, j = n - 1; i < n; j = i++) {
       const [xi, yi] = vertices[i];
       const [xj, yj] = vertices[j];
       const intersects = yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi;
       if (intersects) inside = !inside;
     }
+
     return inside;
   },
 };

@@ -9,7 +9,9 @@ import {
 } from '../../src/presentation/legend/schema';
 
 const rect = { x: 0, y: 0, width: 10, height: 8 } as const;
+
 const geometry = { allocationBounds: rect, visualBounds: rect, visibleBounds: rect } as const;
+
 const placed = {
   ...geometry,
   slotBounds: rect,
@@ -20,12 +22,14 @@ const placed = {
     clipped: false,
   },
 } as const;
+
 const container = {
   allocationBounds: rect,
   contentBounds: rect,
   visualBounds: rect,
   visibleBounds: rect,
 } as const;
+
 const itemsArtifact = {
   kind: 'items',
   container,

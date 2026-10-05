@@ -7,10 +7,12 @@ import type { Lang } from '@/i18n';
 import { allocationFigureI18n } from './allocation-figure.i18n';
 
 export type AllocationFigureProps = { lang?: Lang };
+
 /** 同一尺度下显示分配几何与固定参照 */
 const AllocationFigure: FC<AllocationFigureProps> = props => {
   const { lang = 'zh' } = props;
   const text = allocationFigureI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Rectangle corner1={[0, 0]} width={200} height={100} style={{ stroke: 'gray', dashPattern: [1, 4] }} />

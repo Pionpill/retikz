@@ -47,10 +47,12 @@ const validateTableRoot = (spec: TableRootSemanticInput, context: RefinementCtx)
     if (seen.has(encoding.id)) {
       context.addIssue({ code: 'custom', path: ['encodings', index, 'id'], message: 'duplicate Table encoding id' });
     }
+
     seen.add(encoding.id);
   });
 };
 
+/** 校验绑定外部数据的可序列化明细表格组合节点 */
 export const DetailTableSchema = TableBaseSchema.extend({
   transform: array(DataTransformDeclarationSchema)
     .optional()
@@ -64,6 +66,7 @@ export const DetailTableSchema = TableBaseSchema.extend({
   .superRefine(validateTableRoot)
   .describe('JSON-safe detail Table composite specification bound to external data.');
 
+/** 校验直接编写内容的表格组合节点，拒绝外部数据与数据执行选项 */
 export const ManualTableSchema = TableBaseSchema.extend({
   transform: never().optional().describe('Manual Table does not accept data transforms'),
   dataExecution: never().optional().describe('Manual Table does not accept data execution configuration'),
@@ -73,6 +76,7 @@ export const ManualTableSchema = TableBaseSchema.extend({
   .superRefine(validateTableRoot)
   .describe('JSON-safe manual Table composite specification with explicit content.');
 
+/** 校验通过注册结构能力解析、可选择绑定外部数据的表格组合节点 */
 export const CustomTableSchema = TableBaseSchema.extend({
   transform: array(DataTransformDeclarationSchema)
     .optional()
@@ -91,6 +95,7 @@ type TableSchemaOutput =
   | ZodInfer<typeof ManualTableSchema>
   | ZodInfer<typeof CustomTableSchema>;
 
+/** 校验明细、显式内容与自定义结构三种精确表格根变体 */
 export const TableSchema: ZodType<TableSchemaOutput> = union([
   DetailTableSchema,
   ManualTableSchema,

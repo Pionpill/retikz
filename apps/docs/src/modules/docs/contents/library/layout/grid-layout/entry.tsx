@@ -60,6 +60,7 @@ const renderPreview = (lang: Lang = 'zh') => {
     </LayoutInspectLayout>
   );
 };
+
 export const previewSource = createLayoutInspectPreviewSource(lang => <Layout {...renderPreview(lang).props} />, {
   rules: [
     { kind: 'request', inspector: GRID_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, options: inspectOptions },

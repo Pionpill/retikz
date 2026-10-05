@@ -128,6 +128,7 @@ export const createAsyncBuiltinTransformImplementations = (
       runTransformComputationAsync(computeSmooth(rows, operation, context, regression)),
   }),
 ];
+
 /** 内置 sort transform definition；读取排序字段并稳定重排输入行 */
 const sortTransformDefinition = defineTransform<IRDataSortTransform>({
   schema: SortTransformSchema,
@@ -280,6 +281,7 @@ const binOutputModel = (operation: IRDataBinTransform, context: TransformSemanti
     { field: output.endField, type: DataFieldType.Continuous },
     ...metricDescriptors,
   ];
+
   return { kind: 'replace' as const, fields };
 };
 
@@ -406,6 +408,7 @@ const jitterTransformDefinition = defineTransform<IRDataJitterTransform>({
       axis === JitterAxis.X || axis === JitterAxis.Both ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
       axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
     ].filter((field): field is string => field !== undefined);
+
     return {
       kind: 'preserve',
       outputs: fields.map(field => ({ field, type: { from: field } })),
@@ -487,27 +490,30 @@ const BUILTIN_TRANSFORM_REGISTRY = new Map(
 );
 
 /**
- * 按 kind 索引的内置 transform definition。
+ * 按 kind 索引的内置 transform definition
  * @description 主要供诊断与测试确认内置覆盖；自定义 definition 不写入此表，而是在每次 lowering 时合并
  */
 export const BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND: ReadonlyMap<string, AnyTransformDefinition> =
   createReadonlyMap(BUILTIN_TRANSFORM_REGISTRY);
 
 /**
- * 解析 transform registry。
+ * 解析 transform registry
  * @description 内置 transform 总是先注册；用户自定义 definition 不能覆盖内置 kind，也不能彼此重复
  */
 export const resolveTransformRegistry = (
   custom?: ReadonlyArray<AnyTransformDefinition>,
 ): Map<string, AnyTransformDefinition> => {
   const registry = new Map(BUILTIN_TRANSFORM_REGISTRY);
+
   for (const def of custom ?? []) {
     const kind = extractTransformKind(def.schema);
     if (registry.has(kind)) {
       throw new RetikzDataError(`data: duplicate transform registration: "${kind}"`);
     }
+
     registry.set(kind, def);
   }
+
   return registry;
 };
 
@@ -528,7 +534,10 @@ export const BUILTIN_TRANSFORM_IMPLEMENTATIONS: ReadonlyArray<AnySynchronousTran
     smoothTransformImplementation,
   ]);
 
-/** 独立计算 registry；内置和自定义引用同一语义身份 */
+/**
+ * 独立计算 registry；内置和自定义引用同一语义身份
+ * @template TImplementation 自定义变换实现类型，默认限定同步数据行数组结果
+ */
 export const resolveTransformImplementationRegistry = <
   TImplementation extends AnyTransformImplementation = AnySynchronousTransformImplementation,
 >(

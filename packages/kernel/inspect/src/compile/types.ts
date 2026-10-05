@@ -52,7 +52,13 @@ export type InspectionSelectionRule =
       /** 封锁目标范围内的全部 Inspector，并阻止后代规则重新开启 */
       kind: 'barrier';
       /** 只能作用于整张 scene 或 subtree 的封锁范围 */
-      target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }>;
+      target: Extract<
+        InspectionSelectionTarget,
+        {
+          /** 选择整场景或指定容器的子树作为观察范围 */
+          kind: 'scene' | 'subtree';
+        }
+      >;
     }>;
 
 /** 一次 compile 的 runtime-only Inspector selection */
@@ -63,15 +69,20 @@ export type InspectionSelection = Readonly<{
 
 /** selection 解析出的 canonical request */
 export type ResolvedInspectionRequest = Readonly<{
-  /** Inspector key */
+  /** 检查器的注册键 */
   inspector: InspectorKey;
   /** 实际 owner */
   owner: CompileObservationOwner;
   /** 最终 occurrence */
   occurrence: CompileOccurrenceLocator;
   /** probe/replay 来源 */
-  provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
-  /** canonical options */
+  provenance: Readonly<{
+    /** 探测或重放前产生观察结果的位置 */
+    origin: CompileOccurrenceLocator;
+    /** 重放映射后结果在最终逻辑树中的位置 */
+    final: CompileOccurrenceLocator;
+  }>;
+  /** 规范化后的选项 */
   options: JsonObject;
   /** request 级连续颜色序号 */
   colorScope: number;

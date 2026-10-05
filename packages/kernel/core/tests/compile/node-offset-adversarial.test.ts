@@ -8,14 +8,18 @@ import { flattenPrims } from '../helpers/flatten';
 
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
   flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+
 const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
+
 const findPath = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((x): x is PathPrim => x.type === 'path');
+
 const lastLineEnd = (prim: PathPrim): [number, number] => {
   for (let i = prim.commands.length - 1; i >= 0; i--) {
     const cmd = prim.commands[i];
     if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];
   }
+
   throw new Error('no line cmd');
 };
 
@@ -81,6 +85,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'X', position: { of: 'X', offset: [10, 0] } }],
     };
+
     expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
   });
 
@@ -90,6 +95,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
       type: 'scene',
       children: [{ type: 'coordinate', id: 'a', position: { of: 'a', offset: [0, 0] } }],
     };
+
     expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
   });
 
@@ -102,6 +108,7 @@ describe('OffsetPosition adversarial: 循环 / 自引用', () => {
         { type: 'node', id: 'A', position: { of: 'B', offset: [0, 5] } },
       ],
     };
+
     expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
   });
 });
@@ -121,6 +128,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
       ],
     };
     const [, b] = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
     expect(b[0]).toBeCloseTo(0.6);
     expect(b[1]).toBeCloseTo(0.45);
   });
@@ -136,8 +144,10 @@ describe('OffsetPosition adversarial: 数值极端', () => {
     };
     const scene = compileToScene(ir).scene;
     const [, b] = rects(scene.primitives).map(rectCenter);
+
     expect(b[0]).toBeCloseTo(1e6, 0);
     expect(b[1]).toBeCloseTo(1e6, 0);
+
     // layout 跟随
     expect(scene.layout.width).toBeGreaterThan(1e5);
   });
@@ -155,6 +165,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
       ],
     };
     const cs = rects(compileToScene(ir).scene.primitives).map(rectCenter);
+
     expect(cs[4][0]).toBeCloseTo(40);
     expect(cs[4][1]).toBeCloseTo(0);
   });
@@ -181,10 +192,14 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = findPath(scene.primitives);
+
     expect(path).toBeDefined();
+
     // 首条 move 终点 = (10+5, 10+0) = (15, 10)
     const moveCmd = path!.commands.find(c => c.kind === 'move');
+
     expect(moveCmd?.kind).toBe('move');
+
     if (moveCmd?.kind === 'move') {
       expect(moveCmd.to[0]).toBeCloseTo(15);
       expect(moveCmd.to[1]).toBeCloseTo(10);
@@ -212,8 +227,11 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = findPath(scene.primitives);
+
     expect(path).toBeDefined();
+
     const [ex, ey] = lastLineEnd(path!);
+
     expect(ex).toBeCloseTo(30);
     expect(ey).toBeCloseTo(30);
   });
@@ -238,6 +256,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(findPath(scene.primitives)).toBeUndefined();
   });
 });
@@ -260,6 +279,7 @@ describe('OffsetPosition adversarial: JSON 序列化往返', () => {
     const restored = JSON.parse(JSON.stringify(ir)) as IRScene;
     const before = rects(compileToScene(ir).scene.primitives).map(rectCenter);
     const after = rects(compileToScene(restored).scene.primitives).map(rectCenter);
+
     expect(after).toEqual(before);
   });
 });

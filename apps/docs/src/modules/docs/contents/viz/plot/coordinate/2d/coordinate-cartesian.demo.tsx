@@ -8,5 +8,6 @@ export const previewControls = coordinateCartesianControls;
 const controlledPreview = defineControlledPreview(previewControlContract, renderCoordinateCartesian);
 
 export const previewSource = controlledPreview.source;
+
 const Preview = controlledPreview.Component;
 export default Preview;

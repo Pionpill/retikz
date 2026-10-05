@@ -36,8 +36,10 @@ const pruneClearedRecords = (value: unknown, preserveRoot = false): unknown => {
     const pruned = pruneClearedRecords(child);
     if (pruned === undefined) return;
     if (isRecord(pruned) && Object.keys(pruned).length === 0) return;
+
     result[field] = pruned;
   });
+
   return preserveRoot || Object.keys(result).length > 0 ? result : undefined;
 };
 
@@ -49,6 +51,7 @@ const mergeRecord = (current: Record<string, unknown>, patch: Record<string, unk
       delete result[field];
       return;
     }
+
     if (
       isRecord(result[field]) &&
       isRecord(value) &&
@@ -57,12 +60,15 @@ const mergeRecord = (current: Record<string, unknown>, patch: Record<string, unk
       result[field] = clone(value);
       return;
     }
+
     if (isRecord(result[field]) && isRecord(value) && field !== 'background') {
       result[field] = mergeRecord(result[field], value);
       return;
     }
+
     result[field] = clone(value);
   });
+
   return result;
 };
 
@@ -82,6 +88,7 @@ export const mergeTableDefaults = (
   patch: DeepReadonly<IRTableDefaults> | undefined,
 ): IRTableDefaults => {
   if (patch === undefined) return clone(current ?? {});
+
   const result: Record<string, unknown> = clone(current ?? {});
   if (patch.appearanceDefaults === null) {
     delete result.appearanceDefaults;
@@ -91,11 +98,13 @@ export const mergeTableDefaults = (
       patch.appearanceDefaults,
     );
   }
+
   if (patch.layout === null) {
     delete result.layout;
   } else if (isRecord(patch.layout)) {
     result.layout = mergeLayoutDefaults(isRecord(result.layout) ? result.layout : undefined, patch.layout);
   }
+
   if (patch.visualDefaults === null) {
     delete result.visualDefaults;
   } else if (isRecord(patch.visualDefaults)) {
@@ -104,6 +113,7 @@ export const mergeTableDefaults = (
       patch.visualDefaults,
     );
   }
+
   return TableDefaultsSchema.parse(pruneClearedRecords(result, true));
 };
 
@@ -149,6 +159,7 @@ export const resolveTableThemeDefaults = (
     (resolvedDefaults, layer) => mergeTableDefaults(resolvedDefaults, layer.defaults),
     {},
   );
+
   return deepFreeze({
     ...(style === undefined ? {} : { style }),
     mode,

@@ -80,6 +80,7 @@ const defaultAxisGrids = (rendered: ReactNode): AxisGridSnapshot => {
   };
 
   visit(rendered);
+
   return result;
 };
 
@@ -242,6 +243,7 @@ describe('coordinate composition grids', () => {
     const baseline = renderWithGrids(Component, false, false);
     const xGridPaths = addedPathData(renderWithGrids(Component, true, false), baseline);
     const yGridPaths = addedPathData(renderWithGrids(Component, false, true), baseline);
+
     expect(xGridPaths.length).toBeGreaterThan(0);
     expect(yGridPaths.length).toBeGreaterThan(0);
     expect(xGridPaths.filter(path => yGridPaths.includes(path))).toEqual([]);

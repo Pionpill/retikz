@@ -33,6 +33,7 @@ describe('flattenPrimitives', () => {
     const types = flattenPrimitives(scene)
       .map(p => p.type)
       .sort();
+
     expect(types).toEqual(['ellipse', 'group', 'rect', 'text']);
   });
 });

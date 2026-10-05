@@ -16,6 +16,7 @@ export const createCompileGroup =
     const surface = requiredLayoutProbe(context, { child: shell.surface, occurrence: 0 }, context.proposal);
     const { width, height } = surface.slotSize;
     const host = lowerGroupLabelHost(source, width, height);
+
     return {
       allocationBounds: { x: 0, y: 0, width, height },
       children: [

@@ -17,6 +17,7 @@ const capPoint = (context: RibbonCapContext, x: number, y: number): IRPosition =
 const straightCap = (context: RibbonCapContext, extension: number): RibbonCapGeometry => {
   const half = context.width / 2;
   const sign = context.endpoint === 'end' ? 1 : -1;
+
   return {
     extension,
     commands: [
@@ -39,6 +40,7 @@ const circularCap = (
       message: 'Ribbon arc cap requires a nonzero width.',
       details: { endpoint: context.endpoint },
     });
+
   const endpoints = straightCap(context, 0).commands;
   const from = endpoints[0];
   const to = endpoints[1];
@@ -48,6 +50,7 @@ const circularCap = (
       message: 'Missing cap endpoints.',
       details: {},
     });
+
   const tolerance = Math.max(0.01, radius * 1e-4);
   if (
     Math.abs(point.distance(center, from.to) - radius) > tolerance ||
@@ -59,6 +62,7 @@ const circularCap = (
       details: { endpoint: context.endpoint, radius },
     });
   }
+
   const start = Math.atan2(from.to[1] - center[1], from.to[0] - center[0]);
   const end = Math.atan2(to.to[1] - center[1], to.to[0] - center[0]);
   let sweep = Math.atan2(Math.sin(end - start), Math.cos(end - start));
@@ -66,10 +70,12 @@ const circularCap = (
     const middle = start + sweep / 2;
     if (Math.cos(middle) * context.outward[0] + Math.sin(middle) * context.outward[1] < 0) sweep = -sweep;
   } else if (long) sweep += sweep > 0 ? -2 * Math.PI : 2 * Math.PI;
+
   const commands: Array<PathCommand> = [
     from,
     { kind: 'arc', center, radius, startAngle: (start * 180) / Math.PI, endAngle: ((start + sweep) * 180) / Math.PI },
   ];
+
   return { extension: 0, commands };
 };
 
@@ -79,12 +85,14 @@ export const ButtRibbonCapDefinition = defineRibbonCap({
   paramsSchema: strictObject({}),
   resolve: context => straightCap(context, 0),
 });
+
 /** 官方方形端帽 */
 export const SquareRibbonCapDefinition = defineRibbonCap({
   name: 'square',
   paramsSchema: strictObject({}),
   resolve: context => straightCap(context, context.width / 2),
 });
+
 /** 官方半圆端帽 */
 export const RoundRibbonCapDefinition = defineRibbonCap({
   name: 'round',
@@ -92,6 +100,7 @@ export const RoundRibbonCapDefinition = defineRibbonCap({
   resolve: context =>
     context.width === 0 ? straightCap(context, 0) : circularCap(context, context.center, context.width / 2, false),
 });
+
 /** 官方显式圆弧端帽 */
 export const ArcRibbonCapDefinition = defineRibbonCap({
   name: 'arc',
@@ -104,6 +113,7 @@ export const ArcRibbonCapDefinition = defineRibbonCap({
       context.params.sweep === 'long',
     ),
 });
+
 /** 官方端帽定义集合 */
 export const ExtensionRibbonCapDefinitions: ReadonlyArray<RibbonCapDefinition> = [
   ButtRibbonCapDefinition,

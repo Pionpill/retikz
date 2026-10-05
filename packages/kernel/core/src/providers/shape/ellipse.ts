@@ -25,6 +25,7 @@ const ellipseOutline = (bounds: Rect): Array<PathCommand> => {
   const radiusY = bounds.height / 2;
   const rotation = (bounds.rotate ?? 0) * RAD_TO_DEG;
   const start = localToWorld(bounds, [radiusX, 0]);
+
   return [
     { kind: 'move', to: start },
     {
@@ -44,6 +45,7 @@ const ellipseOutline = (bounds: Rect): Array<PathCommand> => {
 const ellipseKeyPoints = (bounds: Rect) => {
   const radiusX = bounds.width / 2;
   const radiusY = bounds.height / 2;
+
   return [
     { name: 'center', position: [bounds.x, bounds.y] as [number, number] },
     { name: 'right', position: localToWorld(bounds, [radiusX, 0]) },
@@ -75,6 +77,7 @@ export const ellipseShape = defineShape<EllipseParams>({
       const radius = Math.max(halfWidth, halfHeight);
       return { halfWidth: radius, halfHeight: radius };
     }
+
     return { halfWidth, halfHeight };
   },
   outline: bounds => ellipseOutline(bounds),

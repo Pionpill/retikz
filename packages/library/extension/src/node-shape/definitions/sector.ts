@@ -86,6 +86,7 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
       }),
     );
   }
+
   const bounds = boundsOf(candidates);
   if (bounds === undefined) {
     throw new RetikzExtensionError({
@@ -94,6 +95,7 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
       details: { candidateCount: candidates.length, shape: 'sector' },
     });
   }
+
   const aabbCenter = centerOfBounds(bounds);
   const apexOffset: Position = [-aabbCenter[0], -aabbCenter[1]];
   const sweepRadians = (range.end - range.start) * DEG_TO_RAD;
@@ -115,6 +117,7 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
     Math.cos(midAngleRadians) * boundaryOriginRadius,
     Math.sin(midAngleRadians) * boundaryOriginRadius,
   ];
+
   return {
     range,
     aabbHalfAxes: halfAxesOfBounds(bounds),
@@ -143,6 +146,7 @@ const sectorSegments = (rect: Rect, params: SectorShapeParams) => {
   if (innerRadius > 0 && innerRadius < outerRadius) {
     const innerStart = toWorld(rect, geometry.apexOffset, sectorPolarPoint(innerRadius, start));
     const innerEnd = toWorld(rect, geometry.apexOffset, sectorPolarPoint(innerRadius, end));
+
     return {
       geometry,
       segments: [
@@ -170,6 +174,7 @@ const sectorSegments = (rect: Rect, params: SectorShapeParams) => {
       ],
     };
   }
+
   return {
     geometry,
     segments: [
@@ -194,9 +199,12 @@ const openSectorBoundaryPoint = (rect: Rect, toward: Position, params: SectorSha
   const local = worldToLocal(rect, toward);
   const fromCenter: Position = [local[0] - geometry.apexOffset[0], local[1] - geometry.apexOffset[1]];
   let angle = Math.atan2(fromCenter[1], fromCenter[0]) * RAD_TO_DEG;
+
   while (angle < start) angle += 360;
+
   while (angle >= start + 360) angle -= 360;
   const projectedAngle = angle <= end ? angle : angle - end <= start + 360 - angle ? end : start;
+
   return toWorld(rect, geometry.apexOffset, sectorPolarPoint(radius, projectedAngle));
 };
 
@@ -211,15 +219,18 @@ export const SectorShapeDefinition = defineShape<SectorShapeParams>({
   },
   boundaryPoint: (rect, toward, params) => {
     if (params.innerRadius === params.outerRadius) return openSectorBoundaryPoint(rect, toward, params);
+
     const { geometry, segments } = sectorSegments(rect, params);
     const fillets = filletContour(segments, params.cornerRadius);
     const originWorld = localToWorld(rect, geometry.boundaryOriginOffset);
+
     return boundaryFromContour(segments, params.cornerRadius, originWorld, toward, fillets) ?? originWorld;
   },
   anchor: (rect, name: ShapeAnchorName, params) => {
     const geometry = computeSectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geometry.range;
+
     switch (name) {
       case 'apex':
       case 'center':
@@ -260,8 +271,10 @@ export const SectorShapeDefinition = defineShape<SectorShapeParams>({
         ],
         ...pathPrimitiveStyle(style, { fill: 'transparent' }),
       };
+
       return;
     }
+
     const { segments } = sectorSegments(rect, params);
     const fillets = filletContour(segments, params.cornerRadius);
     const path = contourToPathPrimitive(

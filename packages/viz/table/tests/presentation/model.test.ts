@@ -108,6 +108,7 @@ describe('Presented Table model', () => {
     expect(Object.isFrozen(presented.cells[0])).toBe(true);
 
     cells[0].appearance.background.fill = '#000000';
+
     expect(presented.cells[0].appearance).toMatchObject({ background: { fill: '#fff4e5' } });
     expect(Object.isFrozen(cells[0])).toBe(false);
   });

@@ -26,6 +26,7 @@ describe('compile path: arrow 箭头', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = findPathPrim(scene.primitives);
+
     expect(path.arrowEnd?.shape).toBe('stealth');
     expect(path.arrowStart).toBeUndefined();
   });
@@ -46,6 +47,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd).toBeUndefined();
   });
@@ -66,6 +68,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
@@ -85,6 +88,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(path.arrowStart).toBeUndefined();
     expect(path.arrowEnd).toBeUndefined();
   });
@@ -113,9 +117,12 @@ describe('compile path: arrow 箭头', () => {
     };
     const scene = compileToScene(ir).scene;
     const group = scene.primitives.find((p): p is Extract<ScenePrimitive, { type: 'group' }> => p.type === 'group');
+
     expect(group).toBeDefined();
     expect(group?.children).toHaveLength(2);
+
     const [first, last] = group!.children as Array<PathPrim>;
+
     expect(first.arrowStart).toBeUndefined();
     expect(first.arrowEnd).toBeUndefined();
     expect(last.arrowStart).toBeUndefined();
@@ -139,6 +146,7 @@ describe('compile path: arrow 箭头', () => {
         ],
       };
       const path = findPathPrim(compileToScene(ir).scene.primitives);
+
       expect(path.arrowEnd?.shape).toBe(shape);
     }
   });
@@ -165,6 +173,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([expectedEndX, 0])]);
   });
 
@@ -203,6 +212,7 @@ describe('compile path: arrow 箭头', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).arrowEnd?.shape).toBe('stealth');
   });
 
@@ -224,8 +234,11 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
+
     const path = findPathPrim(scene.primitives);
+
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
 
@@ -253,6 +266,7 @@ describe('compile path: arrow 箭头', () => {
     expect(fragments).toHaveLength(2);
     expect(fragments.filter(fragment => fragment.arrowStart !== undefined)).toHaveLength(1);
     expect(fragments.filter(fragment => fragment.arrowEnd !== undefined)).toHaveLength(1);
+
     const startFragment = fragments.find(fragment => fragment.arrowStart !== undefined);
     const endFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
     const startTerminal = [...(startFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');

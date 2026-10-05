@@ -40,6 +40,7 @@ describe('Table React runtime style contract', () => {
       identityPath: ['default', 'scores'],
     };
     const contribution = TableInputEmbedAdapter.lower(input, context);
+
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');

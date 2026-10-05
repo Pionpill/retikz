@@ -20,6 +20,7 @@ export const waterfallTransform = defineTransform({
     ],
   }),
 });
+
 /** waterfallTransform的本地计算实现 */
 export const waterfallTransformImplementation = defineTransformImplementation({
   definition: waterfallTransform,
@@ -31,6 +32,7 @@ export const waterfallTransformImplementation = defineTransformImplementation({
       if (!Number.isFinite(delta)) {
         throw new Error(`waterfall: row ${index} field "${operation.field}" must be a finite number`);
       }
+
       const next = cursor + delta;
       const output = {
         ...row,
@@ -39,6 +41,7 @@ export const waterfallTransformImplementation = defineTransformImplementation({
         direction: delta >= 0 ? 'increase' : 'decrease',
       };
       cursor = next;
+
       return output;
     });
   },

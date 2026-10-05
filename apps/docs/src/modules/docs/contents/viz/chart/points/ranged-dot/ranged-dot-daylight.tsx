@@ -7,6 +7,7 @@ import { createPreviewControlContract } from './ranged-dot-daylight.controls';
 import { renderRangedDotDaylightPreview } from './ranged-dot-daylight.preview';
 
 const contract = createPreviewControlContract();
+
 const controlled = defineControlledPreview(contract, (_values, dimensions) =>
   renderRangedDotDaylightPreview(dimensions),
 );
@@ -19,6 +20,7 @@ const RangedDotDaylight: FC<RangedDotDaylightProps> = controlled.Component;
 export default RangedDotDaylight;
 export { createPreviewControlContract } from './ranged-dot-daylight.controls';
 export const previewControls = contract.controls;
+
 export const previewSource = {
   ...controlled.source,
   datasetImports: { 'chart.data': { name: 'rangedDotDaylightData', from: './ranged-dot-daylight.data' } },

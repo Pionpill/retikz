@@ -43,6 +43,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
         ].resolve({ ...context, params: {} });
   const projections: Array<number> = [];
   let cursor: Position = [120, 0];
+
   for (const command of geometry.commands) {
     if (command.kind === 'move') {
       cursor = command.to;
@@ -65,6 +66,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
       );
     }
   }
+
   const supportX = Math.max(...projections);
   const label = {
     placement: 'outside' as const,
@@ -73,6 +75,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
     textColor: 'currentColor',
     font: { size: 16 },
   };
+
   return (
     <Layout
       width={440}

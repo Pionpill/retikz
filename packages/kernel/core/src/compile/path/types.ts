@@ -31,7 +31,7 @@ export type PathEmitOptions = {
   scopeChain?: ReadonlyArray<Transform>;
   /**
    * paint 解析器（IRPaint → resourceRef + 登记资源）；缺省时纯色透传、IRPaint 退化为无填充 / currentColor
-   * @default 透传字符串；无法解析的 spec 变为 undefined
+   * @default undefined
    */
   resolvePaint?: PaintResolver;
   /** resolving 阶段绑定的 target geometry view（由 emit context 提供） */

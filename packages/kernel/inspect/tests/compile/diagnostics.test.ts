@@ -41,6 +41,7 @@ describe('Inspection diagnostics', () => {
       selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options: true }] },
       compileOptions: { composites: [composite] },
     });
+
     expect(result.diagnostics).toHaveLength(2);
     expect(result.diagnostics[0]).toMatchObject({
       origin: { stage: 'inspect', inspector: key, owner },

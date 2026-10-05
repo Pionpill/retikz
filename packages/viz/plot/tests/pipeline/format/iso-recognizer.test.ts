@@ -102,12 +102,14 @@ describe('ISO 识别器扩宽（contract）— 交互（经 lowering / format）
   it('declared_temporal_space_value_parses', () => {
     // 声明 temporal + 空格带时区值 → 经 lowering 得正确 epoch ms
     const spec = specWithField({ name: 'v', type: 'temporal' });
+
     expect(parseFirst(spec, { d: [{ v: '2024-01-01 12:00:00Z', y: 1 }] })).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
   });
 
   it('format_iso_accepts_space', () => {
     // format:'iso' 经 coerceTimestamp，自动继承空格分隔
     const spec = specWithField({ name: 'v', type: 'temporal', format: 'iso' });
+
     expect(parseFirst(spec, { d: [{ v: '2024-01-01 12:00:00Z', y: 1 }] })).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
   });
 });

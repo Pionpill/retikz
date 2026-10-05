@@ -15,18 +15,23 @@ import { DocTab, DocTabs } from '@/modules/docs/components/mdx-content/doc-tabs'
 import { DocHostContext } from '@/modules/docs/components/mdx-content/doc-tabs/context';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
 const roots: Array<Root> = [];
+
 const render = async (children: ReactNode) => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
   roots.push(root);
   await act(() => root.render(children));
+
   return container;
 };
+
 const selectTab = async (container: Element, label: string) => {
   const button = Array.from(container.querySelectorAll('[role="tab"]')).find(item => item.textContent === label);
   if (!button) throw new Error('Missing tab: ' + label);
+
   await act(() => {
     button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
   });
@@ -51,6 +56,7 @@ describe('MDX DocTabs / DocSteps', () => {
 
     const tabsList = container.querySelector('[role="tablist"]');
     const trigger = container.querySelector('[role="tab"]');
+
     expect(tabsList?.getAttribute('data-variant')).toBe('default');
     expect(trigger?.className).not.toContain('rounded-none');
   });
@@ -95,13 +101,16 @@ describe('MDX DocTabs / DocSteps', () => {
       <Content components={{ DocTabs, DocTab, DocSteps, DocStep, Notice: () => <aside>Notice body</aside> }} />,
     );
     const panel = container.querySelector('[role="tabpanel"][data-state="active"]');
+
     expect(panel?.querySelectorAll('ol > li')).toHaveLength(2);
     expect(panel?.querySelector('strong')?.textContent).toBe('bold');
     expect(panel?.querySelector('a')?.getAttribute('href')).toBe('/guide');
     expect(panel?.querySelectorAll('ul > li')).toHaveLength(2);
     expect(panel?.querySelector('pre code')?.textContent).toBe(code + '\n');
     expect(panel?.querySelector('aside')?.textContent).toBe('Notice body');
+
     await selectTab(container, 'Beta');
+
     expect(container.querySelector('[role="tabpanel"][data-state="active"]')?.textContent).toContain('Other branch.');
     expect(container.textContent).not.toContain('Notice body');
   });
@@ -136,15 +145,23 @@ describe('MDX DocTabs / DocSteps', () => {
         </DocHostContext.Provider>
       );
     };
+
     const container = await render(<Host />);
+
     expect(container.querySelectorAll('[role="tab"][aria-selected="true"]')).toHaveLength(3);
+
     const groups = container.querySelectorAll('[data-host-tabs]');
+
     expect(groups[0].textContent).toContain('Vanilla body');
     expect(groups[1].textContent).toContain('Vanilla body');
+
     await selectTab(groups[0], 'React');
+
     expect(groups[0].textContent).toContain('React body');
     expect(groups[1].textContent).toContain('React body');
+
     await selectTab(container, 'Canvas');
+
     expect(container.querySelector('[data-independent]')?.textContent).toContain('Canvas body');
     expect(groups[1].textContent).toContain('React body');
   });

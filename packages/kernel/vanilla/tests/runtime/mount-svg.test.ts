@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToSvgString } from '../../src';
 import { mountSvg } from '../../src/dom';
 
-/**
+/*
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）
  */
 const sceneOf = (text = 'A'): ReturnType<typeof compileToScene>['scene'] => {
@@ -27,11 +27,15 @@ describe('@retikz/vanilla mountSvg', () => {
       mode === 'static'
         ? mountSvg(container, ir, { runtime: { mode } })
         : mountSvg(container, ir, { runtime: { mode } });
+
     expect(view.root.getAttribute('width')).toBe('240');
     expect(view.root.getAttribute('height')).toBe('120');
+
     view.update({ ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } });
+
     expect(view.root.getAttribute('width')).toBe('300');
     expect(view.root.getAttribute('height')).toBe('100');
+
     view.dispose();
   });
 
@@ -39,6 +43,7 @@ describe('@retikz/vanilla mountSvg', () => {
     const c = document.createElement('div');
     const view = mountSvg(c, sceneOf());
     const svg = c.querySelector('svg');
+
     expect(svg).toBeInstanceOf(SVGSVGElement);
     expect(view.root).toBe(svg);
     expect(svg!.querySelector('text, rect, g')).not.toBeNull();
@@ -50,6 +55,7 @@ describe('@retikz/vanilla mountSvg', () => {
     const r1 = view.root;
     const vb1 = r1.getAttribute('viewBox');
     view.update(sceneOf('AAAAAAAAAAAAAAA')); // 更宽文本 → viewBox 变
+
     expect(view.root).toBe(r1); // 元素恒等、未被替换
     expect(c.querySelectorAll('svg').length).toBe(1); // 没多挂一个
     expect(view.root.getAttribute('viewBox')).not.toBe(vb1); // root attrs 已更新
@@ -65,11 +71,13 @@ describe('@retikz/vanilla mountSvg', () => {
     const view = mountSvg(c, ir, { compile: { artifacts: { nodeLayouts: true } } });
 
     expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'first' } }]);
+
     view.update({
       version: 1,
       type: 'scene',
       children: [{ type: 'node', id: 'second', position: [0, 0], text: 'B' }],
     });
+
     expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'second' } }]);
   });
 
@@ -101,6 +109,7 @@ describe('@retikz/vanilla mountSvg', () => {
     const c = document.createElement('div');
     mountSvg(c, scene, { output: { idPrefix: 'fig' } });
     const domHtml = c.querySelector('svg')!.outerHTML;
+
     expect(str).toContain('retikz-paint-fig-');
     expect(domHtml).toContain('retikz-paint-fig-');
   });
@@ -112,8 +121,11 @@ describe('@retikz/vanilla mountSvg', () => {
   it('dispose-clears：dispose 后容器清空、再调不抛', () => {
     const c = document.createElement('div');
     const view = mountSvg(c, sceneOf());
+
     expect(c.querySelector('svg')).not.toBeNull();
+
     view.dispose();
+
     expect(c.querySelector('svg')).toBeNull();
     expect(() => view.dispose()).not.toThrow();
   });
@@ -121,6 +133,7 @@ describe('@retikz/vanilla mountSvg', () => {
   it('empty-scene-mounts：空 scene 挂出空 <svg>、不抛', () => {
     const c = document.createElement('div');
     const empty: Scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
+
     expect(() => mountSvg(c, empty)).not.toThrow();
     expect(c.querySelector('svg')).not.toBeNull();
   });

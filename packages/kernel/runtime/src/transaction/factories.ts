@@ -38,20 +38,34 @@ export type RuntimeSourceCommandExecutor = Readonly<{
   ) => RuntimeSourceExecutionResult<void>;
   /** update 携带的 change hint base revision */
   changeSetBaseRevision?: RuntimeRevision;
-  /** 以 concrete source read 类型创建 revision-bound Snapshot */
+  /**
+   * 以 concrete source read 类型创建 revision-bound Snapshot
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   snapshot: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     prepared: RuntimePreparedSourceValue<unknown, unknown>,
     revision: RuntimeRevision,
   ) => RuntimeSnapshot<TRead>;
-  /** 读取 concrete source change hint */
+  /**
+   * 读取 concrete source change hint
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   changeSet: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeChangeSet<TChange> | undefined;
 }>;
 
 const runtimeChangeSets = new WeakSet<object>();
+
 const runtimeSourceCommands = new WeakSet<object>();
+
 const runtimeSourceCommandExecutors = new WeakMap<object, RuntimeSourceCommandExecutor>();
 
 /** 判断一个值是否是合法 Runtime revision number */
@@ -63,6 +77,7 @@ export const createRuntimeRevision = (value: number): RuntimeRevision => {
   if (!isRuntimeRevision(value)) {
     throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: value });
   }
+
   return value;
 };
 
@@ -71,9 +86,11 @@ export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevi
   if (!isRuntimeRevision(current)) {
     throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: current });
   }
+
   if (current === Number.MAX_SAFE_INTEGER) {
     throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionExhausted, phase: 'revision', cause: current });
   }
+
   return createRuntimeRevision(current + 1);
 };
 
@@ -81,7 +98,10 @@ export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevi
 export const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<unknown> =>
   typeof value === 'object' && value !== null && runtimeChangeSets.has(value);
 
-/** 创建复制并冻结 changes 容器的 revision-bound change hint */
+/**
+ * 创建复制并冻结 changes 容器的 revision-bound change hint
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export const createRuntimeChangeSet = <TChange>(
   baseRevision: RuntimeRevision,
   changes: ReadonlyArray<TChange>,
@@ -93,11 +113,13 @@ export const createRuntimeChangeSet = <TChange>(
       cause: baseRevision,
     });
   }
+
   const changeSet = Object.freeze({
     baseRevision,
     changes: Object.freeze([...changes]),
   }) as RuntimeChangeSet<TChange>;
   runtimeChangeSets.add(changeSet);
+
   return changeSet;
 };
 
@@ -140,6 +162,7 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
           cause: requestedSource,
         });
       }
+
       return Object.freeze({ revision, value: prepared.read });
     },
     changeSet: (
@@ -153,13 +176,20 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
           cause: requestedSource,
         });
       }
+
       return changeSet;
     },
   });
   return typedExecutor as unknown as RuntimeSourceCommandExecutor;
 };
 
-/** 在 concrete source 泛型仍可见时创建初始 Snapshot command */
+/**
+ * 在 concrete source 泛型仍可见时创建初始 Snapshot command
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
@@ -168,10 +198,17 @@ export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   const executor = createRuntimeSourceCommandExecutor(source, value);
   runtimeSourceCommands.add(command);
   runtimeSourceCommandExecutors.set(command, executor);
+
   return command;
 };
 
-/** 在 concrete source 泛型仍可见时创建更新 Snapshot command */
+/**
+ * 在 concrete source 泛型仍可见时创建更新 Snapshot command
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
@@ -185,10 +222,12 @@ export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
       cause: changeSet,
     });
   }
+
   const command = Object.freeze({ source, kind: 'update' as const }) as unknown as RuntimeSourceUpdate;
   const executor = createRuntimeSourceCommandExecutor(source, value, changeSet);
   runtimeSourceCommands.add(command);
   runtimeSourceCommandExecutors.set(command, executor);
+
   return command;
 };
 
@@ -203,6 +242,7 @@ export const getRuntimeSourceCommandExecutor = (
       cause: command,
     });
   }
+
   const executor = runtimeSourceCommandExecutors.get(command);
   if (executor === undefined) {
     throw new RetikzRuntimeError({
@@ -212,5 +252,6 @@ export const getRuntimeSourceCommandExecutor = (
       cause: command,
     });
   }
+
   return executor;
 };

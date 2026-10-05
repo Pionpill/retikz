@@ -56,6 +56,7 @@ const getGithubSlugger = async () => {
   const requireFromDocs = createRequire(path.join(process.cwd(), 'apps/docs/package.json'));
   const modulePath = requireFromDocs.resolve('github-slugger');
   ({ default: GithubSlugger } = await import(pathToFileURL(modulePath).href));
+
   return GithubSlugger;
 };
 
@@ -93,6 +94,7 @@ const collectInternalLinks = content => {
   for (const match of source.matchAll(/\]\((\/[^)\s]+)(?:\s+['"][^'"]*['"])?\)/g)) {
     links.push(match[1]);
   }
+
   for (const match of source.matchAll(/\bhref\s*=\s*['"](\/[^'"]+)['"]/g)) {
     links.push(match[1]);
   }
@@ -157,8 +159,10 @@ let TypeScript;
 
 const getTypeScript = () => {
   if (TypeScript) return TypeScript;
+
   const requireFromRoot = createRequire(path.join(process.cwd(), 'package.json'));
   TypeScript = requireFromRoot('typescript');
+
   return TypeScript;
 };
 
@@ -236,6 +240,7 @@ const collectDocsData = async repoRoot => {
       } else if (showcase !== undefined) {
         dataErrors.push(`${dataLabel}: ${pageRoute}.meta.layout: "showcase" is required by showcase metadata`);
       }
+
       if (dataErrors.length > 0) showcaseDataErrors.set(pageRoute, dataErrors);
 
       for (const child of arrayProperty(ts, page, 'children')) visitPage(child, pageRoute);
@@ -251,6 +256,7 @@ const collectDocsData = async repoRoot => {
           for (const page of arrayProperty(ts, section, 'pages')) visitPage(page, sectionBase);
         }
       }
+
       ts.forEachChild(node, visit);
     };
 
@@ -287,10 +293,12 @@ const scanBalanced = (source, start, open, close) => {
       else if (character === quote) quote = undefined;
       continue;
     }
+
     if (character === "'" || character === '"' || character === '`') {
       quote = character;
       continue;
     }
+
     if (character === open) depth += 1;
     if (character === close) {
       depth -= 1;
@@ -313,6 +321,7 @@ const collectShowcaseTags = content => {
     let quote;
     let escaped = false;
     let end = -1;
+
     for (let index = start; index < content.length; index += 1) {
       const character = content[index];
       if (quote !== undefined) {
@@ -321,10 +330,12 @@ const collectShowcaseTags = content => {
         else if (character === quote) quote = undefined;
         continue;
       }
+
       if (character === "'" || character === '"' || character === '`') {
         quote = character;
         continue;
       }
+
       if (character === '{') braceDepth += 1;
       if (character === '}') braceDepth -= 1;
       if (character === '>' && braceDepth === 0) {
@@ -344,8 +355,10 @@ const collectShowcaseTags = content => {
 const expressionAttribute = (tag, name) => {
   const match = new RegExp(`\\b${name}\\s*=\\s*\\{`).exec(tag);
   if (!match) return undefined;
+
   const start = match.index + match[0].length - 1;
   const end = scanBalanced(tag, start, '{', '}');
+
   return end < 0 ? undefined : tag.slice(start + 1, end);
 };
 
@@ -359,6 +372,7 @@ const parseExpression = expression => {
     ts.ScriptKind.TS,
   );
   const statement = sourceFile.statements.find(ts.isVariableStatement);
+
   return statement?.declarationList.declarations[0]?.initializer;
 };
 
@@ -378,6 +392,7 @@ const collectPreviewFiles = (ts, preview, fieldPath) => {
       files.push(element.text);
       continue;
     }
+
     if (ts.isObjectLiteralExpression(element)) {
       const file = stringProperty(ts, element, 'file');
       if (file !== undefined) {
@@ -385,6 +400,7 @@ const collectPreviewFiles = (ts, preview, fieldPath) => {
         continue;
       }
     }
+
     errors.push(`${fieldPath}[${index}]: static string or { file } is required`);
   }
 
@@ -411,6 +427,7 @@ const collectShowcaseExamples = content => {
         errors.push(`${examplePath}: static object is required`);
         continue;
       }
+
       const preview = objectProperty(ts, element, 'preview');
       if (preview === undefined) {
         errors.push(`${examplePath}.preview: static object is required`);
@@ -448,6 +465,7 @@ const collectShowcaseExamples = content => {
 
 const constObjectValues = (ts, sourceFile, name) => {
   const values = new Set();
+
   const visit = node => {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name && node.initializer) {
       const initializer = ts.isAsExpression(node.initializer) ? node.initializer.expression : node.initializer;
@@ -457,9 +475,12 @@ const constObjectValues = (ts, sourceFile, name) => {
         }
       }
     }
+
     ts.forEachChild(node, visit);
   };
+
   visit(sourceFile);
+
   return values;
 };
 
@@ -470,6 +491,7 @@ const collectShowcaseTaxonomy = async repoRoot => {
   const ts = getTypeScript();
   const source = await readFile(file, 'utf8');
   const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+
   return {
     family: constObjectValues(ts, sourceFile, 'ShowcaseFamily'),
     usage: constObjectValues(ts, sourceFile, 'ShowcaseUsage'),
@@ -492,6 +514,7 @@ const previewCandidates = (directory, id, language) => {
 
 const localizedPreviewCandidates = (directory, id, language) => {
   if (/\.[cm]?[jt]sx?$/.test(id) || id.endsWith('.json')) return [path.join(directory, id)];
+
   return [
     path.join(directory, `${id}.tsx`),
     path.join(directory, `${id}.demo.tsx`),
@@ -519,11 +542,13 @@ const validateFile = async ({ contentsRoot, file, registeredRoutes, repoRoot, sh
       errors.push(`${label}: internal route does not exist: ${route}`);
       continue;
     }
+
     if (resolved.anchor) {
       if (!resolved.target) {
         errors.push(`${label}: anchor target has no MDX source: ${route}`);
         continue;
       }
+
       const targetContent = await readFile(resolved.target, 'utf8');
       const anchors = await collectAnchorIds(targetContent);
       if (!anchors.has(resolved.anchor)) {
@@ -545,9 +570,11 @@ const validateFile = async ({ contentsRoot, file, registeredRoutes, repoRoot, sh
     if (startLine < 1) {
       errors.push(`${label}: SourceLinks startLine must be >= 1: ${source.path}`);
     }
+
     if (endLine < startLine) {
       errors.push(`${label}: SourceLinks endLine precedes startLine: ${source.path}`);
     }
+
     if (endLine > lineCount) {
       errors.push(`${label}: SourceLinks endLine ${endLine} exceeds ${lineCount} lines: ${source.path}`);
     }
@@ -583,14 +610,17 @@ const validateFile = async ({ contentsRoot, file, registeredRoutes, repoRoot, sh
       if (!(await anyExists(localizedPreviewCandidates(directory, showcase.preview, language)))) {
         errors.push(`${label}: showcase.preview: demo does not exist: ${showcase.preview}`);
       }
+
       if (!examples.some(example => example.id === showcase.preview || example.files[0] === showcase.preview)) {
         errors.push(`${label}: showcase.preview: does not match a ShowcaseGallery example: ${showcase.preview}`);
       }
     }
 
     if (examples.length === 0) errors.push(`${label}: ShowcaseGallery.examples: no static examples found`);
+
     for (const example of examples) {
       const exampleIndex = example.index;
+
       for (let fileIndex = 0; fileIndex < example.files.length; fileIndex += 1) {
         const id = example.files[fileIndex];
         const candidates =
@@ -630,9 +660,11 @@ const comparePeers = (repoRoot, directory, zh, en) => {
   if (zhLevels !== enLevels) {
     errors.push(`${label}: bilingual heading levels differ (${zhLevels} vs ${enLevels})`);
   }
+
   if (zh.previews.length !== en.previews.length) {
     errors.push(`${label}: bilingual ComponentPreview counts differ (${zh.previews.length} vs ${en.previews.length})`);
   }
+
   if (zh.sourceLinks.length !== en.sourceLinks.length) {
     errors.push(`${label}: bilingual SourceLinks counts differ (${zh.sourceLinks.length} vs ${en.sourceLinks.length})`);
   }
@@ -662,6 +694,7 @@ export const auditDocs = async ({ contentsRoot, repoRoot, scope = '.' }) => {
     if (!hasZh) {
       errors.push(`${relativeLabel(repoRoot, directory)}: missing bilingual peer index.zh.mdx`);
     }
+
     if (!hasEn && !isBlog) {
       errors.push(`${relativeLabel(repoRoot, directory)}: missing bilingual peer index.en.mdx`);
     }
@@ -687,10 +720,12 @@ export const auditDocs = async ({ contentsRoot, repoRoot, scope = '.' }) => {
 
 const parseCli = argv => {
   let scope = '.';
+
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === '--scope') scope = argv[index + 1] ?? scope;
     if (argv[index].startsWith('--scope=')) scope = argv[index].slice(8);
   }
+
   return { scope };
 };
 
@@ -706,8 +741,10 @@ const runCli = async () => {
 
   if (result.errors.length > 0) {
     console.error(`Docs integrity failed (${result.errors.length} issues):`);
+
     for (const error of result.errors) console.error(`- ${error}`);
     process.exitCode = 1;
+
     return;
   }
 

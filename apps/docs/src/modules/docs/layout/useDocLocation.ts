@@ -21,6 +21,7 @@ export const parseDocRoutePathname = (pathname: string): DocRouteParams => {
   if (segments.length === 1) return { moduleId };
   if (segments.length === 2) return { moduleId, firstSeg: first };
   if (segments.length === 3) return { moduleId, sectionId: first, pageId: second };
+
   return { moduleId, sectionId: first, pageId: second, subPageId: third };
 };
 
@@ -31,12 +32,14 @@ export const parseDocRoutePathname = (pathname: string): DocRouteParams => {
 export const resolveDocLocation = (params: DocRouteParams): DocLocation | null => {
   const { moduleId, sectionId, pageId, subPageId, firstSeg } = params;
   if (!moduleId || (!isDocModuleId(moduleId) && moduleId !== DOC_ABOUT_ID)) return null;
+
   const sections = getSectionsByArea(moduleId);
   if (firstSeg) {
     const groupedSection = sections.find(section => section.label && section.id === firstSeg);
     if (groupedSection) return { moduleId, sectionId: firstSeg, pageId: null };
     return { moduleId, sectionId: null, pageId: firstSeg };
   }
+
   if (sectionId && pageId) {
     const groupedSection = sections.find(section => section.label && section.id === sectionId);
     if (groupedSection) return { moduleId, sectionId, pageId, subPageId };
@@ -49,6 +52,7 @@ export const resolveDocLocation = (params: DocRouteParams): DocLocation | null =
 
     return { moduleId, sectionId, pageId, subPageId };
   }
+
   return null;
 };
 

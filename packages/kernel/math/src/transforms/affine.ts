@@ -46,10 +46,12 @@ export const isFiniteNonSingularAffine = (matrix: AffineMatrix): boolean => {
  */
 export const getAffineSimilarityScale = (matrix: AffineMatrix): number | undefined => {
   if (!isFiniteNonSingularAffine(matrix)) return undefined;
+
   const firstLength = Math.hypot(matrix[0], matrix[1]);
   const secondLength = Math.hypot(matrix[2], matrix[3]);
   const dot = matrix[0] * matrix[2] + matrix[1] * matrix[3];
   const tolerance = 1e-9 * Math.max(1, firstLength, secondLength);
   if (Math.abs(firstLength - secondLength) > tolerance || Math.abs(dot) > tolerance) return undefined;
+
   return firstLength;
 };

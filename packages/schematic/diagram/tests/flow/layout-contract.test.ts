@@ -62,11 +62,13 @@ describe('Flow Layout Definition contract', () => {
       capabilities: { ...base.capabilities, routing: [{ kind: 'bend' as const }] },
       defaults: { ...base.defaults, routing: { kind: 'bend' as const } },
     };
+
     expect(resolveFlowLayoutRegistry({ flowLayouts: [bend] }).layouts.get('custom')).toBe(bend);
   });
 
   it.each([-1, NaN, Infinity])('rejects invalid physical-axis spacing: %s', vertical => {
     const definition = validDefinition();
+
     expect(() =>
       resolveFlowLayoutRegistry({
         flowLayouts: [
@@ -159,9 +161,11 @@ describe('Flow Layout Definition contract', () => {
   ])('rejects %s during the shared registry validation path', (_label, definition) => {
     try {
       resolveFlowLayoutRegistry({ flowLayouts: [definition] });
+
       expect.unreachable('Expected invalid Flow Layout Definition');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionInvalid);
       expect(error.details).toMatchObject({ capability: 'flow-layout', key: definition.name });
     }

@@ -7,16 +7,19 @@ describe('GuideSchema contract', () => {
   // Happy path
   it('axis_x_valid', () => {
     const guide = { type: 'axis', dimension: 'x' };
+
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
   it('axis_y_full_valid', () => {
     const guide = { type: 'axis', dimension: 'y', ticks: { count: 5 }, grid: true, tickLabels: false, id: 'yAxis' };
+
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
   it('axis_with_grid_valid', () => {
     const guide = { type: 'axis', dimension: 'x', grid: true };
+
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -85,6 +88,7 @@ describe('GuideSchema contract', () => {
   // 边界
   it('axis_omits_optional_valid', () => {
     const guide = { type: 'axis', dimension: 'y' };
+
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -101,6 +105,7 @@ describe('GuideSchema contract', () => {
 
   it('axis_custom_dimension_name_valid', () => {
     const guide = { type: 'axis', dimension: 'angle' };
+
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -153,6 +158,7 @@ describe('GuideSchema contract', () => {
       tickLabels: { format: '.1f' },
       id: 'yA',
     };
+
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 
@@ -165,6 +171,7 @@ describe('GuideSchema contract', () => {
       line: { stroke: '#333', dashPattern: [4, 2], dashOffset: 1.5 },
       ticks: { values: [0, 10], length: 6 },
     };
+
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -189,6 +196,7 @@ describe('GuideSchema contract', () => {
         },
       },
     };
+
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -209,6 +217,7 @@ describe('GuideSchema contract', () => {
         mark: { kind: 'triangle', size: 6, orientation: 'outward', fill: 'currentColor' },
       },
     };
+
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -271,6 +280,7 @@ describe('GuideSchema contract', () => {
         dimension: 'y',
         title: { text: 'y', orientation },
       };
+
       expect(AxisGuideSchema.parse(guide)).toEqual(guide);
     }
   });
@@ -338,6 +348,7 @@ describe('GuideSchema contract', () => {
         mark: { kind: 'custom', shape: { type: 'polygon', params: { sides: 5 } }, width: 8, height: 6 },
       },
     };
+
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -369,6 +380,7 @@ describe('GuideSchema contract', () => {
         },
       },
     };
+
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -401,6 +413,7 @@ describe('GuideSchema contract', () => {
         },
       },
     };
+
     expect(() => PlotSchema.parse(spec)).toThrow();
   });
 
@@ -540,6 +553,7 @@ describe('GuideSchema plot dimensions', () => {
 
   it('axis_xyz_roundtrip', () => {
     const guide = { type: 'axis', dimension: 'x', grid: true, tickLabels: false, id: 'xAxis' };
+
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 });
@@ -549,6 +563,7 @@ describe('LegendGuideSchema contract', () => {
   it('legend_minimal_valid', () => {
     // 最小合法 legend：仅 type + channel
     const guide = { type: 'legend', channel: 'color' };
+
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -564,6 +579,7 @@ describe('LegendGuideSchema contract', () => {
       tickLabels: { format: '.1f' },
       style: { swatchSize: 12, label: { textColor: '#334155' } },
     };
+
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -576,6 +592,7 @@ describe('LegendGuideSchema contract', () => {
   it('legend_each_position_valid', () => {
     for (const position of ['right', 'left', 'top', 'bottom'] as const) {
       const guide = { type: 'legend', channel: 'color', position };
+
       expect(LegendGuideSchema.parse(guide)).toEqual(guide);
     }
   });
@@ -583,6 +600,7 @@ describe('LegendGuideSchema contract', () => {
   // 边界：可选字段省略
   it('legend_omits_optional_valid', () => {
     const guide = { type: 'legend', channel: 'opacity' };
+
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -593,6 +611,7 @@ describe('LegendGuideSchema contract', () => {
 
   it('legend_custom_channel_name_valid', () => {
     const guide = { type: 'legend', channel: 'intensity' };
+
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
@@ -614,7 +633,9 @@ describe('LegendGuideSchema contract', () => {
 
   it('legend_empty_title_reports_legend_message', () => {
     const result = LegendGuideSchema.safeParse({ type: 'legend', channel: 'color', title: '' });
+
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues.some(issue => issue.message.includes('legend title'))).toBe(true);
     }
@@ -635,13 +656,16 @@ describe('GuideSchema discriminated union contract', () => {
   // union 判别：legend 合法
   it('union_accepts_legend', () => {
     const guide = { type: 'legend', channel: 'color', position: 'right' };
+
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
   // type 缺失 → union 无法判别 → 报错可定位到 type
   it('union_missing_type_rejected_at_type_path', () => {
     const result = GuideSchema.safeParse({ channel: 'color' });
+
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues.some(issue => issue.path.includes('type'))).toBe(true);
     }
@@ -650,7 +674,9 @@ describe('GuideSchema discriminated union contract', () => {
   // type 拼错 → union 无合法成员 → 报错可定位
   it('union_bad_type_rejected', () => {
     const result = GuideSchema.safeParse({ type: 'lgend', channel: 'color' });
+
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues.some(issue => issue.path.includes('type'))).toBe(true);
     }
@@ -659,7 +685,9 @@ describe('GuideSchema discriminated union contract', () => {
   // zod parse 错误路径：legend 缺 channel → issue.path 定位到 channel
   it('union_legend_missing_channel_path', () => {
     const result = GuideSchema.safeParse({ type: 'legend' });
+
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues.some(issue => issue.path.includes('channel'))).toBe(true);
     }
@@ -677,12 +705,14 @@ describe('GuideSchema discriminated union contract', () => {
       ticks: { count: 5 },
       tickLabels: false,
     };
+
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 
   // JSON round-trip：axis（回归 union 后仍保形）
   it('axis_roundtrip_through_union', () => {
     const guide = { type: 'axis', dimension: 'y', ticks: { count: 4 }, grid: true };
+
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 });

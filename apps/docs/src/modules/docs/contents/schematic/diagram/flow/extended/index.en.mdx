@@ -93,15 +93,16 @@ For avoidance, normally try automatic bend, quadratic and cubic routing in that 
 
 `FlowLayout` is a container without a visible shell. `kind="linear"` places direct children in declaration order along one direction; `kind="grid"` aligns them in explicit rows and columns. A Layout draws no border or title and cannot be a Relation endpoint.
 
-| Property            | Values                                                  | Purpose                                                                 |
-| ------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `kind`              | `"linear"`, `"grid"`                                    | Selects one-dimensional placement or row and column alignment           |
-| `direction`         | `up`, `right`, `down`, `left`                           | Places direct children in order along this direction in Linear          |
-| `gap`               | Nonnegative number; Grid also accepts `{ row, column }` | Sets adjacent spacing in Linear or row and column track gaps in Grid    |
-| `itemWidth`         | `"match-largest"` or a positive number; optional        | Matches the largest natural width or fixes the width of direct Entities |
-| `placements`        | Matrix or mapping from child id to row and column       | Assigns a cell to each direct child in Grid                             |
-| `reserveLabelSpace` | Boolean; `true` by default                              | Expands Grid gaps for Relation labels                                   |
-| `excludeFromBounds` | `Array<string>`; exclude none by default                | Omits direct children from the footprint reported to the parent         |
+| Property            | Values                                                        | Purpose                                                              |
+| ------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `kind`              | `"linear"`, `"grid"`                                          | Selects one-dimensional placement or row and column alignment        |
+| `direction`         | `up`, `right`, `down`, `left`                                 | Places direct children in order along this direction in Linear       |
+| `gap`               | Nonnegative number; Grid also accepts `{ row, column }`       | Sets adjacent spacing in Linear or row and column track gaps in Grid |
+| `itemWidth`         | Positive number, `match-largest`; linear also supports `fill` | Fix or match Entity widths; fill shares the allocated extra width    |
+| `containerWidth`    | `match-largest`; vertical linear only                         | Allocate the largest natural width to direct horizontal containers   |
+| `placements`        | Matrix or mapping from child id to row and column             | Assigns a cell to each direct child in Grid                          |
+| `reserveLabelSpace` | Boolean; `true` by default                                    | Expands Grid gaps for Relation labels                                |
+| `excludeFromBounds` | `Array<string>`; exclude none by default                      | Omits direct children from the footprint reported to the parent      |
 
 The example contains only Input, Check, and Output. Switch between left and right and change the gap to see that Layout preserves their declared order. There is no Relation between them: fixed placement does not depend on a connection. `direction` also supports up and down.
 
@@ -119,6 +120,23 @@ Set `itemWidth` when the edges of a step group should align. `"match-largest"` m
   size="md"
   caption="Switch between vertical and horizontal placement and natural, matched, or fixed widths to see two step edges align and long text wrap."
 />
+
+### Equal-width sibling containers
+
+Set `containerWidth="match-largest"` on a vertical `FlowLayout` to give its direct containers the largest natural width. Each child is a horizontal Entity row, or a Group containing exactly one such row. A Group passes its available width after caption and padding insets to that row.
+
+Set `itemWidth="fill"` on a receiving row to share additional space equally among non-fixed nodes, preserving their natural width differences. A surplus of 90 gives each of three eligible nodes 30 more units. Unlike match-largest, fill does not make final node widths equal. Nodes with an effective `layout.width` stay fixed; gaps and label reservations remain unchanged.
+
+<ComponentPreview
+  files={['flow-container-width', 'flow-container-width.preview.tsx']}
+  defaultSourceFile="flow-container-width.preview.tsx"
+  size="xl"
+  caption="Toggle equal container widths, then compare shell-only expansion with node growth. Disabling equal widths also disables fill in this example."
+/>
+
+This does not align columns across rows or scale fonts and shapes. Fill requires a parent allocation. Grid, multi-root Groups, excluded participating children, or positive free space with only fixed nodes fail explicitly. Omit fill to align container shells while retaining natural content sizes.
+
+### Grid alignment
 
 Use Grid when nodes in different rows must align in pairs. The recommended `placements` form is a matrix: the outer index is the zero-based row, the inner index is the column, each cell contains a direct child id, and `null` leaves a cell empty. An id-keyed `{ childId: { row, column } }` mapping is also supported. React and Vanilla use the same `placements`; Vanilla `children` controls only containment and paint order. Every direct child needs one cell; overlaps, spans, and references to descendants in other containers are invalid. Empty tracks create no placeholder elements. Columns share center x, rows share center y, and nodes retain their measured sizes.
 
@@ -286,6 +304,20 @@ These are the members used to combine the features on this page. See the [API re
       required: true,
       description:
         'Selects one-dimensional placement or physical row and column alignment for direct children; neither Layout has a visible shell.',
+    },
+    {
+      name: 'FlowLayout.containerWidth',
+      kind: 'property',
+      type: '"match-largest"',
+      description:
+        'A vertical linear Layout allocates the largest natural width to its direct horizontal rows or Groups with one horizontal content root.',
+    },
+    {
+      name: 'FlowLayout.itemWidth',
+      kind: 'property',
+      type: 'number | "match-largest" | "fill"',
+      description:
+        'A number fixes direct Entity widths; match-largest equalizes final widths; fill shares free width in an allocated horizontal row while preserving natural width differences.',
     },
     {
       name: 'FlowLayout.placements',

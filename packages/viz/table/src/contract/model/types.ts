@@ -6,30 +6,30 @@ import type {
   IRTableCellAppearance,
   IRTableCellBorders,
   IRTableCellPayload,
-  TableCellFitValue,
-  TableCellLocationValue,
-  TableCellOverflowValue,
-  TableCellRoleValue,
-  TableHorizontalAlignmentValue,
-  TableRowKindValue,
-  TableVerticalAlignmentValue,
+  TableCellFit,
+  TableCellLocation,
+  TableCellOverflow,
+  TableCellRole,
+  TableHorizontalAlignment,
+  TableRowKind,
+  TableVerticalAlignment,
 } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { TableCellSource } from '../structure';
 
-/** canonical Table row */
+/** 规范化后的表格行 */
 export type SemanticTableRow = Readonly<{
   /** 可选稳定 row id */
   id?: string;
   /** canonical 声明顺序 */
   index: number;
   /** row 语义类型 */
-  kind: TableRowKindValue;
+  kind: TableRowKind;
   /** detail row 对应的外部数据索引 */
   sourceIndex?: number;
 }>;
 
-/** canonical Table column */
+/** 规范化后的表格列 */
 export type SemanticTableColumn = Readonly<{
   /** 可选稳定 column id */
   id?: string;
@@ -52,20 +52,20 @@ export type ResolvedTableCellLayout = Readonly<{
   /** Core 同源的四边 padding */
   padding: Readonly<BoundsInsets>;
   /** content box 内横向对齐 */
-  horizontalAlign: TableHorizontalAlignmentValue;
+  horizontalAlign: TableHorizontalAlignment;
   /** content box 内纵向对齐 */
-  verticalAlign: TableVerticalAlignmentValue;
+  verticalAlign: TableVerticalAlignment;
   /** 是否请求宽度约束重排 */
   wrap: boolean;
   /** 最终内容缩放策略 */
-  fit: TableCellFitValue;
+  fit: TableCellFit;
   /** 最终内容溢出策略 */
-  overflow: TableCellOverflowValue;
+  overflow: TableCellOverflow;
   /** 可选 Cell 四侧 border 候选 */
   borders?: DeepReadonly<IRTableCellBorders>;
 }>;
 
-/** canonical Table Cell */
+/** 规范化后的表格单元格 */
 export type SemanticTableCell = Readonly<{
   /** 可选稳定 Cell id */
   id?: string;
@@ -78,9 +78,9 @@ export type SemanticTableCell = Readonly<{
   /** 所属 column 的 canonical index */
   columnIndex: number;
   /** Cell 语义位置 */
-  location: TableCellLocationValue;
+  location: TableCellLocation;
   /** Cell 语义角色 */
-  roles: ReadonlyArray<TableCellRoleValue>;
+  roles: ReadonlyArray<TableCellRole>;
   /** Cell value 或直接内容 */
   payload: DeepReadonly<IRTableCellPayload>;
   /** 已解析的矩形跨度 */
@@ -93,11 +93,11 @@ export type SemanticTableCell = Readonly<{
 
 /** 所有 structure 共同输出的 canonical Table 语义模型 */
 export type SemanticTableModel = Readonly<{
-  /** canonical rows */
+  /** 规范化后的行集合 */
   rows: ReadonlyArray<SemanticTableRow>;
-  /** canonical columns */
+  /** 规范化后的列集合 */
   columns: ReadonlyArray<SemanticTableColumn>;
-  /** canonical Cells */
+  /** 规范化后的单元格集合 */
   cells: ReadonlyArray<SemanticTableCell>;
 }>;
 
@@ -109,14 +109,14 @@ export type TableCellContext = Readonly<{
   rowId?: string;
   /** 可选所属 column id */
   columnId?: string;
-  /** canonical row index */
+  /** 规范行下标 */
   rowIndex: number;
-  /** canonical column index */
+  /** 规范列下标 */
   columnIndex: number;
   /** Cell 语义位置 */
-  location: TableCellLocationValue;
+  location: TableCellLocation;
   /** Cell 语义角色 */
-  roles: ReadonlyArray<TableCellRoleValue>;
+  roles: ReadonlyArray<TableCellRole>;
   /** 可选最小来源信息 */
   source?: TableCellSource;
 }>;

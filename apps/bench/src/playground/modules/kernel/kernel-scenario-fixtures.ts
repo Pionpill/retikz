@@ -19,6 +19,7 @@ const isKernelNode = (child: IRChild): child is IRNode => child.type === 'node' 
 const updateNode = (scene: IRScene, index: number, update: (node: IRNode) => IRNode): IRScene => {
   const child = scene.children[index];
   if (!isKernelNode(child)) throw new Error('Kernel Lab fixture target must be a node');
+
   return {
     ...scene,
     children: scene.children.map((candidate, childIndex) => (childIndex === index ? update(child) : candidate)),
@@ -32,12 +33,14 @@ const createDenseNodeGridPair = (): KernelLabScenePair => {
     ...first,
     children: first.children.map(child => {
       if (!isKernelNode(child)) throw new Error('Dense node grid fixture must contain only nodes');
+
       return {
         ...child,
         style: { ...child.style, fill: child.style?.fill === '#2563eb' ? '#0891b2' : '#db2777' },
       };
     }),
   };
+
   return { first, second };
 };
 
@@ -59,6 +62,7 @@ const createMixedPrimitiveScene = (): IRScene => ({
         style: { fill: '#2563eb' },
       };
     }
+
     if (index % 3 === 1) {
       return {
         type: 'node',
@@ -69,6 +73,7 @@ const createMixedPrimitiveScene = (): IRScene => ({
         style: { fill: '#7c3aed' },
       };
     }
+
     return {
       type: 'path',
       id: `mixed-path-${index.toString().padStart(4, '0')}`,
@@ -94,6 +99,7 @@ const createMixedPrimitivesPair = (): KernelLabScenePair => {
           : child,
     ),
   };
+
   return { first, second };
 };
 
@@ -101,6 +107,7 @@ const createMixedPrimitivesPair = (): KernelLabScenePair => {
 const createComplexPath = (index: number): IRPath => {
   const x = (index % 25) * 48;
   const y = Math.floor(index / 25) * 24;
+
   return {
     type: 'path',
     id: `complex-path-${index.toString().padStart(4, '0')}`,
@@ -130,12 +137,14 @@ const createComplexPathsPair = (): KernelLabScenePair => {
       if (child.type !== 'path' || 'namespace' in child) {
         throw new Error('Complex paths fixture must contain only paths');
       }
+
       return {
         ...child,
         style: { ...child.style, stroke: child.style?.stroke === '#2563eb' ? '#0891b2' : '#db2777' },
       };
     }),
   };
+
   return { first, second };
 };
 
@@ -146,6 +155,7 @@ const createNodeDragPair = (): KernelLabScenePair => {
     ...node,
     position: [12, 312],
   }));
+
   return { first, second };
 };
 
@@ -156,6 +166,7 @@ const createNodeSelectionPair = (): KernelLabScenePair => {
     ...node,
     style: { ...node.style, fill: '#f59e0b', stroke: '#fef3c7', strokeWidth: 3 },
   }));
+
   return { first, second };
 };
 
@@ -164,6 +175,7 @@ const createNodeInsertRemovePair = (): KernelLabScenePair => {
   const first = createSimpleNodeScene(5_000);
   const removed = first.children[0];
   if (!isKernelNode(removed)) throw new Error('Node insertion fixture must contain only nodes');
+
   const inserted: IRNode = {
     ...removed,
     id: 'entity-inserted',
@@ -171,6 +183,7 @@ const createNodeInsertRemovePair = (): KernelLabScenePair => {
     style: { ...removed.style, fill: '#f59e0b' },
   };
   const second: IRScene = { ...first, children: [...first.children.slice(1), inserted] };
+
   return { first, second };
 };
 

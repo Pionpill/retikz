@@ -19,11 +19,15 @@ type Position = IRPosition;
 type CircuitLabel = IRNodeLabel | Array<IRNodeLabel>;
 
 const INK = 'currentColor';
+
 /** 线条 / 引线统一描边宽度，和 Step 1 电表保持一致 */
 const STROKE_WIDTH = 1.5;
+
 /** 各元件每侧引线长度（viewBox 单位） */
 const BATTERY_LEAD = 25.5;
+
 const SWITCH_LEAD = 28;
+
 /** 电阻 / 滑动变阻器共用（滑动变阻器整体与电阻一致，仅多一条斜箭头） */
 const RESISTOR_LEAD = 19.5;
 
@@ -35,6 +39,7 @@ const anchorPoint = (rect: Rect, x: number, y: number): Position => localToWorld
 const boxAnchor = (rect: Rect, name: string): Position | undefined => {
   const halfWidth = rect.width / 2;
   const halfHeight = rect.height / 2;
+
   switch (name) {
     case 'center':
       return anchorPoint(rect, 0, 0);
@@ -321,6 +326,7 @@ const circuitRheostat: ShapeDefinition = defineShape({
       strokeLinecap: 'round',
       opacity: style.opacity,
     };
+
     // 斜穿箭头：左下 → 右上
     yield {
       type: 'path',
@@ -333,6 +339,7 @@ const circuitRheostat: ShapeDefinition = defineShape({
       strokeLinecap: 'round',
       opacity: style.opacity,
     };
+
     // 箭头头部
     yield {
       type: 'path',

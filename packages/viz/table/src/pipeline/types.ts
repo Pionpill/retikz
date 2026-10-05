@@ -42,7 +42,10 @@ export type TableCompileArtifact = CompositeCompileArtifact<
   ZodOutput<typeof TableLayoutManifestSchema>
 >;
 
-/** 直接编译单个 Table 的分层选项 */
+/**
+ * 直接编译单个 Table 的分层选项
+ * @template TComposites 额外注册的组合定义集合，决定编译结果中可出现的扩展产物类型；默认 readonly []
+ */
 export type CompileTableOptions<TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> = Readonly<{
   /** 可选的有效 Core 根 Theme，与独立 Scope 的语义相同 */
   theme?: IRScene['theme'];
@@ -52,7 +55,10 @@ export type CompileTableOptions<TComposites extends ReadonlyArray<AnyCompositeDe
   compile?: CompileOptions<TComposites>;
 }>;
 
-/** 单次 Table compile 的 Scene、完整 artifacts 与精确根 manifest */
+/**
+ * 单次 Table compile 的 Scene、完整 artifacts 与精确根 manifest
+ * @template TComposites 额外注册的组合定义集合，决定编译结果中可出现的扩展产物类型；默认 readonly []
+ */
 export type CompileTableResult<TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> = Readonly<
   CompileResult<TableCompileArtifact | CompositeArtifactOf<TComposites[number]>> & {
     /** exact root Table artifact 的同一 immutable value 引用 */

@@ -59,6 +59,7 @@ export const AsyncLayoutContent: FC<AsyncLayoutContentProps> = props => {
     },
     [],
   );
+
   useEffect(() => {
     let active = true;
     const abort = new AbortController();
@@ -66,11 +67,13 @@ export const AsyncLayoutContent: FC<AsyncLayoutContentProps> = props => {
     let initialized = false;
     let candidate: PreparedAsyncStaticProcessing | undefined;
     let committed = false;
+
     const fail = (cause: unknown): void => {
       if (!active || signal.aborted) return;
       if (resultRef.current === undefined) setInitialError(() => cause);
       else if (process.env.NODE_ENV !== 'production') console.warn('[retikz] async Layout preparation failed', cause);
     };
+
     if (mode === 'static') {
       void prepareStaticProcessingAsync(source, { ...options, signal }, 0)
         .then(next => {
@@ -79,6 +82,7 @@ export const AsyncLayoutContent: FC<AsyncLayoutContentProps> = props => {
             next.discard();
             return;
           }
+
           next.commit();
           committed = true;
           resultRef.current = next.result;
@@ -92,6 +96,7 @@ export const AsyncLayoutContent: FC<AsyncLayoutContentProps> = props => {
             next.dispose();
             return;
           }
+
           initialized = true;
           controllerRef.current = next;
           resultRef.current = next.read();
@@ -111,13 +116,16 @@ export const AsyncLayoutContent: FC<AsyncLayoutContentProps> = props => {
           if (active) deliverDiagnostics(current, onDiagnosticRef.current);
         });
     }
+
     return () => {
       active = false;
       if (!initialized) abort.abort();
       if (candidate !== undefined && !committed) candidate.discard();
     };
   }, [source, options, mode, deliverDiagnostics]);
+
   if (initialError !== undefined) throw initialError;
   if (result === undefined) return null;
+
   return <ProcessingResultHost key={hostKey} {...hostProps} result={result} />;
 };

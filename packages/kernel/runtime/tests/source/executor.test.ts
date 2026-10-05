@@ -12,6 +12,7 @@ import {
 import { createRuntimeSourceExecutor } from '../../src/source/executor';
 
 type Input = Readonly<{ values: Array<number> }>;
+
 type Value = Readonly<{ values: ReadonlyArray<number>; handle: Readonly<{ dispose: () => void }> }>;
 
 const defineFixtureSource = (
@@ -55,6 +56,7 @@ describe('runtime owner executor', () => {
   it('没有 collector 时不自动建立 identity lookup', () => {
     const definition = defineFixtureSource();
     const prepared = createExecutor(definition).prepare(definition, { values: [] }).value;
+
     expect(prepared.identities).toBeUndefined();
   });
 
@@ -121,6 +123,7 @@ describe('runtime owner executor', () => {
     expect(() => captureExecutor.prepare(captureDefinition, { values: [] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.CaptureFailed, phase: 'capture', cause: captureCause }),
     );
+
     try {
       readExecutor.prepare(readDefinition, { values: [] });
       throw new Error('expected read failure');
@@ -146,11 +149,13 @@ describe('runtime owner executor', () => {
     const left = equalExecutor.prepare(equalDefinition, { values: [1] }).value;
     const same = equalExecutor.prepare(equalDefinition, { values: [1] }).value;
     const changed = equalExecutor.prepare(equalDefinition, { values: [2] }).value;
+
     expect(equalExecutor.compare(equalDefinition, left, same).value).toBe(true);
     expect(equalExecutor.compare(equalDefinition, left, changed).value).toBe(false);
 
     const failingLeft = failingExecutor.prepare(failingDefinition, { values: [1] }).value;
     const failingRight = failingExecutor.prepare(failingDefinition, { values: [2] }).value;
+
     expect(() => failingExecutor.compare(failingDefinition, failingLeft, failingRight)).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.CompareFailed, phase: 'compare', cause: compareCause }),
     );

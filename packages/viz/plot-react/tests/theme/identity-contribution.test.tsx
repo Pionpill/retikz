@@ -46,6 +46,7 @@ describe('Plot React InputEmbed routing', () => {
     renderToStaticMarkup(<Plot spec={spec} data={data} themeStyles={[]} plotThemeStyles={[plotThemeStyle]} />);
 
     const layout = capturedLayouts.at(-1);
+
     expect(layout?.extensions).toEqual({ themeStyles: [] });
     expect(layout).not.toHaveProperty('ir');
     expect(layout).not.toHaveProperty('composites');
@@ -63,6 +64,7 @@ describe('Plot React InputEmbed routing', () => {
     );
 
     const layout = capturedLayouts.at(-1);
+
     expect((layout!.children as { props?: { plotThemeStyles?: unknown } }).props?.plotThemeStyles).toEqual([
       plotThemeStyle,
     ]);
@@ -75,6 +77,7 @@ describe('Plot React InputEmbed routing', () => {
     renderToStaticMarkup(<Plot spec={namedSpec} data={data} x={24} y={12} />);
 
     const child = capturedLayouts.at(-1)?.children as { props?: Record<string, unknown> };
+
     expect(child.props).toMatchObject({ spec: namedSpec, data, x: 24, y: 12 });
     expect(child.props).not.toHaveProperty('composites');
   });

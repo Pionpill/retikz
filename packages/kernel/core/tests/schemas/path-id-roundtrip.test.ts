@@ -16,7 +16,9 @@ const pathWithId = (id: string): IRPath => ({
 describe('PathSchema.id 接受合法形态', () => {
   it('带非空白 id 的 path parse 成功且保留 id', () => {
     const parsed = PathSchema.safeParse(pathWithId('edge1'));
+
     expect(parsed.success).toBe(true);
+
     if (parsed.success) expect(parsed.data.id).toBe('edge1');
   });
 
@@ -28,7 +30,9 @@ describe('PathSchema.id 接受合法形态', () => {
         { type: 'step', kind: 'line', to: [10, 5] },
       ],
     });
+
     expect(parsed.success).toBe(true);
+
     if (parsed.success) expect(parsed.data.id).toBeUndefined();
   });
 });
@@ -37,6 +41,7 @@ describe('PathSchema.id JSON round-trip 保 id', () => {
   it('含 id 的 IRPath 经 JSON.stringify/parse 往返后 parse 等于原 IR', () => {
     const original = pathWithId('edge1');
     const roundTripped = PathSchema.parse(JSON.parse(JSON.stringify(original)));
+
     expect(roundTripped).toEqual(original);
     expect(roundTripped.id).toBe('edge1');
   });
@@ -45,7 +50,9 @@ describe('PathSchema.id JSON round-trip 保 id', () => {
 describe('PathSchema.id 拒绝非法形态', () => {
   it.each(['', '   '])('id=%j 为空白字符串时被拒绝并报告 id 路径', id => {
     const parsed = PathSchema.safeParse(pathWithId(id));
+
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) {
       expect(parsed.error.issues.some(issue => issue.path.includes('id'))).toBe(true);
     }

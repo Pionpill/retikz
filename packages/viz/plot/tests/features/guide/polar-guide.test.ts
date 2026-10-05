@@ -26,19 +26,25 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 /** 是否为 path 子节点 */
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';
+
 /** 是否为 node 子节点 */
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+
 /** 是否为 scope 子节点 */
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 
 /** 一个 scope 层里所有 path 子节点 */
 const pathsOf = (layer: IRScope): Array<IRPath> => layer.children.filter(isPath);
+
 /** 一个 scope 层里所有 node 子节点（刻度标签） */
 const nodesOf = (layer: IRScope): Array<IRNode> => layer.children.filter(isNode);
+
 /** 一条 path 里所有 step 的 kind */
 const stepKinds = (path: IRPath): Array<IRStep['kind']> => path.children.map(step => step.kind);
+
 /** 一条 path 里是否含某 kind 的 step */
 const hasKind = (path: IRPath, kind: IRStep['kind']): boolean => stepKinds(path).includes(kind);
+
 /** 整个 scope 层里所有 step 的 kind（跨所有 path 摊平） */
 const allKinds = (layer: IRScope): Array<IRStep['kind']> => pathsOf(layer).flatMap(stepKinds);
 
@@ -49,7 +55,9 @@ const stepTo = (step: IRStep): [number, number] => (step as { to: [number, numbe
 const segmentsOfAxis = (axisLayer: IRScope): Array<[[number, number], [number, number]]> => {
   const steps = pathsOf(axisLayer).flatMap(p => p.children);
   const segments: Array<[[number, number], [number, number]]> = [];
+
   for (let i = 0; i + 1 < steps.length; i += 2) segments.push([stepTo(steps[i]), stepTo(steps[i + 1])]);
+
   return segments;
 };
 
@@ -64,6 +72,7 @@ const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number
       isScope(child) &&
       (child.defaults?.node?.shape !== undefined || child.defaults?.path?.style?.strokeWidth !== undefined),
   );
+
   return { children, markIndex };
 };
 
@@ -94,6 +103,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+
     expect(axisLayer).toBeDefined();
     expect(allKinds(axisLayer)).toContain('line');
     expect(allKinds(axisLayer)).toContain('cycle');
@@ -121,6 +131,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     );
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+
     expect(allKinds(axisLayer)).toContain('circlePath');
   });
 
@@ -135,7 +146,9 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     const circleStep = pathsOf(axisLayer)
       .flatMap(p => p.children)
       .find(step => step.kind === 'circlePath') as { radius?: number } | undefined;
+
     expect(circleStep).toBeDefined();
+
     // 外圆弧半径 ≈ outerRadius（480×300、有角向标签留白 → outerRadius < 150）
     expect(circleStep?.radius).toBeGreaterThan(0);
     expect(circleStep?.radius).toBeLessThanOrEqual(150);
@@ -145,12 +158,16 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+
     // 4 类别 → 4 个角向短刻度（line 段）+ 4 个圆周外标签 Node
     const tickSegments = pathsOf(axisLayer)
       .flatMap(p => p.children)
       .filter(step => step.kind === 'line');
+
     expect(tickSegments.length).toBeGreaterThanOrEqual(4);
+
     const labels = nodesOf(axisLayer);
+
     expect(labels).toHaveLength(4);
     expect(labels.map(n => n.text).sort()).toEqual(['A', 'B', 'C', 'D']);
   });
@@ -166,7 +183,9 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const labels = nodesOf(axisLayer);
+
     expect(labels).toHaveLength(4);
+
     for (const label of labels) {
       expect(label.layout).toMatchObject({ lineHeight: 24, maxTextWidth: 80 });
       expect(label.layout?.align).toBeDefined();
@@ -185,12 +204,15 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
       .flatMap(p => p.children)
       .find(step => step.kind === 'circlePath') as { radius?: number };
     const outerRadius = circleStep.radius as number;
+
     // polar center = plot 区中心。每个标签到圆心的距离 > outerRadius（圆周外侧）
     const labels = nodesOf(axisLayer);
+
     // 圆心估算：所有标签 position 的中位附近——用 outerRadius 反推不便，改判每个标签离任意标签集中心更远的弱断言：
     // 至少每个标签都是有限坐标且分布开（不全相同）
     const xs = labels.map(n => (n.position as [number, number])[0]);
     const ys = labels.map(n => (n.position as [number, number])[1]);
+
     expect(xs.every(Number.isFinite)).toBe(true);
     expect(ys.every(Number.isFinite)).toBe(true);
     expect(new Set(xs.map(x => x.toFixed(2))).size).toBeGreaterThan(1);
@@ -202,6 +224,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x', tickLabels: false }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+
     expect(nodesOf(axisLayer)).toHaveLength(0);
     expect(allKinds(axisLayer)).toContain('cycle');
     expect(allKinds(axisLayer)).not.toContain('arc');
@@ -234,7 +257,9 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+
     expect(axisLayer).toBeDefined();
+
     // 辐条轴线是直段（line/move），不含 arc
     expect(allKinds(axisLayer)).toContain('line');
     expect(allKinds(axisLayer)).not.toContain('arc');
@@ -247,6 +272,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const [axisLine] = segmentsOfAxis(axisLayer); // 首段 = 辐条轴线
     const [from, to] = axisLine;
+
     expect(Math.abs(to[1] - from[1])).toBeLessThan(1); // 近似同 y（沿 +x 辐条）
     expect(Math.abs(to[0] - from[0])).toBeGreaterThan(0);
   });
@@ -257,7 +283,9 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const [, ...tickSegments] = segmentsOfAxis(axisLayer);
+
     expect(tickSegments.length).toBeGreaterThan(0);
+
     for (const [from, to] of tickSegments) {
       expect(Math.abs(to[0] - from[0])).toBeLessThan(1e-6); // Δx≈0：竖直
       expect(Math.abs(to[1] - from[1])).toBeGreaterThan(0); // Δy≠0
@@ -270,10 +298,12 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     const [axisLine, ...tickSegments] = segmentsOfAxis(axisLayer);
+
     // 辐条沿 +x：刻度点的 x 必落在轴线 [innerX, outerX] 内
     const innerX = Math.min(axisLine[0][0], axisLine[1][0]);
     const outerX = Math.max(axisLine[0][0], axisLine[1][0]);
     const eps = 1e-6;
+
     for (const segment of tickSegments) {
       for (const point of segment) {
         expect(point[0]).toBeGreaterThanOrEqual(innerX - eps);
@@ -286,6 +316,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+
     // linear 径向 → 多个刻度标签（值 0..10 的 nice 刻度）
     expect(nodesOf(axisLayer).length).toBeGreaterThan(0);
     expect(nodesOf(axisLayer).every(n => typeof n.text === 'string')).toBe(true);
@@ -311,12 +342,16 @@ describe('lowerPlots polar guide — grid (contract)', () => {
   it('radius_grid_produces_concentric_circular_paths', () => {
     const outer = expandOf(radiusGridSpec, { d: [{ theta: 0, value: 5 }] }, opts);
     const { children, markIndex } = layersOf(outer);
+
     // grid 层在 mark 层之前（垫底）
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
+
     expect(gridLayer).toBeDefined();
+
     const circles = pathsOf(gridLayer)
       .flatMap(p => p.children)
       .filter(step => step.kind === 'circlePath');
+
     expect(circles.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -327,8 +362,10 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     const circles = pathsOf(gridLayer)
       .flatMap(p => p.children)
       .filter(step => step.kind === 'circlePath') as Array<{ radius?: number }>;
+
     // 多刻度 → 多环，半径各异（同心、递增）
     const radii = circles.map(circle => circle.radius ?? 0).filter(radius => radius > 0);
+
     expect(radii.length).toBeGreaterThanOrEqual(1);
     expect(new Set(radii.map(r => r.toFixed(3))).size).toBe(radii.length);
   });
@@ -337,6 +374,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'y', grid: true }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
+
     expect(gridLayer).toBeDefined();
     expect(allKinds(gridLayer)).toContain('line');
     expect(allKinds(gridLayer)).toContain('cycle');
@@ -362,7 +400,9 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     const outer = expandOf(angleGridSpec, { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
+
     expect(gridLayer).toBeDefined();
+
     // 辐条是直段，不含 arc
     expect(allKinds(gridLayer)).toContain('line');
     expect(allKinds(gridLayer)).not.toContain('arc');
@@ -372,10 +412,12 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     const outer = expandOf(angleGridSpec, { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
+
     // 4 类别 + 角度 scale range 两端 → 6 条辐条（每条 move+line 一对）
     const lineSegments = pathsOf(gridLayer)
       .flatMap(p => p.children)
       .filter(step => step.kind === 'line');
+
     expect(lineSegments).toHaveLength(6);
   });
 });
@@ -399,10 +441,13 @@ describe('lowerPlots polar guide — z-order (contract)', () => {
     });
     const outer = expandOf(spec, { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
+
     expect(markIndex).toBeGreaterThan(0); // mark 前至少一个 grid 层（radius grid）
+
     // mark 层之前全是 grid 层（pathDefault、无 nodeDefault.shape）；之后是 axis 层
     const before = children.slice(0, markIndex);
     const after = children.slice(markIndex + 1);
+
     expect(before.length).toBeGreaterThanOrEqual(1);
     expect(after.length).toBeGreaterThanOrEqual(1);
     expect(before.every(child => isScope(child) && child.defaults?.node?.shape === undefined)).toBe(true);
@@ -426,6 +471,7 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
         { type: 'axis', dimension: 'x' },
       ],
     });
+
     expect(() => expandOf(spec, { d: ROWS }, opts)).toThrow(/duplicate axis/);
   });
 
@@ -446,6 +492,7 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
         { type: 'axis', dimension: 'x' },
       ],
     });
+
     expect(() => expandOf(spec, { d: ROWS }, opts)).toThrow(/angular/);
   });
 });
@@ -476,9 +523,12 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
   it('cartesian_axis_remains_straight_lines', () => {
     const outer = expandOf(cartGuidedSpec, { sales: SALES }, opts);
     const { children, markIndex } = layersOf(outer);
+
     // axis 层（mark 之后）：直线轴，无 arc
     const axisLayers = children.slice(markIndex + 1).filter(isScope);
+
     expect(axisLayers.length).toBeGreaterThanOrEqual(1);
+
     for (const axisLayer of axisLayers) {
       expect(allKinds(axisLayer)).not.toContain('arc');
       expect(allKinds(axisLayer)).toContain('line');
@@ -489,7 +539,9 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
     const outer = expandOf(cartGuidedSpec, { sales: SALES }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayers = children.slice(0, markIndex).filter(isScope);
+
     expect(gridLayers.length).toBeGreaterThanOrEqual(1);
+
     for (const gridLayer of gridLayers) {
       expect(pathsOf(gridLayer).length).toBeGreaterThan(0);
       expect(allKinds(gridLayer)).not.toContain('arc');
@@ -502,6 +554,7 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
     const { children, markIndex } = layersOf(outer);
     const axisLayers = children.slice(markIndex + 1).filter(isScope);
     const totalLabels = axisLayers.flatMap(nodesOf);
+
     expect(totalLabels.length).toBeGreaterThan(0);
     expect(hasKind(pathsOf(axisLayers[0])[0], 'line')).toBe(true);
   });

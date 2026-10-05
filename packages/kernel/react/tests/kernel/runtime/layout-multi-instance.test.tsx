@@ -35,9 +35,11 @@ const extractMarkerIds = (svg: string): Array<string> => {
   const ids: Array<string> = [];
   const re = /<marker[^>]*\bid="([^"]+)"/g;
   let m: RegExpExecArray | null;
+
   while ((m = re.exec(svg)) !== null) {
     ids.push(m[1]);
   }
+
   return ids;
 };
 
@@ -67,10 +69,14 @@ describe('多 Layout 实例 marker id 隔离', () => {
     );
 
     const ids = extractMarkerIds(svg);
+
     expect(ids.length).toBeGreaterThanOrEqual(2);
+
     const prefixes = ids.map(extractPrefix);
+
     // 两实例前缀应不同
     const uniquePrefixes = new Set(prefixes);
+
     expect(uniquePrefixes.size).toBe(2);
   });
 
@@ -93,8 +99,10 @@ describe('多 Layout 实例 marker id 隔离', () => {
     );
 
     const ids = extractMarkerIds(svg);
+
     // 每实例 1 个 marker，共 2 个
     expect(ids).toHaveLength(2);
+
     // 全部 id 互不相同（前缀 + spec hash 都可能不同）
     expect(new Set(ids).size).toBe(2);
   });

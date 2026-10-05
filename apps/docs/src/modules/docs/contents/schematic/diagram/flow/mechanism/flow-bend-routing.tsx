@@ -14,6 +14,7 @@ export type FlowBendRoutingProps = Readonly<{ lang?: Lang }>;
 const Demo: FC<FlowBendRoutingProps> = props => {
   const { lang = 'zh' } = props;
   const copy = flowBendRoutingI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

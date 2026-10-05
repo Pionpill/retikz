@@ -9,6 +9,7 @@ describe('buildPlotIR 自定义坐标系（alpha.12 ADR-05）', () => {
     const spec = buildPlotIR(<PointMark x="hx" y="vy" />, '__plot', {
       coordinate: { type: 'bridge', archHeight: 70 },
     });
+
     expect(spec.coordinate).toEqual({ type: 'bridge', archHeight: 70 });
     expect(spec.scales).toEqual([]); // 自定义坐标系自建几何，无 AUTO 位置 scale
     expect(spec.guides).toEqual([]); // 非 cartesian2D，无默认轴
@@ -16,6 +17,7 @@ describe('buildPlotIR 自定义坐标系（alpha.12 ADR-05）', () => {
 
   it('custom_coordinate_no_config：仅 type 可用', () => {
     const spec = buildPlotIR(<PointMark x="v" />, '__plot', { coordinate: { type: 'sine' } });
+
     expect(spec.coordinate).toEqual({ type: 'sine' });
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
@@ -24,6 +26,7 @@ describe('buildPlotIR 自定义坐标系（alpha.12 ADR-05）', () => {
     const spec = buildPlotIR(<PointMark x="sa" y="si" z="cl" />, '__plot', {
       coordinate: { type: 'tri' },
     });
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
     expect(spec.marks[0]).toEqual({
       type: 'point',

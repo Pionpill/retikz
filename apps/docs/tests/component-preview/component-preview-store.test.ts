@@ -5,8 +5,11 @@ import { PreviewThemeStyle } from '../../src/modules/docs/components/component-p
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const originalDefaultOpen = useComponentPreviewStore.getState().controlPanelDefaultOpen;
+
 const originalThemeMode = useComponentPreviewStore.getState().themeMode;
+
 const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
+
 const originalRangePlaybackDuration = useComponentPreviewStore.getState().rangePlaybackDuration;
 
 afterEach(() => {
@@ -19,9 +22,11 @@ afterEach(() => {
 describe('ComponentPreview store controls panel preference', () => {
   it('设置并切换默认打开状态', () => {
     useComponentPreviewStore.getState().setControlPanelDefaultOpen(true);
+
     expect(useComponentPreviewStore.getState().controlPanelDefaultOpen).toBe(true);
 
     useComponentPreviewStore.getState().toggleControlPanelDefaultOpen();
+
     expect(useComponentPreviewStore.getState().controlPanelDefaultOpen).toBe(false);
   });
 
@@ -29,6 +34,7 @@ describe('ComponentPreview store controls panel preference', () => {
     expect(useComponentPreviewStore.getState().themeMode).toBe('inherit');
 
     useComponentPreviewStore.getState().setThemeMode('dark');
+
     expect(useComponentPreviewStore.getState().themeMode).toBe('dark');
   });
 
@@ -44,6 +50,7 @@ describe('ComponentPreview store controls panel preference', () => {
     expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(2000);
 
     useComponentPreviewStore.getState().setRangePlaybackDuration(500);
+
     expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(500);
   });
 

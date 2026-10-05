@@ -9,6 +9,7 @@ import { renderChainPreview as inputs } from '../../src/modules/docs/contents/li
 it('每种输入实际通过 Vanilla 转换与渲染', () => {
   for (const mode of ['items', 'data', 'count', 'labels', 'branches'] as const) {
     const v = buildVanillaPreview(buildPreviewIR(() => inputs({ mode })));
+
     expect(v.svg).toContain('<svg');
     expect(v.code).toContain('chain(');
     expect(v.code).toContain('ChainInputEmbedAdapter');
@@ -16,9 +17,12 @@ it('每种输入实际通过 Vanilla 转换与渲染', () => {
 });
 it('嵌套图形和箭头转换可执行', () => {
   const v = buildVanillaPreview(buildPreviewIR(() => content({ width: 64, overflow: 'clip' })));
+
   expect(v.svg).toContain('<svg');
   expect(v.code).toContain('matrix(');
+
   const a = buildVanillaPreview(buildPreviewIR(() => connection({ route: 'auto', arrow: '<->', label: 'Chain' })));
+
   expect(a.svg).toContain('Chain');
   expect(a.code).toContain('marks:');
 });

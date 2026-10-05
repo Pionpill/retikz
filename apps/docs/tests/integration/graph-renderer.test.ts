@@ -105,10 +105,12 @@ const primitivesOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePri
 const entityShapeFillOf = (compiled: Scene, id: string) => {
   const entity = primitivesOf(compiled.primitives).find(primitive => primitive.type === 'group' && primitive.id === id);
   if (entity?.type !== 'group') throw new Error(`missing Entity group '${id}'`);
+
   const shape = primitivesOf(entity.children).find(
     primitive => primitive.type === 'ellipse' || primitive.type === 'rect' || primitive.type === 'path',
   );
   if (shape === undefined) throw new Error(`missing Entity shape '${id}'`);
+
   return shape.fill;
 };
 
@@ -274,7 +276,9 @@ describe('Graph renderer integration', () => {
     );
 
     expect(entityText?.type).toBe('text');
+
     if (entityText?.type !== 'text') return;
+
     expect(['#000000', '#ffffff']).toContain(entityText.fill);
   });
 

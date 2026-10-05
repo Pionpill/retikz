@@ -1,4 +1,5 @@
 const translations: Partial<Record<string, string>> = {
+  缓动能力注册表: 'easing registry',
   'Pattern 单条线 motif 的可序列化样式覆盖': 'Serializable style overrides for a pattern line motif',
   'Pattern 相邻线条的稀疏周期样式': 'Sparse repeating styles for adjacent pattern lines',
   'Pattern paint 的可序列化实例参数': 'Serializable pattern paint parameters',
@@ -163,5 +164,6 @@ export const translateVisualApiReference = (source: string): string => {
   const translated = translations[source];
   if (translated !== undefined) return translated;
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   throw new Error(`Missing visual API translation: ${source}`);
 };

@@ -125,6 +125,7 @@ describe('Extension Clip definition public contract', () => {
       PathClipDefinition,
       CompoundClipDefinition,
     ]);
+
     for (const definition of ExtensionClipDefinitions) {
       expect(definition).toEqual(
         expect.objectContaining({
@@ -139,6 +140,7 @@ describe('Extension Clip definition public contract', () => {
 
   it.each(cases)('compiles $kind through complete definitions passed only as clips', testCase => {
     const scene = compileToScene(sceneOf(testCase.clip), { clips: testCase.definitions }).scene;
+
     expect(scene.resources).toEqual([
       {
         kind: 'clip',
@@ -175,6 +177,7 @@ describe('Extension clip provider graph', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [PathClipProvider.key], providers: ExtensionClipProviders }],
     });
+
     expect(definitions).toEqual({ clips: [PathClipDefinition] });
   });
 });

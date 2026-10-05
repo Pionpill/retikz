@@ -9,11 +9,17 @@ import { enumerateAxesTickValues } from './ticks';
 import type { IRAxes } from './types';
 
 type AxesChild = IRPath | IRNode;
+
 type AxesAxis = CanonicalAxes['x'];
+
 type AxesTicks = Exclude<AxesAxis['ticks'], false | undefined>;
+
 type AxesTickLabels = Exclude<AxesTicks['labels'], false | undefined>;
+
 type AxesTextStyle = NonNullable<AxesTickLabels['style']>;
+
 type AxesAxisLabel = Exclude<AxesAxis['label'], false>;
+
 type AxesOriginLabel = Exclude<CanonicalAxes['origin']['label'], false>;
 
 /** 将 Standard Axes 规则确定性下沉为已有 Core Path 与 Node */
@@ -42,6 +48,7 @@ export const lowerAxes = (axes: IRAxes): IRScope => {
       children.push(createLinePath([originX + line.value, minY], [originX + line.value, maxY], xGrid.style));
     });
   }
+
   const yGrid = y.grid;
   if (yGrid !== undefined && yGrid !== false) {
     enumerateLattice({
@@ -59,6 +66,7 @@ export const lowerAxes = (axes: IRAxes): IRScope => {
   if (x.line !== false) {
     children.push(createAxisPath([minX, originY], [maxX, originY], x.line));
   }
+
   if (y.line !== false) {
     children.push(createAxisPath([originX, maxY], [originX, minY], y.line));
   }
@@ -72,9 +80,11 @@ export const lowerAxes = (axes: IRAxes): IRScope => {
   if (x.label !== false) {
     children.push(createAxisLabel('x', x.label, origin.position, extentX));
   }
+
   if (y.label !== false) {
     children.push(createAxisLabel('y', y.label, origin.position, extentY));
   }
+
   if (origin.label !== false) {
     children.push(createOriginLabel(origin.label, origin.position));
   }
@@ -117,8 +127,10 @@ const appendTickLabels = (
 ): void => {
   const ticks = axis.ticks;
   if (ticks === undefined || ticks === false) return;
+
   const labels = ticks.labels;
   if (labels === undefined || labels === false) return;
+
   const [originX, originY] = origin;
   const distance = normalizeTickSideLengths(ticks.side, ticks.length).negative + labels.offset;
   labels.entries.forEach(entry => {
@@ -142,6 +154,7 @@ const createAxisLabel = (
     axisName === 'x'
       ? [originX + direction * (length + resolved.offset), originY]
       : [originX, originY - direction * (length + resolved.offset)];
+
   return createTextNode(position, resolved.text, resolved.style);
 };
 
@@ -175,6 +188,7 @@ const createAxisPath = (from: IRPosition, to: IRPosition, line: Exclude<AxesAxis
     const { start, end, ...shared } = line.arrowDetail ?? {};
     return { kind: 'arrow', ...shared, ...(endpoint === 'start' ? start : end) };
   };
+
   const marks =
     line.arrows === AxesArrowMode.None
       ? undefined

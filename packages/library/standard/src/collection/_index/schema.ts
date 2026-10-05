@@ -18,6 +18,7 @@ const CollectionIndexBaseSchema = strictObject({
   ),
 });
 
+/** 校验格外索引的起始编号或显式标签；两种索引来源互斥 */
 export const CollectionIndexOptionsSchema = union([
   CollectionIndexBaseSchema.extend({
     start: NonNegativeIntegerSchema.default(0).describe('First displayed index; not cell identity.'),

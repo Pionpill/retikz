@@ -35,9 +35,13 @@ import { renderMapSkeletonPreview } from '../../src/modules/docs/contents/librar
 import MapStyles from '../../src/modules/docs/contents/library/standard/collection/map/map-styles';
 
 const ArraySkeletonCanonical: FC = () => arraySkeletonPreviewSource.canonicalRender?.() ?? null;
+
 const MapSkeletonCanonical: FC = () => mapSkeletonPreviewSource.canonicalRender?.() ?? null;
+
 const ArrayStylesCanonical: FC = () => arrayStylesPreviewSource.canonicalRender?.() ?? null;
+
 const MapDataCanonical: FC = () => mapDataPreviewSource.canonicalRender?.() ?? null;
+
 const ArrayDataCanonical: FC = () => arrayDataPreviewSource.canonicalRender?.() ?? null;
 
 describe('Array / Map documentation consumers', () => {
@@ -45,6 +49,7 @@ describe('Array / Map documentation consumers', () => {
     const chinese = createArrayStylesContract('zh');
     const english = createArrayStylesContract('en');
     const width = getPreviewControlFields(chinese.controls).find(field => field.id === 'widthMode');
+
     expect(width).toMatchObject({
       kind: 'select',
       defaultValue: 'fixed',
@@ -55,6 +60,7 @@ describe('Array / Map documentation consumers', () => {
       getPreviewControlFields(chinese.controls).map(field => field.id),
     );
   });
+
   it.each([
     ArraySkeletonCanonical,
     MapSkeletonCanonical,
@@ -72,13 +78,16 @@ describe('Array / Map documentation consumers', () => {
   ])('generates executable Vanilla previews for %s', Component => {
     const preview = buildPreviewIR(Component);
     const output = buildVanillaPreview(preview);
+
     expect(output.code).not.toMatch(/Cannot generate|Failed to generate/);
     expect(output.svg).toContain('<svg');
     expect(output.code).toMatch(/(?:Array|Map)InputEmbedAdapter/);
   });
+
   it('preserves authored cells in copied source and keeps the top-level structure', () => {
     const preview = buildPreviewIR(ArrayStylesCanonical);
     const code = irToVanillaCode(preview.sourceIr);
+
     expect(code).toContain("content: 'B1'");
     expect(code).toContain('items:');
     expect(code).toContain('ArrayInputEmbedAdapter');
@@ -93,6 +102,7 @@ it('keeps text cells compact in persistent IR and copied Vanilla code', () => {
     const preview = buildPreviewIR(Component);
     const json = JSON.stringify(preview.sourceIr);
     const code = irToVanillaCode(preview.sourceIr);
+
     expect(json).not.toContain('"position"');
     expect(json).not.toContain('"type":"node"');
     expect(code).not.toContain('position:');
@@ -106,6 +116,7 @@ it('retains Array content width in copied Vanilla source', () => {
     version: 1,
     children: [{ namespace: 'standard', type: 'array', items: [{ content: 'A', layout: { width: 'content' } }] }],
   });
+
   expect(code).toContain("width: 'content'");
   expect(code).toContain('ArrayInputEmbedAdapter');
 });
@@ -114,6 +125,7 @@ it('retains compact JSON data in copied code and runtime previews', () => {
   for (const Component of [ArrayDataCanonical, MapDataCanonical]) {
     const preview = buildPreviewIR(Component);
     const output = buildVanillaPreview(preview);
+
     expect(output.code).toContain('data:');
     expect(output.code).toContain("dataExpand: ['array']");
     expect(output.svg).toContain(Component === ArrayDataCanonical ? 'ready' : 'layout');
@@ -157,6 +169,7 @@ it('does not interpret JSON fields as drawable children or provider names', () =
   );
   const preview = buildPreviewIR(Component);
   const output = buildVanillaPreview(preview);
+
   expect(output.code).toContain("namespace: 'foreign'");
   expect(output.code).not.toContain('foreignDefinition');
   expect(output.svg).toContain('<svg');
@@ -208,6 +221,7 @@ describe('Array container label controls', () => {
         ...contract.canonicalValues,
         positionMode,
       }).flatMap(section => section.controls.map(control => control.id));
+
     expect(visible('direction')).not.toContain('fraction');
     expect(visible('boundary')).toContain('fraction');
   });
@@ -228,16 +242,19 @@ it('骨架在源码与可执行 Vanilla 预览中保留唯一入口', () => {
   for (const Component of [ArraySkeletonCanonical, MapSkeletonCanonical]) {
     const preview = buildPreviewIR(Component);
     const output = buildVanillaPreview(preview);
+
     expect(output.code).toContain('skeleton:');
     expect(output.code).not.toContain('items:');
     expect(output.code).not.toContain('entries:');
     expect(output.svg).toContain(Component === ArraySkeletonCanonical ? 'x₁' : 'k₁');
   }
+
   const preview = buildPreviewIR(() => (
     <Layout>
       <Map entries={[{ key: {}, value: {} }]} />
     </Layout>
   ));
+
   expect(buildVanillaPreview(preview).code).not.toContain('__CELL_CONTENT__');
   expect(buildVanillaPreview(preview).svg).toContain('<svg');
 });
@@ -245,19 +262,24 @@ it('骨架控件双语契约相同并覆盖空集合与最大数量', () => {
   for (const createContract of [createArraySkeletonContract, createMapSkeletonContract]) {
     const zh = createContract('zh');
     const en = createContract('en');
+
     expect(zh.canonicalValues).toEqual(en.canonicalValues);
     expect(getPreviewControlFields(zh.controls).map(field => field.id)).toEqual(
       getPreviewControlFields(en.controls).map(field => field.id),
     );
   }
+
   for (const count of [0, 6]) {
     const output = buildVanillaPreview(
       buildPreviewIR(() => renderArraySkeletonPreview({ mode: 'count', count, labels: '', index: 'auto' })),
     );
+
     expect(output.svg).toContain('<svg');
     expect(output.code).toContain(`count: ${count}`);
   }
+
   const empty = buildVanillaPreview(buildPreviewIR(() => renderMapSkeletonPreview({ keys: '', empty: true })));
+
   expect(empty.svg).toContain('<svg');
   expect(empty.code).toContain('keys: []');
 });

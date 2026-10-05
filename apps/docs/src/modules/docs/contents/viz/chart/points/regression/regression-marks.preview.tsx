@@ -35,5 +35,6 @@ export const renderRegressionMarksPreview = (
       />
     </RegressionChart>
   );
+
   return chart;
 };

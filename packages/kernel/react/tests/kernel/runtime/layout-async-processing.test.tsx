@@ -12,12 +12,15 @@ const deferred = () => {
   const promise = new Promise<void>(complete => {
     resolve = complete;
   });
+
   return { promise, resolve };
 };
+
 const contribution = (text: string) => ({
   node: { type: 'node' as const, position: [0, 0] as [number, number], text },
   providerDependencies: { roots: [], providers: [] },
 });
+
 const fixture = () => {
   const pending = new Map<string, ReturnType<typeof deferred>>();
   const prepared = vi.fn();
@@ -44,6 +47,7 @@ const fixture = () => {
     isTier2Embeddable: true as const,
     inputEmbedAdapter: adapter,
   });
+
   return { Leaf, pending, prepared, lowered };
 };
 
@@ -52,6 +56,7 @@ describe('Layout async processing bridge', () => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   });
+
   afterEach(() => {
     document.body.replaceChildren();
     vi.restoreAllMocks();
@@ -72,7 +77,9 @@ describe('Layout async processing bridge', () => {
       root.render(draw('initial'));
       await Promise.resolve();
     });
+
     expect(container.textContent).toBe('initial');
+
     const slow = deferred();
     pending.set('slow', slow);
     await act(async () => {
@@ -83,21 +90,27 @@ describe('Layout async processing bridge', () => {
       root.render(draw('latest'));
       await Promise.resolve();
     });
+
     expect(container.textContent).toBe('latest');
+
     await act(async () => {
       slow.resolve();
       await slow.promise;
     });
+
     expect(container.textContent).toBe('latest');
+
     const publications = publish.mock.calls.length;
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     await act(async () => {
       root.render(draw('failure'));
       await Promise.resolve();
     });
+
     expect(container.textContent).toBe('latest');
     expect(publish).toHaveBeenCalledTimes(publications);
     expect(lowered).not.toHaveBeenCalled();
+
     act(() => root.unmount());
   });
 
@@ -122,12 +135,16 @@ describe('Layout async processing bridge', () => {
       root.render(draw('latest'));
       await Promise.resolve();
     });
+
     expect(container.textContent).toBe('latest');
+
     await act(async () => {
       initial.resolve();
       await initial.promise;
     });
+
     expect(container.textContent).toBe('latest');
+
     const slow = deferred();
     pending.set('slow', slow);
     await act(async () => {
@@ -140,11 +157,13 @@ describe('Layout async processing bridge', () => {
       slow.resolve();
       await slow.promise;
     });
+
     expect(publish).toHaveBeenCalledTimes(publications);
   });
 
   it('keeps synchronous React SSR on lower without starting preparation', () => {
     const { Leaf, lowered, prepared } = fixture();
+
     expect(
       renderToStaticMarkup(
         <Layout runtime={{ preparation: 'async' }}>

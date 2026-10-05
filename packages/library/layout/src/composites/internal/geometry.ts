@@ -3,36 +3,77 @@ import { resolveBoxSpacing } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
-import type { IRLayoutAxisSize, LayoutAlignmentValue } from '../shared';
+import type { IRLayoutAxisSize } from '../shared';
 import { LayoutAlignment, LayoutAxisSizeKind } from '../shared';
 
 /** Layout solver 使用的有限非负矩形 */
 export type LayoutRect = Readonly<BoundsRect>;
 
 /** Layout solver 使用的四边 spacing */
-export type LayoutInsets = Readonly<{ top: number; right: number; bottom: number; left: number }>;
+export type LayoutInsets = Readonly<{
+  /** 上侧边距 */
+  top: number;
+  /** 右侧边距 */
+  right: number;
+  /** 下侧边距 */
+  bottom: number;
+  /** 左侧边距 */
+  left: number;
+}>;
 
 /** 以 content-box、target、anchor 与 offset 构造 positioned child slot */
 export type PositionedLayoutSlotInput = Readonly<{
+  /** 提供局部原点的容器内容矩形 */
   content: LayoutRect;
-  at: Readonly<{ x: number; y: number }>;
-  anchor: Readonly<{ x: number; y: number }>;
-  offset: Readonly<{ x: number; y: number }>;
-  size: Readonly<{ width: number; height: number }>;
+  /** 相对内容矩形原点的目标位置 */
+  at: Readonly<{
+    /** 目标相对内容原点的水平坐标 */
+    x: number;
+    /** 目标相对内容原点的垂直坐标 */
+    y: number;
+  }>;
+  /** 按槽位宽高归一化的锚点比例 */
+  anchor: Readonly<{
+    /** 锚点在槽位宽度上的归一化位置 */
+    x: number;
+    /** 锚点在槽位高度上的归一化位置 */
+    y: number;
+  }>;
+  /** 锚点定位后额外应用的物理偏移 */
+  offset: Readonly<{
+    /** 额外水平偏移量 */
+    x: number;
+    /** 额外垂直偏移量 */
+    y: number;
+  }>;
+  /** 被定位槽位的固定宽高 */
+  size: Readonly<{
+    /** 槽位宽度 */
+    width: number;
+    /** 槽位高度 */
+    height: number;
+  }>;
 }>;
 
 /** 单轴容器尺寸求值输入 */
 export type ResolveLayoutAxisSizeInput = Readonly<{
+  /** 当前求解的水平或垂直轴 */
   axis: 'x' | 'y';
+  /** 作者声明的当前轴尺寸策略 */
   policy: IRLayoutAxisSize;
+  /** 父布局传入的尺寸提案 */
   proposal: LayoutAxisProposal;
+  /** 子内容对当前轴的最小尺寸贡献 */
   minimumContribution: number;
+  /** 子内容对当前轴的自然尺寸贡献 */
   naturalContribution: number;
 }>;
 
 /** 单轴容器真实 allocation 与可用父级空间 */
 export type ResolvedLayoutAxisSize = Readonly<{
+  /** 当前轴实际分配的尺寸 */
   allocationSize: number;
+  /** 父提案中的有限尺寸或上限，固有尺寸提案时省略 */
   finiteAvailable?: number;
 }>;
 
@@ -45,6 +86,7 @@ const finiteNonNegative = (value: number, label: string): number => {
       details: { label, value },
     });
   }
+
   return value;
 };
 
@@ -57,8 +99,10 @@ const finiteLayoutRect = (rect: LayoutRect, label: string): LayoutRect => {
       details: { label, x: rect.x, y: rect.y },
     });
   }
+
   finiteNonNegative(rect.width, `${label} width`);
   finiteNonNegative(rect.height, `${label} height`);
+
   return rect;
 };
 
@@ -109,6 +153,7 @@ export const resolveLayoutAxisSize = (input: ResolveLayoutAxisSizeInput): Resolv
         details: { axis: input.axis, policy: input.policy.kind },
       });
     }
+
     return { allocationSize: clampAuthoredSize(finiteAvailable, input.policy), finiteAvailable };
   }
 
@@ -118,6 +163,7 @@ export const resolveLayoutAxisSize = (input: ResolveLayoutAxisSizeInput): Resolv
   } else if (input.proposal.kind === 'exact') {
     candidate = input.proposal.value;
   }
+
   let allocationSize = clampAuthoredSize(candidate, input.policy);
   if (input.proposal.kind === 'range') {
     const intersectionMin = Math.max(input.policy.min ?? 0, input.proposal.min);
@@ -166,7 +212,7 @@ export const alignAllocationInSlot = (
   slot: LayoutRect,
   allocation: LayoutRect,
   axis: 'x' | 'y',
-  alignment: LayoutAlignmentValue,
+  alignment: LayoutAlignment,
 ): number => {
   const slotStart = axis === 'x' ? slot.x : slot.y;
   const slotSize = axis === 'x' ? slot.width : slot.height;
@@ -175,9 +221,11 @@ export const alignAllocationInSlot = (
   if (alignment === LayoutAlignment.End || alignment === LayoutAlignment.LastBaseline) {
     return slotStart + slotSize - allocationStart - allocationSize;
   }
+
   if (alignment === LayoutAlignment.Center) {
     return slotStart + slotSize / 2 - allocationStart - allocationSize / 2;
   }
+
   return slotStart - allocationStart;
 };
 

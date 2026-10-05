@@ -31,6 +31,7 @@ const MANUAL: Array<IRAnimationTrack> = [
 ];
 
 const roots = new Set<Root>();
+
 let animateSpy: ReturnType<typeof vi.fn>;
 
 const mount = async (node: React.ReactElement): Promise<HTMLElement> => {
@@ -39,6 +40,7 @@ const mount = async (node: React.ReactElement): Promise<HTMLElement> => {
   const root = createRoot(container);
   roots.add(root);
   await act(() => root.render(node));
+
   return container;
 };
 
@@ -59,6 +61,7 @@ const stubReducedMotion = (initialMatches: boolean): { setMatches: (matches: boo
       },
     })),
   );
+
   return {
     setMatches: next => {
       matches = next;
@@ -77,6 +80,7 @@ afterEach(async () => {
   for (const root of roots) {
     await act(() => root.unmount());
   }
+
   roots.clear();
   document.body.replaceChildren();
   vi.restoreAllMocks();
@@ -104,6 +108,7 @@ describe('React SVG reduced motion', () => {
         <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(container.querySelector('style') !== null).toBe(true);
 
     await act(() => reducedMotion.setMatches(true));

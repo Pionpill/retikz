@@ -42,6 +42,7 @@ const Consumer: FC<ConsumerProps> = props => {
   const { definition, state, onSnapshot } = props;
   const values = usePreviewControls(definition);
   onSnapshot(state, values);
+
   return null;
 };
 
@@ -99,6 +100,7 @@ afterEach(async () => {
   for (const root of renderedRoots.splice(0)) {
     await act(() => root.unmount());
   }
+
   document.body.replaceChildren();
 });
 
@@ -145,9 +147,11 @@ describe('preview control state', () => {
 
     await act(() => buttons[0].click());
     await act(() => buttons[1].click());
+
     expect(values).toEqual({ strokeWidth: 4, dashed: true });
 
     await act(() => buttons[2].click());
+
     expect(values).toEqual({ strokeWidth: 2, dashed: false });
   });
 
@@ -178,9 +182,11 @@ describe('preview control state', () => {
     const buttons = container.querySelectorAll('button');
     await act(() => buttons[0].click());
     await act(() => buttons[3].click());
+
     expect(values).toEqual({ strokeWidth: 6, dashed: true });
 
     await act(() => buttons[2].click());
+
     expect(values).toEqual({ strokeWidth: 3, dashed: true });
   });
 
@@ -191,15 +197,18 @@ describe('preview control state', () => {
     renderedRoots.push(root);
     let state: PreviewControlState | undefined;
     let values: Record<string, unknown> = {};
+
     const onSnapshot: ConsumerProps['onSnapshot'] = (nextState, nextValues) => {
       state = nextState;
       values = nextValues;
     };
 
     await act(() => root.render(<Harness definition={appearanceDefinition} onSnapshot={onSnapshot} />));
+
     expect(state?.values).toEqual({ strokeWidth: 2, dashed: false });
 
     await act(() => root.render(<Harness definition={contentDefinition} onSnapshot={onSnapshot} />));
+
     expect(state?.values).toEqual({ text: 'New' });
     expect(values).toEqual({ text: 'New' });
   });

@@ -1,28 +1,30 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
-import type { RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import type { RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeComputationId } from '../identity';
 import type { RuntimeChangeSet, RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
 import type { RuntimeTracePhaseDefinition, RuntimeTraceReporter } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
-import type {
-  RuntimeComputationExecutionValue,
-  RuntimeComputationKind,
-  RuntimeComputationKindValue,
-  RuntimeComputationPhase,
-} from './constants';
+import type { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from './constants';
 
 declare const RuntimeComputationTokenBrand: unique symbol;
+
 declare const RuntimeComputationType: unique symbol;
 
 /** 动态 graph lookup 只暴露的 opaque Computation token */
 export type RuntimeComputationToken = Readonly<{
-  /** Computation identity */
+  /** 计算节点的身份 */
   id: RuntimeComputationId;
   /** 只允许 defineRuntimeComputation() 构造 token */
   [RuntimeComputationTokenBrand]: true;
 }>;
 
-/** 保留 artifact 四组泛型关系的 typed Computation token */
+/**
+ * 保留 artifact 四组泛型关系的 typed Computation token
+ * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+ * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型；默认沿用 TArtifactInput
+ * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型；默认沿用 TArtifact
+ * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型；默认沿用 TArtifact
+ */
 export type RuntimeComputationDefinition<
   TArtifactInput,
   TArtifact = TArtifactInput,
@@ -44,7 +46,7 @@ export type RuntimeComputationWarningInput = Readonly<{
   /** 稳定 warning 分类 */
   code: string;
   /** 产生 warning 的领域阶段 */
-  phase: RuntimeDiagnosticPhaseValue;
+  phase: RuntimeDiagnosticPhase;
   /** 面向开发者的 warning 信息 */
   message: string;
 }>;
@@ -55,7 +57,7 @@ export type RuntimeComputationTraceReporter = Pick<RuntimeTraceReporter, 'owner'
 /** Computation callback 可用的 trace 与 warning context */
 export type RuntimeComputationContext = Readonly<{
   /** 当前 callback 的实际执行方式 */
-  execution: RuntimeComputationExecutionValue;
+  execution: RuntimeComputationExecution;
   /** 固定绑定 Computation Source 的 trace reporter */
   trace: RuntimeComputationTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
@@ -64,17 +66,35 @@ export type RuntimeComputationContext = Readonly<{
 
 /** CandidateView 的 typed Source 与 Computation lookup */
 export type RuntimeCandidateLookup = Readonly<{
-  /** 读取已声明 Source 的 candidate Snapshot */
+  /**
+   * 读取已声明 Source 的 candidate Snapshot
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   snapshot: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeSnapshot<TRead>;
   /** 判断已声明 Source 是否在当前 candidate transaction 中发生实际变化 */
   changed: (source: RuntimeSourceToken) => boolean;
-  /** 读取已通过 Runtime envelope/revision 校验的 change hint；领域完整性由 Source validator 或 Computation 校验 */
+  /**
+   * 读取已通过 Runtime envelope/revision 校验的 change hint；领域完整性由 Source validator 或 Computation 校验
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   changeSet: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeChangeSet<TChange> | undefined;
-  /** 读取已声明 upstream Computation 的 public artifact view */
+  /**
+   * 读取已声明 upstream Computation 的 public artifact view
+   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+   * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
+   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+   */
   artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
     computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
   ) => RuntimeSnapshot<TPublicRead>;
@@ -101,7 +121,10 @@ export type RuntimeCandidateView =
         candidateRevision: RuntimeRevision;
       }>);
 
-/** full Computation 执行产生的新 artifact 输入 */
+/**
+ * full Computation 执行产生的新 artifact 输入
+ * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+ */
 export type RuntimeRunResult<TArtifactInput> = Readonly<{
   /** full 执行判别字段 */
   kind: typeof RuntimeComputationKind.Full;
@@ -109,7 +132,10 @@ export type RuntimeRunResult<TArtifactInput> = Readonly<{
   artifact: TArtifactInput;
 }>;
 
-/** incremental Computation 执行的三种可观察结果 */
+/**
+ * incremental Computation 执行的三种可观察结果
+ * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+ */
 export type RuntimeUpdateResult<TArtifactInput> =
   | Readonly<{
       /** incremental 执行判别字段 */
@@ -128,7 +154,13 @@ export type RuntimeUpdateResult<TArtifactInput> =
       diagnostics?: ReadonlyArray<RuntimeComputationWarningInput>;
     }>;
 
-/** Computation artifact 的 capture、双层 read 与释放契约 */
+/**
+ * Computation artifact 的 capture、双层 read 与释放契约
+ * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+ * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型；默认沿用 TArtifactInput
+ * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型；默认沿用 TArtifact
+ * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型；默认沿用 TArtifact
+ */
 export type RuntimeComputationArtifactDefinitionInput<
   TArtifactInput,
   TArtifact = TArtifactInput,
@@ -178,7 +210,10 @@ type RuntimeRequiredComputationArtifact<TArtifactInput, TArtifact, TComputationR
         artifact: RuntimeComputationArtifactDefinitionInput<TArtifactInput, TArtifact, TComputationRead, TPublicRead>;
       }>;
 
-/** Computation commit observer 接收的 revision-bound 事件 */
+/**
+ * Computation commit observer 接收的 revision-bound 事件
+ * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+ */
 export type RuntimeCommitEvent<TPublicRead> =
   | Readonly<{
       /** 初始提交判别字段 */
@@ -202,14 +237,20 @@ export type RuntimeCommitEvent<TPublicRead> =
       /** 已发布的 next revision */
       revision: RuntimeRevision;
       /** 当前 Computation 的实际执行结果 */
-      outcome: Exclude<RuntimeComputationKindValue, typeof RuntimeComputationKind.Bailout>;
+      outcome: Exclude<RuntimeComputationKind, typeof RuntimeComputationKind.Bailout>;
       /** 已发布 artifact 的 public Snapshot */
       artifact: RuntimeSnapshot<TPublicRead>;
       /** publish 前冻结的 commit-safe diagnostics */
       diagnostics: ReadonlyArray<RuntimeDiagnostic>;
     }>;
 
-/** Runtime Computation Definition 的作者侧输入 */
+/**
+ * Runtime Computation Definition 的作者侧输入
+ * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+ * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型；默认沿用 TArtifactInput
+ * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型；默认沿用 TArtifact
+ * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型；默认沿用 TArtifact
+ */
 export type RuntimeComputationDefinitionInput<
   TArtifactInput,
   TArtifact = TArtifactInput,

@@ -10,15 +10,26 @@ import type { ExpandedTrack } from './shared';
 import { easingToCss } from './shared';
 
 /** WAAPI keyframe：offset + 该 CSS 属性值（camelCase 键，直接喂 element.animate）+ 可选段 easing */
-export type WaapiKeyframe = { offset: number; easing?: string } & Record<string, string | number>;
+export type WaapiKeyframe = {
+  /** 关键帧在单次动画周期内的归一化位置 */
+  offset: number;
+  /** 从当前帧到下一帧使用的 CSS 缓动表达式 */
+  easing?: string;
+} & Record<string, string | number>;
 
 /** WAAPI timing options（直接喂 element.animate 第二参；iterations 'infinite' 由 runtime 转 Infinity） */
 export type WaapiTiming = {
+  /** 单次动画周期时长，单位为毫秒 */
   duration: number;
+  /** 播放前等待时间，单位为毫秒 */
   delay?: number;
+  /** 轨道级 CSS 缓动表达式 */
   easing: string;
+  /** 播放次数；infinite 在宿主执行前转换为 Infinity */
   iterations: number | 'infinite';
+  /** 每个动画周期的正向、反向或交替播放方式 */
   direction?: string;
+  /** 动画活动区间之外的样式保留方式 */
   fill: string;
 };
 
@@ -31,7 +42,13 @@ export type WaapiDescriptor = {
   /** WAAPI timing（element.animate 第二参） */
   timing: WaapiTiming;
   /** 触发器：visible / manual / { onEvent } */
-  trigger: 'visible' | 'manual' | { onEvent: string };
+  trigger:
+    | 'visible'
+    | 'manual'
+    | {
+        /** 由宿主监听、用于启动本轨道的事件名称 */
+        onEvent: string;
+      };
   /** transform 通道支点（runtime 写 element.style.transformOrigin + transformBox） */
   transformOrigin?: string;
 };
@@ -59,6 +76,7 @@ export const buildWaapiDescriptor = (
     [key]: frame.value,
     ...(frame.easing ? { easing: frame.easing } : {}),
   }));
+
   return {
     property: track.property,
     keyframes,

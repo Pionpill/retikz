@@ -17,4 +17,5 @@ export const DataTransformDeclarationSchema = strictObject({
 }).describe('Data transform declaration with optional execution policy');
 
 export type IRDataExecution = ZodInfer<typeof DataExecutionSchema>;
+
 export type IRDataTransformDeclaration = ZodInfer<typeof DataTransformDeclarationSchema>;

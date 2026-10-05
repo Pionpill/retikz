@@ -1,5 +1,5 @@
 import { assertNonEmptyString, assertPlainDataContainers } from '@retikz/foundation';
-import type { RelationDirectionValue } from '@retikz/graph';
+import type { RelationDirection } from '@retikz/graph';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
@@ -23,14 +23,20 @@ export type FlowLayoutRegistryOptions = Readonly<{
 
 /** 已验证的 Flow Layout registry 与当前默认项 */
 export type ResolvedFlowLayoutRegistry = Readonly<{
+  /** 按名称索引的可用布局定义 */
   layouts: ReadonlyMap<string, FlowLayoutDefinition>;
+  /** 未显式选择布局名称时使用的定义 */
   defaultLayout: FlowLayoutDefinition;
 }>;
 
-const RELATION_DIRECTIONS = new Set<RelationDirectionValue>(['none', 'forward', 'reverse', 'both']);
+const RELATION_DIRECTIONS = new Set<RelationDirection>(['none', 'forward', 'reverse', 'both']);
+
 const ROUTING_KINDS = new Set(Object.values(FlowRoutingKind));
+
 const FLOW_DIRECTIONS = new Set(Object.values(FlowDirection));
+
 const DEFINITION_KEYS = new Set(['name', 'description', 'capabilities', 'defaults', 'layout']);
+
 const CAPABILITY_KEYS = new Set([
   'placementKinds',
   'compoundScopes',
@@ -44,8 +50,11 @@ const CAPABILITY_KEYS = new Set([
   'relationDirections',
   'routing',
 ]);
+
 const DEFAULT_KEYS = new Set(['direction', 'nodeGap', 'rankGap', 'placementGap', 'routing']);
+
 const PLACEMENT_GAP_KEYS = new Set(['horizontal', 'vertical']);
+
 const ROUTING_DEFAULT_KEYS = new Set(['kind', 'orthogonalCornerRadius']);
 
 const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cause?: unknown): never => {
@@ -110,12 +119,14 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   );
   const capabilities = definition.capabilities;
   const defaults = definition.defaults;
+
   try {
     assertPlainDataContainers(capabilities, 'Flow Layout Definition capabilities');
     assertPlainDataContainers(defaults, 'Flow Layout Definition defaults');
   } catch (cause) {
     return invalidDefinition(definition, 'capabilities and defaults must use JSON-safe plain data containers.', cause);
   }
+
   validateExactKeys(capabilities, CAPABILITY_KEYS, 'capabilities', definition);
   validateExactKeys(defaults, DEFAULT_KEYS, 'defaults', definition);
   validateExactKeys(defaults.placementGap, PLACEMENT_GAP_KEYS, 'defaults.placementGap', definition);
@@ -123,9 +134,11 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   if (capabilities.groupEndpoints && !capabilities.compoundScopes) {
     invalidDefinition(definition, 'groupEndpoints requires compoundScopes.');
   }
+
   if (capabilities.crossScopeRelations && !capabilities.compoundScopes) {
     invalidDefinition(definition, 'crossScopeRelations requires compoundScopes.');
   }
+
   validateUniqueValues(capabilities.relationDirections, RELATION_DIRECTIONS, 'relationDirections', definition);
   validateUniqueValues(
     capabilities.routing.map(item => item.kind),
@@ -133,12 +146,14 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
     'routing',
     definition,
   );
+
   for (const item of capabilities.routing) {
     if (item.kind === 'curve' || item.kind === 'cubic') {
       validateExactKeys(item, new Set(['kind', 'modes']), 'routing capability', definition);
       validateUniqueValues(item.modes, new Set(['auto', 'explicit']), 'routing modes', definition);
     } else validateExactKeys(item, new Set(['kind']), 'routing capability', definition);
   }
+
   validateUniqueValues(
     capabilities.placementKinds,
     new Set(Object.values(FlowPlacementKind)),
@@ -153,6 +168,7 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   if (!capabilities.routing.some(item => item.kind === defaults.routing.kind)) {
     invalidDefinition(definition, 'defaults.routing.kind is not declared by routing.');
   }
+
   const supportsOrthogonal = capabilities.routing.some(
     ({ kind }) => kind === 'orthogonal' || kind === '-|' || kind === '|-',
   );
@@ -163,14 +179,17 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
       'orthogonalCornerRadius must exist exactly when an axis-aligned routing kind is supported.',
     );
   }
+
   if (radius !== undefined) validateFiniteNonNegative(radius, 'defaults.routing.orthogonalCornerRadius', definition);
   if (typeof definition.layout !== 'function') invalidDefinition(definition, 'layout must be a synchronous function.');
+
   return definition;
 };
 
 /** 组装内置优先且 identity-aware 的 Flow Layout registry */
 export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {}): ResolvedFlowLayoutRegistry => {
   const layouts = new Map<string, FlowLayoutDefinition>();
+
   for (const definition of [...BUILTIN_FLOW_LAYOUT_DEFINITIONS, ...(options.flowLayouts ?? [])]) {
     validateFlowLayoutDefinition(definition);
     const existing = layouts.get(definition.name);
@@ -182,8 +201,10 @@ export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {
         details: { capability: 'flow-layout', key: definition.name, availableKeys: [...layouts.keys()] },
       });
     }
+
     layouts.set(definition.name, definition);
   }
+
   const defaultName = options.defaultFlowLayout ?? LayeredFlowLayoutDefinition.name;
   const defaultLayout = layouts.get(defaultName);
   if (defaultLayout === undefined) {
@@ -193,6 +214,7 @@ export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {
       details: { capability: 'flow-layout', key: defaultName, availableKeys: [...layouts.keys()] },
     });
   }
+
   return { layouts, defaultLayout };
 };
 

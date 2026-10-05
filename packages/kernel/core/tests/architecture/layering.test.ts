@@ -8,6 +8,7 @@ const SRC_ROOT = join(process.cwd(), 'src');
 const tsFiles = (dir: string): Array<string> => {
   const entries = readdirSync(dir);
   const files: Array<string> = [];
+
   for (const entry of entries) {
     const path = join(dir, entry);
     const stat = statSync(path);
@@ -17,6 +18,7 @@ const tsFiles = (dir: string): Array<string> => {
       files.push(path);
     }
   }
+
   return files;
 };
 
@@ -37,11 +39,13 @@ const ownerRef = (file: string): OwnerRef | undefined => {
   const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
   const parts = relativePath.split('/');
   if (parts.length < 3) return undefined;
+
   const [layer, owner] = parts;
   if (owner.endsWith('.ts')) return undefined;
 
   const rootPath = join(SRC_ROOT, layer, owner);
   if (!existsSync(join(rootPath, 'index.ts'))) return undefined;
+
   return { root: `${layer}/${owner}`, rootPath };
 };
 
@@ -50,6 +54,7 @@ const resolveImportTarget = (file: string, source: string): string => {
   if (existsSync(target) && statSync(target).isDirectory()) return join(target, 'index.ts');
   if (existsSync(`${target}.ts`)) return `${target}.ts`;
   if (existsSync(join(target, 'index.ts'))) return join(target, 'index.ts');
+
   return target;
 };
 
@@ -59,6 +64,7 @@ const importsFromSchemaSubmodule = (file: string, declaration: string): boolean 
 
   const schemaRoot = join(SRC_ROOT, 'schemas');
   const target = join(dirname(file), source);
+
   return target.startsWith(`${schemaRoot}${sep}`);
 };
 
@@ -72,6 +78,7 @@ const importsFromContractSubmodule = (file: string, declaration: string): boolea
   const target = resolveImportTarget(file, source);
   const contractRoot = join(SRC_ROOT, 'contract');
   const targetOwner = ownerRef(target);
+
   return (
     target.startsWith(`${contractRoot}${sep}`) &&
     target !== join(contractRoot, 'index.ts') &&
@@ -87,6 +94,7 @@ const importsFlatProviderInternal = (file: string, declaration: string): boolean
   if (relativeSource.startsWith('providers/')) return false;
 
   const relativeTarget = relative(SRC_ROOT, resolveImportTarget(file, source)).replace(/\\/g, '/');
+
   return relativeTarget !== 'providers/index.ts' && /^providers\/[^/]+\.ts$/u.test(relativeTarget);
 };
 
@@ -226,6 +234,7 @@ describe('core layer import boundaries', () => {
     const timeOrSharedCacheOffenders = tsFiles(SRC_ROOT).flatMap(file => {
       const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
       const source = readFileSync(file, 'utf8');
+
       return [
         ...(source.includes('Date.now(') ? [`${relativePath}: Date.now`] : []),
         ...(source.includes('createCache') ? [`${relativePath}: createCache`] : []),
@@ -235,6 +244,7 @@ describe('core layer import boundaries', () => {
     const providerCacheOffenders = tsFiles(join(SRC_ROOT, 'providers', 'shape')).flatMap(file => {
       const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
       const source = readFileSync(file, 'utf8');
+
       return /const\s+\w+Cache\s*=\s*new\s+(?:Weak)?Map/u.test(source)
         ? [`${relativePath}: module-level Map cache`]
         : [];

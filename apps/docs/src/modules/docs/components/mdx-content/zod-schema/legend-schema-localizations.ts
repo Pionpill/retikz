@@ -4,8 +4,11 @@ import type { SchemaPathSegment } from './types';
 type DescriptionMap = Record<string, string>;
 
 const field = (key: string): SchemaPathSegment => ({ kind: 'field', key });
+
 const array = (): SchemaPathSegment => ({ kind: 'array' });
+
 const union = (index: number): SchemaPathSegment => ({ kind: 'union', index });
+
 const caseOf = (value: string): SchemaPathSegment => ({ kind: 'case', discriminator: 'kind', value });
 
 const setDescription = (target: DescriptionMap, path: ReadonlyArray<SchemaPathSegment>, description: string): void => {
@@ -157,6 +160,7 @@ const createLegendSchemaDescriptions = (): Readonly<DescriptionMap> => {
   setDescription(descriptions, childPath(tick, 'key'), '当前 Legend 容器内稳定且唯一的刻度标识');
   setDescription(descriptions, childPath(tick, 'offset'), '沿样本主轴的归一化编写位置，范围为 0 到 1');
   setDescription(descriptions, childPath(tick, 'label'), '解释刻度位置的可选 JSON-safe Core child');
+
   return Object.freeze(descriptions);
 };
 
@@ -193,6 +197,7 @@ const createLegendArtifactDescriptions = (): Readonly<DescriptionMap> => {
   setDescription(descriptions, childPath(anchor, 'x'), 'Legend 分配坐标中的有限水平 anchor');
   setDescription(descriptions, childPath(anchor, 'y'), 'Legend 分配坐标中的有限垂直 anchor');
   setDescription(descriptions, childPath(tick, 'label'), '求解后的刻度标签 placement；省略标签时为 null');
+
   return Object.freeze(descriptions);
 };
 

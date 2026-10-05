@@ -4,8 +4,8 @@
 
 #### Chain / ChainProps
 
-- `Chain`: <ApiSourceLink label={"Chain"} path={"packages/library/standard-react/src/collection/chain/Chain.tsx"} startLine={95}>Container for sequential and parallel content</ApiSourceLink>
-- `ChainProps`: <ApiSourceLink label={"ChainProps"} path={"packages/library/standard-react/src/collection/chain/Chain.tsx"} startLine={24}>Chain props inputs and JSX children are mutually exclusive</ApiSourceLink>
+- `Chain`: <ApiSourceLink label={"Chain"} path={"packages/library/standard-react/src/collection/chain/Chain.tsx"} startLine={133}>Container for sequential and parallel content</ApiSourceLink>
+- `ChainProps`: <ApiSourceLink label={"ChainProps"} path={"packages/library/standard-react/src/collection/chain/Chain.tsx"} startLine={33}>Chain props inputs and JSX children are mutually exclusive</ApiSourceLink>
 
 ```ts
 export declare const Chain: {
@@ -47,8 +47,8 @@ export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataE
 
 #### ChainCell / ChainCellProps
 
-- `ChainCell`: <ApiSourceLink label={"ChainCell"} path={"packages/library/standard-react/src/collection/chain/ChainCell.tsx"} startLine={8}>Direct cell of Chain or ChainBranch</ApiSourceLink>
-- `ChainCellProps`: <ApiSourceLink label={"ChainCellProps"} path={"packages/library/standard-react/src/collection/chain/ChainCell.tsx"} startLine={6}>Text or one drawable in a chain cell</ApiSourceLink>
+- `ChainCell`: <ApiSourceLink label={"ChainCell"} path={"packages/library/standard-react/src/collection/chain/ChainCell.tsx"} startLine={10}>Direct cell of Chain or ChainBranch</ApiSourceLink>
+- `ChainCellProps`: <ApiSourceLink label={"ChainCellProps"} path={"packages/library/standard-react/src/collection/chain/ChainCell.tsx"} startLine={7}>Text or one drawable in a chain cell</ApiSourceLink>
 
 <DocTabs defaultValue="text">
 
@@ -62,7 +62,7 @@ export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataE
 | `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                    | —       | —                                                                                                   |
+| `text?`     | `string`                    | —       | Cell text, mutually exclusive with drawing content                                                  |
 
 </ApiTable>
 
@@ -74,7 +74,7 @@ export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataE
 
 | Member     | Type                        | Default | Description                                                                                         |
 | ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                 | —       | —                                                                                                   |
+| `children` | `ReactNode`                 | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
 | `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
 | `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
 | `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
@@ -98,8 +98,8 @@ export type ChainCellProps = CellMarkerProps;
 
 #### ChainParallel / ChainParallelProps
 
-- `ChainParallel`: <ApiSourceLink label={"ChainParallel"} path={"packages/library/standard-react/src/collection/chain/ChainParallel.tsx"} startLine={13}>Structured branching and rejoining</ApiSourceLink>
-- `ChainParallelProps`: <ApiSourceLink label={"ChainParallelProps"} path={"packages/library/standard-react/src/collection/chain/ChainParallel.tsx"} startLine={7}>Local parallel block overrides and direct branches</ApiSourceLink>
+- `ChainParallel`: <ApiSourceLink label={"ChainParallel"} path={"packages/library/standard-react/src/collection/chain/ChainParallel.tsx"} startLine={15}>Structured branching and rejoining</ApiSourceLink>
+- `ChainParallelProps`: <ApiSourceLink label={"ChainParallelProps"} path={"packages/library/standard-react/src/collection/chain/ChainParallel.tsx"} startLine={8}>Local parallel block overrides and direct branches</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -135,8 +135,8 @@ export type ChainParallelProps = {
 
 #### ChainBranch / ChainBranchProps
 
-- `ChainBranch`: <ApiSourceLink label={"ChainBranch"} path={"packages/library/standard-react/src/collection/chain/ChainBranch.tsx"} startLine={10}>Direct branch of a parallel block</ApiSourceLink>
-- `ChainBranchProps`: <ApiSourceLink label={"ChainBranchProps"} path={"packages/library/standard-react/src/collection/chain/ChainBranch.tsx"} startLine={5}>An ordered branch</ApiSourceLink>
+- `ChainBranch`: <ApiSourceLink label={"ChainBranch"} path={"packages/library/standard-react/src/collection/chain/ChainBranch.tsx"} startLine={12}>Direct branch of a parallel block</ApiSourceLink>
+- `ChainBranchProps`: <ApiSourceLink label={"ChainBranchProps"} path={"packages/library/standard-react/src/collection/chain/ChainBranch.tsx"} startLine={6}>An ordered branch</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -170,8 +170,8 @@ export type ChainBranchProps = {
 
 #### chain / InputChain
 
-- `chain`: <ApiSourceLink label={"chain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={113}>Create a chain retaining its authoring input</ApiSourceLink>
-- `InputChain`: <ApiSourceLink label={"InputChain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={23}>Three inputs sharing one structure and connection contract</ApiSourceLink>
+- `chain`: <ApiSourceLink label={"chain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={159}>Create a chain retaining its authoring input</ApiSourceLink>
+- `InputChain`: <ApiSourceLink label={"InputChain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={35}>Three inputs sharing one structure and connection contract</ApiSourceLink>
 
 ```ts
 export declare const chain: (input: InputChain) => InputEmbed<InputChain>;
@@ -209,7 +209,7 @@ export type InputChain = Omit<
   <ApiSourceLink
     label={'ChainInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/chain.ts'}
-    startLine={47}
+    startLine={85}
   >
     Collect content recursively, normalize once through Kernel, and preserve dependencies
   </ApiSourceLink>
@@ -227,7 +227,7 @@ export declare const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputC
   <ApiSourceLink
     label={'IRChain'}
     path={'packages/library/standard/src/collection/chain/schema/types.ts'}
-    startLine={23}
+    startLine={38}
   >
     Three mutually exclusive inputs sharing Core scope and cell content contracts
   </ApiSourceLink>
@@ -285,7 +285,7 @@ export const ChainDefinition: LayoutCompositeDefinition<IRChain, 'standard', 'ch
   <ApiSourceLink
     label={'ChainProvider'}
     path={'packages/library/standard/src/collection/chain/provider.ts'}
-    startLine={6}
+    startLine={7}
   >
     On-demand dependencies of Chain and its cell lowering targets
   </ApiSourceLink>
@@ -298,7 +298,7 @@ export declare const ChainProvider: CoreDependencyProvider;
 #### createChain
 
 <p>
-  <ApiSourceLink label={'createChain'} path={'packages/library/standard/src/collection/chain/factory.ts'} startLine={3}>
+  <ApiSourceLink label={'createChain'} path={'packages/library/standard/src/collection/chain/factory.ts'} startLine={4}>
     Chain factory preserving sparse Source
   </ApiSourceLink>
 </p>

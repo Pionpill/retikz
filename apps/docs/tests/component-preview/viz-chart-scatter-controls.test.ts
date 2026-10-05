@@ -37,7 +37,9 @@ const comparable = (contract: PreviewControlContract) => ({
 
 const expectCompletePanel = (contract: PreviewControlContract): void => {
   expect(contract.controls.presentation).toBe('panel');
+
   if (contract.controls.presentation !== 'panel') return;
+
   expect(contract.controls.sections[0]?.controls[0]?.kind).toBe('table');
   expect(Object.keys(contract.canonicalValues).sort()).toEqual(
     getPreviewControlFields(contract.controls)
@@ -70,6 +72,7 @@ const canonicalDeclarationProps = (source: PreviewSourceConfig, component: unkno
   if (!isValidElement<{ children?: ReactNode }>(chart)) {
     throw new Error('Chart preview must provide a canonical element');
   }
+
   const declaration = Children.toArray(chart.props.children).find(
     child => isValidElement(child) && child.type === component,
   );
@@ -97,6 +100,7 @@ describe('Viz Chart scatter controls', () => {
       ),
     ).toBe(true);
   });
+
   it('保持各组 controls 的双语结构与 canonical 状态一致', () => {
     for (const [zh, en] of [
       [fertilityWorkZh, fertilityWorkEn],
@@ -104,6 +108,7 @@ describe('Viz Chart scatter controls', () => {
       [worldCupZh, worldCupEn],
     ] as const) {
       expect(comparable(zh)).toEqual(comparable(en));
+
       expectCompletePanel(zh);
       expectCompletePanel(en);
     }
@@ -142,7 +147,9 @@ describe('Viz Chart scatter controls', () => {
       [worldCupEn, 'scatter-world-cup-shots-point-shape'],
     ] as const) {
       const shapeControl = getPreviewControlFields(contract.controls).find(control => control.id === controlId);
+
       expect(shapeControl).toMatchObject({ kind: 'select' });
+
       if (shapeControl?.kind === 'select') {
         expect(shapeControl.options.map(option => option.value)).toEqual(['circle', 'rectangle', 'diamond']);
       }
@@ -254,13 +261,17 @@ describe('Viz Chart scatter controls', () => {
   it('基础用法 demo 不包含图内 presentation 内容', () => {
     for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource, appearanceSource]) {
       const props = canonicalScatterProps(source);
+
       expect(props).not.toHaveProperty('presentation');
       expect(props).not.toHaveProperty('plotExtension');
+
       const chart = source.canonicalRender?.();
       if (!isValidElement<{ children?: ReactNode }>(chart)) throw new Error('Missing chart');
+
       const types = Children.toArray(chart.props.children)
         .filter(isValidElement)
         .map(child => child.type);
+
       expect(types).not.toContain(ChartTitle);
       expect(types).not.toContain(ChartSubtitle);
       expect(types).not.toContain(ChartSource);

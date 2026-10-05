@@ -68,6 +68,7 @@ describe('Node auto-contrast textColor keyword', () => {
       text: 'Status',
       style: { textColor: CONTRAST },
     });
+
     expect(NodeSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 });

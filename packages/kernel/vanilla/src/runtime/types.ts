@@ -2,13 +2,12 @@ import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } f
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
-import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
+import type { RuntimeDiagnostic, RuntimeUpdateStrategy } from '@retikz/runtime';
 
 import type { SynchronousInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
 import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
 
-export type { VanillaViewModeValue } from './constants';
 export { VanillaViewMode } from './constants';
 
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla InputScene */
@@ -89,7 +88,7 @@ export type VanillaRetainedRuntimeOptions = Readonly<{
    * Computation 更新策略
    * @default RuntimeUpdateStrategy.Auto
    */
-  updateStrategy?: RuntimeUpdateStrategyValue;
+  updateStrategy?: RuntimeUpdateStrategy;
   /** 可选第三方 retained renderer factory；缺省使用内置实现 */
   rendererFactory?: RetainedRendererFactory;
 }>;
@@ -141,16 +140,19 @@ export type RetainedMountOptions = CommonOptions & {
   runtime?: VanillaRetainedRuntimeOptions;
 };
 
-/** IR / InputScene static DOM mount options */
+/** 将 IR 或 InputScene 静态挂载到 DOM 的选项 */
 export type RawStaticMountOptions = CommonOptions & {
   /** static 完整编译与物化配置 */
   runtime: VanillaStaticRuntimeOptions;
 };
 
-/** IR / InputScene DOM mount options */
+/** 将 IR 或 InputScene 挂载到 DOM 的选项 */
 export type MountOptions = RetainedMountOptions | RawStaticMountOptions;
 
-/** SVG / Canvas view 共享的 lifecycle 与 committed metadata */
+/**
+ * SVG / Canvas view 共享的 lifecycle 与 committed metadata
+ * @template TRoot 挂载产生的 SVG 或 Canvas 根元素类型
+ */
 export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = Readonly<{
   /** 挂载出的稳定宿主 root */
   root: TRoot;
@@ -172,7 +174,7 @@ export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = 
   readonly compileResult: CompileResult | undefined;
 }>;
 
-/** IR / InputScene SVG retained view */
+/** IR 或 InputScene 对应的保留式 SVG 视图 */
 export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
   Readonly<{
     /** view 执行模式 */
@@ -192,7 +194,7 @@ export type StaticSvgView = VanillaViewState<SVGSVGElement> &
     update: (next: Scene) => void;
   }>;
 
-/** IR / InputScene SVG static view */
+/** IR 或 InputScene 对应的静态 SVG 视图 */
 export type StaticRawSvgView = VanillaViewState<SVGSVGElement> &
   Readonly<{
     /** view 执行模式 */
@@ -246,7 +248,7 @@ export type CanvasViewState = VanillaViewState<HTMLCanvasElement> &
     clientToScene: (clientX: number, clientY: number) => ScenePoint;
   }>;
 
-/** IR / InputScene Canvas retained view */
+/** IR 或 InputScene 对应的保留式 Canvas 视图 */
 export type RetainedCanvasView = CanvasViewState &
   Readonly<{
     /** view 执行模式 */
@@ -266,7 +268,7 @@ export type StaticCanvasView = CanvasViewState &
     update: (next: Scene) => void;
   }>;
 
-/** IR / InputScene Canvas static view */
+/** IR 或 InputScene 对应的静态 Canvas 视图 */
 export type StaticRawCanvasView = CanvasViewState &
   Readonly<{
     /** view 执行模式 */

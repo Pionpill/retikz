@@ -16,7 +16,7 @@ export const RetikzGraphReactErrorCode = {
 } as const;
 
 /** Graph React package 稳定错误码取值 */
-export type RetikzGraphReactErrorCodeValue = ValueOf<typeof RetikzGraphReactErrorCode>;
+export type RetikzGraphReactErrorCode = ValueOf<typeof RetikzGraphReactErrorCode>;
 
 /** Graph React package 错误的结构化详情 */
 export type RetikzGraphReactErrorDetails = Readonly<{
@@ -37,7 +37,7 @@ export type RetikzGraphReactErrorDetails = Readonly<{
 /** 创建 Graph React package 错误所需的参数 */
 export type RetikzGraphReactErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzGraphReactErrorCodeValue;
+  code: RetikzGraphReactErrorCode;
   /** 面向调用方的错误消息 */
   message: string;
   /** 与错误码关联的结构化详情 */
@@ -47,11 +47,13 @@ export type RetikzGraphReactErrorOptions = Readonly<{
 }>;
 
 /** Graph React package 的统一结构化错误 */
-export class RetikzGraphReactError extends RetikzError<RetikzGraphReactErrorCodeValue, RetikzGraphReactErrorDetails> {
+export class RetikzGraphReactError extends RetikzError<RetikzGraphReactErrorCode, RetikzGraphReactErrorDetails> {
   /** 稳定错误码 */
-  readonly code: RetikzGraphReactErrorCodeValue;
+  readonly code: RetikzGraphReactErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzGraphReactErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

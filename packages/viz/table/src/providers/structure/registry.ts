@@ -10,10 +10,12 @@ export const extractTableStructureKind = (definition: AnyTableStructureDefinitio
   if (!(definition.schema instanceof ZodObject)) {
     throw new RetikzTableError('table: structure definition schema must be a ZodObject with a literal kind');
   }
+
   const kindSchema = definition.schema.shape.kind;
   if (!(kindSchema instanceof ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
     throw new RetikzTableError('table: structure definition schema.kind must be a non-empty string literal');
   }
+
   return kindSchema.value;
 };
 
@@ -24,6 +26,7 @@ export const resolveTableStructureRegistry = (
   custom?: ReadonlyArray<AnyTableStructureDefinition>,
 ): ReadonlyMap<string, AnyTableStructureDefinition> => {
   const registry = new Map<string, AnyTableStructureDefinition>();
+
   for (const definition of BUILTIN_TABLE_STRUCTURES) {
     const kind = extractTableStructureKind(definition);
     if (registry.has(kind)) throw new RetikzTableError(`table: duplicate built-in structure registration: "${kind}"`);
@@ -35,12 +38,16 @@ export const resolveTableStructureRegistry = (
     if (BUILTIN_STRUCTURE_KINDS.has(kind)) {
       throw new RetikzTableError(`table: structure kind "${kind}" conflicts with a built-in definition`);
     }
+
     if ((RESERVED_TABLE_STRUCTURE_KINDS as ReadonlyArray<string>).includes(kind)) {
       throw new RetikzTableError(`table: structure kind "${kind}" is reserved for v0.1`);
     }
+
     if (registry.has(kind)) throw new RetikzTableError(`table: duplicate structure registration: "${kind}"`);
+
     registry.set(kind, definition);
   }
+
   return registry;
 };
 

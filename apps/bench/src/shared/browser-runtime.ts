@@ -24,6 +24,7 @@ export const createBenchmarkCanvas = (): Readonly<{
   canvas.height = 900;
   const context = canvas.getContext('2d', { alpha: true, willReadFrequently: true });
   if (context === null) throw new Error('browser benchmark: CanvasRenderingContext2D is unavailable');
+
   return Object.freeze({ canvas, context });
 };
 
@@ -73,6 +74,7 @@ export const createRetainedBenchmarkSession = (
     ],
     trace: record => records.push(record),
   });
+
   return Object.freeze({ coreComputation, session });
 };
 

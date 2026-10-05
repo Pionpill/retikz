@@ -25,17 +25,17 @@ Core Theme 固定为 `style` 和 `mode`。两者都按 Scene 到 Scope 的字段
 ```ts
 type IRTheme = Readonly<{
   style?: string;
-  mode?: ThemeModeValue;
+  mode?: ThemeMode;
 }>;
 
 type ThemeStyleDefinition = Readonly<{
   name: string;
-  resolve(context: Readonly<{ mode: ThemeModeValue }>): ThemeStyleColorOverrides;
+  resolve(context: Readonly<{ mode: ThemeMode }>): ThemeStyleColorOverrides;
 }>;
 
 type ResolvedTheme = Readonly<{
   style?: string;
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   colors: ResolvedThemeColors;
 }>;
 
@@ -79,7 +79,7 @@ const ThemeTokenSource = {
   Local: 'local',
 } as const;
 
-type ThemeTokenSourceValue = ValueOf<typeof ThemeTokenSource>;
+type ThemeTokenSource = ValueOf<typeof ThemeTokenSource>;
 ```
 
 `inherit` 只表示 owner resolver 从上层完整 `ResolvedTheme` 直接投影 token 值，例如 Table 对 Core shared categorical 的投影。`local` 表示当前 owner 的默认值、style definition 或 authored override 产生的值，包括领域 token、shorthand 与 native theme。

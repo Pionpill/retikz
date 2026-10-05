@@ -52,6 +52,7 @@ export const computeTableCellFitScale = (
   validateBoundsRect(contentBox, 'contentBox');
 
   let scale: TableCellFitScale;
+
   switch (fit) {
     case 'none':
       scale = { x: 1, y: 1 };
@@ -77,6 +78,7 @@ export const computeTableCellFitScale = (
   }
 
   validateScale(scale);
+
   return deepFreeze(scale);
 };
 
@@ -91,6 +93,7 @@ export const projectTableCellBounds = (
   if (!Number.isFinite(translation.x) || !Number.isFinite(translation.y)) {
     throw new RetikzTableError('table: Cell bounds translation must contain finite x and y');
   }
+
   const projected = {
     x: bounds.x * scale.x + translation.x,
     y: bounds.y * scale.y + translation.y,
@@ -98,5 +101,6 @@ export const projectTableCellBounds = (
     height: bounds.height * scale.y,
   };
   validateBoundsRect(projected, 'projected bounds');
+
   return deepFreeze(projected);
 };

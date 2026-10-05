@@ -5,6 +5,7 @@ import { renderArrayStylesPreview } from './array-styles.preview';
 
 /** Fallback controls for preview registration. */
 export const previewControls = previewControlContract.controls;
+
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   renderArrayStylesPreview({
     indexEnabled: values.indexEnabled,
@@ -28,6 +29,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     override: values.override,
   }),
 );
+
 export const previewSource = controlledPreview.source;
+
 const Demo = controlledPreview.Component;
 export default Demo;

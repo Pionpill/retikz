@@ -45,7 +45,9 @@ const probeGuidesOf = (child: IRChild, measureText: TextMeasurer): ReadonlyArray
     compile: (_node, context) => {
       const probe = context.layoutChild(child, NaturalLayoutProposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       guides = probe.result.alignmentGuides;
+
       return { children: [] };
     },
   });
@@ -55,6 +57,7 @@ const probeGuidesOf = (child: IRChild, measureText: TextMeasurer): ReadonlyArray
     measureText,
     padding: 0,
   });
+
   return guides;
 };
 
@@ -72,9 +75,11 @@ const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: 
     compile: (_node, context) => {
       const probe = context.layoutChild(child, NaturalLayoutProposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       guides = probe.result.alignmentGuides;
       allocationHeight = probe.result.allocationBounds.height;
       visualBounds = probe.result.visualBounds;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -85,11 +90,13 @@ const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: 
     precision,
     lowerTex,
   });
+
   return { guides, allocationHeight, visualBounds, primitives: result.scene.primitives };
 };
 
 const emittedTextPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<TextPrim> => {
   const textPrimitives: Array<TextPrim> = [];
+
   const visit = (primitive: ScenePrimitive): void => {
     if (primitive.type === 'group') {
       primitive.children.forEach(visit);
@@ -97,22 +104,29 @@ const emittedTextPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array
       textPrimitives.push(primitive);
     }
   };
+
   primitives.forEach(visit);
+
   return textPrimitives;
 };
 
 const emittedPhysicalBaselines = (primitives: ReadonlyArray<ScenePrimitive>): Array<number> => {
   const baselines: Array<number> = [];
+
   const visit = (primitive: ScenePrimitive): void => {
     if (primitive.type === 'group') {
       primitive.children.forEach(visit);
       return;
     }
+
     if (primitive.type !== 'text') return;
     if (primitive.baseline !== 'alphabetic') throw new Error('expected alphabetic Node text emission');
+
     primitive.lines.forEach((_line, index) => baselines.push(primitive.y + index * primitive.lineHeight));
   };
+
   primitives.forEach(visit);
+
   return baselines;
 };
 
@@ -142,11 +156,13 @@ describe('toAlphabeticBaselineY', () => {
 
   it('top 单行：块顶（ascent 线）落在锚点', () => {
     const b = baselineY('top', 1);
+
     expect(b - asc).toBeCloseTo(100, 10);
   });
 
   it('bottom 单行：块底（descent 线）落在锚点', () => {
     const b = baselineY('bottom', 1);
+
     expect(b + desc).toBeCloseTo(100, 10);
   });
 
@@ -154,6 +170,7 @@ describe('toAlphabeticBaselineY', () => {
     const b = baselineY('middle', 1);
     const top = b - asc;
     const bottom = b + desc;
+
     expect((top + bottom) / 2).toBeCloseTo(100, 10);
   });
 
@@ -162,18 +179,21 @@ describe('toAlphabeticBaselineY', () => {
     const b = baselineY('middle', n);
     const top = b - asc;
     const bottom = b + (n - 1) * lineHeight + desc;
+
     expect((top + bottom) / 2).toBeCloseTo(100, 10);
   });
 
   it('top 多行：块顶（首行 ascent 线）落在锚点', () => {
     const n = 2;
     const b = baselineY('top', n);
+
     expect(b - asc).toBeCloseTo(100, 10);
   });
 
   it('bottom 多行：块底（末行 descent 线）落在锚点', () => {
     const n = 2;
     const b = baselineY('bottom', n);
+
     expect(b + (n - 1) * lineHeight + desc).toBeCloseTo(100, 10);
   });
 });

@@ -47,6 +47,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
         },
       ],
     } as unknown as IRScene;
+
     expect(rectSize(a)).toEqual(rectSize(b));
   });
 
@@ -77,8 +78,10 @@ describe('Node spacing（CSS-like padding / margin）', () => {
     } as unknown as IRScene;
     const w = rectSize(wide);
     const t = rectSize(tall);
+
     expect(w?.w).toBeGreaterThan(w!.h);
     expect(t?.h).toBeGreaterThan(t!.w);
+
     // 横向 vs 纵向对称：wide.width === tall.height 且 wide.height === tall.width
     expect(w?.w).toBe(t?.h);
     expect(w?.h).toBe(t?.w);
@@ -109,6 +112,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
         },
       ],
     } as unknown as IRScene;
+
     expect(rectSize(ir)).toEqual(rectSize(sym));
   });
 
@@ -126,6 +130,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
       ],
     } as unknown as IRScene;
     const rect = findRect(compileToScene(ir).scene.primitives);
+
     expect(
       rect?.type === 'rect' ? { left: rect.x, center: rect.x + rect.width / 2, width: rect.width } : undefined,
     ).toEqual({ left: -30, center: -10, width: 40 });
@@ -191,6 +196,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0] }],
     };
+
     expect(rectSize(ir)).toEqual({ w: 16, h: 16 });
   });
 });

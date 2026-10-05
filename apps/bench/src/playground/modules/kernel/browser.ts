@@ -35,6 +35,7 @@ export type CreateLabPolicyResultInput = Readonly<{
 }>;
 
 const previewCleanup = new WeakMap<HTMLElement, () => void>();
+
 let measureSequence = 0;
 
 /** 使用工作台配置创建 Vanilla Preview 输出选项 */
@@ -42,6 +43,7 @@ export const createPreviewOutput = (width: number, height: number) => {
   if (!isValidLabPreviewSize(width, height)) {
     throw new Error(`Kernel Lab preview size is invalid: ${width.toString()}x${height.toString()}`);
   }
+
   return Object.freeze({ width, height, idPrefix: 'performance-lab' });
 };
 
@@ -51,6 +53,7 @@ export const fitPreviewOutput = (host: HTMLElement): void => {
   if (!(output instanceof SVGSVGElement) && !(output instanceof HTMLCanvasElement)) {
     throw new Error('Kernel Lab preview output must be an SVG or Canvas element');
   }
+
   output.style.display = 'block';
   output.style.width = 'auto';
   output.style.height = 'auto';
@@ -79,8 +82,10 @@ export const createLabPolicyResult = (input: CreateLabPolicyResultInput): LabPol
     input.trace.find(record => record.owner === '@retikz/core' && record.phase === PerformanceTracePhase.Compile) ??
     input.trace.at(0);
   if (work === undefined) throw new Error(`${input.policyId}: Kernel Lab trace is unavailable`);
+
   const duration = summarizeSamples(input.samples);
   const outcome = input.policyId === LabPolicyId.StaticFull ? LabOutcome.Full : resolveLabOutcome(work);
+
   return Object.freeze({
     policyId: input.policyId,
     outcome,
@@ -122,6 +127,7 @@ const measureUpdate = (task: () => void): number => {
   performance.clearMarks(`${prefix}-start`);
   performance.clearMarks(`${prefix}-end`);
   performance.clearMeasures(prefix);
+
   return measure.duration;
 };
 
@@ -134,15 +140,19 @@ const runSamples = (
   update: (next: IRScene) => void,
 ): ReadonlyArray<number> => {
   let next = second;
+
   for (let index = 0; index < warmupRuns; index += 1) {
     update(next);
     next = next === first ? second : first;
   }
+
   const samples: Array<number> = [];
+
   for (let index = 0; index < sampleRuns; index += 1) {
     samples.push(measureUpdate(() => update(next)));
     next = next === first ? second : first;
   }
+
   return Object.freeze(samples);
 };
 
@@ -150,9 +160,11 @@ const runSamples = (
 const renderPreview = (input: KernelLabPolicyInput, first: IRScene, second: IRScene): void => {
   const preview = input.preview;
   if (preview === undefined) return;
+
   const { host, width, height } = preview;
   previewCleanup.get(host)?.();
   host.replaceChildren();
+
   const output = createPreviewOutput(width, height);
   const animation = { enabled: false };
   let dispose: () => void;
@@ -183,6 +195,7 @@ const renderPreview = (input: KernelLabPolicyInput, first: IRScene, second: IRSc
       dispose = view.dispose;
     }
   }
+
   fitPreviewOutput(host);
   previewCleanup.set(host, dispose);
 };
@@ -219,12 +232,14 @@ const executeStaticPolicy = (input: KernelLabPolicyInput, first: IRScene, second
     update = next => view.update(next);
     dispose = view.dispose;
   }
+
   const samples = runSamples(first, second, input.warmupRuns, input.sampleRuns, next => {
     records.length = 0;
     update(next);
   });
   dispose();
   renderPreview(input, first, second);
+
   return createLabPolicyResult({
     policyId: input.policyId,
     samples,
@@ -259,6 +274,7 @@ const executeRetainedPolicy = (input: KernelLabPolicyInput, first: IRScene, seco
   const diagnostics = value.session.diagnostics().map(diagnostic => `${diagnostic.code}: ${diagnostic.message}`);
   value.session.dispose();
   renderPreview(input, first, second);
+
   return createLabPolicyResult({
     policyId: input.policyId,
     samples,
@@ -272,6 +288,7 @@ const executeRetainedPolicy = (input: KernelLabPolicyInput, first: IRScene, seco
 export const executeBrowserKernelLabPolicy: KernelLabPolicyExecutor = input => {
   const scenario = getKernelLabScenario(input.scenarioId);
   const { first, second } = createKernelLabScenePair(scenario.id);
+
   return Promise.resolve(
     input.policyId === LabPolicyId.StaticFull
       ? executeStaticPolicy(input, first, second)

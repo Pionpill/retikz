@@ -3,6 +3,7 @@ import { pointAtEllipseArcAngle } from '@retikz/math';
 
 import { ShapeVertexAngleSchema, ShapeInnerRatioSchema, shapeVertexPath } from '../shared';
 import type { IRStar } from './types';
+
 /** 将 Star 意图下沉为单一 Core Path */
 export const lowerStar = (source: IRStar): IRPath => {
   const innerRadius =
@@ -17,5 +18,6 @@ export const lowerStar = (source: IRStar): IRPath => {
       angleDeg: rotate + (index * 180) / source.points,
     });
   });
+
   return shapeVertexPath(source, vertices);
 };

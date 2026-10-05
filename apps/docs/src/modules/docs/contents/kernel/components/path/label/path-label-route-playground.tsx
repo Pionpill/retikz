@@ -11,7 +11,9 @@ export type PathLabelRoutePlaygroundCopy = {
 };
 
 const SourcePosition: [number, number] = [-145, -85];
+
 const TargetPosition: [number, number] = [145, 85];
+
 const SmoothPoints: Array<[number, number] | 'B'> = [[-115, 105], [25, -105], 'B'];
 
 /** 由路线控件选择连接两个固定节点的 Step */

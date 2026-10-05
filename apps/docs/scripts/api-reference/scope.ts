@@ -141,6 +141,7 @@ export const createScopeApiReferenceMdx = async (lang: ApiReferenceLanguage): Pr
 /** 写入组件的中英文 API include */
 export const writeScopeApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const)
     writeFileSync(
       path.join(outputDirectory, `generated.${lang}.mdx`),

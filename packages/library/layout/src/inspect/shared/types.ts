@@ -10,7 +10,10 @@ export type BaseLayoutInspectOptions = ZodInput<typeof BaseLayoutInspectOptionsS
 /** Layout 布局检查器选择策略的作用范围 */
 export type LayoutInspectionSelectionScope = InspectionSelectionTarget;
 
-/** 构造一个布局检查器选择结果所需的输入 */
+/**
+ * 构造一个布局检查器选择结果所需的输入
+ * @template TOptions 目标检查器接受的 JSON 选项类型，默认使用基础布局检查选项
+ */
 export type CreateLayoutInspectionSelectionInput<TOptions extends JsonObject = BaseLayoutInspectOptions> = Readonly<{
   /** 目标检查器的注册键 */
   inspector: InspectorKey;

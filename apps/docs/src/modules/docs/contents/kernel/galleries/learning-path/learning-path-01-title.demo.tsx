@@ -4,10 +4,15 @@ import type { ComponentProps, FC } from 'react';
 // 配色 — 节点底 / 边 / 必填白字用字面色（离线 SVG 下不会变黑）；
 // title / header 的黑字用 currentColor，跟随主题 light / dark 自适应
 const REQUIRED_FILL = '#1f6286';
+
 const OPTIONAL_FILL = '#878787';
+
 const LEAF_TEXT = '#ffffff';
+
 const NODE_STROKE = '#000000';
+
 const TITLE_TEXT = 'currentColor';
+
 const SANS_FONT = { family: 'Helvetica, Arial, sans-serif' };
 
 type RoadmapNodeProps = {
@@ -25,6 +30,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
   const isHeader = variant === 'header';
   const hasBox = !isTitle && !isHeader;
   const fill = variant === 'required' ? REQUIRED_FILL : variant === 'optional' ? OPTIONAL_FILL : undefined;
+
   return (
     <Node
       id={id}

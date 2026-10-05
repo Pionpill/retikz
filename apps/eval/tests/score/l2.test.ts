@@ -8,6 +8,7 @@ const ir = SceneSchema.parse({
   type: 'scene',
   children: [{ type: 'node', position: [0, 0], text: 'Hello', shape: 'rectangle' }],
 });
+
 const scene = compileToScene(ir).scene;
 
 describe('scoreL2', () => {
@@ -16,11 +17,14 @@ describe('scoreL2', () => {
       { kind: 'textPresent', text: 'Hello' },
       { kind: 'primitiveCount', primitive: 'rect', op: '>=', value: 1 },
     ]);
+
     expect(r.total).toBe(2);
     expect(r.passed).toBe(2);
   });
+
   it('部分失败 → passed < total', () => {
     const r = scoreL2(scene, [{ kind: 'textPresent', text: '不存在' }]);
+
     expect(r.total).toBe(1);
     expect(r.passed).toBe(0);
     expect(r.results[0]?.pass).toBe(false);

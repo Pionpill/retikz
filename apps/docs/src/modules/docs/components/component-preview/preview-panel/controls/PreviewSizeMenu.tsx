@@ -35,14 +35,17 @@ export const PreviewSizeMenu: FC<PreviewSizeMenuProps> = props => {
   const [menu, setMenu] = useState('');
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const keepOpen = () => clearTimeout(closeTimer.current);
+
   const closeSoon = () => {
     keepOpen();
     closeTimer.current = setTimeout(() => setMenu(''), 150);
   };
+
   useEffect(() => () => clearTimeout(closeTimer.current), []);
   const WidthIcon = width === 375 ? Smartphone : width === 768 ? Tablet : Monitor;
   const heightLabel = lang === 'zh' ? '预览高度' : 'Preview height';
   const widthLabel = lang === 'zh' ? '预览宽度' : 'Preview width';
+
   return (
     <Menubar value={menu} onValueChange={setMenu} className="h-auto gap-1 p-1" onPointerLeave={closeSoon}>
       <MenubarMenu value="height">

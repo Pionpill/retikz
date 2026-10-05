@@ -33,6 +33,7 @@ vi.mock('../../src/modules/docs/store', async importOriginal => {
     themeMode: 'inherit',
     controlPanelDefaultOpen: true,
   };
+
   return {
     ...actual,
     useComponentPreviewStore: Object.assign((selector: (snapshot: typeof state) => unknown) => selector(state), {
@@ -44,6 +45,7 @@ vi.mock('../../src/modules/docs/store', async importOriginal => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const Demo: FC = () => null;
+
 const panelDefinition = definePreviewControls({
   presentation: 'panel',
   sections: [
@@ -114,6 +116,7 @@ describe('ComponentPreviewCard dialog boundary', () => {
     });
 
     const workspace = container.querySelector('[data-slot="preview-workspace"]');
+
     expect(workspace?.classList.contains('h-30')).toBe(true);
     expect(workspace?.classList.contains('h-54')).toBe(false);
     expect(container.querySelector('button[aria-label="Preview size xs"]')?.getAttribute('data-state')).toBe('on');
@@ -193,13 +196,18 @@ describe('ComponentPreviewCard dialog boundary', () => {
       root.render(<ComponentPreviewCard name="original-size" Component={Demo} size="sm" />);
     });
     const sizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Preview size xl"]');
+
     expect(sizeButton).not.toBeNull();
     expect(sizeButton!.getAttribute('data-state')).toBe('off');
 
     act(() => sizeButton!.click());
+
     expect(sizeButton!.getAttribute('data-state')).toBe('on');
+
     const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');
+
     expect(maximizeButton).not.toBeNull();
+
     act(() => maximizeButton!.click());
 
     expect(dialogCapture.props).toHaveLength(1);
@@ -224,7 +232,9 @@ describe('ComponentPreviewCard dialog boundary', () => {
     });
 
     const darkTheme = container.querySelector<HTMLButtonElement>('button[aria-label="Preview theme dark"]');
+
     expect(darkTheme).not.toBeNull();
+
     act(() => darkTheme?.click());
 
     const maximizeButton = container.querySelector<HTMLButtonElement>('button[aria-label="Maximize"]');

@@ -65,6 +65,7 @@ export const QuantileBandOutputsSchema = strictObject({
 })
   .superRefine((outputs, ctx) => {
     const seen = new Map<string, Array<string | number>>();
+
     const addField = (field: string, path: Array<string | number>): void => {
       const previous = seen.get(field);
       if (previous !== undefined) {
@@ -74,11 +75,14 @@ export const QuantileBandOutputsSchema = strictObject({
           message: `duplicate quantile-band output field "${field}"`,
         });
       }
+
       seen.set(field, path);
     };
+
     addField(outputs.lower, ['lower']);
     addField(outputs.upper, ['upper']);
     outputs.points?.forEach((point, index) => addField(point.as, ['points', index, 'as']));
+
     for (const key of [
       'spread',
       'lowerFence',
@@ -130,6 +134,7 @@ const ExternalReducerOperationObjectSchema = looseObject({
   }).describe('Discriminator: custom reducer kind'),
 });
 
+/** 校验带 JSON 配置的自定义聚合归约操作 */
 export const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catchall(JsonValueSchema).describe(
   'Custom reducer operation with JSON config',
 );
@@ -169,6 +174,7 @@ export const ReducerMetricsSchema = array(ReducerOperationSchema)
   .min(1)
   .superRefine((metrics, ctx) => {
     const seen = new Set<string>();
+
     for (let index = 0; index < metrics.length; index++) {
       for (const { field, path } of reducerOutputFieldsOf(metrics[index])) {
         if (seen.has(field)) {
@@ -178,6 +184,7 @@ export const ReducerMetricsSchema = array(ReducerOperationSchema)
             message: `duplicate reducer output field "${field}"`,
           });
         }
+
         seen.add(field);
       }
     }

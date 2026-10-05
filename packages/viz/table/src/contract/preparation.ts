@@ -36,7 +36,10 @@ export type TableDataOptions = Readonly<{
   regressionImplementations?: ReadonlyArray<AnySynchronousRegressionImplementation>;
 }>;
 
-/** Table异步数据准备输入，运行时句柄不进入IR */
+/**
+ * Table异步数据准备输入，运行时句柄不进入IR
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type TableDataPreparationOptions<TSource = never> = Readonly<{
   /** 规范结果、原生源或原始行绑定 */
   dataBindings: DataInputBindings<TSource>;

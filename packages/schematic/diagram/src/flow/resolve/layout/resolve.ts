@@ -69,20 +69,24 @@ const resolveFlowLayoutRouting = (
         looseness: authored?.looseness ?? inheritedTangents?.looseness ?? BendLoosenessSchema.parse(undefined),
       };
     }
+
     const inheritedSymmetric = ancestor !== undefined && !('outAngle' in ancestor) ? ancestor : undefined;
     const bendDirection = authored?.bendDirection ?? inheritedSymmetric?.bendDirection;
     const bendAngle = authored?.bendAngle ?? inheritedSymmetric?.bendAngle;
+
     return {
       kind: 'bend',
       ...(bendAngle === undefined ? {} : { bendAngle }),
       ...(bendDirection === undefined ? {} : { bendDirection }),
     };
   }
+
   const turnPosition =
     routing.kind === 'orthogonal'
       ? (('turnPosition' in routing ? routing.turnPosition : undefined) ??
         (inheritedRouting?.kind === 'orthogonal' ? inheritedRouting.turnPosition : undefined))
       : undefined;
+
   return {
     kind: routing.kind,
     ...(turnPosition === undefined ? {} : { turnPosition }),

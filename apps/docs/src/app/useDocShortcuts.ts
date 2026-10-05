@@ -39,11 +39,13 @@ export const useDocShortcuts = () => {
         handleCopyLink();
         return;
       }
+
       if (mod && !event.altKey && !event.shiftKey && key === 'b') {
         event.preventDefault();
         toggleSidebar();
         return;
       }
+
       if (mod && event.altKey && !event.shiftKey) {
         switch (key) {
           case 'b':
@@ -65,7 +67,9 @@ export const useDocShortcuts = () => {
         }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleCopyLink, handleToggleToc, toggleLayout, togglePreviewHideCode, togglePreviewIsExpand, toggleSidebar]);
 };

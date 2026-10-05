@@ -22,6 +22,7 @@ describe('Performance Lab summary view model', () => {
       [LabPolicyId.RetainedFull]: '保留模式 · 全量',
       [LabPolicyId.RetainedAuto]: '保留模式 · 自动',
     };
+
     expect(
       createComparisonChartRows(
         [result('static-full', 10, 0), result('retained-full', 8, 0), result('retained-auto', 2, 4_999)],
@@ -48,6 +49,7 @@ describe('Performance Lab summary view model', () => {
       result('retained-full', 8, 0),
       result('retained-auto', 2, 4_999),
     ]);
+
     expect(summary).toEqual({
       bestPolicyId: 'retained-auto',
       incrementalActive: true,

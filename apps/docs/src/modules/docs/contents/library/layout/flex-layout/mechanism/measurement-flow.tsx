@@ -6,14 +6,17 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { figureI18n } from './measurement-flow.i18n';
+
 /** 配图语言参数 */
 export type MeasurementFlowProps = { lang?: Lang };
+
 /** 当前小节的处理顺序与关键边界 */
 const MeasurementFlow: FC<MeasurementFlowProps> = props => {
   const { lang = 'zh' } = props;
   const labels = figureI18n[lang];
   const text = (index: number) =>
     labels[index].map((line, row) => ({ text: line, ...(row === 0 ? {} : { fill: 'gray', font: { size: 12 } }) }));
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

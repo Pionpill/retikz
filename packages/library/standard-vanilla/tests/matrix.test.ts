@@ -13,6 +13,7 @@ it('normalizes nested authoring and resolves providers for each input', () => {
   ]) {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
+
     expect(compileToScene(normalized.ir, options).scene.primitives.length).toBeGreaterThan(0);
   }
 });
@@ -25,7 +26,9 @@ it('keeps empty cells JSON-safe when entering retained processing', () => {
   ]) {
     const input = scene({ children: [child] });
     const controller = createProcessingController(input, { adapters: StandardInputEmbedAdapters });
+
     expect(controller.read().scene.primitives.length).toBeGreaterThan(0);
+
     controller.dispose();
   }
 });

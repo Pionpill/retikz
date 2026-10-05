@@ -63,6 +63,7 @@ describe('[mathjax-profile] public profile', () => {
 
       for (const tex of fixtures) {
         const svg = engine.convert(tex, { display: true });
+
         expect(svg, tex).not.toContain('data-mml-node="merror"');
         expect(svg, tex).not.toMatch(/<(?:text|foreignObject|svg)\b[^>]*>.*<(?:svg)\b/s);
       }
@@ -74,6 +75,7 @@ describe('[mathjax-profile] public profile', () => {
     '单独请求 extension 会加载 configuration',
     async () => {
       const engine = await createMathJaxEngine({ extensions: ['cancel'] });
+
       expect(engine.convert(String.raw`\cancel{x}`, { display: false })).not.toContain('data-mml-node="merror"');
     },
     TIMEOUT,

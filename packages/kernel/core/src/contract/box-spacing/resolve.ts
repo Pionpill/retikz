@@ -22,10 +22,13 @@ export const resolveBoxSpacing = (value: number | IRBoxSpacing | undefined, fall
       'resolveBoxSpacing: fallback must be a finite non-negative number',
     );
   }
+
   if (typeof value === 'number') {
     return boxInsets(value);
   }
+
   const base = value?.default ?? fallback;
+
   return {
     top: value?.top ?? value?.y ?? base,
     right: value?.right ?? value?.x ?? base,

@@ -60,6 +60,7 @@ import {
 } from './style-sugar';
 
 type Collected = NormalizationState;
+
 type Composition = PlotComposition;
 
 const facetDimensionOf = (
@@ -74,6 +75,7 @@ const scaffoldTracksOf = (scaffoldId: string, propTracks: Array<ScaffoldTrack> |
   if (tracks.length === 0) {
     throw new RetikzPlotVanillaError(`buildPlotIR: <PlotScaffold id="${scaffoldId}"> requires at least one track`);
   }
+
   return tracks;
 };
 
@@ -92,8 +94,10 @@ export const applyDeclaration = (
       ...(facetDimensionOf(row) !== undefined ? { row: facetDimensionOf(row) } : {}),
       ...(facetDimensionOf(column) !== undefined ? { column: facetDimensionOf(column) } : {}),
     });
+
     return;
   }
+
   if (declaration.kind === 'scaffold') {
     const { id, coordinate, sharedRoles, frame, tracks, viewIdTemplate, spacing, resolve } = child.props as {
       id: string;
@@ -116,11 +120,14 @@ export const applyDeclaration = (
       ...(spacing !== undefined ? { spacing } : {}),
       ...(resolve !== undefined ? { resolve } : {}),
     });
+
     return;
   }
+
   if (declaration.kind === 'track') {
     throw new RetikzPlotVanillaError('buildPlotIR: <PlotTrack> must be declared inside <PlotScaffold>');
   }
+
   if (declaration.kind === 'path-mark') {
     const props = child.props as InputPlotPathMark;
     const {
@@ -151,6 +158,7 @@ export const applyDeclaration = (
       lineJoin,
       roundedCorners,
     } = props;
+
     const colorEnc = colorChannel(color, series);
     const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
     const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
@@ -161,8 +169,10 @@ export const applyDeclaration = (
       'roundedCorners',
       styleContext,
     );
+
     const effectiveFacetId = facetId ?? context.facetId;
     const effectiveTrackId = trackId ?? context.trackId;
+
     into.marks.push({
       type: PlotMark.Path,
       ...(id !== undefined ? { id } : {}),
@@ -190,6 +200,7 @@ export const applyDeclaration = (
       ...(label !== undefined ? { label: canonicalGeometryLabel(label) } : {}),
       encoding: { ...positionEncoding(x, y), ...colorEnc, ...extensionChannelEncoding(channels) },
     });
+
     recordColor(into, colorEnc);
     recordResolveLabel(into, id, props.resolveLabel);
     if (closed || closure !== undefined) into.hasClosedLine = true;
@@ -229,6 +240,7 @@ export const applyDeclaration = (
       placement,
       channels,
     } = props;
+
     const markLabel = buildMarkLabel(props);
     const colorStyle = pointColorStyleOf(color, styleContext);
     const textColorStyle = pointColorStyleOf(textColor, styleContext);
@@ -244,13 +256,16 @@ export const applyDeclaration = (
     const paddingStyle = boxSpacingStyleOf(padding, 'padding', styleContext);
     const minimumSizeStyle = nodeBoxSizeStyleOf(minimumSize, 'minimumSize', styleContext);
     const zIndexStyle = numberStyleOf<IRPlotPointZIndexStyle>(zIndex, 'zIndex', styleContext);
+
     // text 设 → point 下沉为无边框文本 Node（内容走 encoding.text）；否则散点 glyph。内置坐标使用 x 或 x/y，自定义坐标可继续消费 z role
     const textEnc: { text: IRPlotTextChannel } | undefined =
       text !== undefined
         ? { text: { field: text, ...(displayFormat !== undefined ? { displayFormat } : {}) } }
         : undefined;
+
     const effectiveFacetId = facetId ?? context.facetId;
     const effectiveTrackId = trackId ?? context.trackId;
+
     into.marks.push({
       type: PlotMark.Point,
       ...(id !== undefined ? { id } : {}),
@@ -289,6 +304,7 @@ export const applyDeclaration = (
         ...extensionChannelEncoding(channels),
       },
     });
+
     recordMarkColor(into, colorStyle);
     recordResolveLabel(into, id, props.resolveLabel);
   } else if (declaration.kind === 'interval-mark') {
@@ -328,6 +344,7 @@ export const applyDeclaration = (
       padAngle,
       pull,
     } = props;
+
     const direction = rawDirection ?? 'vertical';
     const arrangementGroup = group ?? series;
     if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
@@ -335,11 +352,13 @@ export const applyDeclaration = (
         'buildPlotIR: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"',
       );
     }
+
     if (stackOffset !== undefined && explicitArrangement === 'normalize-stack') {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks',
       );
     }
+
     const arrangement =
       explicitArrangement ??
       (percent === true ? 'normalize-stack' : stack ? 'stack' : arrangementGroup !== undefined ? 'dodge' : undefined);
@@ -363,6 +382,7 @@ export const applyDeclaration = (
       ...(pullStyle !== undefined ? { pull: pullStyle } : {}),
       ...nodeStylePropsOf(props, styleContext),
     };
+
     // pie / donut：angle → 自动累积 stack transform（产 y0/y1）+ extent×full bounds
     if (angle !== undefined) {
       if (
@@ -379,6 +399,7 @@ export const applyDeclaration = (
           'buildPlotIR: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds',
         );
       }
+
       into.shortcutTransforms.push({
         kind: DataTransform.Stack,
         y: angle,
@@ -402,8 +423,10 @@ export const applyDeclaration = (
       });
       into.hasSector = true;
       recordColor(into, colorEnc);
+
       return;
     }
+
     // 显式 bounds（heatmap 双 band / 高级）：直接落 IR；band bound → 强制对应轴 band scale
     if (explicitBounds !== undefined) {
       if (rawDirection !== undefined) {
@@ -411,11 +434,13 @@ export const applyDeclaration = (
           'buildPlotIR: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly',
         );
       }
+
       if (width !== undefined) {
         throw new RetikzPlotVanillaError(
           'buildPlotIR: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly',
         );
       }
+
       const colorEnc = colorChannel(color, series ?? group);
       into.marks.push({
         type: PlotMark.Interval,
@@ -443,55 +468,66 @@ export const applyDeclaration = (
       if (explicitBounds.y?.kind === IntervalBoundKind.Band) into.hasRect = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
+
       return;
     }
+
     // histogram：x0/x1 → bounds.x = extent（连续 x，不强制 band）；普通 / 分组 / 堆叠柱：band x
     const histogram = x0 !== undefined && x1 !== undefined;
     const proportional = width !== undefined;
     if (proportional && histogram) {
       throw new RetikzPlotVanillaError('buildPlotIR: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
     }
+
     if (proportional && arrangement !== undefined) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts',
       );
     }
+
     if (proportional && stackOffset !== undefined) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts',
       );
     }
+
     if (proportional && (group !== undefined || series !== undefined)) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping',
       );
     }
+
     if (histogram && direction === 'horizontal') {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds',
       );
     }
+
     if (histogram && arrangement !== undefined) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds',
       );
     }
+
     if ((x0 === undefined) !== (x1 === undefined)) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark> x0 / x1 must be set together for continuous-interval bars',
       );
     }
+
     if (!histogram && !proportional && x === undefined) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
       );
     }
+
     const valueField = direction === 'horizontal' ? x : y;
     if (valueField === undefined) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form',
       );
     }
+
     const colorEnc = colorChannel(color, series ?? group);
     const categoryField = direction === 'horizontal' ? y : x;
     if (!histogram && !proportional && categoryField === undefined) {
@@ -499,6 +535,7 @@ export const applyDeclaration = (
         'buildPlotIR: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
       );
     }
+
     const bandRole = direction === 'horizontal' ? 'y' : 'x';
     const valueRole = direction === 'horizontal' ? 'x' : 'y';
     const bandBound = {
@@ -510,12 +547,14 @@ export const applyDeclaration = (
         'buildPlotIR: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments',
       );
     }
+
     if (arrangement === 'normalize-stack') {
       if (categoryField === undefined) {
         throw new RetikzPlotVanillaError(
           'buildPlotIR: <IntervalMark arrangement="normalize-stack"> requires the category field on x (vertical) or y (horizontal)',
         );
       }
+
       into.shortcutTransforms.push({
         kind: DataTransform.Normalize,
         field: valueField,
@@ -523,6 +562,7 @@ export const applyDeclaration = (
         basis: 'percent',
       });
     }
+
     if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
       into.shortcutTransforms.push({
         kind: DataTransform.Stack,
@@ -532,6 +572,7 @@ export const applyDeclaration = (
         ...(arrangement === 'stack' && stackOffset !== undefined ? { offset: stackOffset } : {}),
       });
     }
+
     // arrangement → bounds：dodge 切 band 子带；stack / normalize-stack 读 y0/y1 extent
     let bounds: IRPlotIntervalBounds | undefined;
     if (proportional) {
@@ -539,12 +580,15 @@ export const applyDeclaration = (
     } else if (!histogram && (direction === 'horizontal' || arrangement === 'dodge')) {
       bounds = { [bandRole]: bandBound };
     }
+
     if (arrangement === 'stack' || arrangement === 'normalize-stack') {
       bounds = { ...(bounds ?? {}), [valueRole]: { kind: IntervalBoundKind.Extent, from: 'y0', to: 'y1' } };
     } else if (direction === 'horizontal') {
       bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Span } };
     }
+
     if (histogram) bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Extent, from: x0, to: x1 } };
+
     into.marks.push({
       type: PlotMark.Interval,
       ...(id !== undefined ? { id } : {}),
@@ -572,10 +616,12 @@ export const applyDeclaration = (
             }
           : { x: { field: x }, y: { field: y }, ...colorEnc, ...extensionChannelEncoding(channels) },
     });
+
     if (!histogram && !proportional) {
       if (bandRole === 'x') into.hasBar = true;
       else into.hasRect = true;
     }
+
     if (direction === 'horizontal') into.hasHorizontalBar = true;
     recordColor(into, colorEnc);
     recordResolveLabel(into, id, props.resolveLabel);
@@ -626,8 +672,10 @@ export const applyDeclaration = (
           `buildPlotIR: <PlotAxis scale> only supports built-in x / y dimensions; custom coordinate role "${dimension}" must provide its scale through CoordinateDefinition`,
         );
       }
+
       into.scales.push({ dimension, type: scale });
     }
+
     const effectiveFacetId = facetId ?? context.facetId;
     const effectiveScaffoldId = scaffoldId ?? context.scaffoldId;
     const effectiveTrackId = trackId ?? context.trackId;

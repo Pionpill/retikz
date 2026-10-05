@@ -21,9 +21,11 @@ const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefin
 
 const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined => {
   if (!prim || prim.type !== 'path') return undefined;
+
   for (const cmd of prim.commands) {
     if (cmd.kind === 'line') return cmd.to;
   }
+
   return undefined;
 };
 
@@ -52,12 +54,14 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
 describe('createScopeCircleLayout 单元测试', () => {
   it('shapeName ellipse + shapeParams circumscribe:equal', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [0, 0] });
+
     expect(layout.shapeName).toBe('ellipse');
     expect(layout.shapeParams).toEqual({ circumscribe: 'equal' });
   });
 
   it('空点集 → 0×0 占位落在 fallbackOrigin', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [30, 40] });
+
     expect(layout.id).toBe('g');
     expect(layout.rect.x).toBe(30);
     expect(layout.rect.y).toBe(40);
@@ -74,9 +78,12 @@ describe('createScopeCircleLayout 单元测试', () => {
       [30, 40],
     ];
     const mec = circle.minimalEnclosing([...corners]);
+
     expect(mec).not.toBeNull();
+
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: corners, fallbackOrigin: [0, 0] });
     const diameter = mec!.radius * 2;
+
     expect(layout.rect.width).toBeCloseTo(diameter, 5);
     expect(layout.rect.height).toBeCloseTo(diameter, 5);
     expect(layout.rect.x).toBeCloseTo(mec!.center[0], 5);
@@ -110,9 +117,13 @@ describe('scope boundingShape="circle" 集成测试', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+
     expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
+
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // 从 right 方向入射，x 应 > 0（MEC 中心偏右侧）
     expect(end![0]).toBeGreaterThan(0);
   });
@@ -126,7 +137,9 @@ describe('scope boundingShape="circle" 集成测试', () => {
     ];
     const cornerPoints = nodePositions; // 0×0 node → 4 角点即 node 中心点（collapsed），直接用中心点
     const mec = circle.minimalEnclosing([...cornerPoints]);
+
     expect(mec).not.toBeNull();
+
     const ir = scene([
       {
         type: 'scope',
@@ -149,10 +162,13 @@ describe('scope boundingShape="circle" 集成测试', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // right anchor of ellipse with circumscribe:equal at (cx, cy) with diameter d → (cx + d/2, cy)
     // distance from center to end should be ≈ radius
     const dist = Math.sqrt((end![0] - mec!.center[0]) ** 2 + (end![1] - mec!.center[1]) ** 2);
+
     // Allow generous tolerance since boundary clipping may offset slightly
     expect(dist).toBeGreaterThan(mec!.radius * 0.5);
   });
@@ -178,7 +194,9 @@ describe('scope boundingShape="circle" 集成测试', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // MEC center ≈ (30, 0)；boundary clip 后 x 应在合理范围内
     expect(Math.abs(end![0] - 30)).toBeLessThan(50);
   });
@@ -205,7 +223,9 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // 矩形 AABB right x 应接近 B 的位置（60），y 接近 0
     expect(end![0]).toBeGreaterThan(30);
     expect(Math.abs(end![1])).toBeLessThan(20);
@@ -249,8 +269,10 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
     ]);
     const endDefault = lineTo(topPath(compileToScene(irDefault).scene.primitives));
     const endExplicit = lineTo(topPath(compileToScene(irExplicit).scene.primitives));
+
     expect(endDefault).toBeDefined();
     expect(endExplicit).toBeDefined();
+
     // x 坐标应非常接近（同一矩形 AABB right）
     expect(Math.abs(endDefault![0] - endExplicit![0])).toBeLessThan(1);
   });
@@ -263,18 +285,22 @@ describe('collectScopeCornerPoints 单元测试', () => {
 
   it('1 个 layout → 4 个角点', () => {
     const points = collectScopeCornerPoints([layoutAt(0, 0, 40, 20)]);
+
     expect(points).toHaveLength(4);
   });
 
   it('N 个 layouts → 4N 个角点', () => {
     const layouts = [layoutAt(0, 0, 10, 10), layoutAt(50, 50, 10, 10), layoutAt(100, 0, 10, 10)];
     const points = collectScopeCornerPoints(layouts);
+
     expect(points).toHaveLength(12);
   });
 
   it('0×0 layout → 4 个相同角点（退化为单点）', () => {
     const points = collectScopeCornerPoints([layoutAt(30, 20, 0, 0)]);
+
     expect(points).toHaveLength(4);
+
     for (const [px, py] of points) {
       expect(px).toBeCloseTo(30, 5);
       expect(py).toBeCloseTo(20, 5);

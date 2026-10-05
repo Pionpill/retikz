@@ -15,6 +15,7 @@ export type FlowSourceTreeProps = Readonly<{ lang?: Lang }>;
 const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
   const { lang = 'zh' } = props;
   const t = flowSourceTreeI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map

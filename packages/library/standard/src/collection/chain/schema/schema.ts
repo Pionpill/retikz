@@ -8,6 +8,7 @@ import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schem
 
 /** 自动连接的非结构性路径属性 */
 export const ChainPathSchema = PathSchema.omit({ type: true, id: true, children: true, kind: true, kindOptions: true });
+
 /** 自动连接的路径与呈现覆盖 */
 export const ChainConnectionSchema = strictObject({
   route: zodEnum(['auto', 'straight', '|-', '-|'])
@@ -15,6 +16,7 @@ export const ChainConnectionSchema = strictObject({
     .describe('Connection routing; auto reserves branch corridors.'),
   path: ChainPathSchema.optional(),
 });
+
 /** 并行块的结构排布 */
 export const ChainParallelLayoutSchema = strictObject({
   gap: PositiveNumberSchema.default(24).describe('Main-axis clearance between items.'),
@@ -27,13 +29,16 @@ export const ChainParallelLayoutSchema = strictObject({
     .describe('Independent compact sequences or shared immediate-step tracks.'),
   justify: zodEnum(['start', 'center', 'end']).default('start').describe('Short branch position in the shared span.'),
 });
+
 /** 根布局包含单元格默认与链方向 */
 export const ChainLayoutSchema = CellLayoutSchema.extend({
   ...ChainParallelLayoutSchema.shape,
   direction: zodEnum(['right', 'down']).default('right').describe('Main chain direction.'),
 });
+
 /** 有内容或空内容的链单元 */
 export const ChainCellSchema = CellSchema.extend({ kind: literal('cell') });
+
 /** 递归有序分支，每个分支是显式序列 */
 export const ChainParallelSchema = strictObject({
   kind: literal('parallel'),
@@ -56,14 +61,17 @@ export const ChainParallelSchema = strictObject({
     path: ChainPathSchema.optional(),
   }).optional(),
 });
+
 /** 完整序列中的文字、单元或并行块 */
 export const ChainItemSchema = union([string(), ChainCellSchema, ChainParallelSchema]);
+
 /** 只携带符号的递归并行骨架 */
 export const ChainSkeletonBranchSchema = strictObject({
   get branches(): ZodArray<ZodArray<ZodUnion<readonly [ZodString, typeof ChainSkeletonBranchSchema]>>> {
     return array(array(union([string(), ChainSkeletonBranchSchema])).min(1)).min(2);
   },
 });
+
 /** 线性计数、线性符号和递归骨架互斥 */
 export const ChainSkeletonSchema = union([
   strictObject({ count: NonNegativeIntegerSchema, labels: never().optional(), items: never().optional() }),
@@ -74,6 +82,7 @@ export const ChainSkeletonSchema = union([
     labels: never().optional(),
   }),
 ]);
+
 const ChainBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard'),
   type: literal('chain'),
@@ -83,6 +92,7 @@ const ChainBaseSchema = CompositeBaseSchema.extend({
   connection: ChainConnectionSchema.optional(),
   label: NodeSchema.shape.label,
 });
+
 /** 三入口与递归结构的 Source 真源 */
 export const ChainSchema = union([
   ChainBaseSchema.extend({
@@ -105,6 +115,7 @@ export const ChainSchema = union([
   }),
 ]).superRefine((value, ctx) => {
   const fail = (path: Array<string | number>, message: string) => ctx.addIssue({ code: 'custom', path, message });
+
   const visit = (
     items: Array<input<typeof ChainItemSchema>>,
     path: Array<string | number>,
@@ -113,10 +124,12 @@ export const ChainSchema = union([
   ) => {
     items.forEach((item, i) => {
       if (typeof item === 'string' || item.kind === 'cell') return;
+
       const isCell = (index: number) => {
         const v = items.at(index < 0 ? items.length : index);
         return v !== undefined && (typeof v === 'string' || v.kind === 'cell');
       };
+
       if (!isCell(i - 1) || !isCell(i + 1))
         fail([...path, i], 'Parallel blocks require adjacent cells before and after.');
       const selected = item.layout?.branchAlign ?? align;
@@ -127,6 +140,7 @@ export const ChainSchema = union([
       );
     });
   };
+
   if (value.items) visit(value.items, ['items'], value.layout?.branchAlign);
   const skeleton = value.skeleton;
   if (skeleton?.items) {

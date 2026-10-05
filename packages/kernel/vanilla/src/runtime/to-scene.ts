@@ -40,6 +40,7 @@ export type SceneResult = {
 };
 
 const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
+
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 
 /** 把 IR 或 InputScene 归一成通用编译驱动输入 */
@@ -70,6 +71,7 @@ export const toSceneResult = (input: RenderInput, options: CommonOptions): Scene
         'Vanilla compile drivers require authored IR or an InputScene',
       );
     }
+
     return {
       scene: input,
       artifacts: EMPTY_ARTIFACTS,
@@ -79,7 +81,9 @@ export const toSceneResult = (input: RenderInput, options: CommonOptions): Scene
       runtimeMeta: createEmptyRuntimeMeta(),
     };
   }
+
   const result = processToStaticInputResult(input, options);
+
   return {
     scene: result.scene,
     artifacts: result.artifacts,

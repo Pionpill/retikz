@@ -28,6 +28,7 @@ const compileChart = (source: unknown) => {
       { roots: [PathClipProvider.key], providers: [PathClipProvider] },
     ],
   });
+
   return compileToScene({ version: 1, type: 'scene', children: [chart] }, { ...definitions, padding: 0 });
 };
 

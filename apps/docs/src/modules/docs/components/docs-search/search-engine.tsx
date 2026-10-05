@@ -60,12 +60,15 @@ const buildFields = (pageLabel: string, indexed: IndexedPage | undefined): Reado
       lower: indexed.description.toLowerCase(),
     });
   }
+
   for (const heading of indexed.headings) {
     fields.push({ kind: 'heading', original: heading, lower: heading.toLowerCase() });
   }
+
   for (const inlineCode of indexed.inlineCodes) {
     fields.push({ kind: 'code', original: inlineCode, lower: inlineCode.toLowerCase() });
   }
+
   return fields;
 };
 
@@ -99,6 +102,7 @@ const appendSearchEntries = (
         fields: buildFields(pageLabel, indexed),
       });
     }
+
     const walk = (pages: Array<Page>, parent: { id: string; label: string } | null): void => {
       for (const page of pages) {
         const pageLabel = String(t(page.label));
@@ -106,6 +110,7 @@ const appendSearchEntries = (
           walk(page.children, { id: page.id, label: pageLabel });
           continue;
         }
+
         const path = ungrouped
           ? buildDocPath(areaId, null, page.id)
           : parent
@@ -122,6 +127,7 @@ const appendSearchEntries = (
         });
       }
     };
+
     walk(section.pages, null);
   }
 };
@@ -132,10 +138,13 @@ const appendSearchEntries = (
  */
 export const buildSearchEntries = (t: SearchTranslator, searchIndex: SearchIndex, lang: Lang): Array<SearchEntry> => {
   const out: Array<SearchEntry> = [];
+
   for (const module of modules) {
     appendSearchEntries(out, module.id, String(t(module.label)), getSectionsByArea(module.id), t, searchIndex, lang);
   }
+
   appendSearchEntries(out, 'about', String(t('about.label')), aboutSection, t, searchIndex, lang);
+
   return out;
 };
 
@@ -151,10 +160,12 @@ export const useSearchEntries = (searchIndex: SearchIndex, lang: Lang): Array<Se
  */
 export const findMatch = (query: string, entry: SearchEntry): Match | null => {
   const q = query.trim().toLowerCase();
+
   // < 2 字符视同空 query：全量展示按数据顺序的列表，不进入字段匹配——避免单字符触发大量低相关性命中
   if (q.length < 2) {
     return { score: 1, kind: 'label', text: entry.label, index: -1, queryLength: 0 };
   }
+
   for (const field of entry.fields) {
     const idx = field.lower.indexOf(q);
     let base = 0;
@@ -162,11 +173,14 @@ export const findMatch = (query: string, entry: SearchEntry): Match | null => {
     else if (idx > 0) base = 2;
     else {
       let qi = 0;
+
       for (let i = 0; i < field.lower.length && qi < q.length; i++) {
         if (field.lower[i] === q[qi]) qi++;
       }
+
       if (qi === q.length) base = 1;
     }
+
     if (base > 0) {
       return {
         score: base * FIELD_WEIGHT[field.kind],
@@ -177,6 +191,7 @@ export const findMatch = (query: string, entry: SearchEntry): Match | null => {
       };
     }
   }
+
   return null;
 };
 
@@ -185,6 +200,7 @@ const HIGHLIGHT_CLASS = 'rounded-sm bg-amber-200/70 px-0.5 text-foreground dark:
 /** 在原始文本里把 [index, index+length) 的子串用 mark 包起来；index<0 或 length=0 直接原样返回 */
 export const renderHighlighted = (text: string, index: number, length: number): ReactNode => {
   if (index < 0 || length === 0) return text;
+
   return (
     <>
       {text.slice(0, index)}
@@ -202,15 +218,18 @@ export const renderSnippet = (text: string, index: number, length: number): Reac
   if (index < 0 || length === 0) {
     return text.length > SNIPPET_LENGTH ? `${text.slice(0, SNIPPET_LENGTH)}…` : text;
   }
+
   if (text.length <= SNIPPET_LENGTH) {
     return renderHighlighted(text, index, length);
   }
+
   const halfRoom = Math.floor((SNIPPET_LENGTH - length) / 2);
   let start = Math.max(0, index - halfRoom);
   const end = Math.min(text.length, start + SNIPPET_LENGTH);
   if (end - start < SNIPPET_LENGTH) start = Math.max(0, end - SNIPPET_LENGTH);
   const windowed = text.slice(start, end);
   const localIndex = index - start;
+
   return (
     <>
       {start > 0 && '…'}

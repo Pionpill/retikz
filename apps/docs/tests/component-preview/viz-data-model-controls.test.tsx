@@ -71,6 +71,7 @@ const controlsShape = (definition: PreviewControlsDefinition) => {
   if (definition.presentation !== 'panel') {
     return { presentation: definition.presentation, controls: definition.controls.map(controlShape) };
   }
+
   return {
     presentation: definition.presentation,
     defaultSize: definition.defaultSize,
@@ -91,12 +92,17 @@ const contractShape = (contract: PreviewControlContract) => ({
 
 const expectCompletePanelContract = (contract: PreviewControlContract): void => {
   expect(contract.controls.presentation).toBe('panel');
+
   if (contract.controls.presentation !== 'panel') return;
+
   expect(contract.controls.sections[0]?.controls[0]?.kind).toBe('table');
+
   const writableIds = getPreviewControlFields(contract.controls)
     .map(control => control.id)
     .sort();
+
   expect(Object.keys(contract.canonicalValues).sort()).toEqual(writableIds);
+
   for (const preset of contract.presets ?? []) {
     expect(Object.keys(preset.values).sort()).toEqual(writableIds);
   }
@@ -144,6 +150,7 @@ describe('Viz Data model controls', () => {
   it('keeps bilingual contracts structurally identical and complete', () => {
     for (const [zh, en] of localizedPairs) {
       expect(contractShape(zh)).toEqual(contractShape(en));
+
       expectCompletePanelContract(zh);
       expectCompletePanelContract(en);
     }
@@ -160,6 +167,7 @@ describe('Viz Data model controls', () => {
     for (const [page, previewCount] of pagePreviews) {
       for (const locale of ['zh', 'en']) {
         const source = readFileSync(resolve(`src/modules/docs/contents/viz/data/${page}/index.${locale}.mdx`), 'utf8');
+
         expect(source.match(/size="lg"/g) ?? []).toHaveLength(previewCount);
         expect(source).not.toContain('size="md"');
         expect(source).not.toContain('size="sm"');
@@ -259,9 +267,12 @@ describe('Viz Data model controls', () => {
     try {
       await render({ dataset: 'allInvalid', policy: 'sample' });
       await vi.waitFor(() => expect(container.textContent).toContain('校验失败'));
+
       expect(container.textContent).toContain('校验失败');
+
       await render({ dataset: 'dirty', policy: 'skip' });
       await vi.waitFor(() => expect(container.querySelector('svg')).not.toBeNull());
+
       expect(container.querySelector('svg')).not.toBeNull();
     } finally {
       window.removeEventListener('error', preventExpectedWindowError);

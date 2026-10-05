@@ -277,6 +277,7 @@ const Decoration = Object.assign((() => null) as FC<{ id: string }>, {
 });
 
 const WrappedText: FC = () => createElement(Text, { children: 'Wrapped' });
+
 const WrappedRoute: FC = () =>
   createElement(
     Fragment,
@@ -671,6 +672,7 @@ describe('Graph standalone and embedded host classification', () => {
     const markup = renderToStaticMarkup(
       createElement(Graph, { style: { fill: '#123456' } }, createElement(Node, { position: [0, 0] })),
     );
+
     expect(markup).toContain('fill="#123456"');
   });
 
@@ -712,8 +714,11 @@ describe('Graph standalone and embedded host classification', () => {
     } satisfies GraphProps;
 
     const hostProps = graphLayoutHostPropsOf(props);
+
     expect(Object.keys(hostProps)).toEqual(hostPropKeys);
+
     for (const key of hostPropKeys) expect(hostProps[key]).toBe(props[key]);
+
     expect(hostProps).not.toHaveProperty('style');
     expect(hostProps).not.toHaveProperty('theme');
     expect(hostProps).not.toHaveProperty('animations');
@@ -766,16 +771,21 @@ describe('Graph Definition options parity', () => {
       },
       { adapters: createGraphVanillaAdapters(), compile: { padding: 0 } },
     );
+
     expect(reactResult.scene).toEqual(vanillaResult.scene);
+
     type ScenePrimitive = (typeof reactResult.scene.primitives)[number];
     const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
       primitives.flatMap(primitive => (primitive.type === 'group' ? flatten(primitive.children) : [primitive]));
+
     expect(flatten(reactResult.scene.primitives).find(primitive => primitive.id === 'edge')).toMatchObject({
       type: 'path',
       arrowEnd: { shape: 'open' },
       dashPattern: [4, 2],
     });
+
     const normalized = normalizeScene(react.scene, { adapters: react.adapters });
+
     expect(normalized.ir.children[0]).toMatchObject({ children: [{ id: 'a' }, { id: 'b' }, { kind: kind.kind }] });
     expect(normalized.ir.children[0]).not.toHaveProperty('relationKinds');
   });
@@ -833,6 +843,7 @@ describe('Graph Definition options parity', () => {
     for (const child of normalized.ir.children) {
       for (const key of definitionOptionKeys) expect(child).not.toHaveProperty(key);
     }
+
     expect(() =>
       processToStaticInputResult(input.scene, {
         adapters: input.adapters,
@@ -846,6 +857,7 @@ describe('GraphThemeProvider', () => {
   it('merges ancestor and local definitions in declaration order', () => {
     const parent = defineGraphThemeStyle({ name: 'parent', resolve: () => ({}) });
     const local = defineGraphThemeStyle({ name: 'local', resolve: () => ({}) });
+
     const Probe: FC = () => {
       const styles = useGraphThemeStyles();
       return createElement('span', null, styles?.map(style => style.name).join(','));

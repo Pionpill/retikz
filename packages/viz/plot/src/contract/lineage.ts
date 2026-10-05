@@ -33,7 +33,12 @@ export type PlotHostLineageMetadataOptions = {
   /** 是否透传 queryId 与 datasetVersion */
   query?: boolean;
   /** 是否透传 AI 相关引用 */
-  ai?: { promptReference?: boolean; planReference?: boolean };
+  ai?: {
+    /** 是否保留宿主提供的 promptHash */
+    promptReference?: boolean;
+    /** 是否保留宿主提供的 aiPlanId */
+    planReference?: boolean;
+  };
   /** 是否透传 permissionPolicyId */
   permission?: boolean;
   /** 是否透传 extra */
@@ -84,9 +89,9 @@ export type PlotLineageTransformScope = {
 export type PlotMarkLineage = {
   /** mark 在 spec.marks 中的下标 */
   markIndex: number;
-  /** mark id */
+  /** 标记的标识 */
   markId?: string;
-  /** mark type */
+  /** 标记的类型 */
   markType: string;
   /** mark encoding 字段引用 */
   encoding?: Array<PlotLineageEncodingField>;
@@ -116,9 +121,9 @@ export type PlotScaleChannelLineage = {
 
 /** scale lineage 摘要 */
 export type PlotScaleLineage = {
-  /** scale name */
+  /** 比例尺的名称 */
   name: string;
-  /** scale type */
+  /** 比例尺的类型 */
   type: string;
   /** schema 中声明的 domain 摘要 */
   domain?: JsonValue;
@@ -130,29 +135,39 @@ export type PlotScaleLineage = {
 
 /** layout lineage 摘要 */
 export type PlotLayoutLineage = {
-  /** coordinate type */
+  /** 坐标系的类型 */
   coordinateType?: string;
   /** 是否包含 composition */
   hasComposition: boolean;
   /** composition 中声明的 coordinate view id */
   coordinateViews?: Array<string>;
   /** composition 中声明的 facet arrangement 摘要 */
-  facets?: Array<{ id: string; view: string }>;
+  facets?: Array<{
+    /** 分面排列的身份 */
+    id: string;
+    /** 分面复用的坐标视图身份 */
+    view: string;
+  }>;
   /** composition 中声明的 track arrangement 摘要 */
-  tracks?: Array<{ id: string; count: number }>;
+  tracks?: Array<{
+    /** 共享轨道排列的身份 */
+    id: string;
+    /** 该排列声明的轨道数量 */
+    count: number;
+  }>;
 };
 
 /** plot lineage 运行结果 */
 export type PlotLineageRun = {
-  /** plot id */
+  /** 绘图的标识 */
   plotId?: string;
   /** 数据集引用名 */
   dataReference: string;
   /** data 层 root / mark-local lineage */
   data: {
-    /** root transform lineage */
+    /** 根级数据变换的溯源记录 */
     root: DataLineageRun;
-    /** mark-local transform lineage */
+    /** 标记局部数据变换的溯源记录 */
     marks: Array<PlotMarkDataLineage>;
   };
   /** mark 级可视语义 lineage */
@@ -169,13 +184,13 @@ export type PlotLineageRun = {
 export type PlotLineageLowerResult = {
   /** 下沉得到的 core IR children */
   children: Array<IRChild>;
-  /** plot lineage artifact */
+  /** 绘图溯源产物 */
   lineage: PlotLineageRun;
 };
 
 /** locator lineage 查询结果 */
 export type PlotLocatorAnchorLineage = {
-  /** locator address */
+  /** 定位器的地址 */
   address: string;
   /** locator 解析出的 anchor */
   anchor: PlotAnchorResolution;
@@ -187,9 +202,9 @@ export type PlotDatumLineage = {
   queryKind: 'datum';
   /** mark 在 spec.marks 中的下标 */
   markIndex: number;
-  /** datum transformedIndex */
+  /** 数据项在变换结果中的下标 */
   transformedIndex: number;
-  /** datum source identity */
+  /** 数据项在原始数据源中的身份 */
   sourceIdentity?: DataSourceIdentity;
   /** 对应 mark lineage */
   mark?: PlotMarkLineage;
@@ -222,7 +237,7 @@ export type PlotLineageAnchorResolution = {
   lineage: PlotLocatorQueryLineage;
 };
 
-/** plot lineage locator */
+/** 绘图溯源定位器 */
 export type PlotLineageLocator = {
   /** 查询 datum anchor 与 lineage */
   datum: (transformedIndex: number, options?: PlotLocatorOptions) => PlotLineageAnchorResolution | null;

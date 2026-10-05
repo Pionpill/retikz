@@ -1,20 +1,4 @@
-import type { ValueOf } from '@retikz/foundation';
-
 import type { MathJaxExtension, MathJaxProfile } from './constants';
-
-/**
- * MathJax 配置档取值
- *
- * @description 由 `MathJaxProfile` 派生的受限字符串集合，用于选择内置扩展组合；它只描述配置值，实际扩展加载由 MathJax 工厂负责
- */
-export type MathJaxProfileValue = ValueOf<typeof MathJaxProfile>;
-
-/**
- * MathJax 扩展取值
- *
- * @description 由 `MathJaxExtension` 派生的受限字符串集合，可在内置配置档之后追加。配置解析会去重并按稳定顺序加载，调用方无需自行处理 package 顺序
- */
-export type MathJaxExtensionValue = ValueOf<typeof MathJaxExtension>;
 
 /**
  * 同步 TeX → SVG 引擎接口
@@ -36,10 +20,10 @@ export type MathJaxEngineOptions = {
    * 选择基础或数学扩展集合的内置配置档
    * @default 'base'
    */
-  profile?: MathJaxProfileValue;
+  profile?: MathJaxProfile;
   /**
    * 在配置档之后追加的扩展，重复项会在初始化前去重
    * @default []
    */
-  extensions?: Array<MathJaxExtensionValue>;
+  extensions?: Array<MathJaxExtension>;
 };

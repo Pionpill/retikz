@@ -12,6 +12,7 @@ export type TexOverviewFlowProps = Readonly<{ lang?: Lang }>;
 const TexOverviewFlow: FC<TexOverviewFlowProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = texOverviewFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

@@ -25,6 +25,7 @@ export const createTransformResultView = <TValues extends object>(
     const operations = operationsOf(values as TValues);
     const pipeline = Array.isArray(operations) ? [...operations] : [operations as IRDataTransform];
     const sourceRows = typeof rows === 'function' ? rows(values as TValues) : rows;
+
     return applyTransforms([...sourceRows], pipeline, options);
   },
 });

@@ -107,6 +107,7 @@ describe('Drawable shared schema', () => {
   it('rejects unknown fields nested in kind options only when the custom schema rejects them', () => {
     for (const field of ['dashPattern', 'arrow', 'arrowDetail', 'lineCap', 'lineJoin', 'roundedCorners']) {
       const value = field === 'dashPattern' ? [4, 2] : 'round';
+
       expect(PathSchema.safeParse(path({ kind: 'custom', kindOptions: { width: 12, [field]: value } })).success).toBe(
         true,
       );

@@ -69,6 +69,7 @@ describe('rect.edgePoint：矩形四直边', () => {
 
   it('旋转 90° 的 rect：top 上边中点经 local→world', () => {
     const rr = { x: 0, y: 0, width: 20, height: 10, rotate: Math.PI / 2 };
+
     // 局部 (0,-5) 旋转 90° → (5, 0)
     near(rect.edgePoint(rr, Side.Top, 0.5), 5, 0);
   });
@@ -143,6 +144,7 @@ describe('diamond.edgePoint：过 cardinal 顶点的两段折线', () => {
     for (const side of [Side.Top, Side.Bottom, Side.Right, Side.Left]) {
       for (const t of [0, 0.25, 0.5, 0.75, 1]) {
         const p = diamond.edgePoint(d, side, t);
+
         expect(Math.abs(p[0]) / 10 + Math.abs(p[1]) / 15).toBeCloseTo(1, 6);
       }
     }

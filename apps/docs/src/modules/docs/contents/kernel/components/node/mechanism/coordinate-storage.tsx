@@ -13,6 +13,7 @@ export type CoordinateStorageProps = { lang?: Lang };
 const CoordinateStorage: FC<CoordinateStorageProps> = props => {
   const { lang = 'zh' } = props;
   const t = coordinateStorageI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map

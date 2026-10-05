@@ -16,6 +16,7 @@ const cell = (id: string, width: number, height: number) => ({
     layout: { minimumSize: { width, height }, padding: 0, margin: 0 },
   },
 });
+
 const compile = (
   child: IRChild,
   proposal: LayoutProposal = intrinsicLayoutProposal('natural'),
@@ -33,7 +34,9 @@ const compile = (
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -46,6 +49,7 @@ const compile = (
     },
   );
   if (observed === undefined) throw new Error('No layout result');
+
   return { scene, observed };
 };
 
@@ -60,6 +64,7 @@ describe('Array / Map allocation', () => {
     const bounds = result.scene.spatialHandles.entries
       .filter(entry => entry.role === 'array-cell')
       .map(entry => entry.geometry.bounds);
+
     expect(bounds).toEqual(
       direction === 'row'
         ? [
@@ -75,6 +80,7 @@ describe('Array / Map allocation', () => {
       direction === 'row' ? { x: 0, y: 0, width: 78, height: 20 } : { x: 0, y: 0, width: 48, height: 42 },
     );
   });
+
   it('lets per-cell auto and fixed widths override overall content sizing', () => {
     const result = compile({
       namespace: 'standard',
@@ -86,6 +92,7 @@ describe('Array / Map allocation', () => {
         { ...cell('c', 60, 10), layout: { width: 10 } },
       ],
     });
+
     expect(
       result.scene.spatialHandles.entries
         .filter(entry => entry.role === 'array-cell')
@@ -96,6 +103,7 @@ describe('Array / Map allocation', () => {
       { x: 64, y: 0, width: 10, height: 20 },
     ]);
   });
+
   it('uses content width for indexed data cells without widening the shorter cell', () => {
     const result = compile({
       namespace: 'standard',
@@ -109,10 +117,12 @@ describe('Array / Map allocation', () => {
     const cells = result.scene.spatialHandles.entries
       .filter(entry => entry.role === 'array-cell')
       .map(entry => entry.geometry.bounds);
+
     expect(cells[0].width).toBeLessThan(cells[1].width);
     expect(cells[1].x).toBe(cells[0].width + 2);
     expect(result.observed.allocationBounds.width).toBe(cells[0].width + cells[1].width + 2);
   });
+
   it('lets a content cell override an auto-width Array', () => {
     const result = compile({
       namespace: 'standard',
@@ -120,19 +130,25 @@ describe('Array / Map allocation', () => {
       layout: { width: 'auto', height: 20, padding: 0, gap: 2 },
       items: [{ ...cell('a', 20, 10), layout: { width: 'content' } }, cell('b', 40, 10)],
     });
+
     expect(
       result.scene.spatialHandles.entries
         .filter(entry => entry.role === 'array-cell')
         .map(entry => entry.geometry.bounds.width),
     ).toEqual([20, 40]);
   });
+
   it('publishes string cell identities only when requested', () => {
     const base = { namespace: 'standard', type: 'array', items: ['A', 'A'] };
     const withoutIds = compile(base).scene.spatialHandles.entries;
+
     expect(withoutIds.filter(entry => entry.role === 'array-cell')).toHaveLength(0);
+
     const withIds = compile({ ...base, items: ['A', 'B'], cellIdMode: 'string' }).scene.spatialHandles.entries;
+
     expect(withIds.filter(entry => entry.role === 'array-cell').map(entry => entry.id)).toEqual(['cell:A', 'cell:B']);
   });
+
   it.each(['row', 'column'] as const)('places index strips on both sides of a %s without resizing cells', direction => {
     const base = {
       namespace: 'standard',
@@ -147,23 +163,32 @@ describe('Array / Map allocation', () => {
       result.scene.spatialHandles.entries
         .filter(entry => entry.role === 'array-cell')
         .map(entry => entry.geometry.bounds);
+
     expect(before.observed.slotSize).toEqual(after.observed.slotSize);
+
     const axis = direction === 'row' ? 'y' : 'x';
+
     expect(bounds(before)[0][axis]).toBeGreaterThan(6);
     expect(bounds(after)[0][axis]).toBe(0);
     expect(bounds(after)).toEqual(bounds(hidden));
     expect(bounds(before).every(rect => rect.width === 40 && rect.height === 20)).toBe(true);
+
     const dimension = direction === 'row' ? 'height' : 'width';
+
     expect(after.observed.slotSize[dimension]).toBeGreaterThan(hidden.observed.slotSize[dimension]);
+
     const large = compile({ ...base, index: { style: { font: { size: 48 } } } });
+
     expect(large.observed.slotSize[dimension]).toBeGreaterThan(before.observed.slotSize[dimension]);
   });
+
   it('keeps empty indexed lists empty', () => {
     expect(
       compile({ namespace: 'standard', type: 'array', items: [], index: { position: 'after', start: 100 } }).observed
         .slotSize,
     ).toEqual({ width: 0, height: 0 });
   });
+
   it.each(['row', 'column'] as const)('applies per-cell dimensions and auto overrides in a %s Array', direction => {
     const source = {
       namespace: 'standard',
@@ -180,6 +205,7 @@ describe('Array / Map allocation', () => {
     const bounds = result.scene.spatialHandles.entries
       .filter(entry => entry.role === 'array-cell')
       .map(entry => entry.geometry.bounds);
+
     expect(bounds).toEqual(
       direction === 'row'
         ? [
@@ -195,6 +221,7 @@ describe('Array / Map allocation', () => {
     );
     expect(JSON.stringify(source)).toBe(before);
   });
+
   it('applies Map overall, role and cell dimensions without stretching smaller overrides', () => {
     const result = compile({
       namespace: 'standard',
@@ -205,6 +232,7 @@ describe('Array / Map allocation', () => {
         { key: cell('c', 80, 60), value: { ...cell('d', 70, 60), layout: { width: 'auto', height: 9 } } },
       ],
     });
+
     expect(
       result.scene.spatialHandles.entries
         .filter(entry => entry.role === 'map-key' || entry.role === 'map-value')
@@ -216,14 +244,17 @@ describe('Array / Map allocation', () => {
       { x: 12, y: 27, width: 70, height: 9 },
     ]);
   });
+
   it('allocates equal horizontal cells using natural maxima', () => {
     const { observed } = compile({
       namespace: 'standard',
       type: 'array',
       items: [cell('a', 20, 10), cell('b', 30, 20)],
     });
+
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 94, height: 36 });
   });
+
   it('uses separate column maxima and per-row height in Map', () => {
     const { observed } = compile({
       namespace: 'standard',
@@ -233,8 +264,10 @@ describe('Array / Map allocation', () => {
         { key: cell('c', 40, 10), value: cell('d', 10, 10) },
       ],
     });
+
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 104, height: 64 });
   });
+
   it('honors zero padding and gap in vertical Array', () => {
     const { observed } = compile({
       namespace: 'standard',
@@ -242,15 +275,19 @@ describe('Array / Map allocation', () => {
       layout: { direction: 'column', gap: 0, padding: 0 },
       items: [cell('a', 20, 10), cell('b', 30, 20)],
     });
+
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 30, height: 40 });
   });
+
   it('does not stretch cells to consume larger parent allocations', () => {
     const { observed } = compile(
       { namespace: 'standard', type: 'array', items: [cell('a', 20, 10)] },
       { x: { kind: 'exact', value: 100 }, y: { kind: 'exact', value: 80 } },
     );
+
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 80 });
   });
+
   it('rejects insufficient parent allocation while small fixed cells clip oversized content and padding', () => {
     expect(() =>
       compile(
@@ -263,6 +300,7 @@ describe('Array / Map allocation', () => {
         .observed.allocationBounds,
     ).toEqual({ x: 0, y: 0, width: 1, height: 0 });
   });
+
   it('has zero natural allocation for an empty structure', () => {
     for (const child of [
       { namespace: 'standard', type: 'array', items: [] },
@@ -282,7 +320,9 @@ const custom = defineComposite({
   }),
   compile: (node, context) => {
     if (node.reject) throw new Error('foreign child rejected content');
+
     const bounds = { x: -12, y: 6, width: 20, height: 10 };
+
     return {
       allocationBounds: bounds,
       children: [context.scope({}, [], [{ id: 'content', role: 'foreign', bounds }])],
@@ -300,6 +340,7 @@ it('centers third-party content with a negative origin and preserves its own spa
     intrinsicLayoutProposal('natural'),
     [custom],
   );
+
   expect(result.scene.spatialHandles.entries.find(entry => entry.role === 'foreign')?.geometry.bounds).toEqual({
     x: 20,
     y: 20,
@@ -319,12 +360,14 @@ it('preserves third-party compilation failures and missing definition errors', (
     type: 'array',
     items: [{ content: { namespace: 'cell-test', type: 'foreign', reject: true } }],
   };
+
   expect(() => compile(source, intrinsicLayoutProposal('natural'), [custom])).toThrow(/foreign child rejected/);
   expect(() => compile(source)).toThrow();
 });
 it('keeps fixed slot geometry under finite range bounds', () => {
   const source = { namespace: 'standard', type: 'array', items: [cell('a', 20, 10)] };
   const result = compile(source, { x: { kind: 'range', min: 100, max: 120 }, y: { kind: 'range', min: 60, max: 80 } });
+
   expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 60 });
   expect(result.scene.spatialHandles.entries.find(entry => entry.role === 'array-cell')?.geometry.bounds).toEqual({
     x: 0,
@@ -345,8 +388,10 @@ it('measures fixed-cell content naturally without repeated layout compilation', 
     schema: CompositeBaseSchema.extend({ namespace: literal('cell-test'), type: literal('measured') }),
     compile: (_node, context) => {
       calls++;
+
       expect(context.proposal.x.kind).toBe('intrinsic');
       expect(context.proposal.y.kind).toBe('intrinsic');
+
       return { allocationBounds: { x: 0, y: 0, width: 80, height: 40 }, children: [] };
     },
   });
@@ -360,6 +405,7 @@ it('measures fixed-cell content naturally without repeated layout compilation', 
     intrinsicLayoutProposal('natural'),
     [measured],
   );
+
   expect(calls).toBeGreaterThan(0);
   expect(calls).toBeLessThanOrEqual(6);
 });
@@ -368,6 +414,7 @@ it('keeps label visual overflow outside the parent allocation including indexed 
   const source = { namespace: 'standard', type: 'array', index: true, items: [cell('a', 40, 20)] };
   const before = compile(source).observed;
   const after = compile({ ...source, label: { text: 'a very long title outside allocation', distance: 30 } }).observed;
+
   expect(after.allocationBounds).toEqual(before.allocationBounds);
   expect(after.slotSize).toEqual(before.slotSize);
   expect(after.visualBounds.height).toBeGreaterThan(before.visualBounds.height);

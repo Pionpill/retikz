@@ -75,11 +75,11 @@ The internal `empheq` dependency required by `cases` is added automatically and 
 
 ## Configuration API
 
-| Field                                      | Type, default, and behavior                                                                                   |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `MathJaxEngineOptions`<br />`.profile?`    | `MathJaxProfileValue`, default `'base'`. Selects a built-in syntax set                                        |
-| `MathJaxEngineOptions`<br />`.extensions?` | `Array<MathJaxExtensionValue>`, default `[]`. Appends public extensions and normalizes them into stable order |
-| `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`. Used by `createMathJaxLowerTex` and `useLowerTex`                   |
+| Field                                      | Type, default, and behavior                                                                              |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `MathJaxEngineOptions`<br />`.profile?`    | `MathJaxProfile`, default `'base'`. Selects a built-in syntax set                                        |
+| `MathJaxEngineOptions`<br />`.extensions?` | `Array<MathJaxExtension>`, default `[]`. Appends public extensions and normalizes them into stable order |
+| `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`. Used by `createMathJaxLowerTex` and `useLowerTex`              |
 
 In React, `useLowerTex(options)` shares an asynchronous engine by effective extension set. It returns `loading` during startup or a configuration change, injectable `lowerTex` when ready, and `error` when initialization fails. See [Installation & integration](/kernel/packages/tex) for the integration code and state rendering.
 

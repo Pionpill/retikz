@@ -34,6 +34,7 @@ export const assembledTransformsOf = (
       .filter(isStackTransform)
       .map(stackSignature),
   );
+
   return [
     ...explicitTransforms,
     ...shortcutTransforms

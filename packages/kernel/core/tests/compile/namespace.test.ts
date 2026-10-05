@@ -32,16 +32,19 @@ describe('NamespaceStack 基本 register / lookup', () => {
     const stack = new NamespaceStack();
     const layout = makeLayout('A', 10, 20);
     stack.register('A', layout);
+
     expect(stack.lookup('A')).toBe(layout);
   });
 
   it('lookup 未注册 id 返回 undefined', () => {
     const stack = new NamespaceStack();
+
     expect(stack.lookup('ghost')).toBeUndefined();
   });
 
   it('构造后初始 depth = 1（根 frame 存在）', () => {
     const stack = new NamespaceStack();
+
     expect(stack.depth).toBe(1);
   });
 });
@@ -50,11 +53,16 @@ describe('NamespaceStack push / pop frame 隔离', () => {
   it('name_stack_push_pop_frame_isolated', () => {
     const stack = new NamespaceStack();
     stack.pushFrame();
+
     expect(stack.depth).toBe(2);
+
     const inner = makeLayout('A', 100);
     stack.register('A', inner);
+
     expect(stack.lookup('A')).toBe(inner);
+
     stack.popFrame();
+
     expect(stack.depth).toBe(1);
     expect(stack.lookup('A')).toBeUndefined();
   });
@@ -64,6 +72,7 @@ describe('NamespaceStack push / pop frame 隔离', () => {
     const outer = makeLayout('outer', 1);
     stack.register('outer', outer);
     stack.pushFrame();
+
     expect(stack.lookup('outer')).toBe(outer);
   });
 });
@@ -76,8 +85,11 @@ describe('NamespaceStack inside-out shadowing', () => {
     stack.pushFrame();
     const inner = makeLayout('A', 50);
     stack.register('A', inner);
+
     expect(stack.lookup('A')).toBe(inner);
+
     stack.popFrame();
+
     expect(stack.lookup('A')).toBe(outer);
   });
 
@@ -91,10 +103,15 @@ describe('NamespaceStack inside-out shadowing', () => {
     stack.register('A', a1);
     stack.pushFrame();
     stack.register('A', a2);
+
     expect(stack.lookup('A')).toBe(a2);
+
     stack.popFrame();
+
     expect(stack.lookup('A')).toBe(a1);
+
     stack.popFrame();
+
     expect(stack.lookup('A')).toBe(a0);
   });
 });
@@ -102,6 +119,7 @@ describe('NamespaceStack inside-out shadowing', () => {
 describe('NamespaceStack pop 根 frame 防御性 throw', () => {
   it('name_stack_pop_empty_throws', () => {
     const stack = new NamespaceStack();
+
     expect(() => stack.popFrame()).toThrow(/cannot pop the root frame/);
   });
 
@@ -111,6 +129,7 @@ describe('NamespaceStack pop 根 frame 防御性 throw', () => {
     stack.pushFrame();
     stack.popFrame();
     stack.popFrame();
+
     expect(() => stack.popFrame()).toThrow(/cannot pop the root frame/);
   });
 });
@@ -120,6 +139,7 @@ describe('NamespaceStack register 返回 overwritten flag', () => {
     const stack = new NamespaceStack();
     const first = makeLayout('A', 0);
     const second = makeLayout('A', 10);
+
     expect(stack.register('A', first)).toBe(false);
     expect(stack.register('A', second)).toBe(true);
     expect(stack.lookup('A')).toBe(second);
@@ -129,6 +149,7 @@ describe('NamespaceStack register 返回 overwritten flag', () => {
     const stack = new NamespaceStack();
     stack.register('A', makeLayout('A', 0));
     stack.pushFrame();
+
     expect(stack.register('A', makeLayout('A', 10))).toBe(false);
   });
 });
@@ -141,6 +162,7 @@ describe('NamespaceStack onDuplicate 回调', () => {
     });
     stack.register('A', makeLayout('A', 0), 'children[0].node.id');
     stack.register('A', makeLayout('A', 10), 'children[1].node.id');
+
     expect(events).toHaveLength(1);
     expect(events[0].id).toBe('A');
     expect(events[0].frameDepth).toBe(0);
@@ -152,6 +174,7 @@ describe('NamespaceStack onDuplicate 回调', () => {
     const cb = vi.fn();
     const stack = new NamespaceStack({ onDuplicate: cb });
     stack.register('A', makeLayout('A'));
+
     expect(cb).not.toHaveBeenCalled();
   });
 
@@ -161,9 +184,11 @@ describe('NamespaceStack onDuplicate 回调', () => {
     stack.register('A', makeLayout('A', 0), 'p1');
     stack.register('A', makeLayout('A', 1), 'p2');
     stack.register('A', makeLayout('A', 2), 'p3');
+
     expect(events).toHaveLength(2);
     expect(events[0].secondIrPath).toBe('p2');
     expect(events[1].secondIrPath).toBe('p3');
+
     // 第二次 duplicate 时 firstIrPath 仍指向最初 register 的 p1（locator 不被中间覆盖污染）
     expect(events[0].firstIrPath).toBe('p1');
     expect(events[1].firstIrPath).toBe('p1');
@@ -175,6 +200,7 @@ describe('NamespaceStack onDuplicate 回调', () => {
     stack.register('A', makeLayout('A'), 'root');
     stack.pushFrame();
     stack.register('A', makeLayout('A'), 'inner');
+
     expect(cb).not.toHaveBeenCalled();
   });
 
@@ -184,6 +210,7 @@ describe('NamespaceStack onDuplicate 回调', () => {
     stack.pushFrame();
     stack.register('A', makeLayout('A'), 'p1');
     stack.register('A', makeLayout('A'), 'p2');
+
     expect(events[0].frameDepth).toBe(1);
   });
 });
@@ -193,6 +220,7 @@ describe('NamespaceStack resolving phase 禁止 register', () => {
     const stack = new NamespaceStack();
     stack.register('A', makeLayout('A'));
     stack.enterResolvingPhase();
+
     expect(stack.phase).toBe('resolving');
     expect(stack.lookup('A')).toBeDefined();
     expect(() => stack.register('B', makeLayout('B'))).toThrow(/only allowed during registering/);
@@ -206,6 +234,7 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
     const resolved = makeLayout('scope');
 
     stack.register('scope', placeholder, undefined, 'scope-placeholder');
+
     expect(stack.lookupEntry('scope')).toEqual({ layout: placeholder, state: 'scope-placeholder' });
 
     expect(stack.replaceLayout('scope', resolved, 0, placeholder)).toBe(true);

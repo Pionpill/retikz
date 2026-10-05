@@ -24,6 +24,7 @@ export const requiredFieldOf = (values: JsonObject, name: string, path: Readonly
   if (isJsonObject(value) && typeof value.field === 'string' && value.field.length > 0) {
     return value.field;
   }
+
   throw invalidPoint(`Chart field "${name}" is required`, path);
 };
 
@@ -41,10 +42,12 @@ export const pointFieldMappingOf = (
       return { field, ...(scale === undefined ? {} : { scale }) };
     }
   }
+
   throw invalidPoint('Chart encoding must be a resolved direct field mapping', path);
 };
 
 type PointFieldEncodingSlot = 'x' | 'y' | 'color' | 'size' | 'opacity' | 'shape';
+
 type PointPositionFieldEncodingSlot = Extract<PointFieldEncodingSlot, 'x' | 'y'>;
 
 const pointPositionTransformCapabilities = [

@@ -22,6 +22,7 @@ export const pointGlyphStyle = (fill: MarkPaint, mark: PointGlyphStyleSource): I
   const strokeOpacity = mark.strokeOpacity?.kind === 'constant' ? mark.strokeOpacity.value : undefined;
   const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
+
   return {
     shape: 'circle',
     ...(rotate !== undefined ? { rotate } : {}),

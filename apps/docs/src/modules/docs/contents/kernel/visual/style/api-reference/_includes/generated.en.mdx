@@ -5,7 +5,7 @@
 ### IRPatternLineStyle
 
 <p>
-  <ApiSourceLink label={'IRPatternLineStyle'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={23}>
+  <ApiSourceLink label={'IRPatternLineStyle'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={22}>
     Serializable style overrides for a pattern line motif
   </ApiSourceLink>
 </p>
@@ -13,6 +13,8 @@
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member         | Type                            | Default | Description |
 | -------------- | ------------------------------- | ------- | ----------- |
@@ -24,6 +26,8 @@
 | `lineCap?`     | `"butt" \| "round" \| "square"` | —       | —           |
 | `lineJoin?`    | `"round" \| "miter" \| "bevel"` | —       | —           |
 | `lineWidth?`   | `number`                        | —       | —           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -43,7 +47,7 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
   <ApiSourceLink
     label={'IRPatternLineStyleCycle'}
     path={'packages/kernel/core/src/schemas/paint/types.ts'}
-    startLine={26}
+    startLine={25}
   >
     Sparse repeating styles for adjacent pattern lines
   </ApiSourceLink>
@@ -53,10 +57,14 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 
 <DocTab value="members" label="Members">
 
-| Member      | Type     | Default | Description |
-| ----------- | -------- | ------- | ----------- |
-| `overrides` | `…`      | —       | —           |
-| `period`    | `number` | —       | —           |
+<ApiTable>
+
+| Member      | Type                                                              | Default | Description |
+| ----------- | ----------------------------------------------------------------- | ------- | ----------- |
+| `overrides` | `ZodInfer<typeof PatternLineStyleCycleSchema.shape["overrides"]>` | —       | —           |
+| `period`    | `number`                                                          | —       | —           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -73,7 +81,7 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 ### IRPatternPaint
 
 <p>
-  <ApiSourceLink label={'IRPatternPaint'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={20}>
+  <ApiSourceLink label={'IRPatternPaint'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={19}>
     Serializable pattern paint parameters
   </ApiSourceLink>
 </p>
@@ -81,6 +89,8 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member             | Type                                                                                                                                                                                                                                                                                                                       | Default | Description |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
@@ -94,12 +104,14 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 | `kind`             | `"pattern"`                                                                                                                                                                                                                                                                                                                | —       | —           |
 | `lineCap?`         | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                                                            | —       | —           |
 | `lineJoin?`        | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                                                            | —       | —           |
-| `lineStyleCycle?`  | `…`                                                                                                                                                                                                                                                                                                                        | —       | —           |
+| `lineStyleCycle?`  | `IRPatternPaint["lineStyleCycle"]`                                                                                                                                                                                                                                                                                         | —       | —           |
 | `lineWidth?`       | `number`                                                                                                                                                                                                                                                                                                                   | —       | —           |
 | `rotation?`        | `number`                                                                                                                                                                                                                                                                                                                   | —       | —           |
 | `shape`            | `OpenString<ValueOf<{ readonly Lines: "lines"; readonly Dots: "dots"; readonly Grid: "grid"; }>>`                                                                                                                                                                                                                          | —       | —           |
 | `size?`            | `number`                                                                                                                                                                                                                                                                                                                   | —       | —           |
 | `verticalStyle?`   | `{ color?: string \| undefined; dashed?: boolean \| undefined; dashOffset?: number \| undefined; dashPattern?: Array<number> \| undefined; dotted?: boolean \| undefined; lineCap?: "butt" \| "round" \| "square" \| undefined; lineJoin?: "round" \| "miter" \| "bevel" \| undefined; lineWidth?: number \| undefined; }` | —       | —           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -132,11 +144,15 @@ Defines the default base size and motif geometry generator; the definition itsel
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member         | Type                                             | Default | Description                                                                                              |
 | -------------- | ------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------- |
 | `defaultSize?` | `number`                                         | `8`     | Base size in user units when `pattern.size` is omitted; the emit result may change the final tile period |
 | `emit`         | `(ctx: PatternEmitContext) => PatternEmitOutput` | —       | Motif geometry in local tile coordinates                                                                 |
 | `name`         | `string`                                         | —       | Pattern name referenced by the IR pattern paint `shape`                                                  |
+
+</ApiTable>
 
 </DocTab>
 
@@ -172,20 +188,24 @@ Provides base size, base style, optional directional/cyclic styles, and rounding
 
 <DocTab value="members" label="Members">
 
-| Member             | Type                            | Default                       | Description                                                                                                                                        |
-| ------------------ | ------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `background?`      | `string`                        | `Transparent background`      | Tile background fill as a CSS string; omitted means transparent                                                                                    |
-| `color`            | `string`                        | —                             | Motif primary color as a CSS string; defaults to `currentColor`                                                                                    |
-| `dashOffset?`      | `IRPatternPaint['dashOffset']`  | —                             | Stroke dash offset                                                                                                                                 |
-| `dashPattern?`     | `IRPatternPaint['dashPattern']` | —                             | Resolved stroke dash pattern after applying explicit values and dashed/dotted preset precedence                                                    |
-| `horizontalStyle?` | `ResolvedPatternLineStyle`      | —                             | Horizontal line style with inherited base fields and resolved presets                                                                              |
-| `lineCap?`         | `IRPatternPaint['lineCap']`     | —                             | Stroke endpoint cap                                                                                                                                |
-| `lineJoin?`        | `IRPatternPaint['lineJoin']`    | —                             | Stroke corner join                                                                                                                                 |
-| `lineStyleCycle?`  | `ResolvedPatternLineStyleCycle` | —                             | Line-style cycle expanded by index with inheritance resolved                                                                                       |
-| `lineWidth?`       | `IRPatternPaint['lineWidth']`   | `Default chosen by the motif` | Line/grid stroke width; used as radius by dots<br />Present only when `pattern.lineWidth` is explicit; otherwise the motif chooses its own default |
-| `round`            | `(n: number) => number`         | —                             | Precision rounding function shared with compile/render for consistent geometry                                                                     |
-| `size`             | `number`                        | —                             | Resolved base size or spacing in user units; PatternEmitResult.tileSize may override the final period                                              |
-| `verticalStyle?`   | `ResolvedPatternLineStyle`      | —                             | Vertical line style with inherited base fields and resolved presets                                                                                |
+<ApiTable>
+
+| Member             | Type                            | Default     | Description                                                                                                                                        |
+| ------------------ | ------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `background?`      | `string`                        | `undefined` | Tile background fill as a CSS string; omitted means transparent                                                                                    |
+| `color`            | `string`                        | —           | Motif primary color as a CSS string; defaults to `currentColor`                                                                                    |
+| `dashOffset?`      | `IRPatternPaint['dashOffset']`  | —           | Stroke dash offset                                                                                                                                 |
+| `dashPattern?`     | `IRPatternPaint['dashPattern']` | —           | Resolved stroke dash pattern after applying explicit values and dashed/dotted preset precedence                                                    |
+| `horizontalStyle?` | `ResolvedPatternLineStyle`      | —           | Horizontal line style with inherited base fields and resolved presets                                                                              |
+| `lineCap?`         | `IRPatternPaint['lineCap']`     | —           | Stroke endpoint cap                                                                                                                                |
+| `lineJoin?`        | `IRPatternPaint['lineJoin']`    | —           | Stroke corner join                                                                                                                                 |
+| `lineStyleCycle?`  | `ResolvedPatternLineStyleCycle` | —           | Line-style cycle expanded by index with inheritance resolved                                                                                       |
+| `lineWidth?`       | `IRPatternPaint['lineWidth']`   | `undefined` | Line/grid stroke width; used as radius by dots<br />Present only when `pattern.lineWidth` is explicit; otherwise the motif chooses its own default |
+| `round`            | `(n: number) => number`         | —           | Precision rounding function shared with compile/render for consistent geometry                                                                     |
+| `size`             | `number`                        | —           | Resolved base size or spacing in user units; PatternEmitResult.tileSize may override the final period                                              |
+| `verticalStyle?`   | `ResolvedPatternLineStyle`      | —           | Vertical line style with inherited base fields and resolved presets                                                                                |
+
+</ApiTable>
 
 </DocTab>
 
@@ -238,10 +258,14 @@ For patterns whose period differs from `context.size`; the compiler validates an
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member     | Type                        | Default | Description                                                  |
 | ---------- | --------------------------- | ------- | ------------------------------------------------------------ |
 | `motif`    | `Iterable<MarkerPrimitive>` | —       | Motif geometry in local tile coordinates                     |
 | `tileSize` | `number`                    | —       | Final tile period in user units; must be finite and positive |
+
+</ApiTable>
 
 </DocTab>
 
@@ -261,7 +285,7 @@ export type PatternEmitResult = {
 ### PatternShape
 
 <p>
-  <ApiSourceLink label={'PatternShape'} path={'packages/kernel/core/src/schemas/paint/constants.ts'} startLine={6}>
+  <ApiSourceLink label={'PatternShape'} path={'packages/kernel/core/src/schemas/paint/constants.ts'} startLine={8}>
     Built-in pattern motif names, using a const object and ValueOf rather than a TypeScript enum
   </ApiSourceLink>
 </p>
@@ -274,6 +298,8 @@ export const PatternShape = {
   Dots: 'dots',
   Grid: 'grid',
 } as const;
+
+export type PatternShape = ValueOf<typeof PatternShape>;
 ```
 
 ### definePattern
@@ -284,24 +310,39 @@ export const PatternShape = {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name  | Type / signature    | Description |
+| ---------- | ----- | ------------------- | ----------- |
+| Parameters | `def` | `PatternDefinition` | —           |
+| Returns    | —     | `PatternDefinition` | —           |
+
+</ApiTable>
+
+> **Notes:** Currently a typed identity function; provides a consistent registry API entry and a location for future validation or normalization
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const definePattern: (def: PatternDefinition) => PatternDefinition;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                | Description |
-| --------- | ------------------- | ----------- |
-| `def`     | `PatternDefinition` | —           |
-
-> **Notes:** Currently a typed identity function; provides a consistent registry API entry and a location for future validation or normalization
+</DocTabs>
 
 ## shadow · Shadows
 
 ### IRDropShadow
 
 <p>
-  <ApiSourceLink label={'IRDropShadow'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={8}>
+  <ApiSourceLink label={'IRDropShadow'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={6}>
     IR shadow object with an optional preset and explicit field overrides
   </ApiSourceLink>
 </p>
@@ -309,6 +350,8 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member     | Type                                              | Default | Description |
 | ---------- | ------------------------------------------------- | ------- | ----------- |
@@ -318,6 +361,8 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 | `offsetY?` | `number`                                          | —       | —           |
 | `opacity?` | `number`                                          | —       | —           |
 | `preset?`  | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md"` | —       | —           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -331,28 +376,10 @@ export type IRDropShadow = ZodInfer<typeof DropShadowSchema>;
 
 </DocTabs>
 
-### ShadowPresetValue
-
-<p>
-  <ApiSourceLink label={'ShadowPresetValue'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={15}>
-    Union of shadow preset values
-  </ApiSourceLink>
-</p>
-
-```ts
-export type ShadowPresetValue = ValueOf<typeof ShadowPreset>;
-```
-
-#### Expanded type
-
-```ts
-export type ShadowPresetValue = 'none' | 'sm' | 'lg' | 'xl' | '2xl' | 'md';
-```
-
 ### ShadowPreset
 
 <p>
-  <ApiSourceLink label={'ShadowPreset'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={8}>
+  <ApiSourceLink label={'ShadowPreset'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={10}>
     Shadow preset names using a Tailwind-style size scale
   </ApiSourceLink>
 </p>
@@ -368,26 +395,16 @@ export const ShadowPreset = {
   Xl: 'xl',
   Xxl: '2xl',
 } as const;
+
+export type ShadowPreset = ValueOf<typeof ShadowPreset>;
 ```
 
 ## blend · Blending
 
-### BlendModeValue
-
-<p>
-  <ApiSourceLink label={'BlendModeValue'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={18}>
-    Union of blend-mode values
-  </ApiSourceLink>
-</p>
-
-```ts
-export type BlendModeValue = ValueOf<typeof BlendMode>;
-```
-
 ### BlendMode
 
 <p>
-  <ApiSourceLink label={'BlendMode'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={36}>
+  <ApiSourceLink label={'BlendMode'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={38}>
     The set of 16 W3C blend modes
   </ApiSourceLink>
 </p>
@@ -413,4 +430,6 @@ export const BlendMode = {
   Color: 'color',
   Luminosity: 'luminosity',
 } as const;
+
+export type BlendMode = ValueOf<typeof BlendMode>;
 ```

@@ -4,6 +4,7 @@ import type { IRManualTableCell, IRTableFormatterRef, IRTablePresentationRef } f
 import type { FC } from 'react';
 
 type ManualTableCellObject = Extract<IRManualTableCell, object>;
+
 type CellSharedProps = Omit<ManualTableCellObject, 'value' | 'content' | 'presentation'>;
 
 type CellValueProps = {

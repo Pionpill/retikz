@@ -69,6 +69,7 @@ const materializedSamples = (
       align,
       round,
     });
+
     return {
       point: section.center,
       tangent: sample.tangent,
@@ -105,7 +106,7 @@ const resultOf = (
 };
 
 /**
- * IR ribbon path → Extension Path kind compile result
+ * 将带状路径 IR 转换为扩展路径种类的编译结果
  * @description boundary 模式保留 upper/lower 两条曲线并闭合轮廓；centerline 模式复用 Core materializePath 的已结算 commands，再按宽度函数生成左右边界
  */
 export const emitRibbonPrimitive = (
@@ -125,10 +126,12 @@ export const emitRibbonPrimitive = (
         details: { mode: ribbon.mode },
       });
     }
+
     const outline = boundaryOutlineCommands({
       upper: context.materializePath({ children: ribbon.upper }).commands,
       lower: context.materializePath({ children: ribbon.lower }).commands,
     });
+
     return resultOf(ribbon, outline, context);
   }
 
@@ -139,6 +142,7 @@ export const emitRibbonPrimitive = (
       details: { mode: ribbon.mode },
     });
   }
+
   const materialized = context.materializePath({ children: ribbon.children });
   const segmentInputs = commandsToSegmentInputs(materialized.commands, 'centerline');
   const rawSegments = segmentInputsToSegments(segmentInputs);
@@ -150,6 +154,7 @@ export const emitRibbonPrimitive = (
       details: { totalLength: rawTotalLength },
     });
   }
+
   const endpointAxes = {
     start: ribbon.start.direction === 'auto' ? undefined : directionToSectionAxis(ribbon.start.direction, 'start'),
     end: ribbon.end.direction === 'auto' ? undefined : directionToSectionAxis(ribbon.end.direction, 'end'),
@@ -191,5 +196,6 @@ export const emitRibbonPrimitive = (
     ...endpointLabelInput('start', ribbon.start, outline.start),
     ...endpointLabelInput('end', ribbon.end, outline.end),
   ]);
+
   return { ...result, primitives: [...result.primitives, ...endpointLabels] };
 };

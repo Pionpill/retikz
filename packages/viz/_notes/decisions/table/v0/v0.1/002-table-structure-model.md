@@ -30,7 +30,7 @@ type IRManualTableStructure = {
   kind: 'manual';
   rows: number;
   columns: number;
-  rowKinds?: Array<TableRowKindValue>;
+  rowKinds?: Array<TableRowKind>;
   cells: Array<IRTableCell>;
 };
 ```
@@ -130,7 +130,7 @@ type TableStructureContext = Readonly<{
     model?: ReadonlyTableDataModel;
     sourceIndices: ReadonlyArray<number>;
   }>;
-  resolveFieldTypes: (sourceFields: ReadonlySet<string>) => ReadonlyMap<string, DataFieldTypeValue>;
+  resolveFieldTypes: (sourceFields: ReadonlySet<string>) => ReadonlyMap<string, DataFieldType>;
   resolveField: (sourceIndex: number, field: string) => IRDataScalarValue | undefined;
 }>;
 
@@ -138,7 +138,7 @@ type TableStructureOutput = Readonly<{
   rows: ReadonlyArray<
     Readonly<{
       id: string;
-      kind: TableRowKindValue;
+      kind: TableRowKind;
       sourceIndex?: number;
     }>
   >;
@@ -154,8 +154,8 @@ type TableStructureOutput = Readonly<{
       row: number;
       column: number;
       payload: ReadonlyTableCellPayload;
-      location: TableCellLocationValue;
-      roles: ReadonlyArray<TableCellRoleValue>;
+      location: TableCellLocation;
+      roles: ReadonlyArray<TableCellRole>;
       source?: TableCellSource;
     }>
   >;
@@ -214,7 +214,7 @@ type SemanticTableModel = Readonly<{
 type SemanticTableRow = Readonly<{
   id: string;
   index: number;
-  kind: TableRowKindValue;
+  kind: TableRowKind;
   sourceIndex?: number;
 }>;
 
@@ -230,8 +230,8 @@ type SemanticTableCell = Readonly<{
   columnId: string;
   rowIndex: number;
   columnIndex: number;
-  location: TableCellLocationValue;
-  roles: ReadonlyArray<TableCellRoleValue>;
+  location: TableCellLocation;
+  roles: ReadonlyArray<TableCellRole>;
   payload: ReadonlyTableCellPayload;
   source?: TableCellSource;
 }>;

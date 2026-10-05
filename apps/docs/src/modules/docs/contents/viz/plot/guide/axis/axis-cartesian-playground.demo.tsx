@@ -8,5 +8,6 @@ export const previewControls = axisCartesianPlaygroundControls;
 const controlledPreview = defineControlledPreview(previewControlContract, renderCartesianPlayground);
 
 export const previewSource = controlledPreview.source;
+
 const Preview = controlledPreview.Component;
 export default Preview;

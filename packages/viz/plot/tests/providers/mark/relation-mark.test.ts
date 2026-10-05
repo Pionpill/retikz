@@ -11,6 +11,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
+
 const markRegistry = resolveMarkRegistry();
 
 const linearScale = (domain: [number, number], range: [number, number]): PositionScale => ({
@@ -36,7 +37,9 @@ const lineWeightChannel = definePathChannel<number>({
   resolve: () => mark => {
     const binding = extensionChannelsOf(mark).lineWeight;
     if (binding?.field === undefined) return undefined;
+
     const field = binding.field;
+
     return {
       resolver: row => {
         const value = Number(row[field]);
@@ -61,6 +64,7 @@ const markLayer = (root: IRScope, index: number): IRScope => root.children[index
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -68,12 +72,15 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 const collectRibbons = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; kind?: string; children?: ReadonlyArray<unknown> };
@@ -81,12 +88,15 @@ const collectRibbons = (layer: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 const collectCoordinates = (layer: IRScope): Array<IRCoordinate> => {
   const out: Array<IRCoordinate> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -94,12 +104,15 @@ const collectCoordinates = (layer: IRScope): Array<IRCoordinate> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -107,7 +120,9 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -194,6 +209,7 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const layer = markLayer(root, 0);
     const ids = (layer.children as Array<{ id?: string }>).map(child => child.id);
+
     expect(ids).toEqual(['pt.A', 'pt.B']);
   });
 
@@ -208,6 +224,7 @@ describe('RelationMark and anchorId lowering', () => {
       ]),
       { d: rows },
     );
+
     expect(collectNodes(markLayer(root, 0)).map(node => node.id)).toEqual(['bar.A', 'bar.B']);
   });
 
@@ -225,6 +242,7 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const ids = (markLayer(root, 0).children as Array<{ id?: string }>).map(child => child.id);
+
     expect(ids).toEqual(['generated.a', 'generated.b']);
   });
 
@@ -241,6 +259,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
+
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'pt.A' } });
     expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'pt.B' } });
   });
@@ -253,6 +272,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const coordinates = collectCoordinates(markLayer(root, 0));
+
     expect(coordinates.map(coordinate => coordinate.id)).toEqual(['way.A', 'way.B']);
   });
 
@@ -269,6 +289,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: [rows[0]] },
     );
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', length: 10, width: 7 } }]);
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'A', anchor: 'right' } });
     expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'B', anchor: 'left' } });
@@ -297,6 +318,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
+
     expect(path.style?.color).toBe('#2563eb');
     expect(path.marks).toEqual([
       { pos: 0.5, mark: { kind: 'arrow' } },
@@ -336,6 +358,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
+
     expect(path.roundedCorners).toBe(6);
     expect(path.children[1]).toMatchObject({ kind: 'fold', label: { text: 'A to B', position: 0.25, sloped: true } });
     expect(path.children[2]).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 25 });
@@ -356,6 +379,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
+
     expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: 'A to B', side: 'top' } });
   });
 
@@ -379,6 +403,7 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [path] = collectPaths(markLayer(root, 1));
+
     expect(collectPaths(markLayer(root, 1))).toHaveLength(1);
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'pt.A', boundary: 'shape' } });
     expect(path.children[1]).toMatchObject({
@@ -403,6 +428,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const relationLayer = markLayer(root, 1);
+
     expect(collectCoordinates(relationLayer).map(coordinate => coordinate.id)).toEqual(['rel.0.via.0', 'rel.1.via.0']);
     expect(collectPaths(relationLayer)[0].children[1]).toMatchObject({ kind: 'line', to: { id: 'rel.0.via.0' } });
   });
@@ -419,6 +445,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
     );
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.children[0]).toMatchObject({ kind: 'move' });
     expect(path.children[1]).toMatchObject({ kind: 'smooth' });
     expect(path.children[1].kind === 'smooth' && path.children[1].points.length).toBeGreaterThan(2);
@@ -440,6 +467,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
     );
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.children[1]).toMatchObject({ kind: 'smooth' });
   });
 
@@ -483,6 +511,7 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'source.A' } });
     expect(path.children.filter(step => step.kind === 'smooth')).toHaveLength(2);
     expect(path.children.some(step => step.kind === 'smooth' && step.points.some(Array.isArray))).toBe(true);
@@ -538,6 +567,7 @@ describe('RelationMark and anchorId lowering', () => {
         path: { interpolation: 'polar' },
       },
     ]);
+
     expect(() =>
       expandOf(cartesian, { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] }),
     ).toThrow(/relation.*interpolation.*polar2D/i);
@@ -550,6 +580,7 @@ describe('RelationMark and anchorId lowering', () => {
         path: { interpolation: 'polar' },
       },
     ]);
+
     expect(() => expandOf(unresolvedTarget, { d: [{ targetAngle: 10, targetRadius: 8 }] })).toThrow(
       /relation.*interpolation.*projected/i,
     );
@@ -561,6 +592,7 @@ describe('RelationMark and anchorId lowering', () => {
       source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
       target: { project: { x: 'targetAngle', y: 'targetRadius' } },
     };
+
     expect(() =>
       expandOf(
         polarSpec([
@@ -611,6 +643,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
     );
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.children).toHaveLength(2);
     expect(path.children.map(step => step.kind)).toEqual(['move', 'line']);
   });
@@ -623,6 +656,7 @@ describe('RelationMark and anchorId lowering', () => {
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
       },
     ]);
+
     expect(() => expandOf(spec, { d: rows })).toThrow(/duplicate anchor id "pt.A"/);
   });
 
@@ -635,6 +669,7 @@ describe('RelationMark and anchorId lowering', () => {
         target: { anchorId: { prefix: 'pt', field: 'missing' } },
       },
     ]);
+
     expect(() => expandOf(spec, { d: [{ id: 'A', x: 0, y: 0, source: 'A', missing: 'Z' }] })).toThrow(/pt.Z/);
   });
 
@@ -676,6 +711,7 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [path] = collectPaths(markLayer(root, 1));
+
     expect(collectPaths(markLayer(root, 1))).toHaveLength(1);
     expect(path.marks).toEqual([{ pos: 1, mark: { kind: 'arrow' } }]);
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'trend.b' } });
@@ -715,6 +751,7 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.children).toHaveLength(2);
     expect(path.children[0]).toMatchObject({ kind: 'move' });
     expect(path.children[1]).toMatchObject({ kind: 'line' });
@@ -881,6 +918,7 @@ describe('RelationMark and anchorId lowering', () => {
       { width: 50, height: 200 },
     );
     const [path] = collectPaths(markLayer(root, 0));
+
     expect(path.children).toHaveLength(3);
     expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: '+16', position: 0.5, sloped: true } });
     expect(path.children[2]).toMatchObject({ kind: 'line' });
@@ -938,6 +976,7 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [ribbon] = collectRibbons(markLayer(root, 0));
+
     expect(ribbon.kindOptions).not.toHaveProperty('start.direction');
     expect(ribbon.kindOptions).not.toHaveProperty('end.direction');
     expect(ribbon).toMatchObject({
@@ -982,6 +1021,7 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [ribbon] = collectRibbons(markLayer(root, 0));
+
     expect(ribbon.style?.strokeWidth).toBe(5);
   });
 });

@@ -5,7 +5,10 @@ import { cloneAndFreezeJson } from '@retikz/foundation';
 import type { InspectorFragment, InspectorOutput } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
-/** 校验、脱离并深冻结 JSON-safe plain data */
+/**
+ * 校验、脱离并深冻结 JSON-safe plain data
+ * @template T JSON 输入与冻结副本共享的结构类型
+ */
 export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
   try {
     return cloneAndFreezeJson(value, label);
@@ -40,6 +43,7 @@ const sealPrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
   Reflect.deleteProperty(sealed, 'meta');
   Reflect.deleteProperty(sealed, 'animations');
   if (primitive.type !== 'group') return sealed;
+
   return { ...sealed, children: primitive.children.map(sealPrimitive) } as ScenePrimitive;
 };
 
@@ -50,10 +54,12 @@ export const sealInspectionScene = (scene: Scene): Scene => {
     layout: { ...scene.layout },
     ...(scene.resources === undefined ? {} : { resources: structuredClone(scene.resources) }),
   };
+
   const freeze = <T>(value: T): T => {
     if (value === null || typeof value !== 'object') return value;
     for (const child of Object.values(value)) freeze(child);
     return Object.freeze(value);
   };
+
   return freeze(sealed);
 };

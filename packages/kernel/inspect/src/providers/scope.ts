@@ -24,6 +24,7 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
 const envelopeChildrenOf = (subject: ScopeOwnerOutput, color: string): Array<IRChild> => {
   const envelope = subject.envelope;
   if (envelope === null) return [];
+
   const rect = envelope.rect;
   if (envelope.shape === 'rectangle') {
     return [rectCornersToPath(cornersOfRect(rect), pathStyle(color, { dashPattern: [6, 3] }))];
@@ -48,6 +49,7 @@ const envelopeChildrenOf = (subject: ScopeOwnerOutput, color: string): Array<IRC
   if (rotation === 0) {
     return [{ type: 'path', children: steps, style: pathStyle(color, { dashPattern: [6, 3] }) }];
   }
+
   return [
     {
       type: 'scope',
@@ -78,6 +80,7 @@ export const SCOPE_INSPECTOR = defineInspector({
         [40, 0],
         [0, 40],
       ];
+
       for (const endpoint of endpoints) {
         output.push({
           type: 'path',
@@ -89,12 +92,15 @@ export const SCOPE_INSPECTOR = defineInspector({
           style: pathStyle(color, { dashPattern: [2, 2] }),
         });
       }
+
       output.push(labelNode([52, 0], 'x', color), labelNode([0, 52], 'y', color));
     }
+
     if (context.options.labels) {
       const depth = context.ancestors.length + 1;
       output.push(labelNode([6, -12], `scope ${depth}`, color));
     }
+
     return isolateInspectionChildren(output);
   },
 });

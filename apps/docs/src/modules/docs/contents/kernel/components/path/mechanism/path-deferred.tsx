@@ -13,6 +13,7 @@ export type PathDeferredProps = { lang?: Lang };
 const PathDeferred: FC<PathDeferredProps> = props => {
   const { lang = 'zh' } = props;
   const t = pathDeferredI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Array

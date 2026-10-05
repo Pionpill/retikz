@@ -37,10 +37,12 @@ describe('useLowerTex lifecycle', () => {
         resolveEngine = resolve;
       }),
     );
+
     const Probe = () => {
       useLowerTex();
       return null;
     };
+
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -71,10 +73,12 @@ describe('useLowerTex lifecycle', () => {
     );
 
     const values: Array<MathJaxLowerTexState> = [];
+
     const Probe = ({ extension }: { extension: 'ams' | 'cancel' }) => {
       values.push(useLowerTex({ extensions: [extension] }));
       return null;
     };
+
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -83,22 +87,27 @@ describe('useLowerTex lifecycle', () => {
       resolvers.get('ams')?.({ convert: () => 'ams' });
       await Promise.resolve();
     });
+
     expect(values.at(-1)).toMatchObject({ status: 'ready', lowerTex: lowers.ams });
 
     await act(() => root.render(createElement(Probe, { extension: 'cancel' })));
+
     expect(values.at(-1)).toMatchObject({ status: 'loading' });
 
     await act(async () => {
       resolvers.get('cancel')?.({ convert: () => 'cancel' });
       await Promise.resolve();
     });
+
     expect(values.at(-1)).toMatchObject({ status: 'ready', lowerTex: lowers.cancel });
 
     await act(async () => {
       resolvers.get('ams')?.({ convert: () => 'late-ams' });
       await Promise.resolve();
     });
+
     expect(values.at(-1)).toMatchObject({ status: 'ready', lowerTex: lowers.cancel });
+
     await act(() => root.unmount());
   });
 
@@ -114,10 +123,12 @@ describe('useLowerTex lifecycle', () => {
     );
     const first = vi.fn();
     const second = vi.fn();
+
     const Probe = ({ onDiagnostic }: { onDiagnostic: (diagnostic: TexLoweringDiagnostic) => void }) => {
       useLowerTex({ profile: 'base', extensions: ['color'], onDiagnostic });
       return null;
     };
+
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -132,6 +143,7 @@ describe('useLowerTex lifecycle', () => {
     expect(createLowerTexMock).toHaveBeenCalledTimes(1);
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
+
     await act(() => root.unmount());
   });
 
@@ -149,10 +161,12 @@ describe('useLowerTex lifecycle', () => {
       'mathtools',
       'color',
     ] as const;
+
     const Probe = ({ shorthand }: { shorthand: boolean }) => {
       useLowerTex(shorthand ? { profile: 'math' } : { profile: 'base', extensions: [...extensions] });
       return null;
     };
+
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -167,6 +181,7 @@ describe('useLowerTex lifecycle', () => {
 
     expect(createMathJaxEngineMock).toHaveBeenCalledTimes(1);
     expect(createLowerTexMock).toHaveBeenCalledTimes(1);
+
     await act(() => root.unmount());
   });
 });

@@ -30,8 +30,6 @@ import type {
   IRPlotRelationRouting,
   IRPlotRelationStepLabel,
   IRPlotTargetRef,
-  PolarInterpolationValue,
-  RelationOrthogonalLabelStepValue,
 } from '../../../schemas';
 import {
   MarkValueKind,
@@ -108,6 +106,7 @@ const resolveProjectedTarget = (
   forceCoordinate: boolean,
 ): TargetResolution | null => {
   const values: Array<unknown> = [];
+
   for (const frameRole of frame.roles) {
     const field = (ref.project as Partial<Record<string, string>>)[frameRole];
     if (field === undefined) {
@@ -115,18 +114,23 @@ const resolveProjectedTarget = (
         `lowerPlots: relation projected ${role} target is missing field mapping for coordinate role "${frameRole}"`,
       );
     }
+
     values.push(resolveFieldPath(row, field));
   }
+
   const position = frame.projectRoles(values);
   if (position === null) return null;
+
   const polarVertex = isPolarCoordinateFrame(frame) ? toPolarVertex(frame, values[0], values[1]) : null;
   const polarTarget = polarVertex === null ? {} : { polarVertex };
   if (ref.anchorId !== undefined) {
     if (ctx?.anchors === undefined) {
       return { target: shiftedPoint(position, ref.offset), coordinates: [], ...polarTarget };
     }
+
     const owner = targetOwner(mark, ctx, transformedIndex, role);
     const id = ctx.anchors.makeId(ref.anchorId, row, owner);
+
     return {
       target: { id, ...targetExtras(ref) },
       coordinates: [ctx.anchors.coordinate(id, position, owner)],
@@ -134,9 +138,11 @@ const resolveProjectedTarget = (
       ...polarTarget,
     };
   }
+
   if (forceCoordinate && ctx?.anchors !== undefined) {
     const owner = targetOwner(mark, ctx, transformedIndex, role);
     const id = relationGeneratedCoordinateId(mark, ctx, transformedIndex, role);
+
     return {
       target: { id, ...targetExtras(ref) },
       coordinates: [ctx.anchors.coordinate(id, position, owner)],
@@ -144,12 +150,15 @@ const resolveProjectedTarget = (
       ...polarTarget,
     };
   }
+
   if (ref.anchor !== undefined || ref.boundary !== undefined) {
     throw new RetikzPlotError(
       `lowerPlots: relation projected ${role} target requires anchorId when anchor or boundary is set`,
     );
   }
+
   const shifted = shiftedPoint(position, ref.offset);
+
   return { target: shifted, coordinates: [], position: shifted, ...polarTarget };
 };
 
@@ -171,9 +180,11 @@ const resolveTarget = (
       `lowerPlots: relation ${role} target uses generated anchorId but no AnchorRegistry is available`,
     );
   }
+
   const owner = targetOwner(mark, ctx, transformedIndex, role);
   const id = ctx.anchors.makeId(ref.anchorId, row, owner);
   ctx.anchors.reference(id, owner);
+
   return { target: { id, ...targetExtras(ref) }, coordinates: [] };
 };
 
@@ -186,6 +197,7 @@ const anchorInputMissing = (ref: IRPlotTargetRef, row: ExternalRow): boolean => 
       if (resolveFieldPath(row, match[1]) === undefined) return true;
     }
   }
+
   return false;
 };
 
@@ -223,12 +235,14 @@ const endpointGlyphNode = (
   const shape = resolveMarkValue<IRNode['shape']>(glyph.shape, row);
   const size = resolveMarkValue<number>(glyph.size, row);
   if (shape !== undefined) node.shape = shape;
+
   // 与 Point size channel 一致：公开 size 是半径，Core circle 的 minimumSize 使用外接方尺寸
   if (size !== undefined) node.layout = { ...node.layout, minimumSize: size * Math.SQRT2 };
   const provenance =
     ctx?.provenance === undefined
       ? undefined
       : { context: ctx.provenance.context, markIndex: ctx.provenance.markIndex };
+
   return decorateDatum(node, row, transformedIndex, mark.type, provenance, undefined);
 };
 
@@ -251,6 +265,7 @@ const relationPrimitiveStyle = (
   const out: Record<string, unknown> = {};
   const color = relationStyleValue(mark.style, 'color', row) ?? colorOf?.(row) ?? defaultColor;
   if (color !== undefined) out.color = color;
+
   for (const key of [
     'fill',
     'fillOpacity',
@@ -264,22 +279,26 @@ const relationPrimitiveStyle = (
     const value = relationStyleValue(mark.style, key, row);
     if (value !== undefined) out[key] = value;
   }
+
   return out;
 };
 
 const resolveLabel = (label: IRPlotRelationStepLabel | undefined, row: ExternalRow): IRStepLabel | undefined => {
   if (label === undefined) return undefined;
+
   const text = label.text;
   if (typeof text === 'object' && 'field' in text) {
     const value = resolveFieldPath(row, text.field);
     if (value === undefined) return undefined;
     return withDefaultLabelSide({ ...label, text: String(value) });
   }
+
   return withDefaultLabelSide(label as IRStepLabel);
 };
 
 const applyStepLabel = (steps: Array<IRStep>, label: IRStepLabel | undefined): Array<IRStep> => {
   if (label === undefined || steps.some(step => 'label' in step && step.label !== undefined)) return steps;
+
   for (let index = steps.length - 1; index >= 0; index -= 1) {
     const step = steps[index];
     if (step.kind !== RelationRouteStepKind.Move && step.kind !== 'cycle') {
@@ -288,6 +307,7 @@ const applyStepLabel = (steps: Array<IRStep>, label: IRStepLabel | undefined): A
       return next;
     }
   }
+
   return steps;
 };
 
@@ -310,24 +330,25 @@ const defaultRoute = (
  * 计算 Relation path 在当前坐标帧下可消费的 Polar 插值
  * @description 仅默认 path 且 source、target、全部 via 都由 coordinate projection 提供时继承；显式覆盖落到排除形态时 fail-loud
  */
-const relationInterpolationOf = (
-  mark: IRPlotRelationMark,
-  frame: CoordinateFrame,
-): PolarInterpolationValue | undefined => {
+const relationInterpolationOf = (mark: IRPlotRelationMark, frame: CoordinateFrame): PolarInterpolation | undefined => {
   const interpolation = mark.path?.interpolation;
   const kind = mark.kind ?? RelationGeometryKind.Path;
   if (interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError('lowerPlots: relation interpolation override is only supported under polar2D');
   }
+
   if (interpolation !== undefined && kind === RelationGeometryKind.Ribbon) {
     throw new RetikzPlotError('lowerPlots: relation interpolation override is not supported for ribbon geometry');
   }
+
   if (interpolation !== undefined && mark.path?.route !== undefined) {
     throw new RetikzPlotError('lowerPlots: relation interpolation override cannot be combined with an explicit route');
   }
+
   if (interpolation !== undefined && mark.path?.routing !== undefined) {
     throw new RetikzPlotError('lowerPlots: relation interpolation override cannot be combined with routing');
   }
+
   const projectedRefs = [mark.source, ...(mark.path?.via ?? []), mark.target];
   const hasOnlyProjectedRefs = projectedRefs.every(ref => 'project' in ref);
   if (interpolation !== undefined && !hasOnlyProjectedRefs) {
@@ -335,6 +356,7 @@ const relationInterpolationOf = (
       'lowerPlots: relation interpolation override requires projected source, target, and via refs',
     );
   }
+
   if (
     !isPolarCoordinateFrame(frame) ||
     kind !== RelationGeometryKind.Path ||
@@ -344,6 +366,7 @@ const relationInterpolationOf = (
   ) {
     return undefined;
   }
+
   return interpolation ?? frame.interpolation;
 };
 
@@ -357,6 +380,7 @@ const interpolatedPolarRoute = (
   label: IRStepLabel | undefined,
 ): Array<IRStep> => {
   const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: targetResolutions[0].target }];
+
   for (let index = 1; index < targetResolutions.length; index += 1) {
     const sourceResolution = targetResolutions[index - 1];
     const targetResolution = targetResolutions[index];
@@ -367,6 +391,7 @@ const interpolatedPolarRoute = (
         'lowerPlots: relation interpolation requires projected source, target, and via positions',
       );
     }
+
     const sampledPoints = densifyPolarSegments(frame, [sourceVertex, targetVertex]);
     steps.push({
       type: 'step',
@@ -374,6 +399,7 @@ const interpolatedPolarRoute = (
       points: [...sampledPoints.slice(1, -1), targetResolution.target],
     });
   }
+
   return applyStepLabel(steps, label);
 };
 
@@ -397,9 +423,11 @@ const horizontalRibbonSteps = (source: IRTarget, target: IRTarget): Array<IRStep
       { type: 'step', kind: RelationRouteStepKind.Line, to: target },
     ];
   }
+
   const dx = targetPosition[0] - sourcePosition[0];
   const handle = Math.abs(dx) / 2;
   const sign = dx >= 0 ? 1 : -1;
+
   return [
     { type: 'step', kind: RelationRouteStepKind.Move, to: source },
     {
@@ -439,16 +467,18 @@ const applyOrthogonalLabel = (
   steps: Array<IRStep>,
   label: IRStepLabel | undefined,
   candidates: Array<{ stepIndex: number; length: number }>,
-  labelStep: RelationOrthogonalLabelStepValue | undefined,
+  labelStep: RelationOrthogonalLabelStep | undefined,
 ): Array<IRStep> => {
   if (label === undefined || steps.some(step => 'label' in step && step.label !== undefined)) return steps;
   if (labelStep === RelationOrthogonalLabelStep.Last || candidates.length === 0) return applyStepLabel(steps, label);
+
   const selected = candidates.reduce((best, current) => (current.length > best.length ? current : best), candidates[0]);
   const next = [...steps];
   const step = next[selected.stepIndex];
   if (step.kind !== RelationRouteStepKind.Move && step.kind !== 'cycle') {
     next[selected.stepIndex] = { ...step, label } as IRStep;
   }
+
   return next;
 };
 
@@ -459,9 +489,11 @@ const orthogonalRoute = (
 ): Array<IRStep> => {
   const via = routing.via;
   if (via === undefined) throw new RetikzPlotError('lowerPlots: orthogonal relation routing requires via');
+
   const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: targets[0] }];
   const candidates: Array<{ stepIndex: number; length: number }> = [];
   let cursor = targets[0];
+
   for (const target of targets.slice(1)) {
     const fromPosition = positionOf(cursor);
     const toPosition = positionOf(target);
@@ -470,6 +502,7 @@ const orthogonalRoute = (
       cursor = target;
       continue;
     }
+
     const corner: [number, number] =
       via === FoldStepVia.HorizontalThenVertical ? [toPosition[0], fromPosition[1]] : [fromPosition[0], toPosition[1]];
     const firstIndex = steps.length;
@@ -479,6 +512,7 @@ const orthogonalRoute = (
     candidates.push({ stepIndex: firstIndex + 1, length: segmentLength(corner, toPosition) });
     cursor = target;
   }
+
   return applyOrthogonalLabel(steps, label, candidates, routing.labelStep);
 };
 
@@ -493,11 +527,13 @@ const routedSteps = (
   if (routing === undefined || routing.kind === RelationRoutingKind.Line)
     return applyStepLabel(lineRoute(targets), label);
   if (routing.kind === RelationRoutingKind.Bend) return applyStepLabel(bendRoute(routing, targets), label);
+
   return orthogonalRoute(routing, targets, label);
 };
 
 const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: ExternalRow): IRStep => {
   const label = resolveLabel(step.label, row);
+
   switch (step.kind) {
     case RelationRouteStepKind.Move:
       return { type: 'step', kind: RelationRouteStepKind.Move, to: target };
@@ -505,6 +541,7 @@ const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: Ext
       return { type: 'step', kind: RelationRouteStepKind.Line, to: target, ...(label !== undefined ? { label } : {}) };
     case RelationRouteStepKind.Fold:
       if (step.via === undefined) throw new RetikzPlotError('lowerPlots: relation route fold step requires via');
+
       return {
         type: 'step',
         kind: RelationRouteStepKind.Fold,
@@ -515,6 +552,7 @@ const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: Ext
     case RelationRouteStepKind.Curve:
       if (step.control === undefined)
         throw new RetikzPlotError('lowerPlots: relation route curve step requires control');
+
       return {
         type: 'step',
         kind: RelationRouteStepKind.Curve,
@@ -525,6 +563,7 @@ const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: Ext
     case RelationRouteStepKind.Cubic:
       if (step.control1 === undefined || step.control2 === undefined)
         throw new RetikzPlotError('lowerPlots: relation route cubic step requires control1 and control2');
+
       return {
         type: 'step',
         kind: RelationRouteStepKind.Cubic,
@@ -560,6 +599,7 @@ const explicitRoute = (
   const route = mark.path?.route ?? [];
   const coordinates: Array<IRCoordinate> = [];
   const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: source }];
+
   for (let index = 0; index < route.length; index += 1) {
     const step = route[index];
     const stepTargetRef = step.to;
@@ -568,18 +608,21 @@ const explicitRoute = (
         `lowerPlots: relation route step ${index} requires to; only the last explicit route step may omit to and default to target`,
       );
     }
+
     const resolved =
       stepTargetRef === undefined
         ? { target, coordinates: [] }
         : resolveTarget(mark, stepTargetRef, row, frame, ctx, transformedIndex, `route.${index}`, true);
     if (resolved === null) return { steps: [], coordinates: [] };
+
     coordinates.push(...resolved.coordinates);
     steps.push(routeStepToIr(step, resolved.target, row));
   }
+
   return { steps: applyStepLabel(steps, resolveLabel(mark.path?.label, row)), coordinates };
 };
 
-/** 把 relation mark 下沉为 path 或 ribbon core IR。 */
+/** 把 relation mark 下沉为 path 或 ribbon core IR */
 export const lowerRelation = (
   mark: IRPlotRelationMark,
   rows: Array<ExternalRow>,
@@ -593,18 +636,22 @@ export const lowerRelation = (
   const labelOf = channelValueOf<IRNodeLabel['text']>(channels, 'label');
   const children: Array<IRChild> = [];
   const endpointChildren: Array<IRNode> = [];
+
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex += 1) {
     const row = rows[transformedIndex];
     if (anchorInputMissing(mark.source, row) || anchorInputMissing(mark.target, row)) continue;
+
     const source = resolveTarget(mark, mark.source, row, frame, ctx, transformedIndex, 'source');
     const target = resolveTarget(mark, mark.target, row, frame, ctx, transformedIndex, 'target');
     if (source === null || target === null) continue;
+
     const coordinates: Array<IRCoordinate> = [...source.coordinates, ...target.coordinates];
     const style = relationPrimitiveStyle(mark, row, colorOf, defaultColor);
     const zIndex = resolveMarkValue<number>(mark.style?.zIndex, row);
     if ((mark.kind ?? RelationGeometryKind.Path) === RelationGeometryKind.Ribbon) {
       const width = resolveMarkValue<number>(mark.ribbon?.width, row);
       if (width === undefined) continue;
+
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
       const { interpolation, ...ribbonOptions } = mark.ribbon?.options ?? {};
       const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
@@ -636,14 +683,17 @@ export const lowerRelation = (
       children.push(...coordinates, ribbon);
       continue;
     }
+
     let steps: Array<IRStep>;
     if (mark.path?.route !== undefined) {
       const routed = explicitRoute(mark, row, frame, ctx, transformedIndex, source.target, target.target);
       if (routed.steps.length === 0) continue;
+
       coordinates.push(...routed.coordinates);
       steps = routed.steps;
     } else {
       const viaResolutions: Array<TargetResolution> = [];
+
       for (let index = 0; index < (mark.path?.via?.length ?? 0); index += 1) {
         const via = resolveTarget(
           mark,
@@ -656,9 +706,11 @@ export const lowerRelation = (
           true,
         );
         if (via === null) continue;
+
         coordinates.push(...via.coordinates);
         viaResolutions.push(via);
       }
+
       const viaTargets = viaResolutions.map(resolution => resolution.target);
       const pathLabel = resolveLabel(mark.path?.label, row);
       steps =
@@ -668,6 +720,7 @@ export const lowerRelation = (
             ? defaultRoute(source.target, viaTargets, target.target, pathLabel)
             : routedSteps(mark.path.routing, source.target, viaTargets, target.target, pathLabel);
     }
+
     const pathOptions = (mark.path?.options ?? {}) as Partial<IRPath>;
     const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
     const path: IRPath = applyPathChannelDeliveries(
@@ -690,13 +743,16 @@ export const lowerRelation = (
         endpointGlyphNode(mark.endpoints.source, source.position, row, transformedIndex, mark, sharedColor, ctx),
       );
     }
+
     if (mark.endpoints?.target !== undefined && target.position !== undefined) {
       endpointChildren.push(
         endpointGlyphNode(mark.endpoints.target, target.position, row, transformedIndex, mark, sharedColor, ctx),
       );
     }
   }
+
   if (children.length === 0) return null;
+
   return attachMarkLayer({ type: 'scope', children: [...children, ...endpointChildren] }, mark, ctx);
 };
 
@@ -714,7 +770,7 @@ const collectRelationStyleFields = (style: IRPlotRelationPrimitiveStyle | undefi
   for (const value of Object.values(style ?? {})) fields.addChannel(value);
 };
 
-/** 内置 relation mark definition。 */
+/** 内置 relation mark definition */
 export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
   schema: RelationMarkSchema,
   domainPadding: (mark, rows, roles) =>
@@ -722,9 +778,12 @@ export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
       (['source', 'target'] as const).flatMap(side => {
         const glyph = mark.endpoints?.[side];
         if (glyph === undefined) return [];
+
         const target = mark[side];
         if (!('project' in target)) throw new RetikzPlotError('Relation domain padding requires projected endpoints');
+
         const radius = resolveMarkValue<number>(glyph.size, row) ?? POINT_DEFAULT_RADIUS;
+
         return [
           { values: roles.map(role => resolveFieldPath(row, target.project[role])), extent: roles.map(() => radius) },
         ];
@@ -745,6 +804,7 @@ export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
     fields.addChannel(mark.ribbon?.width);
     fields.addChannel(mark.ribbon?.endWidth);
     fields.addChannel(mark.encoding?.color);
+
     for (const channel of Object.values(mark.encoding?.channels ?? {})) fields.addChannel(channel);
   },
   lower: lowerRelation,

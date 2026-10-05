@@ -35,6 +35,7 @@ it('JSX rows preserve empty cells and explicit aliases with Vanilla parity', () 
     ],
   });
   const options = { adapters: synchronousAdapters(jsx.adapters) };
+
   expect(normalizeScene(jsx.scene, options).ir).toEqual(
     normalizeScene(vanilla, { adapters: [MatrixInputEmbedAdapter] }).ir,
   );
@@ -63,6 +64,7 @@ it('automatically collects nested Matrix, Array, Map and clipping providers', ()
       </MatrixRow>
     </Matrix>,
   );
+
   expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
 });
 it('empty React input and all three explicit inputs compile', () => {
@@ -73,6 +75,7 @@ it('empty React input and all three explicit inputs compile', () => {
     <Matrix skeleton={{ labels: [['x', '']] }} />,
   ]) {
     const jsx = createInputScene(element);
+
     expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
   }
 });
@@ -96,6 +99,7 @@ it('rejects misplaced markers, multiple drawable children and ragged rows', () =
     </Matrix>,
   ])
     expect(() => createInputScene(element)).toThrow();
+
   const jsx = createInputScene(
     <Matrix>
       <MatrixRow>
@@ -104,5 +108,6 @@ it('rejects misplaced markers, multiple drawable children and ragged rows', () =
       <MatrixRow />
     </Matrix>,
   );
+
   expect(() => renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toThrow();
 });

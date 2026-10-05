@@ -25,6 +25,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { direction: 'right', gap: 32 },
@@ -33,4 +34,5 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
 };
 
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

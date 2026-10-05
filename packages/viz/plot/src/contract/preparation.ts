@@ -10,7 +10,10 @@ export type PreparedPlotData = Readonly<{
   panels: ReadonlyArray<ReadonlyArray<DataTransformResult>>;
 }>;
 
-/** Plot 异步准备的 runtime 配置 */
+/**
+ * Plot 异步准备的 runtime 配置
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ */
 export type PlotDataPreparationOptions<TSource> = Readonly<{
   /** 按既有 data.reference 绑定的规范输入 */
   dataBindings: DataInputBindings<TSource>;

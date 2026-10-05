@@ -13,7 +13,7 @@ This example needs no React, graphics, or renderer. It follows the Data pipeline
 
 ## Process the first data
 
-This example treats region as a category and revenue as a continuous quantity that can be summed. `DataFieldType` describes a [field's measurement meaning](/viz/data/basic/field-types), regardless of whether the external revenue values are stored as strings.
+This example treats region as a category and revenue as a continuous quantity that can be summed. `DataFieldType` describes a [field's measurement meaning](/viz/data/model/fields-and-types), regardless of whether the external revenue values are stored as strings.
 
 ```ts
 import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
@@ -30,8 +30,8 @@ const model: IRDataModel = [
   { name: 'region', type: DataFieldType.Categorical },
   { name: 'revenue', type: DataFieldType.Continuous },
 ];
-const fieldTypes = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
-const canonicalRows = normalizeRows(rows, fieldTypes);
+const fieldTypeMap = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
+const canonicalRows = normalizeRows(rows, fieldTypeMap);
 
 const transforms: Array<IRDataTransform> = [
   {
@@ -54,5 +54,7 @@ console.log(summary);
 `model` and `transforms` can be stored as JSON. `rows`, along with any custom parsers, Definitions, and registries, participates only at runtime.
 
 ## Next
+
+When handing off canonical data with `createDataView(rows, model)`, the view contains only `rows` and the complete field `model`. Look up a field with `view.model.find(field => field.name === name)`: an `undefined` result means the field does not exist; an existing field with an `undefined` type has an undetermined type. Empty data preserves explicit types and category order without assigning default types to untyped fields.
 
 Read [Data Model](/viz/data/model) for field mapping, formats, or validation, and [Data Transforms](/viz/data/transform) for more built-in operations. When handing the result to a view, continue to [Plot Grammar](/viz/plot) or the relevant Table documentation.

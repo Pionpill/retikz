@@ -53,8 +53,8 @@ type TableCellContext = Readonly<{
   columnId: string;
   rowIndex: number;
   columnIndex: number;
-  location: TableCellLocationValue;
-  roles: ReadonlyArray<TableCellRoleValue>;
+  location: TableCellLocation;
+  roles: ReadonlyArray<TableCellRole>;
   source?: TableCellSource;
 }>;
 ```

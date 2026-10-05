@@ -31,6 +31,7 @@ const layoutSquare = (node: IRNode) => {
     warn: () => {},
     labelDistance: 12,
   });
+
   return layoutNode(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ namespaceStack: new NamespaceStack(), nodeDistance: 24 }),
@@ -55,6 +56,7 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
       layout: { minimumSize: { width: 40, height: 40 } },
     };
     const layout = layoutSquare(node);
+
     // 朝右上角方向取边界点
     const toward = [100, -100] as [number, number];
     const hit = boundaryPointOf(layout, toward);
@@ -62,11 +64,13 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
     // 直角矩形顶点 = [20,-20]；命中点应离中心更近（落在 fillet 弧上）
     const dHit = Math.hypot(hit[0], hit[1]);
     const dCorner = Math.hypot(20, 20);
+
     expect(dHit).toBeLessThan(dCorner - 1e-3);
 
     // 命中点到某个 fillet 圆心距离 ≈ 8（确实落在 r=8 的弧上）
     const fillets = filletContour(square40Segments(), 8);
     const onArc = fillets.some(f => Math.abs(Math.hypot(hit[0] - f.center[0], hit[1] - f.center[1]) - 8) < 1e-3);
+
     expect(onArc).toBe(true);
   });
 
@@ -88,6 +92,7 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
     const toward = [100, -100] as [number, number];
     const hitTop = boundaryPointOf(layoutSquare(top), toward);
     const hitParams = boundaryPointOf(layoutSquare(viaParams), toward);
+
     expect(hitTop[0]).toBeCloseTo(hitParams[0]);
     expect(hitTop[1]).toBeCloseTo(hitParams[1]);
   });
@@ -111,6 +116,7 @@ describe('顶层 Node.cornerRadius 连接边界感知（P1）', () => {
     const toward = [100, -100] as [number, number];
     const hitBoth = boundaryPointOf(layoutSquare(both), toward);
     const hitOnly = boundaryPointOf(layoutSquare(onlyParams), toward);
+
     expect(hitBoth[0]).toBeCloseTo(hitOnly[0]);
     expect(hitBoth[1]).toBeCloseTo(hitOnly[1]);
   });

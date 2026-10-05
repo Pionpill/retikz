@@ -13,6 +13,7 @@ describe('buildPlotIR PlotAxis scale shortcut', () => {
       </>,
       '__plot',
     );
+
     expect(spec.scales[1]).toEqual({ type: 'log', name: '__y' });
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'y' }]);
   });

@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 同一矩形的边界对照文案 */
 export const shadowBoundsI18n: Record<Lang, { titles: Array<string>; notes: Array<string> }> = {
   zh: {

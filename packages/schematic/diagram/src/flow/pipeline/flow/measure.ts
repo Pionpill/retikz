@@ -14,6 +14,7 @@ import type { FlowLayoutDefinition, FlowLayoutElementInput, FlowLayoutRelationIn
 import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
 import { mergeFlowLayoutIntent, resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 import type { IRFlowLayoutIntent } from '../../schemas';
+import { allocateFlowContainerWidths } from './container-width';
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
 
 /** 用当前 Graph Source 测量一个 Flow Entity，并把唯一最终 Source 记录在 measurement 中 */
@@ -22,11 +23,12 @@ const measureEntity = (
   graph: Extract<CanonicalFlowElement, { type: 'entity' }>['graph'],
   context: LayoutCompositeCompileContext,
   state: MeasurementState,
-): FlowLayoutElementInput => {
+): Extract<FlowLayoutElementInput, { kind: 'leaf' }> => {
   const child = { ...graph, position: [0, 0] as const };
   const probe = requiredLayoutProbe(context, { child, occurrence: 0 }, intrinsicLayoutProposal('natural'));
   const margin = resolveBoxSpacing(graph.layout?.margin, 0);
   state.elementMeasurements.set(element.id, { element, graph, probe, margin });
+
   return {
     kind: 'leaf',
     id: element.id,
@@ -45,7 +47,8 @@ const applyLayoutItemWidth = (
   state: MeasurementState,
 ): ReadonlyArray<FlowLayoutElementInput> => {
   const itemWidth = source.itemWidth;
-  if (itemWidth === undefined) return measuredElements;
+  if (itemWidth === undefined || itemWidth === 'fill') return measuredElements;
+
   const leafMeasurements = elements.flatMap(element => {
     if (element.type !== 'entity') return [];
     const measurement = state.elementMeasurements.get(element.id);
@@ -56,13 +59,16 @@ const applyLayoutItemWidth = (
       ? itemWidth
       : Math.max(...leafMeasurements.map(({ measurement }) => measurement.probe.visualBounds.width), 0);
   if (leafMeasurements.length === 0) return measuredElements;
+
   return measuredElements.map((measured, index) => {
     const element = elements[index];
     if (element.type !== 'entity') return measured;
+
     const graph = {
       ...element.graph,
       layout: { ...element.graph.layout, width: targetWidth },
     };
+
     return measureEntity(element, graph, context, state);
   });
 };
@@ -90,6 +96,7 @@ const measureRelationLabel = (
   graphOptions: GraphDefinitionOptions,
 ): Readonly<{ width: number; height: number }> | undefined => {
   if (relation.source.label === undefined) return undefined;
+
   try {
     const resolvedGraphOptions = resolveGraphDefinitionOptions(graphOptions);
     const canonicalRelation = resolveRelation(relation.graph, resolvedGraphOptions);
@@ -117,6 +124,7 @@ const measureRelationLabel = (
       },
       layout: { padding: 0, margin: 0, minimumSize: 0 },
     };
+
     return requiredLayoutProbe(context, { child: labelNode, occurrence: 0 }, intrinsicLayoutProposal('natural'))
       .slotSize;
   } catch (cause) {
@@ -164,6 +172,7 @@ const measureElements = (
         } else {
           state.elementMeasurements.set(element.id, { element, contentInsets: shell.contentInsets });
         }
+
         const measuredElements = measureElements(
           element.elements,
           context,
@@ -191,6 +200,7 @@ const measureElements = (
             elements: finalElements,
           };
         }
+
         return {
           kind: 'group',
           id: element.id,
@@ -204,6 +214,7 @@ const measureElements = (
         return measureFailure(element, cause);
       }
     }
+
     try {
       return measureEntity(element, element.graph, context, state);
     } catch (cause) {
@@ -217,10 +228,12 @@ const commonScopeId = (
 ): string | undefined => {
   let scopeId: string | undefined;
   const sharedLength = Math.min(sourceScopes.length, targetScopes.length);
+
   for (let index = 0; index < sharedLength; index += 1) {
     if (sourceScopes[index] !== targetScopes[index]) break;
     scopeId = sourceScopes[index];
   }
+
   return scopeId;
 };
 
@@ -244,6 +257,7 @@ const relationInputs = (
       label !== undefined && typeof label === 'object' && !Array.isArray(label)
         ? (({ text: _text, textColor: _textColor, font: _font, opacity: _opacity, ...geometry }) => geometry)(label)
         : undefined;
+
     return {
       source: relation.source.source,
       target: relation.source.target,
@@ -277,13 +291,44 @@ export const measureFlowDiagram = (
     [],
     state,
   );
+
   return {
     diagram,
-    input: {
-      layout: rootLayout,
-      elements,
-      relations: relationInputs(diagram, context, graphOptions, definition, rootLayout, state),
-    },
+    input: allocateFlowContainerWidths(
+      diagram,
+      {
+        layout: rootLayout,
+        elements,
+        relations: relationInputs(diagram, context, graphOptions, definition, rootLayout, state),
+      },
+      context,
+      (element, width) => {
+        try {
+          const graph = { ...element.graph, layout: { ...element.graph.layout, width } };
+          const first = measureEntity(element, graph, context, state);
+          const correction = width - first.size.width;
+          const result =
+            Math.abs(correction) <= Number.EPSILON * 64 * Math.max(1, width, first.size.width)
+              ? first
+              : measureEntity(
+                  element,
+                  { ...graph, layout: { ...graph.layout, width: width + correction } },
+                  context,
+                  state,
+                );
+          if (Math.abs(result.size.width - width) > Number.EPSILON * 64 * Math.max(1, width, result.size.width))
+            throw new RetikzDiagramError({
+              code: RetikzDiagramErrorCode.FlowConstraintUnsatisfiable,
+              message: `Entity '${element.id}' cannot satisfy its allocated width.`,
+              details: { path: element.path, relatedIds: [element.id] },
+            });
+
+          return result;
+        } catch (cause) {
+          return measureFailure(element, cause);
+        }
+      },
+    ),
     elementMeasurements: state.elementMeasurements,
     effectiveLayouts: state.effectiveLayouts,
   };

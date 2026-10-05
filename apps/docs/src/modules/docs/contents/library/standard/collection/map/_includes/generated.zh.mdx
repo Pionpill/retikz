@@ -4,7 +4,7 @@
 
 #### Map / MapProps
 
-- `Map`：<ApiSourceLink label={"Map"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={58}>Standard Map 呈现组件</ApiSourceLink>
+- `Map`：<ApiSourceLink label={"Map"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={84}>Standard Map 呈现组件</ApiSourceLink>
 - `MapProps`：<ApiSourceLink label={"MapProps"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={14}>Map 的 React authoring 属性；键值角色覆盖统一位于 style.key/value 与 layout.key/value</ApiSourceLink>
 
 ```ts
@@ -50,7 +50,7 @@ export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
 
 #### MapEntry / MapEntryProps
 
-- `MapEntry`：<ApiSourceLink label={"MapEntry"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={14}>Map 的直属记录声明</ApiSourceLink>
+- `MapEntry`：<ApiSourceLink label={"MapEntry"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={19}>Map 的直属记录声明</ApiSourceLink>
 - `MapEntryProps`：<ApiSourceLink label={"MapEntryProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={7}>Map 的一条键值记录，包含一个 MapKey 和一个 MapValue</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -59,9 +59,9 @@ export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
 
 <ApiTable>
 
-| 成员       | 类型        | 默认值 | 说明 |
-| ---------- | ----------- | ------ | ---- |
-| `children` | `ReactNode` | —      | —    |
+| 成员       | 类型        | 默认值 | 说明                               |
+| ---------- | ----------- | ------ | ---------------------------------- |
+| `children` | `ReactNode` | —      | 当前条目的 MapKey 与 MapValue 声明 |
 
 </ApiTable>
 
@@ -83,8 +83,8 @@ export type MapEntryProps = {
 
 #### MapKey / MapKeyProps
 
-- `MapKey`：<ApiSourceLink label={"MapKey"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={16}>MapEntry 的键槽位</ApiSourceLink>
-- `MapKeyProps`：<ApiSourceLink label={"MapKeyProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={9}>Map 键单元格的文本或 drawable 输入</ApiSourceLink>
+- `MapKey`：<ApiSourceLink label={"MapKey"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={22}>MapEntry 的键槽位</ApiSourceLink>
+- `MapKeyProps`：<ApiSourceLink label={"MapKeyProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={13}>Map 键单元格的文本或 drawable 输入</ApiSourceLink>
 
 <DocTabs defaultValue="text">
 
@@ -98,7 +98,7 @@ export type MapEntryProps = {
 | `id?`       | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
 | `layout?`   | `CellMarkerProps['layout']` | —      | —                                |
 | `style?`    | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`     | `string`                    | —      | —                                |
+| `text?`     | `string`                    | —      | 单元格文本，与绘制子内容互斥     |
 
 </ApiTable>
 
@@ -108,13 +108,13 @@ export type MapEntryProps = {
 
 <ApiTable>
 
-| 成员       | 类型                        | 默认值 | 说明                             |
-| ---------- | --------------------------- | ------ | -------------------------------- |
-| `children` | `ReactNode`                 | —      | —                                |
-| `id?`      | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
-| `layout?`  | `CellMarkerProps['layout']` | —      | —                                |
-| `style?`   | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`    | `never`                     | —      | —                                |
+| 成员       | 类型                        | 默认值 | 说明                                     |
+| ---------- | --------------------------- | ------ | ---------------------------------------- |
+| `children` | `ReactNode`                 | —      | 恰好一个可编译的绘制子内容，与 text 互斥 |
+| `id?`      | `string`                    | —      | 当前容器内唯一的可选单元格 id            |
+| `layout?`  | `CellMarkerProps['layout']` | —      | —                                        |
+| `style?`   | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖         |
+| `text?`    | `never`                     | —      | —                                        |
 
 </ApiTable>
 
@@ -134,8 +134,8 @@ export type MapKeyProps = CellMarkerProps;
 
 #### MapValue / MapValueProps
 
-- `MapValue`：<ApiSourceLink label={"MapValue"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={18}>MapEntry 的值槽位</ApiSourceLink>
-- `MapValueProps`：<ApiSourceLink label={"MapValueProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={11}>Map 值单元格的文本或 drawable 输入</ApiSourceLink>
+- `MapValue`：<ApiSourceLink label={"MapValue"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={25}>MapEntry 的值槽位</ApiSourceLink>
+- `MapValueProps`：<ApiSourceLink label={"MapValueProps"} path={"packages/library/standard-react/src/collection/map/MapMarkers.tsx"} startLine={16}>Map 值单元格的文本或 drawable 输入</ApiSourceLink>
 
 <DocTabs defaultValue="text">
 
@@ -149,7 +149,7 @@ export type MapKeyProps = CellMarkerProps;
 | `id?`       | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
 | `layout?`   | `CellMarkerProps['layout']` | —      | —                                |
 | `style?`    | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`     | `string`                    | —      | —                                |
+| `text?`     | `string`                    | —      | 单元格文本，与绘制子内容互斥     |
 
 </ApiTable>
 
@@ -159,13 +159,13 @@ export type MapKeyProps = CellMarkerProps;
 
 <ApiTable>
 
-| 成员       | 类型                        | 默认值 | 说明                             |
-| ---------- | --------------------------- | ------ | -------------------------------- |
-| `children` | `ReactNode`                 | —      | —                                |
-| `id?`      | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
-| `layout?`  | `CellMarkerProps['layout']` | —      | —                                |
-| `style?`   | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`    | `never`                     | —      | —                                |
+| 成员       | 类型                        | 默认值 | 说明                                     |
+| ---------- | --------------------------- | ------ | ---------------------------------------- |
+| `children` | `ReactNode`                 | —      | 恰好一个可编译的绘制子内容，与 text 互斥 |
+| `id?`      | `string`                    | —      | 当前容器内唯一的可选单元格 id            |
+| `layout?`  | `CellMarkerProps['layout']` | —      | —                                        |
+| `style?`   | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖         |
+| `text?`    | `never`                     | —      | —                                        |
 
 </ApiTable>
 
@@ -187,7 +187,7 @@ export type MapValueProps = CellMarkerProps;
 
 #### map / InputMap
 
-- `map`：<ApiSourceLink label={"map"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={62}>创建 Map embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
+- `map`：<ApiSourceLink label={"map"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={84}>创建 Map embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
 - `InputMap`：<ApiSourceLink label={"InputMap"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={11}>Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value</ApiSourceLink>
 
 ```ts
@@ -225,7 +225,7 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   <ApiSourceLink
     label={'MapInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/map.ts'}
-    startLine={24}
+    startLine={43}
   >
     将 Map 输入与嵌套内容交给根级 traversal
   </ApiSourceLink>

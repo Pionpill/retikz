@@ -6,7 +6,10 @@ import type { TypedChartCommonProps } from '../shared';
 import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectStripChartDeclarations } from './declaration-collection';
 
-/** StripChart React 根属性 */
+/**
+ * StripChart React 根属性
+ * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type StripChartProps<TNative = never> = TypedChartCommonProps<IRStripChart, TNative>;
 
 /** Strip 具体类型的 Chart React 组件 */

@@ -26,15 +26,19 @@ const expandOf = (
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+
 /** legend swatch / glyph / ramp Node（shape rectangle 等，无 text）；标签 Node 有 text */
 const swatchNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined);
+
 const labelNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text !== undefined);
 
 const allScopes = (root: IRScope): Array<IRScope> => {
   const out: Array<IRScope> = [];
+
   const walk = (scope: IRScope): void => {
     for (const child of scope.children) {
       if (isScope(child)) {
@@ -43,7 +47,9 @@ const allScopes = (root: IRScope): Array<IRScope> => {
       }
     }
   };
+
   walk(root);
+
   return out;
 };
 
@@ -56,10 +62,12 @@ const collectNumbers = (value: unknown, out: Array<number>): void => {
     out.push(value);
     return;
   }
+
   if (Array.isArray(value)) {
     for (const item of value) collectNumbers(item, out);
     return;
   }
+
   if (value && typeof value === 'object') {
     for (const v of Object.values(value)) collectNumbers(v, out);
   }
@@ -71,6 +79,7 @@ const hasNonJsonValue = (value: unknown): boolean => {
   if (typeof value === 'number') return !Number.isFinite(value);
   if (Array.isArray(value)) return value.some(hasNonJsonValue);
   if (value && typeof value === 'object') return Object.values(value).some(hasNonJsonValue);
+
   return false;
 };
 
@@ -117,11 +126,15 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       ],
     });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
+
     const nums: Array<number> = [];
     collectNumbers(legend, nums);
+
     expect(nums.every(Number.isFinite)).toBe(true);
     expect(hasNonJsonValue(legend)).toBe(false);
+
     // round-trip 等价
     expect(JSON.parse(JSON.stringify(legend))).toEqual(legend);
   });
@@ -147,9 +160,12 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       guides: [{ type: 'legend', channel: 'color', scale: 'kc' }],
     });
     const outer = expandOf(spec, { d: ORDINAL_ROWS });
+
     for (const legend of legendScopes(outer)) {
       const parsed = ChildSchema.safeParse(legend);
+
       expect(parsed.success, parsed.success ? '' : JSON.stringify(parsed.error.issues)).toBe(true);
+
       // descriptor 字段（lowering 内部）不应泄漏进 IR
       expect(JSON.stringify(legend)).not.toContain('descriptor');
       expect(JSON.stringify(legend)).not.toContain('scaleType');
@@ -192,6 +208,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
       },
       { width: 480, height: 300 },
     );
+
     expect(() => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites }).scene).not.toThrow();
   });
 });
@@ -221,27 +238,34 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
         { type: 'legend', channel: 'color', scale: 'kc', position: 'right' },
       ],
     });
+
     // 画布 90×60：legend reserve 80 + axis margin 会逼近 / 超出宽度
     let outer: IRScope | undefined;
     let threw = false;
+
     try {
       outer = expandOf(spec, { d: ORDINAL_ROWS }, { width: 90, height: 60 });
     } catch {
       threw = true;
     }
+
     if (!threw && outer) {
       const nums: Array<number> = [];
       collectNumbers(outer, nums);
+
       expect(nums.every(Number.isFinite)).toBe(true);
+
       // legend band 不应有负宽 / 负高（结构性）：swatch / ramp Node 坐标 + 尺寸有限
       for (const legend of legendScopes(outer)) {
         for (const swatch of swatchNodesOf(legend)) {
           const n: Array<number> = [];
           collectNumbers(swatch, n);
+
           expect(n.every(Number.isFinite)).toBe(true);
         }
       }
     }
+
     // 要么 fail-loud（plotArea 越界抛），要么产合法有限坐标；不能静默出 NaN
     expect(true).toBe(true);
   });
@@ -272,9 +296,12 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
     });
     const outer = expandOf(spec, { d: ORDINAL_ROWS });
     const legends = legendScopes(outer);
+
     expect(legends.length).toBe(2);
+
     const nums: Array<number> = [];
     collectNumbers(outer, nums);
+
     expect(nums.every(Number.isFinite)).toBe(true);
   });
 
@@ -299,6 +326,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: -3 } }],
     };
     const parsed = PlotSchema.safeParse(bad);
+
     expect(parsed.success).toBe(false);
   });
 
@@ -316,6 +344,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       guides: [{ type: 'legend', channel: 'colour' }],
     };
     const parsed = PlotSchema.parse(bad);
+
     expect(() => expandOf(parsed, { d: ORDINAL_ROWS })).toThrow(/legend channel "colour" has no bound scale/);
   });
 
@@ -332,6 +361,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend' }],
     };
+
     expect(PlotSchema.safeParse(bad).success).toBe(false);
   });
 });
@@ -350,6 +380,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'size' }],
     });
+
     expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow(/size/);
   });
 
@@ -366,6 +397,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'color' }],
     });
+
     expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow();
   });
 
@@ -390,14 +422,17 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'x' }],
     });
+
     // 期望：要么 fail-loud（scale 类型不符），要么产出无 field 的退化 swatch；不应崩出无意义内部错误
     let result: IRScope | undefined;
     let err: unknown;
+
     try {
       result = expandOf(spec, { d: ORDINAL_ROWS });
     } catch (e) {
       err = e;
     }
+
     // 记录行为：若不抛，legend 应有限可序列化
     if (result) {
       expect(hasNonJsonValue(result)).toBe(false);
@@ -443,8 +478,11 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       ],
     });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
+
     const labels = labelNodesOf(legend);
+
     // 4 档（3 断点）→ 4 区间标签
     expect(labels.length).toBe(4);
     expect(labels.every(l => typeof l.text === 'string' && l.text.length > 0)).toBe(true);
@@ -486,11 +524,16 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       ],
     });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
+
     const nums: Array<number> = [];
     collectNumbers(legend, nums);
+
     expect(nums.every(Number.isFinite)).toBe(true);
+
     const labels = labelNodesOf(legend);
+
     expect(labels.every(l => typeof l.text === 'string' && !l.text.includes('NaN'))).toBe(true);
   });
 
@@ -517,12 +560,16 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
     });
     const outer = expandOf(spec, { d: rows });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
+
     // 50 类 → 50 swatch Node + 50 label Node
     expect(swatchNodesOf(legend).length).toBe(50);
     expect(labelNodesOf(legend).length).toBe(50);
+
     const nums: Array<number> = [];
     collectNumbers(legend, nums);
+
     expect(nums.every(Number.isFinite)).toBe(true);
   });
 
@@ -541,6 +588,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       ],
       guides: [{ type: 'legend', channel: 'size' }],
     });
+
     // 所有 population 为 0 → makeSizeResolver descriptor domain [0,0]
     const outer = expandOf(spec, {
       d: [
@@ -549,9 +597,12 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       ],
     });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
+
     const nums: Array<number> = [];
     collectNumbers(legend, nums);
+
     expect(nums.every(Number.isFinite)).toBe(true);
   });
 
@@ -588,7 +639,9 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       ],
     });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
+
     for (const swatch of swatchNodesOf(legend)) {
       if (swatch.style?.fillOpacity !== undefined) {
         expect(swatch.style.fillOpacity).toBeGreaterThanOrEqual(0);
@@ -633,8 +686,10 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       ],
     });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
     expect(hasNonJsonValue(legend)).toBe(false);
+
     // ramp 矩形 Node 的 linearGradient stops offset 必须落 [0,1]
     for (const swatch of swatchNodesOf(legend)) {
       const fill = swatch.style?.fill;
@@ -680,6 +735,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
         { lon: 1, lat: 1, t: 0.002 },
       ],
     });
+
     expect(legendScopes(outer)[0]).toBeDefined();
   }, 5000);
 
@@ -711,9 +767,12 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
       ],
     });
     const legend = legendScopes(outer)[0];
+
     expect(legend).toBeDefined();
+
     const nums: Array<number> = [];
     collectNumbers(legend, nums);
+
     expect(nums.every(Number.isFinite)).toBe(true);
   });
 });
@@ -740,14 +799,19 @@ describe('[adversarial] legend × 默认 axes / polar（攻击面 9）', () => {
       guides: [{ type: 'legend', channel: 'color', scale: 'kc', position: 'right' }],
     });
     let outer: IRScope | undefined;
+
     expect(() => {
       outer = expandOf(spec, { d: ORDINAL_ROWS });
     }).not.toThrow();
+
     if (outer) {
       const legend = legendScopes(outer)[0];
+
       expect(legend).toBeDefined();
+
       const nums: Array<number> = [];
       collectNumbers(legend, nums);
+
       expect(nums.every(Number.isFinite)).toBe(true);
     }
   });

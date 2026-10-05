@@ -17,11 +17,13 @@ export type PageNavigation = {
 /** 在给定可见文档树中解析当前页的上一篇与下一篇。 */
 export const resolvePageNavigation = (loc: DocLocation | null, sections: Array<Section>): PageNavigation => {
   if (!loc) return { prev: null, next: null };
+
   const leaves = flattenLeaves(loc.moduleId, sections);
   const idx = leaves.findIndex(
     leaf => leaf.sectionId === loc.sectionId && leaf.pageId === loc.pageId && leaf.subPageId === loc.subPageId,
   );
   if (idx < 0) return { prev: null, next: null };
+
   return {
     prev: idx > 0 ? leaves[idx - 1] : null,
     next: idx < leaves.length - 1 ? leaves[idx + 1] : null,

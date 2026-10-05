@@ -6,13 +6,10 @@ import type {
   RuntimeComputationContext,
   RuntimeComputationDefinition,
   RuntimeComputationErasedExecutor,
-  RuntimeComputationExecutionValue,
-  RuntimeComputationKindValue,
-  RuntimeComputationPhaseValue,
   RuntimeComputationToken,
 } from '../computation';
 import { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from '../computation';
-import type { RuntimeDiagnostic, RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import type { RuntimeDiagnostic } from '../diagnostic';
 import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeSourceLifecycleDiagnostic } from '../error';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
@@ -63,7 +60,7 @@ type RuntimeComputationState = Readonly<{
   prepared: RuntimePreparedComputationArtifact<unknown, unknown, unknown>;
 }>;
 
-type RuntimeComputationOutcome = Exclude<RuntimeComputationKindValue, typeof RuntimeComputationKind.Bailout>;
+type RuntimeComputationOutcome = Exclude<RuntimeComputationKind, typeof RuntimeComputationKind.Bailout>;
 
 type RuntimePreparedParticipantState = Readonly<{
   executor: RuntimeCommitParticipantExecutor;
@@ -78,7 +75,7 @@ type NormalizedUpdateResult =
   | Readonly<{ kind: typeof RuntimeComputationKind.Incremental; artifact: unknown }>
   | Readonly<{
       kind: typeof RuntimeComputationKind.Fallback;
-      diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>>;
+      diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>>;
     }>;
 
 type RuntimeState =
@@ -91,10 +88,10 @@ type RuntimeState =
   | 'dispose-pending'
   | 'disposed';
 
-const runtimeDiagnosticPhases = new Set<RuntimeDiagnosticPhaseValue>(Object.values(RuntimeDiagnosticPhase));
+const runtimeDiagnosticPhases = new Set<RuntimeDiagnosticPhase>(Object.values(RuntimeDiagnosticPhase));
 
-const isRuntimeDiagnosticPhase = (value: unknown): value is RuntimeDiagnosticPhaseValue =>
-  typeof value === 'string' && runtimeDiagnosticPhases.has(value as RuntimeDiagnosticPhaseValue);
+const isRuntimeDiagnosticPhase = (value: unknown): value is RuntimeDiagnosticPhase =>
+  typeof value === 'string' && runtimeDiagnosticPhases.has(value as RuntimeDiagnosticPhase);
 
 /** 创建 runtime contract 错误 */
 const runtimeError = (
@@ -186,6 +183,7 @@ const normalizePreparedCommit = (value: unknown, participant: RuntimeCommitParti
   ) {
     throw participantError(RetikzRuntimeErrorCode.ParticipantPrepareFailed, 'prepare', participant, value);
   }
+
   return value as RuntimePreparedCommit;
 };
 
@@ -258,9 +256,11 @@ const createParticipantInvocation = (
   observeRuntimeTraceReporterDiagnostics(traceReporter, diagnostic => {
     diagnostics.push(mapParticipantTraceDiagnostic(participant, diagnostic));
   });
+
   const drainTraceDiagnostics = (): void => {
     traceReporter.diagnostics();
   };
+
   let diagnosing = false;
   const context: RuntimeParticipantContext = Object.freeze({
     trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
@@ -277,7 +277,9 @@ const createParticipantInvocation = (
         );
         return;
       }
+
       diagnosing = true;
+
       try {
         const candidate: unknown = warning;
         if (typeof candidate !== 'object' || candidate === null) {
@@ -288,6 +290,7 @@ const createParticipantInvocation = (
             cause: candidate,
           });
         }
+
         const code = Reflect.get(candidate, 'code');
         const phase = Reflect.get(candidate, 'phase');
         const message = Reflect.get(candidate, 'message');
@@ -299,6 +302,7 @@ const createParticipantInvocation = (
             cause: candidate,
           });
         }
+
         diagnostics.push(Object.freeze({ code, phase, message, severity: 'warning' as const, owner: participant.key }));
       } catch (cause) {
         diagnostics.push(
@@ -316,12 +320,15 @@ const createParticipantInvocation = (
       }
     },
   });
+
   const takeDiagnostics = (): ReadonlyArray<RuntimeDiagnostic> => {
     drainTraceDiagnostics();
     const output = Object.freeze([...diagnostics]);
     diagnostics = [];
+
     return output;
   };
+
   return Object.freeze({ context, takeDiagnostics });
 };
 
@@ -348,6 +355,7 @@ const withFailureDiagnostics = (cause: unknown, diagnostics: ReadonlyArray<Runti
       diagnostics,
     });
   }
+
   return cause;
 };
 
@@ -362,9 +370,11 @@ const normalizeRunResult = (result: unknown, definition: RuntimeComputationToken
   if (typeof result !== 'object' || result === null) {
     throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, result);
   }
+
   let kind: unknown;
   let hasArtifact: boolean;
   let artifact: unknown;
+
   try {
     kind = Reflect.get(result, 'kind');
     hasArtifact = Object.prototype.hasOwnProperty.call(result, 'artifact');
@@ -372,9 +382,11 @@ const normalizeRunResult = (result: unknown, definition: RuntimeComputationToken
   } catch (cause) {
     throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, cause);
   }
+
   if (kind !== RuntimeComputationKind.Full || !hasArtifact) {
     throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, result);
   }
+
   return Object.freeze({ kind: RuntimeComputationKind.Full, artifact });
 };
 
@@ -383,41 +395,51 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeComputationTo
   if (typeof result !== 'object' || result === null) {
     throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, result);
   }
+
   let kind: unknown;
+
   try {
     kind = Reflect.get(result, 'kind');
   } catch (cause) {
     throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, cause);
   }
+
   if (kind === RuntimeComputationKind.Bailout) return Object.freeze({ kind });
   if (kind === RuntimeComputationKind.Incremental) {
     let hasArtifact: boolean;
     let artifact: unknown;
+
     try {
       hasArtifact = Object.prototype.hasOwnProperty.call(result, 'artifact');
       artifact = hasArtifact ? Reflect.get(result, 'artifact') : undefined;
     } catch (cause) {
       throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, cause);
     }
+
     if (hasArtifact) return Object.freeze({ kind, artifact });
   }
+
   if (kind === RuntimeComputationKind.Fallback) {
     let fallbackDiagnostics: unknown;
+
     try {
       fallbackDiagnostics = Reflect.get(result, 'diagnostics');
     } catch (cause) {
       throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, cause);
     }
+
     if (fallbackDiagnostics === undefined) return Object.freeze({ kind });
     if (Array.isArray(fallbackDiagnostics)) {
-      const diagnostics: Array<Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>> = [];
+      const diagnostics: Array<Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>> = [];
       let invalidDiagnostic = false;
+
       try {
         for (const diagnostic of fallbackDiagnostics) {
           if (typeof diagnostic !== 'object' || diagnostic === null) {
             invalidDiagnostic = true;
             break;
           }
+
           const code = Reflect.get(diagnostic, 'code');
           const diagnosticPhase = Reflect.get(diagnostic, 'phase');
           const message = Reflect.get(diagnostic, 'message');
@@ -425,16 +447,20 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeComputationTo
             invalidDiagnostic = true;
             break;
           }
+
           diagnostics.push(Object.freeze({ code, phase: diagnosticPhase, message }));
         }
       } catch (cause) {
         throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, cause);
       }
+
       if (invalidDiagnostic)
         throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, result);
+
       return Object.freeze({ kind, diagnostics: Object.freeze(diagnostics) });
     }
   }
+
   throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, result);
 };
 
@@ -447,14 +473,17 @@ const prepareComputationArtifact = (
   diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
 ): RuntimePreparedComputationArtifact<unknown, unknown, unknown> => {
   let prepared: RuntimePreparedComputationArtifact<unknown, unknown, unknown>;
+
   try {
     prepared = executor.prepareArtifact(input, previous?.prepared);
   } catch (cause) {
     if (cause instanceof RetikzRuntimeError) {
       throw withFailureDiagnostics(cause, Object.freeze([...diagnostics, ...cause.diagnostics]));
     }
+
     throw cause;
   }
+
   return prepared;
 };
 
@@ -467,32 +496,40 @@ const prepareInitialSources = (
   if (!Array.isArray(initialSnapshots)) {
     throw runtimeError(RetikzRuntimeErrorCode.InitialSourceMismatch, 'initial', initialSnapshots);
   }
+
   const commands = new Map<RuntimeSourceToken, RuntimeSourceCommandExecutor>();
+
   for (const command of initialSnapshots) {
     const commandExecutor = getRuntimeSourceCommandExecutor(command);
     if (command.kind !== 'initial') {
       throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'initial', command);
     }
+
     if (sources.find(command.source.key) !== command.source || commands.has(command.source)) {
       throw runtimeError(RetikzRuntimeErrorCode.InitialSourceMismatch, 'initial', command, command.source.key);
     }
+
     commands.set(command.source, commandExecutor);
   }
+
   if (commands.size !== sources.definitions().length) {
     throw runtimeError(RetikzRuntimeErrorCode.InitialSourceMismatch, 'initial', initialSnapshots);
   }
 
   const states = new Map<RuntimeSourceToken, RuntimeSourceState>();
+
   try {
     for (const source of sources.definitions()) {
       const command = commands.get(source);
       if (command === undefined) {
         throw runtimeError(RetikzRuntimeErrorCode.InitialSourceMismatch, 'initial', source, source.key);
       }
+
       states.set(source, Object.freeze({ command, prepared: command.prepare(executor).value }));
     }
   } catch (cause) {
     const diagnostics = [...errorDiagnostics(cause)];
+
     for (const source of [...sources.definitions()].reverse()) {
       const sourceState = states.get(source);
       if (sourceState !== undefined) {
@@ -501,14 +538,16 @@ const prepareInitialSources = (
         );
       }
     }
+
     throw withFailureDiagnostics(cause, Object.freeze(diagnostics));
   }
+
   return states;
 };
 
 /** 为当前 Computation 构造只允许已声明依赖的 typed candidate view */
 const createCandidateView = (
-  phase: RuntimeComputationPhaseValue,
+  phase: RuntimeComputationPhase,
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   sourceStates: ReadonlyMap<RuntimeSourceToken, RuntimeSourceState>,
@@ -521,6 +560,7 @@ const createCandidateView = (
 ): RuntimeCandidateView => {
   const declaredSources = new Set(executor.sources);
   const declaredComputations = new Set(executor.computations);
+
   const candidateError = (
     candidatePhase: 'candidate-read' | 'candidate-change' | 'candidate-artifact',
     cause: unknown,
@@ -530,27 +570,32 @@ const createCandidateView = (
     invocationErrors.add(error);
     return error;
   };
+
   const lookup: RuntimeCandidateLookup = Object.freeze({
     snapshot: <TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) => {
       if (!declaredSources.has(source)) {
         throw candidateError('candidate-read', source, source.key);
       }
+
       const state = sourceStates.get(source);
       if (state === undefined) {
         throw candidateError('candidate-read', source, source.key);
       }
+
       return state.command.snapshot(source, state.prepared, candidateRevision);
     },
     changed: source => {
       if (!declaredSources.has(source)) {
         throw candidateError('candidate-change', source, source.key);
       }
+
       return changedSources.has(source);
     },
     changeSet: <TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) => {
       if (!declaredSources.has(source)) {
         throw candidateError('candidate-change', source, source.key);
       }
+
       return changeSets.get(source)?.changeSet(source);
     },
     artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
@@ -559,13 +604,16 @@ const createCandidateView = (
       if (!declaredComputations.has(dependency)) {
         throw candidateError('candidate-artifact', dependency, computation.id.owner);
       }
+
       const state = computationStates.get(dependency);
       if (state === undefined) {
         throw candidateError('candidate-artifact', dependency, computation.id.owner);
       }
+
       return state.executor.snapshot(dependency, state.prepared, candidateRevision);
     },
   });
+
   return phase === RuntimeComputationPhase.Initial
     ? Object.freeze({ ...lookup, phase, candidateRevision })
     : Object.freeze({
@@ -578,7 +626,7 @@ const createCandidateView = (
 
 /** 运行一个 Computation callback 并捕获 artifact 双层 read */
 const runComputation = (
-  phase: RuntimeComputationPhaseValue,
+  phase: RuntimeComputationPhase,
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   sourceStates: ReadonlyMap<RuntimeSourceToken, RuntimeSourceState>,
@@ -588,7 +636,7 @@ const runComputation = (
   definition: RuntimeComputationToken,
   executor: RuntimeComputationErasedExecutor,
   trace: RuntimeOptions['trace'],
-  mode: RuntimeComputationExecutionValue,
+  mode: RuntimeComputationExecution,
   previous?: RuntimeComputationState,
 ): Readonly<{
   state?: RuntimeComputationState;
@@ -616,6 +664,7 @@ const runComputation = (
     phases: executor.tracePhases,
     sink: trace ?? (() => undefined),
   });
+
   const drainTraceDiagnostics = (): void => {
     for (const diagnostic of traceReporter.diagnostics()) {
       const mapped = mapTraceDiagnostic(definition, diagnostic);
@@ -623,11 +672,12 @@ const runComputation = (
       executionDiagnostics.push(mapped);
     }
   };
+
   const createContext = (execution: RuntimeComputationContext['execution']): RuntimeComputationContext =>
     Object.freeze({
       execution,
       trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
-      diagnose: (diagnostic: Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>) => {
+      diagnose: (diagnostic: Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>) => {
         drainTraceDiagnostics();
         const candidate: unknown = diagnostic;
         if (typeof candidate !== 'object' || candidate === null) {
@@ -638,6 +688,7 @@ const runComputation = (
             cause: candidate,
           });
         }
+
         const code = Reflect.get(candidate, 'code');
         const diagnosticPhase = Reflect.get(candidate, 'phase');
         const message = Reflect.get(candidate, 'message');
@@ -649,6 +700,7 @@ const runComputation = (
             cause: candidate,
           });
         }
+
         diagnostics.push(
           Object.freeze({
             code,
@@ -665,6 +717,7 @@ const runComputation = (
   if (mode === RuntimeComputationExecution.Incremental && executor.update !== undefined && previous !== undefined) {
     const context = createContext(RuntimeComputationExecution.Incremental);
     let callbackResult;
+
     try {
       callbackResult = executor.update<unknown, unknown>(previous.prepared.computationRead, view, context);
     } catch (cause) {
@@ -672,6 +725,7 @@ const runComputation = (
       if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) {
         throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
       }
+
       throw computationError(
         RetikzRuntimeErrorCode.ComputationUpdateFailed,
         'update',
@@ -680,19 +734,24 @@ const runComputation = (
         executionDiagnostics,
       );
     }
+
     drainTraceDiagnostics();
     let result: NormalizedUpdateResult;
+
     try {
       result = normalizeUpdateResult(callbackResult, definition);
     } catch (cause) {
       if (cause instanceof RetikzRuntimeError) {
         throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
       }
+
       throw cause;
     }
+
     if (result.kind === RuntimeComputationKind.Bailout) {
       return Object.freeze({ diagnostics: Object.freeze([...diagnostics]) });
     }
+
     if (result.kind === RuntimeComputationKind.Incremental) {
       return Object.freeze({
         state: Object.freeze({
@@ -704,6 +763,7 @@ const runComputation = (
         diagnostics: Object.freeze([...diagnostics]),
       });
     }
+
     for (const diagnostic of result.diagnostics ?? []) context.diagnose(diagnostic);
   }
 
@@ -711,6 +771,7 @@ const runComputation = (
     mode === RuntimeComputationExecution.Incremental ? RuntimeComputationExecution.Fallback : mode,
   );
   let callbackResult;
+
   try {
     callbackResult = executor.run<unknown>(view, context);
   } catch (cause) {
@@ -718,18 +779,23 @@ const runComputation = (
     if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) {
       throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
     }
+
     throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, cause, executionDiagnostics);
   }
+
   drainTraceDiagnostics();
   let result: NormalizedRunResult;
+
   try {
     result = normalizeRunResult(callbackResult, definition);
   } catch (cause) {
     if (cause instanceof RetikzRuntimeError) {
       throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
     }
+
     throw cause;
   }
+
   return Object.freeze({
     state: Object.freeze({
       definition,
@@ -747,36 +813,45 @@ const runComputation = (
 /** 创建同步 Snapshot transaction runtime */
 export const createRuntime = (options: RuntimeOptions): Runtime => {
   let computationSources: RuntimeSourceRegistry;
+
   try {
     computationSources = getRuntimeComputationSourceRegistry(options.computations);
   } catch (cause) {
     throw runtimeError(RetikzRuntimeErrorCode.RegistryMismatch, 'runtime-create', cause);
   }
+
   if (computationSources !== options.sources) {
     throw runtimeError(RetikzRuntimeErrorCode.RegistryMismatch, 'runtime-create', options.computations);
   }
+
   const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(options, 'updateStrategy');
   if (updateStrategyDescriptor !== undefined && !Object.hasOwn(updateStrategyDescriptor, 'value')) {
     throw runtimeError(RetikzRuntimeErrorCode.UpdateStrategyInvalid, 'runtime-create', updateStrategyDescriptor);
   }
+
   const updateStrategy = updateStrategyDescriptor?.value ?? RuntimeUpdateStrategy.Auto;
   if (updateStrategy !== RuntimeUpdateStrategy.Auto && updateStrategy !== RuntimeUpdateStrategy.Full) {
     throw runtimeError(RetikzRuntimeErrorCode.UpdateStrategyInvalid, 'runtime-create', updateStrategy);
   }
+
   const participantsInput = options.participants ?? [];
   const participantExecutors = new Map<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>();
   const participantKeys = new Set<string>();
   const participants: Array<RuntimeCommitParticipantToken> = [];
+
   for (const participantCandidate of participantsInput) {
     if (!isRuntimeCommitParticipant(participantCandidate)) {
       throw runtimeError(RetikzRuntimeErrorCode.ParticipantTokenInvalid, 'runtime-create', participantCandidate);
     }
+
     const participant = participantCandidate;
     if (participantKeys.has(participant.key)) {
       throw runtimeError(RetikzRuntimeErrorCode.ParticipantDuplicate, 'runtime-create', participant, participant.key);
     }
+
     participantKeys.add(participant.key);
     const sourceDependencies = new Set<RuntimeSourceToken>();
+
     for (const source of participant.sources) {
       if (sourceDependencies.has(source) || options.sources.find(source.key) !== source) {
         throw runtimeError(
@@ -786,9 +861,12 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           participant.key,
         );
       }
+
       sourceDependencies.add(source);
     }
+
     const computationDependencies = new Set<RuntimeComputationToken>();
+
     for (const computation of participant.computations) {
       if (computationDependencies.has(computation)) {
         throw runtimeError(
@@ -798,6 +876,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           participant.key,
         );
       }
+
       try {
         if (options.computations.find(computation.id) !== computation) {
           throw new RetikzRuntimeError({
@@ -815,8 +894,10 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           participant.key,
         );
       }
+
       computationDependencies.add(computation);
     }
+
     const executor = getRuntimeCommitParticipantExecutor(participant);
     if (executor === undefined) {
       throw runtimeError(
@@ -826,9 +907,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         participant.key,
       );
     }
+
     participants.push(participant);
     participantExecutors.set(participant, executor);
   }
+
   participants.sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
   Object.freeze(participants);
   const alreadyOwnedParticipant = claimRuntimeCommitParticipants(participants);
@@ -840,6 +923,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       alreadyOwnedParticipant.key,
     );
   }
+
   const sourceExecutor = createRuntimeSourceExecutor(options.sources);
   let sourceStates = new Map<RuntimeSourceToken, RuntimeSourceState>();
   let computationStates = new Map<RuntimeComputationToken, RuntimeComputationState>();
@@ -857,6 +941,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
 
   try {
     sourceStates = prepareInitialSources(options.sources, options.initialSnapshots, sourceExecutor);
+
     for (const definition of options.computations.definitions()) {
       const executor = getRuntimeComputationRegistryExecutor(options.computations, definition);
       const prepared = runComputation(
@@ -880,9 +965,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           cause: prepared,
         });
       }
+
       computationStates.set(definition, prepared.state);
       initialDiagnostics.push(...prepared.diagnostics);
     }
+
     for (const participant of participants) {
       const executor = participantExecutors.get(participant);
       if (executor === undefined) {
@@ -893,6 +980,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           cause: participant,
         });
       }
+
       const invocationErrors = new WeakSet<RetikzRuntimeError>();
       const declaredSources = new Set(participant.sources);
       const declaredComputations = new Set(participant.computations);
@@ -912,6 +1000,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             invocationErrors.add(error);
             throw error;
           }
+
           const sourceState = sourceStates.get(source);
           if (sourceState === undefined) {
             const error = runtimeError(
@@ -923,6 +1012,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             invocationErrors.add(error);
             throw error;
           }
+
           return sourceState.command.snapshot(source, sourceState.prepared, currentRevision);
         },
         artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
@@ -938,6 +1028,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             invocationErrors.add(error);
             throw error;
           }
+
           const computationState = computationStates.get(computation);
           if (computationState === undefined) {
             const error = runtimeError(
@@ -949,12 +1040,15 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             invocationErrors.add(error);
             throw error;
           }
+
           return computationState.executor.snapshot(computation, computationState.prepared, currentRevision);
         },
       });
+
       const invocation = createParticipantInvocation(participant, options.trace);
       participantDrains.set(participant, invocation.takeDiagnostics);
       let preparedCandidate: unknown;
+
       try {
         preparedCandidate = executor.prepare(view, invocation.context);
       } catch (cause) {
@@ -962,6 +1056,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) throw cause;
         throw participantError(RetikzRuntimeErrorCode.ParticipantPrepareFailed, 'prepare', participant, cause);
       }
+
       initialParticipantDiagnostics.push(...invocation.takeDiagnostics());
       const prepared = normalizePreparedCommit(preparedCandidate, participant);
       preparedParticipants.set(
@@ -969,6 +1064,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         Object.freeze({ executor, prepared, takeDiagnostics: invocation.takeDiagnostics }),
       );
     }
+
     for (const participant of participants) {
       try {
         preparedParticipants.get(participant)?.prepared.commit();
@@ -976,9 +1072,12 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
         throw participantError(RetikzRuntimeErrorCode.ParticipantCommitFailed, 'commit', participant, cause);
       }
+
       initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
     }
+
     const candidateReads = new Map<RuntimeCommitParticipantToken, unknown>();
+
     for (const participant of participants) {
       const executor = participantExecutors.get(participant);
       if (executor !== undefined) {
@@ -988,9 +1087,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
           throw participantError(RetikzRuntimeErrorCode.ParticipantReadFailed, 'read', participant, cause);
         }
+
         initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
       }
     }
+
     participantReads = candidateReads;
   } catch (cause) {
     const failedDiagnostics: Array<RuntimeDiagnostic> = [
@@ -998,6 +1099,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       ...initialParticipantDiagnostics,
       ...(cause instanceof RetikzRuntimeError ? cause.diagnostics : []),
     ];
+
     for (const participant of [...participants].reverse()) {
       const participantState = preparedParticipants.get(participant);
       if (participantState !== undefined) {
@@ -1017,6 +1119,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         }
       }
     }
+
     for (const participant of [...participants].reverse()) {
       const participantState = preparedParticipants.get(participant);
       if (participantState !== undefined) {
@@ -1036,13 +1139,16 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         }
       }
     }
+
     for (const participant of [...participants].reverse()) {
       let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
+
       try {
         participantExecutors.get(participant)?.dispose();
       } catch (disposeCause) {
         participantDisposeFailure = Object.freeze({ cause: disposeCause });
       }
+
       failedDiagnostics.push(...(participantDrains.get(participant)?.() ?? []));
       if (participantDisposeFailure !== undefined) {
         failedDiagnostics.push(
@@ -1054,13 +1160,17 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           ),
         );
       }
+
       consumeRuntimeCommitParticipant(participant);
     }
+
     participantReads.clear();
+
     for (const definition of [...options.computations.definitions()].reverse()) {
       const prepared = computationStates.get(definition);
       if (prepared !== undefined) failedDiagnostics.push(...prepared.executor.retire(prepared.prepared));
     }
+
     for (const source of [...options.sources.definitions()].reverse()) {
       const prepared = sourceStates.get(source);
       if (prepared !== undefined) {
@@ -1069,6 +1179,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         );
       }
     }
+
     throw withFailureDiagnostics(cause, Object.freeze(failedDiagnostics));
   }
 
@@ -1076,9 +1187,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
     if (state === 'dispose-pending' || state === 'disposed') {
       throw runtimeError(RetikzRuntimeErrorCode.Disposed, phase, undefined);
     }
+
     if (state === 'broken') {
       throw runtimeError(RetikzRuntimeErrorCode.ParticipantRollbackFailed, phase, brokenError, brokenError?.owner);
     }
+
     if (state !== 'idle') throw runtimeError(RetikzRuntimeErrorCode.Reentrant, phase, state);
   };
 
@@ -1088,20 +1201,25 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       assertIdle('update');
       state = 'preparing';
       const updateState = { broken: false };
+
       try {
         const updateCandidate: unknown = update;
         if (typeof updateCandidate !== 'object' || updateCandidate === null) {
           throw runtimeError(RetikzRuntimeErrorCode.RevisionInvalid, 'update', updateCandidate);
         }
+
         if (!isRuntimeRevision(update.baseRevision)) {
           throw runtimeError(RetikzRuntimeErrorCode.RevisionInvalid, 'update', update.baseRevision);
         }
+
         if (update.baseRevision !== currentRevision) {
           throw runtimeError(RetikzRuntimeErrorCode.RevisionStale, 'update', update.baseRevision);
         }
+
         if (!Array.isArray(update.sources)) {
           throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'update', update.sources);
         }
+
         if (update.sources.length === 0) {
           return Object.freeze({
             revision: currentRevision,
@@ -1111,16 +1229,20 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         }
 
         const commands = new Map<RuntimeSourceToken, RuntimeSourceCommandExecutor>();
+
         for (const command of update.sources) {
           const executor = getRuntimeSourceCommandExecutor(command);
           if (command.kind !== 'update' || options.sources.find(command.source.key) !== command.source) {
             throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'update', command, command.source.key);
           }
+
           if (commands.has(command.source)) {
             throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'update', command, command.source.key);
           }
+
           commands.set(command.source, executor);
         }
+
         for (const [source, executor] of commands) {
           if (executor.changeSetBaseRevision !== undefined && executor.changeSetBaseRevision !== update.baseRevision) {
             throw runtimeError(
@@ -1131,6 +1253,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             );
           }
         }
+
         const candidateRevision = createNextRuntimeRevision(currentRevision);
 
         const nextSourceStates = new Map(sourceStates);
@@ -1139,10 +1262,12 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         const changeSets = new Map<RuntimeSourceToken, RuntimeSourceCommandExecutor>();
         const candidateDiagnostics: Array<RuntimeDiagnostic> = [];
         const preparedSourceCandidates = new Map<RuntimeSourceToken, RuntimeSourceState>();
+
         try {
           for (const source of options.sources.definitions()) {
             const command = commands.get(source);
             if (command === undefined) continue;
+
             const previous = sourceStates.get(source);
             if (previous === undefined) {
               throw new RetikzRuntimeError({
@@ -1152,6 +1277,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                 cause: source,
               });
             }
+
             const candidate = command.prepare(sourceExecutor, previous.prepared).value;
             const candidateState = Object.freeze({ command, prepared: candidate });
             preparedSourceCandidates.set(source, candidateState);
@@ -1162,14 +1288,17 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               preparedSourceCandidates.delete(source);
               continue;
             }
+
             if (command.validateChangeSet !== undefined) {
               let validation: 'valid' | 'fallback';
+
               try {
                 validation = command.validateChangeSet(sourceExecutor, previous.prepared, candidate).value;
               } catch (cause) {
                 preparedSourceCandidates.delete(source);
                 throw cause;
               }
+
               if (validation === 'valid') changeSets.set(source, command);
               else {
                 invalidChangeSources.add(source);
@@ -1184,11 +1313,13 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                 );
               }
             }
+
             nextSourceStates.set(source, candidateState);
             changedSources.add(source);
           }
         } catch (cause) {
           const failedDiagnostics = [...candidateDiagnostics.filter(isExecutionDiagnostic), ...errorDiagnostics(cause)];
+
           for (const source of [...options.sources.definitions()].reverse()) {
             const candidate = preparedSourceCandidates.get(source);
             if (candidate !== undefined) {
@@ -1199,13 +1330,16 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               );
             }
           }
+
           const frozenFailedDiagnostics = Object.freeze(failedDiagnostics);
           diagnosticQueue.push(...frozenFailedDiagnostics);
           throw withFailureDiagnostics(cause, frozenFailedDiagnostics);
         }
+
         if (changedSources.size === 0) {
           const bailoutDiagnostics = Object.freeze([...candidateDiagnostics]);
           diagnosticQueue.push(...bailoutDiagnostics);
+
           return Object.freeze({
             revision: currentRevision,
             outcome: RuntimeComputationKind.Bailout,
@@ -1219,6 +1353,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         const selectedParticipants: Array<RuntimeCommitParticipantToken> = [];
         const preparedUpdateParticipants = new Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>();
         const nextParticipantReads = new Map(participantReads);
+
         try {
           for (const definition of options.computations.definitions()) {
             const executor = getRuntimeComputationRegistryExecutor(options.computations, definition);
@@ -1228,6 +1363,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               .map(computation => computationOutcomes.get(computation))
               .filter((outcome): outcome is RuntimeComputationOutcome => outcome !== undefined);
             if (!directSourceChange && upstreamOutcomes.length === 0) continue;
+
             const upstreamFallback = upstreamOutcomes.some(outcome => outcome === RuntimeComputationKind.Fallback);
             const upstreamFull = upstreamOutcomes.some(outcome => outcome === RuntimeComputationKind.Full);
             const previous = computationStates.get(definition);
@@ -1239,6 +1375,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                 cause: definition,
               });
             }
+
             const prepared = runComputation(
               RuntimeComputationPhase.Update,
               currentRevision,
@@ -1259,14 +1396,17 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             );
             candidateDiagnostics.push(...prepared.diagnostics);
             if (prepared.state === undefined || prepared.outcome === undefined) continue;
+
             nextComputationStates.set(definition, prepared.state);
             computationOutcomes.set(definition, prepared.outcome);
           }
+
           for (const participant of participants) {
             const isAffected =
               participant.sources.some(source => changedSources.has(source)) ||
               participant.computations.some(computation => computationOutcomes.has(computation));
             if (participant.revisionPolicy !== 'continuous' && !isAffected) continue;
+
             selectedParticipants.push(participant);
             const executor = participantExecutors.get(participant);
             if (executor === undefined) {
@@ -1277,6 +1417,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                 cause: participant,
               });
             }
+
             const invocationErrors = new WeakSet<RetikzRuntimeError>();
             const declaredSources = new Set(participant.sources);
             const declaredComputations = new Set(participant.computations);
@@ -1297,6 +1438,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                   invocationErrors.add(error);
                   throw error;
                 }
+
                 const sourceState = nextSourceStates.get(source);
                 if (sourceState === undefined) {
                   const error = runtimeError(
@@ -1308,6 +1450,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                   invocationErrors.add(error);
                   throw error;
                 }
+
                 return sourceState.command.snapshot(source, sourceState.prepared, candidateRevision);
               },
               artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
@@ -1323,6 +1466,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                   invocationErrors.add(error);
                   throw error;
                 }
+
                 const computationState = nextComputationStates.get(computation);
                 if (computationState === undefined) {
                   const error = runtimeError(
@@ -1334,12 +1478,15 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                   invocationErrors.add(error);
                   throw error;
                 }
+
                 return computationState.executor.snapshot(computation, computationState.prepared, candidateRevision);
               },
             });
+
             const invocation = createParticipantInvocation(participant, options.trace);
             participantDrains.set(participant, invocation.takeDiagnostics);
             let preparedCandidate: unknown;
+
             try {
               preparedCandidate = executor.prepare(view, invocation.context);
             } catch (cause) {
@@ -1347,6 +1494,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) throw cause;
               throw participantError(RetikzRuntimeErrorCode.ParticipantPrepareFailed, 'prepare', participant, cause);
             }
+
             candidateParticipantDiagnostics.push(...invocation.takeDiagnostics());
             const prepared = normalizePreparedCommit(preparedCandidate, participant);
             preparedUpdateParticipants.set(
@@ -1354,6 +1502,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               Object.freeze({ executor, prepared, takeDiagnostics: invocation.takeDiagnostics }),
             );
           }
+
           for (const participant of selectedParticipants) {
             try {
               preparedUpdateParticipants.get(participant)?.prepared.commit();
@@ -1363,10 +1512,12 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               );
               throw participantError(RetikzRuntimeErrorCode.ParticipantCommitFailed, 'commit', participant, cause);
             }
+
             candidateParticipantDiagnostics.push(
               ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
             );
           }
+
           for (const participant of selectedParticipants) {
             const executor = participantExecutors.get(participant);
             if (executor !== undefined) {
@@ -1378,6 +1529,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                 );
                 throw participantError(RetikzRuntimeErrorCode.ParticipantReadFailed, 'read', participant, cause);
               }
+
               candidateParticipantDiagnostics.push(
                 ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
               );
@@ -1392,9 +1544,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           let firstRollbackFailure:
             | Readonly<{ participant: RuntimeCommitParticipantToken; cause: unknown }>
             | undefined;
+
           for (const participant of [...selectedParticipants].reverse()) {
             const prepared = preparedUpdateParticipants.get(participant)?.prepared;
             if (prepared === undefined) continue;
+
             try {
               prepared.rollback();
               failedDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
@@ -1414,9 +1568,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               }
             }
           }
+
           for (const participant of [...selectedParticipants].reverse()) {
             const prepared = preparedUpdateParticipants.get(participant)?.prepared;
             if (prepared === undefined) continue;
+
             try {
               prepared.dispose();
               failedDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
@@ -1432,6 +1588,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               );
             }
           }
+
           for (const definition of [...options.computations.definitions()].reverse()) {
             const candidate = nextComputationStates.get(definition);
             const previous = computationStates.get(definition);
@@ -1439,8 +1596,10 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               failedDiagnostics.push(...candidate.executor.retire(candidate.prepared));
             }
           }
+
           for (const source of [...options.sources.definitions()].reverse()) {
             if (!changedSources.has(source)) continue;
+
             const candidate = nextSourceStates.get(source);
             const previous = sourceStates.get(source);
             if (candidate !== undefined && candidate !== previous) {
@@ -1451,6 +1610,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               );
             }
           }
+
           const frozenFailedDiagnostics = Object.freeze(failedDiagnostics);
           diagnosticQueue.push(...frozenFailedDiagnostics);
           if (firstRollbackFailure !== undefined) {
@@ -1465,6 +1625,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             updateState.broken = true;
             throw brokenError;
           }
+
           throw withFailureDiagnostics(cause, frozenFailedDiagnostics);
         }
 
@@ -1479,11 +1640,14 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         const frozenDiagnostics = Object.freeze([...candidateDiagnostics]);
 
         state = 'observing';
+
         for (const definition of options.computations.definitions()) {
           const outcome = computationOutcomes.get(definition);
           if (outcome === undefined) continue;
+
           const computationState = computationStates.get(definition);
           if (computationState === undefined || computationState.executor.observeCommit === undefined) continue;
+
           const event: RuntimeCommitEvent<unknown> = Object.freeze({
             phase: RuntimeComputationPhase.Update,
             baseRevision,
@@ -1492,6 +1656,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             artifact: computationState.executor.snapshotToken(definition, computationState.prepared, currentRevision),
             diagnostics: frozenDiagnostics,
           });
+
           try {
             computationState.executor.observeCommit<unknown>(event);
           } catch (cause) {
@@ -1500,13 +1665,16 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
         }
 
         state = 'retiring';
+
         for (const definition of [...options.computations.definitions()].reverse()) {
           if (!computationOutcomes.has(definition)) continue;
           const previous = previousComputationStates.get(definition);
           if (previous !== undefined) candidateDiagnostics.push(...previous.executor.retire(previous.prepared));
         }
+
         for (const source of [...options.sources.definitions()].reverse()) {
           if (!changedSources.has(source)) continue;
+
           const previous = previousSourceStates.get(source);
           if (previous !== undefined) {
             candidateDiagnostics.push(
@@ -1516,6 +1684,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             );
           }
         }
+
         for (const participant of [...selectedParticipants].reverse()) {
           try {
             preparedUpdateParticipants.get(participant)?.prepared.dispose();
@@ -1544,6 +1713,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             : [...computationOutcomes.values()].includes(RuntimeComputationKind.Incremental)
               ? RuntimeComputationKind.Incremental
               : 'committed';
+
         return Object.freeze({ revision: currentRevision, outcome, diagnostics: resultDiagnostics });
       } finally {
         if (!updateState.broken) state = 'idle';
@@ -1555,6 +1725,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       const sourceState = sourceStates.get(source);
       if (sourceState === undefined)
         throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'snapshot', source, source.key);
+
       return sourceState.command.snapshot(source, sourceState.prepared, currentRevision);
     },
     artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
@@ -1565,6 +1736,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       const computationState = computationStates.get(computation);
       if (computationState === undefined)
         throw runtimeError(RetikzRuntimeErrorCode.UndeclaredDependency, 'artifact', computation);
+
       return computationState.executor.snapshot(computation, computationState.prepared, currentRevision);
     },
     participant: <TRead>(participant: RuntimeCommitParticipant<TRead>): TRead => {
@@ -1572,34 +1744,43 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       if (!isRuntimeCommitParticipant(participantCandidate)) {
         throw runtimeError(RetikzRuntimeErrorCode.ParticipantTokenInvalid, 'participant', participantCandidate);
       }
+
       if (!participantExecutors.has(participant)) {
         throw runtimeError(RetikzRuntimeErrorCode.ParticipantUnknown, 'participant', participant, participant.key);
       }
+
       assertIdle('participant');
+
       return participantReads.get(participant) as TRead;
     },
     diagnostics: () => {
       if (state !== 'idle' && state !== 'broken' && state !== 'dispose-pending' && state !== 'disposed') {
         throw runtimeError(RetikzRuntimeErrorCode.Reentrant, 'diagnostics', state);
       }
+
       const output = Object.freeze([...diagnosticQueue]);
       diagnosticQueue = [];
+
       return output;
     },
     dispose: () => {
       if (state === 'disposed') return;
       if (state !== 'broken' && state !== 'dispose-pending') assertIdle('dispose');
       state = 'disposing';
+
       /** 反向清理尚未成功的 participant，并只消费已完成的 token */
       const disposePendingParticipants = (): void => {
         for (const participant of [...participants].reverse()) {
           if (!pendingParticipantDisposals.has(participant)) continue;
+
           let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
+
           try {
             participantExecutors.get(participant)?.dispose();
           } catch (cause) {
             participantDisposeFailure = Object.freeze({ cause });
           }
+
           diagnosticQueue.push(...(participantDrains.get(participant)?.() ?? []));
           if (participantDisposeFailure !== undefined) {
             diagnosticQueue.push(
@@ -1612,6 +1793,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             );
             continue;
           }
+
           pendingParticipantDisposals.delete(participant);
           consumeRuntimeCommitParticipant(participant);
         }
@@ -1620,11 +1802,13 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       disposePendingParticipants();
       if (!runtimeResourcesRetired) {
         participantReads.clear();
+
         for (const definition of [...options.computations.definitions()].reverse()) {
           const computationState = computationStates.get(definition);
           if (computationState !== undefined)
             diagnosticQueue.push(...computationState.executor.retire(computationState.prepared));
         }
+
         for (const source of [...options.sources.definitions()].reverse()) {
           const sourceState = sourceStates.get(source);
           if (sourceState !== undefined) {
@@ -1635,9 +1819,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             );
           }
         }
+
         runtimeResourcesRetired = true;
         if (pendingParticipantDisposals.size > 0) disposePendingParticipants();
       }
+
       state = pendingParticipantDisposals.size > 0 ? 'dispose-pending' : 'disposed';
     },
   });
@@ -1646,9 +1832,11 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
   const frozenInitialDiagnostics = Object.freeze([...initialDiagnostics]);
   const completedInitialDiagnostics = [...initialDiagnostics];
   state = 'observing';
+
   for (const definition of options.computations.definitions()) {
     const computationState = computationStates.get(definition);
     if (computationState === undefined || computationState.executor.observeCommit === undefined) continue;
+
     const event: RuntimeCommitEvent<unknown> = Object.freeze({
       phase: RuntimeComputationPhase.Initial,
       revision: currentRevision,
@@ -1656,12 +1844,14 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       artifact: computationState.executor.snapshotToken(definition, computationState.prepared, currentRevision),
       diagnostics: frozenInitialDiagnostics,
     });
+
     try {
       computationState.executor.observeCommit<unknown>(event);
     } catch (cause) {
       completedInitialDiagnostics.push(observerDiagnostic(definition, cause));
     }
   }
+
   for (const participant of [...participants].reverse()) {
     try {
       preparedParticipants.get(participant)?.prepared.dispose();
@@ -1678,7 +1868,9 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       );
     }
   }
+
   diagnosticQueue.push(...completedInitialDiagnostics);
   state = 'idle';
+
   return runtime;
 };

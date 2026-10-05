@@ -26,6 +26,8 @@ export const previewSource = {
   ...controlled.source,
   datasetImports: { 'chart.data': { name: 'connectedScatterData', from: './connected-scatter-basic.data' } },
 };
+
 export const previewControls = previewControlContract.controls;
+
 const Demo: FC = controlled.Component;
 export default Demo;

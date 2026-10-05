@@ -4,6 +4,7 @@ import type { FC, ReactElement } from 'react';
 
 import { svgToReact } from './svg-to-react';
 
+/** 通过资源标识与已解析箭头描述生成可被 SVG 路径引用的标记 */
 export type ArrowMarkerProps = {
   /** marker 元素 id，用于 path markerStart / markerEnd 引用 */
   id: string;

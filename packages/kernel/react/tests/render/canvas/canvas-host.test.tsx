@@ -37,6 +37,7 @@ const createTestCanvasContext = (): TestCanvasContext => {
       return true;
     },
   }) as unknown as CanvasRenderingContext2D;
+
   return { context, fillText };
 };
 
@@ -57,9 +58,12 @@ describe('Layout retained renderer 规格', () => {
       viewBox: { x: -20, y: -10, width: 240, height: 120 },
     } as const;
     const svg = renderToStaticMarkup(<Layout ir={{ ...ir, children: [] }} />);
+
     expect(svg).toContain('width="240"');
     expect(svg).toContain('height="120"');
+
     const scaled = renderToStaticMarkup(<Layout ir={{ ...ir, children: [] }} width={480} />);
+
     expect(scaled).toContain('width="480"');
     expect(scaled).toContain('height="240"');
   });
@@ -70,14 +74,18 @@ describe('Layout retained renderer 规格', () => {
     vi.stubGlobal('devicePixelRatio', 2);
     const container = document.createElement('div');
     const root = createRoot(container);
+
     try {
       await act(() => root.render(<Layout renderer="canvas" viewBox={{ x: -20, y: -10, width: 240, height: 120 }} />));
       const canvas = container.querySelector('canvas');
+
       expect(canvas?.style.width).toBe('240px');
       expect(canvas?.style.height).toBe('120px');
       expect(canvas?.width).toBe(480);
       expect(canvas?.height).toBe(240);
+
       await act(() => root.render(<Layout renderer="canvas" viewBox={{ x: 0, y: 0, width: 300, height: 100 }} />));
+
       expect(container.querySelector('canvas')).toBe(canvas);
       expect(canvas?.style.width).toBe('300px');
       expect(canvas?.width).toBe(600);
@@ -104,10 +112,12 @@ describe('Layout retained renderer 规格', () => {
     });
 
     const canvas = container.querySelector('canvas');
+
     expect(canvas).toBeInstanceOf(HTMLCanvasElement);
     expect(canvas?.width).toBe(320);
     expect(canvas?.height).toBe(180);
     expect(recorded.fillText).toHaveBeenCalledWith('A', expect.any(Number), expect.any(Number));
+
     await act(() => root.unmount());
   });
 
@@ -121,7 +131,9 @@ describe('Layout retained renderer 规格', () => {
         <Layout renderer="canvas" width={320} height={180} ir={{ version: 1, type: 'scene', children: [] }} />,
       );
     });
+
     expect(container.querySelector('canvas')?.style.objectFit).toBe('contain');
+
     await act(() => root.unmount());
   });
 
@@ -135,8 +147,10 @@ describe('Layout retained renderer 规格', () => {
         <Layout renderer="canvas" width={720} height={360} ir={{ version: 1, type: 'scene', children: [] }} />,
       );
     });
+
     expect(container.querySelector('canvas')?.width).toBe(720);
     expect(container.querySelector('canvas')?.height).toBe(360);
+
     await act(() => root.unmount());
   });
 
@@ -154,7 +168,9 @@ describe('Layout retained renderer 规格', () => {
         </Layout>,
       );
     });
+
     expect(container.querySelector('canvas')?.style.fontFamily).toContain('Inter');
+
     await act(() => root.unmount());
   });
 
@@ -166,6 +182,7 @@ describe('Layout retained renderer 规格', () => {
         </Node>
       </Layout>,
     );
+
     expect(markup).toContain('<svg');
     expect(markup).toContain('data-retikz-id="a"');
     expect(markup).not.toContain('<canvas');
@@ -180,8 +197,10 @@ describe('Layout retained renderer 规格', () => {
     await act(() => {
       root.render(<Layout renderer="canvas" ir={{ version: 1, type: 'scene', children: [] }} />);
     });
+
     expect(svgMarkup).toContain('<svg');
     expect(container.querySelector('canvas')).not.toBeNull();
+
     await act(() => root.unmount());
   });
 
@@ -197,8 +216,10 @@ describe('Layout retained renderer 规格', () => {
         <Layout renderer="canvas" width={120} height={80} ir={{ version: 1, type: 'scene', children: [] }} />,
       );
     });
+
     expect(container.querySelector('canvas')?.width).toBe(120);
     expect(container.querySelector('canvas')?.height).toBe(80);
+
     await act(() => root.unmount());
     if (descriptor === undefined) Reflect.deleteProperty(globalThis, 'devicePixelRatio');
     else Object.defineProperty(globalThis, 'devicePixelRatio', descriptor);

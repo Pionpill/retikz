@@ -102,34 +102,43 @@ describe('contract 数据健壮性 — bigint ingest', () => {
   it('bigint_ingested_as_continuous：无 model 下 bigint 推断 continuous 且归一化成数值', () => {
     // classify(bigint) → continuous（无 model 推断）；normalizeRows 把 42n coerce 成 42
     expect(inferFieldType([{ a: 42n }, { a: 7n }], 'a')).toBe(DataFieldType.Continuous);
-    const { fieldTypes, normalized } = prepare(specNoModel(), [
+
+    const { fieldTypeMap, normalized } = prepare(specNoModel(), [
       { a: 42n, b: 1n },
       { a: 7n, b: 2n },
     ]);
-    expect(fieldTypes.get('a')).toBe(DataFieldType.Continuous);
+
+    expect(fieldTypeMap.get('a')).toBe(DataFieldType.Continuous);
     expect(normalized[0].a).toBe(42);
     expect(normalized[1].a).toBe(7);
   });
 
   it('safe_integer_bigint_accepted：MAX_SAFE_INTEGER 的 bigint 被接受、转 number', () => {
     const safe = 9007199254740991n; // = Number.MAX_SAFE_INTEGER
+
     expect(coerceValue(safe, DataFieldType.Continuous)).toBe(Number(safe));
+
     const { normalized } = prepare(specWithModel(), [{ a: safe, b: 1 }]);
+
     expect(normalized[0].a).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   it('unsafe_bigint_treated_invalid：超 safe 区间 bigint（finite 但丢精度）默认 skip 当非法值', () => {
     const unsafe = 9007199254740993n; // > MAX_SAFE_INTEGER，Number(unsafe) 仍 finite 但失精
+
     // coerceNumber 只收 Number.isSafeInteger(Number(value))，否则 NaN
     expect(Number.isNaN(coerceValue(unsafe, DataFieldType.Continuous) as number)).toBe(true);
+
     // 默认 skip：归一化写 NaN 哨兵、不删行、不抛
     const { normalized } = prepare(specWithModel(), [{ a: unsafe, b: 1 }]);
+
     expect(Number.isNaN(normalized[0].a as number)).toBe(true);
   });
 
   it('bigint_with_model_continuous：model 声明 continuous + bigint 数据 → coerce 成 number', () => {
-    const { fieldTypes, normalized } = prepare(specWithModel(), [{ a: 100n, b: 200n }]);
-    expect(fieldTypes.get('a')).toBe(DataFieldType.Continuous);
+    const { fieldTypeMap, normalized } = prepare(specWithModel(), [{ a: 100n, b: 200n }]);
+
+    expect(fieldTypeMap.get('a')).toBe(DataFieldType.Continuous);
     expect(normalized[0].a).toBe(100);
     expect(normalized[0].b).toBe(200);
   });
@@ -142,6 +151,7 @@ describe('contract 数据健壮性 — invalid 策略（skip / error）', () => 
       { a: 'abc', b: 1 },
       { a: 5, b: 2 },
     ]);
+
     expect(Number.isNaN(normalized[0].a as number)).toBe(true);
     expect(normalized[1].a).toBe(5);
     expect(() =>
@@ -176,6 +186,7 @@ describe('contract 数据健壮性 — invalid 策略（skip / error）', () => 
 
   it('unsafe_bigint_error_throws：invalid:error + 超 safe 区间 bigint → fail-loud', () => {
     const unsafe = 9007199254740993n;
+
     expect(() => compile(specWithModel(), { d: [{ a: unsafe, b: 1 }] }, { invalid: 'error' })).toThrow();
   });
 
@@ -202,6 +213,7 @@ describe('contract 数据健壮性 — invalid 策略（skip / error）', () => 
       { m: 'Q1', v: 'x' },
       { m: 'Q1', v: 5 },
     ]);
+
     expect(normalized).toHaveLength(3); // 不删行
     expect(normalized[0].v).toBe(3);
     expect(Number.isNaN(normalized[1].v as number)).toBe(true); // 哨兵，整行保留
@@ -217,17 +229,20 @@ describe('contract 数据健壮性 — validateData 字段级报告', () => {
       { a: undefined, b: 2 },
       { a: 'nope', b: 3 },
     ];
-    const fieldTypes = new Map([
+    const fieldTypeMap = new Map([
       ['a', DataFieldType.Continuous],
       ['b', DataFieldType.Continuous],
     ]);
     let message = '';
+
     try {
-      validateBoundData(rows, fieldTypes, 100);
+      validateBoundData(rows, fieldTypeMap, 100);
     } catch (error) {
       message = (error as Error).message;
     }
+
     expect(message).toMatch(/\ba\b/);
+
     // 字段级计数：报错信息须出现 invalid / missing 计数关键字（区别于旧的纯二元 "no valid values"）
     expect(message).toMatch(/invalid|missing/i);
     expect(message).toMatch(/\d+/);
@@ -243,9 +258,11 @@ describe('contract 数据健壮性 — 恒归一化（去门控）', () => {
       { a: 2, b: 20 },
       { a: 3, b: 30 },
     ];
-    const { fieldTypes, normalized } = prepare(spec, rows);
-    const manual = normalizeRows(rows, fieldTypes);
+    const { fieldTypeMap, normalized } = prepare(spec, rows);
+    const manual = normalizeRows(rows, fieldTypeMap);
+
     expect(normalized).toEqual(manual);
+
     // 且与现状（干净数字原样）逐字段一致
     expect(normalized[0].a).toBe(1);
     expect(normalized[2].b).toBe(30);
@@ -254,11 +271,12 @@ describe('contract 数据健壮性 — 恒归一化（去门控）', () => {
   it('normalize_always_runs_with_inference：无 model 纯推断 → canonical 行已 coerce（time 字段成 epoch ms）', () => {
     // 无 model：t 推断 temporal，恒归一化把 ISO 串 coerce 成 epoch ms（不再走「无 model 即原始行」旧门控）
     const spec = specTemporalNoModel();
-    const { fieldTypes, normalized } = prepare(spec, [
+    const { fieldTypeMap, normalized } = prepare(spec, [
       { t: '2024-01-01', v: 5 },
       { t: '2024-02-01', v: 7 },
     ]);
-    expect(fieldTypes.get('t')).toBe(DataFieldType.Temporal);
+
+    expect(fieldTypeMap.get('t')).toBe(DataFieldType.Temporal);
     expect(normalized[0].t).toBe(Date.parse('2024-01-01'));
     expect(normalized[1].t).toBe(Date.parse('2024-02-01'));
     expect(normalized[0].v).toBe(5);
@@ -268,11 +286,14 @@ describe('contract 数据健壮性 — 恒归一化（去门控）', () => {
 describe('contract 数据健壮性 — resolveField 交互', () => {
   it('invalid_with_resolveField：resolveField.parse 返非法值 → 按 invalid 策略处理（skip/error 一致）', () => {
     const spec = specWithModel();
+
     // resolveField.parse 对 a 返回 undefined（非法）→ 归一化写哨兵；默认 skip 不抛
     const resolveField: LowerPlotsOptions['resolveField'] = field =>
       field === 'a' ? { type: DataFieldType.Continuous, parse: () => undefined } : undefined;
     const { normalized } = prepare(spec, [{ a: 5, b: 1 }], { resolveField });
+
     expect(normalized[0].a).toBeUndefined(); // parse 返非法 → 哨兵
+
     // 同样的 resolveField 非法输出，invalid:error 应 fail-loud（skip / error 对 resolver 输出一致处理）
     expect(() => compile(spec, { d: [{ a: 5, b: 1 }] }, { resolveField, invalid: 'error' })).toThrow();
   });

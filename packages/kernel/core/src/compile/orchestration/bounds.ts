@@ -22,6 +22,7 @@ export const expandBoundsForShadow = (
   const dx = shadow.offsetX;
   const dy = shadow.offsetY;
   const blur = shadow.blur ?? 0;
+
   return expandBounds(bounds, {
     left: blur + Math.max(0, -dx),
     right: blur + Math.max(0, dx),

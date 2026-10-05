@@ -58,6 +58,7 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
       options: copy.direction.options,
     });
   }
+
   roleControls.push({
     kind: 'select',
     id: RelationRoleControlId.Status,

@@ -39,12 +39,14 @@ const canonicalDeclarationProps = <TProps extends object = Record<string, unknow
   if (!isValidElement<{ children?: ReactNode }>(chart)) {
     throw new Error('Bubble preview must provide a canonical element');
   }
+
   const declaration = Children.toArray(chart.props.children).find(
     child => isValidElement(child) && child.type === component,
   );
   if (!isValidElement<TProps>(declaration)) {
     throw new Error('Bubble preview is missing a required declaration');
   }
+
   return declaration.props;
 };
 
@@ -53,14 +55,18 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
   if (!isValidElement<{ children?: ReactNode }>(chart)) {
     throw new Error('Bubble preview must provide a canonical element');
   }
+
   const children = Children.toArray(chart.props.children);
+
   const textOf = (marker: typeof ChartTitle | typeof ChartSubtitle | typeof ChartSource): ReactNode => {
     const child = children.find(candidate => isValidElement(candidate) && candidate.type === marker);
     if (!isValidElement<{ children?: ReactNode }>(child)) {
       return undefined;
     }
+
     return child.props.children;
   };
+
   return {
     title: textOf(ChartTitle),
     subtitle: textOf(ChartSubtitle),
@@ -96,7 +102,9 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-point-shape': 'circle',
       'bubble-basic-point-fill-opacity': 0.7,
     });
+
     const controlFields = getPreviewControlFields(basicZh.controls);
+
     expect(controlFields.map(control => control.id)).toEqual([
       'bubble-basic-coordinate-system',
       'bubble-basic-color-by-continent',
@@ -107,11 +115,15 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-point-shape',
       'bubble-basic-point-fill-opacity',
     ]);
+
     const shapeControl = controlFields.find(control => control.id === 'bubble-basic-point-shape');
+
     expect(shapeControl).toMatchObject({ kind: 'select' });
+
     if (shapeControl?.kind === 'select') {
       expect(shapeControl.options.map(option => option.value)).toEqual(['circle', 'rectangle', 'diamond']);
     }
+
     expect(Object.keys(basicZh.canonicalValues).sort()).toEqual(
       getPreviewControlFields(basicZh.controls)
         .map(control => control.id)
@@ -152,10 +164,12 @@ describe('Viz Chart Bubble controls', () => {
       expect(source.datasetImports).toEqual({
         'chart.data': { name: 'gapminderBubbleData', from: './bubble-basic.data' },
       });
+
       const chart = source.canonicalRender?.();
       if (!isValidElement<{ children?: ReactNode }>(chart)) {
         throw new Error('Bubble preview must provide a canonical element');
       }
+
       expect(
         Children.toArray(chart.props.children).some(child => isValidElement(child) && child.type === ChartExtension),
       ).toBe(false);

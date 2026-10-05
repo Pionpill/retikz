@@ -21,6 +21,7 @@ export const RendererModeButton: FC<RendererModeButtonProps> = props => {
   const { rendererMode, onToggle, disabled, className } = props;
   const isCanvas = rendererMode === 'canvas';
   const label = isCanvas ? 'Canvas renderer' : 'SVG renderer';
+
   return (
     <ToolbarIconButton
       label={label}

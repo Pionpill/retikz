@@ -14,6 +14,7 @@ const decodePayload = (value: string): SchemaPathLiteral => {
   if (decoded === null || ['string', 'number', 'boolean'].includes(typeof decoded)) {
     return decoded as SchemaPathLiteral;
   }
+
   throw new Error(`Schema path payload must be a JSON scalar: "${value}".`);
 };
 
@@ -21,6 +22,7 @@ const literalType = (value: SchemaPathLiteral): 'string' | 'number' | 'boolean' 
   if (value === null) return 'null';
   if (typeof value === 'string') return 'string';
   if (typeof value === 'number') return 'number';
+
   return 'boolean';
 };
 
@@ -47,32 +49,41 @@ export const serializeSchemaPath = (segments: ReadonlyArray<SchemaPathSegment>):
 export const parseSchemaPath = (path: string): Array<SchemaPathSegment> => {
   if (path === '') return [];
   if (!path.startsWith('/')) throw new Error('Schema path must start with "/".');
+
   const tokens = path.slice(1).split('/');
   const segments: Array<SchemaPathSegment> = [];
+
   for (let index = 0; index < tokens.length;) {
     const marker = tokens[index++];
     if (marker === 'array') {
       segments.push({ kind: 'array' });
       continue;
     }
+
     if (marker === 'field') {
       const payload = tokens.at(index++);
       if (payload === undefined) throw new Error('Field path segment is missing its key.');
+
       const key = decodePayload(payload);
       if (typeof key !== 'string') throw new Error('Field path key must be a JSON string.');
+
       segments.push({ kind: 'field', key });
       continue;
     }
+
     if (marker === 'tuple' || marker === 'union') {
       const payload = tokens.at(index++);
       if (payload === undefined) throw new Error(`${marker} path segment is missing its index.`);
+
       const value = decodePayload(payload);
       if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
         throw new Error(`${marker} path index must be a non-negative safe integer.`);
       }
+
       segments.push(marker === 'tuple' ? { kind: 'tuple', index: value } : { kind: 'union', index: value });
       continue;
     }
+
     if (marker === 'case') {
       const discriminatorPayload = tokens.at(index++);
       const type = tokens.at(index++);
@@ -80,14 +91,18 @@ export const parseSchemaPath = (path: string): Array<SchemaPathSegment> => {
       if (discriminatorPayload === undefined || type === undefined || valuePayload === undefined) {
         throw new Error('Case path segment is incomplete.');
       }
+
       const discriminator = decodePayload(discriminatorPayload);
       const value = decodePayload(valuePayload);
       if (typeof discriminator !== 'string') throw new Error('Case discriminator must be a JSON string.');
       if (type !== literalType(value)) throw new Error(`Case selector type "${type}" does not match its payload.`);
+
       segments.push({ kind: 'case', discriminator, value });
       continue;
     }
+
     throw new Error(`Unknown schema path marker "${marker}".`);
   }
+
   return segments;
 };

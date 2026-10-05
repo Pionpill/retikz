@@ -5,8 +5,10 @@ import { team } from './line-radar.data';
 
 /** 雷达路径闭合 playground 的稳定控件 id */
 export const LINE_RADAR_CLOSED_ID = 'line-radar-closed';
+
 /** 左侧极坐标的插值控件 id */
 export const LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID = 'line-radar-left-coordinate-interpolation';
+
 /** 右侧极坐标的插值控件 id */
 export const LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID = 'line-radar-right-coordinate-interpolation';
 

@@ -23,6 +23,7 @@ const rows = [
 export const Inspector: FC<InspectorProps> = props => {
   const { result, compact = false } = props;
   const { t } = useTranslation();
+
   return (
     <section data-slot="lab-inspector" className="space-y-3">
       <div className="flex items-center justify-between px-1">
@@ -58,6 +59,7 @@ export const Inspector: FC<InspectorProps> = props => {
                     reused: record.reused,
                   });
             }
+
             if (row.id === 'patch') {
               return result.patch === undefined
                 ? t('inspector.noPatch')
@@ -66,11 +68,14 @@ export const Inspector: FC<InspectorProps> = props => {
                     kinds: result.patch.kinds.join(', '),
                   });
             }
+
             if (row.id === 'diagnostics') {
               return result.diagnostics.length === 0 ? t('inspector.noDiagnostics') : result.diagnostics.join('\n');
             }
+
             return t('inspector.lifecycleUnavailable');
           })();
+
           return (
             <article
               key={row.id}

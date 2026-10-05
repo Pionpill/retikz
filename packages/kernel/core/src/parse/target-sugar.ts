@@ -4,7 +4,9 @@ import { parseNodeTarget } from './node-target';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */
 const RELATIVE_NUMBER = '-?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';
+
 const RELATIVE_OFFSET_RE = new RegExp(`^(\\+{1,2})\\s*(${RELATIVE_NUMBER})\\s*,\\s*(${RELATIVE_NUMBER})$`);
+
 const RELATIVE_LIKE_RE = /^\+.*,/;
 
 /**
@@ -15,6 +17,7 @@ const RELATIVE_LIKE_RE = /^\+.*,/;
  */
 export const parseTargetSugar = (input: unknown): IRTarget => {
   if (typeof input !== 'string') return input as IRTarget;
+
   const match = input.match(RELATIVE_OFFSET_RE);
   if (!match) {
     if (RELATIVE_LIKE_RE.test(input)) {
@@ -23,13 +26,16 @@ export const parseTargetSugar = (input: unknown): IRTarget => {
         `parseTargetSugar: invalid relative offset '${input}'; expected '+x,y' or '++x,y'`,
       );
     }
+
     return parseNodeTarget(input);
   }
+
   const plus = match[1];
   const dx = Number(match[2]);
   const dy = Number(match[3]);
   if (plus === '++') {
     return { relativeAccumulate: [dx, dy] };
   }
+
   return { relative: [dx, dy] };
 };

@@ -16,6 +16,7 @@ const FrameLowering: FC<FrameLoweringProps> = props => {
   const labels = frameLoweringI18n[lang];
   const text = (index: number) =>
     labels[index].map((line, row) => ({ text: line, ...(row === 0 ? {} : { fill: 'gray', font: { size: 12 } }) }));
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="lowering-flow" kind="linear" direction="right">

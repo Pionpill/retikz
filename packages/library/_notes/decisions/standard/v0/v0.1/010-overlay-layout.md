@@ -50,9 +50,9 @@ export type IROverlayLayoutItem = Readonly<{
   margin: number | IRBoxSpacing;
   placement: IROverlayPlacement;
   offset: Readonly<{ x: number; y: number }>;
-  justifySelf?: LayoutEdgeAlignmentValue;
-  alignSelf?: LayoutAlignmentValue;
-  sizeParticipation: LayoutSizeParticipationValue;
+  justifySelf?: LayoutEdgeAlignment;
+  alignSelf?: LayoutAlignment;
+  sizeParticipation: LayoutSizeParticipation;
   zIndex: number;
 }>;
 
@@ -61,16 +61,16 @@ export type IROverlayLayout = Readonly<{
   type: 'overlayLayout';
   size: IRLayoutSize;
   padding: number | IRBoxSpacing;
-  overflow: LayoutOverflowValue;
-  justifyItems: LayoutEdgeAlignmentValue;
-  alignItems: LayoutAlignmentValue;
+  overflow: LayoutOverflow;
+  justifyItems: LayoutEdgeAlignment;
+  alignItems: LayoutAlignment;
   children: ReadonlyArray<IROverlayLayoutItem>;
 }>;
 ```
 
 `IROverlayLayout`和item/placement均由schema parsed output推导；`OverlayLayoutInput`与item input使用 `z.input` 接受默认省略。`createOverlayLayout(input)` 返回canonical IR。
 
-公开导出 `OverlayPlacementSchema`、`OverlayLayoutItemSchema`、`OverlayLayoutSchema` 及对应 `IROverlayPlacement` / `OverlayPlacementInput`、`IROverlayLayoutItem` / `OverlayLayoutItemInput`、`IROverlayLayout` / `OverlayLayoutInput`；公开 `OverlayPlacementKind` / `OverlayPlacementKindValue`、`LayoutSizeParticipation` / `LayoutSizeParticipationValue`、`createOverlayLayout`、`OverlayLayoutDefinition`。layout、item与placement各分支都是strict object/discriminated union，unknown field fail-loud；`at`、`anchor`、`offset` 三个嵌套point object也分别使用strict object，并把unknown field诊断定位到对应point字段。
+公开导出 `OverlayPlacementSchema`、`OverlayLayoutItemSchema`、`OverlayLayoutSchema` 及对应 `IROverlayPlacement` / `OverlayPlacementInput`、`IROverlayLayoutItem` / `OverlayLayoutItemInput`、`IROverlayLayout` / `OverlayLayoutInput`；公开 `OverlayPlacementKind` / `OverlayPlacementKind`、`LayoutSizeParticipation` / `LayoutSizeParticipation`、`createOverlayLayout`、`OverlayLayoutDefinition`。layout、item与placement各分支都是strict object/discriminated union，unknown field fail-loud；`at`、`anchor`、`offset` 三个嵌套point object也分别使用strict object，并把unknown field诊断定位到对应point字段。
 
 默认值：
 

@@ -38,6 +38,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { effect: 'pulse', duration: 1000, peak: 1.3 },

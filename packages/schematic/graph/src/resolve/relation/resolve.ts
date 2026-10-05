@@ -27,6 +27,7 @@ import type {
 const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, capability: string): T => {
   const definition = registry.get(key);
   if (definition !== undefined) return definition;
+
   throw new RetikzGraphError({
     code: RetikzGraphErrorCode.DefinitionNotRegistered,
     message: `${capability} '${key}' is not registered.`,
@@ -67,6 +68,7 @@ export const resolveRelation = (source: IRGraphRelation, context: RelationResolv
       details: { capability: 'relation-kind', key: source.kind, nodeId: source.id },
     });
   }
+
   const predicateDefinition =
     source.predicate === undefined
       ? undefined
@@ -84,6 +86,7 @@ export const resolveRelation = (source: IRGraphRelation, context: RelationResolv
       });
     }
   }
+
   const allowedDirections = kindDefinition?.allowedDirections ?? roleDefinition.allowedDirections;
   const effectiveDirection = source.direction ?? kindDefinition?.defaultDirection ?? roleDefinition.defaultDirection;
   if (!allowedDirections.includes(effectiveDirection)) {
@@ -93,6 +96,7 @@ export const resolveRelation = (source: IRGraphRelation, context: RelationResolv
       details: { capability: 'relation-direction', key: effectiveDirection, nodeId: source.id },
     });
   }
+
   return {
     source,
     roleDefinition,
@@ -115,6 +119,7 @@ const resolvePredicateStructure = (relation: CanonicalRelation): IRGraphRelation
   const predicate = relation.predicate;
   const callback = predicate?.definition.resolveStructure;
   if (predicate === undefined || callback === undefined) return undefined;
+
   try {
     return GraphRelationStructureTokenOverridesSchema.parse(callback(predicate.params));
   } catch (cause) {
@@ -135,13 +140,16 @@ const resolveRelationThemeStructure = (
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
   let structure: IRGraphRelationRuleStructure | undefined;
+
   for (const rule of graphTheme.rules) {
     if (rule.type !== 'relation') continue;
+
     validateGraphThemeSelector(rule.selector, selectorContext);
     if (matchesGraphThemeSelector(rule.selector, subject) && rule.structure !== undefined) {
       structure = rule.structure;
     }
   }
+
   return structure;
 };
 
@@ -158,7 +166,9 @@ export const resolveRelationStructure = (
       details: { capability: 'relation-role-structure', key: relation.effectiveDirection, nodeId: relation.source.id },
     });
   }
+
   const kindStructure = relation.kindDefinition?.directions?.[relation.effectiveDirection];
+
   return applyStructure(
     applyStructure(applyStructure(roleStructure, kindStructure), resolvePredicateStructure(relation)),
     resolveRelationThemeStructure(relation, context),
@@ -207,16 +217,20 @@ const resolveRelationAuthorAppearance = (
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
   let appearance: EffectiveRelationAppearance = {};
+
   for (const layer of context.layers) {
     appearance = mergeRelationAppearance(appearance, layer.defaults?.relation);
+
     for (const rule of layer.rules ?? []) {
       if (rule.type !== 'relation') continue;
+
       validateGraphThemeSelector(rule.selector, selectorContext);
       if (matchesGraphThemeSelector(rule.selector, subject)) {
         appearance = mergeRelationAppearance(appearance, relationRuleAppearance(rule));
       }
     }
   }
+
   return appearance;
 };
 
@@ -227,15 +241,18 @@ const resolveRelationAuthorStructure = (
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
   let structure: IRGraphRelationRuleStructure | undefined;
+
   for (const layer of context.layers) {
     for (const rule of layer.rules ?? []) {
       if (rule.type !== 'relation') continue;
+
       validateGraphThemeSelector(rule.selector, selectorContext);
       if (matchesGraphThemeSelector(rule.selector, subject) && rule.structure !== undefined) {
         structure = rule.structure;
       }
     }
   }
+
   return structure;
 };
 
@@ -256,6 +273,7 @@ const relationSourceAppearanceOf = (source: IRGraphRelation): IRGraphRelationDef
           lineJoin: style.lineJoin,
           dashOffset: style.dashOffset,
         };
+
   return {
     ...(sourceStyle === undefined ? {} : { style: sourceStyle }),
     ...(source.sourceMarker === undefined ? {} : { sourceMarker: source.sourceMarker }),
@@ -274,12 +292,14 @@ export const projectRelationGraphLayers = (
   const authorAppearance = resolveRelationAuthorAppearance(relation, context);
   const authorStructure = resolveRelationAuthorStructure(relation, context);
   if (Object.keys(authorAppearance).length === 0 && authorStructure === undefined) return relation.source;
+
   const projected = mergeRelationAppearance(authorAppearance, relationSourceAppearanceOf(relation.source));
   const style = {
     ...mergeProperties([projected.style], { shouldOverride: value => value !== undefined }),
     ...(authorStructure === undefined ? {} : { dashPattern: authorStructure.dashPattern }),
     ...mergeProperties([relation.source.style], { shouldOverride: value => value !== undefined }),
   };
+
   return {
     ...relation.source,
     ...(projected.sourceMarker === undefined ? {} : { sourceMarker: projected.sourceMarker }),
@@ -301,6 +321,7 @@ const resolveRelationStroke = (
   if (sourceStroke !== undefined || stroke !== 'currentColor' || typeof color !== 'string') {
     return appearance;
   }
+
   return { ...appearance, style: { ...appearance.style, stroke: color } };
 };
 
@@ -313,13 +334,17 @@ export const resolveRelationAppearance = (
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
   let appearance: EffectiveRelationAppearance = graphTheme.defaults.relation ?? {};
+
   for (const rule of graphTheme.rules) {
     if (rule.type !== 'relation') continue;
+
     validateGraphThemeSelector(rule.selector, selectorContext);
     if (matchesGraphThemeSelector(rule.selector, subject)) {
       appearance = mergeRelationAppearance(appearance, relationRuleAppearance(rule));
     }
   }
+
   const sourceAppearance = relationSourceAppearanceOf(relation.source);
+
   return resolveRelationStroke(mergeRelationAppearance(appearance, sourceAppearance), sourceAppearance);
 };

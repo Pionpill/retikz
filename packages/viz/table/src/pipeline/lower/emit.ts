@@ -37,8 +37,10 @@ export const emitTableCellBackground = (
   ) {
     return undefined;
   }
+
   const right = box.x + box.width;
   const bottom = box.y + box.height;
+
   return {
     type: 'path',
     children: [

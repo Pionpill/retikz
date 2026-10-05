@@ -9,14 +9,23 @@ import { resolveDemoKey } from '../../src/modules/docs/components/component-prev
 import { demoModules } from './load-preview-registry';
 
 const scalePositionRoot = resolve('src/modules/docs/contents/viz/plot/scale/position');
+
 const scaleRoot = resolve(scalePositionRoot, '..');
+
 const scaleChinesePage = readFileSync(resolve(scaleRoot, 'index.zh.mdx'), 'utf8');
+
 const scaleEnglishPage = readFileSync(resolve(scaleRoot, 'index.en.mdx'), 'utf8');
+
 const chinesePage = readFileSync(resolve(scalePositionRoot, 'index.zh.mdx'), 'utf8');
+
 const englishPage = readFileSync(resolve(scalePositionRoot, 'index.en.mdx'), 'utf8');
+
 const flowFigure = readFileSync(resolve(scalePositionRoot, 'scale-position-flow.tsx'), 'utf8');
+
 const continuousControls = readFileSync(resolve(scalePositionRoot, 'scale-continuous.controls.ts'), 'utf8');
+
 const englishContinuousControls = readFileSync(resolve(scalePositionRoot, 'scale-continuous.en.controls.ts'), 'utf8');
+
 const scalePositionSegments = ['viz', 'plot', 'scale', 'position'];
 
 const renderLocalizedFlow = (language: 'zh' | 'en'): { key: string; markup: string } => {
@@ -24,6 +33,7 @@ const renderLocalizedFlow = (language: 'zh' | 'en'): { key: string; markup: stri
   const Demo = demoModules[key]?.default;
 
   if (Demo === undefined) throw new Error(`Expected localized scale position flow demo for ${language}`);
+
   return { key, markup: renderToStaticMarkup(createElement(Demo)) };
 };
 
@@ -74,6 +84,7 @@ describe('位置比例尺文档结构', () => {
     expect(flowFigure).toContain('<Layout>');
     expect(flowFigure).not.toMatch(/<Layout\b[^>]*\b(?:width|height)=/);
     expect(nodeTags.length).toBeGreaterThan(0);
+
     for (const nodeTag of nodeTags) {
       expect(nodeTag).toContain("stroke: 'gray'");
       expect(nodeTag).toContain("fill: 'gray'");
@@ -106,6 +117,7 @@ describe('位置比例尺文档结构', () => {
       expect(controls).toContain('canonicalValues: {}');
       expect(controls).toContain("relatedApis: ['Plot.model']");
     }
+
     expect(timeDemo).toContain('defineControlledPreview');
     expect(timeDemo).toContain('export const previewControls');
     expect(timeDemo).toContain('export const previewSource');

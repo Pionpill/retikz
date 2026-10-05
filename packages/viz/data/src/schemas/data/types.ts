@@ -1,7 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { DataFieldFormat, DataFieldType, FieldOrderMode } from './constants';
 import type {
   DataModelSchema,
   DataReferenceSchema,
@@ -10,17 +8,8 @@ import type {
   ScalarValueSchema,
 } from './schema';
 
-/** 字段测量类型取值 */
-export type DataFieldTypeValue = ValueOf<typeof DataFieldType>;
-
-/** 分类字段顺序策略取值 */
-export type FieldOrderModeValue = ValueOf<typeof FieldOrderMode>;
-
-/** 内置字段值解析格式名取值 */
-export type DataFieldFormatValue = ValueOf<typeof DataFieldFormat>;
-
 /** 字段解析格式名：内置关键字或自定义注册名，运行时由 format registry 解析为 parser */
-export type FieldFormatValue = ZodInfer<typeof FieldFormatSchema>;
+export type FieldFormat = ZodInfer<typeof FieldFormatSchema>;
 
 /** 字段声明：逻辑字段名、可选测量类型、可选解析格式和可选分类顺序 */
 export type IRDataFieldDefinition = ZodInfer<typeof FieldDefinitionSchema>;

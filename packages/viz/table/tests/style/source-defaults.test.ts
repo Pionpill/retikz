@@ -67,12 +67,14 @@ describe('Table Source defaults', () => {
 
   it('rejects legacy token bags, a single outer candidate, and non-default table fields', () => {
     const legacy = TableSchema.safeParse({ ...baseManual, tableThemeTokens: { 'cell.content.color': '#111' } });
+
     expect(legacy.success).toBe(false);
 
     const singleOuter = TableSchema.safeParse({
       ...baseManual,
       layout: { borders: { outer: { kind: 'line', stroke: '#111111' } } },
     });
+
     expect(singleOuter.success).toBe(false);
 
     for (const tableDefaults of [
@@ -120,6 +122,7 @@ describe('Table Source defaults', () => {
       structure: { kind: 'manual', rows: [[null, null]], rowKinds: ['body'] },
       tableDefaults: sparseDefaults.tableDefaults,
     });
+
     expect(empty.manifest.cells).toEqual([]);
     expect(empty.manifest.borders).toEqual([]);
     expect(empty.manifest.encodings).toEqual([]);
@@ -176,6 +179,7 @@ describe('Table Source defaults', () => {
 
     const manifest = TableLayoutManifestSchema.parse(result.manifest);
     const serialized = JSON.stringify(manifest);
+
     expect(serialized).not.toContain('tableThemeTokens');
     expect(serialized).not.toContain('cell.content.color');
     expect(serialized).toContain('$spec/appearanceDefaults');

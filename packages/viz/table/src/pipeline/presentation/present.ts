@@ -28,8 +28,10 @@ export const applyTableCellContentStyle = (
   ) {
     return child;
   }
+
   // 已类型化样式不重复 parse；复制后解除 DeepReadonly 投影，避免冻结作者对象
   const contentStyle = structuredClone(style) as IRTableCellContentStyle;
+
   return deepFreeze({ type: 'scope', ...contentStyle, children: [child] });
 };
 
@@ -45,6 +47,7 @@ export const presentCellValue = (
       ? `${input.context.rowIndex}:${input.context.columnIndex}`
       : `"${input.context.cellId}"`;
   const prefix = `table: presentation "${name}" for cell ${cellLabel}`;
+
   try {
     const definition = cellPresentationDefinitionOf(name, registry);
     const parsedOptions = deepFreeze(definition.optionsSchema.parse(presentation.options ?? {}));
