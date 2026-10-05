@@ -23,7 +23,7 @@ export type CellPlacement = {
   y: number;
   width: number;
   height: number;
-  role: 'array-cell' | 'matrix-cell' | 'map-key' | 'map-value';
+  role: 'chain-cell' | 'array-cell' | 'matrix-cell' | 'map-key' | 'map-value';
 };
 
 /** 在当前组件的样式环境下探测内容，保留结果供最终 replay */

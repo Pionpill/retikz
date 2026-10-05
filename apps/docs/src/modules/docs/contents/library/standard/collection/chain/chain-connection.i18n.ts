@@ -1,0 +1,28 @@
+export const chainI18n = {
+  zh: {
+    title: '连接与标签',
+    route: '连接方式',
+    arrow: '箭头',
+    label: '容器标签',
+    auto: '自动正交',
+    straight: '直线',
+    '|-': '先纵后横',
+    '-|': '先横后纵',
+    none: '无箭头',
+    '->': '单向',
+    '<->': '双向',
+  },
+  en: {
+    title: 'Connections and labels',
+    route: 'Route',
+    arrow: 'Arrow',
+    label: 'Container label',
+    auto: 'Automatic orthogonal',
+    straight: 'Straight',
+    '|-': 'Vertical then horizontal',
+    '-|': 'Horizontal then vertical',
+    none: 'No arrow',
+    '->': 'Forward',
+    '<->': 'Both ends',
+  },
+} as const;

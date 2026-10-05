@@ -139,6 +139,10 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
     { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
   ],
+  '@retikz/standard-react/collection#ChainCellProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
+    { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
+  ],
   '@retikz/standard-react/collection#MatrixCellProps': [
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
@@ -146,6 +150,46 @@ export const apiReferenceBranchLabels: Readonly<
   '@retikz/standard/collection#IRMatrixAxisIndex': [
     { value: 'automatic', field: 'start', type: 'number', label: { zh: '自动编号', en: 'Automatic numbering' } },
     { value: 'labels', field: 'start', type: 'never', label: { zh: '显式标号', en: 'Explicit labels' } },
+  ],
+  '@retikz/standard/collection#IRChain': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<IRChainItem>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      type: `NonNullable<input<typeof ChainSchema>['data']>`,
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: `IRChainSkeleton`,
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
+  ],
+  '@retikz/standard-vanilla/collection#InputChain': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<InputChainItem>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      type: `NonNullable<IRChain['data']>`,
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: `NonNullable<IRChain['skeleton']>`,
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
   ],
   '@retikz/standard/collection#IRMatrix': [
     {

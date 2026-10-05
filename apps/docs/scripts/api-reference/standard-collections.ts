@@ -8,6 +8,27 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const translations: Readonly<Record<string, string>> = {
+  串并联内容容器: 'Container for sequential and parallel content',
+  'Chain 的属性入口与 JSX 入口互斥': 'Chain props inputs and JSX children are mutually exclusive',
+  'Chain 或 ChainBranch 的直属单元': 'Direct cell of Chain or ChainBranch',
+  '链单元的文本或唯一 drawable': 'Text or one drawable in a chain cell',
+  结构化分叉与汇合: 'Structured branching and rejoining',
+  并行块局部覆盖与直属支路: 'Local parallel block overrides and direct branches',
+  支路声明: 'Branch declarations',
+  连接覆盖: 'Connection overrides',
+  排布覆盖: 'Layout overrides',
+  并行块的直属支路: 'Direct branch of a parallel block',
+  一条有序支路: 'An ordered branch',
+  '三种互斥输入共用 Core 作用域与单元内容契约':
+    'Three mutually exclusive inputs sharing Core scope and cell content contracts',
+  单元与嵌套并行块: 'Cells and nested parallel blocks',
+  创建保留作者输入的链: 'Create a chain retaining its authoring input',
+  三种输入共用同一结构与连接契约: 'Three inputs sharing one structure and connection contract',
+  '递归收集内容，通过 Kernel 归一化一次并保留依赖':
+    'Collect content recursively, normalize once through Kernel, and preserve dependencies',
+  '保留稀疏 Source 的链工厂': 'Chain factory preserving sparse Source',
+  'Standard Chain 的布局感知 Definition': 'Layout-aware Definition for Standard Chain',
+  'Chain 与单元格 lower target 的按需依赖声明': 'On-demand dependencies of Chain and its cell lowering targets',
   '非空白 Matrix id': 'Nonblank Matrix id',
   非负安全整数行坐标: 'Nonnegative safe integer row coordinate',
   非负安全整数列坐标: 'Nonnegative safe integer column coordinate',
@@ -116,16 +137,18 @@ const translateCollectionApiReference = (source: string): string =>
 /** 从三个公开 collection 入口生成组件局部参考，嵌入合页 API 小节 */
 export const writeStandardCollectionApiReferences = async (
   outputRoot: string,
-  names: ReadonlyArray<'Array' | 'Map' | 'Matrix'> = ['Array', 'Map', 'Matrix'],
+  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain'> = ['Array', 'Map', 'Matrix', 'Chain'],
 ): Promise<void> => {
   for (const name of names) {
     const slug = name.toLowerCase();
     const markers =
-      name === 'Array'
-        ? ['ArrayItem']
-        : name === 'Matrix'
-          ? ['MatrixRow', 'MatrixCell']
-          : ['MapEntry', 'MapKey', 'MapValue'];
+      name === 'Chain'
+        ? ['ChainCell', 'ChainParallel', 'ChainBranch']
+        : name === 'Array'
+          ? ['ArrayItem']
+          : name === 'Matrix'
+            ? ['MatrixRow', 'MatrixCell']
+            : ['MapEntry', 'MapKey', 'MapValue'];
     const owners = [
       {
         suffix: '-react',

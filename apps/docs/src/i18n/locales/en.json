@@ -206,6 +206,7 @@
     "standardAxes": "Axes",
     "standardFrame": "Frame",
     "standardSurface": "Surface",
+    "standardChain": "Chain",
     "standardMatrix": "Matrix",
     "standardArray": "Array",
     "standardMap": "Map",

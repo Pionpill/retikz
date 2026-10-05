@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Chain 串并联', en: 'Unreleased · Chain series-parallel composition' },
+          content: {
+            zh: '新增 Chain：显式结构、JSON 数据和三种骨架表示；支持递归分叉与汇合、两层对齐、正交连接及任意单元内容。React、Vanilla 与双语交互文档同步接入。',
+            en: 'Adds Chain with explicit structures, JSON data, and three skeleton forms, nested branches and joins, independent alignment controls, orthogonal connections, and arbitrary cell content, with React, Vanilla, and bilingual interactive docs.',
+          },
+        },
+        {
           label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
           content: {
             zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',

@@ -105,6 +105,8 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
+import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import type { InputChainItem } from '@retikz/standard-vanilla/collection';
 import {
   matrix,
   MatrixInputEmbedAdapter,
@@ -136,6 +138,8 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
+import { ChainDefinition } from '@retikz/standard/collection';
+import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRMap } from '@retikz/standard/collection';
 import { MatrixDefinition, ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
 import {
@@ -277,6 +281,7 @@ type StandardKind =
   | 'frame'
   | 'surface'
   | 'legend'
+  | 'chain'
   | 'matrix'
   | 'array'
   | 'map';
@@ -394,6 +399,24 @@ const convertStandardChild = (
         ...(title === undefined ? {} : { title: convertPreviewChild(title, state, graphState) }),
         content: normalizedContent,
       });
+    }
+    case 'chain': {
+      const { namespace, type, items, data, skeleton, dataExpand, ...input } = child as IRChain;
+      void namespace;
+      void type;
+      if (skeleton !== undefined) return chain({ ...input, skeleton });
+      if (data !== undefined) return chain({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+      const convert = (sequence: Array<IRChainItem>): Array<InputChainItem> =>
+        sequence.map(item =>
+          typeof item === 'string'
+            ? item
+            : item.kind === 'parallel'
+              ? { ...item, branches: item.branches.map(branch => ({ items: convert(branch.items) })) }
+              : item.content === undefined || typeof item.content === 'string'
+                ? item
+                : { ...item, content: convertPreviewChild(item.content, state, graphState) },
+        );
+      return chain({ ...input, items: convert(items) });
     }
     case 'matrix': {
       const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRMatrix;
@@ -670,6 +693,7 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<Synchron
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('chain') ? [ChainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('matrix') ? [MatrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('array') ? [ArrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('map') ? [MapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
@@ -708,6 +732,7 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
+  ChainDefinition,
   MatrixDefinition,
   ArrayDefinition,
   MapDefinition,
@@ -755,6 +780,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
+          'chain',
           'matrix',
           'array',
           'map',
