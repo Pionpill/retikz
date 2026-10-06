@@ -27,6 +27,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
+import type { IRStack } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
 
@@ -322,6 +323,7 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'frame',
   'surface',
   'surfaceChild',
+  'stack',
   'chain',
   'matrix',
   'array',
@@ -342,6 +344,7 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'AxesInputEmbedAdapter',
   'FrameInputEmbedAdapter',
   'SurfaceInputEmbedAdapter',
+  'StackInputEmbedAdapter',
   'ChainInputEmbedAdapter',
   'MatrixInputEmbedAdapter',
   'ArrayInputEmbedAdapter',
@@ -391,6 +394,7 @@ export type StandardPreviewDefinitionName =
   | 'GridDefinition'
   | 'AxesDefinition'
   | 'FrameDefinition'
+  | 'StackDefinition'
   | 'ChainDefinition'
   | 'MatrixDefinition'
   | 'ArrayDefinition'
@@ -423,6 +427,7 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
+  stack: 'StackDefinition',
   chain: 'ChainDefinition',
   matrix: 'MatrixDefinition',
   array: 'ArrayDefinition',
@@ -490,8 +495,8 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
       ),
     );
 
-  if (child.namespace === 'standard' && child.type === 'array')
-    return ((child as IRArray).items ?? []).flatMap(cell =>
+  if (child.namespace === 'standard' && (child.type === 'array' || child.type === 'stack'))
+    return ((child as IRArray | IRStack).items ?? []).flatMap(cell =>
       typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string' ? [] : [cell.content],
     );
 
@@ -586,7 +591,11 @@ export const collectPreviewDefinitions = (
         if (!standardAdapterKinds.has(child.type)) {
           standard.add(definitionName);
           if (
-            (child.type === 'chain' || child.type === 'array' || child.type === 'map' || child.type === 'matrix') &&
+            (child.type === 'stack' ||
+              child.type === 'chain' ||
+              child.type === 'array' ||
+              child.type === 'map' ||
+              child.type === 'matrix') &&
             (child as IRChain | IRArray | IRMap | IRMatrix).data !== undefined
           ) {
             standard.add('ArrayDefinition');
@@ -681,7 +690,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
     return `chain(${formatObject({ ...stripKeys(record, ['namespace', 'type', 'items']), items: '__ITEMS__' }, indent).replace("'__ITEMS__'", `[${source.items.map(itemCode).join(', ')}]`)})`;
   }
 
-  if (record.type === 'array' || record.type === 'map' || record.type === 'matrix') {
+  if (record.type === 'stack' || record.type === 'array' || record.type === 'map' || record.type === 'matrix') {
     if (record.data !== undefined || record.skeleton !== undefined)
       return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
 
@@ -702,8 +711,8 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
     const values =
       record.type === 'matrix'
         ? ((child as IRMatrix).items ?? []).map(row => `[${row.map(cellCode).join(', ')}]`)
-        : record.type === 'array'
-          ? ((child as IRArray).items ?? []).map(cellCode)
+        : record.type === 'array' || record.type === 'stack'
+          ? ((child as IRArray | IRStack).items ?? []).map(cellCode)
           : ((child as IRMap).entries ?? []).map(
               entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
             );
@@ -1066,8 +1075,10 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     const members = [...standardHelpers, ...standardAdapters];
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
     const collectionMemberNames = new Set<string>([
+      'stack',
       'chain',
       'matrix',
+      'StackInputEmbedAdapter',
       'ChainInputEmbedAdapter',
       'MatrixInputEmbedAdapter',
       'array',
@@ -1108,6 +1119,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
       STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
     );
     const collectionDefinitionNames = new Set<string>([
+      'StackDefinition',
       'ChainDefinition',
       'MatrixDefinition',
       'ArrayDefinition',

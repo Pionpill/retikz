@@ -641,4 +641,34 @@ export const apiReferenceBranchLabels: Readonly<
       label: { zh: '静态模式', en: 'Static' },
     },
   ],
+  '@retikz/standard-react/collection#StackProps': [
+    { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
+    { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },
+    { value: 'skeleton', field: 'skeleton', required: true, label: { zh: '示意骨架', en: 'Skeleton' } },
+    { value: 'children', field: 'children', type: 'ReactNode', label: { zh: 'JSX 子项', en: 'JSX children' } },
+  ],
+  '@retikz/standard-react/collection#StackItemProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
+    { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
+  ],
+  '@retikz/standard/collection#IRStack': [
+    { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
+    { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },
+    { value: 'skeleton', field: 'skeleton', required: true, label: { zh: '示意骨架', en: 'Skeleton' } },
+  ],
+  '@retikz/standard-vanilla/collection#InputStack': [
+    {
+      value: 'items',
+      field: 'items',
+      type: `Array<string | InputCell<IRCell>>`,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    { value: 'data', field: 'data', type: "NonNullable<IRStack['data']>", label: { zh: 'JSON 数据', en: 'JSON data' } },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      type: "NonNullable<IRStack['skeleton']>",
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
+  ],
 };

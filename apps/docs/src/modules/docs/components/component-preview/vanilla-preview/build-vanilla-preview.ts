@@ -109,6 +109,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
+import { stack, StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { InputChainItem } from '@retikz/standard-vanilla/collection';
 import {
@@ -142,7 +143,8 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import { ChainDefinition } from '@retikz/standard/collection';
+import type { IRStack } from '@retikz/standard/collection';
+import { StackDefinition, ChainDefinition } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRMap } from '@retikz/standard/collection';
 import { MatrixDefinition, ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
@@ -295,6 +297,7 @@ type StandardKind =
   | 'frame'
   | 'surface'
   | 'legend'
+  | 'stack'
   | 'chain'
   | 'matrix'
   | 'array'
@@ -467,6 +470,28 @@ const convertStandardChild = (
                       : convertPreviewChild(cell.content, state, graphState),
                 },
           ),
+        ),
+      });
+    }
+    case 'stack': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRStack;
+      void _namespace;
+      void _type;
+      if (skeleton !== undefined) return stack({ ...input, skeleton });
+      if (data !== undefined) return stack({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+
+      return stack({
+        ...input,
+        items: items.map(cell =>
+          typeof cell === 'string'
+            ? cell
+            : {
+                ...cell,
+                content:
+                  cell.content === undefined || typeof cell.content === 'string'
+                    ? cell.content
+                    : convertPreviewChild(cell.content, state, graphState),
+              },
         ),
       });
     }
@@ -745,6 +770,7 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<Synchron
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('stack') ? [StackInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('chain') ? [ChainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('matrix') ? [MatrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('array') ? [ArrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
@@ -784,6 +810,7 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
+  StackDefinition,
   ChainDefinition,
   MatrixDefinition,
   ArrayDefinition,
@@ -833,6 +860,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
+          'stack',
           'chain',
           'matrix',
           'array',

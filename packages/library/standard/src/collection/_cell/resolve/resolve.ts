@@ -46,7 +46,11 @@ export const resolveCell = (source: string | CellResolveSource, context: CellRes
     typeof content !== 'string' &&
     'namespace' in content &&
     content.namespace === 'standard' &&
-    (content.type === 'array' || content.type === 'map' || content.type === 'matrix' || content.type === 'chain');
+    (content.type === 'array' ||
+      content.type === 'map' ||
+      content.type === 'matrix' ||
+      content.type === 'chain' ||
+      content.type === 'stack');
   const visualDefaults = nestedCollection ? NestedCollectionCellDefaultsSchema : CellDefaultsSchema;
   const layoutDefaults = nestedCollection ? NestedCollectionCellLayoutDefaultsSchema : CellLayoutDefaultsSchema;
   const style = mergeStyle([overallStyle, roleStyle, cell.style]);

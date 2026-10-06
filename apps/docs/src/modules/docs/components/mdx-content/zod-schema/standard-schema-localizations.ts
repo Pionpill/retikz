@@ -1,6 +1,7 @@
 import { chainSchemaLocalization } from './chain-schema-localizations';
 import { LegendSchemaZhLocalization, LegendArtifactSchemaZhLocalization } from './legend-schema-localizations';
 import { matrixSchemaLocalization } from './matrix-schema-localizations';
+import { stackSchemaLocalization } from './stack-schema-localizations';
 import {
   GridSchemaZhLocalization,
   GridLineSchemaZhLocalization,
@@ -835,3 +836,5 @@ for (const [name, description] of Object.entries(summaries)) {
 
 standardSchemaLocalizations.MatrixSchema = matrixSchemaLocalization;
 standardSchemaLocalizations.ChainSchema = chainSchemaLocalization;
+
+standardSchemaLocalizations.StackSchema = stackSchemaLocalization;

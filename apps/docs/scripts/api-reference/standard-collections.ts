@@ -8,7 +8,7 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
-const translations: Readonly<Record<string, string>> = {
+const translations: Record<string, string> = {
   '按顺序提供的文本或单元格，与数据和骨架入口互斥': 'Ordered text or cells, mutually exclusive with data and skeleton',
   '用于展开单元格的数据，与显式单元格和骨架入口互斥':
     'Data expanded into cells, mutually exclusive with explicit cells and skeleton',
@@ -198,21 +198,40 @@ const translations: Readonly<Record<string, string>> = {
 const translateCollectionApiReference = (source: string): string =>
   translations[source] ?? translateDrawApiReference(source);
 
+for (const [source, translation] of Object.entries(translations)) {
+  if (source.includes('Array'))
+    translations[source.replaceAll('Array', 'Stack').replace('空数组', '空栈')] = translation
+      .replaceAll('Array', 'Stack')
+      .replace('empty array', 'empty stack');
+}
+Object.assign(translations, {
+  '栈底到栈顶的稀疏 Source，三种输入互斥': 'Sparse bottom-to-top Source with three mutually exclusive inputs',
+  '显式单格，最后一项为栈顶': 'Explicit cells with the last item at the top',
+  'JSON 数据，按输入顺序堆叠': 'JSON data stacked in input order',
+  嵌套数据展开选择: 'Nested data expansion selection',
+  无真实数据的单格骨架: 'Cell skeleton without real data',
+  保留作者稀疏字段与栈底到栈顶顺序: 'Preserve sparse author fields and bottom-to-top order',
+  'Stack 的布局感知编译定义': 'Layout-aware compilation definition for Stack',
+  'Stack 及单格裁切依赖': 'Stack and cell clipping dependencies',
+});
+
 /** 从三个公开 collection 入口生成组件局部参考，嵌入合页 API 小节 */
 export const writeStandardCollectionApiReferences = async (
   outputRoot: string,
-  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain'> = ['Array', 'Map', 'Matrix', 'Chain'],
+  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain' | 'Stack'> = ['Array', 'Map', 'Matrix', 'Chain', 'Stack'],
 ): Promise<void> => {
   for (const name of names) {
     const slug = name.toLowerCase();
     const markers =
-      name === 'Chain'
-        ? ['ChainCell', 'ChainParallel', 'ChainBranch']
-        : name === 'Array'
-          ? ['ArrayItem']
-          : name === 'Matrix'
-            ? ['MatrixRow', 'MatrixCell']
-            : ['MapEntry', 'MapKey', 'MapValue'];
+      name === 'Stack'
+        ? ['StackItem']
+        : name === 'Chain'
+          ? ['ChainCell', 'ChainParallel', 'ChainBranch']
+          : name === 'Array'
+            ? ['ArrayItem']
+            : name === 'Matrix'
+              ? ['MatrixRow', 'MatrixCell']
+              : ['MapEntry', 'MapKey', 'MapValue'];
 
     const owners = [
       {

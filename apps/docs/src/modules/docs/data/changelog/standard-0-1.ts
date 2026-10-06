@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Stack 栈', en: 'Unreleased · Stack' },
+          content: {
+            zh: '新增Stack静态栈：三种输入、四向堆叠、开放border与独立padding、栈顶标签、逐格样式和id引用；React、Vanilla及双语交互文档同步接入，不管理push/pop状态。',
+            en: 'Adds static Stack presentation with three input forms, four directions, an open border, independent padding, top labels, per-cell styles and ids, with React/Vanilla APIs and bilingual interactive docs. Push/pop state remains external.',
+          },
+        },
+        {
           label: { zh: '未发布 · Chain 串并联', en: 'Unreleased · Chain series-parallel composition' },
           content: {
             zh: '新增 Chain：显式结构、JSON 数据和三种骨架表示；支持递归分叉与汇合、两层对齐、正交连接及任意单元内容。React、Vanilla 与双语交互文档同步接入。',

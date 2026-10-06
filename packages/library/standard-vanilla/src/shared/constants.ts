@@ -24,3 +24,6 @@ export const StandardMatrixEmbedKind = 'standard.matrix';
 
 /** Standard Chain embed 的稳定 kind */
 export const StandardChainEmbedKind = 'standard.chain';
+
+/** Standard Stack embed 的稳定 kind */
+export const StandardStackEmbedKind = 'standard.stack';

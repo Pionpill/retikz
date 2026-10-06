@@ -1,0 +1,118 @@
+---
+title: Stack · 栈
+description: 按栈底到栈顶的顺序展示文字、空格与图形，调整堆叠方向、开放边框和栈顶标签。
+---
+
+`Stack` 展示栈的当前快照。输入从栈底到栈顶排列，最后一项始终是栈顶，默认向上堆叠。它适合调用栈、算法教学和操作前后的状态图。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，从 collection 入口导入。
+
+<ComponentPreview files="stack-basic" size="sm" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Stack } from '@retikz/standard-react/collection';
+
+<Layout>
+  <Stack items={['A', 'B', 'C']} />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { stack, StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+renderToSvgString(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }), {
+  adapters: [StackInputEmbedAdapter],
+});
+```
+
+</DocTab>
+<DocTab value="ir" label="Source IR">
+
+```json
+{ "namespace": "standard", "type": "stack", "items": ["A", "B", "C"] }
+```
+
+直接 IR 注册 StackProvider 与 PathClipProvider；data 展开还需要 ArrayProvider、MapProvider，显式嵌套内容提供自身依赖。
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 选择输入方式
+
+items、data、skeleton 三选一。items 字符串原样显示，显式 Cell 使用 `{ content?, id?, style?, layout? }`。data 接受 JSON 数组，字符串显示引号，嵌套对象与数组默认展开为 Map／Array；dataExpand 仅对 data 有效，可用 false 或 map/array 数组选择展开范围。
+
+| 骨架形式                                | 效果                   |
+| --------------------------------------- | ---------------------- |
+| `skeleton={{ count: 3 }}`               | 三个无内容单元格       |
+| `skeleton={{ labels: ['A', '', 'C'] }}` | 三个符号格，中间为空格 |
+
+空数组或 count 为零表示空栈。默认仅保留 16×16 的开放容器，没有占位格或栈顶标签；padding 为零时自然尺寸为零。骨架格是真正的示意内容，不代表容量。
+
+<ComponentPreview
+  files={['stack-inputs', 'stack-inputs.preview.tsx']}
+  defaultSourceFile="stack-inputs.preview.tsx"
+  size="md"
+/>
+
+### 调整堆叠与边框
+
+layout.direction 支持 up、down、left、right，分别朝上、下、左、右堆叠，开放端跟随方向。改变方向不会改变输入顺序。layout.width／height 始终是单格物理宽高；主轴保留每格尺寸，交叉轴 auto 格填满最大需求，固定小格居中且不拉伸。
+
+layout.gap 默认 2。layout.padding 控制格内留白，根 padding 控制容器留白，默认均为 8。border 默认绘制三边轮廓，可以用 `border={{ style: { stroke: 'dodgerblue', dashPattern: [4, 3] } }}` 设置线型；false 只隐藏边框，padding 仍有效。根 frame 保留通用容器装饰语义，与开放边框独立。
+
+可选 topLabel 附着于最后一格，label 附着整体容器。二者都使用普通标签配置，增加可见范围但不撑大布局；topLabel 的位置是物理方向，不自动旋转。本例为了比较方向，固定格子为 44×32、gap 为 4，并开启 top 标签。
+
+<ComponentPreview
+  files={['stack-layout', 'stack-layout.preview.tsx']}
+  defaultSourceFile="stack-layout.preview.tsx"
+  size="md"
+/>
+
+## 扩展方式
+
+### 嵌套内容与单格引用
+
+React 组合使用以下层级；Vanilla 的 items.content 接受对应绘图输入，IR 接受单个可序列化 child。
+
+```text
+Stack
+├── StackItem
+└── StackItem
+    └── Matrix
+```
+
+StackItem 的 text 与唯一 drawable children 互斥，都省略时为空格。嵌套集合默认免去外层 Cell 背景与 padding，普通文字保留默认浅灰背景。单格 style 和 layout 覆盖整体默认，可以精确指定虚线、无填充或尺寸；固定尺寸默认裁切内容，overflow 可显式覆盖。
+
+给格子设置 id 后，外部 Draw 可引用整个格子的实际边界。Stack 不自动生成下标 id，不提供 push/pop 状态或复杂连接规则；操作箭头、曲线与多帧状态由已有绘图和布局能力组合。本例给栈顶格设置 selected，并从外部连接它。
+
+<ComponentPreview
+  files={['stack-composition', 'stack-composition.preview.tsx']}
+  defaultSourceFile="stack-composition.preview.tsx"
+  size="md"
+/>
+
+共享的测量、裁切、编译和空间引用见[集合实现原理](/library/standard/collection/mechanism)。
+
+## API 参考
+
+{/* @include library/standard/collection/stack/generated */}
+
+## Schema 参考
+
+Source 保留作者选择的入口；factory 不展开骨架、不填默认值，显式 parse 物化静态默认。
+
+#### StackSchema
+
+<ZodSchema name="StackSchema" description="有序单元格、JSON 数据或示意骨架构成的静态栈" expandNested />
