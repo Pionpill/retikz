@@ -44,6 +44,8 @@ declare const defineRuntimeComputation: <
 | `observeCommit` | 否       | 在新结果成功发布后接收通知                     |
 | `tracePhases`   | 否       | 声明允许报告的 Trace 阶段，默认 `[]`           |
 
+这些属性会在后文详细说明。
+
 </DocTab>
 <DocTab value="definition" label="类型定义">
 
@@ -113,13 +115,30 @@ const distance = defineRuntimeComputation<number>({
 
 ## 依赖与注册
 
-**依赖**既限定计算可以读取哪些数据，也决定哪些变化需要触发计算。依赖关系必须显式声明；Runtime 不会分析函数代码来自动发现它们。
-
 计算定义中的 `sources` 声明依赖哪些来源，`computations` 声明依赖哪些上游计算。可以把它理解为订阅上游变化：调用 `runtime.update` 后，Runtime 判断来源是否实际变化，再按依赖顺序更新相关计算。直接修改外部对象不会自动触发这条流程。
 
 例如，“坐标来源 → 距离计算 → 显示文本计算”：坐标实际变化会触发距离计算；距离计算产生新结果后，再触发显示文本计算。如果距离计算明确返回 `bailout`，表示复用旧结果，就不沿这条依赖继续触发下游；下游若还有其他变化的依赖，仍会执行。具体返回形式见[增量更新](#增量更新)。
 
 后面的注册配置也有 `sources` 和 `computations`，但它们只是提供来源注册表与计算清单。**依赖关系由每个计算定义声明**，不是由注册列表的位置或顺序建立。
+
+### 依赖作用
+
+`sources` 和 `computations` 不是两种传参写法，而是两类数据入口：前者读来源状态，后者读别的计算已经生成的公开结果。对于同一个当前计算，每一项声明都有两个作用：允许读取这个上游，并将其变化纳入当前计算的执行条件。
+
+| 当前计算声明的字段         | 可以读什么                      | 什么变化会影响当前计算                              |
+| -------------------------- | ------------------------------- | --------------------------------------------------- |
+| `sources: [position]`      | `view.snapshot(position).value` | position 的完整状态被判定发生变化                   |
+| `computations: [distance]` | `view.result(distance).value`   | distance 产生了新结果；只复用旧结果时不沿此依赖触发 |
+
+下面每条箭头都对应**下游定义**中的一项声明。`distance` 接收来源中的 `[3, 4]`；`label` 接收距离结果 `5`，不需要重新读取坐标或重复计算距离。
+
+<ComponentPreview files="computation-dependencies" size="sm" hideCode type="illustration" />
+
+只声明 `computations: [distance]` 不会间接授权读取 `position`。反过来，若给 `label` 额外声明 `sources: [position]`，坐标变化就能直接触发它，即使距离计算已经 `bailout`。因此，声明应反映当前计算真正依赖的数据：漏掉会导致读取报错，多写则可能引入本不需要的重新执行。
+
+读取回调不会动态建立订阅。已声明但本次没有读取的依赖仍然影响执行条件；同一次更新中多个依赖变化时，当前计算按依赖顺序执行一次，而不是每条依赖各调用一次。
+
+### 读取依赖
 
 回调收到的 `view` 是本次执行的**候选视图**：包含准备发布的新来源，以及已经完成的上游计算结果。它与调用方通过 Runtime 读取的已发布状态不同。
 
@@ -142,6 +161,10 @@ const label = defineRuntimeComputation<string>({
 ```
 
 读取未声明的来源或计算会报错，即使它已经注册。`id.owner` 只说明归属，不能代替依赖声明。
+
+### 注册计算
+
+注册解决“哪些定义可用、按什么顺序执行”，依赖声明解决“某项计算具体需要谁”。两者分开，才能校验缺失依赖并允许调用方以任意顺序组织注册列表。
 
 **计算注册表**把这些定义组织成可以执行的依赖图：先确认所有依赖存在，再安排上游先于下游执行。`createRuntimeComputationRegistry(input)` 创建这个固定注册表，不会立即调用 `run`。
 
@@ -204,6 +227,12 @@ console.log(computations.resolve(distance) === distance); // true
 
 数值距离可以直接保存和读取；复杂计算还可能保存索引、缓存或资源句柄，却只希望向外暴露结果。因此，结果区分执行返回值、内部持有值、当前计算使用的旧结果视图，以及公开视图。
 
+下图从一次回调的返回值出发，区分结果的两类读取者。私有视图只服务当前计算的后续更新；公开视图则服务下游计算和外部使用者。图中的“本计算下次 update”是下一次实际执行增量回调，不是每次外部读取。
+
+<ComponentPreview files="computation-result" size="md" hideCode type="flow" />
+
+这里不要求保留四份副本：四个类型区分职责，是否复制由转换函数决定。比如内部保存 `{ point, distance }`，私有视图保留这个对象，公开视图只返回 `distance`，就能把下次更新需要的信息留在计算内部，而不让所有使用者依赖缓存结构。
+
 `result` 配置管理这些转换。`readForComputation` 的结果只交给本计算下一次 `update` 的 `previous`；`read` 的结果供下游计算、宿主读取和提交通知使用。
 
 <DocTabs defaultValue="members">
@@ -253,6 +282,8 @@ const cachedDistance = defineRuntimeComputation<DistanceCache, DistanceCache, Di
 });
 ```
 
+下游通过 `view.result(cachedDistance).value` 只能得到数值距离，不能访问 `point`。如果为这项计算提供 `update`，它的 `previous` 则是带有 `point` 和 `distance` 的私有对象，可以使用这些信息决定如何更新。改变内部缓存结构时，只要公开读取仍返回数值，下游就不需要跟着修改。
+
 此例公开读取从对象变成数值，因此 `read` 必须提供；其余转换类型一致，可以省略。所有转换都可省略且无需清理时，整个 `result` 配置也可省略，前面的 `distance` 就是这种情况。默认原值返回不会复制或冻结对象，作者仍需保证只读隔离，尤其不能在更新中直接修改 `previous`。
 
 捕获完成后，Runtime 先生成私有视图，再生成公开视图，并缓存这两份结果；每次读取快照不会重新执行转换。读取转换失败时会清理已经捕获的新结果；成功替换后才释放旧结果。需要资源释放时提供 `dispose`，复用当前结果应通过后文的 `bailout` 表达。
@@ -263,7 +294,7 @@ const cachedDistance = defineRuntimeComputation<DistanceCache, DistanceCache, Di
 
 ## 增量更新
 
-初始化时，每项计算都按依赖顺序执行 `run`。后续更新中，只有直接来源实际变化，或上游计算产生新结果时，当前计算才需要执行。默认自动策略会尝试 `update`；没有提供它时执行 `run`。
+**首次执行一定调用 `run`**；后续依赖变化触发计算时，默认优先调用 `update`，未提供 `update` 则调用 `run`。全量策略、上游全量或回退，以及 `update` 返回 `fallback` 时，也会调用 `run`；未受依赖变化影响的计算直接跳过。
 
 `update(previous, view, context)` 接收旧结果的私有视图和本次候选数据，由计算作者选择如何得到正确结果。下面是三种返回形式；`run` 则始终返回 `full` 和完整新结果。
 
@@ -272,6 +303,14 @@ const cachedDistance = defineRuntimeComputation<DistanceCache, DistanceCache, Di
 | `{ kind: 'incremental', result }` | 捕获并准备新结果，继续触发依赖它的计算             |
 | `{ kind: 'bailout' }`             | 保留旧结果，不执行结果转换，也不因本项计算触发下游 |
 | `{ kind: 'fallback' }`            | 放弃增量路径，在同一候选数据上调用 `run`           |
+
+`incremental` 不表示返回一个补丁，而是用增量算法得到**完整的新结果**。Runtime 不会把它与旧结果自动合并。`bailout` 表示作者确认旧结果仍可用；`fallback` 表示当前增量方法不适用，要求在相同候选输入上重新调用 `run`，不是放弃这次更新。
+
+下图只展开已经进入 `update` 的计算；没有依赖变化而被跳过的计算，不会进入任何返回分支。
+
+<ComponentPreview files="computation-outcomes" size="lg" hideCode type="flow" />
+
+回退后的 `run` 必须返回 `{ kind: 'full', result }`，随后也会捕获新结果并继续传播。抛出异常则是执行失败，不是另一种 `fallback`；本次更新如何回滚由 Runtime 篇说明。
 
 给距离计算增加 `update`，可以在坐标变化但距离不变时保留旧结果。以下是替换前面 `distance` 定义的版本，不要将两个同名定义一起注册：
 
@@ -303,7 +342,7 @@ const distance = defineRuntimeComputation<number>({
 
 橙色节点执行了 `update` 并返回 `bailout`；灰色节点则完全没有执行，直接复用旧结果。最后一行中，A 的 `bailout` 不会阻止 D 的新结果触发 B，再由 B 的新结果触发 C。箭头始终表示依赖关系，即使本次没有沿该依赖触发执行，它也仍然存在。
 
-变更提示可以通过 `view.changeSet(source)` 辅助局部计算，但提示可能缺省，其领域含义和完整性仍由调用方判断。无法安全增量处理时返回 `fallback`；抛出异常会使本次更新失败，不会自动转成全量重试。来源校验要求回退时，Runtime 也会直接走回退路径。
+`view.changeSet(source)` 是可选变更提示的读取入口，未提供时返回 `undefined`。提示如何随完整输入提交、如何校验以及如何影响 Runtime 的执行路径，将在 Runtime 篇统一说明。
 
 回调的 `context.execution` 区分当前执行方式；`context.trace` 和 `context.diagnose` 用于记录观测信息。`observeCommit` 在新结果成功发布后通知调用方；复用旧结果时不触发该通知。它是隔离的观察回调，不负责计算和资源提交。
 
@@ -316,34 +355,11 @@ const distance = defineRuntimeComputation<number>({
 
 ## 完整流程
 
-下面串起定义、注册、执行和读取。定义与注册只建立规则；创建 Runtime 才执行初始计算，后续更新再按依赖选择执行路径。
+先定义依赖与执行规则，再由注册表校验并排序。运行实例需要这些定义时，才调用 `run/update` 生成结果；结果转换决定哪些内容供后续更新使用，哪些内容对外公开。
 
 <ComponentPreview files="computation-flow" size="md" hideCode type="flow" />
 
-使用前面定义的 `sources`、`computations` 和 Token，就可以建立运行实例。这里沿用[入门示例](/kernel/packages/runtime/usage)的初始化与更新 API，重点观察结果值：
-
-```ts
-import { createRuntime, createRuntimeSourceInput, createRuntimeSourceUpdate } from '@retikz/runtime';
-
-const runtime = createRuntime({
-  sources,
-  computations,
-  initialSnapshots: [createRuntimeSourceInput(position, [3, 4])],
-});
-try {
-  console.log(runtime.result(distance).value); // 5
-  runtime.update({
-    baseRevision: runtime.revision(),
-    sources: [createRuntimeSourceUpdate(position, [6, 8])],
-  });
-  console.log(runtime.result(distance).value); // 10
-  console.log(runtime.result(label).value); // 'Distance: 10'
-} finally {
-  runtime.dispose();
-}
-```
-
-计算回调通过 `view.result` 读取候选上游结果，外部调用方通过 `runtime.result` 读取已发布结果，两者使用同一计算 Token，却处于不同的读取时机。释放 Runtime 时，会清理仍由它持有的结果。
+计算内部通过 `view.result(distance).value` 读取本次执行可用的上游结果；外部通过 `runtime.result(distance).value` 读取已发布结果。查询结果不会重新执行计算。初始化、更新、版本与发布的串联见后续 Runtime 篇；当前可运行的接入代码见[入门示例](/kernel/packages/runtime/usage)。
 
 ## Core 应用
 

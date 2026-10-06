@@ -19,9 +19,9 @@ const SourceValues: FC<SourceValuesProps> = props => {
       <FlowLayout id="values" kind="linear" direction="right">
         <FlowEntities
           items={[
-            { id: 'input', text: i18n.input, role: 'state' },
-            { id: 'value', text: i18n.value, role: 'state' },
-            { id: 'read', text: i18n.read, role: 'state' },
+            { id: 'input', text: i18n.input, role: 'activity' },
+            { id: 'value', text: i18n.value, role: 'activity', kind: 'docs.logic.important' },
+            { id: 'read', text: i18n.read, role: 'activity' },
           ]}
         />
       </FlowLayout>

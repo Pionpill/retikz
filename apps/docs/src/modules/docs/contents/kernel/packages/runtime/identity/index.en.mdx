@@ -7,6 +7,27 @@ description: Identify entities within state through identity creation, compariso
 
 **Entity identity** identifies the same entity across state updates. This page explains how to create and compare identities, then collect and look them up within a Source's state. A Source token identifies the whole Source definition; an Identity identifies an entity within its state. One Source can contain many entity identities.
 
+## Identity and state
+
+Identity answers “which entity is this?”, while state answers “what is it like now?”. Changing a color preserves identity but changes state. Using the entire node as its identity would lose the connection between its old and new forms; using only `'A'` would confuse equally named nodes in different Sources.
+
+An Identity therefore combines two fields:
+
+```ts
+type RuntimeIdentity = Readonly<{
+  owner: string;
+  path: ReadonlyArray<string>;
+}>;
+```
+
+`owner` selects the Source, and `path` selects an entity within it: for example, `owner = 'example/graph'` and `path = ['nodes', 'A']`. Different paths under the same owner identify different entities; identical paths under different owners also identify different entities.
+
+The figure places identity fields next to the node color for comparison. `color` is entity state, not a third Identity field.
+
+<ComponentPreview files="identity-fields" size="md" hideCode type="illustration" />
+
+The records may be different JavaScript objects. Matching owners and complete path contents make their identities equal, but do not imply equal state or automatically reuse computation results. Callers decide how stable identities match entities across states; Runtime supplies common creation, comparison and lookup tools.
+
 ## Identifying nodes
 
 A node's color can change while its identity remains stable. Create an identity with `createRuntimeIdentity(owner, path)`:
@@ -122,7 +143,15 @@ console.log(identities.values().map(identity => identity.path));
 
 `values()` returns identities in segment-by-segment string order, with shorter prefixes first. This is neither insertion order nor locale-sensitive sorting. The lookup owns an independent collection; changing the original list does not affect it.
 
-With a Source's `collectIdentities` callback, Runtime uses this lookup logic while preparing captured state (this section only explains identity collection; identity usage will be covered in later chapters, which have not yet been written). Reuse `defineRuntimeSource(input)` from [Source](/kernel/packages/runtime/source#defining-a-source): it accepts Source configuration and returns a token. Here, `collectIdentities(value)` additionally accepts the internal value and returns all entity identities. Define a graph Source that captures an independent read-only node list and collects every node's identity:
+A lookup answers collection questions, not state equality: `size` counts identities, `has` checks exact membership, and `values` supports enumeration or caller-defined matching. It does not return entity data such as node colors; callers need their own index to resolve identities to those values.
+
+For example, compare old identities `[A, B]` with new identities `[A, C]`. Querying the two lookups reveals that B disappeared and C was added. A appearing in both establishes identity continuity, not unchanged color. Shared prefixes do not make `has` a subtree query.
+
+### Collecting from a Source
+
+`collectIdentities` receives the complete value produced by `capture` and returns the identities to track within it. Runtime checks ownership and duplicates, then stores an internal lookup. That lookup currently has no public query API and does not automatically drive dependencies or invalidation. Callers needing identity queries still build a lookup from their own identity list, and maintain a data index if they need to retrieve entities.
+
+With a Source's `collectIdentities` callback, Runtime uses this lookup logic while preparing captured state (this section covers the collection contract; update timing and failure handling belong to the Runtime chapter). Reuse `defineRuntimeSource(input)` from [Source](/kernel/packages/runtime/source#defining-a-source): it accepts Source configuration and returns a token. Here, `collectIdentities(value)` additionally accepts the internal value and returns all entity identities. Define a graph Source that captures an independent read-only node list and collects every node's identity:
 
 ```ts
 import { defineRuntimeSource } from '@retikz/runtime';
@@ -158,7 +187,7 @@ Identities support two common paths: compare two directly, or organize a complet
 
 <ComponentPreview files="identity-flow" size="sm" hideCode type="flow" />
 
-`createRuntimeIdentity` creates one identity. `runtimeIdentityEquals` compares two identities directly without a lookup. For collection queries, pass an identity list to `createRuntimeIdentityLookup`, then use `has` to query and `values` to enumerate it. A Source's `collectIdentities` callback provides another route to a complete list: after capture, Runtime uses its result to build the lookup and validate ownership and uniqueness internally. Callers need not build it again.
+`createRuntimeIdentity` creates one identity. `runtimeIdentityEquals` compares two identities directly without a lookup. For collection queries, pass an identity list to `createRuntimeIdentityLookup`, then use `has` to query and `values` to enumerate it. A Source's `collectIdentities` supplies a complete list for internal Runtime validation and storage; it does not return the query object shown in the figure to callers.
 
 ## Core application
 
@@ -193,7 +222,7 @@ The `owner` is the Core document Source's registration key; `path` distinguishes
     },
     {
       title: 'Source',
-      description: 'Capture, identity collection, comparison and cleanup across a state lifecycle',
+      description: 'Define state representations, read rules and Source registration',
       url: '/kernel/packages/runtime/source',
     },
     {

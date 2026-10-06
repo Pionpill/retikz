@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { RuntimeDiagnosticCode } from '../../src';
 import {
   defineRuntimeComputation,
   RuntimeComputationExecution,
@@ -20,8 +19,6 @@ const defineCounterSource = (key = 'counter') =>
       read: value => value,
       equals: (left, right) => left === right,
     },
-    validateChangeSet: (previous, next, changeSet) =>
-      previous + changeSet.changes.reduce((sum, change) => sum + change.delta, 0) === next ? 'valid' : 'fallback',
   });
 
 describe('runtime Computation execution', () => {
@@ -275,7 +272,7 @@ describe('runtime Computation execution', () => {
     expect(runtime.result(computation)).toEqual({ revision: 1, value: 2 });
   });
 
-  it('owner 未提供领域 validator 时把 branded change hint 透传给 Computation', () => {
+  it('把 branded change hint 透传给 Computation，由计算判断领域含义', () => {
     const owner = defineRuntimeSource<number, number, number, { delta: number }>({
       key: 'computation-validated',
       value: {
@@ -305,7 +302,7 @@ describe('runtime Computation execution', () => {
       initialSnapshots: [createRuntimeSourceInput(owner, 1)],
     });
     const baseRevision = runtime.revision();
-    const changeSet = createRuntimeChangeSet(baseRevision, [{ delta: 1 }]);
+    const changeSet = createRuntimeChangeSet(baseRevision, [{ delta: 100 }]);
 
     const result = runtime.update({
       baseRevision,
@@ -314,47 +311,6 @@ describe('runtime Computation execution', () => {
 
     expect(result).toEqual({ revision: 1, outcome: RuntimeComputationKind.Incremental, diagnostics: [] });
     expect(hints).toEqual([changeSet]);
-  });
-
-  it('invalid change hint 跳过 update、执行 full，并提交 fallback diagnostic', () => {
-    const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry([owner]);
-    const run = vi.fn(view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }));
-    const update = vi.fn(() => ({ kind: RuntimeComputationKind.Incremental, result: 999 }));
-    const computation = defineRuntimeComputation<number, number, number, number>({
-      id: { owner: 'counter', key: 'computation' },
-      sources: [owner],
-      computations: [],
-      tracePhases: [],
-      result: { capture: value => value, readForComputation: value => value, read: value => value },
-      run,
-      update,
-    });
-    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
-    const runtime = createRuntime({
-      sources,
-      computations,
-      updateStrategy: 'full',
-      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
-    });
-    const baseRevision = runtime.revision();
-
-    const result = runtime.update({
-      baseRevision,
-      sources: [createRuntimeSourceUpdate(owner, 2, createRuntimeChangeSet(baseRevision, [{ delta: 100 }]))],
-    });
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: RuntimeDiagnosticCode.ChangeSetFallback,
-        severity: 'warning',
-        owner: 'counter',
-      }),
-    ]);
-    expect(run).toHaveBeenCalledTimes(2);
-    expect(update).not.toHaveBeenCalled();
-    expect(runtime.result(computation)).toEqual({ revision: 1, value: 2 });
   });
 
   it('upstream full 强制 downstream full，不调用 downstream update', () => {

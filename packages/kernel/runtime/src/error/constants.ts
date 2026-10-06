@@ -10,8 +10,6 @@ export const RuntimeSourcePhase = {
   Read: 'read',
   /** Source value 比较阶段 */
   Compare: 'compare',
-  /** change set 校验阶段 */
-  ValidateChangeSet: 'validate-change-set',
   /** Source value retire 阶段 */
   Retire: 'retire',
 } as const;
@@ -34,8 +32,6 @@ export const RetikzRuntimeErrorCode = {
   ReadFailed: 'RUNTIME_SOURCE_READ_FAILED',
   /** Source compare 失败 */
   CompareFailed: 'RUNTIME_SOURCE_COMPARE_FAILED',
-  /** Source change set 校验失败 */
-  ChangeSetValidationFailed: 'RUNTIME_SOURCE_CHANGESET_VALIDATION_FAILED',
   /** Runtime 内部不变量被破坏 */
   InternalInvariant: 'RUNTIME_INTERNAL_INVARIANT',
   /** Computation identity 无效 */

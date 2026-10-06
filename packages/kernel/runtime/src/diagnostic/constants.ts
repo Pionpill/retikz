@@ -2,8 +2,6 @@ import type { ValueOf } from '@retikz/foundation';
 
 /** Runtime 内置结构化诊断码 */
 export const RuntimeDiagnosticCode = {
-  /** change set 触发 full fallback */
-  ChangeSetFallback: 'RUNTIME_CHANGESET_FALLBACK',
   /** Source value 释放失败 */
   SourceDisposeFailed: 'RUNTIME_SOURCE_DISPOSE_FAILED',
   /** result 释放失败 */
@@ -86,8 +84,6 @@ export const RuntimeDiagnosticPhase = {
   Trace: 'trace',
   /** update 执行阶段 */
   Update: 'update',
-  /** change set 校验阶段 */
-  ValidateChangeSet: 'validate-change-set',
 } as const;
 
 /** Runtime 内置结构化诊断码取值 */

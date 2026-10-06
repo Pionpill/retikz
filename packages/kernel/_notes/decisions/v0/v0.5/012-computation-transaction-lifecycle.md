@@ -277,19 +277,19 @@ const createRuntime = (options: RuntimeOptions): Runtime;
 
 `RuntimeRevision`在 TypeScript中只能从 Runtime API取得 branded value，但运行时是 `0..Number.MAX_SAFE_INTEGER` integer；JavaScript可传入相同数值，Runtime只验证 safe integer与 current/base equality，不声称鉴别来源。`createRuntimeChangeSet()`对 base做同样数值校验，并以 private brand/WeakSet保证 ChangeSet envelope来自 factory，再复制/冻结 changes容器。current已经是 MAX时，只有 `sources: []`可直接 bailout；任何非空 update都在 capture前以 `RUNTIME_REVISION_EXHAUSTED`拒绝，即使其 value之后可能 semantic equal。
 
-`update()` 校验顺序固定：runtime disposed → baseRevision必须等于 current → source command/token有效且 duplicate/unknown检查 → 每个 ChangeSet base必须等于 envelope base → empty sources bailout → revision exhaustion → capture/identity/equals/validation → Computation prepare。非 MAX revision下所有 owner equals current返回 bailout，不递增 revision。Source改变但 Computation graph为空时提交 owner Snapshot，outcome为 `committed`。
+`update()` 校验顺序固定：runtime disposed → baseRevision必须等于 current → source command/token有效且 duplicate/unknown检查 → 每个 ChangeSet base必须等于 envelope base → empty sources bailout → revision exhaustion → capture/identity/equals → Computation prepare。非 MAX revision下所有 owner equals current返回 bailout，不递增 revision。Source改变但 Computation graph为空时提交 owner Snapshot，outcome为 `committed`。
 
 Graph执行算法固定为：
 
 1. capture并 compare owner。equal owner不算 changed；若 Definition带 `dispose` 而新旧 value object identity相同，视为违反 ownership contract，以 `RUNTIME_SOURCE_OWNERSHIP_ALIAS` 拒绝且不得 dispose仍在使用的 current value。
-2. changed owner直接标记声明它的 Computation；只有 `validateChangeSet()` 成功的 hint才进入 CandidateView。缺失 hint不等于不安全，Computation仍可从完整前后 Snapshot Diff；validator明确返回 fallback时丢弃不可信 hint、记录 fallback diagnostic，并使直接 Computation走 full/fallback outcome。
+2. changed owner直接标记声明它的 Computation；通过 envelope/revision 检查的 hint进入 CandidateView，Runtime不解释领域内容。消费 hint 的 Computation负责判断其完整性与可用性，必要时返回 fallback。缺失 hint时仍可从完整前后 Snapshot Diff。
 3. 初始 runtime所有 Computation走 full。普通 update中，无直接/传递 changed dependency的 Computation复用 result且不调用 callback。
-4. affected Computation只要存在 `update()`且 changed upstream Computation没有 full/fallback，就调用 update；changed owner的 hint可 valid或缺失，缺失时 view返回 `undefined`。owner validator明确 fallback或任一 upstream full/fallback时强制本 Computation full。upstream bailout不传播 invalidation。
+4. affected Computation只要存在 `update()`且 changed upstream Computation没有 full/fallback，就调用 update；changed owner的 hint可存在或缺失，缺失时 view返回 `undefined`。任一 upstream full/fallback时强制本 Computation full。upstream bailout不传播 invalidation。
 5. `update()` 返回 incremental时捕获新 result并把下游标为 incremental-eligible；返回 bailout时复用 committed result且不标记下游；返回 fallback时丢弃增量路径、调用 `run()`，并把所有下游强制为 full。任何 full run都保守地强制所有下游 full，不做另一套 result equality优化。
 6. full/incremental/fallback capture若返回与 committed disposable result相同的 object identity，以 `RUNTIME_RESULT_OWNERSHIP_ALIAS`作为 primary error拒绝；aliased current永不进入 candidate cleanup/rollback/retire。其它已 capture candidate仍按反向顺序清理。无 dispose的 persistent immutable result允许同引用。
 7. diagnostics按 owner key code-unit顺序、Computation拓扑顺序、单 callback产生顺序稳定追加；不去重。Computation context只允许提交 commit-safe warning；fatal condition必须 throw，`severity: 'error'`不能作为继续提交的旁路。
 
-Computation 聚合 outcome 优先级为 `fallback > full > incremental > committed > bailout`。Source validation fallback 与 Computation fallback diagnostics 都进入 candidate；只有 full result 成功并发布后才成为该次 result diagnostic。
+Computation 聚合 outcome 优先级为 `fallback > full > incremental > committed > bailout`。Computation fallback diagnostics 进入 candidate；只有 full result 成功并发布后才成为该次 result diagnostic。
 
 Runtime update状态机为 `idle → preparing → observing → retiring → idle`；initial create为 `preparing → observing → idle`，另有 `disposing / disposed`。alpha.2不排队重入：在非 idle阶段同步调用 `update()`、`dispose()`、`snapshot()`、`result()` 或 drain `diagnostics()`，统一以 `RUNTIME_REENTRANT` 拒绝且不得改变外层 transaction；`revision()`只返回当前已 publish revision。trace sink重入遵守 ADR-010相同规则。observer通过 event读取本次 result，不回调 runtime。
 

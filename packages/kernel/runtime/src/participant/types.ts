@@ -77,7 +77,7 @@ export type RuntimeParticipantCandidateLookup = Readonly<{
    * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
    */
   snapshot: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,

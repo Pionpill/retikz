@@ -12,7 +12,6 @@ import {
   PerformanceTracePhase,
   PerformanceTraceUnit,
   RetikzRuntimeErrorCode,
-  RuntimeDiagnosticCode,
   RuntimeComputationKind,
   RuntimeComputationPhase,
 } from '@retikz/runtime';
@@ -162,50 +161,6 @@ describe('Core Runtime Computation initial full run', () => {
 
     expect(artifact.output.result.scene).toEqual(compileToScene(next, { measureText }).scene);
     expect(artifact.patch?.operations).toEqual([expect.objectContaining({ kind: 'replaceScene' })]);
-  });
-
-  it('forced full 不掩盖 invalid change hint，Core replace 与 trace 仍报告 fallback', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const invalidationOwner = defineRuntimeSource<number, number, number, number>({
-      key: 'fixture:core-invalid-hint',
-      value: {
-        capture: value => value,
-        read: value => value,
-        equals: Object.is,
-      },
-      validateChangeSet: () => 'fallback',
-    });
-    const program = createCoreComputation({}, { invalidationSources: [invalidationOwner] });
-    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, invalidationOwner]);
-    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      updateStrategy: 'full',
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('A')),
-        createRuntimeSourceInput(invalidationOwner, 0),
-      ],
-      trace: record => records.push(record),
-    });
-    records.length = 0;
-    const baseRevision = session.revision();
-
-    const result = session.update({
-      baseRevision,
-      sources: [createRuntimeSourceUpdate(invalidationOwner, 1, createRuntimeChangeSet(baseRevision, [1]))],
-    });
-    const artifact = session.result(program).value;
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(result.diagnostics).toEqual([expect.objectContaining({ code: RuntimeDiagnosticCode.ChangeSetFallback })]);
-    expect(artifact.patch?.operations).toEqual([
-      expect.objectContaining({ kind: 'replaceScene', snapshot: artifact.snapshot }),
-    ]);
-    expect(records.filter(record => record.owner === CORE_SOURCE_KEY).map(record => record.outcome)).toEqual([
-      PerformanceTraceOutcome.Fallback,
-      PerformanceTraceOutcome.Fallback,
-    ]);
   });
 
   it('只修改 Core IR 时不会把未变化的外部失效 owner 误判为 invalidation', () => {

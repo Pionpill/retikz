@@ -1258,7 +1258,6 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
 
         const nextSourceStates = new Map(sourceStates);
         const changedSources = new Set<RuntimeSourceToken>();
-        const invalidChangeSources = new Set<RuntimeSourceToken>();
         const changeSets = new Map<RuntimeSourceToken, RuntimeSourceCommandExecutor>();
         const candidateDiagnostics: Array<RuntimeDiagnostic> = [];
         const preparedSourceCandidates = new Map<RuntimeSourceToken, RuntimeSourceState>();
@@ -1289,30 +1288,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               continue;
             }
 
-            if (command.validateChangeSet !== undefined) {
-              let validation: 'valid' | 'fallback';
-
-              try {
-                validation = command.validateChangeSet(sourceExecutor, previous.prepared, candidate).value;
-              } catch (cause) {
-                preparedSourceCandidates.delete(source);
-                throw cause;
-              }
-
-              if (validation === 'valid') changeSets.set(source, command);
-              else {
-                invalidChangeSources.add(source);
-                candidateDiagnostics.push(
-                  Object.freeze({
-                    code: RuntimeDiagnosticCode.ChangeSetFallback,
-                    phase: 'validate-change-set',
-                    severity: 'warning',
-                    message: `Runtime change hint for source "${source.key}" could not be validated`,
-                    owner: source.key,
-                  }),
-                );
-              }
-            }
+            if (command.changeSetBaseRevision !== undefined) changeSets.set(source, command);
 
             nextSourceStates.set(source, candidateState);
             changedSources.add(source);
@@ -1358,7 +1334,6 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           for (const definition of options.computations.definitions()) {
             const executor = getRuntimeComputationRegistryExecutor(options.computations, definition);
             const directSourceChange = executor.sources.some(source => changedSources.has(source));
-            const directInvalidHint = executor.sources.some(source => invalidChangeSources.has(source));
             const upstreamOutcomes = executor.computations
               .map(computation => computationOutcomes.get(computation))
               .filter((outcome): outcome is RuntimeComputationOutcome => outcome !== undefined);
@@ -1387,7 +1362,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
               definition,
               executor,
               options.trace,
-              directInvalidHint || upstreamFallback
+              upstreamFallback
                 ? RuntimeComputationExecution.Fallback
                 : updateStrategy === RuntimeUpdateStrategy.Full || upstreamFull || executor.update === undefined
                   ? RuntimeComputationExecution.Full

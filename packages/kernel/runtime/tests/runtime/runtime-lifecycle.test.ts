@@ -15,8 +15,6 @@ const defineCounterSource = () =>
       read: value => value,
       equals: (left, right) => left === right,
     },
-    validateChangeSet: (previous, next, changeSet) =>
-      previous + changeSet.changes.reduce((sum, change) => sum + change.delta, 0) === next ? 'valid' : 'fallback',
   });
 
 describe('runtime runtime lifecycle', () => {

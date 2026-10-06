@@ -44,6 +44,8 @@ The configuration members cooperate as follows. Result conversion is expanded in
 | `observeCommit` | No          | Receives notification after a new result is published successfully             |
 | `tracePhases`   | No          | Declares allowed Trace phases; defaults to `[]`                                |
 
+These properties are explained in detail later in the documentation.
+
 </DocTab>
 <DocTab value="definition" label="Type definition">
 
@@ -113,13 +115,30 @@ const distance = defineRuntimeComputation<number>({
 
 ## Dependencies and registration
 
-**Dependencies** restrict what a computation may read and determine which changes trigger it. They must be declared explicitly; Runtime does not analyze callback code to discover them.
-
 In a computation definition, `sources` declares Source dependencies and `computations` declares upstream computation dependencies. Think of these as subscriptions to upstream changes: after a call to `runtime.update`, Runtime determines which Sources actually changed and updates affected computations in dependency order. Mutating an external object does not trigger this process automatically.
 
 For example, “coordinate Source → distance computation → display text computation”: changed coordinates trigger the distance computation, and its new result triggers the display text computation. If the distance computation explicitly returns `bailout` to reuse its old result, propagation stops along that dependency. A downstream computation still executes if another dependency changed. See [Incremental updates](#incremental-updates) for the result forms.
 
 The registration configuration below also has `sources` and `computations`, but these supply a Source registry and a list of computations. **Each computation definition declares its dependencies**; registration positions or list order do not establish them.
+
+### Dependency effects
+
+`sources` and `computations` are two kinds of data inputs: Source state and public results already produced by other computations. Each declaration both permits reading that upstream and includes its changes in the execution condition of the current computation.
+
+| Declaration in this computation | Allowed read                    | Change that affects this computation                                                    |
+| ------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------- |
+| `sources: [position]`           | `view.snapshot(position).value` | The complete position state is determined to have changed                               |
+| `computations: [distance]`      | `view.result(distance).value`   | Distance produces a new result; reusing its old result does not trigger this dependency |
+
+Each arrow below corresponds to a declaration in its **downstream definition**. Distance consumes `[3, 4]` from the Source, while label consumes the result `5` without reading coordinates or recomputing distance.
+
+<ComponentPreview files="computation-dependencies" size="sm" hideCode type="illustration" />
+
+Declaring `computations: [distance]` does not indirectly authorize reading `position`. Adding `sources: [position]` to label creates a direct trigger: coordinate changes can execute label even if distance bailed out. Declare the data the current computation actually depends on; missing declarations cause read errors, while unnecessary declarations may cause unnecessary execution.
+
+Reads do not dynamically subscribe to dependencies. A declared dependency still affects scheduling even when a callback does not read it on this execution. Multiple changed dependencies select the current computation once per update, not once per dependency.
+
+### Reading dependencies
 
 The callback's `view` is a **candidate view** for this execution: it contains prepared Source state and already-computed upstream results awaiting publication. It differs from the committed state callers read through Runtime.
 
@@ -142,6 +161,10 @@ const label = defineRuntimeComputation<string>({
 ```
 
 Reading an undeclared Source or computation throws even when it is registered. `id.owner` expresses ownership and does not replace a dependency declaration.
+
+### Registering computations
+
+Registration determines which definitions are available and their execution order. Dependency declarations determine what each computation needs. Keeping these separate allows missing dependencies to be rejected and registration lists to be supplied in any order.
 
 A **computation registry** organizes definitions into an executable dependency graph: it checks that dependencies exist and orders upstream computations before their consumers. `createRuntimeComputationRegistry(input)` creates this fixed registry without calling `run`.
 
@@ -197,15 +220,21 @@ Registration rejects invalid tokens, duplicate computation IDs, missing Sources 
 
 ## Computation results
 
-An **result** is data Runtime retains after a computation for later use. The distance `5` produced earlier is an result. It is more than a temporary callback return value and serves three purposes:
+A **result** is data Runtime retains after a computation for later use. The distance `5` produced earlier is a result. It is more than a temporary callback return value and serves three purposes:
 
 - **Host reads**: a UI obtains the published distance through `runtime.result(distance).value` without executing the computation again just to read it.
 - **Downstream computations**: the display text computation reads the upstream distance through `view.result(distance).value` and derives text from it.
 - **Reuse on the next update**: this computation's `update` receives the old result's private view as `previous`. It can use retained results, indexes or caches to update data; whether this reduces work depends on the algorithm.
 
-Distinguish result data from the configuration with the same name: `result` returned by `run/update` is the data produced by that execution, while `result` in the computation definition supplies capture, read and disposal rules. A simple number can omit that configuration, but the computation still produces and retains an result.
+Distinguish result data from the configuration with the same name: `result` returned by `run/update` is the data produced by that execution, while `result` in the computation definition supplies capture, read and disposal rules. A simple number can omit that configuration, but the computation still produces and retains a result.
 
 A numeric distance can be stored and read directly. More complex computations may retain indexes, caches or resource handles while exposing only a result. Results therefore distinguish execution output, the internally owned value, a previous-result view for this computation, and a public view.
+
+The figure starts from one callback return and separates two kinds of readers. The private view serves future updates of this computation; the public view serves downstream computations and external consumers. “Next local update” means the next actual incremental callback, not the next external read.
+
+<ComponentPreview files="computation-result" size="md" hideCode type="flow" />
+
+This does not require four copies: the types distinguish responsibilities, while conversion functions decide whether to copy. An internal `{ point, distance }` object can remain available privately while the public view exposes only `distance`, avoiding coupling every reader to the cache structure.
 
 The `result` configuration manages these conversions. `readForComputation` supplies only this computation's next `update` as `previous`; `read` supplies downstream computations, host reads and commit notifications.
 
@@ -256,6 +285,8 @@ const cachedDistance = defineRuntimeComputation<DistanceCache, DistanceCache, Di
 });
 ```
 
+Downstream reads through `view.result(cachedDistance).value` receive only the numeric distance, not `point`. If this computation defines `update`, its `previous` argument is the private object containing both `point` and `distance`, available to decide how to update. Internal cache structures can change without changing consumers as long as the public read still returns a number.
+
 The public read converts an object to a number, so `read` is required. The other conversions preserve types and may be omitted. When all conversions may be omitted and no cleanup is needed, the entire `result` configuration is optional, as in the earlier `distance`. Identity defaults neither copy nor freeze objects. Authors must still preserve read isolation, particularly by never mutating `previous` during an update.
 
 After capture, Runtime creates the private view, then the public view, and caches both. Reading a snapshot does not run those conversions again. A failed read conversion cleans up the newly captured result; an old result is released only after successful replacement. Provide `dispose` for resource cleanup, and use the `bailout` result described next to retain the current result.
@@ -271,7 +302,7 @@ After capture, Runtime creates the private view, then the public view, and cache
 
 ## Incremental updates
 
-During initialization, every computation executes `run` in dependency order. Later, a computation executes only when a direct Source actually changes or an upstream computation produces a new result. The default automatic strategy tries `update`; without it, Runtime executes `run`.
+**The first execution always calls `run`**. Later executions triggered by dependency changes prefer `update` by default, or call `run` if `update` is omitted. A full strategy, an upstream full or fallback execution, or `update` returning `fallback` also leads to `run`. Computations unaffected by dependency changes are skipped.
 
 `update(previous, view, context)` receives the old result's private view and the candidate data. The author chooses how to obtain the correct result. It has three result forms; `run` always returns `full` with a complete new result.
 
@@ -280,6 +311,14 @@ During initialization, every computation executes `run` in dependency order. Lat
 | `{ kind: 'incremental', result }` | Captures and prepares a new result, triggering consumers                                    |
 | `{ kind: 'bailout' }`             | Retains the old result without conversions or triggering consumers through this computation |
 | `{ kind: 'fallback' }`            | Abandons the incremental path and calls `run` on the same candidate data                    |
+
+`incremental` carries a **complete new result** produced by an incremental algorithm, not a patch that Runtime merges with the previous result. `bailout` confirms that the old result remains usable. `fallback` says the incremental method is unsuitable and requests `run` with the same candidate inputs; it does not abandon the update.
+
+This figure covers a computation already executing `update`. A computation skipped because no dependency changed enters none of these branches.
+
+<ComponentPreview files="computation-outcomes" size="lg" hideCode type="flow" />
+
+The fallback `run` must return `{ kind: 'full', result }`; that new result is then captured and propagated too. Throwing is an execution failure, not another form of fallback. Runtime rollback is covered separately.
 
 Adding `update` lets the distance computation retain its result when coordinates change without changing the distance. Replace the earlier `distance` definition with this version; do not register both same-ID definitions:
 
@@ -311,7 +350,7 @@ Each circle below represents a computation; arrows point from an upstream comput
 
 Orange nodes execute `update` and return `bailout`; gray nodes do not execute at all and reuse their old results. In the last row, A bailing out does not prevent the new result from D from triggering B, whose new result then triggers C. Arrows always represent dependencies, even when they trigger no execution in this update.
 
-`view.changeSet(source)` can support local updates, but hints may be absent and callers must still check domain meaning and completeness. Return `fallback` when incremental handling is unsafe. Throwing fails the update instead of automatically retrying a full execution. Runtime also takes the fallback path when Source validation requests it.
+`view.changeSet(source)` reads an optional change hint and returns `undefined` when none is supplied. Submitting hints with complete input, validating them and selecting Runtime execution paths will be covered together in the Runtime chapter.
 
 The callback's `context.execution` identifies the execution mode; `context.trace` and `context.diagnose` record observations. `observeCommit` runs after a new result is published successfully and does not run when the old result is reused. It is an isolated observer, not a computation or resource-commit mechanism.
 
@@ -330,34 +369,11 @@ The callback's `context.execution` identifies the execution mode; `context.trace
 
 ## Complete flow
 
-The diagram connects definition, registration, execution and reads. Definition and registration establish rules; creating Runtime performs initial computation, while later updates select execution paths from dependency changes.
+Define dependencies and execution rules, then let the registry validate and order them. A running instance calls `run/update` when it needs those computations. Result conversions decide what remains available for later updates and what readers can access publicly.
 
 <ComponentPreview files="computation-flow" size="md" hideCode type="flow" />
 
-Use the earlier `sources`, `computations` and tokens to create an instance. This reuses the initialization and update APIs from the [starter example](/kernel/packages/runtime/usage), focusing on result values:
-
-```ts
-import { createRuntime, createRuntimeSourceInput, createRuntimeSourceUpdate } from '@retikz/runtime';
-
-const runtime = createRuntime({
-  sources,
-  computations,
-  initialSnapshots: [createRuntimeSourceInput(position, [3, 4])],
-});
-try {
-  console.log(runtime.result(distance).value); // 5
-  runtime.update({
-    baseRevision: runtime.revision(),
-    sources: [createRuntimeSourceUpdate(position, [6, 8])],
-  });
-  console.log(runtime.result(distance).value); // 10
-  console.log(runtime.result(label).value); // 'Distance: 10'
-} finally {
-  runtime.dispose();
-}
-```
-
-Computation callbacks use `view.result` for candidate upstream results; external callers use `runtime.result` for committed results. Both use the same token at different read stages. Disposing Runtime releases the results it still owns.
+Inside a computation, `view.result(distance).value` reads the upstream result available for this execution. Outside, `runtime.result(distance).value` reads the published result. Reading does not execute the computation again. Initialization, updates, revisions and publication will be connected in the Runtime chapter; see the [introductory example](/kernel/packages/runtime/usage) for runnable integration code.
 
 ## Core application
 

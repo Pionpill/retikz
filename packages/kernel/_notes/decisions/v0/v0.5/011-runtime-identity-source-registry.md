@@ -1,4 +1,4 @@
----
+﻿---
 description: Runtime Identity 与 Source Registry；背景：Core、Render、Data、Plot、Table 与 adapter 都需要跨更新稳定地描述领域 owner、完整 Snapshot 和实体 identity
 keywords: 'Runtime、Identity、Source、Registry、TRead、unknown、VanillaRuntimeMeta、RuntimeRevision'
 ---
@@ -44,11 +44,10 @@ type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
   dispose?: (value: TValue) => void;
 }>;
 
-type RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange> = Readonly<{
+type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
   key: string;
   value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
   collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
-  validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' | 'fallback';
 }>;
 
 declare const RuntimeSourceTokenBrand: unique symbol;
@@ -64,7 +63,7 @@ type RuntimeSourceDefinition<TInput, TValue, TRead, TChange> = RuntimeSourceToke
 }>;
 
 const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
-  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange>,
+  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
 ): RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
 
 type RuntimeSourceRegistry = Readonly<{
@@ -82,7 +81,7 @@ const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): Runtime
 
 `RuntimeSourceDefinition` 是公开的 typed token，不公开 author callbacks；只有 `defineRuntimeSource()` 能创建 token。`RuntimeSourceTokenBrand`不导出 value，外部 object literal不能构造合法 token；Runtime另外以 private `WeakSet`做 object-identity guard，JavaScript伪造或其它 Runtime实例的 foreign token以 `RUNTIME_SOURCE_TOKEN_INVALID` fail-loud。helper在闭包中把 author-facing泛型 callbacks封装成 registry-private erased executor，registry直接接受具体 Definition并保存 token/executor一一对应。TypeScript无法原生表达 existential collection，因此实现只允许在 `defineRuntimeSource()` 内做一次由 token object identity守卫的 `unknown` narrowing；禁止 `any`，也禁止 registry/runtime重新 cast callback。`resolve(definition)`只接受原 token并恢复泛型；动态 string lookup只能返回无 callback的 `RuntimeSourceToken`，不能据此提交 value。
 
-异构输入不直接写成 `Array<RuntimeSourceDefinition<unknown, ...>>`。ADR-012 的 typed input/update builder 在具体 Definition 泛型仍在作用域内时生成闭包 command；runtime 和 registry 只消费该 erased command。这样 `unknown` 不会作为参数进入 `capture/read/equals/validateChangeSet`，错误 value/change 类型在 builder 调用点由 TypeScript 拒绝。
+异构输入不直接写成 `Array<RuntimeSourceDefinition<unknown, ...>>`。ADR-012 的 typed input/update builder 在具体 Definition 泛型仍在作用域内时生成闭包 command；runtime 和 registry 只消费该 erased command。这样 `unknown` 不会作为参数进入 `capture/read/equals`，错误 value/change 类型在 builder 调用点由 TypeScript 拒绝。
 
 `capture()` 必须产生 runtime-owned value，不与调用方共享可变引用；`read()` 必须产生不携带 disposable handle、可安全共享和缓存的 deeply immutable / persistent `TRead`；`equals()` 只比较语义完整 Snapshot。Persistent immutable structure 可以安全复用引用；nested object / Array / Map / Set 必须由 Definition 复制并深冻结，或转成 persistent immutable representation。class instance 只有在 read view 不暴露 mutable method、外部引用或 disposable handle 时允许；`TRead` 禁止携带需要 Runtime 释放的 handle。`dispose()` 只释放传入 value，重复调用不是合法路径。
 
@@ -120,7 +119,7 @@ Registry 自身不执行 lifecycle。Runtime 包内唯一的 source executor 负
 Source executor的跨 ADR envelope固定为：
 
 ```ts
-type RuntimeSourcePhase = 'capture' | 'collect-identities' | 'read' | 'compare' | 'validate-change-set' | 'retire';
+type RuntimeSourcePhase = 'capture' | 'collect-identities' | 'read' | 'compare' | 'retire';
 type RuntimeSourceLifecycleDiagnostic = Readonly<{
   code: 'RUNTIME_SOURCE_DISPOSE_FAILED';
   owner: string;
@@ -136,7 +135,7 @@ type RuntimeSourceExecutionResult<T> = Readonly<{
 }>;
 ```
 
-Private executor的 `prepare/compare/validateChangeSet`成功返回 `RuntimeSourceExecutionResult`；validator throw以 `RUNTIME_SOURCE_CHANGESET_VALIDATION_FAILED`、phase `validate-change-set`、owner/cause包装，立即反向清理该次 candidate source，dispose secondary附 error，runtime current保持不变。primary失败抛 `RetikzRuntimeError`，cleanup产生的 secondary diagnostics按发生顺序附在 error上，供 ADR-012聚合。`retire`不产生 primary throw，返回全部 lifecycle diagnostics以便继续清理其它 value。collector结果除逐项调用 identity validator外，还必须验证 `identity.owner === definition.key`，并用 segment exact equality检查整个集合在 owner内唯一；稀疏/非数组/duplicate/mismatch都属于 collect-identities phase。
+Private executor的 `prepare/compare`成功返回 `RuntimeSourceExecutionResult`。Source 不提供领域变更提示校验回调，提示完整性由消费它的 Computation 负责。primary失败抛 `RetikzRuntimeError`，cleanup产生的 secondary diagnostics按发生顺序附在 error上，供 ADR-012聚合。`retire`不产生 primary throw，返回全部 lifecycle diagnostics以便继续清理其它 value。collector结果除逐项调用 identity validator外，还必须验证 `identity.owner === definition.key`，并用 segment exact equality检查整个集合在 owner内唯一；稀疏/非数组/duplicate/mismatch都属于 collect-identities phase。
 
 稳定错误分类：
 

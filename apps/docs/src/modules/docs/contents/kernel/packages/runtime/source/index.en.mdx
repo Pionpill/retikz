@@ -1,11 +1,9 @@
 ---
 title: Source
-description: Follow form coordinates through representation changes, input isolation, capture, read views, equality and disposal, then trace the Source lifecycle in code
+description: Define state Sources and understand input, owned values, read views, tokens and registration
 ---
 
-The [starter example](/kernel/packages/runtime/usage) stores a number, so returning the original value is enough. Now consider a coordinate form: its fields provide strings, `{ x: '10', y: '20' }`, while readers need numeric coordinates. After submitting the object, the caller changes its `x` to `'99'`. Should the state already published by Runtime change too?
-
-It should not. Otherwise, readers would see new contents without an `update`, while dependent computation results would still reflect the old contents. This page follows that position to explain how external input becomes state that Runtime can safely retain, and when that state is kept, replaced or released.
+The [starter example](/kernel/packages/runtime/usage) stores a number, so its input, internal value and read result can share the same representation. A coordinate form instead provides strings, `{ x: '10', y: '20' }`, while internal storage needs numeric coordinates and readers can use a read-only coordinate tuple, `[10, 20]`. This page follows that position to explain how a Source defines data conversion and reading, and what each definition field does.
 
 A **Source** is a definition that tells Runtime how to receive and manage a particular kind of complete state. Our Source owns the position itself; derived results such as its distance from the origin belong to a Computation, introduced in the starter example. The Source definition is not an individual submitted object, and it does not automatically watch the form for changes.
 
@@ -23,7 +21,7 @@ All three representations describe the same position. Internal storage and the r
 | Internal value | `[10, 20]`, ordinary tuple        | Convert to numbers and store them independently; index 0 is x and 1 is y                    |
 | Read view      | `[10, 20]`, frozen ordinary array | Readers receive an independent read-only `[x, y]` tuple, without sharing the internal array |
 
-`capture` converts strings to numbers and allocates independent storage. `read` copies the two numbers into a read-only tuple. The position has the same meaning throughout; its representation and access rules change. When no separate representation or isolation is needed, all three types can be the same.
+The position has the same meaning throughout; its representation and access rules change. When no separate representation or isolation is needed, all three representations can use the same type.
 
 <SourceLinks
   sources={[
@@ -36,15 +34,13 @@ All three representations describe the same position. Internal storage and the r
   ]}
 />
 
-## Capture and reading
-
-### Defining a Source
+## Defining a Source
 
 `defineRuntimeSource(input)` defines a kind of state source. It accepts one configuration object and returns a Source token preserving the input, internal value, read value and change-hint types. Defining it does not capture data.
 
 ```ts
 declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
-  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange>,
+  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
 ) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
 ```
 
@@ -61,7 +57,6 @@ declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
 | `value.equals`      | Yes      | Compare two complete internal values and return whether they are equal                  |
 | `value.dispose`     | No       | Release resources held by the internal value; unnecessary here                          |
 | `collectIdentities` | No       | Accept the internal value and return all entity identities; omitted means no collection |
-| `validateChangeSet` | No       | Accept previous/next read views and a change hint; return `valid` or `fallback`         |
 
 </DocTab>
 <DocTab value="definition" label="Type definition">
@@ -74,11 +69,10 @@ type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
   dispose?: (value: TValue) => void;
 }>;
 
-type RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange> = Readonly<{
+type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
   key: string;
   value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
   collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
-  validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' | 'fallback';
 }>;
 ```
 
@@ -112,7 +106,7 @@ The first three type parameters correspond to the input, internal value and read
 | `TValue`  | `PositionValue`      | Runtime retains it; `read`, `equals` and optional `dispose` receive it |
 | `TRead`   | `PositionRead`       | Read `[x, y]` through a Snapshot, typed as `readonly [number, number]` |
 
-The fourth type parameter describes change hints; `never` means this example provides none. Resource cleanup and the two optional callbacks are explained later.
+The fourth type parameter describes change hints; `never` means this example provides none. The fields are explained below; update timing belongs to the Runtime chapter.
 
 The returned `position` is a definition token identifying this Source; it does not expose the callbacks directly. Runtime stores the associated rules internally, and registration, submission and reading reuse this token. No input data exists yet, so defining the Source neither invokes `capture` nor creates state.
 
@@ -135,7 +129,28 @@ The returned `position` is a definition token identifying this Source; it does n
   ]}
 />
 
-### Source registration
+## Responsibilities in the definition
+
+`key` gives this category of state a stable name. The token lets later APIs recover this exact definition and its types. Multiple Runtime instances can share the definition while owning different coordinate values.
+
+`value` groups the rules for managing those coordinates. Its callbacks address different responsibilities of the same data:
+
+| Field     | Why it exists                                                       | Decision in this example                                                           |
+| --------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `capture` | External representation or mutability may be unsuitable for storage | Convert strings to numbers in a new array, isolating later input mutations         |
+| `read`    | Readers may not need all internal data or mutable references        | Return a separate frozen tuple so readers cannot mutate the internal array         |
+| `equals`  | Runtime cannot determine domain equality on its own                 | Compare both coordinates; captured `'10'` and `'10.0'` represent the same position |
+| `dispose` | Some internal values own resources that need explicit release       | Omit for plain coordinates; close an exclusively owned bitmap here if needed       |
+
+In the coordinate conversion shown earlier, `capture` converts input strings to numbers in a separate array; `read` then copies those numbers into a frozen read-only tuple. These are not redundant copies: one isolates input writers, while the other restricts output readers. If a value is already immutable and uses the same representation, `read: value => value` can also be appropriate. Source does not automatically copy, freeze or validate domain fields for these callbacks.
+
+The read-only representation from `read` is shared by several consumers: the host reads it through `runtime.snapshot(source)`, and computations declaring the Source use `view.snapshot(source)`. Preserve data needed by these consumers, not only fields displayed by the UI.
+
+`equals` must cover the complete meaning relevant to consumers, rather than comparing references or convenient fields alone. `dispose` receives the internal value, not the input or public view; old and new values must not share resources requiring exclusive disposal. When comparison, state adoption and cleanup occur belongs to Runtime update orchestration and will be connected in the Runtime chapter.
+
+The optional `collectIdentities` field lists entities in the internal value, as explained in [Identity](/kernel/packages/runtime/identity#collection-and-lookup).
+
+## Source registration
 
 Defining a Source describes how a kind of state is captured, read and disposed. A Runtime also needs to know which Sources it will use. **Source registration** collects the selected definitions into a **Source registry**, the set of state Sources that Runtime can manage.
 
@@ -147,35 +162,34 @@ For example, `position` defines how coordinate data is handled. Adding it to the
 declare const createRuntimeSourceRegistry: (tokens: Array<RuntimeSourceToken>) => RuntimeSourceRegistry;
 ```
 
-Returns the newly created Source registry.
-
-| Item     | Description                                                  |
-| -------- | ------------------------------------------------------------ |
-| `tokens` | Required Source token array; pass `[]` for an empty registry |
+`tokens` is a required array of Source tokens, and the function returns the newly created Source registry; pass `[]` to create an empty registry.
 
 The registry handles every Source in the array uniformly, without distinguishing built-in and custom Sources. Callers organize and merge those groups when needed. Any duplicate `key` is rejected, including the same token supplied twice. No Sources are loaded automatically.
 
-```ts
-// Method signature on the returned object
-find: (key: string) => RuntimeSourceToken | undefined;
-```
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
 
-Look up a string key; return `undefined` if absent. The generic token does not retain a particular Source's input and read types
+| Member                | Purpose                                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `find(key)`           | Find by name; return `undefined` when absent. The generic token does not retain specific Source types            |
+| `resolve(definition)` | Verify membership and return the same token with its generic types; a different object with the same name throws |
+| `definitions()`       | List definitions in stable string order by `key`; the read-only list cannot modify the registry                  |
 
-```ts
-// Method signature on the returned object
-resolve: <TInput, TValue, TRead, TChange>(definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) =>
-  RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
-```
-
-Confirm that this exact definition is registered and return it unchanged, preserving generic types. A different object with the same name throws
+</DocTab>
+<DocTab value="definition" label="Type definition">
 
 ```ts
-// Method signature on the returned object
-definitions: () => ReadonlyArray<RuntimeSourceToken>;
+type RuntimeSourceRegistry = Readonly<{
+  find: (key: string) => RuntimeSourceToken | undefined;
+  resolve: <TInput, TValue, TRead, TChange>(
+    definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  ) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+  definitions: () => ReadonlyArray<RuntimeSourceToken>;
+}>;
 ```
 
-List definitions in stable string order by `key`; the returned list cannot modify the registry
+</DocTab>
+</DocTabs>
 
 Register the `position` defined above:
 
@@ -203,257 +217,13 @@ Resolving a newly created same-name Source fails because its token differs. Regi
   ]}
 />
 
-### Connecting to Runtime
-
-The Source registry now identifies the available definitions. Next, supply the initial coordinates and create a Runtime instance. This example has no derived computations; it creates an empty Computation registry bound to `sources` as required for initialization. Computation definitions and registration will be covered in “Derived Computation and Incremental Updates”.
-
-The APIs below pair the initial data with its Source and create the instance. Transactions and version publication are covered separately.
-
-```ts
-declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
-  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
-  value: TInput,
-) => RuntimeSourceInput;
-```
-
-Return an initial input command pairing a Source with data; no capture occurs yet.
-
-| Item     | Description                            |
-| -------- | -------------------------------------- |
-| `source` | the Source definition, `position` here |
-| `value`  | complete input data, `input` here      |
-
-```ts
-declare const createRuntime: (options: RuntimeOptions) => Runtime;
-```
-
-Capture initial input and return a Runtime instance for updates, reads and disposal.
-
-<DocTabs defaultValue="members">
-<DocTab value="members" label="Properties">
-
-| Item               | Description                                                        |
-| ------------------ | ------------------------------------------------------------------ |
-| `sources`          | the Source registry                                                |
-| `computations`     | the computation registry                                           |
-| `initialSnapshots` | paired initial inputs                                              |
-| `updateStrategy`   | Optional update strategy; defaults to `RuntimeUpdateStrategy.Auto` |
-| `trace`            | Optional execution trace sink                                      |
-| `participants`     | Optional commit participant tokens                                 |
-
-</DocTab>
-<DocTab value="definition" label="Type definition">
-
-```ts
-type RuntimeOptions = Readonly<{
-  sources: RuntimeSourceRegistry;
-  computations: RuntimeComputationRegistry;
-  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
-  updateStrategy?: RuntimeUpdateStrategy;
-  trace?: PerformanceTraceSink;
-  participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
-}>;
-```
-
-</DocTab>
-</DocTabs>
-
-```ts
-// Method signature on the returned object
-snapshot: <TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) =>
-  RuntimeSnapshot<TRead>;
-```
-
-`source` is a required registered Source token; return a snapshot with revision `revision` and read value `value`
-
-```ts
-// Method signature on the returned object
-dispose: () => void;
-```
-
-No arguments; release Runtime-owned resources and return nothing
-
-The same `sources` registry is used to create the computation registry and passed to Runtime. `createRuntimeSourceInput` only pairs a definition with data; `capture` and `read` run during Runtime initialization. Append the following code to the definition above, leaving out derived computations to observe input isolation:
-
-```ts
-import { createRuntime, createRuntimeComputationRegistry, createRuntimeSourceInput } from '@retikz/runtime';
-
-const input = { x: '10', y: '20' };
-const computations = createRuntimeComputationRegistry({ sources });
-const runtime = createRuntime({
-  sources,
-  computations,
-  initialSnapshots: [createRuntimeSourceInput(position, input)],
-});
-
-try {
-  input.x = '99';
-  console.log(input); // { x: '99', y: '20' }
-  console.log(runtime.snapshot(position).value); // [10, 20]
-  const [x, y] = runtime.snapshot(position).value;
-  console.log(x, y); // 10 20
-} finally {
-  runtime.dispose();
-}
-```
-
-The output shows that changing the original input's `x` leaves Runtime's coordinates at `[10, 20]`. This is because `capture` stored the coordinates independently, and `read` provided a read-only copy. The result contains x followed by y and can be destructured as `[x, y]`.
-
-### Preparing state
-
-Creating Runtime in the example first invokes an internal `prepare` operation to turn input into managed state. Updates use the same process:
-
-1. Call `capture` to obtain the internal value retained by Runtime.
-2. If a disposal callback exists, check whether the new value directly reuses the current internal value, preventing cleanup from releasing resources still in use.
-3. If `collectIdentities` exists, collect entity identifiers and validate their Source ownership and uniqueness. Their purpose is explained under “Identities and change hints”.
-4. Call `read` to produce the read-only view exposed to readers.
-
-Once all steps succeed, the executor stores the internal value, read view and optional identity lookup in a **prepared record**. Subsequent Snapshot reads use its existing view instead of invoking `read` again.
-
-A prepared record is the internal representation used to manage state, not necessarily unpublished state. A newly prepared record can be a candidate and remain in use as current state after adoption. The enclosing Runtime decides whether to adopt and publish it.
-
-Preparation invokes rules and manages state; it does not automatically isolate arbitrary input data. The example's input, internal value and read view are independent because its `capture` and `read` callbacks each create separate data.
-
-<SourceLinks
-  sources={[
-    { label: 'Collect identities and call read after capture', path: 'packages/kernel/runtime/src/source/executor.ts' },
-  ]}
-/>
-
-The preceding sections describe individual callback responsibilities. In the implementation, `createRuntimeSourceExecutor` organizes them into a lifecycle manager bound to one Source registry. It invokes only registered Source rules and tracks which Source owns each prepared record and whether the record remains usable. Creating the executor does not capture input.
-
-This diagram follows the main path of an existing Source receiving new input. Initialization has no old value and therefore skips the comparison shown here. Optional change-hint validation is not expanded in the diagram.
-
-<ComponentPreview files="source-lifecycle" hideCode type="flow" />
-
-`prepare` captures the value, optionally collects identities and creates the read view; `compare` calls the definition's `equals`. Equal values lead to candidate cleanup. Different values proceed to Runtime's update flow: success adopts the new value and cleans up the old one, while failure cleans up the candidate. “Hand to Runtime” includes downstream computation and transaction publication, whose orchestration is outside this page's scope.
-
-`RuntimeSourceExecutor` provides four operations as an internal execution mechanism. Application code does not need to create or call it directly:
-
-| Operation           | Responsibility                                                                      |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| `prepare`           | Prepare complete input as an internal value, read view and optional identity lookup |
-| `compare`           | Check records, then compare their internal values using `equals`                    |
-| `validateChangeSet` | Check records, then validate change hints against their read views                  |
-| `retire`            | Mark a record unusable before attempting to release its internal value              |
-
-Cleanup responsibility depends on where execution failed. Callback exceptions become Runtime errors carrying the Source, phase and original cause. Cleanup failures become diagnostics so that they do not replace the primary error:
-
-| Failure point                                      | Cleanup responsibility                                                                                                         |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `capture` before returning                         | The callback cleans up resources it acquired; the executor has not received an internal value                                  |
-| Identity collection, identity validation or `read` | The executor attempts to release the captured value; no usable prepared record is produced                                     |
-| `equals`                                           | The executor wraps the error; the enclosing Runtime cleans up candidates                                                       |
-| Change-hint validator                              | The executor immediately cleans up the candidate and throws an error preserving the original cause                             |
-| Disposal callback                                  | The executor returns diagnostics so the caller can continue other cleanup; the record remains unusable with no automatic retry |
-
-The executor manages individual Source state lifecycles. Cross-Source updates, candidate adoption, atomic publication and transaction rollback belong to the enclosing Runtime.
-
-## State comparison
-
-In the coordinate example above, the initial input is `{ x: '10', y: '20' }`, and Runtime captures it as the initial value `[10, 20]`. Suppose we now submit `{ x: '10.0', y: '20' }`. The text for x has changed, but conversion still produces position `(10, 20)`. Comparing input text, or two newly allocated internal arrays with only `left === right`, would incorrectly treat this as a state change.
-
-`equals` compares the **meaning of two complete internal values**. This example compares x and y in the two internal tuples. Its arguments are `TValue`, not input objects or read views.
-
-Runtime captures the next input and creates its read view before comparing internal values. This prepared but unpublished state is a **candidate**. Both input arrows below carry `TValue`; the comparison determines whether to keep the candidate for the update:
-
-<ComponentPreview files="source-comparison" hideCode type="flow" />
-
-A next internal value of `[10, 20]` takes the `true` branch; `[13, 20]` takes the `false` branch, but replaces the previous state only after a successful update:
-
-| Next input               | Equality result | Treatment of this Source's state                                                  |
-| ------------------------ | --------------- | --------------------------------------------------------------------------------- |
-| `{ x: '10.0', y: '20' }` | Equal           | Keep the old state and clean up the unused candidate                              |
-| `{ x: '13', y: '20' }`   | Different       | Keep the candidate for the update; replace old state after successful publication |
-
-Equality means this Source has not changed, not that every other Source in the same submission is unchanged. The comparison must cover the full meaning that downstream computations rely on. Ignoring a relevant field can incorrectly preserve old state and results.
-
-Before invoking `equals`, the executor's `compare` checks that both prepared records belong to this executor and the specified Source and are still usable. It only returns the comparison result; the enclosing Runtime orchestrates the retention, cleanup and update branches in the diagram. If `equals` throws, the executor wraps the error and leaves candidate cleanup to Runtime.
-
-This example copies data to isolate it. Immutable data that needs no exclusive disposal can also be shared. The requirement is that external changes cannot bypass the update flow and affect published state.
-
-<SourceLinks
-  sources={[
-    { label: 'Compare internal values and wrap failures', path: 'packages/kernel/runtime/src/source/executor.ts' },
-    { label: 'Retire an equal candidate and retain old state', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-  ]}
-/>
-
-## Resource cleanup
-
-Our position uses ordinary JavaScript memory reclaimed by garbage collection, so no `dispose` callback is needed. Internal values containing bitmaps, subscriptions or other resources may need explicit cleanup. Provide `dispose(value)` to tell Runtime how to release its retained `TValue`.
-
-**Ownership** here means responsibility for a resource's lifetime and eventual release. For example, a Source that exclusively owns an `ImageBitmap` could call `value.bitmap.close()` from its disposal callback. Its read view should expose only data readers need and may safely retain, rather than handing out that closable resource handle.
-
-Cleanup happens at more points than shutting down the whole Runtime:
-
-| Situation                                                 | Value to clean up                           |
-| --------------------------------------------------------- | ------------------------------------------- |
-| Candidate equals the old value                            | Unused candidate                            |
-| Capture returned, but later preparation or updating fails | Created candidate resources being abandoned |
-| Successful update replaces old state                      | Old value that is no longer used            |
-| `runtime.dispose()` is called                             | Current values still held by Runtime        |
-
-When `dispose` is defined, old and new states need to own their disposable resources independently. Otherwise, discarding a candidate could release resources still used by the old state. Runtime rejects candidates that directly reuse the current internal value; definition authors must also avoid sharing underlying resources that require exclusive disposal.
-
-If `capture` throws before returning, Runtime has not received a value it can clean up. The callback must release resources it has already acquired. If `capture` has returned and identity collection or `read` later fails, the lifecycle executor attempts to dispose the captured value while preserving the original failure.
-
-If disposal itself fails, Runtime records a diagnostic and continues cleaning up other values while preserving the original failure.
-
-The implementation calls stopping use of a prepared state and attempting to release it `retire`. It checks ownership and usability, marks the record unusable, then invokes the disposal callback. Even if disposal fails, that record cannot be compared, used for hint validation or retired again. Each record gets one disposal attempt, without automatic retries. With no disposal callback, the record still becomes unusable.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Alias checks, failure cleanup and one-time retirement',
-      path: 'packages/kernel/runtime/src/source/executor.ts',
-    },
-  ]}
-/>
-
-## Identities and change hints
-
-The position needs no additional callbacks. But a state containing a graph of nodes may need to distinguish “the same node changed color” from “an old node was deleted and replaced”. An **identity** identifies the same entity across updates.
-
-`collectIdentities(value)` collects these identities from the complete internal value. Each identity contains its Source's `owner` and domain-defined `path` segments. For example, `{ owner: 'example/graph', path: ['nodes', 'A'] }` identifies node A in that graph. A color change preserves its identity. The callback collects all identities, not just changed nodes. Runtime collects them after `capture` and before `read`, checks Source ownership and duplicates, and builds a lookup. Omitting the callback does not automatically create that lookup.
-
-A separate question is whether callers that already know what changed can pass that information to incremental computation. A **ChangeSet** is an optional hint containing its base version, `baseRevision`, and a domain-defined `changes` list. It accompanies complete next input and cannot replace it.
-
-For example, if the read view changes from `[10, 20]` to `[13, 20]`, a hint could say “x increased by 3”. To accept such hints, replace the fourth type parameter, `never`, with a suitable change type. You can also provide `validateChangeSet(previous, next, changeSet)` to check the hint against the previous and next read views. Here it should confirm that x increased by 3 and y stayed unchanged. Note that `equals` compares internal values, while this callback checks read views.
-
-| Return value | Judgment                               | Subsequent behavior                                                                                                 |
-| ------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `valid`      | The hint may be passed to computations | Incremental computation may be attempted, but is not guaranteed to succeed                                          |
-| `fallback`   | The hint cannot be confirmed reliable  | Discard the hint, use a full fallback path for computations directly depending on this Source, and record a warning |
-
-`fallback` discards the hint while allowing the complete new input to be processed. When the callback is omitted, the executor returns `valid`: the Source layer does not block the hint, but has not proven it correct. The Computation still decides whether it can use it.
-
-Like comparison, validation first checks both records' ownership and usability. Failure handling differs: if the validator throws, the executor immediately retires and cleans up the candidate before throwing a wrapped error. It does not release the previous state. If cleanup also fails, its diagnostics are attached to the validation error, preserving the original failure.
-
-This section introduces only the two optional Source callbacks. See [Identity](/kernel/packages/runtime/identity) for identity structure, comparison and lookup. Incremental use of change hints and version constraints will be covered in the planned “Derived Computation and Incremental Updates” and “Transactions and Version Publication” pages.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Inputs and outputs of the optional callbacks',
-      path: 'packages/kernel/runtime/src/source/types.ts',
-      startLine: 49,
-      endLine: 60,
-    },
-    { label: 'Identity collection and hint validation', path: 'packages/kernel/runtime/src/source/executor.ts' },
-    { label: 'How fallback affects computation', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
-  ]}
-/>
-
 ## Complete flow
 
-Connect the APIs described above: define a Source to obtain its token, register it, pair the token with initial data, then pass the resulting inputs to `createRuntime`. The empty Computation registry satisfies this example's initialization requirements.
+A Source definition returns a token. Register the selected tokens, then find them by name, validate membership or list the definitions. This figure passes definitions, not the data from an individual state.
 
-<ComponentPreview files="source-registration" size="sm" hideCode type="flow" />
+<ComponentPreview files="source-registration" size="lg" hideCode type="flow" />
 
-The registry holds handling rules while the initial-input command carries actual data. They meet when Runtime is created, triggering capture and initial state preparation. Read committed snapshots through the same token, then dispose Runtime when finished. Submitting new input repeats preparation, comparison and publication without redefining or registering the Source again.
-
-See [Computation](/kernel/packages/runtime/computation) for computation definitions, dependencies and registration.
+`find(key)` retrieves a definition by name; `resolve(token)` validates membership while preserving types; `definitions()` lists the definitions. Registration does not call `capture` or execute computations. See the [introductory example](/kernel/packages/runtime/usage) for passing definitions and data to a running instance; full initialization and update orchestration belong to the Runtime chapter.
 
 ## Core application
 
@@ -472,32 +242,20 @@ export const CoreSourceDefinition = defineRuntimeSource({
 
 Input, internal value and read value all use the Scene IR structure: `capture` stores an independent read-only document, `read` exposes that document, and `equals` compares document contents. The two JSON helpers are internal Core utilities; consumers simply import the existing token.
 
-The enclosing application handles integration. For example, Vanilla registers this Source and pairs its token with the initial or updated complete document. Core's compilation computation reads the data through the same token. These excerpts come from different call sites; surrounding registry, Runtime and computation setup is omitted:
+After declaring this Source dependency, Core's compilation computation reads the document through the same token. This excerpt shows the read inside its callback:
 
 ```ts
-// Application initialization: an entry in createRuntime's initialSnapshots
-createRuntimeSourceInput(CoreSourceDefinition, initial.source);
-
-// Application update: submit the next complete document
-runtime.update({
-  baseRevision: runtime.revision(),
-  sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next.source)],
-});
-
-// Inside Core's compilation computation: read the document to compile
 const source = view.snapshot(CoreSourceDefinition).value;
-// Then pass source to compileCoreSnapshot to produce a Scene
+// Pass source to Core compilation to produce a Scene
 ```
+
+See the [starter example](/kernel/packages/runtime/usage) for supplying definitions and data to an instance; full initialization and update orchestration belong to the Runtime chapter.
 
 The token identifies the Source definition and stores no document data. Multiple Runtime instances can reuse it while owning independent state. This example connects the earlier steps—define rules, capture input, read state—to a real consumer. Core documentation covers compilation and incremental updates in detail.
 
 <SourceLinks
   sources={[
     { label: 'Core document Source definition', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
-    {
-      label: 'Application registration, initialization and updates',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-    },
     { label: 'Source reads in Core compilation', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
   ]}
 />

@@ -37,7 +37,7 @@ const IdentityFlow: FC<IdentityFlowProps> = props => {
           <FlowEntities
             items={[
               { id: 'equal', text: text.equal, role: 'state' },
-              { id: 'query', text: text.query, role: 'activity' },
+              { id: 'query', text: text.query, role: 'state' },
             ]}
           />
         </FlowLayout>

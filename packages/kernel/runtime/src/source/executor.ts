@@ -6,7 +6,7 @@ import { createRuntimeIdentityLookup } from '../identity';
 import type { RuntimeSourceRegistry } from '../registry';
 import { getRuntimeSourceRegistryExecutor } from '../registry';
 import type { RuntimeSourceErasedExecutor } from './define';
-import type { RuntimeChangeSet, RuntimeSourceDefinition, RuntimeSourceToken } from './types';
+import type { RuntimeSourceDefinition, RuntimeSourceToken } from './types';
 
 /**
  * executor 准备完成但尚未发布的 source value
@@ -29,7 +29,7 @@ export type RuntimeSourceExecutor = Readonly<{
    * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
    */
   prepare: <TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -41,7 +41,7 @@ export type RuntimeSourceExecutor = Readonly<{
    * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
    */
   compare: <TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -49,24 +49,11 @@ export type RuntimeSourceExecutor = Readonly<{
     right: RuntimePreparedSourceValue<TValue, TRead>,
   ) => RuntimeSourceExecutionResult<boolean>;
   /**
-   * 校验 change hint；validator throw 时立即 retire candidate
-   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
-   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
-   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
-   */
-  validateChangeSet: <TInput, TValue, TRead, TChange>(
-    definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
-    previous: RuntimePreparedSourceValue<TValue, TRead>,
-    candidate: RuntimePreparedSourceValue<TValue, TRead>,
-    changeSet: RuntimeChangeSet<TChange>,
-  ) => RuntimeSourceExecutionResult<'valid' | 'fallback'>;
-  /**
    * exactly-once 释放一个 prepared source value
    * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
    */
   retire: <TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -111,7 +98,6 @@ const createLifecycleError = (
     | typeof RetikzRuntimeErrorCode.CollectIdentitiesFailed
     | typeof RetikzRuntimeErrorCode.ReadFailed
     | typeof RetikzRuntimeErrorCode.CompareFailed
-    | typeof RetikzRuntimeErrorCode.ChangeSetValidationFailed
   >,
   source: string,
   phase: RuntimeSourcePhase,
@@ -254,36 +240,6 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
           definition.key,
           RuntimeSourcePhase.Compare,
           cause,
-        );
-      }
-    },
-
-    validateChangeSet: <TInput, TValue, TRead, TChange>(
-      definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
-      previous: RuntimePreparedSourceValue<TValue, TRead>,
-      candidate: RuntimePreparedSourceValue<TValue, TRead>,
-      changeSet: RuntimeChangeSet<TChange>,
-    ): RuntimeSourceExecutionResult<'valid' | 'fallback'> => {
-      assertPrepared(definition, previous);
-      assertPrepared(definition, candidate);
-      const executor = getRuntimeSourceRegistryExecutor(registry, definition);
-      if (executor.validateChangeSet === undefined) {
-        return Object.freeze({ value: 'valid', diagnostics: Object.freeze([]) });
-      }
-
-      try {
-        return Object.freeze({
-          value: executor.validateChangeSet(previous.read, candidate.read, changeSet),
-          diagnostics: Object.freeze([]),
-        });
-      } catch (cause) {
-        const diagnostics = retire(definition, candidate).diagnostics;
-        throw createLifecycleError(
-          RetikzRuntimeErrorCode.ChangeSetValidationFailed,
-          definition.key,
-          RuntimeSourcePhase.ValidateChangeSet,
-          cause,
-          diagnostics,
         );
       }
     },
