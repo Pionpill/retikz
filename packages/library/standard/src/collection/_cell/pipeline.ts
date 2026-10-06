@@ -106,7 +106,7 @@ export const measureCell = (
 };
 
 /** 固定槽位引用载体只提供边界，不输出可见几何 */
-const cellReferenceNode = (
+export const cellReferenceNode = (
   id: string,
   bounds: { x: number; y: number; width: number; height: number },
   aliasIds?: Array<string>,

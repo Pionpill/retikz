@@ -1,11 +1,12 @@
 import type { IRPath, IRStep, LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
 
-import { compileCells, measureCell } from '../_cell';
-import { layoutChainParallel, layoutChainSequence } from './layout';
-import type { ChainBlock } from './layout';
+import { cellReferenceNode, compileCells, measureCell } from '../_cell';
+import type { CellPlacement } from '../_cell';
+import { layoutChainItems } from './layout';
 import { resolveChain } from './resolve';
 import type { CanonicalChainItem } from './resolve';
 import type { IRChain } from './schema';
+import type { MeasuredChainItem } from './types';
 
 /** 测量内容后排布串并联结构，连接仍由 Core Path 编译 */
 export const compileChain = (source: IRChain, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
@@ -34,73 +35,49 @@ export const compileChain = (source: IRChain, context: LayoutCompositeCompileCon
   const down = resolved.direction === 'down';
   let occurrence = 0;
 
-  const build = (items: Array<CanonicalChainItem>): Array<ChainBlock> => {
-    const blocks: Array<ChainBlock> = [];
+  // 测量保持深度优先 occurrence 顺序，不在此阶段放置或生成路径
+  const measureItems = (items: Array<CanonicalChainItem>): Array<MeasuredChainItem> =>
+    items.map(item =>
+      item.kind === 'cell'
+        ? { kind: 'cell', measured: measureCell(item.cell, context, occurrence++, scope) }
+        : { ...item, branches: item.branches.map(measureItems) },
+    );
+  const measured = measureItems(resolved.items);
+  const block = layoutChainItems(measured, resolved.layout, resolved.connection, down);
 
-    for (const item of items) {
-      if (item.kind === 'cell') {
-        const measured = measureCell(item.cell, context, occurrence++, scope);
-        const cell = {
-          measured,
-          x: 0,
-          y: 0,
-          width: down ? measured.height : measured.width,
-          height: down ? measured.width : measured.height,
-        };
-        blocks.push({
-          width: cell.width,
-          height: cell.height,
-          baseline: cell.height / 2,
-          cells: [cell],
-          edges: [],
-          entries: [cell],
-          exits: [cell],
-        });
-      } else
-        blocks.push(
-          layoutChainParallel(
-            item.branches.map(branch => build(branch)),
-            item.layout,
-            item.connection,
-            blocks.at(-1)!.height,
-          ),
-        );
-    }
-
-    return blocks;
-  };
-
-  const block = layoutChainSequence(build(resolved.items), resolved.layout, resolved.connection);
-  const position = ([x, y]: [number, number]): [number, number] => (down ? [y, x] : [x, y]);
-  const paths: Array<IRPath> = block.edges.map(edge => {
-    const points = edge.points.map(position);
-    const children: Array<IRStep> = [{ type: 'step', kind: 'move', to: points[0] }];
-
-    for (let i = 1; i < points.length; i++)
-      children.push(
-        edge.connection.route === '|-' || edge.connection.route === '-|'
-          ? { type: 'step', kind: 'fold', via: edge.connection.route, to: points[i] }
-          : { type: 'step', kind: 'line', to: points[i] },
-      );
-
-    return { ...edge.connection.path, type: 'path', children };
+  // 只在布局完成后转回绘图坐标，引用节点与内容共享同一分配边界
+  const targets = new Map(block.cells.map((cell, index) => [cell, { id: `cell-${index}` }]));
+  const cells: Array<CellPlacement> = block.cells.map(cell => ({
+    measured: cell.measured,
+    x: down ? cell.y : cell.x,
+    y: down ? cell.x : cell.y,
+    width: down ? cell.height : cell.width,
+    height: down ? cell.width : cell.height,
+    role: 'chain-cell',
+  }));
+  const referenceNodes = cells.map((cell, index) => cellReferenceNode(`cell-${index}`, cell));
+  const paths: Array<IRPath> = block.connections.map(({ from, to, options, autoFraction }) => {
+    const route =
+      options.route === 'auto' ? (autoFraction === undefined ? 'straight' : down ? '|-|' : '-|-') : options.route;
+    const fraction = options.route === 'auto' ? autoFraction : options.fraction;
+    const target = targets.get(to)!;
+    const step: IRStep =
+      route === 'straight'
+        ? { type: 'step', kind: 'line', to: target }
+        : route === '-|-' || route === '|-|'
+          ? { type: 'step', kind: 'fold', via: route, ...(fraction === undefined ? {} : { fraction }), to: target }
+          : { type: 'step', kind: 'fold', via: route, to: target };
+    return { ...options.path, type: 'path', children: [{ type: 'step', kind: 'move', to: targets.get(from)! }, step] };
   });
 
   return compileCells(
-    block.cells.map(cell => ({
-      measured: cell.measured,
-      x: down ? cell.y : cell.x,
-      y: down ? cell.x : cell.y,
-      width: cell.measured.width,
-      height: cell.measured.height,
-      role: 'chain-cell',
-    })),
+    cells,
     {
       width: down ? block.height : block.width,
       height: down ? block.width : block.height,
       scope,
       decoration: { style, label },
-      extra: [context.scope({}, paths)],
+      extra: [context.scope({ localNamespace: true, defaults: { reset: ['node'] } }, [...referenceNodes, ...paths])],
     },
     context,
   );

@@ -1,4 +1,4 @@
-import { CompositeBaseSchema, NodeSchema, ScopePropsSchema, PathSchema } from '@retikz/core';
+import { CompositeBaseSchema, NodeSchema, ScopePropsSchema, PathSchema, FoldStepSchema } from '@retikz/core';
 import { JsonValueSchema, NonNegativeIntegerSchema, PositiveNumberSchema } from '@retikz/foundation';
 import type { ZodArray, ZodObject, ZodUnion, ZodString, input } from 'zod';
 import { strictObject, enum as zodEnum, union, literal, string, array, never } from 'zod';
@@ -10,12 +10,25 @@ import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schem
 export const ChainPathSchema = PathSchema.omit({ type: true, id: true, children: true, kind: true, kindOptions: true });
 
 /** 自动连接的路径与呈现覆盖 */
-export const ChainConnectionSchema = strictObject({
-  route: zodEnum(['auto', 'straight', '|-', '-|'])
-    .default('auto')
-    .describe('Connection routing; auto reserves branch corridors.'),
-  path: ChainPathSchema.optional(),
-});
+export const ChainConnectionSchema = union([
+  strictObject({
+    route: zodEnum(['auto', 'straight'])
+      .default('auto')
+      .describe('Connection routing; auto reserves branch corridors.'),
+    fraction: never().optional(),
+    path: ChainPathSchema.optional(),
+  }),
+  strictObject({
+    route: FoldStepSchema.options[0].shape.via,
+    fraction: never().optional(),
+    path: ChainPathSchema.optional(),
+  }),
+  strictObject({
+    route: FoldStepSchema.options[1].shape.via,
+    fraction: FoldStepSchema.options[1].shape.fraction,
+    path: ChainPathSchema.optional(),
+  }),
+]);
 
 /** 并行块的结构排布 */
 export const ChainParallelLayoutSchema = strictObject({
@@ -24,9 +37,9 @@ export const ChainParallelLayoutSchema = strictObject({
   branchAlign: union([zodEnum(['start', 'center', 'end']), strictObject({ branch: NonNegativeIntegerSchema })])
     .default('center')
     .describe('Branch envelope alignment or main branch index.'),
-  spacing: zodEnum(['compact', 'steps'])
+  spacing: zodEnum(['independent', 'steps'])
     .default('steps')
-    .describe('Independent compact sequences or shared immediate-step tracks.'),
+    .describe('Independent branch sequences or shared immediate-step tracks.'),
   justify: zodEnum(['start', 'center', 'end']).default('start').describe('Short branch position in the shared span.'),
 });
 
@@ -56,10 +69,13 @@ export const ChainParallelSchema = strictObject({
     spacing: ChainParallelLayoutSchema.shape.spacing.unwrap().optional(),
     justify: ChainParallelLayoutSchema.shape.justify.unwrap().optional(),
   }).optional(),
-  connection: strictObject({
-    route: ChainConnectionSchema.shape.route.unwrap().optional(),
-    path: ChainPathSchema.optional(),
-  }).optional(),
+  connection: union([
+    ChainConnectionSchema.options[0].extend({
+      route: ChainConnectionSchema.options[0].shape.route.unwrap().optional(),
+    }),
+    ChainConnectionSchema.options[1],
+    ChainConnectionSchema.options[2],
+  ]).optional(),
 });
 
 /** 完整序列中的文字、单元或并行块 */
@@ -84,34 +100,34 @@ export const ChainSkeletonSchema = union([
 ]);
 
 const ChainBaseSchema = CompositeBaseSchema.extend({
-  namespace: literal('standard'),
-  type: literal('chain'),
+  namespace: literal('standard').describe('Standard collection namespace.'),
+  type: literal('chain').describe('Series-parallel chain discriminator.'),
   ...ScopePropsSchema.omit({ style: true }).shape,
-  style: CellStyleSchema.optional(),
-  layout: ChainLayoutSchema.optional(),
-  connection: ChainConnectionSchema.optional(),
+  style: CellStyleSchema.optional().describe('Shared cell visual style.'),
+  layout: ChainLayoutSchema.optional().describe('Chain direction, branch placement, spacing, and cell dimensions.'),
+  connection: ChainConnectionSchema.optional().describe('Connection routing and path presentation.'),
   label: NodeSchema.shape.label,
 });
 
 /** 三入口与递归结构的 Source 真源 */
 export const ChainSchema = union([
   ChainBaseSchema.extend({
-    items: array(ChainItemSchema),
-    data: never().optional(),
-    skeleton: never().optional(),
-    dataExpand: never().optional(),
+    items: array(ChainItemSchema).describe('Explicit sequential cells and nested parallel branches.'),
+    data: never().optional().describe('Unavailable with this input form.'),
+    skeleton: never().optional().describe('Unavailable with this input form.'),
+    dataExpand: never().optional().describe('Unavailable with this input form.'),
   }),
   ChainBaseSchema.extend({
-    data: array(JsonValueSchema),
-    items: never().optional(),
-    skeleton: never().optional(),
-    dataExpand: DataExpandSchema.optional(),
+    data: array(JsonValueSchema).describe('JSON values expanded into sequential cells.'),
+    items: never().optional().describe('Unavailable with this input form.'),
+    skeleton: never().optional().describe('Unavailable with this input form.'),
+    dataExpand: DataExpandSchema.optional().describe('Nested data expansion policy for the data input.'),
   }),
   ChainBaseSchema.extend({
-    skeleton: ChainSkeletonSchema,
-    items: never().optional(),
-    data: never().optional(),
-    dataExpand: never().optional(),
+    skeleton: ChainSkeletonSchema.describe('Schematic chain structure without data content.'),
+    items: never().optional().describe('Unavailable with this input form.'),
+    data: never().optional().describe('Unavailable with this input form.'),
+    dataExpand: never().optional().describe('Unavailable with this input form.'),
   }),
 ]).superRefine((value, ctx) => {
   const fail = (path: Array<string | number>, message: string) => ctx.addIssue({ code: 'custom', path, message });

@@ -123,7 +123,7 @@ Each column uses the largest cell width demand in that column; each row uses its
 <ComponentPreview
   files={['matrix-layout', 'matrix-layout.preview.tsx']}
   defaultSourceFile="matrix-layout.preview.tsx"
-  size="lg"
+  size="md"
 />
 
 Dimensions include padding, which defaults to 8. Gap defaults to 2 and accepts a number or an object containing both row and column. Cell styles override container styles; font merges by field. Defaults are gray fill at 0.14 opacity, no stroke, and zero corner radius. Each cell paints its own background and border; borders are not merged.
@@ -198,23 +198,6 @@ Fixed dimensions clip by default; auto dimensions preserve overflow. Override ov
 - Data must be a JSON value tree, without functions, cycles, instances, or sparse arrays.
 - A parent allocation smaller than the natural Matrix layout fails compilation. Extra space does not stretch tracks.
 - Matrix does not model merged cells, headers, sorting, aggregation, or matrix arithmetic.
-
-## How it works
-
-Resolution converts all three inputs into shared Cells and merges overall/per-cell settings. Compilation measures content once, calculates column widths and row heights, then positions cells and independent index strips. Fixed cells keep their dimensions; auto cells use their track dimensions.
-
-The shared cell pipeline paints backgrounds, clipped content, and borders separately and registers actual cell bounds. Container labels attach to the overall bounds including index strips and do not participate in cell measurement.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Track measurement and placement',
-      path: 'packages/library/standard/src/collection/matrix/pipeline.ts',
-      startLine: 1,
-    },
-    { label: 'Shared cell output', path: 'packages/library/standard/src/collection/_cell/pipeline.ts', startLine: 1 },
-  ]}
-/>
 
 ## API reference
 

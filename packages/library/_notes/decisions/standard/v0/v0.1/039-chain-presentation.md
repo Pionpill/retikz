@@ -97,7 +97,7 @@ skeleton: {
 | `gap`         | 正有限数，默认 24                                           | 相邻串联项的主轴边界间距，同时为连接提供通道 |
 | `branchGap`   | 正有限数，默认 24                                           | 相邻完整分支包围盒的交叉轴间距               |
 | `branchAlign` | `start / center / end` 或 `{ branch: number }`，默认 center | 分支组相对分叉前单元的交叉轴位置             |
-| `spacing`     | `compact / steps`，默认 steps                               | 各支路独立紧凑排列，或共享步骤轨道           |
+| `spacing`     | `independent / steps`，默认 steps                           | 各支路独立排布，或共享步骤轨道               |
 | `justify`     | `start / center / end`，默认 start                          | 短分支在公共主轴跨度中的位置                 |
 
 parallel 的 layout 可局部覆盖 `gap`、`branchGap`、`branchAlign`、`spacing`、`justify`，未提供字段逐级继承；不能改变 direction 或 Cell 外观默认。其 gap 同时用于该块内部的串联间距和该块与前后单元之间的间距，避免两套入口／出口间距互相冲突。
@@ -108,7 +108,7 @@ parallel 的 layout 可局部覆盖 `gap`、`branchGap`、`branchAlign`、`spaci
 
 **内部对齐**与上述分支组位置独立：
 
-- compact：每条支路使用自身内容自然尺寸与 gap，公共主轴跨度取最长支路；justify 把短支路放在跨度的起端、居中或末端。
+- independent：每条支路使用自身内容自然尺寸与 gap，公共主轴跨度取最长支路；justify 把短支路放在跨度的起端、居中或末端。
 - steps：同一并行块的直属分支共享步骤轨道，轨道数量取最多直属项数量。cell 或嵌套 parallel 各占一个步骤，嵌套 parallel 作为完整块测量，不把其后代步骤摊到父级。
 - steps 下，start 从首轨道开始，end 从末轨道倒排；center 把较短支路前置 `floor((总轨道数 - 支路项数) / 2)` 个空轨道，多出的空位留在末端。各轨道主轴尺寸取所有占用项的最大需求，项在轨道主轴内居中；只有保留间距，没有拉伸单元或生成空节点。
 - 父级的轨道对齐不改变嵌套并行块自身的对齐规则。内容尺寸变化后重新测量，支路次序不变；不自动排序或交换支路来减少交叉。
