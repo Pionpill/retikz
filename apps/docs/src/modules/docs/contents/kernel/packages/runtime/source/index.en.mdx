@@ -81,6 +81,14 @@ The first three type parameters correspond to the input, internal value and read
 
 The fourth type parameter describes change hints; `never` means this example provides none. Resource cleanup and the two optional callbacks are explained later.
 
+The returned `position` is a definition token identifying this Source; it does not expose the callbacks directly. Runtime stores the associated rules internally, and registration, submission and reading reuse this token. No input data exists yet, so defining the Source neither invokes `capture` nor creates state.
+
+<SourceLinks
+  sources={[
+    { label: 'Associating a Source token with its rules', path: 'packages/kernel/runtime/src/source/define.ts' },
+  ]}
+/>
+
 ### Connecting to Runtime
 
 Defining `position` is like declaring a TypeScript type: the definition alone does not create any data. A Source definition additionally includes runtime rules such as capturing and reading values. To use it, the APIs below register the Source with Runtime and supply its initial data. A **registry** holds available definitions; the actual coordinates arrive separately as initial input:
@@ -130,7 +138,20 @@ try {
 
 The output shows that changing the original input's `x` leaves Runtime's coordinates at `[10, 20]`. This is because `capture` stored the coordinates independently, and `read` provided a read-only copy. The result contains x followed by y and can be destructured as `[x, y]`.
 
-The read view is produced during preparation; subsequent Snapshot reads use that prepared view instead of invoking `read` again each time.
+### Preparing state
+
+Creating Runtime in the example first invokes an internal `prepare` operation to turn input into managed state. Updates use the same process:
+
+1. Call `capture` to obtain the internal value retained by Runtime.
+2. If a disposal callback exists, check whether the new value directly reuses the current internal value, preventing cleanup from releasing resources still in use.
+3. If `collectIdentities` exists, collect entity identifiers and validate their Source ownership and uniqueness. Their purpose is explained under “Identities and change hints”.
+4. Call `read` to produce the read-only view exposed to readers.
+
+Once all steps succeed, the executor stores the internal value, read view and optional identity lookup in a **prepared record**. Subsequent Snapshot reads use its existing view instead of invoking `read` again.
+
+A prepared record is the internal representation used to manage state, not necessarily unpublished state. A newly prepared record can be a candidate and remain in use as current state after adoption. The enclosing Runtime decides whether to adopt and publish it.
+
+Preparation invokes rules and manages state; it does not automatically isolate arbitrary input data. The example's input, internal value and read view are independent because its `capture` and `read` callbacks each create separate data.
 
 <SourceLinks
   sources={[
@@ -156,6 +177,8 @@ A next internal value of `[10, 20]` takes the `true` branch; `[13, 20]` takes th
 | `{ x: '13', y: '20' }`   | Different       | Keep the candidate for the update; replace old state after successful publication |
 
 Equality means this Source has not changed, not that every other Source in the same submission is unchanged. The comparison must cover the full meaning that downstream computations rely on. Ignoring a relevant field can incorrectly preserve old state and results.
+
+Before invoking `equals`, the executor's `compare` checks that both prepared records belong to this executor and the specified Source and are still usable. It only returns the comparison result; the enclosing Runtime orchestrates the retention, cleanup and update branches in the diagram. If `equals` throws, the executor wraps the error and leaves candidate cleanup to Runtime.
 
 This example copies data to isolate it. Immutable data that needs no exclusive disposal can also be shared. The requirement is that external changes cannot bypass the update flow and affect published state.
 
@@ -187,7 +210,7 @@ If `capture` throws before returning, Runtime has not received a value it can cl
 
 If disposal itself fails, Runtime records a diagnostic and continues cleaning up other values while preserving the original failure.
 
-The implementation calls stopping use of a prepared state and attempting to release it `retire`. Each state gets one disposal attempt, with no automatic retry after failure.
+The implementation calls stopping use of a prepared state and attempting to release it `retire`. It checks ownership and usability, marks the record unusable, then invokes the disposal callback. Even if disposal fails, that record cannot be compared, used for hint validation or retired again. Each record gets one disposal attempt, without automatic retries. With no disposal callback, the record still becomes unusable.
 
 <SourceLinks
   sources={[
@@ -213,7 +236,9 @@ For example, if the read view changes from `[10, 20]` to `[13, 20]`, a hint coul
 | `valid`      | The hint may be passed to computations | Incremental computation may be attempted, but is not guaranteed to succeed                                          |
 | `fallback`   | The hint cannot be confirmed reliable  | Discard the hint, use a full fallback path for computations directly depending on this Source, and record a warning |
 
-`fallback` discards the hint while allowing the complete new input to be processed; throwing from the validator aborts the update. When the callback is omitted, the Source does not validate the hint, leaving the Computation to assess whether it can use it.
+`fallback` discards the hint while allowing the complete new input to be processed. When the callback is omitted, the executor returns `valid`: the Source layer does not block the hint, but has not proven it correct. The Computation still decides whether it can use it.
+
+Like comparison, validation first checks both records' ownership and usability. Failure handling differs: if the validator throws, the executor immediately retires and cleans up the candidate before throwing a wrapped error. It does not release the previous state. If cleanup also fails, its diagnostics are attached to the validation error, preserving the original failure.
 
 This section introduces only the two optional Source callbacks. Identity structure and registration rules, incremental use of change hints, and version constraints will be covered respectively in the planned “Identity and Registration”, “Derived Computation and Incremental Updates”, and “Transactions and Version Publication” pages.
 
@@ -232,13 +257,34 @@ This section introduces only the two optional Source callbacks. Identity structu
 
 ## Source walkthrough
 
-We can now connect the behavior to internal operations. This diagram follows an existing Source receiving new input. Initialization has no old value and therefore skips the comparison shown here.
+The preceding sections describe individual callback responsibilities. In the implementation, `createRuntimeSourceExecutor` organizes them into a lifecycle manager bound to one Source registry. It invokes only registered Source rules and tracks which Source owns each prepared record and whether the record remains usable. Creating the executor does not capture input.
+
+This diagram follows the main path of an existing Source receiving new input. Initialization has no old value and therefore skips the comparison shown here. Optional change-hint validation is not expanded in the diagram.
 
 <ComponentPreview files="source-lifecycle" hideCode type="flow" />
 
 `prepare` captures the value, optionally collects identities and creates the read view; `compare` calls the definition's `equals`. Equal values lead to candidate cleanup. Different values proceed to Runtime's update flow: success adopts the new value and cleans up the old one, while failure cleans up the candidate. “Hand to Runtime” includes downstream computation and transaction publication, whose orchestration is outside this page's scope.
 
-When reading the source, focus on the division between defining and executing rules. `defineRuntimeSource` returns a token identifying the Source during registration, submission and reading. The executor invokes the corresponding rules during initialization or updates to manage actual state.
+`RuntimeSourceExecutor` provides four operations as an internal execution mechanism. Application code does not need to create or call it directly:
+
+| Operation           | Responsibility                                                                      |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `prepare`           | Prepare complete input as an internal value, read view and optional identity lookup |
+| `compare`           | Check records, then compare their internal values using `equals`                    |
+| `validateChangeSet` | Check records, then validate change hints against their read views                  |
+| `retire`            | Mark a record unusable before attempting to release its internal value              |
+
+Cleanup responsibility depends on where execution failed. Callback exceptions become Runtime errors carrying the Source, phase and original cause. Cleanup failures become diagnostics so that they do not replace the primary error:
+
+| Failure point                                      | Cleanup responsibility                                                                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `capture` before returning                         | The callback cleans up resources it acquired; the executor has not received an internal value                                  |
+| Identity collection, identity validation or `read` | The executor attempts to release the captured value; no usable prepared record is produced                                     |
+| `equals`                                           | The executor wraps the error; the enclosing Runtime cleans up candidates                                                       |
+| Change-hint validator                              | The executor immediately cleans up the candidate and throws an error preserving the original cause                             |
+| Disposal callback                                  | The executor returns diagnostics so the caller can continue other cleanup; the record remains unusable with no automatic retry |
+
+The executor manages individual Source state lifecycles. Cross-Source updates, candidate adoption, atomic publication and transaction rollback belong to the enclosing Runtime.
 
 Read the implementation in this order:
 
