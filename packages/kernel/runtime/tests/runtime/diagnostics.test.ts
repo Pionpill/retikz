@@ -30,7 +30,7 @@ describe('runtime runtime diagnostics', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const observedPrefixes: Array<RuntimeCommitEvent<number>['diagnostics']> = [];
     const first = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'a' },
@@ -136,7 +136,7 @@ describe('runtime runtime diagnostics', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     let artifactCaptureCount = 0;
     const upstream = defineRuntimeComputation<number, Readonly<{ value: number; candidate: boolean }>, number, number>({
       id: { owner: 'counter', key: 'a' },
@@ -245,7 +245,7 @@ describe('runtime runtime diagnostics', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     let updates = 0;
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
@@ -357,7 +357,7 @@ describe('runtime runtime diagnostics', () => {
         },
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -418,7 +418,7 @@ describe('runtime runtime diagnostics', () => {
         },
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [ownerB, ownerA] });
+    const sources = createRuntimeSourceRegistry([ownerB, ownerA]);
     const computationA = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
       id: { owner: 'a', key: 'derive' },
       sources: [ownerA],
@@ -511,7 +511,7 @@ describe('runtime runtime diagnostics', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     let activeReporter: RuntimeComputationTraceReporter | undefined;
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
@@ -573,7 +573,7 @@ describe('runtime runtime diagnostics', () => {
         },
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -630,7 +630,7 @@ describe('runtime runtime diagnostics', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [second, first] });
+    const sources = createRuntimeSourceRegistry([second, first]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -696,7 +696,7 @@ describe('runtime runtime diagnostics', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],

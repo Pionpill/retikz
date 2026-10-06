@@ -26,7 +26,7 @@ const defineCounterSource = (key: string) =>
 describe('runtime runtime participant revision policy', () => {
   it('participants omitted 与显式空数组严格保持既有 runtime 行为', () => {
     const owner = defineCounterSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const base = { sources, computations, initialSnapshots: [createRuntimeSourceInput(owner, 1)] };
     const omitted = createRuntime(base);
@@ -50,7 +50,7 @@ describe('runtime runtime participant revision policy', () => {
 
   it('affected participant 在声明 Computation 产生新 artifact 时执行并读取 candidate public artifact', () => {
     const owner = defineCounterSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, Readonly<{ value: number }>>({
       id: { owner: 'counter', key: 'artifact' },
       sources: [owner],
@@ -113,7 +113,7 @@ describe('runtime runtime participant revision policy', () => {
   it('affected 只响应声明依赖，continuous 响应每个非 bailout commit', () => {
     const primary = defineCounterSource('primary');
     const unrelated = defineCounterSource('unrelated');
-    const sources = createRuntimeSourceRegistry({ builtins: [primary, unrelated] });
+    const sources = createRuntimeSourceRegistry([primary, unrelated]);
     const computations = createRuntimeComputationRegistry({ sources });
     const affectedCalls: Array<number> = [];
     const continuousCalls: Array<number> = [];
@@ -189,7 +189,7 @@ describe('runtime runtime participant revision policy', () => {
 
   it('forced full 下 continuous participant 每个 revision 只推进一次', () => {
     const owner = defineCounterSource('forced-full');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'forced-full', key: 'artifact' },
       sources: [owner],
@@ -261,7 +261,7 @@ describe('runtime runtime participant revision policy', () => {
         },
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'artifact' },
       sources: [owner],

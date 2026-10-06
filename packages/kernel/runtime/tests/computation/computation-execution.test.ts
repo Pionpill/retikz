@@ -27,7 +27,7 @@ const defineCounterSource = (key = 'counter') =>
 describe('runtime Computation execution', () => {
   it('默认 auto 向 Computation 暴露 initial full 与 incremental update execution', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const executions: Array<unknown> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'execution-default' },
@@ -62,7 +62,7 @@ describe('runtime Computation execution', () => {
 
   it('full strategy 跳过 Computation update 并只以 full execution 调用 run', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const executions: Array<unknown> = [];
     const update = vi.fn(() => ({ kind: RuntimeComputationKind.Incremental, artifact: 999 }));
     const computation = defineRuntimeComputation<number, number, number, number>({
@@ -99,7 +99,7 @@ describe('runtime Computation execution', () => {
   it('CandidateView 精确区分同一 Computation 已声明 owner 的实际变化', () => {
     const primarySource = defineCounterSource('primary-changed');
     const stableSource = defineCounterSource('stable-owner');
-    const sources = createRuntimeSourceRegistry({ builtins: [primarySource, stableSource] });
+    const sources = createRuntimeSourceRegistry([primarySource, stableSource]);
     const observations: Array<Readonly<[boolean, boolean]>> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'primary-changed', key: 'changed-observer' },
@@ -131,7 +131,7 @@ describe('runtime Computation execution', () => {
   it('只执行直接与传递失效分支，并复用无关 Computation artifact', () => {
     const primarySource = defineCounterSource('primary');
     const unrelatedSource = defineCounterSource('unrelated');
-    const sources = createRuntimeSourceRegistry({ builtins: [primarySource, unrelatedSource] });
+    const sources = createRuntimeSourceRegistry([primarySource, unrelatedSource]);
     const directRun = vi.fn(view => ({
       kind: RuntimeComputationKind.Full,
       artifact: view.snapshot(primarySource).value,
@@ -244,7 +244,7 @@ describe('runtime Computation execution', () => {
 
   it('缺少 change hint 时仍调用 update，并向 CandidateView 暴露 undefined', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const hints: Array<unknown> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
@@ -284,7 +284,7 @@ describe('runtime Computation execution', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const hints: Array<unknown> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'computation-validated', key: 'computation' },
@@ -318,7 +318,7 @@ describe('runtime Computation execution', () => {
 
   it('invalid change hint 跳过 update、执行 full，并提交 fallback diagnostic', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const run = vi.fn(view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }));
     const update = vi.fn(() => ({ kind: RuntimeComputationKind.Incremental, artifact: 999 }));
     const computation = defineRuntimeComputation<number, number, number, number>({
@@ -359,7 +359,7 @@ describe('runtime Computation execution', () => {
 
   it('upstream full 强制 downstream full，不调用 downstream update', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const upstreamRun = vi.fn(view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }));
     const upstream = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'upstream' },
@@ -410,7 +410,7 @@ describe('runtime Computation execution', () => {
 
   it('Computation fallback 调用 full run并归属 warning；upstream bailout 不触发下游', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const upstreamRun = vi.fn(view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }));
     const upstreamObserver = vi.fn();
     const upstreamUpdate = vi

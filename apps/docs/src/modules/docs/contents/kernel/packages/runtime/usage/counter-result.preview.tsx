@@ -25,7 +25,7 @@ const doubled = defineRuntimeComputation({
   run: view => ({ kind: 'full', artifact: view.snapshot(counter).value * 2 }),
 });
 
-const sources = createRuntimeSourceRegistry({ custom: [counter] });
+const sources = createRuntimeSourceRegistry([counter]);
 
 const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
 

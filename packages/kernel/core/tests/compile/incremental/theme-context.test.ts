@@ -41,7 +41,7 @@ const themedComposite = defineComposite({
 const runUpdate = (initial: IRScene, next: IRScene) => {
   const options = { composites: [themedComposite], onWarn: () => {} } as const;
   const program = createCoreComputation(options);
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
   const session = createRuntime({
     sources,

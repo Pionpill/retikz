@@ -80,7 +80,7 @@ const ir = {
 } as const;
 
 const coreComputation = createCoreComputation({ padding: 16 });
-const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
 const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 const runtime = createRuntime({
   sources,
@@ -159,7 +159,7 @@ const MeasureRevisionSource = defineRuntimeSource({
 });
 
 const coreComputation = createCoreComputation({}, { invalidationSources: [MeasureRevisionSource] });
-const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, MeasureRevisionSource] });
+const sources = createRuntimeSourceRegistry([CoreSourceDefinition, MeasureRevisionSource]);
 const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 const runtime = createRuntime({
   sources,

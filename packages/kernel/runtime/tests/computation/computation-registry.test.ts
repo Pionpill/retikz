@@ -51,7 +51,7 @@ describe('runtime computation definition and registry', () => {
   it('统一合并 builtin/custom，并按拓扑后 owner/key code-unit 顺序返回', () => {
     const owner = defineSource('counter');
     const upperSource = defineSource('Counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner, upperSource] });
+    const sources = createRuntimeSourceRegistry([owner, upperSource]);
     const a = defineComputation(owner, { owner: 'counter', key: 'a' });
     const upper = defineComputation(upperSource, { owner: 'Counter', key: 'A' });
     const child = defineComputation(owner, { owner: 'counter', key: 'child' }, [a]);
@@ -127,7 +127,7 @@ describe('runtime computation definition and registry', () => {
     });
 
     const registry = createRuntimeComputationRegistry({
-      sources: createRuntimeSourceRegistry({ builtins: [owner] }),
+      sources: createRuntimeSourceRegistry([owner]),
       builtins: [definition],
     });
 
@@ -190,7 +190,7 @@ describe('runtime computation definition and registry', () => {
   it('拒绝 duplicate、unknown owner 与 unknown computation', () => {
     const owner = defineSource('counter');
     const unknownSource = defineSource('unknown');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const first = defineComputation(owner, { owner: 'counter', key: 'same' });
     const duplicate = defineComputation(owner, { owner: 'counter', key: 'same' });
     const missingSource = defineComputation(unknownSource, { owner: 'unknown', key: 'missing-owner' });
@@ -209,7 +209,7 @@ describe('runtime computation definition and registry', () => {
 
   it('拒绝 Computation id 指向未注册 owner 与伪造 source registry', () => {
     const owner = defineSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const wrongComputationSource = defineComputation(owner, { owner: 'missing', key: 'computation' });
 
     expect(() => createRuntimeComputationRegistry({ sources, builtins: [wrongComputationSource] })).toThrowError(
@@ -248,7 +248,7 @@ describe('runtime computation definition and registry', () => {
 
   it('拒绝 object literal 与 foreign module Computation token', async () => {
     const owner = defineSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const forged = { id: { owner: 'counter', key: 'forged' } } as RuntimeComputationDefinition<
       number,
       number,

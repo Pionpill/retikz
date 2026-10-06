@@ -80,7 +80,7 @@ describe('runtime Computation artifact lifecycle', () => {
     const ownerDispose = vi.fn();
     const artifactDispose = vi.fn<(artifact: Artifact) => void>();
     const owner = defineSource(ownerDispose);
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -113,7 +113,7 @@ describe('runtime Computation artifact lifecycle', () => {
     const shared = Object.freeze({ value: 1 });
     const ownerDispose = vi.fn();
     const owner = defineSource(ownerDispose);
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -148,7 +148,7 @@ describe('runtime Computation artifact lifecycle', () => {
         dispose: ownerDispose,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -178,7 +178,7 @@ describe('runtime Computation artifact lifecycle', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, typeof sharedArtifact, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -223,7 +223,7 @@ describe('runtime Computation artifact lifecycle', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, typeof sharedArtifact, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],

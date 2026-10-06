@@ -1,5 +1,5 @@
 ---
-title: 状态与来源
+title: Source · 来源
 description: 从表单坐标的转换与输入隔离出发，理解 Source 的捕获、只读视图、相等判断与资源释放，并沿源码追踪状态生命周期
 ---
 
@@ -40,7 +40,52 @@ description: 从表单坐标的转换与输入隔离出发，理解 Source 的�
 
 ### 定义来源
 
-`defineRuntimeSource` 用来定义一种状态来源，指定输入如何捕获、读取、比较和释放；返回的定义用于后续注册和访问该状态。下面定义坐标来源：
+`defineRuntimeSource(input)` 定义一种状态来源，接收一个配置对象，返回保留输入、内部值、读取值和变更提示类型的 Source Token。定义时不会捕获数据。
+
+```ts
+declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
+  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange>,
+) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+```
+
+`defineRuntimeSource` 接收以下配置成员，其中 `value` 包含状态的捕获、读取、比较和释放规则：
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员                | 必填 | 作用                                                   |
+| ------------------- | ---- | ------------------------------------------------------ |
+| `key`               | 是   | Source 的非空注册键，本例为 `example/position`         |
+| `value.capture`     | 是   | 接收完整输入，返回 Runtime 持有的内部值                |
+| `value.read`        | 是   | 接收内部值，返回供外部读取的不可变视图                 |
+| `value.equals`      | 是   | 比较两个完整内部值，返回是否相等的布尔值               |
+| `value.dispose`     | 否   | 释放内部值持有的资源，本例无需提供                     |
+| `collectIdentities` | 否   | 接收内部值，返回完整实体身份列表；省略则不收集         |
+| `validateChangeSet` | 否   | 接收前后读取视图与变更提示，返回 `valid` 或 `fallback` |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
+  capture: (input: TInput) => TValue;
+  read: (value: TValue) => TRead;
+  equals: (left: TValue, right: TValue) => boolean;
+  dispose?: (value: TValue) => void;
+}>;
+
+type RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange> = Readonly<{
+  key: string;
+  value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
+  collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
+  validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' | 'fallback';
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+下面定义坐标来源：
 
 ```ts
 import { defineRuntimeSource } from '@retikz/runtime';
@@ -67,18 +112,6 @@ const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead,
 | `TValue` | `PositionValue` | Runtime 持有；`read`、`equals` 和可选的 `dispose` 使用它        |
 | `TRead`  | `PositionRead`  | 通过 Snapshot 读取 `[x, y]`，类型为 `readonly [number, number]` |
 
-`defineRuntimeSource` 接收以下配置成员，其中 `value` 包含状态的捕获、读取、比较和释放规则：
-
-| 成员                | 必填 | 作用                                             |
-| ------------------- | ---- | ------------------------------------------------ |
-| `key`               | 是   | Source 的非空注册键，本例为 `example/position`   |
-| `value.capture`     | 是   | 将输入转换为 Runtime 持有的内部值                |
-| `value.read`        | 是   | 从内部值生成供外部读取的不可变视图               |
-| `value.equals`      | 是   | 判断两个完整内部值是否表示相同状态               |
-| `value.dispose`     | 否   | 释放内部值持有的资源，本例无需提供               |
-| `collectIdentities` | 否   | 收集状态中实体的稳定身份，例如图中节点的标识     |
-| `validateChangeSet` | 否   | 对照更新前后的读取视图，校验调用方提供的变更提示 |
-
 第四个泛型对应变更提示的类型，本例用 `never` 表示不提供这类提示。资源清理与两个可选回调会在后文说明。
 
 返回的 `position` 是标识这份来源的定义凭证（token），不直接暴露回调。Runtime 内部保存对应的处理规则，后续注册、提交和读取都沿用这份凭证。此时还没有输入数据，也不会执行 `capture` 或创建状态。
@@ -97,35 +130,147 @@ const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead,
 
 <SourceLinks sources={[{ label: '来源凭证与处理规则的关联', path: 'packages/kernel/runtime/src/source/define.ts' }]} />
 
+### 来源注册
+
+定义好一个 Source，只是说明这一类状态如何捕获、读取和释放；接下来还需要确定某个 Runtime 使用哪些来源。**来源注册**就是把选定的来源定义集中登记，形成**来源注册表**，作为这个 Runtime 可管理的状态来源清单。
+
+例如，前面的 `position` 定义了坐标数据的处理规则。将它加入注册表后，Runtime 才能通过这份清单找到对应规则，并检查后续使用的来源是否已注册。注册表保存的是定义，具体的坐标数据仍要在初始化或更新 Runtime 时另外传入；注册本身不会捕获状态。
+
+`createRuntimeSourceRegistry` 接收一个来源 Token 数组，登记 Runtime 可以使用的来源定义：
+
+```ts
+declare const createRuntimeSourceRegistry: (tokens: Array<RuntimeSourceToken>) => RuntimeSourceRegistry;
+```
+
+返回创建好的来源注册表。
+
+| 项目     | 说明                                          |
+| -------- | --------------------------------------------- |
+| `tokens` | 必填的来源 Token 数组；传入 `[]` 创建空注册表 |
+
+注册表统一处理数组中的所有来源，不区分内置或自定义来源；需要分类时，由调用方自行组织并合并数组。任何重复 `key` 都会被拒绝，包括同一凭证重复传入。注册表不会自动装入任何来源。
+
+```ts
+// 返回对象中的方法签名
+find: (key: string) => RuntimeSourceToken | undefined;
+```
+
+按字符串查找；找不到返回 `undefined`。返回通用凭证，不保留具体来源的输入与读取类型
+
+```ts
+// 返回对象中的方法签名
+resolve: <TInput, TValue, TRead, TChange>(definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) =>
+  RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+```
+
+确认这份具体定义已经注册，并原样返回，保留其泛型类型；同名但不同对象也会报错
+
+```ts
+// 返回对象中的方法签名
+definitions: () => ReadonlyArray<RuntimeSourceToken>;
+```
+
+列出定义，按 `key` 的字符串顺序稳定排序；返回的列表不能用来修改注册表
+
+接着注册前面定义的 `position`：
+
+```ts
+import { createRuntimeSourceRegistry } from '@retikz/runtime';
+
+const sources = createRuntimeSourceRegistry([position]);
+
+console.log(sources.find('example/position') === position); // true
+console.log(sources.resolve(position) === position); // true
+console.log(sources.definitions().map(source => source.key)); // ['example/position']
+```
+
+注册时遍历传入的 Token 数组，逐项检查凭证有效性和键的唯一性，并关联对应的处理规则。成功后得到固定的注册表，不提供后续追加或替换定义的方法。
+
+例如，另建一份同名来源后调用 `sources.resolve`，会因凭证不一致而失败；把它与 `position` 一起注册，则会因重复键而失败。一个是使用阶段的成员检查，一个是构造阶段的唯一性检查。
+
+<SourceLinks
+  sources={[
+    { label: '来源注册表的输入与返回成员', path: 'packages/kernel/runtime/src/registry/types.ts' },
+    { label: '来源注册、校验与查找', path: 'packages/kernel/runtime/src/registry/source-registry.ts' },
+  ]}
+/>
+
 ### 接入 Runtime
 
-定义好 `position`，类似于定义好一个 TypeScript 类型：有了定义，还没有具体的数据。区别在于，Source 定义还包含捕获、读取等运行时规则。要实际使用，需要通过下面的 API 将来源注册到 Runtime，并传入初始数据。**注册表**（Registry）保存可用的定义，实际坐标则通过初始输入单独传入：
+来源注册表已经确定可用的定义，接下来传入初始坐标，创建 Runtime 实例。本例不添加派生计算，仅创建一个绑定到 `sources` 的空计算注册表，以满足 Runtime 的初始化要求；计算定义与注册机制将在后续“派生计算与增量更新”中展开。
 
-下表只展示本例用到的参数。两个注册表还支持 `builtins`、`custom` 定义列表，详细配置将在“身份和注册”中展开；初始化与提交过程将在“事务与版本发布”中展开。这两篇目前尚未编写。
+以下介绍配对初始数据与创建实例的 API，完整的事务与版本发布过程另文说明。
 
-| 函数声明                                                     | 说明                                                                                                                                      |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `createRuntimeSourceRegistry({ custom })`                    | 创建来源注册表。<br />`custom`：来源定义列表，本例为 `[position]`                                                                         |
-| `createRuntimeComputationRegistry({ sources })`              | 创建计算注册表，本例没有计算定义。<br />`sources`：关联的来源注册表                                                                       |
-| `createRuntimeSourceInput(source, value)`                    | 将来源与数据配对，作为初始输入。<br />`source`：来源定义，本例为 `position`<br />`value`：完整输入数据，本例为 `input`                    |
-| `createRuntime({ sources, computations, initialSnapshots })` | 捕获初始输入，建立可读取的状态。<br />`sources`：来源注册表<br />`computations`：计算注册表<br />`initialSnapshots`：配对好的初始输入列表 |
+```ts
+declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  value: TInput,
+) => RuntimeSourceInput;
+```
 
-下图分为两条路径：上路注册定义，提供处理规则；下路配对来源与输入，提供实际数据。两路最终汇合到蓝色的 `createRuntime` 节点，建立初始状态：
+返回来源与数据配对的初始输入命令；此时不捕获数据。
 
-<ComponentPreview files="source-registration" hideCode type="flow" />
+| 项目     | 说明                         |
+| -------- | ---------------------------- |
+| `source` | 来源定义，本例为 `position`  |
+| `value`  | 完整输入数据，本例为 `input` |
+
+```ts
+declare const createRuntime: (options: RuntimeOptions) => Runtime;
+```
+
+捕获初始输入，返回可更新、读取和释放的 Runtime 实例。
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 项目               | 说明                                              |
+| ------------------ | ------------------------------------------------- |
+| `sources`          | 来源注册表                                        |
+| `computations`     | 计算注册表                                        |
+| `initialSnapshots` | 配对好的初始输入列表                              |
+| `updateStrategy`   | 可选的更新策略，默认 `RuntimeUpdateStrategy.Auto` |
+| `trace`            | 可选的执行追踪接收器                              |
+| `participants`     | 可选的提交参与者 Token 列表                       |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeOptions = Readonly<{
+  sources: RuntimeSourceRegistry;
+  computations: RuntimeComputationRegistry;
+  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  updateStrategy?: RuntimeUpdateStrategy;
+  trace?: PerformanceTraceSink;
+  participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+```ts
+// 返回对象中的方法签名
+snapshot: <TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) =>
+  RuntimeSnapshot<TRead>;
+```
+
+`source` 为已注册的 Source Token，必填；返回包含版本 `revision` 和读取值 `value` 的快照
+
+```ts
+// 返回对象中的方法签名
+dispose: () => void;
+```
+
+无入参；释放 Runtime 持有的资源，无返回值
 
 同一份 `sources` 既用于创建计算注册表，也传给 Runtime。`createRuntimeSourceInput` 只负责配对定义与数据；实际的 `capture`、`read` 在 Runtime 初始化时执行。以下代码接在上面的定义后，暂时不添加派生计算，先观察输入隔离：
 
 ```ts
-import {
-  createRuntime,
-  createRuntimeComputationRegistry,
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-} from '@retikz/runtime';
+import { createRuntime, createRuntimeComputationRegistry, createRuntimeSourceInput } from '@retikz/runtime';
 
 const input = { x: '10', y: '20' };
-const sources = createRuntimeSourceRegistry({ custom: [position] });
 const computations = createRuntimeComputationRegistry({ sources });
 const runtime = createRuntime({
   sources,
@@ -164,6 +309,35 @@ try {
 <SourceLinks
   sources={[{ label: 'capture 后收集身份并调用 read', path: 'packages/kernel/runtime/src/source/executor.ts' }]}
 />
+
+前面介绍的是各个回调的职责。源码中的 `createRuntimeSourceExecutor` 将它们组织成统一的生命周期管理器：绑定一个来源注册表，只执行已注册来源的规则，并跟踪每份准备记录属于哪个来源、是否仍可使用。创建执行器本身不会捕获输入。
+
+下图聚焦一份已有 Source 接收新输入的主流程；初始化没有旧值，因此不执行这里的前后比较。可选的变更提示校验未在图中展开。
+
+<ComponentPreview files="source-lifecycle" hideCode type="flow" />
+
+`prepare` 依次捕获值、按需收集身份、生成读取视图；`compare` 调用定义中的 `equals`。相等时清理候选值；不相等时交给 Runtime 继续更新，成功后采用新值并清理旧值，失败则清理候选值。图中的“交给 Runtime”包含后续计算与事务发布，本篇不展开这部分编排。
+
+这四个动作由 `RuntimeSourceExecutor` 提供，属于包内执行机制，不需要调用方在接入代码中手动创建或调用：
+
+| 动作                | 核心职责                                     |
+| ------------------- | -------------------------------------------- |
+| `prepare`           | 将完整输入准备为内部值、读取视图和可选身份表 |
+| `compare`           | 检查记录后，调用 `equals` 比较内部值         |
+| `validateChangeSet` | 检查记录后，用前后读取视图校验变更提示       |
+| `retire`            | 先停止使用记录，再尝试释放其内部值           |
+
+失败时，清理责任取决于执行到了哪一步。回调异常会被包装为带来源、阶段和原始原因的 Runtime 错误；清理失败则记录为诊断，避免覆盖主要错误：
+
+| 失败位置                    | 谁负责清理                                                           |
+| --------------------------- | -------------------------------------------------------------------- |
+| `capture` 尚未返回          | 回调自行清理已申请的资源，执行器还没有拿到内部值                     |
+| 身份收集、身份校验或 `read` | 执行器尝试清理已捕获的内部值，不产生可用的准备记录                   |
+| `equals`                    | 执行器包装异常，候选状态由上层 Runtime 清理                          |
+| 变更提示校验回调            | 执行器立即清理候选记录，再抛出保留原始原因的错误                     |
+| 释放回调                    | 执行器返回诊断，上层继续处理其他清理；该记录不恢复可用，也不自动重试 |
+
+执行器负责单份来源状态的生命周期；跨来源的更新、候选值采用、原子发布和事务回滚由上层 Runtime 负责。
 
 ## 状态比较
 
@@ -243,7 +417,7 @@ Runtime 先捕获新输入、生成读取视图，再比较前后内部值。这
 
 与比较一样，校验前也会检查前后记录的归属和可用性。区别在失败处理：校验回调抛错时，执行器立即停止使用并清理候选记录，再抛出包装后的异常；不会释放旧状态。清理自身若失败，其诊断附在校验错误上，保留最初的失败原因。
 
-本节只介绍 Source 的两个可选回调。身份结构与注册约束、变更提示的增量消费、版本约束，将分别在规划中的“身份和注册”“派生计算与增量更新”“事务与版本发布”中展开。
+本节只介绍 Source 的两个可选回调。身份结构、比较与查找见[Identity · 身份](/kernel/packages/runtime/identity)；变更提示的增量消费、版本约束，将分别在规划中的“派生计算与增量更新”“事务与版本发布”中展开。
 
 <SourceLinks
   sources={[
@@ -258,52 +432,13 @@ Runtime 先捕获新输入、生成读取视图，再比较前后内部值。这
   ]}
 />
 
-## 源码导览
+## 完整流程
 
-前面介绍的是各个回调的职责。源码中的 `createRuntimeSourceExecutor` 将它们组织成统一的生命周期管理器：绑定一个来源注册表，只执行已注册来源的规则，并跟踪每份准备记录属于哪个来源、是否仍可使用。创建执行器本身不会捕获输入。
+把前面的 API 串起来：先定义来源并得到 Token，再分别建立来源注册表、将 Token 与初始数据配对，最后交给 `createRuntime`。图中的空计算注册表只满足本例的初始化要求。
 
-下图聚焦一份已有 Source 接收新输入的主流程；初始化没有旧值，因此不执行这里的前后比较。可选的变更提示校验未在图中展开。
+<ComponentPreview files="source-registration" size="sm" hideCode type="flow" />
 
-<ComponentPreview files="source-lifecycle" hideCode type="flow" />
-
-`prepare` 依次捕获值、按需收集身份、生成读取视图；`compare` 调用定义中的 `equals`。相等时清理候选值；不相等时交给 Runtime 继续更新，成功后采用新值并清理旧值，失败则清理候选值。图中的“交给 Runtime”包含后续计算与事务发布，本篇不展开这部分编排。
-
-这四个动作由 `RuntimeSourceExecutor` 提供，属于包内执行机制，不需要调用方在接入代码中手动创建或调用：
-
-| 动作                | 核心职责                                     |
-| ------------------- | -------------------------------------------- |
-| `prepare`           | 将完整输入准备为内部值、读取视图和可选身份表 |
-| `compare`           | 检查记录后，调用 `equals` 比较内部值         |
-| `validateChangeSet` | 检查记录后，用前后读取视图校验变更提示       |
-| `retire`            | 先停止使用记录，再尝试释放其内部值           |
-
-失败时，清理责任取决于执行到了哪一步。回调异常会被包装为带来源、阶段和原始原因的 Runtime 错误；清理失败则记录为诊断，避免覆盖主要错误：
-
-| 失败位置                    | 谁负责清理                                                           |
-| --------------------------- | -------------------------------------------------------------------- |
-| `capture` 尚未返回          | 回调自行清理已申请的资源，执行器还没有拿到内部值                     |
-| 身份收集、身份校验或 `read` | 执行器尝试清理已捕获的内部值，不产生可用的准备记录                   |
-| `equals`                    | 执行器包装异常，候选状态由上层 Runtime 清理                          |
-| 变更提示校验回调            | 执行器立即清理候选记录，再抛出保留原始原因的错误                     |
-| 释放回调                    | 执行器返回诊断，上层继续处理其他清理；该记录不恢复可用，也不自动重试 |
-
-执行器负责单份来源状态的生命周期；跨来源的更新、候选值采用、原子发布和事务回滚由上层 Runtime 负责。
-
-按下面的顺序阅读即可把本篇与源码对上：
-
-| 源码                 | 阅读重点                                                                  |
-| -------------------- | ------------------------------------------------------------------------- |
-| `source/types.ts`    | 三种值的边界、两个可选回调、保留泛型的 token                              |
-| `source/define.ts`   | 从作者配置创建 token，将实际回调保存在内部                                |
-| `source/executor.ts` | `prepare`、`compare`、`validateChangeSet`、`retire`，以及失败时的资源清理 |
-
-<SourceLinks
-  sources={[
-    { label: 'Source 契约', path: 'packages/kernel/runtime/src/source/types.ts' },
-    { label: '定义凭证与内部执行器', path: 'packages/kernel/runtime/src/source/define.ts' },
-    { label: '完整生命周期执行', path: 'packages/kernel/runtime/src/source/executor.ts' },
-  ]}
-/>
+注册表保存处理规则，初始输入命令携带实际数据；两者在创建 Runtime 时汇合，触发捕获并建立初始状态。后续通过同一个 Token 读取已发布快照，使用结束后释放 Runtime。若提交新输入，Runtime 会重复前文的准备、比较与发布流程，而不必重新定义或注册来源。
 
 ## Core 应用
 

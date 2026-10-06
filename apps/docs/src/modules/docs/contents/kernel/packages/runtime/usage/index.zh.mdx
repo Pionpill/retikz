@@ -46,7 +46,7 @@ const doubled = defineRuntimeComputation({
   }),
 });
 
-const sources = createRuntimeSourceRegistry({ custom: [counter] });
+const sources = createRuntimeSourceRegistry([counter]);
 const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
 const runtime = createRuntime({
   sources,
@@ -73,7 +73,7 @@ try {
 
 本例只实现 `run`，因此更新结果为 `full`；使用 Runtime 不要求先编写增量算法。数值本身不可变，capture 与 read 可以直接返回值。
 
-> 初次阅读时，对这些概念有个印象即可；[状态与来源](/kernel/packages/runtime/source)会从表单坐标的转换与隔离问题出发，解释 Source 的捕获、读取、比较与释放。
+> 初次阅读时，对这些概念有个印象即可；[Source · 来源](/kernel/packages/runtime/source)会从表单坐标的转换与隔离问题出发，解释 Source 的捕获、读取、比较与释放。
 
 ## 理解这次接入
 

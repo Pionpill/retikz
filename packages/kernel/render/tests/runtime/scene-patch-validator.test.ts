@@ -37,7 +37,7 @@ const source = (fill: string): IRScene => ({
 
 const createIncrementalPair = () => {
   const program = createCoreComputation({ onWarn: () => undefined });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
   const session = createRuntime({
     sources,

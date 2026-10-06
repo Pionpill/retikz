@@ -19,7 +19,7 @@ const sceneWithText = (text: string): IRScene => ({
 });
 
 const createOwnerSession = (source: IRScene) => {
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
 
   return createRuntime({

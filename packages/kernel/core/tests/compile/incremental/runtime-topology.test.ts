@@ -57,7 +57,7 @@ const resolvedResultOf = (
 };
 
 const runtimeRevision = (() => {
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
 
   return createRuntime({

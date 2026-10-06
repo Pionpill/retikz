@@ -1,0 +1,194 @@
+---
+title: Identity · 身份
+description: 标识状态中的实体，理解身份的创建、比较、收集与查找，以及 Core 的应用示例
+---
+
+[Source · 来源](/kernel/packages/runtime/source)介绍了如何定义、注册和管理一份状态。当状态包含一张图时，还需要区分图中的各个节点：节点 A 从红色变成蓝色，它仍是同一个节点；另一张图中也有节点 A，却不能把两者混在一起。
+
+**实体身份**用于跨状态更新标识同一个实体。本篇说明如何创建身份、比较两个身份，以及收集和查找一份状态中的身份。来源 Token 标识整份来源定义，Identity 标识该来源状态中的实体；一个来源可以包含多个实体身份。
+
+## 标识节点
+
+节点的颜色可以变化，身份则应在它仍是同一个实体时保持不变。使用 `createRuntimeIdentity(owner, path)` 创建身份：
+
+```ts
+declare const createRuntimeIdentity: (owner: string, path: ReadonlyArray<string>) => RuntimeIdentity;
+```
+
+| 项目    | 说明                                           |
+| ------- | ---------------------------------------------- |
+| `owner` | 必填；所属 Source 的注册键，不能是空串或纯空白 |
+| `path`  | 必填；至少一段，每段为非空、非纯空白字符串     |
+| 返回值  | 包含 `owner` 与 `path` 的 Identity             |
+
+<ComponentAlert
+  type="tip"
+  title="owner 与 Source key"
+  description="Identity 的 owner 对应所属 Source 的 key，两者应保持一致。通常将这个字符串定义为常量，例如 GRAPH_SOURCE_KEY，并在定义 Source 和创建 Identity 时共同使用，避免重复手写造成不一致；已有 Source Token 时也可以直接使用它的 key。"
+/>
+
+```ts
+declare const runtimeIdentityEquals: (left: RuntimeIdentity, right: RuntimeIdentity) => boolean;
+```
+
+| 项目            | 说明                                     |
+| --------------- | ---------------------------------------- |
+| `left`、`right` | 必填；待比较的两个 Identity              |
+| 返回值          | `boolean`；来源与完整路径相同才为 `true` |
+
+```ts
+import { createRuntimeIdentity, runtimeIdentityEquals } from '@retikz/runtime';
+
+const nodeA = createRuntimeIdentity('example/graph', ['nodes', 'A']);
+const sameNodeA = createRuntimeIdentity('example/graph', ['nodes', 'A']);
+const otherGraphA = createRuntimeIdentity('example/other-graph', ['nodes', 'A']);
+
+console.log(runtimeIdentityEquals(nodeA, sameNodeA)); // true
+console.log(runtimeIdentityEquals(nodeA, otherGraphA)); // false
+```
+
+路径由领域自己定义，不是文件路径。Runtime 按来源、段数和每段文本精确比较，不拆分斜杠、不合并路径，也不规范化大小写或 Unicode。例如 `['nodes', 'A']` 与 `['nodes/A']` 不同。创建后再修改原路径数组，不会改变已经创建的身份。
+
+<ComponentAlert
+  type="tip"
+  title="为什么 path 使用数组？"
+  description={
+    <>
+      数组保留明确的分段边界，无需约定分隔符和转义规则：<code>['nodes', 'A/B']</code> 与<code>['nodes', 'A', 'B']</code>{' '}
+      是不同路径，也方便在父路径后追加子实体的标识。
+      调用方可以按自己的约定，从共同前缀观察层级、辅助调试或实现子树查询；Runtime
+      的身份比较与存在性查询只做完整匹配，不会因前几段相同而自动关联更新或传播失效。
+    </>
+  }
+/>
+
+稳定性由定义者保证：颜色变化时继续使用节点 A 的身份；若是另一个实体，就应分配另一个身份。Runtime 不会从颜色、对象引用或数组位置自动推断它们是不是同一节点。
+
+<SourceLinks
+  sources={[
+    { label: '实体身份契约', path: 'packages/kernel/runtime/src/identity/types.ts' },
+    { label: '身份创建与精确比较', path: 'packages/kernel/runtime/src/identity/identity.ts' },
+  ]}
+/>
+
+## 收集与查找
+
+一张图可能包含多个节点。`createRuntimeIdentityLookup(owner, identities)` 将同一来源的身份整理成查找表，用来回答“这个实体是否存在”：
+
+```ts
+declare const createRuntimeIdentityLookup: (
+  owner: string,
+  identities: ReadonlyArray<RuntimeIdentity>,
+) => RuntimeIdentityLookup;
+```
+
+创建身份查找表。
+
+| 项目         | 说明                                                |
+| ------------ | --------------------------------------------------- |
+| `owner`      | 所属来源的注册键，必填                              |
+| `identities` | 该来源的完整身份列表，必填，可为空                  |
+| 返回值       | 提供 `size`、`has(identity)` 和 `values()` 的查找表 |
+
+```ts
+// 返回对象中的方法签名
+has: (identity: RuntimeIdentity) => boolean;
+```
+
+入参是待查的完整 Identity；返回是否存在的布尔值，其他来源的身份会报错
+
+```ts
+// 返回对象中的方法签名
+values: () => ReadonlyArray<RuntimeIdentity>;
+```
+
+无入参；返回按路径稳定排序的只读身份列表
+
+```ts
+import { createRuntimeIdentityLookup } from '@retikz/runtime';
+
+const nodeB = createRuntimeIdentity('example/graph', ['nodes', 'B']);
+const identities = createRuntimeIdentityLookup('example/graph', [nodeB, nodeA]);
+
+console.log(identities.size); // 2
+console.log(identities.has(sameNodeA)); // true
+console.log(identities.has(createRuntimeIdentity('example/graph', ['nodes']))); // false
+console.log(identities.values().map(identity => identity.path));
+// [['nodes', 'A'], ['nodes', 'B']]
+```
+
+`has` 查询完整身份，存在子路径不代表父路径也存在。查询同一来源中不存在的身份返回 `false`；查询其他来源的身份会报错。构造查找表时，也会拒绝来源不一致或完整路径重复的条目，空身份列表则合法。
+
+`values()` 按路径逐段的字符串顺序返回身份，前缀相同时短路径在前；这不是插入顺序，也不受本地语言排序规则影响。查找表保存独立的身份集合，修改原列表不会改变它。
+
+在 Source 中提供 `collectIdentities` 后，Runtime 会在捕获状态时使用这套查找逻辑（本节仅说明如何收集身份；身份的用途将在后续章节中展开，相关章节尚未编写）。复用[Source · 来源](/kernel/packages/runtime/source#定义来源)介绍的 `defineRuntimeSource(input)`，它接收来源配置并返回 Token；这里额外提供 `collectIdentities(value)`，接收内部值并返回完整身份列表。下面定义图来源：输入是节点列表，捕获后保存独立的只读数据，并收集所有节点的身份。
+
+```ts
+import { defineRuntimeSource } from '@retikz/runtime';
+
+type GraphNode = Readonly<{ id: string; color: string }>;
+type GraphState = ReadonlyArray<GraphNode>;
+
+const graph = defineRuntimeSource<GraphState, GraphState, GraphState, never>({
+  key: 'example/graph',
+  value: {
+    capture: input => Object.freeze(input.map(node => Object.freeze({ ...node }))),
+    read: value => value,
+    equals: (left, right) =>
+      left.length === right.length &&
+      left.every((node, index) => node.id === right[index].id && node.color === right[index].color),
+  },
+  collectIdentities: value => value.map(node => createRuntimeIdentity('example/graph', ['nodes', node.id])),
+});
+```
+
+颜色变化会改变这份状态，但不改变节点身份。`collectIdentities` 返回完整集合，不能只返回变化的节点；省略它时，Runtime 不会扫描状态自动发现身份。本例只关心节点，因此不收集边或图本身的身份。
+
+<SourceLinks
+  sources={[
+    { label: '身份集合的归属、唯一性与查找', path: 'packages/kernel/runtime/src/identity/identity.ts' },
+    { label: 'Source 捕获后的身份收集', path: 'packages/kernel/runtime/src/source/executor.ts' },
+  ]}
+/>
+
+## 完整流程
+
+身份有两种常见用法：直接比较两个身份，或者把完整身份列表整理成查找表。下面用 API 串起这两条路径；箭头表示输入与输出的传递，不表示所有调用都必须依次执行。
+
+<ComponentPreview files="identity-flow" size="sm" hideCode type="flow" />
+
+`createRuntimeIdentity` 创建单个身份；`runtimeIdentityEquals` 直接比较两个身份，不需要查找表。需要查询集合时，将身份列表交给 `createRuntimeIdentityLookup`，再通过 `has` 查询、`values` 列举。Source 的 `collectIdentities` 是提供完整列表的另一种方式：捕获状态后，Runtime 内部会用它的结果建立查找表并检查归属与重复身份，不需要调用方重复构建。
+
+## Core 应用
+
+Core 用同一套身份结构标识图文档中的实体。例如，在增量比较使用的文档索引中，根的路径是 `['root']`，子实体的路径由父路径、实体类型和显式 `id` 拼接而成。对于根下一个 `id` 为 `A` 的普通节点，对应身份如下：
+
+```ts
+import { createRuntimeIdentity } from '@retikz/runtime';
+
+const root = createRuntimeIdentity('@retikz/core/document', ['root']);
+const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'node', 'A']);
+```
+
+这里的 `owner` 是 Core 文档来源的注册键，`path` 区分文档内部的实体。节点只改颜色时身份不变；父路径改变时，身份也随之改变。Core 在比较前后文档、核对变更提示时使用这些身份。当前文档来源没有配置 `collectIdentities`，这份索引由 Core 的增量计算逻辑建立。
+
+<SourceLinks
+  sources={[{ label: 'Core 文档身份与变更核对', path: 'packages/kernel/core/src/compile/incremental/diff.ts' }]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Source · 来源',
+      description: '捕获、身份收集、比较与资源清理如何组成状态生命周期',
+      url: '/kernel/packages/runtime/source',
+    },
+    {
+      title: '入门示例',
+      description: '将两个注册表交给 Runtime，完成更新、读取与释放',
+      url: '/kernel/packages/runtime/usage',
+    },
+  ]}
+/>

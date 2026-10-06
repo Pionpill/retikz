@@ -22,7 +22,7 @@ const defineCounterSource = () =>
 describe('runtime runtime lifecycle', () => {
   it('initial full 发布 revision 0，并在 incremental update 后原子推进 Snapshot', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const events: Array<RuntimeCommitEvent<string>> = [];
     const computation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, string>({
       id: { owner: 'counter', key: 'sum' },
@@ -82,7 +82,7 @@ describe('runtime runtime lifecycle', () => {
 
   it('empty 与 semantic-equal update bailout，空 Computation graph 仍提交 owner Snapshot', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,

@@ -169,15 +169,13 @@ const createRetainedProcessingState = (
     resolveReadonlyLayers,
   });
 
-  const sources = createRuntimeSourceRegistry({
-    builtins: [
-      CoreSourceDefinition,
-      CoreCompositeInputSourceDefinition,
-      VanillaCompositeRevisionSourceDefinition,
-      VanillaCompileDriverRevisionSourceDefinition,
-      ...(transactionParticipant?.sources ?? []),
-    ],
-  });
+  const sources = createRuntimeSourceRegistry([
+    CoreSourceDefinition,
+    CoreCompositeInputSourceDefinition,
+    VanillaCompositeRevisionSourceDefinition,
+    VanillaCompileDriverRevisionSourceDefinition,
+    ...(transactionParticipant?.sources ?? []),
+  ]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
   let participantResult: ProcessingResult | undefined;

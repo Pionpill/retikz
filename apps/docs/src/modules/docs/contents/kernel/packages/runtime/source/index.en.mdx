@@ -1,5 +1,5 @@
 ---
-title: State and Sources
+title: Source
 description: Follow form coordinates through representation changes, input isolation, capture, read views, equality and disposal, then trace the Source lifecycle in code
 ---
 
@@ -40,7 +40,52 @@ All three representations describe the same position. Internal storage and the r
 
 ### Defining a Source
 
-`defineRuntimeSource` defines a kind of state source and how its input is captured, read, compared and disposed. The returned definition is used to register and access that state. Here we define a coordinate Source:
+`defineRuntimeSource(input)` defines a kind of state source. It accepts one configuration object and returns a Source token preserving the input, internal value, read value and change-hint types. Defining it does not capture data.
+
+```ts
+declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
+  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange>,
+) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+```
+
+`defineRuntimeSource` accepts the following configuration members. The `value` object contains the rules for capturing, reading, comparing and disposing state:
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Member              | Required | Purpose                                                                                 |
+| ------------------- | -------- | --------------------------------------------------------------------------------------- |
+| `key`               | Yes      | The nonempty Source registration key, `example/position` here                           |
+| `value.capture`     | Yes      | Convert input into the internal value retained by Runtime                               |
+| `value.read`        | Yes      | Produce an immutable view for external readers from the internal value                  |
+| `value.equals`      | Yes      | Compare two complete internal values and return whether they are equal                  |
+| `value.dispose`     | No       | Release resources held by the internal value; unnecessary here                          |
+| `collectIdentities` | No       | Accept the internal value and return all entity identities; omitted means no collection |
+| `validateChangeSet` | No       | Accept previous/next read views and a change hint; return `valid` or `fallback`         |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
+  capture: (input: TInput) => TValue;
+  read: (value: TValue) => TRead;
+  equals: (left: TValue, right: TValue) => boolean;
+  dispose?: (value: TValue) => void;
+}>;
+
+type RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange> = Readonly<{
+  key: string;
+  value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
+  collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
+  validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' | 'fallback';
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+Define the coordinate Source as follows:
 
 ```ts
 import { defineRuntimeSource } from '@retikz/runtime';
@@ -67,18 +112,6 @@ The first three type parameters correspond to the input, internal value and read
 | `TValue`  | `PositionValue`      | Runtime retains it; `read`, `equals` and optional `dispose` receive it |
 | `TRead`   | `PositionRead`       | Read `[x, y]` through a Snapshot, typed as `readonly [number, number]` |
 
-`defineRuntimeSource` accepts the following configuration members. The `value` object contains the rules for capturing, reading, comparing and disposing state:
-
-| Member              | Required | Purpose                                                                            |
-| ------------------- | -------- | ---------------------------------------------------------------------------------- |
-| `key`               | Yes      | The nonempty Source registration key, `example/position` here                      |
-| `value.capture`     | Yes      | Convert input into the internal value retained by Runtime                          |
-| `value.read`        | Yes      | Produce an immutable view for external readers from the internal value             |
-| `value.equals`      | Yes      | Determine whether two complete internal values represent the same state            |
-| `value.dispose`     | No       | Release resources held by the internal value; unnecessary here                     |
-| `collectIdentities` | No       | Collect stable identities of entities in the state, such as graph node identifiers |
-| `validateChangeSet` | No       | Check caller-provided change hints against the previous and next read views        |
-
 The fourth type parameter describes change hints; `never` means this example provides none. Resource cleanup and the two optional callbacks are explained later.
 
 The returned `position` is a definition token identifying this Source; it does not expose the callbacks directly. Runtime stores the associated rules internally, and registration, submission and reading reuse this token. No input data exists yet, so defining the Source neither invokes `capture` nor creates state.
@@ -102,35 +135,150 @@ The returned `position` is a definition token identifying this Source; it does n
   ]}
 />
 
+### Source registration
+
+Defining a Source describes how a kind of state is captured, read and disposed. A Runtime also needs to know which Sources it will use. **Source registration** collects the selected definitions into a **Source registry**, the set of state Sources that Runtime can manage.
+
+For example, `position` defines how coordinate data is handled. Adding it to the registry lets Runtime locate those rules and check that a Source used later is registered. The registry holds definitions; actual coordinate data is supplied separately when Runtime is initialized or updated. Registration itself does not capture state.
+
+`createRuntimeSourceRegistry` accepts an array of Source tokens and registers the definitions Runtime may use:
+
+```ts
+declare const createRuntimeSourceRegistry: (tokens: Array<RuntimeSourceToken>) => RuntimeSourceRegistry;
+```
+
+Returns the newly created Source registry.
+
+| Item     | Description                                                  |
+| -------- | ------------------------------------------------------------ |
+| `tokens` | Required Source token array; pass `[]` for an empty registry |
+
+The registry handles every Source in the array uniformly, without distinguishing built-in and custom Sources. Callers organize and merge those groups when needed. Any duplicate `key` is rejected, including the same token supplied twice. No Sources are loaded automatically.
+
+```ts
+// Method signature on the returned object
+find: (key: string) => RuntimeSourceToken | undefined;
+```
+
+Look up a string key; return `undefined` if absent. The generic token does not retain a particular Source's input and read types
+
+```ts
+// Method signature on the returned object
+resolve: <TInput, TValue, TRead, TChange>(definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) =>
+  RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+```
+
+Confirm that this exact definition is registered and return it unchanged, preserving generic types. A different object with the same name throws
+
+```ts
+// Method signature on the returned object
+definitions: () => ReadonlyArray<RuntimeSourceToken>;
+```
+
+List definitions in stable string order by `key`; the returned list cannot modify the registry
+
+Register the `position` defined above:
+
+```ts
+import { createRuntimeSourceRegistry } from '@retikz/runtime';
+
+const sources = createRuntimeSourceRegistry([position]);
+
+console.log(sources.find('example/position') === position); // true
+console.log(sources.resolve(position) === position); // true
+console.log(sources.definitions().map(source => source.key)); // ['example/position']
+```
+
+Registration iterates over the supplied token array, checks token validity and key uniqueness, and associates each definition with its handling rules. The resulting registry is fixed: it exposes no append or replace operation.
+
+Resolving a newly created same-name Source fails because its token differs. Registering it alongside `position` fails because the key is duplicated. These are respectively membership checks during use and uniqueness checks during construction.
+
+<SourceLinks
+  sources={[
+    { label: 'Source registry input and members', path: 'packages/kernel/runtime/src/registry/types.ts' },
+    {
+      label: 'Source registration, validation and lookup',
+      path: 'packages/kernel/runtime/src/registry/source-registry.ts',
+    },
+  ]}
+/>
+
 ### Connecting to Runtime
 
-Defining `position` is like declaring a TypeScript type: the definition alone does not create any data. A Source definition additionally includes runtime rules such as capturing and reading values. To use it, the APIs below register the Source with Runtime and supply its initial data. A **registry** holds available definitions; the actual coordinates arrive separately as initial input:
+The Source registry now identifies the available definitions. Next, supply the initial coordinates and create a Runtime instance. This example has no derived computations; it creates an empty Computation registry bound to `sources` as required for initialization. Computation definitions and registration will be covered in “Derived Computation and Incremental Updates”.
 
-The table shows only the parameters used here. Both registries also support `builtins` and `custom` definition lists. Full configuration will be covered in “Identity and Registration”, and initialization and submission in “Transactions and Version Publication”. Both pages are planned but not yet written.
+The APIs below pair the initial data with its Source and create the instance. Transactions and version publication are covered separately.
 
-| Function declaration                                         | Description                                                                                                                                                                          |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `createRuntimeSourceRegistry({ custom })`                    | Create a Source registry.<br />`custom`: Source definitions, `[position]` here                                                                                                       |
-| `createRuntimeComputationRegistry({ sources })`              | Create a computation registry, with no computation definitions here.<br />`sources`: the associated Source registry                                                                  |
-| `createRuntimeSourceInput(source, value)`                    | Pair a Source with data as initial input.<br />`source`: the Source definition, `position` here<br />`value`: complete input data, `input` here                                      |
-| `createRuntime({ sources, computations, initialSnapshots })` | Capture initial input and establish readable state.<br />`sources`: the Source registry<br />`computations`: the computation registry<br />`initialSnapshots`: paired initial inputs |
+```ts
+declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  value: TInput,
+) => RuntimeSourceInput;
+```
 
-The diagram follows two paths: the upper path registers definitions that provide processing rules; the lower path pairs a Source with its input data. Both converge at the blue `createRuntime` node to establish the initial state:
+Return an initial input command pairing a Source with data; no capture occurs yet.
 
-<ComponentPreview files="source-registration" hideCode type="flow" />
+| Item     | Description                            |
+| -------- | -------------------------------------- |
+| `source` | the Source definition, `position` here |
+| `value`  | complete input data, `input` here      |
+
+```ts
+declare const createRuntime: (options: RuntimeOptions) => Runtime;
+```
+
+Capture initial input and return a Runtime instance for updates, reads and disposal.
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Item               | Description                                                        |
+| ------------------ | ------------------------------------------------------------------ |
+| `sources`          | the Source registry                                                |
+| `computations`     | the computation registry                                           |
+| `initialSnapshots` | paired initial inputs                                              |
+| `updateStrategy`   | Optional update strategy; defaults to `RuntimeUpdateStrategy.Auto` |
+| `trace`            | Optional execution trace sink                                      |
+| `participants`     | Optional commit participant tokens                                 |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeOptions = Readonly<{
+  sources: RuntimeSourceRegistry;
+  computations: RuntimeComputationRegistry;
+  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  updateStrategy?: RuntimeUpdateStrategy;
+  trace?: PerformanceTraceSink;
+  participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+```ts
+// Method signature on the returned object
+snapshot: <TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>) =>
+  RuntimeSnapshot<TRead>;
+```
+
+`source` is a required registered Source token; return a snapshot with revision `revision` and read value `value`
+
+```ts
+// Method signature on the returned object
+dispose: () => void;
+```
+
+No arguments; release Runtime-owned resources and return nothing
 
 The same `sources` registry is used to create the computation registry and passed to Runtime. `createRuntimeSourceInput` only pairs a definition with data; `capture` and `read` run during Runtime initialization. Append the following code to the definition above, leaving out derived computations to observe input isolation:
 
 ```ts
-import {
-  createRuntime,
-  createRuntimeComputationRegistry,
-  createRuntimeSourceInput,
-  createRuntimeSourceRegistry,
-} from '@retikz/runtime';
+import { createRuntime, createRuntimeComputationRegistry, createRuntimeSourceInput } from '@retikz/runtime';
 
 const input = { x: '10', y: '20' };
-const sources = createRuntimeSourceRegistry({ custom: [position] });
 const computations = createRuntimeComputationRegistry({ sources });
 const runtime = createRuntime({
   sources,
@@ -171,6 +319,35 @@ Preparation invokes rules and manages state; it does not automatically isolate a
     { label: 'Collect identities and call read after capture', path: 'packages/kernel/runtime/src/source/executor.ts' },
   ]}
 />
+
+The preceding sections describe individual callback responsibilities. In the implementation, `createRuntimeSourceExecutor` organizes them into a lifecycle manager bound to one Source registry. It invokes only registered Source rules and tracks which Source owns each prepared record and whether the record remains usable. Creating the executor does not capture input.
+
+This diagram follows the main path of an existing Source receiving new input. Initialization has no old value and therefore skips the comparison shown here. Optional change-hint validation is not expanded in the diagram.
+
+<ComponentPreview files="source-lifecycle" hideCode type="flow" />
+
+`prepare` captures the value, optionally collects identities and creates the read view; `compare` calls the definition's `equals`. Equal values lead to candidate cleanup. Different values proceed to Runtime's update flow: success adopts the new value and cleans up the old one, while failure cleans up the candidate. “Hand to Runtime” includes downstream computation and transaction publication, whose orchestration is outside this page's scope.
+
+`RuntimeSourceExecutor` provides four operations as an internal execution mechanism. Application code does not need to create or call it directly:
+
+| Operation           | Responsibility                                                                      |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `prepare`           | Prepare complete input as an internal value, read view and optional identity lookup |
+| `compare`           | Check records, then compare their internal values using `equals`                    |
+| `validateChangeSet` | Check records, then validate change hints against their read views                  |
+| `retire`            | Mark a record unusable before attempting to release its internal value              |
+
+Cleanup responsibility depends on where execution failed. Callback exceptions become Runtime errors carrying the Source, phase and original cause. Cleanup failures become diagnostics so that they do not replace the primary error:
+
+| Failure point                                      | Cleanup responsibility                                                                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `capture` before returning                         | The callback cleans up resources it acquired; the executor has not received an internal value                                  |
+| Identity collection, identity validation or `read` | The executor attempts to release the captured value; no usable prepared record is produced                                     |
+| `equals`                                           | The executor wraps the error; the enclosing Runtime cleans up candidates                                                       |
+| Change-hint validator                              | The executor immediately cleans up the candidate and throws an error preserving the original cause                             |
+| Disposal callback                                  | The executor returns diagnostics so the caller can continue other cleanup; the record remains unusable with no automatic retry |
+
+The executor manages individual Source state lifecycles. Cross-Source updates, candidate adoption, atomic publication and transaction rollback belong to the enclosing Runtime.
 
 ## State comparison
 
@@ -253,7 +430,7 @@ For example, if the read view changes from `[10, 20]` to `[13, 20]`, a hint coul
 
 Like comparison, validation first checks both records' ownership and usability. Failure handling differs: if the validator throws, the executor immediately retires and cleans up the candidate before throwing a wrapped error. It does not release the previous state. If cleanup also fails, its diagnostics are attached to the validation error, preserving the original failure.
 
-This section introduces only the two optional Source callbacks. Identity structure and registration rules, incremental use of change hints, and version constraints will be covered respectively in the planned “Identity and Registration”, “Derived Computation and Incremental Updates”, and “Transactions and Version Publication” pages.
+This section introduces only the two optional Source callbacks. See [Identity](/kernel/packages/runtime/identity) for identity structure, comparison and lookup. Incremental use of change hints and version constraints will be covered in the planned “Derived Computation and Incremental Updates” and “Transactions and Version Publication” pages.
 
 <SourceLinks
   sources={[
@@ -268,52 +445,13 @@ This section introduces only the two optional Source callbacks. Identity structu
   ]}
 />
 
-## Source walkthrough
+## Complete flow
 
-The preceding sections describe individual callback responsibilities. In the implementation, `createRuntimeSourceExecutor` organizes them into a lifecycle manager bound to one Source registry. It invokes only registered Source rules and tracks which Source owns each prepared record and whether the record remains usable. Creating the executor does not capture input.
+Connect the APIs described above: define a Source to obtain its token, register it, pair the token with initial data, then pass the resulting inputs to `createRuntime`. The empty Computation registry satisfies this example's initialization requirements.
 
-This diagram follows the main path of an existing Source receiving new input. Initialization has no old value and therefore skips the comparison shown here. Optional change-hint validation is not expanded in the diagram.
+<ComponentPreview files="source-registration" size="sm" hideCode type="flow" />
 
-<ComponentPreview files="source-lifecycle" hideCode type="flow" />
-
-`prepare` captures the value, optionally collects identities and creates the read view; `compare` calls the definition's `equals`. Equal values lead to candidate cleanup. Different values proceed to Runtime's update flow: success adopts the new value and cleans up the old one, while failure cleans up the candidate. “Hand to Runtime” includes downstream computation and transaction publication, whose orchestration is outside this page's scope.
-
-`RuntimeSourceExecutor` provides four operations as an internal execution mechanism. Application code does not need to create or call it directly:
-
-| Operation           | Responsibility                                                                      |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| `prepare`           | Prepare complete input as an internal value, read view and optional identity lookup |
-| `compare`           | Check records, then compare their internal values using `equals`                    |
-| `validateChangeSet` | Check records, then validate change hints against their read views                  |
-| `retire`            | Mark a record unusable before attempting to release its internal value              |
-
-Cleanup responsibility depends on where execution failed. Callback exceptions become Runtime errors carrying the Source, phase and original cause. Cleanup failures become diagnostics so that they do not replace the primary error:
-
-| Failure point                                      | Cleanup responsibility                                                                                                         |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `capture` before returning                         | The callback cleans up resources it acquired; the executor has not received an internal value                                  |
-| Identity collection, identity validation or `read` | The executor attempts to release the captured value; no usable prepared record is produced                                     |
-| `equals`                                           | The executor wraps the error; the enclosing Runtime cleans up candidates                                                       |
-| Change-hint validator                              | The executor immediately cleans up the candidate and throws an error preserving the original cause                             |
-| Disposal callback                                  | The executor returns diagnostics so the caller can continue other cleanup; the record remains unusable with no automatic retry |
-
-The executor manages individual Source state lifecycles. Cross-Source updates, candidate adoption, atomic publication and transaction rollback belong to the enclosing Runtime.
-
-Read the implementation in this order:
-
-| Source file          | Focus                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `source/types.ts`    | The three value boundaries, optional callbacks and typed token                     |
-| `source/define.ts`   | Creating a token from author configuration and storing actual callbacks internally |
-| `source/executor.ts` | `prepare`, `compare`, `validateChangeSet`, `retire`, and cleanup after failures    |
-
-<SourceLinks
-  sources={[
-    { label: 'Source contracts', path: 'packages/kernel/runtime/src/source/types.ts' },
-    { label: 'Definition tokens and internal executors', path: 'packages/kernel/runtime/src/source/define.ts' },
-    { label: 'Complete lifecycle execution', path: 'packages/kernel/runtime/src/source/executor.ts' },
-  ]}
-/>
+The registry holds handling rules while the initial-input command carries actual data. They meet when Runtime is created, triggering capture and initial state preparation. Read committed snapshots through the same token, then dispose Runtime when finished. Submitting new input repeats preparation, comparison and publication without redefining or registering the Source again.
 
 ## Core application
 

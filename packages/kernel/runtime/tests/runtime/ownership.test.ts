@@ -25,7 +25,7 @@ describe('runtime runtime ownership', () => {
         dispose: ownerDispose,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -99,7 +99,7 @@ describe('runtime runtime ownership', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],

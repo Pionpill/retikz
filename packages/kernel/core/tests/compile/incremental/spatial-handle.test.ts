@@ -59,7 +59,7 @@ describe('incremental spatial handle atomicity', () => {
       ],
     });
     const program = createCoreComputation({ onWarn: () => undefined });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
     const session = createRuntime({
       sources,
@@ -81,7 +81,7 @@ describe('incremental spatial handle atomicity', () => {
 
   it('commits Scene, artifacts, and spatial index together and preserves the previous revision on failure', () => {
     const program = createCoreComputation({ composites: [card] });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
     const session = createRuntime({
       sources,

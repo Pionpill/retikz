@@ -10,7 +10,7 @@ import { sourceRegistrationI18n } from './source-registration.i18n';
 /** 来源注册图的语言配置 */
 export type SourceRegistrationProps = Readonly<{ lang?: Lang }>;
 
-/** 来源定义与初始输入共同接入 Runtime */
+/** 来源定义、注册、初始化、读取与释放的完整流程 */
 const SourceRegistration: FC<SourceRegistrationProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = sourceRegistrationI18n[lang];
@@ -34,6 +34,14 @@ const SourceRegistration: FC<SourceRegistrationProps> = props => {
             ]}
           />
         </FlowLayout>
+        <FlowLayout id="usage" kind="linear" direction="down" itemWidth="match-largest">
+          <FlowEntities
+            items={[
+              { id: 'snapshot', text: i18n.snapshot, role: 'activity' },
+              { id: 'dispose', text: i18n.dispose, role: 'activity' },
+            ]}
+          />
+        </FlowLayout>
       </FlowLayout>
       <FlowRelations
         items={[
@@ -43,6 +51,8 @@ const SourceRegistration: FC<SourceRegistrationProps> = props => {
           { source: 'sources', target: 'runtime', label: 'sources' },
           { source: 'computations', target: 'runtime', label: 'computations' },
           { source: 'input', target: 'runtime', label: 'initialSnapshots' },
+          { source: 'runtime', target: 'snapshot' },
+          { source: 'snapshot', target: 'dispose', label: i18n.finish },
         ]}
       />
     </PreviewFlowDiagram>

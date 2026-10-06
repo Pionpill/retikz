@@ -39,7 +39,7 @@ describe('runtime runtime rollback', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [third, second, first] });
+    const sources = createRuntimeSourceRegistry([third, second, first]);
     const computations = createRuntimeComputationRegistry({ sources });
 
     expect(() =>
@@ -79,7 +79,7 @@ describe('runtime runtime rollback', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [second, first] });
+    const sources = createRuntimeSourceRegistry([second, first]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -128,7 +128,7 @@ describe('runtime runtime rollback', () => {
         dispose: value => retired.push(`owner:c:${value.value}`),
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [thirdSource, secondSource, firstSource] });
+    const sources = createRuntimeSourceRegistry([thirdSource, secondSource, firstSource]);
     const firstComputation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
       id: { owner: 'a', key: 'computation' },
       sources: [firstSource],

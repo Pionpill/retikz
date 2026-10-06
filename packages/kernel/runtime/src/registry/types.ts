@@ -2,15 +2,7 @@ import type { RuntimeComputationDefinition, RuntimeComputationToken } from '../c
 import type { RuntimeComputationId } from '../identity';
 import type { RuntimeSourceDefinition, RuntimeSourceToken } from '../source';
 
-/** Source registry 的 builtin/custom Definition 输入 */
-export type RuntimeSourceRegistryInput = Readonly<{
-  /** Kernel 内置 Source Definitions */
-  builtins?: ReadonlyArray<RuntimeSourceToken>;
-  /** 第三方或上层 Source Definitions */
-  custom?: ReadonlyArray<RuntimeSourceToken>;
-}>;
-
-/** 统一解析 builtin/custom typed Source token 的 immutable registry */
+/** 统一解析 typed Source token 的 immutable registry */
 export type RuntimeSourceRegistry = Readonly<{
   /** 以原 Definition token 恢复完整泛型 */
   resolve: <TInput, TValue, TRead, TChange>(

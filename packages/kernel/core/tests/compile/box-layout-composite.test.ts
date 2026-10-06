@@ -821,7 +821,7 @@ describe('Box Layout Composite contract', () => {
     const next = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 30 });
     const options = { composites: [definition], onWarn: () => {} };
     const program = createCoreComputation(options);
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
     const session = createRuntime({
       sources,

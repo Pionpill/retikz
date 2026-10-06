@@ -34,7 +34,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('拒绝未知 updateStrategy，不把非法策略静默当成 auto', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const create = createRuntime as (value: unknown) => unknown;
 
@@ -55,7 +55,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('创建时复制 updateStrategy，后续修改 options 不改变既有 Runtime', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const update = vi.fn((_previous, view) => ({
       kind: RuntimeComputationKind.Incremental,
       artifact: view.snapshot(owner).value,
@@ -90,7 +90,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('拒绝 updateStrategy accessor，避免创建阶段执行外部 getter', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const create = createRuntime as (value: unknown) => unknown;
     const getter = vi.fn(() => 'auto');
@@ -115,7 +115,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('update null/primitive 不泄漏 TypeError', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -134,7 +134,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('拒绝 malformed full run result，并保留 Computation context', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const input = {
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -169,7 +169,7 @@ describe('runtime runtime malformed JavaScript input', () => {
   it('run result 的恶意 getter throw 仍映射为稳定 Computation error', () => {
     const getterCause = new Error('run kind getter failed');
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const input = {
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -208,7 +208,7 @@ describe('runtime runtime malformed JavaScript input', () => {
   it('update result 只读取一次 author 属性，后续 getter throw 不会逃逸', () => {
     const getterCause = new Error('update kind getter replayed');
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     let kindReads = 0;
     const input = {
       id: { owner: 'counter', key: 'computation' },
@@ -262,7 +262,7 @@ describe('runtime runtime malformed JavaScript input', () => {
     { name: 'malformed fallback diagnostics', result: { kind: RuntimeComputationKind.Fallback, diagnostics: [null] } },
   ])('拒绝 $name update result，不把它误判为合法 fallback', testCase => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const input = {
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -305,7 +305,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('缺少 sources 的 update envelope 使用稳定 command error', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -324,7 +324,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('拒绝 malformed context diagnostic，不提交不完整 warning', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const input = {
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -369,7 +369,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('context diagnostic 只读取一次 author 属性', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     let codeReads = 0;
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
@@ -406,7 +406,7 @@ describe('runtime runtime malformed JavaScript input', () => {
 
   it('Computation trace facade 不允许 callback drain reporter diagnostics', () => {
     const owner = defineSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],

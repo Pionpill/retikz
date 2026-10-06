@@ -67,11 +67,6 @@ const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
   input: RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange>,
 ): RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
 
-type RuntimeSourceRegistryInput = Readonly<{
-  builtins?: ReadonlyArray<RuntimeSourceToken>;
-  custom?: ReadonlyArray<RuntimeSourceToken>;
-}>;
-
 type RuntimeSourceRegistry = Readonly<{
   resolve<TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -80,7 +75,7 @@ type RuntimeSourceRegistry = Readonly<{
   definitions(): ReadonlyArray<RuntimeSourceToken>;
 }>;
 
-const createRuntimeSourceRegistry = (input: RuntimeSourceRegistryInput): RuntimeSourceRegistry;
+const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): RuntimeSourceRegistry;
 ```
 
 `RuntimeRevision` / `RuntimeChangeSet`在本 ADR只是 TypeScript branded vocabulary：revision运行时表示仍是 number，无法鉴别 JavaScript对合法 safe integer的伪造。Runtime只承诺验证 `0..Number.MAX_SAFE_INTEGER`整数、current/base equality和 exhaustion，不承诺判断数值来源；ChangeSet object的 private brand/WeakSet由 ADR-012 factory保证不可伪造，changes array复制为不可变容器。
@@ -93,9 +88,9 @@ const createRuntimeSourceRegistry = (input: RuntimeSourceRegistryInput): Runtime
 
 这是受信任的 Definition author contract，而不是 Runtime 能对任意泛型值自动证明的安全属性。Runtime 不做通用 deep-clone/deep-freeze，也不承诺防御恶意第三方 provider；内置 Definition 必须通过 conformance/alias-attack 测试，第三方扩展示例和文档必须显式说明该责任。ADR-012 的 candidate 隔离只依赖通过该 conformance contract 的 `TRead`，不再声称可防御恶意 callback。
 
-`defineRuntimeSource()` 是唯一作者入口；`createRuntimeSourceRegistry({ builtins, custom })` 合并并解析 Definition token，重复 key fail-loud，没有内置覆盖优先级。动态 `find(key)` 只用于诊断和存在性检查；所有 typed read/update 都必须持有原 Definition token。
+`defineRuntimeSource()` 是唯一作者入口；`createRuntimeSourceRegistry(tokens)` 统一注册并解析 Definition token 数组，重复 key fail-loud。内置与自定义来源的分类及合并由调用方负责，Registry 不区分来源类别，也不自动装入来源。动态 `find(key)` 只用于诊断和存在性检查；所有 typed read/update 都必须持有原 Definition token。
 
-`registry.definitions()` 固定按 key JavaScript code-unit升序返回 immutable copy，与 builtins/custom注册顺序无关。
+`registry.definitions()` 固定按 key JavaScript code-unit升序返回 immutable copy，与输入数组顺序无关。
 
 Source key 与 identity path segment 都是非空字符串，按 JavaScript code-unit exact equality 判等，不对 `/`、`.`、`:` 做规范化。Identity 相等当且仅当 owner、段数和每段完全相等；内部使用结构化 trie 或长度前缀编码，不暴露可歧义字符串 key。
 

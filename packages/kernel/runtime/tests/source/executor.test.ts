@@ -36,7 +36,7 @@ const defineFixtureSource = (
   });
 
 const createExecutor = (...definitions: Array<RuntimeSourceToken>) =>
-  createRuntimeSourceExecutor(createRuntimeSourceRegistry({ custom: definitions }));
+  createRuntimeSourceExecutor(createRuntimeSourceRegistry(definitions));
 
 describe('runtime owner executor', () => {
   it('prepare 隔离 mutable input/read alias 并建立 identity lookup', () => {

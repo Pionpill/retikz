@@ -18,12 +18,7 @@ export * from './diagnostic';
 export * from './error';
 export * from './identity';
 export * from './participant';
-export type {
-  RuntimeComputationRegistry,
-  RuntimeComputationRegistryInput,
-  RuntimeSourceRegistry,
-  RuntimeSourceRegistryInput,
-} from './registry';
+export type { RuntimeComputationRegistry, RuntimeComputationRegistryInput, RuntimeSourceRegistry } from './registry';
 export { createRuntimeComputationRegistry, createRuntimeSourceRegistry } from './registry';
 export * from './runtime';
 export type {

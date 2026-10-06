@@ -264,9 +264,7 @@ describe('composite instance runtime input', () => {
       { composites: [prepared] },
       { compositeInputSource: CoreCompositeInputSourceDefinition },
     );
-    const sources = createRuntimeSourceRegistry({
-      builtins: [CoreSourceDefinition, CoreCompositeInputSourceDefinition],
-    });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, CoreCompositeInputSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
     const inputs = (text: string) => createCompositeInputBindings(source, [{ path: ['children', 0], input: text }]);
     const session = createRuntime({

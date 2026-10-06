@@ -33,7 +33,7 @@ describe('runtime runtime failure isolation', () => {
         dispose,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -97,7 +97,7 @@ describe('runtime runtime failure isolation', () => {
         dispose,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
@@ -164,7 +164,7 @@ describe('runtime runtime failure isolation', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [declared, hidden] });
+    const sources = createRuntimeSourceRegistry([declared, hidden]);
     let replayed: RetikzRuntimeError | undefined;
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'declared', key: 'computation' },
@@ -244,7 +244,7 @@ describe('runtime runtime failure isolation', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const sessionRef: { current?: Runtime } = {};
     const secondObserver = vi.fn();
     const first = defineRuntimeComputation<number, number, number, number>({
@@ -334,7 +334,7 @@ describe('runtime runtime failure isolation', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const observedPrefixes: Array<ReadonlyArray<unknown>> = [];
     const first = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'a' },

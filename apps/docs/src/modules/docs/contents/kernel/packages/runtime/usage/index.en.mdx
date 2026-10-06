@@ -46,7 +46,7 @@ const doubled = defineRuntimeComputation({
   }),
 });
 
-const sources = createRuntimeSourceRegistry({ custom: [counter] });
+const sources = createRuntimeSourceRegistry([counter]);
 const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
 const runtime = createRuntime({
   sources,
@@ -73,7 +73,7 @@ try {
 
 This example implements only `run`, so the update outcome is `full`. Using Runtime does not require an incremental algorithm. Numbers are immutable, so capture and read can return them directly.
 
-> On your first read, a general impression is enough. [State and Sources](/kernel/packages/runtime/source) starts with converting and isolating form coordinates to explain Source capture, reading, comparison and disposal.
+> On your first read, a general impression is enough. [Source](/kernel/packages/runtime/source) starts with converting and isolating form coordinates to explain Source capture, reading, comparison and disposal.
 
 ## Understanding the example
 

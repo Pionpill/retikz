@@ -190,7 +190,7 @@ const createSession = (
           coreComputation,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
   const session = createRuntime({
     sources,
@@ -208,7 +208,7 @@ const createSession = (
 /** 编译一对固定 Runtime snapshot 与 canonical Patch，供内置 renderer 黑盒测试 */
 const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   const coreComputation = createCoreComputation({ onWarn: () => undefined });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
   const session = createRuntime({
     sources,

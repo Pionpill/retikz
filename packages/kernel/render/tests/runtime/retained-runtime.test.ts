@@ -116,9 +116,7 @@ const createHarness = (
     immutableOptions: { backend: 'svg', idPrefix: 'test' },
     coreComputation,
   });
-  const sources = createRuntimeSourceRegistry({
-    builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition],
-  });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
   const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
   const session = createRuntime({
     sources,
@@ -246,7 +244,7 @@ describe('RenderRuntimeSourceDefinition', () => {
       canvas: { width: 320, height: 180 },
       cachePolicy: 'static' as const,
     };
-    const sources = createRuntimeSourceRegistry({ builtins: [RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
     const session = createRuntime({
       sources,
@@ -270,7 +268,7 @@ describe('RenderRuntimeSourceDefinition', () => {
   });
 
   it('按 registration 排序，并拒绝重复 registration 与非法动态字段', () => {
-    const sources = createRuntimeSourceRegistry({ builtins: [RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
     const sorted = createRuntime({
       sources,
@@ -323,7 +321,7 @@ describe('RenderRuntimeSourceDefinition', () => {
   });
 
   it('在读取前递归拒绝 config accessor 与非标准数组属性', () => {
-    const sources = createRuntimeSourceRegistry({ builtins: [RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
     const getter = vi.fn(() => [0, 0, 1, 1]);
     const easings = Object.defineProperty({}, 'custom', {
@@ -636,7 +634,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'validator-first' },
       coreComputation: program,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [sourceOwner, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([sourceOwner, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
     const records: Array<PerformanceTraceRecord> = [];
     const session = createRuntime({
@@ -691,7 +689,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'stale' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
     const session = createRuntime({
       sources,
@@ -745,7 +743,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'mutable-read' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
     const session = createRuntime({
       sources,
@@ -847,9 +845,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'dispose-retry' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({
-      builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition],
-    });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
     const session = createRuntime({
       sources,
@@ -952,7 +948,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'throw' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     try {
@@ -1004,7 +1000,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'retained-error' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     try {
@@ -1053,7 +1049,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'read-getter' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     try {
@@ -1108,7 +1104,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'malformed-animation' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     expect(() =>
@@ -1165,7 +1161,7 @@ describe('createRetainedRenderParticipant', () => {
       immutableOptions: { backend: 'svg', idPrefix: 'animation-capture' },
       coreComputation,
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
     const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
     const session = createRuntime({
       sources,
