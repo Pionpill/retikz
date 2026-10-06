@@ -74,17 +74,11 @@ export type RuntimeSourceExecutor = Readonly<{
   ) => RuntimeSourceExecutionResult<void>;
 }>;
 
-const createDisposeDiagnostic = (source: string, cause: unknown): RuntimeSourceLifecycleDiagnostic =>
-  Object.freeze({
-    code: RuntimeDiagnosticCode.SourceDisposeFailed,
-    owner: source,
-    phase: RuntimeSourcePhase.Retire,
-    severity: 'error',
-    message: cause instanceof Error ? cause.message : String(cause),
-    cause,
-  });
-
-/** 释放一个 captured value，并把 dispose throw 隔离为 secondary diagnostic */
+/**
+ * 释放已捕获的值，并将释放回调抛出的异常转换为诊断
+ * @returns 未定义 dispose 或释放正常完成时返回空数组；释放回调抛出异常时返回包含一条释放失败诊断的只读数组，保留原始异常为 cause
+ * @remarks 释放异常不向外抛出，由上层收集诊断，避免打断后续清理或掩盖已有的主要错误
+ */
 const disposeValue = <TInput, TValue, TRead, TChange>(
   definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   executor: RuntimeSourceErasedExecutor,
@@ -96,7 +90,16 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
     executor.dispose(value);
     return Object.freeze([]);
   } catch (cause) {
-    return Object.freeze([createDisposeDiagnostic(definition.key, cause)]);
+    return Object.freeze([
+      Object.freeze<RuntimeSourceLifecycleDiagnostic>({
+        code: RuntimeDiagnosticCode.SourceDisposeFailed,
+        owner: definition.key,
+        phase: RuntimeSourcePhase.Retire,
+        severity: 'error',
+        message: cause instanceof Error ? cause.message : String(cause),
+        cause,
+      }),
+    ]);
   }
 };
 
