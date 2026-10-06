@@ -1,43 +1,27 @@
-import { CompositeBaseSchema, NodeSchema, ScopePropsSchema, PathSchema } from '@retikz/core';
+import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { JsonValueSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, literal, never, string, union } from 'zod';
 
 import { SurfaceSchema } from '../../../presentation/surface/schema';
 import { DataExpandSchema } from '../../_cell/data';
-import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
+import {
+  CellSchema,
+  CellStyleSchema,
+  CellLayoutSchema,
+  OpenBorderSchema,
+  CollectionArrowSchema,
+} from '../../_cell/schema';
 import { ArraySkeletonSchema } from '../../array';
 
 /** 单格尺寸与栈底到栈顶的堆叠方向 */
 export const StackLayoutSchema = CellLayoutSchema.extend({
   direction: zodEnum(['up', 'down', 'left', 'right']).default('up').describe('Direction from bottom to top.'),
-  gap: NonNegativeNumberSchema.default(2).describe('Distance between adjacent cells.'),
+  reverseArrows: boolean().default(false).describe('Swap operation arrow sides without changing flow or cell order.'),
+  gap: NonNegativeNumberSchema.default(8).describe('Distance between adjacent cells.'),
 });
 
 /** 开放边框复用 Core Path 外观，不开放结构与身份字段 */
-export const StackBorderSchema = PathSchema.omit({
-  type: true,
-  id: true,
-  children: true,
-  kind: true,
-  kindOptions: true,
-})
-  .extend({
-    style: PathSchema.shape.style
-      .unwrap()
-      .extend({
-        stroke: PathSchema.shape.style
-          .unwrap()
-          .shape.stroke.default('currentColor')
-          .describe('Border stroke color; defaults to currentColor.'),
-        strokeWidth: PathSchema.shape.style
-          .unwrap()
-          .shape.strokeWidth.default(1)
-          .describe('Border stroke width in drawing units.'),
-        fill: PathSchema.shape.style.unwrap().shape.fill.default('none').describe('Optional fill; defaults to none.'),
-      })
-      .optional(),
-  })
-  .describe('Non-structural Core path properties of the open border.');
+export const StackBorderSchema = OpenBorderSchema;
 
 /** 栈的空格或符号格骨架，与一维集合共用输入契约 */
 export const StackSkeletonSchema = ArraySkeletonSchema;
@@ -49,7 +33,7 @@ const StackBaseSchema = CompositeBaseSchema.extend({
   style: CellStyleSchema.optional(),
   layout: StackLayoutSchema.optional().describe('Cell sizing, direction and spacing.'),
   label: NodeSchema.shape.label,
-  topLabel: NodeSchema.shape.label.describe('Label on the last cell; hidden for an empty stack.'),
+  arrow: CollectionArrowSchema,
   border: union([boolean(), StackBorderSchema])
     .default(true)
     .describe('Open three-sided border; false hides the border without changing padding.'),

@@ -215,16 +215,36 @@ Object.assign(translations, {
   'Stack 及单格裁切依赖': 'Stack and cell clipping dependencies',
 });
 
+for (const [source, translation] of Object.entries(translations)) {
+  if (source.includes('Stack'))
+    translations[source.replaceAll('Stack', 'Queue').replaceAll('空栈', '空队列')] = translation
+      .replaceAll('Stack', 'Queue')
+      .replaceAll('empty stack', 'empty queue');
+}
+Object.assign(translations, {
+  'JSON 数据，按队首到队尾排列': 'JSON data ordered from front to back',
+  '队首到队尾的稀疏 Source，三种输入互斥': 'Sparse front-to-back Source with three mutually exclusive inputs',
+  '显式单格，最后一项为队尾': 'Explicit cells with the last item at the back',
+  保留作者稀疏字段与队首到队尾顺序: 'Preserve sparse author fields and front-to-back order',
+});
+
 /** 从三个公开 collection 入口生成组件局部参考，嵌入合页 API 小节 */
 export const writeStandardCollectionApiReferences = async (
   outputRoot: string,
-  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain' | 'Stack'> = ['Array', 'Map', 'Matrix', 'Chain', 'Stack'],
+  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain' | 'Stack' | 'Queue'> = [
+    'Array',
+    'Map',
+    'Matrix',
+    'Chain',
+    'Stack',
+    'Queue',
+  ],
 ): Promise<void> => {
   for (const name of names) {
     const slug = name.toLowerCase();
     const markers =
-      name === 'Stack'
-        ? ['StackItem']
+      name === 'Stack' || name === 'Queue'
+        ? [`${name}Item`]
         : name === 'Chain'
           ? ['ChainCell', 'ChainParallel', 'ChainBranch']
           : name === 'Array'

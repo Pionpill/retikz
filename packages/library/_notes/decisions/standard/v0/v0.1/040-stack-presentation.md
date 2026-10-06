@@ -1,5 +1,5 @@
 ---
-description: Stack 以有序单元格呈现栈底到栈顶的静态结构，支持四向堆叠、开放端容器与栈顶标签，操作和自定义连接由外部绘图组合
+description: Stack 以有序单元格呈现栈底到栈顶的静态结构，支持四向堆叠、开放端容器与进出箭头，操作和自定义连接由外部绘图组合
 keywords: Stack、栈、collection、栈顶、开放端、items、data、skeleton、单元格
 ---
 
@@ -38,7 +38,7 @@ Standard 通过 collection 入口公开 `StackSchema`、`IRStack`、`createStack
 React items 属性接受文字或文本 Cell；drawable 使用 StackItem 的唯一 children。StackItem 的 text 与 drawable children 互斥，都省略时为空格。数组和 Fragment 透明展开，沿现有规则忽略 React empty node；不接受非 StackItem 的直属绘图子项。children 是 items 的 authoring 形式，与三个属性入口互斥。React 未提供任何入口时为空栈；Vanilla、factory 与直接 IR 必须明确选择入口。
 
 ```tsx
-<Stack id="calls" layout={{ direction: 'up', width: 96, gap: 2 }} topLabel={{ text: 'top', position: 'right' }}>
+<Stack id="calls" layout={{ direction: 'up', width: 96, gap: 2 }}>
   <StackItem text="main" />
   <StackItem id="active-call" text="visit" style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }} />
 </Stack>
@@ -46,7 +46,7 @@ React items 属性接受文字或文本 Cell；drawable 使用 StackItem 的唯�
 
 ## 排列与单格样式
 
-`layout` 复用 Cell 的 width、height、padding、overflow，并增加 `direction: 'up' | 'down' | 'left' | 'right'`，默认 up，以及非负 `gap`，默认 2。width 与 height 始终表示单格的物理宽高，旋转方向时不交换字段含义。
+`layout` 复用 Cell 的 width、height、padding、overflow，并增加 `direction: 'up' | 'down' | 'left' | 'right'`，默认 up，以及非负 `gap`，默认 8。width 与 height 始终表示单格的物理宽高，旋转方向时不交换字段含义。
 
 | 方向  | 栈底到栈顶 | 开放端 |
 | ----- | ---------- | ------ |
@@ -73,15 +73,15 @@ border 对象复用 Core Path 的非结构属性，排除 Stack 拥有的 type�
 
 父布局 exact／range proposal 沿现有集合契约处理：自然结构不拉伸、不压缩间距，额外空间留在自然结构的右侧和下方；不足以容纳结构时失败。外框跟随自然单元格区域及 padding，不因额外 allocation 空间而拉长。
 
-## 标签与空间引用
+## 进出箭头与空间引用
 
-根 `label` 复用既有集合的 Core Node label 单个或数组配置，附着于整个容器 allocation。新增 `topLabel` 使用同一配置契约，仅在非空栈附着于最后一格的实际 allocation；默认省略，不生成内置文字或箭头。标签位置使用 Core 的物理位置语义，不随 direction 改写。空栈不绘制 topLabel，也不为其保留空间；根 label 仍可显示“空栈”。标签影响可见范围，不撑大格子、容器或帧内留白。
+根 label 保留整体文字标签；arrow.input 与 arrow.output 是默认隐藏的进出箭头，true 独立启用，false 隐藏，对象启用并提供 Core Path style 与 ArrowEndDetail 外观。空集合隐藏进出箭头。箭头距开放端 8，直线段长 24；装饰进入可见范围但不改变单格、容器 allocation 或引用边界。两根折线均经过栈顶开放端，横向分置于开口两侧。向上时入栈先横后纵、出栈先纵后横，随排列方向旋转。layout.reverseArrows 默认 false，true 将进出箭头在开口两侧的位置对调；四向排列均支持，且不改变进出语义、单元顺序或 allocation。
 
 Stack 只登记显式单格 id，不提供索引身份模式，不从 data、文字或 skeleton.labels 推导名称。需要从外部引用某格时使用 items／StackItem 配置 id；引用边界是实际单格 allocation，不包含共享交叉轴剩余空间、gap、border 或标签，格内 drawable 的 id 保留自身边界。
 
 根 inspection handle 为 container，具名格沿用 `cell:<id>` 身份和 `stack-cell` 角色，无 id 的格不额外发布 handle。命名空间、延迟引用、外层变换及 descendant ownerPath 复用 Core，不建立 Stack 私有位置查询表。复杂连接直接使用已有 Core NodeTarget，不由 Stack 保存入口、出口或任意边列表。
 
-根组合保持现有 Collection 的 Core Scope 语义，包括身份、主题、defaults、placement、变换、clip、meta 和 animations。直属 Cell style 与根 Scope 外观沿现有集合的字段分工处理；根标签、border 和 topLabel 不传播到嵌套集合。
+根组合保持 Collection 的 Core Scope 语义，包括身份、主题、defaults、placement、变换、clip、meta 和 animations。根标签、开放边框与进出箭头不传播到嵌套集合。
 
 ## 等价性、失败与兼容性
 
@@ -90,3 +90,5 @@ React 经 Vanilla authoring 输入到同一 Standard Source；布局、栈顶选
 入口混用、未知字段、非法方向、负数或非有限尺寸／间距、非法骨架数量、非字符串骨架标签、非 JSON 数据以及非 data 入口配置 dataExpand，在对应 Source／authoring 边界失败。重复身份、缺失定义、内容测量、proposal 与引用错误沿下层契约保留原因，不输出部分栈。无效 React marker 结构在 React authoring 边界失败。
 
 Stack 为新增能力，不改变 Array、Map、Matrix、Chain 的输入解释和默认布局；没有兼容别名或旧行为迁移。相同输入和环境在直接 IR、Vanilla 与 React 中产生等价 Scene、allocation 和空间引用。公开行为与双语使用文档、API 和可执行示例同步交付。
+
+arrow 的默认值为 false；布尔值统一开启或关闭两侧，对象通过 input、output 独立配置，每侧接受布尔值或含 style、arrowDetail 的外观对象，省略的一侧默认隐藏。

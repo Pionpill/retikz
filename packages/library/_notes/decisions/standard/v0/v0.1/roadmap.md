@@ -77,7 +77,7 @@ Core 保留基础预设和通用轨道工具，Standard 提供生长、循环与
 | P2       | Queue · 队列  | 表达队首、队尾与进出方向；双端和循环形式在后续设计中评估，不承担真实队列操作                                                                |
 | 独立方向 | Tree · 树     | 规划层次结构呈现，为树、BST、Heap、Trie 等示意提供复用基础；先确认与 Graph 的父子关系、树布局及绘图职责边界，不预设归入 Standard collection |
 
-Matrix 的三种输入、行列索引与单元格引用方案见 [038](./038-matrix-presentation.md)，Chain 的串并联与对齐方案见 [039](./039-chain-presentation.md)，Stack 的堆叠与开放端方案见 [040](./040-stack-presentation.md)。Matrix、Chain 优先补齐现有组件缺少的表达能力；Stack、Queue 复用已有单元格与排布能力。连接、标注和绘制复用 Core / Layout 的公开机制，不在 Standard 建立平行关系模型或算法布局。各项公开契约另行通过 ADR 确定。
+Matrix 的三种输入、行列索引与单元格引用方案见 [038](./038-matrix-presentation.md)，Chain 的串并联与对齐方案见 [039](./039-chain-presentation.md)，Stack 的堆叠与开放端方案见 [040](./040-stack-presentation.md)，Queue 的首尾与两端开放方案见 [041](./041-queue-presentation.md)。Matrix、Chain 优先补齐现有组件缺少的表达能力；Stack、Queue 复用已有单元格与排布能力。连接、标注和绘制复用 Core / Layout 的公开机制，不在 Standard 建立平行关系模型或算法布局。各项公开契约另行通过 ADR 确定。
 
 ### Surface 与内容组合
 

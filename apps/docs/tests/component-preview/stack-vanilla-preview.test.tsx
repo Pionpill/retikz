@@ -9,24 +9,47 @@ import { renderStackPreview as renderInputs } from '../../src/modules/docs/conte
 import { renderStackPreview as renderLayout } from '../../src/modules/docs/contents/library/standard/collection/stack/stack-layout.preview';
 import { synchronousInputAdaptersOf } from '../../src/modules/docs/lib';
 
-it('Stack top label can be shown, hidden and shown again', () => {
-  for (const top of [true, false, true]) {
-    const result = buildVanillaPreview(
-      buildPreviewIR(() => renderLayout({ direction: 'up', border: true, padding: '8', top })),
+it('Stack operation arrows toggle independently in SVG and retained updates', () => {
+  const input = (incoming: boolean, outgoing: boolean) =>
+    createInputScene(
+      renderLayout({
+        direction: 'right',
+        border: true,
+        padding: '8',
+        input: incoming,
+        output: outgoing,
+        reverseArrows: false,
+        styled: true,
+      }).props.children,
     );
-    expect(result.svg?.includes('>top<')).toBe(top);
-  }
-});
-
-it('Stack top label toggles through retained processing updates', () => {
-  const input = (top: boolean) =>
-    createInputScene(renderLayout({ direction: 'up', border: true, padding: '8', top }).props.children);
-  const first = input(true);
+  const first = input(true, true);
   const controller = createProcessingController(first.scene, { adapters: synchronousInputAdaptersOf(first.adapters) });
   try {
-    for (const top of [false, true, false]) {
-      controller.update(input(top).scene);
-      expect(JSON.stringify(controller.read().scene).includes('"text":"top"')).toBe(top);
+    for (const [incoming, outgoing] of [
+      [false, true],
+      [true, false],
+      [false, false],
+      [true, true],
+    ]) {
+      controller.update(input(incoming, outgoing).scene);
+      const serialized = JSON.stringify(controller.read().scene);
+      expect(serialized.includes('dodgerblue')).toBe(incoming);
+      expect(serialized.includes('darkorange')).toBe(outgoing);
+      const result = buildVanillaPreview(
+        buildPreviewIR(() =>
+          renderLayout({
+            direction: 'right',
+            border: true,
+            padding: '8',
+            input: incoming,
+            output: outgoing,
+            reverseArrows: false,
+            styled: true,
+          }),
+        ),
+      );
+      expect(result.svg?.includes('dodgerblue')).toBe(incoming);
+      expect(result.svg?.includes('darkorange')).toBe(outgoing);
     }
   } finally {
     controller.dispose();

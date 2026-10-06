@@ -12,7 +12,10 @@ export const stackI18n: Record<
     right: string;
     border: string;
     padding: string;
-    top: string;
+    input: string;
+    output: string;
+    styled: string;
+    reverseArrows: string;
   }
 > = {
   zh: {
@@ -24,7 +27,10 @@ export const stackI18n: Record<
     right: '向右',
     border: '开放边框',
     padding: '容器留白',
-    top: '栈顶标签',
+    input: '进入箭头',
+    output: '出去箭头',
+    styled: '自定义样式',
+    reverseArrows: '交换箭头位置',
   },
   en: {
     title: 'Arrange cells and border',
@@ -35,6 +41,9 @@ export const stackI18n: Record<
     right: 'Right',
     border: 'Open border',
     padding: 'Container padding',
-    top: 'Top label',
+    input: 'Incoming arrow',
+    output: 'Outgoing arrow',
+    styled: 'Custom style',
+    reverseArrows: 'Swap arrow positions',
   },
 };

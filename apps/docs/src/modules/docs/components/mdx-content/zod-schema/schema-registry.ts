@@ -1324,6 +1324,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/standard/presentation/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
+  QueueSchema: {
+    schema: StandardCollectionIR.QueueSchema,
+    label: 'Queue',
+    url: '/library/standard/collection/queue#queueschema',
+  },
   StackSchema: {
     schema: StandardCollectionIR.StackSchema,
     label: 'Stack',

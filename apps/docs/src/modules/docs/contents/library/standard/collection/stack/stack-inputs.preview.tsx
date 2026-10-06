@@ -5,7 +5,7 @@ import { Stack } from '@retikz/standard-react/collection';
 export type StackPreviewValues = { input: 'items' | 'data' | 'skeleton'; empty: boolean; expand: boolean };
 /** 只通过公开属性组合栈的当前快照 */
 export const renderStackPreview = (values: StackPreviewValues) => (
-  <Layout viewBox={{ x: -20, y: -20, width: 140, height: 190 }}>
+  <Layout>
     <Stack
       {...(values.input === 'items'
         ? { items: values.empty ? [] : ['A', 'B', 'C'] }

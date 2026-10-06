@@ -1,7 +1,16 @@
-/** Stack字段中文说明，与实际可见Schema路径一一对应 */
+/** Stack 字段中文说明，与实际可见 Schema 路径一一对应 */
 export const stackSchemaLocalization = {
   description: '栈底到栈顶的静态单元格结构',
   descriptions: {
+    '/union/2/field/"arrow"': '进出箭头；布尔值统一控制两侧，对象分别配置，默认隐藏',
+    '/union/1/field/"arrow"': '进出箭头；布尔值统一控制两侧，对象分别配置，默认隐藏',
+    '/union/0/field/"arrow"': '进出箭头；布尔值统一控制两侧，对象分别配置，默认隐藏',
+    '/union/2/field/"layout"/field/"reverseArrows"': '交换进出箭头所在侧，不改变进出方向或单元顺序',
+
+    '/union/1/field/"layout"/field/"reverseArrows"': '交换进出箭头所在侧，不改变进出方向或单元顺序',
+
+    '/union/0/field/"layout"/field/"reverseArrows"': '交换进出箭头所在侧，不改变进出方向或单元顺序',
+
     '/union/0/field/"namespace"': '命名空间，固定为 standard',
     '/union/0/field/"type"': '组件类型判别字段',
     '/union/0/field/"frame"': '绘制在容器内容下方的可选外框',
@@ -43,19 +52,68 @@ export const stackSchemaLocalization = {
     '/union/0/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
     '/union/0/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
     '/union/0/field/"layout"/field/"direction"': '从栈底到栈顶的物理方向：up、down、left或right，默认up',
-    '/union/0/field/"layout"/field/"gap"': '相邻单元格之间的非负距离，默认2',
+    '/union/0/field/"layout"/field/"gap"': '相邻单元格之间的非负距离，默认8',
     '/union/0/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-    '/union/0/field/"topLabel"': '附着最后一格的标签；空栈不显示，不扩大布局分配区域',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
     '/union/0/field/"border"': '三边开放轮廓；默认开启，false隐藏描边但保留padding',
+    '/union/0/field/"border"/union/1/field/"meta"': '透传至Scene的JSON元数据，编译器不解释其内容',
+    '/union/0/field/"border"/union/1/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
+    '/union/0/field/"border"/union/1/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
+    '/union/0/field/"border"/union/1/field/"roundedCorners"': '线段连接处的几何圆角，与描边lineJoin独立',
+    '/union/0/field/"border"/union/1/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
+    '/union/0/field/"border"/union/1/field/"scale"': '围绕路径包围盒中心缩放整个边框',
+    '/union/0/field/"border"/union/1/field/"scale"/union/1/field/"x"': '横轴缩放比例',
+    '/union/0/field/"border"/union/1/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
+    '/union/0/field/"border"/union/1/field/"label"': '附着于边框路径的标签',
+    '/union/0/field/"border"/union/1/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
+    '/union/0/field/"border"/union/1/field/"style"': '边框路径的独立外观',
     '/union/0/field/"border"/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"border"/union/1/field/"style"/field/"fill"': '填充颜色，默认none；显式填充按开放路径规则闭合区域',
     '/union/0/field/"border"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"border"/union/1/field/"style"/field/"stroke"': '边框描边颜色，默认currentColor',
     '/union/0/field/"border"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
     '/union/0/field/"border"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/0/field/"border"/union/1/field/"style"/field/"strokeWidth"': '边框描边宽度，默认1',
+    '/union/0/field/"border"/union/1/field/"style"/field/"shadow"': '主要路径图形的阴影预设或自定义阴影',
+    '/union/0/field/"border"/union/1/field/"style"/field/"blendMode"': '与下方内容的混合模式，默认普通覆盖',
     '/union/0/field/"border"/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
     '/union/0/field/"border"/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
     '/union/0/field/"border"/union/1/field/"style"/field/"lineCap"':
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
     '/union/0/field/"border"/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"border"/union/1/field/"style"/field/"fillRule"':
+      '填充规则：nonzero按绕向计数，evenodd按交叉次数切换',
     '/union/0/field/"padding"': '容器四边留白，默认8，与格内padding和边框可见性独立',
     '/union/0/field/"items"': '按顺序排列的单元格；字符串默认只提供文字',
     '/union/0/field/"items"/array/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
@@ -130,19 +188,68 @@ export const stackSchemaLocalization = {
     '/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
     '/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
     '/union/1/field/"layout"/field/"direction"': '从栈底到栈顶的物理方向：up、down、left或right，默认up',
-    '/union/1/field/"layout"/field/"gap"': '相邻单元格之间的非负距离，默认2',
+    '/union/1/field/"layout"/field/"gap"': '相邻单元格之间的非负距离，默认8',
     '/union/1/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-    '/union/1/field/"topLabel"': '附着最后一格的标签；空栈不显示，不扩大布局分配区域',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
     '/union/1/field/"border"': '三边开放轮廓；默认开启，false隐藏描边但保留padding',
+    '/union/1/field/"border"/union/1/field/"meta"': '透传至Scene的JSON元数据，编译器不解释其内容',
+    '/union/1/field/"border"/union/1/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
+    '/union/1/field/"border"/union/1/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
+    '/union/1/field/"border"/union/1/field/"roundedCorners"': '线段连接处的几何圆角，与描边lineJoin独立',
+    '/union/1/field/"border"/union/1/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
+    '/union/1/field/"border"/union/1/field/"scale"': '围绕路径包围盒中心缩放整个边框',
+    '/union/1/field/"border"/union/1/field/"scale"/union/1/field/"x"': '横轴缩放比例',
+    '/union/1/field/"border"/union/1/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
+    '/union/1/field/"border"/union/1/field/"label"': '附着于边框路径的标签',
+    '/union/1/field/"border"/union/1/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
+    '/union/1/field/"border"/union/1/field/"style"': '边框路径的独立外观',
     '/union/1/field/"border"/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"border"/union/1/field/"style"/field/"fill"': '填充颜色，默认none；显式填充按开放路径规则闭合区域',
     '/union/1/field/"border"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"border"/union/1/field/"style"/field/"stroke"': '边框描边颜色，默认currentColor',
     '/union/1/field/"border"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
     '/union/1/field/"border"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/1/field/"border"/union/1/field/"style"/field/"strokeWidth"': '边框描边宽度，默认1',
+    '/union/1/field/"border"/union/1/field/"style"/field/"shadow"': '主要路径图形的阴影预设或自定义阴影',
+    '/union/1/field/"border"/union/1/field/"style"/field/"blendMode"': '与下方内容的混合模式，默认普通覆盖',
     '/union/1/field/"border"/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
     '/union/1/field/"border"/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
     '/union/1/field/"border"/union/1/field/"style"/field/"lineCap"':
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
     '/union/1/field/"border"/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/1/field/"border"/union/1/field/"style"/field/"fillRule"':
+      '填充规则：nonzero按绕向计数，evenodd按交叉次数切换',
     '/union/1/field/"padding"': '容器四边留白，默认8，与格内padding和边框可见性独立',
     '/union/1/field/"data"': '递归展示 JSON 数组，默认不推导单元格 id',
     '/union/1/field/"items"': '此分支禁止显式单元格',
@@ -190,64 +297,41 @@ export const stackSchemaLocalization = {
     '/union/2/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
     '/union/2/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
     '/union/2/field/"layout"/field/"direction"': '从栈底到栈顶的物理方向：up、down、left或right，默认up',
-    '/union/2/field/"layout"/field/"gap"': '相邻单元格之间的非负距离，默认2',
+    '/union/2/field/"layout"/field/"gap"': '相邻单元格之间的非负距离，默认8',
     '/union/2/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-    '/union/2/field/"topLabel"': '附着最后一格的标签；空栈不显示，不扩大布局分配区域',
-    '/union/2/field/"border"': '三边开放轮廓；默认开启，false隐藏描边但保留padding',
-    '/union/2/field/"border"/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/union/2/field/"border"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/union/2/field/"border"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/union/2/field/"border"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
-    '/union/2/field/"border"/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/union/2/field/"border"/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/union/2/field/"border"/union/1/field/"style"/field/"lineCap"':
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"lineCap"':
       '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/union/2/field/"border"/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/2/field/"padding"': '容器四边留白，默认8，与格内padding和边框可见性独立',
-    '/union/2/field/"skeleton"': '无真实数据的示意骨架',
-    '/union/2/field/"skeleton"/union/0/field/"count"': '非负安全整数，生成对应数量的无内容格子',
-    '/union/2/field/"skeleton"/union/0/field/"labels"': '数量分支不接受格内文字',
-    '/union/2/field/"skeleton"/union/1/field/"labels"': '有序格内纯文本；长度决定格数，空字符串表示无内容，允许重复',
-    '/union/2/field/"skeleton"/union/1/field/"count"': '格数由 labels 决定，不接受 count',
-    '/union/2/field/"items"': '此分支禁止 items',
-    '/union/2/field/"data"': '此分支禁止 data',
-    '/union/2/field/"dataExpand"': '此分支禁止 dataExpand',
-    '/union/0/field/"border"/union/1/field/"meta"': '透传至Scene的JSON元数据，编译器不解释其内容',
-    '/union/0/field/"border"/union/1/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
-    '/union/0/field/"border"/union/1/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/union/0/field/"border"/union/1/field/"roundedCorners"': '线段连接处的几何圆角，与描边lineJoin独立',
-    '/union/0/field/"border"/union/1/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
-    '/union/0/field/"border"/union/1/field/"scale"': '围绕路径包围盒中心缩放整个边框',
-    '/union/0/field/"border"/union/1/field/"scale"/union/1/field/"x"': '横轴缩放比例',
-    '/union/0/field/"border"/union/1/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
-    '/union/0/field/"border"/union/1/field/"label"': '附着于边框路径的标签',
-    '/union/0/field/"border"/union/1/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
-    '/union/0/field/"border"/union/1/field/"style"': '边框路径的独立外观',
-    '/union/0/field/"border"/union/1/field/"style"/field/"fill"': '填充颜色，默认none；显式填充按开放路径规则闭合区域',
-    '/union/0/field/"border"/union/1/field/"style"/field/"stroke"': '边框描边颜色，默认currentColor',
-    '/union/0/field/"border"/union/1/field/"style"/field/"strokeWidth"': '边框描边宽度，默认1',
-    '/union/0/field/"border"/union/1/field/"style"/field/"shadow"': '主要路径图形的阴影预设或自定义阴影',
-    '/union/0/field/"border"/union/1/field/"style"/field/"blendMode"': '与下方内容的混合模式，默认普通覆盖',
-    '/union/0/field/"border"/union/1/field/"style"/field/"fillRule"':
-      '填充规则：nonzero按绕向计数，evenodd按交叉次数切换',
-    '/union/1/field/"border"/union/1/field/"meta"': '透传至Scene的JSON元数据，编译器不解释其内容',
-    '/union/1/field/"border"/union/1/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
-    '/union/1/field/"border"/union/1/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
-    '/union/1/field/"border"/union/1/field/"roundedCorners"': '线段连接处的几何圆角，与描边lineJoin独立',
-    '/union/1/field/"border"/union/1/field/"rotate"': '围绕路径包围盒中心旋转整个边框',
-    '/union/1/field/"border"/union/1/field/"scale"': '围绕路径包围盒中心缩放整个边框',
-    '/union/1/field/"border"/union/1/field/"scale"/union/1/field/"x"': '横轴缩放比例',
-    '/union/1/field/"border"/union/1/field/"scale"/union/1/field/"y"': '纵轴缩放比例',
-    '/union/1/field/"border"/union/1/field/"label"': '附着于边框路径的标签',
-    '/union/1/field/"border"/union/1/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
-    '/union/1/field/"border"/union/1/field/"style"': '边框路径的独立外观',
-    '/union/1/field/"border"/union/1/field/"style"/field/"fill"': '填充颜色，默认none；显式填充按开放路径规则闭合区域',
-    '/union/1/field/"border"/union/1/field/"style"/field/"stroke"': '边框描边颜色，默认currentColor',
-    '/union/1/field/"border"/union/1/field/"style"/field/"strokeWidth"': '边框描边宽度，默认1',
-    '/union/1/field/"border"/union/1/field/"style"/field/"shadow"': '主要路径图形的阴影预设或自定义阴影',
-    '/union/1/field/"border"/union/1/field/"style"/field/"blendMode"': '与下方内容的混合模式，默认普通覆盖',
-    '/union/1/field/"border"/union/1/field/"style"/field/"fillRule"':
-      '填充规则：nonzero按绕向计数，evenodd按交叉次数切换',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/2/field/"border"': '三边开放轮廓；默认开启，false隐藏描边但保留padding',
     '/union/2/field/"border"/union/1/field/"meta"': '透传至Scene的JSON元数据，编译器不解释其内容',
     '/union/2/field/"border"/union/1/field/"animations"': '声明式动画轨道，不影响布局或包围盒',
     '/union/2/field/"border"/union/1/field/"zIndex"': '同组绘制顺序，数值较大时在上方',
@@ -259,12 +343,90 @@ export const stackSchemaLocalization = {
     '/union/2/field/"border"/union/1/field/"label"': '附着于边框路径的标签',
     '/union/2/field/"border"/union/1/field/"marks"': '沿路径归一化位置放置标记，方向跟随切线',
     '/union/2/field/"border"/union/1/field/"style"': '边框路径的独立外观',
+    '/union/2/field/"border"/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
     '/union/2/field/"border"/union/1/field/"style"/field/"fill"': '填充颜色，默认none；显式填充按开放路径规则闭合区域',
+    '/union/2/field/"border"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
     '/union/2/field/"border"/union/1/field/"style"/field/"stroke"': '边框描边颜色，默认currentColor',
+    '/union/2/field/"border"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/2/field/"border"/union/1/field/"style"/field/"opacity"': '索引文字透明度',
     '/union/2/field/"border"/union/1/field/"style"/field/"strokeWidth"': '边框描边宽度，默认1',
     '/union/2/field/"border"/union/1/field/"style"/field/"shadow"': '主要路径图形的阴影预设或自定义阴影',
     '/union/2/field/"border"/union/1/field/"style"/field/"blendMode"': '与下方内容的混合模式，默认普通覆盖',
+    '/union/2/field/"border"/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/2/field/"border"/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/2/field/"border"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/2/field/"border"/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
     '/union/2/field/"border"/union/1/field/"style"/field/"fillRule"':
       '填充规则：nonzero按绕向计数，evenodd按交叉次数切换',
+    '/union/2/field/"padding"': '容器四边留白，默认8，与格内padding和边框可见性独立',
+    '/union/2/field/"skeleton"': '无真实数据的示意骨架',
+    '/union/2/field/"skeleton"/union/0/field/"count"': '非负安全整数，生成对应数量的无内容格子',
+    '/union/2/field/"skeleton"/union/0/field/"labels"': '数量分支不接受格内文字',
+    '/union/2/field/"skeleton"/union/1/field/"labels"': '有序格内纯文本；长度决定格数，空字符串表示无内容，允许重复',
+    '/union/2/field/"skeleton"/union/1/field/"count"': '格数由 labels 决定，不接受 count',
+    '/union/2/field/"items"': '此分支禁止 items',
+    '/union/2/field/"data"': '此分支禁止 data',
+    '/union/2/field/"dataExpand"': '此分支禁止 dataExpand',
+    '/union/0/field/"arrow"/union/1/field/"input"': '进入箭头，默认隐藏；true 显示，对象自定义外观并显示，空集合隐藏',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"': '路径视觉样式，逐字段覆盖继承的默认值',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"shadow"':
+      '主图形投影，接受预设或显式阴影配置',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"blendMode"':
+      '主图形与下方内容的混合模式，默认 normal',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fillRule"':
+      '自交或嵌套子路径的填充规则，默认 nonzero',
+    '/union/0/field/"arrow"/union/1/field/"input"/union/1/field/"arrowDetail"':
+      '末端箭头的形状、尺寸和颜色，支持已注册的自定义形状',
+    '/union/0/field/"arrow"/union/1/field/"output"': '出去箭头，默认隐藏；true 显示，对象自定义外观并显示，空集合隐藏',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"': '路径视觉样式，逐字段覆盖继承的默认值',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"shadow"':
+      '主图形投影，接受预设或显式阴影配置',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"blendMode"':
+      '主图形与下方内容的混合模式，默认 normal',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fillRule"':
+      '自交或嵌套子路径的填充规则，默认 nonzero',
+    '/union/0/field/"arrow"/union/1/field/"output"/union/1/field/"arrowDetail"':
+      '末端箭头的形状、尺寸和颜色，支持已注册的自定义形状',
+    '/union/1/field/"arrow"/union/1/field/"input"': '进入箭头，默认隐藏；true 显示，对象自定义外观并显示，空集合隐藏',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"': '路径视觉样式，逐字段覆盖继承的默认值',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"shadow"':
+      '主图形投影，接受预设或显式阴影配置',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"blendMode"':
+      '主图形与下方内容的混合模式，默认 normal',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fillRule"':
+      '自交或嵌套子路径的填充规则，默认 nonzero',
+    '/union/1/field/"arrow"/union/1/field/"input"/union/1/field/"arrowDetail"':
+      '末端箭头的形状、尺寸和颜色，支持已注册的自定义形状',
+    '/union/1/field/"arrow"/union/1/field/"output"': '出去箭头，默认隐藏；true 显示，对象自定义外观并显示，空集合隐藏',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"': '路径视觉样式，逐字段覆盖继承的默认值',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"shadow"':
+      '主图形投影，接受预设或显式阴影配置',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"blendMode"':
+      '主图形与下方内容的混合模式，默认 normal',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fillRule"':
+      '自交或嵌套子路径的填充规则，默认 nonzero',
+    '/union/1/field/"arrow"/union/1/field/"output"/union/1/field/"arrowDetail"':
+      '末端箭头的形状、尺寸和颜色，支持已注册的自定义形状',
+    '/union/2/field/"arrow"/union/1/field/"input"': '进入箭头，默认隐藏；true 显示，对象自定义外观并显示，空集合隐藏',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"': '路径视觉样式，逐字段覆盖继承的默认值',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"shadow"':
+      '主图形投影，接受预设或显式阴影配置',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"blendMode"':
+      '主图形与下方内容的混合模式，默认 normal',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"style"/field/"fillRule"':
+      '自交或嵌套子路径的填充规则，默认 nonzero',
+    '/union/2/field/"arrow"/union/1/field/"input"/union/1/field/"arrowDetail"':
+      '末端箭头的形状、尺寸和颜色，支持已注册的自定义形状',
+    '/union/2/field/"arrow"/union/1/field/"output"': '出去箭头，默认隐藏；true 显示，对象自定义外观并显示，空集合隐藏',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"': '路径视觉样式，逐字段覆盖继承的默认值',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"shadow"':
+      '主图形投影，接受预设或显式阴影配置',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"blendMode"':
+      '主图形与下方内容的混合模式，默认 normal',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"style"/field/"fillRule"':
+      '自交或嵌套子路径的填充规则，默认 nonzero',
+    '/union/2/field/"arrow"/union/1/field/"output"/union/1/field/"arrowDetail"':
+      '末端箭头的形状、尺寸和颜色，支持已注册的自定义形状',
   },
 };

@@ -27,3 +27,6 @@ export const StandardChainEmbedKind = 'standard.chain';
 
 /** Standard Stack embed 的稳定 kind */
 export const StandardStackEmbedKind = 'standard.stack';
+
+/** Queue authoring embed 标识 */
+export const StandardQueueEmbedKind = 'standard.queue';

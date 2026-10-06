@@ -6,3 +6,5 @@ export * from './matrix';
 export * from './chain';
 
 export * from './stack';
+
+export * from './queue';

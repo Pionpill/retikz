@@ -1,4 +1,4 @@
-import type { Lang } from '@/i18n';
+﻿import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
@@ -38,12 +38,23 @@ export const createPreviewControlContract = (lang: Lang) => {
                 { value: '16', label: '16' },
               ],
             },
-            { id: 'top', kind: 'switch', label: t.top, defaultValue: true },
+            { id: 'input', kind: 'switch', label: t.input, defaultValue: true },
+            { id: 'output', kind: 'switch', label: t.output, defaultValue: true },
+            { id: 'reverseArrows', kind: 'switch', label: t.reverseArrows, defaultValue: false },
+            { id: 'styled', kind: 'switch', label: t.styled, defaultValue: false },
           ],
         },
       ],
     }),
-    canonicalValues: { direction: 'up', border: true, padding: '8', top: true },
+    canonicalValues: {
+      direction: 'up',
+      border: true,
+      padding: '8',
+      input: true,
+      output: true,
+      styled: false,
+      reverseArrows: false,
+    },
     relatedApis: ['Stack.layout'],
   } satisfies PreviewControlContract;
 };

@@ -109,7 +109,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { stack, StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { queue, QueueInputEmbedAdapter, stack, StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { InputChainItem } from '@retikz/standard-vanilla/collection';
 import {
@@ -143,8 +143,8 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import type { IRStack } from '@retikz/standard/collection';
-import { StackDefinition, ChainDefinition } from '@retikz/standard/collection';
+import type { IRQueue, IRStack } from '@retikz/standard/collection';
+import { QueueDefinition, StackDefinition, ChainDefinition } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRMap } from '@retikz/standard/collection';
 import { MatrixDefinition, ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
@@ -297,6 +297,7 @@ type StandardKind =
   | 'frame'
   | 'surface'
   | 'legend'
+  | 'queue'
   | 'stack'
   | 'chain'
   | 'matrix'
@@ -470,6 +471,28 @@ const convertStandardChild = (
                       : convertPreviewChild(cell.content, state, graphState),
                 },
           ),
+        ),
+      });
+    }
+    case 'queue': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRQueue;
+      void _namespace;
+      void _type;
+      if (skeleton !== undefined) return queue({ ...input, skeleton });
+      if (data !== undefined) return queue({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+
+      return queue({
+        ...input,
+        items: items.map(cell =>
+          typeof cell === 'string'
+            ? cell
+            : {
+                ...cell,
+                content:
+                  cell.content === undefined || typeof cell.content === 'string'
+                    ? cell.content
+                    : convertPreviewChild(cell.content, state, graphState),
+              },
         ),
       });
     }
@@ -770,6 +793,7 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<Synchron
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('queue') ? [QueueInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('stack') ? [StackInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('chain') ? [ChainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('matrix') ? [MatrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
@@ -810,6 +834,7 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
+  QueueDefinition,
   StackDefinition,
   ChainDefinition,
   MatrixDefinition,
@@ -860,6 +885,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
+          'queue',
           'stack',
           'chain',
           'matrix',

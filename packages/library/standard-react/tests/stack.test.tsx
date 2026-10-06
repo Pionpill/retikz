@@ -6,8 +6,12 @@ import { expect, it } from 'vitest';
 import { Stack, StackItem, Matrix, ArrayItem } from '../src/collection';
 import { synchronousAdapters } from './helpers/synchronous-adapters';
 
-it('JSX与Vanilla的样式、空格、栈顶标签和容器配置等价', () => {
-  const props = { padding: 12, border: { style: { dashPattern: [4, 2] } }, topLabel: { text: 'top' } };
+it('JSX与Vanilla的样式、空格、进入箭头和容器配置等价', () => {
+  const props = {
+    padding: 12,
+    border: { style: { dashPattern: [4, 2] } },
+    arrow: { input: { style: { stroke: 'blue' }, arrowDetail: { shape: 'openStealth' } }, output: false },
+  };
   const jsx = createInputScene(
     <Stack {...props}>
       <StackItem text="A" />

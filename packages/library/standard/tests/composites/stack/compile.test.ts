@@ -75,7 +75,7 @@ it.each([
   [
     'up',
     [
-      { x: 8, y: 30, width: 30, height: 20 },
+      { x: 8, y: 36, width: 30, height: 20 },
       { x: 8, y: 8, width: 30, height: 20 },
     ],
   ],
@@ -83,13 +83,13 @@ it.each([
     'down',
     [
       { x: 8, y: 8, width: 30, height: 20 },
-      { x: 8, y: 30, width: 30, height: 20 },
+      { x: 8, y: 36, width: 30, height: 20 },
     ],
   ],
   [
     'left',
     [
-      { x: 40, y: 8, width: 30, height: 20 },
+      { x: 46, y: 8, width: 30, height: 20 },
       { x: 8, y: 8, width: 30, height: 20 },
     ],
   ],
@@ -97,7 +97,7 @@ it.each([
     'right',
     [
       { x: 8, y: 8, width: 30, height: 20 },
-      { x: 40, y: 8, width: 30, height: 20 },
+      { x: 46, y: 8, width: 30, height: 20 },
     ],
   ],
 ] as const)('%s方向最后项朝向开放端且不改变id顺序', (direction, expected) => {
@@ -122,12 +122,12 @@ it('主轴保留各格尺寸，交叉轴auto填满且固定小格居中', () => 
   });
   expect(bounds(result, 'stack-cell')).toEqual([
     { x: 0, y: 0, width: 40, height: 10 },
-    { x: 10, y: 12, width: 20, height: 30 },
-    { x: 0, y: 44, width: 40, height: 16 },
+    { x: 10, y: 18, width: 20, height: 30 },
+    { x: 0, y: 56, width: 40, height: 16 },
   ]);
 });
 it('空栈只有padding容器且不显示栈顶标签，移除边框和留白后为零', () => {
-  const result = compile({ ...base, items: [], topLabel: { text: 'top' } });
+  const result = compile({ ...base, items: [] });
   expect(bounds(result, 'container')).toEqual([{ x: 0, y: 0, width: 16, height: 16 }]);
   expect(flat(result.scene.primitives).some(p => p.type === 'text')).toBe(false);
   expect(bounds(result, 'stack-cell')).toEqual([]);
@@ -135,19 +135,19 @@ it('空栈只有padding容器且不显示栈顶标签，移除边框和留白后
     { x: 0, y: 0, width: 0, height: 0 },
   ]);
 });
-it('骨架与显式单元等价，topLabel不改变allocation', () => {
+it('骨架与显式单元等价，箭头不改变allocation', () => {
   const props = { ...base, layout: { width: 32, height: 24 } };
   expect(compile({ ...props, skeleton: { labels: ['A', ''] } }).scene).toEqual(
     compile({ ...props, items: ['A', {}] }).scene,
   );
   const plain = compile({ ...props, items: ['A', 'B'] });
-  const labelled = compile({ ...props, items: ['A', 'B'], topLabel: { text: 'top', position: 'right' } });
+  const labelled = compile({ ...props, items: ['A', 'B'], arrow: { input: false, output: false } });
   expect(bounds(labelled, 'container')).toEqual(bounds(plain, 'container'));
   expect(
     flat(labelled.scene.primitives)
       .filter(p => p.type === 'text')
       .map(p => p.lines.map(l => l.text).join('')),
-  ).toEqual(['A', 'B', 'top']);
+  ).toEqual(['A', 'B']);
 });
 
 it('开放边框只有三边，隐藏边框不改变独立留白', () => {
@@ -215,4 +215,147 @@ it('嵌套Stack不叠加外层padding，显式覆盖仍然优先', () => {
   const outer = bounds(nested, 'array-cell')[0];
   expect(outer.width).toBeGreaterThanOrEqual(natural.width);
   expect(bounds(explicit, 'array-cell')[0].width - outer.width).toBe(10);
+});
+
+it.each([
+  [
+    'up',
+    [
+      [-15, -32],
+      [9, -32],
+      [9, -8],
+    ],
+    [
+      [27, -8],
+      [27, -32],
+      [51, -32],
+    ],
+  ],
+  [
+    'down',
+    [
+      [51, 58],
+      [27, 58],
+      [27, 34],
+    ],
+    [
+      [9, 34],
+      [9, 58],
+      [-15, 58],
+    ],
+  ],
+  [
+    'right',
+    [
+      [68, -17.5],
+      [68, 6.5],
+      [44, 6.5],
+    ],
+    [
+      [44, 19.5],
+      [68, 19.5],
+      [68, 43.5],
+    ],
+  ],
+  [
+    'left',
+    [
+      [-32, 43.5],
+      [-32, 19.5],
+      [-8, 19.5],
+    ],
+    [
+      [-8, 6.5],
+      [-32, 6.5],
+      [-32, -17.5],
+    ],
+  ],
+] as const)(
+  '%s operation paths match manual Core geometry and preserve allocation',
+  (direction, incoming, outgoing) => {
+    const source = { ...base, items: [{ id: 'cell' }], layout: { direction, width: 20, height: 10 } };
+    const actual = compile({ ...source, arrow: { input: true, output: true } });
+    const disabled = compile({ ...source, arrow: { input: false, output: false } });
+    const path = (points: ReadonlyArray<readonly [number, number]>) => ({
+      type: 'path' as const,
+      style: { stroke: 'currentColor', strokeWidth: 1, fill: 'none' },
+      marks: [{ pos: 1, mark: { kind: 'arrow' as const } }],
+      children: points.map((point, index) => ({
+        type: 'step' as const,
+        kind: index === 0 ? ('move' as const) : ('line' as const),
+        to: [point[0], point[1]] as [number, number],
+      })),
+    });
+    const expected = compile({
+      type: 'scope',
+      children: [{ ...source, arrow: { input: false, output: false } }, path(incoming), path(outgoing)],
+    });
+    expect(flat(actual.scene.primitives).filter(p => p.type === 'path')).toEqual(
+      flat(expected.scene.primitives).filter(p => p.type === 'path'),
+    );
+    expect(bounds(actual, 'container')).toEqual(bounds(disabled, 'container'));
+    const swapped = compile({
+      ...source,
+      layout: { ...source.layout, reverseArrows: true },
+      arrow: { input: true, output: true },
+    });
+    const swappedExpected = compile({
+      type: 'scope',
+      children: [source, path([...outgoing].reverse()), path([...incoming].reverse())],
+    });
+    expect(flat(swapped.scene.primitives).filter(p => p.type === 'path')).toEqual(
+      flat(swappedExpected.scene.primitives).filter(p => p.type === 'path'),
+    );
+    expect(swapped.spatialHandles.entries).toEqual(actual.spatialHandles.entries);
+  },
+);
+it('empty collections suppress arrows and each custom arrow can be independently disabled', () => {
+  const props = {
+    ...base,
+    items: [{}],
+    arrow: {
+      input: { style: { stroke: 'blue', dashPattern: [3, 2] }, arrowDetail: { shape: 'openStealth' } },
+      output: { style: { stroke: 'red' }, arrowDetail: { shape: 'normal' } },
+    },
+  };
+  for (const [incomingArrow, outgoingArrow] of [
+    [false, props.arrow.output],
+    [props.arrow.input, false],
+    [props.arrow.input, props.arrow.output],
+  ] as const) {
+    const output = JSON.stringify(compile({ ...props, arrow: { input: incomingArrow, output: outgoingArrow } }).scene);
+    expect(output.includes('blue')).toBe(incomingArrow !== false);
+    expect(output.includes('red')).toBe(outgoingArrow !== false);
+  }
+  const empty = JSON.stringify(compile({ ...props, items: [] }).scene);
+  expect(empty).not.toContain('blue');
+  expect(empty).not.toContain('red');
+});
+
+it('operation arrows are absent by default and explicitly enabled without changing cells', () => {
+  const source = { ...base, items: ['A'] };
+  const plain = compile(source);
+  expect(plain.scene).toEqual(compile({ ...source, arrow: { input: false, output: false } }).scene);
+  expect(flat(plain.scene.primitives).some(p => p.type === 'path' && p.arrowEnd !== undefined)).toBe(false);
+  expect(
+    flat(compile({ ...source, arrow: { input: true, output: true } }).scene.primitives).filter(
+      p => p.type === 'path' && p.arrowEnd !== undefined,
+    ),
+  ).toHaveLength(2);
+});
+
+it('arrow shorthand and omitted sides preserve independent operation semantics', () => {
+  const source = { ...base, items: ['A', 'B'] };
+  expect(compile({ ...source, arrow: true }).scene).toEqual(
+    compile({ ...source, arrow: { input: true, output: true } }).scene,
+  );
+  for (const arrow of [false, {}] as const) expect(compile({ ...source, arrow }).scene).toEqual(compile(source).scene);
+  for (const arrow of [{ input: true }, { output: true }] as const) {
+    const result = compile({ ...source, arrow });
+    expect(flat(result.scene.primitives).filter(p => p.type === 'path' && p.arrowEnd !== undefined)).toHaveLength(1);
+    expect(bounds(result, 'container')).toEqual(bounds(compile(source), 'container'));
+  }
+  expect(compile({ ...source, items: [], arrow: true }).scene).toEqual(
+    compile({ ...source, items: [], arrow: false }).scene,
+  );
 });

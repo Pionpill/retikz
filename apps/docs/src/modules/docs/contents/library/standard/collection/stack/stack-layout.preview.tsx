@@ -6,24 +6,34 @@ export type StackPreviewValues = {
   direction: 'up' | 'down' | 'left' | 'right';
   border: boolean;
   padding: '0' | '8' | '16';
-  top: boolean;
+  input: boolean;
+  output: boolean;
+  styled: boolean;
+  reverseArrows: boolean;
 };
-/** 只通过公开属性组合栈的当前快照 */
+/** 进出箭头随排列方向旋转，样式独立配置 */
 export const renderStackPreview = (values: StackPreviewValues) => (
-  <Layout viewBox={{ x: -16, y: -48, width: 210, height: 200 }}>
+  <Layout>
     <Stack
       items={['A', 'B', 'C']}
-      layout={{ direction: values.direction, width: 44, height: 32, gap: 4 }}
+      layout={{ direction: values.direction, reverseArrows: values.reverseArrows, width: 44, height: 32 }}
       border={values.border}
       padding={Number(values.padding)}
-      {...(values.top
-        ? {
-            topLabel: {
-              text: 'top',
-              position: values.direction === 'left' || values.direction === 'right' ? 'top' : 'right',
-            },
-          }
-        : {})}
+      arrow={{
+        input:
+          values.input &&
+          (values.styled
+            ? {
+                style: { stroke: 'dodgerblue', strokeWidth: 2, dashPattern: [4, 3] },
+                arrowDetail: { shape: 'openStealth' },
+              }
+            : true),
+        output:
+          values.output &&
+          (values.styled
+            ? { style: { stroke: 'darkorange', strokeWidth: 2 }, arrowDetail: { shape: 'normal' } }
+            : true),
+      }}
     />
   </Layout>
 );

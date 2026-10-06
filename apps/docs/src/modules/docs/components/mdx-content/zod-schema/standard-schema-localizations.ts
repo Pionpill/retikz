@@ -1,6 +1,7 @@
 import { chainSchemaLocalization } from './chain-schema-localizations';
 import { LegendSchemaZhLocalization, LegendArtifactSchemaZhLocalization } from './legend-schema-localizations';
 import { matrixSchemaLocalization } from './matrix-schema-localizations';
+import { queueSchemaLocalization } from './queue-schema-localizations';
 import { stackSchemaLocalization } from './stack-schema-localizations';
 import {
   GridSchemaZhLocalization,
@@ -838,3 +839,5 @@ standardSchemaLocalizations.MatrixSchema = matrixSchemaLocalization;
 standardSchemaLocalizations.ChainSchema = chainSchemaLocalization;
 
 standardSchemaLocalizations.StackSchema = stackSchemaLocalization;
+
+standardSchemaLocalizations.QueueSchema = queueSchemaLocalization;

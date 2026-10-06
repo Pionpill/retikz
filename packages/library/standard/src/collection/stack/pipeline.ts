@@ -5,46 +5,19 @@ import type {
   LayoutCompositeCompileResult,
 } from '@retikz/core';
 
-import { compileCells, measureCell } from '../_cell';
-import type { CellPlacement } from '../_cell';
+import { compileCells, layoutLinearCells, createOperationArrow, linearDirectionVector } from '../_cell';
 import { resolveStack } from './resolve';
 import type { IRStack } from './schema';
 
 /** 在输入序列上一次测量，再沿指定方向放置并下沉框与标签 */
 export const compileStack = (source: IRStack, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
-  const { namespace, type, items, layout, style, label, topLabel, border, padding, ...scope } = resolveStack(source);
+  const { namespace, type, items, layout, style, label, arrow, border, padding, ...scope } = resolveStack(source);
+  const input = typeof arrow === 'object' ? arrow.input : arrow;
+  const output = typeof arrow === 'object' ? arrow.output : arrow;
   void namespace;
   void type;
-  const { direction, gap } = layout;
-  const horizontal = direction === 'left' || direction === 'right';
-  const reverse = direction === 'up' || direction === 'left';
-  let mainSize = 0;
-  let crossSize = 0;
-  const measured = items.map((cell, index) => {
-    const result = measureCell(cell, context, index, scope);
-    mainSize += horizontal ? result.width : result.height;
-    crossSize = Math.max(crossSize, horizontal ? result.height : result.width);
-    return result;
-  });
-  mainSize += Math.max(0, items.length - 1) * gap;
-  const width = (horizontal ? mainSize : crossSize) + padding.left + padding.right;
-  const height = (horizontal ? crossSize : mainSize) + padding.top + padding.bottom;
-  let cursor = 0;
-  const cells: Array<CellPlacement> = measured.map(value => {
-    const cellWidth = horizontal || typeof value.cell.layout.width === 'number' ? value.width : crossSize;
-    const cellHeight = !horizontal || typeof value.cell.layout.height === 'number' ? value.height : crossSize;
-    const size = horizontal ? cellWidth : cellHeight;
-    const main = reverse ? mainSize - cursor - size : cursor;
-    cursor += size + gap;
-    return {
-      measured: value,
-      x: padding.left + (horizontal ? main : (crossSize - cellWidth) / 2),
-      y: padding.top + (horizontal ? (crossSize - cellHeight) / 2 : main),
-      width: cellWidth,
-      height: cellHeight,
-      role: 'stack-cell',
-    };
-  });
+  const { direction } = layout;
+  const { cells, width, height } = layoutLinearCells(items, { ...layout, padding, role: 'stack-cell' }, scope, context);
   const extra: Array<CompositeCompileChild> = [];
   if (border !== undefined) {
     // 从开放端一侧开始，连续经过封闭端两角，再到另一侧
@@ -84,29 +57,27 @@ export const compileStack = (source: IRStack, context: LayoutCompositeCompileCon
     };
     extra.push(context.scope({}, [path]));
   }
-  const top = cells.at(-1);
-  if (top !== undefined && topLabel !== undefined) {
-    const { font, textColor, color, opacity } = top.measured.cell.style;
-    extra.push(
-      context.scope({ defaults: { reset: ['node'] } }, [
-        {
-          type: 'node',
-          position: [top.x + top.width / 2, top.y + top.height / 2],
-          shape: 'rectangle',
-          style: {
-            fill: 'none',
-            stroke: 'none',
-            strokeWidth: 0,
-            ...(font === undefined ? {} : { font }),
-            ...(textColor === undefined ? {} : { textColor }),
-            ...(color === undefined ? {} : { color }),
-            ...(opacity === undefined ? {} : { opacity }),
-          },
-          layout: { minimumSize: { width: top.width, height: top.height }, padding: 0, margin: 0 },
-          label: topLabel,
-        },
-      ]),
-    );
+  if (cells.length > 0) {
+    const [dx, dy] = linearDirectionVector(direction);
+    const half = dx === 0 ? height / 2 : width / 2;
+    const separation = (dx === 0 ? width : height) / 4;
+    const sideSign = layout.reverseArrows ? -1 : 1;
+    const point = (side: number, outward: number): [number, number] => [
+      width / 2 + dx * (half + outward) - dy * side * sideSign,
+      height / 2 + dy * (half + outward) + dx * side * sideSign,
+    ];
+    if (input)
+      extra.push(
+        context.scope({}, [
+          createOperationArrow(input, [point(-separation - 24, 32), point(-separation, 32), point(-separation, 8)]),
+        ]),
+      );
+    if (output)
+      extra.push(
+        context.scope({}, [
+          createOperationArrow(output, [point(separation, 8), point(separation, 32), point(separation + 24, 32)]),
+        ]),
+      );
   }
   return compileCells(cells, { width, height, scope, extra, decoration: { label, style } }, context);
 };

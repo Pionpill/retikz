@@ -1,0 +1,130 @@
+---
+title: Queue
+description: Display text, empty cells and drawings from front to back, with configurable direction, an open border and operation arrows.
+---
+
+`Queue` displays a snapshot ordered from front to back. The first item is the front and the last is the back; the default direction is rightward. Use it for task queues, algorithm illustrations and before/after states.
+
+## Integration
+
+After [installation and first render](/library/standard/get-start), import from the collection entry.
+
+<ComponentPreview files="queue-basic" size="sm" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Queue } from '@retikz/standard-react/collection';
+
+<Layout>
+  <Queue items={['A', 'B', 'C']} />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { queue, QueueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+renderToSvgString(scene({ children: [queue({ items: ['A', 'B', 'C'] })] }), {
+  adapters: [QueueInputEmbedAdapter],
+});
+```
+
+</DocTab>
+<DocTab value="ir" label="Source IR">
+
+```json
+{ "namespace": "standard", "type": "queue", "items": ["A", "B", "C"] }
+```
+
+For direct IR, register QueueProvider and PathClipProvider. Data expansion also requires ArrayProvider and MapProvider; explicit nested content supplies its own dependencies.
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Choose an input form
+
+Choose one of items, data or skeleton. Strings in items are literal text; explicit cells use `{ content?, id?, style?, layout? }`. data accepts a JSON array: strings keep their quotes, and nested objects and arrays expand to Map/Array by default. dataExpand only applies to data; false disables expansion and a map/array list selects which structures expand.
+
+| Skeleton form                           | Result                                         |
+| --------------------------------------- | ---------------------------------------------- |
+| `skeleton={{ count: 3 }}`               | Three contentless cells                        |
+| `skeleton={{ labels: ['A', '', 'C'] }}` | Three symbolic cells with an empty middle cell |
+
+An empty array or zero count means an empty queue. Its default open container is 16×16, with no placeholder cell or operation arrows. Zero padding makes its natural size zero. Skeleton cells are drawing content, not capacity slots.
+
+<ComponentPreview
+  files={['queue-inputs', 'queue-inputs.preview.tsx']}
+  defaultSourceFile="queue-inputs.preview.tsx"
+  size="sm"
+/>
+
+### Arrange cells and border
+
+layout.direction supports up, down, left and right. Both ends stay open. Changing direction preserves input order. layout.width/height always mean physical cell dimensions. Cells retain their main-axis sizes; auto cells fill the largest cross-axis demand, while smaller fixed cells are centered without stretching.
+
+layout.gap defaults to 8, larger than the nested Array/Map default of 2 so outer items remain visually distinct. layout.padding controls cell padding; root padding controls container padding, both defaulting to 8. border draws two independent sides: top and bottom for horizontal layouts, left and right for vertical layouts. Use `border={{ style: { stroke: 'dodgerblue', dashPattern: [4, 3] } }}` to configure the outline. false hides only the border and preserves padding. Root frame retains the general container decoration contract independently.
+
+arrow defaults to false. Set it to true to enable both arrows, or configure input and output independently with an object; omitted sides stay hidden. A queue accepts input at the back and emits output at the front, using straight arrows. Each accepts true, false, or an appearance object. style controls color, width and dashes; arrowDetail controls the arrow-tip shape, size and color. Arrows do not change cell or container allocation and are hidden when empty. label remains the overall text label.
+
+The example below enables both incoming and outgoing arrows by default; use the switches to hide them independently.
+
+```tsx
+<Queue
+  items={['A', 'B', 'C']}
+  arrow={{
+    input: { style: { stroke: 'dodgerblue', dashPattern: [4, 3] }, arrowDetail: { shape: 'openStealth' } },
+    output: { style: { stroke: 'darkorange', strokeWidth: 2 } },
+  }}
+/>
+```
+
+<ComponentPreview
+  files={['queue-layout', 'queue-layout.preview.tsx']}
+  defaultSourceFile="queue-layout.preview.tsx"
+  size="sm"
+/>
+
+## Composition
+
+### Nest content and reference a cell
+
+Use this React hierarchy. Vanilla items.content accepts the corresponding drawing input; IR accepts one serializable child.
+
+```text
+Queue
+├── QueueItem
+└── QueueItem
+    └── Matrix
+```
+
+QueueItem accepts either text or one drawable child; omitting both creates an empty cell. Nested collections omit the outer cell fill and padding by default, while ordinary text retains its light gray background. Cell style and layout override overall defaults, including dashes, no fill and dimensions. Fixed dimensions clip content by default; explicit overflow overrides that behavior.
+
+Set a cell id to reference its actual border from an external Draw. Queue does not generate index ids, maintain enqueue/dequeue state or route complex connections. Compose additional operation annotations, curves and multiple snapshots with existing drawing and layout features. This example names the back cell selected and connects to it externally.
+
+<ComponentPreview
+  files={['queue-composition', 'queue-composition.preview.tsx']}
+  defaultSourceFile="queue-composition.preview.tsx"
+  size="md"
+/>
+
+See [Collection internals](/library/standard/collection/mechanism) for shared measurement, clipping, compilation and spatial references.
+
+## API reference
+
+{/* @include library/standard/collection/queue/generated */}
+
+## Schema reference
+
+Source retains the chosen input form. Factories do not expand skeletons or fill defaults; explicit parse materializes static defaults.
+
+#### QueueSchema
+
+<ZodSchema name="QueueSchema" description="Static queue from ordered cells, JSON data or a skeleton" expandNested />

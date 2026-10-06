@@ -5,7 +5,7 @@ import { Stack, StackItem, Matrix } from '@retikz/standard-react/collection';
 export type StackPreviewValues = { matrix: boolean; dashed: boolean; connect: boolean };
 /** 只通过公开属性组合栈的当前快照 */
 export const renderStackPreview = (values: StackPreviewValues) => (
-  <Layout viewBox={{ x: -20, y: -20, width: 220, height: 150 }}>
+  <Layout>
     <Stack layout={{ width: 80 }}>
       <StackItem text="A" />
       <StackItem

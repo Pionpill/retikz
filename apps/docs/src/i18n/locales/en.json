@@ -208,6 +208,7 @@
     "standardFrame": "Frame",
     "standardSurface": "Surface",
     "standardStack": "Stack",
+    "standardQueue": "Queue",
     "standardChain": "Chain",
     "standardMatrix": "Matrix",
     "standardArray": "Array",
