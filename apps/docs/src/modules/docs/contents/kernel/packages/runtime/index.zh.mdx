@@ -94,3 +94,9 @@ Runtime 的生产依赖只有 `@retikz/foundation`。Core 消费 Runtime 的公�
 | Trace 与诊断的收集和隔离                 | 观测记录的消费方式                 |
 
 Runtime 不提供绘图语法、几何算法、DOM 渲染或 React 生命周期。需要这些能力时，由 Core、Render 与相应 adapter 在各自边界内协作。
+
+<ComponentAlert
+  type="tip"
+  title="关于本文档的示例"
+  description="Runtime 与 Core 并非强绑定关系：Core 是 Runtime 的消费方，Runtime 本身不依赖 Core，也可以用于其他领域的状态与计算管理。因此，后续正文主要通过独立示例介绍 Runtime 的概念和机制，通常不直接展开它与 Core 的关系；涉及 Core 的具体接入时再单独说明。"
+/>

@@ -304,3 +304,47 @@ Runtime 先捕获新输入、生成读取视图，再比较前后内部值。这
     { label: '完整生命周期执行', path: 'packages/kernel/runtime/src/source/executor.ts' },
   ]}
 />
+
+## Core 应用
+
+Core 将整份 Scene IR（图文档的结构化描述）作为一个 Source，而不是为每个节点分别创建 Source。它在模块加载时定义一次 `CoreSourceDefinition`，后续初始化、更新和编译都复用这个 Token。下面摘录来源定义，省略导入与类型声明：
+
+```ts
+export const CoreSourceDefinition = defineRuntimeSource({
+  key: CORE_SOURCE_KEY, // '@retikz/core/document'
+  value: {
+    capture: input => cloneAndFreezeJson(input, 'CoreSourceDefinition input'),
+    read: value => value,
+    equals: jsonStructuralEquals,
+  },
+});
+```
+
+这里的输入、内部值和读取值都采用 Scene IR 结构：`capture` 保存一份独立的只读文档，`read` 直接提供这份文档，`equals` 按内容判断文档是否变化。代码中的两个 JSON helper 是 Core 的内部工具；使用 Core 时直接导入已定义好的 Token 即可。
+
+实际接入由上层负责。例如 Vanilla 注册这份来源，并将初始文档或更新后的完整文档与 Token 配对；Core 的编译计算再通过同一个 Token 读取数据。下面是不同调用位置的关键片段，省略注册表、Runtime 创建和计算定义的外围代码：
+
+```ts
+// 上层初始化：放入 createRuntime 的 initialSnapshots
+createRuntimeSourceInput(CoreSourceDefinition, initial.source);
+
+// 上层更新：提交新的完整文档
+runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next.source)],
+});
+
+// Core 编译计算内部：读取本次待编译的文档
+const source = view.snapshot(CoreSourceDefinition).value;
+// 随后将 source 交给 compileCoreSnapshot，生成 Scene
+```
+
+Token 标识的是来源定义，不保存具体文档；多个 Runtime 可以复用它，各自持有独立状态。这个例子对应了前文“定义规则 → 捕获输入 → 读取状态”的流程，编译和增量更新的细节由 Core 文档展开。
+
+<SourceLinks
+  sources={[
+    { label: 'Core 文档来源定义', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
+    { label: '上层注册、初始化与更新', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
+    { label: 'Core 编译计算读取来源', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>

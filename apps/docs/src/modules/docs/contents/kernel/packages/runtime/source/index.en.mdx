@@ -314,3 +314,50 @@ Read the implementation in this order:
     { label: 'Complete lifecycle execution', path: 'packages/kernel/runtime/src/source/executor.ts' },
   ]}
 />
+
+## Core application
+
+Core treats the complete Scene IR—a structured description of a drawing document—as one Source, rather than creating a Source for each node. It defines `CoreSourceDefinition` once when the module loads and reuses that token for initialization, updates and compilation. This excerpt omits imports and the type declaration:
+
+```ts
+export const CoreSourceDefinition = defineRuntimeSource({
+  key: CORE_SOURCE_KEY, // '@retikz/core/document'
+  value: {
+    capture: input => cloneAndFreezeJson(input, 'CoreSourceDefinition input'),
+    read: value => value,
+    equals: jsonStructuralEquals,
+  },
+});
+```
+
+Input, internal value and read value all use the Scene IR structure: `capture` stores an independent read-only document, `read` exposes that document, and `equals` compares document contents. The two JSON helpers are internal Core utilities; consumers simply import the existing token.
+
+The enclosing application handles integration. For example, Vanilla registers this Source and pairs its token with the initial or updated complete document. Core's compilation computation reads the data through the same token. These excerpts come from different call sites; surrounding registry, Runtime and computation setup is omitted:
+
+```ts
+// Application initialization: an entry in createRuntime's initialSnapshots
+createRuntimeSourceInput(CoreSourceDefinition, initial.source);
+
+// Application update: submit the next complete document
+runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next.source)],
+});
+
+// Inside Core's compilation computation: read the document to compile
+const source = view.snapshot(CoreSourceDefinition).value;
+// Then pass source to compileCoreSnapshot to produce a Scene
+```
+
+The token identifies the Source definition and stores no document data. Multiple Runtime instances can reuse it while owning independent state. This example connects the earlier steps—define rules, capture input, read state—to a real consumer. Core documentation covers compilation and incremental updates in detail.
+
+<SourceLinks
+  sources={[
+    { label: 'Core document Source definition', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
+    {
+      label: 'Application registration, initialization and updates',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+    },
+    { label: 'Source reads in Core compilation', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>

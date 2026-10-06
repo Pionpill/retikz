@@ -94,3 +94,9 @@ Runtime's only production dependency is `@retikz/foundation`. Core consumes Runt
 | Trace and diagnostic collection and isolation                | Observation consumers                                                 |
 
 Runtime provides no drawing syntax, geometry algorithms, DOM rendering, or React lifecycle. Core, Render, and the relevant adapters provide those capabilities within their respective boundaries.
+
+<ComponentAlert
+  type="tip"
+  title="About the examples"
+  description="Runtime is not tightly coupled to Core: Core consumes Runtime, while Runtime does not depend on Core and can manage state and computations in other domains. The following pages therefore use standalone examples to explain Runtime concepts and mechanisms, generally without discussing Core. Core-specific integration is explained separately where relevant."
+/>
