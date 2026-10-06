@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Tree 树', en: 'Unreleased · Tree' },
+          content: {
+            zh: '新增静态 Tree：root 支持文字叶节点与递归对象配置，圆形文字节点、空子槽、四向子树包络排列及可定制父子连接；支持真实节点引用、React、Vanilla 和双语交互文档。',
+            en: 'Adds static Tree with a root input accepting text leaves and configured recursive nodes, circular text nodes, missing child slots, four-direction subtree layout, customizable connections, true node references, React/Vanilla APIs, and bilingual interactive docs.',
+          },
+        },
+        {
           label: { zh: '未发布 · Queue 队列', en: 'Unreleased · Queue' },
           content: {
             zh: '新增 Queue 静态队列：三种输入、四向排列、两端开放边框、可定制进出直线箭头、单格样式与 id 引用，提供 React、Vanilla 和双语交互文档；入队出队状态由外部管理。',

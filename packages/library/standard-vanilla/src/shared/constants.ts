@@ -30,3 +30,6 @@ export const StandardStackEmbedKind = 'standard.stack';
 
 /** Queue authoring embed 标识 */
 export const StandardQueueEmbedKind = 'standard.queue';
+
+/** Tree authoring embed 判别 */
+export const StandardTreeEmbedKind = 'standard.tree';

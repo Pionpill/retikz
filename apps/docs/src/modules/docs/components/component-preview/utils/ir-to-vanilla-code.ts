@@ -324,6 +324,7 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'surface',
   'surfaceChild',
   'queue',
+  'tree',
   'stack',
   'chain',
   'matrix',
@@ -346,6 +347,7 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'FrameInputEmbedAdapter',
   'SurfaceInputEmbedAdapter',
   'QueueInputEmbedAdapter',
+  'TreeInputEmbedAdapter',
   'StackInputEmbedAdapter',
   'ChainInputEmbedAdapter',
   'MatrixInputEmbedAdapter',
@@ -397,6 +399,7 @@ export type StandardPreviewDefinitionName =
   | 'AxesDefinition'
   | 'FrameDefinition'
   | 'QueueDefinition'
+  | 'TreeDefinition'
   | 'StackDefinition'
   | 'ChainDefinition'
   | 'MatrixDefinition'
@@ -431,6 +434,7 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
   queue: 'QueueDefinition',
+  tree: 'TreeDefinition',
   stack: 'StackDefinition',
   chain: 'ChainDefinition',
   matrix: 'MatrixDefinition',
@@ -671,6 +675,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
   ctx.standardAdapters.add(adapterName);
+  if (record.type === 'tree') return `tree(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
   if (record.type === 'chain') {
     const source = child as IRChain;
     if (source.items === undefined) return `chain(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
@@ -1087,10 +1092,12 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
     const collectionMemberNames = new Set<string>([
       'queue',
+      'tree',
       'stack',
       'chain',
       'matrix',
       'QueueInputEmbedAdapter',
+      'TreeInputEmbedAdapter',
       'StackInputEmbedAdapter',
       'ChainInputEmbedAdapter',
       'MatrixInputEmbedAdapter',
@@ -1133,6 +1140,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     );
     const collectionDefinitionNames = new Set<string>([
       'QueueDefinition',
+      'TreeDefinition',
       'StackDefinition',
       'ChainDefinition',
       'MatrixDefinition',

@@ -8,6 +8,7 @@ import {
   GridLineSchemaZhLocalization,
   standardStrokeDescriptions,
 } from './standard-presentation-localizations';
+import { treeSchemaLocalization } from './tree-schema-localizations';
 
 /** Scope 通道沿用 Grid 已维护的公共字段词典 */
 const scopeDescriptions = Object.fromEntries(
@@ -841,3 +842,5 @@ standardSchemaLocalizations.ChainSchema = chainSchemaLocalization;
 standardSchemaLocalizations.StackSchema = stackSchemaLocalization;
 
 standardSchemaLocalizations.QueueSchema = queueSchemaLocalization;
+
+standardSchemaLocalizations.TreeSchema = treeSchemaLocalization;

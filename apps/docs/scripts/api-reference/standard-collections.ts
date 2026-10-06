@@ -9,6 +9,19 @@ import type { ApiReferencePackageConfig } from './tex';
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 const translations: Record<string, string> = {
+  'Tree 使用 root 递归描述文字叶节点与对象配置':
+    'Tree describes text leaves and configured nodes recursively through root',
+  '静态树结构，节点与连接交由 Standard 编译': 'Static tree with nodes and connections compiled by Standard',
+  'Tree 的 root 输入，保留节点配置与作用域属性': 'Tree root input retaining node configuration and scope properties',
+  'Tree 通过同一 Standard composite 下沉': 'Tree lowers through the shared Standard composite',
+  '创建保持稀疏输入的 Tree embed': 'Create a Tree embed preserving sparse input',
+  '以 root 描述结构并保留完整 Scope 的静态树 Source':
+    'Static Tree Source with root structure and full Scope properties',
+  保留作者稀疏字段与有序递归结构: 'Preserve sparse author fields and ordered recursive structure',
+  'Tree 的布局感知编译定义': 'Layout-aware compilation definition for Tree',
+  'Tree 复用 Core 内置节点和路径，扩展形状由宿主装配':
+    'Tree reuses Core nodes and paths; the host registers custom shapes',
+
   '按顺序提供的文本或单元格，与数据和骨架入口互斥': 'Ordered text or cells, mutually exclusive with data and skeleton',
   '用于展开单元格的数据，与显式单元格和骨架入口互斥':
     'Data expanded into cells, mutually exclusive with explicit cells and skeleton',
@@ -231,27 +244,30 @@ Object.assign(translations, {
 /** 从三个公开 collection 入口生成组件局部参考，嵌入合页 API 小节 */
 export const writeStandardCollectionApiReferences = async (
   outputRoot: string,
-  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain' | 'Stack' | 'Queue'> = [
+  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain' | 'Stack' | 'Queue' | 'Tree'> = [
     'Array',
     'Map',
     'Matrix',
     'Chain',
     'Stack',
     'Queue',
+    'Tree',
   ],
 ): Promise<void> => {
   for (const name of names) {
     const slug = name.toLowerCase();
     const markers =
-      name === 'Stack' || name === 'Queue'
-        ? [`${name}Item`]
-        : name === 'Chain'
-          ? ['ChainCell', 'ChainParallel', 'ChainBranch']
-          : name === 'Array'
-            ? ['ArrayItem']
-            : name === 'Matrix'
-              ? ['MatrixRow', 'MatrixCell']
-              : ['MapEntry', 'MapKey', 'MapValue'];
+      name === 'Tree'
+        ? []
+        : name === 'Stack' || name === 'Queue'
+          ? [`${name}Item`]
+          : name === 'Chain'
+            ? ['ChainCell', 'ChainParallel', 'ChainBranch']
+            : name === 'Array'
+              ? ['ArrayItem']
+              : name === 'Matrix'
+                ? ['MatrixRow', 'MatrixCell']
+                : ['MapEntry', 'MapKey', 'MapValue'];
 
     const owners = [
       {

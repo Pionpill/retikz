@@ -1,0 +1,128 @@
+---
+title: Tree · 树
+description: 用文字节点、父子连接与有序子树展示静态树结构。
+---
+
+`Tree` 将显式树形呈现为节点和父子连接，适合二叉树示意、层级结构与算法状态图。节点默认是圆形，连接默认是无箭头直线；输入顺序决定子节点顺序。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，从 collection 入口导入。
+
+<ComponentPreview files="tree-basic" size="md" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Tree } from '@retikz/standard-react/collection';
+
+<Layout>
+  <Tree root={{ content: 'A', children: ['B', 'C'] }} />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { tree, TreeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] }), {
+  adapters: [TreeInputEmbedAdapter],
+});
+```
+
+</DocTab>
+<DocTab value="ir" label="Source IR">
+
+```json
+{ "namespace": "standard", "type": "tree", "root": { "content": "A", "children": ["B", "C"] } }
+```
+
+直接编译 IR 时注册 TreeProvider；节点形状和箭头沿用 Core 的注册能力。
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 声明节点
+
+通过 root 声明整棵树。字符串直接表示文字叶节点；需要子节点、身份或局部样式时，使用对象配置。children 中可以混用这两种写法，顺序决定子节点顺序。
+
+```tsx
+<Tree
+  root={{
+    content: 'A',
+    children: ['B', { content: 'C', children: [null, 'D'] }],
+  }}
+/>
+```
+
+`root="A"` 与 `root={{ content: 'A' }}` 显示相同的单个节点。对象可配置 content、children、id、node 和 connection；省略 content 或使用空字符串会生成可见空节点。文字原样显示，应用可以先将数值转换为字符串。
+
+root 必填，`root={null}` 表示空树。children 中的 null 保留一个默认空节点大小的槽位，不绘制节点或连接，也没有身份。例如 `[null, 'R']` 将 R 保留在第二个位置，`['R']` 则让唯一子节点居中。React 也通过 root 属性描述结构，不接收 JSX 子项。
+
+### 节点与连接
+
+node 统一配置 Core Node 的 shape、style 和 layout。默认 circle、无填充、1 像素描边、minimumSize 32、padding 2、margin 0；32 是最小尺寸，长文字会增大节点。root 入口的逐项 node 只覆盖当前节点，子节点继续继承根级 node。
+
+connection 配置父子边，false 隐藏连接；逐项 connection 配置该节点的入边，根节点自身不能配置入边。全局关闭时仍可用逐项对象重新开启。path 使用 Core Path 的非结构属性，支持 style、marks、label 等；marks 整体替换，空数组清除箭头。
+
+下面演示显式开启箭头，并可调整方向、空槽和样式。
+
+<ComponentPreview
+  files={['tree-layout', 'tree-layout.preview.tsx']}
+  defaultSourceFile="tree-layout.preview.tsx"
+  size="md"
+/>
+
+### 调整排列
+
+layout.direction 默认 down，也支持 up、right、left；上下生长时子项从左到右，左右生长时从上到下，反向生长不反转输入顺序。levelGap 默认 32，表示相邻层的净距；siblingGap 默认 24，表示相邻子树包络的净距。
+
+同层节点中心对齐，父节点位于首个与末个直属子节点中心的中点，空子槽按占位中心参与。更深后代不会通过扩大包络把父节点拉偏。Tree 先测量真实文字与形状，再排列完整子树包络；不会穿插子树来压缩空白，也不做避障或自动旋转。
+
+## 扩展方式
+
+### 自定义节点形状
+
+通过某个节点对象上的 node.shape 单独设置形状，其余节点保留默认圆形。下面将长文本节点设置为 rectangle，并使用 `{ type: 'rectangle', params: { cornerRadius: 8 } }` 添加圆角；局部 node.layout.padding 为文字留出空间。
+
+节点根据文本与 padding 测量尺寸，Tree 使用测量后的轮廓排列节点并连接边界。切换长短文本时，可观察矩形宽度与连接端点一起更新；切换椭圆时，圆角控件隐藏。
+
+<ComponentPreview
+  files={['tree-node-shape', 'tree-node-shape.preview.tsx']}
+  defaultSourceFile="tree-node-shape.preview.tsx"
+  size="md"
+/>
+
+### 连接路由与节点引用
+
+connection.route 支持 straight、`-|`、`|-`、`-|-` 和 `|-|`。三段折线可用 fraction 调整中间段位置；两段折线与直线不接受 fraction。路由以父子节点整体为目标，由首末线段的方向决定真实轮廓上的连接点，不固定到某个 anchor。额外曲线或标注可以通过外部 Draw 组合。
+
+<ComponentPreview
+  files={['tree-connections', 'tree-connections.preview.tsx']}
+  defaultSourceFile="tree-connections.preview.tsx"
+  size="md"
+  caption="默认使用三段折线并开启箭头。蓝色虚线通过节点 id 引用 C 的右侧边界；切换路由时节点保持原位。"
+/>
+
+root 入口显式节点 id 可从外部引用，例如 `{ id: 'selected', anchor: 'right' }`。引用的是 Core Node 的真实边界，不是矩形单元格，也不加 cell: 前缀。Tree 根级 id、transforms、theme、defaults 与 label 保留作用域和整体标注语义。
+
+Tree 只呈现输入快照，不管理插入、删除、搜索、平衡或遍历状态；结构更新由应用提供新的输入。节点内容限文字，任意图形组合使用已有布局能力。
+
+## API 参考
+
+{/* @include library/standard/collection/tree/generated */}
+
+## Schema 参考
+
+Source 保留字符串或对象配置以及稀疏覆盖，factory 不填默认值。解析布局时物化其静态默认，节点和连接的默认在合并覆盖后应用。
+
+#### TreeSchema
+
+<ZodSchema name="TreeSchema" description="文字节点与父子连接构成的静态有序树" expandNested />

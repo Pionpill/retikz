@@ -86,6 +86,7 @@ export const librarySection: Array<Section> = [
           },
           { id: 'stack', label: 'library.standardStack', difficulty: 'beginner' },
           { id: 'queue', label: 'library.standardQueue', difficulty: 'beginner' },
+          { id: 'tree', label: 'library.standardTree', difficulty: 'beginner' },
           { id: 'chain', label: 'library.standardChain', difficulty: 'beginner' },
           {
             id: 'matrix',
