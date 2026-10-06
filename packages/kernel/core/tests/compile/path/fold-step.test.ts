@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src/compile/compile';
 import type { IRScene } from '../../../src/schemas';
+import { flattenPrims } from '../../helpers/flatten';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -178,7 +179,7 @@ describe("compile path: 'step' 折角", () => {
     ]);
   });
 
-  it('旧两段 fold 在同轴退化时保持原 clipping 语义', () => {
+  it('两段 fold 在同轴退化时连接两端边界', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -195,11 +196,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
-      move([0, 0]),
-      line([0, 0]),
-      line([0, 52]),
-    ]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 8]), line([0, 52])]);
   });
 
   it.each([
@@ -240,13 +237,13 @@ describe("compile path: 'step' 折角", () => {
   it.each([
     {
       fraction: 0,
-      expected: [move([0, 8]), line([0, 8]), line([0, 60]), line([92, 60])],
+      expected: [move([0, 8]), line([0, 60]), line([92, 60])],
     },
     {
       fraction: 1,
-      expected: [move([8, 0]), line([100, 0]), line([100, 52]), line([100, 52])],
+      expected: [move([8, 0]), line([100, 0]), line([100, 52])],
     },
-  ])('fraction=$fraction 在 NodeTarget 边界保留零长腿且不画到中心', ({ fraction, expected }) => {
+  ])('fraction=$fraction 在 NodeTarget 边界移除零长腿且不画到中心', ({ fraction, expected }) => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -318,4 +315,186 @@ describe("compile path: 'step' 折角", () => {
       line([0, 0]),
     ]);
   });
+});
+
+it.each([
+  { via: '-|' as const, target: [100, 5] as [number, number], expected: [move([8, 0]), line([92, 0])] },
+  { via: '|-' as const, target: [100, 5] as [number, number], expected: [move([8, 5]), line([92, 5])] },
+  { via: '-|' as const, target: [5, 100] as [number, number], expected: [move([5, 8]), line([5, 92])] },
+  { via: '|-' as const, target: [5, 100] as [number, number], expected: [move([0, 8]), line([0, 92])] },
+  { via: '-|' as const, target: [100, 0] as [number, number], expected: [move([8, 0]), line([92, 0])] },
+  { via: '|-' as const, target: [100, 0] as [number, number], expected: [move([8, 0]), line([92, 0])] },
+])('两段 $via 移除节点内部转折点并保留原路线', ({ via, target, expected }) => {
+  const result = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      { type: 'node', id: 'A', position: [0, 0] },
+      { type: 'node', id: 'B', position: target },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'fold', via, to: { id: 'B' } },
+        ],
+      },
+    ],
+  });
+  expect(findPathPrim(result.scene.primitives).commands).toEqual(expected);
+});
+
+it.each([
+  { fraction: 0.04, expected: [move([4, 8]), line([4, 60]), line([92, 60])] },
+  { fraction: 0.96, expected: [move([8, 0]), line([96, 0]), line([96, 52])] },
+])('三段折线 fraction=$fraction 裁掉节点内部的转折部分', ({ fraction, expected }) => {
+  const result = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      { type: 'node', id: 'A', position: [0, 0] },
+      { type: 'node', id: 'B', position: [100, 60] },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'fold', via: '-|-', fraction, to: { id: 'B' } },
+        ],
+      },
+    ],
+  });
+  expect(findPathPrim(result.scene.primitives).commands).toEqual(expected);
+});
+
+it('折线沿原水平段与椭圆相交，不能用中心连线替代', () => {
+  const result = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      { type: 'node', id: 'A', position: [0, 0] },
+      {
+        type: 'node',
+        id: 'B',
+        shape: 'ellipse',
+        position: [100, 6],
+        layout: { minimumSize: { width: 20, height: 20 }, padding: 0 },
+      },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
+        ],
+      },
+    ],
+  });
+  expect(findPathPrim(result.scene.primitives).commands).toEqual([move([8, 0]), line([92, 0])]);
+});
+
+it('折线裁切使用含非对称 margin 的连接面，反向连接仍正确', () => {
+  const result = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      { type: 'node', id: 'A', position: [100, 0] },
+      { type: 'node', id: 'B', position: [0, 5], layout: { margin: { top: 2, right: 12, bottom: 4, left: 6 } } },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
+        ],
+      },
+    ],
+  });
+  expect(findPathPrim(result.scene.primitives).commands).toEqual([move([92, 0]), line([20, 0])]);
+});
+
+it('显式 center anchor 保留作者端点，不进行节点内部裁切', () => {
+  const result = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      { type: 'node', id: 'A', position: [0, 0] },
+      { type: 'node', id: 'B', position: [100, 5] },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A', anchor: 'center' } },
+          { type: 'step', kind: 'fold', via: '-|', to: { id: 'B', anchor: 'center' } },
+        ],
+      },
+    ],
+  });
+  expect(findPathPrim(result.scene.primitives).commands).toEqual([move([0, 0]), line([100, 0]), line([100, 5])]);
+});
+
+it('折线退化后标签与双向箭头沿可见直线采样', () => {
+  const children: IRScene['children'] = [
+    { type: 'node', id: 'A', position: [0, 0] },
+    { type: 'node', id: 'B', position: [100, 5] },
+  ];
+  const marks = [
+    { pos: 0, mark: { kind: 'arrow' as const } },
+    { pos: 1, mark: { kind: 'arrow' as const } },
+  ];
+  const actual = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      ...children,
+      {
+        type: 'path',
+        marks,
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' }, label: { text: 'mid' } },
+        ],
+      },
+    ],
+  }).scene;
+  const expected = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      {
+        type: 'path',
+        marks,
+        children: [
+          { type: 'step', kind: 'move', to: [8, 0] },
+          { type: 'step', kind: 'line', to: [92, 0], label: { text: 'mid' } },
+        ],
+      },
+    ],
+  }).scene;
+  expect(findPathPrim(actual.primitives).commands).toEqual(findPathPrim(expected.primitives).commands);
+  expect(findPathPrim(actual.primitives).arrowStart).toEqual(findPathPrim(expected.primitives).arrowStart);
+  expect(findPathPrim(actual.primitives).arrowEnd).toEqual(findPathPrim(expected.primitives).arrowEnd);
+  expect(flattenPrims(actual.primitives).filter(item => item.type === 'text')).toEqual(
+    flattenPrims(expected.primitives).filter(item => item.type === 'text'),
+  );
+});
+
+it('折线在自身 Scope 坐标中裁切外部节点，保持变换后的边界交点', () => {
+  const result = compileToScene({
+    type: 'scene',
+    version: 1,
+    children: [
+      { type: 'node', id: 'A', position: [0, 0] },
+      { type: 'node', id: 'B', position: [100, 5] },
+      {
+        type: 'scope',
+        transforms: [{ kind: 'translate', x: 20, y: 30 }],
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: { id: 'A' } },
+              { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+  expect(findPathPrim(flattenPrims(result.scene.primitives)).commands).toEqual([move([-12, -30]), line([72, -30])]);
 });
