@@ -226,17 +226,22 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
 });
 
 describe('IRDataFieldDefinition.order — 错误契约', () => {
-  it('order_on_continuous_throws', () => {
-    // order 配 continuous 字段 → lowering fail-loud
+  it.each([
+    { label: 'numeric observations', value: 1, field: { name: 'cx', order: 'ascending' } },
+    { label: 'temporal observations', value: '2024-01-01', field: { name: 'cx', order: 'appearance' } },
+    {
+      label: 'format-implied type',
+      value: '2024/01/01',
+      field: { name: 'cx', format: 'slashDate', order: 'ascending' },
+    },
+  ])('rejects category order after resolving $label', ({ value, field }) => {
+    // Source 省略 type，格式或数据确定为非分类字段后拒绝类别顺序
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
         reference: 'd',
-        model: [
-          { name: 'cx', type: 'continuous', order: 'ascending' },
-          { name: 'val', type: 'continuous' },
-        ],
+        model: [field, { name: 'val', type: 'continuous' }],
       },
       scales: [
         { type: 'linear', name: 'xv' },
@@ -246,7 +251,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'cx' }, y: { field: 'val' } } }],
     });
 
-    expect(() => expandOf(spec, { d: [{ cx: 1, val: 2 }] })).toThrow();
+    expect(() => expandOf(spec, { d: [{ cx: value, val: 2 }] })).toThrow(/order.*categorical/);
   });
 
   it('conflicting_order_same_role_throws', () => {

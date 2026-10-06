@@ -16,7 +16,12 @@ import type { AnyTransformDefinition } from './transform';
 import type { AnyTransformImplementation } from './transform';
 
 /** 规范逻辑字段模型；不重复执行源格式解析 */
-export type DataTransformModel = Array<Pick<IRDataModel[number], 'name' | 'type' | 'order'>>;
+export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;
+
+/** 按字段分支投影，保留测量类型与分类顺序的关联 */
+type DataTransformField<TField extends IRDataModel[number]> = TField extends IRDataModel[number]
+  ? Pick<TField, 'name' | 'type' | 'order'>
+  : never;
 
 /** 变换的精确统计依赖及本次请求的语义身份 */
 export type DataTransformDependency =

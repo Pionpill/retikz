@@ -22,14 +22,16 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 
 ### FieldDefinitionSchema
 
+字段声明按 `type` 分支：`categorical` 支持类别 `order`；`continuous` 与 `temporal` 禁止 `order`。省略 `type` 时保留推断，若声明了 `order`，最终解析出的字段类型必须是分类类型。
+
 <ZodSchema
   name="FieldDefinitionSchema"
   description="单个逻辑字段的名称、测量类型、解析格式与分类顺序。"
   descriptions={{
     name: '逻辑字段名或点路径。',
-    type: '字段测量类型；省略时从数据推断。',
+    type: '字段测量类型；省略时从格式或数据推断。',
     format: '内置或自定义值解析格式；省略时使用默认 coercion。',
-    order: '分类域顺序；省略时按数据首次出现顺序。',
+    order: '仅分类字段支持的分类域顺序；省略时按数据首次出现顺序。',
   }}
 />
 

@@ -67,6 +67,8 @@ Within Plot, color behavior depends on the authoring layer. React `<Plot>` can s
 
 ## Category order
 
+Field declarations are distinguished by `type`: `categorical` allows `order`, while an explicit `continuous` or `temporal` type forbids it, including `'appearance'`. When `type` is omitted, you may declare `order`, but resolution fails if the format or data implies a non-categorical type. Declare numeric category codes explicitly as `categorical`.
+
 Categorical fields form their domain in data-appearance order by default. Put `order` on the field when the business order should be `S → M → L → XL`:
 
 <ComponentPreview
@@ -100,8 +102,8 @@ These schemas and derived types are exported from the `@retikz/data` package roo
     {
       label: 'Field declaration and data-model schemas',
       path: 'packages/viz/data/src/schemas/data/schema.ts',
-      startLine: 5,
-      endLine: 40,
+      startLine: 20,
+      endLine: 69,
     },
     {
       label: 'Field paths, categorical domains, and type inference',

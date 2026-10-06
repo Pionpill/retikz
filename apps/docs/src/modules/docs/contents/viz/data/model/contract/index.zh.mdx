@@ -67,6 +67,8 @@ description: 用字段模型声明逻辑字段、测量类型与分类顺序，�
 
 ## 分类顺序
 
+字段声明按 `type` 区分：`categorical` 允许 `order`，显式 `continuous` 或 `temporal` 不允许声明 `order`，包括 `'appearance'`。省略 `type` 时可以先写 `order`，但格式解析或数据推断得到非分类类型后会报错；数值编码的类别应显式声明为 `categorical`。
+
 `categorical` 字段默认按数据出现顺序形成分类域。需要 `S → M → L → XL` 这样的业务顺序时，在字段上写 `order`：
 
 <ComponentPreview
@@ -100,8 +102,8 @@ description: 用字段模型声明逻辑字段、测量类型与分类顺序，�
     {
       label: '字段声明与数据模型 Schema',
       path: 'packages/viz/data/src/schemas/data/schema.ts',
-      startLine: 5,
-      endLine: 40,
+      startLine: 20,
+      endLine: 69,
     },
     {
       label: '字段路径、分类域与类型推断',

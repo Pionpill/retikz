@@ -1,5 +1,16 @@
 import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, null as zodNull, number, strictObject, string, union } from 'zod';
+import {
+  array,
+  boolean,
+  enum as zodEnum,
+  literal,
+  never,
+  null as zodNull,
+  number,
+  strictObject,
+  string,
+  union,
+} from 'zod';
 
 import { DataFieldFormat, DataFieldType, FieldOrderMode } from './constants';
 
@@ -8,15 +19,34 @@ export const FieldFormatSchema = createOpenStringSchema(DataFieldFormat).describ
   'Field value-parsing format name; built-in or custom.',
 );
 
-/** 校验数据字段名称、度量类型、解析格式与类别顺序声明 */
-export const FieldDefinitionSchema = strictObject({
+/** 各测量类型共享的字段名称与解析格式 */
+const FieldDefinitionBaseSchema = strictObject({
   name: NonBlankStringSchema.describe('Field name or dotted path'),
-  type: zodEnum(DataFieldType).optional().describe('Field measurement type; omitted means infer from data'),
   format: FieldFormatSchema.optional().describe('Value-parsing format; omitted means default coercion'),
-  order: union([zodEnum(FieldOrderMode), array(union([string(), number()])).min(1)])
-    .optional()
-    .describe('Category order; omitted means appearance order'),
-}).describe('Field declaration for type, format, and category order');
+});
+
+/** 分类字段的顺序声明；省略时按数据出现顺序 */
+const FieldOrderSchema = union([zodEnum(FieldOrderMode), array(union([string(), number()])).min(1)])
+  .optional()
+  .describe('Category order; omitted means appearance order');
+
+/** 校验字段声明；仅分类字段或待推断为分类的字段可声明类别顺序 */
+export const FieldDefinitionSchema = union([
+  FieldDefinitionBaseSchema.extend({
+    type: literal(DataFieldType.Categorical).describe('Categorical field measurement type'),
+    order: FieldOrderSchema,
+  }),
+  FieldDefinitionBaseSchema.extend({
+    type: zodEnum([DataFieldType.Continuous, DataFieldType.Temporal]).describe(
+      'Continuous or temporal field measurement type',
+    ),
+    order: never().optional().describe('Category order is not supported for continuous or temporal fields'),
+  }),
+  FieldDefinitionBaseSchema.extend({
+    type: never().optional().describe('Omitted measurement type; infer from format or data'),
+    order: FieldOrderSchema,
+  }),
+]).describe('Field declaration for type, format, and category order');
 
 /** 校验字段名互不重复的外部数据模型声明 */
 export const DataModelSchema = array(FieldDefinitionSchema)
