@@ -83,6 +83,19 @@ The fourth type parameter describes change hints; `never` means this example pro
 
 The returned `position` is a definition token identifying this Source; it does not expose the callbacks directly. Runtime stores the associated rules internally, and registration, submission and reading reuse this token. No input data exists yet, so defining the Source neither invokes `capture` nor creates state.
 
+<ComponentAlert
+  type="tip"
+  title="Why use both a key and a token?"
+  description={
+    <>
+      The string <code>key</code> provides a stable name for lookup, duplicate checks and diagnostics; the token carries
+      the Source's generic types and identifies its handling rules. Defining the same <code>key</code> again creates a
+      different token that cannot replace the registered one, preventing a mismatch between the caller's expected types
+      and the rules actually executed. Define a Source once and reuse the returned object.
+    </>
+  }
+/>
+
 <SourceLinks
   sources={[
     { label: 'Associating a Source token with its rules', path: 'packages/kernel/runtime/src/source/define.ts' },

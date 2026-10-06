@@ -83,6 +83,18 @@ const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead,
 
 返回的 `position` 是标识这份来源的定义凭证（token），不直接暴露回调。Runtime 内部保存对应的处理规则，后续注册、提交和读取都沿用这份凭证。此时还没有输入数据，也不会执行 `capture` 或创建状态。
 
+<ComponentAlert
+  type="tip"
+  title="为什么同时需要 key 和 Token？"
+  description={
+    <>
+      <code>key</code> 提供稳定名称，用于查找、重名检查和诊断；Token 携带来源的泛型类型，并关联具体处理规则。
+      重复定义相同 <code>key</code> 会得到不同的
+      Token，不能替代已注册的那一份，否则调用方预期的类型和实际执行的规则可能不一致。 因此，应定义一次并复用返回对象。
+    </>
+  }
+/>
+
 <SourceLinks sources={[{ label: '来源凭证与处理规则的关联', path: 'packages/kernel/runtime/src/source/define.ts' }]} />
 
 ### 接入 Runtime
