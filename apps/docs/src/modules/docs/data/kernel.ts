@@ -571,7 +571,15 @@ export const kernelSection: Array<Section> = [
         id: 'runtime',
         label: 'kernel.pkgRuntime',
         sidebarGroup: 'kernel.pkgGroupCore',
-        children: [{ id: 'usage', label: 'kernel.pkgRuntimeUsage', difficulty: DocDifficulty.Beginner }],
+        children: [
+          { id: 'usage', label: 'kernel.pkgRuntimeUsage', difficulty: DocDifficulty.Internals },
+          {
+            id: 'source',
+            label: 'kernel.pkgRuntimeSource',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+        ],
       },
       {
         id: 'core',

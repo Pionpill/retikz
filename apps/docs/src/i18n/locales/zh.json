@@ -120,6 +120,7 @@
     "pkgInspectSchemaReference": "Schema 参考",
     "pkgRuntime": "增量执行 · runtime",
     "pkgRuntimeUsage": "入门示例",
+    "pkgRuntimeSource": "状态与来源",
     "pkgReact": "React 适配 · react",
     "pkgVanilla": "原生适配 · vanilla",
     "pkgTex": "LaTeX 公式 · tex",

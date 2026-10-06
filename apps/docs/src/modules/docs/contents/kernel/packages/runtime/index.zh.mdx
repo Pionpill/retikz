@@ -65,6 +65,23 @@ runtimeIdentityEquals(first, second); // true
 
 创建、更新和释放 Runtime 的完整示例见[入门示例](/kernel/packages/runtime/usage)。
 
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: '入门示例',
+      description: '用计数器完成定义、注册、更新、读取与释放',
+      url: '/kernel/packages/runtime/usage',
+    },
+    {
+      title: '状态与来源',
+      description: '从输入隔离理解 Source 的捕获、读取、比较与资源清理',
+      url: '/kernel/packages/runtime/source',
+    },
+  ]}
+/>
+
 ## 包边界
 
 Runtime 的生产依赖只有 `@retikz/foundation`。Core 消费 Runtime 的公开能力，Runtime 不依赖 Core，也不解释 Core IR 或 Scene。

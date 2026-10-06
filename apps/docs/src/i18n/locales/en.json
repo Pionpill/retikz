@@ -120,6 +120,7 @@
     "pkgInspectSchemaReference": "Schema reference",
     "pkgRuntime": "runtime",
     "pkgRuntimeUsage": "Starter example",
+    "pkgRuntimeSource": "State and Sources",
     "pkgReact": "react",
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",

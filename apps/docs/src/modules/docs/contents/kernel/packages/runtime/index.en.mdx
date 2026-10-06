@@ -65,6 +65,23 @@ runtimeIdentityEquals(first, second); // true
 
 See [Starter example](/kernel/packages/runtime/usage) for a complete example that creates, updates, and disposes a Runtime.
 
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Starter example',
+      description: 'Define, register, update, read and dispose a counter',
+      url: '/kernel/packages/runtime/usage',
+    },
+    {
+      title: 'State and Sources',
+      description: 'Follow input isolation through capture, reading, comparison and resource cleanup',
+      url: '/kernel/packages/runtime/source',
+    },
+  ]}
+/>
+
 ## Package boundaries
 
 Runtime's only production dependency is `@retikz/foundation`. Core consumes Runtime's public capabilities. Runtime does not depend on Core or interpret Core IR or Scene.

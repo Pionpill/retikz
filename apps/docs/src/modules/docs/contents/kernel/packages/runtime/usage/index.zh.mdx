@@ -73,7 +73,7 @@ try {
 
 本例只实现 `run`，因此更新结果为 `full`；使用 Runtime 不要求先编写增量算法。数值本身不可变，capture 与 read 可以直接返回值。
 
-> 初次阅读时，对这些概念有个印象即可；后文会逐步详细解释其中的原理。
+> 初次阅读时，对这些概念有个印象即可；[状态与来源](/kernel/packages/runtime/source)会从表单坐标的转换与隔离问题出发，解释 Source 的捕获、读取、比较与释放。
 
 ## 理解这次接入
 
@@ -85,6 +85,12 @@ try {
 | 创建 Runtime     | 初始 commands 精确覆盖注册的 Source，创建 revision 0 并计算初始 artifact |
 | 更新与读取       | 提交完整的新计数，并读取带 revision 的状态与结果                         |
 | 释放 Runtime     | 在 `finally` 中释放 Runtime 持有的资源                                   |
+
+下图串起本例成功更新的过程：从左上角开始，沿箭头完成创建、更新、读取和释放。
+
+<ComponentPreview files="counter-flow" hideCode type="flow" />
+
+更新成功后，计数与两倍值一起进入 revision 1；无论使用过程是否发生异常，最后都通过 `finally` 释放 Runtime。
 
 Source 的四个泛型依次是输入、内部值、公开只读值与变更类型。本例前三项都是 `number`，没有变更提示，所以第四项为 `never`。
 

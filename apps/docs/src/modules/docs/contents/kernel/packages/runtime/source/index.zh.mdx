@@ -1,0 +1,252 @@
+---
+title: 状态与来源
+description: 从表单坐标的转换与输入隔离出发，理解 Source 的捕获、只读视图、相等判断与资源释放，并沿源码追踪状态生命周期
+---
+
+[入门示例](/kernel/packages/runtime/usage)用一个数字保存计数，直接返回原值就足够了。现在换成坐标编辑表单：输入框提供字符串 `{ x: '10', y: '20' }`，而读取方需要数值坐标。调用方提交后，又把原对象的 `x` 改成 `'99'`，Runtime 中已经发布的状态应该跟着改变吗？
+
+不应该。否则，读取方会在没有调用 `update` 的情况下看到新内容，依赖这些数据的计算结果却仍然来自旧内容。本篇沿着这份坐标，解释如何把外部输入变成 Runtime 可以安全持有的状态，以及这份状态何时保留、替换和释放。
+
+这里的 **Source（状态来源）** 是一份定义：它告诉 Runtime 如何接收和管理某一类完整状态。本例的 Source 管理坐标本身；到原点的距离等派生结果则交给入门示例中介绍过的 Computation。Source 定义不是某次提交的对象，也不负责自动监听表单变化。
+
+## 整体流程
+
+先区分三份数据：调用方的输入、Runtime 内部持有的值、读取方得到的视图。**视图**在这里指允许读取方看到的数据表示，不是界面组件。下面追踪同一个坐标：输入是文本字段，内部保存数值，输出是只读的 `[x, y]` 元组。
+
+<ComponentPreview files="source-values" size="xs" hideCode type="flow" />
+
+三份数据表示同一个坐标。内部值和读取视图虽然都显示为 `[10, 20]`，但分别保存在独立数组中，读取视图只供读取：
+
+| 表示     | 本例的数据               | 为什么这样表示                                         |
+| -------- | ------------------------ | ------------------------------------------------------ |
+| 表单输入 | `{ x: '10', y: '20' }`   | 输入框给出文本，保留有名字的字段便于提交               |
+| 内部值   | `[10, 20]`，普通元组     | 转成数值并独立保存；下标 0 是 x、1 是 y                |
+| 只读视图 | `[10, 20]`，普通数组冻结 | 读取方得到独立的 `[x, y]` 只读元组，不直接持有内部数组 |
+
+`capture` 完成字符串到数值的转换，并创建独立存储；`read` 将两个数值复制为只读元组。同一个坐标的含义没有变，改变的是表示和访问方式。如果没有不同表示或隔离需求，三个类型也可以相同。
+
+<SourceLinks
+  sources={[
+    {
+      label: '输入、内部值与读取视图的契约',
+      path: 'packages/kernel/runtime/src/source/types.ts',
+      startLine: 27,
+      endLine: 42,
+    },
+  ]}
+/>
+
+## 捕获与读取
+
+### 定义来源
+
+`defineRuntimeSource` 用来定义一种状态来源，指定输入如何捕获、读取、比较和释放；返回的定义用于后续注册和访问该状态。下面定义坐标来源：
+
+```ts
+import { defineRuntimeSource } from '@retikz/runtime';
+
+type PositionInput = { x: string; y: string };
+type PositionValue = [number, number];
+type PositionRead = readonly [number, number];
+
+const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead, never>({
+  key: 'example/position',
+  value: {
+    capture: input => [Number(input.x), Number(input.y)],
+    read: value => Object.freeze([value[0], value[1]] as const),
+    equals: (left, right) => Object.is(left[0], right[0]) && Object.is(left[1], right[1]),
+  },
+});
+```
+
+先看前三个泛型，它们分别对应输入、内部值和读取视图：
+
+| 泛型     | 本例的类型      | 由谁使用                                                        |
+| -------- | --------------- | --------------------------------------------------------------- |
+| `TInput` | `PositionInput` | 调用方提交完整输入，`capture` 接收它                            |
+| `TValue` | `PositionValue` | Runtime 持有；`read`、`equals` 和可选的 `dispose` 使用它        |
+| `TRead`  | `PositionRead`  | 通过 Snapshot 读取 `[x, y]`，类型为 `readonly [number, number]` |
+
+`defineRuntimeSource` 接收以下配置成员，其中 `value` 包含状态的捕获、读取、比较和释放规则：
+
+| 成员                | 必填 | 作用                                             |
+| ------------------- | ---- | ------------------------------------------------ |
+| `key`               | 是   | Source 的非空注册键，本例为 `example/position`   |
+| `value.capture`     | 是   | 将输入转换为 Runtime 持有的内部值                |
+| `value.read`        | 是   | 从内部值生成供外部读取的不可变视图               |
+| `value.equals`      | 是   | 判断两个完整内部值是否表示相同状态               |
+| `value.dispose`     | 否   | 释放内部值持有的资源，本例无需提供               |
+| `collectIdentities` | 否   | 收集状态中实体的稳定身份，例如图中节点的标识     |
+| `validateChangeSet` | 否   | 对照更新前后的读取视图，校验调用方提供的变更提示 |
+
+第四个泛型对应变更提示的类型，本例用 `never` 表示不提供这类提示。资源清理与两个可选回调会在后文说明。
+
+### 接入 Runtime
+
+定义好 `position`，类似于定义好一个 TypeScript 类型：有了定义，还没有具体的数据。区别在于，Source 定义还包含捕获、读取等运行时规则。要实际使用，需要通过下面的 API 将来源注册到 Runtime，并传入初始数据。**注册表**（Registry）保存可用的定义，实际坐标则通过初始输入单独传入：
+
+下表只展示本例用到的参数。两个注册表还支持 `builtins`、`custom` 定义列表，详细配置将在“身份和注册”中展开；初始化与提交过程将在“事务与版本发布”中展开。这两篇目前尚未编写。
+
+| 函数声明                                                     | 说明                                                                                                                                      |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `createRuntimeSourceRegistry({ custom })`                    | 创建来源注册表。<br />`custom`：来源定义列表，本例为 `[position]`                                                                         |
+| `createRuntimeComputationRegistry({ sources })`              | 创建计算注册表，本例没有计算定义。<br />`sources`：关联的来源注册表                                                                       |
+| `createRuntimeSourceInput(source, value)`                    | 将来源与数据配对，作为初始输入。<br />`source`：来源定义，本例为 `position`<br />`value`：完整输入数据，本例为 `input`                    |
+| `createRuntime({ sources, computations, initialSnapshots })` | 捕获初始输入，建立可读取的状态。<br />`sources`：来源注册表<br />`computations`：计算注册表<br />`initialSnapshots`：配对好的初始输入列表 |
+
+下图分为两条路径：上路注册定义，提供处理规则；下路配对来源与输入，提供实际数据。两路最终汇合到蓝色的 `createRuntime` 节点，建立初始状态：
+
+<ComponentPreview files="source-registration" hideCode type="flow" />
+
+同一份 `sources` 既用于创建计算注册表，也传给 Runtime。`createRuntimeSourceInput` 只负责配对定义与数据；实际的 `capture`、`read` 在 Runtime 初始化时执行。以下代码接在上面的定义后，暂时不添加派生计算，先观察输入隔离：
+
+```ts
+import {
+  createRuntime,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+} from '@retikz/runtime';
+
+const input = { x: '10', y: '20' };
+const sources = createRuntimeSourceRegistry({ custom: [position] });
+const computations = createRuntimeComputationRegistry({ sources });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(position, input)],
+});
+
+try {
+  input.x = '99';
+  console.log(input); // { x: '99', y: '20' }
+  console.log(runtime.snapshot(position).value); // [10, 20]
+  const [x, y] = runtime.snapshot(position).value;
+  console.log(x, y); // 10 20
+} finally {
+  runtime.dispose();
+}
+```
+
+输出说明：修改原输入的 `x` 后，Runtime 中的坐标仍是 `[10, 20]`。这是因为 `capture` 已经独立保存了输入坐标，`read` 又提供了一份只读副本。读取结果的第一项为 x、第二项为 y，可以用 `[x, y]` 解构。
+
+准备状态时就会生成读取视图，之后读取 Snapshot 使用的是这份准备好的视图，并非每次读取都重新调用 `read`。
+
+<SourceLinks
+  sources={[{ label: 'capture 后收集身份并调用 read', path: 'packages/kernel/runtime/src/source/executor.ts' }]}
+/>
+
+## 状态比较
+
+沿用前面的坐标示例，初始输入是 `{ x: '10', y: '20' }`，捕获后 Runtime 保存的初始值为 `[10, 20]`。现在提交另一个对象 `{ x: '10.0', y: '20' }`。虽然 x 的文本写法变了，但转换后仍是坐标 `(10, 20)`；如果只比较输入文本，或用 `left === right` 比较两份新建的内部数组，就会把它误判为变化。
+
+`equals` 的职责是比较两个**完整内部值的语义**。本例逐项比较两份内部元组的 x 和 y，接收的是 `TValue`，不是输入对象或读取视图。
+
+Runtime 先捕获新输入、生成读取视图，再比较前后内部值。这份准备好但尚未发布的新状态叫作**候选值**。下图中的两条输入箭头都是 `TValue`，比较结果决定是否保留候选值参与更新：
+
+<ComponentPreview files="source-comparison" hideCode type="flow" />
+
+新内部值为 `[10, 20]` 时走 `true` 分支；为 `[13, 20]` 时走 `false` 分支，但仍需更新成功才能替换旧状态：
+
+| 新输入                   | 本例的比较结果 | 对这份 Source 状态的处理                     |
+| ------------------------ | -------------- | -------------------------------------------- |
+| `{ x: '10.0', y: '20' }` | 相等           | 保留旧状态，清理不再需要的候选值             |
+| `{ x: '13', y: '20' }`   | 不相等         | 保留候选值参与本次更新，成功发布后替换旧状态 |
+
+相等只表示这个 Source 没变，不代表同次提交中的其他 Source 也没变。比较必须覆盖可能影响后续计算的完整语义；遗漏字段会让 Runtime 错误复用旧状态和结果。
+
+本例通过复制隔离数据。若数据本身不可变且无需独占释放，也可以共享；关键是外部修改不能绕过更新流程，影响已发布的状态。
+
+<SourceLinks
+  sources={[
+    { label: '内部值比较与异常包装', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    { label: '相等时清理候选值并保留旧状态', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 资源清理
+
+坐标示例只持有普通 JavaScript 内存，由垃圾回收处理，所以不必定义 `dispose`。如果内部值持有图片位图、订阅或其他需要显式释放的资源，单纯丢掉引用可能不够。这时提供 `dispose(value)`，告诉 Runtime 如何释放它持有的 `TValue`。
+
+这里的**所有权**指“谁负责资源的使用期限与最终释放”。例如，若 Source 自己持有独立的 `ImageBitmap`，其释放回调可以调用 `value.bitmap.close()`；读取视图应只提供调用方需要且可以安全保留的数据，不把这个可关闭的句柄直接交出去。
+
+清理并不只发生在整个 Runtime 结束时：
+
+| 情况                           | 清理对象                   |
+| ------------------------------ | -------------------------- |
+| 候选值与旧值相等               | 未采用的候选值             |
+| 已捕获值，但后续准备或更新失败 | 已创建且需要放弃的候选资源 |
+| 更新成功，旧状态被替换         | 不再使用的旧值             |
+| 调用 `runtime.dispose()`       | Runtime 仍持有的当前值     |
+
+定义了 `dispose` 后，新旧状态需要各自拥有待释放的资源。否则，放弃候选值时可能误释放旧状态仍在使用的资源。Runtime 会拒绝直接复用当前内部值的候选值；定义者还需避免新旧值共享同一份需要独占释放的底层资源。
+
+如果 `capture` 在返回之前就抛出异常，Runtime 尚未获得一个可清理的值，回调需要自行清理已经申请的资源。如果 `capture` 已返回，后续身份收集或 `read` 失败，生命周期执行器会尝试清理捕获到的值，并保留原始失败原因。
+
+释放回调自身失败时，Runtime 会记录诊断并继续清理其他值，保留原本的失败原因。
+
+源码将“停止使用一份准备好的状态，并尝试释放它”称为 `retire`。每份状态只尝试释放一次，失败后不会自动重试。
+
+<SourceLinks
+  sources={[{ label: '资源别名检查、失败清理与一次性 retire', path: 'packages/kernel/runtime/src/source/executor.ts' }]}
+/>
+
+## 身份与变更提示
+
+坐标示例不需要额外回调。但如果状态是一张包含多个节点的图，计算方可能需要区分“同一个节点变了颜色”和“旧节点被删除、换成新节点”。这时可以给实体一个跨更新保持稳定的**身份**。
+
+`collectIdentities(value)` 从完整内部值中收集这些身份。每个身份包含所属 Source 的 `owner` 和由领域定义的 `path` 路径段，例如 `{ owner: 'example/graph', path: ['nodes', 'A'] }` 表示图中的节点 A。颜色变化时保留身份；收集的是完整身份集合，不只是本次变化的节点。Runtime 在 `capture` 之后、`read` 之前收集身份，并检查所属 Source 和重复项；省略回调则不自动建立身份查找表。
+
+另一个问题是：调用方已经知道改了哪一项，能否把这个信息带给增量计算？
+
+**变更集**（ChangeSet）就是这种可选提示，包含所基于的版本 `baseRevision` 和领域自定义的 `changes` 列表。它与完整新输入一起提交，不能代替新输入。
+
+例如，读取视图从 `[10, 20]` 变为 `[13, 20]`，提示可以描述为“x 增加 3”。要接受这种提示，先把第四个泛型从 `never` 改成相应的变更类型；还可以提供 `validateChangeSet(previous, next, changeSet)`，检查前后读取视图与提示是否一致。本例需要确认 x 增加 3，且 y 没有变化。注意：`equals` 比较内部值，这个回调校验的是读取视图。
+
+| 返回值     | 表达的判断         | 后续行为                                                           |
+| ---------- | ------------------ | ------------------------------------------------------------------ |
+| `valid`    | 提示可以交给计算方 | 允许继续尝试增量计算，但不保证一定增量成功                         |
+| `fallback` | 无法确认提示可靠   | 不使用这份提示，直接依赖此 Source 的计算回退到全量路径，并记录警告 |
+
+`fallback` 表示放弃提示，仍可继续处理完整新输入；校验回调抛错才会中止本次更新。省略回调时，Source 不校验提示，后续由 Computation 判断是否可用。
+
+本节只介绍 Source 的两个可选回调。身份结构与注册约束、变更提示的增量消费、版本约束，将分别在规划中的“身份和注册”“派生计算与增量更新”“事务与版本发布”中展开。
+
+<SourceLinks
+  sources={[
+    {
+      label: '两个可选回调的输入输出',
+      path: 'packages/kernel/runtime/src/source/types.ts',
+      startLine: 49,
+      endLine: 60,
+    },
+    { label: '身份收集和提示校验的执行', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    { label: 'fallback 对计算路径的影响', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 源码导览
+
+现在再回到源码，就可以把前面的行为对应到几个内部动作。下图聚焦一份已有 Source 接收新输入的过程；初始化没有旧值，因此不执行这里的前后比较。
+
+<ComponentPreview files="source-lifecycle" hideCode type="flow" />
+
+`prepare` 依次捕获值、按需收集身份、生成读取视图；`compare` 调用定义中的 `equals`。相等时清理候选值；不相等时交给 Runtime 继续更新，成功后采用新值并清理旧值，失败则清理候选值。图中的“交给 Runtime”包含后续计算与事务发布，本篇不展开这部分编排。
+
+沿源码阅读时，抓住“定义规则”和“执行规则”的分工即可：`defineRuntimeSource` 返回标识该来源的定义凭证（token），用于注册、提交和读取；执行器在初始化或更新时调用对应规则，管理实际状态。
+
+按下面的顺序阅读即可把本篇与源码对上：
+
+| 源码                 | 阅读重点                                                                  |
+| -------------------- | ------------------------------------------------------------------------- |
+| `source/types.ts`    | 三种值的边界、两个可选回调、保留泛型的 token                              |
+| `source/define.ts`   | 从作者配置创建 token，将实际回调保存在内部                                |
+| `source/executor.ts` | `prepare`、`compare`、`validateChangeSet`、`retire`，以及失败时的资源清理 |
+
+<SourceLinks
+  sources={[
+    { label: 'Source 契约', path: 'packages/kernel/runtime/src/source/types.ts' },
+    { label: '定义凭证与内部执行器', path: 'packages/kernel/runtime/src/source/define.ts' },
+    { label: '完整生命周期执行', path: 'packages/kernel/runtime/src/source/executor.ts' },
+  ]}
+/>
