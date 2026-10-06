@@ -166,3 +166,63 @@ describe('Table data preparation', () => {
     expect((await empty.execute())?.model).toEqual([{ name: 'value' }]);
   });
 });
+
+describe('Table category order intake', () => {
+  const specOf = (order: string) =>
+    TableSchema.parse({
+      ...detail(false),
+      data: { reference: 'rows', model: [{ name: 'value', type: 'categorical', order }] },
+    });
+  it('validates names in sync and async intake without reordering rows', async () => {
+    const rows = [{ value: '10.18' }, { value: '10.2' }];
+    expect(() => resolveTableData(specOf('missing'), { rows: [] })).toThrow(/unknown order/);
+    await expect(
+      prepareTableData(specOf('missing'), { dataBindings: { rows: { kind: 'rows', rows } } }),
+    ).rejects.toThrow(/unknown order/);
+    const prepared = await prepareTableData(specOf('naturalAscending'), {
+      dataBindings: { rows: { kind: 'rows', rows } },
+    });
+    expect((await prepared.execute())?.rows).toEqual(rows);
+    const fieldOrderDefinitions = [{ name: 'business', compare: () => 0 }];
+    expect(() => resolveTableData(specOf('business'), { rows }, { fieldOrderDefinitions })).not.toThrow();
+    const custom = await prepareTableData(
+      specOf('business'),
+      {
+        dataBindings: {
+          rows: {
+            kind: 'result',
+            result: {
+              rows,
+              model: [{ name: 'value', type: 'categorical', order: 'business' }],
+            },
+          },
+        },
+      },
+      { fieldOrderDefinitions },
+    );
+    expect((await custom.execute())?.rows).toEqual(rows);
+  });
+  it('validates canonical binding models even when the spec omits its model', async () => {
+    await expect(
+      prepareTableData(detail(false), {
+        dataBindings: {
+          rows: {
+            kind: 'result',
+            result: {
+              rows: [],
+              model: [{ name: 'value', type: 'categorical', order: 'missing' }],
+            },
+          },
+        },
+      }),
+    ).rejects.toThrow(/unknown order/);
+  });
+});
+
+it('rejects order on an inferred numeric Table field without transforms', () => {
+  const spec = TableSchema.parse({
+    ...detail(false),
+    data: { reference: 'rows', model: [{ name: 'value', order: 'naturalAscending' }] },
+  });
+  expect(() => resolveTableData(spec, { rows: [{ value: 12 }] })).toThrow(/order.*categorical/);
+});

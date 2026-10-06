@@ -5,6 +5,7 @@ import type {
   AnyTransformDefinition,
   ApplyTransformsOptions,
   FieldFormatDefinition,
+  FieldOrderDefinition,
   ResolveField,
 } from '@retikz/data';
 
@@ -24,6 +25,8 @@ export type { CoordinateFrameResolution, MarkDataView } from '../../resolve/coor
 
 /** lowerPlots 运行时选项；尺寸、registry 与 runtime resolver 均不进入 Plot IR */
 export type LowerPlotsOptions = {
+  /** 当前请求注入的分类顺序定义 */
+  fieldOrderDefinitions?: ReadonlyArray<FieldOrderDefinition>;
   /** 运行时注入的 Plot Theme style definitions */
   plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
   /** 整图宽（user units），默认 480 */

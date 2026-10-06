@@ -85,11 +85,11 @@ const model: IRDataModel = [
 
 除了公共字段，字段声明还涉及两个字段：`type` 指定测量类型，省略时从格式或数据推断；`order` 指定分类域顺序，是否允许声明取决于 `type`。两者的组合约束如下：
 
-| `type`                        | 字段含义             | `order` 约束                                                                                                      |
-| ----------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `'categorical'`               | 离散类别             | 可省略；接受 <ApiValues name="FieldOrderMode" /> 或非空 `Array<string \| number>`                                 |
-| `'continuous'` / `'temporal'` | 连续数值 / 日期时间  | 不允许声明，包括 `'appearance'`                                                                                   |
-| 省略                          | 从格式或数据推断类型 | 可省略；接受 <ApiValues name="FieldOrderMode" /> 或非空 `Array<string \| number>`；声明后若解析为非分类类型则报错 |
+| `type`                        | 字段含义             | `order` 约束                                                                                                                 |
+| ----------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `'categorical'`               | 离散类别             | 可省略；接受 <ApiValues name="FieldOrderMode" />、自定义名称或非空 `Array<string \| number>`                                 |
+| `'continuous'` / `'temporal'` | 连续数值 / 日期时间  | 不允许声明，包括 `'appearance'`                                                                                              |
+| 省略                          | 从格式或数据推断类型 | 可省略；接受 <ApiValues name="FieldOrderMode" />、自定义名称或非空 `Array<string \| number>`；声明后若解析为非分类类型则报错 |
 
 **省略字段类型与漏掉字段声明是两回事。** 可以只写 `{ name: 'region' }`，保留类型推断；但一旦声明 `model`，当前数据管线引用的每个源字段都必须列在其中，字段名也不能重复。例如，配置引用了 `revenue`，模型却只有 `size`，就会报错；原始数据里未被引用的额外列无需全部列出。
 
@@ -143,6 +143,34 @@ const model: IRDataModel = [
 />
 
 `model.order` 排的是**分类域**，不会重排数据行。消费模块可以用它保持统一的类别语义；在 Plot 应用中，它会影响分类位置、图例和离散颜色，但不会改变折线连接顺序。要重排行，请使用[数据变换里的排序](/viz/data/transform/operations#排序-sort)；Plot 显式比例尺 `domain` 的优先级高于 `order`。
+
+### 自然排序
+
+版本号应保留为字符串。`'10.2'` 和 `'10.18'` 按字母升序得到 `10.18 → 10.2`；使用 `order: 'naturalAscending'` 则得到 `10.2 → 10.18`。`naturalDescending` 按相反方向排列。
+
+<ComponentPreview
+  files={['version-order', 'version-order.preview.tsx', 'version-order.data.ts']}
+  defaultSourceFile="version-order.preview.tsx"
+  size="lg"
+  caption="默认使用自然升序；切换字母排序，观察版本位置与颜色域的变化。源行始终不变。"
+/>
+
+自然排序将连续 ASCII 数字按整数片段比较，其余文本按区分大小写的 UTF-16 顺序比较；数字片段在文本片段前，公共片段相同时较短标签在前。它不解析小数、负数或 SemVer，超长整数片段也不会因数值精度而混淆。`'v02'` 与 `'v2'` 比较等价，在自然升降序中都保持出现顺序，但仍是不同类别。
+
+### 自定义排序
+
+内置规则不能满足业务需求时，可以通过 `defineFieldOrder` 定义具名比较器，经消费方的 `fieldOrderDefinitions` 注入，再用字段的 `order` 引用该名称。内置与自定义排序共用同一套注册和执行机制；模型只保存名称，比较函数留在运行时。
+
+例如，定义 `labelLength`，按标签长度从短到长排列：`compare(a, b)` 返回 `String(a).length - String(b).length`。将定义传给 `fieldOrderDefinitions`，字段声明使用 `order: 'labelLength'`，就会得到 `2.0 → 10.2 → 10.18 → 10.2.0`。
+
+<ComponentPreview
+  files={['custom-order', 'version-order.preview.tsx', 'version-order.data.ts']}
+  defaultSourceFile="version-order.preview.tsx"
+  size="lg"
+  caption="默认启用自定义标签长度排序；可切换自然排序作对比。打开源码可查看定义、注入与字段引用。"
+/>
+
+完整定义、注入与使用示例见[自定义分类顺序](/viz/data/model/extensions#定义分类顺序)。未知名称即使在空数据或显式比例尺 `domain` 下也会报错。Table 校验名称注册，但不会因此自动重排行列。
 
 ## 延伸阅读
 

@@ -1,9 +1,9 @@
 ---
 title: Extension Mechanisms
-description: Extend data intake with named field formats and runtime resolvers while keeping data-model configuration serializable.
+description: Define field formats, category orders, and runtime resolvers while keeping model configuration serializable.
 ---
 
-Data-model extension points only parse external values into a stable field contract. Reusable parsing rules become named formats, while one-off or source-specific rules use a runtime resolver. Neither form writes functions into serializable configuration.
+Data-model extensions cover field parsing and category ordering. Reusable parsing rules become named formats, while one-off or source-specific rules use a runtime resolver. Neither form writes functions into serializable configuration.
 
 ## Applicability
 
@@ -11,6 +11,7 @@ Prefer built-in formats and field types. Register a `FieldFormatDefinition` only
 
 | Extension entry point | Responsibility                     | Stored configuration |
 | --------------------- | ---------------------------------- | -------------------- |
+| `defineFieldOrder`    | Custom category comparison         | `order` name         |
 | `defineFieldFormat`   | Reusable field storage formats     | `format` name        |
 | `resolveField`        | Temporary type and parser override | Nothing              |
 
@@ -42,14 +43,35 @@ Use `resolveField` for one-off logic and source-specific branches. It returns an
 
 `resolveField` is a runtime escape hatch. It does not use a registry and cannot be serialized. Use a `FieldFormatDefinition` when a stable name, cross-host reuse, or persisted configuration is required.
 
+## Defining Category Orders
+
+Use `defineFieldOrder` for language-specific or business ordering. This example registers `labelLength`; select “Custom: label length” to sort labels by length.
+
+<ComponentPreview
+  files={[
+    'extension-order',
+    '/viz/data/model/fields-and-types/version-order.preview.tsx',
+    '/viz/data/model/fields-and-types/version-order.data.ts',
+  ]}
+  defaultSourceFile="/viz/data/model/fields-and-types/version-order.preview.tsx"
+  size="lg"
+/>
+
+A definition contains `name` and `compare(a, b, context)`. Return a finite number: negative places a first, zero keeps relative order, and positive places a last. `context.values` holds deduplicated effective categories in appearance order. Comparators must be pure, antisymmetric, and transitive, without modifying values or context.
+
+Plot and Table accept arrays through runtime `fieldOrderDefinitions`: the same prop in React and runtime options in Vanilla or direct IR calls. The model stores only `order: 'labelLength'`. Table validates registration without reordering rows or columns. For standalone use, call `resolveFieldOrderRegistry(definitions)` and pass the registry to `resolveCategoryDomain(values, order, registry)`.
+
+Names cannot be blank, duplicated, or override built-ins. Unknown names fail at intake. Thrown callbacks and nonfinite results produce `RetikzDataError`, preserving the original exception as `cause`. Definitions belong to the current request; receiving processes must supply their own implementation of stored names.
+
 ## Injecting A Host
 
 The consuming host passes field-parsing capabilities into the intake pipeline. In Plot:
 
-| Capability          | Injection entry point | Model reference           |
-| ------------------- | --------------------- | ------------------------- |
-| Named field formats | `formatDefinitions`   | Field `format: name`      |
-| Temporary parsers   | `resolveField`        | None; resolved at runtime |
+| Capability            | Injection entry point   | Model reference           |
+| --------------------- | ----------------------- | ------------------------- |
+| Named category orders | `fieldOrderDefinitions` | Field `order: name`       |
+| Named field formats   | `formatDefinitions`     | Field `format: name`      |
+| Temporary parsers     | `resolveField`          | None; resolved at runtime |
 
 Other consumers can expose equivalent adapter entry points. The data model only consumes the format registry and resolver result.
 

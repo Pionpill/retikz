@@ -1,5 +1,11 @@
-import type { ExternalRow, DataFieldType } from '@retikz/data';
-import { createDataView, FieldOrderMode, resolveFieldPath } from '@retikz/data';
+import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
+import {
+  createDataView,
+  FieldOrderMode,
+  resolveFieldPath,
+  resolveCategoryDomain,
+  assertFieldOrders,
+} from '@retikz/data';
 
 import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
@@ -22,12 +28,10 @@ import type {
   IRPlotScaleOperation,
 } from '../../schemas';
 import { IntervalBoundKind, isBuiltinMark, PathClosureKind, PlotGuide, PlotMark, PlotScale } from '../../schemas';
-import type { CategoryOrder } from '../scale';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   derivePositionScale,
-  orderedCategoryDomain,
   resolvePositionScale,
   resolvePositionScaleContinuity,
   resolveScaleDefinition,
@@ -271,6 +275,8 @@ export const resolveCoordinateFrame = (
   const rootDataView = createDataView(rows, model);
   const markDataViews =
     context.markDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
+  assertFieldOrders(model, context.fieldOrderRegistry);
+  for (const entry of markDataViews) assertFieldOrders(entry.dataView.model, context.fieldOrderRegistry);
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
     context.roleMarkDataViews?.[role] ?? markDataViews;
   const coordinateOperation = context.coordinate ?? node.coordinate;
@@ -398,8 +404,8 @@ export const resolveCoordinateFrame = (
   const resolveRoleOrder = (
     role: DimensionRole,
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
-  ): CategoryOrder | undefined => {
-    const found: Array<CategoryOrder> = [];
+  ): NonNullable<IRDataFieldDefinition['order']> | undefined => {
+    const found: Array<NonNullable<IRDataFieldDefinition['order']>> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
@@ -467,7 +473,7 @@ export const resolveCoordinateFrame = (
       (def.type === PlotScale.Band || def.type === PlotScale.Point) &&
       def.domain === undefined
     ) {
-      return { ...def, domain: orderedCategoryDomain(values, order) };
+      return { ...def, domain: resolveCategoryDomain(values, order, context.fieldOrderRegistry) };
     }
 
     return def;

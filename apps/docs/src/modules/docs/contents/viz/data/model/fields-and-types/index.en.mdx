@@ -87,11 +87,11 @@ Each field declaration is an `IRDataFieldDefinition` exported from `@retikz/data
 
 Besides the shared fields, a field declaration has two further fields: `type` specifies the measurement type, inferred from format or data when omitted; `order` specifies the category-domain order, and whether it is allowed depends on `type`. Their combination constraints are:
 
-| `type`                        | Field meaning                        | `order` constraint                                                                                                                                        |
-| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'categorical'`               | Discrete categories                  | Optional; accepts <ApiValues name="FieldOrderMode" /> or a non-empty `Array<string \| number>`                                                            |
-| `'continuous'` / `'temporal'` | Continuous numbers / dates and times | Forbidden, including `'appearance'`                                                                                                                       |
-| Omitted                       | Type inferred from format or data    | Optional; accepts <ApiValues name="FieldOrderMode" /> or a non-empty `Array<string \| number>`; resolution fails if the resulting type is non-categorical |
+| `type`                        | Field meaning                        | `order` constraint                                                                                                                                                        |
+| ----------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'categorical'`               | Discrete categories                  | Optional; accepts <ApiValues name="FieldOrderMode" />, a custom name, or a non-empty `Array<string \| number>`                                                            |
+| `'continuous'` / `'temporal'` | Continuous numbers / dates and times | Forbidden, including `'appearance'`                                                                                                                                       |
+| Omitted                       | Type inferred from format or data    | Optional; accepts <ApiValues name="FieldOrderMode" />, a custom name, or a non-empty `Array<string \| number>`; resolution fails if the resulting type is non-categorical |
 
 **Omitting a field type is different from omitting a field declaration.** You can write `{ name: 'region' }` to retain type inference. Once `model` is declared, however, every source field referenced by the current pipeline must be listed, and field names must be unique. For example, referencing `revenue` when the model contains only `size` fails. Unreferenced extra columns in the raw data need not be listed.
 
@@ -145,6 +145,34 @@ Categorical fields form their domain in data-appearance order by default. Put `o
 />
 
 `model.order` orders the **categorical domain**; it does not reorder rows. Consumers can use it to preserve category semantics. In a Plot application, it affects categorical positions, legends, and discrete colors without changing path connection order. Use [data-transform sorting](/viz/data/transform/operations#sort) for rows; an explicit Plot scale `domain` takes precedence over `order`.
+
+### Natural ordering
+
+Keep versions as strings. Alphabetical ascending places `'10.18'` before `'10.2'`; `order: 'naturalAscending'` produces `10.2 → 10.18`. Use `naturalDescending` for the opposite direction.
+
+<ComponentPreview
+  files={['version-order', 'version-order.preview.tsx', 'version-order.data.ts']}
+  defaultSourceFile="version-order.preview.tsx"
+  size="lg"
+  caption="Natural ascending is selected initially. Compare alphabetical order, version positions, and colors. Source rows stay unchanged."
+/>
+
+Natural ordering compares ASCII digit runs as arbitrary-length integers and other runs in case-sensitive UTF-16 order. Numeric runs precede text runs; a shorter sequence comes first when shared runs compare equally. It does not interpret decimals, negative numbers, or SemVer. Equivalent keys such as `'v02'` and `'v2'` retain appearance order in both natural directions while remaining distinct categories.
+
+### Custom ordering
+
+When built-in rules do not fit your business needs, define a named comparator with `defineFieldOrder`, inject it through the consumer’s `fieldOrderDefinitions`, and reference its name in the field’s `order`. Built-in and custom orders share the same registration and execution mechanism. The model stores only the name; comparator functions stay at runtime.
+
+For example, define `labelLength` to order labels from shortest to longest: `compare(a, b)` returns `String(a).length - String(b).length`. Pass the definition to `fieldOrderDefinitions` and use `order: 'labelLength'` on the field to produce `2.0 → 10.2 → 10.18 → 10.2.0`.
+
+<ComponentPreview
+  files={['custom-order', 'version-order.preview.tsx', 'version-order.data.ts']}
+  defaultSourceFile="version-order.preview.tsx"
+  size="lg"
+  caption="Custom label-length ordering is selected initially. Compare it with natural ordering; open the source to see the definition, injection, and field reference."
+/>
+
+See [defining category orders](/viz/data/model/extensions#defining-category-orders) for the complete definition, injection, and usage example. Unknown names fail even with empty data or an explicit scale `domain`. Table validates registration without automatically reordering rows or columns.
 
 ## Further reading
 

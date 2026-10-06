@@ -1,9 +1,9 @@
 ---
 title: 扩展机制
-description: 用具名字段格式与运行时解析器扩展数据接入，同时保持数据模型配置可序列化。
+description: 定义字段格式、分类顺序与运行时解析器，同时保持数据模型配置可序列化。
 ---
 
-数据模型的扩展点只负责把外部值解析到稳定字段契约。可复用的解析规则注册为具名格式，一次性或数据源专用规则通过运行时字段解析器（resolver）提供；两者都不会把函数写进可序列化配置。
+数据模型支持扩展字段解析与分类顺序。可复用的解析规则注册为具名格式，一次性或数据源专用规则通过运行时字段解析器（resolver）提供；两者都不会把函数写进可序列化配置。
 
 ## 适用边界
 
@@ -11,6 +11,7 @@ description: 用具名字段格式与运行时解析器扩展数据接入，同�
 
 | 扩展入口            | 解决什么                 | 配置保存什么  |
 | ------------------- | ------------------------ | ------------- |
+| `defineFieldOrder`  | 自定义类别比较规则       | `order` 名称  |
 | `defineFieldFormat` | 可复用字段存储格式       | `format` 名称 |
 | `resolveField`      | 临时类型覆盖与字段解析器 | 不进入配置    |
 
@@ -42,14 +43,35 @@ description: 用具名字段格式与运行时解析器扩展数据接入，同�
 
 `resolveField` 是运行时逃生舱，不经过注册表（registry），也不能序列化。需要稳定名称、跨宿主复用或持久化配置时，应改为 `FieldFormatDefinition`。
 
+## 定义分类顺序
+
+内置自然排序适合版本标签与编号；语言排序或其它业务规则可通过 `defineFieldOrder` 定义。下面注册 `labelLength`，按标签长度比较；在控件中选择“自定义：标签长度”，观察标签按长度重新排列。
+
+<ComponentPreview
+  files={[
+    'extension-order',
+    '/viz/data/model/fields-and-types/version-order.preview.tsx',
+    '/viz/data/model/fields-and-types/version-order.data.ts',
+  ]}
+  defaultSourceFile="/viz/data/model/fields-and-types/version-order.preview.tsx"
+  size="lg"
+/>
+
+定义包含 `name` 与 `compare(a, b, context)`。比较器返回有限数值：负数表示 a 在前，零表示同序，正数表示 a 在后；`context.values` 是当前作用域去重后的有效类别，按出现序排列。比较器应为纯函数，满足反对称性与传递性，不修改值或上下文。
+
+Plot、Table 的运行时 `fieldOrderDefinitions` 接收定义数组；React 使用同名 prop，Vanilla 与直接 IR 调用传给运行时 options。字段模型只保存 `order: 'labelLength'`。Table 仅校验注册，不自动重排行列；独立使用时，可先调用 `resolveFieldOrderRegistry(definitions)`，再把 registry 传给 `resolveCategoryDomain(values, order, registry)`。
+
+注册名不能空白、重复或覆盖内置名称。未知名称在模型接入时失败；比较器抛错或返回非有限值时抛出 `RetikzDataError`，原始异常保留为 `cause`。定义仅对当前请求有效，跨进程传模型时需在接收端提供同名实现。
+
 ## 注入宿主
 
 消费宿主负责把字段解析能力交给数据接入管线。以 Plot 为例：
 
-| 能力         | 注入入口            | model 引用方式          |
-| ------------ | ------------------- | ----------------------- |
-| 具名字段格式 | `formatDefinitions` | 字段声明 `format: name` |
-| 临时解析规则 | `resolveField`      | 无，运行时按字段解析    |
+| 能力         | 注入入口                | model 引用方式          |
+| ------------ | ----------------------- | ----------------------- |
+| 具名分类顺序 | `fieldOrderDefinitions` | 字段声明 `order: name`  |
+| 具名字段格式 | `formatDefinitions`     | 字段声明 `format: name` |
+| 临时解析规则 | `resolveField`          | 无，运行时按字段解析    |
 
 其它消费模块可以在自己的适配器（adapter）中提供等价入口；数据模型只关心格式注册表与解析器结果。
 

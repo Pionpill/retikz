@@ -139,10 +139,10 @@ describe('Viz Data model controls', () => {
 
   it('uses large previews for data-table controls', () => {
     const pagePreviews = [
-      ['model/fields-and-types', 1],
+      ['model/fields-and-types', 3],
       ['model/intake', 2],
       ['model/validation', 1],
-      ['model/extensions', 2],
+      ['model/extensions', 3],
     ] as const;
 
     for (const [page, previewCount] of pagePreviews) {

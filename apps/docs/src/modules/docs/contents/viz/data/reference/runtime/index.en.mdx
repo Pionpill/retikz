@@ -48,6 +48,12 @@ Semantic registries merge built-in and custom Definitions, rejecting duplicate k
 
 `normalizeRows()` does not execute transforms. A consumer collects fields, resolves types, and normalizes rows before passing canonical rows to the transform pipeline. That boundary lets Plot, Table, and other hosts share one Data-processing contract.
 
+## Category Domains
+
+`defineFieldOrder` defines a named comparator. `resolveFieldOrderRegistry(definitions?)` combines built-ins and request-local definitions, rejecting duplicates. `assertFieldOrders(model, registry?)` validates all named orders at intake, including empty category sets.
+
+`resolveCategoryDomain(values, order, registry?)` returns a new ordered category list, skipping values other than strings and finite numbers and deduplicating by identity. Omitted registries use built-ins. Explicit arrays retain declared categories and append unlisted observations. Ordering does not change rows, types, or lineage. See [extension mechanisms](/viz/data/model/extensions#defining-category-orders).
+
 ## Transforms and lineage
 
 `applyTransforms(rows, operations?, options?)` executes operations in declaration order and returns rows only; options carry the registry, separate synchronous implementations and context. Use the executor for Promise or external computation. `applyTransformsWithLineage(rows, operations?, options?)` first tags input rows with Symbol provenance that JSON serialization ignores, then returns:

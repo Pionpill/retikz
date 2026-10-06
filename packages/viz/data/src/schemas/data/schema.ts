@@ -26,7 +26,7 @@ const FieldDefinitionBaseSchema = strictObject({
 });
 
 /** 分类字段的顺序声明；省略时按数据出现顺序 */
-const FieldOrderSchema = union([zodEnum(FieldOrderMode), array(union([string(), number()])).min(1)])
+const FieldOrderSchema = union([createOpenStringSchema(FieldOrderMode), array(union([string(), number()])).min(1)])
   .optional()
   .describe('Category order; omitted means appearance order');
 

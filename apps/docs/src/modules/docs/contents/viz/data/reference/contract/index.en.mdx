@@ -17,6 +17,8 @@ Data contracts store JSON-safe configuration only. Real rows, parsers, Definitio
 
 Field declarations branch by `type`: `categorical` supports category `order`; `continuous` and `temporal` forbid it. Omitting `type` preserves inference; when `order` is declared, the resolved field type must be categorical.
 
+`order` accepts a nonblank built-in or custom name, or a nonempty category array. Built-ins include `naturalAscending` / `naturalDescending`. Named orders must be registered in the consuming request; comparator functions stay outside JSON.
+
 <ZodSchema name="FieldDefinitionSchema" />
 
 ## DataExecutionSchema

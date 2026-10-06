@@ -15,12 +15,16 @@ export const DataFieldType = {
 
 /** 分类字段顺序策略 */
 export const FieldOrderMode = {
-  /** 按绑定数据里的首次出现顺序排列分类值；对应 IR 字面量仍为 `data` */
+  /** 按绑定数据里的首次出现顺序排列分类值 */
   Appearance: 'appearance',
   /** 按分类值升序排列；数值用数值比较，其余用字符串比较 */
   Ascending: 'ascending',
   /** 按分类值降序排列；数值用数值比较，其余用字符串比较 */
   Descending: 'descending',
+  /** 按文本与整数片段自然升序排列，比较等价时保留出现序 */
+  NaturalAscending: 'naturalAscending',
+  /** 按文本与整数片段自然降序排列，比较等价时保留出现序 */
+  NaturalDescending: 'naturalDescending',
 } as const;
 
 /** 内置字段值解析格式名 */
