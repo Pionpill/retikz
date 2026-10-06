@@ -3,7 +3,7 @@ title: 契约
 description: 查询 @retikz/data 的数据引用、字段模型与通用 transform JSON schema。
 ---
 
-Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、registry 和回调在运行时注入，不进入这些 schema；字段行为与 transform 用法分别见[字段契约](/viz/data/model/contract)和[变换操作](/viz/data/transform/operations)。
+Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、registry 和回调在运行时注入，不进入这些 schema；字段行为与 transform 用法分别见[字段与类型](/viz/data/model/fields-and-types)和[变换操作](/viz/data/transform/operations)。
 
 ## DataReferenceSchema
 
@@ -329,6 +329,6 @@ annotate 不接受 `outside-quantile-band`；`top` / `bottom` 的 `n` 固定为 
 
 ## 相关
 
-- [字段契约](/viz/data/model/contract)：字段类型、推断、格式与分类顺序的任务型说明
+- [字段与类型](/viz/data/model/fields-and-types)：字段类型、推断、格式与分类顺序的任务型说明
 - [变换操作](/viz/data/transform/operations)：sort、summarize、select 与 annotate 的使用方式
 - [运行时](/viz/data/reference/runtime)：Definition、registry、执行入口与 lineage 结果

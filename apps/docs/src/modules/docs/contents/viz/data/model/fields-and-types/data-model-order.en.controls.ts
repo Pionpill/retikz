@@ -22,8 +22,8 @@ export const dataModelOrderControls = definePreviewControls({
           defaultValue: 'appearance',
           options: [
             { value: 'appearance', label: 'Data appearance' },
-            { value: 'ascending', label: 'Ascending' },
-            { value: 'descending', label: 'Descending' },
+            { value: 'ascending', label: 'Alphabetical ascending' },
+            { value: 'descending', label: 'Alphabetical descending' },
             { value: 'business', label: 'Business order S → XL' },
           ],
         },

@@ -1,65 +1,40 @@
 ---
 title: Fields and Types
-description: Understand rows, logical fields, and measurement types, and how raw data becomes canonical data for consumers.
+description: Declare logical fields and measurement types, and understand inference, value parsing, and category order.
 ---
 
-The data shown in a chart or table keeps changing and may come from different APIs. Data works with **rows supplied by a data source at runtime**, not a fixed batch of values embedded in the visual configuration. The application reads a file, API, or database and passes those rows to Data. Data prepares fields that later configuration can use consistently.
+A field model gives data stable names and meanings. Decide whether a field represents categories, quantities, or time, then use `model` to declare parsing rules and any required category order. Transforms and consumers can use the same contract.
 
-## Rows and fields
+## Field model
 
-Suppose you use a sales API today and a forecast API tomorrow. Both describe region and revenue, but their rows differ:
+A sales API might return `{ region: 'north', revenue: 12 }`, while a forecast API returns `{ area: 'north', pricing: { amount: '12' } }`. Both describe a region and revenue, but their paths and stored values differ.
 
-Sales API:
-
-```json
-{ "region": "north", "revenue": 12 }
-```
-
-Forecast API:
-
-```json
-{ "area": "north", "pricing": { "amount": "12" } }
-```
-
-If later configuration names `revenue` directly, it cannot find revenue in the second source. Changing every chart or transform whenever the source changes would scatter several names for the same business meaning. Even if you keep using the forecast API, `pricing.amount` might be missing later or change to another storage format. Aligning names answers “where should I read?”; it cannot guarantee that a valid value will always be there.
-
-## Physical paths and logical fields
-
-The solution is a **data model** between raw data and later processing. It provides a stable model layer: define the names and meanings that later processing needs, map and normalize each source's records to those fields at intake, then pass the result to data transforms and visualization. Visualization depends on the logical field contract established by the model, without needing to know the paths in the raw records.
-
-First, look at the overall relationship: the field contract guides intake, and normalized rows then move to later processing.
-
-<ComponentPreview files="/viz/data/model/data-model-pipeline" size="sm" hideCode type="flow" />
-
-The field contract in the figure describes logical fields; it does not store raw rows. Solid lines show the data path from external rows to later processing.
-
-In this example, the model establishes `region` and `revenue` as the fields used later, and says that `revenue` is a continuous quantity. `area` and `pricing.amount` in the source record are **physical paths**; `region` and `revenue` in the model are **logical fields**. Revenue already lives at `revenue` in the sales API. For the forecast API, intake maps `pricing.amount` to `revenue` and `area` to `region`. Matching physical and logical names need no mapping.
-
-Now look at the values. The two raw records below are **alternative sources**, not two rows to merge. With their respective intake rules, both produce the same logical fields and values.
+The model establishes `region` and `revenue` as **logical fields** for downstream use. The raw record's `area` and `pricing.amount` are **physical paths**. Intake maps the names and parses the numeric string. The two records below are alternative sources that produce the same logical fields:
 
 <ComponentPreview files="source-to-logical-fields" size="md" hideCode type="illustration" />
 
-The forecast source stores `pricing.amount` as the numeric string `"12"`; parsing turns it into the number `12`. Later configuration reads only `revenue`.
+No mapping is needed when physical and logical names match; see [Data Intake](/viz/data/model/intake) for configuration. A field model (`IRDataModel`) stores declarations only. Actual rows arrive separately at runtime.
 
-Switching sources changes the intake mapping and any necessary parsing rules; charts, tables, and transforms still refer to the same logical fields. “Establishing a model” means giving fields stable names and meanings, not storing these two actual rows. The `model` configuration can declare fields explicitly; simple input also allows omitted declarations and type inference. Explicit declarations are more reliable when sources change or field types must be unambiguous.
+<ComponentAlert
+  type="tip"
+  title="Decouple sources from consumers"
+  description="  Field mapping and value parsing form an adapter between data sources and consumers. Plot, Table, and other consumers
+  depend on stable logical fields without knowing the raw data's physical paths. When a source or path changes, update
+  the mapping and any required parsing rules. As long as the output still satisfies the same logical names, measurement
+  types, and other field contracts, downstream field references and consumer configuration can stay unchanged."
+/>
 
-An external row needs two agreements: logical fields establish where values are read, and measurement types establish what those values mean. Field declarations can live in a serializable `model`, while real rows arrive at runtime.
-
-## Why measurement types matter
+## Measurement types
 
 The number `10` might be an amount whose differences matter, or it might only be a stage code. In `@retikz/data`, a field type describes **how to interpret and use a field**, not whether its raw values happen to be stored as JavaScript `number`, `string`, or `Date` values.
 
-Data sources can change, and so can the values in a field. If transforms and visualizations each guess a field's meaning from its current values, the same logical field might be treated as a calculable quantity in one case and a category in another. A raw value changing from `12` to `'12'` could also change how it is handled.
+`@retikz/data` provides three built-in measurement types:
 
-A measurement type lets the data model define the field's meaning first. `@retikz/data` uses it to parse and normalize values at intake, so later processing can rely on the same field semantics instead of guessing from raw data again. This gives calculations, grouping, and mappings a stable basis when a data source or its samples change.
-
-## Three built-in types
-
-| Measurement type | Meaning                                      | Example                         |
-| ---------------- | -------------------------------------------- | ------------------------------- |
-| `continuous`     | Numeric magnitudes and differences matter    | Revenue `12`, temperature `20`  |
-| `categorical`    | Values identify categories; code gaps do not | Region `north`, stage code `10` |
-| `temporal`       | Values represent dates or points in time     | `2026-09-23`, zoned timestamps  |
+| Measurement type | Type name  | Meaning                                      | Example                         |
+| ---------------- | ---------- | -------------------------------------------- | ------------------------------- |
+| `continuous`     | Continuous | Numeric magnitudes and differences matter    | Revenue `12`, temperature `20`  |
+| `categorical`    | Discrete   | Values identify categories; code gaps do not | Region `north`, stage code `10` |
+| `temporal`       | Timestamp  | Values represent dates or points in time     | `2026-09-23`, zoned timestamps  |
 
 These three types capture the basic distinctions shared by current data processing and visualization: numeric distance, category identity, and time order. `@retikz/data` uses them to normalize valid values in participating fields: continuous values become finite numbers, temporal values become millisecond timestamps, and categorical values retain string or finite-number category values. Consumers can transform or map fields using the same semantics instead of guessing from raw values again. [Plot scales](/viz/plot/scale) are one consumer example; the field type itself does not prescribe a visual representation.
 
@@ -78,9 +53,7 @@ This compares the `type` of an encoded field in Vega-Lite, within the Vega ecosy
 
 </Comparison>
 
-## Raw values do not determine field meaning
-
-Consider these two fields:
+Choose a measurement type by the field's meaning, not how its raw values are stored. Consider these two fields:
 
 ```json
 { "stage": 10, "revenue": "12" }
@@ -90,36 +63,107 @@ Declare `stage` as `categorical`: `10` and `20` are different stages, not stages
 
 Like continuous values, `temporal` values can be ordered and compared by interval, but their time semantics let consumers use time ticks and date formatting. An ordinary number is not inferred as a timestamp simply because it looks like one; non-default date formats also need explicit parsing.
 
-## Type and parsing format
+## Field declarations
 
-`type` answers “what does this field mean?”; `format` answers “how is the raw value parsed?”. For example, `'50%'` represents a continuous quantity, but the `percent` format is needed to parse it as `0.5`. You can declare both; a named format can also imply a type. See [Field Contract](/viz/data/model/contract) for the full declaration and precedence rules, and [Data Intake](/viz/data/model/intake) for built-in formats and field mapping.
+`model` is an array of field declarations. This example treats regions as categories and revenue as a continuous quantity:
 
-If you omit a declaration, `@retikz/data` infers the type from valid samples. Numeric category codes may be inferred as continuous, while numeric strings are not inferred as continuous merely from their contents. Declare a type in `model` when the distinction affects the result or the input format is ambiguous; inference is convenient for simple, unambiguous input.
+```ts
+import type { IRDataModel } from '@retikz/data';
 
-## Normalize before consumers read the data
+const model: IRDataModel = [
+  { name: 'region', type: 'categorical' },
+  { name: 'revenue', type: 'continuous' },
+];
+```
 
-The model layer establishes field names and prepares values that fit the contract. Data reads values from the current source's paths, processes them according to field types and parsing formats, and writes them under logical names. After normalization, both valid revenue values above can be read as `revenue: 12`; the second row's numeric string becomes a number. Later processing reads these normalized rows and field types, not just the `model` declaration. Normalization keeps the input row count. Use [Data Transforms](/viz/data/transform) when you need to summarize or select rows or generate new fields.
+Pass it to the consumer's `model` property to parse `revenue: '12'` as `revenue: 12`. Simple, unambiguous data can omit the model and use inference. Declare fields explicitly when their meaning must remain stable across samples.
 
-The forecast API might later return `{ area: 'north' }`, leaving revenue missing, or change the stored amount to `'1,200'`, which needs a matching parsing format. Normalization does not invent a replacement `12` for a missing value. If the source stops returning a whole record, the model does not recreate that record either. By default, a consumer can skip invalid values. Sample diagnostics or strict validation can reveal which participating fields are missing or cannot be parsed. The data model separates changes in raw data structure from visualization configuration, but a change in the source's fields or formats may still require updating intake rules; **it does not guarantee that the source stays complete**.
+Each field declaration is an `IRDataFieldDefinition` exported from `@retikz/data`. It is a union distinguished by `type`, with these shared fields:
+
+| Shared field | Type                                             | Responsibility                                                                                                  |
+| ------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `name`       | `string`                                         | Required non-blank logical field name referenced by transforms and consumers                                    |
+| `format?`    | <ApiValues name="DataFieldFormat" /> \| `string` | Optional built-in or custom parsing format; omission uses default coercion, and a named format can imply a type |
+
+Besides the shared fields, a field declaration has two further fields: `type` specifies the measurement type, inferred from format or data when omitted; `order` specifies the category-domain order, and whether it is allowed depends on `type`. Their combination constraints are:
+
+| `type`                        | Field meaning                        | `order` constraint                                                                                                                                        |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'categorical'`               | Discrete categories                  | Optional; accepts <ApiValues name="FieldOrderMode" /> or a non-empty `Array<string \| number>`                                                            |
+| `'continuous'` / `'temporal'` | Continuous numbers / dates and times | Forbidden, including `'appearance'`                                                                                                                       |
+| Omitted                       | Type inferred from format or data    | Optional; accepts <ApiValues name="FieldOrderMode" /> or a non-empty `Array<string \| number>`; resolution fails if the resulting type is non-categorical |
+
+**Omitting a field type is different from omitting a field declaration.** You can write `{ name: 'region' }` to retain type inference. Once `model` is declared, however, every source field referenced by the current pipeline must be listed, and field names must be unique. For example, referencing `revenue` when the model contains only `size` fails. Unreferenced extra columns in the raw data need not be listed.
+
+## Field resolution
+
+`name` identifies the logical field to read; `type` and `format` determine its type and parsing rule. The diagram separates three cases according to whether `format` and `type` are declared. Follow one branch, then continue to value parsing and order handling:
+
+<ComponentPreview files="field-resolution" hideCode type="flow" size="xl" />
+
+- **With `format`**: use the registered format's type and parser. An explicit `type` must agree with the format; unknown formats and conflicting types fail. For example, `percent` implies `continuous` and parses `'50%'` as `0.5`.
+- **Without `format`, with `type`**: use default coercion for the declared type. For example, `continuous` converts a strict numeric string such as `'12'` to the number `12`.
+- **Neither declared**: infer the type from samples, then use default coercion. Declare numeric category codes explicitly as `categorical`; numeric strings are not inferred as continuous merely from their content.
+
+`order` does not participate in type inference. An explicit non-categorical type with `order` is rejected during declaration validation. With `type` omitted, resolution also fails if the resulting type is non-categorical. The next section explains category ordering.
+
+The diagram reads logical fields. See [Data Intake](/viz/data/model/intake) for physical-path mapping and built-in formats. To override a type or parsing rule programmatically before values are parsed, see [Extensions](/viz/data/model/extensions).
+
+### Automatic inference
+
+When `type` is omitted and no `format` implies a type, `@retikz/data` classifies raw samples as follows:
+
+| JavaScript value     | Example or condition                                                                      | Sample measurement type               |
+| -------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------- |
+| `number`             | Finite values such as `12`, including numeric timestamps                                  | `continuous`                          |
+| `bigint`             | Such as `12n`                                                                             | `continuous`                          |
+| `Date`               | A `Date` instance                                                                         | `temporal`                            |
+| Date-shaped `string` | `2026-09-23`, or a date-time with `Z` / a timezone offset, such as `2026-09-23T08:00:00Z` | `temporal`                            |
+| Other `string`       | `'north'`, `'12'`, `'2026/09/23'`, or a date-time without a timezone                      | `categorical`                         |
+| `boolean`            | `true`, `false`                                                                           | `categorical`                         |
+| Other values         | `null`, `undefined`, `NaN`, infinities, plain objects, arrays, functions, `symbol`        | Skipped; not counted as valid samples |
+
+Inference applies to the whole column: it scans at most the first 1000 rows and collects up to 100 valid samples. If all samples share one measurement type, that type is used; mixed measurement types or no valid samples fall back to `categorical`. For example, `12` and `12n` both imply `continuous`, while mixing `12` and `'12'` yields `categorical`. Recognizing a date-shaped value does not validate the date; actual values still undergo parsing afterward.
+
+Normalized rows use logical field names and preserve the row count; normalization does not invent missing data. See [Validation & Diagnostics](/viz/data/model/validation) for missing values, parsing failures, and handling policies.
+
+## Category order
+
+Categorical fields form their domain in data-appearance order by default. Put `order` on the field when the business order should be `S → M → L → XL`:
+
+| `order`                         | Effect                                                         |
+| ------------------------------- | -------------------------------------------------------------- |
+| Omitted / `'appearance'`        | Preserve data-appearance order                                 |
+| `'ascending'` / `'descending'`  | Compare all-numeric categories numerically, otherwise as text  |
+| Array such as `['S', 'M', 'L']` | Use the array first, then append remaining observed categories |
+
+<ComponentPreview
+  files={['data-model-order', 'data-model-order-preview.tsx', 'data-model-order.data.ts']}
+  defaultSourceFile="data-model-order-preview.tsx"
+  size="lg"
+  caption="The source table remains XL, S, L, M; controls change the category domain without reordering rows."
+/>
+
+`model.order` orders the **categorical domain**; it does not reorder rows. Consumers can use it to preserve category semantics. In a Plot application, it affects categorical positions, legends, and discrete colors without changing path connection order. Use [data-transform sorting](/viz/data/transform/operations#sort) for rows; an explicit Plot scale `domain` takes precedence over `order`.
 
 ## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Field Contract',
-      description: 'Declare field types, inference, and category order.',
-      url: '/viz/data/model/contract',
-    },
-    {
       title: 'Data Intake',
-      description: 'Configure field mapping and parsing formats.',
+      description: 'Configure field mapping and built-in parsing formats.',
       url: '/viz/data/model/intake',
     },
     {
       title: 'Validation & Diagnostics',
-      description: 'Handle missing values, invalid values, and diagnostics.',
+      description: 'Handle missing values and parsing failures.',
       url: '/viz/data/model/validation',
+    },
+    {
+      title: 'Contract',
+      description: 'Look up the complete field and model schemas.',
+      url: '/viz/data/reference/contract',
     },
   ]}
 />

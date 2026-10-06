@@ -18,20 +18,15 @@ import type {
   PreviewPanelControlItem,
 } from '../../src/modules/docs/components/component-preview';
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
-import { PreviewControlPanel } from '../../src/modules/docs/components/component-preview/control-panel';
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { usePreviewControlState } from '../../src/modules/docs/components/component-preview/hooks';
-import { renderDataModelOrderPreview } from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order-preview';
-import { previewControlContract as orderZh } from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order.controls';
-import { previewControlContract as orderEn } from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order.en.controls';
-import OrderDemo from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order.zh.demo';
-import { previewControlContract as fieldContractZh } from '../../src/modules/docs/contents/viz/data/model/contract/field-contract-playground.controls';
-import { previewControlContract as fieldContractEn } from '../../src/modules/docs/contents/viz/data/model/contract/field-contract-playground.en.controls';
-import FieldContractDemo from '../../src/modules/docs/contents/viz/data/model/contract/field-contract-playground.zh.demo';
 import { previewControlContract as extensionFormatZh } from '../../src/modules/docs/contents/viz/data/model/extensions/extension-format.controls';
 import { previewControlContract as extensionFormatEn } from '../../src/modules/docs/contents/viz/data/model/extensions/extension-format.en.controls';
 import { previewControlContract as extensionResolverZh } from '../../src/modules/docs/contents/viz/data/model/extensions/extension-resolver.controls';
 import { previewControlContract as extensionResolverEn } from '../../src/modules/docs/contents/viz/data/model/extensions/extension-resolver.en.controls';
+import { renderDataModelOrderPreview } from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order-preview';
+import { previewControlContract as orderZh } from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order.controls';
+import { previewControlContract as orderEn } from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order.en.controls';
+import OrderDemo from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order.zh.demo';
 import { previewControlContract as sourceBindingZh } from '../../src/modules/docs/contents/viz/data/model/intake/source-binding.controls';
 import { previewControlContract as sourceBindingEn } from '../../src/modules/docs/contents/viz/data/model/intake/source-binding.en.controls';
 import SourceBindingDemo from '../../src/modules/docs/contents/viz/data/model/intake/source-binding.zh.demo';
@@ -123,22 +118,8 @@ const renderWithValues = (Component: FC, values: Record<string, boolean | number
     </PreviewControlStateContext.Provider>,
   );
 
-const FieldContractControlsHarness: FC = () => {
-  const controlState = usePreviewControlState(fieldContractZh.controls, fieldContractZh.canonicalValues);
-
-  return (
-    <PreviewControlPanel
-      definition={fieldContractZh.controls}
-      controlContract={fieldContractZh}
-      controlState={controlState}
-      onClose={() => undefined}
-    />
-  );
-};
-
 describe('Viz Data model controls', () => {
   const localizedPairs = [
-    [fieldContractZh, fieldContractEn],
     [orderZh, orderEn],
     [sourceBindingZh, sourceBindingEn],
     [valueParsingZh, valueParsingEn],
@@ -158,7 +139,7 @@ describe('Viz Data model controls', () => {
 
   it('uses large previews for data-table controls', () => {
     const pagePreviews = [
-      ['model/contract', 2],
+      ['model/fields-and-types', 1],
       ['model/intake', 2],
       ['model/validation', 1],
       ['model/extensions', 2],
@@ -168,22 +149,13 @@ describe('Viz Data model controls', () => {
       for (const locale of ['zh', 'en']) {
         const source = readFileSync(resolve(`src/modules/docs/contents/viz/data/${page}/index.${locale}.mdx`), 'utf8');
 
-        expect(source.match(/size="lg"/g) ?? []).toHaveLength(previewCount);
-        expect(source).not.toContain('size="md"');
-        expect(source).not.toContain('size="sm"');
+        const functionalPreviews = (source.match(/<ComponentPreview\b[\s\S]*?\/>/g) ?? []).filter(
+          preview => !/type="(?:flow|illustration)"/.test(preview),
+        );
+        expect(functionalPreviews).toHaveLength(previewCount);
+        for (const preview of functionalPreviews) expect(preview).toContain('size="lg"');
       }
     }
-  });
-
-  it('keeps field contract scenario selection in one control', () => {
-    const container = document.createElement('div');
-    const root = createRoot(container);
-    roots.push(root);
-
-    act(() => root.render(<FieldContractControlsHarness />));
-
-    expect(container.querySelector('[data-slot="preview-preset-selector"]')).toBeNull();
-    expect(container.querySelector('[data-control-id="scenario"]')).not.toBeNull();
   });
 
   it('pins every model bar preview to the value-axis baseline', () => {
@@ -228,10 +200,7 @@ describe('Viz Data model controls', () => {
     }
   });
 
-  it('changes field semantics, category order, source binding, and parsing through canonical controls', () => {
-    expect(renderWithValues(FieldContractDemo, { scenario: 'funnel', stageType: 'inferred' })).not.toBe(
-      renderWithValues(FieldContractDemo, { scenario: 'funnel', stageType: 'categorical' }),
-    );
+  it('changes category order, source binding, and parsing through canonical controls', () => {
     expect(renderWithValues(OrderDemo, { orderMode: 'appearance' })).not.toBe(
       renderWithValues(OrderDemo, { orderMode: 'business' }),
     );

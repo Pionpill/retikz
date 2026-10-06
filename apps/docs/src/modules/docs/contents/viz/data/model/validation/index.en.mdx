@@ -70,7 +70,7 @@ Columns not referenced by the current data pipeline are not checked. Strict vali
 2. `validateData` samples canonical rows, or `invalid="error"` checks all of them.
 3. Validated rows enter data transforms; under the default policy, invalid sentinels remain for the consumer to handle. Plot marks consume them in this example.
 
-This ordering keeps errors tied to the intake contract instead of row shapes produced by sorting, aggregation, or filtering. Reference mismatches belong to the [Field Contract](/viz/data/model/contract); incorrect parsing belongs to [Data Intake](/viz/data/model/intake).
+This ordering keeps errors tied to the intake contract instead of row shapes produced by sorting, aggregation, or filtering. Reference mismatches belong to the [Fields and Types](/viz/data/model/fields-and-types); incorrect parsing belongs to [Data Intake](/viz/data/model/intake).
 
 <SourceLinks
   sources={[

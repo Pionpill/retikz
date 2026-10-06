@@ -315,7 +315,6 @@
     "tableReferenceRuntime": "运行时",
     "dataFieldsAndTypes": "字段与类型",
     "dataModel": "数据模型",
-    "dataModelContract": "字段契约",
     "dataModelIntake": "数据接入",
     "dataModelValidation": "校验与诊断",
     "dataModelExtensions": "扩展机制",
