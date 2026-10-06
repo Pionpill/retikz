@@ -280,54 +280,74 @@ describe('layered Flow layout', () => {
     expect(target.y - (labelBounds.y + labelBounds.height)).toBeGreaterThanOrEqual(20);
   });
 
-  it('adds a measured relation label width around direct children in an authored horizontal Layout', () => {
-    let placementInput: FlowLayoutPlacementOutput | undefined;
-    let receivedMargins: ReadonlyArray<unknown> = [];
-    LayeredFlowLayoutDefinition.layout(
-      {
-        layout: layout(),
-        elements: [
-          {
-            kind: 'layout',
-            id: 'lane',
-            layout: layout('right'),
-            placement: { kind: 'linear', direction: 'right', gap: layout('right').nodeGap, align: 'center' },
-            elements: [
-              leaf('source', undefined, { width: 40, height: 40 }),
-              leaf('target', undefined, { width: 40, height: 40 }),
-            ],
+  it.each(['right', 'left', 'down', 'up'] as const)(
+    'reserves only the largest label extent on a shared authored Layout side facing %s',
+    direction => {
+      const horizontal = direction === 'right' || direction === 'left';
+      let placementInput: FlowLayoutPlacementOutput | undefined;
+      let receivedMargins: ReadonlyArray<unknown> = [];
+      LayeredFlowLayoutDefinition.layout(
+        {
+          layout: layout(),
+          elements: [
+            {
+              kind: 'layout',
+              id: 'lane',
+              layout: layout(direction),
+              placement: { kind: 'linear', direction, gap: 20, align: 'center' },
+              elements: [
+                leaf('source', undefined, { width: 40, height: 40 }),
+                leaf('target', undefined, { width: 40, height: 40 }),
+              ],
+            },
+          ],
+          relations: [120, 40, 80].map(extent =>
+            relation('source', 'target', {
+              labelSize: horizontal ? { width: extent, height: 12 } : { width: 12, height: extent },
+            }),
+          ),
+        },
+        {
+          resolveEndpoint: () => {
+            throw new Error('Unexpected endpoint query');
           },
-        ],
-        relations: [relation('source', 'target', { labelSize: { width: 120, height: 12 } })],
-      },
-      {
-        resolveEndpoint: () => {
-          throw new Error('Unexpected endpoint query');
-        },
-        resolveRoutePoints: () => {
-          throw new Error('Unexpected waypoint query');
-        },
-        placeLayout: input => {
-          receivedMargins = input.elements;
-          placementInput = {
-            bounds: { x: 0, y: 0, width: 40, height: 40 },
-            elements: [
-              { id: 'source', bounds: { x: 0, y: 0, width: 40, height: 40 } },
-              { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
-            ],
-          };
+          resolveRoutePoints: () => {
+            throw new Error('Unexpected waypoint query');
+          },
+          placeLayout: input => {
+            receivedMargins = input.elements;
+            placementInput = {
+              bounds: { x: 0, y: 0, width: 40, height: 40 },
+              elements: [
+                { id: 'source', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+                { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+              ],
+            };
 
-          return placementInput;
+            return placementInput;
+          },
         },
-      },
-    );
+      );
 
-    expect(placementInput).toBeDefined();
-    expect(receivedMargins).toMatchObject([
-      { id: 'source', margin: { right: 60 } },
-      { id: 'target', margin: { left: 60 } },
-    ]);
-  });
+      expect(placementInput).toBeDefined();
+      expect(receivedMargins).toMatchObject([
+        {
+          id: 'source',
+          margin: {
+            [direction === 'right' ? 'right' : direction === 'left' ? 'left' : direction === 'down' ? 'bottom' : 'top']:
+              60,
+          },
+        },
+        {
+          id: 'target',
+          margin: {
+            [direction === 'right' ? 'left' : direction === 'left' ? 'right' : direction === 'down' ? 'top' : 'bottom']:
+              60,
+          },
+        },
+      ]);
+    },
+  );
 
   it('centers nested Group children when its minimum cross size exceeds the child scope', () => {
     const output = run({
