@@ -9,6 +9,102 @@
 
 The data, items, skeleton, and ArrayItem children inputs are mutually exclusive; omitting all inputs creates an empty array. dataExpand applies only to data
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRArray['animations']`                                                                  | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`     | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the Array id                                             |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaults?`       | `IRArray['defaults']`                                                                    | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`          | `IRArray['index']`                                                                       | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
+| `label?`          | `IRArray['label']`                                                                       | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `IRArray['layout']`                                                                      | —            | Array cell allocation and ordering.                                                                                                             |
+| `localNamespace?` | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`      | `IRArray['placement']`                                                                   | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `IRCell['style']`                                                                        | —            | Shared visual styles inherited by cells; explicit cell fields override matching values                                                          |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `IRArray['transforms']`                                                                  | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="data">
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                           | Default | Description                                                                     |
+| ------------- | ------------------------------ | ------- | ------------------------------------------------------------------------------- |
+| `children?`   | `never`                        | —       | —                                                                               |
+| `data`        | `NonNullable<IRArray['data']>` | —       | Cells expanded from data, mutually exclusive with items, skeleton, and children |
+| `dataExpand?` | `IRArray['dataExpand']`        | —       | Data expansion policy used only by the data input                               |
+| `items?`      | `never`                        | —       | —                                                                               |
+| `skeleton?`   | `never`                        | —       | —                                                                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                                                | Default | Description                                                        |
+| ------------- | --------------------------------------------------- | ------- | ------------------------------------------------------------------ |
+| `children?`   | `never`                                             | —       | —                                                                  |
+| `data?`       | `never`                                             | —       | —                                                                  |
+| `dataExpand?` | `never`                                             | —       | —                                                                  |
+| `items`       | `Array<string \| CellProps<IRArrayCell['layout']>>` | —       | Ordered text or styled cells, mutually exclusive with other inputs |
+| `skeleton?`   | `never`                                             | —       | —                                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX children">
+
+<ApiTable>
+
+| Member        | Type        | Default | Description                                                          |
+| ------------- | ----------- | ------- | -------------------------------------------------------------------- |
+| `children?`   | `ReactNode` | —       | Cells declared with ArrayItem; other direct markers are not accepted |
+| `data?`       | `never`     | —       | —                                                                    |
+| `dataExpand?` | `never`     | —       | —                                                                    |
+| `items?`      | `never`     | —       | —                                                                    |
+| `skeleton?`   | `never`     | —       | —                                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                               | Default | Description                                                                          |
+| ------------- | ---------------------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `children?`   | `never`                            | —       | —                                                                                    |
+| `data?`       | `never`                            | —       | —                                                                                    |
+| `dataExpand?` | `never`                            | —       | —                                                                                    |
+| `items?`      | `never`                            | —       | —                                                                                    |
+| `skeleton`    | `NonNullable<IRArray['skeleton']>` | —       | Schematic empty cells, mutually exclusive with data, explicit cells, and JSX content |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const Array: {
   (props: ArrayProps, context?: any): ReactNode;
@@ -47,6 +143,10 @@ export type ArrayProps = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
   );
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### ArrayItem / ArrayItemProps
 
 - `ArrayItem`: <ApiSourceLink label={"ArrayItem"} path={"packages/library/standard-react/src/collection/array/ArrayItem.tsx"} startLine={14}>Direct cell declaration for Array; does not produce a standalone drawing</ApiSourceLink>
@@ -54,19 +154,30 @@ export type ArrayProps = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
 
 Text and children are mutually exclusive; omitting both leaves an empty cell, and provided children must produce exactly one drawable. id identifies the cell border box, while style and layout override the corresponding Array settings
 
+**Common members**
+
+<ApiTable>
+
+| Member    | Type                       | Default | Description                                                                                         |
+| --------- | -------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `id?`     | `string`                   | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?` | `ArrayItemProps["layout"]` | —       | —                                                                                                   |
+| `style?`  | `ArrayItemProps["style"]`  | —       | Sparse visual overrides for a collection cell.                                                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="text">
 
 <DocTab value="text" label="Members · Text or empty cell">
 
 <ApiTable>
 
-| Member      | Type                       | Default | Description                                                                                         |
-| ----------- | -------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children?` | `never`                    | —       | —                                                                                                   |
-| `id?`       | `string`                   | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
-| `layout?`   | `ArrayItemProps["layout"]` | —       | —                                                                                                   |
-| `style?`    | `ArrayItemProps["style"]`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                   | —       | Cell text, mutually exclusive with drawing content                                                  |
+| Member      | Type     | Default | Description                                        |
+| ----------- | -------- | ------- | -------------------------------------------------- |
+| `children?` | `never`  | —       | —                                                  |
+| `text?`     | `string` | —       | Cell text, mutually exclusive with drawing content |
 
 </ApiTable>
 
@@ -76,13 +187,10 @@ Text and children are mutually exclusive; omitting both leaves an empty cell, an
 
 <ApiTable>
 
-| Member     | Type                       | Default | Description                                                                                         |
-| ---------- | -------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
-| `id?`      | `string`                   | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
-| `layout?`  | `ArrayItemProps["layout"]` | —       | —                                                                                                   |
-| `style?`   | `ArrayItemProps["style"]`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`    | `never`                    | —       | —                                                                                                   |
+| Member     | Type        | Default | Description                                                        |
+| ---------- | ----------- | ------- | ------------------------------------------------------------------ |
+| `children` | `ReactNode` | —       | Exactly one compilable drawing child, mutually exclusive with text |
+| `text?`    | `never`     | —       | —                                                                  |
 
 </ApiTable>
 
@@ -109,16 +217,78 @@ export type ArrayItemProps = CellMarkerProps<IRArrayCell['layout']>;
 
 Choose items, data, or skeleton; dataExpand applies only to data. Other fields follow IRArray, and the adapter supplies namespace and type
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
+**Common members**
 
 <ApiTable>
 
-| Member              | Type                     | Default | Description                                                                                                                              |
-| ------------------- | ------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `input` (Parameter) | `InputArray`             | —       | Array input using explicit cells, a JSON array, or a skeleton                                                                            |
-| Returns             | `InputEmbed<InputArray>` | —       | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation |
+| Member              | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`       | `IRArray['animations']`                                                                  | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`    | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`       | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the Array id                                             |
+| `clip?`             | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaults?`         | `IRArray['defaults']`                                                                    | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`            | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`               | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`            | `IRArray['index']`                                                                       | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
+| `label?`            | `IRArray['label']`                                                                       | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`           | `IRArray['layout']`                                                                      | —            | Array cell allocation and ordering.                                                                                                             |
+| `localNamespace?`   | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`             | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`        | `IRArray['placement']`                                                                   | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`            | `IRCell['style']`                                                                        | —            | Shared visual styles inherited by cells; explicit cell fields override matching values                                                          |
+| `theme?`            | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`       | `IRArray['transforms']`                                                                  | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`           | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| `input` (Parameter) | `InputArray`                                                                             | —            | Array input using explicit cells, a JSON array, or a skeleton                                                                                   |
+| Returns             | `InputEmbed<InputArray>`                                                                 | —            | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation        |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                                      | Default | Description                                                      |
+| ------------- | ----------------------------------------- | ------- | ---------------------------------------------------------------- |
+| `data?`       | `never`                                   | —       | —                                                                |
+| `dataExpand?` | `never`                                   | —       | —                                                                |
+| `items`       | `Array<string \| InputCell<IRArrayCell>>` | —       | Ordered text or cells, mutually exclusive with data and skeleton |
+| `skeleton?`   | `never`                                   | —       | —                                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                           | Default | Description                                                                   |
+| ------------- | ------------------------------ | ------- | ----------------------------------------------------------------------------- |
+| `data`        | `NonNullable<IRArray['data']>` | —       | Data expanded into cells, mutually exclusive with explicit cells and skeleton |
+| `dataExpand?` | `IRArray['dataExpand']`        | —       | Expansion policy used only by the data input                                  |
+| `items?`      | `never`                        | —       | —                                                                             |
+| `skeleton?`   | `never`                        | —       | —                                                                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                               | Default | Description                                                 |
+| ------------- | ---------------------------------- | ------- | ----------------------------------------------------------- |
+| `data?`       | `never`                            | —       | —                                                           |
+| `dataExpand?` | `never`                            | —       | —                                                           |
+| `items?`      | `never`                            | —       | —                                                           |
+| `skeleton`    | `NonNullable<IRArray['skeleton']>` | —       | Schematic empty cells, mutually exclusive with other inputs |
 
 </ApiTable>
 
@@ -186,6 +356,85 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRScopeProps['animations']`                                                             | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`     | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the Array id                                             |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`          | `IRArray["index"]`                                                                       | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
+| `label?`          | `IRArray["label"]`                                                                       | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `IRArray["layout"]`                                                                      | —            | Array cell allocation and ordering.                                                                                                             |
+| `localNamespace?` | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `namespace`       | `"standard"`                                                                             | —            | Composite namespace for Standard drawing capabilities.                                                                                          |
+| `placement?`      | `IRScopeProps['placement']`                                                              | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `IRCell['style']`                                                                        | —            | Shared visual styles inherited by cells; explicit cell fields override matching values                                                          |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `IRScopeProps['transforms']`                                                             | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `type`            | `"array"`                                                                                | —            | Composite type for the array presentation.                                                                                                      |
+| `zIndex?`         | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                           | Default | Description                                                                        |
+| ------------- | ------------------------------ | ------- | ---------------------------------------------------------------------------------- |
+| `data?`       | `never`                        | —       | —                                                                                  |
+| `dataExpand?` | `never`                        | —       | —                                                                                  |
+| `items`       | `Array<string \| IRArrayCell>` | —       | A string supplies content by default and also supplies its id in string cellIdMode |
+| `skeleton?`   | `never`                        | —       | —                                                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                                             | Default | Description                                                                                                   |
+| ------------- | ------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------- |
+| `data`        | `NonNullable<input<typeof ArraySchema>['data']>` | —       | Render JSON arrays recursively; index mode assigns ids to direct cells                                        |
+| `dataExpand?` | `input<typeof ArraySchema>['dataExpand']`        | `true`  | Expansion of nested objects and arrays: true expands all, false displays text, and an array selects map/array |
+| `items?`      | `never`                                          | —       | —                                                                                                             |
+| `skeleton?`   | `never`                                          | —       | —                                                                                                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                                                 | Default | Description                                                                           |
+| ------------- | ---------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `data?`       | `never`                                              | —       | —                                                                                     |
+| `dataExpand?` | `never`                                              | —       | —                                                                                     |
+| `items?`      | `never`                                              | —       | —                                                                                     |
+| `skeleton`    | `NonNullable<input<typeof ArraySchema>['skeleton']>` | —       | Schematic skeleton without real data, mutually exclusive with data and explicit cells |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type IRArray = Omit<
   input<typeof ArraySchema>,
@@ -215,6 +464,10 @@ export type IRArray = Omit<
       }
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### IRArrayCell
 
@@ -269,18 +522,29 @@ export type IRArrayCell = Omit<input<typeof ArrayCellSchema>, 'content'> & {
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                                                                                                                                                                                  | Default    | Description                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------- |
+| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | Before means above a row or left of a column; after means below or right. |
+| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | Index text appearance; cell-level styles do not affect indices.           |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="automatic">
 
 <DocTab value="automatic" label="Members · Automatic numbering">
 
 <ApiTable>
 
-| Member      | Type                                                                                                                                                                                                                                                                                                                  | Default    | Description                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------- |
-| `labels?`   | `never`                                                                                                                                                                                                                                                                                                               | —          | Not accepted in this input branch.                                        |
-| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | Before means above a row or left of a column; after means below or right. |
-| `start?`    | `number`                                                                                                                                                                                                                                                                                                              | `0`        | First displayed index; not cell identity.                                 |
-| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | Index text appearance; cell-level styles do not affect indices.           |
+| Member    | Type     | Default | Description                               |
+| --------- | -------- | ------- | ----------------------------------------- |
+| `labels?` | `never`  | —       | Not accepted in this input branch.        |
+| `start?`  | `number` | `0`     | First displayed index; not cell identity. |
 
 </ApiTable>
 
@@ -290,12 +554,10 @@ export type IRArrayCell = Omit<input<typeof ArrayCellSchema>, 'content'> & {
 
 <ApiTable>
 
-| Member      | Type                                                                                                                                                                                                                                                                                                                  | Default    | Description                                                                      |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| `labels`    | `Array<string>`                                                                                                                                                                                                                                                                                                       | —          | Outside labels in cell order; empty text hides a label. Length must match cells. |
-| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | Before means above a row or left of a column; after means below or right.        |
-| `start?`    | `never`                                                                                                                                                                                                                                                                                                               | —          | Not accepted in this input branch.                                               |
-| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | Index text appearance; cell-level styles do not affect indices.                  |
+| Member   | Type            | Default | Description                                                                      |
+| -------- | --------------- | ------- | -------------------------------------------------------------------------------- |
+| `labels` | `Array<string>` | —       | Outside labels in cell order; empty text hides a label. Length must match cells. |
+| `start?` | `never`         | —       | Not accepted in this input branch.                                               |
 
 </ApiTable>
 

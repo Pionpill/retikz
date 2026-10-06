@@ -171,6 +171,11 @@ const texApiReferenceConfig: ApiReferencePackageConfig = {
   translate: translateTexApiReference,
 };
 
+/** 属性表按不同字段计数，公共字段不因分支数量重复占用预算 */
+const MAX_UNION_TABLE_MEMBERS = 40;
+
+const MAX_UNION_TABLE_BRANCHES = 8;
+
 const MAX_EXPANDED_UNION_BRANCHES = 8;
 
 const MAX_EXPANDED_UNION_LINES = 40;
@@ -814,10 +819,10 @@ const resolveObjectMembers = (
 
   const branchTypes =
     type.isUnion() &&
-    type.types.length <= MAX_EXPANDED_UNION_BRANCHES &&
+    type.types.length <= MAX_UNION_TABLE_BRANCHES &&
     type.types.every(isObject) &&
-    type.types.reduce((count, branch) => count + checker.getPropertiesOfType(branch).length, 0) <=
-      MAX_EXPANDED_UNION_LINES
+    new Set(type.types.flatMap(branch => checker.getPropertiesOfType(branch).map(member => member.name))).size <=
+      MAX_UNION_TABLE_MEMBERS
       ? type.types
       : undefined;
   const expandedNodes = new Map<ts.Type, ts.TypeNode | undefined>();
@@ -1377,6 +1382,42 @@ const objectSchemaBranches = (schema: z.core.$ZodType, fields: Array<string>): A
   return child ? objectSchemaBranches(child, fields.slice(1)) : [];
 };
 
+/** 用可直接比较的字段类型区分同名 Schema 分支，命名引用保留给其它字段判定 */
+const matchesSchemaMemberType = (schema: z.core.$ZodType, node: ts.TypeNode): boolean => {
+  if (
+    schema instanceof z.ZodOptional ||
+    schema instanceof z.ZodDefault ||
+    schema instanceof z.ZodNullable ||
+    schema instanceof z.ZodReadonly ||
+    schema instanceof z.ZodNonOptional
+  )
+    return matchesSchemaMemberType(schema.unwrap(), node);
+
+  if (schema instanceof z.ZodUnion) return schema.options.some(option => matchesSchemaMemberType(option, node));
+
+  if (ts.isLiteralTypeNode(node)) {
+    if (!(schema instanceof z.ZodLiteral))
+      return !(schema instanceof z.ZodNumber || schema instanceof z.ZodString || schema instanceof z.ZodObject);
+    return [...schema.values].some(
+      value => JSON.stringify(value) === node.literal.getText().replace(/^'([^']*)'$/, '"$1"'),
+    );
+  }
+  if (node.kind === ts.SyntaxKind.NumberKeyword)
+    return !(schema instanceof z.ZodLiteral || schema instanceof z.ZodString || schema instanceof z.ZodObject);
+  if (node.kind === ts.SyntaxKind.StringKeyword)
+    return !(schema instanceof z.ZodLiteral || schema instanceof z.ZodNumber || schema instanceof z.ZodObject);
+  if (ts.isTypeLiteralNode(node)) {
+    if (!(schema instanceof z.ZodObject))
+      return !(schema instanceof z.ZodNumber || schema instanceof z.ZodString || schema instanceof z.ZodLiteral);
+    return node.members.every(member => {
+      if (!ts.isPropertySignature(member) || !member.type) return true;
+      const field = schema.shape[member.name.getText()];
+      return field !== undefined && matchesSchemaMemberType(field, member.type);
+    });
+  }
+  return true;
+};
+
 /** 唯一匹配分支时才投影元数据，不猜测多个分支的默认值 */
 const nestedObjectSchema = (
   branches: Array<z.ZodObject>,
@@ -1400,10 +1441,9 @@ const nestedObjectSchema = (
 
       if (member.type === 'never' || member.type === 'undefined') return inner instanceof z.ZodNever;
       if (inner instanceof z.ZodNever) return false;
-      if (field instanceof z.ZodLiteral)
-        return [...field.values].some(value => JSON.stringify(value) === member.type.replace(/^'([^']*)'$/, '"$1"'));
-
-      return true;
+      const declaration = ts.createSourceFile('member.ts', `type Member = ${member.type}`, ts.ScriptTarget.Latest, true)
+        .statements[0];
+      return ts.isTypeAliasDeclaration(declaration) && matchesSchemaMemberType(inner, declaration.type);
     }),
   );
   if (matches.length === 1) return matches[0];
@@ -1787,6 +1827,20 @@ const renderSymbol = (
       .map(subject => subject.overloads?.map(overload => overload.signature).join('\n') || subject.signature)
       .join('\n\n'),
   };
+  // 仅提取所有分支展示契约完全相同的字段，必填性、只读性与说明差异均保留在分支中
+  const memberContract = ({ schemaSymbol: _schemaSymbol, ...member }: ApiReferenceMember): string => {
+    void _schemaSymbol;
+    return JSON.stringify(member);
+  };
+  const commonMembers =
+    symbol.branches?.[0].members.filter(member =>
+      symbol.branches!.every(branch =>
+        branch.members.some(
+          candidate => candidate.name === member.name && memberContract(candidate) === memberContract(member),
+        ),
+      ),
+    ) ?? [];
+  const commonNames = new Set(commonMembers.map(member => member.name));
   const hasDetailViews =
     !hasMemberViews &&
     !symbol.branches &&
@@ -1853,10 +1907,25 @@ const renderSymbol = (
       ? ''
       : symbol.branches
         ? [
+            ...(commonMembers.length > 0
+              ? [
+                  lang === 'zh' ? '**公共属性**' : '**Common members**',
+                  renderMembers(commonMembers, lang, translate, undefined, extraMembers),
+                  lang === 'zh'
+                    ? '公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。'
+                    : 'Common members apply to every branch; a value must also satisfy at least one branch.',
+                ]
+              : []),
             `<DocTabs defaultValue=${JSON.stringify(symbol.branches[0].value)}>`,
             ...symbol.branches.map(
               branch =>
-                `<DocTab value=${JSON.stringify(branch.value)} label=${JSON.stringify(`${lang === 'zh' ? '属性' : 'Members'} · ${branch.label[lang]}`)}>\n\n${renderMembers(branch.members, lang, translate, undefined, extraMembers)}\n\n</DocTab>`,
+                `<DocTab value=${JSON.stringify(branch.value)} label=${JSON.stringify(`${lang === 'zh' ? '属性' : 'Members'} · ${branch.label[lang]}`)}>\n\n${renderMembers(
+                  branch.members.filter(member => !commonNames.has(member.name)),
+                  lang,
+                  translate,
+                  undefined,
+                  commonMembers.length > 0 ? [] : extraMembers,
+                )}\n\n</DocTab>`,
             ),
             `<DocTab value="definition" label="${lang === 'zh' ? '类型定义' : 'Type definition'}">`,
             `\`\`\`ts\n${combined.signature}\n\`\`\``,
@@ -2193,7 +2262,14 @@ export const createApiReferenceMdx = async (
                   symbol.branches = await Promise.all(
                     resolved.branches.map(async branchMembers => {
                       const matches = labels.filter(label =>
-                        branchMembers.some(member => member.name === label.field && member.type === label.type),
+                        [label, ...(label.and ?? [])].every(condition =>
+                          branchMembers.some(
+                            member =>
+                              member.name === condition.field &&
+                              (condition.type === undefined || member.type === condition.type) &&
+                              (condition.required === undefined || condition.required === !member.optional),
+                          ),
+                        ),
                       );
                       const label = matches[0];
                       if (matches.length !== 1 || used.has(label.value))

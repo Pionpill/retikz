@@ -2,6 +2,10 @@
 export const matrixSchemaLocalization = {
   description: '矩形单元格、JSON 数据或示意骨架',
   descriptions: {
+    '/union/0/field/"layout"': '单元格尺寸、内边距、溢出及行列间距',
+    '/union/1/field/"layout"': '单元格尺寸、内边距、溢出及行列间距',
+    '/union/2/field/"layout"': '单元格尺寸、内边距、溢出及行列间距',
+
     '/union/0/field/"namespace"': 'Standard 复合组件命名空间',
     '/union/0/field/"type"': '矩形单元格呈现类型',
     '/union/0/field/"frame"': '绘制在容器内容下方的可选外框',

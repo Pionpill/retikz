@@ -71,6 +71,103 @@ export type ArcProps = InputArc &
 - `Sector`: <ApiSourceLink label={"Sector"} path={"packages/library/standard-react/src/shape/Sector.tsx"} startLine={19}>Declare a Standard Sector through its Vanilla adapter</ApiSourceLink>
 - `SectorProps`: <ApiSourceLink label={"SectorProps"} path={"packages/library/standard-react/src/shape/Sector.tsx"} startLine={10}>React Sector authoring input and host events</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputSector['animations']`           | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
+| `endAngle?`       | `number`                              | —       | End angle in degrees.                                                                                                                                                        |
+| `id?`             | `string`                              | —       | Explicit path identity                                                                                                                                                       |
+| `label?`          | `InputSector['label']`                | —       | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
+| `marks?`          | `InputSector['marks']`                | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `onClick?`        | `HydrationHandler`                    | —       | Click on this element (DOM `click`)                                                                                                                                          |
+| `onDoubleClick?`  | `HydrationHandler`                    | —       | Double-click on this element (DOM `dblclick`)                                                                                                                                |
+| `onPointerDown?`  | `HydrationHandler`                    | —       | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                          |
+| `onPointerEnter?` | `HydrationHandler`                    | —       | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                              |
+| `onPointerLeave?` | `HydrationHandler`                    | —       | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                 |
+| `onPointerMove?`  | `HydrationHandler`                    | —       | Pointer moves over this element (DOM `pointermove`)                                                                                                                          |
+| `onPointerUp?`    | `HydrationHandler`                    | —       | Pointer released on this element (DOM `pointerup`)                                                                                                                           |
+| `onRightClick?`   | `HydrationHandler`                    | —       | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                                                  |
+| `onWheel?`        | `HydrationHandler`                    | —       | Wheel input over this element (DOM `wheel`)                                                                                                                                  |
+| `rotate?`         | `number`                              | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
+| `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `startAngle?`     | `number`                              | —       | Start angle in degrees.                                                                                                                                                      |
+| `style?`          | `InputSector['style']`                | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `sweepAngle?`     | `number`                              | —       | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="innerRadius-0">
+
+<DocTab value="innerRadius-0" label="Members · Circular sector">
+
+<ApiTable>
+
+| Member         | Type          | Default | Description                                                          |
+| -------------- | ------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `InputTarget` | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `0`           | —       | Zero inner radius for the filled-sector branch.                      |
+| `radius`       | `number`      | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="innerRadius-1" label="Members · Elliptical sector">
+
+<ApiTable>
+
+| Member         | Type                        | Default | Description                                                          |
+| -------------- | --------------------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `InputTarget`               | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `{ x: 0; y: 0; }`           | —       | Zero inner radii for the filled elliptical-sector branch.            |
+| `radius`       | `{ x: number; y: number; }` | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="innerRadius-2" label="Members · Annular sector">
+
+<ApiTable>
+
+| Member         | Type               | Default | Description                                                          |
+| -------------- | ------------------ | ------- | -------------------------------------------------------------------- |
+| `center`       | `[number, number]` | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `number`           | —       | Inner radius; cannot exceed the outer radius.                        |
+| `radius`       | `number`           | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="innerRadius-3" label="Members · Elliptical annular sector">
+
+<ApiTable>
+
+| Member         | Type                        | Default | Description                                                          |
+| -------------- | --------------------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `[number, number]`          | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `{ x: number; y: number; }` | —       | Inner radius; cannot exceed the outer radius.                        |
+| `radius`       | `{ x: number; y: number; }` | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const Sector: {
   (props: SectorProps, context?: any): React.ReactNode;
@@ -81,6 +178,10 @@ export type SectorProps = InputSector &
     id?: string;
   };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 **`@retikz/standard-vanilla`**
 
@@ -143,9 +244,101 @@ export type InputArc = InputShape<IRArc>;
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputSector["animations"]`           | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
+| `endAngle?`       | `number`                              | —       | End angle in degrees.                                                                                                                                                        |
+| `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `label?`          | `InputSector["label"]`                | —       | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
+| `marks?`          | `InputSector["marks"]`                | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `rotate?`         | `number`                              | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
+| `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `startAngle?`     | `number`                              | —       | Start angle in degrees.                                                                                                                                                      |
+| `style?`          | `InputSector["style"]`                | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `sweepAngle?`     | `number`                              | —       | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="innerRadius-0">
+
+<DocTab value="innerRadius-0" label="Members · Circular sector">
+
+<ApiTable>
+
+| Member         | Type          | Default | Description                                                          |
+| -------------- | ------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `InputTarget` | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `0`           | —       | Zero inner radius for the filled-sector branch.                      |
+| `radius`       | `number`      | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="innerRadius-1" label="Members · Elliptical sector">
+
+<ApiTable>
+
+| Member         | Type                        | Default | Description                                                          |
+| -------------- | --------------------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `InputTarget`               | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `{ x: 0; y: 0; }`           | —       | Zero inner radii for the filled elliptical-sector branch.            |
+| `radius`       | `{ x: number; y: number; }` | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="innerRadius-2" label="Members · Annular sector">
+
+<ApiTable>
+
+| Member         | Type               | Default | Description                                                          |
+| -------------- | ------------------ | ------- | -------------------------------------------------------------------- |
+| `center`       | `[number, number]` | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `number`           | —       | Inner radius; cannot exceed the outer radius.                        |
+| `radius`       | `number`           | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="innerRadius-3" label="Members · Elliptical annular sector">
+
+<ApiTable>
+
+| Member         | Type                        | Default | Description                                                          |
+| -------------- | --------------------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `[number, number]`          | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `{ x: number; y: number; }` | —       | Inner radius; cannot exceed the outer radius.                        |
+| `radius`       | `{ x: number; y: number; }` | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type InputSector = InputShape<IRSector>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### ArcInputEmbedAdapter
 
@@ -238,9 +431,99 @@ export type IRArc = ShapeSource<ZodInput<typeof ArcSchema>>;
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRSector["animations"]`              | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `endAngle?`       | `number`                              | —       | End angle in degrees.                                                                                                                                                        |
+| `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `label?`          | `IRSector["label"]`                   | —       | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
+| `marks?`          | `IRSector["marks"]`                   | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `namespace`       | `"standard"`                          | —       | Composite namespace for Standard drawing capabilities.                                                                                                                       |
+| `rotate?`         | `number`                              | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
+| `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `startAngle?`     | `number`                              | —       | Start angle in degrees.                                                                                                                                                      |
+| `style?`          | `IRSector["style"]`                   | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `sweepAngle?`     | `number`                              | —       | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
+| `type`            | `"sector"`                            | —       | Composite type for the sector shape.                                                                                                                                         |
+| `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="circular">
+
+<DocTab value="circular" label="Members · Circular sector">
+
+<ApiTable>
+
+| Member         | Type                 | Default | Description                                                          |
+| -------------- | -------------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `IRSector["center"]` | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `0`                  | —       | Zero inner radius for the filled-sector branch.                      |
+| `radius`       | `number`             | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="elliptical" label="Members · Elliptical sector">
+
+<ApiTable>
+
+| Member         | Type                        | Default | Description                                                          |
+| -------------- | --------------------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `IRSector["center"]`        | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `{ x: 0; y: 0; }`           | —       | Zero inner radii for the filled elliptical-sector branch.            |
+| `radius`       | `{ x: number; y: number; }` | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="annular" label="Members · Annular sector">
+
+<ApiTable>
+
+| Member         | Type               | Default | Description                                                          |
+| -------------- | ------------------ | ------- | -------------------------------------------------------------------- |
+| `center`       | `[number, number]` | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `number`           | —       | Inner radius; cannot exceed the outer radius.                        |
+| `radius`       | `number`           | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="elliptical-annular" label="Members · Elliptical annular sector">
+
+<ApiTable>
+
+| Member         | Type                        | Default | Description                                                          |
+| -------------- | --------------------------- | ------- | -------------------------------------------------------------------- |
+| `center`       | `[number, number]`          | —       | Shape center; coordinate forms depend on the chosen geometry branch. |
+| `innerRadius?` | `{ x: number; y: number; }` | —       | Inner radius; cannot exceed the outer radius.                        |
+| `radius`       | `{ x: number; y: number; }` | —       | Radius in user units; an object specifies the two ellipse axes.      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### ArcDefinition
 

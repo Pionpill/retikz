@@ -9,6 +9,61 @@ import type { ApiReferencePackageConfig } from './tex';
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 const translations: Readonly<Record<string, string>> = {
+  '按顺序提供的文本或单元格，与数据和骨架入口互斥': 'Ordered text or cells, mutually exclusive with data and skeleton',
+  '用于展开单元格的数据，与显式单元格和骨架入口互斥':
+    'Data expanded into cells, mutually exclusive with explicit cells and skeleton',
+  '用于构造空单元格的结构声明，与其它内容入口互斥': 'Schematic empty cells, mutually exclusive with other inputs',
+  '按行排列的二维单元格，与数据和骨架入口互斥': 'Rows of cells, mutually exclusive with data and skeleton',
+  '用于展开矩阵的二维数据，与其它内容入口互斥':
+    'Two-dimensional data expanded into a matrix, mutually exclusive with other inputs',
+
+  '供各格继承的集合视觉样式，格内显式字段可覆盖对应值':
+    'Shared visual styles inherited by cells; explicit cell fields override matching values',
+  'Map 集合的整体与键值角色样式输入': 'Shared Map styles and key/value role overrides',
+  '用于展开键值对的数据，与 entries、skeleton 和 children 互斥':
+    'Data expanded into key/value pairs, mutually exclusive with entries, skeleton, and children',
+  '显式键值对序列，各侧接受文本或带样式的单元格': 'Explicit key/value pairs, with text or styled cells on either side',
+  '由 MapEntry 及其键、值 marker 组成的映射条目': 'Map entries declared with MapEntry and its key/value markers',
+  '用于构造空键值对的结构声明，与其它内容入口互斥': 'Schematic key/value pairs, mutually exclusive with other inputs',
+  '按顺序提供的显式键值对，与数据和骨架入口互斥':
+    'Ordered explicit key/value pairs, mutually exclusive with data and skeleton',
+  '用于展开键值对的数据，与其它内容入口互斥':
+    'Data expanded into key/value pairs, mutually exclusive with other inputs',
+  '从数据值展开单元格；与 items、skeleton 和 children 互斥':
+    'Cells expanded from data, mutually exclusive with items, skeleton, and children',
+  '按顺序提供文本或带样式的单元格；与其它内容入口互斥':
+    'Ordered text or styled cells, mutually exclusive with other inputs',
+  '直接使用 ArrayItem 声明单元格；不接受其它直属 marker':
+    'Cells declared with ArrayItem; other direct markers are not accepted',
+  '只声明空单元格结构；与数据、显式单元格和 JSX 内容互斥':
+    'Schematic empty cells, mutually exclusive with data, explicit cells, and JSX content',
+  '按行排列的显式二维单元格，每格接受文本或带样式的单元格':
+    'Explicit rows of cells, each accepting text or a styled cell',
+  '用于展开矩阵单元格的二维数据，与其它内容入口互斥':
+    'Two-dimensional data expanded into matrix cells, mutually exclusive with other inputs',
+  '用于构造空矩阵的行列结构，与其它内容入口互斥':
+    'Schematic matrix rows and columns, mutually exclusive with other inputs',
+  '由 MatrixRow 及其 MatrixCell 组成的矩阵行列声明': 'Matrix rows and cells declared with MatrixRow and MatrixCell',
+
+  链整体的连接线默认配置: 'Default connection settings for the chain',
+  '显式串行项及嵌套并行分支，与其它内容入口互斥':
+    'Explicit sequential items and nested parallel branches, mutually exclusive with other inputs',
+  '用于展开链单元格的数据，与 items、skeleton 和 children 互斥':
+    'Data expanded into chain cells, mutually exclusive with items, skeleton, and children',
+  '仅对 data 入口生效的数据展开策略': 'Data expansion policy used only by the data input',
+  '用于构造空链项的结构声明，与其它内容入口互斥': 'Schematic chain structure, mutually exclusive with other inputs',
+  '由 ChainCell、ChainParallel 与 ChainBranch 组成的链结构声明':
+    'Chain structure declared with ChainCell, ChainParallel, and ChainBranch',
+  '显式串行项与并行分支，与数据和骨架入口互斥':
+    'Explicit sequential items and parallel branches, mutually exclusive with data and skeleton',
+  '用于展开链项的数据，与其它内容入口互斥': 'Data expanded into chain items, mutually exclusive with other inputs',
+  仅用于数据入口的展开策略: 'Expansion policy used only by the data input',
+  '显式链项序列，与数据和骨架入口互斥': 'Explicit chain item sequence, mutually exclusive with data and skeleton',
+  '用于展开链项的数据，与显式链项和骨架入口互斥':
+    'Data expanded into chain items, mutually exclusive with explicit items and skeleton',
+  只对数据入口生效的展开策略: 'Expansion policy used only by the data input',
+  '不含数据内容的链结构，与其它内容入口互斥':
+    'Chain structure without data content, mutually exclusive with other inputs',
   '单元格文本，与绘制子内容互斥': 'Cell text, mutually exclusive with drawing content',
   '恰好一个可编译的绘制子内容，与 text 互斥': 'Exactly one compilable drawing child, mutually exclusive with text',
   '当前条目的 MapKey 与 MapValue 声明': 'MapKey and MapValue declarations for this entry',

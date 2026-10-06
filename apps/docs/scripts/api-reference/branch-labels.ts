@@ -1,4 +1,4 @@
-/** LLM 审阅的分支名称，以判别字段类型匹配，避免依赖 TypeScript 分支顺序 */
+/** LLM 审阅的分支名称，以判别字段类型或入口必填性匹配，避免依赖 TypeScript 分支顺序 */
 export const apiReferenceBranchLabels: Readonly<
   Partial<
     Record<
@@ -6,12 +6,234 @@ export const apiReferenceBranchLabels: Readonly<
       ReadonlyArray<{
         value: string;
         field: string;
-        type: string;
+        type?: string;
+        required?: boolean;
+        and?: ReadonlyArray<{ field: string; type?: string; required?: boolean }>;
         label: { zh: string; en: string };
       }>
     >
   >
 > = {
+  '@retikz/standard/collection#IRArray': [
+    { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
+    { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },
+    { value: 'skeleton', field: 'skeleton', required: true, label: { zh: '示意骨架', en: 'Skeleton' } },
+  ],
+  '@retikz/standard-react/shape#CircleProps': [
+    { value: 'radius-0', field: 'radius', required: true, label: { zh: '半径', en: 'Radius' } },
+    { value: 'diameter-1', field: 'diameter', required: true, label: { zh: '直径', en: 'Diameter' } },
+    { value: 'from-2', field: 'from', required: true, label: { zh: '直径端点', en: 'Diameter endpoints' } },
+    { value: 'corner1-3', field: 'corner1', required: true, label: { zh: '包围框角点', en: 'Bounding corners' } },
+    { value: 'box-4', field: 'box', required: true, label: { zh: '包围框', en: 'Bounding box' } },
+  ],
+  '@retikz/standard-vanilla/shape#InputCircle': [
+    { value: 'radius-0', field: 'radius', required: true, label: { zh: '半径', en: 'Radius' } },
+    { value: 'diameter-1', field: 'diameter', required: true, label: { zh: '直径', en: 'Diameter' } },
+    { value: 'from-2', field: 'from', required: true, label: { zh: '直径端点', en: 'Diameter endpoints' } },
+    { value: 'corner1-3', field: 'corner1', required: true, label: { zh: '包围框角点', en: 'Bounding corners' } },
+    { value: 'box-4', field: 'box', required: true, label: { zh: '包围框', en: 'Bounding box' } },
+  ],
+  '@retikz/standard/shape#IRCircle': [
+    { value: 'radius', field: 'radius', required: true, label: { zh: '半径', en: 'Radius' } },
+    { value: 'diameter', field: 'diameter', required: true, label: { zh: '直径', en: 'Diameter' } },
+    { value: 'from', field: 'from', required: true, label: { zh: '直径端点', en: 'Diameter endpoints' } },
+    { value: 'corner1', field: 'corner1', required: true, label: { zh: '包围框角点', en: 'Bounding corners' } },
+    { value: 'box', field: 'box', required: true, label: { zh: '包围框', en: 'Bounding box' } },
+  ],
+  '@retikz/standard-react/shape#EllipseProps': [
+    { value: 'radius-0', field: 'radius', required: true, label: { zh: '轴半径', en: 'Axis radii' } },
+    { value: 'diameterX-1', field: 'diameterX', required: true, label: { zh: '轴直径', en: 'Axis diameters' } },
+    { value: 'corner1-2', field: 'corner1', required: true, label: { zh: '包围框角点', en: 'Bounding corners' } },
+    { value: 'box-3', field: 'box', required: true, label: { zh: '包围框', en: 'Bounding box' } },
+  ],
+  '@retikz/standard-vanilla/shape#InputEllipse': [
+    { value: 'radius-0', field: 'radius', required: true, label: { zh: '轴半径', en: 'Axis radii' } },
+    { value: 'diameterX-1', field: 'diameterX', required: true, label: { zh: '轴直径', en: 'Axis diameters' } },
+    { value: 'corner1-2', field: 'corner1', required: true, label: { zh: '包围框角点', en: 'Bounding corners' } },
+    { value: 'box-3', field: 'box', required: true, label: { zh: '包围框', en: 'Bounding box' } },
+  ],
+  '@retikz/standard/shape#IREllipse': [
+    { value: 'radius', field: 'radius', required: true, label: { zh: '轴半径', en: 'Axis radii' } },
+    { value: 'diameterX', field: 'diameterX', required: true, label: { zh: '轴直径', en: 'Axis diameters' } },
+    { value: 'corner1', field: 'corner1', required: true, label: { zh: '包围框角点', en: 'Bounding corners' } },
+    { value: 'box', field: 'box', required: true, label: { zh: '包围框', en: 'Bounding box' } },
+  ],
+  '@retikz/standard-react/shape#RectangleProps': [
+    { value: 'corner2-0', field: 'corner2', required: true, label: { zh: '对角点', en: 'Opposite corners' } },
+    {
+      value: 'center-1',
+      field: 'center',
+      required: true,
+      and: [{ field: 'width', required: true }],
+      label: { zh: '中心与宽高', en: 'Center and dimensions' },
+    },
+    { value: 'side-2', field: 'side', required: true, label: { zh: '正方形', en: 'Square' } },
+    {
+      value: 'width-3',
+      field: 'width',
+      required: true,
+      and: [{ field: 'corner1', required: true }],
+      label: { zh: '角点与宽高', en: 'Corner and dimensions' },
+    },
+  ],
+  '@retikz/standard-vanilla/shape#InputRectangle': [
+    { value: 'corner2-0', field: 'corner2', required: true, label: { zh: '对角点', en: 'Opposite corners' } },
+    {
+      value: 'center-1',
+      field: 'center',
+      required: true,
+      and: [{ field: 'width', required: true }],
+      label: { zh: '中心与宽高', en: 'Center and dimensions' },
+    },
+    { value: 'side-2', field: 'side', required: true, label: { zh: '正方形', en: 'Square' } },
+    {
+      value: 'width-3',
+      field: 'width',
+      required: true,
+      and: [{ field: 'corner1', required: true }],
+      label: { zh: '角点与宽高', en: 'Corner and dimensions' },
+    },
+  ],
+  '@retikz/standard/shape#IRRectangle': [
+    { value: 'corner2', field: 'corner2', required: true, label: { zh: '对角点', en: 'Opposite corners' } },
+    {
+      value: 'center',
+      field: 'center',
+      required: true,
+      and: [{ field: 'width', required: true }],
+      label: { zh: '中心与宽高', en: 'Center and dimensions' },
+    },
+    { value: 'side', field: 'side', required: true, label: { zh: '正方形', en: 'Square' } },
+    {
+      value: 'width',
+      field: 'width',
+      required: true,
+      and: [{ field: 'corner1', required: true }],
+      label: { zh: '角点与宽高', en: 'Corner and dimensions' },
+    },
+  ],
+  '@retikz/standard-react/shape#PolygonProps': [
+    { value: 'radius-0', field: 'radius', required: true, label: { zh: '外接半径', en: 'Circumradius' } },
+    { value: 'sideLength-1', field: 'sideLength', required: true, label: { zh: '边长', en: 'Side length' } },
+  ],
+  '@retikz/standard-react/shape#StarProps': [
+    { value: 'innerRadius-0', field: 'innerRadius', required: true, label: { zh: '内半径', en: 'Inner radius' } },
+    {
+      value: 'innerRatio-1',
+      field: 'innerRatio',
+      type: 'number',
+      label: { zh: '内半径比例', en: 'Inner radius ratio' },
+    },
+  ],
+  '@retikz/standard-react/shape#SectorProps': [
+    { value: 'innerRadius-0', field: 'innerRadius', type: '0', label: { zh: '圆形扇区', en: 'Circular sector' } },
+    {
+      value: 'innerRadius-1',
+      field: 'innerRadius',
+      type: '{ x: 0; y: 0; }',
+      label: { zh: '椭圆扇区', en: 'Elliptical sector' },
+    },
+    { value: 'innerRadius-2', field: 'innerRadius', type: 'number', label: { zh: '圆环扇区', en: 'Annular sector' } },
+    {
+      value: 'innerRadius-3',
+      field: 'innerRadius',
+      type: '{ x: number; y: number; }',
+      label: { zh: '椭圆环扇区', en: 'Elliptical annular sector' },
+    },
+  ],
+  '@retikz/standard-vanilla/shape#InputSector': [
+    { value: 'innerRadius-0', field: 'innerRadius', type: '0', label: { zh: '圆形扇区', en: 'Circular sector' } },
+    {
+      value: 'innerRadius-1',
+      field: 'innerRadius',
+      type: '{ x: 0; y: 0; }',
+      label: { zh: '椭圆扇区', en: 'Elliptical sector' },
+    },
+    { value: 'innerRadius-2', field: 'innerRadius', type: 'number', label: { zh: '圆环扇区', en: 'Annular sector' } },
+    {
+      value: 'innerRadius-3',
+      field: 'innerRadius',
+      type: '{ x: number; y: number; }',
+      label: { zh: '椭圆环扇区', en: 'Elliptical annular sector' },
+    },
+  ],
+  '@retikz/standard/shape#IRSector': [
+    { value: 'circular', field: 'innerRadius', type: '0', label: { zh: '圆形扇区', en: 'Circular sector' } },
+    {
+      value: 'elliptical',
+      field: 'innerRadius',
+      type: '{ x: 0; y: 0; }',
+      label: { zh: '椭圆扇区', en: 'Elliptical sector' },
+    },
+    { value: 'annular', field: 'innerRadius', type: 'number', label: { zh: '圆环扇区', en: 'Annular sector' } },
+    {
+      value: 'elliptical-annular',
+      field: 'innerRadius',
+      type: '{ x: number; y: number; }',
+      label: { zh: '椭圆环扇区', en: 'Elliptical annular sector' },
+    },
+  ],
+  '@retikz/graph-vanilla#RelationInputEmbedProps': [
+    { value: 'route', field: 'way', type: 'never', label: { zh: '路径步骤', en: 'Route steps' } },
+    { value: 'way', field: 'way', required: true, label: { zh: 'Way 路径', en: 'Way path' } },
+  ],
+  '@retikz/standard-react/collection#ArrayProps': [
+    { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
+    { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },
+    { value: 'skeleton', field: 'skeleton', required: true, label: { zh: '示意骨架', en: 'Skeleton' } },
+    { value: 'children', field: 'children', type: 'ReactNode', label: { zh: 'JSX 子项', en: 'JSX children' } },
+  ],
+  '@retikz/standard-react/collection#MatrixProps': [
+    { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
+    { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },
+    { value: 'skeleton', field: 'skeleton', required: true, label: { zh: '示意骨架', en: 'Skeleton' } },
+    { value: 'children', field: 'children', type: 'ReactNode', label: { zh: 'JSX 子项', en: 'JSX children' } },
+  ],
+  '@retikz/standard-react/collection#MapProps': [
+    { value: 'entries', field: 'entries', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
+    { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },
+    { value: 'skeleton', field: 'skeleton', required: true, label: { zh: '示意骨架', en: 'Skeleton' } },
+    { value: 'children', field: 'children', type: 'ReactNode', label: { zh: 'JSX 子项', en: 'JSX children' } },
+  ],
+  '@retikz/graph#IRBlockRow': [
+    { value: 'text', field: 'content', required: true, label: { zh: '文本内容', en: 'Text content' } },
+    {
+      value: 'children',
+      field: 'children',
+      type: 'Array<IRChild>',
+      label: { zh: '任意子元素', en: 'Arbitrary children' },
+    },
+  ],
+  '@retikz/graph-react#BlockRowProps': [
+    { value: 'text', field: 'content', required: true, label: { zh: '文本内容', en: 'Text content' } },
+    { value: 'children', field: 'content', type: 'never', label: { zh: '任意子元素', en: 'Arbitrary children' } },
+  ],
+  '@retikz/graph-vanilla#BlockRowInputEmbedProps': [
+    { value: 'text', field: 'content', required: true, label: { zh: '文本内容', en: 'Text content' } },
+    { value: 'children', field: 'content', type: 'never', label: { zh: '任意子元素', en: 'Arbitrary children' } },
+  ],
+  '@retikz/graph-vanilla#InputBlockRow': [
+    { value: 'text', field: 'content', required: true, label: { zh: '文本内容', en: 'Text content' } },
+    { value: 'children', field: 'content', type: 'never', label: { zh: '任意子元素', en: 'Arbitrary children' } },
+  ],
+  '@retikz/standard-react/presentation#LegendProps': [
+    {
+      value: 'items',
+      field: 'kind',
+      type: 'typeof LegendContentKind.Items',
+      label: { zh: '离散条目', en: 'Discrete items' },
+    },
+    {
+      value: 'ramp',
+      field: 'kind',
+      type: 'typeof LegendContentKind.Ramp',
+      label: { zh: '连续样本', en: 'Continuous sample' },
+    },
+  ],
+  '@retikz/graph-vanilla#InputRelation': [
+    { value: 'route', field: 'way', type: 'never', label: { zh: '路径步骤', en: 'Route steps' } },
+    { value: 'way', field: 'way', required: true, label: { zh: 'Way 路径', en: 'Way path' } },
+  ],
   '@retikz/diagram#FlowBezierRoute': [
     { value: 'curve', field: 'kind', type: "'curve'", label: { zh: '二次贝塞尔', en: 'Quadratic Bezier' } },
     { value: 'cubic', field: 'kind', type: "'cubic'", label: { zh: '三次贝塞尔', en: 'Cubic Bezier' } },
@@ -139,6 +361,27 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
     { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
   ],
+  '@retikz/standard-react/collection#ChainProps': [
+    {
+      value: 'items',
+      field: 'items',
+      required: true,
+      label: { zh: '显式单元格', en: 'Explicit cells' },
+    },
+    {
+      value: 'data',
+      field: 'data',
+      required: true,
+      label: { zh: 'JSON 数据', en: 'JSON data' },
+    },
+    {
+      value: 'skeleton',
+      field: 'skeleton',
+      required: true,
+      label: { zh: '示意骨架', en: 'Skeleton' },
+    },
+    { value: 'children', field: 'children', type: 'ReactNode', label: { zh: 'JSX 子项', en: 'JSX children' } },
+  ],
   '@retikz/standard-react/collection#ChainCellProps': [
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
@@ -155,19 +398,19 @@ export const apiReferenceBranchLabels: Readonly<
     {
       value: 'items',
       field: 'items',
-      type: `Array<IRChainItem>`,
+      required: true,
       label: { zh: '显式单元格', en: 'Explicit cells' },
     },
     {
       value: 'data',
       field: 'data',
-      type: `NonNullable<input<typeof ChainSchema>['data']>`,
+      required: true,
       label: { zh: 'JSON 数据', en: 'JSON data' },
     },
     {
       value: 'skeleton',
       field: 'skeleton',
-      type: `IRChainSkeleton`,
+      required: true,
       label: { zh: '示意骨架', en: 'Skeleton' },
     },
   ],
@@ -175,19 +418,19 @@ export const apiReferenceBranchLabels: Readonly<
     {
       value: 'items',
       field: 'items',
-      type: `Array<InputChainItem>`,
+      required: true,
       label: { zh: '显式单元格', en: 'Explicit cells' },
     },
     {
       value: 'data',
       field: 'data',
-      type: `NonNullable<IRChain['data']>`,
+      required: true,
       label: { zh: 'JSON 数据', en: 'JSON data' },
     },
     {
       value: 'skeleton',
       field: 'skeleton',
-      type: `NonNullable<IRChain['skeleton']>`,
+      required: true,
       label: { zh: '示意骨架', en: 'Skeleton' },
     },
   ],

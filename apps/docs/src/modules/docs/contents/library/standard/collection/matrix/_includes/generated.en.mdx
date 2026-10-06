@@ -7,6 +7,102 @@
 - `Matrix`: <ApiSourceLink label={"Matrix"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={85}>Standard Matrix presentation component</ApiSourceLink>
 - `MatrixProps`: <ApiSourceLink label={"MatrixProps"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={15}>React inputs for Matrix; omitting all inputs creates an empty matrix</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRMatrix['animations']`                                                                 | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`     | `"index" \| "explicit"`                                                                  | `"explicit"` | Explicit cell ids or zero-based row/column ids derived from the Matrix id.                                                                      |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaults?`       | `IRMatrix['defaults']`                                                                   | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`          | `IRMatrix['index']`                                                                      | `false`      | False hides both axes; true enables both; objects configure axes independently.                                                                 |
+| `label?`          | `IRMatrix['label']`                                                                      | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `IRMatrix['layout']`                                                                     | —            | Cell dimensions, padding, overflow, and row or column gaps.                                                                                     |
+| `localNamespace?` | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`      | `IRMatrix['placement']`                                                                  | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `IRMatrix['style']`                                                                      | —            | Sparse visual overrides for a collection cell.                                                                                                  |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `IRMatrix['transforms']`                                                                 | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                                | Default | Description                                                  |
+| ------------- | ----------------------------------- | ------- | ------------------------------------------------------------ |
+| `children?`   | `never`                             | —       | —                                                            |
+| `data?`       | `never`                             | —       | —                                                            |
+| `dataExpand?` | `never`                             | —       | —                                                            |
+| `items`       | `Array<Array<string \| CellProps>>` | —       | Explicit rows of cells, each accepting text or a styled cell |
+| `skeleton?`   | `never`                             | —       | —                                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                            | Default | Description                                                                           |
+| ------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `children?`   | `never`                         | —       | —                                                                                     |
+| `data`        | `NonNullable<IRMatrix['data']>` | —       | Two-dimensional data expanded into matrix cells, mutually exclusive with other inputs |
+| `dataExpand?` | `IRMatrix['dataExpand']`        | —       | Data expansion policy used only by the data input                                     |
+| `items?`      | `never`                         | —       | —                                                                                     |
+| `skeleton?`   | `never`                         | —       | —                                                                                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                                | Default | Description                                                             |
+| ------------- | ----------------------------------- | ------- | ----------------------------------------------------------------------- |
+| `children?`   | `never`                             | —       | —                                                                       |
+| `data?`       | `never`                             | —       | —                                                                       |
+| `dataExpand?` | `never`                             | —       | —                                                                       |
+| `items?`      | `never`                             | —       | —                                                                       |
+| `skeleton`    | `NonNullable<IRMatrix['skeleton']>` | —       | Schematic matrix rows and columns, mutually exclusive with other inputs |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX children">
+
+<ApiTable>
+
+| Member        | Type        | Default | Description                                                  |
+| ------------- | ----------- | ------- | ------------------------------------------------------------ |
+| `children?`   | `ReactNode` | —       | Matrix rows and cells declared with MatrixRow and MatrixCell |
+| `data?`       | `never`     | —       | —                                                            |
+| `dataExpand?` | `never`     | —       | —                                                            |
+| `items?`      | `never`     | —       | —                                                            |
+| `skeleton?`   | `never`     | —       | —                                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const Matrix: {
   (props: MatrixProps, context?: any): ReactNode;
@@ -44,6 +140,10 @@ export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
       }
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### MatrixRow / MatrixRowProps
 
@@ -83,19 +183,30 @@ export type MatrixRowProps = {
 - `MatrixCell`: <ApiSourceLink label={"MatrixCell"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={10}>Direct cell declaration for MatrixRow</ApiSourceLink>
 - `MatrixCellProps`: <ApiSourceLink label={"MatrixCellProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={7}>Text or one drawable in a Matrix cell; omitting both leaves an empty cell</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member    | Type                        | Default | Description                                                                                         |
+| --------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `id?`     | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?` | `CellMarkerProps['layout']` | —       | —                                                                                                   |
+| `style?`  | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="text">
 
 <DocTab value="text" label="Members · Text or empty cell">
 
 <ApiTable>
 
-| Member      | Type                        | Default | Description                                                                                         |
-| ----------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children?` | `never`                     | —       | —                                                                                                   |
-| `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
-| `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
-| `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                    | —       | Cell text, mutually exclusive with drawing content                                                  |
+| Member      | Type     | Default | Description                                        |
+| ----------- | -------- | ------- | -------------------------------------------------- |
+| `children?` | `never`  | —       | —                                                  |
+| `text?`     | `string` | —       | Cell text, mutually exclusive with drawing content |
 
 </ApiTable>
 
@@ -105,13 +216,10 @@ export type MatrixRowProps = {
 
 <ApiTable>
 
-| Member     | Type                        | Default | Description                                                                                         |
-| ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                 | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
-| `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
-| `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
-| `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`    | `never`                     | —       | —                                                                                                   |
+| Member     | Type        | Default | Description                                                        |
+| ---------- | ----------- | ------- | ------------------------------------------------------------------ |
+| `children` | `ReactNode` | —       | Exactly one compilable drawing child, mutually exclusive with text |
+| `text?`    | `never`     | —       | —                                                                  |
 
 </ApiTable>
 
@@ -135,6 +243,83 @@ export type MatrixCellProps = CellMarkerProps;
 
 - `matrix`: <ApiSourceLink label={"matrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={83}>Create a Matrix embed retaining its original input</ApiSourceLink>
 - `InputMatrix`: <ApiSourceLink label={"InputMatrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={11}>Three mutually exclusive Vanilla inputs for Matrix; items accepts nested drawables</ApiSourceLink>
+
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRMatrix['animations']`                                                                 | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`     | `"index" \| "explicit"`                                                                  | `"explicit"` | Explicit cell ids or zero-based row/column ids derived from the Matrix id.                                                                      |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaults?`       | `IRMatrix['defaults']`                                                                   | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`          | `IRMatrix['index']`                                                                      | `false`      | False hides both axes; true enables both; objects configure axes independently.                                                                 |
+| `label?`          | `IRMatrix['label']`                                                                      | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `IRMatrix['layout']`                                                                     | —            | Cell dimensions, padding, overflow, and row or column gaps.                                                                                     |
+| `localNamespace?` | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`      | `IRMatrix['placement']`                                                                  | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `IRMatrix['style']`                                                                      | —            | Sparse visual overrides for a collection cell.                                                                                                  |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `IRMatrix['transforms']`                                                                 | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                                | Default | Description                                              |
+| ------------- | ----------------------------------- | ------- | -------------------------------------------------------- |
+| `data?`       | `never`                             | —       | —                                                        |
+| `dataExpand?` | `never`                             | —       | —                                                        |
+| `items`       | `Array<Array<string \| InputCell>>` | —       | Rows of cells, mutually exclusive with data and skeleton |
+| `skeleton?`   | `never`                             | —       | —                                                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                            | Default | Description                                                                       |
+| ------------- | ------------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `data`        | `NonNullable<IRMatrix['data']>` | —       | Two-dimensional data expanded into a matrix, mutually exclusive with other inputs |
+| `dataExpand?` | `IRMatrix['dataExpand']`        | —       | Expansion policy used only by the data input                                      |
+| `items?`      | `never`                         | —       | —                                                                                 |
+| `skeleton?`   | `never`                         | —       | —                                                                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                                | Default | Description                                                             |
+| ------------- | ----------------------------------- | ------- | ----------------------------------------------------------------------- |
+| `data?`       | `never`                             | —       | —                                                                       |
+| `dataExpand?` | `never`                             | —       | —                                                                       |
+| `items?`      | `never`                             | —       | —                                                                       |
+| `skeleton`    | `NonNullable<IRMatrix['skeleton']>` | —       | Schematic matrix rows and columns, mutually exclusive with other inputs |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const matrix: (input: InputMatrix) => InputEmbed<InputMatrix>;
@@ -161,6 +346,10 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
       }
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### MatrixInputEmbedAdapter
 
@@ -192,6 +381,85 @@ export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<Input
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRScopeProps['animations']`                                                             | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`     | `"explicit" \| "index"`                                                                  | `"explicit"` | Explicit cell ids or zero-based row/column ids derived from the Matrix id.                                                                      |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`          | `IRMatrix["index"]`                                                                      | `false`      | False hides both axes; true enables both; objects configure axes independently.                                                                 |
+| `label?`          | `IRMatrix["label"]`                                                                      | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `IRMatrix["layout"]`                                                                     | —            | Cell dimensions, padding, overflow, and row or column gaps.                                                                                     |
+| `localNamespace?` | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `namespace`       | `"standard"`                                                                             | —            | Standard composite namespace.                                                                                                                   |
+| `placement?`      | `IRScopeProps['placement']`                                                              | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `IRMatrix["style"]`                                                                      | —            | Sparse visual overrides for a collection cell.                                                                                                  |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `IRScopeProps['transforms']`                                                             | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `type`            | `"matrix"`                                                                               | —            | Rectangular cell presentation.                                                                                                                  |
+| `zIndex?`         | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                             | Default | Description                    |
+| ------------- | -------------------------------- | ------- | ------------------------------ |
+| `data?`       | `never`                          | —       | —                              |
+| `dataExpand?` | `never`                          | —       | —                              |
+| `items`       | `Array<Array<string \| IRCell>>` | —       | Explicit two-dimensional cells |
+| `skeleton?`   | `never`                          | —       | —                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                                              | Default | Description                                                         |
+| ------------- | ------------------------------------------------- | ------- | ------------------------------------------------------------------- |
+| `data`        | `NonNullable<input<typeof MatrixSchema>['data']>` | —       | Two-dimensional JSON data; nested cell structures follow dataExpand |
+| `dataExpand?` | `input<typeof MatrixSchema>['dataExpand']`        | —       | Select expansion of objects and arrays inside cells                 |
+| `items?`      | `never`                                           | —       | —                                                                   |
+| `skeleton?`   | `never`                                           | —       | —                                                                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                                                  | Default | Description                                                 |
+| ------------- | ----------------------------------------------------- | ------- | ----------------------------------------------------------- |
+| `data?`       | `never`                                               | —       | —                                                           |
+| `dataExpand?` | `never`                                               | —       | —                                                           |
+| `items?`      | `never`                                               | —       | —                                                           |
+| `skeleton`    | `NonNullable<input<typeof MatrixSchema>['skeleton']>` | —       | An empty rectangle or inside-cell symbols without real data |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type IRMatrix = Omit<
   input<typeof MatrixSchema>,
@@ -220,6 +488,10 @@ export type IRMatrix = Omit<
   );
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### IRMatrixAxisIndex
 
 <p>
@@ -232,18 +504,29 @@ export type IRMatrix = Omit<
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                                                                                                                                                                                  | Default    | Description                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------- |
+| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | Before means above a row or left of a column; after means below or right. |
+| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | Index text appearance; cell-level styles do not affect indices.           |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="automatic">
 
 <DocTab value="automatic" label="Members · Automatic numbering">
 
 <ApiTable>
 
-| Member      | Type                                                                                                                                                                                                                                                                                                                  | Default    | Description                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------- |
-| `labels?`   | `never`                                                                                                                                                                                                                                                                                                               | —          | Not accepted in this input branch.                                        |
-| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | Before means above a row or left of a column; after means below or right. |
-| `start?`    | `number`                                                                                                                                                                                                                                                                                                              | `0`        | First displayed index; not cell identity.                                 |
-| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | Index text appearance; cell-level styles do not affect indices.           |
+| Member    | Type     | Default | Description                               |
+| --------- | -------- | ------- | ----------------------------------------- |
+| `labels?` | `never`  | —       | Not accepted in this input branch.        |
+| `start?`  | `number` | `0`     | First displayed index; not cell identity. |
 
 </ApiTable>
 
@@ -253,12 +536,10 @@ export type IRMatrix = Omit<
 
 <ApiTable>
 
-| Member      | Type                                                                                                                                                                                                                                                                                                                  | Default    | Description                                                                      |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| `labels`    | `Array<string>`                                                                                                                                                                                                                                                                                                       | —          | Outside labels in cell order; empty text hides a label. Length must match cells. |
-| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | Before means above a row or left of a column; after means below or right.        |
-| `start?`    | `never`                                                                                                                                                                                                                                                                                                               | —          | Not accepted in this input branch.                                               |
-| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | Index text appearance; cell-level styles do not affect indices.                  |
+| Member   | Type            | Default | Description                                                                      |
+| -------- | --------------- | ------- | -------------------------------------------------------------------------------- |
+| `labels` | `Array<string>` | —       | Outside labels in cell order; empty text hides a label. Length must match cells. |
+| `start?` | `never`         | —       | Not accepted in this input branch.                                               |
 
 </ApiTable>
 

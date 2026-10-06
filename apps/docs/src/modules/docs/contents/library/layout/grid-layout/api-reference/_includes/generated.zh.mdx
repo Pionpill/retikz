@@ -47,22 +47,33 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
 - `GridLayoutItem`：<ApiSourceLink label={"GridLayoutItem"} path={"packages/library/layout-react/src/layout-item/GridLayoutItem.tsx"} startLine={16}>由 GridLayout 静态读取的直属布局子项</ApiSourceLink>
 - `GridLayoutItemProps`：<ApiSourceLink label={"GridLayoutItemProps"} path={"packages/library/layout-react/src/layout-item/GridLayoutItem.tsx"} startLine={8}>GridLayout 直属 item 的 React authoring props</ApiSourceLink>
 
-<DocTabs defaultValue="jsx">
-
-<DocTab value="jsx" label="属性 · JSX 子元素">
+**公共属性**
 
 <ApiTable>
 
 | 成员                | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
 | `alignSelf?`        | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —      | 覆盖垂直对齐                                           |
-| `readonly children` | `ReactNode`                                                                                                                                                                                                        | —      | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir           |
 | `column?`           | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 列放置范围                                             |
-| `readonly ir?`      | `never`                                                                                                                                                                                                            | —      | JSX 分支不接受 IR 输入                                 |
 | `readonly itemKey?` | `string`                                                                                                                                                                                                           | —      | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
 | `justifySelf?`      | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —      | 覆盖水平对齐                                           |
 | `margin?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`    | 轨道区域内缩前的子项外边距                             |
 | `row?`              | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 行放置范围                                             |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="jsx">
+
+<DocTab value="jsx" label="属性 · JSX 子元素">
+
+<ApiTable>
+
+| 成员                | 类型        | 默认值 | 说明                                         |
+| ------------------- | ----------- | ------ | -------------------------------------------- |
+| `readonly children` | `ReactNode` | —      | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir |
+| `readonly ir?`      | `never`     | —      | JSX 分支不接受 IR 输入                       |
 
 </ApiTable>
 
@@ -72,16 +83,10 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
 
 <ApiTable>
 
-| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
-| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —      | 覆盖垂直对齐                                           |
-| `readonly children?` | `never`                                                                                                                                                                                                            | —      | IR 分支不接受 JSX 子元素                               |
-| `column?`            | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 列放置范围                                             |
-| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                   | —      | 已声明的可序列化子图形；不能同时传 children            |
-| `readonly itemKey?`  | `string`                                                                                                                                                                                                           | —      | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
-| `justifySelf?`       | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —      | 覆盖水平对齐                                           |
-| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`    | 轨道区域内缩前的子项外边距                             |
-| `row?`               | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —      | 行放置范围                                             |
+| 成员                 | 类型                             | 默认值 | 说明                                        |
+| -------------------- | -------------------------------- | ------ | ------------------------------------------- |
+| `readonly children?` | `never`                          | —      | IR 分支不接受 JSX 子元素                    |
+| `readonly ir`        | `InputEmbedContribution['node']` | —      | 已声明的可序列化子图形；不能同时传 children |
 
 </ApiTable>
 

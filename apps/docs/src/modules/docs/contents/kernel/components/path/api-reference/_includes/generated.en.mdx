@@ -537,9 +537,7 @@ export type EllipsePathStepProps = {
 
 `-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg
 
-<DocTabs defaultValue="two-segments">
-
-<DocTab value="two-segments" label="Members · Two segments">
+**Common members**
 
 <ApiTable>
 
@@ -549,7 +547,20 @@ export type EllipsePathStepProps = {
 | `kind`      | `'fold'`         | —       | Discriminant for a fold step |
 | `label?`    | `InputStepLabel` | —       | Edge label                   |
 | `to`        | `DslTarget`      | —       | Fold endpoint                |
-| `via`       | `'-\|' \| '\|-'` | —       | Two-segment fold direction   |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="two-segments">
+
+<DocTab value="two-segments" label="Members · Two segments">
+
+<ApiTable>
+
+| Member | Type             | Default | Description                |
+| ------ | ---------------- | ------- | -------------------------- |
+| `via`  | `'-\|' \| '\|-'` | —       | Two-segment fold direction |
 
 </ApiTable>
 
@@ -561,11 +572,7 @@ export type EllipsePathStepProps = {
 
 | Member      | Type                | Default | Description                           |
 | ----------- | ------------------- | ------- | ------------------------------------- |
-| `children?` | `ReactNode`         | —       | Sugar form                            |
 | `fraction?` | `number`            | `0.5`   | Normalized position of the middle leg |
-| `kind`      | `'fold'`            | —       | Discriminant for a fold step          |
-| `label?`    | `InputStepLabel`    | —       | Edge label                            |
-| `to`        | `DslTarget`         | —       | Fold endpoint                         |
 | `via`       | `'-\|-' \| '\|-\|'` | —       | Three-segment fold direction          |
 
 </ApiTable>

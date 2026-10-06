@@ -167,17 +167,28 @@ export type MathJaxSvgEngine = {
 
 Describes why the engine, MathJax parsing, or SVG lowering phase could not produce formula paths. It carries displayable or loggable failure facts only and does not recover errors; callers choose how to notify users through `LowerTexOptions.onDiagnostic`.
 
+**Common members**
+
+<ApiTable>
+
+| Member    | Type     | Default | Description                                                                 |
+| --------- | -------- | ------- | --------------------------------------------------------------------------- |
+| `message` | `string` | —       | Failure reason suitable for logging or display                              |
+| `source`  | `string` | —       | Failing TeX source text; an empty string for engine initialization failures |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="engine-error">
 
 <DocTab value="engine-error" label="Members · Engine failure">
 
 <ApiTable>
 
-| Member    | Type             | Default | Description                                                                 |
-| --------- | ---------------- | ------- | --------------------------------------------------------------------------- |
-| `kind`    | `'engine-error'` | —       | Engine initialization or execution failed                                   |
-| `message` | `string`         | —       | Failure reason suitable for logging or display                              |
-| `source`  | `string`         | —       | Failing TeX source text; an empty string for engine initialization failures |
+| Member | Type             | Default | Description                               |
+| ------ | ---------------- | ------- | ----------------------------------------- |
+| `kind` | `'engine-error'` | —       | Engine initialization or execution failed |
 
 </ApiTable>
 
@@ -187,11 +198,9 @@ Describes why the engine, MathJax parsing, or SVG lowering phase could not produ
 
 <ApiTable>
 
-| Member    | Type              | Default | Description                                                                 |
-| --------- | ----------------- | ------- | --------------------------------------------------------------------------- |
-| `kind`    | `'mathjax-error'` | —       | MathJax reported a formula parsing error                                    |
-| `message` | `string`          | —       | Failure reason suitable for logging or display                              |
-| `source`  | `string`          | —       | Failing TeX source text; an empty string for engine initialization failures |
+| Member | Type              | Default | Description                              |
+| ------ | ----------------- | ------- | ---------------------------------------- |
+| `kind` | `'mathjax-error'` | —       | MathJax reported a formula parsing error |
 
 </ApiTable>
 
@@ -201,11 +210,9 @@ Describes why the engine, MathJax parsing, or SVG lowering phase could not produ
 
 <ApiTable>
 
-| Member    | Type                | Default | Description                                                                 |
-| --------- | ------------------- | ------- | --------------------------------------------------------------------------- |
-| `kind`    | `'unsupported-svg'` | —       | Engine output contains unsupported SVG structures                           |
-| `message` | `string`            | —       | Failure reason suitable for logging or display                              |
-| `source`  | `string`            | —       | Failing TeX source text; an empty string for engine initialization failures |
+| Member | Type                | Default | Description                                       |
+| ------ | ------------------- | ------- | ------------------------------------------------- |
+| `kind` | `'unsupported-svg'` | —       | Engine output contains unsupported SVG structures |
 
 </ApiTable>
 
@@ -215,11 +222,9 @@ Describes why the engine, MathJax parsing, or SVG lowering phase could not produ
 
 <ApiTable>
 
-| Member    | Type              | Default | Description                                                                 |
-| --------- | ----------------- | ------- | --------------------------------------------------------------------------- |
-| `kind`    | `'malformed-svg'` | —       | The engine emitted malformed SVG                                            |
-| `message` | `string`          | —       | Failure reason suitable for logging or display                              |
-| `source`  | `string`          | —       | Failing TeX source text; an empty string for engine initialization failures |
+| Member | Type              | Default | Description                      |
+| ------ | ----------------- | ------- | -------------------------------- |
+| `kind` | `'malformed-svg'` | —       | The engine emitted malformed SVG |
 
 </ApiTable>
 
