@@ -83,14 +83,14 @@ export type RuntimeParticipantCandidateLookup = Readonly<{
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeSnapshot<TRead>;
   /**
-   * 读取 Computation candidate public artifact Snapshot
-   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
-   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
-   * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
-   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+   * 读取 Computation candidate public result Snapshot
+   * @template TResultInput run 或 update 产生、交给 result capture 的结果输入类型
+   * @template TResult capture 产生并由运行时持有和释放的计算结果类型
+   * @template TComputationRead 仅供当前计算的 update 读取旧结果的私有视图类型
+   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开结果视图类型
    */
-  artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-    computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
+  result: <TResultInput, TResult, TComputationRead, TPublicRead>(
+    computation: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
   ) => RuntimeSnapshot<TPublicRead>;
 }>;
 

@@ -39,12 +39,12 @@ describe('runtime runtime failure isolation', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: () => {
         throw cause;
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
 
     let thrown: unknown;
 
@@ -103,13 +103,13 @@ describe('runtime runtime failure isolation', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update: () => {
         throw cause;
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -143,7 +143,7 @@ describe('runtime runtime failure isolation', () => {
     expect(runtime.diagnostics()).toEqual([]);
     expect(runtime.revision()).toBe(0);
     expect(runtime.snapshot(owner)).toEqual({ revision: 0, value: 1 });
-    expect(runtime.artifact(computation)).toEqual({ revision: 0, value: 1 });
+    expect(runtime.result(computation)).toEqual({ revision: 0, value: 1 });
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
@@ -171,8 +171,8 @@ describe('runtime runtime failure isolation', () => {
       sources: [declared],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(declared).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(declared).value }),
       update: (_previous, view) => {
         if (view.snapshot(declared).value === 2) {
           try {
@@ -182,7 +182,7 @@ describe('runtime runtime failure isolation', () => {
             replayed = error;
           }
 
-          return { kind: RuntimeComputationKind.Incremental, artifact: 2 };
+          return { kind: RuntimeComputationKind.Incremental, result: 2 };
         }
 
         if (replayed === undefined) throw new Error('expected captured Runtime contract error');
@@ -190,7 +190,7 @@ describe('runtime runtime failure isolation', () => {
         throw replayed;
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -231,7 +231,7 @@ describe('runtime runtime failure isolation', () => {
     expect(runtime.diagnostics()).toEqual([]);
     expect(runtime.revision()).toBe(1);
     expect(runtime.snapshot(declared)).toEqual({ revision: 1, value: 2 });
-    expect(runtime.artifact(computation)).toEqual({ revision: 1, value: 2 });
+    expect(runtime.result(computation)).toEqual({ revision: 1, value: 2 });
   });
 
   it('observer throw 与 runtime reentry 不回滚 publish，后序 observer仍执行并进入 queue', () => {
@@ -252,11 +252,11 @@ describe('runtime runtime failure isolation', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update: (_previous, view) => ({
         kind: RuntimeComputationKind.Incremental,
-        artifact: view.snapshot(owner).value,
+        result: view.snapshot(owner).value,
       }),
       observeCommit: event => {
         if (event.phase === RuntimeComputationPhase.Initial) return;
@@ -266,7 +266,7 @@ describe('runtime runtime failure isolation', () => {
 
         const reentrantCalls = [
           () => activeRuntime.snapshot(owner),
-          () => activeRuntime.artifact(first),
+          () => activeRuntime.result(first),
           () => activeRuntime.update({ baseRevision: activeRuntime.revision(), sources: [] }),
           () => activeRuntime.dispose(),
           () => activeRuntime.diagnostics(),
@@ -285,17 +285,17 @@ describe('runtime runtime failure isolation', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update: (_previous, view) => ({
         kind: RuntimeComputationKind.Incremental,
-        artifact: view.snapshot(owner).value,
+        result: view.snapshot(owner).value,
       }),
       observeCommit: event => {
         if (event.phase === RuntimeComputationPhase.Update) secondObserver(event);
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [second, first] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [second, first] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -319,7 +319,7 @@ describe('runtime runtime failure isolation', () => {
       }),
     ]);
     expect(secondObserver).toHaveBeenCalledOnce();
-    expect(runtime.artifact(second)).toEqual({ revision: 1, value: 2 });
+    expect(runtime.result(second)).toEqual({ revision: 1, value: 2 });
     expect(runtime.diagnostics()).toEqual(result.diagnostics);
     expect(runtime.diagnostics()).toEqual([]);
   });
@@ -341,14 +341,14 @@ describe('runtime runtime failure isolation', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: (view, context) => {
         context.diagnose({
           code: 'INITIAL_WARNING',
           phase: 'run',
           message: 'initial warning',
         });
-        return { kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value };
       },
       observeCommit: event => {
         observedPrefixes.push(event.diagnostics);
@@ -361,14 +361,14 @@ describe('runtime runtime failure isolation', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       observeCommit: event => {
         observedPrefixes.push(event.diagnostics);
         secondObserver(event);
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [second, first] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [second, first] });
 
     const runtime = createRuntime({
       sources,
@@ -377,7 +377,7 @@ describe('runtime runtime failure isolation', () => {
     });
 
     expect(runtime.revision()).toBe(0);
-    expect(runtime.artifact(second)).toEqual({ revision: 0, value: 1 });
+    expect(runtime.result(second)).toEqual({ revision: 0, value: 1 });
     expect(secondObserver).toHaveBeenCalledOnce();
     expect(observedPrefixes).toHaveLength(2);
     expect(observedPrefixes[0]).toBe(observedPrefixes[1]);

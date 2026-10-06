@@ -20,15 +20,15 @@ import { compileCoreSnapshot } from '../compile';
 import type { CoreSnapshotIndexRead } from './diff';
 import type { CoreComputationOptions } from './public';
 import { createFullSceneRuntimeSnapshot, freezeComputationOutput } from './snapshot';
-import type { CoreComputationArtifactInput, CoreComputationRead } from './types';
+import type { CoreComputationResultInput, CoreComputationRead } from './types';
 
 /**
  * 单个 root Node 样式更新产生的 private incremental candidate
  * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
 export type CoreRootNodeStyleCandidate<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
-  /** 交给 Runtime capture 的完整 candidate artifact */
-  artifact: CoreComputationArtifactInput<TComposites>;
+  /** 交给 Runtime capture 的完整 candidate result */
+  result: CoreComputationResultInput<TComposites>;
   /** 复用的 committed root child 数 */
   reused: number;
   /** 规范化 Scene Patch operation 数 */
@@ -266,7 +266,7 @@ export const tryCompileRootNodeStyleUpdate = <
   });
 
   return Object.freeze({
-    artifact: Object.freeze({
+    result: Object.freeze({
       publicRead,
       state: Object.freeze({ source: nextSource, index: nextIndex }),
     }),

@@ -22,12 +22,12 @@ const counter = defineRuntimeSource<number, number, number, never>({
 const doubled = defineRuntimeComputation({
   id: { owner: 'example/counter', key: 'doubled' },
   sources: [counter],
-  run: view => ({ kind: 'full', artifact: view.snapshot(counter).value * 2 }),
+  run: view => ({ kind: 'full', result: view.snapshot(counter).value * 2 }),
 });
 
 const sources = createRuntimeSourceRegistry([counter]);
 
-const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
+const computations = createRuntimeComputationRegistry({ sources, computations: [doubled] });
 
 /** 一次完整更新的输入值与显示语言 */
 export type CounterResultPreviewProps = { initial: number; next: number; lang: Lang };
@@ -44,23 +44,23 @@ export const CounterResultPreview: FC<CounterResultPreviewProps> = props => {
 
   try {
     const before = runtime.snapshot(counter);
-    const beforeArtifact = runtime.artifact(doubled);
+    const beforeResult = runtime.result(doubled);
     const update = runtime.update({
       baseRevision: runtime.revision(),
       sources: [createRuntimeSourceUpdate(counter, next)],
     });
     const after = runtime.snapshot(counter);
-    const afterArtifact = runtime.artifact(doubled);
+    const afterResult = runtime.result(doubled);
 
     return (
       <Layout viewBox={{ x: -145, y: -40, width: 290, height: 190 }}>
         <Node
           position={[0, 0]}
-          text={`${i18n.initial} · revision ${before.revision}\n${i18n.count}: ${before.value}   ${i18n.result}: ${beforeArtifact.value}`}
+          text={`${i18n.initial} · revision ${before.revision}\n${i18n.count}: ${before.value}   ${i18n.result}: ${beforeResult.value}`}
         />
         <Node
           position={[0, 75]}
-          text={`${i18n.updated} · revision ${after.revision}\n${i18n.count}: ${after.value}   ${i18n.result}: ${afterArtifact.value}`}
+          text={`${i18n.updated} · revision ${after.revision}\n${i18n.count}: ${after.value}   ${i18n.result}: ${afterResult.value}`}
         />
         <Node
           position={[0, 125]}

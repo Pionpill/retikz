@@ -115,10 +115,10 @@ describe('runtime runtime validation', () => {
       sources: [declared],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(hidden).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(hidden).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
 
     expect(() =>
       createRuntime({
@@ -129,7 +129,7 @@ describe('runtime runtime validation', () => {
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
   });
 
-  it('CandidateView 拒绝读取已注册但未声明的 Computation artifact', () => {
+  it('CandidateView 拒绝读取已注册但未声明的 Computation result', () => {
     const owner = defineSource('counter');
     const sources = createRuntimeSourceRegistry([owner]);
     const upstream = defineRuntimeComputation<number, number, number, number>({
@@ -137,18 +137,18 @@ describe('runtime runtime validation', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
     });
     const hiddenReader = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'b-hidden-reader' },
       sources: [],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.artifact(upstream).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.result(upstream).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [hiddenReader, upstream] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [hiddenReader, upstream] });
 
     expect(() =>
       createRuntime({

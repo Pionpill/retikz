@@ -216,7 +216,7 @@ const assertRetainedDisposeLifecycle = (backend: 'svg' | 'canvas', baseSource: I
       if (target === null) throw new Error('SVG retained lifecycle target is unavailable');
       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     } else {
-      const snapshot = value.session.artifact(value.coreComputation).value.snapshot;
+      const snapshot = value.session.result(value.coreComputation).value.snapshot;
       const client = toCanvasClientPoint(host as HTMLCanvasElement, snapshot, { x: 0, y: 0 });
       host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: client.x, clientY: client.y }));
       if (images.length === 0) throw new Error('Canvas retained lifecycle probe did not create an image resource');
@@ -529,7 +529,7 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
     runWithSession(backend, current, (host, records, value) => {
       const fullId = `${backend}-retained-full-5000`;
       const fullRecord = readRetainedFullRecord(fullId, backend, records);
-      const initialScene = value.session.artifact(value.coreComputation).value.snapshot.scene as unknown as Scene;
+      const initialScene = value.session.result(value.coreComputation).value.snapshot.scene as unknown as Scene;
       results.push(toResult(fullId, assertBackendOracle(fullId, backend, host, initialScene), fullRecord, liveHandles));
 
       const unchangedSvgNode = backend === 'svg' ? host.querySelector('[data-retikz-id="entity-00000"]') : undefined;
@@ -538,12 +538,12 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
         baseRevision: value.session.revision(),
         sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
       });
-      const artifact = value.session.artifact(value.coreComputation).value;
+      const result = value.session.result(value.coreComputation).value;
       const id = `${backend}-single-entity-update-5000`;
       if (
-        artifact.patch?.operations.length !== 1 ||
-        artifact.patch.operations[0]?.kind !== 'update' ||
-        artifact.patch.operations[0].subtree.primitive.type === 'group'
+        result.patch?.operations.length !== 1 ||
+        result.patch.operations[0]?.kind !== 'update' ||
+        result.patch.operations[0].subtree.primitive.type === 'group'
       ) {
         throw new Error(`${id}: Core did not produce one entity update`);
       }
@@ -568,12 +568,12 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
         baseRevision: value.session.revision(),
         sources: [createRuntimeSourceUpdate(CoreSourceDefinition, groupNext)],
       });
-      const artifact = value.session.artifact(value.coreComputation).value;
+      const result = value.session.result(value.coreComputation).value;
       const id = `${backend}-group-update-5000`;
       if (
-        artifact.patch?.operations.length !== 1 ||
-        artifact.patch.operations[0]?.kind !== 'update' ||
-        artifact.patch.operations[0].subtree.primitive.type !== 'group'
+        result.patch?.operations.length !== 1 ||
+        result.patch.operations[0]?.kind !== 'update' ||
+        result.patch.operations[0].subtree.primitive.type !== 'group'
       ) {
         throw new Error(`${id}: Core did not produce one stable Group subtree update`);
       }

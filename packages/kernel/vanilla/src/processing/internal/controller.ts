@@ -176,7 +176,7 @@ const createRetainedProcessingState = (
     VanillaCompileDriverRevisionSourceDefinition,
     ...(transactionParticipant?.sources ?? []),
   ]);
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
   let participantResult: ProcessingResult | undefined;
   let participantPrepared = initial;
@@ -188,7 +188,7 @@ const createRetainedProcessingState = (
     revisionPolicy: 'continuous',
     tracePhases: [],
     prepare: candidate => {
-      const output = candidate.artifact(coreComputation).value.output;
+      const output = candidate.result(coreComputation).value.output;
       const next = createProcessingResult(participantRevision, participantPrepared, output, compileSession);
       assertCurrent();
       const previous = participantResult;
@@ -247,7 +247,7 @@ const createRetainedProcessingState = (
   const commitDriver = (): void => {
     commitVanillaCompileOutput(
       compileSession,
-      resolveVanillaCompileOutput(compileSession, runtime.artifact(coreComputation).value.output),
+      resolveVanillaCompileOutput(compileSession, runtime.result(coreComputation).value.output),
     );
   };
 

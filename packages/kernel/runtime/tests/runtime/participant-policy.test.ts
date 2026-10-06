@@ -48,34 +48,34 @@ describe('runtime runtime participant revision policy', () => {
     explicit.dispose();
   });
 
-  it('affected participant 在声明 Computation 产生新 artifact 时执行并读取 candidate public artifact', () => {
+  it('affected participant 在声明 Computation 产生新 result 时执行并读取 candidate public result', () => {
     const owner = defineCounterSource('counter');
     const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, Readonly<{ value: number }>>({
-      id: { owner: 'counter', key: 'artifact' },
+      id: { owner: 'counter', key: 'result' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: value => value,
         readForComputation: value => value,
         read: value => Object.freeze({ value }),
       },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
-      update: (_previous, view) => ({ kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeComputationKind.Incremental, result: view.snapshot(owner).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const preparedValues: Array<number> = [];
     let committed: Readonly<{ value: number }> = Object.freeze({ value: -1 });
     const participant = defineRuntimeCommitParticipant({
-      key: 'artifact-consumer',
+      key: 'result-consumer',
       sources: [],
       computations: [computation],
       revisionPolicy: 'affected',
       tracePhases: [],
       prepare: candidate => {
         const previous = committed;
-        const next = candidate.artifact(computation).value;
+        const next = candidate.result(computation).value;
         preparedValues.push(next.value);
 
         return Object.freeze({
@@ -191,19 +191,19 @@ describe('runtime runtime participant revision policy', () => {
     const owner = defineCounterSource('forced-full');
     const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
-      id: { owner: 'forced-full', key: 'artifact' },
+      id: { owner: 'forced-full', key: 'result' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: value => value,
         readForComputation: value => value,
         read: value => value,
       },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
-      update: (_previous, view) => ({ kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeComputationKind.Incremental, result: view.snapshot(owner).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const preparedRevisions: Array<number> = [];
     const committedRevisions: Array<number> = [];
     const participant = defineRuntimeCommitParticipant({
@@ -249,7 +249,7 @@ describe('runtime runtime participant revision policy', () => {
 
   it('runtime dispose failure 不阻断反向 cleanup，并只重试失败 participant', () => {
     let ownerDisposeCalls = 0;
-    let artifactDisposeCalls = 0;
+    let resultDisposeCalls = 0;
     const owner = defineRuntimeSource<number, number, number, never>({
       key: 'counter',
       value: {
@@ -263,21 +263,21 @@ describe('runtime runtime participant revision policy', () => {
     });
     const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, number, number, number>({
-      id: { owner: 'counter', key: 'artifact' },
+      id: { owner: 'counter', key: 'result' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: value => value,
         readForComputation: value => value,
         read: value => value,
         dispose: () => {
-          artifactDisposeCalls += 1;
+          resultDisposeCalls += 1;
         },
       },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const calls: Array<string> = [];
     const trigger = new Error('dispose failed');
 
@@ -313,7 +313,7 @@ describe('runtime runtime participant revision policy', () => {
     expect(() => runtime.dispose()).not.toThrow();
     expect(calls).toEqual(['b', 'a', 'b']);
     expect(ownerDisposeCalls).toBe(1);
-    expect(artifactDisposeCalls).toBe(1);
+    expect(resultDisposeCalls).toBe(1);
     expect(runtime.diagnostics()).toEqual([
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: trigger, owner: 'b' }),
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: trigger, owner: 'b' }),
@@ -324,11 +324,11 @@ describe('runtime runtime participant revision policy', () => {
     expect(() => runtime.dispose()).not.toThrow();
     expect(calls).toEqual(['b', 'a', 'b', 'b']);
     expect(ownerDisposeCalls).toBe(1);
-    expect(artifactDisposeCalls).toBe(1);
+    expect(resultDisposeCalls).toBe(1);
     expect(runtime.diagnostics()).toEqual([]);
     expect(() => runtime.dispose()).not.toThrow();
     expect(calls).toEqual(['b', 'a', 'b', 'b']);
     expect(ownerDisposeCalls).toBe(1);
-    expect(artifactDisposeCalls).toBe(1);
+    expect(resultDisposeCalls).toBe(1);
   });
 });

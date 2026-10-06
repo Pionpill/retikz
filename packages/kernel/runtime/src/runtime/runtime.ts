@@ -2,7 +2,7 @@ import type {
   RuntimeCandidateLookup,
   RuntimeCandidateView,
   RuntimeCommitEvent,
-  RuntimePreparedComputationArtifact,
+  RuntimePreparedComputationResult,
   RuntimeComputationContext,
   RuntimeComputationDefinition,
   RuntimeComputationErasedExecutor,
@@ -57,7 +57,7 @@ type RuntimeSourceState = Readonly<{
 type RuntimeComputationState = Readonly<{
   definition: RuntimeComputationToken;
   executor: RuntimeComputationErasedExecutor;
-  prepared: RuntimePreparedComputationArtifact<unknown, unknown, unknown>;
+  prepared: RuntimePreparedComputationResult<unknown, unknown, unknown>;
 }>;
 
 type RuntimeComputationOutcome = Exclude<RuntimeComputationKind, typeof RuntimeComputationKind.Bailout>;
@@ -68,11 +68,11 @@ type RuntimePreparedParticipantState = Readonly<{
   takeDiagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
 }>;
 
-type NormalizedRunResult = Readonly<{ kind: typeof RuntimeComputationKind.Full; artifact: unknown }>;
+type NormalizedRunOutcome = Readonly<{ kind: typeof RuntimeComputationKind.Full; result: unknown }>;
 
-type NormalizedUpdateResult =
+type NormalizedUpdateOutcome =
   | Readonly<{ kind: typeof RuntimeComputationKind.Bailout }>
-  | Readonly<{ kind: typeof RuntimeComputationKind.Incremental; artifact: unknown }>
+  | Readonly<{ kind: typeof RuntimeComputationKind.Incremental; result: unknown }>
   | Readonly<{
       kind: typeof RuntimeComputationKind.Fallback;
       diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>>;
@@ -208,7 +208,7 @@ const traceDiagnosticCodes = {
 /** 失败 transaction 可从 Runtime 内部保留的 execution diagnostic 闭集 */
 const executionDiagnosticCodes = new Set<string>([
   ...Object.values(traceDiagnosticCodes),
-  RuntimeDiagnosticCode.ArtifactDisposeFailed,
+  RuntimeDiagnosticCode.ResultDisposeFailed,
   RuntimeDiagnosticCode.SourceDisposeFailed,
 ]);
 
@@ -366,64 +366,64 @@ const errorDiagnostics = (cause: unknown): ReadonlyArray<RuntimeDiagnostic> => {
 };
 
 /** 单次读取并归一化 JavaScript full callback 返回值 */
-const normalizeRunResult = (result: unknown, definition: RuntimeComputationToken): NormalizedRunResult => {
-  if (typeof result !== 'object' || result === null) {
-    throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, result);
+const normalizeRunOutcome = (outcome: unknown, definition: RuntimeComputationToken): NormalizedRunOutcome => {
+  if (typeof outcome !== 'object' || outcome === null) {
+    throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, outcome);
   }
 
   let kind: unknown;
-  let hasArtifact: boolean;
-  let artifact: unknown;
+  let hasResult: boolean;
+  let result: unknown;
 
   try {
-    kind = Reflect.get(result, 'kind');
-    hasArtifact = Object.prototype.hasOwnProperty.call(result, 'artifact');
-    artifact = hasArtifact ? Reflect.get(result, 'artifact') : undefined;
+    kind = Reflect.get(outcome, 'kind');
+    hasResult = Object.prototype.hasOwnProperty.call(outcome, 'result');
+    result = hasResult ? Reflect.get(outcome, 'result') : undefined;
   } catch (cause) {
     throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, cause);
   }
 
-  if (kind !== RuntimeComputationKind.Full || !hasArtifact) {
-    throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, result);
+  if (kind !== RuntimeComputationKind.Full || !hasResult) {
+    throw computationError(RetikzRuntimeErrorCode.ComputationRunFailed, 'run', definition, outcome);
   }
 
-  return Object.freeze({ kind: RuntimeComputationKind.Full, artifact });
+  return Object.freeze({ kind: RuntimeComputationKind.Full, result });
 };
 
 /** 单次读取并归一化 JavaScript incremental callback 返回值 */
-const normalizeUpdateResult = (result: unknown, definition: RuntimeComputationToken): NormalizedUpdateResult => {
-  if (typeof result !== 'object' || result === null) {
-    throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, result);
+const normalizeUpdateOutcome = (outcome: unknown, definition: RuntimeComputationToken): NormalizedUpdateOutcome => {
+  if (typeof outcome !== 'object' || outcome === null) {
+    throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, outcome);
   }
 
   let kind: unknown;
 
   try {
-    kind = Reflect.get(result, 'kind');
+    kind = Reflect.get(outcome, 'kind');
   } catch (cause) {
     throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, cause);
   }
 
   if (kind === RuntimeComputationKind.Bailout) return Object.freeze({ kind });
   if (kind === RuntimeComputationKind.Incremental) {
-    let hasArtifact: boolean;
-    let artifact: unknown;
+    let hasResult: boolean;
+    let result: unknown;
 
     try {
-      hasArtifact = Object.prototype.hasOwnProperty.call(result, 'artifact');
-      artifact = hasArtifact ? Reflect.get(result, 'artifact') : undefined;
+      hasResult = Object.prototype.hasOwnProperty.call(outcome, 'result');
+      result = hasResult ? Reflect.get(outcome, 'result') : undefined;
     } catch (cause) {
       throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, cause);
     }
 
-    if (hasArtifact) return Object.freeze({ kind, artifact });
+    if (hasResult) return Object.freeze({ kind, result });
   }
 
   if (kind === RuntimeComputationKind.Fallback) {
     let fallbackDiagnostics: unknown;
 
     try {
-      fallbackDiagnostics = Reflect.get(result, 'diagnostics');
+      fallbackDiagnostics = Reflect.get(outcome, 'diagnostics');
     } catch (cause) {
       throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, cause);
     }
@@ -455,27 +455,27 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeComputationTo
       }
 
       if (invalidDiagnostic)
-        throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, result);
+        throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, outcome);
 
       return Object.freeze({ kind, diagnostics: Object.freeze(diagnostics) });
     }
   }
 
-  throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, result);
+  throw computationError(RetikzRuntimeErrorCode.ComputationUpdateFailed, 'update', definition, outcome);
 };
 
-/** 捕获 artifact 并拒绝会把 current disposable artifact 重新交给 Runtime 的 alias */
-const prepareComputationArtifact = (
+/** 捕获 result 并拒绝会把 current disposable result 重新交给 Runtime 的 alias */
+const prepareComputationResult = (
   definition: RuntimeComputationToken,
   executor: RuntimeComputationErasedExecutor,
   input: unknown,
   previous?: RuntimeComputationState,
   diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
-): RuntimePreparedComputationArtifact<unknown, unknown, unknown> => {
-  let prepared: RuntimePreparedComputationArtifact<unknown, unknown, unknown>;
+): RuntimePreparedComputationResult<unknown, unknown, unknown> => {
+  let prepared: RuntimePreparedComputationResult<unknown, unknown, unknown>;
 
   try {
-    prepared = executor.prepareArtifact(input, previous?.prepared);
+    prepared = executor.prepareResult(input, previous?.prepared);
   } catch (cause) {
     if (cause instanceof RetikzRuntimeError) {
       throw withFailureDiagnostics(cause, Object.freeze([...diagnostics, ...cause.diagnostics]));
@@ -562,7 +562,7 @@ const createCandidateView = (
   const declaredComputations = new Set(executor.computations);
 
   const candidateError = (
-    candidatePhase: 'candidate-read' | 'candidate-change' | 'candidate-artifact',
+    candidatePhase: 'candidate-read' | 'candidate-change' | 'candidate-result',
     cause: unknown,
     source: string,
   ) => {
@@ -584,7 +584,7 @@ const createCandidateView = (
 
       return state.command.snapshot(source, state.prepared, candidateRevision);
     },
-    changed: source => {
+    isChanged: source => {
       if (!declaredSources.has(source)) {
         throw candidateError('candidate-change', source, source.key);
       }
@@ -598,16 +598,16 @@ const createCandidateView = (
 
       return changeSets.get(source)?.changeSet(source);
     },
-    artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-      dependency: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
+    result: <TResultInput, TResult, TComputationRead, TPublicRead>(
+      dependency: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
     ): RuntimeSnapshot<TPublicRead> => {
       if (!declaredComputations.has(dependency)) {
-        throw candidateError('candidate-artifact', dependency, computation.id.owner);
+        throw candidateError('candidate-result', dependency, computation.id.owner);
       }
 
       const state = computationStates.get(dependency);
       if (state === undefined) {
-        throw candidateError('candidate-artifact', dependency, computation.id.owner);
+        throw candidateError('candidate-result', dependency, computation.id.owner);
       }
 
       return state.executor.snapshot(dependency, state.prepared, candidateRevision);
@@ -624,7 +624,7 @@ const createCandidateView = (
       });
 };
 
-/** 运行一个 Computation callback 并捕获 artifact 双层 read */
+/** 运行一个 Computation callback 并捕获 result 双层 read */
 const runComputation = (
   phase: RuntimeComputationPhase,
   baseRevision: RuntimeRevision | undefined,
@@ -736,10 +736,10 @@ const runComputation = (
     }
 
     drainTraceDiagnostics();
-    let result: NormalizedUpdateResult;
+    let result: NormalizedUpdateOutcome;
 
     try {
-      result = normalizeUpdateResult(callbackResult, definition);
+      result = normalizeUpdateOutcome(callbackResult, definition);
     } catch (cause) {
       if (cause instanceof RetikzRuntimeError) {
         throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
@@ -757,7 +757,7 @@ const runComputation = (
         state: Object.freeze({
           definition,
           executor,
-          prepared: prepareComputationArtifact(definition, executor, result.artifact, previous, executionDiagnostics),
+          prepared: prepareComputationResult(definition, executor, result.result, previous, executionDiagnostics),
         }),
         outcome: RuntimeComputationKind.Incremental,
         diagnostics: Object.freeze([...diagnostics]),
@@ -784,10 +784,10 @@ const runComputation = (
   }
 
   drainTraceDiagnostics();
-  let result: NormalizedRunResult;
+  let result: NormalizedRunOutcome;
 
   try {
-    result = normalizeRunResult(callbackResult, definition);
+    result = normalizeRunOutcome(callbackResult, definition);
   } catch (cause) {
     if (cause instanceof RetikzRuntimeError) {
       throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
@@ -800,7 +800,7 @@ const runComputation = (
     state: Object.freeze({
       definition,
       executor,
-      prepared: prepareComputationArtifact(definition, executor, result.artifact, previous, executionDiagnostics),
+      prepared: prepareComputationResult(definition, executor, result.result, previous, executionDiagnostics),
     }),
     outcome:
       mode === RuntimeComputationExecution.Incremental || mode === RuntimeComputationExecution.Fallback
@@ -960,7 +960,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       if (prepared.state === undefined) {
         throw new RetikzRuntimeError({
           code: RetikzRuntimeErrorCode.InternalInvariant,
-          message: 'runtime: initial Computation returned no artifact',
+          message: 'runtime: initial Computation returned no result',
           phase: 'computation-prepare',
           cause: prepared,
         });
@@ -1015,13 +1015,13 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
 
           return sourceState.command.snapshot(source, sourceState.prepared, currentRevision);
         },
-        artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-          computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
+        result: <TResultInput, TResult, TComputationRead, TPublicRead>(
+          computation: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
         ): RuntimeSnapshot<TPublicRead> => {
           if (!declaredComputations.has(computation)) {
             const error = runtimeError(
               RetikzRuntimeErrorCode.UndeclaredDependency,
-              'participant-artifact',
+              'participant-result',
               computation,
               participant.key,
             );
@@ -1033,7 +1033,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           if (computationState === undefined) {
             const error = runtimeError(
               RetikzRuntimeErrorCode.UndeclaredDependency,
-              'participant-artifact',
+              'participant-result',
               computation,
               participant.key,
             );
@@ -1453,13 +1453,13 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
 
                 return sourceState.command.snapshot(source, sourceState.prepared, candidateRevision);
               },
-              artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-                computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
+              result: <TResultInput, TResult, TComputationRead, TPublicRead>(
+                computation: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
               ): RuntimeSnapshot<TPublicRead> => {
                 if (!declaredComputations.has(computation)) {
                   const error = runtimeError(
                     RetikzRuntimeErrorCode.UndeclaredDependency,
-                    'participant-artifact',
+                    'participant-result',
                     computation,
                     participant.key,
                   );
@@ -1471,7 +1471,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
                 if (computationState === undefined) {
                   const error = runtimeError(
                     RetikzRuntimeErrorCode.UndeclaredDependency,
-                    'participant-artifact',
+                    'participant-result',
                     computation,
                     participant.key,
                   );
@@ -1653,7 +1653,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             baseRevision,
             revision: currentRevision,
             outcome,
-            artifact: computationState.executor.snapshotToken(definition, computationState.prepared, currentRevision),
+            result: computationState.executor.snapshotToken(definition, computationState.prepared, currentRevision),
             diagnostics: frozenDiagnostics,
           });
 
@@ -1728,14 +1728,14 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
 
       return sourceState.command.snapshot(source, sourceState.prepared, currentRevision);
     },
-    artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-      computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
+    result: <TResultInput, TResult, TComputationRead, TPublicRead>(
+      computation: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
     ): RuntimeSnapshot<TPublicRead> => {
-      assertIdle('artifact');
+      assertIdle('result');
       options.computations.resolve(computation);
       const computationState = computationStates.get(computation);
       if (computationState === undefined)
-        throw runtimeError(RetikzRuntimeErrorCode.UndeclaredDependency, 'artifact', computation);
+        throw runtimeError(RetikzRuntimeErrorCode.UndeclaredDependency, 'result', computation);
 
       return computationState.executor.snapshot(computation, computationState.prepared, currentRevision);
     },
@@ -1841,7 +1841,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       phase: RuntimeComputationPhase.Initial,
       revision: currentRevision,
       outcome: RuntimeComputationKind.Full,
-      artifact: computationState.executor.snapshotToken(definition, computationState.prepared, currentRevision),
+      result: computationState.executor.snapshotToken(definition, computationState.prepared, currentRevision),
       diagnostics: frozenInitialDiagnostics,
     });
 

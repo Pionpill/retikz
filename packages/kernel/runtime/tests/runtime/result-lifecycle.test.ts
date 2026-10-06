@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RetikzRuntimeErrorCode } from '../../src';
-import type { RuntimeComputationArtifactDefinitionInput } from '../../src/computation';
+import type { RuntimeComputationResultDefinitionInput } from '../../src/computation';
 import { defineRuntimeComputation, RuntimeComputationKind } from '../../src/computation';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
 import { createRuntime } from '../../src/runtime';
@@ -19,23 +19,23 @@ const defineSource = (dispose = vi.fn()) =>
     },
   });
 
-type Artifact = Readonly<{ value: number }>;
+type Result = Readonly<{ value: number }>;
 
-type ArtifactDefinition = RuntimeComputationArtifactDefinitionInput<number, Artifact, number, number>;
+type ResultDefinition = RuntimeComputationResultDefinitionInput<number, Result, number, number>;
 
-describe('runtime Computation artifact lifecycle', () => {
+describe('runtime Computation result lifecycle', () => {
   const failureCases: ReadonlyArray<{
     name: string;
     expectedCode: string;
     expectedPhase: string;
-    artifact: (cause: Error, dispose: (artifact: Artifact) => void) => ArtifactDefinition;
+    result: (cause: Error, dispose: (result: Result) => void) => ResultDefinition;
     expectedDisposeCount: number;
   }> = [
     {
       name: 'capture',
-      expectedCode: RetikzRuntimeErrorCode.ArtifactCaptureFailed,
-      expectedPhase: 'artifact-capture',
-      artifact: (cause: Error, dispose: (artifact: Artifact) => void) => ({
+      expectedCode: RetikzRuntimeErrorCode.ResultCaptureFailed,
+      expectedPhase: 'result-capture',
+      result: (cause: Error, dispose: (result: Result) => void) => ({
         capture: () => {
           throw cause;
         },
@@ -47,9 +47,9 @@ describe('runtime Computation artifact lifecycle', () => {
     },
     {
       name: 'private read',
-      expectedCode: RetikzRuntimeErrorCode.ArtifactComputationReadFailed,
-      expectedPhase: 'artifact-computation-read',
-      artifact: (cause: Error, dispose: (artifact: Artifact) => void) => ({
+      expectedCode: RetikzRuntimeErrorCode.ResultComputationReadFailed,
+      expectedPhase: 'result-computation-read',
+      result: (cause: Error, dispose: (result: Result) => void) => ({
         capture: (value: number) => Object.freeze({ value }),
         readForComputation: () => {
           throw cause;
@@ -61,9 +61,9 @@ describe('runtime Computation artifact lifecycle', () => {
     },
     {
       name: 'public read',
-      expectedCode: RetikzRuntimeErrorCode.ArtifactPublicReadFailed,
-      expectedPhase: 'artifact-public-read',
-      artifact: (cause: Error, dispose: (artifact: Artifact) => void) => ({
+      expectedCode: RetikzRuntimeErrorCode.ResultPublicReadFailed,
+      expectedPhase: 'result-public-read',
+      result: (cause: Error, dispose: (result: Result) => void) => ({
         capture: (value: number) => Object.freeze({ value }),
         readForComputation: (value: Readonly<{ value: number }>) => value.value,
         read: () => {
@@ -78,7 +78,7 @@ describe('runtime Computation artifact lifecycle', () => {
   it.each(failureCases)('$name failure 使用稳定 code 并释放已捕获资源', testCase => {
     const cause = new Error(`${testCase.name} failed`);
     const ownerDispose = vi.fn();
-    const artifactDispose = vi.fn<(artifact: Artifact) => void>();
+    const resultDispose = vi.fn<(result: Result) => void>();
     const owner = defineSource(ownerDispose);
     const sources = createRuntimeSourceRegistry([owner]);
     const computation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
@@ -86,10 +86,10 @@ describe('runtime Computation artifact lifecycle', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: testCase.artifact(cause, artifactDispose),
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: testCase.result(cause, resultDispose),
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
 
     expect(() =>
       createRuntime({
@@ -105,7 +105,7 @@ describe('runtime Computation artifact lifecycle', () => {
         cause,
       }),
     );
-    expect(artifactDispose).toHaveBeenCalledTimes(testCase.expectedDisposeCount);
+    expect(resultDispose).toHaveBeenCalledTimes(testCase.expectedDisposeCount);
     expect(ownerDispose).toHaveBeenCalledOnce();
   });
 
@@ -167,9 +167,9 @@ describe('runtime Computation artifact lifecycle', () => {
     expect(runtime.snapshot(owner)).toEqual({ revision: 0, value: 1 });
   });
 
-  it('artifact capture alias fail-loud 且不释放仍在使用的 current artifact', () => {
-    const sharedArtifact = Object.freeze({ value: 1 });
-    const artifactDispose = vi.fn();
+  it('result capture alias fail-loud 且不释放仍在使用的 current result', () => {
+    const sharedResult = Object.freeze({ value: 1 });
+    const resultDispose = vi.fn();
     const owner = defineRuntimeSource<number, number, number, never>({
       key: 'counter',
       value: {
@@ -179,21 +179,21 @@ describe('runtime Computation artifact lifecycle', () => {
       },
     });
     const sources = createRuntimeSourceRegistry([owner]);
-    const computation = defineRuntimeComputation<number, typeof sharedArtifact, number, number>({
+    const computation = defineRuntimeComputation<number, typeof sharedResult, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
-        capture: () => sharedArtifact,
+      result: {
+        capture: () => sharedResult,
         readForComputation: value => value.value,
         read: value => value.value,
-        dispose: artifactDispose,
+        dispose: resultDispose,
       },
-      run: () => ({ kind: RuntimeComputationKind.Full, artifact: 1 }),
-      update: () => ({ kind: RuntimeComputationKind.Incremental, artifact: 2 }),
+      run: () => ({ kind: RuntimeComputationKind.Full, result: 1 }),
+      update: () => ({ kind: RuntimeComputationKind.Incremental, result: 2 }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -205,14 +205,14 @@ describe('runtime Computation artifact lifecycle', () => {
         baseRevision: runtime.revision(),
         sources: [createRuntimeSourceUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ArtifactOwnershipAlias }));
-    expect(runtime.artifact(computation)).toEqual({ revision: 0, value: 1 });
-    expect(artifactDispose).not.toHaveBeenCalled();
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ResultOwnershipAlias }));
+    expect(runtime.result(computation)).toEqual({ revision: 0, value: 1 });
+    expect(resultDispose).not.toHaveBeenCalled();
   });
 
-  it('artifact capture alias 在双层 read 前 fail-loud，read throw 不会释放 current artifact', () => {
-    const sharedArtifact = Object.freeze({ value: 1 });
-    const artifactDispose = vi.fn();
+  it('result capture alias 在双层 read 前 fail-loud，read throw 不会释放 current result', () => {
+    const sharedResult = Object.freeze({ value: 1 });
+    const resultDispose = vi.fn();
     let computationReadCount = 0;
     let publicReadCount = 0;
     const owner = defineRuntimeSource<number, number, number, never>({
@@ -224,13 +224,13 @@ describe('runtime Computation artifact lifecycle', () => {
       },
     });
     const sources = createRuntimeSourceRegistry([owner]);
-    const computation = defineRuntimeComputation<number, typeof sharedArtifact, number, number>({
+    const computation = defineRuntimeComputation<number, typeof sharedResult, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
-        capture: () => sharedArtifact,
+      result: {
+        capture: () => sharedResult,
         readForComputation: value => {
           computationReadCount += 1;
           if (computationReadCount > 1) throw new Error('candidate Computation read must not run');
@@ -241,12 +241,12 @@ describe('runtime Computation artifact lifecycle', () => {
           if (publicReadCount > 1) throw new Error('candidate public read must not run');
           return value.value;
         },
-        dispose: artifactDispose,
+        dispose: resultDispose,
       },
-      run: () => ({ kind: RuntimeComputationKind.Full, artifact: 1 }),
-      update: () => ({ kind: RuntimeComputationKind.Incremental, artifact: 2 }),
+      run: () => ({ kind: RuntimeComputationKind.Full, result: 1 }),
+      update: () => ({ kind: RuntimeComputationKind.Incremental, result: 2 }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -258,10 +258,10 @@ describe('runtime Computation artifact lifecycle', () => {
         baseRevision: runtime.revision(),
         sources: [createRuntimeSourceUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ArtifactOwnershipAlias }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ResultOwnershipAlias }));
     expect(computationReadCount).toBe(1);
     expect(publicReadCount).toBe(1);
-    expect(artifactDispose).not.toHaveBeenCalled();
-    expect(runtime.artifact(computation)).toEqual({ revision: 0, value: 1 });
+    expect(resultDispose).not.toHaveBeenCalled();
+    expect(runtime.result(computation)).toEqual({ revision: 0, value: 1 });
   });
 });

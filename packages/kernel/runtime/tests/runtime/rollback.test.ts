@@ -99,7 +99,7 @@ describe('runtime runtime rollback', () => {
     expect(runtime.snapshot(second)).toEqual({ revision: 0, value: 1 });
   });
 
-  it('Computation prepare 失败时先反向释放 artifact，再反向释放 owner candidates', () => {
+  it('Computation prepare 失败时先反向释放 result，再反向释放 owner candidates', () => {
     const retired: Array<string> = [];
     const firstSource = defineRuntimeSource<number, Readonly<{ value: number }>, number, never>({
       key: 'a',
@@ -134,16 +134,16 @@ describe('runtime runtime rollback', () => {
       sources: [firstSource],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: value => ({ value }),
         readForComputation: value => value.value,
         read: value => value.value,
-        dispose: value => retired.push(`artifact:a:${value.value}`),
+        dispose: value => retired.push(`result:a:${value.value}`),
       },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(firstSource).value }),
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(firstSource).value }),
       update: (_previous, view) => ({
         kind: RuntimeComputationKind.Incremental,
-        artifact: view.snapshot(firstSource).value,
+        result: view.snapshot(firstSource).value,
       }),
     });
     const secondComputation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
@@ -151,16 +151,16 @@ describe('runtime runtime rollback', () => {
       sources: [secondSource],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: value => ({ value }),
         readForComputation: value => value.value,
         read: value => value.value,
-        dispose: value => retired.push(`artifact:b:${value.value}`),
+        dispose: value => retired.push(`result:b:${value.value}`),
       },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(secondSource).value }),
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(secondSource).value }),
       update: (_previous, view) => ({
         kind: RuntimeComputationKind.Incremental,
-        artifact: view.snapshot(secondSource).value,
+        result: view.snapshot(secondSource).value,
       }),
     });
     const cause = new Error('downstream failed');
@@ -169,15 +169,15 @@ describe('runtime runtime rollback', () => {
       sources: [thirdSource],
       computations: [firstComputation, secondComputation],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(thirdSource).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(thirdSource).value }),
       update: () => {
         throw cause;
       },
     });
     const computations = createRuntimeComputationRegistry({
       sources,
-      builtins: [downstream, secondComputation, firstComputation],
+      computations: [downstream, secondComputation, firstComputation],
     });
     const runtime = createRuntime({
       sources,
@@ -200,13 +200,13 @@ describe('runtime runtime rollback', () => {
         ],
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationUpdateFailed, cause }));
-    expect(retired).toEqual(['artifact:b:2', 'artifact:a:2', 'owner:c:2', 'owner:b:2', 'owner:a:2']);
+    expect(retired).toEqual(['result:b:2', 'result:a:2', 'owner:c:2', 'owner:b:2', 'owner:a:2']);
     expect(runtime.revision()).toBe(0);
     expect(runtime.snapshot(firstSource)).toEqual({ revision: 0, value: 1 });
     expect(runtime.snapshot(secondSource)).toEqual({ revision: 0, value: 1 });
     expect(runtime.snapshot(thirdSource)).toEqual({ revision: 0, value: 1 });
-    expect(runtime.artifact(firstComputation)).toEqual({ revision: 0, value: 1 });
-    expect(runtime.artifact(secondComputation)).toEqual({ revision: 0, value: 1 });
-    expect(runtime.artifact(downstream)).toEqual({ revision: 0, value: 1 });
+    expect(runtime.result(firstComputation)).toEqual({ revision: 0, value: 1 });
+    expect(runtime.result(secondComputation)).toEqual({ revision: 0, value: 1 });
+    expect(runtime.result(downstream)).toEqual({ revision: 0, value: 1 });
   });
 });

@@ -58,18 +58,18 @@ describe('runtime runtime malformed JavaScript input', () => {
     const sources = createRuntimeSourceRegistry([owner]);
     const update = vi.fn((_previous, view) => ({
       kind: RuntimeComputationKind.Incremental,
-      artifact: view.snapshot(owner).value,
+      result: view.snapshot(owner).value,
     }));
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'immutable-strategy' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update,
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const options = {
       sources,
       computations,
@@ -140,7 +140,7 @@ describe('runtime runtime malformed JavaScript input', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: (value: number) => value,
         readForComputation: (value: number) => value,
         read: (value: number) => value,
@@ -148,7 +148,7 @@ describe('runtime runtime malformed JavaScript input', () => {
       run: () => null,
     } as unknown as RuntimeComputationDefinitionInput<number, number, number, number>;
     const computation = defineRuntimeComputation(input);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
 
     expect(() =>
       createRuntime({
@@ -175,7 +175,7 @@ describe('runtime runtime malformed JavaScript input', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: (value: number) => value,
         readForComputation: (value: number) => value,
         read: (value: number) => value,
@@ -188,7 +188,7 @@ describe('runtime runtime malformed JavaScript input', () => {
         }),
     } as unknown as RuntimeComputationDefinitionInput<number, number, number, number>;
     const computation = defineRuntimeComputation(input);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
 
     expect(() =>
       createRuntime({
@@ -215,14 +215,14 @@ describe('runtime runtime malformed JavaScript input', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: (value: number) => value,
         readForComputation: (value: number) => value,
         read: (value: number) => value,
       },
       run: (view: Parameters<RuntimeComputationDefinitionInput<number, number, number, number>['run']>[0]) => ({
         kind: RuntimeComputationKind.Full,
-        artifact: view.snapshot(owner).value,
+        result: view.snapshot(owner).value,
       }),
       update: () =>
         Object.defineProperties(
@@ -235,12 +235,12 @@ describe('runtime runtime malformed JavaScript input', () => {
                 return 'incremental';
               },
             },
-            artifact: { value: 2 },
+            result: { value: 2 },
           },
         ),
     } as unknown as RuntimeComputationDefinitionInput<number, number, number, number>;
     const computation = defineRuntimeComputation(input);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -268,19 +268,19 @@ describe('runtime runtime malformed JavaScript input', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: (value: number) => value,
         readForComputation: (value: number) => value,
         read: (value: number) => value,
       },
       run: (view: Parameters<RuntimeComputationDefinitionInput<number, number, number, number>['run']>[0]) => ({
         kind: RuntimeComputationKind.Full,
-        artifact: view.snapshot(owner).value,
+        result: view.snapshot(owner).value,
       }),
       update: () => testCase.result,
     } as unknown as RuntimeComputationDefinitionInput<number, number, number, number>;
     const computation = defineRuntimeComputation(input);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -330,14 +330,14 @@ describe('runtime runtime malformed JavaScript input', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: (value: number) => value,
         readForComputation: (value: number) => value,
         read: (value: number) => value,
       },
       run: view => ({
         kind: RuntimeComputationKind.Full,
-        artifact: view.snapshot(owner).value,
+        result: view.snapshot(owner).value,
       }),
       update: (_previous, _view, context) => {
         const diagnose = context.diagnose as (value: unknown) => void;
@@ -346,7 +346,7 @@ describe('runtime runtime malformed JavaScript input', () => {
       },
     } satisfies RuntimeComputationDefinitionInput<number, number, number, number>;
     const computation = defineRuntimeComputation(input);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -376,7 +376,7 @@ describe('runtime runtime malformed JavaScript input', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: (view, context) => {
         const diagnostic = Object.defineProperties(
           {},
@@ -388,10 +388,10 @@ describe('runtime runtime malformed JavaScript input', () => {
         ) as Readonly<{ code: string; phase: 'run'; message: string }>;
         context.diagnose(diagnostic);
 
-        return { kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value };
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -418,7 +418,7 @@ describe('runtime runtime malformed JavaScript input', () => {
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: (view, context) => {
         context.trace.report({
           phase: PerformanceTracePhase.Update,
@@ -431,10 +431,10 @@ describe('runtime runtime malformed JavaScript input', () => {
         const drain = Reflect.get(context.trace, 'diagnostics');
         if (typeof drain === 'function') Reflect.apply(drain, context.trace, []);
 
-        return { kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value };
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,

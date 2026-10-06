@@ -117,7 +117,7 @@ const createHarness = (
     coreComputation,
   });
   const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
   const session = createRuntime({
     sources,
     computations,
@@ -245,7 +245,7 @@ describe('RenderRuntimeSourceDefinition', () => {
       cachePolicy: 'static' as const,
     };
     const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [] });
     const session = createRuntime({
       sources,
       computations,
@@ -269,7 +269,7 @@ describe('RenderRuntimeSourceDefinition', () => {
 
   it('按 registration 排序，并拒绝重复 registration 与非法动态字段', () => {
     const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [] });
     const sorted = createRuntime({
       sources,
       computations,
@@ -322,7 +322,7 @@ describe('RenderRuntimeSourceDefinition', () => {
 
   it('在读取前递归拒绝 config accessor 与非标准数组属性', () => {
     const sources = createRuntimeSourceRegistry([RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [] });
     const getter = vi.fn(() => [0, 0, 1, 1]);
     const easings = Object.defineProperty({}, 'custom', {
       enumerable: true,
@@ -476,7 +476,7 @@ describe('createRetainedRenderParticipant', () => {
       ],
     });
 
-    expect(session.artifact(coreComputation).value.patch?.operations[0]?.kind).toBe('replaceScene');
+    expect(session.result(coreComputation).value.patch?.operations[0]?.kind).toBe('replaceScene');
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
     expect(
       records.filter(
@@ -532,7 +532,7 @@ describe('createRetainedRenderParticipant', () => {
       ],
     });
 
-    expect(session.artifact(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
+    expect(session.result(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
     expect(renderer.patches[0]?.operations).toEqual([
       expect.objectContaining({ kind: 'replaceScene', snapshot: expect.objectContaining({ revision: 1 }) }),
     ]);
@@ -570,7 +570,7 @@ describe('createRetainedRenderParticipant', () => {
       ],
     });
 
-    expect(session.artifact(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
+    expect(session.result(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
     expect(session.diagnostics()).toEqual([]);
   });
@@ -593,7 +593,7 @@ describe('createRetainedRenderParticipant', () => {
         }),
         topology: Object.freeze([]),
       });
-    const artifact = (current: SceneRuntimeSnapshot, patch?: ScenePatch) =>
+    const result = (current: SceneRuntimeSnapshot, patch?: ScenePatch) =>
       Object.freeze({
         snapshot: current,
         output: Object.freeze({
@@ -607,15 +607,15 @@ describe('createRetainedRenderParticipant', () => {
       sources: [sourceOwner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: artifact(snapshot(view.candidateRevision, false)) }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: result(snapshot(view.candidateRevision, false)) }),
       update: (_previous, view) => {
         const next = snapshot(view.candidateRevision, view.snapshot(sourceOwner).value);
         if (view.baseRevision === undefined) throw new Error('expected update base revision');
 
         return {
           kind: RuntimeComputationKind.Incremental,
-          artifact: artifact(
+          result: result(
             next,
             Object.freeze({
               baseRevision: view.baseRevision,
@@ -635,7 +635,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation: program,
     });
     const sources = createRuntimeSourceRegistry([sourceOwner, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const records: Array<PerformanceTraceRecord> = [];
     const session = createRuntime({
       sources,
@@ -690,7 +690,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
     const session = createRuntime({
       sources,
       computations,
@@ -744,7 +744,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
     const session = createRuntime({
       sources,
       computations,
@@ -846,7 +846,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
     const session = createRuntime({
       sources,
       computations,
@@ -949,7 +949,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     try {
       createRuntime({
@@ -1001,7 +1001,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     try {
       createRuntime({
@@ -1050,7 +1050,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     try {
       createRuntime({
@@ -1105,7 +1105,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
 
     expect(() =>
       createRuntime({
@@ -1162,7 +1162,7 @@ describe('createRetainedRenderParticipant', () => {
       coreComputation,
     });
     const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
     const session = createRuntime({
       sources,
       computations,

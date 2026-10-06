@@ -35,7 +35,7 @@ const scene = (...nodes: Array<Readonly<{ id: string; text: string }>>): IRScene
 const updateWithHint = (initial: IRScene, next: IRScene, changes: ReadonlyArray<CoreChange>) => {
   const program = createCoreComputation({ onWarn: () => {} });
   const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
   const session = createRuntime({
     sources,
     computations,

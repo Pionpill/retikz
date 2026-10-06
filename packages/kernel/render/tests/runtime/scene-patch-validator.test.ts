@@ -38,21 +38,21 @@ const source = (fill: string): IRScene => ({
 const createIncrementalPair = () => {
   const program = createCoreComputation({ onWarn: () => undefined });
   const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
   const session = createRuntime({
     sources,
     computations,
     initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source('#ef4444'))],
   });
-  const current = session.artifact(program).value.snapshot;
+  const current = session.result(program).value.snapshot;
   session.update({
     baseRevision: session.revision(),
     sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source('#22c55e'))],
   });
-  const artifact = session.artifact(program).value;
-  if (artifact.patch === undefined) throw new Error('expected incremental patch');
+  const result = session.result(program).value;
+  if (result.patch === undefined) throw new Error('expected incremental patch');
 
-  return { current, next: artifact.snapshot, patch: artifact.patch };
+  return { current, next: result.snapshot, patch: result.patch };
 };
 
 const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>): SceneRuntimeSnapshot => {

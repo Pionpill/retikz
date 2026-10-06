@@ -14,11 +14,11 @@ The table below uses a counter to show how these objects work together: it store
 | Object      | Responsibility                                                      | Counter example                                 |
 | ----------- | ------------------------------------------------------------------- | ----------------------------------------------- |
 | Source      | Define how complete state is captured, read, compared, and disposed | Hold the current count                          |
-| Computation | Declare dependencies and compute a derived artifact                 | Compute twice the count                         |
+| Computation | Declare dependencies and compute a derived result                   | Compute twice the count                         |
 | Registry    | Register definitions and validate identities and dependencies       | Register the counter Source and its Computation |
 | Runtime     | Prepare updates and publish a consistent revision                   | Publish the new count and result together       |
 
-A Snapshot is a read-only value paired with a revision. Sources provide source state and Computations produce derived artifacts; Runtime exposes both through their respective Snapshots.
+A Snapshot is a read-only value paired with a revision. Sources provide source state and Computations produce derived results; Runtime exposes both through their respective Snapshots.
 
 ## From complete input to consistent results
 
@@ -34,15 +34,15 @@ Domain definitions interpret data and perform computations. Runtime organizes li
 
 Both prepare a new result when inputs change, then commit that result for consumers. This shared idea helps explain Runtime, but the objects they manage and their update contracts differ:
 
-| Aspect                                   | Runtime                                                                                                         | React reconciler                                                                                                                                    |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shared: update derived results           | Run Computations that depend on Source state to produce artifacts                                               | Compute the next UI tree from props, state, and context                                                                                             |
-| Shared: separate computation from commit | Prepare candidate state and artifacts, then publish a revision on success                                       | Compute the next UI during render and apply host updates during commit                                                                              |
-| Shared: reuse existing results           | Skip unaffected Computations, or reuse artifacts when an incremental update returns bailout                     | Skip some component computations through bailout, memo, and related mechanisms                                                                      |
-| Different: organization and identity     | Explicitly register Sources and Computations, forming a computation graph from declared dependencies            | Reconcile a component tree, identifying components by tree position, component type, and key                                                        |
-| Different: scheduling                    | Complete each Runtime update synchronously, without UI priorities or time slicing                               | Support updates with different priorities; more urgent updates can interrupt and restart Transition rendering                                       |
-| Different: published results             | Expose state and artifacts at the same published revision; integrate external state through commit participants | Update a host tree such as the DOM through a renderer, without a domain Snapshot API tied to a shared revision                                      |
-| Different: resource lifecycle            | Sources, Computations, and participants explicitly define disposal, which Runtime organizes                     | Manage component mounting, updates, and unmounting; Effect cleanup runs on dependency changes or unmounting and is not general transaction rollback |
+| Aspect                                   | Runtime                                                                                                       | React reconciler                                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared: update derived results           | Run Computations that depend on Source state to produce results                                               | Compute the next UI tree from props, state, and context                                                                                             |
+| Shared: separate computation from commit | Prepare candidate state and results, then publish a revision on success                                       | Compute the next UI during render and apply host updates during commit                                                                              |
+| Shared: reuse existing results           | Skip unaffected Computations, or reuse results when an incremental update returns bailout                     | Skip some component computations through bailout, memo, and related mechanisms                                                                      |
+| Different: organization and identity     | Explicitly register Sources and Computations, forming a computation graph from declared dependencies          | Reconcile a component tree, identifying components by tree position, component type, and key                                                        |
+| Different: scheduling                    | Complete each Runtime update synchronously, without UI priorities or time slicing                             | Support updates with different priorities; more urgent updates can interrupt and restart Transition rendering                                       |
+| Different: published results             | Expose state and results at the same published revision; integrate external state through commit participants | Update a host tree such as the DOM through a renderer, without a domain Snapshot API tied to a shared revision                                      |
+| Different: resource lifecycle            | Sources, Computations, and participants explicitly define disposal, which Runtime organizes                   | Manage component mounting, updates, and unmounting; Effect cleanup runs on dependency changes or unmounting and is not general transaction rollback |
 
 For example, React determines how a counter component appears. Runtime can store its count, compute twice that value, and publish both consistently. Runtime does not interpret JSX, Hooks, or component trees, and does not replace the React reconciler.
 
