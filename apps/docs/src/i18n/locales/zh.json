@@ -122,6 +122,7 @@
     "pkgRuntimeUsage": "入门示例",
     "pkgRuntimeSource": "Source · 来源",
     "pkgRuntimeIdentity": "Identity · 身份",
+    "pkgRuntimeComputation": "Computation · 计算",
     "pkgReact": "React 适配 · react",
     "pkgVanilla": "原生适配 · vanilla",
     "pkgTex": "LaTeX 公式 · tex",

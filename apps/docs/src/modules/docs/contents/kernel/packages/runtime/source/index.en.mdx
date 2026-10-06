@@ -453,6 +453,8 @@ Connect the APIs described above: define a Source to obtain its token, register 
 
 The registry holds handling rules while the initial-input command carries actual data. They meet when Runtime is created, triggering capture and initial state preparation. Read committed snapshots through the same token, then dispose Runtime when finished. Submitting new input repeats preparation, comparison and publication without redefining or registering the Source again.
 
+See [Computation](/kernel/packages/runtime/computation) for computation definitions, dependencies and registration.
+
 ## Core application
 
 Core treats the complete Scene IR—a structured description of a drawing document—as one Source, rather than creating a Source for each node. It defines `CoreSourceDefinition` once when the module loads and reuses that token for initialization, updates and compilation. This excerpt omits imports and the type declaration:

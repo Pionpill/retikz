@@ -122,6 +122,7 @@
     "pkgRuntimeUsage": "Starter example",
     "pkgRuntimeSource": "Source",
     "pkgRuntimeIdentity": "Identity",
+    "pkgRuntimeComputation": "Computation",
     "pkgReact": "react",
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",

@@ -1,0 +1,384 @@
+---
+title: Computation · 计算
+description: 从坐标派生距离，理解计算定义、依赖注册、结果视图与增量更新
+---
+
+[Source · 来源](/kernel/packages/runtime/source)保存了坐标，但到原点的距离需要由坐标计算得到。当坐标从 `[3, 4]` 变为 `[6, 8]`，距离也应从 `5` 更新为 `10`；如果只是从 `[3, 4]` 变为 `[-3, 4]`，距离仍然是 `5`，依赖距离的计算就可能不必继续执行。
+
+**Computation**（计算）定义如何从来源或其他计算的结果派生数据。Runtime 负责按依赖顺序执行和持有结果，计算作者负责具体算法，以及什么时候可以复用旧结果。本篇沿着“坐标 → 距离 → 显示文本”说明这个过程；事务如何统一发布留给后续章节。
+
+## 定义计算
+
+先区分三个概念：
+
+- **计算定义**：声明依赖和执行规则，可以供多个 Runtime 复用。
+- **计算凭证**（Token）：定义函数返回的对象，后续注册、声明依赖和读取结果都使用它。
+- **计算结果**（Result）：一次执行产生的数据，本例是数值距离，由各个 Runtime 独立持有。
+
+`defineRuntimeComputation(input)` 接收计算配置并返回 Token。定义时不执行计算，也不产生距离值。函数签名如下：
+
+```ts
+declare const defineRuntimeComputation: <
+  TResultInput,
+  TResult = TResultInput,
+  TComputationRead = TResult,
+  TPublicRead = TResult,
+>(
+  input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>,
+) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
+```
+
+输入配置中的成员按下面的职责协作；结果转换在“计算结果”中展开，诊断与 Trace 这里只保留入口说明。
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员            | 必填     | 作用                                           |
+| --------------- | -------- | ---------------------------------------------- |
+| `id`            | 是       | 唯一标识这项计算                               |
+| `sources`       | 是       | 声明会读取或用于触发更新的来源，可为空数组     |
+| `computations`  | 否       | 声明上游计算，默认 `[]`                        |
+| `run`           | 是       | 从完整候选数据计算新结果                       |
+| `update`        | 否       | 利用旧结果更新；省略时执行 `run`               |
+| `result`        | 条件必填 | 定义结果捕获、读取和释放；转换类型一致时可省略 |
+| `observeCommit` | 否       | 在新结果成功发布后接收通知                     |
+| `tracePhases`   | 否       | 声明允许报告的 Trace 阶段，默认 `[]`           |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+以下展开主要结构；省略了根据转换类型决定 `result` 必填性的条件类型。
+
+```ts
+type RuntimeComputationDefinitionInput<
+  TResultInput,
+  TResult = TResultInput,
+  TComputationRead = TResult,
+  TPublicRead = TResult,
+> = Readonly<{
+  id: RuntimeComputationId;
+  sources: ReadonlyArray<RuntimeSourceToken>;
+  computations?: ReadonlyArray<RuntimeComputationToken>;
+  tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
+  result?: RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>;
+  run: (view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeRunOutcome<TResultInput>;
+  update?: (
+    previous: TComputationRead,
+    view: RuntimeCandidateView,
+    context: RuntimeComputationContext,
+  ) => RuntimeUpdateOutcome<TResultInput>;
+  observeCommit?: (event: RuntimeCommitEvent<TPublicRead>) => void;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+计算标识 `RuntimeComputationId` 包含归属来源的 `owner` 和该来源内的计算名称 `key`。它与[实体身份](/kernel/packages/runtime/identity)的 `owner/path` 用途不同：这里标识一项计算规则，不标识状态中的某个节点。
+
+```ts
+type RuntimeComputationId = Readonly<{ owner: string; key: string }>;
+```
+
+下面用只读坐标定义距离计算。为了让例子独立可读，坐标来源直接接收数值元组；捕获、读取和比较的细节见来源篇。
+
+```ts
+import { defineRuntimeSource, defineRuntimeComputation } from '@retikz/runtime';
+
+type Position = readonly [number, number];
+const position = defineRuntimeSource<Position, Position, Position, never>({
+  key: 'example/position',
+  value: {
+    capture: input => Object.freeze([input[0], input[1]] as const),
+    read: value => value,
+    equals: (left, right) => left[0] === right[0] && left[1] === right[1],
+  },
+});
+
+const distance = defineRuntimeComputation<number>({
+  id: { owner: position.key, key: 'distance' },
+  sources: [position],
+  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }),
+});
+```
+
+`run` 返回 `{ kind: 'full', result }`，表示从完整输入得到结果。返回的 `distance` 则仍是 Token，不是这个数值；它与处理回调在 Runtime 内部关联，后续要沿用同一对象。
+
+<SourceLinks
+  sources={[
+    { label: '计算配置与结果类型', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: 'Token 与执行规则的关联', path: 'packages/kernel/runtime/src/computation/define.ts' },
+  ]}
+/>
+
+## 依赖与注册
+
+**依赖**既限定计算可以读取哪些数据，也决定哪些变化需要触发计算。依赖关系必须显式声明；Runtime 不会分析函数代码来自动发现它们。
+
+计算定义中的 `sources` 声明依赖哪些来源，`computations` 声明依赖哪些上游计算。可以把它理解为订阅上游变化：调用 `runtime.update` 后，Runtime 判断来源是否实际变化，再按依赖顺序更新相关计算。直接修改外部对象不会自动触发这条流程。
+
+例如，“坐标来源 → 距离计算 → 显示文本计算”：坐标实际变化会触发距离计算；距离计算产生新结果后，再触发显示文本计算。如果距离计算明确返回 `bailout`，表示复用旧结果，就不沿这条依赖继续触发下游；下游若还有其他变化的依赖，仍会执行。具体返回形式见[增量更新](#增量更新)。
+
+后面的注册配置也有 `sources` 和 `computations`，但它们只是提供来源注册表与计算清单。**依赖关系由每个计算定义声明**，不是由注册列表的位置或顺序建立。
+
+回调收到的 `view` 是本次执行的**候选视图**：包含准备发布的新来源，以及已经完成的上游计算结果。它与调用方通过 Runtime 读取的已发布状态不同。
+
+| 读取入口                   | 功能                                         |
+| -------------------------- | -------------------------------------------- |
+| `view.snapshot(source)`    | 读取已声明来源的快照，通过 `.value` 取得值   |
+| `view.isChanged(source)`   | 判断该来源在本次更新中是否实际变化           |
+| `view.changeSet(source)`   | 读取该来源的变更提示，未提供时为 `undefined` |
+| `view.result(computation)` | 读取已声明上游计算的公开结果快照             |
+
+例如，显示文本依赖距离计算，而不直接读取坐标。因此它只声明 `distance`，不必重复声明上游的 `position`：
+
+```ts
+const label = defineRuntimeComputation<string>({
+  id: { owner: position.key, key: 'label' },
+  sources: [],
+  computations: [distance],
+  run: view => ({ kind: 'full', result: `Distance: ${view.result(distance).value}` }),
+});
+```
+
+读取未声明的来源或计算会报错，即使它已经注册。`id.owner` 只说明归属，不能代替依赖声明。
+
+**计算注册表**把这些定义组织成可以执行的依赖图：先确认所有依赖存在，再安排上游先于下游执行。`createRuntimeComputationRegistry(input)` 创建这个固定注册表，不会立即调用 `run`。
+
+```ts
+declare const createRuntimeComputationRegistry: (input: RuntimeComputationRegistryInput) => RuntimeComputationRegistry;
+```
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员           | 必填 | 作用                                               |
+| -------------- | ---- | -------------------------------------------------- |
+| `sources`      | 是   | 绑定来源注册表；计算的归属来源和来源依赖必须在其中 |
+| `computations` | 否   | 待注册的计算 Token 列表，默认 `[]`                 |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeComputationRegistryInput = Readonly<{
+  sources: RuntimeSourceRegistry;
+  computations?: ReadonlyArray<RuntimeComputationToken>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+所有计算使用同一套注册和校验规则。调用方可以自行组织内置与自定义计算，再合并到 `computations`；注册表不区分这些类别，也不提供覆盖优先级。省略列表时创建空计算注册表。
+
+```ts
+import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '@retikz/runtime';
+
+const sources = createRuntimeSourceRegistry([position]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [label, distance] });
+
+console.log(computations.definitions().map(token => token.id.key)); // ['distance', 'label']
+console.log(computations.find(distance.id) === distance); // true
+console.log(computations.resolve(distance) === distance); // true
+```
+
+注册时拒绝无效 Token、重复计算标识、缺失的来源或上游计算，以及循环依赖。`definitions()` 返回依赖优先的稳定顺序；同时可执行的计算按 `owner`、`key` 的字符串顺序排列，不依赖输入列表顺序。`find(id)` 按标识内容查找，未找到返回 `undefined`；`resolve(token)` 检查原 Token 是否属于注册表，不能用另一个同名定义替代。
+
+<SourceLinks
+  sources={[
+    { label: '来源绑定、依赖校验与拓扑排序', path: 'packages/kernel/runtime/src/registry/computation-registry.ts' },
+    { label: '候选视图与依赖读取检查', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 计算结果
+
+**计算结果**是一次计算完成后，由 Runtime 保存下来供后续使用的数据。前面距离计算得到的 `5` 就是结果；它不只是在回调结束时临时返回，还承担三种用途：
+
+- **供调用方读取**：界面通过 `runtime.result(distance).value` 取得已发布的距离，无需为了读取再执行计算。
+- **供下游计算使用**：显示文本计算通过 `view.result(distance).value` 读取上游距离，继续派生文本。
+- **供下一次更新复用**：本计算的 `update` 收到旧结果的私有视图 `previous`，可以利用保留的结果、索引或缓存更新数据，是否能减少计算量取决于具体算法。
+
+要区分结果数据与同名配置：`run/update` 返回的 `result` 是本次产生的数据，计算定义中的 `result` 则是管理这些数据的捕获、读取和释放规则。简单数字可以省略这项配置，但计算仍会产生和保存结果。
+
+数值距离可以直接保存和读取；复杂计算还可能保存索引、缓存或资源句柄，却只希望向外暴露结果。因此，结果区分执行返回值、内部持有值、当前计算使用的旧结果视图，以及公开视图。
+
+`result` 配置管理这些转换。`readForComputation` 的结果只交给本计算下一次 `update` 的 `previous`；`read` 的结果供下游计算、宿主读取和提交通知使用。
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员                         | 作用与默认行为                                                              |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `capture(input)`             | 接收 `run/update` 的结果输入，生成 Runtime 持有的结果；同类型时默认原值返回 |
+| `readForComputation(result)` | 生成当前计算的私有读取视图；同类型时默认原值返回                            |
+| `read(result)`               | 生成公开读取视图；同类型时默认原值返回                                      |
+| `dispose(result)`            | 释放被替换、未发布或 Runtime 结束时的结果；默认不执行清理                   |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+以下省略根据输入、输出类型决定转换函数必填性的条件类型。
+
+```ts
+type RuntimeComputationResultDefinitionInput<
+  TResultInput,
+  TResult = TResultInput,
+  TComputationRead = TResult,
+  TPublicRead = TResult,
+> = Readonly<{
+  capture?: (input: TResultInput) => TResult;
+  readForComputation?: (result: TResult) => TComputationRead;
+  read?: (result: TResult) => TPublicRead;
+  dispose?: (result: TResult) => void;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+例如，把坐标和距离一起保存在内部，下一次更新可以读取全部信息，而公开读取只得到距离：
+
+```ts
+type DistanceCache = Readonly<{ point: Position; distance: number }>;
+const cachedDistance = defineRuntimeComputation<DistanceCache, DistanceCache, DistanceCache, number>({
+  id: { owner: position.key, key: 'cached-distance' },
+  sources: [position],
+  result: { read: value => value.distance },
+  run: view => {
+    const point = view.snapshot(position).value;
+    return { kind: 'full', result: Object.freeze({ point, distance: Math.hypot(...point) }) };
+  },
+});
+```
+
+此例公开读取从对象变成数值，因此 `read` 必须提供；其余转换类型一致，可以省略。所有转换都可省略且无需清理时，整个 `result` 配置也可省略，前面的 `distance` 就是这种情况。默认原值返回不会复制或冻结对象，作者仍需保证只读隔离，尤其不能在更新中直接修改 `previous`。
+
+捕获完成后，Runtime 先生成私有视图，再生成公开视图，并缓存这两份结果；每次读取快照不会重新执行转换。读取转换失败时会清理已经捕获的新结果；成功替换后才释放旧结果。需要资源释放时提供 `dispose`，复用当前结果应通过后文的 `bailout` 表达。
+
+<SourceLinks
+  sources={[{ label: '默认转换、读取缓存与结果清理', path: 'packages/kernel/runtime/src/computation/define.ts' }]}
+/>
+
+## 增量更新
+
+初始化时，每项计算都按依赖顺序执行 `run`。后续更新中，只有直接来源实际变化，或上游计算产生新结果时，当前计算才需要执行。默认自动策略会尝试 `update`；没有提供它时执行 `run`。
+
+`update(previous, view, context)` 接收旧结果的私有视图和本次候选数据，由计算作者选择如何得到正确结果。下面是三种返回形式；`run` 则始终返回 `full` 和完整新结果。
+
+| `update` 返回                     | Runtime 的处理                                     |
+| --------------------------------- | -------------------------------------------------- |
+| `{ kind: 'incremental', result }` | 捕获并准备新结果，继续触发依赖它的计算             |
+| `{ kind: 'bailout' }`             | 保留旧结果，不执行结果转换，也不因本项计算触发下游 |
+| `{ kind: 'fallback' }`            | 放弃增量路径，在同一候选数据上调用 `run`           |
+
+给距离计算增加 `update`，可以在坐标变化但距离不变时保留旧结果。以下是替换前面 `distance` 定义的版本，不要将两个同名定义一起注册：
+
+```ts
+const distance = defineRuntimeComputation<number>({
+  id: { owner: position.key, key: 'distance' },
+  sources: [position],
+  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }),
+  update: (previous, view) => {
+    const next = Math.hypot(...view.snapshot(position).value);
+    return next === previous ? { kind: 'bailout' } : { kind: 'incremental', result: next };
+  },
+});
+```
+
+这里仍重新计算一次距离，目的是展示返回值如何影响传播，不意味着算法已经更快。Runtime 没有为计算结果配置 `equals`：即使新结果的数值相同，返回 `incremental` 仍会继续传播；是否复用由作者明确决定。
+
+| 坐标变化           | 距离计算                     | 显示文本计算                    |
+| ------------------ | ---------------------------- | ------------------------------- |
+| `[3, 4] → [3, 4]`  | 来源相等，跳过               | 跳过                            |
+| `[3, 4] → [-3, 4]` | 距离仍为 `5`，返回 `bailout` | 没有其他依赖变化，跳过          |
+| `[3, 4] → [6, 8]`  | 返回新距离 `10`              | 执行 `run`，得到 `Distance: 10` |
+
+`bailout` 只停止这一条传播路径；下游若还有其他变化的依赖，仍然会执行。上游使用全量执行时，下游也使用全量执行；上游回退时，下游沿回退路径执行。显式全量策略会跳过增量尝试，但不会因此执行完全不受影响的计算。
+
+下图每个圆形表示一项计算，箭头从上游指向依赖它的下游；三行分别表示一次更新中的不同情况。假设下游直接依赖的 Source 均未变化，蓝色节点均产生新结果。
+
+<ComponentPreview files="computation-propagation" size="lg" hideCode type="illustration" />
+
+橙色节点执行了 `update` 并返回 `bailout`；灰色节点则完全没有执行，直接复用旧结果。最后一行中，A 的 `bailout` 不会阻止 D 的新结果触发 B，再由 B 的新结果触发 C。箭头始终表示依赖关系，即使本次没有沿该依赖触发执行，它也仍然存在。
+
+变更提示可以通过 `view.changeSet(source)` 辅助局部计算，但提示可能缺省，其领域含义和完整性仍由调用方判断。无法安全增量处理时返回 `fallback`；抛出异常会使本次更新失败，不会自动转成全量重试。来源校验要求回退时，Runtime 也会直接走回退路径。
+
+回调的 `context.execution` 区分当前执行方式；`context.trace` 和 `context.diagnose` 用于记录观测信息。`observeCommit` 在新结果成功发布后通知调用方；复用旧结果时不触发该通知。它是隔离的观察回调，不负责计算和资源提交。
+
+<SourceLinks
+  sources={[
+    { label: '执行结果与候选视图契约', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: '增量选择、回退及下游传播', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 完整流程
+
+下面串起定义、注册、执行和读取。定义与注册只建立规则；创建 Runtime 才执行初始计算，后续更新再按依赖选择执行路径。
+
+<ComponentPreview files="computation-flow" size="md" hideCode type="flow" />
+
+使用前面定义的 `sources`、`computations` 和 Token，就可以建立运行实例。这里沿用[入门示例](/kernel/packages/runtime/usage)的初始化与更新 API，重点观察结果值：
+
+```ts
+import { createRuntime, createRuntimeSourceInput, createRuntimeSourceUpdate } from '@retikz/runtime';
+
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(position, [3, 4])],
+});
+try {
+  console.log(runtime.result(distance).value); // 5
+  runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(position, [6, 8])],
+  });
+  console.log(runtime.result(distance).value); // 10
+  console.log(runtime.result(label).value); // 'Distance: 10'
+} finally {
+  runtime.dispose();
+}
+```
+
+计算回调通过 `view.result` 读取候选上游结果，外部调用方通过 `runtime.result` 读取已发布结果，两者使用同一计算 Token，却处于不同的读取时机。释放 Runtime 时，会清理仍由它持有的结果。
+
+## Core 应用
+
+Core 将图文档编译包装成一项 Computation。公开工厂 `createCoreComputation(options)` 创建编译计算 Token；它消费文档来源，内部保存增量编译需要的状态，并向外提供编译结果和 Scene 快照。
+
+```ts
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '@retikz/runtime';
+
+const compile = createCoreComputation({});
+const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [compile] });
+// 将这两个注册表与文档初始输入交给 createRuntime
+// runtime.result(compile).value.output.result.scene 是已发布的 Scene
+```
+
+这个应用对应了前面的三项职责：`run` 从完整文档编译，`update` 尝试支持的局部更新并在不适用时回退，`result` 将内部编译状态与公开结果分开。Runtime 不理解图元或编译算法，这些规则由 Core 提供，具体展开见 Core 文档。
+
+<SourceLinks
+  sources={[
+    { label: 'Core 计算定义与增量分支', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+    { label: 'Core 公开结果视图', path: 'packages/kernel/core/src/compile/incremental/public.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Source · 来源',
+      description: '计算依赖的状态如何捕获、比较和释放',
+      url: '/kernel/packages/runtime/source',
+    },
+    { title: 'Identity · 身份', description: '创建和查找状态内部的实体身份', url: '/kernel/packages/runtime/identity' },
+    { title: '入门示例', description: '运行一次完整的定义、更新和读取流程', url: '/kernel/packages/runtime/usage' },
+  ]}
+/>

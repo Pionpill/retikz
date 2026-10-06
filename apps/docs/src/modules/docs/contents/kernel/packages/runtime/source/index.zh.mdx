@@ -440,6 +440,8 @@ Runtime 先捕获新输入、生成读取视图，再比较前后内部值。这
 
 注册表保存处理规则，初始输入命令携带实际数据；两者在创建 Runtime 时汇合，触发捕获并建立初始状态。后续通过同一个 Token 读取已发布快照，使用结束后释放 Runtime。若提交新输入，Runtime 会重复前文的准备、比较与发布流程，而不必重新定义或注册来源。
 
+计算的定义、依赖与注册见[Computation · 计算](/kernel/packages/runtime/computation)。
+
 ## Core 应用
 
 Core 将整份 Scene IR（图文档的结构化描述）作为一个 Source，而不是为每个节点分别创建 Source。它在模块加载时定义一次 `CoreSourceDefinition`，后续初始化、更新和编译都复用这个 Token。下面摘录来源定义，省略导入与类型声明：
