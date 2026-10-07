@@ -123,6 +123,7 @@
     "pkgRuntimeSource": "Source",
     "pkgRuntimeIdentity": "Identity",
     "pkgRuntimeComputation": "Computation",
+    "pkgRuntimeTransaction": "Runtime · Transaction publication",
     "pkgReact": "react",
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",
