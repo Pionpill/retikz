@@ -52,7 +52,13 @@ describe('schema vocabulary constants', () => {
       'outside-quantile-band',
       'top',
     ]);
-    expect(Object.values(FieldOrderMode).sort()).toEqual(['appearance', 'ascending', 'descending']);
+    expect(Object.values(FieldOrderMode).sort()).toEqual([
+      'appearance',
+      'ascending',
+      'descending',
+      'naturalAscending',
+      'naturalDescending',
+    ]);
   });
 
   it('exports closed plot schema vocabularies from their owners', () => {

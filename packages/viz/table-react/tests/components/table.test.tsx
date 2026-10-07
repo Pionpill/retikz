@@ -9,6 +9,7 @@ import {
   defineTableStructure,
   defineTableThemeStyle,
   TABLE_NAMESPACE,
+  TableSchema,
   TableComposite,
   TableRowKind,
 } from '@retikz/table';
@@ -382,4 +383,23 @@ describe('Table React components', () => {
 
     expect(renderToStaticMarkup(<Table spec={spec} composites={[badge]} />)).toContain('Nested');
   });
+});
+
+it.each([false, true])('passes category definitions through Table React with embedded=%s', embedded => {
+  const spec = TableSchema.parse({
+    namespace: 'table',
+    type: 'table',
+    data: { reference: 'rows', model: [{ name: 'value', type: 'categorical', order: 'custom' }] },
+    structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
+  });
+  const element = (
+    <Table
+      spec={spec}
+      data={{ rows: [{ value: '10.18' }, { value: '10.2' }] }}
+      fieldOrderDefinitions={[{ name: 'custom', compare: () => 0 }]}
+    />
+  );
+  const html = renderToStaticMarkup(embedded ? <Layout>{element}</Layout> : element);
+  expect(html).toContain('10.18');
+  expect(html.indexOf('10.18')).toBeLessThan(html.indexOf('10.2'));
 });

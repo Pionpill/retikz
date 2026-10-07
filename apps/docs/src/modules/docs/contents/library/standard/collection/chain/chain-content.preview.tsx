@@ -2,7 +2,7 @@ import { Layout } from '@retikz/react';
 import { Chain, ChainCell, ChainParallel, ChainBranch, Matrix } from '@retikz/standard-react/collection';
 
 /** 本节交互参数 */
-export type ChainPreviewValues = { width: number; overflow: 'clip' | 'visible' };
+export type ChainPreviewValues = { width: number; overflow: 'clip' | 'visible'; matrixAutoWidth: boolean };
 
 /** 由公开参数绘制链 */
 export const renderChainPreview = (values: ChainPreviewValues) => (
@@ -11,7 +11,7 @@ export const renderChainPreview = (values: ChainPreviewValues) => (
       <ChainCell text="A" />
       <ChainParallel>
         <ChainBranch>
-          <ChainCell>
+          <ChainCell layout={values.matrixAutoWidth ? { width: 'auto' } : {}}>
             <Matrix skeleton={{ rows: 2, columns: 2 }} />
           </ChainCell>
         </ChainBranch>

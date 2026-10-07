@@ -158,6 +158,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 | 两段折线 | `kind="fold" via="-\|"`<br />`kind="fold" via="\|-"`                                  | 经过一个转折点，完整连接目标                              |
 | 三段折线 | `kind="fold" via="-\|-" fraction={0.5}`<br />`kind="fold" via="\|-\|" fraction={0.5}` | 经过两个转折点；`fraction` 调整中间腿位置，默认值为 `0.5` |
 
+折线连接整个节点（省略 `anchor` 和 `offset`）时，会移除起终节点连接面内部的路径部分。转折点落在节点内时，端点沿原线段截到边界；同高或同宽时可退化为直线。显式锚点与坐标仍保留指定端点，不自动避让其它节点。
+
 <ComponentPreview files={['axis-line', 'axis-line.preview.tsx']} size="sm" defaultSourceFile="axis-line.preview.tsx" />
 
 在两种 `axis-line` 模式中，省略 target `anchor` 时固定投影到节点中心，不执行 target 端自动边界裁切；source 节点仍按投影后的方向贴边。它只接受笛卡尔坐标或 NodeTarget，不接受 polar、relative、offset 或 between。

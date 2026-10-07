@@ -2,13 +2,13 @@ import type { IRChild } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 
+import { createLegend } from '../../src/presentation/legend/composite';
 import {
   LegendContentKind,
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
 } from '../../src/presentation/legend/constants';
-import { createLegend } from '../../src/presentation/legend/factory';
 import { resolveLegend } from '../../src/presentation/legend/resolve';
 import { LegendSchema } from '../../src/presentation/legend/schema';
 import type { LegendInput } from '../../src/presentation/legend/types';

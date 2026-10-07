@@ -48,6 +48,12 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 
 `normalizeRows()` 不执行 transform。消费方先完成字段收集、类型解析与规范化，再把 canonical rows 交给 transform pipeline；这种边界让 Plot、Table 与其它宿主复用同一套 Data 处理语义。
 
+## 分类域
+
+`defineFieldOrder` 定义具名比较器；`resolveFieldOrderRegistry(definitions?)` 合并内置与请求内定义，禁止重复名称。`assertFieldOrders(model, registry?)` 在模型接入时验证所有具名顺序，即使没有有效类别也执行。
+
+`resolveCategoryDomain(values, order, registry?)` 返回新的类别排列，跳过非字符串或非有限数字，按值身份去重。省略 registry 时使用内置定义。显式数组保留声明类别并追加未列出的观测值；排序不会修改行、类型或 lineage。契约与示例见[扩展机制](/viz/data/model/extensions#定义分类顺序)。
+
 ## Transform 与 lineage
 
 `applyTransforms(rows, operations?, options?)` 按声明顺序执行 operation，只返回 rows；options 提供 registry、独立同步实现与 context。Promise 或外接模式使用执行器。`applyTransformsWithLineage(rows, operations?, options?)` 会先给输入行添加不可序列化到 JSON 的 Symbol 来源标记，再返回：
@@ -64,20 +70,20 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
     {
       label: '字段类型解析',
       path: 'packages/viz/data/src/providers/data/field.ts',
-      startLine: 121,
-      endLine: 151,
+      startLine: 136,
+      endLine: 171,
     },
     {
       label: 'canonical row 规范化',
       path: 'packages/viz/data/src/providers/data/normalize.ts',
-      startLine: 29,
-      endLine: 44,
+      startLine: 30,
+      endLine: 47,
     },
     {
       label: 'format registry 合并',
       path: 'packages/viz/data/src/providers/format/definitions.ts',
-      startLine: 129,
-      endLine: 143,
+      startLine: 141,
+      endLine: 159,
     },
     {
       label: 'transform registry 合并',
@@ -86,14 +92,14 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
     {
       label: 'statistics 与 selector registry 合并',
       path: 'packages/viz/data/src/providers/statistics/registry.ts',
-      startLine: 31,
-      endLine: 54,
+      startLine: 70,
+      endLine: 97,
     },
     {
       label: 'transform 执行与 lineage 入口',
       path: 'packages/viz/data/src/pipeline/transform.ts',
-      startLine: 63,
-      endLine: 128,
+      startLine: 244,
+      endLine: 297,
     },
     {
       label: 'lineage 选项与事件契约',
@@ -104,8 +110,8 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
     {
       label: 'lineage 默认值与安全限制',
       path: 'packages/viz/data/src/pipeline/lineage.ts',
-      startLine: 53,
-      endLine: 91,
+      startLine: 52,
+      endLine: 93,
     },
   ]}
 />

@@ -205,6 +205,19 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member                  | Type                | Default  | Description                                                                           |
+| ----------------------- | ------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `readonly preparation?` | `'sync' \| 'async'` | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower |
+| `readonly signal?`      | `AbortSignal`       | —        | Lifecycle signal for async preparation and the controller                             |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="retained">
 
 <DocTab value="retained" label="Members · Retained">
@@ -215,8 +228,6 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
 | -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime                                                                                                               |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
-| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
-| `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </ApiTable>
@@ -227,13 +238,11 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
 
 <ApiTable>
 
-| Member                     | Type                              | Default  | Description                                                                           |
-| -------------------------- | --------------------------------- | -------- | ------------------------------------------------------------------------------------- |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | Compiles and materializes the complete result directly, without creating a Runtime    |
-| `readonly onDiagnostic?`   | `never`                           | —        | Static mode creates no Runtime and therefore emits no structured Runtime diagnostics  |
-| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower |
-| `readonly signal?`         | `AbortSignal`                     | —        | Lifecycle signal for async preparation and the controller                             |
-| `readonly updateStrategy?` | `never`                           | —        | Static mode does not support a Computation update strategy                            |
+| Member                     | Type                              | Default | Description                                                                          |
+| -------------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —       | Compiles and materializes the complete result directly, without creating a Runtime   |
+| `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime and therefore emits no structured Runtime diagnostics |
+| `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Computation update strategy                           |
 
 </ApiTable>
 
@@ -367,23 +376,34 @@ export type InputLayer = {
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member        | Type                    | Default | Description                                                                       |
+| ------------- | ----------------------- | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `IRScene['animations']` | —       | Scene-root animation tracks; omitted means no root animation                      |
+| `authoring?`  | `unknown`               | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `id?`         | `string`                | —       | Authoring scene identity, excluded from persisted Scene IR                        |
+| `theme?`      | `IRScene['theme']`      | —       | Root theme; specify only style and mode overrides                                 |
+| `type?`       | `'scene'`               | —       | Optional scene discriminator; fixed to scene after normalization                  |
+| `version?`    | `never`                 | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `IRViewBox`             | —       | Explicit viewport; compilation derives it from content when omitted               |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="children">
 
 <DocTab value="children" label="Members · Children">
 
 <ApiTable>
 
-| Member        | Type                        | Default | Description                                                                       |
-| ------------- | --------------------------- | ------- | --------------------------------------------------------------------------------- |
-| `animations?` | `IRScene['animations']`     | —       | Scene-root animation tracks; omitted means no root animation                      |
-| `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
-| `children`    | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization        |
-| `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
-| `layers?`     | `never`                     | —       | The children variant excludes explicit layers                                     |
-| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
-| `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
-| `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
-| `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
+| Member     | Type                        | Default | Description                                                                |
+| ---------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
+| `children` | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization |
+| `layers?`  | `never`                     | —       | The children variant excludes explicit layers                              |
 
 </ApiTable>
 
@@ -393,17 +413,10 @@ export type InputLayer = {
 
 <ApiTable>
 
-| Member        | Type                        | Default | Description                                                                       |
-| ------------- | --------------------------- | ------- | --------------------------------------------------------------------------------- |
-| `animations?` | `IRScene['animations']`     | —       | Scene-root animation tracks; omitted means no root animation                      |
-| `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
-| `children?`   | `never`                     | —       | The layers variant excludes top-level children                                    |
-| `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
-| `layers`      | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                         |
-| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
-| `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
-| `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
-| `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
+| Member      | Type                        | Default | Description                                               |
+| ----------- | --------------------------- | ------- | --------------------------------------------------------- |
+| `children?` | `never`                     | —       | The layers variant excludes top-level children            |
+| `layers`    | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex |
 
 </ApiTable>
 

@@ -1,11 +1,14 @@
 import { chainSchemaLocalization } from './chain-schema-localizations';
 import { LegendSchemaZhLocalization, LegendArtifactSchemaZhLocalization } from './legend-schema-localizations';
 import { matrixSchemaLocalization } from './matrix-schema-localizations';
+import { queueSchemaLocalization } from './queue-schema-localizations';
+import { stackSchemaLocalization } from './stack-schema-localizations';
 import {
   GridSchemaZhLocalization,
   GridLineSchemaZhLocalization,
   standardStrokeDescriptions,
 } from './standard-presentation-localizations';
+import { treeSchemaLocalization } from './tree-schema-localizations';
 
 /** Scope 通道沿用 Grid 已维护的公共字段词典 */
 const scopeDescriptions = Object.fromEntries(
@@ -835,3 +838,9 @@ for (const [name, description] of Object.entries(summaries)) {
 
 standardSchemaLocalizations.MatrixSchema = matrixSchemaLocalization;
 standardSchemaLocalizations.ChainSchema = chainSchemaLocalization;
+
+standardSchemaLocalizations.StackSchema = stackSchemaLocalization;
+
+standardSchemaLocalizations.QueueSchema = queueSchemaLocalization;
+
+standardSchemaLocalizations.TreeSchema = treeSchemaLocalization;

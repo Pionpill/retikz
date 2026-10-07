@@ -52,13 +52,12 @@ export const vizSection: Array<Section> = [
             label: 'viz.dataFieldsAndTypes',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'guide',
               audience: 'user',
               capability: 'data.fields-and-types',
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'contract', label: 'viz.dataModelContract', difficulty: DocDifficulty.Advanced },
           { id: 'intake', label: 'viz.dataModelIntake', difficulty: DocDifficulty.Advanced },
           { id: 'validation', label: 'viz.dataModelValidation', difficulty: DocDifficulty.Advanced },
           {

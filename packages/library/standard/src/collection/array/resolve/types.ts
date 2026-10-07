@@ -1,5 +1,6 @@
 import type { CanonicalCell } from '../../_cell/resolve';
-import type { IRArray, IRArrayIndexOptions } from '../schema';
+import type { CanonicalCollectionIndex } from '../../_index/resolve';
+import type { IRArray } from '../schema';
 
 /** 默认与单元格继承已解析的 Array */
 export type CanonicalArray = Omit<
@@ -16,21 +17,5 @@ export type CanonicalArray = Omit<
     gap: number;
   };
   /** 关闭索引，或已确定位置的自动编号／显式标签配置 */
-  index:
-    | false
-    | (Omit<IRArrayIndexOptions, 'start' | 'labels' | 'position'> & {
-        /** 索引位于横向数组的上侧或下侧、纵向数组的左侧或右侧 */
-        position: 'before' | 'after';
-      } & (
-          | {
-              /** 自动递增索引的起始数值，与显式标签互斥 */
-              start: number;
-              labels?: never;
-            }
-          | {
-              /** 按单元格顺序提供的显式索引标签，与起始数值互斥 */
-              labels: Array<string>;
-              start?: never;
-            }
-        ));
+  index: CanonicalCollectionIndex;
 };

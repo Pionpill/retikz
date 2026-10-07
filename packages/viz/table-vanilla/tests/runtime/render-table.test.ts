@@ -2,6 +2,7 @@ import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/
 import type { CellPresentationInput } from '@retikz/table';
 import {
   defineCellFormatter,
+  TableSchema,
   defineCellPresentation,
   defineCellVisualScale,
   defineTableThemeStyle,
@@ -322,4 +323,21 @@ describe('renderTable', () => {
 
     expect(renderTable(spec, { compile: { composites: [badge] } })).toContain('Nested');
   });
+});
+
+it('passes category definitions through Table Vanilla without sorting rows', () => {
+  const spec = TableSchema.parse({
+    namespace: 'table',
+    type: 'table',
+    data: { reference: 'rows', model: [{ name: 'value', type: 'categorical', order: 'custom' }] },
+    structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
+  });
+  const data = { rows: [{ value: '10.18' }, { value: '10.2' }] };
+  expect(() => renderTable(spec, { data })).toThrow(/unknown order/);
+  const svg = renderTable(spec, {
+    data,
+    lowerOptions: { fieldOrderDefinitions: [{ name: 'custom', compare: () => 0 }] },
+  });
+  expect(svg).toContain('10.18');
+  expect(svg.indexOf('10.18')).toBeLessThan(svg.indexOf('10.2'));
 });

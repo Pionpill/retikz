@@ -1,57 +1,5 @@
-import type { MeasuredCell } from '../_cell';
 import type { CanonicalChainConnection, CanonicalChainLayout } from './resolve';
-
-/** 主轴坐标中的单元位置 */
-export type ChainCellPlacement = {
-  /** 用于最终内容回放的单格测量结果 */
-  measured: MeasuredCell;
-
-  /** 格子左上角沿链主轴的坐标 */
-  x: number;
-
-  /** 格子左上角沿链交叉轴的坐标 */
-  y: number;
-
-  /** 格子沿链主轴占用的尺寸 */
-  width: number;
-
-  /** 格子沿链交叉轴占用的尺寸 */
-  height: number;
-};
-
-/** 连线的主轴点列与呈现 */
-export type ChainEdge = {
-  /** 按连线行进顺序排列的主轴坐标点 */
-  points: Array<[number, number]>;
-
-  /** 此连线采用的已解析路由与路径样式 */
-  connection: CanonicalChainConnection;
-};
-
-/** 保留主轴基线的完整布局块 */
-export type ChainBlock = {
-  /** 布局块沿主轴占用的总尺寸 */
-  width: number;
-  /** 布局块沿交叉轴占用的总尺寸 */
-  height: number;
-  /** 块顶边到主轴对齐基线的交叉轴偏移 */
-  baseline: number;
-  /** 块内已放置的格子，端点列表引用其中的同一对象 */
-  cells: Array<ChainCellPlacement>;
-  /** 块内连接格子或分支的有序连线 */
-  edges: Array<ChainEdge>;
-  /** 供前一串行块连接的入口格子 */
-  entries: Array<ChainCellPlacement>;
-  /** 供后一串行块连接的出口格子 */
-  exits: Array<ChainCellPlacement>;
-  /** 并行块自身的布局与连接配置；普通格子或序列块不设置 */
-  parallel?: {
-    /** 当前并行块已解析的分支排布参数 */
-    layout: CanonicalChainLayout;
-    /** 当前并行块已解析的连接线参数 */
-    connection: CanonicalChainConnection;
-  };
-};
+import type { ChainBlock, ChainCellPlacement, MeasuredChainItem } from './types';
 
 /** 平移块内坐标，保持端点引用一致 */
 const moveBlock = (block: ChainBlock, x: number, y: number) => {
@@ -59,20 +7,14 @@ const moveBlock = (block: ChainBlock, x: number, y: number) => {
     cell.x += x;
     cell.y += y;
   }
-
-  for (const edge of block.edges)
-    for (const point of edge.points) {
-      point[0] += x;
-      point[1] += y;
-    }
 };
 
 /** 根据短支路策略选择第一条轨道 */
-export const chainTrackOffset = (count: number, total: number, justify: CanonicalChainLayout['justify']) =>
+const computeTrackOffset = (count: number, total: number, justify: CanonicalChainLayout['justify']) =>
   justify === 'end' ? total - count : justify === 'center' ? Math.floor((total - count) / 2) : 0;
 
 /** 拼装已经测量的直属序列 */
-export const layoutChainSequence = (
+const layoutChainSequence = (
   blocks: Array<ChainBlock>,
   layout: CanonicalChainLayout,
   connection: CanonicalChainConnection,
@@ -84,7 +26,7 @@ export const layoutChainSequence = (
     minY = 0,
     maxY = 0;
   const cells: Array<ChainCellPlacement> = [],
-    edges: Array<ChainEdge> = [];
+    connections: ChainBlock['connections'] = [];
   if (tracks) for (let i = 0; i < offset; i++) x += tracks[i] + (trackGaps?.[i] ?? layout.gap);
 
   for (let i = 0; i < blocks.length; i++) {
@@ -105,25 +47,18 @@ export const layoutChainSequence = (
 
       for (const from of previous.exits)
         for (const to of block.entries) {
-          const a: [number, number] = [from.x + from.width, from.y + from.height / 2],
-            z: [number, number] = [to.x, to.y + to.height / 2];
-          let points: Array<[number, number]>;
-          if (options.route === 'auto') {
-            if (block.parallel) {
-              const rail = start - gap / 2;
-              points = [a, [rail, a[1]], [rail, z[1]], z];
-            } else if (previous.parallel) {
-              const rail = x - gap / 2;
-              points = [a, [rail, a[1]], [rail, z[1]], z];
-            } else points = [a, z];
-          } else points = [a, z];
+          const rail = block.parallel ? start - gap / 2 : previous.parallel ? x - gap / 2 : undefined;
+          const autoFraction =
+            options.route === 'auto' && rail !== undefined
+              ? (rail - from.x - from.width / 2) / (to.x + to.width / 2 - from.x - from.width / 2)
+              : undefined;
 
-          edges.push({ points, connection: options });
+          connections.push({ from, to, options, autoFraction });
         }
     }
 
     cells.push(...block.cells);
-    edges.push(...block.edges);
+    connections.push(...block.connections);
     x += slot;
   }
 
@@ -132,7 +67,7 @@ export const layoutChainSequence = (
     height: maxY - minY,
     baseline: -minY,
     cells,
-    edges,
+    connections,
     entries: blocks[0]?.entries ?? [],
     exits: blocks.at(-1)?.exits ?? [],
   };
@@ -142,7 +77,7 @@ export const layoutChainSequence = (
 };
 
 /** 将多条序列组成有序分支包围盒 */
-export const layoutChainParallel = (
+const layoutChainParallel = (
   branches: Array<Array<ChainBlock>>,
   layout: CanonicalChainLayout,
   connection: CanonicalChainConnection,
@@ -152,7 +87,7 @@ export const layoutChainParallel = (
   const tracks = layout.spacing === 'steps' ? Array<number>(count).fill(0) : undefined;
   if (tracks)
     for (const branch of branches) {
-      const offset = chainTrackOffset(branch.length, count, layout.justify);
+      const offset = computeTrackOffset(branch.length, count, layout.justify);
       branch.forEach((block, i) => {
         tracks[offset + i] = Math.max(tracks[offset + i], block.width);
       });
@@ -161,7 +96,7 @@ export const layoutChainParallel = (
   const trackGaps = Array<number>(Math.max(0, count - 1)).fill(0);
   if (tracks)
     for (const branch of branches) {
-      const offset = chainTrackOffset(branch.length, count, layout.justify);
+      const offset = computeTrackOffset(branch.length, count, layout.justify);
 
       for (let i = 1; i < branch.length; i++)
         trackGaps[offset + i - 1] = Math.max(
@@ -176,14 +111,14 @@ export const layoutChainParallel = (
       layout,
       connection,
       tracks,
-      chainTrackOffset(branch.length, count, layout.justify),
+      computeTrackOffset(branch.length, count, layout.justify),
       tracks ? trackGaps : undefined,
     ),
   );
   const width = sequences.reduce((maximum, branch) => Math.max(maximum, branch.width), 0);
   let y = 0;
   const cells: Array<ChainCellPlacement> = [],
-    edges: Array<ChainEdge> = [],
+    connections: ChainBlock['connections'] = [],
     entries: Array<ChainCellPlacement> = [],
     exits: Array<ChainCellPlacement> = [],
     baselines: Array<number> = [];
@@ -199,7 +134,7 @@ export const layoutChainParallel = (
     baselines.push(y + branch.baseline);
     moveBlock(branch, x, y);
     cells.push(...branch.cells);
-    edges.push(...branch.edges);
+    connections.push(...branch.connections);
     entries.push(...branch.entries);
     exits.push(...branch.exits);
     y += branch.height + layout.branchGap;
@@ -216,5 +151,43 @@ export const layoutChainParallel = (
           ? height - parentHeight / 2
           : height / 2;
 
-  return { width, height, baseline, cells, edges, entries, exits, parallel: { layout, connection } };
+  return { width, height, baseline, cells, connections, entries, exits, parallel: { layout, connection } };
+};
+
+/** 将测量树递归合并为主轴坐标中的完整布局块 */
+export const layoutChainItems = (
+  items: Array<MeasuredChainItem>,
+  layout: CanonicalChainLayout,
+  connection: CanonicalChainConnection,
+  down: boolean,
+): ChainBlock => {
+  const buildBlocks = (branchItems: Array<MeasuredChainItem>): Array<ChainBlock> => {
+    const blocks: Array<ChainBlock> = [];
+    for (const item of branchItems) {
+      if (item.kind === 'cell') {
+        const cell: ChainCellPlacement = {
+          measured: item.measured,
+          x: 0,
+          y: 0,
+          width: down ? item.measured.height : item.measured.width,
+          height: down ? item.measured.width : item.measured.height,
+        };
+        blocks.push({
+          width: cell.width,
+          height: cell.height,
+          baseline: cell.height / 2,
+          cells: [cell],
+          connections: [],
+          entries: [cell],
+          exits: [cell],
+        });
+      } else {
+        blocks.push(
+          layoutChainParallel(item.branches.map(buildBlocks), item.layout, item.connection, blocks.at(-1)!.height),
+        );
+      }
+    }
+    return blocks;
+  };
+  return layoutChainSequence(buildBlocks(items), layout, connection);
 };

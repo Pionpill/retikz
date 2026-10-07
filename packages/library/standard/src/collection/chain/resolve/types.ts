@@ -8,7 +8,7 @@ import type { ChainParallelLayoutSchema } from '../schema';
 export type CanonicalChainLayout = output<typeof ChainParallelLayoutSchema>;
 
 /** 已解析继承的自动连接 */
-export type CanonicalChainConnection = {
+export type CanonicalChainConnection = IRChainConnection & {
   /** 已补齐的连线路由策略 */
   route: NonNullable<IRChainConnection['route']>;
   /** 继承并补齐后的连线路径配置 */

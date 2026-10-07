@@ -52,7 +52,7 @@ const MatrixBaseSchema = CompositeBaseSchema.extend({
   type: literal('matrix').describe('Rectangular cell presentation.'),
   ...ScopePropsSchema.omit({ style: true }).shape,
   style: CellStyleSchema.optional(),
-  layout: MatrixLayoutSchema.optional(),
+  layout: MatrixLayoutSchema.optional().describe('Cell dimensions, padding, overflow, and row or column gaps.'),
   label: NodeSchema.shape.label,
   index: MatrixIndexSchema,
   cellIdMode: zodEnum(['explicit', 'index'])

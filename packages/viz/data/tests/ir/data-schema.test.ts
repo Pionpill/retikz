@@ -1,8 +1,28 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import { DataFieldType, DataModelSchema, DataReferenceSchema, ScalarValueSchema } from '../../src';
+import {
+  DataFieldType,
+  DataModelSchema,
+  DataReferenceSchema,
+  FieldDefinitionSchema,
+  ScalarValueSchema,
+} from '../../src';
 
 describe('data schema', () => {
+  it.each(['continuous', 'temporal'])('rejects category order on an explicit %s field', type => {
+    for (const order of ['appearance', 'ascending', 'descending', ['S', 'M']]) {
+      expect(FieldDefinitionSchema.safeParse({ name: 'value', type, order }).success).toBe(false);
+    }
+    expect(FieldDefinitionSchema.parse({ name: 'value', type })).toEqual({ name: 'value', type });
+  });
+
+  it('preserves category order for categorical and inferred declarations', () => {
+    for (const type of ['categorical', undefined]) {
+      const field = { name: 'size', ...(type === undefined ? {} : { type }), order: ['S', 'M'] };
+      expect(FieldDefinitionSchema.parse(JSON.parse(JSON.stringify(field)))).toEqual(field);
+    }
+  });
+
   it('parses data model and survives JSON round-trip', () => {
     const model = [
       { name: 'month', type: DataFieldType.Categorical },

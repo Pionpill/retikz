@@ -484,24 +484,35 @@ export type FlowGroupProps = FlowGroupMarkerProps &
 - `FlowLayout`：<ApiSourceLink label={"FlowLayout"} path={"packages/schematic/diagram-react/src/flow/FlowLayout.tsx"} startLine={20}>声明 FlowDiagram 中无外壳的作者指定布局</ApiSourceLink>
 - `FlowLayoutProps`：<ApiSourceLink label={"FlowLayoutProps"} path={"packages/schematic/diagram-react/src/flow/FlowLayout.tsx"} startLine={11}>Flow Layout 的 React 编写参数</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员                 | 类型            | 默认值 | 说明                                       |
+| -------------------- | --------------- | ------ | ------------------------------------------ |
+| `readonly children?` | `ReactNode`     | —      | 递归 Flow Entity、Group 或 Layout children |
+| `excludeFromBounds?` | `Array<string>` | —      | 不计入本 Layout 对外结构边界的直接子项 id  |
+| `id`                 | `string`        | —      | 整张 Flow 图内唯一的作者 id                |
+| `rank?`              | `number`        | —      | 父 Flow 作用域内的可选层级约束             |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="linear">
 
 <DocTab value="linear" label="属性 · 线性排列">
 
 <ApiTable>
 
-| 成员                 | 类型                                  | 默认值 | 说明                                                           |
-| -------------------- | ------------------------------------- | ------ | -------------------------------------------------------------- |
-| `align?`             | `"center" \| "start" \| "end"`        | —      | 交叉轴对齐，省略时居中                                         |
-| `readonly children?` | `ReactNode`                           | —      | 递归 Flow Entity、Group 或 Layout children                     |
-| `containerWidth?`    | `"match-largest"`                     | —      | 纵向容器为直接子容器分配最大自然宽度                           |
-| `direction`          | `"right" \| "left" \| "up" \| "down"` | —      | 直接子项的必填排列方向                                         |
-| `excludeFromBounds?` | `Array<string>`                       | —      | 不计入本 Layout 对外结构边界的直接子项 id                      |
-| `gap?`               | `number`                              | —      | 相邻直接子项的间距                                             |
-| `id`                 | `string`                              | —      | 整张 Flow 图内唯一的作者 id                                    |
-| `itemWidth?`         | `number \| "fill" \| "match-largest"` | —      | 直接 Entity 固定宽度、match-largest 等宽，或 fill 均分新增宽度 |
-| `kind`               | `"linear"`                            | —      | 沿一个方向固定排列直接子项                                     |
-| `rank?`              | `number`                              | —      | 父 Flow 作用域内的可选层级约束                                 |
+| 成员              | 类型                                  | 默认值 | 说明                                                           |
+| ----------------- | ------------------------------------- | ------ | -------------------------------------------------------------- |
+| `align?`          | `"center" \| "start" \| "end"`        | —      | 交叉轴对齐，省略时居中                                         |
+| `containerWidth?` | `"match-largest"`                     | —      | 纵向容器为直接子容器分配最大自然宽度                           |
+| `direction`       | `"right" \| "left" \| "up" \| "down"` | —      | 直接子项的必填排列方向                                         |
+| `gap?`            | `number`                              | —      | 相邻直接子项的间距                                             |
+| `itemWidth?`      | `number \| "fill" \| "match-largest"` | —      | 直接 Entity 固定宽度、match-largest 等宽，或 fill 均分新增宽度 |
+| `kind`            | `"linear"`                            | —      | 沿一个方向固定排列直接子项                                     |
 
 </ApiTable>
 
@@ -513,14 +524,10 @@ export type FlowGroupProps = FlowGroupMarkerProps &
 
 | 成员                 | 类型                                                                               | 默认值 | 说明                                                                                |
 | -------------------- | ---------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
-| `readonly children?` | `ReactNode`                                                                        | —      | 递归 Flow Entity、Group 或 Layout children                                          |
-| `excludeFromBounds?` | `Array<string>`                                                                    | —      | 不计入本 Layout 对外结构边界的直接子项 id                                           |
 | `gap?`               | `number \| { row: number; column: number; }`                                       | —      | 数字同时设置行列间距；对象必须包含 row 和 column，省略时继承 nodeGap 或物理轴默认值 |
-| `id`                 | `string`                                                                           | —      | 整张 Flow 图内唯一的作者 id                                                         |
 | `itemWidth?`         | `number \| "match-largest"`                                                        | —      | 直接 Entity 的固定可见宽度或 match-largest                                          |
 | `kind`               | `"grid"`                                                                           | —      | 按物理行列固定放置直接子项                                                          |
 | `placements`         | `Record<string, { row: number; column: number; }> \| Array<Array<string \| null>>` | —      | 二维数组或以直接子项 id 为键的行列映射                                              |
-| `rank?`              | `number`                                                                           | —      | 父 Flow 作用域内的可选层级约束                                                      |
 | `reserveLabelSpace?` | `false \| true`                                                                    | —      | 关系标签是否扩大对应轴的轨道间距，省略时开启                                        |
 
 </ApiTable>
@@ -1169,18 +1176,29 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                       | 默认值 | 说明                                     |
+| ----------------- | -------------------------------------------------------------------------- | ------ | ---------------------------------------- |
+| `readonly kind`   | `'bend'`                                                                   | —      | 标识已经确定参数的弯曲参考路线           |
+| `readonly points` | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | 按 source 到 target 排列的根局部参考端点 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="symmetric">
 
 <DocTab value="symmetric" label="属性 · 对称弯曲">
 
 <ApiTable>
 
-| 成员                     | 类型                                                                       | 默认值 | 说明                                     |
-| ------------------------ | -------------------------------------------------------------------------- | ------ | ---------------------------------------- |
-| `readonly bendAngle`     | `number`                                                                   | —      | 弯曲角度，单位为度                       |
-| `readonly bendDirection` | `'left' \| 'right'`                                                        | —      | 相对源到目标方向的弯曲侧                 |
-| `readonly kind`          | `'bend'`                                                                   | —      | 标识已经确定参数的弯曲参考路线           |
-| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | 按 source 到 target 排列的根局部参考端点 |
+| 成员                     | 类型                | 默认值 | 说明                     |
+| ------------------------ | ------------------- | ------ | ------------------------ |
+| `readonly bendAngle`     | `number`            | —      | 弯曲角度，单位为度       |
+| `readonly bendDirection` | `'left' \| 'right'` | —      | 相对源到目标方向的弯曲侧 |
 
 </ApiTable>
 
@@ -1190,13 +1208,11 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
 
 <ApiTable>
 
-| 成员                 | 类型                                                                       | 默认值 | 说明                                     |
-| -------------------- | -------------------------------------------------------------------------- | ------ | ---------------------------------------- |
-| `readonly inAngle`   | `number`                                                                   | —      | 终点一侧控制方向的角度，单位为度         |
-| `readonly kind`      | `'bend'`                                                                   | —      | 标识已经确定参数的弯曲参考路线           |
-| `readonly looseness` | `number`                                                                   | —      | 控制曲线控制臂长度的松紧系数             |
-| `readonly outAngle`  | `number`                                                                   | —      | 从起点出发的切线角，单位为度             |
-| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | 按 source 到 target 排列的根局部参考端点 |
+| 成员                 | 类型     | 默认值 | 说明                             |
+| -------------------- | -------- | ------ | -------------------------------- |
+| `readonly inAngle`   | `number` | —      | 终点一侧控制方向的角度，单位为度 |
+| `readonly looseness` | `number` | —      | 控制曲线控制臂长度的松紧系数     |
+| `readonly outAngle`  | `number` | —      | 从起点出发的切线角，单位为度     |
 
 </ApiTable>
 
@@ -1238,17 +1254,28 @@ export type FlowBendRoute = Readonly<{
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                       | 默认值 | 说明                                   |
+| ----------------- | -------------------------------------------------------------------------- | ------ | -------------------------------------- |
+| `readonly points` | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | 按 source 到 target 排列的中心参考端点 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="curve">
 
 <DocTab value="curve" label="属性 · 二次贝塞尔">
 
 <ApiTable>
 
-| 成员               | 类型                                                                       | 默认值 | 说明                                   |
-| ------------------ | -------------------------------------------------------------------------- | ------ | -------------------------------------- |
-| `readonly control` | `Readonly<Position>`                                                       | —      | 已确定的二次控制点，不是曲线经过点     |
-| `readonly kind`    | `'curve'`                                                                  | —      | 二次贝塞尔参考几何                     |
-| `readonly points`  | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | 按 source 到 target 排列的中心参考端点 |
+| 成员               | 类型                 | 默认值 | 说明                               |
+| ------------------ | -------------------- | ------ | ---------------------------------- |
+| `readonly control` | `Readonly<Position>` | —      | 已确定的二次控制点，不是曲线经过点 |
+| `readonly kind`    | `'curve'`            | —      | 二次贝塞尔参考几何                 |
 
 </ApiTable>
 
@@ -1258,12 +1285,11 @@ export type FlowBendRoute = Readonly<{
 
 <ApiTable>
 
-| 成员                | 类型                                                                       | 默认值 | 说明                                   |
-| ------------------- | -------------------------------------------------------------------------- | ------ | -------------------------------------- |
-| `readonly control1` | `Readonly<Position>`                                                       | —      | 已确定的起点切线控制点                 |
-| `readonly control2` | `Readonly<Position>`                                                       | —      | 已确定的终点切线控制点                 |
-| `readonly kind`     | `'cubic'`                                                                  | —      | 三次贝塞尔参考几何                     |
-| `readonly points`   | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | 按 source 到 target 排列的中心参考端点 |
+| 成员                | 类型                 | 默认值 | 说明                   |
+| ------------------- | -------------------- | ------ | ---------------------- |
+| `readonly control1` | `Readonly<Position>` | —      | 已确定的起点切线控制点 |
+| `readonly control2` | `Readonly<Position>` | —      | 已确定的终点切线控制点 |
+| `readonly kind`     | `'cubic'`            | —      | 三次贝塞尔参考几何     |
 
 </ApiTable>
 

@@ -16,6 +16,8 @@
 
 不得为了套用本表而新建占位目录、泛化 `helpers.ts` 或纯转发 shim。
 
+同一具体 composite 的 Definition、创建工厂与依赖 Provider 统一放在 owner 内的 `composite.ts`，删除对应的 `definition.ts`、`factory.ts`、`provider.ts`，不保留转发文件；仅有其中部分装配职责时也使用 `composite.ts`。此规则不适用于独立扩展契约、registry、数据准备、非 composite provider 或 adapter authoring 工厂。
+
 ## 内部领域目录与公共边界
 
 - 在包或能力家族内，具有独立领域职责、被多个具体 owner 复用且不作为独立公共组件或 package subpath 的基础模块，目录使用 `_<domain>`，如 `_chart`、`_diagram`；放在实际消费方的最近共同领域下，不使用 `_shared`、`_internal` 等泛化名称

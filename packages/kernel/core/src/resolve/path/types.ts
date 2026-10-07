@@ -241,6 +241,12 @@ export type PathTargetView = Readonly<{
   referenceOfTarget: (target: IRTarget, scopeChain: ReadonlyArray<Transform>) => IRPosition | null;
   /** 使用 toward 计算已绑定 target 的裁剪点 */
   clipTarget: (target: IRTarget, toward: IRPosition, scopeChain: ReadonlyArray<Transform>) => IRPosition | null;
+  /** 移除以自动节点目标为起点的折线内部前缀；空数组表示没有外部可见部分 */
+  clipPolylineTarget: (
+    target: IRTarget,
+    points: ReadonlyArray<IRPosition>,
+    scopeChain: ReadonlyArray<Transform>,
+  ) => Array<IRPosition>;
 }>;
 
 /** 解析阶段的窄上下文，不依赖 compile / pipeline 类型 */

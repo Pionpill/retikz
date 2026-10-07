@@ -126,6 +126,66 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 - `BlockRow`: <ApiSourceLink label={"BlockRow"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={185}>Integrate independent Block Row Source into React authoring</ApiSourceLink>
 - `BlockRowProps`: <ApiSourceLink label={"BlockRowProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={56}>React authoring props for Block Row</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                                                                                                                                               | Default | Description                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `BlockRowProps["animations"]`                                                                                                                                                                                      | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `background?`     | `BlockRowProps["background"]`                                                                                                                                                                                      | —       | Explicit shell background override.                                                                                                             |
+| `border?`         | `BlockRowProps["border"]`                                                                                                                                                                                          | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
+| `defaults?`       | `BlockRowProps["defaults"]`                                                                                                                                                                                        | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `BlockRowProps["frame"]`                                                                                                                                                                                           | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
+| `gap?`            | `number`                                                                                                                                                                                                           | —       | Optional horizontal gap between Row children in user units.                                                                                     |
+| `id?`             | `string`                                                                                                                                                                                                           | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Content overflow: visible or clip.                                                                                                              |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing between the content and outer shell.                                                                                                    |
+| `placement?`      | `BlockRowProps["placement"]`                                                                                                                                                                                       | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `BlockRowProps["style"]`                                                                                                                                                                                           | —       | Cascading graphic overrides for descendants.                                                                                                    |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `BlockRowProps["transforms"]`                                                                                                                                                                                      | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text content">
+
+<ApiTable>
+
+| Member               | Type                   | Default | Description                                                      |
+| -------------------- | ---------------------- | ------- | ---------------------------------------------------------------- |
+| `readonly children?` | `never`                | —       | —                                                                |
+| `readonly content`   | `BlockRowContentInput` | —       | Shorthand row content, mutually exclusive with explicit children |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · Arbitrary children">
+
+<ApiTable>
+
+| Member               | Type        | Default | Description                                                               |
+| -------------------- | ----------- | ------- | ------------------------------------------------------------------------- |
+| `readonly children?` | `ReactNode` | —       | Arbitrary children entering the Row layout horizontally in authored order |
+| `readonly content?`  | `never`     | —       | —                                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const BlockRow: {
   (props: BlockRowProps, context?: any): ReactNode;
@@ -133,6 +193,10 @@ export declare const BlockRow: {
 
 export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ## `@retikz/graph-vanilla`
 
@@ -283,11 +347,75 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 - `blockRow`: <ApiSourceLink label={"blockRow"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={54}>Create a Block Row Source authoring embed</ApiSourceLink>
 - `BlockRowInputEmbedProps`: <ApiSourceLink label={"BlockRowInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={12}>Source authoring input for a Block Row embed</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                                                                                                                                               | Default | Description                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `BlockRowInputEmbedProps["animations"]`                                                                                                                                                                            | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `background?`     | `BlockRowInputEmbedProps["background"]`                                                                                                                                                                            | —       | Explicit shell background override.                                                                                                             |
+| `border?`         | `BlockRowInputEmbedProps["border"]`                                                                                                                                                                                | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
+| `defaults?`       | `BlockRowInputEmbedProps["defaults"]`                                                                                                                                                                              | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `BlockRowInputEmbedProps["frame"]`                                                                                                                                                                                 | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
+| `gap?`            | `number`                                                                                                                                                                                                           | —       | Optional horizontal gap between Row children in user units.                                                                                     |
+| `id?`             | `string`                                                                                                                                                                                                           | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Content overflow: visible or clip.                                                                                                              |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing between the content and outer shell.                                                                                                    |
+| `placement?`      | `BlockRowInputEmbedProps["placement"]`                                                                                                                                                                             | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `BlockRowInputEmbedProps["style"]`                                                                                                                                                                                 | —       | Cascading graphic overrides for descendants.                                                                                                    |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `BlockRowInputEmbedProps["transforms"]`                                                                                                                                                                            | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text content">
+
+<ApiTable>
+
+| Member               | Type                   | Default | Description                                                      |
+| -------------------- | ---------------------- | ------- | ---------------------------------------------------------------- |
+| `readonly children?` | `never`                | —       | —                                                                |
+| `readonly content`   | `BlockRowContentInput` | —       | Shorthand row content, mutually exclusive with explicit children |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · Arbitrary children">
+
+<ApiTable>
+
+| Member               | Type                             | Default | Description                                                                     |
+| -------------------- | -------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | Drawing content in authored order for this row, mutually exclusive with content |
+| `readonly content?`  | `never`                          | —       | —                                                                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const blockRow: (input: BlockRowInputEmbedProps) => InputEmbed<BlockRowInputEmbedProps>;
 
 export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### normalizeBlock / InputBlock
 
@@ -413,6 +541,67 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 - `normalizeBlockRow`: <ApiSourceLink label={"normalizeBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={134}>Assemble Block Row authoring input into an independent Source composite</ApiSourceLink>
 - `InputBlockRow`: <ApiSourceLink label={"InputBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={63}>Input aligned with Block Row Source, allowing Vanilla child authoring sugar</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                                                                                                                                               | Default | Description                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputBlockRow["animations"]`                                                                                                                                                                                      | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `background?`     | `InputBlockRow["background"]`                                                                                                                                                                                      | —       | Explicit shell background override.                                                                                                             |
+| `border?`         | `InputBlockRow["border"]`                                                                                                                                                                                          | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
+| `defaults?`       | `InputBlockRow["defaults"]`                                                                                                                                                                                        | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `InputBlockRow["frame"]`                                                                                                                                                                                           | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
+| `gap?`            | `number`                                                                                                                                                                                                           | —       | Optional horizontal gap between Row children in user units.                                                                                     |
+| `id?`             | `string`                                                                                                                                                                                                           | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Content overflow: visible or clip.                                                                                                              |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing between the content and outer shell.                                                                                                    |
+| `placement?`      | `InputBlockRow["placement"]`                                                                                                                                                                                       | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `InputBlockRow["style"]`                                                                                                                                                                                           | —       | Cascading graphic overrides for descendants.                                                                                                    |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `InputBlockRow["transforms"]`                                                                                                                                                                                      | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `readonly type?`  | `'blockRow'`                                                                                                                                                                                                       | —       | —                                                                                                                                               |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text content">
+
+<ApiTable>
+
+| Member               | Type                   | Default | Description                                                      |
+| -------------------- | ---------------------- | ------- | ---------------------------------------------------------------- |
+| `readonly children?` | `never`                | —       | —                                                                |
+| `readonly content`   | `BlockRowContentInput` | —       | Shorthand row content, mutually exclusive with explicit children |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · Arbitrary children">
+
+<ApiTable>
+
+| Member               | Type                             | Default | Description                                                                     |
+| -------------------- | -------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | Drawing content in authored order for this row, mutually exclusive with content |
+| `readonly content?`  | `never`                          | —       | —                                                                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const normalizeBlockRow: (input: InputBlockRow) => IRBlockRow;
 
@@ -428,6 +617,10 @@ export type InputBlockRow = InputBlockRowFields &
       }>
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### BlockHeaderInputEmbedAdapter
 
@@ -591,9 +784,7 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 - `createBlockRow`: <ApiSourceLink label={"createBlockRow"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={52}>Create a Block Row Source record</ApiSourceLink>
 - `BlockRowCreateOptions`: <ApiSourceLink label={"BlockRowCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={28}>Authoring input for a Block Row Source record</ApiSourceLink>
 
-<DocTabs defaultValue="text">
-
-<DocTab value="text" label="Members · Text content">
+**Common members**
 
 <ApiTable>
 
@@ -604,7 +795,6 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 | `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-| `content`         | `BlockRowCreateOptions["content"]`                                                                                                                                                                                 | —       | Block text shorthand lowered to one full-width item or multiple equal-width Row items.                                                          |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
 | `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
@@ -622,34 +812,29 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 
 </ApiTable>
 
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text content">
+
+<ApiTable>
+
+| Member    | Type                               | Default | Description                                                                            |
+| --------- | ---------------------------------- | ------- | -------------------------------------------------------------------------------------- |
+| `content` | `BlockRowCreateOptions["content"]` | —       | Block text shorthand lowered to one full-width item or multiple equal-width Row items. |
+
+</ApiTable>
+
 </DocTab>
 
 <DocTab value="children" label="Members · Arbitrary children">
 
 <ApiTable>
 
-| Member            | Type                                                                                                                                                                                                               | Default | Description                                                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`     | `BlockRowCreateOptions["animations"]`                                                                                                                                                                              | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
-| `background?`     | `BlockRowCreateOptions["background"]`                                                                                                                                                                              | —       | Explicit shell background override.                                                                                                             |
-| `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `children?`       | `Array<IRChild>`                                                                                                                                                                                                   | —       | Optional ordered arbitrary Core or Tier 2 children.                                                                                             |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
-| `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
-| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
-| `gap?`            | `number`                                                                                                                                                                                                           | —       | Optional horizontal gap between Row children in user units.                                                                                     |
-| `id?`             | `string`                                                                                                                                                                                                           | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
-| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
-| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
-| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Content overflow: visible or clip.                                                                                                              |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing between the content and outer shell.                                                                                                    |
-| `placement?`      | `BlockRowCreateOptions["placement"]`                                                                                                                                                                               | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
-| `style?`          | `BlockRowCreateOptions["style"]`                                                                                                                                                                                   | —       | Cascading graphic overrides for descendants.                                                                                                    |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
-| `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
-| `zIndex?`         | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| Member      | Type             | Default | Description                                         |
+| ----------- | ---------------- | ------- | --------------------------------------------------- |
+| `children?` | `Array<IRChild>` | —       | Optional ordered arbitrary Core or Tier 2 children. |
 
 </ApiTable>
 
@@ -949,9 +1134,73 @@ export type IRBlockHeader = ZodInfer<typeof BlockHeaderSchema>;
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                                                                                                                                               | Default | Description                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `ZodInfer<typeof BlockRowSchema.shape["animations"]>`                                                                                                                                                              | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `background?`     | `ZodInfer<typeof BlockRowSchema.shape["background"]>`                                                                                                                                                              | —       | Explicit shell background override.                                                                                                             |
+| `border?`         | `ZodInfer<typeof BlockRowSchema.shape["border"]>`                                                                                                                                                                  | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
+| `defaults?`       | `ZodInfer<typeof BlockRowSchema.shape["defaults"]>`                                                                                                                                                                | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `ZodInfer<typeof BlockRowSchema.shape["frame"]>`                                                                                                                                                                   | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
+| `gap?`            | `number`                                                                                                                                                                                                           | —       | Optional horizontal gap between Row children in user units.                                                                                     |
+| `id?`             | `string`                                                                                                                                                                                                           | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `namespace`       | `"graph"`                                                                                                                                                                                                          | —       | Graph semantic element namespace.                                                                                                               |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Content overflow: visible or clip.                                                                                                              |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing between the content and outer shell.                                                                                                    |
+| `placement?`      | `ZodInfer<typeof BlockRowSchema.shape["placement"]>`                                                                                                                                                               | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `ZodInfer<typeof BlockRowSchema.shape["style"]>`                                                                                                                                                                   | —       | Cascading graphic overrides for descendants.                                                                                                    |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `ZodInfer<typeof BlockRowSchema.shape["transforms"]>`                                                                                                                                                              | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `type`            | `"blockRow"`                                                                                                                                                                                                       | —       | Block Row Source composite discriminator.                                                                                                       |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text content">
+
+<ApiTable>
+
+| Member    | Type                                               | Default | Description                                                                            |
+| --------- | -------------------------------------------------- | ------- | -------------------------------------------------------------------------------------- |
+| `content` | `ZodInfer<typeof BlockRowSchema.shape["content"]>` | —       | Block text shorthand lowered to one full-width item or multiple equal-width Row items. |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · Arbitrary children">
+
+<ApiTable>
+
+| Member      | Type             | Default | Description                                         |
+| ----------- | ---------------- | ------- | --------------------------------------------------- |
+| `children?` | `Array<IRChild>` | —       | Optional ordered arbitrary Core or Tier 2 children. |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type IRBlockRow = ZodInfer<typeof BlockRowSchema>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### IRBlockSection
 
@@ -1320,8 +1569,8 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
 <p>
   <ApiSourceLink
     label={'createCodeBlockContribution'}
-    path={'packages/schematic/graph/src/code/pipeline/provider.ts'}
-    startLine={25}
+    path={'packages/schematic/graph/src/code/pipeline/composite.ts'}
+    startLine={97}
   >
     Create a Core contribution containing the code entity and all lower-level dependencies
   </ApiSourceLink>

@@ -2,7 +2,7 @@ import { assertNonEmptyString } from '@retikz/foundation';
 
 import { RetikzTableError } from '../../error';
 import type { LowerTablesOptions } from '../types';
-import { createTableNestedDefinitionProvider, createTableProvider } from './provider';
+import { createTableNestedDefinitionProvider, createTableProvider } from './composite';
 import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
 
 /** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
@@ -29,6 +29,7 @@ const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
           'visualScaleDefinitions',
           'tableThemeStyles',
           'formatDefinitions',
+          'fieldOrderDefinitions',
           'transformDefinitions',
           'statisticsReducerDefinitions',
           'rowSelectorDefinitions',

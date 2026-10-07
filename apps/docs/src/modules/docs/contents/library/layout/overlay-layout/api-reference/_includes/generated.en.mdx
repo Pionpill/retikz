@@ -50,17 +50,13 @@ export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
 - `OverlayLayoutItem`: <ApiSourceLink label={"OverlayLayoutItem"} path={"packages/library/layout-react/src/layout-item/OverlayLayoutItem.tsx"} startLine={16}>Direct layout item read statically by OverlayLayout</ApiSourceLink>
 - `OverlayLayoutItemProps`: <ApiSourceLink label={"OverlayLayoutItemProps"} path={"packages/library/layout-react/src/layout-item/OverlayLayoutItem.tsx"} startLine={8}>React authoring props for a direct OverlayLayout item</ApiSourceLink>
 
-<DocTabs defaultValue="jsx">
-
-<DocTab value="jsx" label="Members · JSX child">
+**Common members**
 
 <ApiTable>
 
 | Member               | Type                                                                                                                                                                                                                     | Default              | Description                                                                                                    |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                       | —                    | Optional vertical alignment override.                                                                          |
-| `readonly children`  | `ReactNode`                                                                                                                                                                                                              | —                    | Provide exactly one drawable JSX child; cannot be combined with ir                                             |
-| `readonly ir?`       | `never`                                                                                                                                                                                                                  | —                    | The JSX branch does not accept IR input                                                                        |
 | `readonly itemKey?`  | `string`                                                                                                                                                                                                                 | —                    | Stable identity within the container; omission generates a positional internal key, independently of React key |
 | `justifySelf?`       | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                              | —                    | Optional horizontal alignment override.                                                                        |
 | `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }`       | `0`                  | Item margin outside the parent allocation slot.                                                                |
@@ -71,24 +67,31 @@ export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
 
 </ApiTable>
 
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="jsx">
+
+<DocTab value="jsx" label="Members · JSX child">
+
+<ApiTable>
+
+| Member              | Type        | Default | Description                                                        |
+| ------------------- | ----------- | ------- | ------------------------------------------------------------------ |
+| `readonly children` | `ReactNode` | —       | Provide exactly one drawable JSX child; cannot be combined with ir |
+| `readonly ir?`      | `never`     | —       | The JSX branch does not accept IR input                            |
+
+</ApiTable>
+
 </DocTab>
 
 <DocTab value="ir" label="Members · IR child">
 
 <ApiTable>
 
-| Member               | Type                                                                                                                                                                                                                     | Default              | Description                                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                       | —                    | Optional vertical alignment override.                                                                          |
-| `readonly children?` | `never`                                                                                                                                                                                                                  | —                    | The IR branch does not accept JSX children                                                                     |
-| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                         | —                    | A serializable child drawing; cannot be combined with children                                                 |
-| `readonly itemKey?`  | `string`                                                                                                                                                                                                                 | —                    | Stable identity within the container; omission generates a positional internal key, independently of React key |
-| `justifySelf?`       | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                              | —                    | Optional horizontal alignment override.                                                                        |
-| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }`       | `0`                  | Item margin outside the parent allocation slot.                                                                |
-| `offset?`            | `{ x?: number \| undefined; y?: number \| undefined; }`                                                                                                                                                                  | `{"x":0,"y":0}`      | Finite post-placement translation.                                                                             |
-| `placement?`         | `{ kind: "aligned"; } \| { kind: "positioned"; at: { x: number; y: number; }; anchor?: { x?: number \| undefined; y?: number \| undefined; } \| undefined; width?: number \| undefined; height?: number \| undefined; }` | `{"kind":"aligned"}` | Aligned or positioned item placement.                                                                          |
-| `sizeParticipation?` | `"include" \| "exclude"`                                                                                                                                                                                                 | `"include"`          | Whether the item contributes to intrinsic container size.                                                      |
-| `zIndex?`            | `number`                                                                                                                                                                                                                 | `0`                  | Integer paint-order layer for the item scope.                                                                  |
+| Member               | Type                             | Default | Description                                                    |
+| -------------------- | -------------------------------- | ------- | -------------------------------------------------------------- |
+| `readonly children?` | `never`                          | —       | The IR branch does not accept JSX children                     |
+| `readonly ir`        | `InputEmbedContribution['node']` | —       | A serializable child drawing; cannot be combined with children |
 
 </ApiTable>
 
@@ -219,7 +222,7 @@ export declare const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapte
 
 ### createOverlayLayout / OverlayLayoutInput
 
-- `createOverlayLayout`: <ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/factory.ts"} startLine={8}>Create persistent OverlayLayout input preserving omitted fields and shorthand</ApiSourceLink>
+- `createOverlayLayout`: <ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={30}>Create persistent OverlayLayout input preserving omitted fields and shorthand</ApiSourceLink>
 - `OverlayLayoutInput`: <ApiSourceLink label={"OverlayLayoutInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>Authoring input accepted by the OverlayLayout factory</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -470,7 +473,7 @@ export type LayoutSizeParticipation = ValueOf<typeof LayoutSizeParticipation>;
 <p>
   <ApiSourceLink
     label={'OverlayLayoutDefinition'}
-    path={'packages/library/layout/src/composites/overlay-layout/definition.ts'}
+    path={'packages/library/layout/src/composites/overlay-layout/composite.ts'}
     startLine={10}
   >
     Official layout-aware composite definition for OverlayLayout
@@ -497,8 +500,8 @@ export const OverlayLayoutDefinition: LayoutCompositeDefinition<
 <p>
   <ApiSourceLink
     label={'OverlayLayoutProvider'}
-    path={'packages/library/layout/src/composites/overlay-layout/provider.ts'}
-    startLine={8}
+    path={'packages/library/layout/src/composites/overlay-layout/composite.ts'}
+    startLine={39}
   >
     Composite dependency provider for OverlayLayout
   </ApiSourceLink>

@@ -2,6 +2,12 @@ import { translateEntityApiReference } from './entity.en';
 
 /** Block 专属说明译文 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '按声明顺序进入 Row 横向布局的任意 children':
+    'Arbitrary children entering the Row layout horizontally in authored order',
+  '行的便捷内容入口，与显式 children 互斥': 'Shorthand row content, mutually exclusive with explicit children',
+  '当前行按作者顺序排列的绘制子内容，与 content 互斥':
+    'Drawing content in authored order for this row, mutually exclusive with content',
+
   块容器内按作者顺序排列的绘制子内容: 'Drawing content in the block container, in authoring order',
   标题前方的可选绘制内容: 'Optional drawing content before the title',
   标题尾部的可选绘制内容: 'Optional drawing content after the title',

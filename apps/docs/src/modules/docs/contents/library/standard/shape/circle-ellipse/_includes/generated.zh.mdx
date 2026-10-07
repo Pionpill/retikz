@@ -7,6 +7,118 @@
 - `Circle`：<ApiSourceLink label={"Circle"} path={"packages/library/standard-react/src/shape/Circle.tsx"} startLine={19}>通过 Vanilla adapter 声明 Standard Circle</ApiSourceLink>
 - `CircleProps`：<ApiSourceLink label={"CircleProps"} path={"packages/library/standard-react/src/shape/Circle.tsx"} startLine={10}>React Circle 的作者输入与宿主事件</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                  | 默认值 | 说明                                                                                         |
+| ----------------- | ------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputCircle['animations']`           | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承                                           |
+| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                                                               |
+| `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                                                                 |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                                                                 |
+| `closed?`         | `"open" \| "chord" \| "sector"`       | —      | 局部轮廓的闭合方式：开放、弦闭合或扇形闭合                                                   |
+| `endAngle?`       | `number`                              | —      | 终止角度，单位为度                                                                           |
+| `id?`             | `string`                              | —      | 显式路径身份                                                                                 |
+| `label?`          | `InputCircle['label']`                | —      | 附着于路径的标签                                                                             |
+| `marks?`          | `InputCircle['marks']`                | —      | 沿路径按归一化位置放置的标记                                                                 |
+| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容                                              |
+| `onClick?`        | `HydrationHandler`                    | —      | 单击该图元（DOM `click`）                                                                    |
+| `onDoubleClick?`  | `HydrationHandler`                    | —      | 双击该图元（DOM `dblclick`）                                                                 |
+| `onPointerDown?`  | `HydrationHandler`                    | —      | 指针在该图元上按下（DOM `pointerdown`）                                                      |
+| `onPointerEnter?` | `HydrationHandler`                    | —      | 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）                  |
+| `onPointerLeave?` | `HydrationHandler`                    | —      | 指针离开该图元（由 `pointermove` + 命中 id 状态机合成）                                      |
+| `onPointerMove?`  | `HydrationHandler`                    | —      | 指针在该图元上移动（DOM `pointermove`）                                                      |
+| `onPointerUp?`    | `HydrationHandler`                    | —      | 指针在该图元上抬起（DOM `pointerup`）                                                        |
+| `onRightClick?`   | `HydrationHandler`                    | —      | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()` |
+| `onWheel?`        | `HydrationHandler`                    | —      | 在该图元上滚轮（DOM `wheel`）                                                                |
+| `rotate?`         | `number`                              | —      | 绕图形包络中心旋转的角度                                                                     |
+| `roundedCorners?` | `number`                              | —      | 线段接头的几何圆角，与描边转角样式独立                                                       |
+| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                                                           |
+| `startAngle?`     | `number`                              | —      | 起始角度，单位为度                                                                           |
+| `style?`          | `InputCircle['style']`                | —      | 路径的稀疏视觉覆盖                                                                           |
+| `sweepAngle?`     | `number`                              | —      | 有符号扫过角度；三个角度字段恰好指定两个                                                     |
+| `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                                                           |
+| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                                                           |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="radius-0">
+
+<DocTab value="radius-0" label="属性 · 半径">
+
+<ApiTable>
+
+| 成员     | 类型          | 默认值 | 说明                                         |
+| -------- | ------------- | ------ | -------------------------------------------- |
+| `center` | `InputTarget` | —      | 形状中心，坐标形式由几何分支决定             |
+| `radius` | `number`      | —      | 用户坐标单位中的半径；椭圆可分别指定两轴半径 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="diameter-1" label="属性 · 直径">
+
+<ApiTable>
+
+| 成员       | 类型          | 默认值 | 说明                             |
+| ---------- | ------------- | ------ | -------------------------------- |
+| `center`   | `InputTarget` | —      | 形状中心，坐标形式由几何分支决定 |
+| `diameter` | `number`      | —      | 圆的直径                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="from-2" label="属性 · 直径端点">
+
+<ApiTable>
+
+| 成员   | 类型               | 默认值 | 说明               |
+| ------ | ------------------ | ------ | ------------------ |
+| `from` | `[number, number]` | —      | 圆直径的第一个端点 |
+| `to`   | `[number, number]` | —      | 圆直径的第二个端点 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="corner1-3" label="属性 · 包围框角点">
+
+<ApiTable>
+
+| 成员      | 类型                   | 默认值      | 说明                                |
+| --------- | ---------------------- | ----------- | ----------------------------------- |
+| `corner1` | `[number, number]`     | —           | 包围矩形的第一个角点                |
+| `corner2` | `[number, number]`     | —           | 包围矩形的对角点                    |
+| `fit?`    | `"contain" \| "cover"` | `"contain"` | 在包围盒中内接 contain 或外接 cover |
+| `inset?`  | `number`               | —           | 包围盒的均匀内缩距离                |
+| `outset?` | `number`               | —           | 包围盒的均匀外扩距离                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="box-4" label="属性 · 包围框">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                       | 默认值      | 说明                                |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------- |
+| `box`     | `{ x: number; y: number; width: number; height: number; } \| { origin: [number, number]; width: number; height: number; }` | —           | 用于拟合形状的轴对齐包围盒          |
+| `fit?`    | `"contain" \| "cover"`                                                                                                     | `"contain"` | 在包围盒中内接 contain 或外接 cover |
+| `inset?`  | `number`                                                                                                                   | —           | 包围盒的均匀内缩距离                |
+| `outset?` | `number`                                                                                                                   | —           | 包围盒的均匀外扩距离                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const Circle: {
   (props: CircleProps, context?: any): React.ReactNode;
@@ -18,10 +130,112 @@ export type CircleProps = InputCircle &
   };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### Ellipse / EllipseProps
 
 - `Ellipse`：<ApiSourceLink label={"Ellipse"} path={"packages/library/standard-react/src/shape/Ellipse.tsx"} startLine={19}>通过 Vanilla adapter 声明 Standard Ellipse</ApiSourceLink>
 - `EllipseProps`：<ApiSourceLink label={"EllipseProps"} path={"packages/library/standard-react/src/shape/Ellipse.tsx"} startLine={10}>React Ellipse 的作者输入与宿主事件</ApiSourceLink>
+
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                  | 默认值 | 说明                                                                                         |
+| ----------------- | ------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputEllipse['animations']`          | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承                                           |
+| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                                                               |
+| `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                                                                 |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                                                                 |
+| `closed?`         | `"open" \| "chord" \| "sector"`       | —      | 局部轮廓的闭合方式：开放、弦闭合或扇形闭合                                                   |
+| `endAngle?`       | `number`                              | —      | 终止角度，单位为度                                                                           |
+| `id?`             | `string`                              | —      | 显式路径身份                                                                                 |
+| `label?`          | `InputEllipse['label']`               | —      | 附着于路径的标签                                                                             |
+| `marks?`          | `InputEllipse['marks']`               | —      | 沿路径按归一化位置放置的标记                                                                 |
+| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容                                              |
+| `onClick?`        | `HydrationHandler`                    | —      | 单击该图元（DOM `click`）                                                                    |
+| `onDoubleClick?`  | `HydrationHandler`                    | —      | 双击该图元（DOM `dblclick`）                                                                 |
+| `onPointerDown?`  | `HydrationHandler`                    | —      | 指针在该图元上按下（DOM `pointerdown`）                                                      |
+| `onPointerEnter?` | `HydrationHandler`                    | —      | 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）                  |
+| `onPointerLeave?` | `HydrationHandler`                    | —      | 指针离开该图元（由 `pointermove` + 命中 id 状态机合成）                                      |
+| `onPointerMove?`  | `HydrationHandler`                    | —      | 指针在该图元上移动（DOM `pointermove`）                                                      |
+| `onPointerUp?`    | `HydrationHandler`                    | —      | 指针在该图元上抬起（DOM `pointerup`）                                                        |
+| `onRightClick?`   | `HydrationHandler`                    | —      | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()` |
+| `onWheel?`        | `HydrationHandler`                    | —      | 在该图元上滚轮（DOM `wheel`）                                                                |
+| `rotate?`         | `number`                              | —      | 绕图形包络中心旋转的角度                                                                     |
+| `roundedCorners?` | `number`                              | —      | 线段接头的几何圆角，与描边转角样式独立                                                       |
+| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                                                           |
+| `startAngle?`     | `number`                              | —      | 起始角度，单位为度                                                                           |
+| `style?`          | `InputEllipse['style']`               | —      | 路径的稀疏视觉覆盖                                                                           |
+| `sweepAngle?`     | `number`                              | —      | 有符号扫过角度；三个角度字段恰好指定两个                                                     |
+| `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                                                           |
+| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                                                           |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="radius-0">
+
+<DocTab value="radius-0" label="属性 · 轴半径">
+
+<ApiTable>
+
+| 成员     | 类型                        | 默认值 | 说明                                         |
+| -------- | --------------------------- | ------ | -------------------------------------------- |
+| `center` | `InputTarget`               | —      | 形状中心，坐标形式由几何分支决定             |
+| `radius` | `{ x: number; y: number; }` | —      | 用户坐标单位中的半径；椭圆可分别指定两轴半径 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="diameterX-1" label="属性 · 轴直径">
+
+<ApiTable>
+
+| 成员        | 类型          | 默认值 | 说明                             |
+| ----------- | ------------- | ------ | -------------------------------- |
+| `center`    | `InputTarget` | —      | 形状中心，坐标形式由几何分支决定 |
+| `diameterX` | `number`      | —      | 椭圆水平直径                     |
+| `diameterY` | `number`      | —      | 椭圆垂直直径                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="corner1-2" label="属性 · 包围框角点">
+
+<ApiTable>
+
+| 成员      | 类型               | 默认值 | 说明                 |
+| --------- | ------------------ | ------ | -------------------- |
+| `corner1` | `[number, number]` | —      | 包围矩形的第一个角点 |
+| `corner2` | `[number, number]` | —      | 包围矩形的对角点     |
+| `inset?`  | `number`           | —      | 包围盒的均匀内缩距离 |
+| `outset?` | `number`           | —      | 包围盒的均匀外扩距离 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="box-3" label="属性 · 包围框">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                       | 默认值 | 说明                       |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- |
+| `box`     | `{ x: number; y: number; width: number; height: number; } \| { origin: [number, number]; width: number; height: number; }` | —      | 用于拟合形状的轴对齐包围盒 |
+| `inset?`  | `number`                                                                                                                   | —      | 包围盒的均匀内缩距离       |
+| `outset?` | `number`                                                                                                                   | —      | 包围盒的均匀外扩距离       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const Ellipse: {
@@ -34,6 +248,10 @@ export type EllipseProps = InputEllipse &
   };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 **`@retikz/standard-vanilla`**
 
 #### InputCircle
@@ -44,9 +262,116 @@ export type EllipseProps = InputEllipse &
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                  | 默认值 | 说明                                               |
+| ----------------- | ------------------------------------- | ------ | -------------------------------------------------- |
+| `animations?`     | `InputCircle["animations"]`           | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
+| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                     |
+| `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                       |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                       |
+| `closed?`         | `"open" \| "chord" \| "sector"`       | —      | 局部轮廓的闭合方式：开放、弦闭合或扇形闭合         |
+| `endAngle?`       | `number`                              | —      | 终止角度，单位为度                                 |
+| `id?`             | `string`                              | —      | 图形的可选引用身份                                 |
+| `label?`          | `InputCircle["label"]`                | —      | 附着于路径的标签                                   |
+| `marks?`          | `InputCircle["marks"]`                | —      | 沿路径按归一化位置放置的标记                       |
+| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容    |
+| `rotate?`         | `number`                              | —      | 绕图形包络中心旋转的角度                           |
+| `roundedCorners?` | `number`                              | —      | 线段接头的几何圆角，与描边转角样式独立             |
+| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                 |
+| `startAngle?`     | `number`                              | —      | 起始角度，单位为度                                 |
+| `style?`          | `InputCircle["style"]`                | —      | 路径的稀疏视觉覆盖                                 |
+| `sweepAngle?`     | `number`                              | —      | 有符号扫过角度；三个角度字段恰好指定两个           |
+| `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                 |
+| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="radius-0">
+
+<DocTab value="radius-0" label="属性 · 半径">
+
+<ApiTable>
+
+| 成员     | 类型          | 默认值 | 说明                                         |
+| -------- | ------------- | ------ | -------------------------------------------- |
+| `center` | `InputTarget` | —      | 形状中心，坐标形式由几何分支决定             |
+| `radius` | `number`      | —      | 用户坐标单位中的半径；椭圆可分别指定两轴半径 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="diameter-1" label="属性 · 直径">
+
+<ApiTable>
+
+| 成员       | 类型          | 默认值 | 说明                             |
+| ---------- | ------------- | ------ | -------------------------------- |
+| `center`   | `InputTarget` | —      | 形状中心，坐标形式由几何分支决定 |
+| `diameter` | `number`      | —      | 圆的直径                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="from-2" label="属性 · 直径端点">
+
+<ApiTable>
+
+| 成员   | 类型               | 默认值 | 说明               |
+| ------ | ------------------ | ------ | ------------------ |
+| `from` | `[number, number]` | —      | 圆直径的第一个端点 |
+| `to`   | `[number, number]` | —      | 圆直径的第二个端点 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="corner1-3" label="属性 · 包围框角点">
+
+<ApiTable>
+
+| 成员      | 类型                   | 默认值      | 说明                                |
+| --------- | ---------------------- | ----------- | ----------------------------------- |
+| `corner1` | `[number, number]`     | —           | 包围矩形的第一个角点                |
+| `corner2` | `[number, number]`     | —           | 包围矩形的对角点                    |
+| `fit?`    | `"contain" \| "cover"` | `"contain"` | 在包围盒中内接 contain 或外接 cover |
+| `inset?`  | `number`               | —           | 包围盒的均匀内缩距离                |
+| `outset?` | `number`               | —           | 包围盒的均匀外扩距离                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="box-4" label="属性 · 包围框">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                       | 默认值      | 说明                                |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------- |
+| `box`     | `{ x: number; y: number; width: number; height: number; } \| { origin: [number, number]; width: number; height: number; }` | —           | 用于拟合形状的轴对齐包围盒          |
+| `fit?`    | `"contain" \| "cover"`                                                                                                     | `"contain"` | 在包围盒中内接 contain 或外接 cover |
+| `inset?`  | `number`                                                                                                                   | —           | 包围盒的均匀内缩距离                |
+| `outset?` | `number`                                                                                                                   | —           | 包围盒的均匀外扩距离                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type InputCircle = InputShape<IRCircle>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### InputEllipse
 
@@ -56,9 +381,102 @@ export type InputCircle = InputShape<IRCircle>;
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                  | 默认值 | 说明                                               |
+| ----------------- | ------------------------------------- | ------ | -------------------------------------------------- |
+| `animations?`     | `InputEllipse["animations"]`          | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
+| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                     |
+| `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                       |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                       |
+| `closed?`         | `"open" \| "chord" \| "sector"`       | —      | 局部轮廓的闭合方式：开放、弦闭合或扇形闭合         |
+| `endAngle?`       | `number`                              | —      | 终止角度，单位为度                                 |
+| `id?`             | `string`                              | —      | 图形的可选引用身份                                 |
+| `label?`          | `InputEllipse["label"]`               | —      | 附着于路径的标签                                   |
+| `marks?`          | `InputEllipse["marks"]`               | —      | 沿路径按归一化位置放置的标记                       |
+| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容    |
+| `rotate?`         | `number`                              | —      | 绕图形包络中心旋转的角度                           |
+| `roundedCorners?` | `number`                              | —      | 线段接头的几何圆角，与描边转角样式独立             |
+| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                 |
+| `startAngle?`     | `number`                              | —      | 起始角度，单位为度                                 |
+| `style?`          | `InputEllipse["style"]`               | —      | 路径的稀疏视觉覆盖                                 |
+| `sweepAngle?`     | `number`                              | —      | 有符号扫过角度；三个角度字段恰好指定两个           |
+| `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                 |
+| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="radius-0">
+
+<DocTab value="radius-0" label="属性 · 轴半径">
+
+<ApiTable>
+
+| 成员     | 类型                        | 默认值 | 说明                                         |
+| -------- | --------------------------- | ------ | -------------------------------------------- |
+| `center` | `InputTarget`               | —      | 形状中心，坐标形式由几何分支决定             |
+| `radius` | `{ x: number; y: number; }` | —      | 用户坐标单位中的半径；椭圆可分别指定两轴半径 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="diameterX-1" label="属性 · 轴直径">
+
+<ApiTable>
+
+| 成员        | 类型          | 默认值 | 说明                             |
+| ----------- | ------------- | ------ | -------------------------------- |
+| `center`    | `InputTarget` | —      | 形状中心，坐标形式由几何分支决定 |
+| `diameterX` | `number`      | —      | 椭圆水平直径                     |
+| `diameterY` | `number`      | —      | 椭圆垂直直径                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="corner1-2" label="属性 · 包围框角点">
+
+<ApiTable>
+
+| 成员      | 类型               | 默认值 | 说明                 |
+| --------- | ------------------ | ------ | -------------------- |
+| `corner1` | `[number, number]` | —      | 包围矩形的第一个角点 |
+| `corner2` | `[number, number]` | —      | 包围矩形的对角点     |
+| `inset?`  | `number`           | —      | 包围盒的均匀内缩距离 |
+| `outset?` | `number`           | —      | 包围盒的均匀外扩距离 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="box-3" label="属性 · 包围框">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                       | 默认值 | 说明                       |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- |
+| `box`     | `{ x: number; y: number; width: number; height: number; } \| { origin: [number, number]; width: number; height: number; }` | —      | 用于拟合形状的轴对齐包围盒 |
+| `inset?`  | `number`                                                                                                                   | —      | 包围盒的均匀内缩距离       |
+| `outset?` | `number`                                                                                                                   | —      | 包围盒的均匀外扩距离       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type InputEllipse = InputShape<IREllipse>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### CircleInputEmbedAdapter
 
@@ -102,9 +520,114 @@ export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                  | 默认值 | 说明                                               |
+| ----------------- | ------------------------------------- | ------ | -------------------------------------------------- |
+| `animations?`     | `IRCircle["animations"]`              | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
+| `closed?`         | `"open" \| "chord" \| "sector"`       | —      | 局部轮廓的闭合方式：开放、弦闭合或扇形闭合         |
+| `endAngle?`       | `number`                              | —      | 终止角度，单位为度                                 |
+| `id?`             | `string`                              | —      | 图形的可选引用身份                                 |
+| `label?`          | `IRCircle["label"]`                   | —      | 附着于路径的标签                                   |
+| `marks?`          | `IRCircle["marks"]`                   | —      | 沿路径按归一化位置放置的标记                       |
+| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容    |
+| `namespace`       | `"standard"`                          | —      | Standard 复合组件命名空间                          |
+| `rotate?`         | `number`                              | —      | 绕图形包络中心旋转的角度                           |
+| `roundedCorners?` | `number`                              | —      | 线段接头的几何圆角，与描边转角样式独立             |
+| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                 |
+| `startAngle?`     | `number`                              | —      | 起始角度，单位为度                                 |
+| `style?`          | `IRCircle["style"]`                   | —      | 路径的稀疏视觉覆盖                                 |
+| `sweepAngle?`     | `number`                              | —      | 有符号扫过角度；三个角度字段恰好指定两个           |
+| `type`            | `"circle"`                            | —      | 形状类型判别字段                                   |
+| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="radius">
+
+<DocTab value="radius" label="属性 · 半径">
+
+<ApiTable>
+
+| 成员     | 类型                 | 默认值 | 说明                                         |
+| -------- | -------------------- | ------ | -------------------------------------------- |
+| `center` | `IRCircle["center"]` | —      | 形状中心，坐标形式由几何分支决定             |
+| `radius` | `number`             | —      | 用户坐标单位中的半径；椭圆可分别指定两轴半径 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="diameter" label="属性 · 直径">
+
+<ApiTable>
+
+| 成员       | 类型                 | 默认值 | 说明                             |
+| ---------- | -------------------- | ------ | -------------------------------- |
+| `center`   | `IRCircle["center"]` | —      | 形状中心，坐标形式由几何分支决定 |
+| `diameter` | `number`             | —      | 圆的直径                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="from" label="属性 · 直径端点">
+
+<ApiTable>
+
+| 成员   | 类型               | 默认值 | 说明               |
+| ------ | ------------------ | ------ | ------------------ |
+| `from` | `[number, number]` | —      | 圆直径的第一个端点 |
+| `to`   | `[number, number]` | —      | 圆直径的第二个端点 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="corner1" label="属性 · 包围框角点">
+
+<ApiTable>
+
+| 成员      | 类型                   | 默认值      | 说明                                |
+| --------- | ---------------------- | ----------- | ----------------------------------- |
+| `corner1` | `[number, number]`     | —           | 包围矩形的第一个角点                |
+| `corner2` | `[number, number]`     | —           | 包围矩形的对角点                    |
+| `fit?`    | `"contain" \| "cover"` | `"contain"` | 在包围盒中内接 contain 或外接 cover |
+| `inset?`  | `number`               | —           | 包围盒的均匀内缩距离                |
+| `outset?` | `number`               | —           | 包围盒的均匀外扩距离                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="box" label="属性 · 包围框">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                       | 默认值      | 说明                                |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------- |
+| `box`     | `{ x: number; y: number; width: number; height: number; } \| { origin: [number, number]; width: number; height: number; }` | —           | 用于拟合形状的轴对齐包围盒          |
+| `fit?`    | `"contain" \| "cover"`                                                                                                     | `"contain"` | 在包围盒中内接 contain 或外接 cover |
+| `inset?`  | `number`                                                                                                                   | —           | 包围盒的均匀内缩距离                |
+| `outset?` | `number`                                                                                                                   | —           | 包围盒的均匀外扩距离                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type IRCircle = ShapeSource<ZodInput<typeof CircleSchema>>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### IREllipse
 
@@ -114,17 +637,108 @@ export type IRCircle = ShapeSource<ZodInput<typeof CircleSchema>>;
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                  | 默认值 | 说明                                               |
+| ----------------- | ------------------------------------- | ------ | -------------------------------------------------- |
+| `animations?`     | `IREllipse["animations"]`             | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
+| `closed?`         | `"open" \| "chord" \| "sector"`       | —      | 局部轮廓的闭合方式：开放、弦闭合或扇形闭合         |
+| `endAngle?`       | `number`                              | —      | 终止角度，单位为度                                 |
+| `id?`             | `string`                              | —      | 图形的可选引用身份                                 |
+| `label?`          | `IREllipse["label"]`                  | —      | 附着于路径的标签                                   |
+| `marks?`          | `IREllipse["marks"]`                  | —      | 沿路径按归一化位置放置的标记                       |
+| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容    |
+| `namespace`       | `"standard"`                          | —      | Standard 复合组件命名空间                          |
+| `rotate?`         | `number`                              | —      | 绕图形包络中心旋转的角度                           |
+| `roundedCorners?` | `number`                              | —      | 线段接头的几何圆角，与描边转角样式独立             |
+| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                 |
+| `startAngle?`     | `number`                              | —      | 起始角度，单位为度                                 |
+| `style?`          | `IREllipse["style"]`                  | —      | 路径的稀疏视觉覆盖                                 |
+| `sweepAngle?`     | `number`                              | —      | 有符号扫过角度；三个角度字段恰好指定两个           |
+| `type`            | `"ellipse"`                           | —      | 形状类型判别字段                                   |
+| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="radius">
+
+<DocTab value="radius" label="属性 · 轴半径">
+
+<ApiTable>
+
+| 成员     | 类型                        | 默认值 | 说明                                         |
+| -------- | --------------------------- | ------ | -------------------------------------------- |
+| `center` | `IREllipse["center"]`       | —      | 形状中心，坐标形式由几何分支决定             |
+| `radius` | `{ x: number; y: number; }` | —      | 用户坐标单位中的半径；椭圆可分别指定两轴半径 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="diameterX" label="属性 · 轴直径">
+
+<ApiTable>
+
+| 成员        | 类型                  | 默认值 | 说明                             |
+| ----------- | --------------------- | ------ | -------------------------------- |
+| `center`    | `IREllipse["center"]` | —      | 形状中心，坐标形式由几何分支决定 |
+| `diameterX` | `number`              | —      | 椭圆水平直径                     |
+| `diameterY` | `number`              | —      | 椭圆垂直直径                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="corner1" label="属性 · 包围框角点">
+
+<ApiTable>
+
+| 成员      | 类型               | 默认值 | 说明                 |
+| --------- | ------------------ | ------ | -------------------- |
+| `corner1` | `[number, number]` | —      | 包围矩形的第一个角点 |
+| `corner2` | `[number, number]` | —      | 包围矩形的对角点     |
+| `inset?`  | `number`           | —      | 包围盒的均匀内缩距离 |
+| `outset?` | `number`           | —      | 包围盒的均匀外扩距离 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="box" label="属性 · 包围框">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                       | 默认值 | 说明                       |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- |
+| `box`     | `{ x: number; y: number; width: number; height: number; } \| { origin: [number, number]; width: number; height: number; }` | —      | 用于拟合形状的轴对齐包围盒 |
+| `inset?`  | `number`                                                                                                                   | —      | 包围盒的均匀内缩距离       |
+| `outset?` | `number`                                                                                                                   | —      | 包围盒的均匀外扩距离       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type IREllipse = ShapeSource<ZodInput<typeof EllipseSchema>>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### CircleDefinition
 
 <p>
   <ApiSourceLink
     label={'CircleDefinition'}
-    path={'packages/library/standard/src/shape/circle/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/circle/composite.ts'}
+    startLine={10}
   >
     Circle 的 Core composite 注册项
   </ApiSourceLink>
@@ -165,7 +779,11 @@ export const CircleDefinition = defineComposite({
 #### CircleProvider
 
 <p>
-  <ApiSourceLink label={'CircleProvider'} path={'packages/library/standard/src/shape/circle/provider.ts'} startLine={6}>
+  <ApiSourceLink
+    label={'CircleProvider'}
+    path={'packages/library/standard/src/shape/circle/composite.ts'}
+    startLine={25}
+  >
     Circle 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -184,8 +802,8 @@ export const CircleProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'EllipseDefinition'}
-    path={'packages/library/standard/src/shape/ellipse/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={10}
   >
     Ellipse 的 Core composite 注册项
   </ApiSourceLink>
@@ -228,8 +846,8 @@ export const EllipseDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'EllipseProvider'}
-    path={'packages/library/standard/src/shape/ellipse/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={25}
   >
     Ellipse 的按需依赖贡献
   </ApiSourceLink>
@@ -247,7 +865,7 @@ export const EllipseProvider: CoreDependencyProvider = Object.freeze({
 #### createCircle
 
 <p>
-  <ApiSourceLink label={'createCircle'} path={'packages/library/standard/src/shape/circle/factory.ts'} startLine={5}>
+  <ApiSourceLink label={'createCircle'} path={'packages/library/standard/src/shape/circle/composite.ts'} startLine={18}>
     创建保留几何意图的 Circle Source
   </ApiSourceLink>
 </p>
@@ -280,7 +898,11 @@ export declare const createCircle: (input: ShapeProperties<IRCircle>) => IRCircl
 #### createEllipse
 
 <p>
-  <ApiSourceLink label={'createEllipse'} path={'packages/library/standard/src/shape/ellipse/factory.ts'} startLine={5}>
+  <ApiSourceLink
+    label={'createEllipse'}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={18}
+  >
     创建保留几何意图的 Ellipse Source
   </ApiSourceLink>
 </p>

@@ -15,6 +15,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：可扩展分类顺序', en: 'Unreleased: extensible category orders' },
+          content: {
+            zh: '新增 naturalAscending / naturalDescending，按数字片段排列版本标签。Data 统一提供 defineFieldOrder、resolveFieldOrderRegistry 与 resolveCategoryDomain；Plot、Table 及适配器通过 fieldOrderDefinitions 注入。原有顺序语义不变，Table 不自动重排行列。移除 Plot 的 CategoryOrder / orderedCategoryDomain 导出。',
+            en: 'Adds naturalAscending / naturalDescending for version labels. Data exports defineFieldOrder, resolveFieldOrderRegistry, and resolveCategoryDomain; Plot, Table, and adapters accept fieldOrderDefinitions. Existing orders remain unchanged; Table does not reorder rows or columns. Removes Plot CategoryOrder / orderedCategoryDomain exports.',
+          },
+        },
+        {
           label: {
             zh: '待发布：BREAKING 变换语义与计算分离',
             en: 'Unreleased: BREAKING transform semantics and computation split',

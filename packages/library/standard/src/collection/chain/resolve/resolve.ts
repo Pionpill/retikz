@@ -8,15 +8,24 @@ import type { CanonicalChain, CanonicalChainConnection, CanonicalChainItem, Cano
 const resolveConnection = (
   source: IRChainConnection | undefined,
   parent?: CanonicalChainConnection,
-): CanonicalChainConnection => ({
-  route: source?.route ?? parent?.route ?? ChainConnectionSchema.shape.route.parse(undefined),
-  path: {
+): CanonicalChainConnection => {
+  const route = source?.route ?? parent?.route ?? ChainConnectionSchema.options[0].shape.route.parse(undefined);
+  const path: CanonicalChainConnection['path'] = {
     ...parent?.path,
     ...source?.path,
     style: { stroke: 'currentColor', ...parent?.path.style, ...source?.path?.style },
     marks: source?.path?.marks ?? parent?.path.marks ?? [{ pos: 1, mark: { kind: 'arrow' } }],
-  },
-});
+  };
+
+  if (route === '-|-' || route === '|-|') {
+    const fraction =
+      source?.fraction ??
+      (source?.route === undefined || source.route === parent?.route ? parent?.fraction : undefined);
+    return { route, ...(fraction === undefined ? {} : { fraction }), path };
+  }
+
+  return { route, path };
+};
 
 /** 骨架结构只转换符号与显式分支 */
 const skeletonItems = (items: NonNullable<IRChainSkeleton['items']>): Array<IRChainItem> =>

@@ -9,6 +9,8 @@ import type {
 } from '@retikz/data';
 import {
   applyFieldResolver,
+  assertFieldOrders,
+  resolveFieldOrderRegistry,
   applyTransformsToDataView,
   collectFormatFields,
   createDataView,
@@ -96,6 +98,7 @@ export const prepareRows = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
+  registries = preparePlotRegistries(options),
 ): {
   /** 规范 rows 与完整逻辑字段模型 */
   dataView: DataView;
@@ -106,10 +109,18 @@ export const prepareRows = (
   scaleRegistry: Map<string, AnyScaleDefinition>;
   markRegistry: Map<string, AnyMarkDefinition>;
   positionAdjustmentRegistry: Map<string, AnyPositionAdjustmentDefinition>;
+  fieldOrderRegistry: ReturnType<typeof resolveFieldOrderRegistry>;
 } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const { transformRegistry, transformContext, scaleRegistry, markRegistry, positionAdjustmentRegistry } =
-    preparePlotRegistries(options);
+  assertFieldOrders(spec.data.model, registries.fieldOrderRegistry);
+  const {
+    transformRegistry,
+    transformContext,
+    scaleRegistry,
+    markRegistry,
+    positionAdjustmentRegistry,
+    fieldOrderRegistry,
+  } = registries;
   const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
 
   for (const field of spec.data.model ?? []) userSourceFields.add(field.name);
@@ -177,6 +188,7 @@ export const prepareRows = (
     scaleRegistry,
     markRegistry,
     positionAdjustmentRegistry,
+    fieldOrderRegistry,
   };
 };
 
@@ -209,5 +221,12 @@ export const preparePlotRegistries = (options: LowerPlotsOptions) => {
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
   const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.positionAdjustmentDefinitions);
 
-  return { transformRegistry, transformContext, scaleRegistry, markRegistry, positionAdjustmentRegistry };
+  return {
+    transformRegistry,
+    transformContext,
+    scaleRegistry,
+    markRegistry,
+    positionAdjustmentRegistry,
+    fieldOrderRegistry: resolveFieldOrderRegistry(options.fieldOrderDefinitions),
+  };
 };

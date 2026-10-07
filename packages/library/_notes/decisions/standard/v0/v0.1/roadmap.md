@@ -6,15 +6,15 @@
 
 ## 重点功能
 
-| 重点能力           | 目标                                                     | 相关 ADR                                                                                                                                                                            |
-| ------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 开放接入           | 官方与自定义能力通过 Definition 直接接入                 | [021](./021-direct-definition-loading.md)、[023](./023-core-minimal-builtins-and-standard-provider-entrypoints.md)                                                                  |
-| 通用呈现           | 提供 Grid、Axes、Frame 与 Legend                         | [001](./001-grid-composite.md)、[002](./002-axes-composite.md)、[003](./003-frame-composite.md)、[014](./014-generic-legend.md)                                                     |
-| 集合结构扩展       | 规划 Matrix、Chain、Stack、Queue，并评估 Tree 的能力归属 | —                                                                                                                                                                                   |
-| Schema 原子组合    | 全包组合优先，保留各 owner 的领域契约                    | [035](./035-path-schema-atomic-reuse.md)                                                                                                                                            |
-| Surface 与内容组合 | 让面板承载任意已有绘图内容                               | [015](./015-presentation-composite-reuse.md)、[022](./022-arbitrary-child-surface.md)                                                                                               |
-| 图形与端点         | 补齐可选 Shape、Ribbon、Clip 与端点 Marker               | [024](./024-ribbon-as-standard-path-kind.md)、[025](./025-sector-shape-unification.md)、[027](./027-single-clip-definition.md)、[028](./028-diagram-shapes-and-endpoint-markers.md) |
-| 所有权收敛         | 排版布局归 Layout，关系图语义归 Graph                    | —                                                                                                                                                                                   |
+| 重点能力           | 目标                                                  | 相关 ADR                                                                                                                                                                            |
+| ------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 开放接入           | 官方与自定义能力通过 Definition 直接接入              | [021](./021-direct-definition-loading.md)、[023](./023-core-minimal-builtins-and-standard-provider-entrypoints.md)                                                                  |
+| 通用呈现           | 提供 Grid、Axes、Frame 与 Legend                      | [001](./001-grid-composite.md)、[002](./002-axes-composite.md)、[003](./003-frame-composite.md)、[014](./014-generic-legend.md)                                                     |
+| 集合结构扩展       | 提供 Matrix、Chain、Stack、Queue、Tree 的静态结构呈现 | —                                                                                                                                                                                   |
+| Schema 原子组合    | 全包组合优先，保留各 owner 的领域契约                 | [035](./035-path-schema-atomic-reuse.md)                                                                                                                                            |
+| Surface 与内容组合 | 让面板承载任意已有绘图内容                            | [015](./015-presentation-composite-reuse.md)、[022](./022-arbitrary-child-surface.md)                                                                                               |
+| 图形与端点         | 补齐可选 Shape、Ribbon、Clip 与端点 Marker            | [024](./024-ribbon-as-standard-path-kind.md)、[025](./025-sector-shape-unification.md)、[027](./027-single-clip-definition.md)、[028](./028-diagram-shapes-and-endpoint-markers.md) |
+| 所有权收敛         | 排版布局归 Layout，关系图语义归 Graph                 | —                                                                                                                                                                                   |
 
 ## 功能规划
 
@@ -69,15 +69,15 @@ Core 保留基础预设和通用轨道工具，Standard 提供生长、循环与
 
 面向数据结构教学、算法示意与论文插图，在 Array、Map 基础上补齐二维单元格和链式连接。各结构应能表达无真实数据的示意骨架，单元可承载文字、空内容或已有绘图组件。
 
-| 优先级   | 规划能力      | 目标与边界                                                                                                                                  |
-| -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0       | Matrix · 矩阵 | 提供二维单元格、行列索引与单元格引用，服务二维数组、矩阵和动态规划表；不承担矩阵运算或数据表分析                                            |
-| P1       | Chain · 链    | 以显式串并联结构连接内容单元，支持有序分叉、重新汇合、两层对齐与正交连接；不承担任意跨分支连边、自动图布局或避障                            |
-| P2       | Stack · 栈    | 表达堆叠顺序、栈顶与开放端；支持操作示意，不承担真实入栈、出栈状态管理                                                                      |
-| P2       | Queue · 队列  | 表达队首、队尾与进出方向；双端和循环形式在后续设计中评估，不承担真实队列操作                                                                |
-| 独立方向 | Tree · 树     | 规划层次结构呈现，为树、BST、Heap、Trie 等示意提供复用基础；先确认与 Graph 的父子关系、树布局及绘图职责边界，不预设归入 Standard collection |
+| 优先级 | 规划能力      | 目标与边界                                                                                                       |
+| ------ | ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| P0     | Matrix · 矩阵 | 提供二维单元格、行列索引与单元格引用，服务二维数组、矩阵和动态规划表；不承担矩阵运算或数据表分析                 |
+| P1     | Chain · 链    | 以显式串并联结构连接内容单元，支持有序分叉、重新汇合、两层对齐与正交连接；不承担任意跨分支连边、自动图布局或避障 |
+| P2     | Stack · 栈    | 表达堆叠顺序、栈顶与开放端；支持操作示意，不承担真实入栈、出栈状态管理                                           |
+| P2     | Queue · 队列  | 表达队首、队尾与进出方向；双端和循环形式在后续设计中评估，不承担真实队列操作                                     |
+| P2     | Tree · 树     | 用内容节点与父子连接呈现显式树结构，提供基本层级排列，不承担树操作和一般图算法布局                               |
 
-Matrix 的三种输入、行列索引与单元格引用方案见 [038](./038-matrix-presentation.md)，Chain 的串并联与对齐方案见 [039](./039-chain-presentation.md)。Matrix、Chain 优先补齐现有组件缺少的表达能力；Stack、Queue 复用已有单元格与排布能力。连接、标注和绘制复用 Core / Layout 的公开机制，不在 Standard 建立平行关系模型或算法布局。各项公开契约另行通过 ADR 确定。
+Matrix 的三种输入、行列索引与单元格引用方案见 [038](./038-matrix-presentation.md)，Chain 的串并联与对齐方案见 [039](./039-chain-presentation.md)，Stack 的堆叠与开放端方案见 [040](./040-stack-presentation.md)，Queue 的首尾与两端开放方案见 [041](./041-queue-presentation.md)，Tree 的节点、父子连接与层级排列方案见 [042](./042-tree-presentation.md)。Matrix、Chain 优先补齐现有组件缺少的表达能力；Stack、Queue 复用已有单元格与排布能力。连接、标注和绘制复用 Core / Layout 的公开机制，不在 Standard 建立平行关系模型或算法布局。各项公开契约另行通过 ADR 确定。
 
 ### Surface 与内容组合
 

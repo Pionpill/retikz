@@ -7,6 +7,102 @@
 - `Matrix`：<ApiSourceLink label={"Matrix"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={85}>Standard Matrix 呈现组件</ApiSourceLink>
 - `MatrixProps`：<ApiSourceLink label={"MatrixProps"} path={"packages/library/standard-react/src/collection/matrix/Matrix.tsx"} startLine={15}>Matrix 的 React 输入；省略所有入口时生成空矩阵</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                     | 默认值       | 说明                                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRMatrix['animations']`                                                                 | —            | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `cellIdMode?`     | `"index" \| "explicit"`                                                                  | `"explicit"` | 显式单格 id，或由 Matrix id 与零基行列坐标生成 id                                              |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaults?`       | `IRMatrix['defaults']`                                                                   | —            | 后代默认值通道及继承屏障                                                                       |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
+| `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
+| `index?`          | `IRMatrix['index']`                                                                      | `false`      | false 隐藏两轴，true 启用两轴，对象分别配置两轴                                                |
+| `label?`          | `IRMatrix['label']`                                                                      | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
+| `layout?`         | `IRMatrix['layout']`                                                                     | —            | 单元格尺寸、内边距、溢出及行列间距                                                             |
+| `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `placement?`      | `IRMatrix['placement']`                                                                  | —            | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `style?`          | `IRMatrix['style']`                                                                      | —            | 集合 单元格的稀疏外观覆盖                                                                      |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `transforms?`     | `IRMatrix['transforms']`                                                                 | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `zIndex?`         | `number`                                                                                 | —            | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="属性 · 显式单元格">
+
+<ApiTable>
+
+| 成员          | 类型                                | 默认值 | 说明                                                   |
+| ------------- | ----------------------------------- | ------ | ------------------------------------------------------ |
+| `children?`   | `never`                             | —      | —                                                      |
+| `data?`       | `never`                             | —      | —                                                      |
+| `dataExpand?` | `never`                             | —      | —                                                      |
+| `items`       | `Array<Array<string \| CellProps>>` | —      | 按行排列的显式二维单元格，每格接受文本或带样式的单元格 |
+| `skeleton?`   | `never`                             | —      | —                                                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="属性 · JSON 数据">
+
+<ApiTable>
+
+| 成员          | 类型                            | 默认值 | 说明                                             |
+| ------------- | ------------------------------- | ------ | ------------------------------------------------ |
+| `children?`   | `never`                         | —      | —                                                |
+| `data`        | `NonNullable<IRMatrix['data']>` | —      | 用于展开矩阵单元格的二维数据，与其它内容入口互斥 |
+| `dataExpand?` | `IRMatrix['dataExpand']`        | —      | 仅对 data 入口生效的数据展开策略                 |
+| `items?`      | `never`                         | —      | —                                                |
+| `skeleton?`   | `never`                         | —      | —                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="属性 · 示意骨架">
+
+<ApiTable>
+
+| 成员          | 类型                                | 默认值 | 说明                                         |
+| ------------- | ----------------------------------- | ------ | -------------------------------------------- |
+| `children?`   | `never`                             | —      | —                                            |
+| `data?`       | `never`                             | —      | —                                            |
+| `dataExpand?` | `never`                             | —      | —                                            |
+| `items?`      | `never`                             | —      | —                                            |
+| `skeleton`    | `NonNullable<IRMatrix['skeleton']>` | —      | 用于构造空矩阵的行列结构，与其它内容入口互斥 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · JSX 子项">
+
+<ApiTable>
+
+| 成员          | 类型        | 默认值 | 说明                                            |
+| ------------- | ----------- | ------ | ----------------------------------------------- |
+| `children?`   | `ReactNode` | —      | 由 MatrixRow 及其 MatrixCell 组成的矩阵行列声明 |
+| `data?`       | `never`     | —      | —                                               |
+| `dataExpand?` | `never`     | —      | —                                               |
+| `items?`      | `never`     | —      | —                                               |
+| `skeleton?`   | `never`     | —      | —                                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const Matrix: {
   (props: MatrixProps, context?: any): ReactNode;
@@ -44,6 +140,10 @@ export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
       }
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### MatrixRow / MatrixRowProps
 
@@ -83,19 +183,30 @@ export type MatrixRowProps = {
 - `MatrixCell`：<ApiSourceLink label={"MatrixCell"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={10}>MatrixRow 的直属格子声明</ApiSourceLink>
 - `MatrixCellProps`：<ApiSourceLink label={"MatrixCellProps"} path={"packages/library/standard-react/src/collection/matrix/MatrixCell.tsx"} startLine={7}>Matrix 单格的文本或唯一 drawable；同时省略表示空格</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员      | 类型                        | 默认值 | 说明                             |
+| --------- | --------------------------- | ------ | -------------------------------- |
+| `id?`     | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
+| `layout?` | `CellMarkerProps['layout']` | —      | —                                |
+| `style?`  | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="text">
 
 <DocTab value="text" label="属性 · 文本或空格">
 
 <ApiTable>
 
-| 成员        | 类型                        | 默认值 | 说明                             |
-| ----------- | --------------------------- | ------ | -------------------------------- |
-| `children?` | `never`                     | —      | —                                |
-| `id?`       | `string`                    | —      | 当前容器内唯一的可选单元格 id    |
-| `layout?`   | `CellMarkerProps['layout']` | —      | —                                |
-| `style?`    | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖 |
-| `text?`     | `string`                    | —      | 单元格文本，与绘制子内容互斥     |
+| 成员        | 类型     | 默认值 | 说明                         |
+| ----------- | -------- | ------ | ---------------------------- |
+| `children?` | `never`  | —      | —                            |
+| `text?`     | `string` | —      | 单元格文本，与绘制子内容互斥 |
 
 </ApiTable>
 
@@ -105,13 +216,10 @@ export type MatrixRowProps = {
 
 <ApiTable>
 
-| 成员       | 类型                        | 默认值 | 说明                                     |
-| ---------- | --------------------------- | ------ | ---------------------------------------- |
-| `children` | `ReactNode`                 | —      | 恰好一个可编译的绘制子内容，与 text 互斥 |
-| `id?`      | `string`                    | —      | 当前容器内唯一的可选单元格 id            |
-| `layout?`  | `CellMarkerProps['layout']` | —      | —                                        |
-| `style?`   | `CellMarkerProps['style']`  | —      | Array / Map 单元格的稀疏外观覆盖         |
-| `text?`    | `never`                     | —      | —                                        |
+| 成员       | 类型        | 默认值 | 说明                                     |
+| ---------- | ----------- | ------ | ---------------------------------------- |
+| `children` | `ReactNode` | —      | 恰好一个可编译的绘制子内容，与 text 互斥 |
+| `text?`    | `never`     | —      | —                                        |
 
 </ApiTable>
 
@@ -135,6 +243,83 @@ export type MatrixCellProps = CellMarkerProps;
 
 - `matrix`：<ApiSourceLink label={"matrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={83}>创建保留原始输入的 Matrix embed</ApiSourceLink>
 - `InputMatrix`：<ApiSourceLink label={"InputMatrix"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={11}>Matrix 的三种互斥 Vanilla 输入；items 接受嵌套 drawable</ApiSourceLink>
+
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                     | 默认值       | 说明                                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRMatrix['animations']`                                                                 | —            | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `cellIdMode?`     | `"index" \| "explicit"`                                                                  | `"explicit"` | 显式单格 id，或由 Matrix id 与零基行列坐标生成 id                                              |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaults?`       | `IRMatrix['defaults']`                                                                   | —            | 后代默认值通道及继承屏障                                                                       |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
+| `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
+| `index?`          | `IRMatrix['index']`                                                                      | `false`      | false 隐藏两轴，true 启用两轴，对象分别配置两轴                                                |
+| `label?`          | `IRMatrix['label']`                                                                      | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
+| `layout?`         | `IRMatrix['layout']`                                                                     | —            | 单元格尺寸、内边距、溢出及行列间距                                                             |
+| `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `placement?`      | `IRMatrix['placement']`                                                                  | —            | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `style?`          | `IRMatrix['style']`                                                                      | —            | 集合 单元格的稀疏外观覆盖                                                                      |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `transforms?`     | `IRMatrix['transforms']`                                                                 | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `zIndex?`         | `number`                                                                                 | —            | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="属性 · 显式单元格">
+
+<ApiTable>
+
+| 成员          | 类型                                | 默认值 | 说明                                       |
+| ------------- | ----------------------------------- | ------ | ------------------------------------------ |
+| `data?`       | `never`                             | —      | —                                          |
+| `dataExpand?` | `never`                             | —      | —                                          |
+| `items`       | `Array<Array<string \| InputCell>>` | —      | 按行排列的二维单元格，与数据和骨架入口互斥 |
+| `skeleton?`   | `never`                             | —      | —                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="属性 · JSON 数据">
+
+<ApiTable>
+
+| 成员          | 类型                            | 默认值 | 说明                                       |
+| ------------- | ------------------------------- | ------ | ------------------------------------------ |
+| `data`        | `NonNullable<IRMatrix['data']>` | —      | 用于展开矩阵的二维数据，与其它内容入口互斥 |
+| `dataExpand?` | `IRMatrix['dataExpand']`        | —      | 仅用于数据入口的展开策略                   |
+| `items?`      | `never`                         | —      | —                                          |
+| `skeleton?`   | `never`                         | —      | —                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="属性 · 示意骨架">
+
+<ApiTable>
+
+| 成员          | 类型                                | 默认值 | 说明                                         |
+| ------------- | ----------------------------------- | ------ | -------------------------------------------- |
+| `data?`       | `never`                             | —      | —                                            |
+| `dataExpand?` | `never`                             | —      | —                                            |
+| `items?`      | `never`                             | —      | —                                            |
+| `skeleton`    | `NonNullable<IRMatrix['skeleton']>` | —      | 用于构造空矩阵的行列结构，与其它内容入口互斥 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const matrix: (input: InputMatrix) => InputEmbed<InputMatrix>;
@@ -161,6 +346,10 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
       }
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### MatrixInputEmbedAdapter
 
@@ -192,6 +381,85 @@ export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<Input
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                     | 默认值       | 说明                                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRScopeProps['animations']`                                                             | —            | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `cellIdMode?`     | `"index" \| "explicit"`                                                                  | `"explicit"` | 显式单格 id，或由 Matrix id 与零基行列坐标生成 id                                              |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | 后代默认值通道及继承屏障                                                                       |
+| `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
+| `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
+| `index?`          | `IRMatrix["index"]`                                                                      | `false`      | false 隐藏两轴，true 启用两轴，对象分别配置两轴                                                |
+| `label?`          | `IRMatrix["label"]`                                                                      | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
+| `layout?`         | `IRMatrix["layout"]`                                                                     | —            | 单元格尺寸、内边距、溢出及行列间距                                                             |
+| `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `namespace`       | `"standard"`                                                                             | —            | Standard 复合组件命名空间                                                                      |
+| `placement?`      | `IRScopeProps['placement']`                                                              | —            | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `style?`          | `IRMatrix["style"]`                                                                      | —            | 集合 单元格的稀疏外观覆盖                                                                      |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `transforms?`     | `IRScopeProps['transforms']`                                                             | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `type`            | `"matrix"`                                                                               | —            | 矩形单元格呈现类型                                                                             |
+| `zIndex?`         | `number`                                                                                 | —            | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="属性 · 显式单元格">
+
+<ApiTable>
+
+| 成员          | 类型                             | 默认值 | 说明           |
+| ------------- | -------------------------------- | ------ | -------------- |
+| `data?`       | `never`                          | —      | —              |
+| `dataExpand?` | `never`                          | —      | —              |
+| `items`       | `Array<Array<string \| IRCell>>` | —      | 显式二维单元格 |
+| `skeleton?`   | `never`                          | —      | —              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="属性 · JSON 数据">
+
+<ApiTable>
+
+| 成员          | 类型                                              | 默认值 | 说明                                       |
+| ------------- | ------------------------------------------------- | ------ | ------------------------------------------ |
+| `data`        | `NonNullable<input<typeof MatrixSchema>['data']>` | —      | 二维 JSON 数据，格内结构按 dataExpand 展示 |
+| `dataExpand?` | `input<typeof MatrixSchema>['dataExpand']`        | —      | 选择格内对象与数组的展开形式               |
+| `items?`      | `never`                                           | —      | —                                          |
+| `skeleton?`   | `never`                                           | —      | —                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="属性 · 示意骨架">
+
+<ApiTable>
+
+| 成员          | 类型                                                  | 默认值 | 说明                       |
+| ------------- | ----------------------------------------------------- | ------ | -------------------------- |
+| `data?`       | `never`                                               | —      | —                          |
+| `dataExpand?` | `never`                                               | —      | —                          |
+| `items?`      | `never`                                               | —      | —                          |
+| `skeleton`    | `NonNullable<input<typeof MatrixSchema>['skeleton']>` | —      | 无真实数据的矩形或格内符号 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type IRMatrix = Omit<
   input<typeof MatrixSchema>,
@@ -220,6 +488,10 @@ export type IRMatrix = Omit<
   );
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### IRMatrixAxisIndex
 
 <p>
@@ -232,18 +504,29 @@ export type IRMatrix = Omit<
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员        | 类型                                                                                                                                                                                                                                                                                                                  | 默认值     | 说明                                                    |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------- |
+| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | before 为横排上方或竖排左侧，after 为横排下方或竖排右侧 |
+| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | 索引文本样式，字体按字段继承整体字体，不受单格样式影响  |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="automatic">
 
 <DocTab value="automatic" label="属性 · 自动编号">
 
 <ApiTable>
 
-| 成员        | 类型                                                                                                                                                                                                                                                                                                                  | 默认值     | 说明                                                    |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------- |
-| `labels?`   | `never`                                                                                                                                                                                                                                                                                                               | —          | 自动编号分支不接受显式标号                              |
-| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | before 为横排上方或竖排左侧，after 为横排下方或竖排右侧 |
-| `start?`    | `number`                                                                                                                                                                                                                                                                                                              | `0`        | 显示索引的非负整数起点，不作为单元格身份                |
-| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | 索引文本样式，字体按字段继承整体字体，不受单格样式影响  |
+| 成员      | 类型     | 默认值 | 说明                                     |
+| --------- | -------- | ------ | ---------------------------------------- |
+| `labels?` | `never`  | —      | 自动编号分支不接受显式标号               |
+| `start?`  | `number` | `0`    | 显示索引的非负整数起点，不作为单元格身份 |
 
 </ApiTable>
 
@@ -253,12 +536,10 @@ export type IRMatrix = Omit<
 
 <ApiTable>
 
-| 成员        | 类型                                                                                                                                                                                                                                                                                                                  | 默认值     | 说明                                                    |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------- |
-| `labels`    | `Array<string>`                                                                                                                                                                                                                                                                                                       | —          | 格外纯文本标号，数量与格数一致；空字符串隐藏该标号      |
-| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | `"before"` | before 为横排上方或竖排左侧，after 为横排下方或竖排右侧 |
-| `start?`    | `never`                                                                                                                                                                                                                                                                                                               | —          | 显式标号分支不接受起点                                  |
-| `style?`    | `{ opacity?: number \| undefined; color?: string \| undefined; textColor?: string \| number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —          | 索引文本样式，字体按字段继承整体字体，不受单格样式影响  |
+| 成员     | 类型            | 默认值 | 说明                                               |
+| -------- | --------------- | ------ | -------------------------------------------------- |
+| `labels` | `Array<string>` | —      | 格外纯文本标号，数量与格数一致；空字符串隐藏该标号 |
+| `start?` | `never`         | —      | 显式标号分支不接受起点                             |
 
 </ApiTable>
 
@@ -279,8 +560,8 @@ export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
 <p>
   <ApiSourceLink
     label={'MatrixDefinition'}
-    path={'packages/library/standard/src/collection/matrix/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={10}
   >
     Standard Matrix 的布局感知 Definition
   </ApiSourceLink>
@@ -300,8 +581,8 @@ export const MatrixDefinition: LayoutCompositeDefinition<IRMatrix, 'standard', '
 <p>
   <ApiSourceLink
     label={'MatrixProvider'}
-    path={'packages/library/standard/src/collection/matrix/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={25}
   >
     Matrix 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>
@@ -316,8 +597,8 @@ export declare const MatrixProvider: CoreDependencyProvider;
 <p>
   <ApiSourceLink
     label={'createMatrix'}
-    path={'packages/library/standard/src/collection/matrix/factory.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={22}
   >
     保留稀疏 Source 的类型化工厂
   </ApiSourceLink>

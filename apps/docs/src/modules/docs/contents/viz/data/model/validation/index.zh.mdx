@@ -70,21 +70,21 @@ const salesModel: IRDataModel = [
 2. `validateData` 对规范化行做抽样检查，或由 `invalid="error"` 做全量检查。
 3. 通过检查的行再进入数据变换；默认跳过策略则把非法哨兵留给后续消费方处理。在 Plot 中由图元消费这些值。
 
-这个顺序保证错误指向数据接入契约，而不会被排序、汇总或筛选后的行形状干扰。字段声明与引用不一致属于[字段契约](/viz/data/model/contract)错误；解析方式不正确则回到[数据接入](/viz/data/model/intake)调整。
+这个顺序保证错误指向数据接入契约，而不会被排序、汇总或筛选后的行形状干扰。字段声明与引用不一致属于[字段与类型](/viz/data/model/fields-and-types)错误；解析方式不正确则回到[数据接入](/viz/data/model/intake)调整。
 
 <SourceLinks
   sources={[
     {
       label: '抽样诊断与全量严格校验',
       path: 'packages/viz/data/src/providers/data/normalize.ts',
-      startLine: 46,
-      endLine: 92,
+      startLine: 49,
+      endLine: 104,
     },
     {
       label: 'Plot 接入中校验位于规范化之后、数据变换之前',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 138,
-      endLine: 161,
+      startLine: 378,
+      endLine: 421,
     },
   ]}
 />
