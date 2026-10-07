@@ -48,18 +48,17 @@ export const vizSection: Array<Section> = [
         sidebarGroup: 'viz.dataContents',
         children: [
           {
-            id: 'fields-and-types',
+            id: 'field-types',
             label: 'viz.dataFieldsAndTypes',
             difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'guide',
               audience: 'user',
-              capability: 'data.fields-and-types',
+              capability: 'data.field-types',
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'intake', label: 'viz.dataModelIntake', difficulty: DocDifficulty.Advanced },
-          { id: 'validation', label: 'viz.dataModelValidation', difficulty: DocDifficulty.Advanced },
+          { id: 'intake', label: 'viz.dataModelIntake', difficulty: DocDifficulty.Beginner },
           {
             id: 'extensions',
             label: 'viz.dataModelExtensions',
@@ -71,6 +70,8 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+          { id: 'api-reference', label: 'viz.dataModelApiReference' },
+          { id: 'schema-reference', label: 'viz.dataModelSchemaReference' },
         ],
       },
       {

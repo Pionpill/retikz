@@ -1840,17 +1840,22 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   DataReferenceSchema: {
     schema: DataIR.DataReferenceSchema,
     label: 'DataReference',
-    url: '/viz/data/reference/contract#datareferenceschema',
+    url: '/viz/data/model/schema-reference#datareferenceschema',
+  },
+  FieldFormatSchema: {
+    schema: DataIR.FieldFormatSchema,
+    label: 'FieldFormat',
+    url: '/viz/data/model/schema-reference#fieldformatschema',
   },
   DataModelSchema: {
     schema: DataIR.DataModelSchema,
     label: 'DataModel',
-    url: '/viz/data/reference/contract#datamodelschema',
+    url: '/viz/data/model/schema-reference#datamodelschema',
   },
   FieldDefinitionSchema: {
     schema: DataIR.FieldDefinitionSchema,
     label: 'FieldDefinition',
-    url: '/viz/data/reference/contract#fielddefinitionschema',
+    url: '/viz/data/model/schema-reference#fielddefinitionschema',
   },
   DataExecutionSchema: {
     schema: DataIR.DataExecutionSchema,

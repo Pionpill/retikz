@@ -3,8 +3,8 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 import { usePreviewControls } from '@/modules/docs/components/component-preview/context';
 
+import { VersionOrderPreview } from '../intake/version-order.preview';
 import { createPreviewControlContract, previewControlContract } from './custom-order.controls';
-import { VersionOrderPreview } from './version-order.preview';
 
 export { createPreviewControlContract } from './custom-order.controls';
 

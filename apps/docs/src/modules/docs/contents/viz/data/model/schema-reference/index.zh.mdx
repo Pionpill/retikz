@@ -1,0 +1,53 @@
+---
+title: Schema 参考
+description: 查询数据模型可序列化配置的字段、联合分支与约束。
+---
+
+查询 `@retikz/data` 的数据引用、字段模型、字段声明与格式名 Schema。用法见[字段类型](/viz/data/model/field-types)，运行时定义见 [API 参考](/viz/data/model/api-reference)。
+
+这些 Schema 只描述可序列化配置，真实数据行、解析函数与比较器保留在消费侧运行时代码中。省略 `type` 时保留类型推断；省略 `format` 时使用最终类型的默认转换；省略 `order` 时按类别首次出现顺序排列。这些行为由运行时解析应用，不会在 Schema 校验时补写为字段值。
+
+## DataReferenceSchema
+
+<ZodSchema
+  name="DataReferenceSchema"
+  description="用外部数据集名称绑定 rows，并可选声明字段模型。"
+  descriptions={{
+    reference: '外部数据集名称；实际 rows 保留在 IR 之外。',
+    model: '可选字段声明；存在时字段名必须唯一。',
+  }}
+/>
+
+## DataModelSchema
+
+<ZodSchema name="DataModelSchema" description="字段声明数组；同一模型中的 name 必须唯一。" />
+
+## FieldDefinitionSchema
+
+字段声明按 `type` 分支：`categorical` 支持类别 `order`；`continuous` 与 `temporal` 禁止 `order`。省略 `type` 时保留推断，若声明了 `order`，最终解析出的字段类型必须是分类类型。
+
+`order` 接受内置或自定义的非空白名称，或非空类别数组。内置顺序包含 `naturalAscending` / `naturalDescending`；自定义顺序须在消费请求中注册，比较函数不进入 JSON。
+
+<ZodSchema
+  name="FieldDefinitionSchema"
+  expandNested
+  description="单个逻辑字段的名称、测量类型、解析格式与分类顺序。"
+  descriptions={{
+    '/union/0/field/"name"': '逻辑字段名或点路径。',
+    '/union/0/field/"format"': '内置或自定义值解析格式；省略时使用默认转换。',
+    '/union/0/field/"type"': '离散类别测量类型，必须显式填写 categorical。',
+    '/union/0/field/"order"': '分类域顺序；省略时按数据首次出现顺序。',
+    '/union/1/field/"name"': '逻辑字段名或点路径。',
+    '/union/1/field/"format"': '内置或自定义值解析格式；省略时使用默认转换。',
+    '/union/1/field/"type"': '连续数值或时间测量类型，必须显式填写 continuous 或 temporal。',
+    '/union/1/field/"order"': '连续数值和时间字段禁止声明分类顺序。',
+    '/union/2/field/"name"': '逻辑字段名或点路径。',
+    '/union/2/field/"format"': '内置或自定义值解析格式；省略时使用默认转换。',
+    '/union/2/field/"type"': '必须省略，保留格式或数据驱动的类型推断。',
+    '/union/2/field/"order"': '分类域顺序；省略时按数据首次出现顺序。',
+  }}
+/>
+
+## FieldFormatSchema
+
+<ZodSchema name="FieldFormatSchema" description="内置或自定义的非空白字段解析格式名；是否已注册由运行时检查。" />

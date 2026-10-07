@@ -29,7 +29,10 @@ export type FieldResolution = {
 
 /**
  * 程序化字段解析逃生舱，运行时函数，不进 IR
- * @description 按字段名返回类型覆盖与可选自定义解析；返回 undefined 时回退到 data.model / 自动推断与内置 coercion
+ * @description 按字段名返回类型覆盖与可选自定义解析；返回 undefined 时保留已有的模型或格式解析结果
+ * @param field 当前逻辑字段名
+ * @param context 数据集名称、映射后的物理路径及模型显式声明的类型
+ * @returns 字段覆盖；返回 undefined 不作覆盖。提供 parse 时必须同时返回 type 或在模型中显式声明类型
  */
 export type ResolveField = (
   field: string,

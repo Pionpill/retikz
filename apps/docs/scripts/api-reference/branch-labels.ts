@@ -14,6 +14,16 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/data#IRDataFieldDefinition': [
+    { value: 'categorical', field: 'type', type: '"categorical"', label: { zh: '离散类别', en: 'Categorical' } },
+    {
+      value: 'measured',
+      field: 'type',
+      type: '"continuous" | "temporal"',
+      label: { zh: '连续数值或时间', en: 'Continuous or temporal' },
+    },
+    { value: 'inferred', field: 'type', required: false, label: { zh: '推断类型', en: 'Inferred type' } },
+  ],
   '@retikz/standard/collection#IRArray': [
     { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },
     { value: 'data', field: 'data', required: true, label: { zh: 'JSON 数据', en: 'JSON data' } },

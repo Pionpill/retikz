@@ -1,0 +1,28 @@
+---
+title: Schema Reference
+description: Look up serializable data-model fields, union branches, and constraints.
+---
+
+Look up the data-reference, field-model, field-declaration, and format-name schemas exported by `@retikz/data`. See [Field Types](/viz/data/model/field-types) for usage and [API Reference](/viz/data/model/api-reference) for runtime definitions.
+
+These schemas describe serializable configuration only. Data rows, parsers, and comparators remain in consumer runtime code. Omitting `type` preserves inference; omitting `format` uses default coercion for the resolved type; omitting `order` preserves category appearance order. Runtime resolution applies these behaviors; schema validation does not materialize them as field values.
+
+## DataReferenceSchema
+
+<ZodSchema name="DataReferenceSchema" />
+
+## DataModelSchema
+
+<ZodSchema name="DataModelSchema" />
+
+## FieldDefinitionSchema
+
+Field declarations branch by `type`: `categorical` supports category `order`; `continuous` and `temporal` forbid it. Omitting `type` preserves inference; when `order` is declared, the resolved field type must be categorical.
+
+`order` accepts a nonblank built-in or custom name, or a nonempty category array. Built-ins include `naturalAscending` / `naturalDescending`. Custom orders must be registered in the consuming request; comparator functions stay outside JSON.
+
+<ZodSchema name="FieldDefinitionSchema" expandNested />
+
+## FieldFormatSchema
+
+<ZodSchema name="FieldFormatSchema" />
