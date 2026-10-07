@@ -1,4 +1,4 @@
-export * from './definition';
+export * from './composite';
 export * from './provider';
 export * from './registry';
 export * from './resolve';
