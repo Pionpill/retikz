@@ -13,7 +13,7 @@ export type RuntimeRevision = number & Readonly<{ [RuntimeRevisionType]: true }>
 
 /**
  * 绑定 base revision 的领域 change hint
- * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
  */
 export type RuntimeChangeSet<TChange> = Readonly<{
   /** change hint 对应的 current revision */
@@ -46,17 +46,14 @@ export type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<
  * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
- * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
  */
-export type RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange> = Readonly<{
+export type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
   /** 全局精确匹配的非空 source key */
   key: string;
   /** source value 的完整 Snapshot lifecycle */
   value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
   /** 从 captured value 收集该 source 的完整 identity 集合 */
   collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
-  /** 校验 change hint 是否可用于 previous → next */
-  validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' | 'fallback';
 }>;
 
 /** 动态 registry lookup 只暴露的 opaque source token */
@@ -72,7 +69,7 @@ export type RuntimeSourceToken = Readonly<{
  * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
- * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
  */
 export type RuntimeSourceDefinition<TInput, TValue, TRead, TChange> = RuntimeSourceToken &
   Readonly<{

@@ -123,7 +123,7 @@ const svg = renderToSvgString(
 <ComponentPreview
   files={['matrix-layout', 'matrix-layout.preview.tsx']}
   defaultSourceFile="matrix-layout.preview.tsx"
-  size="lg"
+  size="md"
 />
 
 尺寸包含内边距，`padding` 默认 8，`gap` 默认 2；gap 可为统一数字或同时包含 row、column 的对象。样式先取整体设置，再合并单格覆盖，font 按字段合并。默认背景 gray / 0.14、无边框和圆角；背景与边框按格独立绘制，不合并边线。
@@ -198,19 +198,6 @@ React 的 items 只放文字配置，嵌套组件使用 JSX；Vanilla 的 conten
 - data 必须是 JSON 值树，不传函数、循环引用、实例或稀疏数组。
 - 父级可用空间小于矩阵的自然布局需求时编译失败；给出多余空间也不会拉伸轨道。
 - Matrix 不提供合并格、表头建模、排序、聚合或矩阵运算；这些不属于通用格子呈现。
-
-## 实现原理
-
-解析阶段将三种输入转换为共享 Cell，合并整体与单格设置。编译阶段各测量一次内容，汇总列宽和行高，再排布格子与两条独立索引带。固定格保留自身尺寸，自适应格复用所属轨道尺寸。
-
-排布结果交给共享单格输出管线，分别绘制背景、内容裁切层与边框，并登记实际格子边界。容器标签附着在包含索引带的整体边界上，不参与单格测量。
-
-<SourceLinks
-  sources={[
-    { label: '行列测量与排布', path: 'packages/library/standard/src/collection/matrix/pipeline.ts', startLine: 1 },
-    { label: '共享单格输出', path: 'packages/library/standard/src/collection/_cell/pipeline.ts', startLine: 1 },
-  ]}
-/>
 
 ## API 参考
 

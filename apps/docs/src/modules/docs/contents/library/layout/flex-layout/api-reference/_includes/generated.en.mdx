@@ -47,9 +47,7 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
 - `FlexLayoutItem`: <ApiSourceLink label={"FlexLayoutItem"} path={"packages/library/layout-react/src/layout-item/FlexLayoutItem.tsx"} startLine={16}>Direct layout item read statically by FlexLayout</ApiSourceLink>
 - `FlexLayoutItemProps`: <ApiSourceLink label={"FlexLayoutItemProps"} path={"packages/library/layout-react/src/layout-item/FlexLayoutItem.tsx"} startLine={8}>React authoring props for a direct FlexLayout item</ApiSourceLink>
 
-<DocTabs defaultValue="jsx">
-
-<DocTab value="jsx" label="Members · JSX child">
+**Common members**
 
 <ApiTable>
 
@@ -57,14 +55,27 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------- |
 | `alignSelf?`        | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | Optional cross-axis alignment overriding the container alignment.                                              |
 | `basis?`            | `number \| "content"`                                                                                                                                                                                              | `"content"` | Natural content contribution or authored main-axis base slot.                                                  |
-| `readonly children` | `ReactNode`                                                                                                                                                                                                        | —           | Provide exactly one drawable JSX child; cannot be combined with ir                                             |
 | `grow?`             | `number`                                                                                                                                                                                                           | `0`         | Non-negative factor for receiving positive free space.                                                         |
-| `readonly ir?`      | `never`                                                                                                                                                                                                            | —           | The JSX branch does not accept IR input                                                                        |
 | `readonly itemKey?` | `string`                                                                                                                                                                                                           | —           | Stable identity within the container; omission generates a positional internal key, independently of React key |
 | `margin?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Item margin outside the parent allocation slot.                                                                |
 | `max?`              | `number`                                                                                                                                                                                                           | —           | Optional authored hard maximum main-axis slot.                                                                 |
 | `min?`              | `number`                                                                                                                                                                                                           | —           | Optional authored hard minimum main-axis slot.                                                                 |
 | `shrink?`           | `number`                                                                                                                                                                                                           | `1`         | Non-negative factor applied to the base slot for shrink.                                                       |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="jsx">
+
+<DocTab value="jsx" label="Members · JSX child">
+
+<ApiTable>
+
+| Member              | Type        | Default | Description                                                        |
+| ------------------- | ----------- | ------- | ------------------------------------------------------------------ |
+| `readonly children` | `ReactNode` | —       | Provide exactly one drawable JSX child; cannot be combined with ir |
+| `readonly ir?`      | `never`     | —       | The JSX branch does not accept IR input                            |
 
 </ApiTable>
 
@@ -74,18 +85,10 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
 
 <ApiTable>
 
-| Member               | Type                                                                                                                                                                                                               | Default     | Description                                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | Optional cross-axis alignment overriding the container alignment.                                              |
-| `basis?`             | `number \| "content"`                                                                                                                                                                                              | `"content"` | Natural content contribution or authored main-axis base slot.                                                  |
-| `readonly children?` | `never`                                                                                                                                                                                                            | —           | The IR branch does not accept JSX children                                                                     |
-| `grow?`              | `number`                                                                                                                                                                                                           | `0`         | Non-negative factor for receiving positive free space.                                                         |
-| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                   | —           | A serializable child drawing; cannot be combined with children                                                 |
-| `readonly itemKey?`  | `string`                                                                                                                                                                                                           | —           | Stable identity within the container; omission generates a positional internal key, independently of React key |
-| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Item margin outside the parent allocation slot.                                                                |
-| `max?`               | `number`                                                                                                                                                                                                           | —           | Optional authored hard maximum main-axis slot.                                                                 |
-| `min?`               | `number`                                                                                                                                                                                                           | —           | Optional authored hard minimum main-axis slot.                                                                 |
-| `shrink?`            | `number`                                                                                                                                                                                                           | `1`         | Non-negative factor applied to the base slot for shrink.                                                       |
+| Member               | Type                             | Default | Description                                                    |
+| -------------------- | -------------------------------- | ------- | -------------------------------------------------------------- |
+| `readonly children?` | `never`                          | —       | The IR branch does not accept JSX children                     |
+| `readonly ir`        | `InputEmbedContribution['node']` | —       | A serializable child drawing; cannot be combined with children |
 
 </ApiTable>
 
@@ -231,7 +234,7 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<
 
 ### createFlexLayout / FlexLayoutInput
 
-- `createFlexLayout`: <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/factory.ts"} startLine={8}>Create persistent FlexLayout input preserving omitted fields and shorthand</ApiSourceLink>
+- `createFlexLayout`: <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>Create persistent FlexLayout input preserving omitted fields and shorthand</ApiSourceLink>
 - `FlexLayoutInput`: <ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>FlexLayout input allowing fixed discriminators and optional fields to be omitted</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -579,7 +582,7 @@ export type LayoutSizeInput = ZodInput<typeof LayoutSizeSchema>;
 <p>
   <ApiSourceLink
     label={'FlexLayoutDefinition'}
-    path={'packages/library/layout/src/composites/flex-layout/definition.ts'}
+    path={'packages/library/layout/src/composites/flex-layout/composite.ts'}
     startLine={10}
   >
     Official layout-aware composite definition for FlexLayout
@@ -629,8 +632,8 @@ export type FlexLayoutDirection = ValueOf<typeof FlexLayoutDirection>;
 <p>
   <ApiSourceLink
     label={'FlexLayoutProvider'}
-    path={'packages/library/layout/src/composites/flex-layout/provider.ts'}
-    startLine={8}
+    path={'packages/library/layout/src/composites/flex-layout/composite.ts'}
+    startLine={39}
   >
     Composite dependency provider for FlexLayout
   </ApiSourceLink>

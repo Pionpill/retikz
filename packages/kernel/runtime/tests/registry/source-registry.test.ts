@@ -14,13 +14,13 @@ const defineNumberSource = (key: string) =>
   });
 
 describe('runtime source registry', () => {
-  it('以同一 registry 合并 builtin/custom 并保留 typed token', () => {
+  it('统一注册不同值类型的来源并保留 typed token', () => {
     const builtin = defineNumberSource('builtin');
     const custom = defineRuntimeSource<string, string, string, never>({
       key: 'custom',
       value: { capture: input => input, read: value => value, equals: (left, right) => left === right },
     });
-    const registry = createRuntimeSourceRegistry({ builtins: [builtin], custom: [custom] });
+    const registry = createRuntimeSourceRegistry([builtin, custom]);
 
     expect(registry.resolve(builtin)).toBe(builtin);
     expect(registry.resolve(custom)).toBe(custom);
@@ -31,23 +31,23 @@ describe('runtime source registry', () => {
     const b = defineNumberSource('b');
     const upper = defineNumberSource('A');
     const a = defineNumberSource('a');
-    const registry = createRuntimeSourceRegistry({ custom: [b, a], builtins: [upper] });
+    const registry = createRuntimeSourceRegistry([upper, b, a]);
 
     expect(registry.definitions().map(definition => definition.key)).toEqual(['A', 'a', 'b']);
     expect(Object.isFrozen(registry.definitions())).toBe(true);
     expect(registry.definitions()).not.toBe(registry.definitions());
   });
 
-  it('拒绝 builtin/custom 重复 key，不采用覆盖优先级', () => {
-    expect(() =>
-      createRuntimeSourceRegistry({ builtins: [defineNumberSource('same')], custom: [defineNumberSource('same')] }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.Duplicate, owner: 'same' }));
+  it('拒绝来源数组中的重复 key，不采用覆盖优先级', () => {
+    expect(() => createRuntimeSourceRegistry([defineNumberSource('same'), defineNumberSource('same')])).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.Duplicate, owner: 'same' }),
+    );
   });
 
   it('拒绝未注册但合法的 Definition', () => {
     const registered = defineNumberSource('registered');
     const unknown = defineNumberSource('unknown');
-    const registry = createRuntimeSourceRegistry({ builtins: [registered] });
+    const registry = createRuntimeSourceRegistry([registered]);
 
     expect(() => registry.resolve(unknown)).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown, owner: 'unknown' }),
@@ -57,7 +57,7 @@ describe('runtime source registry', () => {
 
   it('以 object identity guard 拒绝结构伪造和 clone token', () => {
     const definition = defineNumberSource('owner');
-    const registry = createRuntimeSourceRegistry({ builtins: [definition] });
+    const registry = createRuntimeSourceRegistry([definition]);
     const forged = { key: 'owner' } as RuntimeSourceDefinition<number, { value: number }, number, { delta: number }>;
     const cloned = structuredClone(definition) as RuntimeSourceDefinition<
       number,
@@ -82,7 +82,7 @@ describe('runtime source registry', () => {
       value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
     });
 
-    expect(() => createRuntimeSourceRegistry({ custom: [foreign] })).toThrowError(
+    expect(() => createRuntimeSourceRegistry([foreign])).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid, owner: 'foreign' }),
     );
   });
@@ -100,10 +100,11 @@ describe('runtime source registry', () => {
   });
 
   it('Core、Tier 2 与 custom owner 复用同一 registry，不引入领域分支', () => {
-    const registry = createRuntimeSourceRegistry({
-      builtins: [defineNumberSource('@retikz/core')],
-      custom: [defineNumberSource('@retikz/plot'), defineNumberSource('custom-extension')],
-    });
+    const registry = createRuntimeSourceRegistry([
+      defineNumberSource('@retikz/core'),
+      defineNumberSource('@retikz/plot'),
+      defineNumberSource('custom-extension'),
+    ]);
 
     expect(registry.definitions().map(definition => definition.key)).toEqual([
       '@retikz/core',

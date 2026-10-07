@@ -1,5 +1,3 @@
-export * from './definition';
-export * from './factory';
+export * from './composite';
 export * from './identity';
-export * from './provider';
 export * from './schema';

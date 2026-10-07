@@ -134,7 +134,7 @@ const rankEdgesForScope = (
         return source === target ? [] : [{ source, target }];
       });
 
-/** 把同一作者 Layout 内 relation label 的主轴尺寸均分到两端 child margin，保留作者指定的 gap 作为净空 */
+/** 将标签主轴尺寸均分到两端 child margin，同侧取最大预留并保留作者 gap 作为净空 */
 const withLayoutLabelMargins = (
   children: ReadonlyArray<SizedElement>,
   layout: EffectiveFlowLayout,
@@ -145,9 +145,9 @@ const withLayoutLabelMargins = (
   const childIndices = new Map(children.map((child, childIndex) => [child.input.id, childIndex]));
   const additions = new Map(children.map(child => [child.input.id, { ...ZERO_INSETS }]));
 
-  const addMargin = (id: string, side: keyof BoundsInsets, value: number): void => {
+  const reserveMargin = (id: string, side: keyof BoundsInsets, value: number): void => {
     const margin = additions.get(id);
-    if (margin !== undefined) margin[side] += value;
+    if (margin !== undefined) margin[side] = Math.max(margin[side], value);
   };
 
   for (const relation of relations) {
@@ -170,17 +170,17 @@ const withLayoutLabelMargins = (
         ? relation.labelSize.width
         : relation.labelSize.height) / 2;
     if (layout.direction === 'right') {
-      addMargin(first, 'right', halfExtent);
-      addMargin(second, 'left', halfExtent);
+      reserveMargin(first, 'right', halfExtent);
+      reserveMargin(second, 'left', halfExtent);
     } else if (layout.direction === 'left') {
-      addMargin(first, 'left', halfExtent);
-      addMargin(second, 'right', halfExtent);
+      reserveMargin(first, 'left', halfExtent);
+      reserveMargin(second, 'right', halfExtent);
     } else if (layout.direction === 'down') {
-      addMargin(first, 'bottom', halfExtent);
-      addMargin(second, 'top', halfExtent);
+      reserveMargin(first, 'bottom', halfExtent);
+      reserveMargin(second, 'top', halfExtent);
     } else {
-      addMargin(first, 'top', halfExtent);
-      addMargin(second, 'bottom', halfExtent);
+      reserveMargin(first, 'top', halfExtent);
+      reserveMargin(second, 'bottom', halfExtent);
     }
   }
 

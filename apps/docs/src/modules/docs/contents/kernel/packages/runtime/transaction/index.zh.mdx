@@ -1,0 +1,398 @@
+---
+title: Runtime · 事务发布
+description: 创建运行实例，将来源更新与计算结果作为一次事务发布，并管理版本、读取和释放
+---
+
+[Source](/kernel/packages/runtime/source) 定义数据如何保存，[Computation](/kernel/packages/runtime/computation) 定义如何派生结果。**Runtime** 把这些定义接到实际数据上，持续接收更新；一次更新就是一笔**事务**，相关来源与计算结果准备成功后一起发布。
+
+本篇继续使用坐标与距离：坐标从 `[3, 4]` 改为 `[6, 8]` 时，读取方应同时得到新坐标和距离 `10`。若计算失败，就继续保留原坐标与距离 `5`。
+
+## 整体流程
+
+| 环节     | 接口或配置                                         | 作用                                   |
+| -------- | -------------------------------------------------- | -------------------------------------- |
+| 创建     | `createRuntime(...)`                               | 接入注册表与初始输入，完成初始化       |
+| 读取基线 | `runtime.snapshot(token)`、`runtime.revision()`    | 取得准备更新所依据的数据与版本         |
+| 准备输入 | `createRuntimeSourceUpdate(...)`                   | 封装新输入及可选变更提示               |
+| 提交     | `runtime.update({ baseRevision, sources })`        | 检查基线版本并执行事务，成功后统一发布 |
+| 读取结果 | `runtime.snapshot(token)`、`runtime.result(token)` | 读取已发布的来源与计算结果             |
+| 释放     | `runtime.dispose()`                                | 结束实例并释放其持有的资源             |
+
+**候选状态**是本次准备的新数据，**已发布状态**是调用方当前可读取的数据。**版本**（revision）标识 Runtime 已发布到哪一步；候选准备期间不会提前推进版本。
+
+<ComponentPreview files="transaction-overview" size="xs" hideCode type="flow" />
+
+一次事务可以同时更新多个来源。未列出的来源沿用旧值，受影响的计算按依赖顺序执行；全部准备成功后，统一切换到新版本。
+
+## 创建实例
+
+`createRuntime(options)` 接收来源、计算及初始输入，返回可更新和读取的运行实例。创建过程同步完成初始捕获与计算，成功后版本为 `0`。
+
+```ts
+declare const createRuntime: (options: RuntimeOptions) => Runtime;
+```
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员               | 必填 | 作用                                                                                                |
+| ------------------ | ---- | --------------------------------------------------------------------------------------------------- |
+| `sources`          | 是   | 运行实例可使用的来源注册表                                                                          |
+| `computations`     | 是   | 与同一个来源注册表绑定的计算注册表                                                                  |
+| `initialSnapshots` | 是   | 每个已注册来源的完整初始输入，不能缺失、重复或多出来源                                              |
+| `updateStrategy`   | 否   | 默认 `auto` 尝试增量执行；`full` 对受影响计算直接执行全量路径                                       |
+| `participants`     | 否   | 将外部状态纳入提交，默认无参与者；详见 [Participant · 参与者](/kernel/packages/runtime/participant) |
+| `trace`            | 否   | 接收执行观测记录；后续 Trace 篇展开                                                                 |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeOptions = Readonly<{
+  sources: RuntimeSourceRegistry;
+  computations: RuntimeComputationRegistry;
+  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  updateStrategy?: 'auto' | 'full';
+  participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
+  trace?: PerformanceTraceSink;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+用 `createRuntimeSourceInput(source, value)` 把来源凭证与完整输入配对。它只创建输入命令，真正的捕获发生在 `createRuntime` 内：
+
+```ts
+declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  value: TInput,
+) => RuntimeSourceInput;
+```
+
+下面的完整例子定义坐标来源和距离计算，并建立运行实例；后续代码沿用这里的变量：
+
+```ts
+import {
+  createRuntime,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  defineRuntimeComputation,
+  defineRuntimeSource,
+} from '@retikz/runtime';
+
+type PositionInput = Readonly<{ x: string; y: string }>;
+type Position = readonly [number, number];
+type PositionChange = Readonly<{ axis: 'x' | 'y' }>;
+
+const position = defineRuntimeSource<PositionInput, Position, Position, PositionChange>({
+  key: 'example/position',
+  value: {
+    capture: input => Object.freeze([Number(input.x), Number(input.y)] as const),
+    read: value => value,
+    equals: (left, right) => Object.is(left[0], right[0]) && Object.is(left[1], right[1]),
+  },
+});
+const distance = defineRuntimeComputation<number, number, number, number>({
+  id: { owner: position.key, key: 'distance' },
+  sources: [position],
+  run: view => {
+    const [x, y] = view.snapshot(position).value;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      throw new Error('Coordinates must be finite');
+    }
+    return { kind: 'full', result: Math.hypot(x, y) };
+  },
+});
+const sources = createRuntimeSourceRegistry([position]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [distance] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(position, { x: '3', y: '4' })],
+});
+
+console.log(runtime.revision()); // 0
+console.log(runtime.result(distance).value); // 5
+```
+
+注册表只包含定义；`initialSnapshots` 才提供这次实例的数据。即使两份来源注册表包含相同 Token，也不能混用：`computations` 必须绑定传给 Runtime 的同一份 `sources`。
+
+创建时先捕获所有来源，再按依赖顺序调用各计算的 `run`。任一步失败就释放已准备的资源并抛错，不会返回半完成的实例。
+
+<SourceLinks
+  sources={[
+    { label: '创建配置与运行实例', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+    { label: '初始输入命令', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+  ]}
+/>
+
+## 提交更新
+
+`runtime.update(input)` 同步执行一笔事务。`baseRevision` 表示调用方基于哪个已发布版本准备数据，必须等于当前版本；它用来拒绝过时提交，不会自动合并冲突。
+
+```ts
+declare const createRuntimeSourceUpdate: <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  value: TInput,
+  changeSet?: RuntimeChangeSet<TChange>,
+) => RuntimeSourceUpdate;
+```
+
+这个函数把来源、完整新输入和可选提示封装为更新命令。`value` 必须是完整输入；变更提示的用途见后面的“变更提示”。
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 更新成员       | 作用                                                                |
+| -------------- | ------------------------------------------------------------------- |
+| `baseRevision` | 必填；准备数据时读取的版本，可取自快照的 `revision`                 |
+| `sources`      | 必填；本次更新的来源命令数组，同一来源只能出现一次；`[]` 表示无更新 |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeUpdate = Readonly<{
+  baseRevision: RuntimeRevision;
+  sources: ReadonlyArray<RuntimeSourceUpdate>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+```ts
+import { createRuntimeSourceUpdate } from '@retikz/runtime';
+
+const previous = runtime.snapshot(position);
+const next = { x: String(previous.value[0] * 2), y: String(previous.value[1] * 2) };
+const result = runtime.update({
+  baseRevision: previous.revision,
+  sources: [createRuntimeSourceUpdate(position, next)],
+});
+console.log(result.revision, result.outcome); // 1, 'full'
+console.log(runtime.snapshot(position).value); // [6, 8]
+console.log(runtime.result(distance).value); // 10
+```
+
+本例没有提供计算的 `update`，所以调用 `run` 得到 `full`。创建更新命令本身不捕获输入；不要在构造命令与执行事务之间修改它引用的数据。
+
+<SourceLinks
+  sources={[
+    { label: '更新输入与事务结果', path: 'packages/kernel/runtime/src/transaction/types.ts' },
+    { label: '更新命令与提示封装', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+  ]}
+/>
+
+`baseRevision` 保存的是准备数据时的版本。网络请求、Worker 或延迟任务完成前，其他更新可能已经发布；下图按时间顺序展示任务 A 基于版本 `5` 准备数据，任务 B 先发布版本 `6`，随后 A 的提交被拒绝。
+
+<ComponentPreview files="transaction-stale" size="xs" hideCode type="flow" />
+
+Runtime 的更新执行是同步的，交错发生在调用方准备数据与提交之间。
+
+<ComponentAlert
+  type="tip"
+  title="版本过期后怎么办？"
+  description={
+    <>
+      {' '}
+      版本过期会抛出 <code>RetikzRuntimeErrorCode.RevisionStale</code>
+      对应的错误。捕获后可丢弃旧结果，或读取最新快照、重新应用修改意图后提交；不要只替换版本号重发旧数据。若携带
+      ChangeSet，也应重新生成。{' '}
+    </>
+  }
+/>
+
+## 准备与发布
+
+Runtime 先检查版本、来源凭证和重复命令，再为每个提交的来源调用 `capture`，可选地收集数据中实体的[身份](/kernel/packages/runtime/identity)，最后调用 `read`。身份集合在这里被校验并保存，但不会自动产生变更提示或触发计算。
+
+候选准备完毕后，`equals` 比较新旧内部值。相等就释放未采用的候选值，保留旧状态；有变化才进入相关计算。以坐标输入为例，字符串 `'6'` 与 `'6.0'` 捕获后都为数值 `6`，因此不会仅因文本写法变化而重算。
+
+<ComponentPreview files="transaction-publication" size="sm" hideCode type="flow" />
+
+这张图描述未接入外部提交参与者时的状态发布。计算回调读取本次候选视图；宿主在事务返回后读取统一发布的新状态。图中的失败指发布前的准备失败。
+
+继续执行以下代码：第一次提交语义相等的数据，第二次提交让距离计算失败的数据：
+
+```ts
+const unchanged = runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(position, { x: '6.0', y: '8' })],
+});
+console.log(unchanged.outcome, runtime.revision()); // 'bailout', 1
+
+try {
+  runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(position, { x: 'invalid', y: '8' })],
+  });
+} catch {
+  console.log(runtime.revision()); // 1
+  console.log(runtime.snapshot(position).value); // [6, 8]
+  console.log(runtime.result(distance).value); // 10
+}
+```
+
+发布前捕获、读取或计算失败时，Runtime 清理本次候选资源，保留已发布版本；这些回调应只准备数据，Runtime 无法撤销回调自行写入的外部副作用。需要协调 renderer 等外部状态时使用提交参与者，详见 [Participant · 参与者](/kernel/packages/runtime/participant)。
+
+成功后先发布来源、结果和版本，再通知计算的 `observeCommit`，最后清理被替换的旧值。通知或旧值清理失败会记录诊断，已经发布的新状态不会因此回滚。
+
+`update` 返回 `{ revision, outcome, diagnostics }`，其中 `outcome` 汇总整笔事务：
+
+| 结果          | 含义                                                     |
+| ------------- | -------------------------------------------------------- |
+| `bailout`     | 没有来源实际变化，版本不推进                             |
+| `committed`   | 来源已发布，但没有计算生成新结果；例如计算全都复用旧结果 |
+| `incremental` | 产生了增量计算结果，没有全量或回退结果                   |
+| `full`        | 至少一项计算走全量路径，且没有回退结果                   |
+| `fallback`    | 至少一项计算走回退路径                                   |
+
+**计算的 `bailout` 不等于事务的 `bailout`**：来源发生变化而计算保留旧结果时，事务仍会发布并推进版本。`fallback` 也表示成功发布，只是采用了全量回退路径。
+
+<SourceLinks
+  sources={[
+    { label: '来源准备、比较与释放', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    { label: '候选计算、原子发布与通知', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 变更提示
+
+**ChangeSet** 告诉计算“这次改了哪里”，让计算有机会复用旧结果，减少查找变化和重新计算的工作。完整输入回答“现在的数据是什么”，变更提示回答“从旧版本到这里发生了什么”。
+
+例如，一个来源保存一万个项目，某项计算分别为每个项目生成结果。用户只修改了项目 A：提交时仍传入完整的新数据，同时附带“项目 A 已修改”的提示。计算的 `update` 就可以：
+
+1. 通过 `view.changeSet(source)` 取得提示，定位项目 A。
+2. 从 `view.snapshot(source).value` 读取 A 的新数据，重新生成 A 的结果。
+3. 复用其余项目的旧结果，返回 `incremental`。
+
+计算的增量回调为 `update(previous, view, context)`，可以读取提示，也可以自行比较：
+
+| 所需数据         | 获取方式                                                  |
+| ---------------- | --------------------------------------------------------- |
+| 调用方的变更提示 | `view.changeSet(source)?.changes`；未提供时为 `undefined` |
+| 来源的新值       | `view.snapshot(source).value`                             |
+| 当前计算的旧结果 | `previous`，由结果的 `readForComputation` 提供            |
+| 来源是否变化     | `view.isChanged(source)`，只返回布尔值，不提供字段差异    |
+
+**自行比较需要计算保留旧数据**：Runtime 不提供旧来源快照或自动生成的差异列表。计算可在结果中保存下次比较所需的数据或索引，通过 `previous` 读取，再与新值比较。例如结果保留了 `previous.position`，就可以逐项比较它与 `view.snapshot(position).value`。
+
+**采用提示、自行比较，或结合两者校验，由业务计算决定，Runtime 不规定优先级。** 传入 ChangeSet 不会关闭自行比较，也不保证提示正确或完整。业务确认提示可靠时可以据此缩小处理范围；发现不一致或无法安全增量处理时，可以重新比较或返回 `fallback` 执行全量计算。盲目信任错误提示可能产生错误结果。
+
+Runtime 负责传递提示，不会替计算执行这些步骤，也不会根据提示修改来源数据。它只检查提示由工厂创建且版本匹配，领域内容是否正确、足以支持增量处理，由消费提示的计算判断。
+
+```ts
+declare const createRuntimeChangeSet: <TChange>(
+  baseRevision: RuntimeRevision,
+  changes: ReadonlyArray<TChange>,
+) => RuntimeChangeSet<TChange>;
+```
+
+`baseRevision` 必须与本次事务一致，`changes` 的内容由来源的变更类型约束。回到坐标例子，下面仅演示提示的创建与传递：提交完整坐标，并附带“x 轴改变”的提示。前文的距离计算没有实现增量分支，因此仍会全量计算：
+
+```ts
+import { createRuntimeChangeSet } from '@retikz/runtime';
+
+const baseRevision = runtime.revision();
+const changeSet = createRuntimeChangeSet<PositionChange>(baseRevision, [{ axis: 'x' }]);
+runtime.update({
+  baseRevision,
+  sources: [createRuntimeSourceUpdate(position, { x: '0', y: '8' }, changeSet)],
+});
+console.log(runtime.result(distance).value); // 8
+```
+
+这里的 ChangeSet 通过 `createRuntimeSourceUpdate(position, nextValue, changeSet)` 附在坐标来源的更新命令上。Runtime 执行计算时，将本次来源更新的提示放入传给 `run` / `update` 的候选视图 `view`。计算在 `sources` 中声明了 `position`，就可以调用 `view.changeSet(position)` 主动读取对应提示，再通过 `.changes` 获取变化列表；未提供提示时返回 `undefined`。因此，提示由 Runtime 传递，计算不会自动探测或捕获它。
+
+增量分支在计算的 [`update`](/kernel/packages/runtime/computation#增量更新) 中实现，需要自行判断提示是否足以解释变化；不适用时返回 `fallback`，没有提示时也可以利用保留的旧数据自行比较。来源相等时计算会跳过，不会仅因提交了提示而触发。工厂复制并冻结提示数组，但不会深拷贝其中的领域对象。
+
+<SourceLinks
+  sources={[
+    { label: '提示工厂与版本约束', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+    { label: '计算读取候选提示', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
+## 读取与释放
+
+运行实例提供以下查询与释放入口：
+
+| 方法                  | 作用                                                               |
+| --------------------- | ------------------------------------------------------------------ |
+| `revision()`          | 返回当前已发布版本                                                 |
+| `snapshot(source)`    | 返回来源的 `{ revision, value }`，使用 Source 的读取视图           |
+| `result(computation)` | 返回计算的 `{ revision, value }`，使用结果的公开视图；不会重新计算 |
+| `diagnostics()`       | 取出并清空累计诊断；`update` 的返回值只包含本次诊断                |
+| `dispose()`           | 结束实例并释放持有资源                                             |
+
+查询返回的 `revision` 是当前 Runtime 版本；某个来源或计算即使复用了旧值，也会出现在当前版本的读取快照中。保留在变量中的旧快照不会随新事务自动更新。
+
+```ts
+const distanceResult = runtime.result(distance);
+console.log(distanceResult.revision, distanceResult.value); // 2, 8
+runtime.dispose();
+```
+
+没有外部参与者时，最终释放顺序为计算结果的逆依赖顺序，再按来源注册表顺序的逆序释放来源。Source 候选相等或事务失败时释放新候选，成功替换时释放旧值，最终结束时释放当前值；同一个持有值不会在这些路径中重复释放。声明了 `dispose` 的值不能让新旧状态共用同一个待释放对象。
+
+Runtime 是同步且不可重入的：准备、通知或清理回调中不要再次调用实例的更新、快照读取、结果读取、诊断读取或释放方法；通知回调使用传入的事件数据。`revision()` 只返回当时已发布的版本。释放后不能继续更新或读取状态，Source 与计算资源的释放失败记录为诊断；外部参与者的释放重试见 [Participant · 参与者](/kernel/packages/runtime/participant#所有权与释放)。
+
+<SourceLinks
+  sources={[
+    { label: '运行实例的查询与释放契约', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+    { label: '发布后读取、重入保护与最终清理', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 完整流程
+
+把公开 API 串起来：先用注册表和初始输入建立实例，再用当前版本提交完整新输入，成功后读取新状态，最后释放实例。
+
+<ComponentPreview files="transaction-flow" size="md" hideCode type="flow" />
+
+`run` 与计算的 `update` 都属于发布前的候选计算；它们返回结果不等于完成提交。只有 Runtime 成功发布，宿主才读到这次事务的状态。
+
+## Core 应用
+
+Core 把文档作为来源、编译作为计算。以下接线沿用前文的 Runtime 导入，复用 Core 已定义的 Token 和计算工厂；`document` 表示调用方已有的完整 Scene IR：
+
+```ts
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+
+const compile = createCoreComputation({});
+const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+const coreComputations = createRuntimeComputationRegistry({ sources: coreSources, computations: [compile] });
+const coreRuntime = createRuntime({
+  sources: coreSources,
+  computations: coreComputations,
+  initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, document)],
+});
+const scene = coreRuntime.result(compile).value.output.result.scene;
+```
+
+后续完整文档仍通过更新命令提交。Runtime 保证文档与编译结果一起发布；Core 决定如何编译、校验领域提示和回退。使用结束后调用 `coreRuntime.dispose()`，将 Scene 应用到 renderer 的外部提交见 [Participant · 参与者](/kernel/packages/runtime/participant)。
+
+<SourceLinks
+  sources={[{ label: 'Core 编译计算入口', path: 'packages/kernel/core/src/compile/incremental/computation.ts' }]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Participant · 参与者',
+      description: '外部状态的准备、提交与回滚',
+      url: '/kernel/packages/runtime/participant',
+    },
+    { title: 'Source · 来源', description: '数据捕获、读取与相等判断', url: '/kernel/packages/runtime/source' },
+    {
+      title: 'Computation · 计算',
+      description: '依赖、结果视图与增量分支',
+      url: '/kernel/packages/runtime/computation',
+    },
+  ]}
+/>

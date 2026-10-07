@@ -23,13 +23,14 @@ it('跨包继承读取真实 Schema 描述和默认值，联合分支使用相�
       entry,
       `
 import type { SurfaceInput, AxesInput, GridInput, GridLineInput } from '@retikz/standard/presentation';
-import type { IRArc, PolygonSchema } from '@retikz/standard/shape';
+import type { IRArc, IRSector as SectorSource, PolygonSchema } from '@retikz/standard/shape';
 import type { ArcProps } from '@retikz/standard-react/shape';
 import type { InputArc } from '@retikz/standard-vanilla/shape';
 import type { IRArray, IRArrayCell } from '@retikz/standard/collection';
 import type { input as ZodInput } from 'zod';
 type PolygonSource = ZodInput<typeof PolygonSchema>;
 export type ArcFields = Pick<IRArc, 'close' | 'startAngle'>;
+export type IRSector = SectorSource;
 export type ReactArcFields = Pick<ArcProps, 'close' | 'startAngle'>;
 export type VanillaArcFields = Pick<InputArc, 'close' | 'startAngle'>;
 export type CustomArc = Omit<IRArc, 'close'> & {
@@ -106,6 +107,7 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
           ...config.entries[0],
           symbols: [
             'ArcFields',
+            'IRSector',
             'ReactArcFields',
             'VanillaArcFields',
             'CustomArc',
@@ -126,6 +128,9 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
     expect(standardEnglish).toContain('{"position":[0,0],"label":false}');
     expect(standardEnglish).toContain('Optional fill appearance for the Surface allocation box.');
     expect(standardEnglish).toContain('Horizontal axis configuration and its perpendicular grid projection.');
+    expect(standardEnglish).toContain('Zero inner radius for the filled-sector branch.');
+    expect(standardEnglish).toContain('Zero inner radii for the filled elliptical-sector branch.');
+    expect(standardEnglish).toContain('Inner radius; cannot exceed the outer radius.');
 
     const standardChinese = await createStandardApiReferenceMdx(standardConfig, 'zh');
 
@@ -148,8 +153,8 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
       '| `includeBoundary?` | `false \\| true` | `false` | Whether missing bounds edges are added as grid lines. |',
     );
     expect(english).toContain('| `sideLength` | `number` | — | Regular polygon side length. |');
-    expect(english.match(/Number of polygon sides; at least three\./g)).toHaveLength(2);
-    expect(english.match(/\| `spacing\?` \| `number` \| `10`/g)).toHaveLength(3);
+    expect(english.match(/Number of polygon sides; at least three\./g)).toHaveLength(1);
+    expect(english.match(/\| `spacing\?` \| `number` \| `10`/g)).toHaveLength(2);
 
     const chinese = await createApiReferenceMdx(config, 'zh');
 

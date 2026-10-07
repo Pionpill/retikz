@@ -24,7 +24,19 @@ export const createPreviewControlContract = (lang: Lang) => {
                 { value: 'straight', label: t['straight'] },
                 { value: '|-', label: t['|-'] },
                 { value: '-|', label: t['-|'] },
+                { value: '-|-', label: t['-|-'] },
+                { value: '|-|', label: t['|-|'] },
               ],
+            },
+            {
+              id: 'fraction',
+              kind: 'range',
+              label: t.fraction,
+              defaultValue: 0.5,
+              min: 0,
+              max: 1,
+              step: 0.05,
+              visibleWhen: { controlId: 'route', oneOf: ['-|-', '|-|'] },
             },
             {
               id: 'arrow',
@@ -42,7 +54,7 @@ export const createPreviewControlContract = (lang: Lang) => {
         },
       ],
     }),
-    canonicalValues: { route: 'auto', arrow: '->', label: 'Chain' },
+    canonicalValues: { route: 'auto', fraction: 0.5, arrow: '->', label: 'Chain' },
     relatedApis: ['Chain.layout', 'Chain.connection'],
   } satisfies PreviewControlContract;
 };

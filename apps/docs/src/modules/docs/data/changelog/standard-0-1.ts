@@ -13,6 +13,27 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Tree 树', en: 'Unreleased · Tree' },
+          content: {
+            zh: '新增静态 Tree：root 支持文字叶节点与递归对象配置，圆形文字节点、空子槽、四向子树包络排列及可定制父子连接；支持真实节点引用、React、Vanilla 和双语交互文档。',
+            en: 'Adds static Tree with a root input accepting text leaves and configured recursive nodes, circular text nodes, missing child slots, four-direction subtree layout, customizable connections, true node references, React/Vanilla APIs, and bilingual interactive docs.',
+          },
+        },
+        {
+          label: { zh: '未发布 · Queue 队列', en: 'Unreleased · Queue' },
+          content: {
+            zh: '新增 Queue 静态队列：三种输入、四向排列、两端开放边框、可定制进出直线箭头、单格样式与 id 引用，提供 React、Vanilla 和双语交互文档；入队出队状态由外部管理。',
+            en: 'Adds static Queue presentation with three inputs, four directions, open ends, customizable incoming/outgoing straight arrows, per-cell styles and ids, React/Vanilla APIs and bilingual interactive docs. Queue operations remain external.',
+          },
+        },
+        {
+          label: { zh: '未发布 · Stack 栈', en: 'Unreleased · Stack' },
+          content: {
+            zh: '新增Stack静态栈：三种输入、四向堆叠、开放border与独立padding、可定制进出折线箭头、逐格样式和id引用；React、Vanilla及双语交互文档同步接入，不管理push/pop状态。',
+            en: 'Adds static Stack presentation with three input forms, four directions, an open border, independent padding, customizable incoming/outgoing bent arrows, per-cell styles and ids, with React/Vanilla APIs and bilingual interactive docs. Push/pop state remains external.',
+          },
+        },
+        {
           label: { zh: '未发布 · Chain 串并联', en: 'Unreleased · Chain series-parallel composition' },
           content: {
             zh: '新增 Chain：显式结构、JSON 数据和三种骨架表示；支持递归分叉与汇合、两层对齐、正交连接及任意单元内容。React、Vanilla 与双语交互文档同步接入。',

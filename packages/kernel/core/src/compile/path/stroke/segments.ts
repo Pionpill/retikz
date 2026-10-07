@@ -146,43 +146,36 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     step.via === '-|-' || step.via === '|-|'
       ? foldCornersOf(fromReference, currentAnchor, step.via, step.fraction)
       : foldCornersOf(fromReference, currentAnchor, step.via);
-  if (corners.length === 1) {
-    const corner = corners[0];
-    const fromClip = penOverride ?? clipTarget(previous.step.to, corner, targetContext);
-    const toClip = clipTarget(step.to, corner, targetContext);
-    if (!fromClip || !toClip) return false;
+  let points = [fromReference, ...corners, currentAnchor];
+  const sourceAutoBoundary = penOverride === null && isAutoBoundaryTarget(previous.step.to);
+  const targetAutoBoundary = isAutoBoundaryTarget(step.to);
 
-    startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-    emitLine(corner);
-    emitLine(toClip, isAutoBoundaryTarget(step.to));
-    sampling.collect(step, t => foldSegmentSample(fromClip, corner, toClip, t));
+  if (sourceAutoBoundary) points = targetView.clipPolylineTarget(previous.step.to, points, scopeChain);
+  if (targetAutoBoundary) points = targetView.clipPolylineTarget(step.to, points.toReversed(), scopeChain).reverse();
+  if (points.length === 0) return true;
 
-    return true;
-  }
-
-  const fromToward =
-    [...corners, currentAnchor].find(candidate => !samePoint(candidate, fromReference)) ?? currentAnchor;
-  const toToward =
-    [fromReference, ...corners].findLast(candidate => !samePoint(candidate, currentAnchor)) ?? fromReference;
-  const fromClip = penOverride ?? clipTarget(previous.step.to, fromToward, targetContext);
-  const toClip = clipTarget(step.to, toToward, targetContext);
+  const fromToward = points.find(candidate => !samePoint(candidate, points[0])) ?? currentAnchor;
+  const toToward = points.findLast(candidate => !samePoint(candidate, points.at(-1)!)) ?? fromReference;
+  const fromClip = sourceAutoBoundary
+    ? points[0]
+    : (penOverride ?? clipTarget(previous.step.to, fromToward, targetContext));
+  const toClip = targetAutoBoundary ? points.at(-1)! : clipTarget(step.to, toToward, targetContext);
   if (!fromClip || !toClip) return false;
 
-  const emittedCorners = corners.map(corner => [...corner] as IRPosition);
+  points = [fromClip, ...points.slice(1, -1), toClip].filter(
+    (position, index, all) => index === 0 || !samePoint(position, all[index - 1]),
+  );
+  if (points.length < 2) return true;
 
-  for (let index = 0; index < emittedCorners.length && samePoint(corners[index], fromReference); index += 1) {
-    emittedCorners[index] = fromClip;
+  startSegment(points[0], sourceAutoBoundary);
+  for (let index = 1; index < points.length; index += 1) {
+    emitLine(points[index], index === points.length - 1 && targetAutoBoundary);
   }
-
-  for (let index = emittedCorners.length - 1; index >= 0 && samePoint(corners[index], currentAnchor); index -= 1) {
-    emittedCorners[index] = toClip;
-  }
-
-  startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
-
-  for (const corner of emittedCorners) emitLine(corner);
-  emitLine(toClip, isAutoBoundaryTarget(step.to));
-  sampling.collect(step, t => foldSegmentSample(fromClip, emittedCorners, toClip, t));
+  sampling.collect(step, t =>
+    points.length === 2
+      ? curve.sampleAt({ kind: 'line', from: points[0], to: points[1] }, t)
+      : foldSegmentSample(points[0], points.slice(1, -1), points.at(-1)!, t),
+  );
 
   return true;
 };

@@ -1,0 +1,262 @@
+---
+title: Source · 来源
+description: 定义状态来源，理解输入、内部值与只读视图的职责，以及 Token 与来源注册
+---
+
+[入门示例](/kernel/packages/runtime/usage)用一个数字保存计数，输入、内部保存的值和读取结果可以保持一致。对于坐标表单，输入框提供字符串 `{ x: '10', y: '20' }`，内部需要保存数值坐标，读取方则可以使用只读坐标元组 `[10, 20]`。本篇沿着这份坐标，解释 Source 如何定义数据的转换与读取方式，以及各个定义字段的职责。
+
+这里的 **Source**（状态来源） 是一份定义：它告诉 Runtime 如何接收和管理某一类完整状态。本例的 Source 管理坐标本身；到原点的距离等派生结果则交给入门示例中介绍过的 Computation。Source 定义不是某次提交的对象，也不负责自动监听表单变化。
+
+## 整体流程
+
+| 环节   | 接口或配置                                              | 作用                              |
+| ------ | ------------------------------------------------------- | --------------------------------- |
+| 定义   | `defineRuntimeSource(...)`                              | 声明来源的数据管理规则            |
+| 注册   | `createRuntimeSourceRegistry([...])`                    | 登记可使用的来源 Token            |
+| 初始化 | `createRuntimeSourceInput(...)`、`createRuntime(...)`   | 提供初始输入，由 Runtime 捕获状态 |
+| 更新   | `createRuntimeSourceUpdate(...)`、`runtime.update(...)` | 提交新输入，成功后发布            |
+| 读取   | `runtime.snapshot(token)`                               | 读取已发布的来源快照及版本        |
+| 释放   | `runtime.dispose()`                                     | 释放 Runtime 持有的来源值         |
+
+先区分三份数据：调用方的输入、Runtime 内部持有的值、读取方得到的视图。**视图**在这里指允许读取方看到的数据表示，不是界面组件。下面追踪同一个坐标：输入是文本字段，内部保存数值，输出是只读的 `[x, y]` 元组。
+
+<ComponentPreview files="source-values" size="xs" hideCode type="flow" />
+
+三份数据表示同一个坐标。内部值和读取视图虽然都显示为 `[10, 20]`，但分别保存在独立数组中，读取视图只供读取：
+
+| 表示     | 本例的数据               | 为什么这样表示                                         |
+| -------- | ------------------------ | ------------------------------------------------------ |
+| 表单输入 | `{ x: '10', y: '20' }`   | 输入框给出文本，保留有名字的字段便于提交               |
+| 内部值   | `[10, 20]`，普通元组     | 转成数值并独立保存；下标 0 是 x、1 是 y                |
+| 只读视图 | `[10, 20]`，普通数组冻结 | 读取方得到独立的 `[x, y]` 只读元组，不直接持有内部数组 |
+
+同一个坐标的含义没有变，改变的是表示和访问方式。如果没有不同表示或隔离需求，三份数据也可以采用相同类型。
+
+<SourceLinks
+  sources={[
+    {
+      label: '输入、内部值与读取视图的契约',
+      path: 'packages/kernel/runtime/src/source/types.ts',
+      startLine: 27,
+      endLine: 42,
+    },
+  ]}
+/>
+
+## 定义来源
+
+`defineRuntimeSource(input)` 定义一种状态来源，接收一个配置对象，返回保留输入、内部值、读取值和变更提示类型的 Source Token。定义时不会捕获数据。
+
+```ts
+declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
+  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
+) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+```
+
+`defineRuntimeSource` 接收以下配置成员，其中 `value` 包含状态的捕获、读取、比较和释放规则：
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员                | 必填 | 作用                                           |
+| ------------------- | ---- | ---------------------------------------------- |
+| `key`               | 是   | Source 的非空注册键，本例为 `example/position` |
+| `value.capture`     | 是   | 接收完整输入，返回 Runtime 持有的内部值        |
+| `value.read`        | 是   | 接收内部值，返回供外部读取的不可变视图         |
+| `value.equals`      | 是   | 比较两个完整内部值，返回是否相等的布尔值       |
+| `value.dispose`     | 否   | 释放内部值持有的资源，本例无需提供             |
+| `collectIdentities` | 否   | 接收内部值，返回完整实体身份列表；省略则不收集 |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
+  capture: (input: TInput) => TValue;
+  read: (value: TValue) => TRead;
+  equals: (left: TValue, right: TValue) => boolean;
+  dispose?: (value: TValue) => void;
+}>;
+
+type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
+  key: string;
+  value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
+  collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+下面定义坐标来源：
+
+```ts
+import { defineRuntimeSource } from '@retikz/runtime';
+
+type PositionInput = { x: string; y: string };
+type PositionValue = [number, number];
+type PositionRead = readonly [number, number];
+
+const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead, never>({
+  key: 'example/position',
+  value: {
+    capture: input => [Number(input.x), Number(input.y)],
+    read: value => Object.freeze([value[0], value[1]] as const),
+    equals: (left, right) => Object.is(left[0], right[0]) && Object.is(left[1], right[1]),
+  },
+});
+```
+
+先看前三个泛型，它们分别对应输入、内部值和读取视图：
+
+| 泛型     | 本例的类型      | 由谁使用                                                        |
+| -------- | --------------- | --------------------------------------------------------------- |
+| `TInput` | `PositionInput` | 调用方提交完整输入，`capture` 接收它                            |
+| `TValue` | `PositionValue` | Runtime 持有；`read`、`equals` 和可选的 `dispose` 使用它        |
+| `TRead`  | `PositionRead`  | 通过 Snapshot 读取 `[x, y]`，类型为 `readonly [number, number]` |
+
+第四个泛型对应变更提示的类型，本例用 `never` 表示不提供这类提示。下面先说明各字段的职责；更新时机留给 Runtime 篇。
+
+返回的 `position` 是标识这份来源的定义凭证（token），不直接暴露回调。Runtime 内部保存对应的处理规则，后续注册、提交和读取都沿用这份凭证。此时还没有输入数据，也不会执行 `capture` 或创建状态。
+
+<ComponentAlert
+  type="tip"
+  title="为什么同时需要 key 和 Token？"
+  description={
+    <>
+      <code>key</code> 提供稳定名称，用于查找、重名检查和诊断；Token 携带来源的泛型类型，并关联具体处理规则。
+      重复定义相同 <code>key</code> 会得到不同的
+      Token，不能替代已注册的那一份，否则调用方预期的类型和实际执行的规则可能不一致。 因此，应定义一次并复用返回对象。
+    </>
+  }
+/>
+
+<SourceLinks sources={[{ label: '来源凭证与处理规则的关联', path: 'packages/kernel/runtime/src/source/define.ts' }]} />
+
+## 定义中的职责
+
+`key` 给这一类状态一个稳定名称，Token 则让后续 API 找回这一份定义及其类型。多个运行实例可以共用定义，却各自持有自己的坐标。
+
+`value` 把“如何管理坐标”集中在一起。四个回调处理的是同一份数据的不同职责：
+
+| 字段      | 为什么需要它                                       | 本例如何决定                                              |
+| --------- | -------------------------------------------------- | --------------------------------------------------------- |
+| `capture` | 外部输入的表示或可变性不一定适合长期保存           | 把文本转为数值并新建数组，输入对象之后的修改不影响内部值  |
+| `read`    | 读取方不一定应该接触内部数据的全部内容或可变引用   | 返回独立的冻结元组，允许读坐标，不允许改内部数组          |
+| `equals`  | Runtime 无法替领域判断两份完整数据是否表示相同状态 | 比较 x 和 y 的数值；`'10'` 与 `'10.0'` 捕获后表示同一坐标 |
+| `dispose` | 某些内部值持有需要显式关闭的资源                   | 普通坐标无需提供；若持有独占位图，可在这里关闭位图        |
+
+对应前面的坐标转换流程，`capture` 将输入字符串转为数值，并创建独立数组；`read` 再把两个数值复制为冻结的只读元组。两者不是重复复制：前者隔离输入的写入方，后者限制输出的读取方。若值已不可变，且表示相同，`read: value => value` 也可以成立；Source 不会替回调自动复制、冻结或验证业务字段。
+
+`read` 定义的只读表示由多个使用者共享：宿主通过 `runtime.snapshot(source)` 读取，声明了该来源的计算通过 `view.snapshot(source)` 读取。因此，设计读取视图时应保留这些使用者需要的数据，而不只是界面展示需要的字段。
+
+`equals` 必须覆盖会影响使用者的完整含义，不能只比较对象引用或挑选方便的字段。`dispose` 处理内部值而不是输入对象或公开视图；新旧内部值也不应共享会被独占关闭的资源。何时比较、采用哪份状态、何时清理，属于 Runtime 的更新编排，将在 Runtime 篇串联说明。
+
+`collectIdentities` 是可选扩展字段，用于从内部值列出实体身份，完整说明见 [Identity · 身份](/kernel/packages/runtime/identity#收集与查找)。
+
+## 来源注册
+
+定义好一个 Source，只是说明这一类状态如何捕获、读取和释放；接下来还需要确定某个 Runtime 使用哪些来源。**来源注册**就是把选定的来源定义集中登记，形成**来源注册表**，作为这个 Runtime 可管理的状态来源清单。
+
+例如，前面的 `position` 定义了坐标数据的处理规则。将它加入注册表后，Runtime 才能通过这份清单找到对应规则，并检查后续使用的来源是否已注册。注册表保存的是定义，具体的坐标数据仍要在初始化或更新 Runtime 时另外传入；注册本身不会捕获状态。
+
+`createRuntimeSourceRegistry` 接收一个来源 Token 数组，登记 Runtime 可以使用的来源定义：
+
+```ts
+declare const createRuntimeSourceRegistry: (tokens: Array<RuntimeSourceToken>) => RuntimeSourceRegistry;
+```
+
+`tokens` 是必填的来源 Token 数组，函数返回创建好的来源注册表；传入 `[]` 创建空注册表。
+
+注册表统一处理数组中的所有来源，不区分内置或自定义来源；需要分类时，由调用方自行组织并合并数组。任何重复 `key` 都会被拒绝，包括同一凭证重复传入。注册表不会自动装入任何来源。
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员                  | 作用                                                                    |
+| --------------------- | ----------------------------------------------------------------------- |
+| `find(key)`           | 按名称查找；找不到返回 `undefined`，返回的通用 Token 不保留具体来源类型 |
+| `resolve(definition)` | 确认凭证已注册并原样返回，保留泛型；同名但不同对象会报错                |
+| `definitions()`       | 按 `key` 的字符串顺序列出定义，返回不可修改注册表的只读列表             |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeSourceRegistry = Readonly<{
+  find: (key: string) => RuntimeSourceToken | undefined;
+  resolve: <TInput, TValue, TRead, TChange>(
+    definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  ) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+  definitions: () => ReadonlyArray<RuntimeSourceToken>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+接着注册前面定义的 `position`：
+
+```ts
+import { createRuntimeSourceRegistry } from '@retikz/runtime';
+
+const sources = createRuntimeSourceRegistry([position]);
+
+console.log(sources.find('example/position') === position); // true
+console.log(sources.resolve(position) === position); // true
+console.log(sources.definitions().map(source => source.key)); // ['example/position']
+```
+
+注册时遍历传入的 Token 数组，逐项检查凭证有效性和键的唯一性，并关联对应的处理规则。成功后得到固定的注册表，不提供后续追加或替换定义的方法。
+
+例如，另建一份同名来源后调用 `sources.resolve`，会因凭证不一致而失败；把它与 `position` 一起注册，则会因重复键而失败。一个是使用阶段的成员检查，一个是构造阶段的唯一性检查。
+
+<SourceLinks
+  sources={[
+    { label: '来源注册表的输入与返回成员', path: 'packages/kernel/runtime/src/registry/types.ts' },
+    { label: '来源注册、校验与查找', path: 'packages/kernel/runtime/src/registry/source-registry.ts' },
+  ]}
+/>
+
+## 完整流程
+
+来源定义返回 Token；将所需 Token 交给注册表后，可以按名称查找、验证凭证或列举来源。图中传递的都是定义，不是某一次的状态数据。
+
+<ComponentPreview files="source-registration" size="lg" hideCode type="flow" />
+
+`find(key)` 适合从名称找回定义；`resolve(token)` 验证持有的凭证属于这个注册表，并保留类型信息；`definitions()` 提供全部定义。注册不会调用 `capture`，也不会执行计算。如何将定义和实际输入交给运行实例，可先参考[入门示例](/kernel/packages/runtime/usage)，完整初始化与更新留到 Runtime 篇。
+
+## Core 应用
+
+Core 将整份 Scene IR（图文档的结构化描述）作为一个 Source，而不是为每个节点分别创建 Source。它在模块加载时定义一次 `CoreSourceDefinition`，后续初始化、更新和编译都复用这个 Token。下面摘录来源定义，省略导入与类型声明：
+
+```ts
+export const CoreSourceDefinition = defineRuntimeSource({
+  key: CORE_SOURCE_KEY, // '@retikz/core/document'
+  value: {
+    capture: input => cloneAndFreezeJson(input, 'CoreSourceDefinition input'),
+    read: value => value,
+    equals: jsonStructuralEquals,
+  },
+});
+```
+
+这里的输入、内部值和读取值都采用 Scene IR 结构：`capture` 保存一份独立的只读文档，`read` 直接提供这份文档，`equals` 按内容判断文档是否变化。代码中的两个 JSON helper 是 Core 的内部工具；使用 Core 时直接导入已定义好的 Token 即可。
+
+Core 的编译计算声明对这份来源的依赖后，通过同一个 Token 读取只读文档。下面摘录计算回调中的读取位置：
+
+```ts
+const source = view.snapshot(CoreSourceDefinition).value;
+// 将 source 交给 Core 编译逻辑，生成 Scene
+```
+
+如何将来源与实际输入交给运行实例，可参考[入门示例](/kernel/packages/runtime/usage)；完整初始化与更新编排留到 Runtime 篇。
+
+Token 标识的是来源定义，不保存具体文档；多个 Runtime 可以复用它，各自持有独立状态。这个例子对应了前文“定义规则 → 捕获输入 → 读取状态”的流程，编译和增量更新的细节由 Core 文档展开。
+
+<SourceLinks
+  sources={[
+    { label: 'Core 文档来源定义', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
+    { label: 'Core 编译计算读取来源', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>

@@ -1,0 +1,130 @@
+---
+title: Stack
+description: Display text, empty cells and drawings from bottom to top, with configurable direction, an open border and operation arrows.
+---
+
+`Stack` displays a snapshot ordered from bottom to top. The last item is always the top; the default direction is upward. Use it for call stacks, algorithm illustrations and before/after states.
+
+## Getting started
+
+After [installation and first render](/library/standard/get-start), import from the collection entry.
+
+<ComponentPreview files="stack-basic" size="sm" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Stack } from '@retikz/standard-react/collection';
+
+<Layout>
+  <Stack items={['A', 'B', 'C']} />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { stack, StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+renderToSvgString(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }), {
+  adapters: [StackInputEmbedAdapter],
+});
+```
+
+</DocTab>
+<DocTab value="ir" label="Source IR">
+
+```json
+{ "namespace": "standard", "type": "stack", "items": ["A", "B", "C"] }
+```
+
+For direct IR, register StackProvider and PathClipProvider. Data expansion also requires ArrayProvider and MapProvider; explicit nested content supplies its own dependencies.
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Choose an input form
+
+Choose one of items, data or skeleton. Strings in items are literal text; explicit cells use `{ content?, id?, style?, layout? }`. data accepts a JSON array: strings keep their quotes, and nested objects and arrays expand to Map/Array by default. dataExpand only applies to data; false disables expansion and a map/array list selects which structures expand.
+
+| Skeleton form                           | Result                                         |
+| --------------------------------------- | ---------------------------------------------- |
+| `skeleton={{ count: 3 }}`               | Three contentless cells                        |
+| `skeleton={{ labels: ['A', '', 'C'] }}` | Three symbolic cells with an empty middle cell |
+
+An empty array or zero count means an empty stack. Its default open container is 16×16, with no placeholder cell or operation arrows. Zero padding makes its natural size zero. Skeleton cells are drawing content, not capacity slots.
+
+<ComponentPreview
+  files={['stack-inputs', 'stack-inputs.preview.tsx']}
+  defaultSourceFile="stack-inputs.preview.tsx"
+  size="md"
+/>
+
+### Arrange cells and border
+
+layout.direction supports up, down, left and right. The open end follows the direction without changing input order. layout.width/height always mean physical cell dimensions. Cells retain their main-axis sizes; auto cells fill the largest cross-axis demand, while smaller fixed cells are centered without stretching.
+
+layout.gap defaults to 8, larger than the nested Array/Map default of 2 so outer items remain visually distinct. layout.padding controls cell padding; root padding controls container padding, both defaulting to 8. border draws three sides by default. Use `border={{ style: { stroke: 'dodgerblue', dashPattern: [4, 3] } }}` to configure the outline. false hides only the border and preserves padding. Root frame retains the general container decoration contract independently.
+
+arrow defaults to false. Set it to true to enable both arrows at the open top, or configure input and output independently with an object; omitted sides stay hidden. In the default upward layout, input follows a horizontal-then-vertical `-|` bend and output follows a vertical-then-horizontal `|-` bend. Other directions rotate the arrangement. Each accepts true, false, or an appearance object. style controls color, width and dashes; arrowDetail controls the arrow-tip shape, size and color. Arrows do not change cell or container allocation and are hidden when empty. label remains the overall text label.
+
+layout.reverseArrows defaults to false. Set it to true to swap the arrow sides: an upward stack then receives input on the right and sends output to the left. Flow and cell order stay unchanged in all four directions. The example below enables both arrows; use “Swap arrow positions” to compare.
+
+```tsx
+<Stack
+  items={['A', 'B', 'C']}
+  arrow={{
+    input: { style: { stroke: 'dodgerblue', dashPattern: [4, 3] }, arrowDetail: { shape: 'openStealth' } },
+    output: { style: { stroke: 'darkorange', strokeWidth: 2 } },
+  }}
+/>
+```
+
+<ComponentPreview
+  files={['stack-layout', 'stack-layout.preview.tsx']}
+  defaultSourceFile="stack-layout.preview.tsx"
+  size="md"
+/>
+
+## Extended usage
+
+### Nest content and reference a cell
+
+Use this React hierarchy. Vanilla items.content accepts the corresponding drawing input; IR accepts one serializable child.
+
+```text
+Stack
+├── StackItem
+└── StackItem
+    └── Matrix
+```
+
+StackItem accepts either text or one drawable child; omitting both creates an empty cell. Nested collections omit the outer cell fill and padding by default, while ordinary text retains its light gray background. Cell style and layout override overall defaults, including dashes, no fill and dimensions. Fixed dimensions clip content by default; explicit overflow overrides that behavior.
+
+Set a cell id to reference its actual border from an external Draw. Stack does not generate index ids, maintain push/pop state or route complex connections. Compose additional operation annotations, curves and multiple snapshots with existing drawing and layout features. This example names the top cell selected and connects to it externally.
+
+<ComponentPreview
+  files={['stack-composition', 'stack-composition.preview.tsx']}
+  defaultSourceFile="stack-composition.preview.tsx"
+  size="md"
+/>
+
+See [Collection internals](/library/standard/collection/mechanism) for shared measurement, clipping, compilation and spatial references.
+
+## API reference
+
+{/* @include library/standard/collection/stack/generated */}
+
+## Schema reference
+
+Source retains the chosen input form. Factories do not expand skeletons or fill defaults; explicit parse materializes static defaults.
+
+#### StackSchema
+
+<ZodSchema name="StackSchema" description="Static stack from ordered cells, JSON data or a skeleton" expandNested />

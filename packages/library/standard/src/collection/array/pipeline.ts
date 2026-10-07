@@ -1,13 +1,13 @@
 import type {
   CompositeCompileChild,
-  IRNode,
   LayoutChildResult,
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '@retikz/core';
 
-import { compileCells, measureCell, measureCellChild } from '../_cell';
+import { compileCells, measureCell } from '../_cell';
 import type { CellPlacement, MeasuredCell } from '../_cell';
+import { measureCollectionIndex } from '../_index';
 import { ArrayDirection, ArrayIndexPosition } from './constants';
 import { resolveArray } from './resolve';
 import type { IRArray } from './schema';
@@ -48,25 +48,13 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
   let indexHeight = 0;
   if (indexOptions) {
     for (let index = 0; index < items.length; index++) {
-      const text = indexOptions.labels === undefined ? String(indexOptions.start + index) : indexOptions.labels[index];
-      if (text === '') {
+      const result = measureCollectionIndex(indexOptions, index, items.length + index, scope, context);
+      if (result === undefined) {
         indices.push(undefined);
         continue;
       }
 
       hasIndices = true;
-      const child: IRNode = {
-        type: 'node',
-        position: [0, 0],
-        text,
-        style: {
-          fill: 'none',
-          stroke: 'none',
-          ...indexOptions.style,
-        },
-        layout: { padding: 0, margin: 0 },
-      };
-      const result = measureCellChild(context, child, items.length + index, scope);
       indices.push(result);
       indexWidth = Math.max(indexWidth, result.slotSize.width);
       indexHeight = Math.max(indexHeight, result.slotSize.height);

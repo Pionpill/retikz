@@ -16,13 +16,24 @@ it('每种输入实际通过 Vanilla 转换与渲染', () => {
   }
 });
 it('嵌套图形和箭头转换可执行', () => {
-  const v = buildVanillaPreview(buildPreviewIR(() => content({ width: 64, overflow: 'clip' })));
+  const v = buildVanillaPreview(buildPreviewIR(() => content({ width: 64, overflow: 'clip', matrixAutoWidth: false })));
 
   expect(v.svg).toContain('<svg');
   expect(v.code).toContain('matrix(');
 
-  const a = buildVanillaPreview(buildPreviewIR(() => connection({ route: 'auto', arrow: '<->', label: 'Chain' })));
+  const a = buildVanillaPreview(
+    buildPreviewIR(() => connection({ route: 'auto', fraction: 0.5, arrow: '<->', label: 'Chain' })),
+  );
 
   expect(a.svg).toContain('Chain');
   expect(a.code).toContain('marks:');
+});
+
+it.each(['-|-', '|-|'] as const)('三段连接 %s 的比例通过预览转换透传', route => {
+  const preview = buildVanillaPreview(
+    buildPreviewIR(() => connection({ route, fraction: 0.25, arrow: 'none', label: 'Chain' })),
+  );
+  expect(preview.svg).toContain('<svg');
+  expect(preview.code).toContain(route);
+  expect(preview.code).toContain('fraction: 0.25');
 });

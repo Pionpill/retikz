@@ -7,6 +7,70 @@
 - `Legend`: <ApiSourceLink label={"Legend"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={97}>React Tier 2 headless authoring component for Standard Legend</ApiSourceLink>
 - `LegendProps`: <ApiSourceLink label={"LegendProps"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={39}>Two explicit headless React Legend authoring forms</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                                                                                                                                               | Default                                           | Description                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `LegendItemsFormProps['animations']`                                                                                                                                                                               | —                                                 | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —                                                 | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —                                                 | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `contentAlign?`   | `"center" \| "start" \| "end"`                                                                                                                                                                                     | `"start"`                                         | Physical x-axis alignment of title and body structural blocks within the Legend content box.                                                    |
+| `defaults?`       | `LegendItemsFormProps['defaults']`                                                                                                                                                                                 | —                                                 | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `direction?`      | `"horizontal" \| "vertical"`                                                                                                                                                                                       | —                                                 | —                                                                                                                                               |
+| `frame?`          | `IRScopeFrame`                                                                                                                                                                                                     | —                                                 | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                                                                                                                                           | —                                                 | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —                                                 | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —                                                 | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | `"visible"`                                       | Container visual overflow policy.                                                                                                               |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`                                               | Insets from allocation box to content box.                                                                                                      |
+| `placement?`      | `LegendItemsFormProps['placement']`                                                                                                                                                                                | —                                                 | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `sampleGap?`      | `number`                                                                                                                                                                                                           | —                                                 | —                                                                                                                                               |
+| `size?`           | `LegendItemsFormProps['size']`                                                                                                                                                                                     | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | Container allocation size including padding.                                                                                                    |
+| `style?`          | `LegendItemsFormProps['style']`                                                                                                                                                                                    | —                                                 | Cascading graphic overrides for descendants.                                                                                                    |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —                                                 | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `titleGap?`       | `number`                                                                                                                                                                                                           | `8`                                               | Vertical gap used only when both the title and a non-empty body are present.                                                                    |
+| `transforms?`     | `LegendItemsFormProps['transforms']`                                                                                                                                                                               | —                                                 | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —                                                 | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Discrete items">
+
+<ApiTable>
+
+| Member               | Type                                         | Default | Description                                          |
+| -------------------- | -------------------------------------------- | ------- | ---------------------------------------------------- |
+| `readonly children?` | `ReactNode`                                  | —       | LegendTitle and LegendItem markers in authored order |
+| `gap?`               | `number \| { row: number; column: number; }` | —       | —                                                    |
+| `readonly kind`      | `typeof LegendContentKind.Items`             | —       | Explicitly select the discrete-items form            |
+| `sampleAlign?`       | `"center" \| "start" \| "end"`               | —       | —                                                    |
+| `wrap?`              | `"nowrap" \| "wrap"`                         | —       | —                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="ramp" label="Members · Continuous sample">
+
+<ApiTable>
+
+| Member               | Type                            | Default | Description                                                                   |
+| -------------------- | ------------------------------- | ------- | ----------------------------------------------------------------------------- |
+| `readonly children?` | `ReactNode`                     | —       | LegendTitle, exactly one LegendRamp, and LegendTick markers in authored order |
+| `readonly kind`      | `typeof LegendContentKind.Ramp` | —       | Explicitly select the continuous-ramp form                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const Legend: {
   (props: LegendProps, context?: any): ReactNode;
@@ -14,6 +78,10 @@ export declare const Legend: {
 
 export type LegendProps = LegendItemsFormProps | LegendRampFormProps;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### LegendTitle / LegendTitleProps
 
@@ -461,6 +529,19 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member      | Type                                                       | Default | Description                                     |
+| ----------- | ---------------------------------------------------------- | ------- | ----------------------------------------------- |
+| `container` | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —       | Resolved Legend container geometry.             |
+| `title`     | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —       | Resolved title placement, or null when omitted. |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="items">
 
 <DocTab value="items" label="Members · Discrete items">
@@ -470,10 +551,8 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 | Member       | Type                                                               | Default | Description                                                                            |
 | ------------ | ------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------- |
 | `bodyBounds` | `{ x: number; y: number; width: number; height: number; } \| null` | —       | Union of placed item allocations and structural gaps, or null when there are no items. |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>`         | —       | Resolved Legend container geometry.                                                    |
 | `items`      | `ZodInfer<typeof LegendArtifactSchema.shape["items"]>`             | —       | Discrete item artifacts in stable authored order.                                      |
 | `kind`       | `"items"`                                                          | —       | Discriminator for a discrete-items Legend artifact.                                    |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`             | —       | Resolved title placement, or null when omitted.                                        |
 
 </ApiTable>
 
@@ -486,11 +565,9 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 | Member       | Type                                                       | Default | Description                                                     |
 | ------------ | ---------------------------------------------------------- | ------- | --------------------------------------------------------------- |
 | `bodyBounds` | `{ x: number; y: number; width: number; height: number; }` | —       | Union of the final sample and non-empty tick-label allocations. |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —       | Resolved Legend container geometry.                             |
 | `kind`       | `"ramp"`                                                   | —       | Discriminator for a continuous-ramp Legend artifact.            |
 | `sample`     | `ZodInfer<typeof LegendArtifactSchema.shape["sample"]>`    | —       | Resolved continuous sample placement.                           |
 | `ticks`      | `ZodInfer<typeof LegendArtifactSchema.shape["ticks"]>`     | —       | Tick anchors and labels in stable authored order.               |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —       | Resolved title placement, or null when omitted.                 |
 
 </ApiTable>
 
@@ -511,7 +588,7 @@ export type LegendArtifact = ZodInfer<typeof LegendArtifactSchema>;
 <p>
   <ApiSourceLink
     label={'LegendCompileArtifact'}
-    path={'packages/library/standard/src/presentation/legend/definition.ts'}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
     startLine={24}
   >
     Public compile artifact envelope derived from the Legend definition
@@ -567,7 +644,7 @@ export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
 <p>
   <ApiSourceLink
     label={'LegendDefinition'}
-    path={'packages/library/standard/src/presentation/legend/definition.ts'}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
     startLine={10}
   >
     Official layout-aware Core composite definition for Standard Legend
@@ -594,8 +671,8 @@ export const LegendDefinition: LayoutCompositeDefinition<
 <p>
   <ApiSourceLink
     label={'LegendProvider'}
-    path={'packages/library/standard/src/presentation/legend/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
+    startLine={34}
   >
     Core composite dependency provider for Legend
   </ApiSourceLink>
@@ -615,8 +692,8 @@ export const LegendProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'createLegend'}
-    path={'packages/library/standard/src/presentation/legend/factory.ts'}
-    startLine={5}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
+    startLine={27}
   >
     Create a sparse persistent Standard Legend composite
   </ApiSourceLink>

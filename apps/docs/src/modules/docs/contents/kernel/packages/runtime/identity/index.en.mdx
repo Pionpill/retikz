@@ -1,0 +1,253 @@
+---
+title: Identity
+description: Identify entities within state through identity creation, comparison, collection and lookup, with a Core example
+---
+
+[Source](/kernel/packages/runtime/source) explains how to define, register and manage state. When that state contains a graph, individual nodes also need to be distinguished: node A remains the same node when its color changes, but node A in another graph is a different entity.
+
+**Entity identity** identifies the same entity across state updates. This page explains how to create and compare identities, then collect and look them up within a Source's state. A Source token identifies the whole Source definition; an Identity identifies an entity within its state. One Source can contain many entity identities.
+
+## Overall flow
+
+| Stage        | API or configuration                      | Purpose                                                            |
+| ------------ | ----------------------------------------- | ------------------------------------------------------------------ |
+| Create       | `createRuntimeIdentity(owner, path)`      | Build an identity from a Source key and entity path                |
+| Compare      | `runtimeIdentityEquals(a, b)`             | Check whether two identities refer to the same entity              |
+| Collect      | `collectIdentities(value)`                | The Source callback returns all identities from the captured value |
+| Build lookup | `createRuntimeIdentityLookup(identities)` | Validate the identity list and build a lookup                      |
+| Query        | `lookup.has(identity)`, `lookup.values()` | Check membership or enumerate the collection                       |
+
+The diagram follows collection lookup. To compare just two entities, use identity comparison directly without building a lookup.
+
+<ComponentPreview files="identity-overview" size="xs" hideCode type="flow" />
+
+## Identity and state
+
+Identity answers “which entity is this?”, while state answers “what is it like now?”. Changing a color preserves identity but changes state. Using the entire node as its identity would lose the connection between its old and new forms; using only `'A'` would confuse equally named nodes in different Sources.
+
+An Identity therefore combines two fields:
+
+```ts
+type RuntimeIdentity = Readonly<{
+  owner: string;
+  path: ReadonlyArray<string>;
+}>;
+```
+
+`owner` selects the Source, and `path` selects an entity within it: for example, `owner = 'example/graph'` and `path = ['nodes', 'A']`. Different paths under the same owner identify different entities; identical paths under different owners also identify different entities.
+
+The figure places identity fields next to the node color for comparison. `color` is entity state, not a third Identity field.
+
+<ComponentPreview files="identity-fields" size="md" hideCode type="illustration" />
+
+The records may be different JavaScript objects. Matching owners and complete path contents make their identities equal, but do not imply equal state or automatically reuse computation results. Callers decide how stable identities match entities across states; Runtime supplies common creation, comparison and lookup tools.
+
+## Identifying nodes
+
+A node's color can change while its identity remains stable. Create an identity with `createRuntimeIdentity(owner, path)`:
+
+```ts
+declare const createRuntimeIdentity: (owner: string, path: ReadonlyArray<string>) => RuntimeIdentity;
+```
+
+| Item         | Description                                                    |
+| ------------ | -------------------------------------------------------------- |
+| `owner`      | Required owning Source key; cannot be empty or whitespace-only |
+| `path`       | Required; at least one nonempty, non-whitespace segment        |
+| Return value | An identity containing `owner` and `path`                      |
+
+<ComponentAlert
+  type="tip"
+  title="owner and the Source key"
+  description="An identity's owner corresponds to its Source's key and must match it. Usually, define the string once as a constant such as GRAPH_SOURCE_KEY and reuse it when defining the Source and creating identities. This avoids mismatched string literals. If the Source token is already available, its key can also be used directly."
+/>
+
+```ts
+declare const runtimeIdentityEquals: (left: RuntimeIdentity, right: RuntimeIdentity) => boolean;
+```
+
+| Item            | Description                                                   |
+| --------------- | ------------------------------------------------------------- |
+| `left`, `right` | Two required identities to compare                            |
+| Return value    | `boolean`; only equal owners and complete paths return `true` |
+
+```ts
+import { createRuntimeIdentity, runtimeIdentityEquals } from '@retikz/runtime';
+
+const nodeA = createRuntimeIdentity('example/graph', ['nodes', 'A']);
+const sameNodeA = createRuntimeIdentity('example/graph', ['nodes', 'A']);
+const otherGraphA = createRuntimeIdentity('example/other-graph', ['nodes', 'A']);
+
+console.log(runtimeIdentityEquals(nodeA, sameNodeA)); // true
+console.log(runtimeIdentityEquals(nodeA, otherGraphA)); // false
+```
+
+Paths are defined by the domain, not interpreted as filesystem paths. Runtime compares the owner, segment count and each segment exactly. It does not split slashes, merge paths or normalize case or Unicode. For example, `['nodes', 'A']` differs from `['nodes/A']`. Modifying the original path array after creation does not change the identity.
+
+<ComponentAlert
+  type="tip"
+  title="Why is path an array?"
+  description={
+    <>
+      Arrays preserve segment boundaries without separator or escaping conventions: <code>['nodes', 'A/B']</code> and{' '}
+      <code>['nodes', 'A', 'B']</code> are different paths. They also make it easy to append a child's identifier to a
+      parent path. Callers can interpret shared prefixes according to their own conventions to inspect hierarchy, aid
+      debugging or implement subtree queries. Runtime identity comparison and membership lookup require complete
+      matches; shared prefixes do not automatically link updates or propagate invalidation.
+    </>
+  }
+/>
+
+The definition author is responsible for stability: keep node A's identity when its color changes, and assign a different identity to a different entity. Runtime does not infer identity from colors, object references or array positions.
+
+<SourceLinks
+  sources={[
+    { label: 'Entity identity contract', path: 'packages/kernel/runtime/src/identity/types.ts' },
+    { label: 'Identity creation and exact comparison', path: 'packages/kernel/runtime/src/identity/identity.ts' },
+  ]}
+/>
+
+## Collection and lookup
+
+A graph may contain multiple nodes. `createRuntimeIdentityLookup(owner, identities)` organizes identities from one Source to answer whether an entity exists:
+
+```ts
+declare const createRuntimeIdentityLookup: (
+  owner: string,
+  identities: ReadonlyArray<RuntimeIdentity>,
+) => RuntimeIdentityLookup;
+```
+
+Create an identity lookup.
+
+| Item         | Description                                                    |
+| ------------ | -------------------------------------------------------------- |
+| `owner`      | owning Source key, required                                    |
+| `identities` | complete identity list for that Source, required, may be empty |
+| Return value | Returns a lookup with `size`, `has(identity)` and `values()`   |
+
+```ts
+// Method signature on the returned object
+has: (identity: RuntimeIdentity) => boolean;
+```
+
+Accept a complete identity and return whether it exists; foreign owners throw
+
+```ts
+// Method signature on the returned object
+values: () => ReadonlyArray<RuntimeIdentity>;
+```
+
+No arguments; return a read-only identity list in stable path order
+
+```ts
+import { createRuntimeIdentityLookup } from '@retikz/runtime';
+
+const nodeB = createRuntimeIdentity('example/graph', ['nodes', 'B']);
+const identities = createRuntimeIdentityLookup('example/graph', [nodeB, nodeA]);
+
+console.log(identities.size); // 2
+console.log(identities.has(sameNodeA)); // true
+console.log(identities.has(createRuntimeIdentity('example/graph', ['nodes']))); // false
+console.log(identities.values().map(identity => identity.path));
+// [['nodes', 'A'], ['nodes', 'B']]
+```
+
+`has` checks a complete identity: a child path does not imply that its parent exists. A missing identity from the same Source returns `false`; an identity from another Source throws. Construction also rejects foreign owners and duplicate complete paths. An empty identity list is valid.
+
+`values()` returns identities in segment-by-segment string order, with shorter prefixes first. This is neither insertion order nor locale-sensitive sorting. The lookup owns an independent collection; changing the original list does not affect it.
+
+A lookup answers collection questions, not state equality: `size` counts identities, `has` checks exact membership, and `values` supports enumeration or caller-defined matching. It does not return entity data such as node colors; callers need their own index to resolve identities to those values.
+
+For example, compare old identities `[A, B]` with new identities `[A, C]`. Querying the two lookups reveals that B disappeared and C was added. A appearing in both establishes identity continuity, not unchanged color. Shared prefixes do not make `has` a subtree query.
+
+### Collecting from a Source
+
+`collectIdentities` receives the complete value produced by `capture` and returns the identities to track within it. Runtime checks ownership and duplicates, then stores an internal lookup. That lookup currently has no public query API and does not automatically drive dependencies or invalidation. Callers needing identity queries still build a lookup from their own identity list, and maintain a data index if they need to retrieve entities.
+
+With a Source's `collectIdentities` callback, Runtime uses this lookup logic while preparing captured state (this section covers the collection contract; update timing and failure handling belong to the Runtime chapter). Reuse `defineRuntimeSource(input)` from [Source](/kernel/packages/runtime/source#defining-a-source): it accepts Source configuration and returns a token. Here, `collectIdentities(value)` additionally accepts the internal value and returns all entity identities. Define a graph Source that captures an independent read-only node list and collects every node's identity:
+
+```ts
+import { defineRuntimeSource } from '@retikz/runtime';
+
+type GraphNode = Readonly<{ id: string; color: string }>;
+type GraphState = ReadonlyArray<GraphNode>;
+
+const graph = defineRuntimeSource<GraphState, GraphState, GraphState, never>({
+  key: 'example/graph',
+  value: {
+    capture: input => Object.freeze(input.map(node => Object.freeze({ ...node }))),
+    read: value => value,
+    equals: (left, right) =>
+      left.length === right.length &&
+      left.every((node, index) => node.id === right[index].id && node.color === right[index].color),
+  },
+  collectIdentities: value => value.map(node => createRuntimeIdentity('example/graph', ['nodes', node.id])),
+});
+```
+
+A color change changes state without changing node identity. `collectIdentities` returns the complete collection, not just changed nodes. When omitted, Runtime does not scan state to discover identities. This example only tracks nodes, not edges or the graph itself.
+
+<SourceLinks
+  sources={[
+    { label: 'Ownership, uniqueness and identity lookup', path: 'packages/kernel/runtime/src/identity/identity.ts' },
+    { label: 'Identity collection after Source capture', path: 'packages/kernel/runtime/src/source/executor.ts' },
+  ]}
+/>
+
+## Complete flow
+
+Identities support two common paths: compare two directly, or organize a complete identity list into a lookup. The APIs below connect these paths. Arrows show inputs and outputs, not a sequence that every caller must execute.
+
+<ComponentPreview files="identity-flow" size="sm" hideCode type="flow" />
+
+`createRuntimeIdentity` creates one identity. `runtimeIdentityEquals` compares two identities directly without a lookup. For collection queries, pass an identity list to `createRuntimeIdentityLookup`, then use `has` to query and `values` to enumerate it. A Source's `collectIdentities` supplies a complete list for internal Runtime validation and storage; it does not return the query object shown in the figure to callers.
+
+## Core application
+
+Core uses the same identity structure for entities inside a drawing document. In the document index used for incremental comparison, the root path is `['root']`. Each child path appends its type and explicit `id` to its parent's path. An ordinary node with `id: 'A'` directly under the root therefore has this identity:
+
+```ts
+import { createRuntimeIdentity } from '@retikz/runtime';
+
+const root = createRuntimeIdentity('@retikz/core/document', ['root']);
+const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'node', 'A']);
+```
+
+The `owner` is the Core document Source's registration key; `path` distinguishes entities within the document. Changing only a node's color preserves its identity, while changing its parent path changes its identity. Core uses these identities to compare documents and check change hints. The document Source currently does not configure `collectIdentities`; Core's incremental computation logic builds this index.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core document identities and change checks',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime · Transaction publication',
+      description: 'Instance creation, revisions and atomic publication',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    {
+      title: 'Computation',
+      description: 'Define derived computations, dependencies, result views and incremental updates',
+      url: '/kernel/packages/runtime/computation',
+    },
+    {
+      title: 'Source',
+      description: 'Define state representations, read rules and Source registration',
+      url: '/kernel/packages/runtime/source',
+    },
+    {
+      title: 'Starter example',
+      description: 'Pass both registries to Runtime, then update, read and dispose',
+      url: '/kernel/packages/runtime/usage',
+    },
+  ]}
+/>

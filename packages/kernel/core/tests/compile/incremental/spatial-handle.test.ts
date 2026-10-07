@@ -59,8 +59,8 @@ describe('incremental spatial handle atomicity', () => {
       ],
     });
     const program = createCoreComputation({ onWarn: () => undefined });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -73,7 +73,7 @@ describe('incremental spatial handle atomicity', () => {
         sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(aliasIds))],
       });
 
-      expect(session.artifact(program).value.output.result.scene).toEqual(
+      expect(session.result(program).value.output.result.scene).toEqual(
         compileToScene(source(aliasIds), { onWarn: () => undefined }).scene,
       );
     }
@@ -81,8 +81,8 @@ describe('incremental spatial handle atomicity', () => {
 
   it('commits Scene, artifacts, and spatial index together and preserves the previous revision on failure', () => {
     const program = createCoreComputation({ composites: [card] });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -93,7 +93,7 @@ describe('incremental spatial handle atomicity', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(20, ['alternate']))],
     });
-    const committed = session.artifact(program).value.output.result;
+    const committed = session.result(program).value.output.result;
 
     expect(committed.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
     expect(selectSpatialHandles(committed.spatialHandles, { id: 'alternate' })).toEqual(
@@ -107,14 +107,14 @@ describe('incremental spatial handle atomicity', () => {
       }),
     ).toThrow(/RUNTIME_COMPUTATION_RUN_FAILED/);
 
-    expect(session.artifact(program).value.output.result).toBe(committed);
-    expect(session.artifact(program).value.output.result.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
+    expect(session.result(program).value.output.result).toBe(committed);
+    expect(session.result(program).value.output.result.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
 
     session.update({
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(20, ['new']))],
     });
-    const updated = session.artifact(program).value.output.result;
+    const updated = session.result(program).value.output.result;
 
     expect(selectSpatialHandles(updated.spatialHandles, { id: 'alternate' })).toEqual([]);
     expect(selectSpatialHandles(updated.spatialHandles, { id: 'new' })).toHaveLength(1);

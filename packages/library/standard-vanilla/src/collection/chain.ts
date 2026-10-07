@@ -9,7 +9,7 @@ import { normalizeCells, dataCellDependencies } from './cell';
 import type { InputCell } from './cell';
 
 /** 连接输入只增加 Kernel 箭头语法糖 */
-export type InputChainConnection = Omit<IRChainConnection, 'path'> & {
+export type InputChainConnection = IRChainConnection & {
   /** 连接线路径配置，额外接受 Vanilla 箭头简写与端点放置参数 */
   path?: NonNullable<IRChainConnection['path']> & Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'>;
 };

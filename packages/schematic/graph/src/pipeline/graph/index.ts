@@ -1,3 +1,2 @@
-export * from './definition';
+export * from './composite';
 export * from './lower';
-export * from './provider';

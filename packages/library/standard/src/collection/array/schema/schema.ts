@@ -1,14 +1,9 @@
 import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
-import {
-  JsonValueSchema,
-  NonBlankStringSchema,
-  NonNegativeNumberSchema,
-  NonNegativeIntegerSchema,
-} from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
+import { JsonValueSchema, NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import { array, boolean, enum as zodEnum, literal, never, string, union } from 'zod';
 
 import { DataExpandSchema } from '../../_cell/data';
-import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
+import { CellSchema, CellStyleSchema, CellLayoutSchema, LinearCellSkeletonSchema } from '../../_cell/schema';
 import { CollectionIndexOptionsSchema, CollectionIndexStyleSchema } from '../../_index';
 import { ArrayCellIdMode, ArrayDirection } from '../constants';
 
@@ -19,18 +14,7 @@ export const ArrayIndexStyleSchema = CollectionIndexStyleSchema;
 export const ArrayIndexOptionsSchema = CollectionIndexOptionsSchema;
 
 /** 校验无真实数据的数组骨架：指定空格数量或按顺序提供格内标签 */
-export const ArraySkeletonSchema = union([
-  strictObject({
-    count: NonNegativeIntegerSchema.describe('Number of contentless cells.'),
-    labels: never().optional().describe('Not accepted in this input branch.'),
-  }),
-  strictObject({
-    labels: array(string()).describe(
-      'Inside-cell plain text in order; empty text means absent content. Length determines cell count.',
-    ),
-    count: never().optional().describe('Not accepted in this input branch.'),
-  }),
-]).describe('Schematic cells from either a count or symbolic labels, without real data.');
+export const ArraySkeletonSchema = LinearCellSkeletonSchema;
 
 /** Array 的逐格内容宽度模式，不改变 Map 共享单元格契约 */
 export const ArrayCellLayoutSchema = CellLayoutSchema.extend({

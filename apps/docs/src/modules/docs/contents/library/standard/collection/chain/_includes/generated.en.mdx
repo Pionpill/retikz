@@ -7,6 +7,101 @@
 - `Chain`: <ApiSourceLink label={"Chain"} path={"packages/library/standard-react/src/collection/chain/Chain.tsx"} startLine={133}>Container for sequential and parallel content</ApiSourceLink>
 - `ChainProps`: <ApiSourceLink label={"ChainProps"} path={"packages/library/standard-react/src/collection/chain/Chain.tsx"} startLine={33}>Chain props inputs and JSX children are mutually exclusive</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputChain['animations']`                                                               | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `connection?`     | `InputChainConnection`                                                                   | —       | Default connection settings for the chain                                                                                                       |
+| `defaults?`       | `InputChain['defaults']`                                                                 | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `label?`          | `InputChain['label']`                                                                    | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `InputChain['layout']`                                                                   | —       | Chain direction, branch placement, spacing, and cell dimensions.                                                                                |
+| `localNamespace?` | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`      | `InputChain['placement']`                                                                | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `InputChain['style']`                                                                    | —       | Shared cell visual style.                                                                                                                       |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `InputChain['transforms']`                                                               | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                    | Default | Description                                                                                  |
+| ------------- | ----------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `children?`   | `never`                 | —       | —                                                                                            |
+| `data?`       | `never`                 | —       | —                                                                                            |
+| `dataExpand?` | `never`                 | —       | —                                                                                            |
+| `items`       | `Array<ChainItemProps>` | —       | Explicit sequential items and nested parallel branches, mutually exclusive with other inputs |
+| `skeleton?`   | `never`                 | —       | —                                                                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                              | Default | Description                                                                           |
+| ------------- | --------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `children?`   | `never`                           | —       | —                                                                                     |
+| `data`        | `NonNullable<InputChain['data']>` | —       | Data expanded into chain cells, mutually exclusive with items, skeleton, and children |
+| `dataExpand?` | `InputChain['dataExpand']`        | —       | Data expansion policy used only by the data input                                     |
+| `items?`      | `never`                           | —       | —                                                                                     |
+| `skeleton?`   | `never`                           | —       | —                                                                                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                                  | Default | Description                                                     |
+| ------------- | ------------------------------------- | ------- | --------------------------------------------------------------- |
+| `children?`   | `never`                               | —       | —                                                               |
+| `data?`       | `never`                               | —       | —                                                               |
+| `dataExpand?` | `never`                               | —       | —                                                               |
+| `items?`      | `never`                               | —       | —                                                               |
+| `skeleton`    | `NonNullable<InputChain['skeleton']>` | —       | Schematic chain structure, mutually exclusive with other inputs |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX children">
+
+<ApiTable>
+
+| Member        | Type        | Default | Description                                                             |
+| ------------- | ----------- | ------- | ----------------------------------------------------------------------- |
+| `children?`   | `ReactNode` | —       | Chain structure declared with ChainCell, ChainParallel, and ChainBranch |
+| `data?`       | `never`     | —       | —                                                                       |
+| `dataExpand?` | `never`     | —       | —                                                                       |
+| `items?`      | `never`     | —       | —                                                                       |
+| `skeleton?`   | `never`     | —       | —                                                                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const Chain: {
   (props: ChainProps, context?: any): ReactNode;
@@ -45,10 +140,28 @@ export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataE
   );
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### ChainCell / ChainCellProps
 
 - `ChainCell`: <ApiSourceLink label={"ChainCell"} path={"packages/library/standard-react/src/collection/chain/ChainCell.tsx"} startLine={10}>Direct cell of Chain or ChainBranch</ApiSourceLink>
 - `ChainCellProps`: <ApiSourceLink label={"ChainCellProps"} path={"packages/library/standard-react/src/collection/chain/ChainCell.tsx"} startLine={7}>Text or one drawable in a chain cell</ApiSourceLink>
+
+**Common members**
+
+<ApiTable>
+
+| Member    | Type                        | Default | Description                                                                                         |
+| --------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `id?`     | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?` | `CellMarkerProps['layout']` | —       | —                                                                                                   |
+| `style?`  | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
 
 <DocTabs defaultValue="text">
 
@@ -56,13 +169,10 @@ export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataE
 
 <ApiTable>
 
-| Member      | Type                        | Default | Description                                                                                         |
-| ----------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children?` | `never`                     | —       | —                                                                                                   |
-| `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
-| `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
-| `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`     | `string`                    | —       | Cell text, mutually exclusive with drawing content                                                  |
+| Member      | Type     | Default | Description                                        |
+| ----------- | -------- | ------- | -------------------------------------------------- |
+| `children?` | `never`  | —       | —                                                  |
+| `text?`     | `string` | —       | Cell text, mutually exclusive with drawing content |
 
 </ApiTable>
 
@@ -72,13 +182,10 @@ export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataE
 
 <ApiTable>
 
-| Member     | Type                        | Default | Description                                                                                         |
-| ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                 | —       | Exactly one compilable drawing child, mutually exclusive with text                                  |
-| `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
-| `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
-| `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a collection cell.                                                      |
-| `text?`    | `never`                     | —       | —                                                                                                   |
+| Member     | Type        | Default | Description                                                        |
+| ---------- | ----------- | ------- | ------------------------------------------------------------------ |
+| `children` | `ReactNode` | —       | Exactly one compilable drawing child, mutually exclusive with text |
+| `text?`    | `never`     | —       | —                                                                  |
 
 </ApiTable>
 
@@ -173,6 +280,82 @@ export type ChainBranchProps = {
 - `chain`: <ApiSourceLink label={"chain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={159}>Create a chain retaining its authoring input</ApiSourceLink>
 - `InputChain`: <ApiSourceLink label={"InputChain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={35}>Three inputs sharing one structure and connection contract</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRChain['animations']`                                                                  | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `connection?`     | `InputChainConnection`                                                                   | —       | Default connection settings for the chain                                                                                                       |
+| `defaults?`       | `IRChain['defaults']`                                                                    | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `label?`          | `IRChain['label']`                                                                       | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `IRChain['layout']`                                                                      | —       | Chain direction, branch placement, spacing, and cell dimensions.                                                                                |
+| `localNamespace?` | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`      | `IRChain['placement']`                                                                   | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `IRChain['style']`                                                                       | —       | Shared cell visual style.                                                                                                                       |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `IRChain['transforms']`                                                                  | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`         | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                    | Default | Description                                                                                |
+| ------------- | ----------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `data?`       | `never`                 | —       | —                                                                                          |
+| `dataExpand?` | `never`                 | —       | —                                                                                          |
+| `items`       | `Array<InputChainItem>` | —       | Explicit sequential items and parallel branches, mutually exclusive with data and skeleton |
+| `skeleton?`   | `never`                 | —       | —                                                                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                           | Default | Description                                                          |
+| ------------- | ------------------------------ | ------- | -------------------------------------------------------------------- |
+| `data`        | `NonNullable<IRChain['data']>` | —       | Data expanded into chain items, mutually exclusive with other inputs |
+| `dataExpand?` | `IRChain['dataExpand']`        | —       | Expansion policy used only by the data input                         |
+| `items?`      | `never`                        | —       | —                                                                    |
+| `skeleton?`   | `never`                        | —       | —                                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                               | Default | Description                                                     |
+| ------------- | ---------------------------------- | ------- | --------------------------------------------------------------- |
+| `data?`       | `never`                            | —       | —                                                               |
+| `dataExpand?` | `never`                            | —       | —                                                               |
+| `items?`      | `never`                            | —       | —                                                               |
+| `skeleton`    | `NonNullable<IRChain['skeleton']>` | —       | Schematic chain structure, mutually exclusive with other inputs |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const chain: (input: InputChain) => InputEmbed<InputChain>;
 
@@ -202,6 +385,10 @@ export type InputChain = Omit<
       }
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### ChainInputEmbedAdapter
 
@@ -233,6 +420,84 @@ export declare const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputC
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                                     | Default | Description                                                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRScopeProps['animations']`                                                             | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `connection?`     | `IRChain["connection"]`                                                                  | —       | Connection routing and path presentation.                                                                                                       |
+| `defaults?`       | `IRScopeProps['defaults']`                                                               | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`          | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                                                                                      |
+| `id?`             | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `label?`          | `IRChain["label"]`                                                                       | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`         | `IRChain["layout"]`                                                                      | —       | Chain direction, branch placement, spacing, and cell dimensions.                                                                                |
+| `localNamespace?` | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `namespace`       | `"standard"`                                                                             | —       | Standard collection namespace.                                                                                                                  |
+| `placement?`      | `IRScopeProps['placement']`                                                              | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`          | `IRChain["style"]`                                                                       | —       | Shared cell visual style.                                                                                                                       |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`     | `IRScopeProps['transforms']`                                                             | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `type`            | `"chain"`                                                                                | —       | Series-parallel chain discriminator.                                                                                                            |
+| `zIndex?`         | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member        | Type                 | Default | Description                                                             |
+| ------------- | -------------------- | ------- | ----------------------------------------------------------------------- |
+| `data?`       | `never`              | —       | Unavailable with this input form.                                       |
+| `dataExpand?` | `never`              | —       | Unavailable with this input form.                                       |
+| `items`       | `Array<IRChainItem>` | —       | Explicit chain item sequence, mutually exclusive with data and skeleton |
+| `skeleton?`   | `never`              | —       | Unavailable with this input form.                                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member        | Type                                             | Default | Description                                      |
+| ------------- | ------------------------------------------------ | ------- | ------------------------------------------------ |
+| `data`        | `NonNullable<input<typeof ChainSchema>['data']>` | —       | JSON values expanded into sequential cells.      |
+| `dataExpand?` | `input<typeof ChainSchema>['dataExpand']`        | `true`  | Nested data expansion policy for the data input. |
+| `items?`      | `never`                                          | —       | —                                                |
+| `skeleton?`   | `never`                                          | —       | Unavailable with this input form.                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="skeleton" label="Members · Skeleton">
+
+<ApiTable>
+
+| Member        | Type                                                                                                                                                                                                                                              | Default | Description                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------- |
+| `data?`       | `never`                                                                                                                                                                                                                                           | —       | Unavailable with this input form.               |
+| `dataExpand?` | `never`                                                                                                                                                                                                                                           | —       | Unavailable with this input form.               |
+| `items?`      | `never`                                                                                                                                                                                                                                           | —       | —                                               |
+| `skeleton`    | `{ count: number; labels?: undefined; items?: undefined; } \| { labels: Array<string>; count?: undefined; items?: undefined; } \| { items: Array<string \| { branches: Array<Array<string \| any>>; }>; count?: undefined; labels?: undefined; }` | —       | Schematic chain structure without data content. |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type IRChain = Omit<input<typeof ChainSchema>, Exclude<keyof IRScopeProps, 'style'> | 'items'> &
   Omit<IRScopeProps, 'style'> &
@@ -258,13 +523,17 @@ export type IRChain = Omit<input<typeof ChainSchema>, Exclude<keyof IRScopeProps
   );
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### ChainDefinition
 
 <p>
   <ApiSourceLink
     label={'ChainDefinition'}
-    path={'packages/library/standard/src/collection/chain/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={10}
   >
     Layout-aware Definition for Standard Chain
   </ApiSourceLink>
@@ -284,8 +553,8 @@ export const ChainDefinition: LayoutCompositeDefinition<IRChain, 'standard', 'ch
 <p>
   <ApiSourceLink
     label={'ChainProvider'}
-    path={'packages/library/standard/src/collection/chain/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={21}
   >
     On-demand dependencies of Chain and its cell lowering targets
   </ApiSourceLink>
@@ -298,7 +567,11 @@ export declare const ChainProvider: CoreDependencyProvider;
 #### createChain
 
 <p>
-  <ApiSourceLink label={'createChain'} path={'packages/library/standard/src/collection/chain/factory.ts'} startLine={4}>
+  <ApiSourceLink
+    label={'createChain'}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={18}
+  >
     Chain factory preserving sparse Source
   </ApiSourceLink>
 </p>

@@ -4,7 +4,7 @@ import { GridLayoutProvider } from '@retikz/layout';
 import { LegendProvider } from '@retikz/standard/presentation';
 
 import type { FlowDiagramDefinitionOptions } from '../contract';
-import { createFlowDiagramProvider, FlowDiagramProviderKey } from './provider';
+import { createFlowDiagramProvider, FlowDiagramProviderKey } from './composite';
 
 /**
  * 创建 Flow Diagram 及全部 Graph / Foundation 依赖的完整provider contribution

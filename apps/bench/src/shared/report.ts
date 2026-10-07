@@ -56,8 +56,8 @@ export const runCoreWallClockReport = (
   const first = createSimpleNodeScene(5_000);
   const second = updateSimpleNodeFill(first, 2_500, '#22c55e');
   const coreComputation = createCoreComputation({ onWarn: () => undefined });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
   reports.push(
     measureScenario('core-retained-full-5000', warmupRuns, sampleRuns, () => {
       const initial = createRuntime({

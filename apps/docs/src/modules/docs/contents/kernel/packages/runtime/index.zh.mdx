@@ -14,7 +14,7 @@ description: 用 @retikz/runtime 管理完整状态、派生计算与一致发�
 | 对象        | 职责                                   | 计数器示例                         |
 | ----------- | -------------------------------------- | ---------------------------------- |
 | Source      | 定义完整状态如何捕获、读取、比较和释放 | 保存当前计数                       |
-| Computation | 声明依赖并计算派生产物（artifact）     | 计算计数的两倍                     |
+| Computation | 声明依赖并计算派生结果（result）       | 计算计数的两倍                     |
 | Registry    | 注册定义，确认身份与依赖关系           | 注册计数 Source 与计算 Computation |
 | Runtime     | 准备更新并发布一致的版本（revision）   | 一起发布新计数和计算结果           |
 
@@ -34,15 +34,15 @@ Snapshot 是带有 revision 的只读值。Source 提供原始状态，Computati
 
 两者都需要根据输入变化准备下一份结果，再将结果提交给读取方。这个共同思路有助于理解 Runtime，但它们管理的对象与更新契约不同：
 
-| 维度                   | Runtime                                                                             | React 协调器                                                                     |
-| ---------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 共同点：更新派生结果   | 根据 Source 状态运行依赖它的 Computation，产生 artifact                             | 根据 props、state 和 context 计算下一棵 UI 树                                    |
-| 共同点：分开计算与提交 | 先准备候选状态与产物，成功后发布 revision                                           | render 阶段计算下一份 UI，commit 阶段应用宿主更新                                |
-| 共同点：复用已有结果   | 可跳过不受影响的 Computation，或由增量更新返回 bailout 复用产物                     | 可通过 bailout、memo 等机制跳过部分组件计算                                      |
-| 差异：组织与身份       | 显式注册 Source 和 Computation，以声明的依赖组成计算图                              | 协调组件树，结合树中位置、组件类型与 key 判断组件身份                            |
-| 差异：调度方式         | Runtime 同步完成一次 update；不提供 UI 优先级或时间切片调度                         | 支持不同优先级的更新；Transition 渲染可被更紧急的更新打断并重新开始              |
-| 差异：发布结果         | 对外提供同一已发布 revision 的状态与 artifact；外部状态通过 commit participant 接入 | 通过 renderer 更新 DOM 等宿主树；不向调用方提供统一 revision 的领域 Snapshot API |
-| 差异：资源生命周期     | Source、Computation 与 participant 显式定义资源释放，由 Runtime 组织                | 管理组件挂载、更新和卸载；Effect 清理随依赖变化或卸载执行，并非通用事务回滚      |
+| 维度                   | Runtime                                                                           | React 协调器                                                                     |
+| ---------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 共同点：更新派生结果   | 根据 Source 状态运行依赖它的 Computation，产生 result                             | 根据 props、state 和 context 计算下一棵 UI 树                                    |
+| 共同点：分开计算与提交 | 先准备候选状态与结果，成功后发布 revision                                         | render 阶段计算下一份 UI，commit 阶段应用宿主更新                                |
+| 共同点：复用已有结果   | 可跳过不受影响的 Computation，或由增量更新返回 bailout 复用结果                   | 可通过 bailout、memo 等机制跳过部分组件计算                                      |
+| 差异：组织与身份       | 显式注册 Source 和 Computation，以声明的依赖组成计算图                            | 协调组件树，结合树中位置、组件类型与 key 判断组件身份                            |
+| 差异：调度方式         | Runtime 同步完成一次 update；不提供 UI 优先级或时间切片调度                       | 支持不同优先级的更新；Transition 渲染可被更紧急的更新打断并重新开始              |
+| 差异：发布结果         | 对外提供同一已发布 revision 的状态与 result；外部状态通过 commit participant 接入 | 通过 renderer 更新 DOM 等宿主树；不向调用方提供统一 revision 的领域 Snapshot API |
+| 差异：资源生命周期     | Source、Computation 与 participant 显式定义资源释放，由 Runtime 组织              | 管理组件挂载、更新和卸载；Effect 清理随依赖变化或卸载执行，并非通用事务回滚      |
 
 例如，React 负责决定计数器组件如何显示；Runtime 可以负责保存计数、计算两倍值并一致发布。Runtime 本身不解释 JSX、Hook 或组件树，也不代替 React 协调器。
 
@@ -65,6 +65,43 @@ runtimeIdentityEquals(first, second); // true
 
 创建、更新和释放 Runtime 的完整示例见[入门示例](/kernel/packages/runtime/usage)。
 
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: 'Participant · 参与者',
+      description: '外部状态的准备、提交与回滚',
+      url: '/kernel/packages/runtime/participant',
+    },
+    {
+      title: 'Runtime · 事务发布',
+      description: '创建实例、版本检查与事务发布',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    {
+      title: '入门示例',
+      description: '用计数器完成定义、注册、更新、读取与释放',
+      url: '/kernel/packages/runtime/usage',
+    },
+    {
+      title: 'Source · 来源',
+      description: '从输入隔离理解 Source 的捕获、读取、比较与资源清理',
+      url: '/kernel/packages/runtime/source',
+    },
+    {
+      title: 'Identity · 身份',
+      description: '创建、比较、收集与查找状态中的实体身份',
+      url: '/kernel/packages/runtime/identity',
+    },
+    {
+      title: 'Computation · 计算',
+      description: '定义派生计算，理解依赖注册、结果视图和增量更新',
+      url: '/kernel/packages/runtime/computation',
+    },
+  ]}
+/>
+
 ## 包边界
 
 Runtime 的生产依赖只有 `@retikz/foundation`。Core 消费 Runtime 的公开能力，Runtime 不依赖 Core，也不解释 Core IR 或 Scene。
@@ -77,3 +114,9 @@ Runtime 的生产依赖只有 `@retikz/foundation`。Core 消费 Runtime 的公�
 | Trace 与诊断的收集和隔离                 | 观测记录的消费方式                 |
 
 Runtime 不提供绘图语法、几何算法、DOM 渲染或 React 生命周期。需要这些能力时，由 Core、Render 与相应 adapter 在各自边界内协作。
+
+<ComponentAlert
+  type="tip"
+  title="关于本文档的示例"
+  description="Runtime 与 Core 并非强绑定关系：Core 是 Runtime 的消费方，Runtime 本身不依赖 Core，也可以用于其他领域的状态与计算管理。因此，后续正文主要通过独立示例介绍 Runtime 的概念和机制，通常不直接展开它与 Core 的关系；涉及 Core 的具体接入时再单独说明。"
+/>

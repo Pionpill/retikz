@@ -126,6 +126,66 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 - `BlockRow`：<ApiSourceLink label={"BlockRow"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={185}>将独立 Block Row Source 接入 React 编写流程</ApiSourceLink>
 - `BlockRowProps`：<ApiSourceLink label={"BlockRowProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={56}>Block Row 的 React 编写参数</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `animations?`     | `BlockRowProps["animations"]`                                                                                                                                                                                      | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`     | `BlockRowProps["background"]`                                                                                                                                                                                      | —      | 外框背景覆盖                                           |
+| `border?`         | `BlockRowProps["border"]`                                                                                                                                                                                          | —      | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
+| `defaults?`       | `BlockRowProps["defaults"]`                                                                                                                                                                                        | —      | 后代默认样式及继承屏障                                 |
+| `frame?`          | `BlockRowProps["frame"]`                                                                                                                                                                                           | —      | 固有包络装饰，不参与布局                               |
+| `gap?`            | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                         |
+| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                          |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                     |
+| `placement?`      | `BlockRowProps["placement"]`                                                                                                                                                                                       | —      | 布局与局部变换后的最终对齐放置                         |
+| `style?`          | `BlockRowProps["style"]`                                                                                                                                                                                           | —      | 后代的级联视觉覆盖                                     |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
+| `transforms?`     | `BlockRowProps["transforms"]`                                                                                                                                                                                      | —      | 局部变换，数组最后一项先作用于局部点                   |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="属性 · 文本内容">
+
+<ApiTable>
+
+| 成员                 | 类型                   | 默认值 | 说明                                   |
+| -------------------- | ---------------------- | ------ | -------------------------------------- |
+| `readonly children?` | `never`                | —      | —                                      |
+| `readonly content`   | `BlockRowContentInput` | —      | 行的便捷内容入口，与显式 children 互斥 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · 任意子元素">
+
+<ApiTable>
+
+| 成员                 | 类型        | 默认值 | 说明                                       |
+| -------------------- | ----------- | ------ | ------------------------------------------ |
+| `readonly children?` | `ReactNode` | —      | 按声明顺序进入 Row 横向布局的任意 children |
+| `readonly content?`  | `never`     | —      | —                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const BlockRow: {
   (props: BlockRowProps, context?: any): ReactNode;
@@ -133,6 +193,10 @@ export declare const BlockRow: {
 
 export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ## `@retikz/graph-vanilla`
 
@@ -283,11 +347,75 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 - `blockRow`：<ApiSourceLink label={"blockRow"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={54}>创建 Block Row Source 的 authoring embed 节点</ApiSourceLink>
 - `BlockRowInputEmbedProps`：<ApiSourceLink label={"BlockRowInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={12}>Block Row embed 的 Source authoring 输入</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `animations?`     | `BlockRowInputEmbedProps["animations"]`                                                                                                                                                                            | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`     | `BlockRowInputEmbedProps["background"]`                                                                                                                                                                            | —      | 外框背景覆盖                                           |
+| `border?`         | `BlockRowInputEmbedProps["border"]`                                                                                                                                                                                | —      | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
+| `defaults?`       | `BlockRowInputEmbedProps["defaults"]`                                                                                                                                                                              | —      | 后代默认样式及继承屏障                                 |
+| `frame?`          | `BlockRowInputEmbedProps["frame"]`                                                                                                                                                                                 | —      | 固有包络装饰，不参与布局                               |
+| `gap?`            | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                         |
+| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                          |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                     |
+| `placement?`      | `BlockRowInputEmbedProps["placement"]`                                                                                                                                                                             | —      | 布局与局部变换后的最终对齐放置                         |
+| `style?`          | `BlockRowInputEmbedProps["style"]`                                                                                                                                                                                 | —      | 后代的级联视觉覆盖                                     |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
+| `transforms?`     | `BlockRowInputEmbedProps["transforms"]`                                                                                                                                                                            | —      | 局部变换，数组最后一项先作用于局部点                   |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="属性 · 文本内容">
+
+<ApiTable>
+
+| 成员                 | 类型                   | 默认值 | 说明                                   |
+| -------------------- | ---------------------- | ------ | -------------------------------------- |
+| `readonly children?` | `never`                | —      | —                                      |
+| `readonly content`   | `BlockRowContentInput` | —      | 行的便捷内容入口，与显式 children 互斥 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · 任意子元素">
+
+<ApiTable>
+
+| 成员                 | 类型                             | 默认值 | 说明                                              |
+| -------------------- | -------------------------------- | ------ | ------------------------------------------------- |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —      | 当前行按作者顺序排列的绘制子内容，与 content 互斥 |
+| `readonly content?`  | `never`                          | —      | —                                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const blockRow: (input: BlockRowInputEmbedProps) => InputEmbed<BlockRowInputEmbedProps>;
 
 export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### normalizeBlock / InputBlock
 
@@ -413,6 +541,67 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 - `normalizeBlockRow`：<ApiSourceLink label={"normalizeBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={134}>将 Block Row authoring 输入组装为独立 Source composite</ApiSourceLink>
 - `InputBlockRow`：<ApiSourceLink label={"InputBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={63}>与 Block Row Source 对齐、但允许 children 使用 Vanilla child authoring sugar 的输入</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `animations?`     | `InputBlockRow["animations"]`                                                                                                                                                                                      | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`     | `InputBlockRow["background"]`                                                                                                                                                                                      | —      | 外框背景覆盖                                           |
+| `border?`         | `InputBlockRow["border"]`                                                                                                                                                                                          | —      | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
+| `defaults?`       | `InputBlockRow["defaults"]`                                                                                                                                                                                        | —      | 后代默认样式及继承屏障                                 |
+| `frame?`          | `InputBlockRow["frame"]`                                                                                                                                                                                           | —      | 固有包络装饰，不参与布局                               |
+| `gap?`            | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                         |
+| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                          |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                     |
+| `placement?`      | `InputBlockRow["placement"]`                                                                                                                                                                                       | —      | 布局与局部变换后的最终对齐放置                         |
+| `style?`          | `InputBlockRow["style"]`                                                                                                                                                                                           | —      | 后代的级联视觉覆盖                                     |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
+| `transforms?`     | `InputBlockRow["transforms"]`                                                                                                                                                                                      | —      | 局部变换，数组最后一项先作用于局部点                   |
+| `readonly type?`  | `'blockRow'`                                                                                                                                                                                                       | —      | —                                                      |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="属性 · 文本内容">
+
+<ApiTable>
+
+| 成员                 | 类型                   | 默认值 | 说明                                   |
+| -------------------- | ---------------------- | ------ | -------------------------------------- |
+| `readonly children?` | `never`                | —      | —                                      |
+| `readonly content`   | `BlockRowContentInput` | —      | 行的便捷内容入口，与显式 children 互斥 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · 任意子元素">
+
+<ApiTable>
+
+| 成员                 | 类型                             | 默认值 | 说明                                              |
+| -------------------- | -------------------------------- | ------ | ------------------------------------------------- |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —      | 当前行按作者顺序排列的绘制子内容，与 content 互斥 |
+| `readonly content?`  | `never`                          | —      | —                                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const normalizeBlockRow: (input: InputBlockRow) => IRBlockRow;
 
@@ -428,6 +617,10 @@ export type InputBlockRow = InputBlockRowFields &
       }>
   );
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### BlockHeaderInputEmbedAdapter
 
@@ -591,40 +784,7 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 - `createBlockRow`：<ApiSourceLink label={"createBlockRow"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={52}>组装 Block Row Source record</ApiSourceLink>
 - `BlockRowCreateOptions`：<ApiSourceLink label={"BlockRowCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={28}>Block Row Source record 的作者输入</ApiSourceLink>
 
-<DocTabs defaultValue="text">
-
-<DocTab value="text" label="属性 · 文本内容">
-
-<ApiTable>
-
-| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------- |
-| `animations?`     | `BlockRowCreateOptions["animations"]`                                                                                                                                                                              | —      | 作用于整体的动画轨道，不参与布局或向后代继承             |
-| `background?`     | `BlockRowCreateOptions["background"]`                                                                                                                                                                              | —      | 外框背景覆盖                                             |
-| `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —      | 外框描边覆盖，整体替换主题值                             |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                   |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                   |
-| `content`         | `BlockRowCreateOptions["content"]`                                                                                                                                                                                 | —      | 文本项或文本项数组，单项占满，多项等分，与 children 互斥 |
-| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                                 |
-| `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —      | 后代默认样式及继承屏障                                   |
-| `frame?`          | `BlockRowCreateOptions["frame"]`                                                                                                                                                                                   | —      | 固有包络装饰，不参与布局                                 |
-| `gap?`            | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                           |
-| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                            |
-| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级   |
-| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                       |
-| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                            |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                       |
-| `placement?`      | `BlockRowCreateOptions["placement"]`                                                                                                                                                                               | —      | 布局与局部变换后的最终对齐放置                           |
-| `style?`          | `BlockRowCreateOptions["style"]`                                                                                                                                                                                   | —      | 后代的级联视觉覆盖                                       |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                       |
-| `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —      | 局部变换，数组最后一项先作用于局部点                     |
-| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                               |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="children" label="属性 · 任意子元素">
+**公共属性**
 
 <ApiTable>
 
@@ -634,7 +794,6 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 | `background?`     | `BlockRowCreateOptions["background"]`                                                                                                                                                                              | —      | 外框背景覆盖                                           |
 | `border?`         | `BlockRowCreateOptions["border"]`                                                                                                                                                                                  | —      | 外框描边覆盖，整体替换主题值                           |
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
-| `children?`       | `Array<IRChild>`                                                                                                                                                                                                   | —      | 按声明顺序保存的任意绘图子元素                         |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
 | `defaults?`       | `BlockRowCreateOptions["defaults"]`                                                                                                                                                                                | —      | 后代默认样式及继承屏障                                 |
@@ -650,6 +809,32 @@ export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
 | `transforms?`     | `BlockRowCreateOptions["transforms"]`                                                                                                                                                                              | —      | 局部变换，数组最后一项先作用于局部点                   |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="属性 · 文本内容">
+
+<ApiTable>
+
+| 成员      | 类型                               | 默认值 | 说明                                                     |
+| --------- | ---------------------------------- | ------ | -------------------------------------------------------- |
+| `content` | `BlockRowCreateOptions["content"]` | —      | 文本项或文本项数组，单项占满，多项等分，与 children 互斥 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · 任意子元素">
+
+<ApiTable>
+
+| 成员        | 类型             | 默认值 | 说明                           |
+| ----------- | ---------------- | ------ | ------------------------------ |
+| `children?` | `Array<IRChild>` | —      | 按声明顺序保存的任意绘图子元素 |
 
 </ApiTable>
 
@@ -949,9 +1134,73 @@ export type IRBlockHeader = ZodInfer<typeof BlockHeaderSchema>;
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `animations?`     | `ZodInfer<typeof BlockRowSchema.shape["animations"]>`                                                                                                                                                              | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`     | `ZodInfer<typeof BlockRowSchema.shape["background"]>`                                                                                                                                                              | —      | 外框背景覆盖                                           |
+| `border?`         | `ZodInfer<typeof BlockRowSchema.shape["border"]>`                                                                                                                                                                  | —      | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
+| `defaults?`       | `ZodInfer<typeof BlockRowSchema.shape["defaults"]>`                                                                                                                                                                | —      | 后代默认样式及继承屏障                                 |
+| `frame?`          | `ZodInfer<typeof BlockRowSchema.shape["frame"]>`                                                                                                                                                                   | —      | 固有包络装饰，不参与布局                               |
+| `gap?`            | `number`                                                                                                                                                                                                           | —      | 直接内容项之间的间距，用户单位                         |
+| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
+| `namespace`       | `"graph"`                                                                                                                                                                                                          | —      | 命名空间，固定为 graph                                 |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，visible 或 clip                          |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框的内边距                                     |
+| `placement?`      | `ZodInfer<typeof BlockRowSchema.shape["placement"]>`                                                                                                                                                               | —      | 布局与局部变换后的最终对齐放置                         |
+| `style?`          | `ZodInfer<typeof BlockRowSchema.shape["style"]>`                                                                                                                                                                   | —      | 后代的级联视觉覆盖                                     |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
+| `transforms?`     | `ZodInfer<typeof BlockRowSchema.shape["transforms"]>`                                                                                                                                                              | —      | 局部变换，数组最后一项先作用于局部点                   |
+| `type`            | `"blockRow"`                                                                                                                                                                                                       | —      | 当前组件的记录判别字段                                 |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="属性 · 文本内容">
+
+<ApiTable>
+
+| 成员      | 类型                                               | 默认值 | 说明                                                     |
+| --------- | -------------------------------------------------- | ------ | -------------------------------------------------------- |
+| `content` | `ZodInfer<typeof BlockRowSchema.shape["content"]>` | —      | 文本项或文本项数组，单项占满，多项等分，与 children 互斥 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · 任意子元素">
+
+<ApiTable>
+
+| 成员        | 类型             | 默认值 | 说明                           |
+| ----------- | ---------------- | ------ | ------------------------------ |
+| `children?` | `Array<IRChild>` | —      | 按声明顺序保存的任意绘图子元素 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type IRBlockRow = ZodInfer<typeof BlockRowSchema>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### IRBlockSection
 
@@ -1320,8 +1569,8 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
 <p>
   <ApiSourceLink
     label={'createCodeBlockContribution'}
-    path={'packages/schematic/graph/src/code/pipeline/provider.ts'}
-    startLine={25}
+    path={'packages/schematic/graph/src/code/pipeline/composite.ts'}
+    startLine={97}
   >
     创建代码实体及其完整下层依赖的 Core contribution
   </ApiSourceLink>

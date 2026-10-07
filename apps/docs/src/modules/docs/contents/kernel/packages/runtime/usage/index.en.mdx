@@ -7,7 +7,7 @@ This page completes a minimal Runtime workflow. The initial count is 1 and a Com
 
 ## Using this topic
 
-Adjust the initial and next counts to inspect the Snapshots, artifacts, and revision returned by Runtime. Each interaction creates a fresh Runtime and performs one update. Set both counts to the same value to observe a bailout when no update is needed.
+Adjust the initial and next counts to inspect the Snapshots, results, and revision returned by Runtime. Each interaction creates a fresh Runtime and performs one update. Set both counts to the same value to observe a bailout when no update is needed.
 
 <ComponentPreview
   files={['counter-result', 'counter-result.preview.tsx']}
@@ -42,12 +42,12 @@ const doubled = defineRuntimeComputation({
   sources: [counter],
   run: view => ({
     kind: 'full',
-    artifact: view.snapshot(counter).value * 2,
+    result: view.snapshot(counter).value * 2,
   }),
 });
 
-const sources = createRuntimeSourceRegistry({ custom: [counter] });
-const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
+const sources = createRuntimeSourceRegistry([counter]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [doubled] });
 const runtime = createRuntime({
   sources,
   computations,
@@ -56,7 +56,7 @@ const runtime = createRuntime({
 
 try {
   console.log(runtime.snapshot(counter)); // { revision: 0, value: 1 }
-  console.log(runtime.artifact(doubled)); // { revision: 0, value: 2 }
+  console.log(runtime.result(doubled)); // { revision: 0, value: 2 }
 
   const result = runtime.update({
     baseRevision: runtime.revision(),
@@ -65,7 +65,7 @@ try {
 
   console.log(result.outcome); // 'full'
   console.log(runtime.snapshot(counter)); // { revision: 1, value: 2 }
-  console.log(runtime.artifact(doubled)); // { revision: 1, value: 4 }
+  console.log(runtime.result(doubled)); // { revision: 1, value: 4 }
 } finally {
   runtime.dispose();
 }
@@ -73,7 +73,7 @@ try {
 
 This example implements only `run`, so the update outcome is `full`. Using Runtime does not require an incremental algorithm. Numbers are immutable, so capture and read can return them directly.
 
-> On your first read, a general impression of these concepts is enough; the following sections will explain the underlying principles in detail, step by step.
+> On your first read, a general impression is enough. [Source](/kernel/packages/runtime/source) starts with converting and isolating form coordinates to explain Source capture, reading, comparison and disposal.
 
 ## Understanding the example
 
@@ -82,15 +82,21 @@ This example implements only `run`, so the update outcome is `full`. Using Runti
 | Define an Source     | `capture` receives the complete count, `read` exposes its immutable value, and `equals` compares counts |
 | Define a Computation | `sources: [counter]` declares read access, and `run` produces twice the count                           |
 | Register definitions | The Computation registry binds to the same Source registry used by Runtime                              |
-| Create a Runtime     | Initial commands exactly cover registered Sources, creating revision 0 and the initial artifact         |
+| Create a Runtime     | Initial commands exactly cover registered Sources, creating revision 0 and the initial result           |
 | Update and read      | Submit the complete next count and read state and results with their revision                           |
 | Dispose the Runtime  | Release Runtime-owned resources in `finally`                                                            |
 
+The diagram follows this example's successful update. Start at the top left and follow the arrows through creation, updating, reading and disposal.
+
+<ComponentPreview files="counter-flow" hideCode type="flow" />
+
+After a successful update, the count and doubled value enter revision 1 together. The `finally` block disposes the Runtime even if an exception occurs during use.
+
 The four Source type parameters describe input, internal value, public read, and change type. The first three are `number`; no change hints are used, so the fourth is `never`.
 
-The four Computation type parameters describe artifact input, internal artifact, the read used by its own incremental update, and the public read. Here they are inferred as `number` from `run`, so no explicit type arguments are needed. With no upstream Computations or observation phases, omit `computations` and `tracePhases`; both default to empty arrays.
+The four Computation type parameters describe result input, internal result, the read used by its own incremental update, and the public read. Here they are inferred as `number` from `run`, so no explicit type arguments are needed. With no upstream Computations or observation phases, omit `computations` and `tracePhases`; both default to empty arrays.
 
-You can independently omit `artifact.capture`, `artifact.readForComputation`, and `artifact.read` when each callback's input and output types match. Each defaults to returning its argument. This example also needs no resource cleanup, so it omits the entire `artifact` object. Type conversions still require the corresponding callback, and resource cleanup still requires `artifact.dispose`. The default public read returns the internal artifact directly, without passing through `readForComputation`.
+You can independently omit `result.capture`, `result.readForComputation`, and `result.read` when each callback's input and output types match. Each defaults to returning its argument. This example also needs no resource cleanup, so it omits the entire `result` object. Type conversions still require the corresponding callback, and resource cleanup still requires `result.dispose`. The default public read returns the internal result directly, without passing through `readForComputation`.
 
 These defaults do not copy or freeze objects. Definition authors remain responsible for ownership and immutability of candidates and published values.
 
@@ -100,4 +106,4 @@ These defaults do not copy or freeze objects. Definition authors remain responsi
 - Obtain `baseRevision` from the current Runtime. Stale revisions are rejected; do not invent revisions or reuse an outdated one.
 - Computations may read only declared dependencies. Keep the same Definition tokens when registering and calling APIs.
 - Arrays, Maps, and resource objects cannot blindly reuse this example's capture/read callbacks. Definition authors must prevent unsafe mutable sharing between callers, candidates, and published state.
-- This example owns no external resources and needs no value-level `dispose`. For resource-bearing values, provide cleanup in the owning Source or artifact definition and call Runtime's `dispose()` when finished.
+- This example owns no external resources and needs no value-level `dispose`. For resource-bearing values, provide cleanup in the owning Source or result definition and call Runtime's `dispose()` when finished.

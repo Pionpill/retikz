@@ -15,6 +15,7 @@ export const createPreviewControlContract = (lang: Lang) => {
         {
           controls: [
             { id: 'width', kind: 'range', label: t['width'], defaultValue: 64, min: 24, max: 80, step: 4 },
+            { id: 'matrixAutoWidth', kind: 'switch', label: t.matrixAutoWidth, defaultValue: false },
             {
               id: 'overflow',
               kind: 'select',
@@ -29,7 +30,7 @@ export const createPreviewControlContract = (lang: Lang) => {
         },
       ],
     }),
-    canonicalValues: { width: 64, overflow: 'clip' },
+    canonicalValues: { width: 64, overflow: 'clip', matrixAutoWidth: false },
     relatedApis: ['Chain.layout', 'Chain.connection'],
   } satisfies PreviewControlContract;
 };

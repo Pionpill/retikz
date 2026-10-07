@@ -18,8 +18,8 @@ describe('runtime runtime validation', () => {
   it('在 capture 前拒绝 Computation/Source registry identity mismatch', () => {
     const capture = vi.fn((value: number) => value);
     const owner = defineSource('counter', capture);
-    const computationSources = createRuntimeSourceRegistry({ builtins: [owner] });
-    const runtimeSources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const computationSources = createRuntimeSourceRegistry([owner]);
+    const runtimeSources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources: computationSources });
 
     expect(() =>
@@ -35,7 +35,7 @@ describe('runtime runtime validation', () => {
   it('初始 commands 必须精确覆盖 source registry', () => {
     const first = defineSource('first');
     const second = defineSource('second');
-    const sources = createRuntimeSourceRegistry({ builtins: [first, second] });
+    const sources = createRuntimeSourceRegistry([first, second]);
     const computations = createRuntimeComputationRegistry({ sources });
 
     expect(() =>
@@ -57,7 +57,7 @@ describe('runtime runtime validation', () => {
   it('按固定顺序拒绝 stale base、伪 command 与 mismatched ChangeSet base', () => {
     const capture = vi.fn((value: number) => value);
     const owner = defineSource('counter', capture);
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,
@@ -109,16 +109,16 @@ describe('runtime runtime validation', () => {
   it('CandidateView 拒绝未声明 owner dependency', () => {
     const declared = defineSource('declared');
     const hidden = defineSource('hidden');
-    const sources = createRuntimeSourceRegistry({ builtins: [declared, hidden] });
+    const sources = createRuntimeSourceRegistry([declared, hidden]);
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'declared', key: 'computation' },
       sources: [declared],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(hidden).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(hidden).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
 
     expect(() =>
       createRuntime({
@@ -129,26 +129,26 @@ describe('runtime runtime validation', () => {
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
   });
 
-  it('CandidateView 拒绝读取已注册但未声明的 Computation artifact', () => {
+  it('CandidateView 拒绝读取已注册但未声明的 Computation result', () => {
     const owner = defineSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const upstream = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'a-upstream' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
     });
     const hiddenReader = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'b-hidden-reader' },
       sources: [],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.artifact(upstream).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.result(upstream).value }),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [hiddenReader, upstream] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [hiddenReader, upstream] });
 
     expect(() =>
       createRuntime({
@@ -161,7 +161,7 @@ describe('runtime runtime validation', () => {
 
   it('重复 dispose no-op，并在 disposed 后拒绝 read/update', () => {
     const owner = defineSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,

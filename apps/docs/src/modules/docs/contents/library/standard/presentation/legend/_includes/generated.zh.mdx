@@ -7,6 +7,70 @@
 - `Legend`：<ApiSourceLink label={"Legend"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={97}>Standard Legend 的 React Tier 2 无头 authoring 组件</ApiSourceLink>
 - `LegendProps`：<ApiSourceLink label={"LegendProps"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={39}>React Legend 的两个显式无头 authoring form</ApiSourceLink>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员              | 类型                                                                                                                                                                                                               | 默认值                                            | 说明                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `animations?`     | `LegendItemsFormProps['animations']`                                                                                                                                                                               | —                                                 | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —                                                 | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —                                                 | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `contentAlign?`   | `"center" \| "start" \| "end"`                                                                                                                                                                                     | `"start"`                                         | 标题与主体结构块在 Legend 内容框物理 x 轴上的独立对齐方式                                      |
+| `defaults?`       | `LegendItemsFormProps['defaults']`                                                                                                                                                                                 | —                                                 | 后代默认值通道及继承屏障                                                                       |
+| `direction?`      | `"horizontal" \| "vertical"`                                                                                                                                                                                       | —                                                 | —                                                                                              |
+| `frame?`          | `IRScopeFrame`                                                                                                                                                                                                     | —                                                 | 可省略默认值的包络装饰                                                                         |
+| `id?`             | `string`                                                                                                                                                                                                           | —                                                 | 可选引用 id；始终注册到父级命名空间                                                            |
+| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —                                                 | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —                                                 | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | `"visible"`                                       | 容器的视觉溢出策略                                                                             |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`                                               | 从分配框到内容框的内边距                                                                       |
+| `placement?`      | `LegendItemsFormProps['placement']`                                                                                                                                                                                | —                                                 | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `sampleGap?`      | `number`                                                                                                                                                                                                           | —                                                 | —                                                                                              |
+| `size?`           | `LegendItemsFormProps['size']`                                                                                                                                                                                     | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | 包含内边距的容器分配尺寸                                                                       |
+| `style?`          | `LegendItemsFormProps['style']`                                                                                                                                                                                    | —                                                 | 当前实例的视觉覆盖，按字段继承与覆盖                                                           |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —                                                 | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `titleGap?`       | `number`                                                                                                                                                                                                           | `8`                                               | 仅在标题与非空主体同时存在时使用的垂直间距                                                     |
+| `transforms?`     | `LegendItemsFormProps['transforms']`                                                                                                                                                                               | —                                                 | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `zIndex?`         | `number`                                                                                                                                                                                                           | —                                                 | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="属性 · 离散条目">
+
+<ApiTable>
+
+| 成员                 | 类型                                         | 默认值 | 说明                                             |
+| -------------------- | -------------------------------------------- | ------ | ------------------------------------------------ |
+| `readonly children?` | `ReactNode`                                  | —      | LegendTitle 与按声明顺序排列的 LegendItem marker |
+| `gap?`               | `number \| { row: number; column: number; }` | —      | —                                                |
+| `readonly kind`      | `typeof LegendContentKind.Items`             | —      | 显式选择离散条目 form                            |
+| `sampleAlign?`       | `"center" \| "start" \| "end"`               | —      | —                                                |
+| `wrap?`              | `"nowrap" \| "wrap"`                         | —      | —                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="ramp" label="属性 · 连续样本">
+
+<ApiTable>
+
+| 成员                 | 类型                            | 默认值 | 说明                                                              |
+| -------------------- | ------------------------------- | ------ | ----------------------------------------------------------------- |
+| `readonly children?` | `ReactNode`                     | —      | LegendTitle、唯一 LegendRamp 与按声明顺序排列的 LegendTick marker |
+| `readonly kind`      | `typeof LegendContentKind.Ramp` | —      | 显式选择连续样本 form                                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const Legend: {
   (props: LegendProps, context?: any): ReactNode;
@@ -14,6 +78,10 @@ export declare const Legend: {
 
 export type LegendProps = LegendItemsFormProps | LegendRampFormProps;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### LegendTitle / LegendTitleProps
 
@@ -461,6 +529,19 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员        | 类型                                                       | 默认值 | 说明                                      |
+| ----------- | ---------------------------------------------------------- | ------ | ----------------------------------------- |
+| `container` | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —      | 求解后的 Legend 容器几何                  |
+| `title`     | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —      | 求解后的标题 placement；省略标题时为 null |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="items">
 
 <DocTab value="items" label="属性 · 离散条目">
@@ -470,10 +551,8 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 | 成员         | 类型                                                               | 默认值 | 说明                                        |
 | ------------ | ------------------------------------------------------------------ | ------ | ------------------------------------------- |
 | `bodyBounds` | `{ x: number; y: number; width: number; height: number; } \| null` | —      | 条目分配与结构间距的并集；没有条目时为 null |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>`         | —      | 求解后的 Legend 容器几何                    |
 | `items`      | `ZodInfer<typeof LegendArtifactSchema.shape["items"]>`             | —      | 按稳定编写顺序发布的离散条目产物            |
 | `kind`       | `"items"`                                                          | —      | 离散条目 Legend 产物的判别字段              |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`             | —      | 求解后的标题 placement；省略标题时为 null   |
 
 </ApiTable>
 
@@ -483,14 +562,12 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 
 <ApiTable>
 
-| 成员         | 类型                                                       | 默认值 | 说明                                      |
-| ------------ | ---------------------------------------------------------- | ------ | ----------------------------------------- |
-| `bodyBounds` | `{ x: number; y: number; width: number; height: number; }` | —      | 最终样本与非空刻度标签分配的并集          |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —      | 求解后的 Legend 容器几何                  |
-| `kind`       | `"ramp"`                                                   | —      | 连续样本 Legend 产物的判别字段            |
-| `sample`     | `ZodInfer<typeof LegendArtifactSchema.shape["sample"]>`    | —      | 求解后的连续样本 placement                |
-| `ticks`      | `ZodInfer<typeof LegendArtifactSchema.shape["ticks"]>`     | —      | 按稳定编写顺序发布的刻度 anchor 与标签    |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —      | 求解后的标题 placement；省略标题时为 null |
+| 成员         | 类型                                                       | 默认值 | 说明                                   |
+| ------------ | ---------------------------------------------------------- | ------ | -------------------------------------- |
+| `bodyBounds` | `{ x: number; y: number; width: number; height: number; }` | —      | 最终样本与非空刻度标签分配的并集       |
+| `kind`       | `"ramp"`                                                   | —      | 连续样本 Legend 产物的判别字段         |
+| `sample`     | `ZodInfer<typeof LegendArtifactSchema.shape["sample"]>`    | —      | 求解后的连续样本 placement             |
+| `ticks`      | `ZodInfer<typeof LegendArtifactSchema.shape["ticks"]>`     | —      | 按稳定编写顺序发布的刻度 anchor 与标签 |
 
 </ApiTable>
 
@@ -511,7 +588,7 @@ export type LegendArtifact = ZodInfer<typeof LegendArtifactSchema>;
 <p>
   <ApiSourceLink
     label={'LegendCompileArtifact'}
-    path={'packages/library/standard/src/presentation/legend/definition.ts'}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
     startLine={24}
   >
     Legend definition 推导出的公开 compile artifact envelope
@@ -567,7 +644,7 @@ export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
 <p>
   <ApiSourceLink
     label={'LegendDefinition'}
-    path={'packages/library/standard/src/presentation/legend/definition.ts'}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
     startLine={10}
   >
     Standard Legend 的官方 Core layout-aware composite definition
@@ -594,8 +671,8 @@ export const LegendDefinition: LayoutCompositeDefinition<
 <p>
   <ApiSourceLink
     label={'LegendProvider'}
-    path={'packages/library/standard/src/presentation/legend/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
+    startLine={34}
   >
     Legend 的 Core Composite dependency provider
   </ApiSourceLink>
@@ -615,8 +692,8 @@ export const LegendProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'createLegend'}
-    path={'packages/library/standard/src/presentation/legend/factory.ts'}
-    startLine={5}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
+    startLine={27}
   >
     创建稀疏持久化的 Standard Legend composite
   </ApiSourceLink>

@@ -33,7 +33,7 @@ describe('runtime runtime participant failure lifecycle', () => {
     ['commit', RetikzRuntimeErrorCode.ParticipantCommitFailed] as const,
   ])('update %s failure 回滚 prepared tokens、保留旧 cache 并把 warning 同步入 queue', (failurePhase, code) => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const calls: Array<string> = [];
     const trigger = new Error(`${failurePhase} failed`);
@@ -130,7 +130,7 @@ describe('runtime runtime participant failure lifecycle', () => {
 
   it('prepare 返回 malformed token 时稳定拒绝且不执行 commit', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     let commitCalls = 0;
     let disposeCalls = 0;
@@ -180,7 +180,7 @@ describe('runtime runtime participant failure lifecycle', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     let disposeCalls = 0;
     const participant = defineRuntimeCommitParticipant({
@@ -211,7 +211,7 @@ describe('runtime runtime participant failure lifecycle', () => {
 
   it('initial commit failure 按 key 正序执行并反向 rollback/token dispose/participant dispose', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const calls: Array<string> = [];
     const trigger = new Error('commit failed');
@@ -268,7 +268,7 @@ describe('runtime runtime participant failure lifecycle', () => {
 
   it('initial read failure 保留 primary，并把 rollback/token/instance dispose failure 作为 secondary', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const readFailure = new Error('read failed');
     const rollbackFailure = new Error('rollback failed');
@@ -345,7 +345,7 @@ describe('runtime runtime participant failure lifecycle', () => {
 
   it('publish 后 token dispose failure 只进入 runtime diagnostics', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const trigger = new Error('token dispose failed');
     const participant = defineRuntimeCommitParticipant({
@@ -387,7 +387,7 @@ describe('runtime runtime participant failure lifecycle', () => {
 
   it('update rollback throw 进入 broken，保留旧 read/revision 并允许 diagnostics/dispose', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const readFailure = new Error('read failed');
     const firstRollbackFailure = new Error('rollback b failed');

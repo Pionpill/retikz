@@ -41,8 +41,8 @@ const themedComposite = defineComposite({
 const runUpdate = (initial: IRScene, next: IRScene) => {
   const options = { composites: [themedComposite], onWarn: () => {} } as const;
   const program = createCoreComputation(options);
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
   const session = createRuntime({
     sources,
     computations,
@@ -53,7 +53,7 @@ const runUpdate = (initial: IRScene, next: IRScene) => {
     sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
   });
 
-  return { result, actual: session.artifact(program).value.output.result, expected: compileToScene(next, options) };
+  return { result, actual: session.result(program).value.output.result, expected: compileToScene(next, options) };
 };
 
 describe('Theme retained invalidation', () => {

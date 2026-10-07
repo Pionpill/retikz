@@ -1,0 +1,130 @@
+---
+title: Tree
+description: Present static trees with text nodes, parent-child connections, and ordered subtrees.
+---
+
+`Tree` presents an explicit hierarchy as nodes and parent-child connections, for binary-tree diagrams, hierarchies, and algorithm snapshots. Nodes default to circles and connections to straight lines without arrows. Input order determines child order.
+
+## Getting started
+
+After [installation and first rendering](/library/standard/get-start), import from the collection entry.
+
+<ComponentPreview files="tree-basic" size="md" />
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Tree } from '@retikz/standard-react/collection';
+
+<Layout>
+  <Tree root={{ content: 'A', children: ['B', 'C'] }} />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { tree, TreeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] }), {
+  adapters: [TreeInputEmbedAdapter],
+});
+```
+
+</DocTab>
+<DocTab value="ir" label="Source IR">
+
+```json
+{ "namespace": "standard", "type": "tree", "root": { "content": "A", "children": ["B", "C"] } }
+```
+
+Register TreeProvider when compiling IR directly. Shapes and arrows use the Core registries.
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Declare nodes
+
+Describe the tree through root. A string is a text leaf; use an object for children, identity, or local styles. Both forms can appear together in children, whose order determines child order.
+
+```tsx
+<Tree
+  root={{
+    content: 'A',
+    children: ['B', { content: 'C', children: [null, 'D'] }],
+  }}
+/>
+```
+
+`root="A"` and `root={{ content: 'A' }}` produce the same single node. Objects accept content, children, id, node, and connection. Omitting content or using an empty string creates an empty visible node. Text is displayed literally; applications can convert numeric values to strings first.
+
+root is required; `root={null}` creates an empty tree. A null element in children reserves a default empty node's footprint without drawing a node or edge or assigning an identity. For example, `[null, 'R']` keeps R in the second slot, while `['R']` centers the only child. React also describes structure through root rather than JSX children.
+
+### Placement, nodes, and connections
+
+layout.direction defaults to down and also accepts up, right, and left. Vertical growth orders children left to right; horizontal growth orders them top to bottom. Reversing growth does not reverse input order. levelGap defaults to 32 between levels, and siblingGap to 24 between sibling subtree envelopes.
+
+Nodes at the same depth share a center line. Each parent is centered between its first and last direct child centers, including the centers of missing slots. Deeper descendants do not shift the parent merely by enlarging the subtree envelope. Tree measures text and shapes before arranging whole envelopes; it does not interleave branches to compact whitespace, avoid obstacles, or rotate nodes.
+
+node configures Core Node shape, style, and layout. Defaults are circle, no fill, a 1-pixel stroke, minimumSize 32, padding 2, and margin 0. The minimum is not a fixed size: longer text enlarges nodes. Per-item node settings in root affect only that node; descendants inherit the global node settings.
+
+connection configures parent-child edges; false hides them. A per-item connection configures that node's incoming edge, so it is invalid on the root node. A local object can reenable a globally disabled connection. path accepts nonstructural Core Path properties including style, marks, and label. marks replaces the entire inherited array; an empty array clears arrows.
+
+This example explicitly enables arrows and lets you adjust direction, missing slots, and styles.
+
+<ComponentPreview
+  files={['tree-layout', 'tree-layout.preview.tsx']}
+  defaultSourceFile="tree-layout.preview.tsx"
+  size="md"
+/>
+
+## Extended usage
+
+### Custom node shapes
+
+Set node.shape on an individual node object to override its shape while keeping other nodes circular. This example gives the long-text node a rectangle using `{ type: 'rectangle', params: { cornerRadius: 8 } }` for rounded corners. Local node.layout.padding adds space around the text.
+
+Nodes are measured from their text and padding, and Tree uses the resulting outlines for placement and connections. Switch between short and long text to see the rectangle width and edge endpoint update together. Selecting an ellipse hides the corner-radius control.
+
+<ComponentPreview
+  files={['tree-node-shape', 'tree-node-shape.preview.tsx']}
+  defaultSourceFile="tree-node-shape.preview.tsx"
+  size="md"
+/>
+
+### Connection routes and node references
+
+connection.route accepts straight, `-|`, `|-`, `-|-`, and `|-|`. Three-segment folds accept fraction to position the middle segment; straight and two-segment routes do not. Routes target whole parent and child nodes. The first and last segment directions determine intersections with their actual outlines, rather than fixed anchors. Compose additional curves and annotations with external Draw elements.
+
+<ComponentPreview
+  files={['tree-connections', 'tree-connections.preview.tsx']}
+  defaultSourceFile="tree-connections.preview.tsx"
+  size="md"
+  caption="This example starts with a three-segment fold and arrows enabled. The blue dashed line references C’s right boundary by node id; changing routes keeps nodes in place."
+/>
+
+Explicit node ids in root can be referenced externally, for example `{ id: 'selected', anchor: 'right' }`. References target the actual Core Node boundary, without a cell: prefix. Tree-level id, transforms, theme, defaults, and label retain scope and overall annotation semantics.
+
+Tree renders the supplied snapshot. Applications own insertion, deletion, search, balancing, and traversal state. Node content is text only; use existing layout capabilities for arbitrary drawing composition.
+
+## API reference
+
+{/* @include library/standard/collection/tree/generated */}
+
+## Schema reference
+
+Source retains strings or configured nodes and sparse overrides; the factory does not fill defaults. Parsing layout materializes its static defaults. Node and connection defaults apply after merging overrides.
+
+#### TreeSchema
+
+<ZodSchema
+  name="TreeSchema"
+  description="A static ordered tree of text nodes and parent-child connections"
+  expandNested
+/>

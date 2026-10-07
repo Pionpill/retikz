@@ -127,3 +127,22 @@ export const createCellsInput = <TLayout extends CellLayoutSource>(
 
   return { cells: inputs, adapters };
 };
+
+/** 收集一维集合的显式单格或直属 marker，保留字符串身份语义 */
+export const createLinearCellsInput = <TLayout extends CellLayoutSource>(
+  items: Array<string | CellProps<TLayout>> | undefined,
+  children: ReactNode,
+  marker: FC<CellMarkerProps<TLayout>>,
+  label: string,
+  context: ReactInputEmbedContext,
+) => {
+  const cells = items ?? collectCellMarkers(children, marker, label).map(markerCell<TLayout>);
+  const collected = createCellsInput<TLayout>(
+    cells.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
+    context,
+  );
+  return {
+    cells: collected.cells.map((cell, index) => (typeof cells[index] === 'string' ? cells[index] : cell)),
+    adapters: collected.adapters,
+  };
+};

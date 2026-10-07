@@ -10,8 +10,6 @@ export const RuntimeSourcePhase = {
   Read: 'read',
   /** Source value 比较阶段 */
   Compare: 'compare',
-  /** change set 校验阶段 */
-  ValidateChangeSet: 'validate-change-set',
   /** Source value retire 阶段 */
   Retire: 'retire',
 } as const;
@@ -34,8 +32,6 @@ export const RetikzRuntimeErrorCode = {
   ReadFailed: 'RUNTIME_SOURCE_READ_FAILED',
   /** Source compare 失败 */
   CompareFailed: 'RUNTIME_SOURCE_COMPARE_FAILED',
-  /** Source change set 校验失败 */
-  ChangeSetValidationFailed: 'RUNTIME_SOURCE_CHANGESET_VALIDATION_FAILED',
   /** Runtime 内部不变量被破坏 */
   InternalInvariant: 'RUNTIME_INTERNAL_INVARIANT',
   /** Computation identity 无效 */
@@ -68,16 +64,16 @@ export const RetikzRuntimeErrorCode = {
   ComputationRunFailed: 'RUNTIME_COMPUTATION_RUN_FAILED',
   /** Computation update 执行失败 */
   ComputationUpdateFailed: 'RUNTIME_COMPUTATION_UPDATE_FAILED',
-  /** artifact capture 失败 */
-  ArtifactCaptureFailed: 'RUNTIME_ARTIFACT_CAPTURE_FAILED',
-  /** artifact private read 失败 */
-  ArtifactComputationReadFailed: 'RUNTIME_ARTIFACT_COMPUTATION_READ_FAILED',
-  /** artifact public read 失败 */
-  ArtifactPublicReadFailed: 'RUNTIME_ARTIFACT_PUBLIC_READ_FAILED',
+  /** result capture 失败 */
+  ResultCaptureFailed: 'RUNTIME_RESULT_CAPTURE_FAILED',
+  /** result private read 失败 */
+  ResultComputationReadFailed: 'RUNTIME_RESULT_COMPUTATION_READ_FAILED',
+  /** result public read 失败 */
+  ResultPublicReadFailed: 'RUNTIME_RESULT_PUBLIC_READ_FAILED',
   /** 数据源持有值的所有权别名 */
   SourceOwnershipAlias: 'RUNTIME_SOURCE_OWNERSHIP_ALIAS',
-  /** 计算产物的所有权别名 */
-  ArtifactOwnershipAlias: 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS',
+  /** 计算结果的所有权别名 */
+  ResultOwnershipAlias: 'RUNTIME_RESULT_OWNERSHIP_ALIAS',
   /** runtime 重入 */
   Reentrant: 'RUNTIME_REENTRANT',
   /** runtime 已释放 */

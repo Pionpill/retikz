@@ -43,19 +43,19 @@ const defineComputation = (
     sources: [source],
     computations,
     tracePhases: [],
-    artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-    run: () => ({ kind: RuntimeComputationKind.Full, artifact: 1 }),
+    result: { capture: value => value, readForComputation: value => value, read: value => value },
+    run: () => ({ kind: RuntimeComputationKind.Full, result: 1 }),
   });
 
 describe('runtime computation definition and registry', () => {
-  it('统一合并 builtin/custom，并按拓扑后 owner/key code-unit 顺序返回', () => {
+  it('统一注册计算列表，并按拓扑后 owner/key code-unit 顺序返回', () => {
     const owner = defineSource('counter');
     const upperSource = defineSource('Counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner, upperSource] });
+    const sources = createRuntimeSourceRegistry([owner, upperSource]);
     const a = defineComputation(owner, { owner: 'counter', key: 'a' });
     const upper = defineComputation(upperSource, { owner: 'Counter', key: 'A' });
     const child = defineComputation(owner, { owner: 'counter', key: 'child' }, [a]);
-    const registry = createRuntimeComputationRegistry({ sources, builtins: [child], custom: [a, upper] });
+    const registry = createRuntimeComputationRegistry({ sources, computations: [child, a, upper] });
 
     expect(registry.resolve(a)).toBe(a);
     expect(registry.find({ owner: 'counter', key: 'child' })).toBe(child);
@@ -85,7 +85,7 @@ describe('runtime computation definition and registry', () => {
         outcomes,
       },
     ];
-    const artifact = {
+    const result = {
       capture: (value: number) => value,
       readForComputation: (value: number) => value,
       read: (value: number) => value,
@@ -95,8 +95,8 @@ describe('runtime computation definition and registry', () => {
       sources,
       computations,
       tracePhases,
-      artifact,
-      run: () => ({ kind: RuntimeComputationKind.Full, artifact: 1 }),
+      result,
+      run: () => ({ kind: RuntimeComputationKind.Full, result: 1 }),
     };
     const definition = defineRuntimeComputation(input);
     const executor = getRuntimeComputationDefinitionExecutor(definition);
@@ -107,28 +107,28 @@ describe('runtime computation definition and registry', () => {
     computations.push(definition);
     outcomes.push(PerformanceTraceOutcome.Incremental);
     tracePhases.length = 0;
-    artifact.capture = () => 99;
-    artifact.readForComputation = () => 99;
-    artifact.read = () => 99;
-    input.run = () => ({ kind: RuntimeComputationKind.Full, artifact: 99 });
+    result.capture = () => 99;
+    result.readForComputation = () => 99;
+    result.read = () => 99;
+    input.run = () => ({ kind: RuntimeComputationKind.Full, result: 99 });
     const view: RuntimeCandidateView = Object.freeze({
       phase: RuntimeComputationPhase.Initial,
       candidateRevision: 0 as RuntimeRevision,
       snapshot: () => {
         throw new Error('unused owner lookup');
       },
-      changed: () => true,
+      isChanged: () => true,
       changeSet: () => {
         throw new Error('unused change lookup');
       },
-      artifact: () => {
-        throw new Error('unused artifact lookup');
+      result: () => {
+        throw new Error('unused result lookup');
       },
     });
 
     const registry = createRuntimeComputationRegistry({
-      sources: createRuntimeSourceRegistry({ builtins: [owner] }),
-      builtins: [definition],
+      sources: createRuntimeSourceRegistry([owner]),
+      computations: [definition],
     });
 
     expect(registry.definitions()).toEqual([definition]);
@@ -151,7 +151,7 @@ describe('runtime computation definition and registry', () => {
         trace: createRuntimeTraceReporter({ owner: 'counter', phases: [], sink: () => undefined }),
         diagnose: () => undefined,
       }),
-    ).toEqual({ kind: RuntimeComputationKind.Full, artifact: 1 });
+    ).toEqual({ kind: RuntimeComputationKind.Full, result: 1 });
   });
 
   it.each([
@@ -181,8 +181,8 @@ describe('runtime computation definition and registry', () => {
         sources: [owner],
         computations: [],
         tracePhases,
-        artifact: { capture: (value: number) => value, readForComputation: value => value, read: value => value },
-        run: () => ({ kind: RuntimeComputationKind.Full, artifact: 1 }),
+        result: { capture: (value: number) => value, readForComputation: value => value, read: value => value },
+        run: () => ({ kind: RuntimeComputationKind.Full, result: 1 }),
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.TraceDefinitionInvalid }));
   });
@@ -190,29 +190,29 @@ describe('runtime computation definition and registry', () => {
   it('拒绝 duplicate、unknown owner 与 unknown computation', () => {
     const owner = defineSource('counter');
     const unknownSource = defineSource('unknown');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const first = defineComputation(owner, { owner: 'counter', key: 'same' });
     const duplicate = defineComputation(owner, { owner: 'counter', key: 'same' });
     const missingSource = defineComputation(unknownSource, { owner: 'unknown', key: 'missing-owner' });
     const missingComputation = defineComputation(owner, { owner: 'counter', key: 'missing-computation' }, [first]);
 
-    expect(() => createRuntimeComputationRegistry({ sources, builtins: [first, duplicate] })).toThrowError(
+    expect(() => createRuntimeComputationRegistry({ sources, computations: [first, duplicate] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationDuplicate }),
     );
-    expect(() => createRuntimeComputationRegistry({ sources, builtins: [missingSource] })).toThrowError(
+    expect(() => createRuntimeComputationRegistry({ sources, computations: [missingSource] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown }),
     );
-    expect(() => createRuntimeComputationRegistry({ sources, builtins: [missingComputation] })).toThrowError(
+    expect(() => createRuntimeComputationRegistry({ sources, computations: [missingComputation] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationUnknown }),
     );
   });
 
   it('拒绝 Computation id 指向未注册 owner 与伪造 source registry', () => {
     const owner = defineSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const wrongComputationSource = defineComputation(owner, { owner: 'missing', key: 'computation' });
 
-    expect(() => createRuntimeComputationRegistry({ sources, builtins: [wrongComputationSource] })).toThrowError(
+    expect(() => createRuntimeComputationRegistry({ sources, computations: [wrongComputationSource] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown }),
     );
     expect(() =>
@@ -248,7 +248,7 @@ describe('runtime computation definition and registry', () => {
 
   it('拒绝 object literal 与 foreign module Computation token', async () => {
     const owner = defineSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const forged = { id: { owner: 'counter', key: 'forged' } } as RuntimeComputationDefinition<
       number,
       number,
@@ -256,7 +256,7 @@ describe('runtime computation definition and registry', () => {
       number
     >;
 
-    expect(() => createRuntimeComputationRegistry({ sources, custom: [forged] })).toThrowError(
+    expect(() => createRuntimeComputationRegistry({ sources, computations: [forged] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationTokenInvalid }),
     );
 
@@ -267,11 +267,11 @@ describe('runtime computation definition and registry', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: (value: number) => value, readForComputation: value => value, read: value => value },
-      run: () => ({ kind: RuntimeComputationKind.Full, artifact: 1 }),
+      result: { capture: (value: number) => value, readForComputation: value => value, read: value => value },
+      run: () => ({ kind: RuntimeComputationKind.Full, result: 1 }),
     });
 
-    expect(() => createRuntimeComputationRegistry({ sources, custom: [foreign] })).toThrowError(
+    expect(() => createRuntimeComputationRegistry({ sources, computations: [foreign] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationTokenInvalid }),
     );
   });

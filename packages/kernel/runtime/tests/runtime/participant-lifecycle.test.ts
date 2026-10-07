@@ -26,7 +26,7 @@ const defineCounterSource = () =>
 describe('runtime runtime participant lifecycle', () => {
   it('initial create 在 publish 前 prepare、commit 并缓存 participant read', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const calls: Array<string> = [];
     let liveValue = -1;
@@ -80,7 +80,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('affected participant 在依赖 owner 更新时与 revision 原子提交', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const calls: Array<string> = [];
     let liveValue = -1;
@@ -134,7 +134,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('participant 被 runtime 接管后永久 consumed，不能跨 runtime 复用', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     let disposeCalls = 0;
     const participant = defineRuntimeCommitParticipant({
@@ -170,7 +170,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('initial prepare 失败保留 cause、释放 participant 并永久 consumed', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const trigger = new Error('prepare failed');
     let disposeCalls = 0;
@@ -206,7 +206,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('update read 失败回滚 view 并保留旧 revision 与 committed read', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const trigger = new Error('read failed');
     const calls: Array<string> = [];
@@ -264,7 +264,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('第二个 participant read 失败不局部发布前序 read cache', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     let failSecond = false;
 
@@ -324,7 +324,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('participant update callbacks 不能经 runtime API 重入观察半提交状态', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const reentryErrors: Array<RetikzRuntimeError> = [];
     const sessionRef: { current?: Runtime } = {};
@@ -404,7 +404,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('rollback 与 participant dispose callback 同样遵守 runtime reentry gate', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const sessionRef: { current?: Runtime } = {};
     const reentryCodes: Array<string> = [];
@@ -456,7 +456,7 @@ describe('runtime runtime participant lifecycle', () => {
 
   it('immutable read 与 candidate mutable state 无 alias，rollback 后旧 nested reference/content 不变', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     let live = { values: [1] };
     let failFollower = false;

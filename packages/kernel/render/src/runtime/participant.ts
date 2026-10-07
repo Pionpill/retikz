@@ -627,7 +627,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       },
     ],
     prepare: (candidate, context) => {
-      const core = candidate.artifact(captured.coreComputation).value;
+      const core = candidate.result(captured.coreComputation).value;
       const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeSourceDefinition).value;
       if (candidate.phase === RuntimeComputationPhase.Initial) {
         validateSceneRuntimeSnapshot(core.snapshot);
