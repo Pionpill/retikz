@@ -5,7 +5,7 @@ description: The data model binds external rows to a stable field contract and p
 
 The data model answers four questions: which fields the configuration references, how external data binds to those fields, how bad values are diagnosed, and how to extend built-in behavior. Real rows stay outside the serializable configuration and arrive at runtime, so one field contract can be reused across data sources.
 
-If fields and measurement types are new to you, start with [Fields and Types](/viz/data/model/fields-and-types).
+If fields and measurement types are new to you, start with [Field Types](/viz/data/model/field-types).
 
 ## Overall flow
 
@@ -15,12 +15,11 @@ Solid arrows show the data path: external rows are normalized before data transf
 
 ## Responsibilities
 
-| Topic                    | Responsibility                                             | Read it when                                       |
-| ------------------------ | ---------------------------------------------------------- | -------------------------------------------------- |
-| Fields and Types         | Field declarations, types, parsing, and category order     | You are new to the data model                      |
-| Data Intake              | Physical paths, parsing, and canonical-row normalization   | You switch APIs, use nested data, or parse formats |
-| Validation & Diagnostics | Skip, sample-check, or reject invalid participating values | You debug blank charts or enforce intake contracts |
-| Extension Mechanisms     | Register field formats and runtime field resolution        | Built-in intake cannot express a storage format    |
+| Topic                | Responsibility                                         | Read it when                                                |
+| -------------------- | ------------------------------------------------------ | ----------------------------------------------------------- |
+| Field Types          | Field declarations, types, inference, and parsing      | You are new to the data model                               |
+| Data Intake          | Field mapping, parsing, category order, and validation | You connect data, debug blank charts, or enforce validation |
+| Extension Mechanisms | Register field formats and runtime field resolution    | Built-in intake cannot express a storage format             |
 
 The data model stops after producing canonical rows. [Data transforms](/viz/data/transform) own sorting, aggregation, and filtering, while each consumer decides how the result enters a view. In a Plot application, [Plot scales](/viz/plot/scale) own mappings to position, color, or size.
 
@@ -29,24 +28,29 @@ The data model stops after producing canonical rows. [Data transforms](/viz/data
 <LinkedSections
   items={[
     {
-      title: 'Fields and Types',
-      description: 'Declare fields and understand types, parsing, and category order.',
-      url: '/viz/data/model/fields-and-types',
+      title: 'Field Types',
+      description: 'Declare fields and understand types, inference, and parsing.',
+      url: '/viz/data/model/field-types',
     },
     {
       title: 'Data Intake',
-      description: 'Align field paths, parse formats, and produce canonical rows.',
+      description: 'Map paths, parse formats, and handle missing or invalid values.',
       url: '/viz/data/model/intake',
-    },
-    {
-      title: 'Validation & Diagnostics',
-      description: 'Choose an invalid-value policy and turn blank charts into actionable errors.',
-      url: '/viz/data/model/validation',
     },
     {
       title: 'Extension Mechanisms',
       description: 'Register field formats or provide runtime field resolution.',
       url: '/viz/data/model/extensions',
+    },
+    {
+      title: 'API Reference',
+      description: 'Look up data-model and runtime extension APIs.',
+      url: '/viz/data/model/api-reference',
+    },
+    {
+      title: 'Schema Reference',
+      description: 'Look up serializable field declarations and constraints.',
+      url: '/viz/data/model/schema-reference',
     },
   ]}
 />

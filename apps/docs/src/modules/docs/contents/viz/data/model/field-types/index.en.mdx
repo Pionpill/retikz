@@ -1,6 +1,6 @@
 ---
-title: Fields and Types
-description: Declare logical fields and measurement types, and understand inference, value parsing, and category order.
+title: Field Types
+description: Declare logical fields and measurement types, and understand inference and value parsing.
 ---
 
 A field model gives data stable names and meanings. Decide whether a field represents categories, quantities, or time, then use `model` to declare parsing rules and any required category order. Transforms and consumers can use the same contract.
@@ -36,7 +36,7 @@ The number `10` might be an amount whose differences matter, or it might only be
 | `categorical`    | Discrete   | Values identify categories; code gaps do not | Region `north`, stage code `10` |
 | `temporal`       | Timestamp  | Values represent dates or points in time     | `2026-09-23`, zoned timestamps  |
 
-These three types capture the basic distinctions shared by current data processing and visualization: numeric distance, category identity, and time order. `@retikz/data` uses them to normalize valid values in participating fields: continuous values become finite numbers, temporal values become millisecond timestamps, and categorical values retain string or finite-number category values. Consumers can transform or map fields using the same semantics instead of guessing from raw values again. [Plot scales](/viz/plot/scale) are one consumer example; the field type itself does not prescribe a visual representation.
+These three types capture the basic distinctions shared by current data processing and visualization: numeric distance, category identity, and time order. `@retikz/data` uses them to normalize valid values in participating fields: continuous values become finite numbers, temporal values become millisecond timestamps, and categorical values retain string or finite-number category values. Consumers can transform or map fields using the same semantics instead of guessing from raw values again. Field types describe data semantics without prescribing how consumers present them.
 
 <Comparison target="vega" title="Vega-Lite Field Semantic Types">
 This compares the `type` of an encoded field in Vega-Lite, within the Vega ecosystem. It describes a field's measurement meaning or geographic shape role, not its input parsing type.
@@ -49,7 +49,7 @@ This compares the `type` of an encoded field in Vega-Lite, within the Vega ecosy
 | `temporal`     | Dates or times                       | Corresponds to `temporal`                                  |
 | `geojson`      | Geographic shapes for geoshape marks | `@retikz/data` has no corresponding field measurement type |
 
-`@retikz/data` groups ordered and unordered categories under `categorical`; it has no separate `ordinal` type. Vega-Lite's `geojson` is specific to geographic shapes. Numeric latitude and longitude channels still use `quantitative`, so not every geographic field is `geojson`. We are not considering `geojson` support for now; we will revisit it when designing map capabilities for Plot.
+`@retikz/data` groups ordered and unordered categories under `categorical`; it has no separate `ordinal` type. Vega-Lite's `geojson` is specific to geographic shapes. Numeric latitude and longitude channels still use `quantitative`, so not every geographic field is `geojson`. There is currently no field type corresponding to `geojson`.
 
 </Comparison>
 
@@ -105,7 +105,7 @@ Besides the shared fields, a field declaration has two further fields: `type` sp
 - **Without `format`, with `type`**: use default coercion for the declared type. For example, `continuous` converts a strict numeric string such as `'12'` to the number `12`.
 - **Neither declared**: infer the type from samples, then use default coercion. Declare numeric category codes explicitly as `categorical`; numeric strings are not inferred as continuous merely from their content.
 
-`order` does not participate in type inference. An explicit non-categorical type with `order` is rejected during declaration validation. With `type` omitted, resolution also fails if the resulting type is non-categorical. The next section explains category ordering.
+`order` does not participate in type inference. An explicit non-categorical type with `order` is rejected during declaration validation. With `type` omitted, resolution also fails if the resulting type is non-categorical. See [category order in Data Intake](/viz/data/model/intake#category-order).
 
 The diagram reads logical fields. See [Data Intake](/viz/data/model/intake) for physical-path mapping and built-in formats. To override a type or parsing rule programmatically before values are parsed, see [Extensions](/viz/data/model/extensions).
 
@@ -125,54 +125,52 @@ When `type` is omitted and no `format` implies a type, `@retikz/data` classifies
 
 Inference applies to the whole column: it scans at most the first 1000 rows and collects up to 100 valid samples. If all samples share one measurement type, that type is used; mixed measurement types or no valid samples fall back to `categorical`. For example, `12` and `12n` both imply `continuous`, while mixing `12` and `'12'` yields `categorical`. Recognizing a date-shaped value does not validate the date; actual values still undergo parsing afterward.
 
-Normalized rows use logical field names and preserve the row count; normalization does not invent missing data. See [Validation & Diagnostics](/viz/data/model/validation) for missing values, parsing failures, and handling policies.
+Normalized rows use logical field names and preserve the row count; normalization does not invent missing data. See [validation policies](/viz/data/model/intake#validation-policy) for missing values, parsing failures, and handling policies.
 
-## Category order
+## Related props
 
-Categorical fields form their domain in data-appearance order by default. Put `order` on the field when the business order should be `S → M → L → XL`:
+These entries summarize the field declarations used on this page. See the [Data reference](/viz/data/model/schema-reference) for the complete contract.
 
-| `order`                         | Effect                                                         |
-| ------------------------------- | -------------------------------------------------------------- |
-| Omitted / `'appearance'`        | Preserve data-appearance order                                 |
-| `'ascending'` / `'descending'`  | Compare all-numeric categories numerically, otherwise as text  |
-| Array such as `['S', 'M', 'L']` | Use the array first, then append remaining observed categories |
-
-<ComponentPreview
-  files={['data-model-order', 'data-model-order-preview.tsx', 'data-model-order.data.ts']}
-  defaultSourceFile="data-model-order-preview.tsx"
-  size="lg"
-  caption="The source table remains XL, S, L, M; controls change the category domain without reordering rows."
+<ComponentProps
+  items={[
+    {
+      name: 'IRDataModel',
+      type: 'Array<IRDataFieldDefinition>',
+      description:
+        'An array of field declarations. Each item has a required `name: string`, an optional `format: string`, and the `type` / `order` union constraints below. Field names must be unique.',
+      kind: 'type',
+    },
+    {
+      name: 'name',
+      type: 'string',
+      description: 'A nonblank logical field name used by transforms and consumers.',
+      kind: 'property',
+      required: true,
+    },
+    {
+      name: 'type',
+      type: "'continuous' | 'categorical' | 'temporal'",
+      description:
+        '`continuous` represents numeric quantities, `categorical` represents discrete categories, and `temporal` represents time. When omitted, the format-implied type takes precedence; otherwise the type is inferred from data samples.',
+      kind: 'property',
+    },
+    {
+      name: 'format',
+      type: 'string',
+      description:
+        'A named parsing format. Built-ins are `iso` (ISO time), `epochSeconds` (epoch seconds), `epochMillis` (epoch milliseconds), `slashDate` (slash-separated dates), `numberString` (permissive numeric strings), and `percent` (percentage strings). Registered custom names are also accepted. When omitted, default coercion follows the resolved measurement type. An explicit type must match the format-implied type.',
+      kind: 'property',
+    },
+    {
+      name: 'order',
+      type: 'string | Array<string | number>',
+      description:
+        'Only valid for categorical fields. It may be declared with an omitted `type`, but the resolved type must be categorical. Accepts a built-in or custom name, or a nonempty explicit category array. `appearance` preserves appearance order; `ascending` / `descending` compare numbers numerically and text alphabetically; `naturalAscending` / `naturalDescending` compare text and integer segments in natural order. See [category order](/viz/data/model/intake#category-order).',
+      kind: 'property',
+      defaultValue: 'appearance',
+    },
+  ]}
 />
-
-`model.order` orders the **categorical domain**; it does not reorder rows. Consumers can use it to preserve category semantics. In a Plot application, it affects categorical positions, legends, and discrete colors without changing path connection order. Use [data-transform sorting](/viz/data/transform/operations#sort) for rows; an explicit Plot scale `domain` takes precedence over `order`.
-
-### Natural ordering
-
-Keep versions as strings. Alphabetical ascending places `'10.18'` before `'10.2'`; `order: 'naturalAscending'` produces `10.2 → 10.18`. Use `naturalDescending` for the opposite direction.
-
-<ComponentPreview
-  files={['version-order', 'version-order.preview.tsx', 'version-order.data.ts']}
-  defaultSourceFile="version-order.preview.tsx"
-  size="lg"
-  caption="Natural ascending is selected initially. Compare alphabetical order, version positions, and colors. Source rows stay unchanged."
-/>
-
-Natural ordering compares ASCII digit runs as arbitrary-length integers and other runs in case-sensitive UTF-16 order. Numeric runs precede text runs; a shorter sequence comes first when shared runs compare equally. It does not interpret decimals, negative numbers, or SemVer. Equivalent keys such as `'v02'` and `'v2'` retain appearance order in both natural directions while remaining distinct categories.
-
-### Custom ordering
-
-When built-in rules do not fit your business needs, define a named comparator with `defineFieldOrder`, inject it through the consumer’s `fieldOrderDefinitions`, and reference its name in the field’s `order`. Built-in and custom orders share the same registration and execution mechanism. The model stores only the name; comparator functions stay at runtime.
-
-For example, define `labelLength` to order labels from shortest to longest: `compare(a, b)` returns `String(a).length - String(b).length`. Pass the definition to `fieldOrderDefinitions` and use `order: 'labelLength'` on the field to produce `2.0 → 10.2 → 10.18 → 10.2.0`.
-
-<ComponentPreview
-  files={['custom-order', 'version-order.preview.tsx', 'version-order.data.ts']}
-  defaultSourceFile="version-order.preview.tsx"
-  size="lg"
-  caption="Custom label-length ordering is selected initially. Compare it with natural ordering; open the source to see the definition, injection, and field reference."
-/>
-
-See [defining category orders](/viz/data/model/extensions#defining-category-orders) for the complete definition, injection, and usage example. Unknown names fail even with empty data or an explicit scale `domain`. Table validates registration without automatically reordering rows or columns.
 
 ## Further reading
 
@@ -180,18 +178,13 @@ See [defining category orders](/viz/data/model/extensions#defining-category-orde
   items={[
     {
       title: 'Data Intake',
-      description: 'Configure field mapping and built-in parsing formats.',
+      description: 'Configure mapping, parsing, and invalid-value policies.',
       url: '/viz/data/model/intake',
     },
     {
-      title: 'Validation & Diagnostics',
-      description: 'Handle missing values and parsing failures.',
-      url: '/viz/data/model/validation',
-    },
-    {
-      title: 'Contract',
+      title: 'Schema Reference',
       description: 'Look up the complete field and model schemas.',
-      url: '/viz/data/reference/contract',
+      url: '/viz/data/model/schema-reference',
     },
   ]}
 />

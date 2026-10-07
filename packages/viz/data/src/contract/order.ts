@@ -12,5 +12,9 @@ export type FieldOrderDefinition = Readonly<{
   compare: (a: string | number, b: string | number, context: FieldOrderContext) => number;
 }>;
 
-/** 定义可注册的纯分类比较规则 */
+/**
+ * 定义可注册的纯分类比较规则
+ * @param definition 具名比较器；必须保持纯计算并返回有限数值
+ * @returns 原样返回定义对象；不会自动注册
+ */
 export const defineFieldOrder = (definition: FieldOrderDefinition): FieldOrderDefinition => definition;

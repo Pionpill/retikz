@@ -1,6 +1,6 @@
 ---
-title: 字段与类型
-description: 声明逻辑字段与测量类型，理解类型推断、值解析和分类顺序。
+title: 字段类型
+description: 声明逻辑字段与测量类型，理解类型推断与值解析。
 ---
 
 字段模型为数据约定稳定的名字与含义。先确定字段表示类别、数值还是时间，再通过 `model` 声明解析规则和必要的分类顺序，数据变换与消费方就能使用同一份约定。
@@ -34,7 +34,7 @@ description: 声明逻辑字段与测量类型，理解类型推断、值解析�
 | `categorical` | 离散型 | 值用于区分类别，编码间距没有意义 | 地区 `north`、阶段编号 `10`  |
 | `temporal`    | 时间戳 | 值表示日期或时间点               | `2026-09-23`、带时区的时间戳 |
 
-这三类是当前数据处理与可视化共同需要的基本区分：数值距离、类别身份和时间顺序。`@retikz/data` 据此整理参与字段的有效值：连续字段成为有限数值，时间字段成为毫秒时间戳，分类字段保留字符串或有限数字类别。下游消费模块可按相同的字段语义做变换或映射，而无需重新猜测原始值。[Plot 的比例尺](/viz/plot/scale)是一个消费例子；类型本身不规定图形怎样呈现。
+这三类是当前数据处理与可视化共同需要的基本区分：数值距离、类别身份和时间顺序。`@retikz/data` 据此整理参与字段的有效值：连续字段成为有限数值，时间字段成为毫秒时间戳，分类字段保留字符串或有限数字类别。下游消费模块可按相同的字段语义做变换或映射，而无需重新猜测原始值。字段类型只约定数据语义，不规定消费方如何呈现。
 
 <Comparison target="vega" title="Vega-Lite 的字段语义类型">
 这里对照的是 Vega 生态中 Vega-Lite 编码字段的 `type`：它描述字段的测量含义或地理形状角色，而不是数据加载时的输入解析类型。
@@ -47,7 +47,7 @@ description: 声明逻辑字段与测量类型，理解类型推断、值解析�
 | `temporal`     | 日期或时间               | 对应 `temporal`                                 |
 | `geojson`      | 用于 geoshape 的地理形状 | `@retikz/data` 没有对应的字段测量类型           |
 
-`@retikz/data` 将有序与无序类别合并为 `categorical`，没有单独的 `ordinal` 类型。Vega-Lite 的 `geojson` 专用于地理形状；经纬度通道中的数值仍属于 `quantitative`，不能把所有地理字段都归为 `geojson`。当前暂不考虑支持 `geojson`；等 Plot 设计地图能力时再评估。
+`@retikz/data` 将有序与无序类别合并为 `categorical`，没有单独的 `ordinal` 类型。Vega-Lite 的 `geojson` 专用于地理形状；经纬度通道中的数值仍属于 `quantitative`，不能把所有地理字段都归为 `geojson`。当前没有对应 `geojson` 的字段类型。
 
 </Comparison>
 
@@ -103,7 +103,7 @@ const model: IRDataModel = [
 - **无 `format`，有 `type`**：使用声明类型的默认转换。例如 `continuous` 可以将严格数字串 `'12'` 转为数值 `12`。
 - **两者都省略**：从样本推断类型，再使用默认转换。数字编码的类别应显式声明为 `categorical`，数字串也不会仅凭内容被推断为连续量。
 
-`order` 不参与类型推断。显式非分类类型搭配 `order` 会在声明校验时被拒绝；省略 `type` 时，若最终解析为非分类类型也会报错。分类字段如何排列见下一节。
+`order` 不参与类型推断。显式非分类类型搭配 `order` 会在声明校验时被拒绝；省略 `type` 时，若最终解析为非分类类型也会报错。分类字段如何排列见[数据接入的分类顺序](/viz/data/model/intake#分类顺序)。
 
 图中按逻辑字段取值；物理路径不同或需要了解内置格式时，见[数据接入](/viz/data/model/intake)。需要在值解析前通过程序化解析器覆盖类型或解析规则时，见[扩展机制](/viz/data/model/extensions)。
 
@@ -123,61 +123,62 @@ const model: IRDataModel = [
 
 推断针对整列：最多扫描前 1000 行，收集前 100 个有效样本；样本全部属于同一种测量类型时采用该类型，出现多种测量类型或没有有效样本时回退到 `categorical`。例如，`12` 与 `12n` 同属连续量，得到 `continuous`；`12` 与 `'12'` 混合则得到 `categorical`。日期形式识别不等于日期有效性校验，实际值仍需经过后续解析。
 
-规范化后的行使用逻辑字段名，行数保持不变；它不会为缺失值补造数据。缺失值、解析失败及处理策略见[校验与诊断](/viz/data/model/validation)。
+规范化后的行使用逻辑字段名，行数保持不变；它不会为缺失值补造数据。缺失值、解析失败及处理策略见[数据接入的校验策略](/viz/data/model/intake#校验策略)。
 
-## 分类顺序
+## 相关属性
 
-`categorical` 字段默认按数据出现顺序形成分类域。需要 `S → M → L → XL` 这样的业务顺序时，在字段上写 `order`：
+以下汇总本页涉及的字段声明；完整契约见[Data 参考](/viz/data/model/schema-reference)。
 
-| `order`                        | 效果                               |
-| ------------------------------ | ---------------------------------- |
-| 不写 / `'appearance'`          | 按数据出现序                       |
-| `'ascending'` / `'descending'` | 全数值按数值比较，否则按字符串比较 |
-| 数组，如 `['S', 'M', 'L']`     | 以数组为先，其余实际类别追加到末尾 |
-
-<ComponentPreview
-  files={['data-model-order', 'data-model-order-preview.tsx', 'data-model-order.data.ts']}
-  defaultSourceFile="data-model-order-preview.tsx"
-  size="lg"
-  caption="源表始终是 XL、S、L、M；控件改变分类域，不重排数据行。"
+<ComponentProps
+  items={[
+    {
+      name: 'IRDataModel',
+      type: 'Array<IRDataFieldDefinition>',
+      description:
+        '字段声明数组，每项包含必填的 `name: string`、可选的 `format: string`，以及下列 `type` / `order` 联合约束；字段名不能重复。',
+      kind: 'type',
+    },
+    {
+      name: 'name',
+      type: 'string',
+      description: '非空白逻辑字段名，供数据变换与消费方引用。',
+      kind: 'property',
+      required: true,
+    },
+    {
+      name: 'type',
+      type: "'continuous' | 'categorical' | 'temporal'",
+      description:
+        '`continuous` 表示连续数值，`categorical` 表示离散类别，`temporal` 表示时间。省略时先使用格式蕴含的类型，否则从数据样本推断。',
+      kind: 'property',
+    },
+    {
+      name: 'format',
+      type: 'string',
+      description:
+        '具名解析格式。内置名称为 `iso`（ISO 时间）、`epochSeconds`（秒时间戳）、`epochMillis`（毫秒时间戳）、`slashDate`（斜杠日期）、`numberString`（宽松数字串）和 `percent`（百分比串）；也可使用已注册的自定义名称。省略时按最终测量类型进行默认转换；显式类型须与格式蕴含的类型一致。',
+      kind: 'property',
+    },
+    {
+      name: 'order',
+      type: 'string | Array<string | number>',
+      description:
+        '仅分类字段可用；省略 `type` 时可以声明，但最终必须解析为分类类型。接受内置或自定义名称，以及非空显式类别数组。`appearance` 按出现顺序，`ascending` / `descending` 对数字按数值、对文本按字母升降序，`naturalAscending` / `naturalDescending` 按文本与整数片段自然升降序排列；具体用法见[分类顺序](/viz/data/model/intake#分类顺序)。',
+      kind: 'property',
+      defaultValue: 'appearance',
+    },
+  ]}
 />
-
-`model.order` 排的是**分类域**，不会重排数据行。消费模块可以用它保持统一的类别语义；在 Plot 应用中，它会影响分类位置、图例和离散颜色，但不会改变折线连接顺序。要重排行，请使用[数据变换里的排序](/viz/data/transform/operations#排序-sort)；Plot 显式比例尺 `domain` 的优先级高于 `order`。
-
-### 自然排序
-
-版本号应保留为字符串。`'10.2'` 和 `'10.18'` 按字母升序得到 `10.18 → 10.2`；使用 `order: 'naturalAscending'` 则得到 `10.2 → 10.18`。`naturalDescending` 按相反方向排列。
-
-<ComponentPreview
-  files={['version-order', 'version-order.preview.tsx', 'version-order.data.ts']}
-  defaultSourceFile="version-order.preview.tsx"
-  size="lg"
-  caption="默认使用自然升序；切换字母排序，观察版本位置与颜色域的变化。源行始终不变。"
-/>
-
-自然排序将连续 ASCII 数字按整数片段比较，其余文本按区分大小写的 UTF-16 顺序比较；数字片段在文本片段前，公共片段相同时较短标签在前。它不解析小数、负数或 SemVer，超长整数片段也不会因数值精度而混淆。`'v02'` 与 `'v2'` 比较等价，在自然升降序中都保持出现顺序，但仍是不同类别。
-
-### 自定义排序
-
-内置规则不能满足业务需求时，可以通过 `defineFieldOrder` 定义具名比较器，经消费方的 `fieldOrderDefinitions` 注入，再用字段的 `order` 引用该名称。内置与自定义排序共用同一套注册和执行机制；模型只保存名称，比较函数留在运行时。
-
-例如，定义 `labelLength`，按标签长度从短到长排列：`compare(a, b)` 返回 `String(a).length - String(b).length`。将定义传给 `fieldOrderDefinitions`，字段声明使用 `order: 'labelLength'`，就会得到 `2.0 → 10.2 → 10.18 → 10.2.0`。
-
-<ComponentPreview
-  files={['custom-order', 'version-order.preview.tsx', 'version-order.data.ts']}
-  defaultSourceFile="version-order.preview.tsx"
-  size="lg"
-  caption="默认启用自定义标签长度排序；可切换自然排序作对比。打开源码可查看定义、注入与字段引用。"
-/>
-
-完整定义、注入与使用示例见[自定义分类顺序](/viz/data/model/extensions#定义分类顺序)。未知名称即使在空数据或显式比例尺 `domain` 下也会报错。Table 校验名称注册，但不会因此自动重排行列。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
     { title: '数据接入', description: '配置字段映射和内置解析格式。', url: '/viz/data/model/intake' },
-    { title: '校验与诊断', description: '处理缺失值与解析失败。', url: '/viz/data/model/validation' },
-    { title: '契约', description: '查询字段声明与数据模型的完整 Schema。', url: '/viz/data/reference/contract' },
+    {
+      title: 'Schema 参考',
+      description: '查询字段声明与数据模型的完整 Schema。',
+      url: '/viz/data/model/schema-reference',
+    },
   ]}
 />

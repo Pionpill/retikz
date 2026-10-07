@@ -1,6 +1,6 @@
 /**
  * 外部数据行
- * @description 运行时由宿主 lowering pipeline 注入的任意 JS 记录（可嵌套）；field 路径对其解析、结果须为标量
+ * @description 消费侧在运行时提供的任意 JS 记录（可嵌套）；字段路径解析后的结果须为标量
  */
 export type ExternalRow = Record<string, unknown>;
 
