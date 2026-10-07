@@ -1,8 +1,11 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import type { ScenePrimitive } from '@retikz/core';
+import { compileToScene, defineThemeStyle, resolveCoreProviderDependencies } from '@retikz/core';
+import { defineGraphThemeStyle } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
+import { defineDiagramThemeStyle } from '../../src/_diagram';
 import type { FlowLayoutDefinition } from '../../src/flow';
-import { LayeredFlowLayoutDefinition } from '../../src/flow';
+import { defineFlowThemeStyle, LayeredFlowLayoutDefinition } from '../../src/flow';
 import { FlowDiagramSchema, FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';
 
 const source = (fill = true, fixed = false) => ({
@@ -69,6 +72,50 @@ const compile = (input: unknown) => {
 };
 
 describe('Flow 容器宽度', () => {
+  it('局部主题改变字号时，测量与最终外框仍保持行等宽', () => {
+    const name = 'compact';
+    const result = compileToScene(
+      { type: 'scene', version: 1, children: [FlowDiagramSchema.parse({ ...source(), theme: { style: name } })] },
+      {
+        ...resolveCoreProviderDependencies({
+          contributions: [
+            createFlowDiagramProviderContribution({
+              graphThemeStyles: [
+                defineGraphThemeStyle({
+                  name,
+                  resolve: () => ({ defaults: { entity: { style: { font: { size: 14 } } } } }),
+                }),
+              ],
+              flowThemeStyles: [defineFlowThemeStyle({ name, resolve: () => ({}) })],
+              diagramThemeStyles: [defineDiagramThemeStyle({ name, resolve: () => ({}) })],
+            }),
+          ],
+        }),
+        themeStyles: [defineThemeStyle({ name, resolve: () => ({}) })],
+        measureText: (text, font) => ({
+          width: (text.length * font.size) / 2,
+          height: font.size,
+          ascent: font.size * 0.8,
+          descent: font.size * 0.2,
+        }),
+      },
+    );
+    const artifact = FlowDiagramArtifactSchema.parse(
+      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
+    );
+    const root = artifact.elements[0];
+    if (root.kind !== 'layout') throw new Error('Expected layout');
+    const [first, second] = root.elements;
+    if (first.kind !== 'layout' || second.kind !== 'layout') throw new Error('Expected rows');
+    const rectangles = (items: ReadonlyArray<ScenePrimitive>): Array<Extract<ScenePrimitive, { type: 'rect' }>> =>
+      items.flatMap(item => (item.type === 'group' ? rectangles(item.children) : item.type === 'rect' ? [item] : []));
+    const rects = rectangles(result.scene.primitives);
+    expect(rects).toHaveLength(4);
+    const entities = [...first.elements, ...second.elements];
+    rects.forEach((rect, index) => expect(rect.width).toBeCloseTo(entities[index].bounds.width, 2));
+    expect(rects[0].x).toBeCloseTo(rects[2].x, 2);
+    expect(rects[1].x + rects[1].width).toBeCloseTo(rects[3].x + rects[3].width, 2);
+  });
   it('以自然最大行宽分配预算，节点均分增量且保留差异和间距', () => {
     const natural = compile(source(false));
     const filled = compile(source());

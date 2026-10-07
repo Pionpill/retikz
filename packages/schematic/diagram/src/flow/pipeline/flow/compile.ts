@@ -114,6 +114,7 @@ export const createCompileFlowDiagram =
     source: IRFlowDiagram,
     context: LayoutCompositeCompileContext,
   ): LayoutCompositeCompileResult<FlowDiagramArtifact> => {
+    if (source.theme !== undefined) context = context.withTheme(source.theme);
     const definition = options.flowLayouts.defaultLayout;
     const diagram = resolveFlowDiagram(source, {
       theme: context.theme,

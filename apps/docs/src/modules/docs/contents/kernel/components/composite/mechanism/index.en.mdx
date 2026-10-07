@@ -52,6 +52,8 @@ Plain text has an explicit wrapping measurement contract: a finite width can wra
 
 ### Selection, failure, and commit
 
+When a composite accepts a local `theme`, first create a local compilation context with `context.withTheme(theme)` and use it for measurement and `resolvePathTargets()` queries. It uses Core's registered theme definitions, preserves the parent context, and shares input and replay ownership with the original context. Declare the same final theme boundary with `context.scope({ theme }, children)`; applying the theme only to the output can make measured font sizes and node bounds differ from the drawing.
+
 Each `layoutChild()` runs in an isolated transaction. A parent solver may compare several minimum / natural / range / exact candidates. Discarded resolved results and failed outcomes leak no primitives, resources, warnings, artifacts, namespaces, identities, or observations. Select success with `context.replay(result)`; select failure with `context.raise(failure)`, which preserves the original provider, source path, cause, and complete nested probe occurrence.
 
 Failures, results, replays, and output children are governed by callback-local, compile-local identity. They cannot be forged, reused after copying, passed across callbacks / compiles, or committed twice. An occurrence's `probe[index]` records candidate child dispatch, while `replay[index]` records final output commit; these are different stages.
