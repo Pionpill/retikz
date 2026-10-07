@@ -64,3 +64,13 @@ export const CellLayoutDefaultsSchema = CellLayoutSchema.extend({
   padding: CellLayoutSchema.shape.padding.default(8),
   overflow: CellLayoutSchema.shape.overflow.default('visible'),
 }).describe('Base cell layout defaults applied after inheritance.');
+
+/** 嵌套集合的外层单格默认不再叠加背景 */
+export const NestedCollectionCellDefaultsSchema = CellDefaultsSchema.extend({
+  fill: CellStyleSchema.shape.fill.default('none'),
+});
+
+/** 嵌套集合自行组织内部留白，外层单格默认不增加内边距 */
+export const NestedCollectionCellLayoutDefaultsSchema = CellLayoutDefaultsSchema.extend({
+  padding: CellLayoutSchema.shape.padding.default(0),
+});

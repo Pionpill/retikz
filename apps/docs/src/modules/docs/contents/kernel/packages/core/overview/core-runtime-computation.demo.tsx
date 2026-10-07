@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
-/** Core 把完整 IR Snapshot 编译为由 Runtime 原子发布的 public artifact */
+/** Core 把完整 IR Snapshot 编译为由 Runtime 原子发布的 public result */
 const Demo: FC = () => (
   <Layout>
     <Node

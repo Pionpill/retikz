@@ -65,7 +65,9 @@ Plot、Table、Graph 等领域包先把 channel、scale、表格规则、图式�
 ## 非目标
 
 - 排版布局 schema、solver、artifact、inspection 与 adapter
-- Tree、Layered、Force、GraphModel、edge routing 与碰撞避让
+- 一般图的 Tree / Layered / Force 算法布局、GraphModel、自动 edge routing 与碰撞避让
 - Plot / Table 数据语义、Graph 图式语义、领域 provenance 与交互
 - Core IR、Scene、renderer、运行时资源或编辑器状态
 - 兼容 re-export、双 namespace、隐式全局注册或跨 package 私有导入
+
+显式递归输入的静态 Tree 集合呈现可由 Standard 拥有：节点与父子连接复用 Core，子树仅按自然包络作确定排列，不提供一般图算法布局。公开契约草案见 [v0.1 ADR-042](../decisions/standard/v0/v0.1/042-tree-presentation.md)。

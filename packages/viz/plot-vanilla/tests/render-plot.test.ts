@@ -1,5 +1,6 @@
 import { compileToScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { defineFieldOrder } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
@@ -667,4 +668,39 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('<path');
     expect(svg).toContain('<ellipse');
   });
+});
+
+it('renders a registered category order identically to its explicit domain', () => {
+  const definition = defineFieldOrder({ name: 'length', compare: (a, b) => String(a).length - String(b).length });
+  const ordered: IRPlot = {
+    ...spec,
+    data: {
+      reference: 'sales',
+      model: [
+        { name: 'month', type: 'categorical', order: 'length' },
+        { name: 'revenue', type: 'continuous' },
+      ],
+    },
+    scales: [
+      { name: 'x', type: 'band' },
+      { name: 'y', type: 'linear' },
+    ],
+  };
+  const rows = {
+    sales: [
+      { month: 'bbb', revenue: 1 },
+      { month: 'a', revenue: 2 },
+    ],
+  };
+  const expected: IRPlot = {
+    ...ordered,
+    data: {
+      reference: 'sales',
+      model: [
+        { name: 'month', type: 'categorical', order: ['a', 'bbb'] },
+        { name: 'revenue', type: 'continuous' },
+      ],
+    },
+  };
+  expect(renderPlot(ordered, rows, { fieldOrderDefinitions: [definition] })).toEqual(renderPlot(expected, rows));
 });

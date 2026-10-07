@@ -174,7 +174,7 @@ export type IRGrid = Omit<ZodInput<typeof GridSchema>, keyof IRScopeProps | 'bou
 <p>
   <ApiSourceLink
     label={'GridDefinition'}
-    path={'packages/library/standard/src/presentation/grid/definition.ts'}
+    path={'packages/library/standard/src/presentation/grid/composite.ts'}
     startLine={10}
   >
     Official Core composite definition for Standard Grid
@@ -195,8 +195,8 @@ export const GridDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'GridProvider'}
-    path={'packages/library/standard/src/presentation/grid/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/presentation/grid/composite.ts'}
+    startLine={25}
   >
     Core composite dependency provider for Grid
   </ApiSourceLink>
@@ -214,7 +214,11 @@ export const GridProvider: CoreDependencyProvider = Object.freeze({
 #### createGrid
 
 <p>
-  <ApiSourceLink label={'createGrid'} path={'packages/library/standard/src/presentation/grid/factory.ts'} startLine={5}>
+  <ApiSourceLink
+    label={'createGrid'}
+    path={'packages/library/standard/src/presentation/grid/composite.ts'}
+    startLine={18}
+  >
     Assemble a persistent Standard Grid composite
   </ApiSourceLink>
 </p>

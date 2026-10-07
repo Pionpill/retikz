@@ -484,24 +484,35 @@ export type FlowGroupProps = FlowGroupMarkerProps &
 - `FlowLayout`: <ApiSourceLink label={"FlowLayout"} path={"packages/schematic/diagram-react/src/flow/FlowLayout.tsx"} startLine={20}>Declare an authored, shell-free Layout inside FlowDiagram</ApiSourceLink>
 - `FlowLayoutProps`: <ApiSourceLink label={"FlowLayoutProps"} path={"packages/schematic/diagram-react/src/flow/FlowLayout.tsx"} startLine={11}>React authoring props for a Flow Layout</ApiSourceLink>
 
+**Common members**
+
+<ApiTable>
+
+| Member               | Type            | Default | Description                                                                                           |
+| -------------------- | --------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `readonly children?` | `ReactNode`     | —       | Recursive Flow Entity, Group, or Layout children                                                      |
+| `excludeFromBounds?` | `Array<string>` | —       | Direct child ids excluded from this Layout bounds, without removing their local placement or drawing. |
+| `id`                 | `string`        | —       | Flow-wide authored Layout identity.                                                                   |
+| `rank?`              | `number`        | —       | Optional rank constraint within the parent Flow scope.                                                |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="linear">
 
 <DocTab value="linear" label="Members · Linear placement">
 
 <ApiTable>
 
-| Member               | Type                                  | Default | Description                                                                                                                                                                                                                                                         |
-| -------------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `align?`             | `"center" \| "start" \| "end"`        | —       | Optional cross-axis alignment; omission resolves to center.                                                                                                                                                                                                         |
-| `readonly children?` | `ReactNode`                           | —       | Recursive Flow Entity, Group, or Layout children                                                                                                                                                                                                                    |
-| `containerWidth?`    | `"match-largest"`                     | —       | Equalize direct horizontal Layout or single-row Group widths to their natural maximum in an up/down linear Layout. Does not stretch descendants without itemWidth fill.                                                                                             |
-| `direction`          | `"right" \| "left" \| "up" \| "down"` | —       | Required authored direction for direct children placement.                                                                                                                                                                                                          |
-| `excludeFromBounds?` | `Array<string>`                       | —       | Direct child ids excluded from this Layout bounds, without removing their local placement or drawing.                                                                                                                                                               |
-| `gap?`               | `number`                              | —       | Optional gap between direct children in user units.                                                                                                                                                                                                                 |
-| `id`                 | `string`                              | —       | Flow-wide authored Layout identity.                                                                                                                                                                                                                                 |
-| `itemWidth?`         | `number \| "fill" \| "match-largest"` | —       | Direct Entity visible-width strategy: a number fixes width, match-largest equalizes natural widths, and fill shares positive free width over non-fixed Entities in a horizontal row receiving containerWidth allocation while preserving natural width differences. |
-| `kind`               | `"linear"`                            | —       | One-dimensional placement discriminator.                                                                                                                                                                                                                            |
-| `rank?`              | `number`                              | —       | Optional rank constraint within the parent Flow scope.                                                                                                                                                                                                              |
+| Member            | Type                                  | Default | Description                                                                                                                                                                                                                                                         |
+| ----------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `align?`          | `"center" \| "start" \| "end"`        | —       | Optional cross-axis alignment; omission resolves to center.                                                                                                                                                                                                         |
+| `containerWidth?` | `"match-largest"`                     | —       | Equalize direct horizontal Layout or single-row Group widths to their natural maximum in an up/down linear Layout. Does not stretch descendants without itemWidth fill.                                                                                             |
+| `direction`       | `"right" \| "left" \| "up" \| "down"` | —       | Required authored direction for direct children placement.                                                                                                                                                                                                          |
+| `gap?`            | `number`                              | —       | Optional gap between direct children in user units.                                                                                                                                                                                                                 |
+| `itemWidth?`      | `number \| "fill" \| "match-largest"` | —       | Direct Entity visible-width strategy: a number fixes width, match-largest equalizes natural widths, and fill shares positive free width over non-fixed Entities in a horizontal row receiving containerWidth allocation while preserving natural width differences. |
+| `kind`            | `"linear"`                            | —       | One-dimensional placement discriminator.                                                                                                                                                                                                                            |
 
 </ApiTable>
 
@@ -513,14 +524,10 @@ export type FlowGroupProps = FlowGroupMarkerProps &
 
 | Member               | Type                                                                               | Default | Description                                                                                                                           |
 | -------------------- | ---------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly children?` | `ReactNode`                                                                        | —       | Recursive Flow Entity, Group, or Layout children                                                                                      |
-| `excludeFromBounds?` | `Array<string>`                                                                    | —       | Direct child ids excluded from this Layout bounds, without removing their local placement or drawing.                                 |
 | `gap?`               | `number \| { row: number; column: number; }`                                       | —       | Grid track gaps. A number applies to both axes; omission uses inherited nodeGap or physical-axis defaults.                            |
-| `id`                 | `string`                                                                           | —       | Flow-wide authored Layout identity.                                                                                                   |
 | `itemWidth?`         | `number \| "match-largest"`                                                        | —       | Optional direct Entity visible-width strategy. Numeric values are fixed widths; match-largest uses this Layout scope natural maximum. |
 | `kind`               | `"grid"`                                                                           | —       | Shared row and column placement discriminator.                                                                                        |
 | `placements`         | `Record<string, { row: number; column: number; }> \| Array<Array<string \| null>>` | —       | Grid positions as a recommended row-major matrix or an id-keyed row and column mapping.                                               |
-| `rank?`              | `number`                                                                           | —       | Optional rank constraint within the parent Flow scope.                                                                                |
 | `reserveLabelSpace?` | `false \| true`                                                                    | —       | Whether measured relation labels expand their matching Grid track gap. Omission enables reservation.                                  |
 
 </ApiTable>
@@ -1169,18 +1176,29 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                       | Default | Description                                                                  |
+| ----------------- | -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `readonly kind`   | `'bend'`                                                                   | —       | Identifies a bend reference route with resolved parameters                   |
+| `readonly points` | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Reference endpoints in root-local coordinates, ordered from source to target |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="symmetric">
 
 <DocTab value="symmetric" label="Members · Symmetric bend">
 
 <ApiTable>
 
-| Member                   | Type                                                                       | Default | Description                                                                  |
-| ------------------------ | -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
-| `readonly bendAngle`     | `number`                                                                   | —       | Bend angle in degrees                                                        |
-| `readonly bendDirection` | `'left' \| 'right'`                                                        | —       | Bend side relative to the source-to-target direction                         |
-| `readonly kind`          | `'bend'`                                                                   | —       | Identifies a bend reference route with resolved parameters                   |
-| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Reference endpoints in root-local coordinates, ordered from source to target |
+| Member                   | Type                | Default | Description                                          |
+| ------------------------ | ------------------- | ------- | ---------------------------------------------------- |
+| `readonly bendAngle`     | `number`            | —       | Bend angle in degrees                                |
+| `readonly bendDirection` | `'left' \| 'right'` | —       | Bend side relative to the source-to-target direction |
 
 </ApiTable>
 
@@ -1190,13 +1208,11 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
 
 <ApiTable>
 
-| Member               | Type                                                                       | Default | Description                                                                  |
-| -------------------- | -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
-| `readonly inAngle`   | `number`                                                                   | —       | Control direction at the target endpoint, in degrees                         |
-| `readonly kind`      | `'bend'`                                                                   | —       | Identifies a bend reference route with resolved parameters                   |
-| `readonly looseness` | `number`                                                                   | —       | Looseness factor controlling curve control-arm lengths                       |
-| `readonly outAngle`  | `number`                                                                   | —       | Outgoing tangent angle at the source endpoint, in degrees                    |
-| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Reference endpoints in root-local coordinates, ordered from source to target |
+| Member               | Type     | Default | Description                                               |
+| -------------------- | -------- | ------- | --------------------------------------------------------- |
+| `readonly inAngle`   | `number` | —       | Control direction at the target endpoint, in degrees      |
+| `readonly looseness` | `number` | —       | Looseness factor controlling curve control-arm lengths    |
+| `readonly outAngle`  | `number` | —       | Outgoing tangent angle at the source endpoint, in degrees |
 
 </ApiTable>
 
@@ -1238,17 +1254,28 @@ export type FlowBendRoute = Readonly<{
   </ApiSourceLink>
 </p>
 
+**Common members**
+
+<ApiTable>
+
+| Member            | Type                                                                       | Default | Description                                              |
+| ----------------- | -------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
+| `readonly points` | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Center reference endpoints ordered from source to target |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
 <DocTabs defaultValue="curve">
 
 <DocTab value="curve" label="Members · Quadratic Bezier">
 
 <ApiTable>
 
-| Member             | Type                                                                       | Default | Description                                              |
-| ------------------ | -------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
-| `readonly control` | `Readonly<Position>`                                                       | —       | Resolved quadratic control, not a point on the curve     |
-| `readonly kind`    | `'curve'`                                                                  | —       | Quadratic Bezier reference geometry                      |
-| `readonly points`  | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Center reference endpoints ordered from source to target |
+| Member             | Type                 | Default | Description                                          |
+| ------------------ | -------------------- | ------- | ---------------------------------------------------- |
+| `readonly control` | `Readonly<Position>` | —       | Resolved quadratic control, not a point on the curve |
+| `readonly kind`    | `'curve'`            | —       | Quadratic Bezier reference geometry                  |
 
 </ApiTable>
 
@@ -1258,12 +1285,11 @@ export type FlowBendRoute = Readonly<{
 
 <ApiTable>
 
-| Member              | Type                                                                       | Default | Description                                              |
-| ------------------- | -------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
-| `readonly control1` | `Readonly<Position>`                                                       | —       | Resolved source tangent control                          |
-| `readonly control2` | `Readonly<Position>`                                                       | —       | Resolved target tangent control                          |
-| `readonly kind`     | `'cubic'`                                                                  | —       | Cubic Bezier reference geometry                          |
-| `readonly points`   | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Center reference endpoints ordered from source to target |
+| Member              | Type                 | Default | Description                     |
+| ------------------- | -------------------- | ------- | ------------------------------- |
+| `readonly control1` | `Readonly<Position>` | —       | Resolved source tangent control |
+| `readonly control2` | `Readonly<Position>` | —       | Resolved target tangent control |
+| `readonly kind`     | `'cubic'`            | —       | Cubic Bezier reference geometry |
 
 </ApiTable>
 

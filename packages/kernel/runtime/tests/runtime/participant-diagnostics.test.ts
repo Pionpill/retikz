@@ -30,7 +30,7 @@ const defineCounterSource = (key = 'counter') =>
 describe('runtime runtime participant diagnostics', () => {
   it('trace facade 不暴露 drain，Runtime 在 diagnose/callback 后归属 reporter diagnostics', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     let capturedContext: RuntimeParticipantContext | undefined;
     const participant = defineRuntimeCommitParticipant({
@@ -91,7 +91,7 @@ describe('runtime runtime participant diagnostics', () => {
 
   it('无效 diagnose 输入转 execution diagnostic，不向 callback 反抛', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const participant = defineRuntimeCommitParticipant({
       key: 'renderer',
@@ -128,7 +128,7 @@ describe('runtime runtime participant diagnostics', () => {
 
   it('initial prepare throw 时 warning 与 trace execution diagnostics 进入 primary envelope', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const trigger = new Error('prepare failed');
     const participant = defineRuntimeCommitParticipant({
@@ -178,7 +178,7 @@ describe('runtime runtime participant diagnostics', () => {
   it('CandidateView 自身的 undeclared dependency 原样传播，participant 伪造 RetikzRuntimeError 仍被包装', () => {
     const owner = defineCounterSource();
     const foreign = defineCounterSource('foreign');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner, foreign] });
+    const sources = createRuntimeSourceRegistry([owner, foreign]);
     const computations = createRuntimeComputationRegistry({ sources });
     const undeclared = defineRuntimeCommitParticipant({
       key: 'undeclared',

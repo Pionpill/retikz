@@ -8,7 +8,75 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
-const translations: Readonly<Record<string, string>> = {
+const translations: Record<string, string> = {
+  'Tree 使用 root 递归描述文字叶节点与对象配置':
+    'Tree describes text leaves and configured nodes recursively through root',
+  '静态树结构，节点与连接交由 Standard 编译': 'Static tree with nodes and connections compiled by Standard',
+  'Tree 的 root 输入，保留节点配置与作用域属性': 'Tree root input retaining node configuration and scope properties',
+  'Tree 通过同一 Standard composite 下沉': 'Tree lowers through the shared Standard composite',
+  '创建保持稀疏输入的 Tree embed': 'Create a Tree embed preserving sparse input',
+  '以 root 描述结构并保留完整 Scope 的静态树 Source':
+    'Static Tree Source with root structure and full Scope properties',
+  保留作者稀疏字段与有序递归结构: 'Preserve sparse author fields and ordered recursive structure',
+  'Tree 的布局感知编译定义': 'Layout-aware compilation definition for Tree',
+  'Tree 复用 Core 内置节点和路径，扩展形状由宿主装配':
+    'Tree reuses Core nodes and paths; the host registers custom shapes',
+
+  '按顺序提供的文本或单元格，与数据和骨架入口互斥': 'Ordered text or cells, mutually exclusive with data and skeleton',
+  '用于展开单元格的数据，与显式单元格和骨架入口互斥':
+    'Data expanded into cells, mutually exclusive with explicit cells and skeleton',
+  '用于构造空单元格的结构声明，与其它内容入口互斥': 'Schematic empty cells, mutually exclusive with other inputs',
+  '按行排列的二维单元格，与数据和骨架入口互斥': 'Rows of cells, mutually exclusive with data and skeleton',
+  '用于展开矩阵的二维数据，与其它内容入口互斥':
+    'Two-dimensional data expanded into a matrix, mutually exclusive with other inputs',
+
+  '供各格继承的集合视觉样式，格内显式字段可覆盖对应值':
+    'Shared visual styles inherited by cells; explicit cell fields override matching values',
+  'Map 集合的整体与键值角色样式输入': 'Shared Map styles and key/value role overrides',
+  '用于展开键值对的数据，与 entries、skeleton 和 children 互斥':
+    'Data expanded into key/value pairs, mutually exclusive with entries, skeleton, and children',
+  '显式键值对序列，各侧接受文本或带样式的单元格': 'Explicit key/value pairs, with text or styled cells on either side',
+  '由 MapEntry 及其键、值 marker 组成的映射条目': 'Map entries declared with MapEntry and its key/value markers',
+  '用于构造空键值对的结构声明，与其它内容入口互斥': 'Schematic key/value pairs, mutually exclusive with other inputs',
+  '按顺序提供的显式键值对，与数据和骨架入口互斥':
+    'Ordered explicit key/value pairs, mutually exclusive with data and skeleton',
+  '用于展开键值对的数据，与其它内容入口互斥':
+    'Data expanded into key/value pairs, mutually exclusive with other inputs',
+  '从数据值展开单元格；与 items、skeleton 和 children 互斥':
+    'Cells expanded from data, mutually exclusive with items, skeleton, and children',
+  '按顺序提供文本或带样式的单元格；与其它内容入口互斥':
+    'Ordered text or styled cells, mutually exclusive with other inputs',
+  '直接使用 ArrayItem 声明单元格；不接受其它直属 marker':
+    'Cells declared with ArrayItem; other direct markers are not accepted',
+  '只声明空单元格结构；与数据、显式单元格和 JSX 内容互斥':
+    'Schematic empty cells, mutually exclusive with data, explicit cells, and JSX content',
+  '按行排列的显式二维单元格，每格接受文本或带样式的单元格':
+    'Explicit rows of cells, each accepting text or a styled cell',
+  '用于展开矩阵单元格的二维数据，与其它内容入口互斥':
+    'Two-dimensional data expanded into matrix cells, mutually exclusive with other inputs',
+  '用于构造空矩阵的行列结构，与其它内容入口互斥':
+    'Schematic matrix rows and columns, mutually exclusive with other inputs',
+  '由 MatrixRow 及其 MatrixCell 组成的矩阵行列声明': 'Matrix rows and cells declared with MatrixRow and MatrixCell',
+
+  链整体的连接线默认配置: 'Default connection settings for the chain',
+  '显式串行项及嵌套并行分支，与其它内容入口互斥':
+    'Explicit sequential items and nested parallel branches, mutually exclusive with other inputs',
+  '用于展开链单元格的数据，与 items、skeleton 和 children 互斥':
+    'Data expanded into chain cells, mutually exclusive with items, skeleton, and children',
+  '仅对 data 入口生效的数据展开策略': 'Data expansion policy used only by the data input',
+  '用于构造空链项的结构声明，与其它内容入口互斥': 'Schematic chain structure, mutually exclusive with other inputs',
+  '由 ChainCell、ChainParallel 与 ChainBranch 组成的链结构声明':
+    'Chain structure declared with ChainCell, ChainParallel, and ChainBranch',
+  '显式串行项与并行分支，与数据和骨架入口互斥':
+    'Explicit sequential items and parallel branches, mutually exclusive with data and skeleton',
+  '用于展开链项的数据，与其它内容入口互斥': 'Data expanded into chain items, mutually exclusive with other inputs',
+  仅用于数据入口的展开策略: 'Expansion policy used only by the data input',
+  '显式链项序列，与数据和骨架入口互斥': 'Explicit chain item sequence, mutually exclusive with data and skeleton',
+  '用于展开链项的数据，与显式链项和骨架入口互斥':
+    'Data expanded into chain items, mutually exclusive with explicit items and skeleton',
+  只对数据入口生效的展开策略: 'Expansion policy used only by the data input',
+  '不含数据内容的链结构，与其它内容入口互斥':
+    'Chain structure without data content, mutually exclusive with other inputs',
   '单元格文本，与绘制子内容互斥': 'Cell text, mutually exclusive with drawing content',
   '恰好一个可编译的绘制子内容，与 text 互斥': 'Exactly one compilable drawing child, mutually exclusive with text',
   '当前条目的 MapKey 与 MapValue 声明': 'MapKey and MapValue declarations for this entry',
@@ -143,21 +211,63 @@ const translations: Readonly<Record<string, string>> = {
 const translateCollectionApiReference = (source: string): string =>
   translations[source] ?? translateDrawApiReference(source);
 
+for (const [source, translation] of Object.entries(translations)) {
+  if (source.includes('Array'))
+    translations[source.replaceAll('Array', 'Stack').replace('空数组', '空栈')] = translation
+      .replaceAll('Array', 'Stack')
+      .replace('empty array', 'empty stack');
+}
+Object.assign(translations, {
+  '栈底到栈顶的稀疏 Source，三种输入互斥': 'Sparse bottom-to-top Source with three mutually exclusive inputs',
+  '显式单格，最后一项为栈顶': 'Explicit cells with the last item at the top',
+  'JSON 数据，按输入顺序堆叠': 'JSON data stacked in input order',
+  嵌套数据展开选择: 'Nested data expansion selection',
+  无真实数据的单格骨架: 'Cell skeleton without real data',
+  保留作者稀疏字段与栈底到栈顶顺序: 'Preserve sparse author fields and bottom-to-top order',
+  'Stack 的布局感知编译定义': 'Layout-aware compilation definition for Stack',
+  'Stack 及单格裁切依赖': 'Stack and cell clipping dependencies',
+});
+
+for (const [source, translation] of Object.entries(translations)) {
+  if (source.includes('Stack'))
+    translations[source.replaceAll('Stack', 'Queue').replaceAll('空栈', '空队列')] = translation
+      .replaceAll('Stack', 'Queue')
+      .replaceAll('empty stack', 'empty queue');
+}
+Object.assign(translations, {
+  'JSON 数据，按队首到队尾排列': 'JSON data ordered from front to back',
+  '队首到队尾的稀疏 Source，三种输入互斥': 'Sparse front-to-back Source with three mutually exclusive inputs',
+  '显式单格，最后一项为队尾': 'Explicit cells with the last item at the back',
+  保留作者稀疏字段与队首到队尾顺序: 'Preserve sparse author fields and front-to-back order',
+});
+
 /** 从三个公开 collection 入口生成组件局部参考，嵌入合页 API 小节 */
 export const writeStandardCollectionApiReferences = async (
   outputRoot: string,
-  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain'> = ['Array', 'Map', 'Matrix', 'Chain'],
+  names: ReadonlyArray<'Array' | 'Map' | 'Matrix' | 'Chain' | 'Stack' | 'Queue' | 'Tree'> = [
+    'Array',
+    'Map',
+    'Matrix',
+    'Chain',
+    'Stack',
+    'Queue',
+    'Tree',
+  ],
 ): Promise<void> => {
   for (const name of names) {
     const slug = name.toLowerCase();
     const markers =
-      name === 'Chain'
-        ? ['ChainCell', 'ChainParallel', 'ChainBranch']
-        : name === 'Array'
-          ? ['ArrayItem']
-          : name === 'Matrix'
-            ? ['MatrixRow', 'MatrixCell']
-            : ['MapEntry', 'MapKey', 'MapValue'];
+      name === 'Tree'
+        ? []
+        : name === 'Stack' || name === 'Queue'
+          ? [`${name}Item`]
+          : name === 'Chain'
+            ? ['ChainCell', 'ChainParallel', 'ChainBranch']
+            : name === 'Array'
+              ? ['ArrayItem']
+              : name === 'Matrix'
+                ? ['MatrixRow', 'MatrixCell']
+                : ['MapEntry', 'MapKey', 'MapValue'];
 
     const owners = [
       {

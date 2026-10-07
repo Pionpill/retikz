@@ -27,7 +27,7 @@ import type {
 import { CORE_COMPUTATION_ID } from './public';
 import { tryCompileRootNodeStyleUpdate } from './root-node-style';
 import { createFullSceneRuntimeSnapshot, freezeComputationOutput } from './snapshot';
-import type { CoreComputationArtifact, CoreComputationArtifactInput, CoreComputationRead } from './types';
+import type { CoreComputationResult, CoreComputationResultInput, CoreComputationRead } from './types';
 
 /** 缺省 warning sink 与 compileToScene 保持一致 */
 const dispatchDefaultWarning = (warning: CompileWarning): void => {
@@ -56,8 +56,8 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
   const warningSink = fixedOptions.onWarn ?? dispatchDefaultWarning;
 
   const definition = defineRuntimeComputation<
-    CoreComputationArtifactInput<TComposites>,
-    CoreComputationArtifact<TComposites>,
+    CoreComputationResultInput<TComposites>,
+    CoreComputationResult<TComposites>,
     CoreComputationRead<TComposites>,
     CoreComputationPublicRead<TComposites>
   >({
@@ -80,10 +80,10 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
       },
     ],
-    artifact: {
+    result: {
       capture: input => input,
-      readForComputation: artifact => Object.freeze({ ...artifact.publicRead, state: artifact.state }),
-      read: artifact => artifact.publicRead,
+      readForComputation: result => Object.freeze({ ...result.publicRead, state: result.state }),
+      read: result => result.publicRead,
     },
     run: (view, context) => {
       const source = view.snapshot(CoreSourceDefinition).value;
@@ -161,7 +161,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
 
       return {
         kind: RuntimeComputationKind.Full,
-        artifact: Object.freeze({
+        result: Object.freeze({
           publicRead,
           state: Object.freeze({ source, index: createCoreSnapshotIndex(source) }),
         }),
@@ -169,9 +169,9 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
     },
     update: (previous, view, context) => {
       if (view.phase !== RuntimeComputationPhase.Update) return { kind: RuntimeComputationKind.Fallback };
-      if (compositeInputSource !== undefined && view.changed(compositeInputSource))
+      if (compositeInputSource !== undefined && view.isChanged(compositeInputSource))
         return { kind: RuntimeComputationKind.Fallback };
-      if (invalidationSources.some(owner => view.changed(owner))) {
+      if (invalidationSources.some(owner => view.isChanged(owner))) {
         return { kind: RuntimeComputationKind.Fallback };
       }
 
@@ -224,10 +224,10 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
         changed: incremental.operationCount,
       });
 
-      return { kind: RuntimeComputationKind.Incremental, artifact: incremental.artifact };
+      return { kind: RuntimeComputationKind.Incremental, result: incremental.result };
     },
     observeCommit: event => {
-      event.artifact.value.output.diagnostics.forEach(warningSink);
+      event.result.value.output.diagnostics.forEach(warningSink);
     },
   });
 

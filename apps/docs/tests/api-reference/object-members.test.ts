@@ -10,6 +10,17 @@ import { createApiReferenceMdx } from '../../scripts/api-reference/tex';
 
 vi.mock('../../scripts/api-reference/branch-labels', () => ({
   apiReferenceBranchLabels: {
+    'object-reference-fixture#LargeUnion': [
+      { value: 'text', field: 'value', required: true, label: { zh: '文本', en: 'Text' } },
+      {
+        value: 'data',
+        field: 'optional',
+        required: false,
+        and: [{ field: 'payload', required: true }],
+        label: { zh: '数据', en: 'Data' },
+      },
+      { value: 'empty', field: 'kind', type: "'empty'", label: { zh: '空', en: 'Empty' } },
+    ],
     'object-reference-fixture#GenericMarker': [
       { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
       { value: 'children', field: 'children', type: 'Nested', label: { zh: '子项', en: 'Children' } },
@@ -57,6 +68,20 @@ interface Base {
   retries?: number;
   nested: Nested;
 }
+interface SharedFields {
+  ${Array.from({ length: 22 }, (_, index) => `shared${index}?: string;`).join('\n')}
+}
+export type LargeUnion = SharedFields & (
+  | { kind: 'text'; value: string; payload?: never; optional: number; readonly mutable: string;
+      /** Text description */
+      description?: string }
+  | { kind: 'data'; value?: never; payload: Nested; optional?: number; mutable: string;
+      /** Data description */
+      description?: string }
+  | { kind: 'empty'; value?: never; payload?: never; optional?: number; mutable: string;
+      /** Empty description */
+      description?: string }
+);
 export type Selected = Pick<Base, 'id' | 'retries'>;
 export type Omitted = Omit<Base, 'id'>;
 export type Optional = Partial<Base>;
@@ -164,10 +189,26 @@ export type IndexedProps = IndexedMarker;
     const branch = (value: string) => marker.split(`<DocTab value="${value}"`)[1]?.split('</DocTab>')[0] ?? '';
 
     for (const value of ['text', 'children']) {
-      expect(branch(value)).toContain('| `readonly id?` | `string`');
-      expect(branch(value)).toContain('| `layout?` | `{ width: number; }`');
+      expect(branch(value)).not.toContain('| `readonly id?` | `string`');
+      expect(branch(value)).not.toContain('| `layout?` | `{ width: number; }`');
       expect(branch(value)).not.toContain('Omit<');
     }
+
+    expect(marker.match(/\| `readonly id\?` \|/g)).toHaveLength(1);
+    expect(marker.match(/\| `layout\?` \|/g)).toHaveLength(1);
+    const large = section('LargeUnion');
+    expect(large).toContain('Common members');
+    expect(large.match(/\| `shared0\?` \|/g)).toHaveLength(1);
+    const textBranch = large.split('<DocTab value="text"')[1]?.split('</DocTab>')[0] ?? '';
+    const dataBranch = large.split('<DocTab value="data"')[1]?.split('</DocTab>')[0] ?? '';
+    expect(textBranch).toContain('Text description');
+    expect(dataBranch).toContain('Data description');
+    expect(textBranch).toContain('| `payload?` | `never`');
+    expect(dataBranch).toContain('| `payload` | `Nested`');
+    expect(textBranch).toContain('| `optional` | `number`');
+    expect(dataBranch).toContain('| `optional?` | `number`');
+    expect(textBranch).toContain('| `readonly mutable` | `string`');
+    expect(dataBranch).toContain('| `mutable` | `string`');
 
     expect(branch('text')).toContain('| `text` | `string`');
     expect(branch('text')).toContain('| `children?` | `never`');

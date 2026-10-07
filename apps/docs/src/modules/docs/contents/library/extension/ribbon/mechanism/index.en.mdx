@@ -26,37 +26,37 @@ The responsibilities in one compile are:
       label: 'Ribbon Definition and profile injection',
       path: 'packages/library/extension/src/ribbon/definition.ts',
       startLine: 14,
-      endLine: 39,
+      endLine: 40,
     },
     {
       label: 'Ribbon provider contribution',
       path: 'packages/library/extension/src/ribbon/provider.ts',
       startLine: 5,
-      endLine: 40,
+      endLine: 60,
     },
     {
       label: 'Core host-neutral Path kind services',
       path: 'packages/kernel/core/src/contract/path-kind/types.ts',
-      startLine: 110,
-      endLine: 153,
+      startLine: 129,
+      endLine: 172,
     },
     {
       label: 'Core Path kind lookup and subject-schema parsing',
       path: 'packages/kernel/core/src/resolve/path/provider.ts',
-      startLine: 26,
-      endLine: 41,
+      startLine: 27,
+      endLine: 42,
     },
     {
       label: 'Core path materialization and host-label orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 551,
-      endLine: 616,
+      startLine: 586,
+      endLine: 657,
     },
     {
       label: 'Ribbon outline and label output',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 107,
-      endLine: 195,
+      startLine: 108,
+      endLine: 201,
     },
   ]}
 />
@@ -93,20 +93,20 @@ All original segment joints and width `stops` are then added, sorted, and dedupl
     {
       label: 'Segment lengths and distance inversion',
       path: 'packages/library/extension/src/ribbon/geometry/centerline.ts',
-      startLine: 195,
-      endLine: 233,
+      startLine: 208,
+      endLine: 251,
     },
     {
       label: 'Base sample count',
       path: 'packages/library/extension/src/ribbon/geometry/width.ts',
-      startLine: 90,
-      endLine: 97,
+      startLine: 104,
+      endLine: 111,
     },
     {
       label: 'Retain segment joints and width stops',
       path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
-      startLine: 53,
-      endLine: 73,
+      startLine: 74,
+      endLine: 98,
     },
   ]}
 />
@@ -129,20 +129,20 @@ Sampled sides therefore usually use interpolating curves, with lines for two-poi
     {
       label: 'Width allocation and section axes',
       path: 'packages/library/extension/src/ribbon/geometry/outline/cross-section.ts',
-      startLine: 22,
-      endLine: 69,
+      startLine: 34,
+      endLine: 84,
     },
     {
       label: 'Side interpolation',
       path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
-      startLine: 31,
-      endLine: 42,
+      startLine: 49,
+      endLine: 63,
     },
     {
       label: 'Chunk sampling, caps, and closure order',
       path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
-      startLine: 74,
-      endLine: 119,
+      startLine: 99,
+      endLine: 149,
     },
   ]}
 />
@@ -166,18 +166,18 @@ Width interpolation and side connection are separate steps: the former determine
 
 <SourceLinks
   sources={[
-    { label: 'Sort width stops', path: 'packages/library/extension/src/ribbon/resolve.ts', startLine: 16, endLine: 24 },
+    { label: 'Sort width stops', path: 'packages/library/extension/src/ribbon/resolve.ts', startLine: 19, endLine: 28 },
     {
       label: 'Piecewise linear and smooth width evaluation',
       path: 'packages/library/extension/src/ribbon/geometry/width.ts',
       startLine: 4,
-      endLine: 61,
+      endLine: 71,
     },
     {
       label: 'Add width stops to sample positions',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 161,
-      endLine: 176,
+      startLine: 166,
+      endLine: 181,
     },
   ]}
 />
@@ -206,20 +206,20 @@ Only the two end closures are new lines; the sides remain the supplied lines, BÃ
     {
       label: 'Materialize upper and lower sides',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 121,
-      endLine: 134,
+      startLine: 122,
+      endLine: 137,
     },
     {
       label: 'Preserve sides and close with lines',
       path: 'packages/library/extension/src/ribbon/geometry/outline/boundary.ts',
       startLine: 7,
-      endLine: 22,
+      endLine: 23,
     },
     {
       label: 'Reverse commands while preserving geometry',
       path: 'packages/library/extension/src/ribbon/geometry/commands.ts',
-      startLine: 46,
-      endLine: 69,
+      startLine: 52,
+      endLine: 80,
     },
   ]}
 />
@@ -250,26 +250,26 @@ Core then uses the text rotation to compute the layout box's projected half-exte
     {
       label: 'Cap endpoints and open-chain validation',
       path: 'packages/library/extension/src/ribbon/geometry/caps.ts',
-      startLine: 23,
-      endLine: 102,
+      startLine: 26,
+      endLine: 112,
     },
     {
       label: 'Cap projection extrema and label base points',
       path: 'packages/library/extension/src/ribbon/geometry/endpoint-label.ts',
       startLine: 10,
-      endLine: 38,
+      endLine: 41,
     },
     {
       label: 'Rotated text-box projection and offset',
       path: 'packages/kernel/core/src/compile/text/boundary-label-geometry.ts',
-      startLine: 26,
-      endLine: 67,
+      startLine: 28,
+      endLine: 78,
     },
     {
       label: 'Label sampling and final output',
       path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
-      startLine: 179,
-      endLine: 195,
+      startLine: 184,
+      endLine: 201,
     },
   ]}
 />

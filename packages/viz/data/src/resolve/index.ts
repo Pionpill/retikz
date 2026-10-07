@@ -1,4 +1,5 @@
 export * from './data-view';
+export * from './category-domain';
 export {
   assertDataTransformModel,
   assertDataTransformResult,

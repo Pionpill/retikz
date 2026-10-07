@@ -3,7 +3,7 @@ title: 契约
 description: 查询 @retikz/data 的数据引用、字段模型与通用 transform JSON schema。
 ---
 
-Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、registry 和回调在运行时注入，不进入这些 schema；字段行为与 transform 用法分别见[字段契约](/viz/data/model/contract)和[变换操作](/viz/data/transform/operations)。
+Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、registry 和回调在运行时注入，不进入这些 schema；字段行为与 transform 用法分别见[字段与类型](/viz/data/model/fields-and-types)和[变换操作](/viz/data/transform/operations)。
 
 ## DataReferenceSchema
 
@@ -22,14 +22,18 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 
 ### FieldDefinitionSchema
 
+字段声明按 `type` 分支：`categorical` 支持类别 `order`；`continuous` 与 `temporal` 禁止 `order`。省略 `type` 时保留推断，若声明了 `order`，最终解析出的字段类型必须是分类类型。
+
+`order` 接受内置或自定义的非空白名称，或非空类别数组。新增内置 `naturalAscending` / `naturalDescending`；具名顺序须在消费请求中注册，比较函数不进入 JSON。
+
 <ZodSchema
   name="FieldDefinitionSchema"
   description="单个逻辑字段的名称、测量类型、解析格式与分类顺序。"
   descriptions={{
     name: '逻辑字段名或点路径。',
-    type: '字段测量类型；省略时从数据推断。',
+    type: '字段测量类型；省略时从格式或数据推断。',
     format: '内置或自定义值解析格式；省略时使用默认 coercion。',
-    order: '分类域顺序；省略时按数据首次出现顺序。',
+    order: '仅分类字段支持的分类域顺序；省略时按数据首次出现顺序。',
   }}
 />
 
@@ -307,8 +311,8 @@ annotate 不接受 `outside-quantile-band`；`top` / `bottom` 的 `n` 固定为 
     {
       label: '数据引用与字段模型 schema',
       path: 'packages/viz/data/src/schemas/data/schema.ts',
-      startLine: 6,
-      endLine: 40,
+      startLine: 18,
+      endLine: 76,
     },
     {
       label: '通用 transform schema',
@@ -327,6 +331,6 @@ annotate 不接受 `outside-quantile-band`；`top` / `bottom` 的 `n` 固定为 
 
 ## 相关
 
-- [字段契约](/viz/data/model/contract)：字段类型、推断、格式与分类顺序的任务型说明
+- [字段与类型](/viz/data/model/fields-and-types)：字段类型、推断、格式与分类顺序的任务型说明
 - [变换操作](/viz/data/transform/operations)：sort、summarize、select 与 annotate 的使用方式
 - [运行时](/viz/data/reference/runtime)：Definition、registry、执行入口与 lineage 结果

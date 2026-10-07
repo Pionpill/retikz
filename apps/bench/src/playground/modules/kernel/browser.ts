@@ -269,8 +269,8 @@ const executeRetainedPolicy = (input: KernelLabPolicyInput, first: IRScene, seco
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
   });
-  const artifact = value.session.artifact(value.coreComputation).value;
-  const patchKinds = artifact.patch?.operations.map(operation => operation.kind) ?? [];
+  const result = value.session.result(value.coreComputation).value;
+  const patchKinds = result.patch?.operations.map(operation => operation.kind) ?? [];
   const diagnostics = value.session.diagnostics().map(diagnostic => `${diagnostic.code}: ${diagnostic.message}`);
   value.session.dispose();
   renderPreview(input, first, second);

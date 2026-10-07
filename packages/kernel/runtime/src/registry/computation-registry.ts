@@ -93,7 +93,7 @@ export const sortRuntimeComputationGraph = (
   return Object.freeze(sorted);
 };
 
-/** 合并 builtin/custom Computation Definitions 并验证 Source binding 与 DAG */
+/** 注册 Computation Definitions 并验证 Source binding 与 DAG */
 export const createRuntimeComputationRegistry = (
   input: RuntimeComputationRegistryInput,
 ): RuntimeComputationRegistry => {
@@ -101,13 +101,12 @@ export const createRuntimeComputationRegistry = (
     throw computationError(RetikzRuntimeErrorCode.RegistryMismatch, undefined, input.sources);
   }
 
-  const builtins = input.builtins ?? [];
-  const custom = input.custom ?? [];
+  const computations = input.computations ?? [];
 
   const byId = new Map<string, RuntimeComputationToken>();
   const executors = new Map<RuntimeComputationToken, RuntimeComputationErasedExecutor>();
 
-  for (const definition of [...builtins, ...custom]) {
+  for (const definition of computations) {
     if (!isRuntimeComputationDefinition(definition)) {
       throw computationError(RetikzRuntimeErrorCode.ComputationTokenInvalid, undefined, definition);
     }
@@ -135,9 +134,9 @@ export const createRuntimeComputationRegistry = (
     definition => executors.get(definition)?.computations ?? [],
   );
   const registry: RuntimeComputationRegistry = Object.freeze({
-    resolve: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-      definition: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
-    ): RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead> => {
+    resolve: <TResultInput, TResult, TComputationRead, TPublicRead>(
+      definition: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
+    ): RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead> => {
       if (!isRuntimeComputationDefinition(definition)) {
         throw computationError(RetikzRuntimeErrorCode.ComputationTokenInvalid, undefined, definition);
       }

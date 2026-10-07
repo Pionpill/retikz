@@ -1,0 +1,270 @@
+---
+title: Source
+description: Define state Sources and understand input, owned values, read views, tokens and registration
+---
+
+The [starter example](/kernel/packages/runtime/usage) stores a number, so its input, internal value and read result can share the same representation. A coordinate form instead provides strings, `{ x: '10', y: '20' }`, while internal storage needs numeric coordinates and readers can use a read-only coordinate tuple, `[10, 20]`. This page follows that position to explain how a Source defines data conversion and reading, and what each definition field does.
+
+A **Source** is a definition that tells Runtime how to receive and manage a particular kind of complete state. Our Source owns the position itself; derived results such as its distance from the origin belong to a Computation, introduced in the starter example. The Source definition is not an individual submitted object, and it does not automatically watch the form for changes.
+
+## Overall flow
+
+| Stage      | API or configuration                                    | Purpose                                         |
+| ---------- | ------------------------------------------------------- | ----------------------------------------------- |
+| Define     | `defineRuntimeSource(...)`                              | Declare how Source data is managed              |
+| Register   | `createRuntimeSourceRegistry([...])`                    | Register the available Source tokens            |
+| Initialize | `createRuntimeSourceInput(...)`, `createRuntime(...)`   | Provide initial inputs for Runtime to capture   |
+| Update     | `createRuntimeSourceUpdate(...)`, `runtime.update(...)` | Submit new inputs for publication on success    |
+| Read       | `runtime.snapshot(token)`                               | Read the published Source snapshot and revision |
+| Dispose    | `runtime.dispose()`                                     | Release Source values owned by Runtime          |
+
+First distinguish three representations: the caller's input, the value held internally by Runtime, and the view given to readers. A **view** here means the data representation readers may access, not a UI component. Follow the same position below: text fields become internal numbers, then a read-only `[x, y]` tuple.
+
+<ComponentPreview files="source-values" size="xs" hideCode type="flow" />
+
+All three representations describe the same position. Internal storage and the read view both display `[10, 20]`, but use separate arrays, and the read view is read-only:
+
+| Representation | Example data                      | Purpose                                                                                     |
+| -------------- | --------------------------------- | ------------------------------------------------------------------------------------------- |
+| Form input     | `{ x: '10', y: '20' }`            | Input fields provide text; named fields make submission straightforward                     |
+| Internal value | `[10, 20]`, ordinary tuple        | Convert to numbers and store them independently; index 0 is x and 1 is y                    |
+| Read view      | `[10, 20]`, frozen ordinary array | Readers receive an independent read-only `[x, y]` tuple, without sharing the internal array |
+
+The position has the same meaning throughout; its representation and access rules change. When no separate representation or isolation is needed, all three representations can use the same type.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Contracts for input, internal values and read views',
+      path: 'packages/kernel/runtime/src/source/types.ts',
+      startLine: 27,
+      endLine: 42,
+    },
+  ]}
+/>
+
+## Defining a Source
+
+`defineRuntimeSource(input)` defines a kind of state source. It accepts one configuration object and returns a Source token preserving the input, internal value, read value and change-hint types. Defining it does not capture data.
+
+```ts
+declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
+  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
+) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+```
+
+`defineRuntimeSource` accepts the following configuration members. The `value` object contains the rules for capturing, reading, comparing and disposing state:
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Member              | Required | Purpose                                                                                 |
+| ------------------- | -------- | --------------------------------------------------------------------------------------- |
+| `key`               | Yes      | The nonempty Source registration key, `example/position` here                           |
+| `value.capture`     | Yes      | Convert input into the internal value retained by Runtime                               |
+| `value.read`        | Yes      | Produce an immutable view for external readers from the internal value                  |
+| `value.equals`      | Yes      | Compare two complete internal values and return whether they are equal                  |
+| `value.dispose`     | No       | Release resources held by the internal value; unnecessary here                          |
+| `collectIdentities` | No       | Accept the internal value and return all entity identities; omitted means no collection |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
+  capture: (input: TInput) => TValue;
+  read: (value: TValue) => TRead;
+  equals: (left: TValue, right: TValue) => boolean;
+  dispose?: (value: TValue) => void;
+}>;
+
+type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
+  key: string;
+  value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
+  collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+Define the coordinate Source as follows:
+
+```ts
+import { defineRuntimeSource } from '@retikz/runtime';
+
+type PositionInput = { x: string; y: string };
+type PositionValue = [number, number];
+type PositionRead = readonly [number, number];
+
+const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead, never>({
+  key: 'example/position',
+  value: {
+    capture: input => [Number(input.x), Number(input.y)],
+    read: value => Object.freeze([value[0], value[1]] as const),
+    equals: (left, right) => Object.is(left[0], right[0]) && Object.is(left[1], right[1]),
+  },
+});
+```
+
+The first three type parameters correspond to the input, internal value and read view:
+
+| Parameter | Type in this example | Consumer                                                               |
+| --------- | -------------------- | ---------------------------------------------------------------------- |
+| `TInput`  | `PositionInput`      | The caller submits complete input to `capture`                         |
+| `TValue`  | `PositionValue`      | Runtime retains it; `read`, `equals` and optional `dispose` receive it |
+| `TRead`   | `PositionRead`       | Read `[x, y]` through a Snapshot, typed as `readonly [number, number]` |
+
+The fourth type parameter describes change hints; `never` means this example provides none. The fields are explained below; update timing belongs to the Runtime chapter.
+
+The returned `position` is a definition token identifying this Source; it does not expose the callbacks directly. Runtime stores the associated rules internally, and registration, submission and reading reuse this token. No input data exists yet, so defining the Source neither invokes `capture` nor creates state.
+
+<ComponentAlert
+  type="tip"
+  title="Why use both a key and a token?"
+  description={
+    <>
+      The string <code>key</code> provides a stable name for lookup, duplicate checks and diagnostics; the token carries
+      the Source's generic types and identifies its handling rules. Defining the same <code>key</code> again creates a
+      different token that cannot replace the registered one, preventing a mismatch between the caller's expected types
+      and the rules actually executed. Define a Source once and reuse the returned object.
+    </>
+  }
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Associating a Source token with its rules', path: 'packages/kernel/runtime/src/source/define.ts' },
+  ]}
+/>
+
+## Responsibilities in the definition
+
+`key` gives this category of state a stable name. The token lets later APIs recover this exact definition and its types. Multiple Runtime instances can share the definition while owning different coordinate values.
+
+`value` groups the rules for managing those coordinates. Its callbacks address different responsibilities of the same data:
+
+| Field     | Why it exists                                                       | Decision in this example                                                           |
+| --------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `capture` | External representation or mutability may be unsuitable for storage | Convert strings to numbers in a new array, isolating later input mutations         |
+| `read`    | Readers may not need all internal data or mutable references        | Return a separate frozen tuple so readers cannot mutate the internal array         |
+| `equals`  | Runtime cannot determine domain equality on its own                 | Compare both coordinates; captured `'10'` and `'10.0'` represent the same position |
+| `dispose` | Some internal values own resources that need explicit release       | Omit for plain coordinates; close an exclusively owned bitmap here if needed       |
+
+In the coordinate conversion shown earlier, `capture` converts input strings to numbers in a separate array; `read` then copies those numbers into a frozen read-only tuple. These are not redundant copies: one isolates input writers, while the other restricts output readers. If a value is already immutable and uses the same representation, `read: value => value` can also be appropriate. Source does not automatically copy, freeze or validate domain fields for these callbacks.
+
+The read-only representation from `read` is shared by several consumers: the host reads it through `runtime.snapshot(source)`, and computations declaring the Source use `view.snapshot(source)`. Preserve data needed by these consumers, not only fields displayed by the UI.
+
+`equals` must cover the complete meaning relevant to consumers, rather than comparing references or convenient fields alone. `dispose` receives the internal value, not the input or public view; old and new values must not share resources requiring exclusive disposal. When comparison, state adoption and cleanup occur belongs to Runtime update orchestration and will be connected in the Runtime chapter.
+
+The optional `collectIdentities` field lists entities in the internal value, as explained in [Identity](/kernel/packages/runtime/identity#collection-and-lookup).
+
+## Source registration
+
+Defining a Source describes how a kind of state is captured, read and disposed. A Runtime also needs to know which Sources it will use. **Source registration** collects the selected definitions into a **Source registry**, the set of state Sources that Runtime can manage.
+
+For example, `position` defines how coordinate data is handled. Adding it to the registry lets Runtime locate those rules and check that a Source used later is registered. The registry holds definitions; actual coordinate data is supplied separately when Runtime is initialized or updated. Registration itself does not capture state.
+
+`createRuntimeSourceRegistry` accepts an array of Source tokens and registers the definitions Runtime may use:
+
+```ts
+declare const createRuntimeSourceRegistry: (tokens: Array<RuntimeSourceToken>) => RuntimeSourceRegistry;
+```
+
+`tokens` is a required array of Source tokens, and the function returns the newly created Source registry; pass `[]` to create an empty registry.
+
+The registry handles every Source in the array uniformly, without distinguishing built-in and custom Sources. Callers organize and merge those groups when needed. Any duplicate `key` is rejected, including the same token supplied twice. No Sources are loaded automatically.
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Member                | Purpose                                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `find(key)`           | Find by name; return `undefined` when absent. The generic token does not retain specific Source types            |
+| `resolve(definition)` | Verify membership and return the same token with its generic types; a different object with the same name throws |
+| `definitions()`       | List definitions in stable string order by `key`; the read-only list cannot modify the registry                  |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeSourceRegistry = Readonly<{
+  find: (key: string) => RuntimeSourceToken | undefined;
+  resolve: <TInput, TValue, TRead, TChange>(
+    definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  ) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
+  definitions: () => ReadonlyArray<RuntimeSourceToken>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+Register the `position` defined above:
+
+```ts
+import { createRuntimeSourceRegistry } from '@retikz/runtime';
+
+const sources = createRuntimeSourceRegistry([position]);
+
+console.log(sources.find('example/position') === position); // true
+console.log(sources.resolve(position) === position); // true
+console.log(sources.definitions().map(source => source.key)); // ['example/position']
+```
+
+Registration iterates over the supplied token array, checks token validity and key uniqueness, and associates each definition with its handling rules. The resulting registry is fixed: it exposes no append or replace operation.
+
+Resolving a newly created same-name Source fails because its token differs. Registering it alongside `position` fails because the key is duplicated. These are respectively membership checks during use and uniqueness checks during construction.
+
+<SourceLinks
+  sources={[
+    { label: 'Source registry input and members', path: 'packages/kernel/runtime/src/registry/types.ts' },
+    {
+      label: 'Source registration, validation and lookup',
+      path: 'packages/kernel/runtime/src/registry/source-registry.ts',
+    },
+  ]}
+/>
+
+## Complete flow
+
+A Source definition returns a token. Register the selected tokens, then find them by name, validate membership or list the definitions. This figure passes definitions, not the data from an individual state.
+
+<ComponentPreview files="source-registration" size="lg" hideCode type="flow" />
+
+`find(key)` retrieves a definition by name; `resolve(token)` validates membership while preserving types; `definitions()` lists the definitions. Registration does not call `capture` or execute computations. See the [introductory example](/kernel/packages/runtime/usage) for passing definitions and data to a running instance; full initialization and update orchestration belong to the Runtime chapter.
+
+## Core application
+
+Core treats the complete Scene IR—a structured description of a drawing document—as one Source, rather than creating a Source for each node. It defines `CoreSourceDefinition` once when the module loads and reuses that token for initialization, updates and compilation. This excerpt omits imports and the type declaration:
+
+```ts
+export const CoreSourceDefinition = defineRuntimeSource({
+  key: CORE_SOURCE_KEY, // '@retikz/core/document'
+  value: {
+    capture: input => cloneAndFreezeJson(input, 'CoreSourceDefinition input'),
+    read: value => value,
+    equals: jsonStructuralEquals,
+  },
+});
+```
+
+Input, internal value and read value all use the Scene IR structure: `capture` stores an independent read-only document, `read` exposes that document, and `equals` compares document contents. The two JSON helpers are internal Core utilities; consumers simply import the existing token.
+
+After declaring this Source dependency, Core's compilation computation reads the document through the same token. This excerpt shows the read inside its callback:
+
+```ts
+const source = view.snapshot(CoreSourceDefinition).value;
+// Pass source to Core compilation to produce a Scene
+```
+
+See the [starter example](/kernel/packages/runtime/usage) for supplying definitions and data to an instance; full initialization and update orchestration belong to the Runtime chapter.
+
+The token identifies the Source definition and stores no document data. Multiple Runtime instances can reuse it while owning independent state. This example connects the earlier steps—define rules, capture input, read state—to a real consumer. Core documentation covers compilation and incremental updates in detail.
+
+<SourceLinks
+  sources={[
+    { label: 'Core document Source definition', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
+    { label: 'Source reads in Core compilation', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>

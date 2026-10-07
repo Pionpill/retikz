@@ -42,7 +42,7 @@ export type CellPlacement = {
   /** 分配给格子边框区域的最终高度 */
   height: number;
   /** 空间引用中标识格子所属集合及键值角色的类别 */
-  role: 'chain-cell' | 'array-cell' | 'matrix-cell' | 'map-key' | 'map-value';
+  role: 'queue-cell' | 'stack-cell' | 'chain-cell' | 'array-cell' | 'matrix-cell' | 'map-key' | 'map-value';
 };
 
 /** 在当前组件的样式环境下探测内容，保留结果供最终 replay */
@@ -106,7 +106,7 @@ export const measureCell = (
 };
 
 /** 固定槽位引用载体只提供边界，不输出可见几何 */
-const cellReferenceNode = (
+export const cellReferenceNode = (
   id: string,
   bounds: { x: number; y: number; width: number; height: number },
   aliasIds?: Array<string>,

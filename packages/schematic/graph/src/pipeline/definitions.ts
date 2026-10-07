@@ -5,13 +5,13 @@ import { SurfaceDefinition } from '@retikz/standard/presentation';
 import type { GraphDefinitionOptions } from '../contract';
 import { resolveGraphDefinitionOptions } from '../providers';
 import { createBaseGraphProviders } from './base-providers';
-import { createBlockDefinitionFromOptions } from './block/definition';
+import { createBlockDefinitionFromOptions } from './block/composite';
 import { BlockHeaderDefinition, BlockRowDefinition, BlockSectionDefinition } from './block/structure-definition';
-import { createEntityDefinitionFromOptions } from './entity/definition';
-import { createGraphDefinitionFromOptions } from './graph/definition';
+import { createEntityDefinitionFromOptions } from './entity/composite';
+import { createGraphDefinitionFromOptions } from './graph/composite';
 import { GroupBodyAllocationDefinition } from './group';
-import { createGroupDefinitionFromOptions } from './group/definition';
-import { createRelationDefinitionFromOptions } from './relation/definition';
+import { createGroupDefinitionFromOptions } from './group/composite';
+import { createRelationDefinitionFromOptions } from './relation/composite';
 
 /**
  * 创建当前 Graph 包族的完整 composite definition 集合

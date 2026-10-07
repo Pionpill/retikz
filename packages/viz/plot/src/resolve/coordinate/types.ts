@@ -1,5 +1,5 @@
 import type { IRScope } from '@retikz/core';
-import type { DataTransformModel, DataView, ExternalRow, IRDataScalarValue } from '@retikz/data';
+import type { DataTransformModel, DataView, FieldOrderDefinition, ExternalRow, IRDataScalarValue } from '@retikz/data';
 
 import type {
   AnyCoordinateDefinition,
@@ -39,6 +39,8 @@ export type CoordinateAxisLowerer = (
  * @description source IR 通过 resolveCoordinateFrame 的首个参数传入；context 只携带数据、registry、布局输入与 pipeline 注入的下沉回调
  */
 export type CoordinateResolveContext = {
+  /** 当前请求的分类顺序定义 */
+  fieldOrderRegistry?: ReadonlyMap<string, FieldOrderDefinition>;
   /** 当前 lowering 共享的逐点留白求解状态 */
   markPadding?: MarkPaddingContext;
   /** 面板或坐标 scope 的稳定身份 */

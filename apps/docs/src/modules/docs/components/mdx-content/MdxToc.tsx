@@ -6,8 +6,8 @@ import { cn } from '@/lib';
 
 import { parseHeadings } from './utils';
 
-/** 顶部 sticky header h-12 (48px) + 留白 */
-const SCROLL_OFFSET = 64;
+/** 顶部 sticky header h-14 与边框、24px 留白，加少量滚动判定容差 */
+const SCROLL_OFFSET = 88;
 
 const levelIndent: Record<number, string> = {
   1: '',

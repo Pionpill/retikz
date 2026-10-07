@@ -383,7 +383,7 @@ export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'c
 <p>
   <ApiSourceLink
     label={'FrameDefinition'}
-    path={'packages/library/standard/src/presentation/frame/definition.ts'}
+    path={'packages/library/standard/src/presentation/frame/composite.ts'}
     startLine={10}
   >
     Standard Frame 的官方 Core composite definition
@@ -404,8 +404,8 @@ export const FrameDefinition: LayoutCompositeDefinition<IRFrame, typeof STANDARD
 <p>
   <ApiSourceLink
     label={'FrameProvider'}
-    path={'packages/library/standard/src/presentation/frame/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/presentation/frame/composite.ts'}
+    startLine={25}
   >
     Frame 的 Core Composite dependency provider
   </ApiSourceLink>
@@ -425,8 +425,8 @@ export const FrameProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'createFrame'}
-    path={'packages/library/standard/src/presentation/frame/factory.ts'}
-    startLine={5}
+    path={'packages/library/standard/src/presentation/frame/composite.ts'}
+    startLine={18}
   >
     创建稀疏持久化的 Standard Frame composite
   </ApiSourceLink>

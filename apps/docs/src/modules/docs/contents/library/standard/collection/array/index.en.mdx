@@ -5,7 +5,7 @@ description: Use Array to display one-dimensional content, configure cells, comp
 
 `Array` draws one-dimensional content as a row or column of cells, suitable for arrays, queues, and indexed values. Each cell contains text or one drawable component.
 
-## Using this topic
+## Getting started
 
 After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
 
@@ -256,16 +256,16 @@ Generated components recursively use the same selection. A structure displayed a
   defaultSourceFile="array-data.preview.tsx"
 />
 
-| Data type       | Input example   | Display                                                        |
-| --------------- | --------------- | -------------------------------------------------------------- |
-| String value    | `"null"`        | A quoted, escaped JSON literal: `"null"`, distinct from `null` |
-| Number          | `42`            | Displayed as `42`                                              |
-| Boolean         | `true`, `false` | Displayed as `true`, `false`                                   |
-| Null            | `null`          | Displayed as `null`                                            |
-| Nonempty array  | `["A", 2]`      | Recursively displayed as a Array, with one cell per element    |
-| Empty array     | `[]`            | Displayed as the text `[]`                                     |
-| Nonempty object | `{"a": 1}`      | A nested Map by default; `text` mode displays `{"a":1}`        |
-| Empty object    | `{}`            | Displayed as the text `{}`                                     |
+| Data type       | Input example   | Display                                                                    |
+| --------------- | --------------- | -------------------------------------------------------------------------- |
+| String value    | `"null"`        | A quoted, escaped JSON literal: `"null"`, distinct from `null`             |
+| Number          | `42`            | Displayed as `42`                                                          |
+| Boolean         | `true`, `false` | Displayed as `true`, `false`                                               |
+| Null            | `null`          | Displayed as `null`                                                        |
+| Nonempty array  | `["A", 2]`      | Recursively displayed as a Array, with one cell per element                |
+| Empty array     | `[]`            | Displayed as the text `[]`                                                 |
+| Nonempty object | `{"a": 1}`      | A nested Map by default; when objects are not expanded, displays `{"a":1}` |
+| Empty object    | `{}`            | Displayed as the text `{}`                                                 |
 
 An empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
 
@@ -321,61 +321,6 @@ Automatic cells default to `overflow: 'visible'`; fixing either axis changes the
 - `data` accepts JSON value trees only, not functions, runtime instances, cycles, or sparse arrays. Project data before rendering when needed.
 - A fixed cell may be smaller than its content, but compilation fails if the parent allocation cannot fit all cells and gaps. Extra parent space remains at the end rather than stretching cells.
 - These components draw data structures; they do not process data or implement arbitrary matrices or merged cells.
-
-## Implementation
-
-<ComponentAlert
-  type="tip"
-  title="Optional reading"
-  description="This section explains internal implementation. If you only need to use the component, skip ahead to the API reference."
-/>
-
-### How dimensions are determined
-
-`resolveArray` merges overall and per-cell settings before applying defaults. Text becomes a node with no background, border, or padding. `compileArray` measures each content once at its natural size and adds padding. `auto` uses the largest cell requirement, `content` width keeps each cell's own requirement, and fixed dimensions retain their values. Placement advances by cell size plus gap along the chosen direction. Indices are measured separately using the merged font and reserve a strip above/below rows or left/right of columns according to `index.position`.
-
-Compare the cell borders for the same content under two width modes, and note the separate index strip outside them:
-
-<ComponentPreview files="array-measurement-figure" size="sm" hideCode type="illustration" />
-
-On the left, `auto` gives both cells the largest content requirement. On the right, `content` keeps each cell's own content width plus padding. The index strip takes additional space without changing cell widths.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Settings and defaults',
-      path: 'packages/library/standard/src/collection/array/resolve/resolve.ts',
-      startLine: 1,
-    },
-    {
-      label: 'Measurement and placement',
-      path: 'packages/library/standard/src/collection/array/pipeline.ts',
-      startLine: 1,
-    },
-  ]}
-/>
-
-### Why references and labels do not resize cells
-
-After placement, `compileCells` reuses the measured results to center content and emit the background, clipped content layer, and border separately. An invisible rectangular node carries each cell id using its allocated size, so content overflow does not affect the reference. Separate `container` and `cell:<id>` spatial handles support inspection rather than replacing named references.
-
-Another invisible rectangle hosts container labels using the container allocation, including the index strip when enabled. Labels attach after cell placement and do not feed back into cell measurement; they only extend visible bounds. The label host does not inherit cell role styling or use `defaults.node`.
-
-The blue border shows the fixed cell allocation and reference bounds. Compare the arrow endpoint with the overflowing text and container label outside the border:
-
-<ComponentPreview files="array-reference-figure" size="md" hideCode type="illustration" />
-
-Text overflow and the label extend visible bounds without changing the cell's 82 × 42 allocation. The reference arrow still points to the rectangle's bottom edge.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Content replay, reference rectangles, and label host',
-      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
-      startLine: 1,
-    },
-  ]}
-/>
 
 ## API reference
 

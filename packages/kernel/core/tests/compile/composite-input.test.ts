@@ -264,10 +264,8 @@ describe('composite instance runtime input', () => {
       { composites: [prepared] },
       { compositeInputSource: CoreCompositeInputSourceDefinition },
     );
-    const sources = createRuntimeSourceRegistry({
-      builtins: [CoreSourceDefinition, CoreCompositeInputSourceDefinition],
-    });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, CoreCompositeInputSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const inputs = (text: string) => createCompositeInputBindings(source, [{ path: ['children', 0], input: text }]);
     const session = createRuntime({
       sources,
@@ -285,9 +283,9 @@ describe('composite instance runtime input', () => {
       ],
     });
 
-    expect(JSON.stringify(session.artifact(program).value.output.result.scene)).toContain('updated-ready');
+    expect(JSON.stringify(session.result(program).value.output.result.scene)).toContain('updated-ready');
 
-    const committed = session.artifact(program).value.output.result;
+    const committed = session.result(program).value.output.result;
     const revision = session.revision();
 
     expect(() =>
@@ -300,7 +298,7 @@ describe('composite instance runtime input', () => {
       }),
     ).toThrow(/RUNTIME_COMPUTATION_RUN_FAILED/i);
     expect(session.revision()).toBe(revision);
-    expect(session.artifact(program).value.output.result).toBe(committed);
+    expect(session.result(program).value.output.result).toBe(committed);
 
     session.dispose();
   });

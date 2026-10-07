@@ -40,7 +40,7 @@ const defineParticipant = (
 describe('runtime runtime participant preflight', () => {
   it('拒绝重复 key，且不触碰 executor', () => {
     const owner = defineCounterSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     let disposeCalls = 0;
     const first = defineParticipant('duplicate', [owner], () => {
@@ -59,7 +59,7 @@ describe('runtime runtime participant preflight', () => {
 
   it('拒绝 foreign module participant token', async () => {
     const owner = defineCounterSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     vi.resetModules();
     const { defineRuntimeCommitParticipant: defineForeignParticipant } = await import('../../src/participant/define');
@@ -87,7 +87,7 @@ describe('runtime runtime participant preflight', () => {
   it('拒绝 foreign 或重复 dependency，且 preflight 失败不消费 token', () => {
     const owner = defineCounterSource('counter');
     const foreign = defineCounterSource('foreign');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const invalid = defineParticipant('invalid', [foreign]);
     const duplicate = defineParticipant('duplicate-dependency', [owner, owner]);
@@ -100,7 +100,7 @@ describe('runtime runtime participant preflight', () => {
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDependencyInvalid }),
     );
 
-    const validSources = createRuntimeSourceRegistry({ builtins: [foreign] });
+    const validSources = createRuntimeSourceRegistry([foreign]);
     const validComputations = createRuntimeComputationRegistry({ sources: validSources });
     const runtime = createRuntime({
       sources: validSources,
@@ -116,7 +116,7 @@ describe('runtime runtime participant preflight', () => {
 
   it('fresh + already-owned 混合 preflight 不污染 fresh token', () => {
     const owner = defineCounterSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const owned = defineParticipant('z-owned', [owner]);
     const fresh = defineParticipant('a-fresh', [owner]);
@@ -143,7 +143,7 @@ describe('runtime runtime participant preflight', () => {
 
   it('合法但不属于当前 runtime 的 typed token 以 UNKNOWN 拒绝', () => {
     const owner = defineCounterSource('counter');
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const member = defineParticipant('member', [owner]);
     const foreign = defineParticipant('foreign', [owner]);

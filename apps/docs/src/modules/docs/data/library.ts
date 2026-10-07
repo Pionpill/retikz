@@ -3,136 +3,6 @@ import type { Section } from './types';
 /** Library 能力包的文档导航 */
 export const librarySection: Array<Section> = [
   {
-    id: 'standard',
-    label: 'library.standard',
-    navigationDescription: 'library.standardNavigationDescription',
-    document: true,
-    pages: [
-      {
-        id: 'introduction',
-        label: 'library.standardIntroduction',
-        difficulty: 'beginner',
-      },
-      {
-        id: 'get-start',
-        label: 'library.getStart',
-        difficulty: 'beginner',
-      },
-      {
-        id: 'design',
-        label: 'library.design',
-        difficulty: 'beginner',
-        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
-      },
-      {
-        id: 'changelog',
-        label: 'library.changelog',
-        children: [
-          {
-            id: 'v0-1',
-            label: 'library.changelogV01',
-          },
-        ],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'standard.release',
-          sourceOfTruth: 'changelog',
-        },
-      },
-      {
-        id: 'shape',
-        label: 'library.standardShapes',
-        sidebarGroup: 'library.components',
-        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
-        children: [
-          {
-            id: 'circle-ellipse',
-            label: 'library.standardCircleEllipse',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'rectangle',
-            label: 'library.standardRectangle',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'polygon',
-            label: 'library.standardPolygon',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'star',
-            label: 'library.standardStar',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'arc-sector',
-            label: 'library.standardArcSector',
-            difficulty: 'beginner',
-          },
-        ],
-      },
-      {
-        id: 'collection',
-        label: 'library.standardCollections',
-        sidebarGroup: 'library.components',
-        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
-        children: [
-          {
-            id: 'array',
-            label: 'library.standardArray',
-            difficulty: 'beginner',
-          },
-          { id: 'chain', label: 'library.standardChain', difficulty: 'beginner' },
-          {
-            id: 'matrix',
-            label: 'library.standardMatrix',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'map',
-            label: 'library.standardMap',
-            difficulty: 'beginner',
-          },
-        ],
-      },
-      {
-        id: 'presentation',
-        label: 'library.standardPresentation',
-        sidebarGroup: 'library.components',
-        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
-        children: [
-          {
-            id: 'grid',
-            label: 'library.standardGrid',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'axes',
-            label: 'library.standardAxes',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'frame',
-            label: 'library.standardFrame',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'surface',
-            label: 'library.standardSurface',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'legend',
-            label: 'library.standardLegend',
-            difficulty: 'beginner',
-          },
-        ],
-      },
-    ],
-  },
-  {
     id: 'extension',
     label: 'library.extension',
     navigationDescription: 'library.extensionNavigationDescription',
@@ -231,6 +101,128 @@ export const librarySection: Array<Section> = [
         difficulty: 'beginner',
         sidebarGroup: 'library.visual',
         meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+    ],
+  },
+  {
+    id: 'standard',
+    label: 'library.standard',
+    navigationDescription: 'library.standardNavigationDescription',
+    document: true,
+    pages: [
+      {
+        id: 'introduction',
+        label: 'library.standardIntroduction',
+        difficulty: 'beginner',
+      },
+      {
+        id: 'get-start',
+        label: 'library.getStart',
+        difficulty: 'beginner',
+      },
+      {
+        id: 'design',
+        label: 'library.design',
+        difficulty: 'beginner',
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'changelog',
+        label: 'library.changelog',
+        children: [
+          {
+            id: 'v0-1',
+            label: 'library.changelogV01',
+          },
+        ],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'standard.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
+      {
+        id: 'shape',
+        label: 'library.standardShapes',
+        sidebarGroup: 'library.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          {
+            id: 'circle-ellipse',
+            label: 'library.standardCircleEllipse',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'rectangle',
+            label: 'library.standardRectangle',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'polygon',
+            label: 'library.standardPolygon',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'star',
+            label: 'library.standardStar',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'arc-sector',
+            label: 'library.standardArcSector',
+            difficulty: 'beginner',
+          },
+        ],
+      },
+      {
+        id: 'collection',
+        label: 'library.standardCollections',
+        sidebarGroup: 'library.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          { id: 'array', label: 'library.standardArray', difficulty: 'beginner' },
+          { id: 'map', label: 'library.standardMap', difficulty: 'beginner' },
+          { id: 'matrix', label: 'library.standardMatrix', difficulty: 'beginner' },
+          { id: 'stack', label: 'library.standardStack', difficulty: 'beginner' },
+          { id: 'queue', label: 'library.standardQueue', difficulty: 'beginner' },
+          { id: 'chain', label: 'library.standardChain', difficulty: 'beginner' },
+          { id: 'tree', label: 'library.standardTree', difficulty: 'beginner' },
+          { id: 'mechanism', label: 'library.standardCollectionMechanism', difficulty: 'internals' },
+        ],
+      },
+      {
+        id: 'presentation',
+        label: 'library.standardPresentation',
+        sidebarGroup: 'library.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          {
+            id: 'grid',
+            label: 'library.standardGrid',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'axes',
+            label: 'library.standardAxes',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'frame',
+            label: 'library.standardFrame',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'surface',
+            label: 'library.standardSurface',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'legend',
+            label: 'library.standardLegend',
+            difficulty: 'beginner',
+          },
+        ],
       },
     ],
   },

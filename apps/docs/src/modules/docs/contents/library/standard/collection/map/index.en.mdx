@@ -5,7 +5,7 @@ description: Use Map to display key/value records, configure cells, compose draw
 
 `Map` draws ordered key/value pairs in two aligned columns, suitable for object fields and records. It handles presentation, not dictionary lookup or deduplication.
 
-## Using this topic
+## Getting started
 
 After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
 
@@ -160,7 +160,12 @@ Style precedence is **structural defaults → overall style → style.key / styl
 
 Font fields merge individually. `fillOpacity` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
 
-<ComponentPreview files="map-styles" size="sm" />
+<ComponentPreview
+  files={['map-styles', 'map-styles.preview.tsx']}
+  defaultSourceFile="map-styles.preview.tsx"
+  size="sm"
+  caption="Change column widths, then disable the first-cell override to compare inheritance levels."
+/>
 
 `layout.width` / `height` set the cell border-box dimensions, including padding; zero is valid. Omit them or use `'auto'` for natural sizing. Cell-level values take precedence, and explicit `'auto'` clears an inherited fixed dimension. `layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
 
@@ -170,9 +175,12 @@ Layout precedence is **overall layout → layout.key / layout.value → cell lay
 
 `label` adds text to the whole container. It accepts one object or an array, with position, distance, rotation, and pin options. Labels do not enlarge the layout allocation but do contribute to the final drawing bounds, including on empty containers.
 
-```tsx
-<Map entries={[{ key: 'a', value: '1' }]} label={{ text: 'record', position: 'top' }} />
-```
+<ComponentPreview
+  files={['map-labels', 'map-labels.preview.tsx']}
+  defaultSourceFile="map-labels.preview.tsx"
+  size="md"
+  caption="Change label position and distance; cell dimensions stay unchanged."
+/>
 
 Overall font, text color, and `defaults.label` supply label defaults, overridden by the label itself. Key/value roles and cell styles do not affect container labels, and nested containers created by `data` do not inherit the root label.
 
@@ -233,6 +241,13 @@ React / Vanilla assemble nested dependencies automatically. For direct IR with `
 Set a cell `id` to reference it from a path endpoint, for example `to={{ id: 'selected', anchor: 'right' }}`. The reference uses the cell border rectangle, excluding gaps, indices, and visual overflow. Hiding the background does not change it. An id on the content references its own geometry. Cells without ids do not acquire identities from array indices.
 
 Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
+
+<ComponentPreview
+  files={['map-overflow', 'map-overflow.preview.tsx']}
+  defaultSourceFile="map-overflow.preview.tsx"
+  size="md"
+  caption="The blue external path targets the value cell boundary. Overflow does not move its endpoint; cell width does."
+/>
 
 ## Errors and limitations
 

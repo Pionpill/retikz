@@ -47,7 +47,9 @@ Direct IR needs ChainProvider and PathClipProvider, plus content dependencies. E
 </DocTab>
 </DocTabs>
 
-## Choose inputs and branch skeletons
+## Basic usage
+
+### Choose an input form
 
 Choose exactly one of items, data, and skeleton. An items string is literal text; a full cell uses `{ kind: 'cell', content?, id?, style?, layout? }`. Each JSON data value creates a sequential cell, without inferring branches from arrays or objects. dataExpand defaults to true; use false or a map/array selection to control nested expansion.
 
@@ -57,31 +59,37 @@ Choose exactly one of items, data, and skeleton. An items string is literal text
 | `skeleton={{ labels: ['A', '', 'C'] }}`                          | Sequential symbols; empty text preserves an empty cell |
 | `skeleton={{ items: ['A', { branches: [['B'], ['C']] }, 'D'] }}` | Explicit branches and a join; recursively nestable     |
 
-These forms exclude one another. Skeleton branches contain symbols only, without drawings, ids, or local styling. Full items use `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`, with optional local layout and connection overrides.
+These forms exclude one another.
+
+**Branch skeletons** use `skeleton.items` to describe sequences and branches with symbols only, without drawings, ids, or local styling. For those settings, full items use `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`, with optional local layout and connection overrides.
+
+Nested collections default to no outer Cell background and zero outer padding; ordinary text retains its light gray background and default padding. Automatic JSON expansion and authored nesting behave alike. Explicit style.fill and layout.padding, including inherited settings, still take precedence.
 
 <ComponentPreview
   files={['chain-inputs', 'chain-inputs.preview.tsx']}
   defaultSourceFile="chain-inputs.preview.tsx"
-  size="md"
+  size="sm"
 />
 
 Each parallel block requires at least two nonempty branches and an adjacent cell before and after it. Branches must also start and end with cells. An empty string or cell is a cell; an empty array is not a bypass. Empty root sequences have no connections, and single cells never connect to themselves.
 
-## Align branches and steps
+### Align branches and steps
 
 layout.direction defaults to right and also accepts down. Positive gap and branchGap control main-axis and branch clearance, both defaulting to 24.
 
 branchAlign places the complete branch envelope relative to the preceding cell: start, center, end, or `{ branch: 0 }`. The default is center. A selected branch keeps its baseline on the parent baseline. Start/end mean top/bottom for horizontal chains and left/right for vertical chains.
 
-spacing defaults to steps, sharing tracks across immediate branch items; compact packs branches independently. justify places shorter branches at start, center, or end, defaulting to start. A nested parallel block occupies one parent step. Centered short branches put an odd extra empty track at the end, without creating dummy nodes.
+spacing defaults to steps, sharing tracks across immediate branch items; independent packs branches independently. justify places shorter branches at start, center, or end, defaulting to start. A nested parallel block occupies one parent step. Centered short branches put an odd extra empty track at the end, without creating dummy nodes.
 
 <ComponentPreview
   files={['chain-alignment', 'chain-alignment.preview.tsx']}
   defaultSourceFile="chain-alignment.preview.tsx"
-  size="xl"
+  size="md"
 />
 
-## Compose drawings and nested branches
+## Extended usage
+
+### Compose drawable content
 
 The JSX hierarchy is:
 
@@ -101,12 +109,23 @@ This example embeds a Matrix and adds a nested parallel block in another branch.
 <ComponentPreview
   files={['chain-content', 'chain-content.preview.tsx']}
   defaultSourceFile="chain-content.preview.tsx"
-  size="lg"
+  size="md"
 />
 
-## Connections, labels, and references
+### Connections, labels, and references
 
-connection.route defaults to auto. Horizontal branching uses `|-`, joining uses `-|`; vertical chains reverse these choices. Auto connections reserve turning positions in the gaps. Short branches also use the shared join corridor. Explicit straight, `|-`, and `-|` connect endpoints directly and may cross other content.
+`connection.route` defaults to `auto`: branching and joining reserve corridors around the branch bounds, using `-|-` horizontally and `|-|` vertically. Short branches join through the shared corridor too. Ordinary sequential items connect directly. Core Path generates the folded geometry.
+
+| route      | Connection                                |
+| ---------- | ----------------------------------------- |
+| `auto`     | Choose a straight line or branch corridor |
+| `straight` | Connect endpoints directly                |
+| `\|-`      | Vertical then horizontal                  |
+| `-\|`      | Horizontal then vertical                  |
+| `-\|-`     | Horizontal–vertical–horizontal            |
+| `\|-\|`    | Vertical–horizontal–vertical              |
+
+Connections reference the whole cell without fixed side anchors; paths clip to its boundary according to their outgoing and incoming directions. Explicit routes use drawing coordinates: their horizontal/vertical meaning does not swap with the Chain direction, and they do not avoid other content automatically. For three-leg folds, `connection.fraction` places the middle leg between the cell centers from 0 to 1, defaulting to 0.5; `fraction` is accepted only with an explicit `-|-` or `|-|`, never with other or omitted routes. A local style-only override inherits the current route; the same explicit route can inherit or override its fraction, while a different route uses its own parameters and defaults. Layout computes the corridor for `auto`.
 
 <ComponentPreview
   files={['chain-connection', 'chain-connection.preview.tsx']}
@@ -122,13 +141,70 @@ An explicit cell id supports external references: React/Vanilla use `target.righ
 
 Mixed inputs, empty branches, parallel blocks without adjacent cells, invalid main-branch indices, and nonpositive gaps fail with structural context. Insufficient parent space never compresses cells or gaps. Chain has no arbitrary cross-branch edges, back edges, closed chains, or obstacle avoidance; use Graph for diagram relationships.
 
-## How it works
+## Implementation
 
-Standard resolves the three inputs into one structure, measures shared Cells, and recursively combines branch bounds and step tracks. Connections become ordinary paths. Core handles arrows, labels, clipping, namespaces, and final spatial references.
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section covers Chain-specific branch layout and connection compilation. Skip it if you only need to use the component."
+/>
+
+For cell inheritance, measurement, and content replay, see [Collection implementation](/library/standard/collection/mechanism). Chain preserves the series-parallel hierarchy, places the complete chain, and then generates connections.
+
+### Branch merging and step alignment
+
+Layout tracks three concepts:
+
+- **Block**: the overall size and internal positions of a cell, a sequence, or a parallel group.
+- **Baseline**: the main-axis alignment line used when joining neighboring blocks, stored as an offset from the block's top edge.
+- **Entries and exits**: references to cell placement objects that neighboring blocks can connect to, rather than fixed anchors or coordinate snapshots.
+
+Both diagrams use the same content, `justify="center"`, and `branchAlign="center"`. The longer Bbbbbbbb makes the difference visible: compare E on the lower branch with C above it.
+
+<ComponentPreview files="branch-layout-figure" size="sm" hideCode type="illustration" />
+
+- `independent` packs each branch using its own cell sizes, then centers the shorter branch within the widest branch. E need not align with C.
+- `steps` takes the largest block size at each step across branches to create shared tracks, then centers blocks in their assigned tracks. With three upper steps and one lower step, E occupies the second track and aligns with C. With only two upper steps, centering selects the first track and leaves the unused track at the end. Track allocation does not stretch individual cells.
+
+Layout merges blocks recursively from the inside out. A sequence aligns block baselines and takes its entries from the first block and exits from the last. A parallel block stacks branches and gathers their entries and exits. Here its entries are Bbbbbbbb and E; its exits are D and E. `branchAlign` determines how the whole block aligns with A and F: `center` uses the cross-axis midpoint, while a selected branch supplies its own baseline. Calculations use main-axis and cross-axis coordinates; downward chains swap positions and dimensions before final output.
 
 <SourceLinks
   sources={[
-    { label: 'Chain compilation', path: 'packages/library/standard/src/collection/chain/pipeline.ts', startLine: 1 },
+    {
+      label: 'Recursive merging, baselines, and step tracks',
+      path: 'packages/library/standard/src/collection/chain/layout.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Blocks and endpoint references',
+      path: 'packages/library/standard/src/collection/chain/types.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+### Connections become paths
+
+Layout pairs every exit of the previous block with every entry of the next. It records endpoint cell references, connection options, and the automatic channel fraction when needed. If a block moves again, its endpoints still reference the same placement objects; no bend-point list needs updating. The figure follows A entering the two branches:
+
+<ComponentPreview files="connection-compile-figure" size="xs" hideCode type="flow" />
+
+Once placement is complete, compilation creates private rectangular reference nodes from the final cell allocations and converts connections into ordinary Core Paths. Nodes and paths share an isolated namespace. Each path targets the whole rectangle by id, so connections work without explicit cell ids and do not fix a particular side anchor. If content is narrower than its allocated cell, connections still use the allocation boundary.
+
+`auto` generates straight paths between ordinary adjacent cells and uses the midpoint of the gap between blocks as the channel at a split or join. The fraction is relative to endpoint centers and remains unchanged by translation. Rightward chains use horizontal–vertical–horizontal routing; downward chains use vertical–horizontal–vertical routing. Explicit routes retain their drawing-coordinate directions. Core handles boundary clipping, visible paths when bends fall inside endpoint nodes, arrows, and labels. This does not provide automatic avoidance of other nodes.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Endpoint pairing and automatic channels',
+      path: 'packages/library/standard/src/collection/chain/layout.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Private reference nodes and Core Paths',
+      path: 'packages/library/standard/src/collection/chain/pipeline.ts',
+      startLine: 1,
+    },
   ]}
 />
 

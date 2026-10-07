@@ -2,12 +2,10 @@ import type { ValueOf } from '@retikz/foundation';
 
 /** Runtime 内置结构化诊断码 */
 export const RuntimeDiagnosticCode = {
-  /** change set 触发 full fallback */
-  ChangeSetFallback: 'RUNTIME_CHANGESET_FALLBACK',
   /** Source value 释放失败 */
   SourceDisposeFailed: 'RUNTIME_SOURCE_DISPOSE_FAILED',
-  /** artifact 释放失败 */
-  ArtifactDisposeFailed: 'RUNTIME_ARTIFACT_DISPOSE_FAILED',
+  /** result 释放失败 */
+  ResultDisposeFailed: 'RUNTIME_RESULT_DISPOSE_FAILED',
   /** Computation commit observer 失败 */
   ComputationObserverFailed: 'RUNTIME_COMPUTATION_OBSERVER_FAILED',
   /** trace record 无效 */
@@ -24,18 +22,18 @@ export const RuntimeDiagnosticCode = {
 
 /** Runtime 结构化诊断的发生阶段 */
 export const RuntimeDiagnosticPhase = {
-  /** artifact 捕获阶段 */
-  ArtifactCapture: 'artifact-capture',
-  /** artifact 释放阶段 */
-  ArtifactDispose: 'artifact-dispose',
-  /** artifact private read 阶段 */
-  ArtifactComputationRead: 'artifact-computation-read',
-  /** artifact public read 阶段 */
-  ArtifactPublicRead: 'artifact-public-read',
-  /** artifact Snapshot 阶段 */
-  ArtifactSnapshot: 'artifact-snapshot',
-  /** candidate artifact 读取阶段 */
-  CandidateArtifact: 'candidate-artifact',
+  /** result 捕获阶段 */
+  ResultCapture: 'result-capture',
+  /** result 释放阶段 */
+  ResultDispose: 'result-dispose',
+  /** result private read 阶段 */
+  ResultComputationRead: 'result-computation-read',
+  /** result public read 阶段 */
+  ResultPublicRead: 'result-public-read',
+  /** result Snapshot 阶段 */
+  ResultSnapshot: 'result-snapshot',
+  /** candidate result 读取阶段 */
+  CandidateResult: 'candidate-result',
   /** candidate change 读取阶段 */
   CandidateChange: 'candidate-change',
   /** candidate Snapshot 读取阶段 */
@@ -86,8 +84,6 @@ export const RuntimeDiagnosticPhase = {
   Trace: 'trace',
   /** update 执行阶段 */
   Update: 'update',
-  /** change set 校验阶段 */
-  ValidateChangeSet: 'validate-change-set',
 } as const;
 
 /** Runtime 内置结构化诊断码取值 */

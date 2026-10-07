@@ -1,7 +1,13 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
 import type { IRCellStyle } from '../schema';
-import { CellDefaultsSchema, CellLayoutDefaultsSchema, KeyCellDefaultsSchema } from '../schema';
+import {
+  CellDefaultsSchema,
+  CellLayoutDefaultsSchema,
+  KeyCellDefaultsSchema,
+  NestedCollectionCellDefaultsSchema,
+  NestedCollectionCellLayoutDefaultsSchema,
+} from '../schema';
 import type { CanonicalCell, CellResolveContext, CellResolveSource } from './types';
 
 /** 只合并显式字段；字体子字段保留先前继承值 */
@@ -34,6 +40,21 @@ const mergeStyle = (styles: Array<IRCellStyle | undefined>): IRCellStyle => {
 export const resolveCell = (source: string | CellResolveSource, context: CellResolveContext): CanonicalCell => {
   const { overallStyle, overallLayout, roleStyle, roleLayout, isKey = false } = context;
   const cell = typeof source === 'string' ? { content: source } : source;
+  const content = cell.content;
+  const nestedCollection =
+    content !== undefined &&
+    typeof content !== 'string' &&
+    'namespace' in content &&
+    content.namespace === 'standard' &&
+    (content.type === 'array' ||
+      content.type === 'map' ||
+      content.type === 'matrix' ||
+      content.type === 'chain' ||
+      content.type === 'stack' ||
+      content.type === 'queue' ||
+      content.type === 'tree');
+  const visualDefaults = nestedCollection ? NestedCollectionCellDefaultsSchema : CellDefaultsSchema;
+  const layoutDefaults = nestedCollection ? NestedCollectionCellLayoutDefaultsSchema : CellLayoutDefaultsSchema;
   const style = mergeStyle([overallStyle, roleStyle, cell.style]);
   const width = cell.layout?.width ?? roleLayout?.width ?? overallLayout?.width;
   const height = cell.layout?.height ?? roleLayout?.height ?? overallLayout?.height;
@@ -53,7 +74,7 @@ export const resolveCell = (source: string | CellResolveSource, context: CellRes
         : cell.content,
     style: {
       ...style,
-      fill: style.fill ?? CellDefaultsSchema.shape.fill.parse(undefined),
+      fill: style.fill ?? visualDefaults.shape.fill.parse(undefined),
       fillOpacity:
         style.fillOpacity ?? (isKey ? KeyCellDefaultsSchema : CellDefaultsSchema).shape.fillOpacity.parse(undefined),
       stroke: style.stroke ?? CellDefaultsSchema.shape.stroke.parse(undefined),
@@ -66,7 +87,7 @@ export const resolveCell = (source: string | CellResolveSource, context: CellRes
         cell.layout?.padding ??
           roleLayout?.padding ??
           overallLayout?.padding ??
-          CellLayoutDefaultsSchema.shape.padding.parse(undefined),
+          layoutDefaults.shape.padding.parse(undefined),
         0,
       ),
       overflow:

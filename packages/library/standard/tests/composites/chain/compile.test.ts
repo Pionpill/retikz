@@ -340,8 +340,8 @@ it('分叉占共享步骤，汇合回主干且只注册真实单元', () => {
   expect(bounds('e').x).toBeGreaterThan(bounds('c').x + 20);
 });
 
-it('短分支对齐在紧凑与步骤布局下保持真实单元数量', () => {
-  for (const spacing of ['compact', 'steps'] as const)
+it('短分支对齐在独立与步骤布局下保持真实单元数量', () => {
+  for (const spacing of ['independent', 'steps'] as const)
     for (const justify of ['start', 'center', 'end'] as const) {
       const result = compile({
         ...base,
@@ -396,7 +396,7 @@ it('纵向布局交换主轴但保留单元物理宽高', () => {
 it('嵌套并行块局部字段不重置继承的对齐', () => {
   const result = compile({
     ...base,
-    layout: { width: 20, height: 10, spacing: 'compact', justify: 'end' },
+    layout: { width: 20, height: 10, spacing: 'independent', justify: 'end' },
     items: [
       'A',
       {
@@ -429,5 +429,222 @@ it('递归骨架与显式结构的图形完全一致', () => {
         'G',
       ],
     }).scene,
+  );
+});
+
+it.each([
+  {
+    direction: 'right' as const,
+    route: '-|-' as const,
+    points: [
+      [17.5, 15],
+      [17.5, 10],
+      [30, 10],
+    ],
+  },
+  {
+    direction: 'right' as const,
+    route: '|-|' as const,
+    points: [
+      [20, 21.25],
+      [40, 21.25],
+      [40, 20],
+    ],
+  },
+  {
+    direction: 'down' as const,
+    route: '-|-' as const,
+    points: [
+      [21.25, 20],
+      [21.25, 40],
+      [20, 40],
+    ],
+  },
+  {
+    direction: 'down' as const,
+    route: '|-|' as const,
+    points: [
+      [15, 17.5],
+      [10, 17.5],
+      [10, 30],
+    ],
+  },
+])('显式 $route 在 $direction 排列中保持物理方向并继承中段比例', ({ direction, route, points }) => {
+  const result = compile({
+    ...base,
+    layout: { direction, width: 20, height: 20, gap: 10, branchGap: 10 },
+    connection: { route, fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
+    items: ['A', { kind: 'parallel', connection: { route }, branches: [{ items: ['B', 'C'] }, { items: ['D'] }] }, 'E'],
+  });
+  expect(connections(result)[0].commands).toEqual(
+    points.map((to, index) => ({ kind: index === 0 ? 'move' : 'line', to })),
+  );
+});
+
+it('三段折线缺省使用中点，局部零比例覆盖继承值', () => {
+  for (const fraction of [undefined, 0]) {
+    const result = compile({
+      ...base,
+      layout: { width: 20, height: 20, gap: 10, branchGap: 10 },
+      connection: {
+        route: '-|-',
+        fraction: fraction === undefined ? undefined : 0.75,
+        path: { marks: [], meta: { chainConnection: true } },
+      },
+      items: [
+        'A',
+        {
+          kind: 'parallel',
+          connection: { route: '-|-', fraction },
+          branches: [{ items: ['B', 'C'] }, { items: ['D'] }],
+        },
+        'E',
+      ],
+    });
+    const commands = connections(result)[0].commands;
+    expect(commands).toContainEqual({ kind: 'line', to: [fraction === undefined ? 25 : 10, 10] });
+    expect(commands.at(-1)).toEqual({ kind: 'line', to: [30, 10] });
+  }
+});
+
+it('嵌套不等宽分支平移后，连接仍贴合最终单元边界', () => {
+  for (const direction of ['right', 'down'] as const) {
+    const result = compile({
+      ...base,
+      layout: { direction, width: 20, height: 20, gap: 10, branchGap: 10 },
+      connection: { path: { marks: [], meta: { chainConnection: true } } },
+      items: [
+        { kind: 'cell', id: 'a' },
+        {
+          kind: 'parallel',
+          branches: [
+            {
+              items: [
+                { kind: 'cell', id: 'b', layout: { width: 60, height: 60 } },
+                {
+                  kind: 'parallel',
+                  branches: [{ items: [{ kind: 'cell', id: 'c' }] }, { items: [{ kind: 'cell', id: 'd' }] }],
+                },
+                { kind: 'cell', id: 'e' },
+              ],
+            },
+            { items: [{ kind: 'cell', id: 'f' }] },
+          ],
+        },
+        { kind: 'cell', id: 'g' },
+      ],
+    });
+    const bounds = (id: string) => resolveSpatialHandle(result.spatialHandles, { id: `cell:${id}` }).geometry.bounds;
+    const paths = connections(result);
+    expect(paths).toHaveLength(8);
+    for (const [from, to] of [
+      ['a', 'b'],
+      ['a', 'f'],
+      ['b', 'c'],
+      ['b', 'd'],
+      ['c', 'e'],
+      ['d', 'e'],
+      ['e', 'g'],
+      ['f', 'g'],
+    ]) {
+      const a = bounds(from),
+        b = bounds(to);
+      const source = direction === 'right' ? [a.x + a.width, a.y + a.height / 2] : [a.x + a.width / 2, a.y + a.height];
+      const target = direction === 'right' ? [b.x, b.y + b.height / 2] : [b.x + b.width / 2, b.y];
+      expect(
+        paths.some(
+          path =>
+            JSON.stringify(path.commands[0]) === JSON.stringify({ kind: 'move', to: source }) &&
+            JSON.stringify(path.commands.at(-1)) === JSON.stringify({ kind: 'line', to: target }),
+        ),
+      ).toBe(true);
+    }
+  }
+});
+
+it('样式覆盖继承原路由，切换路由不继承旧折转比例', () => {
+  for (const route of [undefined, 'straight', '|-|'] as const) {
+    const result = compile({
+      ...base,
+      layout: { width: 20, height: 20, gap: 10, branchGap: 10 },
+      connection: { route: '-|-', fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
+      items: [
+        'A',
+        {
+          kind: 'parallel',
+          connection: { route, path: { style: { stroke: 'red' } } },
+          branches: [{ items: ['B'] }, { items: ['C'] }],
+        },
+        'D',
+      ],
+    });
+    const path = connections(result)[0];
+    expect(path.stroke).toBe('red');
+    expect(path.commands).toEqual(
+      route === 'straight'
+        ? [
+            { kind: 'move', to: [20, 20] },
+            { kind: 'line', to: [30, 15] },
+          ]
+        : route === '|-|'
+          ? [
+              { kind: 'move', to: [20, 17.5] },
+              { kind: 'line', to: [30, 17.5] },
+            ]
+          : [
+              { kind: 'move', to: [17.5, 15] },
+              { kind: 'line', to: [17.5, 10] },
+              { kind: 'line', to: [30, 10] },
+            ],
+    );
+  }
+});
+
+it.each([
+  {
+    direction: 'right' as const,
+    route: '|-' as const,
+    points: [
+      [10, 15],
+      [10, 10],
+      [30, 10],
+    ],
+  },
+  {
+    direction: 'right' as const,
+    route: '-|' as const,
+    points: [
+      [20, 25],
+      [40, 25],
+      [40, 20],
+    ],
+  },
+  {
+    direction: 'down' as const,
+    route: '|-' as const,
+    points: [
+      [25, 20],
+      [25, 40],
+      [20, 40],
+    ],
+  },
+  {
+    direction: 'down' as const,
+    route: '-|' as const,
+    points: [
+      [15, 10],
+      [10, 10],
+      [10, 30],
+    ],
+  },
+])('两段 $route 在 $direction 排列中按路径方向连接整个单元边界', ({ direction, route, points }) => {
+  const result = compile({
+    ...base,
+    layout: { direction, width: 20, height: 20, gap: 10, branchGap: 10 },
+    connection: { route, path: { marks: [], meta: { chainConnection: true } } },
+    items: ['A', { kind: 'parallel', branches: [{ items: ['B'] }, { items: ['C'] }] }, 'D'],
+  });
+  expect(connections(result)[0].commands).toEqual(
+    points.map((to, index) => ({ kind: index === 0 ? 'move' : 'line', to })),
   );
 });

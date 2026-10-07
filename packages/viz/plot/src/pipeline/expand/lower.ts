@@ -14,6 +14,7 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
+import { assertFieldOrders, resolveCategoryDomain } from '@retikz/data';
 import type { DataLineageOptions, DataLineageRun, DataTransformResult, DataView, ExternalDatasets } from '@retikz/data';
 import {
   applyTransformsToDataView,
@@ -84,7 +85,6 @@ import { resolveMarkOperation } from '../../resolve/mark';
 import {
   createMarkPaddingContext,
   markDomainPaddingOf,
-  orderedCategoryDomain,
   resolveChannelScale,
   resolvePositionScaleContinuity,
 } from '../../resolve/scale';
@@ -395,6 +395,7 @@ export const lowerPlotWithDataArtifact = (
     scaleRegistry,
     markRegistry,
     positionAdjustmentRegistry,
+    fieldOrderRegistry,
   } = preparedRootView === undefined
     ? prepareRows(node, datasets, options, ingested)
     : {
@@ -403,6 +404,8 @@ export const lowerPlotWithDataArtifact = (
         fieldTypeMap: undefined,
         normalized: preparedRootView.rows,
       };
+
+  assertFieldOrders(node.data.model, fieldOrderRegistry);
 
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
@@ -516,6 +519,7 @@ export const lowerPlotWithDataArtifact = (
   const allGuides: Array<IRPlotGuide> = themedGuides;
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
 
+  assertFieldOrders(rootDataView.model, fieldOrderRegistry);
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const coordinateResolveContextOf = (
     source: IRPlot,
@@ -533,6 +537,7 @@ export const lowerPlotWithDataArtifact = (
     margin: options.margin,
     provenance,
     coordinateRegistry,
+    fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.filter(isLegendGuide)),
     lowerGuide,
@@ -556,7 +561,7 @@ export const lowerPlotWithDataArtifact = (
     defaultColor: categoricalColorAt(resolvedTheme.palette.series, 0),
     resolveChannelScale: (operation, values, context) =>
       resolveChannelScale(operation, values, context, { registry: scaleRegistry }),
-    resolveCategoryDomain: orderedCategoryDomain,
+    resolveCategoryDomain: (values, order) => resolveCategoryDomain(values, order, fieldOrderRegistry),
     resolveColorScheme,
     palette: resolvedTheme.palette,
   };
@@ -575,6 +580,7 @@ export const lowerPlotWithDataArtifact = (
     : undefined;
 
   const scopedFramesContext = {
+    fieldOrderRegistry,
     markPadding,
     node,
     dataView: rootDataView,

@@ -77,20 +77,20 @@ export type RuntimeParticipantCandidateLookup = Readonly<{
    * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
    */
   snapshot: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeSnapshot<TRead>;
   /**
-   * 读取 Computation candidate public artifact Snapshot
-   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
-   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
-   * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
-   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+   * 读取 Computation candidate public result Snapshot
+   * @template TResultInput run 或 update 产生、交给 result capture 的结果输入类型
+   * @template TResult capture 产生并由运行时持有和释放的计算结果类型
+   * @template TComputationRead 仅供当前计算的 update 读取旧结果的私有视图类型
+   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开结果视图类型
    */
-  artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-    computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
+  result: <TResultInput, TResult, TComputationRead, TPublicRead>(
+    computation: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
   ) => RuntimeSnapshot<TPublicRead>;
 }>;
 
@@ -122,14 +122,23 @@ export type RuntimeParticipantCandidateView =
 export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
   /** participant 的稳定唯一 key */
   key: string;
-  /** participant 声明读取的 Source tokens */
-  sources: ReadonlyArray<RuntimeSourceToken>;
-  /** participant 声明读取的 Computation tokens */
-  computations: ReadonlyArray<RuntimeComputationToken>;
+  /**
+   * participant 声明读取的 Source tokens
+   * @default []
+   */
+  sources?: ReadonlyArray<RuntimeSourceToken>;
+  /**
+   * participant 声明读取的 Computation tokens
+   * @default []
+   */
+  computations?: ReadonlyArray<RuntimeComputationToken>;
   /** participant 的 update 选择策略 */
   revisionPolicy: 'affected' | 'continuous';
-  /** participant 允许发射的 trace phases */
-  tracePhases: ReadonlyArray<RuntimeTracePhaseDefinition>;
+  /**
+   * participant 允许发射的 trace phases
+   * @default []
+   */
+  tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
   /** 为 candidate staging 一次可回滚 commit */
   prepare: (candidate: RuntimeParticipantCandidateView, context: RuntimeParticipantContext) => RuntimePreparedCommit;
   /** 生成与已 commit view 对应的 immutable public read */

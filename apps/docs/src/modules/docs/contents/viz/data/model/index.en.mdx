@@ -17,8 +17,7 @@ Solid arrows show the data path: external rows are normalized before data transf
 
 | Topic                    | Responsibility                                             | Read it when                                       |
 | ------------------------ | ---------------------------------------------------------- | -------------------------------------------------- |
-| Fields and Types         | Rows, logical fields, and measurement types                | You are new to the data model                      |
-| Field Contract           | Logical fields, measurement types, inference, and order    | You need stable, self-describing configuration     |
+| Fields and Types         | Field declarations, types, parsing, and category order     | You are new to the data model                      |
 | Data Intake              | Physical paths, parsing, and canonical-row normalization   | You switch APIs, use nested data, or parse formats |
 | Validation & Diagnostics | Skip, sample-check, or reject invalid participating values | You debug blank charts or enforce intake contracts |
 | Extension Mechanisms     | Register field formats and runtime field resolution        | Built-in intake cannot express a storage format    |
@@ -31,13 +30,8 @@ The data model stops after producing canonical rows. [Data transforms](/viz/data
   items={[
     {
       title: 'Fields and Types',
-      description: 'Understand rows, logical fields, and measurement types.',
+      description: 'Declare fields and understand types, parsing, and category order.',
       url: '/viz/data/model/fields-and-types',
-    },
-    {
-      title: 'Field Contract',
-      description: 'Declare field types, partial contracts, inference, and category order.',
-      url: '/viz/data/model/contract',
     },
     {
       title: 'Data Intake',

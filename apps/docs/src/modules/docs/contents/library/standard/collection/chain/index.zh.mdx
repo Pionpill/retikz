@@ -47,7 +47,9 @@ renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
 </DocTab>
 </DocTabs>
 
-## 选择输入与分支骨架
+## 基础用法
+
+### 选择输入方式
 
 items、data、skeleton 三选一。items 的字符串原样显示，显式单元用 `{ kind: 'cell', content?, id?, style?, layout? }`。data 中每个 JSON 值形成线性单元，嵌套对象或数组不会被猜测为分支；dataExpand 默认 true，可用 false 或 map/array 数组控制展开。
 
@@ -57,31 +59,37 @@ items、data、skeleton 三选一。items 的字符串原样显示，显式单�
 | `skeleton={{ labels: ['A', '', 'C'] }}`                          | 线性符号，空字符串保留空单元 |
 | `skeleton={{ items: ['A', { branches: [['B'], ['C']] }, 'D'] }}` | 分叉后汇合，可递归嵌套       |
 
-骨架的三个形式互斥。分支骨架只含符号，不携带图形、id 或局部样式。显式分叉用 `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`，可配置局部 layout 与 connection。
+骨架的三个形式互斥。
+
+**分支骨架**使用 `skeleton.items` 描述串行与分叉结构，只含符号，不携带图形、id 或局部样式。需要这些配置时，显式分叉用 `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`，可配置局部 layout 与 connection。
+
+嵌套集合默认不增加外层 Cell 背景和 padding，普通文本仍保留浅灰背景与默认内边距。JSON 自动展开与手动嵌套行为一致；显式设置的 style.fill、layout.padding（含继承配置）仍然优先。
 
 <ComponentPreview
   files={['chain-inputs', 'chain-inputs.preview.tsx']}
   defaultSourceFile="chain-inputs.preview.tsx"
-  size="md"
+  size="sm"
 />
 
 每个分叉至少两条非空支路，前后必须有普通单元，支路首尾也必须是普通单元。空字符串或空 cell 是单元，空数组不是直通支路。根空序列无连线，单单元不会自连。
 
-## 对齐分支与步骤
+### 对齐分支与步骤
 
 根 layout.direction 默认 right，也支持 down。gap 和 branchGap 分别控制主轴与支路间距，均为正数，默认 24。
 
 branchAlign 决定整个分支包围盒相对前一个单元的位置：start、center、end 或 `{ branch: 0 }`。默认 center；指定分支时，其主干与父链保持直线。横向链的起端／末端为上／下，纵向链为左／右。
 
-spacing 默认 steps，直属项共享步骤轨道；compact 让各支路独立紧凑排列。justify 用 start、center、end 控制短支路的位置，默认 start。嵌套分叉整体占父级一步；中心对齐遇到奇数空轨道时，多余空位放在末端，不生成虚假节点。
+spacing 默认 steps，直属项共享步骤轨道；independent 让各支路独立排布。justify 用 start、center、end 控制短支路的位置，默认 start。嵌套分叉整体占父级一步；中心对齐遇到奇数空轨道时，多余空位放在末端，不生成虚假节点。
 
 <ComponentPreview
   files={['chain-alignment', 'chain-alignment.preview.tsx']}
   defaultSourceFile="chain-alignment.preview.tsx"
-  size="xl"
+  size="md"
 />
 
-## 组合图形与嵌套分支
+## 扩展用法
+
+### 组合图形内容
 
 JSX 的结构关系为：
 
@@ -101,12 +109,23 @@ ChainCell 的 text 与唯一图形 children 互斥，都省略表示空单元。
 <ComponentPreview
   files={['chain-content', 'chain-content.preview.tsx']}
   defaultSourceFile="chain-content.preview.tsx"
-  size="lg"
+  size="md"
 />
 
-## 连接、标签与引用
+### 连接、标签与引用
 
-connection.route 默认 auto。横向分叉使用 `|-`、汇合使用 `-|`；纵向相反。自动连接在节点间距中预留折转位置，短支路也连接到公共汇合通道。显式 straight、`|-` 或 `-|` 直接连接端点，可能穿过其它内容。
+`connection.route` 默认 `auto`：在分流、汇合处按分支包围盒预留通道，横向用 `-|-`，纵向用 `|-|`；短支路也沿公共通道汇合。普通串行项直接连接。具体折线由 Core Path 生成。
+
+| route      | 连接方式               |
+| ---------- | ---------------------- |
+| `auto`     | 自动选择直线或分支通道 |
+| `straight` | 起终点直连             |
+| `\|-`      | 先纵后横               |
+| `-\|`      | 先横后纵               |
+| `-\|-`     | 横—纵—横               |
+| `\|-\|`    | 纵—横—纵               |
+
+连接引用整个单元，不固定左右或上下锚点；路径根据出入方向在单元边界处裁切。显式路由的横纵方向以绘图坐标为准，不随 Chain 排列方向交换，也不自动避让其它内容。三段折线使用 `connection.fraction` 指定中段在两单元中心之间的位置，范围为 0–1，缺省为 0.5；`fraction` 只能与显式 `-|-` 或 `|-|` 一起提供，其它路由或省略路由时均不允许携带。局部仅覆盖样式时继承原路由；指定相同路由时可继承或覆盖比例，切换路由时使用新路由自己的参数与默认值。`auto` 的通道位置由布局计算。
 
 <ComponentPreview
   files={['chain-connection', 'chain-connection.preview.tsx']}
@@ -124,10 +143,65 @@ connection.route 默认 auto。横向分叉使用 `|-`、汇合使用 `-|`；纵
 
 ## 实现原理
 
-Standard 将三入口解析成统一结构，复用 Cell 测量内容，再递归汇总支路包围盒和步骤轨道。摆放后通过普通路径输出连接，Core 负责箭头、标签、裁切、命名空间和最终空间引用。
+<ComponentAlert
+  type="tip"
+  title="选读"
+  description="这里只解释 Chain 特有的分支布局与连接编译。仅使用组件时可跳过本节。"
+/>
+
+单元格的继承、测量与内容回放见 [Collection 实现原理](/library/standard/collection/mechanism)。Chain 在此基础上保留串并联层次，先确定整条链的位置，再生成连接。
+
+### 分支合并与轨道对齐
+
+布局需要跟踪三个对象：
+
+- **布局块**：一个单元、一段序列或一组并行分支的整体尺寸与内部位置。
+- **基线**：块内用于与前后序列对齐的主轴位置，以距块顶边的偏移表示。
+- **入口与出口**：允许前后块连接的单元格布局对象引用，不是固定锚点或坐标快照。
+
+下图使用同一组内容，较长的 Bbbbbbbb 让两种居中的区别可见。观察下方 E 与上方 C 的位置：两图都使用 `justify="center"` 和 `branchAlign="center"`。
+
+<ComponentPreview files="branch-layout-figure" size="sm" hideCode type="illustration" />
+
+- `independent` 先按各格尺寸独立排布，再将较短支路放到最大支路宽度的中央；E 不必对齐 C。
+- `steps` 先按步骤序号汇总各支路的最大尺寸，形成共享轨道，再把各块居中放入对应轨道。上方有三个步骤、下方只有一个时，E 使用第二条轨道，因此与 C 对齐；只有两个步骤时，居中取前一条轨道，剩余空轨道留在末端。轨道分配不会强行拉宽单元格本身。
+
+布局从内向外递归合并。串行块按基线对齐，入口取第一块、出口取最后一块；并行块纵向叠放支路，汇总各支路入口与出口。图中并行块的入口是 Bbbbbbbb、E，出口是 D、E。`branchAlign` 决定这个整体与 A、F 对齐的位置：`center` 使用块的交叉轴中点，指定支路时则使用该支路的基线。计算始终使用主轴与交叉轴，向下排列时在最终输出前交换坐标与尺寸。
 
 <SourceLinks
-  sources={[{ label: 'Chain 编译', path: 'packages/library/standard/src/collection/chain/pipeline.ts', startLine: 1 }]}
+  sources={[
+    {
+      label: '递归合并、基线与步骤轨道',
+      path: 'packages/library/standard/src/collection/chain/layout.ts',
+      startLine: 1,
+    },
+    { label: '布局块与端点引用', path: 'packages/library/standard/src/collection/chain/types.ts', startLine: 1 },
+  ]}
+/>
+
+### 连接关系与路径生成
+
+布局阶段把前一块的每个出口与后一块的每个入口配对。它只记录两端单元格的引用、连接配置及必要的自动通道比例；块继续平移时，端点仍引用同一布局对象，不维护随位置变化的折线点列。下图沿用 A 进入两条分支的例子：
+
+<ComponentPreview files="connection-compile-figure" size="xs" hideCode type="flow" />
+
+所有位置确定后，编译入口用单元格的最终分配边界创建私有矩形引用节点，再将每条连接转为普通 Core Path。节点与路径位于独立命名空间内，路径通过 id 引用整个矩形，因此未显式提供 cell id 也能连接，不会固定某一侧的 anchor。内部内容比单元格窄时，连接仍以分配边界为准。
+
+`auto` 在普通相邻单元之间生成直线，在分叉和汇合处使用块间空隙的中线作为通道；比例相对两端中心计算，整体平移不改变它。向右排列使用横—纵—横，向下排列使用纵—横—纵。显式路由则保持绘图坐标中的横纵含义。后续节点边界裁切、折点落在节点内时的可见路径处理，以及箭头和标签均交由 Core 完成；这不包含其它节点的自动避障。
+
+<SourceLinks
+  sources={[
+    {
+      label: '出口与入口配对、自动通道',
+      path: 'packages/library/standard/src/collection/chain/layout.ts',
+      startLine: 1,
+    },
+    {
+      label: '私有引用节点与 Core Path 生成',
+      path: 'packages/library/standard/src/collection/chain/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
 />
 
 ## API 参考

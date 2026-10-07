@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { RuntimeDiagnosticCode } from '../../src';
 import {
   defineRuntimeComputation,
   RuntimeComputationExecution,
@@ -20,31 +19,29 @@ const defineCounterSource = (key = 'counter') =>
       read: value => value,
       equals: (left, right) => left === right,
     },
-    validateChangeSet: (previous, next, changeSet) =>
-      previous + changeSet.changes.reduce((sum, change) => sum + change.delta, 0) === next ? 'valid' : 'fallback',
   });
 
 describe('runtime Computation execution', () => {
   it('默认 auto 向 Computation 暴露 initial full 与 incremental update execution', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const executions: Array<unknown> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'execution-default' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: (view, context) => {
         executions.push(context.execution);
-        return { kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value };
       },
       update: (_previous, view, context) => {
         executions.push(context.execution);
-        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Incremental, result: view.snapshot(owner).value };
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -62,22 +59,22 @@ describe('runtime Computation execution', () => {
 
   it('full strategy 跳过 Computation update 并只以 full execution 调用 run', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const executions: Array<unknown> = [];
-    const update = vi.fn(() => ({ kind: RuntimeComputationKind.Incremental, artifact: 999 }));
+    const update = vi.fn(() => ({ kind: RuntimeComputationKind.Incremental, result: 999 }));
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'forced-full' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: (view, context) => {
         executions.push(context.execution);
-        return { kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value };
       },
       update,
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -93,27 +90,27 @@ describe('runtime Computation execution', () => {
     expect(result).toEqual({ revision: 1, outcome: RuntimeComputationKind.Full, diagnostics: [] });
     expect(update).not.toHaveBeenCalled();
     expect(executions).toEqual([RuntimeComputationExecution.Full, RuntimeComputationExecution.Full]);
-    expect(runtime.artifact(computation)).toEqual({ revision: 1, value: 2 });
+    expect(runtime.result(computation)).toEqual({ revision: 1, value: 2 });
   });
 
   it('CandidateView 精确区分同一 Computation 已声明 owner 的实际变化', () => {
     const primarySource = defineCounterSource('primary-changed');
     const stableSource = defineCounterSource('stable-owner');
-    const sources = createRuntimeSourceRegistry({ builtins: [primarySource, stableSource] });
+    const sources = createRuntimeSourceRegistry([primarySource, stableSource]);
     const observations: Array<Readonly<[boolean, boolean]>> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'primary-changed', key: 'changed-observer' },
       sources: [primarySource, stableSource],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(primarySource).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(primarySource).value }),
       update: (_previous, view) => {
-        observations.push(Object.freeze([view.changed(primarySource), view.changed(stableSource)]));
-        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(primarySource).value };
+        observations.push(Object.freeze([view.isChanged(primarySource), view.isChanged(stableSource)]));
+        return { kind: RuntimeComputationKind.Incremental, result: view.snapshot(primarySource).value };
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -128,71 +125,71 @@ describe('runtime Computation execution', () => {
     expect(observations).toEqual([[true, false]]);
   });
 
-  it('只执行直接与传递失效分支，并复用无关 Computation artifact', () => {
+  it('只执行直接与传递失效分支，并复用无关 Computation result', () => {
     const primarySource = defineCounterSource('primary');
     const unrelatedSource = defineCounterSource('unrelated');
-    const sources = createRuntimeSourceRegistry({ builtins: [primarySource, unrelatedSource] });
+    const sources = createRuntimeSourceRegistry([primarySource, unrelatedSource]);
     const directRun = vi.fn(view => ({
       kind: RuntimeComputationKind.Full,
-      artifact: view.snapshot(primarySource).value,
+      result: view.snapshot(primarySource).value,
     }));
     const directCapture = vi.fn((value: number) => value);
     const directObserver = vi.fn();
     const directUpdate = vi.fn((_previous: number, view) => ({
       kind: RuntimeComputationKind.Incremental,
-      artifact: view.snapshot(primarySource).value,
+      result: view.snapshot(primarySource).value,
     }));
     const direct = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'primary', key: 'direct' },
       sources: [primarySource],
       computations: [],
       tracePhases: [],
-      artifact: { capture: directCapture, readForComputation: value => value, read: value => value },
+      result: { capture: directCapture, readForComputation: value => value, read: value => value },
       run: directRun,
       update: directUpdate,
       observeCommit: directObserver,
     });
     const transitiveRun = vi.fn(view => ({
       kind: RuntimeComputationKind.Full,
-      artifact: view.artifact(direct).value * 10,
+      result: view.result(direct).value * 10,
     }));
     const transitiveCapture = vi.fn((value: number) => value);
     const transitiveObserver = vi.fn();
     const transitiveUpdate = vi.fn((_previous: number, view) => ({
       kind: RuntimeComputationKind.Incremental,
-      artifact: view.artifact(direct).value * 10,
+      result: view.result(direct).value * 10,
     }));
     const transitive = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'primary', key: 'transitive' },
       sources: [],
       computations: [direct],
       tracePhases: [],
-      artifact: { capture: transitiveCapture, readForComputation: value => value, read: value => value },
+      result: { capture: transitiveCapture, readForComputation: value => value, read: value => value },
       run: transitiveRun,
       update: transitiveUpdate,
       observeCommit: transitiveObserver,
     });
     const unrelatedRun = vi.fn(view => ({
       kind: RuntimeComputationKind.Full,
-      artifact: view.snapshot(unrelatedSource).value,
+      result: view.snapshot(unrelatedSource).value,
     }));
     const unrelatedCapture = vi.fn((value: number) => value);
     const unrelatedObserver = vi.fn();
     const unrelatedUpdate = vi.fn((_previous: number, view) => ({
       kind: RuntimeComputationKind.Incremental,
-      artifact: view.snapshot(unrelatedSource).value,
+      result: view.snapshot(unrelatedSource).value,
     }));
     const unrelated = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'unrelated', key: 'isolated' },
       sources: [unrelatedSource],
       computations: [],
       tracePhases: [],
-      artifact: { capture: unrelatedCapture, readForComputation: value => value, read: value => value },
+      result: { capture: unrelatedCapture, readForComputation: value => value, read: value => value },
       run: unrelatedRun,
       update: unrelatedUpdate,
       observeCommit: unrelatedObserver,
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [transitive, unrelated, direct] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [transitive, unrelated, direct] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -216,9 +213,9 @@ describe('runtime Computation execution', () => {
     expect(directObserver).toHaveBeenCalledTimes(2);
     expect(transitiveObserver).toHaveBeenCalledTimes(2);
     expect(unrelatedObserver).toHaveBeenCalledTimes(1);
-    expect(runtime.artifact(direct)).toEqual({ revision: 1, value: 2 });
-    expect(runtime.artifact(transitive)).toEqual({ revision: 1, value: 20 });
-    expect(runtime.artifact(unrelated)).toEqual({ revision: 1, value: 7 });
+    expect(runtime.result(direct)).toEqual({ revision: 1, value: 2 });
+    expect(runtime.result(transitive)).toEqual({ revision: 1, value: 20 });
+    expect(runtime.result(unrelated)).toEqual({ revision: 1, value: 7 });
 
     runtime.update({
       baseRevision: runtime.revision(),
@@ -237,28 +234,28 @@ describe('runtime Computation execution', () => {
     expect(directObserver).toHaveBeenCalledTimes(2);
     expect(transitiveObserver).toHaveBeenCalledTimes(2);
     expect(unrelatedObserver).toHaveBeenCalledTimes(2);
-    expect(runtime.artifact(direct)).toEqual({ revision: 2, value: 2 });
-    expect(runtime.artifact(transitive)).toEqual({ revision: 2, value: 20 });
-    expect(runtime.artifact(unrelated)).toEqual({ revision: 2, value: 8 });
+    expect(runtime.result(direct)).toEqual({ revision: 2, value: 2 });
+    expect(runtime.result(transitive)).toEqual({ revision: 2, value: 20 });
+    expect(runtime.result(unrelated)).toEqual({ revision: 2, value: 8 });
   });
 
   it('缺少 change hint 时仍调用 update，并向 CandidateView 暴露 undefined', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const hints: Array<unknown> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'computation' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update: (_previous, view) => {
         hints.push(view.changeSet(owner));
-        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Incremental, result: view.snapshot(owner).value };
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -272,10 +269,10 @@ describe('runtime Computation execution', () => {
 
     expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
     expect(hints).toEqual([undefined]);
-    expect(runtime.artifact(computation)).toEqual({ revision: 1, value: 2 });
+    expect(runtime.result(computation)).toEqual({ revision: 1, value: 2 });
   });
 
-  it('owner 未提供领域 validator 时把 branded change hint 透传给 Computation', () => {
+  it('把 branded change hint 透传给 Computation，由计算判断领域含义', () => {
     const owner = defineRuntimeSource<number, number, number, { delta: number }>({
       key: 'computation-validated',
       value: {
@@ -284,28 +281,28 @@ describe('runtime Computation execution', () => {
         equals: (left, right) => left === right,
       },
     });
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const hints: Array<unknown> = [];
     const computation = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'computation-validated', key: 'computation' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update: (_previous, view) => {
         hints.push(view.changeSet(owner));
-        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+        return { kind: RuntimeComputationKind.Incremental, result: view.snapshot(owner).value };
       },
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(owner, 1)],
     });
     const baseRevision = runtime.revision();
-    const changeSet = createRuntimeChangeSet(baseRevision, [{ delta: 1 }]);
+    const changeSet = createRuntimeChangeSet(baseRevision, [{ delta: 100 }]);
 
     const result = runtime.update({
       baseRevision,
@@ -316,78 +313,37 @@ describe('runtime Computation execution', () => {
     expect(hints).toEqual([changeSet]);
   });
 
-  it('invalid change hint 跳过 update、执行 full，并提交 fallback diagnostic', () => {
-    const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
-    const run = vi.fn(view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }));
-    const update = vi.fn(() => ({ kind: RuntimeComputationKind.Incremental, artifact: 999 }));
-    const computation = defineRuntimeComputation<number, number, number, number>({
-      id: { owner: 'counter', key: 'computation' },
-      sources: [owner],
-      computations: [],
-      tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
-      run,
-      update,
-    });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
-    const runtime = createRuntime({
-      sources,
-      computations,
-      updateStrategy: 'full',
-      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
-    });
-    const baseRevision = runtime.revision();
-
-    const result = runtime.update({
-      baseRevision,
-      sources: [createRuntimeSourceUpdate(owner, 2, createRuntimeChangeSet(baseRevision, [{ delta: 100 }]))],
-    });
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: RuntimeDiagnosticCode.ChangeSetFallback,
-        severity: 'warning',
-        owner: 'counter',
-      }),
-    ]);
-    expect(run).toHaveBeenCalledTimes(2);
-    expect(update).not.toHaveBeenCalled();
-    expect(runtime.artifact(computation)).toEqual({ revision: 1, value: 2 });
-  });
-
   it('upstream full 强制 downstream full，不调用 downstream update', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
-    const upstreamRun = vi.fn(view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }));
+    const sources = createRuntimeSourceRegistry([owner]);
+    const upstreamRun = vi.fn(view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }));
     const upstream = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'upstream' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: upstreamRun,
     });
     const downstreamExecutions: Array<unknown> = [];
     const downstreamRun = vi.fn((view, context) => {
       downstreamExecutions.push(context.execution);
-      return { kind: RuntimeComputationKind.Full, artifact: view.artifact(upstream).value * 10 };
+      return { kind: RuntimeComputationKind.Full, result: view.result(upstream).value * 10 };
     });
     const downstreamUpdate = vi.fn((_previous, view) => ({
       kind: RuntimeComputationKind.Incremental,
-      artifact: view.artifact(upstream).value * 10,
+      result: view.result(upstream).value * 10,
     }));
     const downstream = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'downstream' },
       sources: [],
       computations: [upstream],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: downstreamRun,
       update: downstreamUpdate,
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [downstream, upstream] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [downstream, upstream] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -404,14 +360,14 @@ describe('runtime Computation execution', () => {
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
     expect(downstreamExecutions).toEqual([RuntimeComputationExecution.Full, RuntimeComputationExecution.Full]);
-    expect(runtime.artifact(upstream)).toEqual({ revision: 1, value: 2 });
-    expect(runtime.artifact(downstream)).toEqual({ revision: 1, value: 20 });
+    expect(runtime.result(upstream)).toEqual({ revision: 1, value: 2 });
+    expect(runtime.result(downstream)).toEqual({ revision: 1, value: 20 });
   });
 
   it('Computation fallback 调用 full run并归属 warning；upstream bailout 不触发下游', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
-    const upstreamRun = vi.fn(view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }));
+    const sources = createRuntimeSourceRegistry([owner]);
+    const upstreamRun = vi.fn(view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }));
     const upstreamObserver = vi.fn();
     const upstreamUpdate = vi
       .fn()
@@ -427,7 +383,7 @@ describe('runtime Computation execution', () => {
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: upstreamRun,
       update: upstreamUpdate,
       observeCommit: upstreamObserver,
@@ -435,24 +391,24 @@ describe('runtime Computation execution', () => {
     const fallbackDownstreamExecutions: Array<unknown> = [];
     const downstreamRun = vi.fn((view, context) => {
       fallbackDownstreamExecutions.push(context.execution);
-      return { kind: RuntimeComputationKind.Full, artifact: view.artifact(upstream).value * 10 };
+      return { kind: RuntimeComputationKind.Full, result: view.result(upstream).value * 10 };
     });
     const downstreamObserver = vi.fn();
     const downstreamUpdate = vi.fn((_previous, view) => ({
       kind: RuntimeComputationKind.Incremental,
-      artifact: view.artifact(upstream).value * 10,
+      result: view.result(upstream).value * 10,
     }));
     const downstream = defineRuntimeComputation<number, number, number, number>({
       id: { owner: 'counter', key: 'downstream' },
       sources: [],
       computations: [upstream],
       tracePhases: [],
-      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: downstreamRun,
       update: downstreamUpdate,
       observeCommit: downstreamObserver,
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [downstream, upstream] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [downstream, upstream] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -483,7 +439,7 @@ describe('runtime Computation execution', () => {
     ]);
     expect(upstreamObserver).toHaveBeenCalledTimes(2);
     expect(downstreamObserver).toHaveBeenCalledTimes(2);
-    expect(runtime.artifact(downstream)).toEqual({ revision: 1, value: 20 });
+    expect(runtime.result(downstream)).toEqual({ revision: 1, value: 20 });
 
     const bailout = runtime.update({
       baseRevision: runtime.revision(),
@@ -492,8 +448,8 @@ describe('runtime Computation execution', () => {
 
     expect(bailout.outcome).toBe('committed');
     expect(upstreamUpdate).toHaveBeenCalledTimes(2);
-    expect(runtime.artifact(upstream)).toEqual({ revision: 2, value: 2 });
-    expect(runtime.artifact(downstream)).toEqual({ revision: 2, value: 20 });
+    expect(runtime.result(upstream)).toEqual({ revision: 2, value: 2 });
+    expect(runtime.result(downstream)).toEqual({ revision: 2, value: 20 });
     expect(downstreamRun).toHaveBeenCalledTimes(2);
     expect(downstreamUpdate).not.toHaveBeenCalled();
     expect(fallbackDownstreamExecutions).toEqual([

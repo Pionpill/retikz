@@ -1,5 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, Position } from '@retikz/math';
+import { point } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
@@ -99,6 +100,45 @@ export const boundaryPointOf = (
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn);
   const raw = def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
+};
+
+/** 沿折线移除起始节点连接面内的前缀，保留原线段上的出界交点 */
+export const clipNodePolyline = (
+  layout: NodeAnchorLayout,
+  points: ReadonlyArray<Position>,
+  boundary?: IRBoundary,
+  boundaryResolution?: BoundaryReferenceResolution,
+  warn?: (code: string, message: string) => void,
+): Array<Position> => {
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn);
+  const outer = inflateRect(rect, layout.margin);
+  const center: Position = [outer.x, outer.y];
+  const boundaryAt = (position: Position): Position =>
+    snapshotProviderPosition(
+      `Boundary '${boundaryKey(boundary)}' boundaryPoint`,
+      def.boundaryPoint(outer, position, params),
+    );
+  const contains = (position: Position): boolean =>
+    point.isEqual(position, center) || point.distance(center, position) <= point.distance(center, boundaryAt(position));
+
+  for (let index = 0; index < points.length; index += 1) {
+    const outside = points[index];
+    if (contains(outside)) continue;
+    if (index === 0) return [...points];
+    if (point.isEqual(points[index - 1], center)) return [boundaryAt(outside), ...points.slice(index)];
+
+    // 沿原线段求内外分界，避免改用中心射线后破坏正交方向
+    let inside = points[index - 1];
+    let edge = outside;
+    for (let iteration = 0; iteration < 48; iteration += 1) {
+      const midpoint: Position = [(inside[0] + edge[0]) / 2, (inside[1] + edge[1]) / 2];
+      if (contains(midpoint)) inside = midpoint;
+      else edge = midpoint;
+    }
+    return [edge, ...points.slice(index)];
+  }
+
+  return [];
 };
 
 /** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */

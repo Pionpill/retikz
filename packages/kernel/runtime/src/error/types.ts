@@ -22,7 +22,7 @@ export type RuntimeSourceLifecycleDiagnostic = Readonly<{
  * @template T Source 执行成功时 value 字段承载的结果类型
  */
 export type RuntimeSourceExecutionResult<T> = Readonly<{
-  /** 成功产物 */
+  /** 成功结果 */
   value: T;
   /** 执行过程中隔离的非致命诊断 */
   diagnostics: ReadonlyArray<RuntimeSourceLifecycleDiagnostic>;

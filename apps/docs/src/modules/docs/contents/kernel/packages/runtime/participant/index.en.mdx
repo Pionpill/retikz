@@ -1,0 +1,402 @@
+---
+title: Participant
+description: Define participants that consume Sources and computation results and manage external commits, rollback, reads and disposal
+---
+
+[Runtime · Transaction publication](/kernel/packages/runtime/transaction) explains how Sources and computation results publish together. **Runtime coordinates transactions; a Participant takes part in that process.** Runtime orchestrates computation, preparation, commit, rollback on failure, and resource disposal. Each Participant implements its own external-state logic, follows Runtime's transaction and instance lifecycles, and supplies a read view suited to its consumers.
+
+<ComponentPreview files="participant-relationship" size="sm" hideCode type="flow" />
+
+A Participant can update the DOM, replace a Canvas frame, or manage host state. Failure in its preparation, commit, or read prevents publication and triggers rollback of prepared objects. Its logic therefore helps determine whether the transaction succeeds, and its new read view becomes publicly readable only after successful publication.
+
+For example, updating an SVG document through Vanilla must update both its public processing result and the actual drawing. Publishing a new result when the SVG update fails would leave data and drawing inconsistent. Vanilla connects the processing result and renderer as separate commit participants: publish only when all succeed, or retain both previous states when failure is followed by successful rollback.
+
+`runtime.update(...)` executes the transaction; `runtime.participant(token)` reads a participant’s latest successfully published result without triggering a commit. The following count and display-buffer example explains the protocol, and [Vanilla application](#vanilla-application) connects it to the actual integration.
+
+## Overall flow
+
+| Stage                | API or configuration                     | Purpose                                                                                           |
+| -------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Define               | `defineRuntimeCommitParticipant(...)`    | Declare dependencies and preparation, read, and disposal logic                                    |
+| Register             | `createRuntime({ participants: [...] })` | Give Runtime ownership and execute the initialization transaction                                 |
+| Execute              | `runtime.update(...)`                    | Start a transaction; Runtime invokes participants as needed                                       |
+| Commit and roll back | `prepare` → `commit` / `rollback`        | The prepared object provides commit and rollback methods for Runtime to invoke                    |
+| Read                 | `runtime.participant(token)`             | Get the participant read value cached after the latest successful publication                     |
+| Dispose              | `runtime.dispose()`                      | Release long-lived resources; the prepared object's `dispose` cleans up per-transaction resources |
+
+Sources hold input, Computations derive results, and Participants consume that data to manage external state. The public `RuntimeCommitParticipant` type represents the long-lived participant. Its `prepare` returns a `RuntimePreparedCommit` for each transaction, responsible only for committing, rolling back and cleaning up that transaction’s temporary resources.
+
+<ComponentPreview files="participant-overview" size="xs" hideCode type="flow" />
+
+Participants receive candidate data before publication. Only after all participant commits and reads succeed does Runtime publish Sources, computation results, participant read views and the new revision. The post-publication `observeCommit` notification does not serve this transactional role.
+
+## Defining a participant
+
+`defineRuntimeCommitParticipant(options)` returns a token for registration and reads. Its callbacks typically close over a renderer or host resource; a token can be claimed by only one Runtime.
+
+```ts
+declare const defineRuntimeCommitParticipant: <TRead>(
+  options: RuntimeCommitParticipantDefinitionInput<TRead>,
+) => RuntimeCommitParticipant<TRead>;
+```
+
+`sources`, `computations`, and `tracePhases` are optional and default to `[]`; all other configuration fields are required:
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Member           | Purpose                                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `key`            | Unique within the instance; also determines participant execution order                                              |
+| `sources`        | Declare readable Sources and Source update triggers                                                                  |
+| `computations`   | Declare readable computations and result update triggers                                                             |
+| `revisionPolicy` | `affected` responds to dependency changes; `continuous` participates in every actual publication, as explained below |
+| `tracePhases`    | Declare allowed Trace phases; defaults to `[]`                                                                       |
+| `prepare`        | Read candidate data and prepare the transaction object                                                               |
+| `read`           | Produce an immutable host-facing view after commit                                                                   |
+| `dispose`        | End the participant and release its long-lived host resources                                                        |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
+  key: string;
+  sources?: ReadonlyArray<RuntimeSourceToken>;
+  computations?: ReadonlyArray<RuntimeComputationToken>;
+  revisionPolicy: 'affected' | 'continuous';
+  tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
+  prepare: (candidate: RuntimeParticipantCandidateView, context: RuntimeParticipantContext) => RuntimePreparedCommit;
+  read: () => TRead;
+  dispose: () => void;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+A participant’s `sources` and `computations` are dependency lists: they determine which candidate data it can read and which changes trigger it under the `affected` policy. Here, `computations` is an array of registered computation tokens, unlike the complete computation registry passed to Runtime creation.
+
+An independent display buffer demonstrates how a participant owns and updates host state. First define a count Source and a computation that produces display text. Subsequent examples reuse these variables:
+
+```ts
+import {
+  createRuntime,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  defineRuntimeCommitParticipant,
+  defineRuntimeComputation,
+  defineRuntimeSource,
+} from '@retikz/runtime';
+
+const count = defineRuntimeSource<number, number, number, never>({
+  key: 'example/count',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: Object.is,
+  },
+});
+const label = defineRuntimeComputation<string>({
+  id: { owner: count.key, key: 'label' },
+  sources: [count],
+  run: view => ({ kind: 'full', result: `Count: ${view.snapshot(count).value}` }),
+});
+```
+
+The display buffer lives outside Runtime. `prepare` creates the new content and remembers the old content; `commit` performs the replacement:
+
+```ts
+type DisplayRead = Readonly<{ text: string }>;
+let display: DisplayRead = Object.freeze({ text: '' });
+let rejectNextCommit = false;
+
+const displayParticipant = defineRuntimeCommitParticipant<DisplayRead>({
+  key: 'example/display',
+  computations: [label],
+  revisionPolicy: 'affected',
+  prepare: candidate => {
+    const previous = display;
+    const next = Object.freeze({ text: candidate.result(label).value });
+    return {
+      commit: () => {
+        display = next;
+        if (rejectNextCommit) {
+          rejectNextCommit = false;
+          throw new Error('Display commit failed');
+        }
+      },
+      rollback: () => {
+        display = previous;
+      },
+      dispose: () => {},
+    };
+  },
+  read: () => display,
+  dispose: () => {
+    display = Object.freeze({ text: '' });
+  },
+});
+```
+
+Runtime invokes the three functions returned by `prepare`; each applies only to this transaction:
+
+- `commit()`: after all participants prepare successfully, apply the change. Here it replaces `display` with `next`.
+- `rollback()`: if preparation, commit, or reading fails, restore the previous state. Here it restores `display` to `previous`. It must also be safe when this object's `commit` has not run yet.
+- `dispose()`: after successful publication or rollback on failure, clean up this transaction's temporary resources without undoing published results. This example has no temporary resources requiring explicit release, so the function is empty.
+
+The example deliberately throws after replacing the display to verify that `rollback` restores its old content. The outer participant's `dispose` clears the display when the participant ends; it releases long-lived resources rather than cleaning up one transaction.
+
+<SourceLinks
+  sources={[
+    { label: 'Participant definition and token', path: 'packages/kernel/runtime/src/participant/define.ts' },
+    { label: 'Configuration and prepared commit contract', path: 'packages/kernel/runtime/src/participant/types.ts' },
+  ]}
+/>
+
+## Registration and reads
+
+Register participants through the `participants` array passed to `createRuntime`. Dependencies must already be registered. Reading only `label` requires `computations: [label]`; the participant need not also declare the count Source used by that computation.
+
+```ts
+const sources = createRuntimeSourceRegistry([count]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [label] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(count, 1)],
+  participants: [displayParticipant],
+});
+
+console.log(runtime.revision()); // 0
+console.log(runtime.participant(displayParticipant).text); // Count: 1
+
+runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(count, 2)],
+});
+console.log(runtime.revision()); // 1
+console.log(runtime.participant(displayParticipant).text); // Count: 2
+```
+
+Initialization prepares, commits and reads every participant, so successful creation already displays `Count: 1`. Failed initialization returns no instance and cleans up the claimed participants.
+
+`runtime.participant(token)` returns `TRead` directly, without a `{ revision, value }` wrapper. It reads the cache from the latest successful publication rather than calling the participant’s `read` again. This example returns a frozen object. Returning mutable host objects would let later mutations change older views, so isolation is the participant’s responsibility.
+
+<SourceLinks
+  sources={[
+    { label: 'Participant registration and reads', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+    { label: 'Initialization, cached reads and publication', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## Per-transaction work
+
+After this transaction's computations finish, Runtime calls `prepare(candidate, context)`. The first argument, `candidate`, is the **candidate view**: it exposes the new state prepared for this transaction but not yet published. The second argument, `context`, provides Trace and diagnostic capabilities.
+
+For example, when the count changes from `1` to `2`, `candidate.result(label).value` in the example is the pending `Count: 2`. The table below lists the methods and properties of `candidate`:
+
+| Member                | Available data                                                         |
+| --------------------- | ---------------------------------------------------------------------- |
+| `snapshot(source)`    | A Source’s candidate `{ revision, value }`                             |
+| `result(computation)` | A computation’s candidate public view as `{ revision, value }`         |
+| `phase`               | `initial` during creation, `update` on subsequent updates              |
+| `candidateRevision`   | The revision that will publish if this transaction succeeds            |
+| `baseRevision`        | The published base revision of an update; absent during initialization |
+
+`candidate` can read only the participant's declared dependencies and provides neither ChangeSet access nor previous computation results. The participant retains old host state itself, as with `previous` above. `context.trace` reports execution observations and `context.diagnose` reports diagnostics; their usage belongs to the errors and Trace chapter.
+
+The returned `RuntimePreparedCommit` belongs to this transaction only:
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Method       | Responsibility                                                                                        |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| `commit()`   | Apply prepared state to the host; rollback must remain possible even after partial application throws |
+| `rollback()` | Restore pre-commit state; must also be safe before `commit` has run                                   |
+| `dispose()`  | Release transaction-local resources on both success and failure paths                                 |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimePreparedCommit = Readonly<{
+  commit: () => void;
+  rollback: () => void;
+  dispose: () => void;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+`prepare` should validate and stage changes without altering visible host state. If it fails before returning its transaction object, Runtime has no object to roll back or dispose; preparation must clean up any temporary resources it allocated.
+
+All callbacks run synchronously. Use the supplied candidate view rather than reentering Runtime update or read methods. `revision()` can query the currently published version, which has not yet advanced to the candidate version.
+
+<SourceLinks
+  sources={[
+    { label: 'Candidate view and transaction contract', path: 'packages/kernel/runtime/src/participant/types.ts' },
+  ]}
+/>
+
+## Failure and rollback
+
+Participants execute in ascending `key` order: all prepare, then all commit, then all read. Runtime does not finish the entire sequence for one participant before moving to the next. There is no participant dependency graph, and the candidate view cannot read another participant.
+
+For A and B below, both prepare, A commits, and B’s commit fails. Runtime rolls back participants that returned transaction objects in reverse order, including the failed B:
+
+<ComponentPreview files="participant-rollback" size="xs" hideCode type="flow" />
+
+If preparation fails, earlier prepared objects receive `rollback` even though they have not committed. If a `read` fails after all commits succeed, the batch also rolls back; applying external changes alone is not enough to publish the revision.
+
+Simulate failure in the display example:
+
+```ts
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '@retikz/runtime';
+
+rejectNextCommit = true;
+try {
+  runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(count, 3)],
+  });
+} catch (error) {
+  if (!(error instanceof RetikzRuntimeError) || error.code !== RetikzRuntimeErrorCode.ParticipantCommitFailed) {
+    throw error;
+  }
+  console.log(runtime.revision()); // 1
+  console.log(runtime.snapshot(count).value); // 2
+  console.log(runtime.result(label).value); // Count: 2
+  console.log(display.text); // Count: 2
+  console.log(runtime.participant(displayParticipant).text); // Count: 2
+}
+```
+
+After successful rollback, the previous revision, results and cached read views remain usable. Fix the cause before submitting again. Runtime then disposes transaction objects and candidate resources in reverse order. Temporary-resource cleanup failures after successful publication only record diagnostics; they do not undo publication.
+
+<ComponentAlert
+  type="warn"
+  title="Rollback failure"
+  description="If rollback also fails during an update, external state may be inconsistent. Runtime rejects further updates and state reads, leaving revision queries, diagnostics and disposal available. Recover the host resources and create a new instance rather than retrying the update on this one."
+/>
+
+This is a synchronous, rollback-capable commit protocol, not an isolation guarantee for external systems. Code observing host state such as the DOM directly may see intermediate mutations. Irreversible actions such as network sends do not gain transactional guarantees from an empty rollback method.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Batch commits, reverse rollback and failure state',
+      path: 'packages/kernel/runtime/src/runtime/runtime.ts',
+    },
+    { label: 'Participant error codes', path: 'packages/kernel/runtime/src/error/constants.ts' },
+  ]}
+/>
+
+## Dependencies and triggers
+
+`revisionPolicy` determines whether an update selects the participant:
+
+| Policy       | Selection condition                                                         | Use case                                            |
+| ------------ | --------------------------------------------------------------------------- | --------------------------------------------------- |
+| `affected`   | A declared Source changes or a declared computation produces a new result   | Apply display updates when its dependencies change  |
+| `continuous` | Every transaction with actual Source changes that will advance the revision | External state must follow every published revision |
+
+Both policies execute during initialization. Empty updates and updates whose Sources all compare equal bail out before participants run, including `continuous` participants.
+
+If a participant depends only on a computation that returns `bailout`, `affected` does not run merely because an upstream Source changed. Declaring that Source directly would make its changes a trigger. Unselected participants retain their cached reads; advancing Runtime’s global revision does not call their `read` again.
+
+<SourceLinks
+  sources={[
+    { label: 'Participant selection and transaction bailout', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## Ownership and disposal
+
+Source and Computation definitions are reusable, but a participant token binds host resources and is claimed exclusively by Runtime. Once claimed, it cannot be used by another instance or reused after successful disposal. A new instance needs a new participant and usable host resources. Initialization failure after ownership is claimed also consumes the token.
+
+The two `dispose` methods have distinct scopes: PreparedCommit cleans transaction-local resources; the participant cleans long-lived resources. After a successful commit, transaction cleanup must not release new state still owned by the host. End the instance through Runtime:
+
+```ts
+runtime.dispose();
+console.log(display.text); // ''
+```
+
+Final disposal visits participants in reverse `key` order, then computation results and Sources. Participant disposal failures record diagnostics. After retiring computations and Sources, Runtime attempts those participants once more. Calling `runtime.dispose()` again retries any still failing participants without revisiting successfully disposed objects. Updates cannot resume once disposal begins, and later retries cannot depend on live computation or Source resources.
+
+Failed initialization returns no instance on which to retry disposal. Participants should make cleanup reliable; integration code remains responsible for external resources that require further recovery.
+
+<SourceLinks
+  sources={[
+    { label: 'Exclusive ownership and token consumption', path: 'packages/kernel/runtime/src/participant/define.ts' },
+    { label: 'Final cleanup and retries', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## Complete flow
+
+After candidate computations finish, Runtime processes selected participants by phase. Every participant in the batch completes a step before the next step starts:
+
+<ComponentPreview files="participant-flow" size="xs" hideCode type="flow" />
+
+After publication, Runtime calls computation `observeCommit` callbacks, retires replaced Source values and results, and finally disposes transaction objects. Runtime queries expose successfully published state; restoring the host depends on the participant’s rollback implementation.
+
+<SourceLinks
+  sources={[
+    { label: 'Runtime commit orchestration', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'Retained renderer participant', path: 'packages/kernel/render/src/runtime/participant.ts' },
+  ]}
+/>
+
+## Vanilla application
+
+Vanilla’s retained DOM integration connects **Core computation, processing-result publication and renderer commits** to one Runtime. When updating an SVG, Core first produces candidate compilation output, then two participants prepare their own state:
+
+| Object                        | Commit responsibility                                                                                                  | Public read                                               |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Processing-result participant | Build a new `ProcessingResult` from Core output, replace the previous result on commit, and restore it on rollback     | The processing result exposed by Vanilla                  |
+| Renderer participant          | Apply the Scene and rendering configuration to SVG or Canvas, restoring state through the rollback protocol on failure | The committed `frame` and optional `animation` controller |
+
+Vanilla registers both in the `participants` array passed to `createRuntime`. An update first calls `runtime.update(...)`. Only after it returns successfully does Vanilla obtain the new processing result through `runtime.participant(resultParticipant)` and update its public cache. The renderer-side read wrapper also delegates to `runtime.participant(rendererParticipant)` to obtain the renderer’s committed public view.
+
+The diagram follows a successful update: Core candidate output feeds both participants inside the transaction. After publication, Vanilla and the renderer wrapper each read their cache through `runtime.participant(...)`, exposing processing results to callers and frames or animation controls to the host. Neither participant reads the other.
+
+<ComponentPreview files="participant-vanilla" size="sm" hideCode type="flow" />
+
+Suppose Core has computed a new Scene but the renderer fails during commit. Runtime attempts to roll back the prepared participants. Successful rollback keeps the previous processing result, drawing and read caches consistent; Vanilla does not return the candidate processing result as a successful update. If rollback also fails, the failure state described above applies, and drawing/data consistency can no longer be assumed.
+
+Here, `runtime.result(coreComputation)` reads compilation output, while participant reads expose results owned by the external commit layer. Both are gated by successful publication, but their contents and owners differ. A host could retain committed state itself; the shared read API instead reuses Runtime’s publication cache, avoiding separate success/rollback cache switching in every consumer.
+
+Renderer integration uses `createRetainedRenderParticipant` from `@retikz/render` with the `continuous` policy to follow published revisions. Ordinary Vanilla users work through its higher-level interfaces and generally do not need to handle Runtime participant tokens directly.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Processing-result participant, registration and post-success reads',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+    },
+    { label: 'Connecting renderer participants in Vanilla DOM', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
+    { label: 'Renderer commits and public read wrapper', path: 'packages/kernel/render/src/runtime/participant.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime · Transaction publication',
+      description: 'Publishing Sources, computations and revisions together',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    {
+      title: 'Computation',
+      description: 'Candidate results and post-publication notifications',
+      url: '/kernel/packages/runtime/computation',
+    },
+  ]}
+/>

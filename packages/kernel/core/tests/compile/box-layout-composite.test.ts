@@ -821,8 +821,8 @@ describe('Box Layout Composite contract', () => {
     const next = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 30 });
     const options = { composites: [definition], onWarn: () => {} };
     const program = createCoreComputation(options);
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -833,7 +833,7 @@ describe('Box Layout Composite contract', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
-    const artifact = session.artifact(program).value;
+    const artifact = session.result(program).value;
     const freshDiagnostics: Array<CompileWarning> = [];
     const freshResult = compileToScene(next, {
       composites: [definition],

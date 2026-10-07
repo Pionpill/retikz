@@ -537,9 +537,7 @@ export type EllipsePathStepProps = {
 
 `-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置
 
-<DocTabs defaultValue="two-segments">
-
-<DocTab value="two-segments" label="属性 · 两段折线">
+**公共属性**
 
 <ApiTable>
 
@@ -549,7 +547,20 @@ export type EllipsePathStepProps = {
 | `kind`      | `'fold'`         | —      | 折角 step 鉴别字面量 |
 | `label?`    | `InputStepLabel` | —      | 边标注               |
 | `to`        | `DslTarget`      | —      | 折角终点             |
-| `via`       | `'-\|' \| '\|-'` | —      | 两段折角走向         |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="two-segments">
+
+<DocTab value="two-segments" label="属性 · 两段折线">
+
+<ApiTable>
+
+| 成员  | 类型             | 默认值 | 说明         |
+| ----- | ---------------- | ------ | ------------ |
+| `via` | `'-\|' \| '\|-'` | —      | 两段折角走向 |
 
 </ApiTable>
 
@@ -559,14 +570,10 @@ export type EllipsePathStepProps = {
 
 <ApiTable>
 
-| 成员        | 类型                | 默认值 | 说明                 |
-| ----------- | ------------------- | ------ | -------------------- |
-| `children?` | `ReactNode`         | —      | sugar 形态           |
-| `fraction?` | `number`            | `0.5`  | 中间腿的归一化位置   |
-| `kind`      | `'fold'`            | —      | 折角 step 鉴别字面量 |
-| `label?`    | `InputStepLabel`    | —      | 边标注               |
-| `to`        | `DslTarget`         | —      | 折角终点             |
-| `via`       | `'-\|-' \| '\|-\|'` | —      | 三段折角走向         |
+| 成员        | 类型                | 默认值 | 说明               |
+| ----------- | ------------------- | ------ | ------------------ |
+| `fraction?` | `number`            | `0.5`  | 中间腿的归一化位置 |
+| `via`       | `'-\|-' \| '\|-\|'` | —      | 三段折角走向       |
 
 </ApiTable>
 

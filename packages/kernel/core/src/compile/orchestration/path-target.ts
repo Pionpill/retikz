@@ -5,7 +5,7 @@ import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTa
 import { FoldStepVia } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { point } from '../../shared/geometry';
-import { boundaryPointOf } from '../node';
+import { boundaryPointOf, clipNodePolyline } from '../node';
 import { resolveAnchorRef } from '../reference';
 import { applyTransformChain, inverseTransformChain } from '../transform';
 
@@ -149,6 +149,20 @@ export const pathTargetViewOf = (
   return {
     pointOfTarget: target => pointOf(target),
     referenceOfTarget: target => bindingOf(target)?.referencePoint ?? pointOf(target),
+    clipPolylineTarget: (target, points, scopeChain) => {
+      const binding = bindingOf(target);
+      if (binding?.node === undefined || !isNodeTarget(target) || !isAutoBoundaryTarget(target)) return [...points];
+
+      const node = binding.node;
+      const clipped = clipNodePolyline(
+        node,
+        points.map(position => applyTransformChain(position, scopeChain)),
+        target.boundary ?? node.boundary,
+        binding.boundaryResolution,
+        warn === undefined ? undefined : (code, message) => warn(code, message, node),
+      );
+      return clipped.map(position => inverseTransformChain(position, scopeChain));
+    },
     clipTarget: (target, toward, scopeChain) => {
       const binding = bindingOf(target);
       if (binding?.node === undefined || !isNodeTarget(target)) return pointOf(target);
