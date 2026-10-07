@@ -1,24 +1,6 @@
 import type { CanonicalCell } from '../../_cell/resolve';
-import type { IRMatrix, IRMatrixAxisIndex } from '../schema';
-
-/** 已补全默认值的单轴索引 */
-export type CanonicalMatrixAxisIndex =
-  | false
-  | (Omit<IRMatrixAxisIndex, 'position' | 'start' | 'labels'> & {
-      /** 当前轴索引在矩阵前侧或后侧的放置位置 */
-      position: 'before' | 'after';
-    } & (
-        | {
-            /** 当前轴自动递增索引的起始数值，与显式标签互斥 */
-            start: number;
-            labels?: never;
-          }
-        | {
-            /** 当前轴按顺序排列的显式索引标签，与起始数值互斥 */
-            labels: Array<string>;
-            start?: never;
-          }
-      ));
+import type { CanonicalCollectionIndex } from '../../_index/resolve';
+import type { IRMatrix } from '../schema';
 
 /** 已解析的矩形格与独立行列索引 */
 export type CanonicalMatrix = Omit<
@@ -40,8 +22,8 @@ export type CanonicalMatrix = Omit<
   /** 分别解析的行索引与列索引，任一轴可独立关闭 */
   index: {
     /** 已解析的行索引，false 表示关闭 */
-    row: CanonicalMatrixAxisIndex;
+    row: CanonicalCollectionIndex;
     /** 已解析的列索引，false 表示关闭 */
-    column: CanonicalMatrixAxisIndex;
+    column: CanonicalCollectionIndex;
   };
 };

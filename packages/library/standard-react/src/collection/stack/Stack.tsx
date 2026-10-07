@@ -7,7 +7,7 @@ import type { FC, ReactNode } from 'react';
 
 import type { StandardEmbeddableComponent } from '../../shared';
 import type { CellProps } from '../cell';
-import { collectCellMarkers, createCellsInput, markerCell } from '../cell';
+import { createLinearCellsInput } from '../cell';
 import { StackItem } from './StackItem';
 
 /**
@@ -58,14 +58,10 @@ const createStackInput = (props: Readonly<Record<string, unknown>>, context: Rea
   if (data !== undefined)
     return { ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputStack;
 
-  const cells = items ?? collectCellMarkers(children, StackItem, 'Stack').map(markerCell<IRCell['layout']>);
-  const collected = createCellsInput(
-    cells.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
-    context,
-  );
+  const collected = createLinearCellsInput(items, children, StackItem, 'Stack', context);
   const result: InputStack = {
     ...input,
-    items: collected.cells.map((cell, index) => (typeof cells[index] === 'string' ? cells[index] : cell)),
+    items: collected.cells,
   };
 
   return withInputEmbedAdapters(result, collected.adapters);

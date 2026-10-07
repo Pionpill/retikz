@@ -1,13 +1,13 @@
 import type {
   CompositeCompileChild,
-  IRNode,
   LayoutChildResult,
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '@retikz/core';
 
-import { compileCells, measureCell, measureCellChild } from '../_cell';
+import { compileCells, measureCell } from '../_cell';
 import type { CellPlacement, MeasuredCell } from '../_cell';
+import { measureCollectionIndex } from '../_index';
 import { resolveMatrix } from './resolve';
 import type { IRMatrix } from './schema';
 
@@ -55,20 +55,13 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
     let visible = false;
 
     for (let i = 0; i < (axis === 'row' ? rows : columns); i++) {
-      const text = options.labels === undefined ? String(options.start + i) : options.labels[i];
-      if (text === '') {
+      const result = measureCollectionIndex(options, i, occurrence, scope, context);
+      if (result === undefined) {
         axisResults[axis].push(undefined);
         continue;
       }
 
-      const child: IRNode = {
-        type: 'node',
-        position: [0, 0],
-        text,
-        style: { fill: 'none', stroke: 'none', ...options.style },
-        layout: { padding: 0, margin: 0 },
-      };
-      const result = measureCellChild(context, child, occurrence++, scope);
+      occurrence++;
       axisResults[axis].push(result);
       visible = true;
       strips[axis] = Math.max(strips[axis], axis === 'row' ? result.slotSize.width : result.slotSize.height);

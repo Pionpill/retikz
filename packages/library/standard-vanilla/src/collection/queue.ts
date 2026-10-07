@@ -5,7 +5,7 @@ import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardQueueEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
-import { dataCellDependencies, normalizeCells } from './cell';
+import { dataCellDependencies, normalizeCellItems } from './cell';
 
 /**
  * Queue 的 Vanilla authoring 输入
@@ -57,18 +57,14 @@ export const QueueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue> = 
       };
 
     const { items, ...input } = props;
-    const normalized = normalizeCells(
-      items.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
-      context,
-      QueueProvider,
-    );
+    const normalized = normalizeCellItems(items, context, QueueProvider);
 
     return {
       node: createQueue({
         namespace: 'standard',
         type: 'queue',
         ...input,
-        items: normalized.cells.map((cell, index) => (typeof items[index] === 'string' ? items[index] : cell)),
+        items: normalized.cells,
       }),
       providerDependencies: normalized.providerDependencies,
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),

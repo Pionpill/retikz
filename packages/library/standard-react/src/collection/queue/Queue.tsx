@@ -7,7 +7,7 @@ import type { FC, ReactNode } from 'react';
 
 import type { StandardEmbeddableComponent } from '../../shared';
 import type { CellProps } from '../cell';
-import { collectCellMarkers, createCellsInput, markerCell } from '../cell';
+import { createLinearCellsInput } from '../cell';
 import { QueueItem } from './QueueItem';
 
 /**
@@ -58,14 +58,10 @@ const createQueueInput = (props: Readonly<Record<string, unknown>>, context: Rea
   if (data !== undefined)
     return { ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputQueue;
 
-  const cells = items ?? collectCellMarkers(children, QueueItem, 'Queue').map(markerCell<IRCell['layout']>);
-  const collected = createCellsInput(
-    cells.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
-    context,
-  );
+  const collected = createLinearCellsInput(items, children, QueueItem, 'Queue', context);
   const result: InputQueue = {
     ...input,
-    items: collected.cells.map((cell, index) => (typeof cells[index] === 'string' ? cells[index] : cell)),
+    items: collected.cells,
   };
 
   return withInputEmbedAdapters(result, collected.adapters);

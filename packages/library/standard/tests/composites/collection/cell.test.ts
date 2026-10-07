@@ -3,7 +3,13 @@ import { compileToScene } from '@retikz/core';
 import { PathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 
-import { ArrayDefinition, MapDefinition, MatrixDefinition, ChainDefinition } from '../../../src/collection';
+import {
+  ArrayDefinition,
+  MapDefinition,
+  MatrixDefinition,
+  ChainDefinition,
+  TreeDefinition,
+} from '../../../src/collection';
 import { createDataCell } from '../../../src/collection/_cell/data';
 import { resolveCell } from '../../../src/collection/_cell/resolve';
 
@@ -12,6 +18,7 @@ const nested: Array<IRChild> = [
   { namespace: 'standard', type: 'map', entries: [{ key: 'K', value: 'V' }] },
   { namespace: 'standard', type: 'matrix', items: [['A']] },
   { namespace: 'standard', type: 'chain', items: ['A'] },
+  { namespace: 'standard', type: 'tree', root: 'A' },
 ];
 
 it('嵌套集合默认没有外层填充与内边距，保留原始内容和 Source', () => {
@@ -40,7 +47,7 @@ it('文本、空格与非集合绘图内容保留原默认样式', () => {
 });
 
 it('集合整体、角色与单格显式配置依次覆盖嵌套默认值', () => {
-  const content = nested[0];
+  const content = nested[nested.length - 1];
   const overall = { overallStyle: { fill: 'red' }, overallLayout: { padding: 6 } };
   const role = { ...overall, roleStyle: { fill: 'blue' }, roleLayout: { padding: 4 } };
   expect(resolveCell({ content }, overall)).toMatchObject({ style: { fill: 'red' }, layout: { padding: { left: 6 } } });
@@ -79,7 +86,7 @@ it('嵌套集合的外层 Cell 保留身份，默认尺寸与子集合一致，�
         ],
       },
       {
-        composites: [ArrayDefinition, MapDefinition, MatrixDefinition, ChainDefinition],
+        composites: [ArrayDefinition, MapDefinition, MatrixDefinition, ChainDefinition, TreeDefinition],
         clips: [PathClipDefinition],
         padding: 0,
       },
@@ -91,7 +98,7 @@ it('嵌套集合的外层 Cell 保留身份，默认尺寸与子集合一致，�
     const standalone = compileToScene(
       { type: 'scene', version: 1, children: [child] },
       {
-        composites: [ArrayDefinition, MapDefinition, MatrixDefinition, ChainDefinition],
+        composites: [ArrayDefinition, MapDefinition, MatrixDefinition, ChainDefinition, TreeDefinition],
         clips: [PathClipDefinition],
         padding: 0,
       },

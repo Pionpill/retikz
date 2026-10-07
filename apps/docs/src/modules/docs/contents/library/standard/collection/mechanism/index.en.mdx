@@ -109,7 +109,7 @@ The left side of the figure shows field responsibilities, and the right side sho
 
 `resolveCell` merges explicit fields in collection → Map key/value role → cell order, then fills missing defaults. Font fields merge individually, so changing only the size preserves an inherited family. The selected padding value expands into top, right, bottom, and left values. Map keys have a darker default fill, applied at the lowest priority rather than overriding explicit settings.
 
-When the content is directly a nested collection, the outer Cell defaults to fill `none` and padding `0`, avoiding a second background and extra spacing. The inner collection retains its own styles and padding. JSON expansion and authored nesting follow the same rule. Text, empty cells, and other drawing content keep their usual defaults; explicit collection, role, or cell settings take precedence.
+When the content is directly a nested collection (including Tree), the outer Cell defaults to fill `none` and padding `0`, avoiding a second background and extra spacing. The inner collection retains its own styles and padding. JSON expansion and authored nesting follow the same rule. Text, empty cells, and other drawing content keep their usual defaults; explicit collection, role, or cell settings take precedence.
 
 Numeric dimensions describe the cell's border box, including padding. When either axis has a numeric dimension and no local or inherited overflow setting exists, overflow defaults to clipping; otherwise it defaults to visible. An empty cell has no content measurement result, but padding or explicit dimensions can still reserve space.
 

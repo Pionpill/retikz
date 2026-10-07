@@ -51,7 +51,8 @@ export const resolveCell = (source: string | CellResolveSource, context: CellRes
       content.type === 'matrix' ||
       content.type === 'chain' ||
       content.type === 'stack' ||
-      content.type === 'queue');
+      content.type === 'queue' ||
+      content.type === 'tree');
   const visualDefaults = nestedCollection ? NestedCollectionCellDefaultsSchema : CellDefaultsSchema;
   const layoutDefaults = nestedCollection ? NestedCollectionCellLayoutDefaultsSchema : CellLayoutDefaultsSchema;
   const style = mergeStyle([overallStyle, roleStyle, cell.style]);

@@ -5,13 +5,13 @@ import { array, boolean, enum as zodEnum, literal, never, string, union } from '
 import { SurfaceSchema } from '../../../presentation/surface/schema';
 import { DataExpandSchema } from '../../_cell/data';
 import {
+  LinearCellSkeletonSchema,
   CellSchema,
   CellStyleSchema,
   CellLayoutSchema,
   OpenBorderSchema,
   CollectionArrowSchema,
 } from '../../_cell/schema';
-import { ArraySkeletonSchema } from '../../array';
 
 /** 单格尺寸与栈底到栈顶的堆叠方向 */
 export const StackLayoutSchema = CellLayoutSchema.extend({
@@ -24,7 +24,7 @@ export const StackLayoutSchema = CellLayoutSchema.extend({
 export const StackBorderSchema = OpenBorderSchema;
 
 /** 栈的空格或符号格骨架，与一维集合共用输入契约 */
-export const StackSkeletonSchema = ArraySkeletonSchema;
+export const StackSkeletonSchema = LinearCellSkeletonSchema;
 
 const StackBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard collection namespace.'),

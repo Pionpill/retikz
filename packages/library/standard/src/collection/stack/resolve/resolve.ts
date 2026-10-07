@@ -1,7 +1,6 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
-import { createDataCell, DataExpandSchema } from '../../_cell/data';
-import { resolveCell } from '../../_cell/resolve';
+import { expandLinearCells, resolveCell } from '../../_cell/resolve';
 import { StackBorderSchema, StackLayoutSchema, StackSchema } from '../schema';
 import type { IRStack } from '../schema';
 import type { CanonicalStack } from './types';
@@ -9,13 +8,7 @@ import type { CanonicalStack } from './types';
 /** 展开三入口，合并单格继承并物化框的静态默认 */
 export const resolveStack = (source: IRStack): CanonicalStack => {
   const { items, data, dataExpand, skeleton, layout, border, padding, ...common } = source;
-  const cells =
-    items ??
-    (data !== undefined
-      ? data.map(value => createDataCell(value, dataExpand ?? DataExpandSchema.parse(undefined)))
-      : skeleton.labels !== undefined
-        ? skeleton.labels.map(text => (text === '' ? {} : { content: text }))
-        : Array.from({ length: skeleton.count }, () => ({})));
+  const cells = items ?? expandLinearCells(data !== undefined ? { data, dataExpand } : { skeleton });
   const path = StackBorderSchema.parse(typeof border === 'object' ? border : {});
   const style = StackBorderSchema.shape.style.unwrap().parse(path.style ?? {});
   return {
