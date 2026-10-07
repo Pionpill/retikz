@@ -1,6 +1,7 @@
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { compositeOpaqueColor } from '@retikz/foundation';
 import { GraphStatus } from '@retikz/graph';
+
 // @vitest-environment jsdom
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
