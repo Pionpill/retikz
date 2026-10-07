@@ -1,4 +1,4 @@
-import { defineRegression, defineRegressionImplementation } from '@retikz/data';
+import { defineFieldOrder, defineRegression, defineRegressionImplementation } from '@retikz/data';
 import { lowerPlotWithLineage, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
@@ -49,4 +49,33 @@ describe('Plot regression runtime injection', () => {
     expect(() => lowerPlotWithLineage(result.spec, result.datasets ?? {}, result.lowerOptions)).not.toThrow();
     expect(JSON.stringify(result.spec)).not.toMatch(/regressionDefinitions|predict|schema/);
   });
+});
+
+it.each([false, true])('injects field orders into React runtime with embedded=%s', embedded => {
+  const definition = defineFieldOrder({ name: 'length', compare: (a, b) => String(a).length - String(b).length });
+  const spec = PlotSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: {
+      reference: 'rows',
+      model: [
+        { name: 'x', type: 'categorical', order: 'length' },
+        { name: 'y', type: 'continuous' },
+      ],
+    },
+    coordinate: { type: 'cartesian2D' },
+    scales: [],
+    marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+  });
+  const data = {
+    rows: [
+      { x: 'bbb', y: 1 },
+      { x: 'a', y: 2 },
+    ],
+  };
+  const result = resolvePlotAuthoring({ spec, data, fieldOrderDefinitions: [definition] }, { embedded });
+  expect(lowerPlotWithLineage(result.spec, result.datasets ?? {}, result.lowerOptions).children).toEqual(
+    lowerPlotWithLineage(spec, data, { ...result.lowerOptions, fieldOrderDefinitions: [definition] }).children,
+  );
+  expect(() => lowerPlotWithLineage(spec, data)).toThrow(/unknown order/);
 });

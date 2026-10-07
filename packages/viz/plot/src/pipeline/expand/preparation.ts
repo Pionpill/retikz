@@ -7,6 +7,7 @@ import type {
 } from '@retikz/data';
 import {
   assertAllValuesValid,
+  assertFieldOrders,
   assertDataTransformModel,
   assertDataTransformResult,
   createDataTransformExecutor,
@@ -49,10 +50,11 @@ export const preparePlotData = async <TSource = never>(
   const provenance =
     options.provenance === true || options.datumProvenance === true || options.datumIdField !== undefined;
   const registries = preparePlotRegistries(options);
+  assertFieldOrders(spec.data.model, registries.fieldOrderRegistry);
   let input: DataTransformStageInput<TSource>;
   if (binding.kind === 'rows') {
     const rows = provenance ? tagSourceIndex(binding.rows) : binding.rows;
-    const prepared = prepareRows(spec, { [reference]: rows }, options, rows);
+    const prepared = prepareRows(spec, { [reference]: rows }, options, rows, registries);
     if (options.invalid === 'error') assertAllValuesValid(prepared.normalized, prepared.fieldTypeMap);
     if (options.validateData)
       validateBoundData(
@@ -121,11 +123,13 @@ export const preparePlotData = async <TSource = never>(
     });
   const semantic = { transformRegistry: registries.transformRegistry, ...registries.transformContext };
   const descriptor = describeDataTransformInput(input);
+  assertFieldOrders(descriptor.model, registries.fieldOrderRegistry);
   const rootResolution = resolveDataTransforms(spec.transform ?? [], descriptor.model, semantic);
   const model = rootResolution.stages.at(-1)?.outputModel ?? rootResolution.inputModel;
   const markResolutions = spec.marks.map(mark => resolveDataTransforms(plotMarkTransformsOf(mark), model, semantic));
 
   const prepareScope = async (scope: string, scopeDescriptor: typeof descriptor, resolution: typeof rootResolution) => {
+    for (const stage of resolution.stages) assertFieldOrders(stage.outputModel, registries.fieldOrderRegistry);
     try {
       const prepared = await executor.prepare(scopeDescriptor, resolution, {
         dataExecution: spec.dataExecution,
@@ -167,7 +171,9 @@ export const preparePlotData = async <TSource = never>(
         actual: DataTransformStageInput<TSource>,
       ) => {
         try {
-          return await prepared.bind(actual).execute();
+          const result = await prepared.bind(actual).execute();
+          assertFieldOrders(result.model, registries.fieldOrderRegistry);
+          return result;
         } catch (cause) {
           throw new RetikzPlotError(`Plot ${scope} execution failed`, { cause });
         }

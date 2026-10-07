@@ -17,18 +17,22 @@ export type ComponentPreviewsItem = {
 
 export type ComponentPreviewsProps = {
   items: Array<ComponentPreviewsItem>;
+  /** 每行列数上限；省略时按可用宽度自动分列，窄屏可减少列数 */
+  columns?: 1 | 2 | 3 | 4;
+  /** 自动分列时采用的最小卡片宽度，单位 px
+   * @default 280
+   */
+  minWidth?: number;
 };
-
-const previewMinWidth = 280;
 
 const previewGap = 16;
 
 /** 在等宽、均衡分行的网格中只展示已有 demo 图形 */
 export const ComponentPreviews: FC<ComponentPreviewsProps> = props => {
-  const { items } = props;
+  const { items, columns, minWidth = 280 } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const [maxColumns, setMaxColumns] = useState(1);
-  const rowSizes = getLinkedSectionRowSizes(items.length, maxColumns);
+  const rowSizes = getLinkedSectionRowSizes(items.length, Math.min(maxColumns, columns ?? maxColumns));
   const rows = rowSizes.map((rowSize, index) => {
     const startIndex = rowSizes.slice(0, index).reduce((sum, size) => sum + size, 0);
     return items.slice(startIndex, startIndex + rowSize);
@@ -39,7 +43,7 @@ export const ComponentPreviews: FC<ComponentPreviewsProps> = props => {
     if (container == null || typeof ResizeObserver === 'undefined') return undefined;
 
     const updateMaxColumns = (width: number): void => {
-      const nextMaxColumns = Math.max(1, Math.floor((width + previewGap) / (previewMinWidth + previewGap)));
+      const nextMaxColumns = Math.max(1, Math.floor((width + previewGap) / (minWidth + previewGap)));
       setMaxColumns(currentMaxColumns => (currentMaxColumns === nextMaxColumns ? currentMaxColumns : nextMaxColumns));
     };
 
@@ -51,7 +55,7 @@ export const ComponentPreviews: FC<ComponentPreviewsProps> = props => {
     observer.observe(container);
 
     return () => observer.disconnect();
-  }, []);
+  }, [minWidth]);
 
   return (
     <div ref={containerRef} data-component-previews className="my-6 min-w-0 space-y-4">

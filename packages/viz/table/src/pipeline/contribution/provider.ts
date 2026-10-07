@@ -29,6 +29,7 @@ const TABLE_THEME_STYLES_KEY = 'tableThemeStyles';
 
 const DATA_OPTIONS_KEYS = new Set([
   'formatDefinitions',
+  'fieldOrderDefinitions',
   'transformDefinitions',
   'statisticsReducerDefinitions',
   'rowSelectorDefinitions',
@@ -143,6 +144,11 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
 
   return {
     ...mergeSharedLowerOptions(optionSets),
+    fieldOrderDefinitions: mergeByIdentity(
+      optionSets.map(options => options.fieldOrderDefinitions),
+      definition => definition.name,
+      'field order',
+    ),
     formatDefinitions: mergeByIdentity(
       optionSets.map(options => options.formatDefinitions),
       definition => definition.name,

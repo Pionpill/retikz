@@ -22,6 +22,19 @@ const sourceView = (): DataView =>
   );
 
 describe('resolved data view transforms', () => {
+  it.each(['appearance', 'ascending'] as const)(
+    'rejects %s category order when observations infer a continuous field',
+    order => {
+      expect(() => createDataView([{ value: 1 }], [{ name: 'value', order }])).toThrow(/order.*categorical/);
+    },
+  );
+
+  it('preserves order when observations infer a categorical field', () => {
+    expect(createDataView([{ value: 'M' }], [{ name: 'value', order: ['S', 'M'] }]).model).toEqual([
+      { name: 'value', type: 'categorical', order: ['S', 'M'] },
+    ]);
+  });
+
   it('preserves input field evidence and adds descriptor-derived output evidence', () => {
     const copyField = defineTransform({
       schema: strictObject({

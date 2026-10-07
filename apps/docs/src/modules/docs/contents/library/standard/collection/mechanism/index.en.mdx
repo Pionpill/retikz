@@ -1,0 +1,327 @@
+---
+title: Implementation
+description: Understand the shared internal logic of Collections, from input resolution and Cell measurement to layout allocation and content replay.
+---
+
+Array, Map, Matrix, Stack, Queue, and Chain share Cell descriptions, measurement, and replay, then arrange cells according to their own structure. Tree belongs to the same family but measures text Nodes and arranges subtrees directly; the final section covers this separate path. This page follows that common processing chain to explain how content enters a cell and why it can retain its original size when the cell's dimensions change.
+
+We start when a collection's Source IR enters its compile callback and stop when compiled children and allocation bounds are returned. React child collection, Vanilla input conversion, and final SVG / Canvas rendering are outside this scope. Names such as `CanonicalCell` and `MeasuredCell` identify internal implementation structures, not public inputs that users must construct.
+
+## Overall flow
+
+Start with a familiar result: how can Array cells have equal width and height when their contents differ in size? When all items use automatic dimensions, Array **measures every item first, then takes the maximum width and maximum height separately as the common cell size**. The two maxima may come from different items. Content is not stretched; it is centered inside the allocated cell.
+
+Below, A and Bbbb represent shorter and longer content. Their example content blocks are set to 40 × 24 and 80 × 36. These dimensions include the colored rectangles, rather than describing the glyphs themselves. Adding padding 8 on every side gives individual cell needs of 56 × 40 and 96 × 52, so the common width is 96 and the common height is 52. On the right, the gray cells match while the colored contents retain their own sizes.
+
+<ComponentPreview files="array-sizing-figure" size="lg" hideCode type="illustration" />
+
+This describes automatic sizing: an explicit numeric cell dimension retains its value, while `width: 'content'` retains that cell's own width need. Later sections explain these policies. For now, the example establishes a common premise: **measuring how much space content needs and deciding how much space to allocate are separate tasks**.
+
+A collection first interprets its input, then measures each cell's needs, and finally decides where to place it. Keep three sizes distinct:
+
+- **Natural content size**: the content's measured layout size under its own settings, before the outer collection applies shared cell dimensions
+- **Cell need**: an explicit dimension, or the natural content dimension plus padding on that axis
+- **Final allocation**: the cell's position and border box, determined from the collection's cell needs
+
+Read the arrows row by row. Natural measurement and final allocation are separate stages; replay reuses the result retained during measurement.
+
+<ComponentPreview files="overview-figure" size="sm" hideCode type="flow" />
+
+The following sections reuse A and Bbbb's dimensions as we follow input resolution, cell measurement, and final placement.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Array stage orchestration',
+      path: 'packages/library/standard/src/collection/array/pipeline.ts',
+      startLine: 16,
+    },
+    {
+      label: 'Shared measurement and placement records',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 17,
+    },
+  ]}
+/>
+
+## Input resolution
+
+Internal container resolvers, such as `resolveArray` and `resolveMap`, first handle their respective input shapes, then call the shared `resolveCell` to resolve each cell's content and settings. We call this **resolution and completion**: it unifies representations and applies inheritance and defaults without rewriting the original Source. We avoid calling this `normalize`, which names a separate input-conversion stage in Vanilla.
+
+The three entry forms of these six Cell-based collections eventually supply cell content, but they have different meanings. Tree root does not pass through this step:
+
+| Input               | Expansion                                                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`              | Convert JSON values to displayable cells; nonempty arrays and objects can expand into nested Array / Map components according to `dataExpand` |
+| `items` / `entries` | Preserve authored text, drawable children, cell identities, and local settings                                                                |
+| `skeleton`          | Generate cells from counts, keys, or a rectangular shape; supported nonempty labels become content, while empty labels leave cells empty      |
+
+The figure shows input-field excerpts from three **independent Array instances**. Numeric data `[1, 2]`, explicit text `['1', '2']`, and a labeled skeleton all produce cells displaying `1` and `2`. Only selected internal fields of the first cell are expanded on the right.
+
+<ComponentPreview files="inputs-figure" size="lg" hideCode type="illustration" />
+
+Primitive `data` values become display text through `JSON.stringify`, so JSON strings retain their quotes; explicit text is displayed directly. Empty arrays, empty objects, and containers whose expansion is disabled also appear as JSON text. Expansion creates another collection as a child rather than flattening nested data into the outer cells.
+
+Converging on Cell does not discard collection structure: Array retains sequence order, Map retains key-value pairs, Matrix retains rows and columns, Stack and Queue retain a sequence with defined operation ends, and Chain retains its sequence-and-branch tree. Each resolver also handles its own gap shorthand, indices, or connection settings. Measurement no longer needs to distinguish the original entry form.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'JSON values and nested collection expansion',
+      path: 'packages/library/standard/src/collection/_cell/data/cell.ts',
+      startLine: 12,
+    },
+    {
+      label: 'Array input convergence',
+      path: 'packages/library/standard/src/collection/array/resolve/resolve.ts',
+      startLine: 9,
+    },
+    {
+      label: 'Map key-value pairs',
+      path: 'packages/library/standard/src/collection/map/resolve/resolve.ts',
+      startLine: 8,
+    },
+    {
+      label: 'Matrix row structure',
+      path: 'packages/library/standard/src/collection/matrix/resolve/resolve.ts',
+      startLine: 33,
+    },
+    {
+      label: 'Chain branch recursion',
+      path: 'packages/library/standard/src/collection/chain/resolve/resolve.ts',
+      startLine: 32,
+    },
+  ]}
+/>
+
+## Cell responsibilities
+
+Cell is the shared description of one collection slot. It may be empty, contain text, or contain one drawable child, including a nested collection. The cell's background, border, size, and identity are distinct from its content, so the cell boundary remains meaningful even when content overflows.
+
+- **`content`**: what goes inside; resolution expands strings into text nodes with no fill, no stroke, and zero padding and margin
+- **`style`**: cell appearance and settings such as font and text color supplied to its content
+- **`layout`**: size policies, padding, and overflow behavior
+- **`id`**: an optional identity used to reference the cell's allocated bounds
+
+The left side of the figure shows field responsibilities, and the right side shows padding precedence. When all four candidates exist, the local cell value 4 wins; lookup continues downward only when a candidate is omitted.
+
+<ComponentPreview files="cell-figure" size="md" hideCode type="illustration" />
+
+`resolveCell` merges explicit fields in collection → Map key/value role → cell order, then fills missing defaults. Font fields merge individually, so changing only the size preserves an inherited family. The selected padding value expands into top, right, bottom, and left values. Map keys have a darker default fill, applied at the lowest priority rather than overriding explicit settings.
+
+When the content is directly a nested collection (including Tree), the outer Cell defaults to fill `none` and padding `0`, avoiding a second background and extra spacing. The inner collection retains its own styles and padding. JSON expansion and authored nesting follow the same rule. Text, empty cells, and other drawing content keep their usual defaults; explicit collection, role, or cell settings take precedence.
+
+Numeric dimensions describe the cell's border box, including padding. When either axis has a numeric dimension and no local or inherited overflow setting exists, overflow defaults to clipping; otherwise it defaults to visible. An empty cell has no content measurement result, but padding or explicit dimensions can still reserve space.
+
+Array arranges Cells in a sequence, Map pairs them as keys and values, Matrix stores them in rows, Stack and Queue arrange them along one axis, and Chain uses them as leaves in its sequence-and-branch structure. They share cell behavior while owning their organization.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Cell input and default fields',
+      path: 'packages/library/standard/src/collection/_cell/schema/cell.ts',
+      startLine: 28,
+    },
+    {
+      label: 'Inheritance, text expansion, and conditional defaults',
+      path: 'packages/library/standard/src/collection/_cell/resolve/resolve.ts',
+      startLine: 33,
+    },
+    {
+      label: 'Resolved internal cell contract',
+      path: 'packages/library/standard/src/collection/_cell/resolve/types.ts',
+      startLine: 30,
+    },
+  ]}
+/>
+
+## Natural measurement
+
+A collection's compile function calls `measureCell` for each resolved Cell. When content exists, it supplies the cell's font, text color, and related settings within the collection's theme and defaults, then calls `measureCellChild` with an `intrinsicLayoutProposal('natural')` probe.
+
+“Natural” means this pass does not constrain content to the outer cell's final width. The content's own size and layout settings still apply. Probing performs the compilation work required by the content and returns a replayable `LayoutChildResult`, not just two dimensions. A nested collection completes its own resolution, measurement, and placement within that probe.
+
+Colored rectangles below represent content; light gray represents the cell. A and Bbbb first receive padding 8 on every side. The additional example on the right sets Bbbb's cell width to 60: its width need becomes 60 while its content remains 80 wide.
+
+<ComponentPreview files="measurement-figure" size="lg" hideCode type="illustration" />
+
+Each axis is evaluated separately. For width:
+
+$$
+w_{need}=\begin{cases}
+w_{fixed}, & \text{a numeric width is configured} \\
+w_{content}+p_{left}+p_{right}, & \text{otherwise}
+\end{cases}
+$$
+
+Height follows the same rule. Missing content contributes zero, so an empty cell with padding 8 has a natural need of 16 × 16. An explicit width of 60 does not receive another 16 of horizontal padding.
+
+`MeasuredCell` retains three kinds of information: the resolved `cell`, the optional content probe `result`, and cell needs `width / height`. Collections store these records in a flat array, a two-dimensional array, or Chain layout blocks. **Within each collection compile call, each cell's content is probed here once and reused for final placement.** This is not a persistent cache across compilations, nor does it first draw the whole figure in a browser and read DOM dimensions.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Natural probing and style environment',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 49,
+    },
+    {
+      label: 'Content needs and explicit dimensions',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 70,
+    },
+  ]}
+/>
+
+## Size and position allocation
+
+Once cell needs are known, a collection can compare the relevant cells. Shared measurement does not imply identical placement: each collection decides which cells contribute to a maximum and how coordinates advance.
+
+Continue with A's need of 56 × 40 and Bbbb's need of 96 × 52. Every panel uses the same A and Bbbb content sizes; gray regions show actual cell allocation. Map compares the two columns with A/Bbbb and Bbbb/A rows, while Matrix repeats A/Bbbb in both rows.
+
+<ComponentPreview files="allocation-figure" size="xxl" hideCode type="illustration" />
+
+| Collection    | Automatic sizing and placement                                                                                                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Array         | Automatic width and height take the maximum needs across all cells; `width: 'content'` retains each cell's own width need. Advance along the chosen axis by allocated cell size plus gap                      |
+| Map           | Take separate maximum widths for key and value columns; each row uses the larger height of its pair. Advance by row height plus row gap                                                                       |
+| Matrix        | Take a maximum width per column and maximum height per row. Place cells at track starts and advance by track size plus gap                                                                                    |
+| Stack / Queue | Preserve cell sizes on the main axis. Auto cells fill the largest cross-axis need; fixed cells are centered. Container padding is added separately; borders and operation arrows do not change cell placement |
+| Chain         | Keep each cell's needed size, combine cells and branches into layout blocks, then determine sequence positions, branch alignment, and connections                                                             |
+
+Every collection preserves explicit numeric cell dimensions. In Map and Matrix, making one cell narrower does not necessarily shrink its column track: a wider cell in the same column still determines the next column's start. Chain's step alignment can also introduce shared tracks, while cells retain their own sizes within those tracks.
+
+Placement produces `CellPlacement`, which references the earlier `MeasuredCell` and adds `x / y / width / height` and a role. These dimensions describe the final cell border box. Array and Matrix measure indices separately and reserve strips beside the cells. Indices increase the collection's needs without using index text width to resize content cells.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Array automatic, content, and fixed sizing',
+      path: 'packages/library/standard/src/collection/array/pipeline.ts',
+      startLine: 87,
+    },
+    {
+      label: 'Map column widths and row heights',
+      path: 'packages/library/standard/src/collection/map/pipeline.ts',
+      startLine: 16,
+    },
+    {
+      label: 'Matrix shared row and column tracks',
+      path: 'packages/library/standard/src/collection/matrix/pipeline.ts',
+      startLine: 24,
+    },
+    {
+      label: 'Chain blocks and tracks',
+      path: 'packages/library/standard/src/collection/chain/layout.ts',
+      startLine: 75,
+    },
+  ]}
+/>
+
+## Content replay
+
+`compileCells` receives positioned cells and uses its internal `emitCell` to output the background, content layer, and border. The content layer reuses the probe result with `context.replay(result)`, adding only placement transforms and any required clipping.
+
+Bbbb is 80 × 36 in all three examples. The first cell provides extra room, the second allows overflow on both sides, and the third clips at the cell outline. Narrowing a cell does not scale Bbbb or reflow its content under the new width.
+
+<ComponentPreview files="replay-figure" size="md" hideCode type="illustration" />
+
+Centering accounts for both padding and the measured allocation origin. Symmetric padding uses the cell center; asymmetric padding shifts the content center and clamps it within the cell. The horizontal transform is:
+
+$$
+c_x=\operatorname{clamp}\!\left(\frac{W+p_{left}-p_{right}}{2},0,W\right),\qquad
+\Delta x=c_x-\frac{w_{content}}{2}-x_{allocation}
+$$
+
+Here `x_allocation` is the origin of the measured allocation bounds and need not be zero. Subtracting it places content correctly even when it already has a local offset. The vertical axis follows the same rule. Clipping follows the cell's outer outline, including corner rounding, rather than the smaller area inside its padding.
+
+The collection also resolves its allocation against the parent's size proposal. Extra parent space does not stretch the cells again; insufficient space for the already arranged cells and gaps produces an error. Named cells publish allocated bounds and invisible reference carriers. Container labels, indices, and Chain connections are assembled as additional content. The callback returns compiled children and `allocationBounds`; subsequent compilation and the renderer complete the overall output.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Content translation, clipping, and layers',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 123,
+    },
+    {
+      label: 'Parent allocation, decoration, and references',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 185,
+    },
+  ]}
+/>
+
+## Complete implementation flow
+
+Use Matrix as the source-reading entry point below. The entire diagram belongs to one `compileMatrix` call: its `compileMatrix` node denotes track aggregation and placement after measurement, not a second invocation. The callback resolves and measures individual cells, then passes final positions to the shared output logic.
+
+<ComponentPreview files="pipeline-figure" size="lg" hideCode type="flow" />
+
+Start with `resolveMatrix` to see how rows are preserved, then read `resolveCell` for cell settings. Return to the compile function to follow `MeasuredCell[][]` into `CellPlacement[]`, and finish with `emitCell` inside `compileCells` to understand replay. Follow the same order for Array, Map, Stack, Queue, and Chain, substituting their organization and placement stages.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Matrix compile entry',
+      path: 'packages/library/standard/src/collection/matrix/pipeline.ts',
+      startLine: 15,
+    },
+    {
+      label: 'Shared cell resolution',
+      path: 'packages/library/standard/src/collection/_cell/resolve/resolve.ts',
+      startLine: 34,
+    },
+    {
+      label: 'Shared measurement and output',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 17,
+    },
+  ]}
+/>
+
+## The Tree node and subtree path
+
+Tree reads root directly: strings become text nodes, objects retain children and local settings, and null represents an empty tree or a missing child slot. It does not create Cells or use the three-input expansion. Global node settings and per-node overrides merge before node defaults apply.
+
+A, B, C, and D below are real Nodes. The missing child slot under C occupies space without drawing a node. Each parent sits midway between the centers of its first and last direct children, rather than at the center of the full descendant envelope.
+
+<ComponentPreview files="/library/standard/collection/tree/tree-basic" hideCode type="illustration" size="md" />
+
+Compilation measures node text and shapes, aggregates subtree envelopes from the leaves upward, and places them using level and sibling clearances. Each node replays its measured result. Parent-child paths target complete nodes, so path direction determines where they meet the actual outlines. An explicit id identifies the Node itself, rather than a rectangular Cell region. See [Tree usage](/library/standard/collection/tree) for shape and long-text examples.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Tree node and configuration resolution',
+      path: 'packages/library/standard/src/collection/tree/resolve/resolve.ts',
+    },
+    {
+      label: 'Tree measurement, subtree placement, and connections',
+      path: 'packages/library/standard/src/collection/tree/pipeline.ts',
+    },
+    { label: 'Shared Stack / Queue linear layout', path: 'packages/library/standard/src/collection/_cell/linear.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Array',
+      description: 'Explore automatic sizing, content width, and indices',
+      url: '/library/standard/collection/array',
+    },
+    {
+      title: 'Matrix',
+      description: 'Explore shared tracks and individual cell overrides',
+      url: '/library/standard/collection/matrix',
+    },
+    {
+      title: 'Chain',
+      description: 'Explore sequences, branch alignment, and connections',
+      url: '/library/standard/collection/chain',
+    },
+  ]}
+/>

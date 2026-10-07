@@ -1,5 +1,5 @@
 import type { IRScope } from '@retikz/core';
-import type { DataView } from '@retikz/data';
+import type { DataView, FieldOrderDefinition } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
@@ -60,6 +60,8 @@ export type ScopedFramesResolveContext = {
   provenance?: ProvenanceContext;
   /** 按类型索引的有效尺度定义 */
   scaleRegistry: Map<string, AnyScaleDefinition>;
+  /** 当前请求共享的分类顺序注册表 */
+  fieldOrderRegistry?: ReadonlyMap<string, FieldOrderDefinition>;
   /** 各 mark 局部变换后的有效数据视图 */
   markDataViews: Array<MarkDataView>;
   /** 组合区域间距与外边距配置 */
@@ -150,6 +152,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     margin: options.margin,
     provenance,
     coordinateRegistry,
+    fieldOrderRegistry: context.fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.flatMap(guide => (guide.type === PlotGuide.Legend ? [guide] : []))),
     lowerGuide,

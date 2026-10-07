@@ -77,3 +77,20 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
     authoringSites: normalized.flatMap(child => child?.authoringSites ?? []),
   };
 };
+
+/** 归一化一维集合的显式单格，原样保留字符串以供领域身份规则消费 */
+export const normalizeCellItems = <TCell extends { content?: string | InputChild }>(
+  items: Array<string | TCell>,
+  context: Parameters<SynchronousInputEmbedAdapter<unknown>['lower']>[1],
+  provider: CoreDependencyProvider,
+) => {
+  const normalized = normalizeCells(
+    items.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
+    context,
+    provider,
+  );
+  return {
+    ...normalized,
+    cells: normalized.cells.map((cell, index) => (typeof items[index] === 'string' ? items[index] : cell)),
+  };
+};

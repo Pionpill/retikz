@@ -7,7 +7,7 @@
 - 使用 retikz 自绘，同级 `<name>.tsx` 与 `<name>.i18n.ts`；单份默认导出 FC 接收 `lang?: Lang`，可见文案来自同名字典，不新建两份语言图。
 - 静态图保持可直接派生 IR，不使用 hook 或渲染外副作用；交互图按 [Controls](controls.md) 的源码派生路径处理。
 - MDX 使用 `<ComponentPreview files="..." hideCode type="..." />`。FlowDiagram / FlowLayout / FlowEntities / FlowRelations 的叙述图为 `flow`，其它为 `illustration`。
-- 算法控制流复用现有 Flow 能力，不手写平行流程布局。数据结构图强调组织、嵌套、引用与读写，按 [逻辑图](figure-logic.md#数据结构图) 复用 List / Map；当前预览 type 仍使用 `illustration`。
+- 算法控制流复用现有 Flow 能力，不手写平行流程布局。数据结构图强调组织、嵌套、引用与读写，按 [逻辑图](figure-logic.md#数据结构图) 选择 Array、Map、Matrix、Stack、Queue、Chain 或 Tree；当前预览 type 仍使用 `illustration`。
 - 图前指出观察对象，图后解释结论；不用截图、Mermaid 或外部绘图代替站内功能图。
 
 ## 视觉编码

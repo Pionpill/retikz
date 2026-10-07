@@ -1,0 +1,289 @@
+---
+title: 实现原理
+description: 了解 Collection 内部通用的输入解析、Cell 测量、布局分配与内容回放逻辑。
+---
+
+Array、Map、Matrix、Stack、Queue 和 Chain 通过共享的 Cell 描述、测量与回放逻辑处理单格内容，再按各自结构完成排布。Tree 属于同一集合家族，但直接测量文字 Node 并排列子树；本文最后单独说明这条处理路径。本页沿这条通用处理链，解释内容如何进入格子，以及格子尺寸变化时，内容为什么仍能保持原来的大小。
+
+本文从一个集合的 Source IR 进入编译回调开始，追踪到编译子项与布局分配边界返回为止。React 子项的收集、Vanilla 输入转换，以及最终 SVG / Canvas 绘制不在这条主线内。正文中的 `CanonicalCell`、`MeasuredCell` 等是内部实现锚点，不是需要用户构造的公开输入。
+
+## 整体流程
+
+先看一个熟悉的效果：Array 中的内容有大有小，为什么格子还能等宽、等高？在各项都使用自动宽高时，它会**先测量所有项，再分别取最大的宽度和最大的高度，作为每个格子的统一尺寸**。两个最大值可以来自不同的项；内容本身不被拉伸，只是在分配好的格子中居中放置。
+
+下图用 A 和 Bbbb 表示短内容与较长内容，示例内容块分别设为 40 × 24 和 80 × 36。这里的尺寸包含有色矩形区域，并非字形本身的宽高。加上四边各 8 的内边距后，两格各自需要 56 × 40、96 × 52；因此统一宽度为 96，统一高度为 52。观察右侧：灰色格子一样大，有色内容仍保持各自大小。
+
+<ComponentPreview files="array-sizing-figure" size="lg" hideCode type="illustration" />
+
+这里说明的是自动尺寸：单格显式指定数字宽高时保留该值，使用 `width: 'content'` 时则保留自身所需宽度。后文再展开这些策略。这个例子先建立一个共同前提：**测量内容需要多少空间，与决定最后分配多少空间，是两件事**。
+
+集合先理解输入，再知道每格需要多大，最后决定每格放在哪里。三个尺寸概念需要分开：
+
+- **内容自然尺寸**：内容在自身配置下测得的布局尺寸，尚未套用外层集合的统一宽高
+- **单格需求**：显式宽高，或内容自然尺寸加上对应方向的内边距
+- **最终分配**：集合根据全部单格需求，给当前格子确定的位置和边框区域
+
+沿下面的箭头逐行阅读。自然测量与最终分配是两个阶段，回放复用测量阶段保留的结果。
+
+<ComponentPreview files="overview-figure" size="sm" hideCode type="flow" />
+
+后文沿用 A、Bbbb 这组尺寸，依次展开输入解析、单格测量和最终排布。
+
+<SourceLinks
+  sources={[
+    { label: 'Array 的阶段编排', path: 'packages/library/standard/src/collection/array/pipeline.ts', startLine: 17 },
+    {
+      label: '共享测量结果与最终放置结构',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 17,
+    },
+  ]}
+/>
+
+## 输入解析与补全
+
+容器内部的解析方法，如 `resolveArray`、`resolveMap`，先处理各自的输入形态，再调用共享的 `resolveCell` 解析单格内容与配置。本页把这一步称为**解析与补全**：它既收敛表示方式，也落实继承和默认值；原始 Source 不会被改写。这里不另称 `normalize`，以免与 Vanilla 的输入转换阶段混淆。
+
+上述六种 Cell 集合的三个入口最终都提供单格内容，但含义不同；Tree 的 root 不经过这一步：
+
+| 输入                | 展开方式                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| `data`              | 将 JSON 值转成可展示的单格；非空数组或对象可按 `dataExpand` 展开为嵌套 Array / Map |
+| `items` / `entries` | 保留作者给出的文本、绘图子项、单格身份及局部配置                                   |
+| `skeleton`          | 根据数量、键或二维形状生成格子；支持标签的骨架将非空标签作为内容，空标签留空       |
+
+下图是三个**独立 Array 实例**的输入字段摘录。数字数据 `[1, 2]`、显式文本 `['1', '2']` 和带标签骨架最终都得到显示 `1`、`2` 的格子；右侧只展开第一格的一部分内部字段。
+
+<ComponentPreview files="inputs-figure" size="lg" hideCode type="illustration" />
+
+`data` 的基础值经 `JSON.stringify` 转为显示文本，因此 JSON 字符串会保留引号；显式文本则直接作为文字。空数组、空对象，以及未启用展开的容器，也以 JSON 文本显示。嵌套展开创建的是另一个集合子项，不会把嵌套结构拍平成外层格子。
+
+汇聚到 Cell 不代表丢失集合形状：Array 保留一维顺序，Map 保留键值配对，Matrix 保留二维行列，Stack 和 Queue 保留端点语义明确的一维顺序，Chain 保留串行项与并行分支树。各 resolver 还负责自身的间距简写、索引配置或连接配置，测量阶段无需重新判断原始输入来自哪个入口。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'JSON 值与嵌套集合展开',
+      path: 'packages/library/standard/src/collection/_cell/data/cell.ts',
+      startLine: 12,
+    },
+    {
+      label: 'Array 三入口汇聚',
+      path: 'packages/library/standard/src/collection/array/resolve/resolve.ts',
+      startLine: 9,
+    },
+    { label: 'Map 键值配对', path: 'packages/library/standard/src/collection/map/resolve/resolve.ts', startLine: 8 },
+    {
+      label: 'Matrix 二维结构',
+      path: 'packages/library/standard/src/collection/matrix/resolve/resolve.ts',
+      startLine: 33,
+    },
+    {
+      label: 'Chain 分支递归',
+      path: 'packages/library/standard/src/collection/chain/resolve/resolve.ts',
+      startLine: 32,
+    },
+  ]}
+/>
+
+## Cell 的职责
+
+Cell 是集合内部共享的单格描述。它可以没有内容，也可以承载一段文本或一个绘图子项；嵌套集合也是一个子项。格子的背景、边框、尺寸和身份独立于内容，因此内容溢出时，格子边界仍然有确定的含义。
+
+- **`content`**：这格里面放什么；字符串在解析时展开为无背景、无描边、零内边距与零外边距的文本节点
+- **`style`**：格子外观及供内容使用的字体、文字颜色等配置
+- **`layout`**：格子的尺寸策略、内边距和溢出处理
+- **`id`**：可选的格子身份，供后续引用其分配边界
+
+下图左侧展示字段职责，右侧用 padding 展示优先级。四个候选同时存在时采用单格的 4；只有当前层缺省才继续向下查找。
+
+<ComponentPreview files="cell-figure" size="md" hideCode type="illustration" />
+
+`resolveCell` 按“集合整体 → Map 键值角色 → 单格”的覆盖顺序合并显式字段，最后补缺省字段。字体按子字段合并，局部只改字号不会抹掉已继承的字族；padding 选出有效值后才展开成上、右、下、左四个数值。Map 的键还有较深的默认填充，但它是最低优先级默认，不会覆盖显式配置。
+
+内容直接是嵌套集合（包括 Tree）时，外层 Cell 的缺省填充为 `none`、padding 为 `0`，避免重复背景和留白；内部集合保留自己的样式与内边距。自动展开 JSON 和手动嵌套使用同一规则。普通文本、空格及其它绘图内容仍采用原默认值；集合整体、角色或单格的显式配置优先于这条缺省规则。
+
+显式数字宽高是格子的边框区域尺寸，已经包含内边距。任一轴为显式数字、且没有继承或局部指定 overflow 时，默认裁切；否则默认允许可见溢出。空格没有内容测量结果，但仍可通过内边距或显式尺寸占据空间。
+
+Array 将 Cell 排成序列，Map 将两个 Cell 组成键值条目，Matrix 按行存储 Cell，Stack 和 Queue 沿单轴排列 Cell，Chain 则把 Cell 作为串并联结构的叶子。它们共享单格能力，各自拥有组织方式。
+
+<SourceLinks
+  sources={[
+    {
+      label: '单格输入与默认字段',
+      path: 'packages/library/standard/src/collection/_cell/schema/cell.ts',
+      startLine: 28,
+    },
+    {
+      label: '继承、文本展开与条件默认',
+      path: 'packages/library/standard/src/collection/_cell/resolve/resolve.ts',
+      startLine: 33,
+    },
+    {
+      label: '解析后的内部单格契约',
+      path: 'packages/library/standard/src/collection/_cell/resolve/types.ts',
+      startLine: 30,
+    },
+  ]}
+/>
+
+## 自然测量
+
+集合的编译函数对每个已解析 Cell 调用 `measureCell`。有内容时，它在集合的主题与默认样式环境下补入该格的字体、文字颜色等配置，再通过 `measureCellChild` 发起 `intrinsicLayoutProposal('natural')` 探测。
+
+“自然”表示这一轮不把外层格子的最终宽度作为约束压给内容，内容自身的尺寸和布局配置仍然生效。探测会执行内容所需的编译工作，并返回可回放的 `LayoutChildResult`，不仅仅是一个宽高数值。若内容是嵌套集合，它会在这次探测内完成自己的解析、测量与排布。
+
+图中有色矩形是内容本体，浅灰区域是格子。A 与 Bbbb 都先加四边 8 的内边距；右侧另外给 Bbbb 设置格宽 60，因此单格宽度需求改为 60，而内容宽度仍为 80。
+
+<ComponentPreview files="measurement-figure" size="lg" hideCode type="illustration" />
+
+每个轴独立计算。以宽度为例：
+
+$$
+w_{need}=\begin{cases}
+w_{fixed}, & \text{配置了数字宽度} \\
+w_{content}+p_{left}+p_{right}, & \text{否则}
+\end{cases}
+$$
+
+高度同理。无内容时内容尺寸按 0 计，因此四边 padding 为 8 的空格自然需求是 16 × 16。显式宽度 60 不会再额外加上左右 16。
+
+返回的 `MeasuredCell` 保留三类信息：已解析的 `cell`、可选的内容探测 `result`、单格需求 `width / height`。集合随后把这些记录保存为一维数组、二维数组或 Chain 的布局块。**每次集合编译中的每个单格内容只在这里探测一次，最终放置复用该结果**；这不是跨次编译的永久缓存，也不是先把整个图画到浏览器再读取 DOM 尺寸。
+
+<SourceLinks
+  sources={[
+    {
+      label: '自然探测与所处样式环境',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 49,
+    },
+    {
+      label: '内容需求与显式尺寸分支',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 70,
+    },
+  ]}
+/>
+
+## 尺寸与位置分配
+
+获得单格需求后，集合才能比较全部相关格子。共享测量并不意味着共享同一套排布规则：最大值的统计范围与坐标推进方式都由具体集合决定。
+
+继续观察 A：56 × 40、Bbbb：96 × 52 这两个单格需求。图中每个面板都使用相同大小的 A、Bbbb 内容；灰色或深灰色区域显示格子的实际分配。Map 为比较键值列，使用 A/Bbbb、Bbbb/A 两行；Matrix 则重复 A/Bbbb 两行。
+
+<ComponentPreview files="allocation-figure" size="xxl" hideCode type="illustration" />
+
+| 集合          | 自动尺寸与位置的决定方式                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Array         | 自动宽、高分别取全部格子的最大需求；`width: 'content'` 保留当前格子的宽度需求。沿排列轴累计实际分配尺寸和 gap      |
+| Map           | 键列、值列分别取最大宽度；每行高度取本行键和值的较大需求。下一行按行高与行间距推进                                 |
+| Matrix        | 每列取最大宽度，每行取最大高度；每格从所属轨道起点放置，下一格按轨道尺寸与间距推进                                 |
+| Stack / Queue | 沿主轴保留每格尺寸；交叉轴 auto 格填满最大需求，固定尺寸格居中。另计容器 padding，开放边框和操作箭头不改变格子排布 |
+| Chain         | 保留每格需求尺寸；将格子与分支组装成布局块，再确定串行位置、分支对齐和连接线                                       |
+
+各集合都保留单格显式数字尺寸。对 Map、Matrix 而言，一个格子显式设得较窄，不代表整列轨道也会缩小：同列更宽的格子仍决定下一列的起点。Chain 的按步骤对齐也可以引入共享轨道，但轨道中的格子仍保持自身大小。
+
+排布阶段输出 `CellPlacement`：它引用先前的 `MeasuredCell`，再补上 `x / y / width / height` 与角色。这里的宽高才是最终单格边框区域。Array 和 Matrix 的索引另行测量与预留侧边空间，不混入内容 Cell；它们扩大集合需求，但不会以索引文字长度重新决定格子宽度。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Array 的自动、内容与固定尺寸',
+      path: 'packages/library/standard/src/collection/array/pipeline.ts',
+      startLine: 87,
+    },
+    {
+      label: 'Map 的两列宽度与逐行高度',
+      path: 'packages/library/standard/src/collection/map/pipeline.ts',
+      startLine: 16,
+    },
+    {
+      label: 'Matrix 的共享行列轨道',
+      path: 'packages/library/standard/src/collection/matrix/pipeline.ts',
+      startLine: 24,
+    },
+    { label: 'Chain 的块与轨道排布', path: 'packages/library/standard/src/collection/chain/layout.ts', startLine: 77 },
+  ]}
+/>
+
+## 内容回放
+
+`compileCells` 接收已定位的单格，内部由 `emitCell` 输出背景、内容层和边框。内容层使用 `context.replay(result)` 复用测量结果，只附加放置变换和需要的裁切。
+
+下图三处 Bbbb 内容都为 80 × 36。第一格有额外空间，第二格允许左右溢出，第三格在格子轮廓处裁切。格子变窄不会缩放 Bbbb，也不会触发按新宽度重新排版。
+
+<ComponentPreview files="replay-figure" size="md" hideCode type="illustration" />
+
+内容居中时要同时考虑内边距与测量边界原点。对称 padding 下中心就是格子中心；不对称 padding 会移动内容中心，并将它限制在格子范围内。横向变换为：
+
+$$
+c_x=\operatorname{clamp}\!\left(\frac{W+p_{left}-p_{right}}{2},0,W\right),\qquad
+\Delta x=c_x-\frac{w_{content}}{2}-x_{allocation}
+$$
+
+其中 `x_allocation` 是测量结果分配边界的原点，不保证为 0。扣除它后，原本有局部偏移的内容也能正确放入格子。纵向同理。裁切使用格子的外轮廓，包括圆角，而不是仅裁到扣除 padding 后的内容区。
+
+集合整体还会结合父级尺寸提案确定分配边界：父级额外给空间时不重新拉伸格子；空间放不下已排好的格子与间距时会报告错误。带身份的单格发布分配边界及不可见引用载体，整体标签和索引、Chain 连线作为附加内容组装。最终返回编译子项和 `allocationBounds`，后续编译与 renderer 才完成整体输出。
+
+<SourceLinks
+  sources={[
+    {
+      label: '内容平移、裁切与绘制层次',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 123,
+    },
+    {
+      label: '父级分配、装饰及引用输出',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 185,
+    },
+  ]}
+/>
+
+## 完整实现流程
+
+下面以 Matrix 为源码阅读入口。整张图处于同一次 `compileMatrix` 调用中：图中的 `compileMatrix` 节点特指测量完成后的轨道汇总与放置阶段，不是再次调用这个函数。它逐格调用共享解析与测量，再把最终位置交给共享输出逻辑。
+
+<ComponentPreview files="pipeline-figure" size="lg" hideCode type="flow" />
+
+阅读时先看 `resolveMatrix` 如何保留二维结构，再看 `resolveCell` 如何确定每格配置；回到编译函数追踪 `MeasuredCell[][]` 到 `CellPlacement[]` 的变化，最后读 `compileCells` 内部的 `emitCell`，理解内容如何回放。Array、Map、Stack、Queue 和 Chain 可以沿同样顺序阅读，只替换集合组织与排布部分。
+
+<SourceLinks
+  sources={[
+    { label: 'Matrix 编译入口', path: 'packages/library/standard/src/collection/matrix/pipeline.ts', startLine: 15 },
+    { label: '共享单格解析', path: 'packages/library/standard/src/collection/_cell/resolve/resolve.ts', startLine: 34 },
+    { label: '共享测量与输出', path: 'packages/library/standard/src/collection/_cell/pipeline.ts', startLine: 17 },
+  ]}
+/>
+
+## Tree 的节点与子树路径
+
+Tree 直接读取 root：字符串生成文字节点，对象保留 children 与局部配置，null 表示空树或空子槽。它不生成 Cell，也不使用三入口展开。整体 node 配置与逐节点覆盖合并后，再应用节点默认值。
+
+下面的 A、B、C、D 是真实 Node。C 的空子槽参与占位但不输出图形；父节点位于首末直属子节点中心的中点，而不是整棵后代树包络的中点。
+
+<ComponentPreview files="/library/standard/collection/tree/tree-basic" hideCode type="illustration" size="md" />
+
+编译先测量节点文本与形状，再自底向上汇总子树包络，按层间净距与子树净距放置。每个节点复用测量结果回放；父子连接引用完整节点，由实际路径方向确定轮廓上的连接点。显式 id 指向 Node 自身，不是 Cell 的矩形引用区域。节点形状和长文本的效果见 [Tree 用法](/library/standard/collection/tree)。
+
+<SourceLinks
+  sources={[
+    { label: 'Tree 节点与配置解析', path: 'packages/library/standard/src/collection/tree/resolve/resolve.ts' },
+    { label: 'Tree 测量、子树排布与节点连接', path: 'packages/library/standard/src/collection/tree/pipeline.ts' },
+    { label: 'Stack / Queue 共享单轴布局', path: 'packages/library/standard/src/collection/_cell/linear.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Array · 数组', description: '试验自动宽度、内容宽度与索引', url: '/library/standard/collection/array' },
+    { title: 'Matrix · 矩阵', description: '试验共享行列轨道及单格覆盖', url: '/library/standard/collection/matrix' },
+    {
+      title: 'Chain · 链',
+      description: '了解串并联结构、分支对齐与连接方式',
+      url: '/library/standard/collection/chain',
+    },
+  ]}
+/>

@@ -204,6 +204,19 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员                    | 类型                | 默认值   | 说明                                          |
+| ----------------------- | ------------------- | -------- | --------------------------------------------- |
+| `readonly preparation?` | `'sync' \| 'async'` | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower |
+| `readonly signal?`      | `AbortSignal`       | —        | 异步 preparation 与 controller 的生命周期信号 |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="retained">
 
 <DocTab value="retained" label="属性 · 保留模式">
@@ -214,8 +227,6 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
 | -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime                                                       |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
-| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
-| `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
@@ -226,13 +237,11 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
 
 <ApiTable>
 
-| 成员                       | 类型                              | 默认值   | 说明                                                 |
-| -------------------------- | --------------------------------- | -------- | ---------------------------------------------------- |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime，直接完整编译与物化                   |
-| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime，因此不产生 Runtime 结构化诊断 |
-| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower        |
-| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号        |
-| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Computation 更新策略                   |
+| 成员                       | 类型                              | 默认值 | 说明                                                 |
+| -------------------------- | --------------------------------- | ------ | ---------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —      | 不创建 Runtime，直接完整编译与物化                   |
+| `readonly onDiagnostic?`   | `never`                           | —      | static 不创建 Runtime，因此不产生 Runtime 结构化诊断 |
+| `readonly updateStrategy?` | `never`                           | —      | static 不支持 Computation 更新策略                   |
 
 </ApiTable>
 
@@ -366,23 +375,34 @@ export type InputLayer = {
   </ApiSourceLink>
 </p>
 
+**公共属性**
+
+<ApiTable>
+
+| 成员          | 类型                    | 默认值 | 说明                                             |
+| ------------- | ----------------------- | ------ | ------------------------------------------------ |
+| `animations?` | `IRScene['animations']` | —      | 场景根动画轨道，省略时不添加根动画               |
+| `authoring?`  | `unknown`               | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR |
+| `id?`         | `string`                | —      | 作者侧场景标识，不写入持久化 Scene IR            |
+| `theme?`      | `IRScene['theme']`      | —      | 场景根主题，只填写需要覆盖的 style 与 mode       |
+| `type?`       | `'scene'`               | —      | 可省略的场景类别；归一化后固定为 scene           |
+| `version?`    | `never`                 | —      | 作者输入不接受版本号；归一化时写入当前 IR 版本   |
+| `viewBox?`    | `IRViewBox`             | —      | 显式取景矩形；省略时由编译结果按内容计算         |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
 <DocTabs defaultValue="children">
 
 <DocTab value="children" label="属性 · 子节点">
 
 <ApiTable>
 
-| 成员          | 类型                        | 默认值 | 说明                                             |
-| ------------- | --------------------------- | ------ | ------------------------------------------------ |
-| `animations?` | `IRScene['animations']`     | —      | 场景根动画轨道，省略时不添加根动画               |
-| `authoring?`  | `unknown`                   | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR |
-| `children`    | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层               |
-| `id?`         | `string`                    | —      | 作者侧场景标识，不写入持久化 Scene IR            |
-| `layers?`     | `never`                     | —      | children 模式不接受显式 layers                   |
-| `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 style 与 mode       |
-| `type?`       | `'scene'`                   | —      | 可省略的场景类别；归一化后固定为 scene           |
-| `version?`    | `never`                     | —      | 作者输入不接受版本号；归一化时写入当前 IR 版本   |
-| `viewBox?`    | `IRViewBox`                 | —      | 显式取景矩形；省略时由编译结果按内容计算         |
+| 成员       | 类型                        | 默认值 | 说明                               |
+| ---------- | --------------------------- | ------ | ---------------------------------- |
+| `children` | `ReadonlyArray<InputChild>` | —      | 有序子图元，归一化时置于隐式默认层 |
+| `layers?`  | `never`                     | —      | children 模式不接受显式 layers     |
 
 </ApiTable>
 
@@ -392,17 +412,10 @@ export type InputLayer = {
 
 <ApiTable>
 
-| 成员          | 类型                        | 默认值 | 说明                                             |
-| ------------- | --------------------------- | ------ | ------------------------------------------------ |
-| `animations?` | `IRScene['animations']`     | —      | 场景根动画轨道，省略时不添加根动画               |
-| `authoring?`  | `unknown`                   | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR |
-| `children?`   | `never`                     | —      | layers 模式不接受顶层 children                   |
-| `id?`         | `string`                    | —      | 作者侧场景标识，不写入持久化 Scene IR            |
-| `layers`      | `ReadonlyArray<InputLayer>` | —      | 显式分层列表，按 zIndex 稳定排序后归一化         |
-| `theme?`      | `IRScene['theme']`          | —      | 场景根主题，只填写需要覆盖的 style 与 mode       |
-| `type?`       | `'scene'`                   | —      | 可省略的场景类别；归一化后固定为 scene           |
-| `version?`    | `never`                     | —      | 作者输入不接受版本号；归一化时写入当前 IR 版本   |
-| `viewBox?`    | `IRViewBox`                 | —      | 显式取景矩形；省略时由编译结果按内容计算         |
+| 成员        | 类型                        | 默认值 | 说明                                     |
+| ----------- | --------------------------- | ------ | ---------------------------------------- |
+| `children?` | `never`                     | —      | layers 模式不接受顶层 children           |
+| `layers`    | `ReadonlyArray<InputLayer>` | —      | 显式分层列表，按 zIndex 稳定排序后归一化 |
 
 </ApiTable>
 

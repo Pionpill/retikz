@@ -1,5 +1,6 @@
 import type {
   FieldFormatDefinition,
+  FieldOrderDefinition,
   AnyTransformDefinition,
   AnyStatisticsReducerDefinition,
   AnyRowSelectorDefinition,
@@ -16,6 +17,8 @@ import type {
 
 /** Table直接复用Data的语义定义与同步计算选项 */
 export type TableDataOptions = Readonly<{
+  /** 当前请求注入的分类顺序定义 */
+  fieldOrderDefinitions?: ReadonlyArray<FieldOrderDefinition>;
   /** 源格式定义 */
   formatDefinitions?: ReadonlyArray<FieldFormatDefinition>;
   /** Transform语义定义 */

@@ -158,6 +158,8 @@ Switch between two single-axis projections and fold connections over the same no
 | Two-leg fold    | `kind="fold" via="-\|"`<br />`kind="fold" via="\|-"`                                  | Reach the target through one corner                                         |
 | Three-leg fold  | `kind="fold" via="-\|-" fraction={0.5}`<br />`kind="fold" via="\|-\|" fraction={0.5}` | Reach it through two corners; `fraction` positions the middle leg           |
 
+When a fold connects whole nodes (without `anchor` or `offset`), it removes the path portions inside their connection boundaries. Corners inside a node are trimmed along the original segments; aligned nodes can produce a straight line. Explicit anchors and coordinates retain their specified endpoints. This does not avoid other nodes.
+
 <ComponentPreview files={['axis-line', 'axis-line.preview.tsx']} size="sm" defaultSourceFile="axis-line.preview.tsx" />
 
 In either `axis-line` mode, omitting the target `anchor` projects to the node center and disables target-side automatic boundary clipping; a source node still clips toward the projected endpoint. The target is restricted to Cartesian coordinates or NodeTarget, excluding polar, relative, offset, and between forms.

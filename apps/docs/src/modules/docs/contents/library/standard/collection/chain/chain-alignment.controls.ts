@@ -42,7 +42,7 @@ export const createPreviewControlContract = (lang: Lang) => {
               label: t['spacing'],
               defaultValue: 'steps',
               options: [
-                { value: 'compact', label: t['compact'] },
+                { value: 'independent', label: t['independent'] },
                 { value: 'steps', label: t['steps'] },
               ],
             },
@@ -57,11 +57,21 @@ export const createPreviewControlContract = (lang: Lang) => {
                 { value: 'end', label: t['end'] },
               ],
             },
+            {
+              id: 'upperSteps',
+              kind: 'select',
+              label: t.upperSteps,
+              defaultValue: '2',
+              options: [
+                { value: '2', label: '2' },
+                { value: '3', label: '3' },
+              ],
+            },
           ],
         },
       ],
     }),
-    canonicalValues: { direction: 'right', align: 'center', spacing: 'steps', justify: 'start' },
+    canonicalValues: { direction: 'right', align: 'center', spacing: 'steps', justify: 'start', upperSteps: '2' },
     relatedApis: ['Chain.layout', 'Chain.connection'],
   } satisfies PreviewControlContract;
 };

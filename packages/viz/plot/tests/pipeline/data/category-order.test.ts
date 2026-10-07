@@ -1,10 +1,11 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { DataModelSchema, FieldDefinitionSchema } from '@retikz/data';
+import { DataModelSchema, defineFieldOrder, FieldDefinitionSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { preparePlotData } from '../../../src/pipeline/expand/preparation';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
@@ -226,17 +227,22 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
 });
 
 describe('IRDataFieldDefinition.order — 错误契约', () => {
-  it('order_on_continuous_throws', () => {
-    // order 配 continuous 字段 → lowering fail-loud
+  it.each([
+    { label: 'numeric observations', value: 1, field: { name: 'cx', order: 'ascending' } },
+    { label: 'temporal observations', value: '2024-01-01', field: { name: 'cx', order: 'appearance' } },
+    {
+      label: 'format-implied type',
+      value: '2024/01/01',
+      field: { name: 'cx', format: 'slashDate', order: 'ascending' },
+    },
+  ])('rejects category order after resolving $label', ({ value, field }) => {
+    // Source 省略 type，格式或数据确定为非分类字段后拒绝类别顺序
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
         reference: 'd',
-        model: [
-          { name: 'cx', type: 'continuous', order: 'ascending' },
-          { name: 'val', type: 'continuous' },
-        ],
+        model: [field, { name: 'val', type: 'continuous' }],
       },
       scales: [
         { type: 'linear', name: 'xv' },
@@ -246,7 +252,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'cx' }, y: { field: 'val' } } }],
     });
 
-    expect(() => expandOf(spec, { d: [{ cx: 1, val: 2 }] })).toThrow();
+    expect(() => expandOf(spec, { d: [{ cx: value, val: 2 }] })).toThrow(/order.*categorical/);
   });
 
   it('conflicting_order_same_role_throws', () => {
@@ -430,4 +436,113 @@ describe('IRDataFieldDefinition.order — JSON round-trip', () => {
 
     expect(DataModelSchema.parse(roundTripped)).toEqual(model);
   });
+});
+
+describe('registered category orders', () => {
+  const rows = [
+    { cat: '10.18', val: 1 },
+    { cat: '10.2', val: 2 },
+    { cat: '2.0', val: 3 },
+  ];
+  const specOf = (order: string) =>
+    bandSpec(
+      [
+        { name: 'cat', type: 'categorical', order },
+        { name: 'val', type: 'continuous' },
+      ],
+      [{ type: 'linear', name: 'yv' }],
+    );
+
+  it.each([
+    ['naturalAscending', ['2.0', '10.2', '10.18']],
+    ['naturalDescending', ['10.18', '10.2', '2.0']],
+  ])('positions versions with %s', (order, expected) => {
+    expect(bandCategorySequence(firstLayer(specOf(String(order)), { d: rows }), rows)).toEqual(expected);
+  });
+
+  it('dispatches custom definitions and retains request isolation', () => {
+    const definition = defineFieldOrder({ name: 'length', compare: (a, b) => String(a).length - String(b).length });
+    expect(
+      bandCategorySequence(
+        firstLayer(specOf('length'), { d: rows }, { ...opts, fieldOrderDefinitions: [definition] }),
+        rows,
+      ),
+    ).toEqual(['2.0', '10.2', '10.18']);
+    expect(() => firstLayer(specOf('length'), { d: rows })).toThrow(/unknown order/);
+  });
+
+  it.each([{ values: [] }, { values: [rows[0]] }])(
+    'rejects unknown orders even without enough observations',
+    ({ values }) => {
+      expect(() => firstLayer(specOf('missing'), { d: values })).toThrow(/unknown order/);
+    },
+  );
+
+  it('validates registration even when an explicit visual domain wins', () => {
+    const spec = specOf('missing');
+    spec.coordinate = { type: 'cartesian2D', x: 'cx', y: 'yv' };
+    spec.scales.push({ type: 'band', name: 'cx', domain: ['10.18', '10.2', '2.0'] });
+    expect(() => firstLayer(spec, { d: rows })).toThrow(/unknown order/);
+    const fieldOrderDefinitions = [defineFieldOrder({ name: 'missing', compare: () => 0 })];
+    expect(bandCategorySequence(firstLayer(spec, { d: rows }, { ...opts, fieldOrderDefinitions }), rows)).toEqual([
+      '10.18',
+      '10.2',
+      '2.0',
+    ]);
+  });
+});
+
+it('uses the same natural domain for position, color, and legend', () => {
+  const make = (order: string | Array<string>) =>
+    PlotSchema.parse({
+      ...bandSpec(
+        [
+          { name: 'cat', type: 'categorical', order },
+          { name: 'val', type: 'continuous' },
+        ],
+        [{ type: 'linear', name: 'yv' }],
+      ),
+      marks: [
+        {
+          type: 'point',
+          color: { kind: 'field', value: 'cat' },
+          encoding: { x: { field: 'cat' }, y: { field: 'val' } },
+        },
+      ],
+      guides: [{ type: 'legend', channel: 'color' }],
+    });
+  const data = {
+    d: [
+      { cat: '10.18', val: 1 },
+      { cat: '2.0', val: 2 },
+      { cat: '10.2', val: 3 },
+    ],
+  };
+  expect(expandOf(make('naturalAscending'), data)).toEqual(expandOf(make(['2.0', '10.2', '10.18']), data));
+});
+
+it('checks async result and native source models before execution', async () => {
+  const spec = bandSpec(
+    [
+      { name: 'cat', type: 'categorical', order: 'business' },
+      { name: 'val', type: 'continuous' },
+    ],
+    [{ type: 'linear', name: 'yv' }],
+  );
+  const model = spec.data.model ?? [];
+  await expect(preparePlotData(spec, { dataBindings: { d: { kind: 'source', source: {} } } })).rejects.toThrow(
+    /unknown order/,
+  );
+  const inferred = { ...spec, data: { reference: 'd' } };
+  await expect(
+    preparePlotData(inferred, { dataBindings: { d: { kind: 'result', result: { rows: [], model } } } }),
+  ).rejects.toThrow(/unknown order/);
+  const prepared = await preparePlotData(
+    spec,
+    { dataBindings: { d: { kind: 'result', result: { rows: [], model } } } },
+    {
+      fieldOrderDefinitions: [defineFieldOrder({ name: 'business', compare: () => 0 })],
+    },
+  );
+  expect((await prepared.execute()).root.model).toEqual(model);
 });

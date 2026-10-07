@@ -1,5 +1,4 @@
-import type { IRDataFieldDefinition } from '@retikz/data';
-import { coerceTimestamp, DataFieldType, FieldOrderMode, inferCategoryDomain } from '@retikz/data';
+import { coerceTimestamp, DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {
@@ -287,32 +286,4 @@ export const derivePositionScale = (fieldType: DataFieldType | undefined, name: 
     default:
       return { type: PlotScale.Linear, name };
   }
-};
-
-/** IR data model 的分类排序契约 */
-export type CategoryOrder = NonNullable<IRDataFieldDefinition['order']>;
-
-/**
- * 按字段 order 得到分类 position scale 的显式 domain
- * @description appearance/undefined 保留出现序；ascending/descending 按值排序；数组顺序优先并追加未声明类别
- */
-export const orderedCategoryDomain = (
-  values: Array<unknown>,
-  order: CategoryOrder | undefined,
-): Array<string | number> => {
-  const deduped = inferCategoryDomain(values);
-  if (order === undefined || order === FieldOrderMode.Appearance) return deduped;
-  if (order === FieldOrderMode.Ascending || order === FieldOrderMode.Descending) {
-    const allNumber = deduped.every(value => typeof value === 'number');
-    const sorted = [...deduped].sort((a, b) =>
-      allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b)),
-    );
-
-    return order === FieldOrderMode.Descending ? sorted.reverse() : sorted;
-  }
-
-  const inArray = new Set<string | number>(order);
-  const appended = deduped.filter(value => !inArray.has(value));
-
-  return [...order, ...appended];
 };

@@ -47,9 +47,7 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
 - `FlexLayoutItem`：<ApiSourceLink label={"FlexLayoutItem"} path={"packages/library/layout-react/src/layout-item/FlexLayoutItem.tsx"} startLine={16}>由 FlexLayout 静态读取的直属布局子项</ApiSourceLink>
 - `FlexLayoutItemProps`：<ApiSourceLink label={"FlexLayoutItemProps"} path={"packages/library/layout-react/src/layout-item/FlexLayoutItem.tsx"} startLine={8}>FlexLayout 直属 item 的 React authoring props</ApiSourceLink>
 
-<DocTabs defaultValue="jsx">
-
-<DocTab value="jsx" label="属性 · JSX 子元素">
+**公共属性**
 
 <ApiTable>
 
@@ -57,14 +55,27 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------ |
 | `alignSelf?`        | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | 覆盖当前子项的交叉轴对齐                               |
 | `basis?`            | `number \| "content"`                                                                                                                                                                                              | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸         |
-| `readonly children` | `ReactNode`                                                                                                                                                                                                        | —           | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir           |
 | `grow?`             | `number`                                                                                                                                                                                                           | `0`         | 接收正剩余空间的有限非负系数                           |
-| `readonly ir?`      | `never`                                                                                                                                                                                                            | —           | JSX 分支不接受 IR 输入                                 |
 | `readonly itemKey?` | `string`                                                                                                                                                                                                           | —           | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
 | `margin?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 分配区域外边距；不进入子图形的空间提案                 |
 | `max?`              | `number`                                                                                                                                                                                                           | —           | 作者给出的主轴分配尺寸硬上限                           |
 | `min?`              | `number`                                                                                                                                                                                                           | —           | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达   |
 | `shrink?`           | `number`                                                                                                                                                                                                           | `1`         | 与未约束基础尺寸相乘，用于回收负剩余空间               |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="jsx">
+
+<DocTab value="jsx" label="属性 · JSX 子元素">
+
+<ApiTable>
+
+| 成员                | 类型        | 默认值 | 说明                                         |
+| ------------------- | ----------- | ------ | -------------------------------------------- |
+| `readonly children` | `ReactNode` | —      | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir |
+| `readonly ir?`      | `never`     | —      | JSX 分支不接受 IR 输入                       |
 
 </ApiTable>
 
@@ -74,18 +85,10 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
 
 <ApiTable>
 
-| 成员                 | 类型                                                                                                                                                                                                               | 默认值      | 说明                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------ |
-| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | 覆盖当前子项的交叉轴对齐                               |
-| `basis?`             | `number \| "content"`                                                                                                                                                                                              | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸         |
-| `readonly children?` | `never`                                                                                                                                                                                                            | —           | IR 分支不接受 JSX 子元素                               |
-| `grow?`              | `number`                                                                                                                                                                                                           | `0`         | 接收正剩余空间的有限非负系数                           |
-| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                   | —           | 已声明的可序列化子图形；不能同时传 children            |
-| `readonly itemKey?`  | `string`                                                                                                                                                                                                           | —           | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
-| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 分配区域外边距；不进入子图形的空间提案                 |
-| `max?`               | `number`                                                                                                                                                                                                           | —           | 作者给出的主轴分配尺寸硬上限                           |
-| `min?`               | `number`                                                                                                                                                                                                           | —           | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达   |
-| `shrink?`            | `number`                                                                                                                                                                                                           | `1`         | 与未约束基础尺寸相乘，用于回收负剩余空间               |
+| 成员                 | 类型                             | 默认值 | 说明                                        |
+| -------------------- | -------------------------------- | ------ | ------------------------------------------- |
+| `readonly children?` | `never`                          | —      | IR 分支不接受 JSX 子元素                    |
+| `readonly ir`        | `InputEmbedContribution['node']` | —      | 已声明的可序列化子图形；不能同时传 children |
 
 </ApiTable>
 

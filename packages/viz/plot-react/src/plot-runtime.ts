@@ -90,6 +90,7 @@ const lowerPlotOptionsOf = <TSource>(
     markDefinitions,
     positionAdjustmentDefinitions,
     formatDefinitions,
+    fieldOrderDefinitions,
     plotThemeStyles,
   } = props;
 
@@ -127,6 +128,7 @@ const lowerPlotOptionsOf = <TSource>(
     markDefinitions,
     positionAdjustmentDefinitions,
     formatDefinitions,
+    fieldOrderDefinitions,
     plotThemeStyles,
   };
 };
