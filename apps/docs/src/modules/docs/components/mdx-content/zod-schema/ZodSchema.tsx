@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -104,7 +104,8 @@ const expandTypeRows = (type: TypeRepr, paths: PathVariants, depth: number): Arr
     return type.elements.flatMap((element, index) => {
       const variants = appendPath(paths, { kind: 'tuple', index });
       const label = `tuple[${index}]`;
-      return [syntheticRow(label, element, variants, depth), ...expandTypeRows(element, variants, depth + 1)];
+      const children = expandTypeRows(element, variants, depth + 1);
+      return children.length === 0 ? [] : [syntheticRow(label, element, variants, depth), ...children];
     });
   }
 
@@ -118,7 +119,8 @@ const expandTypeRows = (type: TypeRepr, paths: PathVariants, depth: number): Arr
       const variants = paths.flatMap(path => segments.map(segment => [...path, segment]));
       const label = branchLabel(type, index);
 
-      return [syntheticRow(label, member, variants, depth), ...expandTypeRows(member, variants, depth + 1)];
+      const children = expandTypeRows(member, variants, depth + 1);
+      return children.length === 0 ? [] : [syntheticRow(label, member, variants, depth), ...children];
     });
   }
 
@@ -204,7 +206,9 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
     }
   } else if (expandNested) {
     const nestedRows = expandTypeRows(repr.type, [[]], 0);
-    rows = effectiveDescriptions == null ? nestedRows : applyCanonicalDescriptions(nestedRows, effectiveDescriptions);
+    if (nestedRows.length > 0) {
+      rows = effectiveDescriptions == null ? nestedRows : applyCanonicalDescriptions(nestedRows, effectiveDescriptions);
+    }
   }
 
   if (effectiveDescriptions != null && rows != null) {
@@ -250,16 +254,13 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
       {(effectiveDescription != null || repr.description != null) && (
         <p className="mb-3 text-sm text-muted-foreground">{effectiveDescription ?? repr.description}</p>
       )}
-      {rows != null ? (
-        <RenderTable rows={rows} schemaName={name} />
-      ) : (
-        repr.kind === 'alias' && (
-          <div className="my-2">
-            <span className="text-sm text-muted-foreground">{t('zodSchema.typePrefix')}</span>
-            <RenderType repr={repr.type} name={name} />
-          </div>
-        )
+      {repr.kind === 'alias' && (
+        <div className="my-2">
+          <span className="text-sm text-muted-foreground">{t('zodSchema.typePrefix')}</span>
+          <RenderType repr={repr.type} name={name} />
+        </div>
       )}
+      {rows != null && <RenderTable rows={rows} schemaName={name} />}
     </div>
   );
 };
