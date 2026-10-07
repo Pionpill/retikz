@@ -9,13 +9,13 @@ description: Identify entities within state through identity creation, compariso
 
 ## Overall flow
 
-| Stage        | API or configuration                      | Purpose                                                            |
-| ------------ | ----------------------------------------- | ------------------------------------------------------------------ |
-| Create       | `createRuntimeIdentity(owner, path)`      | Build an identity from a Source key and entity path                |
-| Compare      | `runtimeIdentityEquals(a, b)`             | Check whether two identities refer to the same entity              |
-| Collect      | `collectIdentities(value)`                | The Source callback returns all identities from the captured value |
-| Build lookup | `createRuntimeIdentityLookup(identities)` | Validate the identity list and build a lookup                      |
-| Query        | `lookup.has(identity)`, `lookup.values()` | Check membership or enumerate the collection                       |
+| Stage        | API or configuration                             | Purpose                                                            |
+| ------------ | ------------------------------------------------ | ------------------------------------------------------------------ |
+| Create       | `createRuntimeIdentity(owner, path)`             | Build an identity from a Source key and entity path                |
+| Compare      | `runtimeIdentityEquals(a, b)`                    | Check whether two identities refer to the same entity              |
+| Collect      | `collectIdentities(value)`                       | The Source callback returns all identities from the captured value |
+| Build lookup | `createRuntimeIdentityLookup(owner, identities)` | Validate the identity list and build a lookup                      |
+| Query        | `lookup.has(identity)`, `lookup.values()`        | Check membership or enumerate the collection                       |
 
 The diagram follows collection lookup. To compare just two entities, use identity comparison directly without building a lookup.
 
@@ -42,7 +42,9 @@ The figure places identity fields next to the node color for comparison. `color`
 
 The records may be different JavaScript objects. Matching owners and complete path contents make their identities equal, but do not imply equal state or automatically reuse computation results. Callers decide how stable identities match entities across states; Runtime supplies common creation, comparison and lookup tools.
 
-## Identifying nodes
+## Creation and lookup
+
+### Creating and comparing identities
 
 A node's color can change while its identity remains stable. Create an identity with `createRuntimeIdentity(owner, path)`:
 
@@ -107,7 +109,7 @@ The definition author is responsible for stability: keep node A's identity when 
   ]}
 />
 
-## Collection and lookup
+### Building a lookup
 
 A graph may contain multiple nodes. `createRuntimeIdentityLookup(owner, identities)` organizes identities from one Source to answer whether an entity exists:
 
@@ -161,6 +163,8 @@ A lookup answers collection questions, not state equality: `size` counts identit
 
 For example, compare old identities `[A, B]` with new identities `[A, C]`. Querying the two lookups reveals that B disappeared and C was added. A appearing in both establishes identity continuity, not unchanged color. Shared prefixes do not make `has` a subtree query.
 
+## Working with Sources and computations
+
 ### Collecting from a Source
 
 `collectIdentities` receives the complete value produced by `capture` and returns the identities to track within it. Runtime checks ownership and duplicates, then stores an internal lookup. That lookup currently has no public query API and does not automatically drive dependencies or invalidation. Callers needing identity queries still build a lookup from their own identity list, and maintain a data index if they need to retrieve entities.
@@ -195,7 +199,22 @@ A color change changes state without changing node identity. `collectIdentities`
   ]}
 />
 
-## Complete flow
+### How computations use identity
+
+Entity identity `{ owner, path }` and computation identity `{ owner, key }` serve different purposes. Node A in Source `example/graph` can have identity `{ owner: 'example/graph', path: ['nodes', 'A'] }`, while its layout computation uses `{ owner: 'example/graph', key: 'layout' }`. The first identifies a node; the second identifies the computation itself.
+
+Matching `owner` values do not grant access: the computation must still declare `sources: [graph]`. A node can keep its identity while changing color. Source `equals` determines state changes, and declared dependencies determine execution. To reuse results by node, the algorithm reads identity information from the Source public view or ChangeSet and stores its own index in its private result view; it cannot query Runtime's internal identity lookup.
+
+Identity equality answers whether two references identify the same entity, not whether their state is equal or a cached result remains valid. See [Lifecycle](/kernel/packages/runtime/lifecycle#members-and-state) for the complete relationship.
+
+<SourceLinks
+  sources={[
+    { label: 'Entity and computation identities', path: 'packages/kernel/runtime/src/identity/types.ts' },
+    { label: 'Explicit dependencies and reads', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
+### Identity boundaries
 
 Identities support two common paths: compare two directly, or organize a complete identity list into a lookup. The APIs below connect these paths. Arrows show inputs and outputs, not a sequence that every caller must execute.
 
@@ -225,12 +244,71 @@ The `owner` is the Core document Source's registration key; `path` distinguishes
   ]}
 />
 
+## Related props
+
+Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.
+
+<ComponentProps
+  items={[
+    {
+      name: 'RuntimeIdentity',
+      kind: 'type',
+      type: 'Readonly<{ owner: string; path: ReadonlyArray<string> }>',
+      description:
+        'owner identifies the Source; path is a non-empty sequence of segments. Identity excludes current entity values.',
+    },
+    {
+      name: 'RuntimeComputationId',
+      kind: 'type',
+      type: 'Readonly<{ owner: string; key: string }>',
+      description: 'Identifies a computation, not an entity path. owner grants no dependency access.',
+    },
+    {
+      name: 'createRuntimeIdentity',
+      kind: 'function',
+      type: '(owner: string, path: ReadonlyArray<string>) => RuntimeIdentity',
+      description: 'Validates and copies identity; path segments must be non-empty and match exactly.',
+    },
+    {
+      name: 'runtimeIdentityEquals',
+      kind: 'function',
+      type: '(left: RuntimeIdentity, right: RuntimeIdentity) => boolean',
+      description: 'Compares owner, path length and all segments, not object references or prefixes.',
+    },
+    {
+      name: 'createRuntimeIdentityLookup',
+      kind: 'function',
+      type: '(owner: string, identities: ReadonlyArray<RuntimeIdentity>) => RuntimeIdentityLookup',
+      description: 'Builds a set bound to one owner; rejects duplicates and identities from other owners.',
+    },
+    {
+      name: 'RuntimeIdentityLookup',
+      kind: 'type',
+      type: 'Readonly<{ owner: string; size: number; has: (identity: RuntimeIdentity) => boolean; values: () => ReadonlyArray<RuntimeIdentity> }>',
+      description:
+        'has performs exact matching; values are stably sorted. Runtime does not expose its internal Source identity lookup.',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Public exports', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: 'Main contracts', path: 'packages/kernel/runtime/src/identity/types.ts' },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Runtime · Transaction publication',
+      title: 'Lifecycle',
+      description: 'Follow member collaboration through initialization, updates, failures and disposal',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
+    {
+      title: 'Runtime',
       description: 'Instance creation, revisions and atomic publication',
       url: '/kernel/packages/runtime/transaction',
     },

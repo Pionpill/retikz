@@ -1,0 +1,190 @@
+---
+title: Lifecycle
+description: Follow initialization, candidate preparation, publication, failure and disposal across Runtime members
+---
+
+The preceding chapters introduce [Source](/kernel/packages/runtime/source), [Identity](/kernel/packages/runtime/identity), [Computation](/kernel/packages/runtime/computation), [Runtime](/kernel/packages/runtime/transaction), [Participant](/kernel/packages/runtime/participant) and [Trace](/kernel/packages/runtime/trace). This chapter places them on one timeline and follows state from entering Runtime to final disposal.
+
+The example uses Source `graph` containing `A: 1, B: 2`, a computation that doubles each value, and a participant displaying `2, 4`. We then change only A to `3`: success should display `6, 4`, while a failed commit should preserve `2, 4`. Numbers in the figures are excerpts of this example's state, not additional Runtime fields.
+
+## Overall flow
+
+Start with the instance lifetime: definitions and registries establish rules; instance creation starts owning data. One instance accepts multiple updates and ends with `dispose`.
+
+<ComponentPreview files="lifecycle-overview" size="xs" hideCode type="flow" />
+
+Each update includes preparation, commit and cleanup. Only publication of changed state advances the revision. Trace can be emitted during preparation; commit observers run after publication. They serve different purposes.
+
+## Members and state
+
+The three blocks below group responsibilities by lifetime. Rows describe ownership, not memory layout or execution order:
+
+<ComponentPreview files="lifecycle-ownership" size="lg" hideCode type="illustration" />
+
+Source and Computation tokens on the left can be reused across instances, but the owned values and results on the right belong to each instance. A Participant token is tied to external host state and exclusively adopted by Runtime; even after disposal, that token cannot be given to another instance.
+
+The lower block belongs to one transaction. New Source values and results start as candidates: success adopts them into the instance, while failure retires them. A participant's `PreparedCommit` covers only one change. Its `dispose` releases temporary resources; the participant's own `dispose` releases long-lived host resources.
+
+### Identity across updates
+
+A has entity identity `{ owner: 'graph', path: ['nodes', 'A'] }`; the computation may use `{ owner: 'graph', key: 'doubled' }`. The former identifies A in the data; the latter identifies a computation definition. A keeps its identity when its value changes from `1` to `3`.
+
+A Source can return its complete entity identity set through `collectIdentities`, which Runtime validates during preparation. This set does not generate differences or schedule computations. Source `equals` detects state changes, explicit dependencies drive scheduling, and the algorithm decides whether B's result can be reused by identity. It obtains identity/data through the public Source view or domain hints, not Runtime's private identity lookup.
+
+<SourceLinks
+  sources={[
+    { label: 'Source values and identity collection', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    { label: 'Definition and result responsibilities', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: 'Exclusive participant adoption', path: 'packages/kernel/runtime/src/participant/internal/index.ts' },
+  ]}
+/>
+
+## Initialization
+
+Creation has no previous published revision to preserve. Follow the numbered stages: the upper row prepares data; the lower row completes host commits and initial notification.
+
+<ComponentPreview files="lifecycle-initial" size="md" hideCode type="flow" />
+
+1. Runtime preflights registries, initial commands and participants, then adopts participants. Sources run `capture → collectIdentities (optional) → read` in registry order, producing the read view `A: 1, B: 2`.
+2. Computations call `run` in dependency order, producing `A: 2, B: 4`. After `capture`, `readForComputation` creates a private view used only by this computation's later `update`, while `read` creates a public view for downstream computations and the host. Both views are derived from the same owned result.
+3. All participants prepare, then all commit, then all read. In this example commit changes the display and read builds the public view. Failure at any stage prevents returning a successfully created instance.
+4. Once initial state is ready at revision `0`, Runtime notifies `observeCommit` and disposes transaction objects. Notification occurs before `createRuntime` returns; use the event's result inside the callback.
+
+Creation failure leaves no instance for subsequent queries or disposal retries. Adopted participants and prepared Sources/results are cleaned up, with diagnostics attached to the error. If prepare fails before returning a transaction object, it must clean up its own temporary allocations.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Initializing Sources, computations, participants and observers',
+      path: 'packages/kernel/runtime/src/runtime/runtime.ts',
+    },
+  ]}
+/>
+
+## An update
+
+### From published state to candidates
+
+Submit complete new Source data `A: 3, B: 2` based on revision `0`. The middle column below stops after computation preparation and before participant commit. Compare its result and public display rows:
+
+<ComponentPreview files="lifecycle-state" size="md" hideCode type="illustration" />
+
+The middle column has computed `6, 4`, but the old public display remains `2, 4` and published revision remains `0`. Candidate snapshots carry revision `1`; they are not published yet. The right column applies only after all participant commits and reads succeed, when Sources, results, participant read caches and revision switch together.
+
+The blue identity row stays the same in all columns. B's result can also be reused, but that is an algorithm decision. Even a reused value receives the current revision `1` in a newly read published snapshot.
+
+### Prepare, commit and publish
+
+Place those state columns into the execution sequence below. Publication happens at step 5. Step 4 changes actual host state before Runtime publishes, which is why rollback is necessary.
+
+<ComponentPreview files="lifecycle-update" size="md" hideCode type="flow" />
+
+1. **Check revisions and commands**: Reject stale revisions, invalid tokens and duplicate commands before preparing invalid work.
+2. **Prepare Source candidates**: Capture complete candidates for submitted Sources and compare values. Unsubmitted Sources reuse their old values; equal candidates are retired.
+3. **Propagate computations**: Follow declared dependencies. `auto` prefers incremental execution, `bailout` preserves the old result, and `fallback` calls `run` with the same candidate view. The example updates A using its hint and reuses B. See [Computation](/kernel/packages/runtime/computation#consuming-change-hints) for the code that reads, validates and falls back from hints.
+4. **Commit participants**: Select affected or continuous participants, prepare all, commit all and then build new read caches.
+5. **Publish together**: Switch Sources, computation results, participant read caches and revision to the new state together.
+6. **Notify and clean up**: Notify computations with new results, retire replaced results in reverse dependency order, retire replaced Source values in reverse order, and finally dispose participant transaction objects. Failures in this step append diagnostics without reverting the published revision.
+
+| Stage                          | Data used                               | Observable result                       | Failure boundary                               |
+| ------------------------------ | --------------------------------------- | --------------------------------------- | ---------------------------------------------- |
+| Source/computation preparation | Old state and new candidates            | Trace may be delivered synchronously    | Clean candidates; retain published state       |
+| Participant commits and reads  | Declared candidate dependencies         | Real host state may already change      | Roll back prepared objects; no publication yet |
+| Publication                    | All successful candidates               | New revision and read caches agree      | Earlier failure never crosses this boundary    |
+| Notification and retirement    | Published events and replaced resources | Diagnostics enter results and the queue | Keep the new revision                          |
+
+Runtime coordinates synchronously; it cannot undo arbitrary callback side effects. Participants implement host recovery. Do not reenter Runtime updates or state reads from callbacks: use candidate views during preparation and events during notification.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Candidate views, incremental propagation and publication',
+      path: 'packages/kernel/runtime/src/runtime/runtime.ts',
+    },
+    { label: 'Candidate and commit event contracts', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
+## No change and failure
+
+### Paths that still succeed
+
+If all Sources are equal, the transaction returns `bailout`, skips computations and participants, and keeps the revision. If a Source changes but all computations bail out, Runtime still publishes the Source and advances the revision with aggregate outcome `committed`. Computation fallback is also a success path, using full execution instead of incremental results.
+
+### Where failure occurs
+
+The three rows compare failures relative to publication. The first assumes all required rollbacks succeed. The second isolates rollback failure, which cannot be treated as an ordinary retry.
+
+<ComponentPreview files="lifecycle-failure" size="lg" hideCode type="flow" />
+
+- **First row:** candidate computation, participant preparation, commit or read fails. Runtime does not publish. Already returned participant transaction objects roll back in reverse order, including those not yet committed. Once old data and display agree again, corrected input can be retried.
+- **Second row:** rollback itself fails, so the real host may disagree with old caches. The instance becomes broken and rejects updates and Source/result/participant state reads. Revision queries, diagnostics and disposal remain available.
+- **Third row:** an observer or cleanup fails after revision `1` was published. Readers keep new state and diagnostics describe the failure; it does not revert to revision `0`.
+
+Trace is sent synchronously when work occurs and is not retracted if the first row later fails. Computation business warnings publish only with successful results; execution, rollback and cleanup faults survive according to the failure path. Commit observers receive diagnostics frozen before notification. Later diagnostics are read from the final update result or accumulated queue. See [Trace](/kernel/packages/runtime/trace).
+
+<SourceLinks
+  sources={[
+    { label: 'Failure aggregation, rollback and broken state', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'Synchronous Trace and isolation', path: 'packages/kernel/runtime/src/trace/reporter.ts' },
+  ]}
+/>
+
+## Reads and disposal
+
+`snapshot`, `result` and `participant` use published read caches without rerunning capture, computation or participant read. Old snapshots do not update automatically. For long-lived reads, public transforms must provide independent, safe values instead of exposing internal handles that may soon be disposed.
+
+Calling `dispose` stops service and cleans up in this order. Step 5 retries only failed participants; retired results and Sources are not disposed again.
+
+<ComponentPreview files="lifecycle-disposal" size="md" hideCode type="flow" />
+
+Participants are disposed first so they can clean up while Sources and results are still alive. Computation results follow in reverse dependency order, then Source values in reverse registry order. Runtime retries participants that failed earlier in this call. Remaining failures leave dispose-pending, allowing another `dispose()` call.
+
+Updates cannot resume once disposal starts. Later retries cannot depend on already retired Sources or computation results. `revision()` and `diagnostics()` remain available: the former returns the last published revision and the latter drains the diagnostic queue.
+
+<SourceLinks
+  sources={[
+    { label: 'Final disposal and participant retries', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'Exactly-once Source retirement', path: 'packages/kernel/runtime/src/source/executor.ts' },
+  ]}
+/>
+
+## Source reading order
+
+Follow the handoffs in the figures: start with Source preparation and retirement, then computation result transforms, and finally Runtime initialization, update, observer notification and disposal. The Participant protocol provides recoverability for external state. Return to each topic's Related props section for configuration details.
+
+<SourceLinks
+  sources={[
+    { label: 'Source lifecycle', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    { label: 'Result capture and reads', path: 'packages/kernel/runtime/src/computation/define.ts' },
+    { label: 'Cross-member coordination', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'Participant protocol', path: 'packages/kernel/runtime/src/participant/types.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime',
+      description: 'Creation, update commands and reads',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    {
+      title: 'Computation',
+      description: 'Incremental branches, hints and commit observation',
+      url: '/kernel/packages/runtime/computation',
+    },
+    {
+      title: 'Participant',
+      description: 'Implement external commits and recovery',
+      url: '/kernel/packages/runtime/participant',
+    },
+    {
+      title: 'Trace · Errors and diagnostics',
+      description: 'Consume failures, warnings and work records',
+      url: '/kernel/packages/runtime/trace',
+    },
+  ]}
+/>

@@ -3,7 +3,7 @@ title: Trace · Errors and diagnostics
 description: Distinguish transaction errors, structured diagnostics and Trace records to locate failures and observe computation work
 ---
 
-[Runtime · Transaction publication](/kernel/packages/runtime/transaction) and [Participant](/kernel/packages/runtime/participant) explain how data and external state commit together. Callers also need to know why an update failed, whether a successful update produced warnings, and how much work a computation reused.
+[Runtime](/kernel/packages/runtime/transaction) and [Participant](/kernel/packages/runtime/participant) explain how data and external state commit together. Callers also need to know why an update failed, whether a successful update produced warnings, and how much work a computation reused.
 
 Runtime offers three channels: an **error** interrupts the current operation, a **diagnostic** records a problem that needs attention, and **Trace** reports execution stages and work counts. A successful update can carry diagnostics, and receiving a Trace record does not mean the transaction ultimately published.
 
@@ -129,7 +129,9 @@ Creation runs the computation too, so the result is already `2` and `records` co
   ]}
 />
 
-## Catching errors
+## Errors and diagnostics
+
+### Catching errors
 
 `RetikzRuntimeError` is Runtime's structured error. Branch on `code`, locate the failure with `phase`, `owner` or `computation`, and inspect `cause` for the original reason. Do not parse the message to select behavior.
 
@@ -178,7 +180,7 @@ Neither the negative count nor a new result was published. Failure diagnostics a
   ]}
 />
 
-## Consuming diagnostics
+### Consuming diagnostics
 
 Computations and participants report business warnings with `context.diagnose({ code, phase, message })`. Runtime adds `severity: 'warning'` and the computation or participant context; callers do not supply those ownership fields. The main diagnostic members are:
 
@@ -246,7 +248,9 @@ Do not call `runtime.diagnostics()` from a callback while Runtime is executing: 
   ]}
 />
 
-## Recording Trace
+## Work traces
+
+### Recording Trace
 
 Trace records **deterministic work counts**, not elapsed time. A record describes how much work an execution visited, reused and changed. Do not interpret `visited` as milliseconds or add counts with different `unit` values.
 
@@ -299,7 +303,7 @@ Both computation and participant `context.trace` expose only `owner` and `report
   ]}
 />
 
-## Isolating observation failures
+### Isolating observation failures
 
 Valid records reach the `trace` receiver synchronously and immediately, possibly before the transaction commits. If a later computation or participant fails, delivered records are not withdrawn. Trace proves that work occurred, not that publication succeeded.
 
@@ -336,13 +340,15 @@ Without a `trace` callback, Runtime still validates reported records but does no
   ]}
 />
 
-## Complete flow
+### Reporting flow
 
 Follow one report: a computation or participant supplies a record, the reporter validates it and adds ownership, valid records reach the receiver, and observation failures enter diagnostics. The business transaction then finishes on its own success or failure path:
 
 <ComponentPreview files="trace-flow" size="sm" hideCode type="flow" />
 
 Start source reading with reporter validation and receiver isolation. Then follow Runtime's mapping of local diagnostics to computation or participant context, and finally the update result, error object and instance queue.
+
+Runtime converts Source capture, comparison and disposal failures into structured errors or diagnostics; Source callbacks do not receive a computation-style `context.trace`. Computations and Participants report explicitly through their contexts, while Runtime adds ownership and collects diagnostics at transaction boundaries. Configuring a sink does not automatically generate work records for every stage: algorithms and participants supply them. See [Lifecycle](/kernel/packages/runtime/lifecycle#no-change-and-failure) to place these information channels into initialization, commit and disposal order.
 
 ## Core application
 
@@ -379,12 +385,84 @@ Core domain diagnostics reside in compilation `output.diagnostics`. Runtime tran
   ]}
 />
 
+## Related props
+
+Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.
+
+<ComponentProps
+  items={[
+    {
+      name: 'RetikzRuntimeError',
+      kind: 'type',
+      type: 'RetikzRuntimeError',
+      description:
+        'Public errors carry code, message, phase, optional owner/computation/cause, and diagnostics. Branch on code; inspect cause for the original failure.',
+    },
+    {
+      name: 'context.diagnose',
+      kind: 'property',
+      type: '(warning: { code: string; phase: RuntimeDiagnosticPhase; message: string }) => void',
+      description:
+        'Reports commit-safe business warnings; Runtime adds ownership. Failed computation candidate warnings are not published as committed warnings.',
+    },
+    {
+      name: 'Runtime.diagnostics',
+      kind: 'property',
+      type: '() => ReadonlyArray<RuntimeDiagnostic>',
+      description:
+        'Drains the accumulated queue; entries carry code, phase, severity, message and optional owner, computation and cause.',
+    },
+    {
+      name: 'tracePhases',
+      kind: 'property',
+      type: 'ReadonlyArray<RuntimeTracePhaseDefinition>',
+      description:
+        'Each item is `{ phase, unit, outcomes }`. phase: compile/update/commit; unit: ir-child/scene-primitive/computation/scene-change; non-empty outcomes may contain full/incremental/bailout/fallback/commit. These are algorithm declarations, not Runtime initial/update phases.',
+      required: false,
+      defaultValue: '[]',
+    },
+    {
+      name: 'context.trace.report',
+      kind: 'property',
+      type: "(record: Omit<PerformanceTraceRecord, 'owner'>) => void",
+      description:
+        'Takes phase, unit, outcome, visited, reused and changed; counts are non-negative safe integers, reused/changed each cannot exceed visited, and bailout has changed = 0.',
+    },
+    {
+      name: 'trace',
+      kind: 'property',
+      type: '(record: PerformanceTraceRecord) => void',
+      description:
+        'Synchronously receives valid records with owner added. Exceptions are isolated; records may precede publication and are not retracted on rollback.',
+    },
+    {
+      name: 'createRuntimeTraceReporter',
+      kind: 'function',
+      type: '<const TOwner extends string>(input: CreateRuntimeTraceReporterInput<TOwner>) => RuntimeTraceReporter<TOwner>',
+      description:
+        'Standalone reporter accepts `{ owner: TOwner, phases: ReadonlyArray<RuntimeTracePhaseDefinition>, sink: PerformanceTraceSink }`; returns owner, report and diagnostics to drain local faults.',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Public exports', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: 'Main contracts', path: 'packages/kernel/runtime/src/trace/types.ts' },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Runtime · Transaction publication',
+      title: 'Lifecycle',
+      description: 'Follow member collaboration through initialization, updates, failures and disposal',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
+    {
+      title: 'Runtime',
       description: 'Revision checks and atomic publication',
       url: '/kernel/packages/runtime/transaction',
     },

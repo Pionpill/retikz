@@ -9,13 +9,13 @@ description: 标识状态中的实体，理解身份的创建、比较、收集�
 
 ## 整体流程
 
-| 环节       | 接口或配置                                | 作用                                   |
-| ---------- | ----------------------------------------- | -------------------------------------- |
-| 创建       | `createRuntimeIdentity(owner, path)`      | 用来源名称和实体路径构成身份           |
-| 比较       | `runtimeIdentityEquals(a, b)`             | 判断两个身份是否指向同一实体           |
-| 收集       | `collectIdentities(value)`                | 来源回调返回捕获后数据中的完整身份列表 |
-| 建立查找表 | `createRuntimeIdentityLookup(identities)` | 校验身份列表并建立查找表               |
-| 查询       | `lookup.has(identity)`、`lookup.values()` | 检查身份是否存在，或列举集合           |
+| 环节       | 接口或配置                                       | 作用                                   |
+| ---------- | ------------------------------------------------ | -------------------------------------- |
+| 创建       | `createRuntimeIdentity(owner, path)`             | 用来源名称和实体路径构成身份           |
+| 比较       | `runtimeIdentityEquals(a, b)`                    | 判断两个身份是否指向同一实体           |
+| 收集       | `collectIdentities(value)`                       | 来源回调返回捕获后数据中的完整身份列表 |
+| 建立查找表 | `createRuntimeIdentityLookup(owner, identities)` | 校验身份列表并建立查找表               |
+| 查询       | `lookup.has(identity)`、`lookup.values()`        | 检查身份是否存在，或列举集合           |
 
 下图展示集合查询的路径；只需比较两个实体时，可以直接使用身份比较接口，无需建立查找表。
 
@@ -42,7 +42,9 @@ type RuntimeIdentity = Readonly<{
 
 两个节点记录可以是不同的 JavaScript 对象。只要 `owner` 与完整 `path` 内容相同，身份比较就相等；这既不表示两份状态相等，也不自动复用计算结果。调用方决定如何用稳定身份对应前后实体，Runtime 提供统一的创建、比较和查找工具。
 
-## 标识节点
+## 创建与查询
+
+### 创建与比较
 
 节点的颜色可以变化，身份则应在它仍是同一个实体时保持不变。使用 `createRuntimeIdentity(owner, path)` 创建身份：
 
@@ -106,7 +108,7 @@ console.log(runtimeIdentityEquals(nodeA, otherGraphA)); // false
   ]}
 />
 
-## 收集与查找
+### 建立查找集合
 
 一张图可能包含多个节点。`createRuntimeIdentityLookup(owner, identities)` 将同一来源的身份整理成查找表，用来回答“这个实体是否存在”：
 
@@ -160,6 +162,8 @@ console.log(identities.values().map(identity => identity.path));
 
 例如，旧状态的集合为 `[A, B]`，新状态为 `[A, C]`：调用方分别查询两份集合，就能识别 B 不再存在、C 是新加入的实体。A 在两份集合中都存在，只能说明身份延续，不能说明其颜色没有变化。共同前缀也不代表 `has` 会匹配子树。
 
+## 与来源和计算协作
+
 ### 从来源收集
 
 `collectIdentities` 接收 `capture` 产生的完整内部值，返回其中需要被标识的实体集合。Runtime 会检查这些身份的归属与重复项，并保存内部查找表。目前这个内部表没有公开查询入口，也不会自动驱动计算依赖或失效；调用方需要查询身份时，仍应使用自己的身份列表建立查找表，需要取得实体数据时则维护数据索引。
@@ -194,7 +198,22 @@ const graph = defineRuntimeSource<GraphState, GraphState, GraphState, never>({
   ]}
 />
 
-## 完整流程
+### 计算如何使用身份
+
+实体身份 `{ owner, path }` 与计算身份 `{ owner, key }` 解决不同的问题。例如，来源 `example/graph` 中节点 A 的实体身份是 `{ owner: 'example/graph', path: ['nodes', 'A'] }`；为图计算布局的 Computation 可以使用 `{ owner: 'example/graph', key: 'layout' }`。前者标识节点，后者标识计算本身。
+
+即使两者的 `owner` 相同，计算仍必须声明 `sources: [graph]` 才能读取图。节点颜色改变时，身份可以不变；来源是否变化由 `equals` 判断，计算是否执行由依赖关系决定。若布局算法需要按节点复用结果，应从来源公开视图或 ChangeSet 读取身份信息，并在结果私有视图中保存自己的索引；不能查询 Runtime 内部收集的身份表。
+
+身份比较只回答“是否同一个实体”，不回答“状态是否相等”或“缓存是否仍有效”。从身份到更新的完整关系见[生命周期](/kernel/packages/runtime/lifecycle#成员与状态)。
+
+<SourceLinks
+  sources={[
+    { label: '实体身份与计算身份', path: 'packages/kernel/runtime/src/identity/types.ts' },
+    { label: '计算的显式依赖与读取', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
+### 身份的使用边界
 
 身份有两种常见用法：直接比较两个身份，或者把完整身份列表整理成查找表。下面用 API 串起这两条路径；箭头表示输入与输出的传递，不表示所有调用都必须依次执行。
 
@@ -219,12 +238,69 @@ const nodeA = createRuntimeIdentity('@retikz/core/document', [...root.path, 'nod
   sources={[{ label: 'Core 文档身份与变更核对', path: 'packages/kernel/core/src/compile/incremental/diff.ts' }]}
 />
 
+## 相关属性
+
+这里只收录本篇涉及的公开成员；完整声明与默认行为可从下方源码入口回查。
+
+<ComponentProps
+  items={[
+    {
+      name: 'RuntimeIdentity',
+      kind: 'type',
+      type: 'Readonly<{ owner: string; path: ReadonlyArray<string> }>',
+      description: 'owner 标识来源；path 是非空路径段序列，身份不包含实体当前值。',
+    },
+    {
+      name: 'RuntimeComputationId',
+      kind: 'type',
+      type: 'Readonly<{ owner: string; key: string }>',
+      description: '标识计算定义，不是实体路径；owner 不授予依赖读取权限。',
+    },
+    {
+      name: 'createRuntimeIdentity',
+      kind: 'function',
+      type: '(owner: string, path: ReadonlyArray<string>) => RuntimeIdentity',
+      description: '校验并复制身份；path 各段不能为空，字符串按完整内容匹配。',
+    },
+    {
+      name: 'runtimeIdentityEquals',
+      kind: 'function',
+      type: '(left: RuntimeIdentity, right: RuntimeIdentity) => boolean',
+      description: '比较 owner、路径长度和每段内容，不比较对象引用或前缀。',
+    },
+    {
+      name: 'createRuntimeIdentityLookup',
+      kind: 'function',
+      type: '(owner: string, identities: ReadonlyArray<RuntimeIdentity>) => RuntimeIdentityLookup',
+      description: '创建固定 owner 的集合；拒绝重复及其他 owner 的身份。',
+    },
+    {
+      name: 'RuntimeIdentityLookup',
+      kind: 'type',
+      type: 'Readonly<{ owner: string; size: number; has: (identity: RuntimeIdentity) => boolean; values: () => ReadonlyArray<RuntimeIdentity> }>',
+      description: 'has 进行完整匹配；values 稳定排序。内部来源身份表不通过 Runtime 暴露。',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: '公开入口', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: '本篇主要契约', path: 'packages/kernel/runtime/src/identity/types.ts' },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections
   items={[
     {
-      title: 'Runtime · 事务发布',
+      title: '生命周期',
+      description: '沿初始化、更新、失败和释放理解成员协作',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
+    {
+      title: 'Runtime',
       description: '创建实例、版本检查与事务发布',
       url: '/kernel/packages/runtime/transaction',
     },

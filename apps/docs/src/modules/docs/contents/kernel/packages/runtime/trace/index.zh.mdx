@@ -3,7 +3,7 @@ title: Trace · 错误诊断
 description: 区分事务错误、结构化诊断与 Trace，定位失败原因并观察计算工作量
 ---
 
-[Runtime · 事务发布](/kernel/packages/runtime/transaction) 和 [Participant · 参与者](/kernel/packages/runtime/participant) 说明了如何一起提交数据与外部状态。调用方还需要知道：更新为什么失败？成功后是否有警告？这次计算复用了多少工作？
+[Runtime](/kernel/packages/runtime/transaction) 和 [Participant · 参与者](/kernel/packages/runtime/participant) 说明了如何一起提交数据与外部状态。调用方还需要知道：更新为什么失败？成功后是否有警告？这次计算复用了多少工作？
 
 Runtime 提供三个出口：**错误**中断当前操作，**诊断**记录需要处理的问题，**Trace**报告执行阶段与工作量。三者回答不同的问题：更新成功也可能带有诊断，已经收到 Trace 也不表示事务最终发布成功。
 
@@ -126,7 +126,9 @@ const runtime = createRuntime({
   ]}
 />
 
-## 捕获错误
+## 错误与诊断
+
+### 捕获错误
 
 `RetikzRuntimeError` 是 Runtime 的结构化错误。按 `code` 判断错误类别，用 `phase`、`owner` 或 `computation` 定位，用 `cause` 查看原始原因；不要解析错误消息来分支。
 
@@ -172,7 +174,7 @@ console.log(runtime.diagnostics().map(item => item.code));
   ]}
 />
 
-## 消费诊断
+### 消费诊断
 
 `context.diagnose({ code, phase, message })` 用于计算和参与者报告业务警告。Runtime 自动补上 `severity: 'warning'` 及所属计算或参与者；调用方不需要填写这些归属字段。诊断对象的主要成员如下：
 
@@ -237,7 +239,9 @@ console.log(updated.diagnostics.length); // 1
   ]}
 />
 
-## 记录 Trace
+## 工作量 Trace
+
+### 记录 Trace
 
 Trace 是**确定性的工作量记录**，没有耗时字段。本例的一条记录描述“一次计算访问了多少工作、复用了多少、改变了多少”，不能把 `visited` 当作毫秒，也不能把不同 `unit` 的计数直接相加。
 
@@ -287,7 +291,7 @@ type PerformanceTraceRecord = Readonly<{
   ]}
 />
 
-## 观测隔离
+### 观测隔离
 
 合法 Trace 会立即同步交给 `trace` 接收函数。它可能在事务最终提交前执行；后续计算或参与者失败时，已经送出的记录不会撤回。因此，Trace 只能说明工作发生过，不能作为发布通知。
 
@@ -324,13 +328,15 @@ runtime.dispose();
   ]}
 />
 
-## 完整流程
+### 报告流程
 
 沿一次报告追踪：计算或参与者填写记录，reporter 验证并补齐归属，合法记录交给接收函数，观测故障转入诊断。业务事务继续按自己的成功或失败路径收尾：
 
 <ComponentPreview files="trace-flow" size="sm" hideCode type="flow" />
 
 读源码时先看 reporter 的记录校验与接收隔离，再看 Runtime 如何把局部诊断补上计算或参与者归属，最后追踪更新返回值、错误对象和实例队列三个出口。
+
+Source 的捕获、比较和释放故障由 Runtime 转换为结构化错误或诊断；Source 回调没有计算式的 `context.trace`。Computation 和 Participant 则通过各自的上下文主动报告，Runtime 补齐归属并在事务边界收集。配置接收函数不会自动产生每个阶段的工作量记录，记录内容仍由算法或参与者提供。把三条信息通路放回初始化、提交与释放时序，可继续读[生命周期](/kernel/packages/runtime/lifecycle#无变化与失败)。
 
 ## Core 应用
 
@@ -367,11 +373,80 @@ Core 的领域诊断保存在编译输出的 `output.diagnostics`；Runtime 的�
   ]}
 />
 
+## 相关属性
+
+这里只收录本篇涉及的公开成员；完整声明与默认行为可从下方源码入口回查。
+
+<ComponentProps
+  items={[
+    {
+      name: 'RetikzRuntimeError',
+      kind: 'type',
+      type: 'RetikzRuntimeError',
+      description:
+        '公开错误包含 code、message、phase、owner?、computation?、cause?、diagnostics；按 code 分支，原始失败看 cause。',
+    },
+    {
+      name: 'context.diagnose',
+      kind: 'property',
+      type: '(warning: { code: string; phase: RuntimeDiagnosticPhase; message: string }) => void',
+      description: '报告 commit-safe 业务警告；Runtime 补归属，失败计算的候选警告不会当作已提交警告发布。',
+    },
+    {
+      name: 'Runtime.diagnostics',
+      kind: 'property',
+      type: '() => ReadonlyArray<RuntimeDiagnostic>',
+      description: '读取并清空累计队列；项目包含 code、phase、severity、message 和可选 owner、computation、cause。',
+    },
+    {
+      name: 'tracePhases',
+      kind: 'property',
+      type: 'ReadonlyArray<RuntimeTracePhaseDefinition>',
+      description:
+        '每项为 `{ phase, unit, outcomes }`。phase: compile/update/commit；unit: ir-child/scene-primitive/computation/scene-change；outcomes 非空，可含 full/incremental/bailout/fallback/commit。组合表示算法声明，阶段不等于 Runtime 的 initial/update。',
+      required: false,
+      defaultValue: '[]',
+    },
+    {
+      name: 'context.trace.report',
+      kind: 'property',
+      type: "(record: Omit<PerformanceTraceRecord, 'owner'>) => void",
+      description:
+        '传 phase、unit、outcome、visited、reused、changed；计数为非负安全整数，reused/changed 各自不超过 visited，bailout 的 changed 为 0。',
+    },
+    {
+      name: 'trace',
+      kind: 'property',
+      type: '(record: PerformanceTraceRecord) => void',
+      description: '同步接收补齐 owner 的合法记录；抛错被隔离，记录可能早于发布且不会因回滚撤回。',
+    },
+    {
+      name: 'createRuntimeTraceReporter',
+      kind: 'function',
+      type: '<const TOwner extends string>(input: CreateRuntimeTraceReporterInput<TOwner>) => RuntimeTraceReporter<TOwner>',
+      description:
+        '独立 reporter 输入 `{ owner: TOwner, phases: ReadonlyArray<RuntimeTracePhaseDefinition>, sink: PerformanceTraceSink }`；返回 owner、report 和读取清空局部诊断的 diagnostics。',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: '公开入口', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: '本篇主要契约', path: 'packages/kernel/runtime/src/trace/types.ts' },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections
   items={[
-    { title: 'Runtime · 事务发布', description: '版本检查与统一发布边界', url: '/kernel/packages/runtime/transaction' },
+    {
+      title: '生命周期',
+      description: '沿初始化、更新、失败和释放理解成员协作',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
+    { title: 'Runtime', description: '版本检查与统一发布边界', url: '/kernel/packages/runtime/transaction' },
     {
       title: 'Participant · 参与者',
       description: '外部提交、回滚与资源释放',

@@ -138,7 +138,7 @@ The returned `position` is a definition token identifying this Source; it does n
   ]}
 />
 
-## Responsibilities in the definition
+### Transforms, equality and disposal
 
 `key` gives this category of state a stable name. The token lets later APIs recover this exact definition and its types. Multiple Runtime instances can share the definition while owning different coordinate values.
 
@@ -157,7 +157,7 @@ The read-only representation from `read` is shared by several consumers: the hos
 
 `equals` must cover the complete meaning relevant to consumers, rather than comparing references or convenient fields alone. `dispose` receives the internal value, not the input or public view; old and new values must not share resources requiring exclusive disposal. When comparison, state adoption and cleanup occur belongs to Runtime update orchestration and will be connected in the Runtime chapter.
 
-The optional `collectIdentities` field lists entities in the internal value, as explained in [Identity](/kernel/packages/runtime/identity#collection-and-lookup).
+The optional `collectIdentities` field lists entities in the internal value, as explained in [Identity](/kernel/packages/runtime/identity#building-a-lookup).
 
 ## Source registration
 
@@ -226,13 +226,34 @@ Resolving a newly created same-name Source fails because its token differs. Regi
   ]}
 />
 
-## Complete flow
+### Registration flow
 
 A Source definition returns a token. Register the selected tokens, then find them by name, validate membership or list the definitions. This figure passes definitions, not the data from an individual state.
 
 <ComponentPreview files="source-registration" size="lg" hideCode type="flow" />
 
 `find(key)` retrieves a definition by name; `resolve(token)` validates membership while preserving types; `definitions()` lists the definitions. Registration does not call `capture` or execute computations. See the [introductory example](/kernel/packages/runtime/usage) for passing definitions and data to a running instance; full initialization and update orchestration belong to the Runtime chapter.
+
+## Sources inside Runtime
+
+### Definitions, state and identity
+
+A Source token associates rules. Multiple Runtime instances can use the same token, while each captures and owns its own state; the registry does not store those values. A computation declares `sources` to gain read access, and Runtime uses `equals` to decide whether dependent computations need to execute.
+
+For state containing multiple entities, `collectIdentities(value)` can return the complete identity set. Runtime validates ownership and duplicates after `capture` and before `read`; each identity's `owner` must match the Source `key`. This set neither generates change hints nor replaces dependency declarations. See [Identity](/kernel/packages/runtime/identity#working-with-sources-and-computations).
+
+### Candidates and owned values
+
+Initialization captures the first state. An update prepares a candidate and compares the owned values. Equality preserves the old value and retires the candidate; a changed candidate goes through computation and participant preparation before successful publication replaces the old state. Source callbacks handle local conversion, equality and cleanup; [Lifecycle](/kernel/packages/runtime/lifecycle) explains ordering across members.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Identity validation and reads during Source preparation',
+      path: 'packages/kernel/runtime/src/source/executor.ts',
+    },
+  ]}
+/>
 
 ## Core application
 
@@ -266,5 +287,82 @@ The token identifies the Source definition and stores no document data. Multiple
   sources={[
     { label: 'Core document Source definition', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
     { label: 'Source reads in Core compilation', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>
+
+## Related props
+
+Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineRuntimeSource',
+      kind: 'function',
+      type: '<TInput, TValue, TRead, TChange>(input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>',
+      description:
+        'Creates a Source token from key, value and optional collectIdentities. Definition does not capture data.',
+    },
+    {
+      name: 'value.capture',
+      kind: 'property',
+      type: '(input: TInput) => TValue',
+      description: 'Captures complete input into an instance-owned value.',
+      required: true,
+    },
+    {
+      name: 'value.read',
+      kind: 'property',
+      type: '(value: TValue) => TRead',
+      description: 'Produces a shareable immutable view without disposable handles.',
+      required: true,
+    },
+    {
+      name: 'value.equals',
+      kind: 'property',
+      type: '(left: TValue, right: TValue) => boolean',
+      description:
+        'Compares full semantics; equality retains the old value and suppresses Source-triggered propagation.',
+      required: true,
+    },
+    {
+      name: 'value.dispose',
+      kind: 'property',
+      type: '(value: TValue) => void',
+      description: 'Retires candidate, replaced or final owned values; omit when no resources require cleanup.',
+    },
+    {
+      name: 'collectIdentities',
+      kind: 'property',
+      type: '(value: TValue) => ReadonlyArray<RuntimeIdentity>',
+      description:
+        'Returns the complete set of `{ owner: string, path: ReadonlyArray<string> }`; owner must equal key and identities must be unique.',
+    },
+    {
+      name: 'createRuntimeSourceRegistry',
+      kind: 'function',
+      type: '(tokens: Array<RuntimeSourceToken>) => RuntimeSourceRegistry',
+      description:
+        'Returns resolve(definition), find(key) and definitions(): validate an original token, find by key and list definitions.',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Public exports', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: 'Main contracts', path: 'packages/kernel/runtime/src/source/types.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Lifecycle',
+      description: 'Follow member collaboration through initialization, updates, failures and disposal',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
   ]}
 />

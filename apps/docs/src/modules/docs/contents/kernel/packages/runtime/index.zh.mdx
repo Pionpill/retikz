@@ -69,17 +69,6 @@ runtimeIdentityEquals(first, second); // true
 
 <LinkedSections
   items={[
-    { title: 'Trace · 错误诊断', description: '捕获失败、消费诊断与观察工作量', url: '/kernel/packages/runtime/trace' },
-    {
-      title: 'Participant · 参与者',
-      description: '外部状态的准备、提交与回滚',
-      url: '/kernel/packages/runtime/participant',
-    },
-    {
-      title: 'Runtime · 事务发布',
-      description: '创建实例、版本检查与事务发布',
-      url: '/kernel/packages/runtime/transaction',
-    },
     {
       title: '入门示例',
       description: '用计数器完成定义、注册、更新、读取与释放',
@@ -99,6 +88,22 @@ runtimeIdentityEquals(first, second); // true
       title: 'Computation · 计算',
       description: '定义派生计算，理解依赖注册、结果视图和增量更新',
       url: '/kernel/packages/runtime/computation',
+    },
+    {
+      title: 'Runtime',
+      description: '创建实例、版本检查与事务发布',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    {
+      title: 'Participant · 参与者',
+      description: '外部状态的准备、提交与回滚',
+      url: '/kernel/packages/runtime/participant',
+    },
+    { title: 'Trace · 错误诊断', description: '捕获失败、消费诊断与观察工作量', url: '/kernel/packages/runtime/trace' },
+    {
+      title: '生命周期',
+      description: '围绕图示串联初始化、更新、失败与释放',
+      url: '/kernel/packages/runtime/lifecycle',
     },
   ]}
 />

@@ -22,7 +22,9 @@ description: 从坐标派生距离，理解计算定义、依赖注册、结果�
 
 <ComponentPreview files="computation-overview" size="xs" hideCode type="flow" />
 
-## 定义计算
+## 定义与依赖
+
+### 定义计算
 
 先区分三个概念：
 
@@ -43,7 +45,7 @@ declare const defineRuntimeComputation: <
 ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
 ```
 
-输入配置中的成员按下面的职责协作；结果转换在“计算结果”中展开，观测相关用法见 [Trace · 错误诊断](/kernel/packages/runtime/trace)。
+输入配置中的成员按下面的职责协作；结果转换在“结果管理”中展开，观测相关用法见 [Trace · 错误诊断](/kernel/packages/runtime/trace)。
 
 <DocTabs defaultValue="members">
 <DocTab value="members" label="属性">
@@ -128,8 +130,6 @@ const distance = defineRuntimeComputation<number>({
     { label: 'Token 与执行规则的关联', path: 'packages/kernel/runtime/src/computation/define.ts' },
   ]}
 />
-
-## 依赖与注册
 
 计算定义中的 `sources` 声明依赖哪些来源，`computations` 声明依赖哪些上游计算。可以把它理解为订阅上游变化：调用 `runtime.update` 后，Runtime 判断来源是否实际变化，再按依赖顺序更新相关计算。直接修改外部对象不会自动触发这条流程。
 
@@ -231,7 +231,7 @@ console.log(computations.resolve(distance) === distance); // true
   ]}
 />
 
-## 计算结果
+## 结果管理
 
 **计算结果**是一次计算完成后，由 Runtime 保存下来供后续使用的数据。前面距离计算得到的 `5` 就是结果；它不只是在回调结束时临时返回，还承担三种用途：
 
@@ -308,17 +308,42 @@ const cachedDistance = defineRuntimeComputation<DistanceCache, DistanceCache, Di
   sources={[{ label: '默认转换、读取缓存与结果清理', path: 'packages/kernel/runtime/src/computation/define.ts' }]}
 />
 
-## 增量更新
+## 执行与传播
+
+### 候选阶段与执行方式
+
+Runtime 在初始化和更新中都可能调用 `run`，因此不能用回调名称判断当前生命周期。候选视图说明“准备哪一版数据”，上下文说明“采用哪条计算路径”，返回值说明“这次产生了什么”。
+
+| 入口                     | 取值与含义                                                                   |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `view.phase`             | `initial` 是初始化，`update` 是后续事务                                      |
+| `view.baseRevision`      | 仅更新阶段存在，表示当前已发布版本                                           |
+| `view.candidateRevision` | 本次候选成功后将发布的版本；初始化为 `0`                                     |
+| `context.execution`      | `full` 调用全量路径；`incremental` 尝试增量；`fallback` 调用回退后的全量路径 |
+| 返回 `kind`              | `run` 只返回 `full`；`update` 返回 `incremental`、`bailout` 或 `fallback`    |
+
+例如版本 `2` 的更新中，`update` 可以收到 `phase: 'update'`、`candidateRevision: 3`、`execution: 'incremental'`。若它返回 `fallback`，Runtime 在相同候选视图上调用 `run`，此时 `execution` 变为 `fallback`，但 `run` 仍返回 `kind: 'full'`。最终提交事件会将本计算记为 `fallback`。
+
+候选快照中的版本也是 `candidateRevision`，包括复用未变化的来源或上游结果；这不表示该值已经对宿主发布。成员间的先后关系见[生命周期](/kernel/packages/runtime/lifecycle#一次更新)。
+
+<SourceLinks
+  sources={[
+    { label: '候选视图与执行上下文', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: '回退时复用候选视图', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+### 增量更新
 
 **首次执行一定调用 `run`**；后续依赖变化触发计算时，默认优先调用 `update`，未提供 `update` 则调用 `run`。全量策略、上游全量或回退，以及 `update` 返回 `fallback` 时，也会调用 `run`；未受依赖变化影响的计算直接跳过。
 
 `update(previous, view, context)` 接收旧结果的私有视图和本次候选数据，由计算作者选择如何得到正确结果。下面是三种返回形式；`run` 则始终返回 `full` 和完整新结果。
 
-| `update` 返回                     | Runtime 的处理                                     |
-| --------------------------------- | -------------------------------------------------- |
-| `{ kind: 'incremental', result }` | 捕获并准备新结果，继续触发依赖它的计算             |
-| `{ kind: 'bailout' }`             | 保留旧结果，不执行结果转换，也不因本项计算触发下游 |
-| `{ kind: 'fallback' }`            | 放弃增量路径，在同一候选数据上调用 `run`           |
+| `update` 返回                        | Runtime 的处理                                                     |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| `{ kind: 'incremental', result }`    | 捕获并准备新结果，继续触发依赖它的计算                             |
+| `{ kind: 'bailout' }`                | 保留旧结果，不执行结果转换，也不因本项计算触发下游                 |
+| `{ kind: 'fallback', diagnostics? }` | 放弃增量路径，在同一候选数据上调用 `run`；可附带说明原因的业务警告 |
 
 `incremental` 不表示返回一个补丁，而是用增量算法得到**完整的新结果**。Runtime 不会把它与旧结果自动合并。`bailout` 表示作者确认旧结果仍可用；`fallback` 表示当前增量方法不适用，要求在相同候选输入上重新调用 `run`，不是放弃这次更新。
 
@@ -369,13 +394,158 @@ const distance = defineRuntimeComputation<number>({
   ]}
 />
 
-## 完整流程
+### 消费变更提示
+
+下面把坐标例子换成一份包含 A/B 的节点来源，完整演示提示的创建、消费和回退。节点值乘以二后生成标签对象；只改 A 时，复用 B 的旧标签对象。蓝图是“来源身份稳定 → 算法校验提示 → 采用新结果”，不是 Runtime 自动按 Identity 更新。
+
+代码可独立运行。绿色 `+` 标出本步新增的提示消费逻辑，其余是定义和运行上下文：
+
+```ts
+import {
+  createRuntime,
+  createRuntimeSourceRegistry,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceUpdate,
+  createRuntimeChangeSet,
+  createRuntimeIdentity,
+  defineRuntimeSource,
+  defineRuntimeComputation,
+} from '@retikz/runtime';
+
+type NodeKey = 'A' | 'B';
+type Values = Readonly<Record<NodeKey, number>>;
+type Labels = Readonly<Record<NodeKey, Readonly<{ text: string }>>>;
+type Cached = Readonly<{ values: Values; labels: Labels }>;
+const graph = defineRuntimeSource<Values, Values, Values, NodeKey>({
+  key: 'graph',
+  value: {
+    capture: input => Object.freeze({ ...input }),
+    read: value => value,
+    equals: (a, b) => a.A === b.A && a.B === b.B,
+  },
+  collectIdentities: () => ['A', 'B'].map(key => createRuntimeIdentity('graph', ['nodes', key])),
+});
+const label = (value: number) => Object.freeze({ text: String(value * 2) });
+const doubled = defineRuntimeComputation<Cached, Cached, Cached, Labels>({
+  id: { owner: graph.key, key: 'doubled' },
+  sources: [graph],
+  result: { read: result => result.labels },
+  run: view => {
+    const values = view.snapshot(graph).value;
+    return {
+      kind: 'full',
+      result: Object.freeze({
+        values,
+        labels: Object.freeze({ A: label(values.A), B: label(values.B) }),
+      }),
+    };
+  },
+  update: (previous, view) => {
+    // [!code ++]
+    const values = view.snapshot(graph).value; // [!code ++]
+    const hints = view.changeSet(graph)?.changes; // [!code ++]
+    const changed = (['A', 'B'] as const).filter(key => previous.values[key] !== values[key]); // [!code ++]
+    if (!hints || changed.some(key => !hints.includes(key))) {
+      // [!code ++]
+      return {
+        kind: 'fallback',
+        diagnostics: [
+          {
+            // [!code ++]
+            code: 'graph/incomplete-hint',
+            phase: 'update',
+            message: 'Use full calculation', // [!code ++]
+          },
+        ],
+      }; // [!code ++]
+    } // [!code ++]
+    const labels = { ...previous.labels }; // [!code ++]
+    for (const key of changed) labels[key] = label(values[key]); // [!code ++]
+    return { kind: 'incremental', result: Object.freeze({ values, labels: Object.freeze(labels) }) }; // [!code ++]
+  }, // [!code ++]
+});
+const sources = createRuntimeSourceRegistry([graph]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [doubled] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(graph, { A: 1, B: 2 })],
+});
+try {
+  const before = runtime.result(doubled).value;
+  const baseRevision = runtime.revision();
+  const next = runtime.update({
+    baseRevision,
+    sources: [createRuntimeSourceUpdate(graph, { A: 3, B: 2 }, createRuntimeChangeSet<NodeKey>(baseRevision, ['A']))],
+  });
+  console.log(next.outcome, runtime.result(doubled).value.A.text); // 'incremental', '6'
+  console.log(runtime.result(doubled).value.B === before.B); // true
+  const fallback = runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(graph, { A: 4, B: 2 })],
+  });
+  console.log(fallback.outcome, fallback.diagnostics[0]?.code); // 'fallback', 'graph/incomplete-hint'
+  console.log(runtime.result(doubled).value.A.text); // '8'
+} finally {
+  runtime.dispose();
+}
+```
+
+这个示例扫描两个字段以核对提示是否覆盖实际变化，仍有比较成本；复用的是未变化节点的标签对象，不宣称减少了全部扫描工作。大型数据应由领域算法建立可靠的提示验证方式。Source 的身份收集与算法的 `NodeKey` 对应关系由本例定义，不是隐式依赖。
+
+缺少或漏报提示时返回 `fallback`，附带 `code/phase/message` 说明原因，Runtime 再执行 `run`。回退警告随成功结果进入诊断；若后续计算或提交失败，候选计算业务警告不会作为已提交警告发布，执行与清理故障仍按 [Trace](/kernel/packages/runtime/trace#消费诊断) 的规则保留。
+
+<SourceLinks
+  sources={[
+    { label: 'ChangeSet 工厂及透传', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+    { label: 'fallback 警告与全量执行', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+### 计算流程
 
 先定义依赖与执行规则，再由注册表校验并排序。运行实例需要这些定义时，才调用 `run/update` 生成结果；结果转换决定哪些内容供后续更新使用，哪些内容对外公开。
 
 <ComponentPreview files="computation-flow" size="md" hideCode type="flow" />
 
 计算内部通过 `view.result(distance).value` 读取本次执行可用的上游结果；外部通过 `runtime.result(distance).value` 读取已发布结果。查询结果不会重新执行计算。初始化、更新、版本与发布的串联见后续 Runtime 篇；当前可运行的接入代码见[入门示例](/kernel/packages/runtime/usage)。
+
+## 提交观察
+
+`observeCommit` 接收已经发布的公开结果，不参与决定事务是否成功。初始化会在 `createRuntime(...)` 返回前通知一次；后续仅当该计算产生新结果时通知，跳过或返回 `bailout` 不通知。需要原子更新 DOM 等外部资源时，应使用 [Participant](/kernel/packages/runtime/participant)。
+
+| 事件成员                      | 初始化           | 后续更新                                       |
+| ----------------------------- | ---------------- | ---------------------------------------------- |
+| `phase`                       | `initial`        | `update`                                       |
+| `baseRevision`                | 不存在           | 更新前版本                                     |
+| `revision`、`result.revision` | `0`              | 已发布的新版本                                 |
+| `outcome`                     | `full`           | 本项计算的 `full`、`incremental` 或 `fallback` |
+| `result.value`                | 首次结果公开视图 | 本次结果公开视图                               |
+| `diagnostics`                 | 通知前冻结的诊断 | 通知前冻结的整笔事务诊断                       |
+
+将前面的距离计算加上观察者，注册这份新定义后再创建实例。回调直接消费事件，不读取尚未赋值的 Runtime 变量，也不重入实例方法：
+
+```ts
+const observedDistance = defineRuntimeComputation<number>({
+  id: { owner: position.key, key: 'observed-distance' },
+  sources: [position],
+  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }),
+  observeCommit: event => {
+    // [!code ++]
+    console.log(event.phase, event.revision, event.outcome, event.result.value); // [!code ++]
+  }, // [!code ++]
+});
+```
+
+观察者按计算注册表的依赖顺序同步通知。事件的 `outcome` 只描述当前计算，可能与 `runtime.update(...)` 的聚合结果不同。观察者抛错会记录诊断，不撤销发布，也不会阻止后续观察者；这些较晚的诊断不追加到已经冻结的事件列表中，消费方式见 [Trace](/kernel/packages/runtime/trace#消费诊断)。
+
+<SourceLinks
+  sources={[
+    { label: '提交事件字段', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: '初始化与更新后的观察通知', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
 
 ## Core 应用
 
@@ -401,13 +571,82 @@ const computations = createRuntimeComputationRegistry({ sources, computations: [
   ]}
 />
 
+## 相关属性
+
+这里只收录本篇涉及的公开成员；完整声明与默认行为可从下方源码入口回查。
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineRuntimeComputation',
+      kind: 'function',
+      type: '<TResultInput, TResult = TResultInput, TComputationRead = TResult, TPublicRead = TResult>(input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
+      description:
+        '定义 id、sources、run；可配置 computations、result、update、tracePhases 和 observeCommit。转换输入输出类型不同时必须提供对应转换。',
+    },
+    {
+      name: 'createRuntimeComputationRegistry',
+      kind: 'function',
+      type: '(input: RuntimeComputationRegistryInput) => RuntimeComputationRegistry',
+      description:
+        'input 为 `{ sources: RuntimeSourceRegistry, computations?: ReadonlyArray<RuntimeComputationToken> }`，computations 默认 []；验证依赖并按拓扑排序。',
+    },
+    {
+      name: 'run',
+      kind: 'property',
+      type: '(view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeRunOutcome<TResultInput>',
+      description: "返回 `{ kind: 'full', result: TResultInput }`；初始化、全量策略和回退时执行。",
+      required: true,
+    },
+    {
+      name: 'update',
+      kind: 'property',
+      type: '(previous: TComputationRead, view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeUpdateOutcome<TResultInput>',
+      description:
+        "返回分支：\n\n- `{ kind: 'incremental', result: TResultInput }`：完整新结果。\n\n- `{ kind: 'bailout' }`：复用旧结果。\n\n- `{ kind: 'fallback', diagnostics?: ReadonlyArray<RuntimeComputationWarningInput> }`：改走 run，可附业务警告。",
+    },
+    {
+      name: 'context.execution',
+      kind: 'property',
+      type: "'full' | 'incremental' | 'fallback'",
+      description: '当前回调的执行方式；与 initial/update 生命周期阶段和返回 kind 分开。',
+    },
+    {
+      name: 'observeCommit',
+      kind: 'property',
+      type: '(event: RuntimeCommitEvent<TPublicRead>) => void',
+      description:
+        '事件有 phase、revision、outcome、result、diagnostics；update 还含 baseRevision。初始化即通知，bailout 不通知，抛错不撤销发布。',
+    },
+    {
+      name: 'result',
+      kind: 'property',
+      type: 'RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>',
+      description:
+        'capture: (input: TResultInput) => TResult；readForComputation: (result: TResult) => TComputationRead；read: (result: TResult) => TPublicRead；dispose?: (result: TResult) => void。同类型转换默认恒等，不自动复制或冻结。',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: '公开入口', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: '本篇主要契约', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections
   items={[
+    {
+      title: '生命周期',
+      description: '沿初始化、更新、失败和释放理解成员协作',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
     { title: 'Trace · 错误诊断', description: '捕获失败、消费诊断与观察工作量', url: '/kernel/packages/runtime/trace' },
     {
-      title: 'Runtime · 事务发布',
+      title: 'Runtime',
       description: '创建实例、版本检查与事务发布',
       url: '/kernel/packages/runtime/transaction',
     },

@@ -1,5 +1,5 @@
 ---
-title: Runtime · Transaction publication
+title: Runtime
 description: Create a running instance, publish Source updates and computation results atomically, and manage revisions, reads and disposal
 ---
 
@@ -207,6 +207,65 @@ Runtime executes updates synchronously; interleaving happens between caller-side
   }
 />
 
+### Change hints
+
+A **ChangeSet** tells a computation what changed, giving it an opportunity to reuse previous results and reduce change detection and recomputation. Complete input describes the current data; change hints describe what happened since the previous revision.
+
+For example, a Source holds ten thousand items, and a computation produces a separate result for each item. The user edits only item A. The caller still submits complete new data, accompanied by an “item A changed” hint. The computation's `update` can then:
+
+1. Read the hint through `view.changeSet(source)` to identify item A.
+2. Read A's new data from `view.snapshot(source).value` and recompute A's result.
+3. Reuse the other items' previous results and return `incremental`.
+
+The incremental callback is `update(previous, view, context)`. It can read hints or compare data itself:
+
+| Data needed                        | Access                                                            |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| Caller-provided change hints       | `view.changeSet(source)?.changes`; `undefined` when omitted       |
+| New Source value                   | `view.snapshot(source).value`                                     |
+| This computation's previous result | `previous`, supplied by the result's `readForComputation`         |
+| Whether a Source changed           | `view.isChanged(source)` returns a boolean, not field differences |
+
+**Comparing data requires the computation to retain old data.** Runtime provides neither old Source snapshots nor an automatically generated difference list. A computation can store the data or index needed for its next comparison in its result, read it through `previous`, and compare it with the new value. For example, a retained `previous.position` can be compared element by element with `view.snapshot(position).value`.
+
+**The business computation decides whether to use hints, compare data, or cross-check both; Runtime sets no precedence.** Passing a ChangeSet neither disables comparison nor guarantees correct, complete hints. A computation may narrow its work when it considers the hints reliable. If they disagree with the data or safe incremental processing is not possible, it can compare again or return `fallback` for full computation. Blindly trusting incorrect hints can produce incorrect results.
+
+Runtime passes hints through. It neither performs these steps for the computation nor applies hints to Source data. It checks factory provenance and revision consistency; the consuming computation determines whether the domain content is valid and sufficient for incremental processing.
+
+```ts
+declare const createRuntimeChangeSet: <TChange>(
+  baseRevision: RuntimeRevision,
+  changes: ReadonlyArray<TChange>,
+) => RuntimeChangeSet<TChange>;
+```
+
+`baseRevision` must match the transaction, and the Source's change type constrains `changes`. Returning to the coordinate example, the following only demonstrates creating and passing a hint. It submits complete coordinates with an x-axis change hint. The distance computation defined earlier has no incremental branch, so it still computes the full result:
+
+```ts
+import { createRuntimeChangeSet } from '@retikz/runtime';
+
+const baseRevision = runtime.revision();
+const changeSet = createRuntimeChangeSet<PositionChange>(baseRevision, [{ axis: 'x' }]);
+runtime.update({
+  baseRevision,
+  sources: [createRuntimeSourceUpdate(position, { x: '0', y: '8' }, changeSet)],
+});
+console.log(runtime.result(distance).value); // 8
+```
+
+The ChangeSet is attached to the coordinate Source update through `createRuntimeSourceUpdate(position, nextValue, changeSet)`. When executing a computation, Runtime exposes the hints from this update through the candidate `view` passed to `run` / `update`. A computation that declares `position` in `sources` can explicitly call `view.changeSet(position)` and read its `.changes` list; the call returns `undefined` when no hint was supplied. Runtime passes the hint through; the computation does not automatically detect or capture it.
+
+Implement the incremental branch in the computation’s [`update`](/kernel/packages/runtime/computation#incremental-updates), deciding whether hints adequately explain the change and return `fallback` when unsuitable. It may also compare retained old data with new data when no hint is supplied. Equal Sources do not trigger computation merely because a hint was submitted. The factory copies and freezes the hints array, without deep-copying its domain objects.
+
+<SourceLinks
+  sources={[
+    { label: 'Hint factory and revision constraints', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+    { label: 'Reading candidate hints in computations', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
+See [Computation · Consuming change hints](/kernel/packages/runtime/computation#consuming-change-hints) for the complete consumer: reuse unchanged nodes, reject incomplete hints and fall back with diagnostics.
+
 ## Preparation and publication
 
 Runtime first checks revisions, Source tokens and duplicate commands. For each submitted Source it calls `capture`, optionally collects [entity identities](/kernel/packages/runtime/identity), then calls `read`. Collected identities are validated and stored here; they do not automatically generate hints or trigger computations.
@@ -264,63 +323,6 @@ On success, Runtime publishes Sources, results and revision, then calls computat
   ]}
 />
 
-## Change hints
-
-A **ChangeSet** tells a computation what changed, giving it an opportunity to reuse previous results and reduce change detection and recomputation. Complete input describes the current data; change hints describe what happened since the previous revision.
-
-For example, a Source holds ten thousand items, and a computation produces a separate result for each item. The user edits only item A. The caller still submits complete new data, accompanied by an “item A changed” hint. The computation's `update` can then:
-
-1. Read the hint through `view.changeSet(source)` to identify item A.
-2. Read A's new data from `view.snapshot(source).value` and recompute A's result.
-3. Reuse the other items' previous results and return `incremental`.
-
-The incremental callback is `update(previous, view, context)`. It can read hints or compare data itself:
-
-| Data needed                        | Access                                                            |
-| ---------------------------------- | ----------------------------------------------------------------- |
-| Caller-provided change hints       | `view.changeSet(source)?.changes`; `undefined` when omitted       |
-| New Source value                   | `view.snapshot(source).value`                                     |
-| This computation's previous result | `previous`, supplied by the result's `readForComputation`         |
-| Whether a Source changed           | `view.isChanged(source)` returns a boolean, not field differences |
-
-**Comparing data requires the computation to retain old data.** Runtime provides neither old Source snapshots nor an automatically generated difference list. A computation can store the data or index needed for its next comparison in its result, read it through `previous`, and compare it with the new value. For example, a retained `previous.position` can be compared element by element with `view.snapshot(position).value`.
-
-**The business computation decides whether to use hints, compare data, or cross-check both; Runtime sets no precedence.** Passing a ChangeSet neither disables comparison nor guarantees correct, complete hints. A computation may narrow its work when it considers the hints reliable. If they disagree with the data or safe incremental processing is not possible, it can compare again or return `fallback` for full computation. Blindly trusting incorrect hints can produce incorrect results.
-
-Runtime passes hints through. It neither performs these steps for the computation nor applies hints to Source data. It checks factory provenance and revision consistency; the consuming computation determines whether the domain content is valid and sufficient for incremental processing.
-
-```ts
-declare const createRuntimeChangeSet: <TChange>(
-  baseRevision: RuntimeRevision,
-  changes: ReadonlyArray<TChange>,
-) => RuntimeChangeSet<TChange>;
-```
-
-`baseRevision` must match the transaction, and the Source's change type constrains `changes`. Returning to the coordinate example, the following only demonstrates creating and passing a hint. It submits complete coordinates with an x-axis change hint. The distance computation defined earlier has no incremental branch, so it still computes the full result:
-
-```ts
-import { createRuntimeChangeSet } from '@retikz/runtime';
-
-const baseRevision = runtime.revision();
-const changeSet = createRuntimeChangeSet<PositionChange>(baseRevision, [{ axis: 'x' }]);
-runtime.update({
-  baseRevision,
-  sources: [createRuntimeSourceUpdate(position, { x: '0', y: '8' }, changeSet)],
-});
-console.log(runtime.result(distance).value); // 8
-```
-
-The ChangeSet is attached to the coordinate Source update through `createRuntimeSourceUpdate(position, nextValue, changeSet)`. When executing a computation, Runtime exposes the hints from this update through the candidate `view` passed to `run` / `update`. A computation that declares `position` in `sources` can explicitly call `view.changeSet(position)` and read its `.changes` list; the call returns `undefined` when no hint was supplied. Runtime passes the hint through; the computation does not automatically detect or capture it.
-
-Implement the incremental branch in the computation’s [`update`](/kernel/packages/runtime/computation#incremental-updates), deciding whether hints adequately explain the change and return `fallback` when unsuitable. It may also compare retained old data with new data when no hint is supplied. Equal Sources do not trigger computation merely because a hint was submitted. The factory copies and freezes the hints array, without deep-copying its domain objects.
-
-<SourceLinks
-  sources={[
-    { label: 'Hint factory and revision constraints', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
-    { label: 'Reading candidate hints in computations', path: 'packages/kernel/runtime/src/computation/types.ts' },
-  ]}
-/>
-
 ## Reading and disposal
 
 The instance exposes these read and disposal operations:
@@ -352,7 +354,7 @@ Runtime is synchronous and non-reentrant. Preparation, notification and cleanup 
   ]}
 />
 
-## Complete flow
+### Instance flow
 
 Connect the public APIs: create an instance from registries and initial input, submit complete new input against its current revision, read published state after success, and finally dispose it.
 
@@ -386,10 +388,86 @@ Subsequent complete documents are submitted through update commands. Runtime pub
   ]}
 />
 
+## Related props
+
+Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.
+
+<ComponentProps
+  items={[
+    {
+      name: 'createRuntime',
+      kind: 'function',
+      type: '(options: RuntimeOptions) => Runtime',
+      description:
+        'Requires sources, computations and initialSnapshots; optionally accepts participants, updateStrategy and trace. Registries must share the Source registry and initial commands must cover every Source exactly.',
+    },
+    {
+      name: 'createRuntimeSourceInput',
+      kind: 'function',
+      type: '<TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>, value: TInput) => RuntimeSourceInput',
+      description: 'Pairs a Source with complete initial input; capture occurs during instance creation.',
+    },
+    {
+      name: 'createRuntimeSourceUpdate',
+      kind: 'function',
+      type: '<TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>, value: TInput, changeSet?: RuntimeChangeSet<TChange>) => RuntimeSourceUpdate',
+      description: 'Submits complete new input; optional hints do not replace it or apply patches automatically.',
+    },
+    {
+      name: 'createRuntimeChangeSet',
+      kind: 'function',
+      type: '<TChange>(baseRevision: RuntimeRevision, changes: ReadonlyArray<TChange>) => RuntimeChangeSet<TChange>',
+      description:
+        'Hint revision must match the transaction; copies/freezes the array only. Computations validate domain correctness.',
+    },
+    {
+      name: 'updateStrategy',
+      kind: 'property',
+      type: "'auto' | 'full'",
+      description: 'auto prefers update; full calls run for affected computations without executing unrelated ones.',
+      required: false,
+      defaultValue: 'auto',
+    },
+    {
+      name: 'Runtime.update',
+      kind: 'property',
+      type: '(update: RuntimeUpdate) => RuntimeResult',
+      description:
+        'Accepts `{ baseRevision: RuntimeRevision, sources: ReadonlyArray<RuntimeSourceUpdate> }`; returns `{ revision, outcome, diagnostics }`. outcome is committed, full, incremental, fallback or bailout.',
+    },
+    {
+      name: 'RuntimeSnapshot<TRead>',
+      kind: 'type',
+      type: 'Readonly<{ revision: RuntimeRevision; value: TRead }>',
+      description:
+        'Read envelope for Source snapshots and computation results; reused values still carry the current queried revision.',
+    },
+    {
+      name: 'Runtime.dispose',
+      kind: 'property',
+      type: '() => void',
+      description:
+        'Disposes participants, results and Sources in reverse order; updates stop once disposal begins. Failed participant cleanup can be retried.',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Public exports', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: 'Main contracts', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections
   items={[
+    {
+      title: 'Lifecycle',
+      description: 'Follow member collaboration through initialization, updates, failures and disposal',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
     {
       title: 'Trace · Errors and diagnostics',
       description: 'Catch failures, consume diagnostics and observe work',
