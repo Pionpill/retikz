@@ -15,6 +15,7 @@ description: Use when changing Retikz package structure, dependencies, schemas, 
 - 外部 unknown 在 parse/schema 边界校验；内部按类型契约消费，仅保留补全后不变量与真实上下文错误。
 - schema 声明默认值；resolve 处理继承优先级、上下文 lookup 与默认应用时机；pipeline/compile 管理上下文及调度。
 - 依赖沿 shared → schemas → contract → providers → resolve → pipeline/compile，不反向导入。
+- 同一 composite 的具体 Definition、创建工厂与依赖 Provider 合并为 owner-local `composite.ts`；schema、resolve、编译算法及独立 registry / 数据准备保持各自边界，`index.ts` 仍只做导出。合并时保持公开符号、初始化顺序与依赖方向，不跨包合并 adapter 工厂；删除原文件与遗留空目录，不保留转发层。
 - 命名读 [standard-name](../standard-name/SKILL.md)；公共 JSDoc 读 [JSDoc](../docs-doc-reference/references/jsdoc.md)。
 
 ## 按改动加载
