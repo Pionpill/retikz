@@ -588,7 +588,7 @@ export type LegendArtifact = ZodInfer<typeof LegendArtifactSchema>;
 <p>
   <ApiSourceLink
     label={'LegendCompileArtifact'}
-    path={'packages/library/standard/src/presentation/legend/definition.ts'}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
     startLine={24}
   >
     Legend definition 推导出的公开 compile artifact envelope
@@ -644,7 +644,7 @@ export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
 <p>
   <ApiSourceLink
     label={'LegendDefinition'}
-    path={'packages/library/standard/src/presentation/legend/definition.ts'}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
     startLine={10}
   >
     Standard Legend 的官方 Core layout-aware composite definition
@@ -671,8 +671,8 @@ export const LegendDefinition: LayoutCompositeDefinition<
 <p>
   <ApiSourceLink
     label={'LegendProvider'}
-    path={'packages/library/standard/src/presentation/legend/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
+    startLine={34}
   >
     Legend 的 Core Composite dependency provider
   </ApiSourceLink>
@@ -692,8 +692,8 @@ export const LegendProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'createLegend'}
-    path={'packages/library/standard/src/presentation/legend/factory.ts'}
-    startLine={5}
+    path={'packages/library/standard/src/presentation/legend/composite.ts'}
+    startLine={27}
   >
     创建稀疏持久化的 Standard Legend composite
   </ApiSourceLink>

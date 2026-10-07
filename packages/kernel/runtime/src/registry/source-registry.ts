@@ -1,7 +1,7 @@
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeSourceDefinition, RuntimeSourceErasedExecutor, RuntimeSourceToken } from '../source';
 import { getRuntimeSourceDefinitionExecutor, hasRuntimeSourceToken } from '../source';
-import type { RuntimeSourceRegistry, RuntimeSourceRegistryInput } from './types';
+import type { RuntimeSourceRegistry } from './types';
 
 const runtimeSourceRegistryExecutors = new WeakMap<
   RuntimeSourceRegistry,
@@ -37,14 +37,12 @@ const sourceRegistryError = (
 export const isRuntimeSourceRegistry = (value: unknown): value is RuntimeSourceRegistry =>
   typeof value === 'object' && value !== null && runtimeSourceRegistries.has(value);
 
-/** 合并 builtin/custom Definition 并拒绝无效 token 与重复 key */
-export const createRuntimeSourceRegistry = (input: RuntimeSourceRegistryInput): RuntimeSourceRegistry => {
-  const builtins = input.builtins ?? [];
-  const custom = input.custom ?? [];
+/** 注册来源 token，并拒绝无效 token 与重复 key */
+export const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): RuntimeSourceRegistry => {
   const definitions = new Map<string, RuntimeSourceToken>();
   const executors = new Map<RuntimeSourceToken, RuntimeSourceErasedExecutor>();
 
-  for (const candidate of [...builtins, ...custom]) {
+  for (const candidate of tokens) {
     if (!hasRuntimeSourceToken(candidate)) {
       throw sourceRegistryError(RetikzRuntimeErrorCode.TokenInvalid, candidate.key, candidate);
     }

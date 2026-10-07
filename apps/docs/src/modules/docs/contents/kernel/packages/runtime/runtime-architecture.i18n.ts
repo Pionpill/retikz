@@ -18,7 +18,7 @@ export const runtimeArchitectureI18n: Record<
     computations: 'Computation 注册表\n计算依赖',
     runtime: 'Runtime\n事务与版本发布',
     observation: 'Trace 与诊断\n隔离的观测旁路',
-    output: 'Snapshot 与 artifact\n已发布的版本',
+    output: 'Snapshot 与 result\n已发布的版本',
   },
   en: {
     input: 'Domain input\nComplete state',
@@ -26,6 +26,6 @@ export const runtimeArchitectureI18n: Record<
     computations: 'Computation registry\nDependencies',
     runtime: 'Runtime\nTransaction and revision',
     observation: 'Trace and diagnostics\nIsolated observation',
-    output: 'Snapshots and artifacts\nPublished revision',
+    output: 'Snapshots and results\nPublished revision',
   },
 };

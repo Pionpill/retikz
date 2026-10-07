@@ -1,0 +1,403 @@
+---
+title: Runtime · Transaction publication
+description: Create a running instance, publish Source updates and computation results atomically, and manage revisions, reads and disposal
+---
+
+[Source](/kernel/packages/runtime/source) defines how data is retained; [Computation](/kernel/packages/runtime/computation) defines derived results. **Runtime** connects these definitions to actual data and accepts successive updates. Each update is a **transaction**: related Sources and results are published together after preparation succeeds.
+
+We continue with coordinates and distance. Changing `[3, 4]` to `[6, 8]` should expose both the new coordinates and distance `10`. If computation fails, the original coordinates and distance `5` remain available.
+
+## Overall flow
+
+| Stage         | API or configuration                               | Purpose                                                                              |
+| ------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Create        | `createRuntime(...)`                               | Connect registries and initial inputs, then initialize                               |
+| Read baseline | `runtime.snapshot(token)`, `runtime.revision()`    | Obtain the data and revision used to prepare an update                               |
+| Prepare input | `createRuntimeSourceUpdate(...)`                   | Wrap new input and optional change hints                                             |
+| Submit        | `runtime.update({ baseRevision, sources })`        | Check the baseline revision and execute the transaction; publish together on success |
+| Read results  | `runtime.snapshot(token)`, `runtime.result(token)` | Read published Source values and computation results                                 |
+| Dispose       | `runtime.dispose()`                                | End the instance and release its resources                                           |
+
+**Candidate state** is the new data being prepared. **Published state** is what the host can currently read. A **revision** identifies the published Runtime version; preparing candidates does not advance it.
+
+<ComponentPreview files="transaction-overview" size="xs" hideCode type="flow" />
+
+One transaction may update several Sources. Omitted Sources retain their values, affected computations execute in dependency order, and successful preparation leads to a single publication.
+
+## Creating an instance
+
+`createRuntime(options)` accepts registries and initial input, returning an instance for updates and reads. Creation synchronously captures initial values and computes results, publishing revision `0` on success.
+
+```ts
+declare const createRuntime: (options: RuntimeOptions) => Runtime;
+```
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Member             | Required | Purpose                                                                                                               |
+| ------------------ | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `sources`          | Yes      | Registry of Sources available to this instance                                                                        |
+| `computations`     | Yes      | Computation registry bound to the same Source registry object                                                         |
+| `initialSnapshots` | Yes      | Complete initial input for every registered Source, with no missing, duplicate or extra Sources                       |
+| `updateStrategy`   | No       | Defaults to `auto`, attempting incremental execution; `full` runs affected computations through the full path         |
+| `participants`     | No       | Include external state in the commit; none by default, covered in [Participant](/kernel/packages/runtime/participant) |
+| `trace`            | No       | Receive execution records, covered in the later Trace chapter                                                         |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeOptions = Readonly<{
+  sources: RuntimeSourceRegistry;
+  computations: RuntimeComputationRegistry;
+  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  updateStrategy?: 'auto' | 'full';
+  participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
+  trace?: PerformanceTraceSink;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+`createRuntimeSourceInput(source, value)` pairs a Source token with complete input. It creates a command; capture happens inside `createRuntime`:
+
+```ts
+declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  value: TInput,
+) => RuntimeSourceInput;
+```
+
+This complete example defines coordinates and a distance computation, then creates the instance. Subsequent examples reuse these variables:
+
+```ts
+import {
+  createRuntime,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  defineRuntimeComputation,
+  defineRuntimeSource,
+} from '@retikz/runtime';
+
+type PositionInput = Readonly<{ x: string; y: string }>;
+type Position = readonly [number, number];
+type PositionChange = Readonly<{ axis: 'x' | 'y' }>;
+
+const position = defineRuntimeSource<PositionInput, Position, Position, PositionChange>({
+  key: 'example/position',
+  value: {
+    capture: input => Object.freeze([Number(input.x), Number(input.y)] as const),
+    read: value => value,
+    equals: (left, right) => Object.is(left[0], right[0]) && Object.is(left[1], right[1]),
+  },
+});
+const distance = defineRuntimeComputation<number, number, number, number>({
+  id: { owner: position.key, key: 'distance' },
+  sources: [position],
+  run: view => {
+    const [x, y] = view.snapshot(position).value;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      throw new Error('Coordinates must be finite');
+    }
+    return { kind: 'full', result: Math.hypot(x, y) };
+  },
+});
+const sources = createRuntimeSourceRegistry([position]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [distance] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(position, { x: '3', y: '4' })],
+});
+
+console.log(runtime.revision()); // 0
+console.log(runtime.result(distance).value); // 5
+```
+
+Registries hold definitions; `initialSnapshots` supplies data for this instance. Even registries containing identical tokens are not interchangeable: `computations` must be bound to the exact `sources` object passed to Runtime.
+
+Creation captures all Sources before calling each computation's `run` in dependency order. Failure releases prepared resources and throws, without returning a partially initialized instance.
+
+<SourceLinks
+  sources={[
+    { label: 'Creation options and instance contract', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+    { label: 'Initial input commands', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+  ]}
+/>
+
+## Submitting updates
+
+`runtime.update(input)` synchronously executes a transaction. `baseRevision` identifies the published version on which the caller based its input and must equal the current revision. It rejects stale submissions rather than merging conflicts.
+
+```ts
+declare const createRuntimeSourceUpdate: <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+  value: TInput,
+  changeSet?: RuntimeChangeSet<TChange>,
+) => RuntimeSourceUpdate;
+```
+
+This factory packages a Source, complete new input and an optional hint into an update command. `value` must contain complete input; hints are covered under “Change hints” below.
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Update member  | Purpose                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| `baseRevision` | Required; the version read when preparing data, available as a snapshot's `revision`          |
+| `sources`      | Required array of Source update commands, with each Source at most once; `[]` means no update |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeUpdate = Readonly<{
+  baseRevision: RuntimeRevision;
+  sources: ReadonlyArray<RuntimeSourceUpdate>;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+```ts
+import { createRuntimeSourceUpdate } from '@retikz/runtime';
+
+const previous = runtime.snapshot(position);
+const next = { x: String(previous.value[0] * 2), y: String(previous.value[1] * 2) };
+const result = runtime.update({
+  baseRevision: previous.revision,
+  sources: [createRuntimeSourceUpdate(position, next)],
+});
+console.log(result.revision, result.outcome); // 1, 'full'
+console.log(runtime.snapshot(position).value); // [6, 8]
+console.log(runtime.result(distance).value); // 10
+```
+
+This computation has no `update`, so Runtime calls `run` and reports `full`. Constructing a command does not capture input; do not mutate the referenced data between command construction and transaction execution.
+
+<SourceLinks
+  sources={[
+    { label: 'Update input and transaction outcome', path: 'packages/kernel/runtime/src/transaction/types.ts' },
+    { label: 'Update commands and hints', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+  ]}
+/>
+
+`baseRevision` preserves the version used to prepare the data. A network request, Worker or delayed task may finish after another update publishes. In chronological order below, task A prepares from revision `5`, task B publishes revision `6`, and A's later submission is rejected.
+
+<ComponentPreview files="transaction-stale" size="xs" hideCode type="flow" />
+
+Runtime executes updates synchronously; interleaving happens between caller-side preparation and submission.
+
+<ComponentAlert
+  type="tip"
+  title="Handling a stale revision"
+  description={
+    <>
+      {' '}
+      A stale revision throws an error with code <code>RetikzRuntimeErrorCode.RevisionStale</code>. Catch it and either
+      discard the old result or read the latest snapshot, reapply the intended change and submit again. Do not simply
+      replace the revision and resend old data. Regenerate any accompanying ChangeSet as well.{' '}
+    </>
+  }
+/>
+
+## Preparation and publication
+
+Runtime first checks revisions, Source tokens and duplicate commands. For each submitted Source it calls `capture`, optionally collects [entity identities](/kernel/packages/runtime/identity), then calls `read`. Collected identities are validated and stored here; they do not automatically generate hints or trigger computations.
+
+Once the candidate is prepared, `equals` compares the old and new internal values. Equal candidates are disposed and the old state is retained; changes trigger dependent computations. Strings `'6'` and `'6.0'`, for example, both capture to numeric `6`, so a textual difference alone does not cause recomputation.
+
+<ComponentPreview files="transaction-publication" size="sm" hideCode type="flow" />
+
+This diagram covers publication without external commit participants. Computation callbacks read the candidate view; after the transaction returns, the host reads the newly published state. Failure in the diagram means preparation failure before publication.
+
+Continue with these calls: first submit semantically equal data, then data that makes the distance computation fail:
+
+```ts
+const unchanged = runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(position, { x: '6.0', y: '8' })],
+});
+console.log(unchanged.outcome, runtime.revision()); // 'bailout', 1
+
+try {
+  runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(position, { x: 'invalid', y: '8' })],
+  });
+} catch {
+  console.log(runtime.revision()); // 1
+  console.log(runtime.snapshot(position).value); // [6, 8]
+  console.log(runtime.result(distance).value); // 10
+}
+```
+
+Capture, read or computation failures before publication clean up candidate resources and preserve the published revision. These callbacks should prepare data only: Runtime cannot undo external side effects they perform themselves. Use commit participants to coordinate external state such as renderers; see [Participant](/kernel/packages/runtime/participant).
+
+On success, Runtime publishes Sources, results and revision, then calls computation `observeCommit` callbacks, and finally cleans up replaced values. Notification or old-value disposal failures produce diagnostics and do not roll back the published state.
+
+`update` returns `{ revision, outcome, diagnostics }`. The `outcome` summarizes the transaction:
+
+| Outcome       | Meaning                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `bailout`     | No Source changed; revision does not advance                                                                               |
+| `committed`   | Sources were published, but no computation produced a new result, for example when all affected computations reuse results |
+| `incremental` | New incremental results were produced, without full or fallback results                                                    |
+| `full`        | At least one computation used the full path and none used fallback                                                         |
+| `fallback`    | At least one computation used the fallback path                                                                            |
+
+**A computation bailout is not a transaction bailout**: if Sources change while computations retain their results, the transaction still publishes and advances its revision. `fallback` also means successful publication, using a full recomputation path.
+
+<SourceLinks
+  sources={[
+    { label: 'Source preparation, comparison and disposal', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    {
+      label: 'Candidate execution, atomic publication and notification',
+      path: 'packages/kernel/runtime/src/runtime/runtime.ts',
+    },
+  ]}
+/>
+
+## Change hints
+
+A **ChangeSet** tells a computation what changed, giving it an opportunity to reuse previous results and reduce change detection and recomputation. Complete input describes the current data; change hints describe what happened since the previous revision.
+
+For example, a Source holds ten thousand items, and a computation produces a separate result for each item. The user edits only item A. The caller still submits complete new data, accompanied by an “item A changed” hint. The computation's `update` can then:
+
+1. Read the hint through `view.changeSet(source)` to identify item A.
+2. Read A's new data from `view.snapshot(source).value` and recompute A's result.
+3. Reuse the other items' previous results and return `incremental`.
+
+The incremental callback is `update(previous, view, context)`. It can read hints or compare data itself:
+
+| Data needed                        | Access                                                            |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| Caller-provided change hints       | `view.changeSet(source)?.changes`; `undefined` when omitted       |
+| New Source value                   | `view.snapshot(source).value`                                     |
+| This computation's previous result | `previous`, supplied by the result's `readForComputation`         |
+| Whether a Source changed           | `view.isChanged(source)` returns a boolean, not field differences |
+
+**Comparing data requires the computation to retain old data.** Runtime provides neither old Source snapshots nor an automatically generated difference list. A computation can store the data or index needed for its next comparison in its result, read it through `previous`, and compare it with the new value. For example, a retained `previous.position` can be compared element by element with `view.snapshot(position).value`.
+
+**The business computation decides whether to use hints, compare data, or cross-check both; Runtime sets no precedence.** Passing a ChangeSet neither disables comparison nor guarantees correct, complete hints. A computation may narrow its work when it considers the hints reliable. If they disagree with the data or safe incremental processing is not possible, it can compare again or return `fallback` for full computation. Blindly trusting incorrect hints can produce incorrect results.
+
+Runtime passes hints through. It neither performs these steps for the computation nor applies hints to Source data. It checks factory provenance and revision consistency; the consuming computation determines whether the domain content is valid and sufficient for incremental processing.
+
+```ts
+declare const createRuntimeChangeSet: <TChange>(
+  baseRevision: RuntimeRevision,
+  changes: ReadonlyArray<TChange>,
+) => RuntimeChangeSet<TChange>;
+```
+
+`baseRevision` must match the transaction, and the Source's change type constrains `changes`. Returning to the coordinate example, the following only demonstrates creating and passing a hint. It submits complete coordinates with an x-axis change hint. The distance computation defined earlier has no incremental branch, so it still computes the full result:
+
+```ts
+import { createRuntimeChangeSet } from '@retikz/runtime';
+
+const baseRevision = runtime.revision();
+const changeSet = createRuntimeChangeSet<PositionChange>(baseRevision, [{ axis: 'x' }]);
+runtime.update({
+  baseRevision,
+  sources: [createRuntimeSourceUpdate(position, { x: '0', y: '8' }, changeSet)],
+});
+console.log(runtime.result(distance).value); // 8
+```
+
+The ChangeSet is attached to the coordinate Source update through `createRuntimeSourceUpdate(position, nextValue, changeSet)`. When executing a computation, Runtime exposes the hints from this update through the candidate `view` passed to `run` / `update`. A computation that declares `position` in `sources` can explicitly call `view.changeSet(position)` and read its `.changes` list; the call returns `undefined` when no hint was supplied. Runtime passes the hint through; the computation does not automatically detect or capture it.
+
+Implement the incremental branch in the computation’s [`update`](/kernel/packages/runtime/computation#incremental-updates), deciding whether hints adequately explain the change and return `fallback` when unsuitable. It may also compare retained old data with new data when no hint is supplied. Equal Sources do not trigger computation merely because a hint was submitted. The factory copies and freezes the hints array, without deep-copying its domain objects.
+
+<SourceLinks
+  sources={[
+    { label: 'Hint factory and revision constraints', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+    { label: 'Reading candidate hints in computations', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
+## Reading and disposal
+
+The instance exposes these read and disposal operations:
+
+| Method                | Purpose                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `revision()`          | Return the published revision                                                                    |
+| `snapshot(source)`    | Return `{ revision, value }` using the Source's read view                                        |
+| `result(computation)` | Return `{ revision, value }` using the result's public view, without recomputation               |
+| `diagnostics()`       | Return and clear accumulated diagnostics; an update result contains only that call's diagnostics |
+| `dispose()`           | End the instance and release owned resources                                                     |
+
+Read snapshots carry the current Runtime revision even when a Source or computation reuses an older value. An old snapshot retained in a variable does not update itself when a new transaction publishes.
+
+```ts
+const distanceResult = runtime.result(distance);
+console.log(distanceResult.revision, distanceResult.value); // 2, 8
+runtime.dispose();
+```
+
+Without external participants, final disposal visits computation results in reverse dependency order, then Sources in reverse registry order. Equal or failed candidates release new values; successful replacements release old values; final disposal releases current values. Each owned value is retired once across these paths. Values with `dispose` must not reuse the same disposable object for old and new state.
+
+Runtime is synchronous and non-reentrant. Preparation, notification and cleanup callbacks must not call instance update, snapshot, result, diagnostic-read or disposal methods again; notification callbacks use their event data. `revision()` returns the version already published at that moment. After disposal, updates and state reads are unavailable; Source and computation disposal failures are recorded as diagnostics. External participant disposal retries are covered in [Participant](/kernel/packages/runtime/participant#ownership-and-disposal).
+
+<SourceLinks
+  sources={[
+    { label: 'Instance read and disposal contract', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+    { label: 'Published reads, reentrancy guards and cleanup', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## Complete flow
+
+Connect the public APIs: create an instance from registries and initial input, submit complete new input against its current revision, read published state after success, and finally dispose it.
+
+<ComponentPreview files="transaction-flow" size="md" hideCode type="flow" />
+
+Both `run` and computation `update` prepare candidate results before publication. Returning a result is not a commit; the host sees transaction state only after Runtime publishes it successfully.
+
+## Core application
+
+Core uses a document Source and a compilation Computation. This wiring uses the Runtime imports from earlier and Core's token and computation factory; `document` stands for the caller's complete Scene IR:
+
+```ts
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+
+const compile = createCoreComputation({});
+const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+const coreComputations = createRuntimeComputationRegistry({ sources: coreSources, computations: [compile] });
+const coreRuntime = createRuntime({
+  sources: coreSources,
+  computations: coreComputations,
+  initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, document)],
+});
+const scene = coreRuntime.result(compile).value.output.result.scene;
+```
+
+Subsequent complete documents are submitted through update commands. Runtime publishes the document and compilation results together; Core owns compilation, domain hint validation and fallback. Call `coreRuntime.dispose()` when finished. Applying the Scene to a renderer through an external commit is covered in [Participant](/kernel/packages/runtime/participant).
+
+<SourceLinks
+  sources={[
+    { label: 'Core compilation computation', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Participant',
+      description: 'Prepare, commit and roll back external state',
+      url: '/kernel/packages/runtime/participant',
+    },
+    { title: 'Source', description: 'Capture, reads and equality', url: '/kernel/packages/runtime/source' },
+    {
+      title: 'Computation',
+      description: 'Dependencies, result views and incremental outcomes',
+      url: '/kernel/packages/runtime/computation',
+    },
+  ]}
+/>

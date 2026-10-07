@@ -1,5 +1,3 @@
-export * from './definition';
-export * from './factory';
-export * from './provider';
-export { TreeSchema, TreeItemSchema, TreeNodeSchema, TreeConnectionSchema, TreeLayoutSchema } from './schema';
+export * from './composite';
 export type { IRTree, IRTreeItem, IRTreeNode, IRTreeConnection, IRTreeLayout } from './schema';
+export { TreeSchema, TreeItemSchema, TreeNodeSchema, TreeConnectionSchema, TreeLayoutSchema } from './schema';

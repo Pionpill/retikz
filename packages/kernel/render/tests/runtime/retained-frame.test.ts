@@ -103,8 +103,8 @@ const createHarness = (
     ...(options.expectedInitialFrame === undefined ? {} : { expectedInitialFrame: options.expectedInitialFrame }),
     ...(options.resolveReadonlyLayers === undefined ? {} : { resolveReadonlyLayers: options.resolveReadonlyLayers }),
   });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
   const session = createRuntime({
     sources,
     computations,
@@ -159,7 +159,7 @@ describe('retained render frame contract', () => {
         return layersFrom(output);
       },
     });
-    const initialOutput = harness.session.artifact(harness.coreComputation).value.output;
+    const initialOutput = harness.session.result(harness.coreComputation).value.output;
     const initialFrame = harness.handle.read(harness.session).frame;
 
     expect(outputs).toEqual([initialOutput]);
@@ -169,7 +169,7 @@ describe('retained render frame contract', () => {
       baseRevision: harness.session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source('updated content'))],
     });
-    const updatedOutput = harness.session.artifact(harness.coreComputation).value.output;
+    const updatedOutput = harness.session.result(harness.coreComputation).value.output;
     const updatedFrame = harness.handle.read(harness.session).frame;
 
     expect(outputs.at(-1)).toBe(updatedOutput);

@@ -17,7 +17,7 @@ export const RuntimeComputationKind = {
   Full: 'full',
   /** 增量执行结果 */
   Incremental: 'incremental',
-  /** 复用已提交 artifact 的结果 */
+  /** 复用已提交 result 的结果 */
   Bailout: 'bailout',
   /** 放弃增量路径并回退到完整执行的结果 */
   Fallback: 'fallback',

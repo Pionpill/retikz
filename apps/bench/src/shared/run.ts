@@ -68,8 +68,8 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
   const current = createSimpleNodeScene(5_000);
   const next = updateSimpleNodeFill(current, 2_500, '#22c55e');
   const program = createCoreComputation({ onWarn: () => undefined });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
   const records: Array<PerformanceTraceRecord> = [];
   const session = createRuntime({
     sources,
@@ -84,7 +84,7 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
-    const artifact = session.artifact(program).value;
+    const result = session.result(program).value;
     const record = assertSingleTraceRecord('core-single-entity-update-5000', records, {
       owner: CORE_SOURCE_KEY,
       phase: PerformanceTracePhase.Update,
@@ -104,14 +104,14 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
       changed: 1,
     });
     if (
-      artifact.patch?.operations.length !== 1 ||
-      artifact.patch.operations[0]?.kind !== 'update' ||
-      stableHash(artifact.output.result.scene) !== stableHash(compileToScene(next).scene)
+      result.patch?.operations.length !== 1 ||
+      result.patch.operations[0]?.kind !== 'update' ||
+      stableHash(result.output.result.scene) !== stableHash(compileToScene(next).scene)
     ) {
       throw new Error('core-single-entity-update-5000: incremental patch or full oracle mismatch');
     }
 
-    results.push(toResult('core-single-entity-update-5000', stableHash(artifact.output.result.scene), record));
+    results.push(toResult('core-single-entity-update-5000', stableHash(result.output.result.scene), record));
   } finally {
     session.dispose();
   }

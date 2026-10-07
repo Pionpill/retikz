@@ -389,7 +389,7 @@ export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<Input
 | ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `IRScopeProps['animations']`                                                             | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `cellIdMode?`     | `"explicit" \| "index"`                                                                  | `"explicit"` | Explicit cell ids or zero-based row/column ids derived from the Matrix id.                                                                      |
+| `cellIdMode?`     | `"index" \| "explicit"`                                                                  | `"explicit"` | Explicit cell ids or zero-based row/column ids derived from the Matrix id.                                                                      |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
 | `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `frame?`          | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
@@ -560,8 +560,8 @@ export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
 <p>
   <ApiSourceLink
     label={'MatrixDefinition'}
-    path={'packages/library/standard/src/collection/matrix/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={10}
   >
     Layout-aware Definition for Standard Matrix
   </ApiSourceLink>
@@ -581,8 +581,8 @@ export const MatrixDefinition: LayoutCompositeDefinition<IRMatrix, 'standard', '
 <p>
   <ApiSourceLink
     label={'MatrixProvider'}
-    path={'packages/library/standard/src/collection/matrix/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={25}
   >
     On-demand dependencies of Matrix and its cell lowering targets
   </ApiSourceLink>
@@ -597,8 +597,8 @@ export declare const MatrixProvider: CoreDependencyProvider;
 <p>
   <ApiSourceLink
     label={'createMatrix'}
-    path={'packages/library/standard/src/collection/matrix/factory.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={22}
   >
     Typed factory preserving sparse Source
   </ApiSourceLink>

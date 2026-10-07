@@ -11,7 +11,7 @@ import { CORE_SOURCE_KEY } from '../../contract';
 import type { CoreCompositeInputSourceDefinition } from '../../contract';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from '../types';
 import type { CompileWarning } from '../warning';
-import type { CoreComputationArtifact, CoreComputationArtifactInput, CoreComputationRead } from './types';
+import type { CoreComputationResult, CoreComputationResultInput, CoreComputationRead } from './types';
 
 /** Core compile Computation 的固定 identity */
 export const CORE_COMPUTATION_ID = Object.freeze({ owner: CORE_SOURCE_KEY, key: 'compile' } as const);
@@ -45,7 +45,7 @@ export type CoreComputationOutput<TComposites extends ReadonlyArray<AnyComposite
 }>;
 
 /**
- * 下游 Computation、participant 与 runtime caller 可见的 Core artifact
+ * 下游 Computation、participant 与 runtime caller 可见的 Core result
  * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
 export type CoreComputationPublicRead<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
@@ -63,8 +63,8 @@ export type CoreComputationPublicRead<TComposites extends ReadonlyArray<AnyCompo
  */
 export type CoreComputationDefinition<TComposites extends ReadonlyArray<AnyCompositeDefinition>> =
   RuntimeComputationDefinition<
-    CoreComputationArtifactInput<TComposites>,
-    CoreComputationArtifact<TComposites>,
+    CoreComputationResultInput<TComposites>,
+    CoreComputationResult<TComposites>,
     CoreComputationRead<TComposites>,
     CoreComputationPublicRead<TComposites>
   >;

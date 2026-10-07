@@ -234,7 +234,7 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<
 
 ### createFlexLayout / FlexLayoutInput
 
-- `createFlexLayout`: <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/factory.ts"} startLine={8}>Create persistent FlexLayout input preserving omitted fields and shorthand</ApiSourceLink>
+- `createFlexLayout`: <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>Create persistent FlexLayout input preserving omitted fields and shorthand</ApiSourceLink>
 - `FlexLayoutInput`: <ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>FlexLayout input allowing fixed discriminators and optional fields to be omitted</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -582,7 +582,7 @@ export type LayoutSizeInput = ZodInput<typeof LayoutSizeSchema>;
 <p>
   <ApiSourceLink
     label={'FlexLayoutDefinition'}
-    path={'packages/library/layout/src/composites/flex-layout/definition.ts'}
+    path={'packages/library/layout/src/composites/flex-layout/composite.ts'}
     startLine={10}
   >
     Official layout-aware composite definition for FlexLayout
@@ -632,8 +632,8 @@ export type FlexLayoutDirection = ValueOf<typeof FlexLayoutDirection>;
 <p>
   <ApiSourceLink
     label={'FlexLayoutProvider'}
-    path={'packages/library/layout/src/composites/flex-layout/provider.ts'}
-    startLine={8}
+    path={'packages/library/layout/src/composites/flex-layout/composite.ts'}
+    startLine={39}
   >
     Composite dependency provider for FlexLayout
   </ApiSourceLink>

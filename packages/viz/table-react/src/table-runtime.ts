@@ -104,6 +104,7 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   visualScaleDefinitions: props.visualScaleDefinitions,
   tableThemeStyles: props.tableThemeStyles,
   formatDefinitions: props.formatDefinitions,
+  fieldOrderDefinitions: props.fieldOrderDefinitions,
   transformDefinitions: props.transformDefinitions,
   statisticsReducerDefinitions: props.statisticsReducerDefinitions,
   rowSelectorDefinitions: props.rowSelectorDefinitions,

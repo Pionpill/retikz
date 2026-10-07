@@ -271,9 +271,9 @@ export declare const RectangleInputEmbedAdapter: SynchronousInputEmbedAdapter<In
 
 Common members apply to every branch; a value must also satisfy at least one branch.
 
-<DocTabs defaultValue="corner2-0">
+<DocTabs defaultValue="corner2">
 
-<DocTab value="corner2-0" label="Members · Opposite corners">
+<DocTab value="corner2" label="Members · Opposite corners">
 
 <ApiTable>
 
@@ -286,7 +286,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="center-1" label="Members · Center and dimensions">
+<DocTab value="center" label="Members · Center and dimensions">
 
 <ApiTable>
 
@@ -300,7 +300,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="side-2" label="Members · Square">
+<DocTab value="side" label="Members · Square">
 
 <ApiTable>
 
@@ -313,7 +313,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="width-3" label="Members · Corner and dimensions">
+<DocTab value="width" label="Members · Corner and dimensions">
 
 <ApiTable>
 
@@ -342,8 +342,8 @@ export type IRRectangle = ShapeSource<ZodInput<typeof RectangleSchema>>;
 <p>
   <ApiSourceLink
     label={'RectangleDefinition'}
-    path={'packages/library/standard/src/shape/rectangle/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/rectangle/composite.ts'}
+    startLine={10}
   >
     Rectangle Core composite registration
   </ApiSourceLink>
@@ -386,8 +386,8 @@ export const RectangleDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'RectangleProvider'}
-    path={'packages/library/standard/src/shape/rectangle/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/shape/rectangle/composite.ts'}
+    startLine={25}
   >
     Rectangle on-demand dependency contribution
   </ApiSourceLink>
@@ -407,8 +407,8 @@ export const RectangleProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'createRectangle'}
-    path={'packages/library/standard/src/shape/rectangle/factory.ts'}
-    startLine={5}
+    path={'packages/library/standard/src/shape/rectangle/composite.ts'}
+    startLine={18}
   >
     Create a Rectangle Source preserving geometry intent
   </ApiSourceLink>

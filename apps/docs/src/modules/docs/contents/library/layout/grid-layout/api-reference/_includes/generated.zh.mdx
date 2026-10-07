@@ -212,7 +212,7 @@ export declare const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<I
 
 ### createGridLayout / GridLayoutInput
 
-- `createGridLayout`：<ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/factory.ts"} startLine={8}>创建保留省略字段与简写的 GridLayout 持久化输入</ApiSourceLink>
+- `createGridLayout`：<ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={30}>创建保留省略字段与简写的 GridLayout 持久化输入</ApiSourceLink>
 - `GridLayoutInput`：<ApiSourceLink label={"GridLayoutInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>GridLayout factory 接受的作者输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -262,11 +262,11 @@ export type GridLayoutInput = Omit<IRGridLayout, 'namespace' | 'type'>;
 
 | 成员        | 类型                                                                                                                                                                 | 默认值 | 说明                                                 |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------- |
-| `columns`   | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —      | 按物理起点顺序排列的已求解列轨道。                   |
+| `columns`   | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "minmax" \| "content-minimum" \| "content-natural"; implicit: boolean; }>` | —      | 按物理起点顺序排列的已求解列轨道。                   |
 | `container` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["container"]>`                                                                                                       | —      | 已求解的容器几何。                                   |
 | `items`     | `ZodInfer<typeof GridLayoutArtifactSchema.shape["items"]>`                                                                                                           | —      | 按作者声明顺序排列的子项结果。                       |
 | `kind`      | `"grid"`                                                                                                                                                             | —      | GridLayout 产物的判别字段。                          |
-| `rows`      | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —      | 按物理起点顺序排列的已求解行轨道。                   |
+| `rows`      | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "minmax" \| "content-minimum" \| "content-natural"; implicit: boolean; }>` | —      | 按物理起点顺序排列的已求解行轨道。                   |
 | `spacing`   | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>`                                       | —      | 按 canonical 物理顺序排列的固定 gap 与内容分布区域。 |
 
 </ApiTable>
@@ -610,7 +610,7 @@ export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'chil
 | `implicit`   | `boolean`                                                                     | —      | 是否为超出显式列表后生成的隐式轨道 |
 | `index`      | `number`                                                                      | —      | 从零开始且连续的轨道序号           |
 | `size`       | `number`                                                                      | —      | 已求解的非负轨道尺寸               |
-| `sourceKind` | `"fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"` | —      | 轨道最外层的尺寸策略               |
+| `sourceKind` | `"fixed" \| "fraction" \| "minmax" \| "content-minimum" \| "content-natural"` | —      | 轨道最外层的尺寸策略               |
 | `start`      | `number`                                                                      | —      | 轨道的物理起点                     |
 
 </ApiTable>
@@ -669,7 +669,7 @@ export type GridAutoFlow = ValueOf<typeof GridAutoFlow>;
 <p>
   <ApiSourceLink
     label={'GridLayoutDefinition'}
-    path={'packages/library/layout/src/composites/grid-layout/definition.ts'}
+    path={'packages/library/layout/src/composites/grid-layout/composite.ts'}
     startLine={10}
   >
     Layout GridLayout 的官方 Core layout-aware composite definition
@@ -696,8 +696,8 @@ export const GridLayoutDefinition: LayoutCompositeDefinition<
 <p>
   <ApiSourceLink
     label={'GridLayoutProvider'}
-    path={'packages/library/layout/src/composites/grid-layout/provider.ts'}
-    startLine={8}
+    path={'packages/library/layout/src/composites/grid-layout/composite.ts'}
+    startLine={39}
   >
     GridLayout 的 Core Composite dependency provider
   </ApiSourceLink>

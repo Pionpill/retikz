@@ -28,7 +28,7 @@ const invalidParticipant = (cause: unknown) =>
 export const defineRuntimeCommitParticipant = <TRead>(
   input: RuntimeCommitParticipantDefinitionInput<TRead>,
 ): RuntimeCommitParticipant<TRead> => {
-  const { key, sources, computations, revisionPolicy, tracePhases, prepare, read, dispose } = input;
+  const { key, sources = [], computations = [], revisionPolicy, tracePhases = [], prepare, read, dispose } = input;
   if (key.length === 0) throw invalidParticipant(input);
 
   try {

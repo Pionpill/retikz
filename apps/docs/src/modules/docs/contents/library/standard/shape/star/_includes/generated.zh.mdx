@@ -252,7 +252,7 @@ export type IRStar = ShapeSource<ZodInput<typeof StarSchema>>;
 #### StarDefinition
 
 <p>
-  <ApiSourceLink label={'StarDefinition'} path={'packages/library/standard/src/shape/star/definition.ts'} startLine={8}>
+  <ApiSourceLink label={'StarDefinition'} path={'packages/library/standard/src/shape/star/composite.ts'} startLine={10}>
     Star 的 Core composite 注册项
   </ApiSourceLink>
 </p>
@@ -292,7 +292,7 @@ export const StarDefinition = defineComposite({
 #### StarProvider
 
 <p>
-  <ApiSourceLink label={'StarProvider'} path={'packages/library/standard/src/shape/star/provider.ts'} startLine={6}>
+  <ApiSourceLink label={'StarProvider'} path={'packages/library/standard/src/shape/star/composite.ts'} startLine={25}>
     Star 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -309,7 +309,7 @@ export const StarProvider: CoreDependencyProvider = Object.freeze({
 #### createStar
 
 <p>
-  <ApiSourceLink label={'createStar'} path={'packages/library/standard/src/shape/star/factory.ts'} startLine={5}>
+  <ApiSourceLink label={'createStar'} path={'packages/library/standard/src/shape/star/composite.ts'} startLine={18}>
     创建保留几何意图的 Star Source
   </ApiSourceLink>
 </p>

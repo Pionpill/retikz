@@ -59,7 +59,7 @@ Core owner 对 JSON-safe IR 做结构复制、冻结和相等比较。Computatio
 
 ChangeSet 是可选加速提示，不是真源。提供 hint 时，Core 会用完整前后 Snapshot 校验 identity、字段变化、parent、before 与最小 reorder；漏报、多报、unknown kind、anonymous/duplicate identity 或无法重建 next order 都视为 mismatch，并完整 fallback。
 
-`CORE_CHANGESET_MISMATCH` 只作为 Runtime diagnostic 在 fallback 成功 commit 后发布一次，不进入 Core compile warnings 或 `onWarn`。fallback 失败时不发布 diagnostic、不推进 revision，也不替换已提交 artifact。
+`CORE_CHANGESET_MISMATCH` 只作为 Runtime diagnostic 在 fallback 成功 commit 后发布一次，不进入 Core compile warnings 或 `onWarn`。fallback 失败时不发布 diagnostic、不推进 revision，也不替换已提交 result。
 
 ### 已接受的局部增量边界
 
@@ -94,8 +94,8 @@ Computation trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 - Computation option、registry 与 Definition 输入在创建时隔离
 - full fallback 产生完整 Snapshot 和独占 `replaceScene` Patch
 - 单 root Node fill 变化使用 committed Scene 作为安全 contribution cache，产生局部 `update` Patch
-- public artifact、warning、Runtime diagnostic 与 trace 通道保持分离
-- Core 入口、public artifact、identity、ChangeSet、局部子集与 fallback 复用同一 Runtime contract
+- public result、warning、Runtime diagnostic 与 trace 通道保持分离
+- Core 入口、public result、identity、ChangeSet、局部子集与 fallback 复用同一 Runtime contract
 
 ## 公开影响与兼容性
 

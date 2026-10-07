@@ -3,7 +3,7 @@ import type { ScenePrimitive, LayoutProposal, LayoutChildResult } from '@retikz/
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { TreeDefinition } from '../../../src/collection/tree/definition';
+import { TreeDefinition } from '../../../src/collection/tree';
 import type { IRTree } from '../../../src/collection/tree/schema';
 
 const base = { namespace: 'standard', type: 'tree' } as const;

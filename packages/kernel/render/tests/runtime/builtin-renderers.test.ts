@@ -190,8 +190,8 @@ const createSession = (
           coreComputation,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
   const session = createRuntime({
     sources,
     computations,
@@ -208,23 +208,23 @@ const createSession = (
 /** 编译一对固定 Runtime snapshot 与 canonical Patch，供内置 renderer 黑盒测试 */
 const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   const coreComputation = createCoreComputation({ onWarn: () => undefined });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
   const session = createRuntime({
     sources,
     computations,
     initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, currentSource)],
   });
-  const current = session.artifact(coreComputation).value.snapshot;
+  const current = session.result(coreComputation).value.snapshot;
   session.update({
     baseRevision: session.revision(),
     sources: [createRuntimeSourceUpdate(CoreSourceDefinition, nextSource)],
   });
-  const artifact = session.artifact(coreComputation).value;
+  const result = session.result(coreComputation).value;
   session.dispose();
-  if (artifact.patch === undefined) throw new Error('expected incremental Core patch');
+  if (result.patch === undefined) throw new Error('expected incremental Core patch');
 
-  return Object.freeze({ current, next: artifact.snapshot, patch: artifact.patch });
+  return Object.freeze({ current, next: result.snapshot, patch: result.patch });
 };
 
 afterEach(() => vi.restoreAllMocks());

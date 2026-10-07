@@ -61,8 +61,8 @@ export const createRetainedBenchmarkSession = (
           immutableOptions: { backend, idPrefix: 'retained-bench', devicePixelRatio: 1 },
           coreComputation,
         });
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition, RenderRuntimeSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [coreComputation] });
   const session = createRuntime({
     sources,
     computations,

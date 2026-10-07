@@ -1,11 +1,6 @@
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeIdentity } from '../identity';
-import type {
-  RuntimeChangeSet,
-  RuntimeSourceDefinition,
-  RuntimeSourceDefinitionInput,
-  RuntimeSourceToken,
-} from './types';
+import type { RuntimeSourceDefinition, RuntimeSourceDefinitionInput, RuntimeSourceToken } from './types';
 
 const runtimeSourceTokens = new WeakSet<object>();
 
@@ -40,16 +35,6 @@ export type RuntimeSourceErasedExecutor = Readonly<{
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    */
   collectIdentities?: <TValue>(value: TValue) => ReadonlyArray<RuntimeIdentity>;
-  /**
-   * 校验具体 Definition 的 change hint
-   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
-   */
-  validateChangeSet?: <TRead, TChange>(
-    previous: TRead,
-    next: TRead,
-    changeSet: RuntimeChangeSet<TChange>,
-  ) => 'valid' | 'fallback';
 }>;
 
 /**
@@ -57,10 +42,10 @@ export type RuntimeSourceErasedExecutor = Readonly<{
  * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
- * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
  */
 export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
-  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange>,
+  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
 ): RuntimeSourceDefinition<TInput, TValue, TRead, TChange> => {
   if (input.key.length === 0) {
     throw new RetikzRuntimeError({
@@ -80,7 +65,6 @@ export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
     equals: (left: TValue, right: TValue): boolean => equals(left, right),
     dispose,
     collectIdentities: input.collectIdentities,
-    validateChangeSet: input.validateChangeSet,
   }) as RuntimeSourceErasedExecutor;
   runtimeSourceTokens.add(token);
   runtimeSourceExecutors.set(token, erasedExecutor);

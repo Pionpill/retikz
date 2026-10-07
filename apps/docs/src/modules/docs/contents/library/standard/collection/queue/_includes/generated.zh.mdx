@@ -4,7 +4,7 @@
 
 #### Queue / QueueProps
 
-- `Queue`：<ApiSourceLink label={"Queue"} path={"packages/library/standard-react/src/collection/queue/Queue.tsx"} startLine={77}>Standard Queue 呈现组件</ApiSourceLink>
+- `Queue`：<ApiSourceLink label={"Queue"} path={"packages/library/standard-react/src/collection/queue/Queue.tsx"} startLine={73}>Standard Queue 呈现组件</ApiSourceLink>
 - `QueueProps`：<ApiSourceLink label={"QueueProps"} path={"packages/library/standard-react/src/collection/queue/Queue.tsx"} startLine={17}>Queue 的 React authoring 属性</ApiSourceLink>
 
 data、items、skeleton 与 QueueItem children 内容入口互斥；全部省略时生成空队列。dataExpand 仅用于 data 入口
@@ -213,7 +213,7 @@ export type QueueItemProps = CellMarkerProps<IRCell['layout']>;
 
 #### queue / InputQueue
 
-- `queue`：<ApiSourceLink label={"queue"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={84}>创建 Queue embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
+- `queue`：<ApiSourceLink label={"queue"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={80}>创建 Queue embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
 - `InputQueue`：<ApiSourceLink label={"InputQueue"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={14}>Queue 的 Vanilla authoring 输入</ApiSourceLink>
 
 items、data 与 skeleton 三选一；dataExpand 仅用于 data 入口。其余字段沿用 IRQueue，namespace 与 type 由 adapter 补齐
@@ -475,8 +475,8 @@ export type IRQueue = Omit<
 <p>
   <ApiSourceLink
     label={'QueueDefinition'}
-    path={'packages/library/standard/src/collection/queue/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/queue/composite.ts'}
+    startLine={10}
   >
     Queue 的布局感知编译定义
   </ApiSourceLink>
@@ -496,8 +496,8 @@ export const QueueDefinition: LayoutCompositeDefinition<IRQueue, 'standard', 'qu
 <p>
   <ApiSourceLink
     label={'QueueProvider'}
-    path={'packages/library/standard/src/collection/queue/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/queue/composite.ts'}
+    startLine={21}
   >
     Queue 及单格裁切依赖
   </ApiSourceLink>
@@ -510,7 +510,11 @@ export declare const QueueProvider: CoreDependencyProvider;
 #### createQueue
 
 <p>
-  <ApiSourceLink label={'createQueue'} path={'packages/library/standard/src/collection/queue/factory.ts'} startLine={4}>
+  <ApiSourceLink
+    label={'createQueue'}
+    path={'packages/library/standard/src/collection/queue/composite.ts'}
+    startLine={18}
+  >
     保留作者稀疏字段与队首到队尾顺序
   </ApiSourceLink>
 </p>

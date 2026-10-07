@@ -222,7 +222,7 @@ export declare const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapte
 
 ### createOverlayLayout / OverlayLayoutInput
 
-- `createOverlayLayout`：<ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/factory.ts"} startLine={8}>创建保留省略字段与简写的 OverlayLayout 持久化输入</ApiSourceLink>
+- `createOverlayLayout`：<ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={30}>创建保留省略字段与简写的 OverlayLayout 持久化输入</ApiSourceLink>
 - `OverlayLayoutInput`：<ApiSourceLink label={"OverlayLayoutInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>OverlayLayout factory 接受的作者输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -473,7 +473,7 @@ export type LayoutSizeParticipation = ValueOf<typeof LayoutSizeParticipation>;
 <p>
   <ApiSourceLink
     label={'OverlayLayoutDefinition'}
-    path={'packages/library/layout/src/composites/overlay-layout/definition.ts'}
+    path={'packages/library/layout/src/composites/overlay-layout/composite.ts'}
     startLine={10}
   >
     Layout OverlayLayout 的官方 Core layout-aware composite definition
@@ -500,8 +500,8 @@ export const OverlayLayoutDefinition: LayoutCompositeDefinition<
 <p>
   <ApiSourceLink
     label={'OverlayLayoutProvider'}
-    path={'packages/library/layout/src/composites/overlay-layout/provider.ts'}
-    startLine={8}
+    path={'packages/library/layout/src/composites/overlay-layout/composite.ts'}
+    startLine={39}
   >
     OverlayLayout 的 Core Composite dependency provider
   </ApiSourceLink>

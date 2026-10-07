@@ -132,7 +132,7 @@ export type IRAxes = Omit<ZodInput<typeof AxesSchema>, keyof IRScopeProps> & IRS
 <p>
   <ApiSourceLink
     label={'AxesDefinition'}
-    path={'packages/library/standard/src/presentation/axes/definition.ts'}
+    path={'packages/library/standard/src/presentation/axes/composite.ts'}
     startLine={10}
   >
     Official Core composite definition for Standard Axes
@@ -153,8 +153,8 @@ export const AxesDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'AxesProvider'}
-    path={'packages/library/standard/src/presentation/axes/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/presentation/axes/composite.ts'}
+    startLine={25}
   >
     Core composite dependency provider for Axes
   </ApiSourceLink>
@@ -172,7 +172,11 @@ export const AxesProvider: CoreDependencyProvider = Object.freeze({
 #### createAxes
 
 <p>
-  <ApiSourceLink label={'createAxes'} path={'packages/library/standard/src/presentation/axes/factory.ts'} startLine={5}>
+  <ApiSourceLink
+    label={'createAxes'}
+    path={'packages/library/standard/src/presentation/axes/composite.ts'}
+    startLine={18}
+  >
     Assemble a persistent Standard Axes composite
   </ApiSourceLink>
 </p>

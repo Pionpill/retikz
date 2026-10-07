@@ -15,30 +15,28 @@ const defineCounterSource = () =>
       read: value => value,
       equals: (left, right) => left === right,
     },
-    validateChangeSet: (previous, next, changeSet) =>
-      previous + changeSet.changes.reduce((sum, change) => sum + change.delta, 0) === next ? 'valid' : 'fallback',
   });
 
 describe('runtime runtime lifecycle', () => {
   it('initial full 发布 revision 0，并在 incremental update 后原子推进 Snapshot', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const events: Array<RuntimeCommitEvent<string>> = [];
     const computation = defineRuntimeComputation<number, Readonly<{ value: number }>, number, string>({
       id: { owner: 'counter', key: 'sum' },
       sources: [owner],
       computations: [],
       tracePhases: [],
-      artifact: {
+      result: {
         capture: value => Object.freeze({ value }),
-        readForComputation: artifact => artifact.value,
-        read: artifact => `sum:${artifact.value}`,
+        readForComputation: result => result.value,
+        read: result => `sum:${result.value}`,
       },
-      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
-      update: (_previous, view) => ({ kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value }),
+      run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeComputationKind.Incremental, result: view.snapshot(owner).value }),
       observeCommit: event => events.push(event),
     });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({
       sources,
       computations,
@@ -47,13 +45,13 @@ describe('runtime runtime lifecycle', () => {
 
     expect(runtime.revision()).toBe(0);
     expect(runtime.snapshot(owner)).toEqual({ revision: 0, value: 1 });
-    expect(runtime.artifact(computation)).toEqual({ revision: 0, value: 'sum:1' });
+    expect(runtime.result(computation)).toEqual({ revision: 0, value: 'sum:1' });
     expect(events).toEqual([
       expect.objectContaining({
         phase: RuntimeComputationPhase.Initial,
         revision: 0,
         outcome: RuntimeComputationKind.Full,
-        artifact: { revision: 0, value: 'sum:1' },
+        result: { revision: 0, value: 'sum:1' },
         diagnostics: [],
       }),
     ]);
@@ -67,14 +65,14 @@ describe('runtime runtime lifecycle', () => {
     expect(result).toEqual({ revision: 1, outcome: RuntimeComputationKind.Incremental, diagnostics: [] });
     expect(runtime.revision()).toBe(1);
     expect(runtime.snapshot(owner)).toEqual({ revision: 1, value: 2 });
-    expect(runtime.artifact(computation)).toEqual({ revision: 1, value: 'sum:2' });
+    expect(runtime.result(computation)).toEqual({ revision: 1, value: 'sum:2' });
     expect(events.at(-1)).toEqual(
       expect.objectContaining({
         phase: RuntimeComputationPhase.Update,
         baseRevision: 0,
         revision: 1,
         outcome: RuntimeComputationKind.Incremental,
-        artifact: { revision: 1, value: 'sum:2' },
+        result: { revision: 1, value: 'sum:2' },
         diagnostics: [],
       }),
     );
@@ -82,7 +80,7 @@ describe('runtime runtime lifecycle', () => {
 
   it('empty 与 semantic-equal update bailout，空 Computation graph 仍提交 owner Snapshot', () => {
     const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
     const runtime = createRuntime({
       sources,

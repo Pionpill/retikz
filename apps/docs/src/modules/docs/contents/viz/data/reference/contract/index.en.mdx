@@ -3,7 +3,7 @@ title: Contract
 description: Look up the @retikz/data data-reference, field-model, and shared transform JSON schemas.
 ---
 
-Data contracts store JSON-safe configuration only. Real rows, parsers, Definitions, registries, and callbacks are injected at runtime and never enter these schemas. See [Field Contract](/viz/data/model/contract) and [Transform Operations](/viz/data/transform/operations) for task-oriented behavior and usage.
+Data contracts store JSON-safe configuration only. Real rows, parsers, Definitions, registries, and callbacks are injected at runtime and never enter these schemas. See [Fields and Types](/viz/data/model/fields-and-types) and [Transform Operations](/viz/data/transform/operations) for task-oriented behavior and usage.
 
 ## DataReferenceSchema
 
@@ -14,6 +14,10 @@ Data contracts store JSON-safe configuration only. Real rows, parsers, Definitio
 <ZodSchema name="DataModelSchema" />
 
 ### FieldDefinitionSchema
+
+Field declarations branch by `type`: `categorical` supports category `order`; `continuous` and `temporal` forbid it. Omitting `type` preserves inference; when `order` is declared, the resolved field type must be categorical.
+
+`order` accepts a nonblank built-in or custom name, or a nonempty category array. Built-ins include `naturalAscending` / `naturalDescending`. Named orders must be registered in the consuming request; comparator functions stay outside JSON.
 
 <ZodSchema name="FieldDefinitionSchema" />
 
@@ -138,8 +142,8 @@ Annotate excludes `outside-quantile-band`. For `top` / `bottom`, `n` is fixed to
     {
       label: 'Data-reference and field-model schemas',
       path: 'packages/viz/data/src/schemas/data/schema.ts',
-      startLine: 6,
-      endLine: 40,
+      startLine: 18,
+      endLine: 76,
     },
     {
       label: 'Shared transform schemas',
@@ -158,6 +162,6 @@ Annotate excludes `outside-quantile-band`. For `top` / `bottom`, `n` is fixed to
 
 ## Related
 
-- [Field Contract](/viz/data/model/contract): field types, inference, formats, and category order
+- [Fields and Types](/viz/data/model/fields-and-types): field types, inference, formats, and category order
 - [Transform Operations](/viz/data/transform/operations): using sort, summarize, select, and annotate
 - [Runtime](/viz/data/reference/runtime): Definitions, registries, execution entry points, and lineage results

@@ -75,12 +75,12 @@ export const resolveDataTransformOutputModel = (
         throw new RetikzDataError(`data: output references unknown field "${descriptor.type.from}"`);
     }
 
-    const type = typeof descriptor.type === 'string' ? descriptor.type : source?.type;
-    fields.set(descriptor.field, {
-      name: descriptor.field,
-      ...(type === undefined ? {} : { type }),
-      ...(source?.order === undefined ? {} : { order: source.order }),
-    });
+    fields.set(
+      descriptor.field,
+      source === undefined
+        ? { name: descriptor.field, ...(typeof descriptor.type === 'string' ? { type: descriptor.type } : {}) }
+        : { ...source, name: descriptor.field },
+    );
   }
 
   return [...fields.values()];

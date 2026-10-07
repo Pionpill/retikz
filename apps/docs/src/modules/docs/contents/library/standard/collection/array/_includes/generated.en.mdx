@@ -4,7 +4,7 @@
 
 #### Array / ArrayProps
 
-- `Array`: <ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={77}>Standard Array presentation component</ApiSourceLink>
+- `Array`: <ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={73}>Standard Array presentation component</ApiSourceLink>
 - `ArrayProps`: <ApiSourceLink label={"ArrayProps"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={17}>React authoring props for Array</ApiSourceLink>
 
 The data, items, skeleton, and ArrayItem children inputs are mutually exclusive; omitting all inputs creates an empty array. dataExpand applies only to data
@@ -212,7 +212,7 @@ export type ArrayItemProps = CellMarkerProps<IRArrayCell['layout']>;
 
 #### array / InputArray
 
-- `array`: <ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={81}>Create a Array embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
+- `array`: <ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={77}>Create a Array embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
 - `InputArray`: <ApiSourceLink label={"InputArray"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={14}>Vanilla authoring input for Array</ApiSourceLink>
 
 Choose items, data, or skeleton; dataExpand applies only to data. Other fields follow IRArray, and the adapter supplies namespace and type
@@ -617,8 +617,8 @@ export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 <p>
   <ApiSourceLink
     label={'ArrayDefinition'}
-    path={'packages/library/standard/src/collection/array/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/array/composite.ts'}
+    startLine={10}
   >
     Layout-aware Definition for Standard Array
   </ApiSourceLink>
@@ -638,8 +638,8 @@ export const ArrayDefinition: LayoutCompositeDefinition<IRArray, 'standard', 'ar
 <p>
   <ApiSourceLink
     label={'ArrayProvider'}
-    path={'packages/library/standard/src/collection/array/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/array/composite.ts'}
+    startLine={25}
   >
     On-demand dependencies of Array and its cell lowering targets
   </ApiSourceLink>
@@ -652,7 +652,11 @@ export declare const ArrayProvider: CoreDependencyProvider;
 #### createArray
 
 <p>
-  <ApiSourceLink label={'createArray'} path={'packages/library/standard/src/collection/array/factory.ts'} startLine={8}>
+  <ApiSourceLink
+    label={'createArray'}
+    path={'packages/library/standard/src/collection/array/composite.ts'}
+    startLine={22}
+  >
     Typed factory preserving sparse Source
   </ApiSourceLink>
 </p>

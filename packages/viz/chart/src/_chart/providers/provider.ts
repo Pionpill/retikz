@@ -14,7 +14,7 @@ import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
 import { eraseChartRecipeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
-import { chartProviderKeyOf, createChartDefinition } from './definition';
+import { chartProviderKeyOf, createChartDefinition } from './composite';
 import { resolveChartProviderRegistry } from './registry';
 import { resolveChartFromProvider } from './resolve';
 import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';

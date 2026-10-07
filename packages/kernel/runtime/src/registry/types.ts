@@ -2,15 +2,7 @@ import type { RuntimeComputationDefinition, RuntimeComputationToken } from '../c
 import type { RuntimeComputationId } from '../identity';
 import type { RuntimeSourceDefinition, RuntimeSourceToken } from '../source';
 
-/** Source registry 的 builtin/custom Definition 输入 */
-export type RuntimeSourceRegistryInput = Readonly<{
-  /** Kernel 内置 Source Definitions */
-  builtins?: ReadonlyArray<RuntimeSourceToken>;
-  /** 第三方或上层 Source Definitions */
-  custom?: ReadonlyArray<RuntimeSourceToken>;
-}>;
-
-/** 统一解析 builtin/custom typed Source token 的 immutable registry */
+/** 统一解析 typed Source token 的 immutable registry */
 export type RuntimeSourceRegistry = Readonly<{
   /** 以原 Definition token 恢复完整泛型 */
   resolve: <TInput, TValue, TRead, TChange>(
@@ -22,22 +14,20 @@ export type RuntimeSourceRegistry = Readonly<{
   definitions: () => ReadonlyArray<RuntimeSourceToken>;
 }>;
 
-/** Computation registry 的 Source binding 与 builtin/custom 输入 */
+/** Computation registry 的 Source binding 与计算列表输入 */
 export type RuntimeComputationRegistryInput = Readonly<{
   /** Computation dependencies 必须来自的 Source registry */
   sources: RuntimeSourceRegistry;
-  /** Kernel 内置 Computation Definitions */
-  builtins?: ReadonlyArray<RuntimeComputationToken>;
-  /** 第三方或上层 Computation Definitions */
-  custom?: ReadonlyArray<RuntimeComputationToken>;
+  /** 待注册的计算凭证，默认空列表 */
+  computations?: ReadonlyArray<RuntimeComputationToken>;
 }>;
 
 /** 统一解析 typed Computation token 并暴露稳定拓扑顺序的 registry */
 export type RuntimeComputationRegistry = Readonly<{
   /** 以原 Definition token 恢复完整泛型 */
-  resolve: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
-    definition: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
-  ) => RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>;
+  resolve: <TResultInput, TResult, TComputationRead, TPublicRead>(
+    definition: RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
+  ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
   /** 动态 identity lookup 只返回不含 callback 的 token */
   find: (id: RuntimeComputationId) => RuntimeComputationToken | undefined;
   /** 按依赖优先和 code-unit tie-break 返回 immutable token copy */

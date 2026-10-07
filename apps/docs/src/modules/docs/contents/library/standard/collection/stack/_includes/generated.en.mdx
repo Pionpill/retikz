@@ -4,7 +4,7 @@
 
 #### Stack / StackProps
 
-- `Stack`: <ApiSourceLink label={"Stack"} path={"packages/library/standard-react/src/collection/stack/Stack.tsx"} startLine={77}>Standard Stack presentation component</ApiSourceLink>
+- `Stack`: <ApiSourceLink label={"Stack"} path={"packages/library/standard-react/src/collection/stack/Stack.tsx"} startLine={73}>Standard Stack presentation component</ApiSourceLink>
 - `StackProps`: <ApiSourceLink label={"StackProps"} path={"packages/library/standard-react/src/collection/stack/Stack.tsx"} startLine={17}>React authoring props for Stack</ApiSourceLink>
 
 The data, items, skeleton, and StackItem children inputs are mutually exclusive; omitting all inputs creates an empty stack. dataExpand applies only to data
@@ -213,7 +213,7 @@ export type StackItemProps = CellMarkerProps<IRCell['layout']>;
 
 #### stack / InputStack
 
-- `stack`: <ApiSourceLink label={"stack"} path={"packages/library/standard-vanilla/src/collection/stack.ts"} startLine={84}>Create a Stack embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
+- `stack`: <ApiSourceLink label={"stack"} path={"packages/library/standard-vanilla/src/collection/stack.ts"} startLine={80}>Create a Stack embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
 - `InputStack`: <ApiSourceLink label={"InputStack"} path={"packages/library/standard-vanilla/src/collection/stack.ts"} startLine={14}>Vanilla authoring input for Stack</ApiSourceLink>
 
 Choose items, data, or skeleton; dataExpand applies only to data. Other fields follow IRStack, and the adapter supplies namespace and type
@@ -475,8 +475,8 @@ export type IRStack = Omit<
 <p>
   <ApiSourceLink
     label={'StackDefinition'}
-    path={'packages/library/standard/src/collection/stack/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/stack/composite.ts'}
+    startLine={10}
   >
     Layout-aware compilation definition for Stack
   </ApiSourceLink>
@@ -496,8 +496,8 @@ export const StackDefinition: LayoutCompositeDefinition<IRStack, 'standard', 'st
 <p>
   <ApiSourceLink
     label={'StackProvider'}
-    path={'packages/library/standard/src/collection/stack/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/stack/composite.ts'}
+    startLine={21}
   >
     Stack and cell clipping dependencies
   </ApiSourceLink>
@@ -510,7 +510,11 @@ export declare const StackProvider: CoreDependencyProvider;
 #### createStack
 
 <p>
-  <ApiSourceLink label={'createStack'} path={'packages/library/standard/src/collection/stack/factory.ts'} startLine={4}>
+  <ApiSourceLink
+    label={'createStack'}
+    path={'packages/library/standard/src/collection/stack/composite.ts'}
+    startLine={18}
+  >
     Preserve sparse author fields and bottom-to-top order
   </ApiSourceLink>
 </p>

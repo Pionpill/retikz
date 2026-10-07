@@ -22,33 +22,33 @@ Concurrent 的根问题不是把所有 Computation 改成异步，而是让 Comp
 ```ts
 type RuntimePriority = 'immediate' | 'interactive' | 'visible' | 'background';
 
-type RuntimeComputationExecutionCapability<TArtifactInput, TComputationRead> =
+type RuntimeComputationExecutionCapability<TResultInput, TComputationRead> =
   | Readonly<{ kind: 'blocking' }>
   | Readonly<{
       kind: 'chunkable';
       createRunWork: (
         view: RuntimeCandidateView,
         context: RuntimePrepareContext,
-      ) => RuntimeChunkedWork<RuntimeRunResult<TArtifactInput>>;
+      ) => RuntimeChunkedWork<RuntimeRunOutcome<TResultInput>>;
       createUpdateWork?: (
         previous: TComputationRead,
         view: RuntimeCandidateView,
         context: RuntimePrepareContext,
-      ) => RuntimeChunkedWork<RuntimeUpdateResult<TArtifactInput>>;
+      ) => RuntimeChunkedWork<RuntimeUpdateOutcome<TResultInput>>;
     }>
   | Readonly<{
       kind: 'offloadable';
       executorKey: string;
       encodeRunRequest: (view: RuntimeCandidateView) => RuntimeTransferPayload;
-      decodeRunResult: (payload: RuntimeTransferPayload) => RuntimeRunResult<TArtifactInput>;
+      decodeRunResult: (payload: RuntimeTransferPayload) => RuntimeRunOutcome<TResultInput>;
       encodeUpdateRequest?: (previous: TComputationRead, view: RuntimeCandidateView) => RuntimeTransferPayload;
-      decodeUpdateResult?: (payload: RuntimeTransferPayload) => RuntimeUpdateResult<TArtifactInput>;
+      decodeUpdateResult?: (payload: RuntimeTransferPayload) => RuntimeUpdateOutcome<TResultInput>;
     }>;
 
-type RuntimeConcurrentComputationDefinitionInput<TArtifactInput, TArtifact, TComputationRead, TPublicRead> =
-  RuntimeComputationDefinitionInput<TArtifactInput, TArtifact, TComputationRead, TPublicRead> &
+type RuntimeConcurrentComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead> =
+  RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead> &
     Readonly<{
-      execution?: RuntimeComputationExecutionCapability<TArtifactInput, TComputationRead>;
+      execution?: RuntimeComputationExecutionCapability<TResultInput, TComputationRead>;
     }>;
 
 type RuntimeScheduledUpdate<TResult> = Readonly<{
@@ -59,9 +59,9 @@ type RuntimeScheduledUpdate<TResult> = Readonly<{
 }>;
 ```
 
-后续 milestone 若接受本 ADR，将扩展原 `defineRuntimeComputation()` 的 author input 为 `RuntimeConcurrentComputationDefinitionInput`；`execution` 封装进同一个 typed Computation token/private executor，Computation registry 与 graph 不变，不建立第二套 async registry。缺省 / `blocking` 直接调用 alpha.2 `run/update`。Chunkable 按 candidate phase 调用 `createRunWork` 或 `createUpdateWork`；update work 缺失时使用同步 update，Computation 本来无 update 则同步 full run。所有 work 最终必须返回同一 `RuntimeRunResult/RuntimeUpdateResult`，再走 alpha.2 artifact capture/read 与 transaction
+后续 milestone 若接受本 ADR，将扩展原 `defineRuntimeComputation()` 的 author input 为 `RuntimeConcurrentComputationDefinitionInput`；`execution` 封装进同一个 typed Computation token/private executor，Computation registry 与 graph 不变，不建立第二套 async registry。缺省 / `blocking` 直接调用 alpha.2 `run/update`。Chunkable 按 candidate phase 调用 `createRunWork` 或 `createUpdateWork`；update work 缺失时使用同步 update，Computation 本来无 update 则同步 full run。所有 work 最终必须返回同一 `RuntimeRunOutcome/RuntimeUpdateOutcome`，再走 alpha.2 result capture/read 与 transaction
 
-Offload encoder只在主线程执行，并取得原 typed CandidateView/previous private read；它只能读取 Computation已声明依赖，必须把所需事实投影为 structured-clone-safe `RuntimeTransferPayload`。CandidateView、Definition token、callback、source/artifact cache本身绝不传入 Worker。Runtime按 initial/update phase选择 run/update encode/decode对；update任一函数缺失时回退同步 update/full。decode在主线程恢复标准 result，随后仍走同一 capture/fallback/commit gate。具体 Computation的 encoder/decoder负责证明 blocking/chunkable/offloadable结果与同步 oracle等价。
+Offload encoder只在主线程执行，并取得原 typed CandidateView/previous private read；它只能读取 Computation已声明依赖，必须把所需事实投影为 structured-clone-safe `RuntimeTransferPayload`。CandidateView、Definition token、callback、source/result cache本身绝不传入 Worker。Runtime按 initial/update phase选择 run/update encode/decode对；update任一函数缺失时回退同步 update/full。decode在主线程恢复标准 result，随后仍走同一 capture/fallback/commit gate。具体 Computation的 encoder/decoder负责证明 blocking/chunkable/offloadable结果与同步 oracle等价。
 
 `RuntimeTransferPayload` 必须结构化克隆安全；函数、DOM、ReactNode、renderer 对象和 owner cache 不能跨 Worker。Offload executor 由宿主按 `executorKey` 注入 `RuntimeOffloadExecutorDefinition` registry，内置与第三方 executor 走同一解析、校验和 diagnostic 链路。Runtime 不静态 import Worker 或任何领域包。
 

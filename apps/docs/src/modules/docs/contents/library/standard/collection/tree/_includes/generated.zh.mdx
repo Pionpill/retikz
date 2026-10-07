@@ -103,7 +103,7 @@ export type IRTree = Omit<input<typeof TreeSchema>, keyof IRScopeProps> & IRScop
 <p>
   <ApiSourceLink
     label={'TreeDefinition'}
-    path={'packages/library/standard/src/collection/tree/definition.ts'}
+    path={'packages/library/standard/src/collection/tree/composite.ts'}
     startLine={9}
   >
     Tree 的布局感知编译定义
@@ -124,8 +124,8 @@ export const TreeDefinition: LayoutCompositeDefinition<IRTree, 'standard', 'tree
 <p>
   <ApiSourceLink
     label={'TreeProvider'}
-    path={'packages/library/standard/src/collection/tree/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/collection/tree/composite.ts'}
+    startLine={20}
   >
     Tree 复用 Core 内置节点和路径，扩展形状由宿主装配
   </ApiSourceLink>
@@ -138,7 +138,11 @@ export declare const TreeProvider: CoreDependencyProvider;
 #### createTree
 
 <p>
-  <ApiSourceLink label={'createTree'} path={'packages/library/standard/src/collection/tree/factory.ts'} startLine={4}>
+  <ApiSourceLink
+    label={'createTree'}
+    path={'packages/library/standard/src/collection/tree/composite.ts'}
+    startLine={17}
+  >
     保留作者稀疏字段与有序递归结构
   </ApiSourceLink>
 </p>

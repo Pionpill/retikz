@@ -25,12 +25,6 @@ export type RuntimeSourceCommandExecutor = Readonly<{
     previous: RuntimePreparedSourceValue<unknown, unknown>,
     candidate: RuntimePreparedSourceValue<unknown, unknown>,
   ) => RuntimeSourceExecutionResult<boolean>;
-  /** 校验 concrete change hint，缺少 hint 时不存在 */
-  validateChangeSet?: (
-    executor: RuntimeSourceExecutor,
-    previous: RuntimePreparedSourceValue<unknown, unknown>,
-    candidate: RuntimePreparedSourceValue<unknown, unknown>,
-  ) => RuntimeSourceExecutionResult<'valid' | 'fallback'>;
   /** 释放一个 prepared source value */
   retire: (
     executor: RuntimeSourceExecutor,
@@ -43,7 +37,7 @@ export type RuntimeSourceCommandExecutor = Readonly<{
    * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
    */
   snapshot: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -55,7 +49,7 @@ export type RuntimeSourceCommandExecutor = Readonly<{
    * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
    * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
    * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
-   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
    */
   changeSet: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -100,7 +94,7 @@ export const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<un
 
 /**
  * 创建复制并冻结 changes 容器的 revision-bound change hint
- * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
  */
 export const createRuntimeChangeSet = <TChange>(
   baseRevision: RuntimeRevision,
@@ -138,14 +132,6 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
       previous: RuntimePreparedSourceValue<TValue, TRead>,
       candidate: RuntimePreparedSourceValue<TValue, TRead>,
     ) => runtimeExecutor.compare(source, previous, candidate),
-    validateChangeSet:
-      changeSet === undefined
-        ? undefined
-        : (
-            runtimeExecutor: RuntimeSourceExecutor,
-            previous: RuntimePreparedSourceValue<TValue, TRead>,
-            candidate: RuntimePreparedSourceValue<TValue, TRead>,
-          ) => runtimeExecutor.validateChangeSet(source, previous, candidate, changeSet),
     retire: (runtimeExecutor: RuntimeSourceExecutor, prepared: RuntimePreparedSourceValue<TValue, TRead>) =>
       runtimeExecutor.retire(source, prepared),
     changeSetBaseRevision: changeSet?.baseRevision,
@@ -188,7 +174,7 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
  * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
- * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
  */
 export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -207,7 +193,7 @@ export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
  * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
- * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
  */
 export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,

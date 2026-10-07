@@ -2,6 +2,8 @@ import type { DataTransformResult, DataTransformStageInput, ExternalDatasets, Ex
 import {
   applyTransformsToDataView,
   assertDataTransformModel,
+  assertFieldOrders,
+  resolveFieldOrderRegistry,
   assertDataTransformResult,
   collectFormatFields,
   collectTransformFields,
@@ -109,7 +111,17 @@ const resolveTableDataImpl = (
   options: TableDataOptions = {},
 ): DataTransformResult | undefined => {
   assertTableDataScope(spec);
-  if (spec.data === undefined || spec.transform === undefined) return undefined;
+  const fieldOrderRegistry = resolveFieldOrderRegistry(options.fieldOrderDefinitions);
+  assertFieldOrders(spec.data?.model, fieldOrderRegistry);
+  if (spec.data === undefined) return undefined;
+  if (spec.transform === undefined) {
+    if (spec.data.model?.some(field => field.order !== undefined)) {
+      if (!Object.hasOwn(datasets, spec.data.reference))
+        throw new RetikzTableError(`Table dataset "${spec.data.reference}" not found`);
+      tableRowsResult(spec, datasets[spec.data.reference], options);
+    }
+    return undefined;
+  }
 
   for (const declaration of spec.transform) {
     if (resolveDataExecution(undefined, spec.dataExecution, declaration.dataExecution).mode !== 'builtin')
@@ -156,6 +168,8 @@ const prepareTableDataImpl = async <TSource = never>(
   options: TableDataOptions = {},
 ): Promise<TableDataPreparation> => {
   assertTableDataScope(spec);
+  const fieldOrderRegistry = resolveFieldOrderRegistry(options.fieldOrderDefinitions);
+  assertFieldOrders(spec.data?.model, fieldOrderRegistry);
   let consumed = false;
 
   const once = (): void => {
@@ -199,6 +213,8 @@ const prepareTableDataImpl = async <TSource = never>(
     }
   }
 
+  assertFieldOrders(describeDataTransformInput(input).model, fieldOrderRegistry);
+
   if (binding.kind === 'rows' && spec.transform === undefined && input.kind === 'result') {
     const result = input.result;
     return {
@@ -212,6 +228,7 @@ const prepareTableDataImpl = async <TSource = never>(
   const { transformRegistry, context } = tableDataRegistries(options);
   const descriptor = describeDataTransformInput(input);
   const resolution = resolveDataTransforms(spec.transform ?? [], descriptor.model, { transformRegistry, ...context });
+  for (const stage of resolution.stages) assertFieldOrders(stage.outputModel, fieldOrderRegistry);
   const executor = request.dataTransformExecutor ?? createDataTransformExecutor<TSource>(options);
   const preparation = await executor.prepare(descriptor, resolution, {
     dataExecution: spec.dataExecution,
@@ -226,7 +243,9 @@ const prepareTableDataImpl = async <TSource = never>(
   return {
     execute: async () => {
       once();
-      return preparation.bind(input).execute();
+      const result = await preparation.bind(input).execute();
+      assertFieldOrders(result.model, fieldOrderRegistry);
+      return result;
     },
   };
 };

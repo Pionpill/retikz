@@ -27,7 +27,7 @@ const RuntimeArchitecture: FC<RuntimeArchitectureProps> = props => {
           items={[{ id: 'input', text: i18n.input, role: 'state', kind: LogicFigureEntityKind.ImportantData }]}
         />
         <FlowGroup
-          id="runtime"
+          id="runtime-group"
           caption={{ title: { text: '@retikz/runtime', textColor: 'gray', font: { size: 12 } } }}
           padding={16}
           cornerRadius={4}

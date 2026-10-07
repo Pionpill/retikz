@@ -1,0 +1,391 @@
+---
+title: Participant · 参与者
+description: 定义参与者消费来源与计算结果，将外部状态的提交、回滚、读取与释放接入 Runtime
+---
+
+[Runtime · 事务发布](/kernel/packages/runtime/transaction) 介绍了来源与计算结果如何一起发布。**Runtime 是事务协调者，Participant 是参与这套流程的对象**：Runtime 统筹计算、准备、提交、失败回滚和资源释放；Participant 实现自己的外部状态处理逻辑，随 Runtime 的事务与实例生命周期执行，并提供适合业务使用的读取视图。
+
+<ComponentPreview files="participant-relationship" size="sm" hideCode type="flow" />
+
+Participant 可以修改 DOM、替换 Canvas 画面或管理宿主状态。它的准备、提交或读取失败会阻止本次事务发布，并触发对已准备对象的回滚。因此，它的逻辑参与决定事务能否成功；自己的读取视图也只有成功发布后才对外可读。
+
+例如，Vanilla 更新一份 SVG 文档时，需要同时更新对外的处理结果和实际画面。如果新结果已经对外可读，但 SVG 更新失败，调用方看到的数据就会与画面不一致。Vanilla 将处理结果与 renderer 分别接入提交参与者：全部成功才发布；失败且回滚成功时，两者都保留旧状态。
+
+`runtime.update(...)` 负责执行这笔事务，`runtime.participant(token)` 则读取某个参与者最近成功发布的结果，不会触发提交。后文先用计数与显示缓冲区演示协议，最后在 [Vanilla 应用](#vanilla-应用) 中对应到实际接线。
+
+## 整体流程
+
+| 环节       | 接口或配置                               | 作用                                                  |
+| ---------- | ---------------------------------------- | ----------------------------------------------------- |
+| 定义       | `defineRuntimeCommitParticipant(...)`    | 声明依赖及准备、读取、释放逻辑                        |
+| 注册       | `createRuntime({ participants: [...] })` | 由 Runtime 接管，并执行初始化事务                     |
+| 执行       | `runtime.update(...)`                    | 触发事务，由 Runtime 按需调用参与者                   |
+| 提交与回滚 | `prepare` → `commit` / `rollback`        | 准备对象提供提交与回滚方法，由 Runtime 调度           |
+| 读取       | `runtime.participant(token)`             | 获取最近成功发布后缓存的参与者读取值                  |
+| 释放       | `runtime.dispose()`                      | 释放长期资源；事务临时资源由准备对象的 `dispose` 清理 |
+
+Source 保存输入，Computation 派生结果，Participant 消费这些数据并管理外部状态。公开类型 `RuntimeCommitParticipant` 表示长期参与者；它的 `prepare` 为每次事务返回一个 `RuntimePreparedCommit`，后者只负责本次修改的提交、回滚和临时资源清理。
+
+<ComponentPreview files="participant-overview" size="xs" hideCode type="flow" />
+
+参与者接收的是发布前的候选数据。只有参与者提交与读取全部成功，Runtime 才发布来源、计算结果、参与者读取视图和新版本；提交后通知 `observeCommit` 不承担这项事务职责。
+
+## 定义参与者
+
+`defineRuntimeCommitParticipant(options)` 返回用于注册和读取的 Token。参与者通常闭包持有一个 renderer 或宿主资源；同一个 Token 只能由一个 Runtime 接管。
+
+```ts
+declare const defineRuntimeCommitParticipant: <TRead>(
+  options: RuntimeCommitParticipantDefinitionInput<TRead>,
+) => RuntimeCommitParticipant<TRead>;
+```
+
+`sources`、`computations` 和 `tracePhases` 可省略，默认 `[]`；其余配置字段必填：
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员             | 作用                                                               |
+| ---------------- | ------------------------------------------------------------------ |
+| `key`            | 标识参与者；同一实例内不能重复，也决定多个参与者的执行顺序         |
+| `sources`        | 声明可读取及用于触发更新的来源                                     |
+| `computations`   | 声明可读取及用于触发更新的计算                                     |
+| `revisionPolicy` | `affected` 仅响应依赖变化；`continuous` 参与每次实际发布，详见后文 |
+| `tracePhases`    | 声明允许报告的 Trace 阶段；默认 `[]`                               |
+| `prepare`        | 读取候选数据，准备本次待提交对象                                   |
+| `read`           | 在提交成功后生成供宿主读取的不可变视图                             |
+| `dispose`        | 结束参与者，释放长期持有的宿主资源                                 |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
+  key: string;
+  sources?: ReadonlyArray<RuntimeSourceToken>;
+  computations?: ReadonlyArray<RuntimeComputationToken>;
+  revisionPolicy: 'affected' | 'continuous';
+  tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
+  prepare: (candidate: RuntimeParticipantCandidateView, context: RuntimeParticipantContext) => RuntimePreparedCommit;
+  read: () => TRead;
+  dispose: () => void;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+参与者的 `sources` 和 `computations` 是依赖列表，决定它能读取哪些候选数据，以及 `affected` 策略下哪些变化会触发执行。这里的 `computations` 是已注册计算的 Token 数组，与创建 Runtime 时传入的整个计算注册表不同。
+
+下面用独立的显示缓冲区模拟外部状态，展示参与者如何持有和更新宿主状态。先定义计数来源和生成显示文本的计算，后续示例沿用这些变量：
+
+```ts
+import {
+  createRuntime,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  defineRuntimeCommitParticipant,
+  defineRuntimeComputation,
+  defineRuntimeSource,
+} from '@retikz/runtime';
+
+const count = defineRuntimeSource<number, number, number, never>({
+  key: 'example/count',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: Object.is,
+  },
+});
+const label = defineRuntimeComputation<string>({
+  id: { owner: count.key, key: 'label' },
+  sources: [count],
+  run: view => ({ kind: 'full', result: `Count: ${view.snapshot(count).value}` }),
+});
+```
+
+显示缓冲区保存在 Runtime 外部。`prepare` 只计算新内容并记住旧内容，真正的替换留给 `commit`：
+
+```ts
+type DisplayRead = Readonly<{ text: string }>;
+let display: DisplayRead = Object.freeze({ text: '' });
+let rejectNextCommit = false;
+
+const displayParticipant = defineRuntimeCommitParticipant<DisplayRead>({
+  key: 'example/display',
+  computations: [label],
+  revisionPolicy: 'affected',
+  prepare: candidate => {
+    const previous = display;
+    const next = Object.freeze({ text: candidate.result(label).value });
+    return {
+      commit: () => {
+        display = next;
+        if (rejectNextCommit) {
+          rejectNextCommit = false;
+          throw new Error('Display commit failed');
+        }
+      },
+      rollback: () => {
+        display = previous;
+      },
+      dispose: () => {},
+    };
+  },
+  read: () => display,
+  dispose: () => {
+    display = Object.freeze({ text: '' });
+  },
+});
+```
+
+`prepare` 返回的三个函数由 Runtime 调用，只负责本次事务：
+
+- `commit()`：所有参与者准备成功后，应用本次修改；这里将 `display` 替换为 `next`。
+- `rollback()`：本次准备、提交或读取失败时，恢复旧状态；这里将 `display` 恢复为 `previous`。即使自己的 `commit` 尚未执行，也必须能安全回滚。
+- `dispose()`：成功发布或失败回滚后，清理本次事务的临时资源，不撤销已发布的结果。本例没有需要显式释放的临时资源，因此函数体为空。
+
+示例故意在替换显示后抛错，用来验证 `rollback` 能恢复旧内容。外层参与者的 `dispose` 则在参与者结束时清空显示，负责长期资源的释放，与这里的事务清理不同。
+
+<SourceLinks
+  sources={[
+    { label: '参与者定义与 Token', path: 'packages/kernel/runtime/src/participant/define.ts' },
+    { label: '配置与待提交对象契约', path: 'packages/kernel/runtime/src/participant/types.ts' },
+  ]}
+/>
+
+## 注册与读取
+
+通过 `createRuntime` 的 `participants` 数组接入参与者。依赖必须已经注册；只读取 `label` 时声明 `computations: [label]` 即可，不必重复声明它依赖的计数来源。
+
+```ts
+const sources = createRuntimeSourceRegistry([count]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [label] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(count, 1)],
+  participants: [displayParticipant],
+});
+
+console.log(runtime.revision()); // 0
+console.log(runtime.participant(displayParticipant).text); // Count: 1
+
+runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(count, 2)],
+});
+console.log(runtime.revision()); // 1
+console.log(runtime.participant(displayParticipant).text); // Count: 2
+```
+
+初始化也会执行所有参与者的准备、提交和读取，所以创建成功时显示已经是 `Count: 1`。初始化失败不会返回实例，已接管的参与者会被清理。
+
+`runtime.participant(token)` 直接返回 `TRead`，不包装为 `{ revision, value }`。它读取最近一次成功发布的缓存，不会再次调用参与者的 `read`。本例返回冻结对象；如果返回可变宿主对象，后续修改会破坏旧读取视图，因此隔离责任在参与者。
+
+<SourceLinks
+  sources={[
+    { label: '参与者注册与读取 API', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+    { label: '初始化、读取缓存与发布', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 单次事务
+
+本次事务的计算完成后，Runtime 调用 `prepare(candidate, context)`。第一个参数 `candidate` 是**候选视图**，用于读取本次已准备好、但尚未发布的新状态；第二个参数 `context` 提供 Trace 和诊断能力。
+
+例如计数从 `1` 更新为 `2` 时，示例中的 `candidate.result(label).value` 是待发布的 `Count: 2`。下表列出 `candidate` 的方法和属性：
+
+| 成员                  | 读取内容                                     |
+| --------------------- | -------------------------------------------- |
+| `snapshot(source)`    | 来源的候选 `{ revision, value }`             |
+| `result(computation)` | 计算结果的候选公开视图 `{ revision, value }` |
+| `phase`               | 初始化为 `initial`，后续更新为 `update`      |
+| `candidateRevision`   | 本次成功后将发布的版本                       |
+| `baseRevision`        | 更新所基于的已发布版本；初始化时不存在       |
+
+`candidate` 只能读取参与者声明过的依赖，不提供 ChangeSet 或旧计算结果。旧宿主状态由参与者自行保留，如示例中的 `previous`。`context.trace` 用于执行观测，`context.diagnose` 用于报告诊断，具体用法留给错误与 Trace 篇。
+
+准备成功返回的 `RuntimePreparedCommit` 只对应这一次事务：
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 方法         | 职责                                                         |
+| ------------ | ------------------------------------------------------------ |
+| `commit()`   | 把准备好的状态应用到宿主；即使部分应用后抛错，也必须能够回滚 |
+| `rollback()` | 恢复提交前状态；尚未执行 `commit` 时也应能够安全调用         |
+| `dispose()`  | 释放这次事务的临时资源；成功和失败路径都会调用               |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimePreparedCommit = Readonly<{
+  commit: () => void;
+  rollback: () => void;
+  dispose: () => void;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+`prepare` 应完成校验和暂存，避免提前改变可见宿主状态。如果它在返回待提交对象前失败，Runtime 没有该对象可用于回滚或清理，准备函数必须自行清理已经分配的临时资源。
+
+所有回调同步执行。回调中使用传入的候选视图，不重入调用 Runtime 的更新或读取方法；`revision()` 可以查询当时已发布的版本，但新版本此时尚未发布。
+
+<SourceLinks
+  sources={[{ label: '候选视图与单次提交契约', path: 'packages/kernel/runtime/src/participant/types.ts' }]}
+/>
+
+## 失败与回滚
+
+多个参与者按 `key` 升序执行，先全部 `prepare`，再全部 `commit`，最后全部 `read`，不是每个参与者各自完成一整套流程。它们之间没有可声明的依赖图，不能通过候选视图读取另一个参与者。
+
+下面以 A、B 为例：两者已准备，A 提交成功，B 提交失败。Runtime 会按逆序回滚已返回待提交对象的参与者，包括失败的 B：
+
+<ComponentPreview files="participant-rollback" size="xs" hideCode type="flow" />
+
+若准备阶段就失败，之前已准备但尚未提交的对象也会收到 `rollback`。若全部提交成功后某个 `read` 失败，同样回滚这一批；外部修改成功还不足以发布新版本。
+
+在前面的显示示例中模拟失败：
+
+```ts
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '@retikz/runtime';
+
+rejectNextCommit = true;
+try {
+  runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(count, 3)],
+  });
+} catch (error) {
+  if (!(error instanceof RetikzRuntimeError) || error.code !== RetikzRuntimeErrorCode.ParticipantCommitFailed) {
+    throw error;
+  }
+  console.log(runtime.revision()); // 1
+  console.log(runtime.snapshot(count).value); // 2
+  console.log(runtime.result(label).value); // Count: 2
+  console.log(display.text); // Count: 2
+  console.log(runtime.participant(displayParticipant).text); // Count: 2
+}
+```
+
+回滚成功时，旧版本、旧结果与旧读取视图保持可用，可以修复失败原因后再次提交。回滚后再逆序清理本次待提交对象和候选资源；成功发布后的临时资源清理失败则只记录诊断，不撤销已发布状态。
+
+<ComponentAlert
+  type="warn"
+  title="回滚失败"
+  description="如果更新中的 rollback 也失败，外部状态可能已经不一致。Runtime 会拒绝后续更新和状态读取，只保留版本查询、诊断读取和释放入口；调用方应处理宿主资源并创建新实例，不能直接重试更新。"
+/>
+
+这是同步、可回滚的提交协议，不是外部系统的隔离保证。直接观察 DOM 等宿主状态的代码可能看见提交过程中的中间修改；网络发送等不可撤销操作也不能仅靠提供一个空回滚方法获得事务保证。
+
+<SourceLinks
+  sources={[
+    { label: '批量提交、逆序回滚与失败状态', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: '参与者错误分类', path: 'packages/kernel/runtime/src/error/constants.ts' },
+  ]}
+/>
+
+## 依赖与触发
+
+`revisionPolicy` 决定一次更新是否选择该参与者：
+
+| 策略         | 选择条件                                   | 适用场景                     |
+| ------------ | ------------------------------------------ | ---------------------------- |
+| `affected`   | 声明的来源实际变化，或声明的计算产生新结果 | 依赖更新时应用显示内容       |
+| `continuous` | 每次来源实际变化、将推进版本的事务         | 外部状态需要跟随每个发布版本 |
+
+两种策略在初始化时都会执行。空更新或来源全部相等时，事务直接 `bailout`，`continuous` 也不会运行。
+
+如果参与者只依赖某项计算，而该计算返回 `bailout`，`affected` 不会仅因其上游来源变化而执行；直接声明该来源则会响应来源变化。没有被选中的参与者保留旧读取缓存，即使 Runtime 的全局版本已经推进，也不会重新调用它的 `read`。
+
+<SourceLinks
+  sources={[{ label: '参与者选择与事务 bailout', path: 'packages/kernel/runtime/src/runtime/runtime.ts' }]}
+/>
+
+## 所有权与释放
+
+Source 和 Computation 的定义可以复用，参与者 Token 则绑定着宿主资源，由 Runtime 独占接管。接管后不能再传给另一个实例，成功释放后也不能复用；新的实例需要新的参与者及可用的宿主资源。接管后的初始化失败也会消费该 Token。
+
+两个 `dispose` 的边界是：单次 PreparedCommit 清理临时资源，参与者清理长期资源。成功提交后，单次对象不能释放仍由宿主持有的新状态。最终结束通过 Runtime 统一处理：
+
+```ts
+runtime.dispose();
+console.log(display.text); // ''
+```
+
+最终释放按参与者 `key` 的逆序执行，再释放计算结果与来源。参与者释放失败会记录诊断；Runtime 在释放计算和来源后会再尝试一次，仍失败的参与者可通过再次调用 `runtime.dispose()` 重试，已成功释放的对象不会重复释放。首次开始释放后就不能恢复更新，后续重试也不再有存活的计算或来源资源可依赖。
+
+初始化失败时没有实例可供调用方重试释放，参与者应尽量保证清理可靠；需要额外恢复的外部资源仍由集成代码负责处理。
+
+<SourceLinks
+  sources={[
+    { label: '独占接管与 Token 消费', path: 'packages/kernel/runtime/src/participant/define.ts' },
+    { label: '最终清理与失败重试', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 完整流程
+
+候选计算完成后，Runtime 对本次选中的参与者按阶段执行。图中的每一步都是这一批参与者全部完成后，才进入下一步：
+
+<ComponentPreview files="participant-flow" size="xs" hideCode type="flow" />
+
+发布之后才通知计算的 `observeCommit`、清理被替换的旧来源与结果，最后清理单次提交对象。Runtime 查询到的是成功发布的状态；宿主恢复能力来自参与者实现的回滚逻辑。
+
+<SourceLinks
+  sources={[
+    { label: 'Runtime 提交调度', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: 'Retained renderer 参与者', path: 'packages/kernel/render/src/runtime/participant.ts' },
+  ]}
+/>
+
+## Vanilla 应用
+
+Vanilla 的保留式 DOM 接入将 **Core 计算、处理结果发布和 renderer 提交**接在同一个 Runtime 上。以更新 SVG 为例，Core 先产生候选编译结果，两个参与者各自准备要提交的状态：
+
+| 对象            | 提交职责                                                                        | 公开读取内容                                  |
+| --------------- | ------------------------------------------------------------------------------- | --------------------------------------------- |
+| 处理结果参与者  | 从 Core 输出生成新的 `ProcessingResult`，成功提交时替换旧结果，回滚时恢复旧结果 | Vanilla 对外提供的处理结果                    |
+| renderer 参与者 | 将 Scene 与渲染配置应用到 SVG 或 Canvas，失败时按协议恢复                       | 已提交的 `frame` 和可选动画控制器 `animation` |
+
+Vanilla 在 `createRuntime` 的 `participants` 中注册这两个参与者。更新时先调用 `runtime.update(...)`；成功返回后，才通过 `runtime.participant(resultParticipant)` 取得新的处理结果并更新对外缓存。渲染侧的读取封装也最终调用 `runtime.participant(rendererParticipant)`，取得 renderer 已提交的公开视图。
+
+下图展示一次成功更新：Core 候选结果在事务内交给两个参与者；统一发布后，Vanilla 和渲染封装分别通过 `runtime.participant(...)` 读取缓存，供调用方处理结果、宿主读取帧或控制动画。两个参与者之间不互相读取。
+
+<ComponentPreview files="participant-vanilla" size="sm" hideCode type="flow" />
+
+假设 Core 已算出新 Scene，但 renderer 在提交中失败：Runtime 尝试回滚本次已准备的参与者。回滚成功后，旧处理结果、旧画面和读取缓存保持一致，Vanilla 不会把这次候选处理结果当作成功结果返回。若回滚也失败，则按前文的失败状态处理，不能继续假定画面与数据一致。
+
+这里 `runtime.result(coreComputation)` 读取编译计算结果，参与者读取入口则暴露外部提交层的结果；两者都受成功发布约束，但返回内容与所有者不同。宿主也能自行保存已提交状态，不过统一读取入口复用了 Runtime 的发布缓存，无需每个消费方再维护成功与回滚时的切换逻辑。
+
+renderer 接入使用 `@retikz/render` 的 `createRetainedRenderParticipant`，它以 `continuous` 跟随发布版本。普通 Vanilla 用户使用其封装好的接口即可，通常不需要直接操作 Runtime 的参与者 Token。
+
+<SourceLinks
+  sources={[
+    {
+      label: '处理结果参与者、注册与成功后读取',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+    },
+    { label: 'Vanilla DOM 接入 renderer 参与者', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
+    { label: '渲染提交与公开读取封装', path: 'packages/kernel/render/src/runtime/participant.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime · 事务发布',
+      description: '来源、计算与版本如何一起发布',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    { title: 'Computation · 计算', description: '候选结果与提交后通知', url: '/kernel/packages/runtime/computation' },
+  ]}
+/>

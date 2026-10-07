@@ -8,10 +8,10 @@ const computation: RuntimeComputationId = { owner: 'owner', key: 'computation' }
 
 const diagnostics: ReadonlyArray<RuntimeDiagnostic> = [
   {
-    code: RuntimeDiagnosticCode.ChangeSetFallback,
-    phase: 'change-set',
+    code: RuntimeDiagnosticCode.SourceDisposeFailed,
+    phase: 'retire',
     severity: 'warning',
-    message: 'fallback',
+    message: 'dispose failed',
   },
 ];
 

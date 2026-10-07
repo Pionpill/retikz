@@ -1,5 +1,6 @@
 export * from './data';
 export * from './format';
+export * from './order';
 export * from './regression';
 export * from './statistics';
 export {

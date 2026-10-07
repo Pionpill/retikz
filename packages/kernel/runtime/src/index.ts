@@ -2,15 +2,15 @@ export type {
   RuntimeCandidateLookup,
   RuntimeCandidateView,
   RuntimeCommitEvent,
-  RuntimeComputationArtifactDefinitionInput,
   RuntimeComputationContext,
   RuntimeComputationDefinition,
   RuntimeComputationDefinitionInput,
+  RuntimeComputationResultDefinitionInput,
   RuntimeComputationToken,
   RuntimeComputationTraceReporter,
   RuntimeComputationWarningInput,
-  RuntimeRunResult,
-  RuntimeUpdateResult,
+  RuntimeRunOutcome,
+  RuntimeUpdateOutcome,
 } from './computation';
 export { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from './computation';
 export { defineRuntimeComputation } from './computation';
@@ -18,12 +18,7 @@ export * from './diagnostic';
 export * from './error';
 export * from './identity';
 export * from './participant';
-export type {
-  RuntimeComputationRegistry,
-  RuntimeComputationRegistryInput,
-  RuntimeSourceRegistry,
-  RuntimeSourceRegistryInput,
-} from './registry';
+export type { RuntimeComputationRegistry, RuntimeComputationRegistryInput, RuntimeSourceRegistry } from './registry';
 export { createRuntimeComputationRegistry, createRuntimeSourceRegistry } from './registry';
 export * from './runtime';
 export type {

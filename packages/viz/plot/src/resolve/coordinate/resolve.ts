@@ -1,5 +1,11 @@
-import type { ExternalRow } from '@retikz/data';
-import { createDataView, DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
+import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
+import {
+  createDataView,
+  FieldOrderMode,
+  resolveFieldPath,
+  resolveCategoryDomain,
+  assertFieldOrders,
+} from '@retikz/data';
 
 import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
@@ -22,12 +28,10 @@ import type {
   IRPlotScaleOperation,
 } from '../../schemas';
 import { IntervalBoundKind, isBuiltinMark, PathClosureKind, PlotGuide, PlotMark, PlotScale } from '../../schemas';
-import type { CategoryOrder } from '../scale';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   derivePositionScale,
-  orderedCategoryDomain,
   resolvePositionScale,
   resolvePositionScaleContinuity,
   resolveScaleDefinition,
@@ -271,6 +275,8 @@ export const resolveCoordinateFrame = (
   const rootDataView = createDataView(rows, model);
   const markDataViews =
     context.markDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
+  assertFieldOrders(model, context.fieldOrderRegistry);
+  for (const entry of markDataViews) assertFieldOrders(entry.dataView.model, context.fieldOrderRegistry);
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
     context.roleMarkDataViews?.[role] ?? markDataViews;
   const coordinateOperation = context.coordinate ?? node.coordinate;
@@ -391,15 +397,15 @@ export const resolveCoordinateFrame = (
   };
 
   /**
-   * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
-   * @description 收集该 role 各绑定字段的非默认 order（!=='appearance'）：非分类字段配 order → throw；
+   * 解析某 role 的有效 order 并检查绑定字段之间的顺序冲突
+   * @description 收集该 role 各绑定字段的非默认 order（!=='appearance'）：
    *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）
    */
   const resolveRoleOrder = (
     role: DimensionRole,
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
-  ): CategoryOrder | undefined => {
-    const found: Array<CategoryOrder> = [];
+  ): NonNullable<IRDataFieldDefinition['order']> | undefined => {
+    const found: Array<NonNullable<IRDataFieldDefinition['order']>> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
@@ -411,13 +417,6 @@ export const resolveCoordinateFrame = (
       const definition = dataView.model.find(field => field.name === channel.field);
       const order = definition?.order;
       if (order === undefined || order === FieldOrderMode.Appearance) continue;
-
-      const type = definition?.type;
-      if (type !== undefined && type !== DataFieldType.Categorical) {
-        throw new RetikzPlotError(
-          `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,
-        );
-      }
 
       found.push(order);
     }
@@ -444,7 +443,7 @@ export const resolveCoordinateFrame = (
   ): IRPlotScaleOperation => {
     const types = roleFieldTypes(role, pick);
 
-    // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
+    // 解析该 role 有效 order 并检查顺序冲突，无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
     let def: IRPlotScaleOperation;
     if (scaleName !== undefined) {
@@ -474,7 +473,7 @@ export const resolveCoordinateFrame = (
       (def.type === PlotScale.Band || def.type === PlotScale.Point) &&
       def.domain === undefined
     ) {
-      return { ...def, domain: orderedCategoryDomain(values, order) };
+      return { ...def, domain: resolveCategoryDomain(values, order, context.fieldOrderRegistry) };
     }
 
     return def;

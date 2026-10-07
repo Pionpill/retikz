@@ -547,9 +547,9 @@ export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 
 公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
 
-<DocTabs defaultValue="radius-0">
+<DocTabs defaultValue="radius">
 
-<DocTab value="radius-0" label="属性 · 半径">
+<DocTab value="radius" label="属性 · 半径">
 
 <ApiTable>
 
@@ -562,7 +562,7 @@ export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 
 </DocTab>
 
-<DocTab value="diameter-1" label="属性 · 直径">
+<DocTab value="diameter" label="属性 · 直径">
 
 <ApiTable>
 
@@ -575,7 +575,7 @@ export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 
 </DocTab>
 
-<DocTab value="from-2" label="属性 · 直径端点">
+<DocTab value="from" label="属性 · 直径端点">
 
 <ApiTable>
 
@@ -588,7 +588,7 @@ export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 
 </DocTab>
 
-<DocTab value="corner1-3" label="属性 · 包围框角点">
+<DocTab value="corner1" label="属性 · 包围框角点">
 
 <ApiTable>
 
@@ -604,7 +604,7 @@ export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 
 </DocTab>
 
-<DocTab value="box-4" label="属性 · 包围框">
+<DocTab value="box" label="属性 · 包围框">
 
 <ApiTable>
 
@@ -664,9 +664,9 @@ export type IRCircle = ShapeSource<ZodInput<typeof CircleSchema>>;
 
 公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
 
-<DocTabs defaultValue="radius-0">
+<DocTabs defaultValue="radius">
 
-<DocTab value="radius-0" label="属性 · 轴半径">
+<DocTab value="radius" label="属性 · 轴半径">
 
 <ApiTable>
 
@@ -679,7 +679,7 @@ export type IRCircle = ShapeSource<ZodInput<typeof CircleSchema>>;
 
 </DocTab>
 
-<DocTab value="diameterX-1" label="属性 · 轴直径">
+<DocTab value="diameterX" label="属性 · 轴直径">
 
 <ApiTable>
 
@@ -693,7 +693,7 @@ export type IRCircle = ShapeSource<ZodInput<typeof CircleSchema>>;
 
 </DocTab>
 
-<DocTab value="corner1-2" label="属性 · 包围框角点">
+<DocTab value="corner1" label="属性 · 包围框角点">
 
 <ApiTable>
 
@@ -708,7 +708,7 @@ export type IRCircle = ShapeSource<ZodInput<typeof CircleSchema>>;
 
 </DocTab>
 
-<DocTab value="box-3" label="属性 · 包围框">
+<DocTab value="box" label="属性 · 包围框">
 
 <ApiTable>
 
@@ -737,8 +737,8 @@ export type IREllipse = ShapeSource<ZodInput<typeof EllipseSchema>>;
 <p>
   <ApiSourceLink
     label={'CircleDefinition'}
-    path={'packages/library/standard/src/shape/circle/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/circle/composite.ts'}
+    startLine={10}
   >
     Circle 的 Core composite 注册项
   </ApiSourceLink>
@@ -779,7 +779,11 @@ export const CircleDefinition = defineComposite({
 #### CircleProvider
 
 <p>
-  <ApiSourceLink label={'CircleProvider'} path={'packages/library/standard/src/shape/circle/provider.ts'} startLine={6}>
+  <ApiSourceLink
+    label={'CircleProvider'}
+    path={'packages/library/standard/src/shape/circle/composite.ts'}
+    startLine={25}
+  >
     Circle 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -798,8 +802,8 @@ export const CircleProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'EllipseDefinition'}
-    path={'packages/library/standard/src/shape/ellipse/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={10}
   >
     Ellipse 的 Core composite 注册项
   </ApiSourceLink>
@@ -842,8 +846,8 @@ export const EllipseDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'EllipseProvider'}
-    path={'packages/library/standard/src/shape/ellipse/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={25}
   >
     Ellipse 的按需依赖贡献
   </ApiSourceLink>
@@ -861,7 +865,7 @@ export const EllipseProvider: CoreDependencyProvider = Object.freeze({
 #### createCircle
 
 <p>
-  <ApiSourceLink label={'createCircle'} path={'packages/library/standard/src/shape/circle/factory.ts'} startLine={5}>
+  <ApiSourceLink label={'createCircle'} path={'packages/library/standard/src/shape/circle/composite.ts'} startLine={18}>
     创建保留几何意图的 Circle Source
   </ApiSourceLink>
 </p>
@@ -894,7 +898,11 @@ export declare const createCircle: (input: ShapeProperties<IRCircle>) => IRCircl
 #### createEllipse
 
 <p>
-  <ApiSourceLink label={'createEllipse'} path={'packages/library/standard/src/shape/ellipse/factory.ts'} startLine={5}>
+  <ApiSourceLink
+    label={'createEllipse'}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={18}
+  >
     创建保留几何意图的 Ellipse Source
   </ApiSourceLink>
 </p>

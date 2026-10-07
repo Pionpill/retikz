@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeChangeSet, RuntimeSourceDefinition, RuntimeSourceToken } from '../../src';
+import type { RuntimeSourceDefinition, RuntimeSourceToken } from '../../src';
 import {
   createRuntimeIdentity,
   createRuntimeSourceRegistry,
@@ -36,7 +36,7 @@ const defineFixtureSource = (
   });
 
 const createExecutor = (...definitions: Array<RuntimeSourceToken>) =>
-  createRuntimeSourceExecutor(createRuntimeSourceRegistry({ custom: definitions }));
+  createRuntimeSourceExecutor(createRuntimeSourceRegistry(definitions));
 
 describe('runtime owner executor', () => {
   it('prepare 隔离 mutable input/read alias 并建立 identity lookup', () => {
@@ -174,16 +174,14 @@ describe('runtime owner executor', () => {
     );
   });
 
-  it('retire 后禁止再次 compare 或 validate disposed value', () => {
+  it('retire 后禁止再次 compare disposed value', () => {
     const definition = defineFixtureSource();
     const executor = createExecutor(definition);
     const retired = executor.prepare(definition, { values: [1] }).value;
     const active = executor.prepare(definition, { values: [2] }).value;
     executor.retire(definition, retired);
-    const changeSet = { baseRevision: 0, changes: ['change'] } as unknown as RuntimeChangeSet<string>;
 
     expect(() => executor.compare(definition, retired, active)).toThrow(/already retired/i);
-    expect(() => executor.validateChangeSet(definition, active, retired, changeSet)).toThrow(/already retired/i);
   });
 
   it('Definition author 可隔离 nested Map/Set alias，persistent immutable value 可安全复用引用', () => {
@@ -222,75 +220,6 @@ describe('runtime owner executor', () => {
 
     expect(aliasPrepared.read).toEqual({ entries: [['a', 1]], values: ['x'] });
     expect(executor.prepare(persistent, persistentValue).value.read).toBe(persistentValue);
-  });
-
-  it('validator throw 会 retire candidate，并把 dispose secondary 附到 validation error', () => {
-    const validationCause = new Error('validation failed');
-    const disposeCause = new Error('dispose failed');
-    const definition = defineRuntimeSource<number, number, number, string>({
-      key: 'validator',
-      value: {
-        capture: value => value,
-        read: value => value,
-        equals: (left, right) => left === right,
-        dispose: () => {
-          throw disposeCause;
-        },
-      },
-      validateChangeSet: () => {
-        throw validationCause;
-      },
-    });
-    const executor = createExecutor(definition);
-    const previous = executor.prepare(definition, 1).value;
-    const candidate = executor.prepare(definition, 2).value;
-    const changeSet = { baseRevision: 0, changes: ['change'] } as unknown as RuntimeChangeSet<string>;
-
-    try {
-      executor.validateChangeSet(definition, previous, candidate, changeSet);
-      throw new Error('expected validation failure');
-    } catch (error) {
-      expect(error).toMatchObject({
-        code: RetikzRuntimeErrorCode.ChangeSetValidationFailed,
-        phase: 'validate-change-set',
-        cause: validationCause,
-      });
-      expect((error as RetikzRuntimeError).diagnostics).toEqual([
-        expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, cause: disposeCause }),
-      ]);
-    }
-  });
-
-  it('validator 成功返回 valid，缺省 validator 允许 Computation 继续校验', () => {
-    const validating = defineRuntimeSource<number, number, number, string>({
-      key: 'validating',
-      value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
-      validateChangeSet: (previous, next, changeSet) =>
-        previous === 1 && next === 2 && changeSet.changes[0] === 'change' ? 'valid' : 'fallback',
-    });
-    const withoutValidator = defineRuntimeSource<number, number, number, string>({
-      key: 'without-validator',
-      value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
-    });
-    const executor = createExecutor(validating, withoutValidator);
-    const changeSet = { baseRevision: 0, changes: ['change'] } as unknown as RuntimeChangeSet<string>;
-
-    expect(
-      executor.validateChangeSet(
-        validating,
-        executor.prepare(validating, 1).value,
-        executor.prepare(validating, 2).value,
-        changeSet,
-      ).value,
-    ).toBe('valid');
-    expect(
-      executor.validateChangeSet(
-        withoutValidator,
-        executor.prepare(withoutValidator, 1).value,
-        executor.prepare(withoutValidator, 2).value,
-        changeSet,
-      ).value,
-    ).toBe('valid');
   });
 
   it('retire 隔离 dispose throw 并拒绝重复 retire', () => {

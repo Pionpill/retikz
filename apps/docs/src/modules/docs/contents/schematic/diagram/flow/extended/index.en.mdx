@@ -93,6 +93,8 @@ For avoidance, normally try automatic bend, quadratic and cubic routing in that 
 
 `FlowLayout` is a container without a visible shell. `kind="linear"` places direct children in declaration order along one direction; `kind="grid"` aligns them in explicit rows and columns. A Layout draws no border or title and cannot be a Relation endpoint.
 
+Linear reserves main-axis space for relation labels in addition to the configured `gap`. Labels sharing the same side of a child share that reservation: the largest extent is used rather than summing every relation. Authored margins remain separate. Routing handles actual label placement and conflicts.
+
 | Property            | Values                                                        | Purpose                                                              |
 | ------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `kind`              | `"linear"`, `"grid"`                                          | Selects one-dimensional placement or row and column alignment        |

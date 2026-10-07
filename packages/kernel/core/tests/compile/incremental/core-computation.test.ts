@@ -12,7 +12,6 @@ import {
   PerformanceTracePhase,
   PerformanceTraceUnit,
   RetikzRuntimeErrorCode,
-  RuntimeDiagnosticCode,
   RuntimeComputationKind,
   RuntimeComputationPhase,
 } from '@retikz/runtime';
@@ -84,8 +83,8 @@ describe('Core Runtime Computation initial full run', () => {
       { measureText: () => ({ width: measuredWidth, height: 10 }) },
       { invalidationSources: [invalidationOwner] },
     );
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, invalidationOwner] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, invalidationOwner]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -94,7 +93,7 @@ describe('Core Runtime Computation initial full run', () => {
         createRuntimeSourceInput(invalidationOwner, 0),
       ],
     });
-    const initialWidth = session.artifact(program).value.output.result.scene.layout.width;
+    const initialWidth = session.result(program).value.output.result.scene.layout.width;
 
     measuredWidth = 100;
     session.update({
@@ -102,7 +101,7 @@ describe('Core Runtime Computation initial full run', () => {
       sources: [createRuntimeSourceUpdate(invalidationOwner, 1)],
     });
 
-    expect(session.artifact(program).value.output.result.scene.layout.width).toBeGreaterThan(initialWidth);
+    expect(session.result(program).value.output.result.scene.layout.width).toBeGreaterThan(initialWidth);
   });
 
   it('外部失效 owner 与 Core IR 同 revision 变化时强制 full fallback', () => {
@@ -141,8 +140,8 @@ describe('Core Runtime Computation initial full run', () => {
     };
     const measureText = () => ({ width: measuredWidth, height: 10 });
     const program = createCoreComputation({ measureText }, { invalidationSources: [invalidationOwner] });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, invalidationOwner] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, invalidationOwner]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -158,54 +157,10 @@ describe('Core Runtime Computation initial full run', () => {
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next), createRuntimeSourceUpdate(invalidationOwner, 1)],
     });
 
-    const artifact = session.artifact(program).value;
+    const artifact = session.result(program).value;
 
     expect(artifact.output.result.scene).toEqual(compileToScene(next, { measureText }).scene);
     expect(artifact.patch?.operations).toEqual([expect.objectContaining({ kind: 'replaceScene' })]);
-  });
-
-  it('forced full 不掩盖 invalid change hint，Core replace 与 trace 仍报告 fallback', () => {
-    const records: Array<PerformanceTraceRecord> = [];
-    const invalidationOwner = defineRuntimeSource<number, number, number, number>({
-      key: 'fixture:core-invalid-hint',
-      value: {
-        capture: value => value,
-        read: value => value,
-        equals: Object.is,
-      },
-      validateChangeSet: () => 'fallback',
-    });
-    const program = createCoreComputation({}, { invalidationSources: [invalidationOwner] });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, invalidationOwner] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
-    const session = createRuntime({
-      sources,
-      computations,
-      updateStrategy: 'full',
-      initialSnapshots: [
-        createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('A')),
-        createRuntimeSourceInput(invalidationOwner, 0),
-      ],
-      trace: record => records.push(record),
-    });
-    records.length = 0;
-    const baseRevision = session.revision();
-
-    const result = session.update({
-      baseRevision,
-      sources: [createRuntimeSourceUpdate(invalidationOwner, 1, createRuntimeChangeSet(baseRevision, [1]))],
-    });
-    const artifact = session.artifact(program).value;
-
-    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(result.diagnostics).toEqual([expect.objectContaining({ code: RuntimeDiagnosticCode.ChangeSetFallback })]);
-    expect(artifact.patch?.operations).toEqual([
-      expect.objectContaining({ kind: 'replaceScene', snapshot: artifact.snapshot }),
-    ]);
-    expect(records.filter(record => record.owner === CORE_SOURCE_KEY).map(record => record.outcome)).toEqual([
-      PerformanceTraceOutcome.Fallback,
-      PerformanceTraceOutcome.Fallback,
-    ]);
   });
 
   it('只修改 Core IR 时不会把未变化的外部失效 owner 误判为 invalidation', () => {
@@ -242,8 +197,8 @@ describe('Core Runtime Computation initial full run', () => {
       children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
     const program = createCoreComputation({}, { invalidationSources: [invalidationOwner] });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, invalidationOwner] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition, invalidationOwner]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -259,7 +214,7 @@ describe('Core Runtime Computation initial full run', () => {
     });
 
     expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
-    expect(session.artifact(program).value.patch?.operations).toEqual([expect.objectContaining({ kind: 'update' })]);
+    expect(session.result(program).value.patch?.operations).toEqual([expect.objectContaining({ kind: 'update' })]);
   });
 
   it('保留固定 Computation id，并与 compileToScene 的完整结果等价', () => {
@@ -272,15 +227,15 @@ describe('Core Runtime Computation initial full run', () => {
       ],
     };
     const program = createCoreComputation({ padding: 16, onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
     });
 
-    const artifact = session.artifact(program);
+    const artifact = session.result(program);
     const expected = compileToScene(ir, { padding: 16, onWarn: () => {} });
 
     expect(program.id).toEqual(CORE_COMPUTATION_ID);
@@ -325,14 +280,14 @@ describe('Core Runtime Computation initial full run', () => {
       ],
     };
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
     });
-    const snapshot = session.artifact(program).value.snapshot;
+    const snapshot = session.result(program).value.snapshot;
     const topologyIdentityKeys = snapshot.topology.map(node => identityKey(node.identity));
     const topologyByPath = new Map(snapshot.topology.map(node => [node.primitivePath.join('.'), node]));
     const topologyPaths = snapshot.topology.map(node => node.primitivePath.join('.')).sort();
@@ -395,15 +350,15 @@ describe('Core Runtime Computation initial full run', () => {
       throw new Error('mutated Definition must not be observed');
     };
 
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
     });
 
-    expect(session.artifact(program).value.output.result).toEqual(expected);
+    expect(session.result(program).value.output.result).toEqual(expected);
   });
 
   it('隔离带自定义 prototype 的 Definition record 后续修改', () => {
@@ -432,15 +387,15 @@ describe('Core Runtime Computation initial full run', () => {
       throw new Error('mutated prototype Definition must not be observed');
     };
 
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
     });
 
-    expect(session.artifact(program).value.output.result).toEqual(expected);
+    expect(session.result(program).value.output.result).toEqual(expected);
   });
 
   it('在 initial commit 后按 canonical 顺序派发 warning，并保存等价 diagnostics', () => {
@@ -453,16 +408,16 @@ describe('Core Runtime Computation initial full run', () => {
     const expected = compileToScene(ir, { onWarn: warning => expectedWarnings.push(warning) });
     const observedWarnings: Array<CompileWarning> = [];
     const program = createCoreComputation({ onWarn: warning => observedWarnings.push(warning) });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, ir)],
     });
 
-    expect(session.artifact(program).value.output.result).toEqual(expected);
-    expect(session.artifact(program).value.output.diagnostics).toEqual(expectedWarnings);
+    expect(session.result(program).value.output.result).toEqual(expected);
+    expect(session.result(program).value.output.diagnostics).toEqual(expectedWarnings);
     expect(observedWarnings).toEqual(expectedWarnings);
   });
 
@@ -478,8 +433,8 @@ describe('Core Runtime Computation initial full run', () => {
     };
     const observedWarnings: Array<CompileWarning> = [];
     const program = createCoreComputation({ onWarn: warning => observedWarnings.push(warning) });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
 
     expect(() =>
       createRuntime({
@@ -502,8 +457,8 @@ describe('Core Runtime Computation initial full run', () => {
       ],
     };
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     createRuntime({
       sources,
       computations,
@@ -567,21 +522,21 @@ describe('Core Runtime Computation observed output', () => {
       { composites: [observedComposite], onWarn: () => {} },
       { observers: [observer] },
     );
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sourceWithLabel('A'))],
     });
-    const before = session.artifact(program).value;
+    const before = session.result(program).value;
     const baseRevision = session.revision();
 
     const update = session.update({
       baseRevision,
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, sourceWithLabel('B'))],
     });
-    const after = session.artifact(program).value;
+    const after = session.result(program).value;
 
     expect(update.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(after.output.observerOutputs).toEqual([{ key: 'program-observer', value: ['B'] }]);
@@ -610,14 +565,14 @@ describe('Core Runtime Computation observed output', () => {
       { composites: [observedComposite], onWarn: () => {} },
       { observers: [failingObserver] },
     );
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sourceWithLabel('A'))],
     });
-    const before = session.artifact(program).value;
+    const before = session.result(program).value;
     const baseRevision = session.revision();
     shouldFail = true;
 
@@ -633,13 +588,13 @@ describe('Core Runtime Computation observed output', () => {
       }),
     );
     expect(session.revision()).toBe(baseRevision);
-    expect(session.artifact(program).value).toBe(before);
+    expect(session.result(program).value).toBe(before);
   });
 
   it('keeps the existing incremental path when observers are empty', () => {
     const program = createCoreComputation({ onWarn: () => {} }, { observers: [] });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const initial = sceneWithText('A');
     const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
     const session = createRuntime({
@@ -654,7 +609,7 @@ describe('Core Runtime Computation observed output', () => {
     });
 
     expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
-    expect(session.artifact(program).value.output.observerOutputs).toEqual([]);
+    expect(session.result(program).value.output.observerOutputs).toEqual([]);
   });
 });
 
@@ -662,8 +617,8 @@ describe('Core Runtime Computation full fallback update', () => {
   it('unique id 前插与 reorder 后保持 owner 和 primitive identity，并发布独占 replaceScene Patch', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const initial = sceneWithText('A');
     initial.children.push({ type: 'node', id: 'node-b', position: [80, 0], text: 'B' });
     const session = createRuntime({
@@ -672,7 +627,7 @@ describe('Core Runtime Computation full fallback update', () => {
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
       trace: record => records.push(record),
     });
-    const before = session.artifact(program).value.snapshot.topology;
+    const before = session.result(program).value.snapshot.topology;
     records.length = 0;
 
     const next: IRScene = {
@@ -688,7 +643,7 @@ describe('Core Runtime Computation full fallback update', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
-    const after = session.artifact(program).value;
+    const after = session.result(program).value;
     const stableIdentityKeys = (topology: typeof before, publicId: string): Array<string> =>
       topology
         .filter(node => node.semanticOwner.path.at(-1) === publicId)
@@ -728,8 +683,8 @@ describe('Core Runtime Computation full fallback update', () => {
 
   it('anonymous 与 duplicate id 只获得 candidate-local owner identity', () => {
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const source: IRScene = {
       version: 1,
       type: 'scene',
@@ -744,7 +699,7 @@ describe('Core Runtime Computation full fallback update', () => {
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source)],
     });
-    const ownersAtRevision0 = session.artifact(program).value.snapshot.topology.map(node => node.semanticOwner);
+    const ownersAtRevision0 = session.result(program).value.snapshot.topology.map(node => node.semanticOwner);
 
     expect(ownersAtRevision0.every(identity => identity.path.includes('candidate'))).toBe(true);
     expect(ownersAtRevision0.some(identity => identity.path.join('/') === 'root/node/duplicate')).toBe(false);
@@ -752,8 +707,8 @@ describe('Core Runtime Computation full fallback update', () => {
 
   it('接受与前后 Snapshot 一致的 update hint，且缺少 hint 时不误报 mismatch', () => {
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -785,8 +740,8 @@ describe('Core Runtime Computation full fallback update', () => {
 
   it('hint 指向错误 identity 或漏掉真实变化时只提交一条 mismatch diagnostic', () => {
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const initial: IRScene = {
       version: 1,
       type: 'scene',
@@ -840,8 +795,8 @@ describe('Core Runtime Computation full fallback update', () => {
 
   it('实体同时重排与更新时不把 update hints 误判为完整 change set', () => {
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const initial: IRScene = {
       version: 1,
       type: 'scene',
@@ -909,8 +864,8 @@ describe('Core Runtime Computation full fallback update', () => {
     '仅修改 Scene 根 $name 时拒绝空 change hint',
     ({ rootChange }) => {
       const program = createCoreComputation({ onWarn: () => {} });
-      const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-      const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+      const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+      const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
       const initial = sceneWithText('A');
       const session = createRuntime({
         sources,
@@ -936,8 +891,8 @@ describe('Core Runtime Computation full fallback update', () => {
 
   it('Scene 根与 child 同时变化时拒绝只覆盖 child 的 update hint', () => {
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const initial = sceneWithText('A');
     const session = createRuntime({
       sources,
@@ -970,14 +925,14 @@ describe('Core Runtime Computation full fallback update', () => {
 
   it('mismatch 后 full fallback 失败时不发布 diagnostic 或替换 committed artifact', () => {
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, sceneWithText('A'))],
     });
-    const before = session.artifact(program);
+    const before = session.result(program);
     const baseRevision = session.revision();
     const broken: IRScene = {
       version: 1,
@@ -1003,7 +958,7 @@ describe('Core Runtime Computation full fallback update', () => {
       }),
     ).toThrow();
     expect(session.revision()).toBe(baseRevision);
-    expect(session.artifact(program).value).toBe(before.value);
+    expect(session.result(program).value).toBe(before.value);
     expect(session.diagnostics()).toEqual([]);
   });
 });
@@ -1020,8 +975,8 @@ describe('Core Runtime Computation incremental style update', () => {
       children: [{ type: 'node', id: 'a', position: [0, 0], style: { fill: 'blue', stroke: 'green', strokeWidth: 4 } }],
     };
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -1032,7 +987,7 @@ describe('Core Runtime Computation incremental style update', () => {
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
 
-    expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.result(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
   });
 
   it('只重编单个 stable root Node，并发布原子 primitive update Patch', () => {
@@ -1071,15 +1026,15 @@ describe('Core Runtime Computation incremental style update', () => {
       ],
     };
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
       initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
       trace: record => records.push(record),
     });
-    const before = session.artifact(program).value.snapshot;
+    const before = session.result(program).value.snapshot;
     const baseRevision = session.revision();
     records.length = 0;
 
@@ -1087,7 +1042,7 @@ describe('Core Runtime Computation incremental style update', () => {
       baseRevision,
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
-    const after = session.artifact(program).value;
+    const after = session.result(program).value;
 
     expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
     expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
@@ -1152,8 +1107,8 @@ describe('Core Runtime Computation incremental style update', () => {
       children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -1167,7 +1122,7 @@ describe('Core Runtime Computation incremental style update', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
-    const after = session.artifact(program).value;
+    const after = session.result(program).value;
 
     expect(result.outcome).toBe(RuntimeComputationKind.Full);
     expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
@@ -1216,8 +1171,8 @@ describe('Core Runtime Computation incremental style update', () => {
       children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
     const program = createCoreComputation({ onWarn: () => {} });
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -1230,7 +1185,7 @@ describe('Core Runtime Computation incremental style update', () => {
     });
 
     expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+    expect(session.result(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
 
     const changedReferenceNode: IRScene = {
       ...next,
@@ -1242,7 +1197,7 @@ describe('Core Runtime Computation incremental style update', () => {
     });
 
     expect(changedReferenceResult.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.artifact(program).value.output.result).toEqual(
+    expect(session.result(program).value.output.result).toEqual(
       compileToScene(changedReferenceNode, { onWarn: () => {} }),
     );
   });
@@ -1277,8 +1232,8 @@ describe('Core Runtime Computation incremental style update', () => {
     const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
     const options = { shapes: [fillSensitiveShape], onWarn: () => {} } as const;
     const program = createCoreComputation(options);
-    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
     const session = createRuntime({
       sources,
       computations,
@@ -1291,14 +1246,14 @@ describe('Core Runtime Computation incremental style update', () => {
     });
 
     expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
-    expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, options));
+    expect(session.result(program).value.output.result).toEqual(compileToScene(next, options));
   });
 });
 
 it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', () => {
   const program = createCoreComputation({});
-  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
-  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+  const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
   const initial: IRScene = { version: 1, type: 'scene', children: [] };
   const session = createRuntime({
     sources,
@@ -1336,6 +1291,6 @@ it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', (
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, ir)],
     });
 
-    expect(session.artifact(program).value.output.result.scene).toEqual(compileToScene(ir).scene);
+    expect(session.result(program).value.output.result.scene).toEqual(compileToScene(ir).scene);
   }
 });
