@@ -20,15 +20,14 @@ import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject, string } from 'zod';
 
+import type { LegendCompileArtifact } from '../../src/presentation/legend/composite';
+import { LegendDefinition, createLegend } from '../../src/presentation/legend/composite';
 import {
   LegendContentKind,
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
 } from '../../src/presentation/legend/constants';
-import type { LegendCompileArtifact } from '../../src/presentation/legend/definition';
-import { LegendDefinition } from '../../src/presentation/legend/definition';
-import { createLegend } from '../../src/presentation/legend/factory';
 import type { LegendItemsArtifact } from '../../src/presentation/legend/types';
 import type { LegendInput } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
