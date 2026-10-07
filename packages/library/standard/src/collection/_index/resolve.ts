@@ -1,8 +1,10 @@
-import type { input } from 'zod';
+import type { output, input } from 'zod';
 
-import type { CollectionIndexStyleSchema } from '../schema';
-import { CollectionIndexOptionsSchema } from '../schema';
-import type { CanonicalCollectionIndex } from './types';
+import type { CollectionIndexStyleSchema } from './schema';
+import { CollectionIndexOptionsSchema } from './schema';
+
+/** 已补全编号及位置默认值的索引，false 表示关闭 */
+export type CanonicalCollectionIndex = false | output<typeof CollectionIndexOptionsSchema>;
 
 /** 合并集合文字样式与索引覆盖，再补全自动编号和位置默认值 */
 export const resolveCollectionIndex = (
