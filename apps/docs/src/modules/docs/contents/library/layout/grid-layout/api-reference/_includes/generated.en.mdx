@@ -212,7 +212,7 @@ export declare const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<I
 
 ### createGridLayout / GridLayoutInput
 
-- `createGridLayout`: <ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/factory.ts"} startLine={8}>Create persistent GridLayout input preserving omitted fields and shorthand</ApiSourceLink>
+- `createGridLayout`: <ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={30}>Create persistent GridLayout input preserving omitted fields and shorthand</ApiSourceLink>
 - `GridLayoutInput`: <ApiSourceLink label={"GridLayoutInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>Authoring input accepted by the GridLayout factory</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -262,11 +262,11 @@ export type GridLayoutInput = Omit<IRGridLayout, 'namespace' | 'type'>;
 
 | Member      | Type                                                                                                                                                                 | Default | Description                                              |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
-| `columns`   | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —       | Resolved columns in physical start order.                |
+| `columns`   | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "minmax" \| "content-minimum" \| "content-natural"; implicit: boolean; }>` | —       | Resolved columns in physical start order.                |
 | `container` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["container"]>`                                                                                                       | —       | Resolved container geometry.                             |
 | `items`     | `ZodInfer<typeof GridLayoutArtifactSchema.shape["items"]>`                                                                                                           | —       | Items in authored source order.                          |
 | `kind`      | `"grid"`                                                                                                                                                             | —       | Discriminator for a GridLayout artifact payload.         |
-| `rows`      | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —       | Resolved rows in physical start order.                   |
+| `rows`      | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "minmax" \| "content-minimum" \| "content-natural"; implicit: boolean; }>` | —       | Resolved rows in physical start order.                   |
 | `spacing`   | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>`                                       | —       | Resolved fixed gaps and distributed free-space segments. |
 
 </ApiTable>
@@ -610,7 +610,7 @@ export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'chil
 | `implicit`   | `boolean`                                                                     | —       | Whether the track was materialized beyond the authored explicit track list. |
 | `index`      | `number`                                                                      | —       | Contiguous zero-based resolved track index.                                 |
 | `size`       | `number`                                                                      | —       | Finite non-negative resolved track size.                                    |
-| `sourceKind` | `"fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"` | —       | Authored or implicit outer sizing source for the track.                     |
+| `sourceKind` | `"fixed" \| "fraction" \| "minmax" \| "content-minimum" \| "content-natural"` | —       | Authored or implicit outer sizing source for the track.                     |
 | `start`      | `number`                                                                      | —       | Finite physical track start in container allocation coordinates.            |
 
 </ApiTable>
@@ -669,7 +669,7 @@ export type GridAutoFlow = ValueOf<typeof GridAutoFlow>;
 <p>
   <ApiSourceLink
     label={'GridLayoutDefinition'}
-    path={'packages/library/layout/src/composites/grid-layout/definition.ts'}
+    path={'packages/library/layout/src/composites/grid-layout/composite.ts'}
     startLine={10}
   >
     Official layout-aware composite definition for GridLayout
@@ -696,8 +696,8 @@ export const GridLayoutDefinition: LayoutCompositeDefinition<
 <p>
   <ApiSourceLink
     label={'GridLayoutProvider'}
-    path={'packages/library/layout/src/composites/grid-layout/provider.ts'}
-    startLine={8}
+    path={'packages/library/layout/src/composites/grid-layout/composite.ts'}
+    startLine={39}
   >
     Composite dependency provider for GridLayout
   </ApiSourceLink>

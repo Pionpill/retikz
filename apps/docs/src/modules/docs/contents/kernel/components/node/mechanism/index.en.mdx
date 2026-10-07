@@ -26,8 +26,8 @@ Fonts, wrapping, and padding change the required content area. `minimumSize` can
     {
       label: 'Lay out text, spacing, and the shape',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 137,
-      endLine: 305,
+      startLine: 145,
+      endLine: 328,
     },
   ]}
 />
@@ -45,8 +45,8 @@ The label has its own text box. The compiler uses its rotated box and `distance`
     {
       label: 'Label visual box and attachment offset',
       path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
-      startLine: 160,
-      endLine: 191,
+      startLine: 147,
+      endLine: 179,
     },
   ]}
 />
@@ -56,8 +56,8 @@ The label has its own text box. The compiler uses its rotated box and `distance`
     {
       label: 'Collect node and label extents separately',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 740,
-      endLine: 759,
+      startLine: 836,
+      endLine: 857,
     },
   ]}
 />
@@ -85,26 +85,26 @@ A regular connection surface first derives its rectangle from `fit`, then applie
     {
       label: 'Tight envelopes, fallback, and cache',
       path: 'packages/kernel/core/src/compile/node/boundary.ts',
-      startLine: 48,
-      endLine: 93,
+      startLine: 51,
+      endLine: 100,
     },
     {
       label: 'Built-in boundary fit and gap',
       path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
-      startLine: 10,
-      endLine: 101,
+      startLine: 9,
+      endLine: 113,
     },
     {
       label: 'Route visual contours, boundaries, and anchors',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 89,
-      endLine: 160,
+      startLine: 93,
+      endLine: 209,
     },
     {
       label: 'Apply margin by anchor category',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 9,
-      endLine: 51,
+      startLine: 15,
+      endLine: 74,
     },
   ]}
 />
@@ -133,19 +133,19 @@ When traversal reaches a Node, compilation completes text and shape layout and p
       label: 'Namespace stack and entry structure',
       path: 'packages/kernel/core/src/compile/namespace.ts',
       startLine: 5,
-      endLine: 80,
+      endLine: 83,
     },
     {
       label: 'NodeLayout geometry fields',
       path: 'packages/kernel/core/src/compile/node/types.ts',
-      startLine: 73,
-      endLine: 110,
+      startLine: 74,
+      endLine: 119,
     },
     {
       label: 'Layout projection and id registration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 704,
-      endLine: 730,
+      startLine: 794,
+      endLine: 825,
     },
   ]}
 />
@@ -165,24 +165,24 @@ For example, placing `Node b` before `Node a` while making `b.position` refer to
 
 <SourceLinks
   sources={[
-    { label: 'Inside-out lookup', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 240, endLine: 252 },
+    { label: 'Inside-out lookup', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 260, endLine: 273 },
     {
       label: 'Project layout into a position reference view',
       path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
-      startLine: 66,
-      endLine: 91,
+      startLine: 67,
+      endLine: 96,
     },
     {
       label: 'Enqueue paths and reserve drawing order',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 803,
-      endLine: 837,
+      startLine: 902,
+      endLine: 936,
     },
     {
       label: 'Resolve paths and fill reserved slots',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 621,
-      endLine: 669,
+      startLine: 704,
+      endLine: 757,
     },
   ]}
 />
@@ -204,26 +204,26 @@ Registering a duplicate id in the same frame replaces the old entry and emits a 
     {
       label: 'Registration, replacement, and entry states',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 183,
-      endLine: 237,
+      startLine: 195,
+      endLine: 257,
     },
     {
       label: 'Register the Scope placeholder in its parent',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1045,
-      endLine: 1063,
+      startLine: 1160,
+      endLine: 1179,
     },
     {
       label: 'Push a frame only for localNamespace',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1135,
-      endLine: 1142,
+      startLine: 1254,
+      endLine: 1261,
     },
     {
       label: 'Publish bounds, consume paths, then pop',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 1266,
-      endLine: 1300,
+      startLine: 1395,
+      endLine: 1433,
     },
   ]}
 />
@@ -261,8 +261,8 @@ This also explains both boundaries: `<Text>` only works inside `<Node>`, and it 
     {
       label: 'Node child-line normalization',
       path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 120,
-      endLine: 192,
+      startLine: 129,
+      endLine: 218,
     },
   ]}
 />
@@ -282,20 +282,20 @@ A per-line `font` still participates in that line's width measurement; wrapping,
     {
       label: 'Resolve after style cascading',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 680,
-      endLine: 695,
+      startLine: 769,
+      endLine: 785,
     },
     {
       label: 'Node contrast resolution',
       path: 'packages/kernel/core/src/resolve/node/text-color.ts',
-      startLine: 55,
-      endLine: 111,
+      startLine: 60,
+      endLine: 123,
     },
     {
       label: 'Node body text layout',
       path: 'packages/kernel/core/src/compile/node/content/layout.ts',
-      startLine: 34,
-      endLine: 129,
+      startLine: 42,
+      endLine: 145,
     },
   ]}
 />
@@ -317,14 +317,14 @@ The compiler resolves `position`, applies the current Scope transform to obtain 
     {
       label: 'Coordinate position resolution and registration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 766,
-      endLine: 800,
+      startLine: 865,
+      endLine: 900,
     },
     {
       label: 'position reference resolution',
       path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 42,
-      endLine: 81,
+      startLine: 44,
+      endLine: 90,
     },
   ]}
 />
@@ -348,19 +348,19 @@ For `hub` with no Scope transform, the input position is `[40, 20]`. Its registe
       label: 'zero-size geometry record construction',
       path: 'packages/kernel/core/src/compile/node/synthetic.ts',
       startLine: 64,
-      endLine: 121,
+      endLine: 122,
     },
     {
       label: 'named anchor resolution',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 102,
-      endLine: 160,
+      startLine: 145,
+      endLine: 209,
     },
     {
       label: 'zero-size side-fraction rejection',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
       startLine: 28,
-      endLine: 51,
+      endLine: 53,
     },
   ]}
 />
@@ -381,13 +381,13 @@ The default `ellipse` multiplies each half-axis by √2. During compilation, `ci
       label: 'Resolve the circle preset to an equal ellipse',
       path: 'packages/kernel/core/src/resolve/node/shape.ts',
       startLine: 35,
-      endLine: 106,
+      endLine: 110,
     },
     {
       label: 'Ellipse circumscription, anchors, and primitive emission',
       path: 'packages/kernel/core/src/providers/shape/ellipse.ts',
       startLine: 9,
-      endLine: 45,
+      endLine: 46,
     },
   ]}
 />
@@ -408,19 +408,19 @@ The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retain
       label: 'Default Node shape and corner-radius resolution',
       path: 'packages/kernel/core/src/resolve/node/shape.ts',
       startLine: 35,
-      endLine: 106,
+      endLine: 110,
     },
     {
       label: 'Text and padding to shape-boundary layout',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 81,
-      endLine: 127,
+      startLine: 189,
+      endLine: 253,
     },
     {
       label: 'Rectangle outline, anchors, and boundary intersection',
       path: 'packages/kernel/core/src/providers/shape/rectangle.ts',
-      startLine: 41,
-      endLine: 69,
+      startLine: 42,
+      endLine: 71,
     },
   ]}
 />
@@ -443,19 +443,19 @@ Text and `padding` first form the inner box. The polygon provider then derives t
       label: 'diamond preset normalization',
       path: 'packages/kernel/core/src/resolve/node/shape.ts',
       startLine: 35,
-      endLine: 106,
+      endLine: 110,
     },
     {
       label: 'Circumradius calculation for the inner box',
       path: 'packages/kernel/core/src/providers/shape/polygon.ts',
-      startLine: 89,
-      endLine: 114,
+      startLine: 95,
+      endLine: 121,
     },
     {
       label: 'Contour output, connection hit, and directional anchors',
       path: 'packages/kernel/core/src/providers/shape/polygon.ts',
-      startLine: 126,
-      endLine: 183,
+      startLine: 134,
+      endLine: 196,
     },
   ]}
 />
@@ -485,7 +485,7 @@ The execution order is:
       label: 'Resolve shape presets, providers, and params',
       path: 'packages/kernel/core/src/resolve/node/shape.ts',
       startLine: 35,
-      endLine: 106,
+      endLine: 110,
     },
   ]}
 />

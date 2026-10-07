@@ -389,7 +389,7 @@ export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<Input
 | ----------------- | ---------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
 | `animations?`     | `IRScopeProps['animations']`                                                             | —            | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `cellIdMode?`     | `"explicit" \| "index"`                                                                  | `"explicit"` | 显式单格 id，或由 Matrix id 与零基行列坐标生成 id                                              |
+| `cellIdMode?`     | `"index" \| "explicit"`                                                                  | `"explicit"` | 显式单格 id，或由 Matrix id 与零基行列坐标生成 id                                              |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
 | `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | 后代默认值通道及继承屏障                                                                       |
 | `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
@@ -560,8 +560,8 @@ export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
 <p>
   <ApiSourceLink
     label={'MatrixDefinition'}
-    path={'packages/library/standard/src/collection/matrix/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={10}
   >
     Standard Matrix 的布局感知 Definition
   </ApiSourceLink>
@@ -581,8 +581,8 @@ export const MatrixDefinition: LayoutCompositeDefinition<IRMatrix, 'standard', '
 <p>
   <ApiSourceLink
     label={'MatrixProvider'}
-    path={'packages/library/standard/src/collection/matrix/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={25}
   >
     Matrix 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>
@@ -597,8 +597,8 @@ export declare const MatrixProvider: CoreDependencyProvider;
 <p>
   <ApiSourceLink
     label={'createMatrix'}
-    path={'packages/library/standard/src/collection/matrix/factory.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/collection/matrix/composite.ts'}
+    startLine={22}
   >
     保留稀疏 Source 的类型化工厂
   </ApiSourceLink>

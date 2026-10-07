@@ -234,7 +234,7 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<
 
 ### createFlexLayout / FlexLayoutInput
 
-- `createFlexLayout`：<ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/factory.ts"} startLine={8}>创建保留省略字段与简写的 FlexLayout 持久化输入</ApiSourceLink>
+- `createFlexLayout`：<ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>创建保留省略字段与简写的 FlexLayout 持久化输入</ApiSourceLink>
 - `FlexLayoutInput`：<ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>创建 FlexLayout 时允许省略固定 discriminator 与 可选字段的输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -582,7 +582,7 @@ export type LayoutSizeInput = ZodInput<typeof LayoutSizeSchema>;
 <p>
   <ApiSourceLink
     label={'FlexLayoutDefinition'}
-    path={'packages/library/layout/src/composites/flex-layout/definition.ts'}
+    path={'packages/library/layout/src/composites/flex-layout/composite.ts'}
     startLine={10}
   >
     Layout FlexLayout 的官方 Core layout-aware composite definition
@@ -632,8 +632,8 @@ export type FlexLayoutDirection = ValueOf<typeof FlexLayoutDirection>;
 <p>
   <ApiSourceLink
     label={'FlexLayoutProvider'}
-    path={'packages/library/layout/src/composites/flex-layout/provider.ts'}
-    startLine={8}
+    path={'packages/library/layout/src/composites/flex-layout/composite.ts'}
+    startLine={39}
   >
     FlexLayout 的 Core Composite dependency provider
   </ApiSourceLink>

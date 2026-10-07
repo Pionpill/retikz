@@ -553,8 +553,8 @@ export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries'
 <p>
   <ApiSourceLink
     label={'MapDefinition'}
-    path={'packages/library/standard/src/collection/map/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/map/composite.ts'}
+    startLine={10}
   >
     Standard Map 的布局感知 Definition
   </ApiSourceLink>
@@ -572,7 +572,11 @@ export const MapDefinition: LayoutCompositeDefinition<IRMap, 'standard', 'map'> 
 #### MapProvider
 
 <p>
-  <ApiSourceLink label={'MapProvider'} path={'packages/library/standard/src/collection/map/provider.ts'} startLine={7}>
+  <ApiSourceLink
+    label={'MapProvider'}
+    path={'packages/library/standard/src/collection/map/composite.ts'}
+    startLine={21}
+  >
     Map 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>
 </p>
@@ -584,7 +588,7 @@ export declare const MapProvider: CoreDependencyProvider;
 #### createMap
 
 <p>
-  <ApiSourceLink label={'createMap'} path={'packages/library/standard/src/collection/map/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createMap'} path={'packages/library/standard/src/collection/map/composite.ts'} startLine={18}>
     保留稀疏 Source 的类型化工厂
   </ApiSourceLink>
 </p>

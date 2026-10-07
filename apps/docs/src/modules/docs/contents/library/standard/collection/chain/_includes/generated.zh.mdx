@@ -532,8 +532,8 @@ export type IRChain = Omit<input<typeof ChainSchema>, Exclude<keyof IRScopeProps
 <p>
   <ApiSourceLink
     label={'ChainDefinition'}
-    path={'packages/library/standard/src/collection/chain/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={10}
   >
     Standard Chain 的布局感知 Definition
   </ApiSourceLink>
@@ -553,8 +553,8 @@ export const ChainDefinition: LayoutCompositeDefinition<IRChain, 'standard', 'ch
 <p>
   <ApiSourceLink
     label={'ChainProvider'}
-    path={'packages/library/standard/src/collection/chain/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={21}
   >
     Chain 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>
@@ -567,7 +567,11 @@ export declare const ChainProvider: CoreDependencyProvider;
 #### createChain
 
 <p>
-  <ApiSourceLink label={'createChain'} path={'packages/library/standard/src/collection/chain/factory.ts'} startLine={4}>
+  <ApiSourceLink
+    label={'createChain'}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={18}
+  >
     保留稀疏 Source 的链工厂
   </ApiSourceLink>
 </p>

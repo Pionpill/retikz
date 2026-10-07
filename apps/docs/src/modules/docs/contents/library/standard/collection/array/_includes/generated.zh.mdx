@@ -4,7 +4,7 @@
 
 #### Array / ArrayProps
 
-- `Array`：<ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={77}>Standard Array 呈现组件</ApiSourceLink>
+- `Array`：<ApiSourceLink label={"Array"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={73}>Standard Array 呈现组件</ApiSourceLink>
 - `ArrayProps`：<ApiSourceLink label={"ArrayProps"} path={"packages/library/standard-react/src/collection/array/Array.tsx"} startLine={17}>Array 的 React authoring 属性</ApiSourceLink>
 
 data、items、skeleton 与 ArrayItem children 内容入口互斥；全部省略时生成空数组。dataExpand 仅用于 data 入口
@@ -212,7 +212,7 @@ export type ArrayItemProps = CellMarkerProps<IRArrayCell['layout']>;
 
 #### array / InputArray
 
-- `array`：<ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={81}>创建 Array embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
+- `array`：<ApiSourceLink label={"array"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={77}>创建 Array embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
 - `InputArray`：<ApiSourceLink label={"InputArray"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={14}>Array 的 Vanilla authoring 输入</ApiSourceLink>
 
 items、data 与 skeleton 三选一；dataExpand 仅用于 data 入口。其余字段沿用 IRArray，namespace 与 type 由 adapter 补齐
@@ -617,8 +617,8 @@ export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 <p>
   <ApiSourceLink
     label={'ArrayDefinition'}
-    path={'packages/library/standard/src/collection/array/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/array/composite.ts'}
+    startLine={10}
   >
     Standard Array 的布局感知 Definition
   </ApiSourceLink>
@@ -638,8 +638,8 @@ export const ArrayDefinition: LayoutCompositeDefinition<IRArray, 'standard', 'ar
 <p>
   <ApiSourceLink
     label={'ArrayProvider'}
-    path={'packages/library/standard/src/collection/array/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/array/composite.ts'}
+    startLine={25}
   >
     Array 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>
@@ -652,7 +652,11 @@ export declare const ArrayProvider: CoreDependencyProvider;
 #### createArray
 
 <p>
-  <ApiSourceLink label={'createArray'} path={'packages/library/standard/src/collection/array/factory.ts'} startLine={8}>
+  <ApiSourceLink
+    label={'createArray'}
+    path={'packages/library/standard/src/collection/array/composite.ts'}
+    startLine={22}
+  >
     保留稀疏 Source 的类型化工厂
   </ApiSourceLink>
 </p>

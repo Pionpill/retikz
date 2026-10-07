@@ -532,8 +532,8 @@ export type IRChain = Omit<input<typeof ChainSchema>, Exclude<keyof IRScopeProps
 <p>
   <ApiSourceLink
     label={'ChainDefinition'}
-    path={'packages/library/standard/src/collection/chain/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={10}
   >
     Layout-aware Definition for Standard Chain
   </ApiSourceLink>
@@ -553,8 +553,8 @@ export const ChainDefinition: LayoutCompositeDefinition<IRChain, 'standard', 'ch
 <p>
   <ApiSourceLink
     label={'ChainProvider'}
-    path={'packages/library/standard/src/collection/chain/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={21}
   >
     On-demand dependencies of Chain and its cell lowering targets
   </ApiSourceLink>
@@ -567,7 +567,11 @@ export declare const ChainProvider: CoreDependencyProvider;
 #### createChain
 
 <p>
-  <ApiSourceLink label={'createChain'} path={'packages/library/standard/src/collection/chain/factory.ts'} startLine={4}>
+  <ApiSourceLink
+    label={'createChain'}
+    path={'packages/library/standard/src/collection/chain/composite.ts'}
+    startLine={18}
+  >
     Chain factory preserving sparse Source
   </ApiSourceLink>
 </p>

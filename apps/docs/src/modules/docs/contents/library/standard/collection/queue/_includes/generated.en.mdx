@@ -4,7 +4,7 @@
 
 #### Queue / QueueProps
 
-- `Queue`: <ApiSourceLink label={"Queue"} path={"packages/library/standard-react/src/collection/queue/Queue.tsx"} startLine={77}>Standard Queue presentation component</ApiSourceLink>
+- `Queue`: <ApiSourceLink label={"Queue"} path={"packages/library/standard-react/src/collection/queue/Queue.tsx"} startLine={73}>Standard Queue presentation component</ApiSourceLink>
 - `QueueProps`: <ApiSourceLink label={"QueueProps"} path={"packages/library/standard-react/src/collection/queue/Queue.tsx"} startLine={17}>React authoring props for Queue</ApiSourceLink>
 
 The data, items, skeleton, and QueueItem children inputs are mutually exclusive; omitting all inputs creates an empty queue. dataExpand applies only to data
@@ -213,7 +213,7 @@ export type QueueItemProps = CellMarkerProps<IRCell['layout']>;
 
 #### queue / InputQueue
 
-- `queue`: <ApiSourceLink label={"queue"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={84}>Create a Queue embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
+- `queue`: <ApiSourceLink label={"queue"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={80}>Create a Queue embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
 - `InputQueue`: <ApiSourceLink label={"InputQueue"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={14}>Vanilla authoring input for Queue</ApiSourceLink>
 
 Choose items, data, or skeleton; dataExpand applies only to data. Other fields follow IRQueue, and the adapter supplies namespace and type
@@ -475,8 +475,8 @@ export type IRQueue = Omit<
 <p>
   <ApiSourceLink
     label={'QueueDefinition'}
-    path={'packages/library/standard/src/collection/queue/definition.ts'}
-    startLine={9}
+    path={'packages/library/standard/src/collection/queue/composite.ts'}
+    startLine={10}
   >
     Layout-aware compilation definition for Queue
   </ApiSourceLink>
@@ -496,8 +496,8 @@ export const QueueDefinition: LayoutCompositeDefinition<IRQueue, 'standard', 'qu
 <p>
   <ApiSourceLink
     label={'QueueProvider'}
-    path={'packages/library/standard/src/collection/queue/provider.ts'}
-    startLine={7}
+    path={'packages/library/standard/src/collection/queue/composite.ts'}
+    startLine={21}
   >
     Queue and cell clipping dependencies
   </ApiSourceLink>
@@ -510,7 +510,11 @@ export declare const QueueProvider: CoreDependencyProvider;
 #### createQueue
 
 <p>
-  <ApiSourceLink label={'createQueue'} path={'packages/library/standard/src/collection/queue/factory.ts'} startLine={4}>
+  <ApiSourceLink
+    label={'createQueue'}
+    path={'packages/library/standard/src/collection/queue/composite.ts'}
+    startLine={18}
+  >
     Preserve sparse author fields and front-to-back order
   </ApiSourceLink>
 </p>

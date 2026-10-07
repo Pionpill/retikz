@@ -251,8 +251,8 @@ export type IRPolygon = ShapeSource<ZodInput<typeof PolygonSchema>>;
 <p>
   <ApiSourceLink
     label={'PolygonDefinition'}
-    path={'packages/library/standard/src/shape/polygon/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/polygon/composite.ts'}
+    startLine={10}
   >
     Polygon Core composite registration
   </ApiSourceLink>
@@ -295,8 +295,8 @@ export const PolygonDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'PolygonProvider'}
-    path={'packages/library/standard/src/shape/polygon/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/shape/polygon/composite.ts'}
+    startLine={25}
   >
     Polygon on-demand dependency contribution
   </ApiSourceLink>
@@ -314,7 +314,11 @@ export const PolygonProvider: CoreDependencyProvider = Object.freeze({
 #### createPolygon
 
 <p>
-  <ApiSourceLink label={'createPolygon'} path={'packages/library/standard/src/shape/polygon/factory.ts'} startLine={5}>
+  <ApiSourceLink
+    label={'createPolygon'}
+    path={'packages/library/standard/src/shape/polygon/composite.ts'}
+    startLine={18}
+  >
     Create a Polygon Source preserving geometry intent
   </ApiSourceLink>
 </p>

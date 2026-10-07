@@ -528,7 +528,7 @@ export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 #### ArcDefinition
 
 <p>
-  <ApiSourceLink label={'ArcDefinition'} path={'packages/library/standard/src/shape/arc/definition.ts'} startLine={8}>
+  <ApiSourceLink label={'ArcDefinition'} path={'packages/library/standard/src/shape/arc/composite.ts'} startLine={10}>
     Arc 的 Core composite 注册项
   </ApiSourceLink>
 </p>
@@ -568,7 +568,7 @@ export const ArcDefinition = defineComposite({
 #### ArcProvider
 
 <p>
-  <ApiSourceLink label={'ArcProvider'} path={'packages/library/standard/src/shape/arc/provider.ts'} startLine={6}>
+  <ApiSourceLink label={'ArcProvider'} path={'packages/library/standard/src/shape/arc/composite.ts'} startLine={25}>
     Arc 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -587,8 +587,8 @@ export const ArcProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'SectorDefinition'}
-    path={'packages/library/standard/src/shape/sector/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/sector/composite.ts'}
+    startLine={10}
   >
     Sector 的 Core composite 注册项
   </ApiSourceLink>
@@ -629,7 +629,11 @@ export const SectorDefinition = defineComposite({
 #### SectorProvider
 
 <p>
-  <ApiSourceLink label={'SectorProvider'} path={'packages/library/standard/src/shape/sector/provider.ts'} startLine={6}>
+  <ApiSourceLink
+    label={'SectorProvider'}
+    path={'packages/library/standard/src/shape/sector/composite.ts'}
+    startLine={25}
+  >
     Sector 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -646,7 +650,7 @@ export const SectorProvider: CoreDependencyProvider = Object.freeze({
 #### createArc
 
 <p>
-  <ApiSourceLink label={'createArc'} path={'packages/library/standard/src/shape/arc/factory.ts'} startLine={5}>
+  <ApiSourceLink label={'createArc'} path={'packages/library/standard/src/shape/arc/composite.ts'} startLine={18}>
     创建保留几何意图的 Arc Source
   </ApiSourceLink>
 </p>
@@ -679,7 +683,7 @@ export declare const createArc: (input: ShapeProperties<IRArc>) => IRArc;
 #### createSector
 
 <p>
-  <ApiSourceLink label={'createSector'} path={'packages/library/standard/src/shape/sector/factory.ts'} startLine={5}>
+  <ApiSourceLink label={'createSector'} path={'packages/library/standard/src/shape/sector/composite.ts'} startLine={18}>
     创建保留几何意图的 Sector Source
   </ApiSourceLink>
 </p>

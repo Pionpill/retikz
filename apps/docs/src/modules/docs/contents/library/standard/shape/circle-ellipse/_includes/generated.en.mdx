@@ -547,9 +547,9 @@ export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 
 Common members apply to every branch; a value must also satisfy at least one branch.
 
-<DocTabs defaultValue="radius-0">
+<DocTabs defaultValue="radius">
 
-<DocTab value="radius-0" label="Members · Radius">
+<DocTab value="radius" label="Members · Radius">
 
 <ApiTable>
 
@@ -562,7 +562,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="diameter-1" label="Members · Diameter">
+<DocTab value="diameter" label="Members · Diameter">
 
 <ApiTable>
 
@@ -575,7 +575,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="from-2" label="Members · Diameter endpoints">
+<DocTab value="from" label="Members · Diameter endpoints">
 
 <ApiTable>
 
@@ -588,7 +588,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="corner1-3" label="Members · Bounding corners">
+<DocTab value="corner1" label="Members · Bounding corners">
 
 <ApiTable>
 
@@ -604,7 +604,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="box-4" label="Members · Bounding box">
+<DocTab value="box" label="Members · Bounding box">
 
 <ApiTable>
 
@@ -664,9 +664,9 @@ export type IRCircle = ShapeSource<ZodInput<typeof CircleSchema>>;
 
 Common members apply to every branch; a value must also satisfy at least one branch.
 
-<DocTabs defaultValue="radius-0">
+<DocTabs defaultValue="radius">
 
-<DocTab value="radius-0" label="Members · Axis radii">
+<DocTab value="radius" label="Members · Axis radii">
 
 <ApiTable>
 
@@ -679,7 +679,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="diameterX-1" label="Members · Axis diameters">
+<DocTab value="diameterX" label="Members · Axis diameters">
 
 <ApiTable>
 
@@ -693,7 +693,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="corner1-2" label="Members · Bounding corners">
+<DocTab value="corner1" label="Members · Bounding corners">
 
 <ApiTable>
 
@@ -708,7 +708,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 
 </DocTab>
 
-<DocTab value="box-3" label="Members · Bounding box">
+<DocTab value="box" label="Members · Bounding box">
 
 <ApiTable>
 
@@ -737,8 +737,8 @@ export type IREllipse = ShapeSource<ZodInput<typeof EllipseSchema>>;
 <p>
   <ApiSourceLink
     label={'CircleDefinition'}
-    path={'packages/library/standard/src/shape/circle/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/circle/composite.ts'}
+    startLine={10}
   >
     Circle Core composite registration
   </ApiSourceLink>
@@ -779,7 +779,11 @@ export const CircleDefinition = defineComposite({
 #### CircleProvider
 
 <p>
-  <ApiSourceLink label={'CircleProvider'} path={'packages/library/standard/src/shape/circle/provider.ts'} startLine={6}>
+  <ApiSourceLink
+    label={'CircleProvider'}
+    path={'packages/library/standard/src/shape/circle/composite.ts'}
+    startLine={25}
+  >
     Circle on-demand dependency contribution
   </ApiSourceLink>
 </p>
@@ -798,8 +802,8 @@ export const CircleProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'EllipseDefinition'}
-    path={'packages/library/standard/src/shape/ellipse/definition.ts'}
-    startLine={8}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={10}
   >
     Ellipse Core composite registration
   </ApiSourceLink>
@@ -842,8 +846,8 @@ export const EllipseDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'EllipseProvider'}
-    path={'packages/library/standard/src/shape/ellipse/provider.ts'}
-    startLine={6}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={25}
   >
     Ellipse on-demand dependency contribution
   </ApiSourceLink>
@@ -861,7 +865,7 @@ export const EllipseProvider: CoreDependencyProvider = Object.freeze({
 #### createCircle
 
 <p>
-  <ApiSourceLink label={'createCircle'} path={'packages/library/standard/src/shape/circle/factory.ts'} startLine={5}>
+  <ApiSourceLink label={'createCircle'} path={'packages/library/standard/src/shape/circle/composite.ts'} startLine={18}>
     Create a Circle Source preserving geometry intent
   </ApiSourceLink>
 </p>
@@ -894,7 +898,11 @@ export declare const createCircle: (input: ShapeProperties<IRCircle>) => IRCircl
 #### createEllipse
 
 <p>
-  <ApiSourceLink label={'createEllipse'} path={'packages/library/standard/src/shape/ellipse/factory.ts'} startLine={5}>
+  <ApiSourceLink
+    label={'createEllipse'}
+    path={'packages/library/standard/src/shape/ellipse/composite.ts'}
+    startLine={18}
+  >
     Create a Ellipse Source preserving geometry intent
   </ApiSourceLink>
 </p>
