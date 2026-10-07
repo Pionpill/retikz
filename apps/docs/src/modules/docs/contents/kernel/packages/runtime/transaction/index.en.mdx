@@ -42,7 +42,7 @@ declare const createRuntime: (options: RuntimeOptions) => Runtime;
 | `initialSnapshots` | Yes      | Complete initial input for every registered Source, with no missing, duplicate or extra Sources                       |
 | `updateStrategy`   | No       | Defaults to `auto`, attempting incremental execution; `full` runs affected computations through the full path         |
 | `participants`     | No       | Include external state in the commit; none by default, covered in [Participant](/kernel/packages/runtime/participant) |
-| `trace`            | No       | Receive execution records, covered in the later Trace chapter                                                         |
+| `trace`            | No       | Receive execution records; see [Trace · Errors and diagnostics](/kernel/packages/runtime/trace)                       |
 
 </DocTab>
 <DocTab value="definition" label="Type definition">
@@ -74,9 +74,9 @@ This complete example defines coordinates and a distance computation, then creat
 
 ```ts
 import {
-  createRuntime,
+  createRuntime, // [!code ++]
   createRuntimeComputationRegistry,
-  createRuntimeSourceInput,
+  createRuntimeSourceInput, // [!code ++]
   createRuntimeSourceRegistry,
   defineRuntimeComputation,
   defineRuntimeSource,
@@ -100,18 +100,20 @@ const distance = defineRuntimeComputation<number, number, number, number>({
   run: view => {
     const [x, y] = view.snapshot(position).value;
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
-      throw new Error('Coordinates must be finite');
-    }
+      // [!code ++]
+      throw new Error('Coordinates must be finite'); // [!code ++]
+    } // [!code ++]
     return { kind: 'full', result: Math.hypot(x, y) };
   },
 });
 const sources = createRuntimeSourceRegistry([position]);
 const computations = createRuntimeComputationRegistry({ sources, computations: [distance] });
 const runtime = createRuntime({
-  sources,
-  computations,
-  initialSnapshots: [createRuntimeSourceInput(position, { x: '3', y: '4' })],
-});
+  // [!code ++]
+  sources, // [!code ++]
+  computations, // [!code ++]
+  initialSnapshots: [createRuntimeSourceInput(position, { x: '3', y: '4' })], // [!code ++]
+}); // [!code ++]
 
 console.log(runtime.revision()); // 0
 console.log(runtime.result(distance).value); // 5
@@ -220,19 +222,19 @@ Continue with these calls: first submit semantically equal data, then data that 
 ```ts
 const unchanged = runtime.update({
   baseRevision: runtime.revision(),
-  sources: [createRuntimeSourceUpdate(position, { x: '6.0', y: '8' })],
+  sources: [createRuntimeSourceUpdate(position, { x: '6.0', y: '8' })], // [!code ++]
 });
-console.log(unchanged.outcome, runtime.revision()); // 'bailout', 1
+console.log(unchanged.outcome, runtime.revision()); // 'bailout', 1 // [!code ++]
 
 try {
   runtime.update({
     baseRevision: runtime.revision(),
-    sources: [createRuntimeSourceUpdate(position, { x: 'invalid', y: '8' })],
+    sources: [createRuntimeSourceUpdate(position, { x: 'invalid', y: '8' })], // [!code ++]
   });
 } catch {
-  console.log(runtime.revision()); // 1
-  console.log(runtime.snapshot(position).value); // [6, 8]
-  console.log(runtime.result(distance).value); // 10
+  console.log(runtime.revision()); // 1 // [!code ++]
+  console.log(runtime.snapshot(position).value); // [6, 8] // [!code ++]
+  console.log(runtime.result(distance).value); // 10 // [!code ++]
 }
 ```
 
@@ -388,6 +390,11 @@ Subsequent complete documents are submitted through update commands. Runtime pub
 
 <LinkedSections
   items={[
+    {
+      title: 'Trace · Errors and diagnostics',
+      description: 'Catch failures, consume diagnostics and observe work',
+      url: '/kernel/packages/runtime/trace',
+    },
     {
       title: 'Participant',
       description: 'Prepare, commit and roll back external state',

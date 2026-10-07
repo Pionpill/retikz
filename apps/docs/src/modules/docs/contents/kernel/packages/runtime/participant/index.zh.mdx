@@ -118,23 +118,27 @@ const displayParticipant = defineRuntimeCommitParticipant<DisplayRead>({
   computations: [label],
   revisionPolicy: 'affected',
   prepare: candidate => {
-    const previous = display;
-    const next = Object.freeze({ text: candidate.result(label).value });
+    // [!code ++]
+    const previous = display; // [!code ++]
+    const next = Object.freeze({ text: candidate.result(label).value }); // [!code ++]
     return {
+      // [!code ++]
       commit: () => {
-        display = next;
+        // [!code ++]
+        display = next; // [!code ++]
         if (rejectNextCommit) {
           rejectNextCommit = false;
           throw new Error('Display commit failed');
         }
       },
       rollback: () => {
-        display = previous;
-      },
+        // [!code ++]
+        display = previous; // [!code ++]
+      }, // [!code ++]
       dispose: () => {},
     };
   },
-  read: () => display,
+  read: () => display, // [!code ++]
   dispose: () => {
     display = Object.freeze({ text: '' });
   },
@@ -167,18 +171,18 @@ const runtime = createRuntime({
   sources,
   computations,
   initialSnapshots: [createRuntimeSourceInput(count, 1)],
-  participants: [displayParticipant],
+  participants: [displayParticipant], // [!code ++]
 });
 
 console.log(runtime.revision()); // 0
-console.log(runtime.participant(displayParticipant).text); // Count: 1
+console.log(runtime.participant(displayParticipant).text); // Count: 1 // [!code ++]
 
 runtime.update({
   baseRevision: runtime.revision(),
   sources: [createRuntimeSourceUpdate(count, 2)],
 });
 console.log(runtime.revision()); // 1
-console.log(runtime.participant(displayParticipant).text); // Count: 2
+console.log(runtime.participant(displayParticipant).text); // Count: 2 // [!code ++]
 ```
 
 初始化也会执行所有参与者的准备、提交和读取，所以创建成功时显示已经是 `Count: 1`。初始化失败不会返回实例，已接管的参与者会被清理。
@@ -206,7 +210,7 @@ console.log(runtime.participant(displayParticipant).text); // Count: 2
 | `candidateRevision`   | 本次成功后将发布的版本                       |
 | `baseRevision`        | 更新所基于的已发布版本；初始化时不存在       |
 
-`candidate` 只能读取参与者声明过的依赖，不提供 ChangeSet 或旧计算结果。旧宿主状态由参与者自行保留，如示例中的 `previous`。`context.trace` 用于执行观测，`context.diagnose` 用于报告诊断，具体用法留给错误与 Trace 篇。
+`candidate` 只能读取参与者声明过的依赖，不提供 ChangeSet 或旧计算结果。旧宿主状态由参与者自行保留，如示例中的 `previous`。`context.trace` 用于执行观测，`context.diagnose` 用于报告诊断，具体用法见 [Trace · 错误诊断](/kernel/packages/runtime/trace)。
 
 准备成功返回的 `RuntimePreparedCommit` 只对应这一次事务：
 
@@ -256,7 +260,7 @@ type RuntimePreparedCommit = Readonly<{
 ```ts
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '@retikz/runtime';
 
-rejectNextCommit = true;
+rejectNextCommit = true; // [!code ++]
 try {
   runtime.update({
     baseRevision: runtime.revision(),
@@ -264,13 +268,14 @@ try {
   });
 } catch (error) {
   if (!(error instanceof RetikzRuntimeError) || error.code !== RetikzRuntimeErrorCode.ParticipantCommitFailed) {
+    // [!code ++]
     throw error;
   }
-  console.log(runtime.revision()); // 1
-  console.log(runtime.snapshot(count).value); // 2
-  console.log(runtime.result(label).value); // Count: 2
-  console.log(display.text); // Count: 2
-  console.log(runtime.participant(displayParticipant).text); // Count: 2
+  console.log(runtime.revision()); // 1 // [!code ++]
+  console.log(runtime.snapshot(count).value); // 2 // [!code ++]
+  console.log(runtime.result(label).value); // Count: 2 // [!code ++]
+  console.log(display.text); // Count: 2 // [!code ++]
+  console.log(runtime.participant(displayParticipant).text); // Count: 2 // [!code ++]
 }
 ```
 
@@ -381,6 +386,7 @@ renderer 接入使用 `@retikz/render` 的 `createRetainedRenderParticipant`，�
 
 <LinkedSections
   items={[
+    { title: 'Trace · 错误诊断', description: '捕获失败、消费诊断与观察工作量', url: '/kernel/packages/runtime/trace' },
     {
       title: 'Runtime · 事务发布',
       description: '来源、计算与版本如何一起发布',

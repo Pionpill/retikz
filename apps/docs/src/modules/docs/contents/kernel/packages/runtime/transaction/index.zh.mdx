@@ -42,7 +42,7 @@ declare const createRuntime: (options: RuntimeOptions) => Runtime;
 | `initialSnapshots` | 是   | 每个已注册来源的完整初始输入，不能缺失、重复或多出来源                                              |
 | `updateStrategy`   | 否   | 默认 `auto` 尝试增量执行；`full` 对受影响计算直接执行全量路径                                       |
 | `participants`     | 否   | 将外部状态纳入提交，默认无参与者；详见 [Participant · 参与者](/kernel/packages/runtime/participant) |
-| `trace`            | 否   | 接收执行观测记录；后续 Trace 篇展开                                                                 |
+| `trace`            | 否   | 接收执行观测记录；详见 [Trace · 错误诊断](/kernel/packages/runtime/trace)                           |
 
 </DocTab>
 <DocTab value="definition" label="类型定义">
@@ -74,9 +74,9 @@ declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
 
 ```ts
 import {
-  createRuntime,
+  createRuntime, // [!code ++]
   createRuntimeComputationRegistry,
-  createRuntimeSourceInput,
+  createRuntimeSourceInput, // [!code ++]
   createRuntimeSourceRegistry,
   defineRuntimeComputation,
   defineRuntimeSource,
@@ -100,18 +100,20 @@ const distance = defineRuntimeComputation<number, number, number, number>({
   run: view => {
     const [x, y] = view.snapshot(position).value;
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
-      throw new Error('Coordinates must be finite');
-    }
+      // [!code ++]
+      throw new Error('Coordinates must be finite'); // [!code ++]
+    } // [!code ++]
     return { kind: 'full', result: Math.hypot(x, y) };
   },
 });
 const sources = createRuntimeSourceRegistry([position]);
 const computations = createRuntimeComputationRegistry({ sources, computations: [distance] });
 const runtime = createRuntime({
-  sources,
-  computations,
-  initialSnapshots: [createRuntimeSourceInput(position, { x: '3', y: '4' })],
-});
+  // [!code ++]
+  sources, // [!code ++]
+  computations, // [!code ++]
+  initialSnapshots: [createRuntimeSourceInput(position, { x: '3', y: '4' })], // [!code ++]
+}); // [!code ++]
 
 console.log(runtime.revision()); // 0
 console.log(runtime.result(distance).value); // 5
@@ -220,19 +222,19 @@ Runtime 先检查版本、来源凭证和重复命令，再为每个提交的来
 ```ts
 const unchanged = runtime.update({
   baseRevision: runtime.revision(),
-  sources: [createRuntimeSourceUpdate(position, { x: '6.0', y: '8' })],
+  sources: [createRuntimeSourceUpdate(position, { x: '6.0', y: '8' })], // [!code ++]
 });
-console.log(unchanged.outcome, runtime.revision()); // 'bailout', 1
+console.log(unchanged.outcome, runtime.revision()); // 'bailout', 1 // [!code ++]
 
 try {
   runtime.update({
     baseRevision: runtime.revision(),
-    sources: [createRuntimeSourceUpdate(position, { x: 'invalid', y: '8' })],
+    sources: [createRuntimeSourceUpdate(position, { x: 'invalid', y: '8' })], // [!code ++]
   });
 } catch {
-  console.log(runtime.revision()); // 1
-  console.log(runtime.snapshot(position).value); // [6, 8]
-  console.log(runtime.result(distance).value); // 10
+  console.log(runtime.revision()); // 1 // [!code ++]
+  console.log(runtime.snapshot(position).value); // [6, 8] // [!code ++]
+  console.log(runtime.result(distance).value); // 10 // [!code ++]
 }
 ```
 
@@ -383,6 +385,7 @@ const scene = coreRuntime.result(compile).value.output.result.scene;
 
 <LinkedSections
   items={[
+    { title: 'Trace · 错误诊断', description: '捕获失败、消费诊断与观察工作量', url: '/kernel/packages/runtime/trace' },
     {
       title: 'Participant · 参与者',
       description: '外部状态的准备、提交与回滚',

@@ -43,7 +43,7 @@ declare const defineRuntimeComputation: <
 ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
 ```
 
-The configuration members cooperate as follows. Result conversion is expanded in “Computation results”; diagnostics and Trace receive only a brief introduction here.
+The configuration members cooperate as follows. Result conversion is expanded in “Computation results”; observation is covered in [Trace · Errors and diagnostics](/kernel/packages/runtime/trace).
 
 <DocTabs defaultValue="members">
 <DocTab value="members" label="Properties">
@@ -113,10 +113,11 @@ const position = defineRuntimeSource<Position, Position, Position, never>({
 });
 
 const distance = defineRuntimeComputation<number>({
-  id: { owner: position.key, key: 'distance' },
-  sources: [position],
-  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }),
-});
+  // [!code ++]
+  id: { owner: position.key, key: 'distance' }, // [!code ++]
+  sources: [position], // [!code ++]
+  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }), // [!code ++]
+}); // [!code ++]
 ```
 
 `run` returns `{ kind: 'full', result }`, a result derived from complete input. The returned `distance` is still a token, not that numeric value. Runtime associates it with the callbacks internally; subsequent operations must retain the same token object.
@@ -421,6 +422,11 @@ This maps to the three responsibilities above: `run` compiles a complete documen
 
 <LinkedSections
   items={[
+    {
+      title: 'Trace · Errors and diagnostics',
+      description: 'Catch failures, consume diagnostics and observe work',
+      url: '/kernel/packages/runtime/trace',
+    },
     {
       title: 'Runtime · Transaction publication',
       description: 'Instance creation, revisions and atomic publication',

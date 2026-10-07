@@ -118,23 +118,27 @@ const displayParticipant = defineRuntimeCommitParticipant<DisplayRead>({
   computations: [label],
   revisionPolicy: 'affected',
   prepare: candidate => {
-    const previous = display;
-    const next = Object.freeze({ text: candidate.result(label).value });
+    // [!code ++]
+    const previous = display; // [!code ++]
+    const next = Object.freeze({ text: candidate.result(label).value }); // [!code ++]
     return {
+      // [!code ++]
       commit: () => {
-        display = next;
+        // [!code ++]
+        display = next; // [!code ++]
         if (rejectNextCommit) {
           rejectNextCommit = false;
           throw new Error('Display commit failed');
         }
       },
       rollback: () => {
-        display = previous;
-      },
+        // [!code ++]
+        display = previous; // [!code ++]
+      }, // [!code ++]
       dispose: () => {},
     };
   },
-  read: () => display,
+  read: () => display, // [!code ++]
   dispose: () => {
     display = Object.freeze({ text: '' });
   },
@@ -167,18 +171,18 @@ const runtime = createRuntime({
   sources,
   computations,
   initialSnapshots: [createRuntimeSourceInput(count, 1)],
-  participants: [displayParticipant],
+  participants: [displayParticipant], // [!code ++]
 });
 
 console.log(runtime.revision()); // 0
-console.log(runtime.participant(displayParticipant).text); // Count: 1
+console.log(runtime.participant(displayParticipant).text); // Count: 1 // [!code ++]
 
 runtime.update({
   baseRevision: runtime.revision(),
   sources: [createRuntimeSourceUpdate(count, 2)],
 });
 console.log(runtime.revision()); // 1
-console.log(runtime.participant(displayParticipant).text); // Count: 2
+console.log(runtime.participant(displayParticipant).text); // Count: 2 // [!code ++]
 ```
 
 Initialization prepares, commits and reads every participant, so successful creation already displays `Count: 1`. Failed initialization returns no instance and cleans up the claimed participants.
@@ -206,7 +210,7 @@ For example, when the count changes from `1` to `2`, `candidate.result(label).va
 | `candidateRevision`   | The revision that will publish if this transaction succeeds            |
 | `baseRevision`        | The published base revision of an update; absent during initialization |
 
-`candidate` can read only the participant's declared dependencies and provides neither ChangeSet access nor previous computation results. The participant retains old host state itself, as with `previous` above. `context.trace` reports execution observations and `context.diagnose` reports diagnostics; their usage belongs to the errors and Trace chapter.
+`candidate` can read only the participant's declared dependencies and provides neither ChangeSet access nor previous computation results. The participant retains old host state itself, as with `previous` above. `context.trace` reports execution observations and `context.diagnose` reports diagnostics; see [Trace · Errors and diagnostics](/kernel/packages/runtime/trace).
 
 The returned `RuntimePreparedCommit` belongs to this transaction only:
 
@@ -258,7 +262,7 @@ Simulate failure in the display example:
 ```ts
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '@retikz/runtime';
 
-rejectNextCommit = true;
+rejectNextCommit = true; // [!code ++]
 try {
   runtime.update({
     baseRevision: runtime.revision(),
@@ -266,13 +270,14 @@ try {
   });
 } catch (error) {
   if (!(error instanceof RetikzRuntimeError) || error.code !== RetikzRuntimeErrorCode.ParticipantCommitFailed) {
+    // [!code ++]
     throw error;
   }
-  console.log(runtime.revision()); // 1
-  console.log(runtime.snapshot(count).value); // 2
-  console.log(runtime.result(label).value); // Count: 2
-  console.log(display.text); // Count: 2
-  console.log(runtime.participant(displayParticipant).text); // Count: 2
+  console.log(runtime.revision()); // 1 // [!code ++]
+  console.log(runtime.snapshot(count).value); // 2 // [!code ++]
+  console.log(runtime.result(label).value); // Count: 2 // [!code ++]
+  console.log(display.text); // Count: 2 // [!code ++]
+  console.log(runtime.participant(displayParticipant).text); // Count: 2 // [!code ++]
 }
 ```
 
@@ -388,6 +393,11 @@ Renderer integration uses `createRetainedRenderParticipant` from `@retikz/render
 
 <LinkedSections
   items={[
+    {
+      title: 'Trace · Errors and diagnostics',
+      description: 'Catch failures, consume diagnostics and observe work',
+      url: '/kernel/packages/runtime/trace',
+    },
     {
       title: 'Runtime · Transaction publication',
       description: 'Publishing Sources, computations and revisions together',

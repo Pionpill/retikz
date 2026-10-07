@@ -125,6 +125,7 @@
     "pkgRuntimeComputation": "Computation",
     "pkgRuntimeTransaction": "Runtime · Transaction publication",
     "pkgRuntimeParticipant": "Participant",
+    "pkgRuntimeTrace": "Trace · Errors and diagnostics",
     "pkgReact": "react",
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",

@@ -43,7 +43,7 @@ declare const defineRuntimeComputation: <
 ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
 ```
 
-输入配置中的成员按下面的职责协作；结果转换在“计算结果”中展开，诊断与 Trace 这里只保留入口说明。
+输入配置中的成员按下面的职责协作；结果转换在“计算结果”中展开，观测相关用法见 [Trace · 错误诊断](/kernel/packages/runtime/trace)。
 
 <DocTabs defaultValue="members">
 <DocTab value="members" label="属性">
@@ -113,10 +113,11 @@ const position = defineRuntimeSource<Position, Position, Position, never>({
 });
 
 const distance = defineRuntimeComputation<number>({
-  id: { owner: position.key, key: 'distance' },
-  sources: [position],
-  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }),
-});
+  // [!code ++]
+  id: { owner: position.key, key: 'distance' }, // [!code ++]
+  sources: [position], // [!code ++]
+  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }), // [!code ++]
+}); // [!code ++]
 ```
 
 `run` 返回 `{ kind: 'full', result }`，表示从完整输入得到结果。返回的 `distance` 则仍是 Token，不是这个数值；它与处理回调在 Runtime 内部关联，后续要沿用同一对象。
@@ -404,6 +405,7 @@ const computations = createRuntimeComputationRegistry({ sources, computations: [
 
 <LinkedSections
   items={[
+    { title: 'Trace · 错误诊断', description: '捕获失败、消费诊断与观察工作量', url: '/kernel/packages/runtime/trace' },
     {
       title: 'Runtime · 事务发布',
       description: '创建实例、版本检查与事务发布',

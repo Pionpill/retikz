@@ -182,7 +182,7 @@ const graph = defineRuntimeSource<GraphState, GraphState, GraphState, never>({
       left.length === right.length &&
       left.every((node, index) => node.id === right[index].id && node.color === right[index].color),
   },
-  collectIdentities: value => value.map(node => createRuntimeIdentity('example/graph', ['nodes', node.id])),
+  collectIdentities: value => value.map(node => createRuntimeIdentity('example/graph', ['nodes', node.id])), // [!code ++]
 });
 ```
 

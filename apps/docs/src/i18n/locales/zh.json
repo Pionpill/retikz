@@ -125,6 +125,7 @@
     "pkgRuntimeComputation": "Computation · 计算",
     "pkgRuntimeTransaction": "Runtime · 事务发布",
     "pkgRuntimeParticipant": "Participant · 参与者",
+    "pkgRuntimeTrace": "Trace · 错误诊断",
     "pkgReact": "React 适配 · react",
     "pkgVanilla": "原生适配 · vanilla",
     "pkgTex": "LaTeX 公式 · tex",

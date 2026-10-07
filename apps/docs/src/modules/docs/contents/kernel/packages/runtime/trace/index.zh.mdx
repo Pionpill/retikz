@@ -1,0 +1,382 @@
+---
+title: Trace · 错误诊断
+description: 区分事务错误、结构化诊断与 Trace，定位失败原因并观察计算工作量
+---
+
+[Runtime · 事务发布](/kernel/packages/runtime/transaction) 和 [Participant · 参与者](/kernel/packages/runtime/participant) 说明了如何一起提交数据与外部状态。调用方还需要知道：更新为什么失败？成功后是否有警告？这次计算复用了多少工作？
+
+Runtime 提供三个出口：**错误**中断当前操作，**诊断**记录需要处理的问题，**Trace**报告执行阶段与工作量。三者回答不同的问题：更新成功也可能带有诊断，已经收到 Trace 也不表示事务最终发布成功。
+
+## 整体流程
+
+| 环节         | 接口或配置                                              | 作用                               |
+| ------------ | ------------------------------------------------------- | ---------------------------------- |
+| 捕获失败     | `try/catch`、`RetikzRuntimeError`                       | 获取错误分类、发生位置和原始原因   |
+| 报告问题     | `context.diagnose(...)`                                 | 由计算或参与者报告业务警告         |
+| 读取本次诊断 | 更新返回值的 `diagnostics`、错误的 `diagnostics`        | 查看本次操作附带的诊断             |
+| 消费累计诊断 | `runtime.diagnostics()`                                 | 读取并清空实例的诊断队列           |
+| 声明观测     | `tracePhases`                                           | 声明允许报告的阶段、单位和结果组合 |
+| 报告与接收   | `context.trace.report(...)`、`createRuntime({ trace })` | 报告工作量，由同步回调接收合法记录 |
+
+下图展示三条信息通路：
+
+<ComponentPreview files="trace-overview" size="md" hideCode type="flow" />
+
+是否发布以更新的返回或抛错为准；诊断用于补充处理，Trace 用于解释执行工作量。它们都不会替业务代码决定如何重试或展示消息。
+
+## 接入观测
+
+继续使用计数来源，计算结果是计数的两倍。下面同时接入三种信息：负数导致计算失败，大于 `1` 产生业务警告，每次正常计算报告一条 Trace。为演示次要错误，释放负数候选值时也故意抛错。
+
+`tracePhases` 声明允许的记录；计算通过 `context.trace.report` 填写计数，Runtime 自动补上归属；`trace` 回调把记录收进调用方数组。后续示例沿用这些变量：
+
+绿色背景和 `+` 标记表示本例新增的错误、诊断与 Trace 相关代码。
+
+```ts
+import {
+  createRuntime,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  defineRuntimeComputation,
+  defineRuntimeSource,
+  PerformanceTraceOutcome, // [!code ++]
+  PerformanceTracePhase, // [!code ++]
+  PerformanceTraceUnit, // [!code ++]
+  RetikzRuntimeError, // [!code ++]
+  RetikzRuntimeErrorCode, // [!code ++]
+} from '@retikz/runtime';
+import type { PerformanceTraceRecord } from '@retikz/runtime'; // [!code ++]
+
+const records: Array<PerformanceTraceRecord> = []; // [!code ++]
+let failTraceSink = false; // [!code ++]
+const calculationFailure = new Error('Count must be non-negative'); // [!code ++]
+const cleanupFailure = new Error('Candidate cleanup failed'); // [!code ++]
+
+const count = defineRuntimeSource<number, number, number, never>({
+  key: 'example/count',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: Object.is,
+    dispose: value => {
+      // [!code ++]
+      if (value < 0) throw cleanupFailure; // [!code ++]
+    }, // [!code ++]
+  },
+});
+const doubled = defineRuntimeComputation<number>({
+  id: { owner: count.key, key: 'doubled' },
+  sources: [count],
+  tracePhases: [
+    // [!code ++]
+    {
+      // [!code ++]
+      phase: PerformanceTracePhase.Update, // [!code ++]
+      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      outcomes: [PerformanceTraceOutcome.Full], // [!code ++]
+    }, // [!code ++]
+  ], // [!code ++]
+  run: (view, context) => {
+    // [!code ++]
+    const value = view.snapshot(count).value;
+    if (value < 0) throw calculationFailure; // [!code ++]
+    if (value > 1) {
+      // [!code ++]
+      context.diagnose({
+        // [!code ++]
+        code: 'example/above-preferred-count', // [!code ++]
+        phase: 'run', // [!code ++]
+        message: 'Count exceeds the preferred value', // [!code ++]
+      }); // [!code ++]
+    } // [!code ++]
+    context.trace.report({
+      // [!code ++]
+      phase: PerformanceTracePhase.Update, // [!code ++]
+      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      outcome: PerformanceTraceOutcome.Full, // [!code ++]
+      visited: 1, // [!code ++]
+      reused: 0, // [!code ++]
+      changed: 1, // [!code ++]
+    }); // [!code ++]
+    return { kind: 'full', result: value * 2 };
+  },
+});
+const sources = createRuntimeSourceRegistry([count]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [doubled] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(count, 1)],
+  trace: record => {
+    // [!code ++]
+    records.push(record); // [!code ++]
+    if (failTraceSink) throw new Error('Trace consumer failed'); // [!code ++]
+  }, // [!code ++]
+});
+```
+
+创建实例也会执行计算，因此此时结果为 `2`，`records` 已收到一条记录。本例没有增量实现，每次受影响时重新全量计算，所以报告 `full`、访问 `1`、复用 `0`、重新生成 `1`。这些计数由算法作者填写，Runtime 不会自动分析算法生成它们。
+
+<SourceLinks
+  sources={[
+    { label: '计算的观测上下文与阶段声明', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: 'Runtime 的 Trace 接收配置', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+  ]}
+/>
+
+## 捕获错误
+
+`RetikzRuntimeError` 是 Runtime 的结构化错误。按 `code` 判断错误类别，用 `phase`、`owner` 或 `computation` 定位，用 `cause` 查看原始原因；不要解析错误消息来分支。
+
+| 成员                   | 含义                               |
+| ---------------------- | ---------------------------------- |
+| `code`、`message`      | 稳定错误码与可读说明               |
+| `phase`                | 发生失败的 Runtime 阶段            |
+| `owner`、`computation` | 可选来源或参与者归属、计算身份     |
+| `cause`                | 原始回调异常或触发错误的输入       |
+| `diagnostics`          | 本次失败附带的执行、回滚或清理诊断 |
+
+提交负数会让计算失败；Runtime 随后清理候选值，清理也失败。计算错误仍是主错误，清理错误附在诊断中：
+
+```ts
+try {
+  runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(count, -1)],
+  });
+} catch (error) {
+  if (!(error instanceof RetikzRuntimeError)) throw error;
+  console.log(error.code === RetikzRuntimeErrorCode.ComputationRunFailed); // true
+  console.log(error.cause === calculationFailure); // true
+  console.log(error.diagnostics[0]?.cause === cleanupFailure); // true
+}
+console.log(runtime.revision(), runtime.result(doubled).value); // 0, 2
+console.log(runtime.diagnostics().map(item => item.code));
+// ['RUNTIME_SOURCE_DISPOSE_FAILED']
+```
+
+失败没有发布负数或新结果。失败诊断也进入实例队列；创建实例失败时拿不到 Runtime，应从抛出的错误读取诊断。
+
+<ComponentAlert
+  type="tip"
+  title="回滚失败需要单独处理"
+  description="普通准备失败可以保留旧状态；参与者回滚失败会使实例进入 broken 状态，不能继续更新或读取状态。此时错误的 cause 包含 trigger 与 rollback，分别保留触发失败和回滚失败。仍可读取版本、消费诊断并尝试释放资源。"
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Runtime 错误结构', path: 'packages/kernel/runtime/src/error/errors.ts' },
+    { label: '失败诊断归并与回滚失败状态', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 消费诊断
+
+`context.diagnose({ code, phase, message })` 用于计算和参与者报告业务警告。Runtime 自动补上 `severity: 'warning'` 及所属计算或参与者；调用方不需要填写这些归属字段。诊断对象的主要成员如下：
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员                   | 作用                                   |
+| ---------------------- | -------------------------------------- |
+| `code`、`message`      | 内置或业务自定义的分类与说明           |
+| `phase`                | 问题产生的阶段                         |
+| `severity`             | `warning` 或 `error`，表示问题严重程度 |
+| `owner`、`computation` | 可选归属与计算身份                     |
+| `cause`                | 部分内置诊断保留的原始异常             |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type RuntimeDiagnostic = Readonly<{
+  code: string;
+  phase: RuntimeDiagnosticPhase;
+  severity: 'warning' | 'error';
+  message: string;
+  owner?: string;
+  computation?: RuntimeComputationId;
+  cause?: unknown;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+下面的警告不阻止发布：
+
+```ts
+const updated = runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(count, 2)],
+});
+console.log(updated.revision, runtime.result(doubled).value); // 1, 4
+console.log(updated.diagnostics.map(item => item.code));
+// ['example/above-preferred-count']
+console.log(runtime.diagnostics().length); // 1
+console.log(runtime.diagnostics().length); // 0
+console.log(updated.diagnostics.length); // 1
+```
+
+更新返回值只带本次诊断；实例队列则累计创建、更新和释放过程中尚未消费的诊断。`runtime.diagnostics()` **读取后清空队列**，不会修改已经返回的数组。错误上的诊断和更新返回值上的诊断也可能在队列中再次读到；日志系统应选定一个主要消费入口，避免重复上报。
+
+诊断按实际产生顺序收集。发布前的诊断先冻结成同一份列表，交给各计算的 `observeCommit`；观察者异常、旧资源释放失败和单次参与者对象清理失败发生得更晚，只会进入最终更新结果与累计队列：
+
+<ComponentPreview files="trace-diagnostics" size="xs" hideCode type="flow" />
+
+`severity: 'error'` 也不等于事务回滚。例如发布后的资源清理失败是 error 诊断，但新版本已经发布。失败事务中的计算业务警告不会作为已提交警告发布；Trace 故障与清理失败等执行诊断仍会保留。诊断不是所有候选计算日志的完整存档。
+
+不要在 Runtime 正在执行的回调中调用 `runtime.diagnostics()`，它受不可重入约束。等创建、更新或释放结束后再消费；实例进入 broken 或已释放状态后仍可读取诊断。
+
+<SourceLinks
+  sources={[
+    { label: '诊断字段与内置分类', path: 'packages/kernel/runtime/src/diagnostic/types.ts' },
+    { label: '发布前列表、完成列表与诊断队列', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 记录 Trace
+
+Trace 是**确定性的工作量记录**，没有耗时字段。本例的一条记录描述“一次计算访问了多少工作、复用了多少、改变了多少”，不能把 `visited` 当作毫秒，也不能把不同 `unit` 的计数直接相加。
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="属性">
+
+| 成员      | 作用                                                   |
+| --------- | ------------------------------------------------------ |
+| `owner`   | 固定归属：计算的 `id.owner` 或参与者的 `key`           |
+| `phase`   | 被观测阶段，如 `compile`、`update`、`commit`           |
+| `unit`    | 计数单位，如 `computation`、`ir-child`、`scene-change` |
+| `outcome` | 执行方式，如 `full`、`incremental`、`fallback`         |
+| `visited` | 访问的工作项数量                                       |
+| `reused`  | 复用的工作项数量                                       |
+| `changed` | 改变或重新生成的工作项数量                             |
+
+</DocTab>
+<DocTab value="definition" label="类型定义">
+
+```ts
+type PerformanceTraceRecord = Readonly<{
+  owner: string;
+  phase: PerformanceTracePhase;
+  unit: PerformanceTraceUnit;
+  outcome: PerformanceTraceOutcome;
+  visited: number;
+  reused: number;
+  changed: number;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+`tracePhases` 中每项用 `phase`、`unit` 和 `outcomes` 声明可报告的组合。同一阶段可以使用不同单位，但同一阶段与单位不能重复声明，允许的结果列表不能为空；定义错误会抛出 `TraceDefinitionInvalid`，应在接入时修正。
+
+`context.trace.report(record)` 接收上表除 `owner` 外的字段。记录必须符合已声明的组合；三个计数都是非负安全整数，`reused` 和 `changed` 各自不能超过 `visited`，`bailout` 的 `changed` 必须为 `0`。Runtime 不要求 `reused + changed === visited`，具体计数含义由算法负责。
+
+本例使用 `update` 作为算法的观测阶段，初始化也会报告它；Trace 的 `phase` 不等同于候选视图区分首次与后续执行的 `phase`。记录也不包含 Runtime 版本或完整计算身份，同一来源下多个计算可能共享 `owner`。
+
+计算与参与者的 `context.trace` 都只提供 `owner` 和 `report`，由 Runtime 统一消费内部诊断。只有脱离实例独立使用 `createRuntimeTraceReporter({ owner, phases, sink })` 时，返回的 reporter 才另外提供 `diagnostics()`，读取并清空它自己的局部诊断；这与实例诊断队列不同。
+
+<SourceLinks
+  sources={[
+    { label: 'Trace 记录、阶段声明与 reporter 契约', path: 'packages/kernel/runtime/src/trace/types.ts' },
+    { label: '记录校验与同步接收', path: 'packages/kernel/runtime/src/trace/reporter.ts' },
+  ]}
+/>
+
+## 观测隔离
+
+合法 Trace 会立即同步交给 `trace` 接收函数。它可能在事务最终提交前执行；后续计算或参与者失败时，已经送出的记录不会撤回。因此，Trace 只能说明工作发生过，不能作为发布通知。
+
+下面故意让接收函数抛错，业务更新仍成功：
+
+```ts
+failTraceSink = true;
+const observed = runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(count, 3)],
+});
+console.log(observed.revision, runtime.result(doubled).value); // 2, 6
+console.log(observed.diagnostics.map(item => item.code));
+// ['example/above-preferred-count', 'RUNTIME_TRACE_SINK_FAILED']
+failTraceSink = false;
+runtime.diagnostics();
+runtime.dispose();
+```
+
+| 问题                          | 独立 reporter 的诊断码 | Runtime 中的诊断码             |
+| ----------------------------- | ---------------------- | ------------------------------ |
+| 记录不符合阶段声明或计数约束  | `invalid-record`       | `RUNTIME_TRACE_INVALID_RECORD` |
+| 接收函数抛错                  | `sink-threw`           | `RUNTIME_TRACE_SINK_FAILED`    |
+| 接收期间再次调用同一 reporter | `reentrant-report`     | `RUNTIME_TRACE_REENTRANT`      |
+
+非法记录和重入记录不会交给接收函数；接收函数抛错也不会从 `report` 向外传播。这三类故障会映射为 error 诊断，不替换业务结果。Trace 的接收异常只记录分类，不保留接收函数抛出的原始异常。
+
+不配置 `trace` 时，Runtime 仍校验已报告的记录，只是不向外发送。记录被拒绝仍可能产生诊断；省略接收函数并不等于关闭契约校验。
+
+<SourceLinks
+  sources={[
+    { label: 'Trace 失败隔离与重入防护', path: 'packages/kernel/runtime/src/trace/reporter.ts' },
+    { label: 'Trace 故障映射为 Runtime 诊断', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## 完整流程
+
+沿一次报告追踪：计算或参与者填写记录，reporter 验证并补齐归属，合法记录交给接收函数，观测故障转入诊断。业务事务继续按自己的成功或失败路径收尾：
+
+<ComponentPreview files="trace-flow" size="sm" hideCode type="flow" />
+
+读源码时先看 reporter 的记录校验与接收隔离，再看 Runtime 如何把局部诊断补上计算或参与者归属，最后追踪更新返回值、错误对象和实例队列三个出口。
+
+## Core 应用
+
+Core 的编译计算已经声明并报告 Trace，调用方只需把接收函数接到 Runtime。以下示例沿用前文的 Runtime 导入，使用一份空 Scene IR 完成初始化：
+
+```ts
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+
+const coreRecords: Array<PerformanceTraceRecord> = [];
+const compile = createCoreComputation({});
+const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+const coreComputations = createRuntimeComputationRegistry({ sources: coreSources, computations: [compile] });
+const coreRuntime = createRuntime({
+  sources: coreSources,
+  computations: coreComputations,
+  initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, { version: 1, type: 'scene', children: [] })],
+  trace: record => coreRecords.push(record),
+});
+console.log(coreRecords.map(record => [record.owner, record.phase, record.unit, record.outcome]));
+// [['@retikz/core/document', 'update', 'ir-child', 'full']]
+coreRuntime.dispose();
+```
+
+Core 的全量路径报告 `ir-child` 工作量；更新时还可报告 `scene-change`。受支持的根节点样式增量路径报告 `incremental` 及访问、复用和变化计数；不能增量处理时回退全量路径，记录 `fallback`。这说明算法采用了什么路径，不表示 Runtime 替 Core 推断了计数。
+
+Core 的领域诊断保存在编译输出的 `output.diagnostics`；Runtime 的事务、清理与观测诊断来自更新返回值或实例队列。两者归属不同。Core 发现 ChangeSet 与实际状态不符时，还会通过计算的 fallback 诊断说明回退原因。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core 的阶段声明、报告与 fallback 诊断',
+      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Runtime · 事务发布', description: '版本检查与统一发布边界', url: '/kernel/packages/runtime/transaction' },
+    {
+      title: 'Participant · 参与者',
+      description: '外部提交、回滚与资源释放',
+      url: '/kernel/packages/runtime/participant',
+    },
+    { title: 'Computation · 计算', description: '执行方式与提交后通知', url: '/kernel/packages/runtime/computation' },
+  ]}
+/>
