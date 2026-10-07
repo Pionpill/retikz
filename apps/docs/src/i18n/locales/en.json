@@ -124,6 +124,7 @@
     "pkgRuntimeIdentity": "Identity",
     "pkgRuntimeComputation": "Computation",
     "pkgRuntimeTransaction": "Runtime · Transaction publication",
+    "pkgRuntimeParticipant": "Participant",
     "pkgReact": "react",
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",

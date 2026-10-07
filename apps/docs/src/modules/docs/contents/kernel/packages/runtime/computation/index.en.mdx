@@ -7,6 +7,21 @@ description: Derive distance from coordinates and understand computation definit
 
 **Computation** defines how to derive data from Sources or other computations. Runtime executes dependencies in order and owns the results; the author supplies the algorithm and decides when an old result can be reused. This page follows “coordinates → distance → display text”. Transaction publication is left to a later chapter.
 
+## Overall flow
+
+| Stage             | API or configuration                     | Purpose                                                                                                                       |
+| ----------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Define            | `defineRuntimeComputation(...)`          | Declare dependencies, algorithms, and result management                                                                       |
+| Register          | `createRuntimeComputationRegistry(...)`  | Register computations and validate dependencies                                                                               |
+| Initial execution | `createRuntime(...)` → `run`             | Compute initial results in dependency order                                                                                   |
+| Update            | `runtime.update(...)` → `update` / `run` | Try incremental updates for affected computations; use `run` without an incremental implementation or under the full strategy |
+| Read              | `runtime.result(token)`                  | Read the published computation result and revision                                                                            |
+| Dispose           | `runtime.dispose()`                      | Release computation results owned by Runtime                                                                                  |
+
+Define and register computations first. Runtime executes them during initialization or updates; new results become readable after successful publication.
+
+<ComponentPreview files="computation-overview" size="xs" hideCode type="flow" />
+
 ## Defining a computation
 
 Distinguish three concepts:

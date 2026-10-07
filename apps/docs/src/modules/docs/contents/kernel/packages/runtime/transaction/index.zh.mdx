@@ -9,6 +9,15 @@ description: 创建运行实例，将来源更新与计算结果作为一次事�
 
 ## 整体流程
 
+| 环节     | 接口或配置                                         | 作用                                   |
+| -------- | -------------------------------------------------- | -------------------------------------- |
+| 创建     | `createRuntime(...)`                               | 接入注册表与初始输入，完成初始化       |
+| 读取基线 | `runtime.snapshot(token)`、`runtime.revision()`    | 取得准备更新所依据的数据与版本         |
+| 准备输入 | `createRuntimeSourceUpdate(...)`                   | 封装新输入及可选变更提示               |
+| 提交     | `runtime.update({ baseRevision, sources })`        | 检查基线版本并执行事务，成功后统一发布 |
+| 读取结果 | `runtime.snapshot(token)`、`runtime.result(token)` | 读取已发布的来源与计算结果             |
+| 释放     | `runtime.dispose()`                                | 结束实例并释放其持有的资源             |
+
 **候选状态**是本次准备的新数据，**已发布状态**是调用方当前可读取的数据。**版本**（revision）标识 Runtime 已发布到哪一步；候选准备期间不会提前推进版本。
 
 <ComponentPreview files="transaction-overview" size="xs" hideCode type="flow" />
@@ -26,14 +35,14 @@ declare const createRuntime: (options: RuntimeOptions) => Runtime;
 <DocTabs defaultValue="members">
 <DocTab value="members" label="属性">
 
-| 成员               | 必填 | 作用                                                          |
-| ------------------ | ---- | ------------------------------------------------------------- |
-| `sources`          | 是   | 运行实例可使用的来源注册表                                    |
-| `computations`     | 是   | 与同一个来源注册表绑定的计算注册表                            |
-| `initialSnapshots` | 是   | 每个已注册来源的完整初始输入，不能缺失、重复或多出来源        |
-| `updateStrategy`   | 否   | 默认 `auto` 尝试增量执行；`full` 对受影响计算直接执行全量路径 |
-| `participants`     | 否   | 将外部状态纳入提交，默认无参与者；后续 Participant 篇展开     |
-| `trace`            | 否   | 接收执行观测记录；后续 Trace 篇展开                           |
+| 成员               | 必填 | 作用                                                                                                |
+| ------------------ | ---- | --------------------------------------------------------------------------------------------------- |
+| `sources`          | 是   | 运行实例可使用的来源注册表                                                                          |
+| `computations`     | 是   | 与同一个来源注册表绑定的计算注册表                                                                  |
+| `initialSnapshots` | 是   | 每个已注册来源的完整初始输入，不能缺失、重复或多出来源                                              |
+| `updateStrategy`   | 否   | 默认 `auto` 尝试增量执行；`full` 对受影响计算直接执行全量路径                                       |
+| `participants`     | 否   | 将外部状态纳入提交，默认无参与者；详见 [Participant · 参与者](/kernel/packages/runtime/participant) |
+| `trace`            | 否   | 接收执行观测记录；后续 Trace 篇展开                                                                 |
 
 </DocTab>
 <DocTab value="definition" label="类型定义">
@@ -227,7 +236,7 @@ try {
 }
 ```
 
-发布前捕获、读取或计算失败时，Runtime 清理本次候选资源，保留已发布版本；这些回调应只准备数据，Runtime 无法撤销回调自行写入的外部副作用。需要协调 renderer 等外部状态时使用 Participant，提交与回滚契约将在后篇说明。
+发布前捕获、读取或计算失败时，Runtime 清理本次候选资源，保留已发布版本；这些回调应只准备数据，Runtime 无法撤销回调自行写入的外部副作用。需要协调 renderer 等外部状态时使用提交参与者，详见 [Participant · 参与者](/kernel/packages/runtime/participant)。
 
 成功后先发布来源、结果和版本，再通知计算的 `observeCommit`，最后清理被替换的旧值。通知或旧值清理失败会记录诊断，已经发布的新状态不会因此回滚。
 
@@ -329,7 +338,7 @@ runtime.dispose();
 
 没有外部参与者时，最终释放顺序为计算结果的逆依赖顺序，再按来源注册表顺序的逆序释放来源。Source 候选相等或事务失败时释放新候选，成功替换时释放旧值，最终结束时释放当前值；同一个持有值不会在这些路径中重复释放。声明了 `dispose` 的值不能让新旧状态共用同一个待释放对象。
 
-Runtime 是同步且不可重入的：准备、通知或清理回调中不要再次调用实例的更新、快照读取、结果读取、诊断读取或释放方法；通知回调使用传入的事件数据。`revision()` 只返回当时已发布的版本。释放后不能继续更新或读取状态，Source 与计算资源的释放失败记录为诊断；外部参与者的释放重试由后篇展开。
+Runtime 是同步且不可重入的：准备、通知或清理回调中不要再次调用实例的更新、快照读取、结果读取、诊断读取或释放方法；通知回调使用传入的事件数据。`revision()` 只返回当时已发布的版本。释放后不能继续更新或读取状态，Source 与计算资源的释放失败记录为诊断；外部参与者的释放重试见 [Participant · 参与者](/kernel/packages/runtime/participant#所有权与释放)。
 
 <SourceLinks
   sources={[
@@ -364,7 +373,7 @@ const coreRuntime = createRuntime({
 const scene = coreRuntime.result(compile).value.output.result.scene;
 ```
 
-后续完整文档仍通过更新命令提交。Runtime 保证文档与编译结果一起发布；Core 决定如何编译、校验领域提示和回退。使用结束后调用 `coreRuntime.dispose()`，将 Scene 应用到 renderer 的外部提交由 Participant 篇展开。
+后续完整文档仍通过更新命令提交。Runtime 保证文档与编译结果一起发布；Core 决定如何编译、校验领域提示和回退。使用结束后调用 `coreRuntime.dispose()`，将 Scene 应用到 renderer 的外部提交见 [Participant · 参与者](/kernel/packages/runtime/participant)。
 
 <SourceLinks
   sources={[{ label: 'Core 编译计算入口', path: 'packages/kernel/core/src/compile/incremental/computation.ts' }]}
@@ -374,6 +383,11 @@ const scene = coreRuntime.result(compile).value.output.result.scene;
 
 <LinkedSections
   items={[
+    {
+      title: 'Participant · 参与者',
+      description: '外部状态的准备、提交与回滚',
+      url: '/kernel/packages/runtime/participant',
+    },
     { title: 'Source · 来源', description: '数据捕获、读取与相等判断', url: '/kernel/packages/runtime/source' },
     {
       title: 'Computation · 计算',

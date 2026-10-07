@@ -9,6 +9,15 @@ description: 定义状态来源，理解输入、内部值与只读视图的职�
 
 ## 整体流程
 
+| 环节   | 接口或配置                                              | 作用                              |
+| ------ | ------------------------------------------------------- | --------------------------------- |
+| 定义   | `defineRuntimeSource(...)`                              | 声明来源的数据管理规则            |
+| 注册   | `createRuntimeSourceRegistry([...])`                    | 登记可使用的来源 Token            |
+| 初始化 | `createRuntimeSourceInput(...)`、`createRuntime(...)`   | 提供初始输入，由 Runtime 捕获状态 |
+| 更新   | `createRuntimeSourceUpdate(...)`、`runtime.update(...)` | 提交新输入，成功后发布            |
+| 读取   | `runtime.snapshot(token)`                               | 读取已发布的来源快照及版本        |
+| 释放   | `runtime.dispose()`                                     | 释放 Runtime 持有的来源值         |
+
 先区分三份数据：调用方的输入、Runtime 内部持有的值、读取方得到的视图。**视图**在这里指允许读取方看到的数据表示，不是界面组件。下面追踪同一个坐标：输入是文本字段，内部保存数值，输出是只读的 `[x, y]` 元组。
 
 <ComponentPreview files="source-values" size="xs" hideCode type="flow" />

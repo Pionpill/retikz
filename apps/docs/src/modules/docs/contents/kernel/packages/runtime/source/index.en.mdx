@@ -9,6 +9,15 @@ A **Source** is a definition that tells Runtime how to receive and manage a part
 
 ## Overall flow
 
+| Stage      | API or configuration                                    | Purpose                                         |
+| ---------- | ------------------------------------------------------- | ----------------------------------------------- |
+| Define     | `defineRuntimeSource(...)`                              | Declare how Source data is managed              |
+| Register   | `createRuntimeSourceRegistry([...])`                    | Register the available Source tokens            |
+| Initialize | `createRuntimeSourceInput(...)`, `createRuntime(...)`   | Provide initial inputs for Runtime to capture   |
+| Update     | `createRuntimeSourceUpdate(...)`, `runtime.update(...)` | Submit new inputs for publication on success    |
+| Read       | `runtime.snapshot(token)`                               | Read the published Source snapshot and revision |
+| Dispose    | `runtime.dispose()`                                     | Release Source values owned by Runtime          |
+
 First distinguish three representations: the caller's input, the value held internally by Runtime, and the view given to readers. A **view** here means the data representation readers may access, not a UI component. Follow the same position below: text fields become internal numbers, then a read-only `[x, y]` tuple.
 
 <ComponentPreview files="source-values" size="xs" hideCode type="flow" />

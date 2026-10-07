@@ -9,6 +9,15 @@ We continue with coordinates and distance. Changing `[3, 4]` to `[6, 8]` should 
 
 ## Overall flow
 
+| Stage         | API or configuration                               | Purpose                                                                              |
+| ------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Create        | `createRuntime(...)`                               | Connect registries and initial inputs, then initialize                               |
+| Read baseline | `runtime.snapshot(token)`, `runtime.revision()`    | Obtain the data and revision used to prepare an update                               |
+| Prepare input | `createRuntimeSourceUpdate(...)`                   | Wrap new input and optional change hints                                             |
+| Submit        | `runtime.update({ baseRevision, sources })`        | Check the baseline revision and execute the transaction; publish together on success |
+| Read results  | `runtime.snapshot(token)`, `runtime.result(token)` | Read published Source values and computation results                                 |
+| Dispose       | `runtime.dispose()`                                | End the instance and release its resources                                           |
+
 **Candidate state** is the new data being prepared. **Published state** is what the host can currently read. A **revision** identifies the published Runtime version; preparing candidates does not advance it.
 
 <ComponentPreview files="transaction-overview" size="xs" hideCode type="flow" />
@@ -26,14 +35,14 @@ declare const createRuntime: (options: RuntimeOptions) => Runtime;
 <DocTabs defaultValue="members">
 <DocTab value="members" label="Properties">
 
-| Member             | Required | Purpose                                                                                                       |
-| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
-| `sources`          | Yes      | Registry of Sources available to this instance                                                                |
-| `computations`     | Yes      | Computation registry bound to the same Source registry object                                                 |
-| `initialSnapshots` | Yes      | Complete initial input for every registered Source, with no missing, duplicate or extra Sources               |
-| `updateStrategy`   | No       | Defaults to `auto`, attempting incremental execution; `full` runs affected computations through the full path |
-| `participants`     | No       | Include external state in the commit; none by default, covered in the later Participant chapter               |
-| `trace`            | No       | Receive execution records, covered in the later Trace chapter                                                 |
+| Member             | Required | Purpose                                                                                                               |
+| ------------------ | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `sources`          | Yes      | Registry of Sources available to this instance                                                                        |
+| `computations`     | Yes      | Computation registry bound to the same Source registry object                                                         |
+| `initialSnapshots` | Yes      | Complete initial input for every registered Source, with no missing, duplicate or extra Sources                       |
+| `updateStrategy`   | No       | Defaults to `auto`, attempting incremental execution; `full` runs affected computations through the full path         |
+| `participants`     | No       | Include external state in the commit; none by default, covered in [Participant](/kernel/packages/runtime/participant) |
+| `trace`            | No       | Receive execution records, covered in the later Trace chapter                                                         |
 
 </DocTab>
 <DocTab value="definition" label="Type definition">
@@ -227,7 +236,7 @@ try {
 }
 ```
 
-Capture, read or computation failures before publication clean up candidate resources and preserve the published revision. These callbacks should prepare data only: Runtime cannot undo external side effects they perform themselves. Use Participants to coordinate external state such as renderers; their commit and rollback contracts are covered later.
+Capture, read or computation failures before publication clean up candidate resources and preserve the published revision. These callbacks should prepare data only: Runtime cannot undo external side effects they perform themselves. Use commit participants to coordinate external state such as renderers; see [Participant](/kernel/packages/runtime/participant).
 
 On success, Runtime publishes Sources, results and revision, then calls computation `observeCommit` callbacks, and finally cleans up replaced values. Notification or old-value disposal failures produce diagnostics and do not roll back the published state.
 
@@ -332,7 +341,7 @@ runtime.dispose();
 
 Without external participants, final disposal visits computation results in reverse dependency order, then Sources in reverse registry order. Equal or failed candidates release new values; successful replacements release old values; final disposal releases current values. Each owned value is retired once across these paths. Values with `dispose` must not reuse the same disposable object for old and new state.
 
-Runtime is synchronous and non-reentrant. Preparation, notification and cleanup callbacks must not call instance update, snapshot, result, diagnostic-read or disposal methods again; notification callbacks use their event data. `revision()` returns the version already published at that moment. After disposal, updates and state reads are unavailable; Source and computation disposal failures are recorded as diagnostics. External participant disposal retries are covered later.
+Runtime is synchronous and non-reentrant. Preparation, notification and cleanup callbacks must not call instance update, snapshot, result, diagnostic-read or disposal methods again; notification callbacks use their event data. `revision()` returns the version already published at that moment. After disposal, updates and state reads are unavailable; Source and computation disposal failures are recorded as diagnostics. External participant disposal retries are covered in [Participant](/kernel/packages/runtime/participant#ownership-and-disposal).
 
 <SourceLinks
   sources={[
@@ -367,7 +376,7 @@ const coreRuntime = createRuntime({
 const scene = coreRuntime.result(compile).value.output.result.scene;
 ```
 
-Subsequent complete documents are submitted through update commands. Runtime publishes the document and compilation results together; Core owns compilation, domain hint validation and fallback. Call `coreRuntime.dispose()` when finished. Applying the Scene to a renderer through an external commit is covered in the Participant chapter.
+Subsequent complete documents are submitted through update commands. Runtime publishes the document and compilation results together; Core owns compilation, domain hint validation and fallback. Call `coreRuntime.dispose()` when finished. Applying the Scene to a renderer through an external commit is covered in [Participant](/kernel/packages/runtime/participant).
 
 <SourceLinks
   sources={[
@@ -379,6 +388,11 @@ Subsequent complete documents are submitted through update commands. Runtime pub
 
 <LinkedSections
   items={[
+    {
+      title: 'Participant',
+      description: 'Prepare, commit and roll back external state',
+      url: '/kernel/packages/runtime/participant',
+    },
     { title: 'Source', description: 'Capture, reads and equality', url: '/kernel/packages/runtime/source' },
     {
       title: 'Computation',

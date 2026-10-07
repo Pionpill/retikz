@@ -13,13 +13,10 @@ describe('runtime commit participant definition', () => {
     expect(runtime).not.toHaveProperty('getRuntimeTraceReporterDiagnosticDrainCount');
   });
 
-  it('只在 token 上公开冻结 metadata，不暴露 lifecycle callbacks', () => {
+  it('省略依赖与 Trace 阶段时公开冻结的空数组，不暴露 lifecycle callbacks', () => {
     const input = {
       key: 'renderer',
-      sources: [],
-      computations: [],
       revisionPolicy: 'continuous' as const,
-      tracePhases: [],
       prepare: () => ({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined }),
       read: () => Object.freeze({ value: 1 }),
       dispose: () => undefined,
@@ -34,6 +31,9 @@ describe('runtime commit participant definition', () => {
       tracePhases: [],
     });
     expect(Object.isFrozen(participant)).toBe(true);
+    expect(Object.isFrozen(participant.sources)).toBe(true);
+    expect(Object.isFrozen(participant.computations)).toBe(true);
+    expect(Object.isFrozen(participant.tracePhases)).toBe(true);
     expect(participant).not.toHaveProperty('prepare');
     expect(participant).not.toHaveProperty('read');
     expect(participant).not.toHaveProperty('dispose');

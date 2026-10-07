@@ -597,6 +597,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'participant',
+            label: 'kernel.pkgRuntimeParticipant',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {

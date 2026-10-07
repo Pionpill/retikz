@@ -7,6 +7,21 @@ description: 从坐标派生距离，理解计算定义、依赖注册、结果�
 
 **Computation**（计算）定义如何从来源或其他计算的结果派生数据。Runtime 负责按依赖顺序执行和持有结果，计算作者负责具体算法，以及什么时候可以复用旧结果。本篇沿着“坐标 → 距离 → 显示文本”说明这个过程；事务如何统一发布留给后续章节。
 
+## 整体流程
+
+| 环节     | 接口或配置                               | 作用                                                           |
+| -------- | ---------------------------------------- | -------------------------------------------------------------- |
+| 定义     | `defineRuntimeComputation(...)`          | 声明依赖、算法与结果管理规则                                   |
+| 注册     | `createRuntimeComputationRegistry(...)`  | 登记计算并校验依赖关系                                         |
+| 首次执行 | `createRuntime(...)` → `run`             | 按依赖顺序计算初始结果                                         |
+| 更新     | `runtime.update(...)` → `update` / `run` | 对受影响计算尝试增量更新；无增量实现或采用全量策略时执行 `run` |
+| 读取     | `runtime.result(token)`                  | 读取已发布的计算结果及版本                                     |
+| 释放     | `runtime.dispose()`                      | 释放 Runtime 持有的计算结果                                    |
+
+计算先定义和注册，再由 Runtime 首次执行或随更新重新执行，成功发布后才能读取新结果。
+
+<ComponentPreview files="computation-overview" size="xs" hideCode type="flow" />
+
 ## 定义计算
 
 先区分三个概念：

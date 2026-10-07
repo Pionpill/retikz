@@ -7,6 +7,20 @@ description: Identify entities within state through identity creation, compariso
 
 **Entity identity** identifies the same entity across state updates. This page explains how to create and compare identities, then collect and look them up within a Source's state. A Source token identifies the whole Source definition; an Identity identifies an entity within its state. One Source can contain many entity identities.
 
+## Overall flow
+
+| Stage        | API or configuration                      | Purpose                                                            |
+| ------------ | ----------------------------------------- | ------------------------------------------------------------------ |
+| Create       | `createRuntimeIdentity(owner, path)`      | Build an identity from a Source key and entity path                |
+| Compare      | `runtimeIdentityEquals(a, b)`             | Check whether two identities refer to the same entity              |
+| Collect      | `collectIdentities(value)`                | The Source callback returns all identities from the captured value |
+| Build lookup | `createRuntimeIdentityLookup(identities)` | Validate the identity list and build a lookup                      |
+| Query        | `lookup.has(identity)`, `lookup.values()` | Check membership or enumerate the collection                       |
+
+The diagram follows collection lookup. To compare just two entities, use identity comparison directly without building a lookup.
+
+<ComponentPreview files="identity-overview" size="xs" hideCode type="flow" />
+
 ## Identity and state
 
 Identity answers “which entity is this?”, while state answers “what is it like now?”. Changing a color preserves identity but changes state. Using the entire node as its identity would lose the connection between its old and new forms; using only `'A'` would confuse equally named nodes in different Sources.

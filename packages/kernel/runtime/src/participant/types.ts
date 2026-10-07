@@ -122,14 +122,23 @@ export type RuntimeParticipantCandidateView =
 export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
   /** participant 的稳定唯一 key */
   key: string;
-  /** participant 声明读取的 Source tokens */
-  sources: ReadonlyArray<RuntimeSourceToken>;
-  /** participant 声明读取的 Computation tokens */
-  computations: ReadonlyArray<RuntimeComputationToken>;
+  /**
+   * participant 声明读取的 Source tokens
+   * @default []
+   */
+  sources?: ReadonlyArray<RuntimeSourceToken>;
+  /**
+   * participant 声明读取的 Computation tokens
+   * @default []
+   */
+  computations?: ReadonlyArray<RuntimeComputationToken>;
   /** participant 的 update 选择策略 */
   revisionPolicy: 'affected' | 'continuous';
-  /** participant 允许发射的 trace phases */
-  tracePhases: ReadonlyArray<RuntimeTracePhaseDefinition>;
+  /**
+   * participant 允许发射的 trace phases
+   * @default []
+   */
+  tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
   /** 为 candidate staging 一次可回滚 commit */
   prepare: (candidate: RuntimeParticipantCandidateView, context: RuntimeParticipantContext) => RuntimePreparedCommit;
   /** 生成与已 commit view 对应的 immutable public read */
