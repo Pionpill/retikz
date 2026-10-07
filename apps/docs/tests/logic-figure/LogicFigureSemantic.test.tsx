@@ -35,7 +35,7 @@ describe('LogicFigure semantic vocabulary', () => {
     { mode: 'dark' as const, fill: '#1b1b1b', text: '#bbbbbb' },
   ])('Secondary 在 $mode 下保持无描边中性底色并允许实例覆盖', ({ mode, fill, text }) => {
     const Figure = () => (
-      <LogicFigure semanticColors={false}>
+      <LogicFigure>
         <Entity role="activity" kind={LogicFigureEntityKind.Secondary} group="branch" position={[0, 0]}>
           Derived
         </Entity>
@@ -158,7 +158,6 @@ describe('LogicFigure semantic vocabulary', () => {
     expect(figure).toMatchObject({
       namespace: 'diagram',
       type: 'flow',
-      graphRules: expect.any(Array),
     });
     expect(figure.entities).toEqual(
       expect.arrayContaining(

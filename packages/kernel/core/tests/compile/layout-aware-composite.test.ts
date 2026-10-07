@@ -8,6 +8,7 @@ import type {
   LayoutChildResult,
   LayoutCompositeCompileContext,
   LayoutProposal,
+  ScenePrimitive,
   TextMeasurer,
 } from '../../src';
 import {
@@ -15,6 +16,7 @@ import {
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
+  defineThemeStyle,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -87,6 +89,54 @@ const sceneOf = (child: IRChild): IRScene => ({
 });
 
 describe('layout-aware composite', () => {
+  it('局部主题上下文共享输入所有权，测量和目标查询一致且不修改父主题', () => {
+    const child = defineComposite({
+      namespace: 'test',
+      type: 'themed-child',
+      schema: strictObject({ namespace: literal('test'), type: literal('themed-child') }),
+      expand: (_source, context) => ({
+        children: [
+          {
+            type: 'node',
+            id: 'target',
+            position: [0, 0],
+            shape: 'rectangle',
+            layout: {
+              width: context.theme.style === 'compact' ? 40 : 80,
+              padding: 0,
+              margin: 0,
+              minimumSize: { height: 20 },
+            },
+          },
+        ],
+      }),
+    });
+    const parent = defineComposite({
+      namespace: 'test',
+      type: 'themed-parent',
+      schema: strictObject({ namespace: literal('test'), type: literal('themed-parent') }),
+      compile: (_source, context) => {
+        const source = { namespace: 'test', type: 'themed-child' };
+        const bound = context.bindChild(source, []);
+        const local = context.withTheme({ style: 'compact' });
+        const probe = local.layoutChild(bound, NaturalLayoutProposal);
+        if (probe.kind === 'failed') return local.raise(probe.failure);
+        expect(probe.result.allocationBounds.width).toBe(40);
+        expect(resolvedResultOf(context, source).allocationBounds.width).toBe(80);
+        expect(
+          local.resolvePathTargets({ child: source, source: { id: 'target', anchor: 'right' }, points: [] }).source,
+        ).toEqual([20, 0]);
+        return { children: [context.scope({ theme: { style: 'compact' } }, [context.replay(probe.result)])] };
+      },
+    });
+    const result = compileToScene(sceneOf({ namespace: 'test', type: 'themed-parent' }), {
+      composites: [parent, child],
+      themeStyles: [defineThemeStyle({ name: 'compact', resolve: () => ({}) })],
+    });
+    const rectangles = (items: ReadonlyArray<ScenePrimitive>): Array<Extract<ScenePrimitive, { type: 'rect' }>> =>
+      items.flatMap(item => (item.type === 'group' ? rectangles(item.children) : item.type === 'rect' ? [item] : []));
+    expect(rectangles(result.scene.primitives).map(rect => rect.width)).toEqual([40]);
+  });
   it('routes a composite warning through onWarn with the current Source locator', () => {
     const definition = defineComposite({
       namespace: 'test',

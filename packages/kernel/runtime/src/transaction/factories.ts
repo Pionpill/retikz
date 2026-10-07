@@ -66,7 +66,12 @@ const runtimeSourceCommandExecutors = new WeakMap<object, RuntimeSourceCommandEx
 export const isRuntimeRevision = (value: unknown): value is RuntimeRevision =>
   typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 
-/** 把已验证 safe integer 转成 Runtime 内部 revision */
+/**
+ * 把已验证 safe integer 转成 Runtime 内部 revision
+ * @param value 非负安全整数
+ * @returns 带 RuntimeRevision 类型品牌的原数值
+ * @throws {RetikzRuntimeError} 数值不是非负安全整数时抛出 RevisionInvalid
+ */
 export const createRuntimeRevision = (value: number): RuntimeRevision => {
   if (!isRuntimeRevision(value)) {
     throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: value });
@@ -95,6 +100,10 @@ export const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<un
 /**
  * 创建复制并冻结 changes 容器的 revision-bound change hint
  * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
+ * @param baseRevision 变更提示所基于的已发布版本
+ * @param changes 领域变更提示；仅复制并冻结数组，不克隆其中的元素
+ * @returns 绑定版本并由当前工厂标记的变更提示
+ * @throws {RetikzRuntimeError} baseRevision 无效时抛出 RevisionInvalid
  */
 export const createRuntimeChangeSet = <TChange>(
   baseRevision: RuntimeRevision,
@@ -175,6 +184,9 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
  * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
+ * @param source 待初始化的来源定义
+ * @param value 完整初始输入；capture 在 Runtime 初始化时执行
+ * @returns 供 initialSnapshots 使用的不透明初始化命令
  */
 export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
@@ -194,6 +206,11 @@ export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
  * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
+ * @param source 待更新的来源定义
+ * @param value 完整下一份输入；capture 在 Runtime 更新时执行
+ * @param changeSet 可选增量提示；不替代完整输入
+ * @returns 供 RuntimeUpdate.sources 使用的不透明更新命令
+ * @throws {RetikzRuntimeError} changeSet 不是由当前工厂创建时抛出 ChangeSetInvalid
  */
 export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,

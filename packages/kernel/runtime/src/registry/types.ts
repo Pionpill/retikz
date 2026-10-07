@@ -18,7 +18,10 @@ export type RuntimeSourceRegistry = Readonly<{
 export type RuntimeComputationRegistryInput = Readonly<{
   /** Computation dependencies 必须来自的 Source registry */
   sources: RuntimeSourceRegistry;
-  /** 待注册的计算凭证，默认空列表 */
+  /**
+   * 待注册的计算凭证，默认空列表
+   * @default []
+   */
   computations?: ReadonlyArray<RuntimeComputationToken>;
 }>;
 

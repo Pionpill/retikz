@@ -21,7 +21,7 @@ const GraphLayers: FC<GraphLayersProps> = props => {
   ];
 
   return (
-    <LogicFigure semanticColors={false}>
+    <LogicFigure>
       {rows.map(row => (
         <Entity
           key={row.id}

@@ -16,6 +16,7 @@ import type {
   EmitStrokeOwnerOutputOptions,
   GroupPrim,
   LayoutChildResult,
+  LayoutCompositeCompileContext,
   LayoutProposal,
   PaintValue,
   PathKindCompileContext,
@@ -2463,9 +2464,11 @@ export const compileChildrenToPrimitives = (
     };
 
     try {
-      callbackResult = callable.compile(callable.node, {
+      const createLayoutContext = (theme: TraversalFrame['theme']): LayoutCompositeCompileContext => ({
         ...runtimeInputContext,
-        theme: frame.theme,
+        theme,
+        withTheme: override =>
+          createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeStyles)),
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         resolvePathTargets: query => {
           const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, layoutProbeIndex++);
@@ -2477,7 +2480,7 @@ export const compileChildrenToPrimitives = (
             occurrence,
             frame.scopeChain,
             frame.styleStack,
-            frame.theme,
+            theme,
             false,
             undefined,
             (scope, namespace, chain) => {
@@ -2520,7 +2523,7 @@ export const compileChildrenToPrimitives = (
                 ],
               },
               {
-                mode: frame.theme.mode,
+                mode: theme.mode,
                 scopeChain: queryChain,
                 targetResolver: {
                   pointOfTarget: target => bindingOf(target)?.point ?? null,
@@ -2592,19 +2595,23 @@ export const compileChildrenToPrimitives = (
               probeOccurrence,
               frame.scopeChain,
               frame.styleStack,
-              frame.theme,
+              theme,
               false,
               probeInputs,
             );
             const { layoutResult, transaction } = probed;
-            transaction.materialize = ({ scopeChain, styleStack, theme }: CompositeReplayMaterializeContext) =>
+            transaction.materialize = ({
+              scopeChain,
+              styleStack,
+              theme: replayTheme,
+            }: CompositeReplayMaterializeContext) =>
               probeLayoutChild(
                 clonedChild,
                 clonedProposal,
                 probeOccurrence,
                 scopeChain,
                 styleStack,
-                theme,
+                replayTheme,
                 true,
                 probeInputs,
               ).transaction;
@@ -2635,6 +2642,8 @@ export const compileChildrenToPrimitives = (
         scope: (props, children, spatialHandles) =>
           createCompositeScopeChild(runtime.context.session, owner, props, children, spatialHandles),
       });
+
+      callbackResult = callable.compile(callable.node, createLayoutContext(frame.theme));
     } catch (thrown) {
       if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 

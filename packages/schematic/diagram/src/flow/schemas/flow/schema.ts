@@ -557,10 +557,12 @@ export const FlowDiagramSchema = strictObject({
   layout: FlowLayoutIntentSchema.optional().describe('Root Flow layout overrides.'),
   routing: FlowScopeRoutingSchema.optional().describe('Root Flow relation routing default.'),
   entities: array(FlowEntitySchema).nonempty().describe('Non-empty flat Flow Entity declaration catalog.'),
-  groups: array(FlowGroupSchema).describe('Flat Flow Group declaration catalog; empty when no Groups are authored.'),
-  layouts: array(FlowLayoutSchema).describe(
-    'Flat Flow Layout declaration catalog; empty when no Layouts are authored.',
-  ),
+  groups: array(FlowGroupSchema)
+    .default([])
+    .describe('Flat Flow Group declaration catalog; defaults to an empty array.'),
+  layouts: array(FlowLayoutSchema)
+    .default([])
+    .describe('Flat Flow Layout declaration catalog; defaults to an empty array.'),
   relations: array(FlowRelationSchema).nonempty().optional().describe('Optional non-empty root relation collection.'),
   children: array(NonBlankStringSchema)
     .nonempty()

@@ -107,3 +107,5 @@ Computation 的四个泛型依次是 result 输入、内部 result、供自身�
 - Computation 只能读取已声明的依赖，注册和调用时保留同一组 Definition token。
 - 数组、Map 或资源对象不能直接照搬本例的 capture/read；定义者必须确保调用方、candidate 与已发布状态之间不存在不安全的可变共享。
 - 本例没有需要释放的外部资源，所以没有定义值级 `dispose`。持有资源时，应在所属 Source 或 result 定义中提供释放逻辑，并在使用结束后调用 Runtime 的 `dispose()`。
+
+完成这个最小闭环后，可按 Source → Identity → Computation → Runtime → Participant → Trace 逐篇阅读，最后通过[生命周期](/kernel/packages/runtime/lifecycle)的图示把成员关系与执行顺序串起来。

@@ -60,7 +60,7 @@ describe('Flow Group Graph surface', () => {
     });
     const parsed = Flow.FlowDiagramSchema.parse(source);
 
-    expect(parsed.groups[0]).toMatchObject(source.groups[0]);
+    expect(parsed.groups[0]).toMatchObject(source.groups![0]);
     expect(Flow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
     expect(Flow.FlowGroupSchema.safeParse({ id: 'group', children: ['item'], caption: {} }).success).toBe(false);
     expect(Flow.FlowGroupSchema.safeParse({ id: 'group', children: ['item'], labels: [] }).success).toBe(false);

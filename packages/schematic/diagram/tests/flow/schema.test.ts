@@ -104,6 +104,18 @@ const completeFlow = {
 } as const;
 
 describe('Flow Source schema', () => {
+  it('defaults omitted catalogs to empty arrays while retaining required members', () => {
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [{ id: 'item', text: 'Item' }],
+      children: ['item'],
+    };
+    expect(FlowDiagramSchema.parse(source)).toEqual({ ...source, groups: [], layouts: [] });
+    expect(FlowDiagramSchema.safeParse({ ...source, entities: [] }).success).toBe(false);
+    expect(FlowDiagramSchema.safeParse({ ...source, children: [] }).success).toBe(false);
+  });
+
   it('preserves root and Group-local Graph rules', () => {
     const source = {
       namespace: 'diagram',
@@ -328,12 +340,6 @@ describe('Flow Source schema', () => {
     { ...completeFlow, entities: [{ id: 'negative-rank', text: 'x', rank: -1 }] },
     { ...completeFlow, flowTheme: {} },
     { ...completeFlow, flowThemeTokens: {} },
-    {
-      namespace: 'diagram',
-      type: 'flow',
-      entities: [{ id: 'entity', text: 'Entity' }],
-      children: ['entity'],
-    },
     {
       namespace: 'diagram',
       type: 'flow',

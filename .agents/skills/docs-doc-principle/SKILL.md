@@ -61,6 +61,7 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 - 严禁以作者全知视角预设读者已理解尚未介绍的概念；仅可依赖已明确链接的基础用法等前置文档。新概念首次出现必须就地解释，必要时先用具体例子说明要解决的问题，再引入概念与正文；自审按阅读顺序检查缺失前提，不用后文或源码链接代替解释。
 - H1 来自 frontmatter；description 脱离页面也能说明职责或使用入口。小节按读者任务命名，不按 prop 数量分节。
 - 可复制例子使用真实公开导入和最上层 Source IR；不把内部 Canonical 或 lower 结果展示为用户写法。
+- 长代码示例承接前文时，用绿色 `+` 标记本步新增或修改的重点，保留上下文但不整段标亮。正文代码使用行尾 `// [!code ++]`，连续 demo 复用 `diffFrom`；格式化后检查标记位置、无多余空行，复制结果须去除标记并保持可运行。
 - 文档与示例不默认以 React 为主；共同语义以 IR / 共享契约为基础。小章节可直接使用组件名，但优先按“组件 / Vanilla / IR”并列对应入口，或用“组件（备注对应 Vanilla / IR）”简写；只列实际支持的形式。
 - 正文代码优先用 DocTabs 切换同一任务的不同 API 形式，细则见 [DocTabs / DocSteps](references/doc-tabs-steps.md)。demo 保持 ComponentPreview 的现有 API 切换机制，不为本规则另建多份 demo 或重复已有源码。
 - 仅在讲解 React 组合用法的小章节或 React Tab 内，API 依靠父子组件组合时，在首次解释组合关系处用简短的 `text` 树展示真实可用的组件层级，再给可复制 JSX 或 ComponentPreview；树只列组件，不把 props 当子节点，也不替代运行示例。例如：

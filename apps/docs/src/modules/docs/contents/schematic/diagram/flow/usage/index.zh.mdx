@@ -15,6 +15,8 @@ React 可用 `FlowDiagram` 及其子元素声明 Flow；Vanilla 可用 `flowDiag
 
 Flow Source 由下列成员组成。React 组件负责声明这些成员，运行时根据实体、容器与关系计算位置和连线路径。
 
+没有语义组或排布容器时，可以省略 `groups`、`layouts`，Schema 会将它们解析为空数组。React 和 Vanilla 生成 Source 时也会省略空目录。`entities` 和根 `children` 仍须提供非空数组；没有关系时省略 `relations`。
+
 | 元素     | React 成员                      | Source 成员      | 职能                                                           |
 | -------- | ------------------------------- | ---------------- | -------------------------------------------------------------- |
 | Flow 图  | `FlowDiagram`                   | 整个 Flow Source | 汇总图内元素，并触发自动排布与连接                             |

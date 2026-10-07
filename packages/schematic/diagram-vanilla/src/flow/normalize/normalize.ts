@@ -14,8 +14,8 @@ export const normalizeFlowDiagram = (input: InputFlowDiagram): IRFlowDiagram => 
     type: 'flow',
     ...root,
     entities: [...entities],
-    groups: groups.map(group => ({ ...group, children: [...group.children] })),
-    layouts: layouts.map(layout => ({ ...layout, children: [...layout.children] })),
+    ...(groups?.length ? { groups: groups.map(group => ({ ...group, children: [...group.children] })) } : {}),
+    ...(layouts?.length ? { layouts: layouts.map(layout => ({ ...layout, children: [...layout.children] })) } : {}),
     ...(relations === undefined ? {} : { relations: [...relations] }),
     children: [...children],
   };

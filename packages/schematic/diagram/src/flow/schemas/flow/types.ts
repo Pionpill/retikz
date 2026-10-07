@@ -70,7 +70,8 @@ export type IRFlowLayout = ZodInfer<typeof FlowLayoutSchema>;
 export type IRFlowRelation = ZodInfer<typeof FlowRelationSchema>;
 
 /** Flow Diagram 的持久化 Source IR */
-export type IRFlowDiagram = ZodInfer<typeof FlowDiagramSchema>;
+export type IRFlowDiagram = Omit<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'> &
+  Partial<Pick<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'>>;
 
 /** 持久化关系端点约束 */
 export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
