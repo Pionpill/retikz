@@ -127,6 +127,7 @@
     "pkgRuntimeParticipant": "Participant",
     "pkgRuntimeTrace": "Trace · Errors and diagnostics",
     "pkgRuntimeLifecycle": "Lifecycle",
+    "pkgRuntimeApiReference": "API Reference",
     "pkgReact": "react",
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",

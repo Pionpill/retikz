@@ -37,7 +37,12 @@ const sourceRegistryError = (
 export const isRuntimeSourceRegistry = (value: unknown): value is RuntimeSourceRegistry =>
   typeof value === 'object' && value !== null && runtimeSourceRegistries.has(value);
 
-/** 注册来源 token，并拒绝无效 token 与重复 key */
+/**
+ * 注册来源 token，并拒绝无效 token 与重复 key
+ * @param tokens 待注册的来源凭证；空数组建立空注册表
+ * @returns 冻结的来源注册表，保留原始凭证身份
+ * @throws {RetikzRuntimeError} 凭证不是由 defineRuntimeSource 创建或来源键重复时抛出
+ */
 export const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): RuntimeSourceRegistry => {
   const definitions = new Map<string, RuntimeSourceToken>();
   const executors = new Map<RuntimeSourceToken, RuntimeSourceErasedExecutor>();

@@ -66,6 +66,9 @@ const normalizePhaseDefinitions = (
 /**
  * 创建一个固定 owner 且失败隔离的同步 trace reporter
  * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息
+ * @param input 固定归属、允许的阶段与同步接收函数
+ * @returns 隔离非法记录、接收函数异常与重入的报告器
+ * @throws {RetikzRuntimeError} owner 为空、阶段与单位重复或 outcomes 为空时抛出 TraceDefinitionInvalid
  */
 export const createRuntimeTraceReporter = <const TOwner extends string>(
   input: CreateRuntimeTraceReporterInput<TOwner>,
