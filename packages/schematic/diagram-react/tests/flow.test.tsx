@@ -16,6 +16,27 @@ const synchronousAdapters = (adapters: ReturnType<typeof createInputScene>['adap
     return adapter;
   });
 
+it('omits empty catalogs in React and Vanilla Source with equivalent parsed defaults', () => {
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowEntity id="item" text="Item" />
+    </FlowReact.FlowDiagram>,
+  );
+  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
+  const vanilla = normalizeFlowDiagram({ entities: [{ id: 'item', text: 'Item' }], children: ['item'] });
+  const explicitEmpty = normalizeFlowDiagram({
+    entities: [{ id: 'item', text: 'Item' }],
+    groups: [],
+    layouts: [],
+    children: ['item'],
+  });
+  expect(react).toEqual(vanilla);
+  expect(explicitEmpty).toEqual(vanilla);
+  expect(vanilla).not.toHaveProperty('groups');
+  expect(vanilla).not.toHaveProperty('layouts');
+  expect(FlowDiagramSchema.parse(vanilla)).toMatchObject({ groups: [], layouts: [] });
+});
+
 it('preserves Graph Group captions, labels and local context through React and Vanilla equally', () => {
   const group = {
     id: 'service',
@@ -38,12 +59,11 @@ it('preserves Graph Group captions, labels and local context through React and V
   const vanilla = normalizeFlowDiagram({
     entities: [{ id: 'request', text: 'Request' }],
     groups: [{ ...group, children: ['request'] }],
-    layouts: [],
     children: ['service'],
   });
 
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
-  expect(vanilla.groups[0]).toEqual({ ...group, children: ['request'] });
+  expect(vanilla.groups?.[0]).toEqual({ ...group, children: ['request'] });
 });
 
 it('preserves local Layout exclusion through React and Vanilla equally', () => {
@@ -60,7 +80,6 @@ it('preserves local Layout exclusion through React and Vanilla equally', () => {
       { id: 'canvas', text: 'canvas' },
       { id: 'png', text: 'png' },
     ],
-    groups: [],
     layouts: [
       { id: 'row', kind: 'linear', direction: 'right', children: ['canvas', 'png'], excludeFromBounds: ['png'] },
     ],
@@ -166,8 +185,6 @@ describe('@retikz/diagram-react/flow', () => {
     );
     const vanilla = normalizeFlowDiagram({
       entities,
-      groups: [],
-      layouts: [],
       children: ['a', 'b'],
       relations: [relation],
     });
@@ -232,7 +249,7 @@ describe('@retikz/diagram-react/flow', () => {
       );
       const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
 
-      expect(react).toEqual(direct);
+      expect(FlowDiagramSchema.parse(react)).toEqual(direct);
       expect(normalizeFlowDiagram(source)).toEqual(direct);
 
       const result = processToStaticInputResult(input.scene, {
@@ -258,8 +275,6 @@ describe('@retikz/diagram-react/flow', () => {
       type: 'flow',
       ...props,
       entities: [entity],
-      groups: [],
-      layouts: [],
       children: ['node'],
       relations: [relation],
     });
@@ -275,14 +290,12 @@ describe('@retikz/diagram-react/flow', () => {
     const vanilla = normalizeFlowDiagram({
       ...props,
       entities: [entity],
-      groups: [],
-      layouts: [],
       children: ['node'],
       relations: [relation],
     });
 
-    expect(react).toEqual(direct);
-    expect(vanilla).toEqual(direct);
+    expect(FlowDiagramSchema.parse(react)).toEqual(direct);
+    expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
   });
 
   it('exports the supported Flow root, single and batch JSX markers', () => {
@@ -350,8 +363,6 @@ describe('@retikz/diagram-react/flow', () => {
         { id: 'third', text: 'Third', status: 'success' },
         { id: 'fourth', text: 'Fourth' },
       ],
-      groups: [],
-      layouts: [],
       children: ['first', 'second', 'third', 'fourth'],
       relations: [
         { source: 'first', target: 'second' },
@@ -585,8 +596,6 @@ describe('@retikz/diagram-react/flow', () => {
       namespace: 'diagram',
       type: 'flow',
       entities: [{ id: 'only', text: 'Only' }],
-      groups: [],
-      layouts: [],
       children: ['only'],
     });
   });
@@ -704,8 +713,6 @@ describe('@retikz/diagram-react/flow', () => {
             layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
           },
         ],
-        groups: [],
-        layouts: [],
         children: ['form'],
       },
     ]);
@@ -821,8 +828,6 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
   const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeFlowDiagram({
     entities,
-    groups: [],
-    layouts: [],
     children: ['a', 'b'],
     relations: [relation],
   });
@@ -830,8 +835,6 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
     namespace: 'diagram',
     type: 'flow',
     entities,
-    groups: [],
-    layouts: [],
     children: ['a', 'b'],
     relations: [relation],
   });
@@ -897,8 +900,6 @@ it('preserves automatic, explicit Bezier and smooth routing through all authorin
       { id: 'a', text: 'A' },
       { id: 'b', text: 'B' },
     ],
-    groups: [],
-    layouts: [],
     children: ['a', 'b'],
     relations,
   });
@@ -909,8 +910,6 @@ it('preserves automatic, explicit Bezier and smooth routing through all authorin
       { id: 'a', text: 'A' },
       { id: 'b', text: 'B' },
     ],
-    groups: [],
-    layouts: [],
     children: ['a', 'b'],
     relations,
   });
@@ -952,8 +951,6 @@ it('keeps endpoint constraints and sparse defaults equal across React, Vanilla a
     entities,
     relations,
     flowDefaults,
-    groups: [],
-    layouts: [],
     children: ['a', 'b'],
   });
   const direct = FlowDiagramSchema.parse({
@@ -962,8 +959,6 @@ it('keeps endpoint constraints and sparse defaults equal across React, Vanilla a
     entities,
     relations,
     flowDefaults,
-    groups: [],
-    layouts: [],
     children: ['a', 'b'],
   });
 
@@ -990,7 +985,6 @@ it('容器等宽与行内填充在 React 和 Vanilla 中保留相同 Source', ()
       { id: 'a', text: 'A' },
       { id: 'b', text: 'B' },
     ],
-    groups: [],
     layouts: [
       { id: 'rows', kind: 'linear', direction: 'down', containerWidth: 'match-largest', children: ['row'] },
       { id: 'row', kind: 'linear', direction: 'right', itemWidth: 'fill', children: ['a', 'b'] },

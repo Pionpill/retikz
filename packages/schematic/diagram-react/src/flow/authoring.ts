@@ -386,8 +386,8 @@ export const collectFlowDiagramInput = (
   return {
     ...input,
     entities: collected.entities,
-    groups: collected.groups,
-    layouts: collected.layouts,
+    ...(collected.groups.length === 0 ? {} : { groups: collected.groups }),
+    ...(collected.layouts.length === 0 ? {} : { layouts: collected.layouts }),
     ...(collected.relations.length === 0 ? {} : { relations: collected.relations }),
     children: collected.children,
   };
