@@ -1,50 +1,97 @@
 ---
 title: collection · 集合
-description: 用数组、映射和矩阵展示顺序集合、键值记录、二维单元格与嵌套结构。
+description: 根据顺序、键值、二维、进出或层级关系，选择集合组件并查看示例。
 ---
 
-集合组件把结构化内容画成可识别的单元格。Array 按顺序组织项目，Map 按键和值组织条目，Matrix 让二维内容共享行列轨道；单元格也可以承载另一个组件，用来表达嵌套结构。
+集合组件把数据结构的当前状态画出来。你可以展示一组项目、键值记录、二维格子，或用连接表达进出、分支与父子关系。它们适合算法教学、结构说明和状态对比；输入变化由应用提供，组件负责绘制。
 
-## 职责一览
+## 如何选择
 
-| 组件         | 职责                                 | 何时阅读                   |
-| ------------ | ------------------------------------ | -------------------------- |
-| Array · 数组 | 按顺序排列内容，支持横排、竖排与索引 | 表达数组、队列等顺序结构   |
-| Map · 映射   | 将键与值组织为条目                   | 表达记录、属性表或键值集合 |
+先看需要强调的结构：普通顺序用 Array，键值配对用 Map，二维行列用 Matrix；需要突出进出端时用 Stack 或 Queue，有分叉汇合或父子关系时用 Chain 或 Tree。
 
-| Matrix · 矩阵 | 按共享行列轨道排列二维内容 | 表达二维数组与矩阵示意 |
+| 集合                                                 | 什么时候用               | 图中重点                 |
+| ---------------------------------------------------- | ------------------------ | ------------------------ |
+| [Array · 数组](/library/standard/collection/array)   | 展示有序项目或索引位置   | 一维单元格               |
+| [Map · 映射](/library/standard/collection/map)       | 展示记录、属性与配置     | 键和值成对排列           |
+| [Matrix · 矩阵](/library/standard/collection/matrix) | 展示二维数组或矩阵       | 共享行列轨道             |
+| [Stack · 栈](/library/standard/collection/stack)     | 展示后进先出的状态       | 栈顶、开放边框与进出箭头 |
+| [Queue · 队列](/library/standard/collection/queue)   | 展示先进先出的状态       | 队首、队尾与进出箭头     |
+| [Chain · 链](/library/standard/collection/chain)     | 展示顺序连接、分叉与汇合 | 单元格和串并联连接       |
+| [Tree · 树](/library/standard/collection/tree)       | 展示父子层级             | 文字节点和有序子树       |
 
-## 在序列中展示一条记录
+<ComponentPreviews
+  columns={4}
+  minWidth={150}
+  items={[
+    {
+      title: 'Array · 数组',
+      url: '/library/standard/collection/array',
+      files: '/library/standard/collection/array/array-basic',
+    },
+    {
+      title: 'Map · 映射',
+      url: '/library/standard/collection/map',
+      files: '/library/standard/collection/map/map-basic',
+    },
+    {
+      title: 'Matrix · 矩阵',
+      url: '/library/standard/collection/matrix',
+      files: '/library/standard/collection/matrix/matrix-basic',
+    },
+    {
+      title: 'Stack · 栈',
+      url: '/library/standard/collection/stack',
+      files: '/library/standard/collection/stack-overview',
+    },
+    {
+      title: 'Queue · 队列',
+      url: '/library/standard/collection/queue',
+      files: '/library/standard/collection/queue-overview',
+    },
+    {
+      title: 'Chain · 链',
+      url: '/library/standard/collection/chain',
+      files: '/library/standard/collection/chain-overview',
+    },
+    {
+      title: 'Tree · 树',
+      url: '/library/standard/collection/tree',
+      files: '/library/standard/collection/tree/tree-basic',
+    },
+  ]}
+/>
 
-下面复用数组页的组合示例：外层 Array 表达先后顺序，其中一个 ArrayItem 放入 Map 展示记录字段。外层负责项目排列，内层负责键值关系。
+Stack 与 Queue 的图库示例显式开启两根操作箭头，便于识别进入和出去的位置；箭头配置默认关闭。点击图形进入对应文档。
+
+## 组合不同集合
+
+单元格可以承载另一种集合。下面用 Array 表达项目顺序，其中一个格子放入 Map 展示记录字段：外层负责排列，内层负责键值关系。嵌套集合默认不增加外层 Cell 的背景和内边距。
 
 <ComponentPreview files="/library/standard/collection/array/array-composition" size="sm" />
 
-嵌套改变的是单元格内容，数组的顺序仍然清楚。单元格样式、索引和引用方式分别在 Array、Map 子页展开。
+## 输入与使用边界
 
-同一个 JSON 数组可以直接作为 Array 的 `data`，JSON 对象可以作为 Map 的 `data`；需要给单格设置身份、样式或嵌套可绘制内容时，使用显式 items / entries 或 React 组合子项。两种入口分别承担数据展示与逐格控制，不要在同一实例混用。
+Array、Map、Matrix、Chain、Stack 和 Queue 都支持显式内容、JSON 数据与示意骨架，各自的字段和结构有所不同。显式内容适合逐项样式、身份与图形组合；data 展示现有数据；skeleton 只描述示意格子。三种入口不能混用，具体写法见子页。
 
-## 选择与边界
+Tree 使用单一 root 入口，节点可以是字符串或带 children、样式与连接配置的对象；它绘制文字节点，不承载任意图形。
 
-这里的集合组件负责可视表达，不是运行时的数据结构实现。为任意图形添加背景或分组边框，应选择[展示组件](/library/standard/presentation)中的 Surface 或 Frame；只需通用排列时，阅读[布局包](/library/layout)。
+这些组件不执行入栈、出队、搜索或平衡等数据操作。需要任意图形排版时使用[布局包](/library/layout)，需要包装背景或边框时使用[展示组件](/library/standard/presentation)。首次使用可从[安装与首次渲染](/library/standard/get-start)开始。
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    {
-      title: 'Array · 数组',
-      description: '按顺序排列内容，支持横排、竖排与索引',
-      url: '/library/standard/collection/array',
-    },
-    { title: 'Matrix · 矩阵', description: '共享行列轨道的二维单元格', url: '/library/standard/collection/matrix' },
-    { title: 'Map · 映射', description: '将键与值组织为条目', url: '/library/standard/collection/map' },
+    { title: 'Array · 数组', description: '展示有序项目或索引位置', url: '/library/standard/collection/array' },
+    { title: 'Map · 映射', description: '展示记录、属性与配置', url: '/library/standard/collection/map' },
+    { title: 'Matrix · 矩阵', description: '展示二维数组或矩阵', url: '/library/standard/collection/matrix' },
+    { title: 'Stack · 栈', description: '展示后进先出的状态', url: '/library/standard/collection/stack' },
+    { title: 'Queue · 队列', description: '展示先进先出的状态', url: '/library/standard/collection/queue' },
+    { title: 'Chain · 链', description: '展示顺序连接、分叉与汇合', url: '/library/standard/collection/chain' },
+    { title: 'Tree · 树', description: '展示父子层级', url: '/library/standard/collection/tree' },
     {
       title: '实现原理',
-      description: '理解集合输入解析、共享 Cell、自然测量与最终排布',
+      description: '理解单元格测量、排布与 Tree 节点处理的边界',
       url: '/library/standard/collection/mechanism',
     },
   ]}
 />
-
-[Chain · 链](/library/standard/collection/chain) 连接任意内容，支持有序分叉、汇合与两层对齐。

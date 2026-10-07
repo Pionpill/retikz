@@ -5,7 +5,7 @@ description: Present static trees with text nodes, parent-child connections, and
 
 `Tree` presents an explicit hierarchy as nodes and parent-child connections, for binary-tree diagrams, hierarchies, and algorithm snapshots. Nodes default to circles and connections to straight lines without arrows. Input order determines child order.
 
-## Integration
+## Getting started
 
 After [installation and first rendering](/library/standard/get-start), import from the collection entry.
 
@@ -66,7 +66,11 @@ Describe the tree through root. A string is a text leaf; use an object for child
 
 root is required; `root={null}` creates an empty tree. A null element in children reserves a default empty node's footprint without drawing a node or edge or assigning an identity. For example, `[null, 'R']` keeps R in the second slot, while `['R']` centers the only child. React also describes structure through root rather than JSX children.
 
-### Nodes and connections
+### Placement, nodes, and connections
+
+layout.direction defaults to down and also accepts up, right, and left. Vertical growth orders children left to right; horizontal growth orders them top to bottom. Reversing growth does not reverse input order. levelGap defaults to 32 between levels, and siblingGap to 24 between sibling subtree envelopes.
+
+Nodes at the same depth share a center line. Each parent is centered between its first and last direct child centers, including the centers of missing slots. Deeper descendants do not shift the parent merely by enlarging the subtree envelope. Tree measures text and shapes before arranging whole envelopes; it does not interleave branches to compact whitespace, avoid obstacles, or rotate nodes.
 
 node configures Core Node shape, style, and layout. Defaults are circle, no fill, a 1-pixel stroke, minimumSize 32, padding 2, and margin 0. The minimum is not a fixed size: longer text enlarges nodes. Per-item node settings in root affect only that node; descendants inherit the global node settings.
 
@@ -80,13 +84,7 @@ This example explicitly enables arrows and lets you adjust direction, missing sl
   size="md"
 />
 
-### Adjust placement
-
-layout.direction defaults to down and also accepts up, right, and left. Vertical growth orders children left to right; horizontal growth orders them top to bottom. Reversing growth does not reverse input order. levelGap defaults to 32 between levels, and siblingGap to 24 between sibling subtree envelopes.
-
-Nodes at the same depth share a center line. Each parent is centered between its first and last direct child centers, including the centers of missing slots. Deeper descendants do not shift the parent merely by enlarging the subtree envelope. Tree measures text and shapes before arranging whole envelopes; it does not interleave branches to compact whitespace, avoid obstacles, or rotate nodes.
-
-## Composition
+## Extended usage
 
 ### Custom node shapes
 

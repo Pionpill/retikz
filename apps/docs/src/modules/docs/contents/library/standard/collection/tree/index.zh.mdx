@@ -66,7 +66,11 @@ renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B'
 
 root 必填，`root={null}` 表示空树。children 中的 null 保留一个默认空节点大小的槽位，不绘制节点或连接，也没有身份。例如 `[null, 'R']` 将 R 保留在第二个位置，`['R']` 则让唯一子节点居中。React 也通过 root 属性描述结构，不接收 JSX 子项。
 
-### 节点与连接
+### 排列、节点与连接
+
+layout.direction 默认 down，也支持 up、right、left；上下生长时子项从左到右，左右生长时从上到下，反向生长不反转输入顺序。levelGap 默认 32，表示相邻层的净距；siblingGap 默认 24，表示相邻子树包络的净距。
+
+同层节点中心对齐，父节点位于首个与末个直属子节点中心的中点，空子槽按占位中心参与。更深后代不会通过扩大包络把父节点拉偏。Tree 先测量真实文字与形状，再排列完整子树包络；不会穿插子树来压缩空白，也不做避障或自动旋转。
 
 node 统一配置 Core Node 的 shape、style 和 layout。默认 circle、无填充、1 像素描边、minimumSize 32、padding 2、margin 0；32 是最小尺寸，长文字会增大节点。root 入口的逐项 node 只覆盖当前节点，子节点继续继承根级 node。
 
@@ -80,13 +84,7 @@ connection 配置父子边，false 隐藏连接；逐项 connection 配置该节
   size="md"
 />
 
-### 调整排列
-
-layout.direction 默认 down，也支持 up、right、left；上下生长时子项从左到右，左右生长时从上到下，反向生长不反转输入顺序。levelGap 默认 32，表示相邻层的净距；siblingGap 默认 24，表示相邻子树包络的净距。
-
-同层节点中心对齐，父节点位于首个与末个直属子节点中心的中点，空子槽按占位中心参与。更深后代不会通过扩大包络把父节点拉偏。Tree 先测量真实文字与形状，再排列完整子树包络；不会穿插子树来压缩空白，也不做避障或自动旋转。
-
-## 扩展方式
+## 扩展用法
 
 ### 自定义节点形状
 

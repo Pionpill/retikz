@@ -1,54 +1,93 @@
 ---
 title: Collections
-description: Visualize ordered collections, key-value records, and nested structures with Array, Map, and Matrix.
+description: Choose collections for ordered, keyed, two-dimensional, operation, or hierarchical structures and compare examples.
 ---
 
-Collection components draw structured content as identifiable cells. Array organizes items in sequence; Map organizes entries as keys and values; Matrix aligns two-dimensional cells on shared row and column tracks. A cell can also contain another component to represent nested structures.
+Collection components draw a snapshot of a data structure. Show ordered items, key-value records, or a grid, and use connections to express operations, branches, or parent-child relationships. They suit algorithm explanations, structural diagrams, and state comparisons. Your application supplies changes; the components draw each state.
 
-## Responsibilities at a glance
+## How to choose
 
-| Component | Responsibility                                            | When to read                                        |
-| --------- | --------------------------------------------------------- | --------------------------------------------------- |
-| Array     | Arrange sequential items with direction and index options | Show arrays, queues, or other ordered structures    |
-| Map       | Organize entries into keys and values                     | Show records, property tables, or keyed collections |
+Start with the structure you want to emphasize: Array for order, Map for key-value pairs, and Matrix for rows and columns. Use Stack or Queue to highlight operation ends, Chain for branches and joins, and Tree for parent-child hierarchy.
 
-| Matrix | Arrange cells on shared row/column tracks | Show two-dimensional arrays and schematic matrices |
+| Collection                                    | When to use it                             | What the diagram emphasizes                    |
+| --------------------------------------------- | ------------------------------------------ | ---------------------------------------------- |
+| [Array](/library/standard/collection/array)   | Show ordered items or indexed positions    | One-dimensional cells                          |
+| [Map](/library/standard/collection/map)       | Show records, properties, or configuration | Paired keys and values                         |
+| [Matrix](/library/standard/collection/matrix) | Show two-dimensional arrays or matrices    | Shared row and column tracks                   |
+| [Stack](/library/standard/collection/stack)   | Show a last-in, first-out state            | Stack top, open border, and operation arrows   |
+| [Queue](/library/standard/collection/queue)   | Show a first-in, first-out state           | Queue front, rear, and operation arrows        |
+| [Chain](/library/standard/collection/chain)   | Show a sequence with branches and joins    | Cells with sequential and parallel connections |
+| [Tree](/library/standard/collection/tree)     | Show parent-child hierarchy                | Text nodes and ordered subtrees                |
 
-## Show a record inside a sequence
+<ComponentPreviews
+  columns={4}
+  minWidth={150}
+  items={[
+    {
+      title: 'Array',
+      url: '/library/standard/collection/array',
+      files: '/library/standard/collection/array/array-basic',
+    },
+    { title: 'Map', url: '/library/standard/collection/map', files: '/library/standard/collection/map/map-basic' },
+    {
+      title: 'Matrix',
+      url: '/library/standard/collection/matrix',
+      files: '/library/standard/collection/matrix/matrix-basic',
+    },
+    { title: 'Stack', url: '/library/standard/collection/stack', files: '/library/standard/collection/stack-overview' },
+    { title: 'Queue', url: '/library/standard/collection/queue', files: '/library/standard/collection/queue-overview' },
+    { title: 'Chain', url: '/library/standard/collection/chain', files: '/library/standard/collection/chain-overview' },
+    { title: 'Tree', url: '/library/standard/collection/tree', files: '/library/standard/collection/tree/tree-basic' },
+  ]}
+/>
 
-This example from the Array page places a Map inside one ArrayItem. The outer Array establishes item order, while the inner Map represents the fields of a record.
+The Stack and Queue gallery examples explicitly enable both operation arrows to show entry and exit. Arrows are disabled by default. Select a diagram to open its documentation.
+
+## Combine collections
+
+A cell can contain another collection. This example uses Array to establish item order and places a Map inside one cell to show record fields. The outer collection arranges items; the inner one owns its key-value structure. A nested collection adds no outer Cell background or padding by default.
 
 <ComponentPreview files="/library/standard/collection/array/array-composition" size="sm" />
 
-Nesting changes the content of a cell without obscuring the sequence. The Array and Map pages cover cell styling, indices, and references in detail.
+## Inputs and boundaries
 
-Pass a JSON array as Array data or a JSON object as Map data. Use explicit items / entries or React composition when individual cells need ids, styles, or drawable children. These inputs serve different authoring needs and cannot be mixed on one instance.
+Array, Map, Matrix, Chain, Stack, and Queue accept explicit content, JSON data, or a schematic skeleton, with fields and shapes appropriate to each structure. Explicit content supports per-item styles, identity, and drawable composition; data displays existing values; skeleton describes schematic cells. These inputs are mutually exclusive. See each page for its syntax.
 
-## Choosing the right family
+Tree uses a single root input. Nodes may be strings or objects with children, styles, and connection settings. It draws text nodes rather than arbitrary drawable content.
 
-These collection components visualize structures; they are not runtime data structure implementations. Use Surface or Frame from [Presentation](/library/standard/presentation) to decorate arbitrary graphics. For general arrangement, see [Layout](/library/layout).
+These components do not perform push, dequeue, search, or balancing operations. Use [Layout](/library/layout) to arrange arbitrary drawings and [presentation components](/library/standard/presentation) to wrap content in a background or border. New users can start with [installation and first render](/library/standard/get-start).
 
-## Contents
+## Chapter contents
 
 <LinkedSections
   items={[
     {
       title: 'Array',
-      description: 'Arrange sequential items with direction and index options',
+      description: 'Show ordered items or indexed positions',
       url: '/library/standard/collection/array',
     },
     {
+      title: 'Map',
+      description: 'Show records, properties, or configuration',
+      url: '/library/standard/collection/map',
+    },
+    {
       title: 'Matrix',
-      description: 'Two-dimensional cells on shared row and column tracks',
+      description: 'Show two-dimensional arrays or matrices',
       url: '/library/standard/collection/matrix',
     },
-    { title: 'Map', description: 'Organize entries into keys and values', url: '/library/standard/collection/map' },
+    { title: 'Stack', description: 'Show a last-in, first-out state', url: '/library/standard/collection/stack' },
+    { title: 'Queue', description: 'Show a first-in, first-out state', url: '/library/standard/collection/queue' },
+    {
+      title: 'Chain',
+      description: 'Show a sequence with branches and joins',
+      url: '/library/standard/collection/chain',
+    },
+    { title: 'Tree', description: 'Show parent-child hierarchy', url: '/library/standard/collection/tree' },
     {
       title: 'Implementation',
-      description: 'Understand input resolution, shared Cells, natural measurement, and placement',
+      description: 'Understand cell measurement, placement, and the Tree node pipeline',
       url: '/library/standard/collection/mechanism',
     },
   ]}
 />
-
-[Chain](/library/standard/collection/chain) connects arbitrary content with ordered branches, joins, and independent alignment controls.

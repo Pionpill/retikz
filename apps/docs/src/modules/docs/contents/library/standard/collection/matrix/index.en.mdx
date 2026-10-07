@@ -5,7 +5,7 @@ description: Draw rectangular content with shared row and column tracks, JSON da
 
 `Matrix` draws two-dimensional content as aligned cells for arrays, dynamic-programming tables, and schematic matrices. A cell may contain text, one drawing, or no content. Matrix does not perform arithmetic, aggregate data, or merge cells.
 
-## Integration
+## Getting started
 
 After [installation and first rendering](/library/standard/get-start), import the collection APIs. React and Vanilla collect component and clipping dependencies automatically; direct IR registers definitions explicitly.
 
@@ -84,7 +84,7 @@ const svg = renderToSvgString(
 
 ## Basic usage
 
-### Choose an input
+### Choose an input form
 
 The three inputs are mutually exclusive, including empty inputs. The first two array levels always describe rows and columns. Every row must have the same length; Matrix never pads, truncates, or transposes input.
 
@@ -104,7 +104,7 @@ A string item is equivalent to `{ content: text }`; repeated text is valid. `{}`
 
 `[]` means 0 × 0, and `[[], []]` means 2 × 0. A zero axis produces no cells, index strips, or gaps and has zero natural dimensions. Container labels can still render.
 
-### Draw a skeleton
+### Draw a schematic skeleton
 
 Use `{ rows, columns }` for empty cells or `{ labels: [['x₁₁', 'x₁₂'], ['x₂₁', '']] }` for inside-cell text. These alternatives cannot mix. Dimensions and their product must be nonnegative safe integers. Label rows must be rectangular; empty strings mean no content, other strings are literal text, and repeated symbols are valid.
 

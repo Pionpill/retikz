@@ -5,7 +5,7 @@ description: Use Array to display one-dimensional content, configure cells, comp
 
 `Array` draws one-dimensional content as a row or column of cells, suitable for arrays, queues, and indexed values. Each cell contains text or one drawable component.
 
-## Using this topic
+## Getting started
 
 After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
 
@@ -256,16 +256,16 @@ Generated components recursively use the same selection. A structure displayed a
   defaultSourceFile="array-data.preview.tsx"
 />
 
-| Data type       | Input example   | Display                                                        |
-| --------------- | --------------- | -------------------------------------------------------------- |
-| String value    | `"null"`        | A quoted, escaped JSON literal: `"null"`, distinct from `null` |
-| Number          | `42`            | Displayed as `42`                                              |
-| Boolean         | `true`, `false` | Displayed as `true`, `false`                                   |
-| Null            | `null`          | Displayed as `null`                                            |
-| Nonempty array  | `["A", 2]`      | Recursively displayed as a Array, with one cell per element    |
-| Empty array     | `[]`            | Displayed as the text `[]`                                     |
-| Nonempty object | `{"a": 1}`      | A nested Map by default; `text` mode displays `{"a":1}`        |
-| Empty object    | `{}`            | Displayed as the text `{}`                                     |
+| Data type       | Input example   | Display                                                                    |
+| --------------- | --------------- | -------------------------------------------------------------------------- |
+| String value    | `"null"`        | A quoted, escaped JSON literal: `"null"`, distinct from `null`             |
+| Number          | `42`            | Displayed as `42`                                                          |
+| Boolean         | `true`, `false` | Displayed as `true`, `false`                                               |
+| Null            | `null`          | Displayed as `null`                                                        |
+| Nonempty array  | `["A", 2]`      | Recursively displayed as a Array, with one cell per element                |
+| Empty array     | `[]`            | Displayed as the text `[]`                                                 |
+| Nonempty object | `{"a": 1}`      | A nested Map by default; when objects are not expanded, displays `{"a":1}` |
+| Empty object    | `{}`            | Displayed as the text `{}`                                                 |
 
 An empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
 

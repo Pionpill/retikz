@@ -160,7 +160,12 @@ keys 的长度决定行数，键以原始纯文本显示，值格无内容；保
 
 字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
 
-<ComponentPreview files="map-styles" size="sm" />
+<ComponentPreview
+  files={['map-styles', 'map-styles.preview.tsx']}
+  defaultSourceFile="map-styles.preview.tsx"
+  size="sm"
+  caption="调整两列宽度，再关闭首格覆盖，比较整体、角色与单格的优先级。"
+/>
 
 `layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零；省略或 `'auto'` 时自适应。单格同名字段优先，显式 `'auto'` 可以解除继承的固定尺寸。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
 
@@ -170,9 +175,12 @@ keys 的长度决定行数，键以原始纯文本显示，值格无内容；保
 
 `label` 为整个容器添加文字，支持单个对象或数组，可设置位置、距离、旋转和引线。标签不撑大布局尺寸，但计入最终绘制范围；空容器也能显示标签。
 
-```tsx
-<Map entries={[{ key: 'a', value: '1' }]} label={{ text: 'record', position: 'top' }} />
-```
+<ComponentPreview
+  files={['map-labels', 'map-labels.preview.tsx']}
+  defaultSourceFile="map-labels.preview.tsx"
+  size="md"
+  caption="切换标签方位和距离，容器的格子尺寸保持不变。"
+/>
 
 整体字体、文字颜色及 `defaults.label` 可作为标签默认，标签自身设置优先；键值角色和单格样式不影响容器标签，`data` 中的嵌套容器也不继承根标签。
 
@@ -232,6 +240,13 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。未设 id 的格不会按数组下标自动获得身份。
 
 自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+
+<ComponentPreview
+  files={['map-overflow', 'map-overflow.preview.tsx']}
+  defaultSourceFile="map-overflow.preview.tsx"
+  size="md"
+  caption="蓝色外部连线始终引用值格边界；切换溢出方式不会移动连线端点，改变格宽才会。"
+/>
 
 ## 错误与限制
 

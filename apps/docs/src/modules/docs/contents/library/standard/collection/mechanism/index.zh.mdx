@@ -3,7 +3,7 @@ title: 实现原理
 description: 了解 Collection 内部通用的输入解析、Cell 测量、布局分配与内容回放逻辑。
 ---
 
-Collection 内部通过共享的 Cell 描述、测量与回放逻辑处理单格内容，再由各集合按自身结构完成排布。本页沿这条通用处理链，解释内容如何进入格子，以及格子尺寸变化时，内容为什么仍能保持原来的大小。
+Array、Map、Matrix、Stack、Queue 和 Chain 通过共享的 Cell 描述、测量与回放逻辑处理单格内容，再按各自结构完成排布。Tree 属于同一集合家族，但直接测量文字 Node 并排列子树；本文最后单独说明这条处理路径。本页沿这条通用处理链，解释内容如何进入格子，以及格子尺寸变化时，内容为什么仍能保持原来的大小。
 
 本文从一个集合的 Source IR 进入编译回调开始，追踪到编译子项与布局分配边界返回为止。React 子项的收集、Vanilla 输入转换，以及最终 SVG / Canvas 绘制不在这条主线内。正文中的 `CanonicalCell`、`MeasuredCell` 等是内部实现锚点，不是需要用户构造的公开输入。
 
@@ -44,7 +44,7 @@ Collection 内部通过共享的 Cell 描述、测量与回放逻辑处理单格
 
 容器内部的解析方法，如 `resolveArray`、`resolveMap`，先处理各自的输入形态，再调用共享的 `resolveCell` 解析单格内容与配置。本页把这一步称为**解析与补全**：它既收敛表示方式，也落实继承和默认值；原始 Source 不会被改写。这里不另称 `normalize`，以免与 Vanilla 的输入转换阶段混淆。
 
-三个入口最终都提供单格内容，但含义不同：
+上述六种 Cell 集合的三个入口最终都提供单格内容，但含义不同；Tree 的 root 不经过这一步：
 
 | 输入                | 展开方式                                                                           |
 | ------------------- | ---------------------------------------------------------------------------------- |
@@ -58,7 +58,7 @@ Collection 内部通过共享的 Cell 描述、测量与回放逻辑处理单格
 
 `data` 的基础值经 `JSON.stringify` 转为显示文本，因此 JSON 字符串会保留引号；显式文本则直接作为文字。空数组、空对象，以及未启用展开的容器，也以 JSON 文本显示。嵌套展开创建的是另一个集合子项，不会把嵌套结构拍平成外层格子。
 
-汇聚到 Cell 不代表丢失集合形状：Array 保留一维顺序，Map 保留键值配对，Matrix 保留二维行列，Chain 保留串行项与并行分支树。各 resolver 还负责自身的间距简写、索引配置或连接配置，测量阶段无需重新判断原始输入来自哪个入口。
+汇聚到 Cell 不代表丢失集合形状：Array 保留一维顺序，Map 保留键值配对，Matrix 保留二维行列，Stack 和 Queue 保留端点语义明确的一维顺序，Chain 保留串行项与并行分支树。各 resolver 还负责自身的间距简写、索引配置或连接配置，测量阶段无需重新判断原始输入来自哪个入口。
 
 <SourceLinks
   sources={[
@@ -105,7 +105,7 @@ Cell 是集合内部共享的单格描述。它可以没有内容，也可以承
 
 显式数字宽高是格子的边框区域尺寸，已经包含内边距。任一轴为显式数字、且没有继承或局部指定 overflow 时，默认裁切；否则默认允许可见溢出。空格没有内容测量结果，但仍可通过内边距或显式尺寸占据空间。
 
-Array 将 Cell 排成序列，Map 将两个 Cell 组成键值条目，Matrix 按行存储 Cell，Chain 则把 Cell 作为串并联结构的叶子。它们共享单格能力，各自拥有组织方式。
+Array 将 Cell 排成序列，Map 将两个 Cell 组成键值条目，Matrix 按行存储 Cell，Stack 和 Queue 沿单轴排列 Cell，Chain 则把 Cell 作为串并联结构的叶子。它们共享单格能力，各自拥有组织方式。
 
 <SourceLinks
   sources={[
@@ -173,12 +173,13 @@ $$
 
 <ComponentPreview files="allocation-figure" size="xxl" hideCode type="illustration" />
 
-| 集合   | 自动尺寸与位置的决定方式                                                                                      |
-| ------ | ------------------------------------------------------------------------------------------------------------- |
-| Array  | 自动宽、高分别取全部格子的最大需求；`width: 'content'` 保留当前格子的宽度需求。沿排列轴累计实际分配尺寸和 gap |
-| Map    | 键列、值列分别取最大宽度；每行高度取本行键和值的较大需求。下一行按行高与行间距推进                            |
-| Matrix | 每列取最大宽度，每行取最大高度；每格从所属轨道起点放置，下一格按轨道尺寸与间距推进                            |
-| Chain  | 保留每格需求尺寸；将格子与分支组装成布局块，再确定串行位置、分支对齐和连接线                                  |
+| 集合          | 自动尺寸与位置的决定方式                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Array         | 自动宽、高分别取全部格子的最大需求；`width: 'content'` 保留当前格子的宽度需求。沿排列轴累计实际分配尺寸和 gap      |
+| Map           | 键列、值列分别取最大宽度；每行高度取本行键和值的较大需求。下一行按行高与行间距推进                                 |
+| Matrix        | 每列取最大宽度，每行取最大高度；每格从所属轨道起点放置，下一格按轨道尺寸与间距推进                                 |
+| Stack / Queue | 沿主轴保留每格尺寸；交叉轴 auto 格填满最大需求，固定尺寸格居中。另计容器 padding，开放边框和操作箭头不改变格子排布 |
+| Chain         | 保留每格需求尺寸；将格子与分支组装成布局块，再确定串行位置、分支对齐和连接线                                       |
 
 各集合都保留单格显式数字尺寸。对 Map、Matrix 而言，一个格子显式设得较窄，不代表整列轨道也会缩小：同列更宽的格子仍决定下一列的起点。Chain 的按步骤对齐也可以引入共享轨道，但轨道中的格子仍保持自身大小。
 
@@ -245,13 +246,31 @@ $$
 
 <ComponentPreview files="pipeline-figure" size="lg" hideCode type="flow" />
 
-阅读时先看 `resolveMatrix` 如何保留二维结构，再看 `resolveCell` 如何确定每格配置；回到编译函数追踪 `MeasuredCell[][]` 到 `CellPlacement[]` 的变化，最后读 `compileCells` 内部的 `emitCell`，理解内容如何回放。Array、Map 和 Chain 可以沿同样顺序阅读，只替换集合组织与排布部分。
+阅读时先看 `resolveMatrix` 如何保留二维结构，再看 `resolveCell` 如何确定每格配置；回到编译函数追踪 `MeasuredCell[][]` 到 `CellPlacement[]` 的变化，最后读 `compileCells` 内部的 `emitCell`，理解内容如何回放。Array、Map、Stack、Queue 和 Chain 可以沿同样顺序阅读，只替换集合组织与排布部分。
 
 <SourceLinks
   sources={[
     { label: 'Matrix 编译入口', path: 'packages/library/standard/src/collection/matrix/pipeline.ts', startLine: 15 },
     { label: '共享单格解析', path: 'packages/library/standard/src/collection/_cell/resolve/resolve.ts', startLine: 34 },
     { label: '共享测量与输出', path: 'packages/library/standard/src/collection/_cell/pipeline.ts', startLine: 17 },
+  ]}
+/>
+
+## Tree 的节点与子树路径
+
+Tree 直接读取 root：字符串生成文字节点，对象保留 children 与局部配置，null 表示空树或空子槽。它不生成 Cell，也不使用三入口展开。整体 node 配置与逐节点覆盖合并后，再应用节点默认值。
+
+下面的 A、B、C、D 是真实 Node。C 的空子槽参与占位但不输出图形；父节点位于首末直属子节点中心的中点，而不是整棵后代树包络的中点。
+
+<ComponentPreview files="/library/standard/collection/tree/tree-basic" hideCode type="illustration" size="md" />
+
+编译先测量节点文本与形状，再自底向上汇总子树包络，按层间净距与子树净距放置。每个节点复用测量结果回放；父子连接引用完整节点，由实际路径方向确定轮廓上的连接点。显式 id 指向 Node 自身，不是 Cell 的矩形引用区域。节点形状和长文本的效果见 [Tree 用法](/library/standard/collection/tree)。
+
+<SourceLinks
+  sources={[
+    { label: 'Tree 节点与配置解析', path: 'packages/library/standard/src/collection/tree/resolve/resolve.ts' },
+    { label: 'Tree 测量、子树排布与节点连接', path: 'packages/library/standard/src/collection/tree/pipeline.ts' },
+    { label: 'Stack / Queue 共享单轴布局', path: 'packages/library/standard/src/collection/_cell/linear.ts' },
   ]}
 />
 
