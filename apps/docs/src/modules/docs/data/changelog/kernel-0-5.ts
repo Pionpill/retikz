@@ -39,6 +39,26 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: 'BREAKING：错误码类型统一命名',
+            en: 'BREAKING: unified error-code type name',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：错误码类型统一命名',
+                en: 'BREAKING: unified error-code type name',
+              },
+              content: {
+                zh: '随所属BREAKING：错误码类型统一命名发布，更新内部依赖及共享契约消费。',
+                en: 'Renames the `RetikzFoundationErrorCodeValue` type to `RetikzFoundationErrorCode`, sharing the constant name. Update old type imports; runtime error codes are unchanged.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
@@ -141,6 +161,26 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: '曲线投影范围',
+            en: 'Projected curve ranges',
+          },
+          items: [
+            {
+              label: {
+                zh: '曲线投影范围',
+                en: 'Projected curve ranges',
+              },
+              content: {
+                zh: '随所属曲线投影范围发布，更新内部依赖及共享契约消费。',
+                en: 'Adds `curve.projectedRange(segment, axis)` to compute projected ranges for lines, Bézier curves, and circular or elliptical arcs along a chosen axis.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-22',
@@ -257,6 +297,26 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: 'BREAKING：统一 Source、Computation 与 Runtime',
+            en: 'BREAKING: unify Source, Computation, and Runtime',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：统一 Source、Computation 与 Runtime',
+                en: 'BREAKING: unify Source, Computation, and Runtime',
+              },
+              content: {
+                zh: '公开状态定义、计算注册和持续运行实例统一采用 Source、Computation、Runtime 词汇；简化注册配置与结果转换默认，移除 Source 的变更提示校验回调，提示校验由消费它的 Computation 负责。强制 full 直接重新计算，不检查领域增量提示。',
+                en: 'Public state definitions, computation registration, and persistent instances use Source, Computation, and Runtime terminology. Registration and identity result transforms are simplified. Source change-hint validation callbacks are removed; consuming Computations validate hints. Forced full execution recomputes without inspecting domain hints.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
@@ -311,14 +371,14 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '未发布 · 可组合绘图契约', en: 'Unreleased · Composable drawing contracts' },
+          label: { zh: '可组合绘图契约', en: 'Composable drawing contracts' },
           content: {
             zh: 'Core 根入口公开主色、整体透明度、填充、描边、端点转角、文字呈现与布局、路径变换片段及推导类型。上层可以正向组合所需字段，既有 Node、Path、默认继承与 JSON 输入形态保持不变。',
             en: 'The Core root exports master-color, element-opacity, fill, stroke, cap/join, text-visual, text-layout, and path-transform fragments with inferred types. Consumers can compose the fields they need while existing Node, Path, default inheritance, and JSON input shapes remain unchanged.',
           },
         },
         {
-          label: { zh: '未发布 · 路径几何复用', en: 'Unreleased · Shared path geometry' },
+          label: { zh: '路径几何复用', en: 'Shared path geometry' },
           content: {
             zh: '公开 samplePathRoute 与 resolveGeometryLabelPlacement，供上层复用路径采样和标签默认。bend 单独提供 outAngle 或 inAngle 即启用切线模式，缺项使用统一权威默认；控制点溢出保留 Core 错误。',
             en: 'Exports samplePathRoute and resolveGeometryLabelPlacement for shared path sampling and label defaults. Either outAngle or inAngle selects tangent bend mode, with omitted fields using authoritative defaults. Control-point overflow retains a Core error.',
@@ -326,21 +386,21 @@ export const kernelV05: Release = {
         },
 
         {
-          label: { zh: '待发布：复合组件实例运行输入', en: 'Unreleased: composite instance runtime inputs' },
+          label: { zh: '复合组件实例运行输入', en: 'composite instance runtime inputs' },
           content: {
             zh: '按真实 Source 位置绑定 runtimeInput，作者 child 和生成 child 显式转交 opaque 绑定；probe/replay/direct lowering 和 retained 事务复用同一运行输入，保持 Core 同步且领域中立。',
             en: 'Bind runtimeInput to actual Source positions and transport opaque bindings explicitly for authored and generated children. Probes, replay, direct lowering and retained transactions reuse the same runtime input while Core remains synchronous and domain-neutral.',
           },
         },
         {
-          label: { zh: '未发布 · Node 默认位置', en: 'Unreleased · Default Node position' },
+          label: { zh: 'Node 默认位置', en: 'Default Node position' },
           content: {
             zh: 'Node 的 position 可省略，Core 统一解析为当前局部坐标系的 [0, 0]；React、Vanilla 与 Source IR 使用同一语义，布局子项无需显式填写零坐标。显式定位保持不变，Coordinate 的 position 仍必填。',
             en: 'Node position is optional and Core resolves it to [0, 0] in the current local coordinate system. React, Vanilla, and Source IR share this behavior, so layout children no longer need explicit zero coordinates. Explicit positioning is unchanged; Coordinate position remains required.',
           },
         },
         {
-          label: { zh: '未发布 · 图元身份与别名', en: 'Unreleased · Graphic identities and aliases' },
+          label: { zh: '图元身份与别名', en: 'Graphic identities and aliases' },
           content: {
             zh: '空间声明、查询和结果统一使用 id，移除旧 key 字段。Node 与空间句柄新增 aliasIds；多个 id 查询同一份几何或冻结空间记录，不重复创建图元，命名空间、变换、布局重放和原子更新保持一致。',
             en: 'Spatial declarations, selectors, and results now use id, removing the old key field. Node and spatial handles add aliasIds: multiple ids query the same geometry or frozen record without duplicate primitives, preserving namespaces, transforms, layout replay, and atomic updates.',
@@ -404,6 +464,76 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: '可组合绘图契约；路径几何复用；复合组件实例运行输入；Node 默认位置；图元身份与别名',
+            en: 'Composable drawing contracts; Shared path geometry; composite instance runtime inputs; Default Node position; Graphic identities and aliases',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：Runtime 接口与枚举类型命名',
+                en: 'BREAKING: Runtime APIs and enum type names',
+              },
+              content: {
+                zh: 'Core 的 Owner / Program 接口随 Runtime 统一为 Source / Computation；例如 `createCoreProgram` 改为 `createCoreComputation`，相关配置与结果类型同步改名。const object enum 的派生类型移除 `Value` 后缀，如 `LayoutAxisProposalKindValue` 改为 `LayoutAxisProposalKind`；更新旧导入，不保留别名。',
+                en: 'Core Owner / Program APIs follow Runtime terminology as Source / Computation; for example, `createCoreProgram` becomes `createCoreComputation`, with corresponding option and result type renames. Derived const-object enum types drop the `Value` suffix, such as `LayoutAxisProposalKindValue` to `LayoutAxisProposalKind`. Update old imports; no aliases remain.',
+              },
+            },
+            {
+              label: {
+                zh: '可组合绘图契约',
+                en: 'Composable drawing contracts',
+              },
+              content: {
+                zh: 'Core 根入口公开主色、整体透明度、填充、描边、端点转角、文字呈现与布局、路径变换片段及推导类型。上层可以正向组合所需字段，既有 Node、Path、默认继承与 JSON 输入形态保持不变。',
+                en: 'The Core root exports master-color, element-opacity, fill, stroke, cap/join, text-visual, text-layout, and path-transform fragments with inferred types. Consumers can compose the fields they need while existing Node, Path, default inheritance, and JSON input shapes remain unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: '路径几何复用',
+                en: 'Shared path geometry',
+              },
+              content: {
+                zh: '公开 samplePathRoute 与 resolveGeometryLabelPlacement，供上层复用路径采样和标签默认。bend 单独提供 outAngle 或 inAngle 即启用切线模式，缺项使用统一权威默认；控制点溢出保留 Core 错误。',
+                en: 'Exports samplePathRoute and resolveGeometryLabelPlacement for shared path sampling and label defaults. Either outAngle or inAngle selects tangent bend mode, with omitted fields using authoritative defaults. Control-point overflow retains a Core error.',
+              },
+            },
+            {
+              label: {
+                zh: '复合组件实例运行输入',
+                en: 'composite instance runtime inputs',
+              },
+              content: {
+                zh: '按真实 Source 位置绑定 runtimeInput，作者 child 和生成 child 显式转交 opaque 绑定；probe/replay/direct lowering 和 retained 事务复用同一运行输入，保持 Core 同步且领域中立。',
+                en: 'Bind runtimeInput to actual Source positions and transport opaque bindings explicitly for authored and generated children. Probes, replay, direct lowering and retained transactions reuse the same runtime input while Core remains synchronous and domain-neutral.',
+              },
+            },
+            {
+              label: {
+                zh: 'Node 默认位置',
+                en: 'Default Node position',
+              },
+              content: {
+                zh: 'Node 的 position 可省略，Core 统一解析为当前局部坐标系的 [0, 0]；React、Vanilla 与 Source IR 使用同一语义，布局子项无需显式填写零坐标。显式定位保持不变，Coordinate 的 position 仍必填。',
+                en: 'Node position is optional and Core resolves it to [0, 0] in the current local coordinate system. React, Vanilla, and Source IR share this behavior, so layout children no longer need explicit zero coordinates. Explicit positioning is unchanged; Coordinate position remains required.',
+              },
+            },
+            {
+              label: {
+                zh: '图元身份与别名',
+                en: 'Graphic identities and aliases',
+              },
+              content: {
+                zh: '空间声明、查询和结果统一使用 id，移除旧 key 字段。Node 与空间句柄新增 aliasIds；多个 id 查询同一份几何或冻结空间记录，不重复创建图元，命名空间、变换、布局重放和原子更新保持一致。',
+                en: 'Spatial declarations, selectors, and results now use id, removing the old key field. Node and spatial handles add aliasIds: multiple ids query the same geometry or frozen record without duplicate primitives, preserving namespaces, transforms, layout replay, and atomic updates.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-22',
@@ -629,6 +759,36 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: '发布组同步',
+            en: 'Release-group alignment',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：错误码类型命名',
+                en: 'BREAKING: error-code type name',
+              },
+              content: {
+                zh: '`RetikzInspectErrorCodeValue` 改为与常量同名的 `RetikzInspectErrorCode`；更新类型导入，检查结果与运行时错误码保持不变。',
+                en: '`RetikzInspectErrorCodeValue` becomes `RetikzInspectErrorCode`, sharing the constant name. Update type imports; inspection results and runtime codes are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: '发布组同步',
+                en: 'Release-group alignment',
+              },
+              content: {
+                zh: '随所属发布组同步发布，更新内部依赖及共享契约消费。',
+                en: 'Released with its release group, aligning internal dependencies and shared contract consumption.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
@@ -735,6 +895,36 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: '发布组同步',
+            en: 'Release-group alignment',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：枚举派生类型命名',
+                en: 'BREAKING: derived enum type names',
+              },
+              content: {
+                zh: 'const object enum 的派生类型统一移除 `Value` 后缀，例如 `RetikzEventValue` 改为 `RetikzEvent`、`RenderCachePolicyValue` 改为 `RenderCachePolicy`；常量值和渲染行为保持不变，旧类型导入需更新。',
+                en: 'Derived const-object enum types drop the `Value` suffix: for example, `RetikzEventValue` becomes `RetikzEvent` and `RenderCachePolicyValue` becomes `RenderCachePolicy`. Constant values and rendering behavior are unchanged; update old type imports.',
+              },
+            },
+            {
+              label: {
+                zh: '发布组同步',
+                en: 'Release-group alignment',
+              },
+              content: {
+                zh: '随所属发布组同步发布，更新内部依赖及共享契约消费。',
+                en: 'Released with its release group, aligning internal dependencies and shared contract consumption.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
@@ -806,7 +996,7 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '待发布：Layout 异步准备桥接', en: 'Unreleased: Layout async preparation bridge' },
+          label: { zh: 'Layout 异步准备桥接', en: 'Layout async preparation bridge' },
           content: {
             zh: 'runtime.preparation 支持 sync/async，缺省 sync；async 复用 Vanilla controller，不创建领域私有请求状态机。React 同步 SSR 保持同步；异步 SSR 使用 Vanilla 入口。',
             en: 'runtime.preparation supports sync/async and defaults to sync. Async mode reuses the Vanilla controller without domain-private request state machines. React synchronous SSR remains synchronous; async SSR uses Vanilla entry points.',
@@ -835,6 +1025,26 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: 'Layout 异步准备桥接',
+            en: 'Layout async preparation bridge',
+          },
+          items: [
+            {
+              label: {
+                zh: 'Layout 异步准备桥接',
+                en: 'Layout async preparation bridge',
+              },
+              content: {
+                zh: 'runtime.preparation 支持 sync/async，缺省 sync；async 复用 Vanilla controller，不创建领域私有请求状态机。React 同步 SSR 保持同步；异步 SSR 使用 Vanilla 入口。',
+                en: 'runtime.preparation supports sync/async and defaults to sync. Async mode reuses the Vanilla controller without domain-private request state machines. React synchronous SSR remains synchronous; async SSR uses Vanilla entry points.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-22',
@@ -914,7 +1124,7 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '待发布：共享异步作者准备', en: 'Unreleased: shared async authoring preparation' },
+          label: { zh: '共享异步作者准备', en: 'shared async authoring preparation' },
           content: {
             zh: 'adapter.prepare 先预检完整作者树，再执行并编译；共享 static commit/discard 与 async controller 负责取消、过期结果隔离及原子发布。同步 lower 与异步 prepare 契约明确区分。',
             en: 'adapter.prepare preflights the complete author tree before execution and compilation. Shared static commit/discard and async controllers own cancellation, stale-result isolation and atomic publication. Synchronous lower and async prepare have explicit contracts.',
@@ -936,6 +1146,26 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: '共享异步作者准备',
+            en: 'shared async authoring preparation',
+          },
+          items: [
+            {
+              label: {
+                zh: '共享异步作者准备',
+                en: 'shared async authoring preparation',
+              },
+              content: {
+                zh: 'adapter.prepare 先预检完整作者树，再执行并编译；共享 static commit/discard 与 async controller 负责取消、过期结果隔离及原子发布。同步 lower 与异步 prepare 契约明确区分。',
+                en: 'adapter.prepare preflights the complete author tree before execution and compilation. Shared static commit/discard and async controllers own cancellation, stale-result isolation and atomic publication. Synchronous lower and async prepare have explicit contracts.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-22',
@@ -1037,6 +1267,36 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: '发布组同步',
+            en: 'Release-group alignment',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：MathJax 枚举类型命名',
+                en: 'BREAKING: MathJax enum type names',
+              },
+              content: {
+                zh: '`MathJaxProfileValue` / `MathJaxExtensionValue` 改为 `MathJaxProfile` / `MathJaxExtension`，类型与常量共用名称；更新类型导入，公式渲染与 profile 值保持不变。',
+                en: '`MathJaxProfileValue` / `MathJaxExtensionValue` become `MathJaxProfile` / `MathJaxExtension`, sharing the constant names. Update type imports; formula rendering and profile values are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: '发布组同步',
+                en: 'Release-group alignment',
+              },
+              content: {
+                zh: '随所属发布组同步发布，更新内部依赖及共享契约消费。',
+                en: 'Released with its release group, aligning internal dependencies and shared contract consumption.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-22',

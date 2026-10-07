@@ -9,11 +9,13 @@ keywords: 'Vanilla、Authoring、InputXxx、InputScene、IRScene、InputEmbed'
 - 决策日期：2026-08-13
 - 关联：[ADR-012](./012-computation-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-retained-renderer.md)
 
+> 后续扩展：[ADR-047](./047-async-authoring-preparation.md) 定义异步 authoring prepare；同步入口只接受具备同步 lower 的 adapter。[ADR-048](./048-composite-runtime-input.md) 定义 Composite 实例运行输入，补充下文 metadata 与 Core 输入边界。
+
 ## 背景与目标
 
 Core 目前同时拥有可持久化 Source IR 和一部分面向作者的宽松输入类型、简写解析；React builder 也直接将 JSX props 拼装为 Core IR，并复制了 Vanilla 已有的 compile driver、Runtime 与 retained render 编排。这个边界使同一 authoring 语法和框架无关处理分散在 Core、React 与 Vanilla：新框架包需要重复 IR builder 和处理链，Core 公开面包含非持久化 `*Input` 类型，React 与无框架入口无法保证经由同一归一化链路。
 
-本决策建立唯一的 Core authoring 与处理主链：Vanilla 面向所有框架和无框架调用方提供 TypeScript authoring Input、Input 到 Source IR 的 pure normalize、compile driver、retained processing runtime 及只读处理结果；React 只负责解释 JSX、props、children、hook、ref、React 生命周期与 React 宿主接线，并直接依赖 Vanilla。Core 继续只拥有 JSON-safe Source IR、Source IR-to-Canonical normalize、compile 与 Scene。浏览器 mount / hydrate 只由 Vanilla 的 DOM 子入口承接，React 不取得这部分 DOM 所有权。
+本决策建立唯一的 Core authoring 与处理主链：Vanilla 面向所有框架和无框架调用方提供 TypeScript authoring Input、Input 到 Source IR 的 pure normalize、compile driver、retained processing runtime 及只读处理结果；React 只负责解释 JSX、props、children、hook、ref、React 生命周期与 React 宿主接线，并直接依赖 Vanilla。Core 继续只拥有 JSON-safe Source IR、Source IR-to-Canonical resolve、compile 与 Scene。浏览器 mount / hydrate 只由 Vanilla 的 DOM 子入口承接，React 不取得这部分 DOM 所有权。
 
 目标是收敛既有职责和公开表面，不增加绘图语义、IR 字段、Scene primitive、renderer 行为或新的通用扩展能力。
 
@@ -28,7 +30,7 @@ Vanilla 提供纯 `normalizeXxx(InputXxx): IRXxx`。它只负责已类型化 aut
 ```ts
 type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
   readonly type?: 'node';
-  readonly position: InputPosition;
+  readonly position?: InputPosition;
   readonly label?: InputNodeLabel | ReadonlyArray<InputNodeLabel>;
 };
 
@@ -82,7 +84,7 @@ React JSX / props / children
   -> React adapter produces Vanilla InputXxx
   -> Vanilla normalizeXxx
   -> Core IRXxx
-  -> Core resolveXxx + normalizeXxx
+  -> Core resolveXxx
   -> CanonicalXxx -> Scene
   -> Vanilla readonly processing result
   -> React host bridge

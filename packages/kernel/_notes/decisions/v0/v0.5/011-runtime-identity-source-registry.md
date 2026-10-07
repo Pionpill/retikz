@@ -77,15 +77,15 @@ type RuntimeSourceRegistry = Readonly<{
 const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): RuntimeSourceRegistry;
 ```
 
-`RuntimeRevision` / `RuntimeChangeSet`在本 ADR只是 TypeScript branded vocabulary：revision运行时表示仍是 number，无法鉴别 JavaScript对合法 safe integer的伪造。Runtime只承诺验证 `0..Number.MAX_SAFE_INTEGER`整数、current/base equality和 exhaustion，不承诺判断数值来源；ChangeSet object的 private brand/WeakSet由 ADR-012 factory保证不可伪造，changes array复制为不可变容器。
+`RuntimeRevision` / `RuntimeChangeSet`在本 ADR只是 TypeScript branded vocabulary：revision运行时表示仍是 number，无法鉴别 JavaScript对合法 safe integer的伪造。Runtime只承诺验证 `0..Number.MAX_SAFE_INTEGER`整数、current/base equality和 exhaustion，不承诺判断数值来源；ChangeSet 对象必须来自 ADR-012 的 factory，changes array复制为不可变容器。
 
-`RuntimeSourceDefinition` 是公开的 typed token，不公开 author callbacks；只有 `defineRuntimeSource()` 能创建 token。`RuntimeSourceTokenBrand`不导出 value，外部 object literal不能构造合法 token；Runtime另外以 private `WeakSet`做 object-identity guard，JavaScript伪造或其它 Runtime实例的 foreign token以 `RUNTIME_SOURCE_TOKEN_INVALID` fail-loud。helper在闭包中把 author-facing泛型 callbacks封装成 registry-private erased executor，registry直接接受具体 Definition并保存 token/executor一一对应。TypeScript无法原生表达 existential collection，因此实现只允许在 `defineRuntimeSource()` 内做一次由 token object identity守卫的 `unknown` narrowing；禁止 `any`，也禁止 registry/runtime重新 cast callback。`resolve(definition)`只接受原 token并恢复泛型；动态 string lookup只能返回无 callback的 `RuntimeSourceToken`，不能据此提交 value。
+`RuntimeSourceDefinition` 是公开的 typed token，不公开 author callbacks；只有 `defineRuntimeSource()` 能创建合法 token。伪造或 foreign token 以 `RUNTIME_SOURCE_TOKEN_INVALID` fail-loud。Registry 接受具体 Definition，并保持 token 与执行能力的一一对应；`resolve(definition)` 只接受原 token 并恢复泛型。动态 string lookup 只返回无 callback 的 `RuntimeSourceToken`，不能据此提交 value。
 
 异构输入不直接写成 `Array<RuntimeSourceDefinition<unknown, ...>>`。ADR-012 的 typed input/update builder 在具体 Definition 泛型仍在作用域内时生成闭包 command；runtime 和 registry 只消费该 erased command。这样 `unknown` 不会作为参数进入 `capture/read/equals`，错误 value/change 类型在 builder 调用点由 TypeScript 拒绝。
 
 `capture()` 必须产生 runtime-owned value，不与调用方共享可变引用；`read()` 必须产生不携带 disposable handle、可安全共享和缓存的 deeply immutable / persistent `TRead`；`equals()` 只比较语义完整 Snapshot。Persistent immutable structure 可以安全复用引用；nested object / Array / Map / Set 必须由 Definition 复制并深冻结，或转成 persistent immutable representation。class instance 只有在 read view 不暴露 mutable method、外部引用或 disposable handle 时允许；`TRead` 禁止携带需要 Runtime 释放的 handle。`dispose()` 只释放传入 value，重复调用不是合法路径。
 
-这是受信任的 Definition author contract，而不是 Runtime 能对任意泛型值自动证明的安全属性。Runtime 不做通用 deep-clone/deep-freeze，也不承诺防御恶意第三方 provider；内置 Definition 必须通过 conformance/alias-attack 测试，第三方扩展示例和文档必须显式说明该责任。ADR-012 的 candidate 隔离只依赖通过该 conformance contract 的 `TRead`，不再声称可防御恶意 callback。
+这是受信任的 Definition author contract，而不是 Runtime 能对任意泛型值自动证明的安全属性。Runtime 不做通用 deep-clone/deep-freeze，也不承诺防御恶意第三方 provider；内置与第三方 Definition 均须履行不可变读取与引用隔离契约。ADR-012 的 candidate 隔离只依赖通过该 conformance contract 的 `TRead`，不再声称可防御恶意 callback。
 
 `defineRuntimeSource()` 是唯一作者入口；`createRuntimeSourceRegistry(tokens)` 统一注册并解析 Definition token 数组，重复 key fail-loud。内置与自定义来源的分类及合并由调用方负责，Registry 不区分来源类别，也不自动装入来源。动态 `find(key)` 只用于诊断和存在性检查；所有 typed read/update 都必须持有原 Definition token。
 
