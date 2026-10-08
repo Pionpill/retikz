@@ -91,8 +91,7 @@ export const renderExtensionStatisticsPreview = () => (
       statisticsReducerImplementations={[midpointImplementation]}
       width={250}
       height={220}
-      x={0}
-      y={20}
+      position={[0, 20]}
     >
       <PlotTransform operation={{ ...midpointSummaryOperationOf() }} />
       <PointMark x="group" y="midpoint" />
@@ -106,8 +105,7 @@ export const renderExtensionStatisticsPreview = () => (
       rowSelectorImplementations={[closestToMeanImplementation]}
       width={250}
       height={220}
-      x={270}
-      y={20}
+      position={[270, 20]}
     >
       <PlotTransform operation={{ ...closestToMeanSelectOperationOf() }} />
       <PointMark x="group" y="score" />

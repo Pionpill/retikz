@@ -10,8 +10,9 @@ import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDef
 import type {
   ScopeFrameSchema,
   ScopeDefaultsSchema,
-  ScopePlacementSchema,
-  ScopePlacementTargetSchema,
+  ScopeAnchorPositionSchema,
+  ScopePositionSchema,
+  ScopePositionTargetSchema,
   ScopePropsSchema,
 } from './schema';
 
@@ -27,17 +28,22 @@ export type IRLabelDefault = ZodInfer<typeof LabelDefaultSchema>;
 /** every arrow 默认样式（= ArrowDetail） */
 export type IRArrowDefault = ZodInfer<typeof ArrowDefaultSchema>;
 
-/** Scope placement 允许的闭合 target */
-export type IRScopePlacementTarget = ZodInfer<typeof ScopePlacementTargetSchema>;
+/** Scope 锚点定位允许的闭合目标 */
+export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
 
 /** Scope 最终锚点对齐放置 */
-export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
+export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
+
+/** Scope 原点位置或最终锚点对齐 */
+export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 
 /** 样式继承通道标识，defaults.reset 按通道切断外层继承 */
 export type StyleChannel = ValueOf<typeof ScopeStyleChannel>;
 
 /** Scope 除 `type` 与递归 `children` 外的完整 authored 属性集合 */
-export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame'> & {
+export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'position'> & {
+  /** 父坐标系原点位置或最终锚点对齐，省略时为原点 */
+  position?: IRScopePosition;
   /** 可省略默认值的包络装饰 */
   frame?: IRScopeFrame;
 };

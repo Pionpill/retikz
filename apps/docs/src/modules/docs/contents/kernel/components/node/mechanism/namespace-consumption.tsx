@@ -17,7 +17,7 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Array
-        transforms={[{ kind: 'translate', x: 24, y: 29 }]}
+        position={[24, 29]}
         layout={{ width: 192, height: 36, padding: 0 }}
         style={{ font: { size: 14 } }}
         items={['Path(a, b)', 'Node a', 'Node b'].map((text, index) => ({
@@ -26,7 +26,7 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
         }))}
       />
       <Array
-        transforms={[{ kind: 'translate', x: 24, y: 135 }]}
+        position={[24, 135]}
         label={{ text: t.queue, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
         layout={{ width: 192, height: 36, padding: 0 }}
         style={{ font: { size: 14 } }}
@@ -38,7 +38,7 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
         ]}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 440, y: 137 }]}
+        position={[440, 137]}
         label={{ text: t.map, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 152 } }}
         style={{ font: { size: 13 }, textColor: 'currentColor' }}
@@ -81,7 +81,7 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
         arrow="->"
       />{' '}
       <Map
-        transforms={[{ kind: 'translate', x: 45, y: 269 }]}
+        position={[45, 269]}
         label={{ text: t.immediate, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 90 }, value: { width: 114 } }}
         style={{ font: { size: 13 }, textColor: 'currentColor' }}

@@ -209,7 +209,7 @@ const missing = new Set<string>();
 
 /** 缺译时记录原文，完成整页投影后统一报错 */
 export const translateFlowApiReference = (source: string): string => {
-  if (['', '—', 'false', '[]', 'LayeredFlowLayoutDefinition.name'].includes(source)) return source;
+  if (['', '—', 'false', '[]', '[0,0]', 'LayeredFlowLayoutDefinition.name'].includes(source)) return source;
 
   const value = translations[source.replace(/\r/g, '')];
   if (value !== undefined) return value;

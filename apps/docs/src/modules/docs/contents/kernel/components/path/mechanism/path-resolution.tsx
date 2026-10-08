@@ -37,7 +37,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
       />
       <Array
         id="commands"
-        transforms={[{ kind: 'translate', x: 0, y: 180 }]}
+        position={[0, 180]}
         label={{
           text: t.commands,
           position: { boundary: 'bottom', fraction: 0 },
@@ -64,7 +64,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
       />
       <Map
         id="occurrence"
-        transforms={[{ kind: 'translate', x: 300, y: 375 }]}
+        position={[300, 375]}
         label={{
           text: t.record,
           position: { boundary: 'bottom', fraction: 0 },
@@ -84,7 +84,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
         }}
       />
       <Draw way={['commands.bottom', '|-', 'occurrence.left']} arrow="->" />
-      <Scope transforms={[{ kind: 'translate', x: 40, y: 455 }]}>
+      <Scope position={[40, 455]}>
         <Path style={{ stroke: 'dodgerblue', strokeWidth: 2 }}>
           <Step kind="move" to={cutCurve.from} />
           <Step kind="curve" control={cutCurve.control} to={cutCurve.to} />

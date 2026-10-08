@@ -333,7 +333,7 @@ export const FlowGroupSchema = strictObject({
     type: true,
     children: true,
     transforms: true,
-    placement: true,
+    position: true,
     localNamespace: true,
   }).shape,
   id: GroupSchema.shape.id.unwrap().describe('Flow-wide authored Group identity.'),
@@ -342,7 +342,7 @@ export const FlowGroupSchema = strictObject({
   routing: FlowScopeRoutingSchema.optional().describe('Routing default for Relations in this Group scope.'),
   children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
 }).describe(
-  'Graph Group surface with Flow identity, reference children and automatic layout; excludes transforms, placement and localNamespace.',
+  'Graph Group surface with Flow identity, reference children and automatic layout; excludes transforms, position and localNamespace.',
 );
 
 const FlowLayoutBaseSchema = strictObject({

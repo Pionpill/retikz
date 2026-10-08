@@ -33,6 +33,101 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
   return undefined;
 };
 
+describe('Scope 原点位置与局部变换', () => {
+  it('中心 pivot 旋转后再应用点位置，外部引用保持最终中心', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          position: [100, 50],
+          transforms: [{ kind: 'rotate', degrees: 90, pivot: 'center' }],
+          children: [
+            {
+              type: 'node',
+              id: 'pivot-node',
+              position: [10, 20],
+              shape: 'rectangle',
+              layout: { minimumSize: { width: 40, height: 20 } },
+            },
+          ],
+        },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { id: 'pivot-node', anchor: 'center' } },
+          ],
+        },
+      ]),
+    ).scene;
+    const endpoint = lineTo(topPath(compiled.primitives));
+    expect(endpoint?.[0]).toBeCloseTo(110);
+    expect(endpoint?.[1]).toBeCloseTo(70);
+  });
+
+  it.each([
+    { position: [100, 50] as [number, number], expected: [110, 50] },
+    {
+      position: { kind: 'anchor' as const, target: [100, 50] as [number, number], selfAnchor: 'origin' as const },
+      expected: [100, 50],
+    },
+  ])('原点位置保留附加平移，anchor 则精确对齐：$position', ({ position, expected }) => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          position,
+          transforms: [{ kind: 'translate', x: 10, y: 0 }],
+          children: [{ type: 'coordinate', id: 'inside', position: [0, 0] }],
+        },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { id: 'inside' } },
+          ],
+        },
+      ]),
+    ).scene;
+    expect(lineTo(topPath(compiled.primitives))).toEqual(expected);
+  });
+
+  it('自身缩放不缩放主位置，祖先变换作用于位置和内容', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          position: [5, 7],
+          transforms: [{ kind: 'scale', x: 3 }],
+          children: [
+            {
+              type: 'scope',
+              position: [100, 50],
+              transforms: [{ kind: 'scale', x: 2 }],
+              children: [{ type: 'coordinate', id: 'inside', position: [10, 0] }],
+            },
+          ],
+        },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { id: 'inside' } },
+          ],
+        },
+      ]),
+    ).scene;
+    expect(lineTo(topPath(compiled.primitives))).toEqual([365, 157]);
+  });
+
+  it('省略位置与显式零位置产生相同 Scene', () => {
+    const children: IRScene['children'] = [{ type: 'node', position: [20, 30] }];
+    expect(compileToScene(scene([{ type: 'scope', position: [0, 0], children }])).scene).toEqual(
+      compileToScene(scene([{ type: 'scope', children }])).scene,
+    );
+  });
+});
+
 describe('applyTransformChain / inverseTransformChain 对偶性', () => {
   it('translate(50, 30) 正反复合是恒等', () => {
     const chain = [{ kind: 'translate' as const, x: 50, y: 30 }];

@@ -2,7 +2,8 @@ import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { quarterlyRows } from './extension-resolver.data';
 
-const parseQuarter = (raw: unknown): number | undefined => {
+/** 将季度标签解析为该季度起始时刻 */
+export const parseQuarter = (raw: unknown): number | undefined => {
   const match = /^(\d{4})Q([1-4])$/.exec(String(raw));
   if (!match) return undefined;
   return Date.UTC(Number(match[1]), (Number(match[2]) - 1) * 3, 1);

@@ -1,4 +1,4 @@
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type {
   CodeBlockPropsSchema,
@@ -9,7 +9,8 @@ import type {
   CodeSignatureSchema,
 } from './schema';
 
-export type IRCodeBlockProps = ZodInfer<typeof CodeBlockPropsSchema>;
+export type IRCodeBlockProps = Omit<ZodInfer<typeof CodeBlockPropsSchema>, 'position'> &
+  Pick<ZodInput<typeof CodeBlockPropsSchema>, 'position'>;
 
 export type IRCodeParameter = ZodInfer<typeof CodeParameterSchema>;
 

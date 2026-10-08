@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { FlexLayout, FlexLayoutItem, GridLayoutItem } from '../../src';
 import { InspectFlexLayout, InspectGridLayout, LayoutInspectLayout, LayoutInspectScope } from '../../src/inspect';
+import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 /** 通过 Vanilla processing 处理 React 输入并返回已提交的 Inspect 结果 */
 const inspectReactInput = (children: ReactNode): InspectionCompileResult | undefined => {
@@ -16,7 +17,7 @@ const inspectReactInput = (children: ReactNode): InspectionCompileResult | undef
   const processing = prepareStaticProcessing(
     input.scene,
     {
-      adapters: input.adapters,
+      adapters: synchronousAdapters(input.adapters),
       compile: { padding: 0 },
       compileDriver: createLayoutInspectionVanillaDriver({
         onCommit: result => {
@@ -73,7 +74,7 @@ describe('@retikz/layout-react/inspect', () => {
       </FlexLayout>
     );
     const input = createInputScene(children);
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 
     expect(
       normalized.authoringSites
@@ -119,7 +120,7 @@ describe('@retikz/layout-react/inspect', () => {
       prepareStaticProcessing(
         input.scene,
         {
-          adapters: input.adapters,
+          adapters: synchronousAdapters(input.adapters),
           compile: { padding: 0 },
           compileDriver: createLayoutInspectionVanillaDriver(),
         },

@@ -7,7 +7,7 @@ description: 定义字段格式、分类顺序与运行时解析器，同时保�
 
 ## 适用边界
 
-优先使用内置格式和字段类型。只有新的存储格式会跨数据源复用时才注册 `FieldFormatDefinition`；只服务当前数据源的解析分支使用 `resolveField`。
+先阅读[字段类型](/viz/data/model/field-types)与[数据接入](/viz/data/model/intake)，优先使用内置格式和排序规则。只有新的存储格式会跨数据源复用时才注册 `FieldFormatDefinition`；只服务当前数据源的解析分支使用 `resolveField`。
 
 | 扩展入口            | 解决什么                 | 配置保存什么  |
 | ------------------- | ------------------------ | ------------- |
@@ -19,20 +19,78 @@ description: 定义字段格式、分类顺序与运行时解析器，同时保�
 
 ## 定义字段格式
 
-可持久化、可跨数据源复用的格式使用 `defineFieldFormat`。`name` 是 model 中的引用键，`impliedType` 声明规范值类型，`parse` 把原始值转换为字符串、有限数值或 `undefined`。
+需要通过名称引用、可跨数据源复用的格式使用 `defineFieldFormat`。`name` 是 model 中的引用键，`impliedType` 声明规范值类型，`parse` 把原始值转换为字符串、有限数值或 `undefined`。
 
-下面的 `wan` 定义（Definition）通过 `<Plot formatDefinitions>` 注入；`model` 只保存 `format: 'wan'`，不会保存解析函数。
+报表中的收入可能写成 `'1.2K'`，但计算和绘图需要数值 `1200`。下面自定义一个名为 `thousands` 的解析格式：`K` 表示千，去掉 `K` 后缀，将前面的数字乘以 `1000`，并把字段类型确定为 `continuous`。例如，`'1.2K' → 1200`、`'2.4K' → 2400`；普通数值和不带后缀的数字串按原数值处理。
+
+`thousands` 是本示例注册的名称，不是内置格式。将定义加入本次数据处理使用的格式注册表后，收入字段用 `format: 'thousands'` 引用它；`model` 只保存格式名，解析函数留在运行时。
 
 <ComponentPreview
   files={['extension-format', 'extension-format-preview.tsx', 'extension-format.data.ts']}
   defaultSourceFile="extension-format-preview.tsx"
   size="lg"
-  caption="输入表保留原始“万”字符串；定义提供解析器，model 只保存格式名。"
+  caption="输入表保留原始“K”字符串；定义提供解析器，model 只保存格式名。"
 />
+
+关键是定义解析规则、注册名称，再由字段声明引用；下面直接展示 Data API：
+
+```ts
+import type { IRDataModel } from '@retikz/data';
+import { defineFieldFormat, resolveFormatRegistry } from '@retikz/data';
+
+const thousands = defineFieldFormat({
+  name: 'thousands',
+  impliedType: 'continuous',
+  parse: raw => {
+    if (typeof raw === 'number') return raw;
+    if (typeof raw !== 'string') return undefined;
+    const text = raw.trim();
+    const value = text.endsWith('K') ? Number(text.slice(0, -1)) * 1000 : Number(text);
+    return Number.isFinite(value) ? value : undefined;
+  },
+});
+const model: IRDataModel = [{ name: 'revenue', format: 'thousands' }];
+const registry = resolveFormatRegistry([thousands]);
+registry.get('thousands')?.parse('1.2K'); // 1200
+```
+
+## 定义分类顺序
+
+内置自然排序适合版本标签与编号；语言排序或其它业务规则可通过 `defineFieldOrder` 定义。下面注册 `labelLength`，默认按标签长度比较，等长标签保持出现顺序。切换内置规则可以比较结果；长度排序只是演示自定义比较器，并不等价于版本号排序。
+
+<ComponentPreview
+  files={[
+    'extension-order',
+    '/viz/data/model/intake/version-order.preview.tsx',
+    '/viz/data/model/intake/version-order.data.ts',
+  ]}
+  defaultSourceFile="/viz/data/model/intake/version-order.preview.tsx"
+  size="lg"
+/>
+
+定义比较器并注册后，可以直接用 Data API 生成分类域：
+
+```ts
+import { defineFieldOrder, resolveCategoryDomain, resolveFieldOrderRegistry } from '@retikz/data';
+
+const labelLength = defineFieldOrder({
+  name: 'labelLength',
+  compare: (a, b) => String(a).length - String(b).length,
+});
+const registry = resolveFieldOrderRegistry([labelLength]);
+const domain = resolveCategoryDomain(['10.18', '2.0', '10.2', '10.2.0'], 'labelLength', registry);
+// ['2.0', '10.2', '10.18', '10.2.0']
+```
+
+定义包含 `name` 与 `compare(a, b, context)`。比较器返回有限数值：负数表示 a 在前，零表示同序，正数表示 a 在后；`context.values` 是当前作用域去重后的有效类别，按出现序排列。比较器应为纯函数，满足反对称性与传递性，不修改值或上下文。
+
+分类顺序只决定类别域，不改变原始数据行的顺序。字段模型用 `order: 'labelLength'` 保存名称，比较器由运行时注册表提供。
 
 ## 运行时字段解析
 
-一次性逻辑或数据源专用分支使用 `resolveField`。它按逻辑字段返回可选的 `type` 与 `parse`，优先级高于 model、具名格式和默认转换；返回 `undefined` 时回到标准接入路径。
+一次性逻辑或数据源专用分支使用 `resolveField`。它按逻辑字段返回可选的 `type` 与 `parse`，覆盖已确定的类型或解析器；返回 `undefined` 时保留原有结果。格式注册和类型兼容检查先于 resolver，因此它不能绕过未知格式或格式与显式类型冲突。
+
+下面把 `2026Q1` 这样的季度标签转成季度起始时刻。模型已经声明 `quarter` 为时间类型，因此 resolver 只需返回 `parse`。如果模型未显式声明类型，返回解析函数时必须同时返回 `type`，即使格式或样本已能确定类型也一样。
 
 <ComponentPreview
   files={['extension-resolver', 'extension-resolver-preview.tsx', 'extension-resolver.data.ts']}
@@ -41,111 +99,105 @@ description: 定义字段格式、分类顺序与运行时解析器，同时保�
   caption="输入仍是季度字符串；运行时解析器只覆盖 quarter 字段的解析。"
 />
 
-`resolveField` 是运行时逃生舱，不经过注册表（registry），也不能序列化。需要稳定名称、跨宿主复用或持久化配置时，应改为 `FieldFormatDefinition`。
+运行时解析器只关心字段与原始值。下面显式返回时间类型，将季度标签转换为该季度起始时刻：
 
-## 定义分类顺序
+```ts
+import type { ResolveField } from '@retikz/data';
 
-内置自然排序适合版本标签与编号；语言排序或其它业务规则可通过 `defineFieldOrder` 定义。下面注册 `labelLength`，按标签长度比较；在控件中选择“自定义：标签长度”，观察标签按长度重新排列。
-
-<ComponentPreview
-  files={[
-    'extension-order',
-    '/viz/data/model/fields-and-types/version-order.preview.tsx',
-    '/viz/data/model/fields-and-types/version-order.data.ts',
-  ]}
-  defaultSourceFile="/viz/data/model/fields-and-types/version-order.preview.tsx"
-  size="lg"
-/>
-
-定义包含 `name` 与 `compare(a, b, context)`。比较器返回有限数值：负数表示 a 在前，零表示同序，正数表示 a 在后；`context.values` 是当前作用域去重后的有效类别，按出现序排列。比较器应为纯函数，满足反对称性与传递性，不修改值或上下文。
-
-Plot、Table 的运行时 `fieldOrderDefinitions` 接收定义数组；React 使用同名 prop，Vanilla 与直接 IR 调用传给运行时 options。字段模型只保存 `order: 'labelLength'`。Table 仅校验注册，不自动重排行列；独立使用时，可先调用 `resolveFieldOrderRegistry(definitions)`，再把 registry 传给 `resolveCategoryDomain(values, order, registry)`。
-
-注册名不能空白、重复或覆盖内置名称。未知名称在模型接入时失败；比较器抛错或返回非有限值时抛出 `RetikzDataError`，原始异常保留为 `cause`。定义仅对当前请求有效，跨进程传模型时需在接收端提供同名实现。
-
-## 注入宿主
-
-消费宿主负责把字段解析能力交给数据接入管线。以 Plot 为例：
-
-| 能力         | 注入入口                | model 引用方式          |
-| ------------ | ----------------------- | ----------------------- |
-| 具名分类顺序 | `fieldOrderDefinitions` | 字段声明 `order: name`  |
-| 具名字段格式 | `formatDefinitions`     | 字段声明 `format: name` |
-| 临时解析规则 | `resolveField`          | 无，运行时按字段解析    |
-
-其它消费模块可以在自己的适配器（adapter）中提供等价入口；数据模型只关心格式注册表与解析器结果。
-
-## 执行机制
-
-```text
-字段契约 → 查找具名格式 → 应用 resolveField 覆盖 → 规范化字段值
+const resolveField: ResolveField = field =>
+  field === 'quarter'
+    ? {
+        type: 'temporal',
+        parse: raw => {
+          const match = /^(\d{4})Q([1-4])$/.exec(String(raw));
+          return match ? Date.UTC(Number(match[1]), (Number(match[2]) - 1) * 3, 1) : undefined;
+        },
+      }
+    : undefined;
 ```
 
-具名格式先提供字段类型和解析器，`resolveField` 再按字段覆盖其中任一项。没有命中自定义规则时，数据接入继续使用 `model` 声明、推断结果与默认转换。
+`resolveField` 是运行时逃生舱，不经过注册表（registry）。它及其返回的解析函数不能序列化，也不会进入 IR，只保留在消费侧的运行时代码中。需要稳定名称、跨宿主复用或持久化配置时，应改为 `FieldFormatDefinition`：IR 只保存格式名称，定义及其解析函数仍由消费侧在运行时提供。
 
 ## 错误与限制
 
-| 情况                                | 结果                                                     |
-| ----------------------------------- | -------------------------------------------------------- |
-| 格式名与内置或自定义键重复          | 注册表构建立即报错                                       |
-| `model` 引用未注册格式              | 数据接入前报未注册错误                                   |
-| `resolveField.parse` 没有可确定类型 | 要求在 `model` 声明类型或由解析器返回 `type`             |
-| 解析器返回错误类型                  | 形成非法值，交给[校验与诊断](/viz/data/model/validation) |
+| 情况                                                  | 结果                                                                          |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 格式名为空、排序名为空白，或名称重复、覆盖内置名      | 注册表构建报错                                                                |
+| 模型引用未注册格式或排序名                            | 接入失败；接收模型的进程也必须注入同名定义                                    |
+| 格式类型与显式 `type` 冲突                            | 在 resolver 执行前报错                                                        |
+| resolver 返回 `parse`，但模型和返回值都未显式给出类型 | 接入失败；推断类型或格式蕴含类型不能代替这项声明                              |
+| 解析器返回与类型不符的值、`undefined` 或非有限数值    | 形成不可用值，交给[校验策略](/viz/data/model/intake#校验策略)，不重试默认转换 |
+| 排序比较器抛错或返回非有限数值                        | 抛出 `RetikzDataError`；回调异常保留为 `cause`                                |
 
 字段解析只负责单值规范化，不重排行、不改变行数，也不生成统计字段；这些能力属于[数据变换扩展](/viz/data/transform/extensions)。
 
-## API 参考
+## 相关属性
 
-以下契约都从 `@retikz/data` 包根导出。
+以下是本页使用的 Data 公开契约；完整说明见[API 参考](/viz/data/model/api-reference)。
 
-#### `FieldFormatDefinition`
-
-`defineFieldFormat(definition)` 接收并返回同一个 `FieldFormatDefinition`。
-
-| 字段          | 类型                                 | 描述                                            |
-| ------------- | ------------------------------------ | ----------------------------------------------- |
-| `name`        | `string`                             | 非空 registry key，不能与内置或其它自定义名冲突 |
-| `impliedType` | <ApiValues name="DataFieldType" />   | model 未声明 `type` 时采用的字段测量类型        |
-| `parse`       | `(raw: unknown) => ParsedFieldValue` | 把原始值转成规范字符串、有限数值或 `undefined`  |
-
-#### `ResolveField`
-
-`ResolveField` 是 `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution | undefined`，按逻辑字段返回覆盖；`undefined` 回到标准接入路径。
-
-#### `FieldResolution`
-
-`FieldResolution` 是单字段运行时覆盖：`type?` 为最终测量类型 <ApiValues name="DataFieldType" />，`parse?: (raw: unknown) => ParsedFieldValue` 为自定义解析函数。
-
-<SourceLinks
-  sources={[
+<ComponentProps
+  items={[
     {
-      label: '字段格式 Definition 契约',
-      path: 'packages/viz/data/src/contract/format.ts',
-      startLine: 5,
-      endLine: 22,
+      name: 'defineFieldFormat',
+      type: '(def: FieldFormatDefinition) => FieldFormatDefinition',
+      description: '定义具名解析规则；不会自动全局注册。',
+      kind: 'function',
     },
     {
-      label: '运行时字段 resolver 契约',
-      path: 'packages/viz/data/src/contract/data.ts',
-      startLine: 15,
-      endLine: 41,
+      name: 'FieldFormatDefinition',
+      type: '{ name: string; impliedType: DataFieldType; parse: (raw: unknown) => string | number | undefined }',
+      description:
+        '`impliedType` 为 `continuous`、`temporal` 或 `categorical`。时间返回毫秒数；连续值返回有限数值；离散值返回字符串或有限数值。',
+      kind: 'type',
     },
     {
-      label: 'resolver 覆盖与类型校验',
-      path: 'packages/viz/data/src/providers/data/resolve.ts',
-      startLine: 5,
-      endLine: 47,
+      name: 'resolveFormatRegistry',
+      type: '(custom?: ReadonlyArray<FieldFormatDefinition>) => Map<string, FieldFormatDefinition>',
+      description: '合并内置与自定义格式；字段的 format 按名称查找解析器。',
+      kind: 'function',
     },
     {
-      label: 'Plot 中字段格式与 resolver 的接入顺序',
-      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
-      startLine: 115,
-      endLine: 164,
+      name: 'resolveField',
+      type: '(field: string, context: { dataReference: string; physicalPath: string; declaredType?: DataFieldType }) => FieldResolution | undefined',
+      description: '按逻辑字段决定覆盖；返回 `undefined` 保留原解析。运行时注入，不写入 IR。',
+      kind: 'property',
+    },
+    {
+      name: 'FieldResolution',
+      type: '{ type?: DataFieldType; parse?: (raw: unknown) => string | number | undefined }',
+      description:
+        '`type` 可为 `continuous`、`temporal`、`categorical`。提供 `parse` 时必须显式声明模型类型或同时返回 `type`。',
+      kind: 'type',
+    },
+    {
+      name: 'defineFieldOrder',
+      type: '(definition: FieldOrderDefinition) => FieldOrderDefinition',
+      description: '定义具名纯比较器；通过运行时定义数组注册。',
+      kind: 'function',
+    },
+    {
+      name: 'FieldOrderDefinition',
+      type: 'Readonly<{ name: string; compare: (a: string | number, b: string | number, context: FieldOrderContext) => number }>',
+      description:
+        '`context.values` 是当前作用域去重后的有效类别，按出现序排列。返回负数、零、正数分别表示在前、同序、在后。',
+      kind: 'type',
+    },
+    {
+      name: 'resolveFieldOrderRegistry',
+      type: '(definitions?: ReadonlyArray<FieldOrderDefinition>) => ReadonlyMap<string, FieldOrderDefinition>',
+      description: '合并内置与自定义分类顺序，供分类域解析使用。',
+      kind: 'function',
+    },
+    {
+      name: 'resolveCategoryDomain',
+      type: "(values: Array<unknown>, order: IRDataFieldDefinition['order'], registry?: ReadonlyMap<string, FieldOrderDefinition>) => Array<string | number>",
+      description: '提取有效类别、去重并按指定 order 排列；返回分类域，不改变源行。',
+      kind: 'function',
     },
   ]}
 />
 
-## 相关
+## 延伸阅读
 
 <LinkedSections
   items={[

@@ -26,19 +26,19 @@ Scope 是常见的 lower target，其审计维度包括：
 | 维度                 | Scope 的典型能力                                                                |
 | -------------------- | ------------------------------------------------------------------------------- |
 | group / identity     | `id`、`localNamespace`、`zIndex`、`meta`、`animations`                          |
-| geometry / placement | `transforms`、`placement`、`clip`、`boundingShape`                              |
+| geometry / position  | `position`、`transforms`、`clip`、`boundingShape`                               |
 | Theme environment    | `theme` 及其向后代 composite 的逐字段继承                                       |
 | inherited appearance | 级联 graphic style、领域 defaults 通道（以当前 Core schema 为准）、`resetStyle` |
 | child-owned          | `children` 及节点、路径、坐标的几何和显式样式                                   |
 
 这些维度只能帮助发现缺口，不能成为可任意删减的字段白名单。对于明确拥有 Scope-backed public surface、或根语义就是一个 Scope container 的 composite，默认应能承载完整的 Core Scope surface
 
-先确认所选 lowering channel。普通 `CompositeDefinition.expand` 可以返回 `IRChild | Array<IRChild>`；layout-aware `compile` 的 `context.scope()` 只接受 Core 声明的结构属性，`replay` wrapper 只接受已 lowering 的 transforms/clip，不能重新施加 placement、样式 defaults 或 `resetStyle`。每个 lower target 及其字段都必须落到实际可用的 channel；不能把受限 channel 当作完整下层 contract 的替身
+先确认所选 lowering channel。`CompositeDefinition.expand` 通过 `children` 返回普通 IR；layout-aware `compile` 的 `context.scope()` 复用完整 `IRScopeProps`，沿普通 Scope 主链消费作者定位、变换、样式与 defaults。`replay` wrapper 仅接受已 lowering 的数值 transforms 与 allocation-coordinate clip，不重新施加作者定位、身份、样式或 defaults。每个 lower-facing 字段都必须落到对应 channel，不能用 replay 替代 authored Scope
 
-| channel                | 根输出规则                                                                                                                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `expand`               | 有共享 group 语义时输出普通 `IRScope`；无共享语义时可输出有序 child 数组                                                                                                                            |
-| layout-aware `compile` | 使用 `context.scope()` / `replay()` 形成 compile-local opaque child，只能使用该 channel 声明的属性；需要普通 `IRScope` 或其他完整 lower target 才能表达的字段，必须换路径或记录 Core capability gap |
+| channel                | 根输出规则                                                                                                                                                     |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `expand`               | 有共享 group 语义时输出普通 `IRScope`；无共享语义时可输出有序 child 数组                                                                                       |
+| layout-aware `compile` | 使用 `context.scope()` 承载完整 authored Scope surface，使用 `replay()` 提交已布局 child 的数值变换与裁剪；两者产生 compile-local opaque child，不混用各自职责 |
 
 ## 2. 原子契约与底层逻辑复用
 
@@ -54,13 +54,14 @@ Scope 是常见的 lower target，其审计维度包括：
 - 复用目标元素的全部 lower-facing surface；下层增加属性、默认值、refinement 或可观察输出时，Tier 2 不得继续依赖旧的局部副本。公开字段的收窄必须能在映射表和测试中被发现
 - composite 暴露 group/inherited Scope 能力，或其领域契约明确表示生成 child 共享一个可观察的 Scope 时，按所选 channel 产出稳定的根 Scope（`expand` 为普通 `IRScope`，layout-aware `compile` 为受限 opaque Scope child），所有生成 child 放入其 children/replay 结构。多个 child 本身不是 wrapper 的充分理由；wrapper 的存在由组合语义决定
 - 一旦根形状确定，空输入、嵌套和不同数据形态不能改变根输出契约。无 Scope 语义的普通多 child expand 可以保持数组；有 Scope 语义却省略 wrapper 时，必须给出跨 transform、style、clip、identity、bounds 的等价证明
-- 外层 lower 属性只 lower 一次并作用于其声明的组合范围；不要把外层 transform、clip、style、placement 或其他行为重复写入每个 child，也不要在 child 上重新实现下层算法
-- 组合语义必须引用下层现有规则：普通 Scope transform 按其数组顺序应用，placement 的时机与 intrinsic layout 对齐，普通 Scope clip 使用 Scope-local 坐标；layout-aware replay wrapper 的 clip 使用 placement 后的 parent-allocation 坐标，runtime transforms 也不等同于完整 `IRTransform`。级联 graphic style 向 child 继承，child 显式值优先，`resetStyle` 按命名通道切断继承。Theme 是独立环境，不因 `resetStyle` 被当作 graphic style 清除。若所选 channel 不支持其中一项，就改变 lowering 路径或显式拒绝，不自行发明等价语义
+- 外层 lower 属性只 lower 一次并作用于其声明的组合范围；不要把外层 position、transform、clip、style 或其他行为重复写入每个 child，也不要在 child 上重新实现下层算法
+- 作者主位置使用下层 `position`，`transforms` 仅表达局部变换；点位置遵循 `T(position)·M`，anchor 位置遵循最终包络对齐，不把两种形式互换或转换为隐式 translate。布局求解与 replay 保留各自的数值变换职责
+- 组合语义必须引用下层现有规则：普通 Scope transform 按其数组顺序应用，position 区分父坐标系原点与最终锚点对齐，普通 Scope clip 使用 Scope-local 坐标；layout-aware replay wrapper 的 clip 使用 placement 后的 parent-allocation 坐标，runtime transforms 也不等同于完整 `IRTransform`。级联 graphic style 向 child 继承，child 显式值优先，`resetStyle` 按命名通道切断继承。Theme 是独立环境，不因 `resetStyle` 被当作 graphic style 清除。若所选 channel 不支持其中一项，就改变 lowering 路径或显式拒绝，不自行发明等价语义
 
 ## 4. Identity 与跨元素组合
 
 - `id` 是 contract，不是普通样式：对每个 lower target 都要追踪 authored id → 生成的 lower element → 下层定义的 parent namespace、anchor/reference、bbox、prune 和 artifact 行为。另行区分 compile occurrence path、领域 item key、宿主 embed id 与 provenance/locator；它们有不同生命周期、唯一范围、碰撞和重排稳定性，只有 owner 明确声明时才能建立映射。不得把数组下标、JSON 内容 hash 或未声明映射的宿主 embed id 冒充稳定 identity
-- 写明 lower element 顺序、空输入、嵌套、外层与内部 transform 顺序、clip 范围、placement/bounds、兄弟级 `zIndex`、重复 id、`localNamespace`、空 wrapper/prune 和生成 id 规则，并复用下层既有语义
+- 写明 lower element 顺序、空输入、嵌套、外层与内部 transform 顺序、clip 范围、position/bounds、兄弟级 `zIndex`、重复 id、`localNamespace`、空 wrapper/prune 和生成 id 规则，并复用下层既有语义
 - 写明默认值与显式值的优先级：用户显式 lower 值不能被 composite 默认覆盖，child 显式样式不能被继承默认覆盖；`undefined`、`false`、`0` 必须保持语义
 - Scope `meta` 不自动继承给 child；必须说明用户 meta、root/child provenance 的落点、是否传播和字段级冲突规则，保留用户数据且不得无声覆盖
 

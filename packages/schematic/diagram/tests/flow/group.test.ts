@@ -68,7 +68,7 @@ describe('Flow Group Graph surface', () => {
 
   it.each([
     { transforms: [{ kind: 'translate', x: 10, y: 0 }] },
-    { placement: { target: [10, 0] } },
+    { position: { kind: 'anchor', target: [10, 0] } },
     { localNamespace: true },
   ])('rejects Group fields that change Flow geometry or identity: %j', field => {
     const parsed = Flow.FlowDiagramSchema.safeParse({

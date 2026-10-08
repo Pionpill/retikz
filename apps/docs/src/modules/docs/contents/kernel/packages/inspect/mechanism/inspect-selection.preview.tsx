@@ -46,7 +46,7 @@ const renderRightScope = (children: ReactNode, barrier: boolean) =>
       {children}
     </InspectScope>
   ) : (
-    <Scope transforms={[{ kind: 'translate', x: 110, y: 0 }]}>{children}</Scope>
+    <Scope position={[110, 0]}>{children}</Scope>
   );
 
 /** 图形参数 */
@@ -64,7 +64,7 @@ export const InspectSelectionPreview = (values: InspectSelectionPreviewValues) =
 
   return (
     <InspectLayout registry={registry}>
-      <Scope transforms={[{ kind: 'translate', x: -110, y: 0 }]}>
+      <Scope position={[-110, 0]}>
         <Curve inspect={inspectLeft} controlPoints={values.controlPoints} labels={values.labels} />
         <Node position={[0, 88]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
           A

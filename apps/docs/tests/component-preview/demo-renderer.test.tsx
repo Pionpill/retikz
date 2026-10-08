@@ -1,5 +1,6 @@
-﻿import { Layout } from '@retikz/react';
 // @vitest-environment jsdom
+
+import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';

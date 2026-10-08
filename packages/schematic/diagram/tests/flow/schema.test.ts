@@ -111,7 +111,7 @@ describe('Flow Source schema', () => {
       entities: [{ id: 'item', text: 'Item' }],
       children: ['item'],
     };
-    expect(FlowDiagramSchema.parse(source)).toEqual({ ...source, groups: [], layouts: [] });
+    expect(FlowDiagramSchema.parse(source)).toEqual({ ...source, position: [0, 0], groups: [], layouts: [] });
     expect(FlowDiagramSchema.safeParse({ ...source, entities: [] }).success).toBe(false);
     expect(FlowDiagramSchema.safeParse({ ...source, children: [] }).success).toBe(false);
   });
@@ -156,7 +156,7 @@ describe('Flow Source schema', () => {
 
     const parsed = FlowDiagramSchema.parse(source);
 
-    expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual({ ...source, position: [0, 0] });
     expect(
       FlowDiagramSchema.safeParse({
         ...source,
@@ -168,7 +168,7 @@ describe('Flow Source schema', () => {
   it('parses the flat catalog Source and round-trips without changing it', () => {
     const parsed = FlowDiagramSchema.parse(completeFlow);
 
-    expect(parsed).toEqual(completeFlow);
+    expect(parsed).toEqual({ ...completeFlow, position: [0, 0] });
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
     expect(Object.keys(parsed).at(-1)).toBe('children');
     expect(JSON.stringify(parsed)).not.toContain('parentId');
@@ -246,7 +246,7 @@ describe('Flow Source schema', () => {
       children: ['layout'],
     };
 
-    expect(FlowDiagramSchema.parse(source)).toEqual(source);
+    expect(FlowDiagramSchema.parse(source)).toEqual({ ...source, position: [0, 0] });
     expect(
       FlowDiagramSchema.safeParse({
         ...source,
@@ -293,7 +293,7 @@ describe('Flow Source schema', () => {
       children: ['layout'],
     };
 
-    expect(FlowDiagramSchema.parse(source)).toEqual(source);
+    expect(FlowDiagramSchema.parse(source)).toEqual({ ...source, position: [0, 0] });
     expect(FlowDiagramSchema.safeParse({ ...source, layouts: [{ ...source.layouts[0], itemWidth: 0 }] }).success).toBe(
       false,
     );

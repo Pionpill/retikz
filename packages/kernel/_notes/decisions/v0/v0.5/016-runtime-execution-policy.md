@@ -66,9 +66,9 @@ type VanillaRuntimeOptions =
 
 `@retikz/runtime`公开 const object `RuntimeUpdateStrategy`及其`RuntimeUpdateStrategy`。`RuntimeComputationContext`增加当前 invocation 的`execution: 'full' | 'incremental' | 'fallback'`，让 Computation 对 forced full 与安全失败 fallback 使用准确 trace；它不允许 callback 改写调度结果。
 
-Runtime Runtime 的策略在创建时复制并固定。`full` 只改变有实际依赖变化的 Computation：无关 Computation 仍复用 committed artifact，continuous participant 仍按既有规则推进 revision。Computation graph 中任一 upstream full 仍使依赖 Computation full；invalid ChangeSet 仍标为 fallback，不被 forced full 隐藏。
+Runtime 的策略在创建时复制并固定。`full` 只改变有实际依赖变化的 Computation：无关 Computation 仍复用 committed artifact，continuous participant 仍按既有规则推进 revision。Computation graph 中任一 upstream full 仍使依赖 Computation full；upstream fallback 优先向下游传播。强制 full 直接调用 run，不消费或校验领域增量提示，成功结果标为 full。Runtime 仍校验 ChangeSet 的来源与 base revision；增量路径中提示内容的完整性与可用性由消费它的 Computation 判断，需要时返回 fallback。
 
-`auto | full` 是 Runtime 为保证 transaction、invalid-hint fallback precedence 与 Computation graph propagation 而拥有的封闭调度枚举，不接受第三方注册任意 strategy；开放 Computation 继续统一通过 `defineRuntimeComputation()`接入。`static | retained`同样只是 adapter 对两条既有宿主生命周期的封闭选择，不是绘图能力或可注册 provider；第三方 renderer 仍只通过现有 `RetainedRendererFactory`进入 retained 分支。
+`auto | full` 是 Runtime 为保证 transaction 与 Computation graph outcome propagation 而拥有的封闭调度枚举，不接受第三方注册任意 strategy；开放 Computation 继续统一通过 `defineRuntimeComputation()`接入。`static | retained`同样只是 adapter 对两条既有宿主生命周期的封闭选择，不是绘图能力或可注册 provider；第三方 renderer 仍只通过现有 `RetainedRendererFactory`进入 retained 分支。
 
 Render participant 将直接收到的独占 `replaceScene` 记录为 `full` work；renderer capability 把原局部 Patch 扩大成 replace 时仍记录 `fallback`并产生既有 warning；规范局部 Patch继续记录`incremental`。三种结果都必须与 next完整Snapshot 等价。
 
@@ -102,7 +102,7 @@ Static没有candidate、commit或rollback。compile / normalization在宿主写�
 
 ## 最终结果
 
-- Runtime公开`RuntimeUpdateStrategy`，Runtime在创建时固定`auto | full`；Computation context准确区分`full | incremental | fallback`，invalid ChangeSet仍优先归为fallback。
+- Runtime公开`RuntimeUpdateStrategy`，Runtime在创建时固定`auto | full`；Computation context准确区分`full | incremental | fallback`。强制 full 不检查领域增量提示，增量路径的提示校验由 Computation 负责，upstream fallback 优先向下游传播。
 - Core forced full发布独占`replaceScene`，Render区分直接replace full、局部incremental与capability fallback。
 - React `<Layout>`与Vanilla raw-input mount对等支持static、retained full与默认retained auto；React strategy变化在同一host重建Runtime，Vanilla改变策略需dispose/remount。
 - Bench 观测 retained/static 的 execution outcome，但不改变运行时契约或 timing gate

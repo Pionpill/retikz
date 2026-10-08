@@ -29,7 +29,7 @@ const LifecycleState: FC<LifecycleStateProps> = props => {
       ].map(state => (
         <Map
           key={state.x}
-          transforms={[{ kind: 'translate', x: state.x, y: 0 }]}
+          position={[state.x, 0]}
           label={{ text: state.title, font: { size: 12 } }}
           layout={{ height: 30, key: { width: 90 }, value: { width: 180 } }}
           style={{ font: { size: 14 } }}

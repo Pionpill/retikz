@@ -1084,7 +1084,7 @@ export type FlowRelationsProps = Readonly<{
 | `layouts?`                     | `InputFlowDiagram['layouts']`                                                                                                     | `[]`                               | Flat Flow Layout declaration catalog; defaults to an empty array.                                                                               |
 | `localNamespace?`              | `false \| true`                                                                                                                   | —                                  | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
 | `meta?`                        | `Record<string, JsonValue>`                                                                                                       | —                                  | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
-| `placement?`                   | `InputFlowDiagram['placement']`                                                                                                   | —                                  | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `position?`                    | `InputFlowDiagram['position']`                                                                                                    | `[0,0]`                            | Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].                                             |
 | `presentation?`                | `InputFlowDiagram['presentation']`                                                                                                | —                                  | Optional complete Diagram Presentation.                                                                                                         |
 | `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`                                                                                           | `[]`                               | Custom Relation kind definitions                                                                                                                |
 | `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>`                                                                                      | `[]`                               | Custom Relation predicate definitions                                                                                                           |
@@ -2217,7 +2217,7 @@ export type FlowSmoothRouting = Readonly<{
 | `localNamespace?`  | `false \| true`                                                                                                                   | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
 | `meta?`            | `Record<string, JsonValue>`                                                                                                       | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `namespace`        | `"diagram"`                                                                                                                       | —       | Diagram semantic element namespace.                                                                                                             |
-| `placement?`       | `IRFlowDiagram["placement"]`                                                                                                      | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `position?`        | `IRFlowDiagram["position"]`                                                                                                       | `[0,0]` | Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].                                             |
 | `presentation?`    | `IRFlowDiagram["presentation"]`                                                                                                   | —       | Optional complete Diagram Presentation.                                                                                                         |
 | `relations?`       | `IRFlowDiagram["relations"]`                                                                                                      | —       | Optional non-empty root relation collection.                                                                                                    |
 | `routing?`         | `IRFlowDiagram["routing"]`                                                                                                        | —       | Root Flow relation routing default.                                                                                                             |
@@ -2234,8 +2234,9 @@ export type FlowSmoothRouting = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type IRFlowDiagram = Omit<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'> &
-  Partial<Pick<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'>>;
+export type IRFlowDiagram = Omit<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts' | 'position'> &
+  Partial<Pick<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'>> &
+  Pick<ZodInput<typeof FlowDiagramSchema>, 'position'>;
 ```
 
 </DocTab>

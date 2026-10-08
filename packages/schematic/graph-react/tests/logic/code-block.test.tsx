@@ -15,6 +15,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
+import { synchronousAdapters } from '../helpers/synchronous-adapters';
+
 const schema = CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
 
 const definition = defineCodeBlock({
@@ -64,12 +66,12 @@ const Service = Object.assign(ServiceView, {
 describe('Custom code block React authoring', () => {
   it('reuses the Vanilla adapter and matches Direct IR and Vanilla Scene', () => {
     const input = createInputScene(<Service key="service" {...source} />);
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 
     expect(normalized.ir.children).toEqual([source]);
 
     const actual = processToStaticInputResult(input.scene, {
-      adapters: input.adapters,
+      adapters: synchronousAdapters(input.adapters),
       compile: { themeStyles: [coreStyle] },
     });
     const vanilla = processToStaticInputResult(
@@ -90,7 +92,7 @@ describe('Custom code block React authoring', () => {
     expect(actual.scene).toEqual(direct.scene);
 
     const retained = createProcessingController(input.scene, {
-      adapters: input.adapters,
+      adapters: synchronousAdapters(input.adapters),
       compile: { themeStyles: [coreStyle] },
     });
 

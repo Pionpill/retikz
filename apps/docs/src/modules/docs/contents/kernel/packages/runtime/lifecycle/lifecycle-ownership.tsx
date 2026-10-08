@@ -26,7 +26,7 @@ const LifecycleOwnership: FC<LifecycleOwnershipProps> = props => {
         ]}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 375, y: 0 }]}
+        position={[375, 0]}
         label={{ text: text.instance, font: { size: 14 } }}
         style={{ font: { size: 14 } }}
         layout={{ height: 34, key: { width: 160 }, value: { width: 180 } }}
@@ -37,7 +37,7 @@ const LifecycleOwnership: FC<LifecycleOwnershipProps> = props => {
         ]}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 180, y: 170 }]}
+        position={[180, 170]}
         label={{ text: text.transaction, font: { size: 14 } }}
         style={{ font: { size: 14 } }}
         layout={{ height: 34, key: { width: 190 }, value: { width: 200 } }}

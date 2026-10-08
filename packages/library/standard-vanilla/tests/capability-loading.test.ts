@@ -1,5 +1,8 @@
 import { StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
 import {
+  TreeInputEmbedAdapter,
+  QueueInputEmbedAdapter,
+  StackInputEmbedAdapter,
   ChainInputEmbedAdapter,
   MatrixInputEmbedAdapter,
   ArrayInputEmbedAdapter,
@@ -50,6 +53,9 @@ const input = scene({
 describe('Standard Vanilla definition loading', () => {
   it('provides the current adapter catalog once in stable frozen order', () => {
     expect(StandardInputEmbedAdapters).toEqual([
+      TreeInputEmbedAdapter,
+      QueueInputEmbedAdapter,
+      StackInputEmbedAdapter,
       ChainInputEmbedAdapter,
       MatrixInputEmbedAdapter,
       MapInputEmbedAdapter,

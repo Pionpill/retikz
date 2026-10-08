@@ -138,6 +138,9 @@ export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormat
 /**
  * 解析字段格式 registry
  * @description 内置格式总是先注册；用户自定义 definition 不能覆盖内置格式名，也不能彼此重复
+ * @param custom 自定义格式列表；省略时仅包含内置格式
+ * @returns 每次调用独立创建的名称到定义映射
+ * @throws {RetikzDataError} 格式名称为空或与内置、自定义名称重复
  */
 export const resolveFormatRegistry = (
   custom?: ReadonlyArray<FieldFormatDefinition>,

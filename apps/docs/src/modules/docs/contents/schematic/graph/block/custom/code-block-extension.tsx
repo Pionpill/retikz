@@ -117,7 +117,7 @@ const Demo: FC<CodeBlockExtensionProps> = props => {
           description={i18n.description}
           width={270}
           theme={{ style: coreStyle.name, mode }}
-          transforms={[{ kind: 'translate', x: index * 290, y: 0 }]}
+          position={[index * 290, 0]}
           logic={{
             id: 'logic',
             title: i18n.title,

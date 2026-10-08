@@ -1,6 +1,6 @@
 ---
 title: Schema reference
-description: Look up public Scope, placement, transform, and clipping data contracts
+description: Look up public Scope, position, transform, and clipping data contracts
 ---
 
 This page selects Scope-owned and directly clipping-related schemas from `@retikz/core` by name and reads their fields from source. Shared drawable-default and transform schemas stay as named field types on Scope instead of being repeated here. See [API reference](/kernel/components/scope/api-reference) for React props and [Basic usage](/kernel/components/scope/usage) to get started.
@@ -25,13 +25,17 @@ A frame stores decoration spacing and independent styling, without an id, events
 
 <ZodSchema name="ScopeFrameStyleSchema" shallow />
 
-## ScopePlacementSchema
+## ScopePositionSchema
 
-<ZodSchema shallow name="ScopePlacementSchema" />
+<ZodSchema shallow name="ScopePositionSchema" />
 
-## ScopePlacementTargetSchema
+## ScopeAnchorPositionSchema
 
-<ZodSchema shallow name="ScopePlacementTargetSchema" />
+<ZodSchema shallow name="ScopeAnchorPositionSchema" />
+
+## ScopePositionTargetSchema
+
+<ZodSchema shallow name="ScopePositionTargetSchema" />
 
 ## ScopeSelfPointSchema
 

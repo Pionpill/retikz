@@ -23,14 +23,14 @@ const node = (id: string, position: [number, number]) => ({
   layout: { minimumSize: { width: 20, height: 10 }, padding: 0, margin: 0 },
 });
 
-describe('Scope placement 两阶段布局', () => {
+describe('Scope anchor position 两阶段布局', () => {
   it('显式 parent-frame target + center selfAnchor 生成最外层 placement translate', () => {
     const compiled = compileToScene(
       scene([
         {
           type: 'scope',
           id: 'cluster',
-          placement: { target: [100, 50] },
+          position: { kind: 'anchor', target: [100, 50] },
           children: [node('inside', [10, 20])],
         },
       ]),
@@ -44,7 +44,7 @@ describe('Scope placement 两阶段布局', () => {
       scene([
         {
           type: 'scope',
-          placement: { target: [100, 50], selfAnchor: 'top-left' },
+          position: { kind: 'anchor', target: [100, 50], selfAnchor: 'top-left' },
           children: [{ ...node('inside', [10, 20]), layout: { ...node('inside', [10, 20]).layout, margin: 2 } }],
         },
       ]),
@@ -59,10 +59,7 @@ describe('Scope placement 两阶段布局', () => {
         { type: 'coordinate', id: 'target', position: [100, 80] },
         {
           type: 'scope',
-          placement: {
-            target: { id: 'target', offset: [6, -2] },
-            selfAnchor: 'origin',
-          },
+          position: { kind: 'anchor', target: { id: 'target', offset: [6, -2] }, selfAnchor: 'origin' },
           children: [node('inside', [10, 20])],
         },
       ]),
@@ -77,7 +74,7 @@ describe('Scope placement 两阶段布局', () => {
         node('node-target', [40, 10]),
         {
           type: 'scope',
-          placement: { target: { id: 'node-target', anchor: 'right' }, selfAnchor: 'origin' },
+          position: { kind: 'anchor', target: { id: 'node-target', anchor: 'right' }, selfAnchor: 'origin' },
           children: [],
         },
         {
@@ -87,7 +84,7 @@ describe('Scope placement 两阶段布局', () => {
         },
         {
           type: 'scope',
-          placement: { target: { id: 'scope-target', anchor: 'right' }, selfAnchor: 'origin' },
+          position: { kind: 'anchor', target: { id: 'scope-target', anchor: 'right' }, selfAnchor: 'origin' },
           children: [],
         },
       ]),
@@ -103,7 +100,7 @@ describe('Scope placement 两阶段布局', () => {
       scene([
         {
           type: 'scope',
-          placement: { target: [100, 50] },
+          position: { kind: 'anchor', target: [100, 50] },
           transforms: [
             { kind: 'rotate', degrees: 90, pivot: 'center' },
             { kind: 'scale', x: 2, y: 3, pivot: 'center' },
@@ -128,7 +125,7 @@ describe('Scope placement 两阶段布局', () => {
         {
           type: 'scope',
           id: 'empty',
-          placement: { target: [40, 30] },
+          position: { kind: 'anchor', target: [40, 30] },
           children: [],
         },
         {
@@ -154,7 +151,7 @@ describe('Scope placement 两阶段布局', () => {
         {
           type: 'scope',
           boundingShape: 'circle',
-          placement: { target: [100, 0], selfAnchor: 'right' },
+          position: { kind: 'anchor', target: [100, 0], selfAnchor: 'right' },
           children: [node('left', [-10, 0]), node('right', [10, 0])],
         },
       ]),
@@ -168,17 +165,17 @@ describe('Scope placement 两阶段布局', () => {
     [
       'forward',
       [
-        { type: 'scope', placement: { target: { id: 'later' } }, children: [] },
+        { type: 'scope', position: { kind: 'anchor', target: { id: 'later' } }, children: [] },
         { type: 'coordinate', id: 'later', position: [0, 0] },
       ],
     ],
-    ['self', [{ type: 'scope', id: 'self', placement: { target: { id: 'self' } }, children: [] }]],
+    ['self', [{ type: 'scope', id: 'self', position: { kind: 'anchor', target: { id: 'self' } }, children: [] }]],
     [
       'descendant',
       [
         {
           type: 'scope',
-          placement: { target: { id: 'inside' } },
+          position: { kind: 'anchor', target: { id: 'inside' } },
           children: [{ type: 'coordinate', id: 'inside', position: [0, 0] }],
         },
       ],
@@ -192,9 +189,7 @@ describe('Scope placement 两阶段布局', () => {
           children: [
             {
               type: 'scope',
-              placement: {
-                target: { id: 'outer', anchor: 'right', boundary: 'missing-boundary' },
-              },
+              position: { kind: 'anchor', target: { id: 'outer', anchor: 'right', boundary: 'missing-boundary' } },
               children: [],
             },
           ],
@@ -203,7 +198,7 @@ describe('Scope placement 两阶段布局', () => {
     ],
   ] as const)('%s Scope target fail-loud，不读取未完成 placeholder', (_name, children) => {
     expect(() => compileToScene(scene(children as unknown as IRScene['children'])).scene).toThrow(
-      /scope placement target/i,
+      /scope position target/i,
     );
   });
 
@@ -214,10 +209,7 @@ describe('Scope placement 两阶段布局', () => {
           scene([
             {
               type: 'scope',
-              placement: {
-                target: [0, 0],
-                selfAnchor: { side: 'top', fraction: 0.5 },
-              },
+              position: { kind: 'anchor', target: [0, 0], selfAnchor: { side: 'top', fraction: 0.5 } },
               children: [],
             },
           ]),
@@ -231,7 +223,7 @@ describe('Scope placement 两阶段布局', () => {
         {
           type: 'scope',
           id: 'cluster',
-          placement: { target: [100, 50] },
+          position: { kind: 'anchor', target: [100, 50] },
           transforms: [{ kind: 'rotate', degrees: 90, pivot: 'center' }],
           children: [node('inside', [10, 20])],
         },
@@ -265,13 +257,13 @@ describe('Scope placement 两阶段布局', () => {
         {
           type: 'scope',
           id: 'outer',
-          placement: { target: [100, 100] },
+          position: { kind: 'anchor', target: [100, 100] },
           transforms: [{ kind: 'rotate', degrees: 90, pivot: 'center' }],
           children: [
             {
               type: 'scope',
               id: 'inner',
-              placement: { target: [20, 0] },
+              position: { kind: 'anchor', target: [20, 0] },
               transforms: [{ kind: 'scale', x: 2, pivot: 'center' }],
               children: [node('leaf', [10, 0])],
             },
@@ -308,10 +300,7 @@ describe('Scope placement 两阶段布局', () => {
             {
               type: 'scope',
               id: 'placed',
-              placement: {
-                target: { id: 'target', offset: [10, 0] },
-                selfAnchor: 'origin',
-              },
+              position: { kind: 'anchor', target: { id: 'target', offset: [10, 0] }, selfAnchor: 'origin' },
               children: [],
             },
           ],
@@ -361,7 +350,7 @@ describe('Scope zero-scale 反投影契约', () => {
               children: [
                 {
                   type: 'scope',
-                  placement: { target: { id: 'outside' } },
+                  position: { kind: 'anchor', target: { id: 'outside' } },
                   children: [],
                 },
               ],

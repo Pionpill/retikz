@@ -33,7 +33,7 @@ const ScopeEnvelopeComparison: FC<ScopeEnvelopeComparisonProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[false, true].map((transformed, index) => (
-        <Scope key={index} transforms={[{ kind: 'translate', x: 105 + index * 300, y: 0 }]}>
+        <Scope key={index} position={[105 + index * 300, 0]}>
           <Node position={[0, -62]} style={{ stroke: 'none', fill: 'none', font: { size: 14 } }}>
             {transformed ? i18n.after : i18n.before}
           </Node>

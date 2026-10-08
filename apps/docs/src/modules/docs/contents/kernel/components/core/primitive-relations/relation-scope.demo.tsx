@@ -12,7 +12,7 @@ const Demo: FC = () => (
     <Node id="ext" position={[-170, 0]} style={{ stroke: 'none' }}>
       ext
     </Node>
-    <Scope id="cluster" transforms={[{ kind: 'translate', x: 90, y: 0 }]}>
+    <Scope id="cluster" position={[90, 0]}>
       <Node id="A" position={[0, -20]} style={{ stroke: 'none' }}>
         a
       </Node>

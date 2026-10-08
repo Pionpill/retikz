@@ -5,12 +5,7 @@ import type { LowerPlotsOptions } from '@retikz/plot';
 import type { InputScope } from '@retikz/vanilla';
 
 /** Chart 嵌入场景时可选的根 Scope 输入 */
-export type InputChartPanel = Pick<InputScope, 'clip' | 'placement' | 'theme' | 'transforms' | 'zIndex'> & {
-  /** Chart 根的横向平移 */
-  x?: number;
-  /** Chart 根的纵向平移 */
-  y?: number;
-};
+export type InputChartPanel = Pick<InputScope, 'clip' | 'position' | 'theme' | 'transforms' | 'zIndex'>;
 
 /**
  * adapter 内部规范化后用于依赖组装的运行时输入；不作为公开编写结果

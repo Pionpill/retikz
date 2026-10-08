@@ -34,6 +34,32 @@ const sourceOf = (input: ScatterChartInputEmbedProps<unknown>): IRChartSource =>
     .children[0] as IRChartSource;
 
 describe('Chart React InputEmbed routing', () => {
+  it('preserves anchor positioning and auxiliary panel properties through React and Vanilla', () => {
+    const panel: NonNullable<ScatterChartInputEmbedProps['panel']> = {
+      position: { kind: 'anchor', target: [120, 40], selfAnchor: 'origin' },
+      transforms: [{ kind: 'scale', x: 1.5 }],
+      zIndex: 3,
+    };
+    const vanillaInput: ScatterChartInputEmbedProps<unknown> = {
+      data: [{ x: 1, y: 2 }],
+      encodings: { x: 'x', y: 'y' },
+      panel,
+    };
+    const reactInput = inputOf(ScatterChart, {
+      panel,
+      children: (
+        <>
+          <ChartData data={vanillaInput.data} />
+          <ScatterEncodings x="x" y="y" />
+        </>
+      ),
+    });
+    const normalize = (input: ScatterChartInputEmbedProps<unknown>) =>
+      normalizeScene(scene({ children: [scatterChart(input)] }), { adapters: [ScatterChartInputEmbedAdapter] }).ir;
+    expect(normalize(reactInput)).toEqual(normalize(vanillaInput));
+    expect(normalize(reactInput).children[0]).toMatchObject({ type: 'scope', ...panel });
+  });
+
   it('uses the matching Vanilla adapter for every typed chartType component', () => {
     expect(BubbleChart.inputEmbedAdapter).toBe(BubbleChartInputEmbedAdapter);
     expect(RegressionChart.inputEmbedAdapter).toBe(RegressionChartInputEmbedAdapter);

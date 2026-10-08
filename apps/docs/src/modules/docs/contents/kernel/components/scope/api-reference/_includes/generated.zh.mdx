@@ -4,10 +4,10 @@
 
 ### Scope / ScopeProps
 
-- `Scope`：<ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={65}>将子图元组合为作用域，统一设置样式、变换、定位与裁剪</ApiSourceLink>
+- `Scope`：<ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={66}>将子图元组合为作用域，统一设置样式、变换、定位与裁剪</ApiSourceLink>
 - `ScopeProps`：<ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={11}>为一组图元设置局部样式、命名空间、变换、裁剪和引用包络</ApiSourceLink>
 
-给一组节点 / 路径提供局部样式、命名空间、变换、最终锚点定位、裁剪和引用包络
+给一组节点 / 路径提供局部样式、命名空间、原点或锚点定位、局部变换、裁剪和引用包络
 
 <DocTabs defaultValue="members">
 
@@ -22,7 +22,7 @@
 |        | `localNamespace?` | `boolean`                               | `false`       | 是否创建本地命名空间；true 时子节点 id 不向外层作用域公开<br />子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用                                             |
 | 几何   | `boundingShape?`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | 通过 id 引用整组图元时使用的包络形状；支持矩形或圆形，默认使用轴对齐矩形包络                                                                                                                            |
 |        | `clip?`           | `IRScope['clip']`                       | —             | 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；设值则裁剪 scope 内全部子元素                                                                                   |
-|        | `placement?`      | `IRScope['placement']`                  | —             | Scope 最终锚点对齐定位<br />target 是父坐标系显式点或此前已完成的命名实体；selfAnchor 缺省为固有包络 center                                                                                             |
+|        | `position?`       | `IRScope['position']`                   | `[0, 0]`      | Scope 在父坐标系中的原点位置或最终锚点对齐<br />坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center                                          |
 |        | `transforms?`     | `Array<InputTransform>`                 | —             | 局部 transform 列表；遵循 SVG transform list，最后一项先作用于局部点<br />支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale                       |
 | 样式   | `defaults?`       | `InputScope['defaults']`                | —             | 为后代 Node、Path、Label 与 Arrow 提供默认样式；元素显式值优先，reset 可阻断指定外层通道                                                                                                                |
 |        | `frame?`          | `IRScope['frame']`                      | —             | 固有包络的独立外框；位于内容下方，不参与布局、引用或命中                                                                                                                                                |
@@ -57,7 +57,7 @@ export type ScopeProps = ScopeStyleProps &
     id?: string;
     localNamespace?: boolean;
     transforms?: Array<InputTransform>;
-    placement?: IRScope['placement'];
+    position?: IRScope['position'];
     zIndex?: IRScope['zIndex'];
     clip?: IRScope['clip'];
     boundingShape?: IRScope['boundingShape'];
@@ -134,7 +134,7 @@ export type ScopeStyleProps = {
 |        | `type?`           | `'scope'`                                                                                | —      | 无法由 authoring 字段唯一识别时显式指定 Scope 类别                                             |
 | 几何   | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
 |        | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-|        | `placement?`      | `InputScope["placement"]`                                                                | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+|        | `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 |        | `transforms?`     | `ReadonlyArray<InputTransform>`                                                          | —      | 局部变换列表，最后一项先作用于局部点；省略时不施加局部变换                                     |
 | 样式   | `defaults?`       | `InputScope["defaults"]`                                                                 | —      | 后代默认值通道及继承屏障                                                                       |
 |        | `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
@@ -175,7 +175,7 @@ export type InputScope = InputScopeBase & {
 ### IRScope
 
 <p>
-  <ApiSourceLink label={'IRScope'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={53}>
+  <ApiSourceLink label={'IRScope'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={59}>
     Scope IR 类型——手写而非 z.infer 派生
   </ApiSourceLink>
 </p>
@@ -197,7 +197,7 @@ Scope 通过 style 提供级联视觉值，通过 defaults 提供四个默认通
 |        | `type`            | `'scope'`                                                                                | —      | 固定为 scope 的容器判别字段                                                                    |
 | 几何   | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
 |        | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-|        | `placement?`      | `IRScopeProps['placement']`                                                              | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+|        | `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 |        | `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
 | 样式   | `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
 |        | `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
@@ -224,10 +224,48 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
+### IRScopeAnchorPosition
+
+<p>
+  <ApiSourceLink
+    label={'IRScopeAnchorPosition'}
+    path={'packages/kernel/core/src/schemas/scope/types.ts'}
+    startLine={35}
+  >
+    Scope 最终锚点对齐放置
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                                                                                                                                                                                                                                                 | 默认值 | 说明                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------- |
+| `kind`        | `"anchor"`                                                                                                                                                                                                                                           | —      | 锚点定位的判别字段                             |
+| `selfAnchor?` | `number \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —      | 变换后 Scope 包络上的对齐点；省略时使用 center |
+| `target`      | `ZodInput<typeof ScopeAnchorPositionSchema.shape["target"]>`                                                                                                                                                                                         | —      | 父坐标系中的定位目标                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### IRScopeDefaults
 
 <p>
-  <ApiSourceLink label={'IRScopeDefaults'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={60}>
+  <ApiSourceLink label={'IRScopeDefaults'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={66}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -263,7 +301,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 ### IRScopeFrame
 
 <p>
-  <ApiSourceLink label={'IRScopeFrame'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={46}>
+  <ApiSourceLink label={'IRScopeFrame'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={52}>
     Scope 外框的可省略默认值输入
   </ApiSourceLink>
 </p>
@@ -293,43 +331,38 @@ export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 
 </DocTabs>
 
-### IRScopePlacement
+### IRScopePosition
 
 <p>
-  <ApiSourceLink label={'IRScopePlacement'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={34}>
-    Scope 最终锚点对齐放置
+  <ApiSourceLink label={'IRScopePosition'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={38}>
+    Scope 原点位置或最终锚点对齐
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable>
-
-| 成员          | 类型                                                                                                                                                                                                                                                 | 默认值 | 说明                                           |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------- |
-| `selfAnchor?` | `number \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —      | 变换后 Scope 包络上的对齐点；省略时使用 center |
-| `target`      | `ZodInfer<typeof ScopePlacementSchema.shape["target"]>`                                                                                                                                                                                              | —      | 父坐标系中的定位目标                           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
 ```ts
-export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
+export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 ```
 
-</DocTab>
+### IRScopePositionTarget
 
-</DocTabs>
+<p>
+  <ApiSourceLink
+    label={'IRScopePositionTarget'}
+    path={'packages/kernel/core/src/schemas/scope/types.ts'}
+    startLine={32}
+  >
+    Scope 锚点定位允许的闭合目标
+  </ApiSourceLink>
+</p>
+
+```ts
+export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
+```
 
 ### IRScopeProps
 
 <p>
-  <ApiSourceLink label={'IRScopeProps'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={40}>
+  <ApiSourceLink label={'IRScopeProps'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={44}>
     Scope 除 `type` 与递归 `children` 外的完整 authored 属性集合
   </ApiSourceLink>
 </p>
@@ -338,13 +371,14 @@ export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
 
 <DocTab value="members" label="直接属性">
 
-其余属性继承自 `ZodInfer<typeof ScopePropsSchema>`，并移除 `'frame'`。完整组合关系见“类型定义”
+其余属性继承自 `ZodInfer<typeof ScopePropsSchema>`，并移除 `'frame'`、`'position'`。完整组合关系见“类型定义”
 
 <ApiTable>
 
-| 成员     | 类型           | 默认值 | 说明                   |
-| -------- | -------------- | ------ | ---------------------- |
-| `frame?` | `IRScopeFrame` | —      | 可省略默认值的包络装饰 |
+| 成员        | 类型              | 默认值 | 说明                                         |
+| ----------- | ----------------- | ------ | -------------------------------------------- |
+| `frame?`    | `IRScopeFrame`    | —      | 可省略默认值的包络装饰                       |
+| `position?` | `IRScopePosition` | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点 |
 
 </ApiTable>
 
@@ -353,7 +387,8 @@ export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame'> & {
+export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'position'> & {
+  position?: IRScopePosition;
   frame?: IRScopeFrame;
 };
 ```

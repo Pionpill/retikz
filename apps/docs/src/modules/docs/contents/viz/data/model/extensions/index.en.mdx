@@ -7,7 +7,7 @@ Data-model extensions cover field parsing and category ordering. Reusable parsin
 
 ## Applicability
 
-Prefer built-in formats and field types. Register a `FieldFormatDefinition` only when a storage format must be reused across data sources; use `resolveField` for parsing branches local to the current source.
+Read [Field Types](/viz/data/model/field-types) and [Data Intake](/viz/data/model/intake) first; prefer built-in formats and ordering rules. Register a `FieldFormatDefinition` only when a storage format must be reused across data sources; use `resolveField` for parsing branches local to the current source.
 
 | Extension entry point | Responsibility                     | Stored configuration |
 | --------------------- | ---------------------------------- | -------------------- |
@@ -19,20 +19,78 @@ Prefer built-in formats and field types. Register a `FieldFormatDefinition` only
 
 ## Defining Field Formats
 
-Use `defineFieldFormat` for formats that must be persisted and reused across data sources. `name` is the model lookup key, `impliedType` declares the canonical value type, and `parse` converts raw input to text, a finite number, or `undefined`.
+Use `defineFieldFormat` for formats referenced by name and reused across data sources. `name` is the model lookup key, `impliedType` declares the canonical value type, and `parse` converts raw input to text, a finite number, or `undefined`.
 
-The `wan` Definition below is injected through `<Plot formatDefinitions>`. The model stores only `format: 'wan'`, never the parsing function.
+A report may express revenue as `'1.2K'`, while calculation and plotting need the number `1200`. The example defines a format named `thousands` for the K suffix (thousands). It removes the suffix, multiplies the preceding number by `1000`, and sets the field type to `continuous`: `'1.2K' → 1200` and `'2.4K' → 2400`. Plain numbers and numeric strings without the suffix retain their numeric value.
+
+`thousands` is a custom name registered by this example, not a built-in format. Add its definition to the format registry for this data-processing request, then reference it on the revenue field with `format: 'thousands'`. The model stores only the name; the parser remains at runtime.
 
 <ComponentPreview
   files={['extension-format', 'extension-format-preview.tsx', 'extension-format.data.ts']}
   defaultSourceFile="extension-format-preview.tsx"
   size="lg"
-  caption="The input table keeps the raw wan strings; the Definition supplies the parser while the model stores only its name."
+  caption="The input table keeps the raw K-suffixed strings; the Definition supplies the parser while the model stores only its name."
 />
+
+Define the parser, register its name, and reference it from the model. The Data API can be used directly:
+
+```ts
+import type { IRDataModel } from '@retikz/data';
+import { defineFieldFormat, resolveFormatRegistry } from '@retikz/data';
+
+const thousands = defineFieldFormat({
+  name: 'thousands',
+  impliedType: 'continuous',
+  parse: raw => {
+    if (typeof raw === 'number') return raw;
+    if (typeof raw !== 'string') return undefined;
+    const text = raw.trim();
+    const value = text.endsWith('K') ? Number(text.slice(0, -1)) * 1000 : Number(text);
+    return Number.isFinite(value) ? value : undefined;
+  },
+});
+const model: IRDataModel = [{ name: 'revenue', format: 'thousands' }];
+const registry = resolveFormatRegistry([thousands]);
+registry.get('thousands')?.parse('1.2K'); // 1200
+```
+
+## Defining Category Orders
+
+Use `defineFieldOrder` for language-specific or business ordering. This example registers `labelLength` and selects it by default. Equal-length labels keep their appearance order. Switch to built-in rules to compare results; length ordering demonstrates a custom comparator, not version ordering.
+
+<ComponentPreview
+  files={[
+    'extension-order',
+    '/viz/data/model/intake/version-order.preview.tsx',
+    '/viz/data/model/intake/version-order.data.ts',
+  ]}
+  defaultSourceFile="/viz/data/model/intake/version-order.preview.tsx"
+  size="lg"
+/>
+
+After defining and registering a comparator, generate the category domain directly with the Data API:
+
+```ts
+import { defineFieldOrder, resolveCategoryDomain, resolveFieldOrderRegistry } from '@retikz/data';
+
+const labelLength = defineFieldOrder({
+  name: 'labelLength',
+  compare: (a, b) => String(a).length - String(b).length,
+});
+const registry = resolveFieldOrderRegistry([labelLength]);
+const domain = resolveCategoryDomain(['10.18', '2.0', '10.2', '10.2.0'], 'labelLength', registry);
+// ['2.0', '10.2', '10.18', '10.2.0']
+```
+
+A definition contains `name` and `compare(a, b, context)`. Return a finite number: negative places a first, zero keeps relative order, and positive places a last. `context.values` holds deduplicated effective categories in appearance order. Comparators must be pure, antisymmetric, and transitive, without modifying values or context.
+
+Category ordering determines the domain without reordering source rows. The model stores `order: 'labelLength'`; the runtime registry supplies the comparator.
 
 ## Runtime Field Resolution
 
-Use `resolveField` for one-off logic and source-specific branches. It returns an optional `type` and `parse` for each logical field and takes precedence over the model, named format, and default coercion. Returning `undefined` falls back to the standard intake path.
+Use `resolveField` for one-off or source-specific logic. It returns optional `type` and `parse` overrides for each logical field; returning `undefined` preserves existing results. Format registration and type compatibility are checked first, so a resolver cannot bypass an unknown format or a conflicting explicit type.
+
+The example converts quarter labels such as `2026Q1` to quarter start timestamps. The model explicitly declares `quarter` as temporal, so the resolver only returns `parse`. Without an explicit model type, a parser override must also return `type`, even if a format or inference has already determined a type.
 
 <ComponentPreview
   files={['extension-resolver', 'extension-resolver-preview.tsx', 'extension-resolver.data.ts']}
@@ -41,111 +99,106 @@ Use `resolveField` for one-off logic and source-specific branches. It returns an
   caption="The input remains quarter strings; the runtime resolver only overrides parsing for the quarter field."
 />
 
-`resolveField` is a runtime escape hatch. It does not use a registry and cannot be serialized. Use a `FieldFormatDefinition` when a stable name, cross-host reuse, or persisted configuration is required.
+A runtime resolver only needs the field and raw values. This version explicitly returns a temporal type and converts quarter labels to quarter start timestamps:
 
-## Defining Category Orders
+```ts
+import type { ResolveField } from '@retikz/data';
 
-Use `defineFieldOrder` for language-specific or business ordering. This example registers `labelLength`; select “Custom: label length” to sort labels by length.
-
-<ComponentPreview
-  files={[
-    'extension-order',
-    '/viz/data/model/fields-and-types/version-order.preview.tsx',
-    '/viz/data/model/fields-and-types/version-order.data.ts',
-  ]}
-  defaultSourceFile="/viz/data/model/fields-and-types/version-order.preview.tsx"
-  size="lg"
-/>
-
-A definition contains `name` and `compare(a, b, context)`. Return a finite number: negative places a first, zero keeps relative order, and positive places a last. `context.values` holds deduplicated effective categories in appearance order. Comparators must be pure, antisymmetric, and transitive, without modifying values or context.
-
-Plot and Table accept arrays through runtime `fieldOrderDefinitions`: the same prop in React and runtime options in Vanilla or direct IR calls. The model stores only `order: 'labelLength'`. Table validates registration without reordering rows or columns. For standalone use, call `resolveFieldOrderRegistry(definitions)` and pass the registry to `resolveCategoryDomain(values, order, registry)`.
-
-Names cannot be blank, duplicated, or override built-ins. Unknown names fail at intake. Thrown callbacks and nonfinite results produce `RetikzDataError`, preserving the original exception as `cause`. Definitions belong to the current request; receiving processes must supply their own implementation of stored names.
-
-## Injecting A Host
-
-The consuming host passes field-parsing capabilities into the intake pipeline. In Plot:
-
-| Capability            | Injection entry point   | Model reference           |
-| --------------------- | ----------------------- | ------------------------- |
-| Named category orders | `fieldOrderDefinitions` | Field `order: name`       |
-| Named field formats   | `formatDefinitions`     | Field `format: name`      |
-| Temporary parsers     | `resolveField`          | None; resolved at runtime |
-
-Other consumers can expose equivalent adapter entry points. The data model only consumes the format registry and resolver result.
-
-## Execution
-
-```text
-field contract → look up named format → apply resolveField override → normalize field value
+const resolveField: ResolveField = field =>
+  field === 'quarter'
+    ? {
+        type: 'temporal',
+        parse: raw => {
+          const match = /^(\d{4})Q([1-4])$/.exec(String(raw));
+          return match ? Date.UTC(Number(match[1]), (Number(match[2]) - 1) * 3, 1) : undefined;
+        },
+      }
+    : undefined;
 ```
 
-Named formats provide an initial field type and parser, then `resolveField` may override either value per field. When no custom rule matches, intake continues with the model declaration, inference result, and default coercion.
+`resolveField` is a runtime escape hatch that bypasses the registry. Neither the callback nor the parser it returns can be serialized or included in IR; both remain in the consuming application’s runtime code. Use a `FieldFormatDefinition` when a stable name, cross-host reuse, or persisted configuration is required: IR stores only the format name, while the consumer still supplies the definition and its parser at runtime.
 
 ## Errors And Limits
 
-| Condition                                 | Result                                                                          |
-| ----------------------------------------- | ------------------------------------------------------------------------------- |
-| Duplicate built-in/custom format name     | Registry construction fails immediately                                         |
-| Model references an unknown format        | Intake fails before normalization                                               |
-| `resolveField.parse` has no resolved type | Declare the type in the model or return `type` from the resolver                |
-| Parser returns the wrong value type       | Invalid value handled by [Validation & Diagnostics](/viz/data/model/validation) |
+| Condition                                                                | Result                                                                                                                  |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Empty format name, blank order name, or duplicate/built-in name          | Registry construction fails                                                                                             |
+| Unknown format or order in the model                                     | Intake fails; receiving processes must also inject the named definition                                                 |
+| Format type conflicts with explicit `type`                               | Fails before the resolver runs                                                                                          |
+| Resolver returns `parse` without an explicit type in the model or result | Intake fails; inference and format-implied types do not satisfy this requirement                                        |
+| Parser returns an incompatible value, `undefined`, or a nonfinite number | Unusable value follows [validation policies](/viz/data/model/intake#validation-policy); default coercion is not retried |
+| Order comparator throws or returns a nonfinite number                    | Throws `RetikzDataError`; callback exceptions are preserved as `cause`                                                  |
 
 Field parsing normalizes individual values. It does not reorder rows, change row counts, or produce statistical fields; those capabilities belong to [Data Transform Extensions](/viz/data/transform/extensions).
 
-## API Reference
+## Related props
 
-The following contracts are exported from the `@retikz/data` package root.
+These are the public Data contracts used on this page; see [Data contracts](/viz/data/model/schema-reference) for the full reference.
 
-#### `FieldFormatDefinition`
-
-`defineFieldFormat(definition)` accepts and returns the same `FieldFormatDefinition`.
-
-| Field         | Type                                 | Description                                                               |
-| ------------- | ------------------------------------ | ------------------------------------------------------------------------- |
-| `name`        | `string`                             | Non-empty registry key that cannot collide with a built-in or custom name |
-| `impliedType` | <ApiValues name="DataFieldType" />   | Measurement type used when the model omits `type`                         |
-| `parse`       | `(raw: unknown) => ParsedFieldValue` | Converts a raw value to a canonical string, finite number, or `undefined` |
-
-#### `ResolveField`
-
-`ResolveField` is `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution | undefined`. It returns an override for one logical field; `undefined` falls back to the standard path.
-
-#### `FieldResolution`
-
-`FieldResolution` is a runtime override for one field: `type?` supplies the final measurement type <ApiValues name="DataFieldType" />, and `parse?: (raw: unknown) => ParsedFieldValue` supplies a custom parser.
-
-<SourceLinks
-  sources={[
+<ComponentProps
+  items={[
     {
-      label: 'Field-format Definition contract',
-      path: 'packages/viz/data/src/contract/format.ts',
-      startLine: 5,
-      endLine: 22,
+      name: 'defineFieldFormat',
+      type: '(def: FieldFormatDefinition) => FieldFormatDefinition',
+      description: 'Define a named parser; this does not register it globally.',
+      kind: 'function',
     },
     {
-      label: 'Runtime field-resolver contract',
-      path: 'packages/viz/data/src/contract/data.ts',
-      startLine: 15,
-      endLine: 41,
+      name: 'FieldFormatDefinition',
+      type: '{ name: string; impliedType: DataFieldType; parse: (raw: unknown) => string | number | undefined }',
+      description:
+        '`impliedType` is `continuous`, `temporal`, or `categorical`. Return milliseconds for time, finite numbers for continuous fields, and strings or finite numbers for categories.',
+      kind: 'type',
     },
     {
-      label: 'Resolver overrides and type validation',
-      path: 'packages/viz/data/src/providers/data/resolve.ts',
-      startLine: 5,
-      endLine: 47,
+      name: 'resolveFormatRegistry',
+      type: '(custom?: ReadonlyArray<FieldFormatDefinition>) => Map<string, FieldFormatDefinition>',
+      description: 'Combine built-in and custom formats; field format names select parsers.',
+      kind: 'function',
     },
     {
-      label: 'Field-format and resolver order in Plot',
-      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
-      startLine: 115,
-      endLine: 164,
+      name: 'resolveField',
+      type: '(field: string, context: { dataReference: string; physicalPath: string; declaredType?: DataFieldType }) => FieldResolution | undefined',
+      description: 'Override by logical field; `undefined` preserves existing parsing. Inject at runtime, outside IR.',
+      kind: 'property',
+    },
+    {
+      name: 'FieldResolution',
+      type: '{ type?: DataFieldType; parse?: (raw: unknown) => string | number | undefined }',
+      description:
+        '`type` is `continuous`, `temporal`, or `categorical`. A parser requires an explicit model type or a returned `type`.',
+      kind: 'type',
+    },
+    {
+      name: 'defineFieldOrder',
+      type: '(definition: FieldOrderDefinition) => FieldOrderDefinition',
+      description: 'Define a named pure comparator; register it through runtime definitions.',
+      kind: 'function',
+    },
+    {
+      name: 'FieldOrderDefinition',
+      type: 'Readonly<{ name: string; compare: (a: string | number, b: string | number, context: FieldOrderContext) => number }>',
+      description:
+        '`context.values` contains deduplicated effective categories in appearance order for this scope. Return negative, zero, or positive for before, equivalent, or after.',
+      kind: 'type',
+    },
+    {
+      name: 'resolveFieldOrderRegistry',
+      type: '(definitions?: ReadonlyArray<FieldOrderDefinition>) => ReadonlyMap<string, FieldOrderDefinition>',
+      description: 'Combine built-in and custom category orders for domain resolution.',
+      kind: 'function',
+    },
+    {
+      name: 'resolveCategoryDomain',
+      type: "(values: Array<unknown>, order: IRDataFieldDefinition['order'], registry?: ReadonlyMap<string, FieldOrderDefinition>) => Array<string | number>",
+      description:
+        'Extract valid categories, deduplicate, and apply the specified order. Returns a domain without changing source rows.',
+      kind: 'function',
     },
   ]}
 />
 
-## Related
+## Further reading
 
 <LinkedSections
   items={[

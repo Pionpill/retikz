@@ -19,7 +19,7 @@ const FlowBendScreening: FC<FlowBendScreeningProps> = props => {
       {t.stages.map((title, stage) => {
         const divisions = stage === 0 ? 1 : 8;
         return (
-          <Scope key={title} transforms={[{ kind: 'translate', x: stage * 250, y: 0 }]}>
+          <Scope key={title} position={[stage * 250, 0]}>
             <Node position={[100, 0]} text={title} style={{ stroke: 'none', font: { size: 14 } }} />
             {stage < 2 &&
               Array.from({ length: divisions }, (_, index) => {

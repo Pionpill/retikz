@@ -1,4 +1,4 @@
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { GroupCaptionDirectionSchema, GroupCaptionSchema, GroupCaptionTextSchema, GroupSchema } from './schema';
 
@@ -12,4 +12,4 @@ export type GroupCaptionDirection = ZodInfer<typeof GroupCaptionDirectionSchema>
 export type IRGroupCaption = ZodInfer<typeof GroupCaptionSchema>;
 
 /** 可 JSON 序列化的图分组组合节点输入 */
-export type IRGroup = ZodInfer<typeof GroupSchema>;
+export type IRGroup = Omit<ZodInfer<typeof GroupSchema>, 'position'> & Pick<ZodInput<typeof GroupSchema>, 'position'>;

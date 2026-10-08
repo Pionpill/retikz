@@ -17,7 +17,7 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
         id: 'wrapper',
         localNamespace: true,
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
-        placement: { target: [30, 40], selfAnchor: 'center' },
+        position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
         zIndex: 2,
         clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
         boundingShape: 'circle',
@@ -41,7 +41,7 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
     const props = {
       style: { fill: 'lightblue' },
       transforms: [{ kind: 'scale' as const, x: 1.5, pivot: [2, 3] as [number, number] }],
-      placement: { target: [10, 20] as [number, number] },
+      position: { kind: 'anchor', target: [10, 20] as [number, number] },
       defaults: { node: { style: { fill: 'white' } }, reset: ['label' as const] },
     };
     const parsed = ScopePropsSchema.parse(JSON.parse(JSON.stringify(props)));
@@ -429,7 +429,7 @@ describe('Scope 样式 JSON round-trip', () => {
     };
     const restored = ScopeSchema.parse(JSON.parse(JSON.stringify(ir)));
 
-    expect(restored).toEqual(ir);
+    expect(restored).toEqual({ ...ir, position: [0, 0] });
   });
 });
 

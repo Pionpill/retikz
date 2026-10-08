@@ -13,91 +13,91 @@ export const standardV01: Release = {
       },
       highlights: [
         {
-          label: { zh: '未发布 · Tree 树', en: 'Unreleased · Tree' },
+          label: { zh: 'Tree 树', en: 'Tree' },
           content: {
             zh: '新增静态 Tree：root 支持文字叶节点与递归对象配置，圆形文字节点、空子槽、四向子树包络排列及可定制父子连接；支持真实节点引用、React、Vanilla 和双语交互文档。',
             en: 'Adds static Tree with a root input accepting text leaves and configured recursive nodes, circular text nodes, missing child slots, four-direction subtree layout, customizable connections, true node references, React/Vanilla APIs, and bilingual interactive docs.',
           },
         },
         {
-          label: { zh: '未发布 · Queue 队列', en: 'Unreleased · Queue' },
+          label: { zh: 'Queue 队列', en: 'Queue' },
           content: {
             zh: '新增 Queue 静态队列：三种输入、四向排列、两端开放边框、可定制进出直线箭头、单格样式与 id 引用，提供 React、Vanilla 和双语交互文档；入队出队状态由外部管理。',
             en: 'Adds static Queue presentation with three inputs, four directions, open ends, customizable incoming/outgoing straight arrows, per-cell styles and ids, React/Vanilla APIs and bilingual interactive docs. Queue operations remain external.',
           },
         },
         {
-          label: { zh: '未发布 · Stack 栈', en: 'Unreleased · Stack' },
+          label: { zh: 'Stack 栈', en: 'Stack' },
           content: {
             zh: '新增Stack静态栈：三种输入、四向堆叠、开放border与独立padding、可定制进出折线箭头、逐格样式和id引用；React、Vanilla及双语交互文档同步接入，不管理push/pop状态。',
             en: 'Adds static Stack presentation with three input forms, four directions, an open border, independent padding, customizable incoming/outgoing bent arrows, per-cell styles and ids, with React/Vanilla APIs and bilingual interactive docs. Push/pop state remains external.',
           },
         },
         {
-          label: { zh: '未发布 · Chain 串并联', en: 'Unreleased · Chain series-parallel composition' },
+          label: { zh: 'Chain 串并联', en: 'Chain series-parallel composition' },
           content: {
             zh: '新增 Chain：显式结构、JSON 数据和三种骨架表示；支持递归分叉与汇合、两层对齐、正交连接及任意单元内容。React、Vanilla 与双语交互文档同步接入。',
             en: 'Adds Chain with explicit structures, JSON data, and three skeleton forms, nested branches and joins, independent alignment controls, orthogonal connections, and arbitrary cell content, with React, Vanilla, and bilingual interactive docs.',
           },
         },
         {
-          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          label: { zh: 'Matrix 矩阵', en: 'Matrix' },
           content: {
             zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
             en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
           },
         },
         {
-          label: { zh: '未发布 · BREAKING：Array 统一命名', en: 'Unreleased · BREAKING: Array naming' },
+          label: { zh: 'BREAKING：Array 统一命名', en: 'BREAKING: Array naming' },
           content: {
             zh: 'List 更名为 Array，配套组件、工厂、类型、Schema 和定义同步更名。IR type 与 dataExpand 选项由 list 改为 array，文档路由改为 /library/standard/collection/array；不保留旧名或旧路由。绘制与布局行为不变。',
             en: 'List is renamed to Array together with its components, factories, types, schemas, and definitions. The IR type and dataExpand option change from list to array, and the documentation route becomes /library/standard/collection/array. Old names and routes are removed; drawing and layout behavior are unchanged.',
           },
         },
         {
-          label: { zh: '未发布 · 集合示意骨架', en: 'Unreleased · Collection skeletons' },
+          label: { zh: '集合示意骨架', en: 'Collection skeletons' },
           content: {
             zh: 'Array / Map 新增 skeleton 入口：Array 用 count 或 labels 描述空格和格内符号，Map 用 keys 描述符号键与空值格；与 data、显式结构及 JSX children 互斥。显式单元格可省略内容，Map 键值角色仍必填。Array 的 index.labels 提供独立的格外标号，可与格内符号同时使用；显示文字不推导身份。',
             en: 'Array / Map add skeleton inputs: Array uses count or labels for empty cells and inside symbols, while Map uses keys for symbolic keys and contentless values. Skeletons exclude data, explicit cells, and JSX children. Explicit cells may omit content; Map roles remain required. Array index.labels provides independent outside labels alongside inside symbols, without inferring identities from display text.',
           },
         },
         {
-          label: { zh: '未发布 · BREAKING：嵌套数据展开', en: 'Unreleased · BREAKING: nested data expansion' },
+          label: { zh: 'BREAKING：嵌套数据展开', en: 'BREAKING: nested data expansion' },
           content: {
             zh: "Array / Map 使用 dataExpand 统一选择嵌套对象与数组的呈现：true 默认全部展开，false 全部显示为 JSON 文本，数组选择 map / array。根结构不变，空结构保留字面量。移除 dataObjectDisplay；原 map 改用 true，原 text 改用 ['array']，不保留兼容字段。",
             en: "Array / Map use dataExpand for nested objects and arrays: true expands all by default, false renders JSON text, and an array selects map/array. Root structures remain intact and empty structures stay literal. dataObjectDisplay is removed: replace map with true and text with ['array']; no compatibility field is retained.",
           },
         },
         {
-          label: { zh: '未发布 · Array 内容宽度', en: 'Unreleased · Array content width' },
+          label: { zh: 'Array 内容宽度', en: 'Array content width' },
           content: {
             zh: 'Array 的整体或单格 layout.width 可设为 content，使每格按自身内容自然宽度加内边距定宽；data 模式下还会沿自动生成的数据树传给后代 Array。auto 仍使用全组最大宽度，单格设置优先。Map 的宽度模式不变。',
             en: 'Array layout.width accepts content on the whole Array or an individual cell, sizing each cell to its own natural content width plus padding; in data mode it also passes through the generated data tree to descendant Arrays. auto still uses the shared maximum, and cell settings take precedence. Map width modes are unchanged.',
           },
         },
         {
-          label: { zh: '未发布 · BREAKING：Array 索引配置', en: 'Unreleased · BREAKING: Array index configuration' },
+          label: { zh: 'BREAKING：Array 索引配置', en: 'BREAKING: Array index configuration' },
           content: {
             zh: 'Array 统一使用 index 配置索引，支持横排上下、竖排左右位置与独立文本样式。showIndex 迁移为 index 布尔值；同时设置起点时改为 index: { start }，隐藏时使用 false。position 默认为 before，可设 after；索引 font 按字段继承整体字体，不影响单格尺寸。旧 showIndex / indexStart 字段不再接受。',
             en: 'Array uses index for visibility, positions above/below rows or left/right of columns, and independent text styles. Replace showIndex with a boolean index; use index: { start } to enable numbering with a starting value, or false to hide it. Position defaults to before and also accepts after. Index font fields inherit the shared font without changing cell dimensions. The old showIndex / indexStart fields are no longer accepted.',
           },
         },
         {
-          label: { zh: '未发布 · 拓展包拆分', en: 'Unreleased · Extension package split' },
+          label: { zh: '拓展包拆分', en: 'Extension package split' },
           content: {
             zh: '节点形状、箭头、裁剪、流带与动画预设迁入 @retikz/extension，Standard 保留展现与形状复合组件。使用这些扩展时统一从 Extension 根入口导入；Standard 组件所需的扩展依赖继续自动随组件贡献。',
             en: 'Node shapes, arrows, clips, ribbons, and animation presets move to @retikz/extension. Standard retains presentation and shape composites. Import extensions from the Extension root; Standard components continue contributing their required dependencies.',
           },
         },
         {
-          label: { zh: '未发布 · Array / Map', en: 'Unreleased · Array / Map' },
+          label: { zh: 'Array / Map', en: 'Array / Map' },
           content: {
             zh: 'Array / Map 新增与 Node 默认样式一致的容器 label，支持单个与多个附属标签，不扩大 allocation。Array / Map 新增 data 属性，递归呈现 JSON 数组与对象，保留紧凑 Source 且不推导单元格 id。新增一维 Array 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。Array 的 items 字符串默认只作为 content，可用 cellIdMode 选择 explicit / string / index；index 模式配合 Array id 与 getArrayCellId 为直属格按零基下标寻址，显式 id 作为同一图元和空间记录的别名。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ArrayItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
             en: 'Array / Map add container labels with Node defaults, supporting one or multiple annotations without enlarging allocation. Array / Map now accept data for recursive JSON arrays and objects, preserving compact Source without inferred cell ids. Adds one-dimensional Array and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. Array item strings supply content only by default; cellIdMode selects explicit, string, or index identities. Index mode uses the Array id and getArrayCellId for zero-based direct-cell references, retaining explicit ids as aliases of the same geometry and spatial record. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ArrayItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
           },
         },
         {
-          label: { zh: '未发布 · 形状迁移', en: 'Unreleased · Shape migration' },
+          label: { zh: '形状迁移', en: 'Shape migration' },
           content: {
             zh: '新增 Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 的持久化 composite。形状从三包 /shape 子入口导出，节点形状扩展迁至 @retikz/extension。Vanilla 统一使用 shape.xxx，React 组件来自 @retikz/standard-react/shape；几何约束与 provider 按需装配共用同一契约。',
             en: 'Adds persistent Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc and Sector composites. Shape APIs use dedicated /shape subpaths; node extensions move to @retikz/extension. Vanilla uses shape.xxx and React components come from @retikz/standard-react/shape, sharing geometry validation and on-demand providers.',
@@ -119,6 +119,146 @@ export const standardV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: 'Tree 树；Queue 队列；Stack 栈；Chain 串并联；Matrix 矩阵；BREAKING：Array 统一命名；集合示意骨架；BREAKING：嵌套数据展开；Array 内容宽度；BREAKING：Array 索引配置；拓展包拆分；Array / Map；形状迁移',
+            en: 'Tree; Queue; Stack; Chain series-parallel composition; Matrix; BREAKING: Array naming; Collection skeletons; BREAKING: nested data expansion; Array content width; BREAKING: Array index configuration; Extension package split; Array / Map; Shape migration',
+          },
+          items: [
+            {
+              label: {
+                zh: 'Tree 树',
+                en: 'Tree',
+              },
+              content: {
+                zh: '新增静态 Tree：root 支持文字叶节点与递归对象配置，圆形文字节点、空子槽、四向子树包络排列及可定制父子连接；支持真实节点引用、React、Vanilla 和双语交互文档。',
+                en: 'Adds static Tree with a root input accepting text leaves and configured recursive nodes, circular text nodes, missing child slots, four-direction subtree layout, customizable connections, true node references, React/Vanilla APIs, and bilingual interactive docs.',
+              },
+            },
+            {
+              label: {
+                zh: 'Queue 队列',
+                en: 'Queue',
+              },
+              content: {
+                zh: '新增 Queue 静态队列：三种输入、四向排列、两端开放边框、可定制进出直线箭头、单格样式与 id 引用，提供 React、Vanilla 和双语交互文档；入队出队状态由外部管理。',
+                en: 'Adds static Queue presentation with three inputs, four directions, open ends, customizable incoming/outgoing straight arrows, per-cell styles and ids, React/Vanilla APIs and bilingual interactive docs. Queue operations remain external.',
+              },
+            },
+            {
+              label: {
+                zh: 'Stack 栈',
+                en: 'Stack',
+              },
+              content: {
+                zh: '新增Stack静态栈：三种输入、四向堆叠、开放border与独立padding、可定制进出折线箭头、逐格样式和id引用；React、Vanilla及双语交互文档同步接入，不管理push/pop状态。',
+                en: 'Adds static Stack presentation with three input forms, four directions, an open border, independent padding, customizable incoming/outgoing bent arrows, per-cell styles and ids, with React/Vanilla APIs and bilingual interactive docs. Push/pop state remains external.',
+              },
+            },
+            {
+              label: {
+                zh: 'Chain 串并联',
+                en: 'Chain series-parallel composition',
+              },
+              content: {
+                zh: '新增 Chain：显式结构、JSON 数据和三种骨架表示；支持递归分叉与汇合、两层对齐、正交连接及任意单元内容。React、Vanilla 与双语交互文档同步接入。',
+                en: 'Adds Chain with explicit structures, JSON data, and three skeleton forms, nested branches and joins, independent alignment controls, orthogonal connections, and arbitrary cell content, with React, Vanilla, and bilingual interactive docs.',
+              },
+            },
+            {
+              label: {
+                zh: 'Matrix 矩阵',
+                en: 'Matrix',
+              },
+              content: {
+                zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+                en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：Array 统一命名',
+                en: 'BREAKING: Array naming',
+              },
+              content: {
+                zh: 'List 更名为 Array，配套组件、工厂、类型、Schema 和定义同步更名。IR type 与 dataExpand 选项由 list 改为 array，文档路由改为 /library/standard/collection/array；不保留旧名或旧路由。绘制与布局行为不变。',
+                en: 'List is renamed to Array together with its components, factories, types, schemas, and definitions. The IR type and dataExpand option change from list to array, and the documentation route becomes /library/standard/collection/array. Old names and routes are removed; drawing and layout behavior are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: '集合示意骨架',
+                en: 'Collection skeletons',
+              },
+              content: {
+                zh: 'Array / Map 新增 skeleton 入口：Array 用 count 或 labels 描述空格和格内符号，Map 用 keys 描述符号键与空值格；与 data、显式结构及 JSX children 互斥。显式单元格可省略内容，Map 键值角色仍必填。Array 的 index.labels 提供独立的格外标号，可与格内符号同时使用；显示文字不推导身份。',
+                en: 'Array / Map add skeleton inputs: Array uses count or labels for empty cells and inside symbols, while Map uses keys for symbolic keys and contentless values. Skeletons exclude data, explicit cells, and JSX children. Explicit cells may omit content; Map roles remain required. Array index.labels provides independent outside labels alongside inside symbols, without inferring identities from display text.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：嵌套数据展开',
+                en: 'BREAKING: nested data expansion',
+              },
+              content: {
+                zh: "Array / Map 使用 dataExpand 统一选择嵌套对象与数组的呈现：true 默认全部展开，false 全部显示为 JSON 文本，数组选择 map / array。根结构不变，空结构保留字面量。移除 dataObjectDisplay；原 map 改用 true，原 text 改用 ['array']，不保留兼容字段。",
+                en: "Array / Map use dataExpand for nested objects and arrays: true expands all by default, false renders JSON text, and an array selects map/array. Root structures remain intact and empty structures stay literal. dataObjectDisplay is removed: replace map with true and text with ['array']; no compatibility field is retained.",
+              },
+            },
+            {
+              label: {
+                zh: 'Array 内容宽度',
+                en: 'Array content width',
+              },
+              content: {
+                zh: 'Array 的整体或单格 layout.width 可设为 content，使每格按自身内容自然宽度加内边距定宽；data 模式下还会沿自动生成的数据树传给后代 Array。auto 仍使用全组最大宽度，单格设置优先。Map 的宽度模式不变。',
+                en: 'Array layout.width accepts content on the whole Array or an individual cell, sizing each cell to its own natural content width plus padding; in data mode it also passes through the generated data tree to descendant Arrays. auto still uses the shared maximum, and cell settings take precedence. Map width modes are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：Array 索引配置',
+                en: 'BREAKING: Array index configuration',
+              },
+              content: {
+                zh: 'Array 统一使用 index 配置索引，支持横排上下、竖排左右位置与独立文本样式。showIndex 迁移为 index 布尔值；同时设置起点时改为 index: { start }，隐藏时使用 false。position 默认为 before，可设 after；索引 font 按字段继承整体字体，不影响单格尺寸。旧 showIndex / indexStart 字段不再接受。',
+                en: 'Array uses index for visibility, positions above/below rows or left/right of columns, and independent text styles. Replace showIndex with a boolean index; use index: { start } to enable numbering with a starting value, or false to hide it. Position defaults to before and also accepts after. Index font fields inherit the shared font without changing cell dimensions. The old showIndex / indexStart fields are no longer accepted.',
+              },
+            },
+            {
+              label: {
+                zh: '拓展包拆分',
+                en: 'Extension package split',
+              },
+              content: {
+                zh: '节点形状、箭头、裁剪、流带与动画预设迁入 @retikz/extension，Standard 保留展现与形状复合组件。使用这些扩展时统一从 Extension 根入口导入；Standard 组件所需的扩展依赖继续自动随组件贡献。',
+                en: 'Node shapes, arrows, clips, ribbons, and animation presets move to @retikz/extension. Standard retains presentation and shape composites. Import extensions from the Extension root; Standard components continue contributing their required dependencies.',
+              },
+            },
+            {
+              label: {
+                zh: 'Array / Map',
+                en: 'Array / Map',
+              },
+              content: {
+                zh: 'Array / Map 新增与 Node 默认样式一致的容器 label，支持单个与多个附属标签，不扩大 allocation。Array / Map 新增 data 属性，递归呈现 JSON 数组与对象，保留紧凑 Source 且不推导单元格 id。新增一维 Array 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。Array 的 items 字符串默认只作为 content，可用 cellIdMode 选择 explicit / string / index；index 模式配合 Array id 与 getArrayCellId 为直属格按零基下标寻址，显式 id 作为同一图元和空间记录的别名。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ArrayItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
+                en: 'Array / Map add container labels with Node defaults, supporting one or multiple annotations without enlarging allocation. Array / Map now accept data for recursive JSON arrays and objects, preserving compact Source without inferred cell ids. Adds one-dimensional Array and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. Array item strings supply content only by default; cellIdMode selects explicit, string, or index identities. Index mode uses the Array id and getArrayCellId for zero-based direct-cell references, retaining explicit ids as aliases of the same geometry and spatial record. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ArrayItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
+              },
+            },
+            {
+              label: {
+                zh: '形状迁移',
+                en: 'Shape migration',
+              },
+              content: {
+                zh: '新增 Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 的持久化 composite。形状从三包 /shape 子入口导出，节点形状扩展迁至 @retikz/extension。Vanilla 统一使用 shape.xxx，React 组件来自 @retikz/standard-react/shape；几何约束与 provider 按需装配共用同一契约。',
+                en: 'Adds persistent Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc and Sector composites. Shape APIs use dedicated /shape subpaths; node extensions move to @retikz/extension. Vanilla uses shape.xxx and React components come from @retikz/standard-react/shape, sharing geometry validation and on-demand providers.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-14',
@@ -368,7 +508,7 @@ export const standardV01: Release = {
       },
       highlights: [
         {
-          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          label: { zh: 'Matrix 矩阵', en: 'Matrix' },
           content: {
             zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
             en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
@@ -383,6 +523,36 @@ export const standardV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: 'Matrix 矩阵；集合作者入口',
+            en: 'Matrix; Collection authoring APIs',
+          },
+          items: [
+            {
+              label: {
+                zh: 'Matrix 矩阵',
+                en: 'Matrix',
+              },
+              content: {
+                zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+                en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+              },
+            },
+            {
+              label: {
+                zh: '集合作者入口',
+                en: 'Collection authoring APIs',
+              },
+              content: {
+                zh: '同步 Array / Map 增强及 Matrix、Chain、Stack、Queue、Tree 的作者入口、嵌套内容和依赖装配；List 更名为 Array，形状入口与可选扩展按包职责迁移。',
+                en: 'Aligns authoring APIs, nested content, and dependency assembly for Array/Map enhancements and Matrix, Chain, Stack, Queue, and Tree. List becomes Array; shape APIs and optional extensions move to their owning packages.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-14',
@@ -505,7 +675,7 @@ export const standardV01: Release = {
       },
       highlights: [
         {
-          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          label: { zh: 'Matrix 矩阵', en: 'Matrix' },
           content: {
             zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
             en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
@@ -520,6 +690,36 @@ export const standardV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.6',
+          date: '2026-10-08',
+          summary: {
+            zh: 'Matrix 矩阵；集合作者入口',
+            en: 'Matrix; Collection authoring APIs',
+          },
+          items: [
+            {
+              label: {
+                zh: 'Matrix 矩阵',
+                en: 'Matrix',
+              },
+              content: {
+                zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+                en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+              },
+            },
+            {
+              label: {
+                zh: '集合作者入口',
+                en: 'Collection authoring APIs',
+              },
+              content: {
+                zh: '同步 Array / Map 增强及 Matrix、Chain、Stack、Queue、Tree 的作者入口、嵌套内容和依赖装配；List 更名为 Array，形状入口与可选扩展按包职责迁移。',
+                en: 'Aligns authoring APIs, nested content, and dependency assembly for Array/Map enhancements and Matrix, Chain, Stack, Queue, and Tree. List becomes Array; shape APIs and optional extensions move to their owning packages.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-14',

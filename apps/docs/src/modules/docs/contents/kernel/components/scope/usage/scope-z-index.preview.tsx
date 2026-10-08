@@ -14,7 +14,7 @@ export type ScopeZIndexPreviewValues = {
 export const ScopeZIndexPreview = (values: ScopeZIndexPreviewValues) => {
   return (
     <Layout>
-      <Scope transforms={[{ kind: 'translate', x: -22, y: -14 }]} zIndex={values.scopeA}>
+      <Scope position={[-22, -14]} zIndex={values.scopeA}>
         <Node
           id="a1"
           position={[0, 0]}
@@ -34,7 +34,7 @@ export const ScopeZIndexPreview = (values: ScopeZIndexPreviewValues) => {
           A2
         </Node>
       </Scope>
-      <Scope transforms={[{ kind: 'translate', x: 22, y: 26 }]} zIndex={values.scopeB}>
+      <Scope position={[22, 26]} zIndex={values.scopeB}>
         <Node
           id="b1"
           position={[0, 0]}

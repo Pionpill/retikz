@@ -24,7 +24,7 @@ const preview = defineControlledBuiltinInspectPreview(
         request={{ inspector: CLIP_INSPECTOR_KEY, options: { outline: values.outline, labels: values.labels } }}
       >
         <Scope
-          transforms={[{ kind: 'translate', x: values.position[0], y: values.position[1] }]}
+          position={[values.position[0], values.position[1]]}
           clip={{
             kind: 'path',
             fillRule: 'evenodd',

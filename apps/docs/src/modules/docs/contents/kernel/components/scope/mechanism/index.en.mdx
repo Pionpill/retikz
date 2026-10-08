@@ -5,7 +5,7 @@ description: How Scope resolves transforms, cross-coordinate references, local n
 
 Start with [Basic usage](/kernel/components/scope/usage). Each section explains one local mechanism behind Scope transforms, references, or clipping.
 
-## Transforms and final placement
+## Transforms and final position
 
 Scope treats its contents as a group: scale them together, rotate them together, then move them to a target. Below, nodes A and B first scale by `1.4` around the origin, then rotate by `30°`, and finally move their origin to `[16, 14]`.
 
@@ -15,13 +15,13 @@ The orange point marks the origin, and the gray dotted axes stay fixed. Watch th
 
 During the first two steps, the origin stays put while the group scales and rotates around it. Only the final step moves the whole group away. B follows the same sequence: `[14, 0]` → `[19.6, 0]` → approximately `[17, 9.8]` → approximately `[33, 23.8]`.
 
-The `pivot` property selects the center of scaling or rotation; `placement` specifies the final alignment. Both transforms here use `pivot: 'origin'`. The final `placement={{ target: [16, 14], selfAnchor: 'origin' }}` means “move the group's origin to `[16, 14]`.”
+The `pivot` property selects the center of scaling or rotation; `position` places the group in parent coordinates. Both transforms here use `pivot: 'origin'`, followed by `position={[16, 14]}`. A point position follows `ancestor transforms × position translation × local transforms`: local scaling does not scale the base position, while additional local translation is retained.
 
-Mind the array order: `transforms` **acts from last to first**. To scale before rotating, declare `[rotation, scaling]`. `placement` acts after those transforms.
+Mind the array order: `transforms` **acts from last to first**. To scale before rotating, declare `[rotation, scaling]`. `position` acts after those transforms.
 
 What if you want to rotate around the middle of the group's right edge instead of the origin? First lay out the nodes, then fit a box around them. Its right-edge midpoint gives you that point. The implementation calls this box before transformation the “intrinsic envelope.”
 
-The next figure compares the same group's box before and after transformation, without final placement. The gray dashed box on the right keeps the original position visible for comparison.
+The next figure compares the same group's box before and after transformation, without final position. The gray dashed box on the right keeps the original position visible for comparison.
 
 <ComponentPreview files="scope-envelope-comparison" size="md" type="illustration" hideCode />
 
@@ -38,7 +38,7 @@ The implementation therefore needs to find the transform center before calculati
 
 An origin or explicit-coordinate center is known immediately. A center selected from the box must wait until the child nodes are laid out and the box size is known. The two inputs in the diagram represent these cases.
 
-The target position, `placement.target`, is calculated and saved in advance. Once the group's own transforms are determined, the final translation is “target position minus the selected point after transformation.” The compiler puts this translation first in the array so it acts last. The selected point then reaches the target regardless of scaling or rotation, with no manual compensation.
+The anchor form, `position={{ kind: 'anchor', target, selfAnchor }}`, calculates and saves the target in advance. Once the group's own transforms are determined, the final translation is “target minus the selected point after transformation.” The compiler puts this translation first in the array so it acts last. It can cancel a local translation to preserve exact alignment, unlike the point form that directly specifies the base origin position.
 
 A target written as `{ id: 'target' }` must refer to an earlier object whose layout is complete. Later objects, the Scope itself, its children, and Scopes whose layout is unfinished cannot be targets and cause an error.
 
@@ -47,7 +47,7 @@ For the coordinate calculations, see Math's [Coordinate transforms](/kernel/pack
 <SourceLinks
   sources={[
     {
-      label: 'Freeze the placement target before children',
+      label: 'Freeze the position target before children',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 948,
       endLine: 986,
@@ -150,7 +150,7 @@ Replacing a lookup entry does not delete the earlier element's drawing output. A
       endLine: 184,
     },
     {
-      label: 'Register and diagnose same-frame replacements',
+      label: 'Register and diagnose same-frame repositions',
       path: 'packages/kernel/core/src/compile/namespace.ts',
       startLine: 197,
       endLine: 229,
