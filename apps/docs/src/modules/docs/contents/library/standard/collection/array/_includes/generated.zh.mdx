@@ -27,7 +27,7 @@ data、items、skeleton 与 ArrayItem children 内容入口互斥；全部省略
 | `layout?`         | `IRArray['layout']`                                                                      | —            | Array 单元格分配与排列                                                                         |
 | `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `placement?`      | `IRArray['placement']`                                                                   | —            | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `position?`       | `IRScopePosition`                                                                        | —            | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 | `style?`          | `IRCell['style']`                                                                        | —            | 供各格继承的集合视觉样式，格内显式字段可覆盖对应值                                             |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRArray['transforms']`                                                                  | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
@@ -235,7 +235,7 @@ items、data 与 skeleton 三选一；dataExpand 仅用于 data 入口。其余�
 | `layout?`         | `IRArray['layout']`                                                                      | —            | Array 单元格分配与排列                                                                         |
 | `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `placement?`      | `IRArray['placement']`                                                                   | —            | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `position?`       | `IRScopePosition`                                                                        | —            | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 | `style?`          | `IRCell['style']`                                                                        | —            | 供各格继承的集合视觉样式，格内显式字段可覆盖对应值                                             |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRArray['transforms']`                                                                  | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
@@ -375,7 +375,7 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
 | `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
 | `namespace`       | `"standard"`                                                                             | —            | 命名空间，固定为 standard                                                                      |
-| `placement?`      | `IRScopeProps['placement']`                                                              | —            | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `position?`       | `IRScopePosition`                                                                        | —            | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 | `style?`          | `IRCell['style']`                                                                        | —            | 供各格继承的集合视觉样式，格内显式字段可覆盖对应值                                             |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRScopeProps['transforms']`                                                             | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |

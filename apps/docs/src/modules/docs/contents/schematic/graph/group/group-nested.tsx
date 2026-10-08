@@ -21,7 +21,7 @@ const GroupNested: FC<GroupNestedProps> = props => {
           id={`region-${index}`}
           localNamespace
           caption={{ title: { text: region } }}
-          transforms={[{ kind: 'translate', x: index * 340, y: 0 }]}
+          position={[index * 340, 0]}
         >
           <Group id="workers" caption={{ title: { text: text.workers } }}>
             <Entity id="input" role="resource" position={[0, 0]}>

@@ -1,4 +1,4 @@
-import type { IRChild, IRScope } from '@retikz/core';
+import type { IRChild } from '@retikz/core';
 
 import type { InputChartPanel } from './types';
 
@@ -9,16 +9,10 @@ import type { InputChartPanel } from './types';
 export const wrapChartPanel = <TChart extends IRChild>(chart: TChart, panel: InputChartPanel | undefined): IRChild => {
   if (panel === undefined) return chart;
 
-  const { x, y, transforms, placement, zIndex, clip, theme } = panel;
-  const scopeTransforms =
-    x !== undefined || y !== undefined
-      ? ([{ kind: 'translate', x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])] as NonNullable<IRScope['transforms']>)
-      : transforms === undefined
-        ? undefined
-        : [...transforms];
+  const { position, transforms, zIndex, clip, theme } = panel;
   if (
-    scopeTransforms === undefined &&
-    placement === undefined &&
+    transforms === undefined &&
+    position === undefined &&
     zIndex === undefined &&
     clip === undefined &&
     theme === undefined
@@ -28,8 +22,8 @@ export const wrapChartPanel = <TChart extends IRChild>(chart: TChart, panel: Inp
 
   return {
     type: 'scope',
-    ...(scopeTransforms === undefined ? {} : { transforms: scopeTransforms }),
-    ...(placement === undefined ? {} : { placement }),
+    ...(transforms === undefined ? {} : { transforms: [...transforms] }),
+    ...(position === undefined ? {} : { position }),
     ...(zIndex === undefined ? {} : { zIndex }),
     ...(clip === undefined ? {} : { clip }),
     ...(theme === undefined ? {} : { theme }),

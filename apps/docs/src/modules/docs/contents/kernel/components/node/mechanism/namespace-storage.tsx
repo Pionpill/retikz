@@ -18,14 +18,14 @@ const NamespaceStorage: FC<NamespaceStorageProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Array
-        transforms={[{ kind: 'translate', x: 20, y: 45 }]}
+        position={[20, 45]}
         label={{ text: t.frames, opacity: 0.8, font: { size: 12 } }}
         layout={{ width: 158, height: 34, padding: 0 }}
         style={{ font: { size: 14 } }}
         items={[{ content: t.root }, { id: 'top', content: t.current }]}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 65, y: 160 }]}
+        position={[65, 160]}
         label={{
           text: t.map,
           position: 'bottom',
@@ -47,7 +47,7 @@ const NamespaceStorage: FC<NamespaceStorageProps> = props => {
         ]}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 430, y: 45 }]}
+        position={[430, 45]}
         label={{ text: t.record, opacity: 0.8, font: { size: 12 } }}
         id="record"
         layout={{ padding: 6 }}

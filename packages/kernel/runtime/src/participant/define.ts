@@ -24,6 +24,9 @@ const invalidParticipant = (cause: unknown) =>
 /**
  * 定义 nominal Runtime commit participant
  * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
+ * @param input 参与者依赖、选择策略与事务回调
+ * @returns 只能由一个 Runtime 接管的参与者凭证
+ * @throws {RetikzRuntimeError} 参与者键为空或 Trace 声明无效时抛出
  */
 export const defineRuntimeCommitParticipant = <TRead>(
   input: RuntimeCommitParticipantDefinitionInput<TRead>,

@@ -1,31 +1,20 @@
-import type { infer as ZodInfer } from 'zod';
-
-import type {
-  BlockHeaderSchema,
-  BlockRowSchema,
-  BlockSchema,
-  BlockSectionSchema,
-  IRBlock,
-  IRBlockHeader,
-  IRBlockRow,
-  IRBlockSection,
-} from '../../schemas';
+import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 
 /** 对 union 的每个成员分别移除作者不可写字段 */
 type DistributiveOmit<T, TKeys extends PropertyKey> = T extends unknown ? Omit<T, TKeys> : never;
 
 /** Block Source record 的作者输入 */
-export type BlockCreateOptions = Omit<ZodInfer<typeof BlockSchema>, 'namespace' | 'type'>;
+export type BlockCreateOptions = Omit<IRBlock, 'namespace' | 'type'>;
 
 /** Block Header Source record 的作者输入 */
-export type BlockHeaderCreateOptions = Omit<ZodInfer<typeof BlockHeaderSchema>, 'namespace' | 'type'>;
+export type BlockHeaderCreateOptions = Omit<IRBlockHeader, 'namespace' | 'type'>;
 
 /** Block Section Source record 的作者输入 */
-export type BlockSectionCreateOptions = Omit<ZodInfer<typeof BlockSectionSchema>, 'namespace' | 'type'>;
+export type BlockSectionCreateOptions = Omit<IRBlockSection, 'namespace' | 'type'>;
 
 /** Block Row Source record 的作者输入 */
-export type BlockRowCreateOptions = DistributiveOmit<ZodInfer<typeof BlockRowSchema>, 'namespace' | 'type'>;
+export type BlockRowCreateOptions = DistributiveOmit<IRBlockRow, 'namespace' | 'type'>;
 
 /** 组装 Block Source record */
 export const createBlock = (input: BlockCreateOptions): IRBlock => ({

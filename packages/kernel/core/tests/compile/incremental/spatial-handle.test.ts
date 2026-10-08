@@ -42,6 +42,40 @@ const scene = (width: number, aliasIds?: Array<string>): IRScene => ({
 });
 
 describe('incremental spatial handle atomicity', () => {
+  it('position-only changes update Scene and spatial handles identically to fresh compilation', () => {
+    const source = (x: number): IRScene => ({
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'scope',
+          id: 'panel',
+          position: [x, 20],
+          children: [{ namespace: 'third', type: 'card', width: 10 }],
+        },
+      ],
+    });
+    const program = createCoreComputation({ composites: [card] });
+    const sources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+    const computations = createRuntimeComputationRegistry({ sources, computations: [program] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source(0))],
+    });
+    for (const x of [40, -10, 0]) {
+      runtime.update({
+        baseRevision: runtime.revision(),
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(x))],
+      });
+      const result = runtime.result(program).value.output.result;
+      const fresh = compileToScene(source(x), { composites: [card] });
+      expect(result.scene).toEqual(fresh.scene);
+      expect(result.spatialHandles).toEqual(fresh.spatialHandles);
+      expect(result.spatialHandles.entries[0]?.geometry.bounds).toEqual({ x, y: 20, width: 10, height: 10 });
+    }
+  });
+
   it('rebuilds Node alias registration on retained updates and matches fresh compilation', () => {
     const source = (aliasIds: Array<string>): IRScene => ({
       type: 'scene',

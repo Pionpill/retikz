@@ -4,10 +4,10 @@
 
 ### Scope / ScopeProps
 
-- `Scope`: <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={65}>Group child elements into a scope with shared styling, transforms, placement, and clipping</ApiSourceLink>
+- `Scope`: <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={66}>Group child elements into a scope with shared styling, transforms, placement, and clipping</ApiSourceLink>
 - `ScopeProps`: <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={11}>Configure local styles, namespaces, transforms, clipping, and reference bounds for a group of elements</ApiSourceLink>
 
-Provides local styles, namespaces, transforms, final anchor placement, clipping, and reference bounds for a group of nodes and paths
+Provides local styles, namespaces, origin or anchor positioning, local transforms, clipping, and reference bounds for a group of nodes and paths
 
 <DocTabs defaultValue="members">
 
@@ -22,7 +22,7 @@ Provides local styles, namespaces, transforms, final anchor placement, clipping,
 |           | `localNamespace?` | `boolean`                               | `false`       | Whether to create a local namespace; when true, child ids are hidden from outer scopes<br />Child IDs can only be referenced inside this Scope; they are inaccessible outside it, while `scope.id` itself remains accessible from the outer scope                     |
 | Geometry  | `boundingShape?`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Envelope shape used when referencing the group by id; supports rectangles or circles and defaults to an axis-aligned rectangle                                                                                                                                        |
 |           | `clip?`           | `IRScope['clip']`                       | —             | Clip region in Scope-local coordinates (rect, circle, ellipse, polygon, path, compound, or custom); clips all children when supplied                                                                                                                                  |
-|           | `placement?`      | `IRScope['placement']`                  | —             | Final anchor-aligned Scope placement<br />The target is an explicit point in parent coordinates or a previously completed named entity; selfAnchor defaults to the center of the intrinsic bounds                                                                     |
+|           | `position?`       | `IRScope['position']`                   | `[0, 0]`      | Scope origin position in parent coordinates or final anchor alignment<br />A coordinate position is applied outside local transforms. The anchor form aligns selfAnchor on the transformed envelope to target; selfAnchor defaults to center                          |
 |           | `transforms?`     | `Array<InputTransform>`                 | —             | Local transform list following SVG transform-list order; the last item acts on a local point first<br />Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale                                                     |
 | Style     | `defaults?`       | `InputScope['defaults']`                | —             | Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels                                                                                                                                |
 |           | `frame?`          | `IRScope['frame']`                      | —             | Independent intrinsic-envelope frame below all content; excluded from layout, references, and hit testing                                                                                                                                                             |
@@ -57,7 +57,7 @@ export type ScopeProps = ScopeStyleProps &
     id?: string;
     localNamespace?: boolean;
     transforms?: Array<InputTransform>;
-    placement?: IRScope['placement'];
+    position?: IRScope['position'];
     zIndex?: IRScope['zIndex'];
     clip?: IRScope['clip'];
     boundingShape?: IRScope['boundingShape'];
@@ -134,7 +134,7 @@ export type ScopeStyleProps = {
 |           | `type?`                | `'scope'`                                                                                | —       | Explicitly identify a Scope when its authoring fields do not uniquely identify it                                                              |
 | Geometry  | `boundingShape?`       | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                          |
 |           | `clip?`                | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                            |
-|           | `placement?`           | `InputScope["placement"]`                                                                | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                  |
+|           | `position?`            | `IRScopePosition`                                                                        | —       | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                          |
 |           | `transforms?`          | `ReadonlyArray<InputTransform>`                                                          | —       | Local transform list; the last item acts on local points first. Omission applies no local transform                                            |
 | Style     | `defaults?`            | `InputScope["defaults"]`                                                                 | —       | Named descendant defaults and their inheritance barrier.                                                                                       |
 |           | `frame?`               | `IRScopeFrame`                                                                           | —       | Envelope decoration whose defaulted fields may be omitted                                                                                      |
@@ -175,7 +175,7 @@ export type InputScope = InputScopeBase & {
 ### IRScope
 
 <p>
-  <ApiSourceLink label={'IRScope'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={53}>
+  <ApiSourceLink label={'IRScope'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={59}>
     Scope IR type, declared explicitly rather than inferred with z.infer
   </ApiSourceLink>
 </p>
@@ -196,7 +196,7 @@ ChildSchema is populated lazily through z.lazy, so an explicit declaration prese
 |           | `type`            | `'scope'`                                                                                | —       | Container discriminator, fixed to scope                                                                                                         |
 | Geometry  | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
 |           | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-|           | `placement?`      | `IRScopeProps['placement']`                                                              | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+|           | `position?`       | `IRScopePosition`                                                                        | —       | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                           |
 |           | `transforms?`     | `IRScopeProps['transforms']`                                                             | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
 | Style     | `defaults?`       | `IRScopeProps['defaults']`                                                               | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
 |           | `frame?`          | `IRScopeFrame`                                                                           | —       | Envelope decoration whose defaulted fields may be omitted                                                                                       |
@@ -223,10 +223,48 @@ export type IRScope = IRScopeProps & {
 
 </DocTabs>
 
+### IRScopeAnchorPosition
+
+<p>
+  <ApiSourceLink
+    label={'IRScopeAnchorPosition'}
+    path={'packages/kernel/core/src/schemas/scope/types.ts'}
+    startLine={35}
+  >
+    Final anchor-aligned Scope placement
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                                                                                                                                                                                                                                                 | Default | Description                                                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `kind`        | `"anchor"`                                                                                                                                                                                                                                           | —       | Anchor alignment position discriminator.                                              |
+| `selfAnchor?` | `number \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —       | Point on the transformed Scope envelope aligned to target. Omitted fields use center. |
+| `target`      | `ZodInput<typeof ScopeAnchorPositionSchema.shape["target"]>`                                                                                                                                                                                         | —       | Alignment target resolved in the parent coordinate frame.                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRScopeAnchorPosition = ZodInput<typeof ScopeAnchorPositionSchema>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### IRScopeDefaults
 
 <p>
-  <ApiSourceLink label={'IRScopeDefaults'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={60}>
+  <ApiSourceLink label={'IRScopeDefaults'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={66}>
     View source
   </ApiSourceLink>
 </p>
@@ -262,7 +300,7 @@ export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
 ### IRScopeFrame
 
 <p>
-  <ApiSourceLink label={'IRScopeFrame'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={46}>
+  <ApiSourceLink label={'IRScopeFrame'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={52}>
     Scope frame input with optional defaulted fields
   </ApiSourceLink>
 </p>
@@ -292,43 +330,38 @@ export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 
 </DocTabs>
 
-### IRScopePlacement
+### IRScopePosition
 
 <p>
-  <ApiSourceLink label={'IRScopePlacement'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={34}>
-    Final anchor-aligned Scope placement
+  <ApiSourceLink label={'IRScopePosition'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={38}>
+    Scope origin position or final anchor alignment
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member        | Type                                                                                                                                                                                                                                                 | Default | Description                                                                           |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
-| `selfAnchor?` | `number \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —       | Point on the transformed Scope envelope aligned to target. Omitted fields use center. |
-| `target`      | `ZodInfer<typeof ScopePlacementSchema.shape["target"]>`                                                                                                                                                                                              | —       | Placement target resolved in the parent coordinate frame.                             |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
 ```ts
-export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
+export type IRScopePosition = ZodInput<typeof ScopePositionSchema>;
 ```
 
-</DocTab>
+### IRScopePositionTarget
 
-</DocTabs>
+<p>
+  <ApiSourceLink
+    label={'IRScopePositionTarget'}
+    path={'packages/kernel/core/src/schemas/scope/types.ts'}
+    startLine={32}
+  >
+    Closed set of targets accepted by Scope anchor positioning
+  </ApiSourceLink>
+</p>
+
+```ts
+export type IRScopePositionTarget = ZodInput<typeof ScopePositionTargetSchema>;
+```
 
 ### IRScopeProps
 
 <p>
-  <ApiSourceLink label={'IRScopeProps'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={40}>
+  <ApiSourceLink label={'IRScopeProps'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={44}>
     Complete authored Scope properties excluding `type` and recursive `children`
   </ApiSourceLink>
 </p>
@@ -337,13 +370,14 @@ export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `ZodInfer<typeof ScopePropsSchema>`, with `'frame'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `ZodInfer<typeof ScopePropsSchema>`, with `'frame'`, `'position'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
-| Member   | Type           | Default | Description                                               |
-| -------- | -------------- | ------- | --------------------------------------------------------- |
-| `frame?` | `IRScopeFrame` | —       | Envelope decoration whose defaulted fields may be omitted |
+| Member      | Type              | Default | Description                                                                           |
+| ----------- | ----------------- | ------- | ------------------------------------------------------------------------------------- |
+| `frame?`    | `IRScopeFrame`    | —       | Envelope decoration whose defaulted fields may be omitted                             |
+| `position?` | `IRScopePosition` | —       | Origin position in the parent frame or final anchor alignment; defaults to the origin |
 
 </ApiTable>
 
@@ -352,7 +386,8 @@ The remaining members are inherited from `ZodInfer<typeof ScopePropsSchema>`, wi
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame'> & {
+export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame' | 'position'> & {
+  position?: IRScopePosition;
   frame?: IRScopeFrame;
 };
 ```

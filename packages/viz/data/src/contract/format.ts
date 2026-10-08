@@ -17,6 +17,7 @@ export type FieldFormatDefinition = {
 /**
  * 定义一个字段解析格式 definition
  * @description 内置与自定义格式经同一 registry 入口分派；spec 里仍只写 `{ name, format }` JSON
- * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
+ * @param def 具名格式及其类型、解析函数；注册时检查名称冲突
+ * @returns 原样返回定义对象；不会自动注册
  */
 export const defineFieldFormat = (def: FieldFormatDefinition): FieldFormatDefinition => def;

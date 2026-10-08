@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeBranchApiReferenceMdx } from './api-reference/branch';
+import { writeDataModelApiReferenceMdx } from './api-reference/data-model';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
 import { writeFlowApiReferenceMdx } from './api-reference/flow';
@@ -14,6 +15,7 @@ import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
+import { writeRuntimeApiReferenceMdx } from './api-reference/runtime';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeStandardCollectionApiReferences } from './api-reference/standard-collections';
 import { writeStandardPresentationApiReferences } from './api-reference/standard-presentation';
@@ -22,6 +24,9 @@ import { writeTexApiReferenceMdx } from './api-reference/tex';
 import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+await writeRuntimeApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/runtime/api-reference/_includes'),
+);
 await writeBranchApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/diagram/branch/api-reference/_includes'),
 );
@@ -85,4 +90,8 @@ await writeRibbonApiReferenceMdx(
 );
 await writeFlowApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/diagram/flow/api-reference/_includes'),
+);
+
+await writeDataModelApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/viz/data/model/api-reference/_includes'),
 );

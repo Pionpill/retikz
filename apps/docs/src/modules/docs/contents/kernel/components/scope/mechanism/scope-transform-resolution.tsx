@@ -40,10 +40,10 @@ const ScopeTransformResolution: FC<ScopeTransformResolutionProps> = props => {
               items={[
                 { id: 'own', role: 'activity', text: scopeFlowText(t.nodes.own) },
                 {
-                  id: 'placement',
+                  id: 'position',
                   role: 'activity',
                   kind: LogicFigureEntityKind.Important,
-                  text: scopeFlowText(t.nodes.placement),
+                  text: scopeFlowText(t.nodes.position),
                 },
               ]}
             />
@@ -54,7 +54,7 @@ const ScopeTransformResolution: FC<ScopeTransformResolutionProps> = props => {
         items={[
           { source: 'known', target: 'own' },
           { source: 'bounds', target: 'own' },
-          { source: 'own', target: 'placement' },
+          { source: 'own', target: 'position' },
         ]}
       />
     </PreviewFlowDiagram>

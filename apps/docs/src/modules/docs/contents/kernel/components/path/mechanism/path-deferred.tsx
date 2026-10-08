@@ -17,7 +17,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Array
-        transforms={[{ kind: 'translate', x: 0, y: 0 }]}
+        position={[0, 0]}
         label={{ text: t.queue, opacity: 0.8, font: { size: 12 } }}
         layout={{ width: 150, height: 36 }}
         items={[{ id: 'task', content: t.task, style: { fill: 'dodgerblue' } }]}
@@ -26,7 +26,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
       />
       <Map
         id="record"
-        transforms={[{ kind: 'translate', x: 340, y: 0 }]}
+        position={[340, 0]}
         label={{ text: t.record, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, key: { width: 140 }, value: { width: 130 } }}
         style={{ font: { size: 13 } }}
@@ -37,7 +37,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
       />
       <Map
         id="slot"
-        transforms={[{ kind: 'translate', x: 340, y: 160 }]}
+        position={[340, 160]}
         label={{ text: t.slot, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, key: { width: 140 }, value: { width: 130 } }}
         style={{ font: { size: 13 } }}
@@ -51,7 +51,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
       />
       <Array
         id="sink"
-        transforms={[{ kind: 'translate', x: 0, y: 165 }]}
+        position={[0, 165]}
         label={{ text: t.before, opacity: 0.8, font: { size: 12 } }}
         layout={{ direction: 'column', width: 170, height: 34 }}
         style={{ font: { size: 13 } }}
@@ -62,7 +62,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
         ]}
       />
       <Array
-        transforms={[{ kind: 'translate', x: 0, y: 385 }]}
+        position={[0, 385]}
         label={{ text: t.after, opacity: 0.8, font: { size: 12 } }}
         layout={{ direction: 'column', width: 170, height: 34 }}
         style={{ font: { size: 13 } }}

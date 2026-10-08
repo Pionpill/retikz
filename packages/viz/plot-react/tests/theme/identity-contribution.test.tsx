@@ -51,7 +51,9 @@ describe('Plot React InputEmbed routing', () => {
     expect(layout).not.toHaveProperty('ir');
     expect(layout).not.toHaveProperty('composites');
     expect(Reflect.has(Plot, 'inputEmbedAdapter')).toBe(true);
-    expect((layout!.children as { type?: unknown }).type).toBe(Plot);
+    expect((layout!.children as { type?: { inputEmbedAdapter?: unknown } }).type?.inputEmbedAdapter).toBe(
+      Plot.inputEmbedAdapter,
+    );
   });
 
   it('keeps ambient Plot style definitions on the InputEmbed props', () => {
@@ -65,20 +67,21 @@ describe('Plot React InputEmbed routing', () => {
 
     const layout = capturedLayouts.at(-1);
 
-    expect((layout!.children as { props?: { plotThemeStyles?: unknown } }).props?.plotThemeStyles).toEqual([
-      plotThemeStyle,
-    ]);
+    expect(
+      (layout!.children as { props?: { lowerOptions?: { plotThemeStyles?: unknown } } }).props?.lowerOptions
+        ?.plotThemeStyles,
+    ).toEqual([plotThemeStyle]);
   });
 
   it('preserves the React panel identity and authoring props on the InputEmbed', () => {
     capturedLayouts.length = 0;
 
     const namedSpec: IRPlot = { ...spec, id: 'sales' };
-    renderToStaticMarkup(<Plot spec={namedSpec} data={data} x={24} y={12} />);
+    renderToStaticMarkup(<Plot spec={namedSpec} data={data} position={[24, 12]} />);
 
     const child = capturedLayouts.at(-1)?.children as { props?: Record<string, unknown> };
 
-    expect(child.props).toMatchObject({ spec: namedSpec, data, x: 24, y: 12 });
+    expect(child.props).toMatchObject({ spec: namedSpec, datasets: data, panel: { position: [24, 12] } });
     expect(child.props).not.toHaveProperty('composites');
   });
 });

@@ -26,7 +26,7 @@ const OpenComposition: FC<OpenCompositionProps> = props => {
         </Entity>
         <Relation role="flow" source={{ id: 'input' }} target={{ id: 'activity' }} />
       </Group>
-      <Block id="order" width={170} transforms={[{ kind: 'translate', x: 350, y: 40 }]}>
+      <Block id="order" width={170} position={[350, 40]}>
         <BlockHeader title={t.block} />
         <BlockRow content={t.row} />
       </Block>

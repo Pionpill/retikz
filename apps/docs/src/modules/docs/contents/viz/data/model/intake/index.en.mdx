@@ -1,67 +1,42 @@
 ---
 title: Data Intake
-description: Bind external field paths and storage formats to logical fields, producing canonical rows before transforms run.
+description: Map paths, parse formats, set category order, and choose validation policies so external data satisfies one field model.
 ---
 
-Data intake converts API, file, or database records into logical fields that consumers can reference consistently. For example, `{ period, amount }` can become `{ month, revenue }` through `fieldMap`, then storage values normalize through models and formats. The examples use React `<Plot>` to visualize the result, but Plot is only the example host: field paths, models, formats, and normalization belong to Data and can be reused by other consumers.
+Start with the logical contract in [Field Types](/viz/data/model/field-types), then bind real data to it. Mapping determines where a value comes from; types and formats determine how to interpret it. For example, read `pricing.amount` as `revenue`, then parse `'50%'` as `0.5`. After parsing, choose to skip, diagnose, or reject unusable values. The examples visualize Data processing results.
 
-## Field paths
+## Field mapping
 
-A field name may be a dotted path: `user.address.city` traverses nested objects, and the leaf must be a scalar such as text, number, boolean, or time. Resolution checks for an exact own key before traversing `.`, so a canonical logical name can itself contain dots.
+Sources with the same names and types only require replacing the rows. When names differ, use `fieldMap` to map logical names to physical paths while consumers keep referencing logical names. Mapping requires `model` and can only target declared fields. An omitted entry reads the logical name directly.
 
-```tsx
-<Plot data={rows}>
-  <PathMark x="user.createdAt" y="metrics.revenue" order="user.createdAt" />
-</Plot>
+Physical paths support dotted access such as `pricing.amount`. Reading first checks for an exact own key, then traverses nested properties. Arrays are not unwound automatically; reshape the source first when one record must produce multiple rows.
+
+Switch between actual, forecast, and finance data below. The first two only replace rows; finance also maps paths. Consumers always reference `month` and `revenue`.
+
+Choose `fieldMap` based on the source. The pseudocode below omits data selection and consumer configuration, keeping only the mapping logic:
+
+```ts
+const fieldMap = source === 'finance' ? { month: 'period', revenue: 'amount' } : undefined;
 ```
 
-Arrays are not unwound automatically. Flatten them into separate rows in the data layer when one source record should produce several observations.
-
-## Switching data sources
-
-Real rows stay outside the serializable field contract, so one consumer configuration can use different sources. Choose the binding based on what changed; the examples below continue to use Plot.
-
-### Same field contract
-
-When both sources expose the same names and types, the consumer only replaces its data input. In the Plot example below, that means replacing `<Plot data>`; actual and forecast values share one field contract and consumer configuration.
-
-The source-binding playground below compares swapping matching data with aligning renamed fields through one stable consumer configuration.
-
-### Different field names
-
-Use `fieldMap` to map logical names to physical paths. Data transforms and consumer configuration continue to reference only logical names. In a Plot application, marks and transforms therefore do not need to know the physical path either:
-
-```tsx
-<Plot
-  data={rows}
-  model={[
-    { name: 'month', type: 'temporal' },
-    { name: 'revenue', type: 'continuous' },
-  ]}
-  fieldMap={{ month: 'period', revenue: 'pricing.amount' }}
->
-  <PathMark x="month" y="revenue" order="month" />
-</Plot>
-```
-
-`fieldMap` aligns names without computing values. It requires `model`, because there is no logical field set to map without a field contract.
+Actual and forecast rows already contain `month` and `revenue`, so they need no mapping. Finance rows use `period` and `amount`; `fieldMap` aligns them with the logical names. The model and the logical fields referenced by consumers stay the same for every source.
 
 <ComponentPreview
   files={['source-binding', 'source-binding-preview.tsx', 'source-binding.data.ts']}
   defaultSourceFile="source-binding-preview.tsx"
   size="lg"
-  caption="Marks always reference month/revenue; only the finance feed aligns physical fields through fieldMap."
+  caption="Consumers always reference month/revenue; only the finance feed aligns physical fields through fieldMap."
 />
 
-### Different storage shapes
+Mapping changes where values are read, not how they are parsed. When mapping to a different path, explicitly declare `type` or `format` in the model rather than relying on inference, which reads logical field names from raw rows.
 
-Default coercion unifies `Date`, strict ISO strings, and epoch milliseconds as temporal values. It also unifies finite numbers, safe-integer `bigint` values, and strict numeric strings as continuous values. The mixed representations below still normalize against one model.
+Mapping and rows stay at runtime; the field model only stores the contract. Consumers keep reading the same logical fields when a mapping changes.
 
-The value-parsing playground below compares canonical values, mixed built-in storage shapes, and report values that require explicit formats.
+## Value parsing
 
-## Declaring parsing formats
+Once the type is known, default coercion converts finite numbers, safe-integer `bigint` values, and strict numeric strings to continuous values. It converts `Date`, strict ISO strings, and epoch milliseconds to temporal values. Converting a numeric string is distinct from inferring an undeclared type; see [Measurement types](/viz/data/model/field-types).
 
-Put common non-default formats on the field as `format`. The format name enters the serializable model, while a built-in or injected Definition supplies the parser.
+Declare non-default storage formats through the field's `format`. The model stores the name; a built-in or runtime definition supplies the parser:
 
 | `format`       | Type         | Parsing                                        |
 | -------------- | ------------ | ---------------------------------------------- |
@@ -72,7 +47,9 @@ Put common non-default formats on the field as `format`. The format name enters 
 | `numberString` | `continuous` | Numeric strings with whitespace or commas      |
 | `percent`      | `continuous` | Percentage string `'50%'` to `0.5`             |
 
-`format` implies a type. The intake stage reports an error when an explicit `type` conflicts with the format's type. The standard intake path applies declarative `format` before falling back to default coercion.
+`format` also determines the field type; a conflicting explicit `type` fails. A registered parser is used instead of default coercion. A failed parse does not retry default coercion: the result goes through the [validation policy](/viz/data/model/intake#validation-policy).
+
+Switch between canonical, mixed, and report data to compare storage representations under the same consumer configuration:
 
 <ComponentPreview
   files={['value-parsing', 'value-parsing-preview.tsx', 'value-parsing.data.ts']}
@@ -81,59 +58,159 @@ Put common non-default formats on the field as `format`. The format name enters 
   caption="canonical and mixed use default coercion; report uses slashDate and percent formats."
 />
 
-See [Extension Mechanisms](/viz/data/model/extensions) when you need to register a custom format or supply a runtime field parser.
+See [Extension Mechanisms](/viz/data/model/extensions) for custom formats and runtime resolvers. Normalized values are exposed under logical names to transforms and consumers; internal steps belong to [Runtime mechanisms](/viz/data/reference/runtime).
 
-## Intake order
+## Category order
 
-1. Collect fields referenced by the current configuration.
-2. Read physical paths through `fieldMap`.
-3. Resolve type from the model / format, then inference.
-4. Parse with the declarative format, then default coercion.
-5. Write the result under the logical name to form a canonical row.
+Categorical fields form their domain in data-appearance order by default. Put `order` on the field when the business order should be `S → M → L → XL`:
 
-Data transforms and consumer modules read those canonical rows instead of repeating parsing independently. In a Plot application, those consumers include scales, marks, and locators.
+| `order`                                      | Effect                                                                                    |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Omitted / `'appearance'`                     | Preserve data-appearance order                                                            |
+| `'ascending'` / `'descending'`               | Compare all-numeric categories numerically, otherwise as text                             |
+| `'naturalAscending'` / `'naturalDescending'` | Natural ascending / descending by digit runs, suitable for version labels and identifiers |
+| Array such as `['S', 'M', 'L']`              | Use the array first, then append remaining observed categories                            |
 
-<SourceLinks
-  sources={[
-    {
-      label: 'Unified preparation when Plot consumes Data capabilities',
-      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
-      startLine: 54,
-      endLine: 164,
-    },
-    {
-      label: 'Canonical values written under logical field names',
-      path: 'packages/viz/data/src/providers/data/normalize.ts',
-      startLine: 26,
-      endLine: 47,
-    },
-    {
-      label: 'Format type compatibility and parser resolution',
-      path: 'packages/viz/data/src/providers/format/orchestrate.ts',
-      startLine: 5,
-      endLine: 41,
-    },
-  ]}
+<ComponentPreview
+  files={['data-model-order', 'data-model-order-preview.tsx', 'data-model-order.data.ts']}
+  defaultSourceFile="data-model-order-preview.tsx"
+  size="lg"
+  caption="The source table remains XL, S, L, M; controls change the category domain without reordering rows."
 />
 
-## Related
+`model.order` orders the **categorical domain** without reordering rows. Consumers can reuse this category order; use [data-transform sorting](/viz/data/transform/operations#sort) to change row order.
+
+Keep versions as strings. Alphabetical ascending places `'10.18'` before `'10.2'`; `order: 'naturalAscending'` produces `10.2 → 10.18`. Use `naturalDescending` for the opposite direction.
+
+<ComponentPreview
+  files={['version-order', 'version-order.preview.tsx', 'version-order.data.ts']}
+  defaultSourceFile="version-order.preview.tsx"
+  size="lg"
+  caption="Natural ascending is selected initially. Compare alphabetical order, version positions, and colors. Source rows stay unchanged."
+/>
+
+Natural ordering compares ASCII digit runs as arbitrary-length integers and other runs in case-sensitive UTF-16 order. Numeric runs precede text runs; a shorter sequence comes first when shared runs compare equally. It does not interpret decimals, negative numbers, or SemVer. Equivalent keys such as `'v02'` and `'v2'` retain appearance order in both natural directions while remaining distinct categories.
+
+## Validation policy
+
+The example intake configuration defaults to `invalid: 'skip'`: normalization retains rows without inventing replacement values, and consumers decide how to skip unusable values. Use sampled diagnostics when a field has no valid values.
+
+`invalid` determines whether bad values are strictly rejected and only accepts `skip` or `error`. `validateData` is a separate sampled-diagnostics switch, not a third `invalid` policy.
+
+| Property       | Value                           | Behavior and use case                                                                                           |
+| -------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `invalid`      | `'skip'` (default)              | Retain normalized rows and let consumers skip invalid values; tolerate a few bad points                         |
+| `invalid`      | `'error'`                       | Check all participating values and reject missing or invalid values; enforce strict data admission              |
+| `validateData` | `false` (default)               | Disable sampled diagnostics                                                                                     |
+| `validateData` | `true` or `{ sampleRows: 100 }` | Require at least one valid value per participating field in the sample; diagnose blank charts and path mappings |
+
+`validateData: true` checks the first 100 rows by default. Pass an object with `sampleRows` to change the sample size. Sampling allows some bad values, so it does not replace the per-value checks performed by `invalid: 'error'`.
+
+Choose a dataset, then switch policy. Partially invalid data can pass sampling but fails strict validation. An entirely invalid field fails sampling. Switch back to valid data to recover the preview.
+
+<ComponentPreview
+  files={['validation-policy', 'validation-policy-preview.tsx', 'validation-policy.data.ts']}
+  defaultSourceFile="validation-policy-preview.tsx"
+  size="lg"
+  caption="A few bad values can be skipped; an all-invalid field triggers sampling diagnostics; strict mode fails on the first bad value."
+/>
+
+`validateData` and `invalid` are runtime checking options in the example intake configuration, outside the field model. Combine `validateData: true` with `invalid: 'skip'` to tolerate a few bad values while detecting entirely invalid fields. With `invalid: 'error'`, sampling runs before strict validation.
+
+<ComponentAlert
+  type="tip"
+  title="Validation scope"
+  description={
+    <>
+      {' '}
+      This example checks source fields required by configuration and every field explicitly declared in{' '}
+      <code>model</code>. Even when consumers only use <code>x</code> and <code>y</code>, a missing additional
+      continuous model field can fail strict validation. Extra source columns that are neither declared nor referenced
+      are excluded.{' '}
+    </>
+  }
+/>
+
+## Diagnostics
+
+Checks inspect normalized values after intake and before transforms. Errors identify logical field names and zero-based input row indices, not positions after sorting or filtering.
+
+| Error text                                | Meaning and next step                                                                                     |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `has no valid values in the sampled data` | No valid value for this field in the sample; check its physical path, type, and format                    |
+| `missing or invalid at row 1`             | This field is unusable in the second input row; inspect the original value and parser result              |
+| Unknown format or conflicting type        | Configuration is invalid; repair declarations or registration, since skip mode cannot bypass these errors |
+
+Sampled `invalid` / `missing` counts describe normalized results and may not preserve the original failure reason. Passing sampling does not validate other rows. `sampleRows: 0` and empty data skip sampled checks. Use strict validation when every value must be valid.
+
+Unusable results from custom parsers follow the same policies.
+
+## Related props
+
+These members cover this topic; see [Data contracts](/viz/data/model/schema-reference) for the full reference.
+
+<ComponentProps
+  items={[
+    {
+      name: 'fieldMap',
+      kind: 'property',
+      type: 'Record<string, string>',
+      description:
+        'Mapping in this intake example from logical names to physical paths. Requires `model`; omitted entries use the same name.',
+    },
+    {
+      name: 'format',
+      kind: 'property',
+      type: 'string',
+      description:
+        'Field format name. Built-ins `iso`, `epochSeconds`, `epochMillis`, and `slashDate` parse time; `numberString` and `percent` parse continuous values. Custom names require injected definitions.',
+    },
+
+    {
+      name: 'order',
+      kind: 'property',
+      type: 'string | Array<string | number>',
+      description: 'Categorical domain order: `appearance` preserves appearance order; `ascending` / `descending` compare numbers or strings; `naturalAscending` / `naturalDescending` compare digit runs naturally. A nonempty array puts listed categories first and appends others. Only fields resolved as categorical accept order. Custom names require registration.',
+      defaultValue: "'appearance'",
+    },
+    {
+      name: 'invalid',
+      kind: 'property',
+      type: "'skip' | 'error'",
+      description:
+        '`skip` retains rows and lets consumers handle unusable values; `error` checks all participating values before transforms.',
+      defaultValue: "'skip'",
+    },
+    {
+      name: 'validateData',
+      kind: 'property',
+      type: 'boolean | { sampleRows?: number }',
+      description:
+        '`true` or an object enables sampling; `false` disables it. `sampleRows` defaults to 100; 0 skips checks. Includes declared model fields and source dependencies.',
+      defaultValue: 'false',
+    },
+
+]}
+/>
+
+## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Fields and Types',
+      title: 'Field Types',
       description: 'Define logical fields, types, and category order first.',
-      url: '/viz/data/model/fields-and-types',
-    },
-    {
-      title: 'Validation & Diagnostics',
-      description: 'Choose how parsing failures and missing values are handled.',
-      url: '/viz/data/model/validation',
+      url: '/viz/data/model/field-types',
     },
     {
       title: 'Extension Mechanisms',
       description: 'Learn custom field parsing and runtime injection in one place.',
       url: '/viz/data/model/extensions',
+    },
+    {
+      title: 'Runtime mechanisms',
+      description: 'Explore data preparation and consumption internals.',
+      url: '/viz/data/reference/runtime',
     },
   ]}
 />

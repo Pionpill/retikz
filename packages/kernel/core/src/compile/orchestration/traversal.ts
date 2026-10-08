@@ -16,6 +16,7 @@ import type {
   EmitStrokeOwnerOutputOptions,
   GroupPrim,
   LayoutChildResult,
+  LayoutCompositeCompileContext,
   LayoutProposal,
   PaintValue,
   PathKindCompileContext,
@@ -71,7 +72,7 @@ import type {
   IRChild,
   IRPathBase,
   IRPosition,
-  IRScopePlacementTarget,
+  IRScopePositionTarget,
   IRScopeSelfPoint,
   IRStep,
   IRTarget,
@@ -935,8 +936,8 @@ export const compileChildrenToPrimitives = (
     pathSink.push(pending);
   };
 
-  /** 拒绝非 finite 的 Scope placement 中间结果 */
-  const assertFinitePlacementPoint = (point: IRPosition, label: string): IRPosition => {
+  /** 拒绝非 finite 的 Scope position 中间结果 */
+  const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
     if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
       throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
     }
@@ -945,24 +946,26 @@ export const compileChildrenToPrimitives = (
   };
 
   /**
-   * 在 children 编译前冻结 Scope placement target
+   * 在 children 编译前冻结 Scope position target
    * @description 只允许父 frame 显式坐标或此前已完成的 namespace entry，避免 descendant / self / placeholder cycle
    */
-  const resolveScopePlacementTarget = (
+  const resolveScopePositionTarget = (
     child: ScopeChild,
     index: number,
     frame: TraversalFrame,
   ): IRPosition | undefined => {
-    const target: IRScopePlacementTarget | undefined = child.placement?.target;
+    const target: IRScopePositionTarget | undefined = Array.isArray(child.position)
+      ? undefined
+      : child.position?.target;
     if (target === undefined) return undefined;
     if (Array.isArray(target)) {
-      return assertFinitePlacementPoint([target[0], target[1]], 'scope placement target');
+      return assertFiniteScopePoint([target[0], target[1]], 'scope position target');
     }
 
     const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
     if (target.id === child.id) {
       throw createLayoutProbeRecoverableError(
-        `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
+        `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
       );
     }
 
@@ -970,7 +973,7 @@ export const compileChildrenToPrimitives = (
     const reference = positionContext.lookupReference(target.id);
     if (reference === undefined || reference.state !== 'resolved') {
       throw createLayoutProbeRecoverableError(
-        `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
+        `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
       );
     }
 
@@ -978,11 +981,11 @@ export const compileChildrenToPrimitives = (
     if (resolution.referencePoint === null) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`,
+        `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}`,
       );
     }
 
-    return assertFinitePlacementPoint(positionContext.toLocal(resolution.referencePoint), 'scope placement target');
+    return assertFiniteScopePoint(positionContext.toLocal(resolution.referencePoint), 'scope position target');
   };
 
   /** 从当前 Scope 的固有 child layouts 创建 rectangle / circle synthetic envelope */
@@ -1045,7 +1048,7 @@ export const compileChildrenToPrimitives = (
     };
   };
 
-  /** placement self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
+  /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
   const resolveTransformedSelfPoint = (
     point: IRScopeSelfPoint,
     intrinsicLayout: NodeLayout,
@@ -1054,23 +1057,20 @@ export const compileChildrenToPrimitives = (
   ): IRPosition => {
     if (typeof point === 'string') {
       if (point !== 'origin') {
-        return assertFinitePlacementPoint(
-          resolveAnchorRefUncached(transformedLayout, point),
-          'scope placement selfAnchor',
-        );
+        return assertFiniteScopePoint(resolveAnchorRefUncached(transformedLayout, point), 'scope position selfAnchor');
       }
 
-      return assertFinitePlacementPoint(applyTransformChain([0, 0], scopeTransforms), 'scope placement selfAnchor');
+      return assertFiniteScopePoint(applyTransformChain([0, 0], scopeTransforms), 'scope position selfAnchor');
     }
 
     if (Array.isArray(point)) {
-      return assertFinitePlacementPoint(
+      return assertFiniteScopePoint(
         applyTransformChain([point[0], point[1]], scopeTransforms),
-        'scope placement selfAnchor',
+        'scope position selfAnchor',
       );
     }
 
-    return assertFinitePlacementPoint(resolveAnchorRefUncached(transformedLayout, point), 'scope placement selfAnchor');
+    return assertFiniteScopePoint(resolveAnchorRefUncached(transformedLayout, point), 'scope position selfAnchor');
   };
 
   /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
@@ -1079,7 +1079,7 @@ export const compileChildrenToPrimitives = (
     index: number,
     frame: TraversalFrame,
     intrinsicLayout: NodeLayout,
-    placementTarget: IRPosition | undefined,
+    positionTarget: IRPosition | undefined,
     preliminaryTransforms: Array<Transform> | undefined,
   ): Array<Transform> => {
     const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
@@ -1102,24 +1102,29 @@ export const compileChildrenToPrimitives = (
     }
 
     const scopeTransforms = loweredOwn ?? [];
-    if (placementTarget === undefined) return scopeTransforms;
+    if (Array.isArray(child.position)) {
+      if (preliminaryTransforms !== undefined) return scopeTransforms;
+      const [x, y] = child.position;
+      return x === 0 && y === 0 ? scopeTransforms : [{ kind: 'translate', x, y }, ...scopeTransforms];
+    }
+    if (positionTarget === undefined) return scopeTransforms;
 
     const transformedLayout =
       scopeTransforms.length === 0 ? intrinsicLayout : projectLayoutToGlobal(intrinsicLayout, scopeTransforms);
     const selfPoint = resolveTransformedSelfPoint(
-      child.placement?.selfAnchor ?? 'center',
+      (!Array.isArray(child.position) ? child.position?.selfAnchor : undefined) ?? 'center',
       intrinsicLayout,
       transformedLayout,
       scopeTransforms,
     );
-    const placement: Transform = {
+    const alignment: Transform = {
       kind: 'translate',
-      x: placementTarget[0] - selfPoint[0],
-      y: placementTarget[1] - selfPoint[1],
+      x: positionTarget[0] - selfPoint[0],
+      y: positionTarget[1] - selfPoint[1],
     };
-    assertFinitePlacementPoint([placement.x, placement.y], 'scope placement');
+    assertFiniteScopePoint([alignment.x, alignment.y], 'scope position');
 
-    return [placement, ...scopeTransforms];
+    return [alignment, ...scopeTransforms];
   };
 
   /**
@@ -1145,7 +1150,13 @@ export const compileChildrenToPrimitives = (
         failedTransform = transform;
       },
     });
-    if (transforms !== null) return transforms;
+    if (transforms !== null) {
+      if (Array.isArray(child.position)) {
+        const [x, y] = child.position;
+        if (x !== 0 || y !== 0) return [{ kind: 'translate', x, y }, ...transforms];
+      }
+      return transforms;
+    }
 
     runtime.context.onWarn({
       code: transformWarnCode(failedTransform),
@@ -1153,7 +1164,9 @@ export const compileChildrenToPrimitives = (
       path: `${frame.locatorPrefix}children[${index}].scope.transforms`,
     });
 
-    return [];
+    return Array.isArray(child.position) && (child.position[0] !== 0 || child.position[1] !== 0)
+      ? [{ kind: 'translate', x: child.position[0], y: child.position[1] }]
+      : [];
   };
 
   /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
@@ -1248,7 +1261,7 @@ export const compileChildrenToPrimitives = (
         ? `${locatorPrefix}children[${index}].scope.theme`
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
     const theme = resolveTheme(frame.theme, child.theme, themePath, context.themeStyles);
-    const placementTarget = resolveScopePlacementTarget(child, index, frame);
+    const positionTarget = resolveScopePositionTarget(child, index, frame);
 
     // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
     // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 publication/observation
@@ -1341,7 +1354,7 @@ export const compileChildrenToPrimitives = (
         index,
         frame,
         intrinsicLayout,
-        placementTarget,
+        positionTarget,
         preliminaryTransforms,
       );
       publishKernelObservation(
@@ -2463,9 +2476,11 @@ export const compileChildrenToPrimitives = (
     };
 
     try {
-      callbackResult = callable.compile(callable.node, {
+      const createLayoutContext = (theme: TraversalFrame['theme']): LayoutCompositeCompileContext => ({
         ...runtimeInputContext,
-        theme: frame.theme,
+        theme,
+        withTheme: override =>
+          createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeStyles)),
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         resolvePathTargets: query => {
           const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, layoutProbeIndex++);
@@ -2477,7 +2492,7 @@ export const compileChildrenToPrimitives = (
             occurrence,
             frame.scopeChain,
             frame.styleStack,
-            frame.theme,
+            theme,
             false,
             undefined,
             (scope, namespace, chain) => {
@@ -2520,7 +2535,7 @@ export const compileChildrenToPrimitives = (
                 ],
               },
               {
-                mode: frame.theme.mode,
+                mode: theme.mode,
                 scopeChain: queryChain,
                 targetResolver: {
                   pointOfTarget: target => bindingOf(target)?.point ?? null,
@@ -2592,19 +2607,23 @@ export const compileChildrenToPrimitives = (
               probeOccurrence,
               frame.scopeChain,
               frame.styleStack,
-              frame.theme,
+              theme,
               false,
               probeInputs,
             );
             const { layoutResult, transaction } = probed;
-            transaction.materialize = ({ scopeChain, styleStack, theme }: CompositeReplayMaterializeContext) =>
+            transaction.materialize = ({
+              scopeChain,
+              styleStack,
+              theme: replayTheme,
+            }: CompositeReplayMaterializeContext) =>
               probeLayoutChild(
                 clonedChild,
                 clonedProposal,
                 probeOccurrence,
                 scopeChain,
                 styleStack,
-                theme,
+                replayTheme,
                 true,
                 probeInputs,
               ).transaction;
@@ -2635,6 +2654,8 @@ export const compileChildrenToPrimitives = (
         scope: (props, children, spatialHandles) =>
           createCompositeScopeChild(runtime.context.session, owner, props, children, spatialHandles),
       });
+
+      callbackResult = callable.compile(callable.node, createLayoutContext(frame.theme));
     } catch (thrown) {
       if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 

@@ -49,7 +49,7 @@ const FlowLayoutGeometry: FC<FlowLayoutGeometryProps> = props => {
           label={{ text: t.spacing, font: { size: 12 }, textColor: 'gray', side: 'bottom' }}
         />
       </Scope>
-      <Scope transforms={[{ kind: 'translate', x: 240, y: 120 }]}>
+      <Scope position={[240, 120]}>
         <Node
           cornerRadius={4}
           id="placed"

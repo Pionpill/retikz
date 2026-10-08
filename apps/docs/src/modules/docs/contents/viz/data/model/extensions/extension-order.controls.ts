@@ -1,1 +1,1 @@
-export { createPreviewControlContract, previewControlContract } from '../fields-and-types/version-order.controls';
+export { createPreviewControlContract, previewControlContract } from './custom-order.controls';

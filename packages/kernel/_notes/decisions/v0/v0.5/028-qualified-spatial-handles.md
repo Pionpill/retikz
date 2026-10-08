@@ -106,7 +106,7 @@ expand composite 没有 runtime Scope authoring context，继续在 `CompositeEx
 
 每个 declaration 的 `id` 在当前 composite occurrence 内唯一；layout-aware composite 即使在多个可达 runtime Scope 上附着声明，也共享同一个 owner-local id 空间，重复 id 必须 fail-loud。`context.scope` 调用时立即校验并冻结 declaration 结构，与 Scope props / children 的 callback boundary 行为一致；只有最终 `LayoutCompositeCompileResult.children` 可达 runtime output tree 中的 Scope 才发布声明并参与 duplicate-id 检查。创建后未返回或不再可达的 Scope 不发布 index entry、不占用 id，也不改变可达声明的顺序，但其调用时结构错误仍同步失败。`role` 是 owner 定义的稳定语义词汇；`tags` 是非空、数组内唯一且无顺序语义的精确匹配标签，序列化时保留 authored order；`payload` 保存 owner 定义的 JSON domain 数据。Core 校验结构和局部唯一性，但不解释 role、tag 或 payload 的领域含义。
 
-Core 根据嵌套 composite occurrence 自动形成从外到内的 `ownerPath`。layout-aware 声明虽然附着到 runtime Scope，declaration owner 仍是创建该 Scope 的当前 composite occurrence；Scope 不形成 synthetic owner。声明者是 path 最后一段；外层 composite 只形成前缀，不复制 descendant handle。layout replay 可以改变最终 geometry 与 `finalOccurrence`，但 `originOccurrence` 保留声明来源。该通用不变量由 synthetic third-party nested owners 与 Standard Surface 的正式 `surface` handle 证明；Plot、Table、Chart 的具体 handle vocabulary 仍需各 owner 的独立 ADR。
+Core 根据嵌套 composite occurrence 自动形成从外到内的 `ownerPath`。layout-aware 声明虽然附着到 runtime Scope，declaration owner 仍是创建该 Scope 的当前 composite occurrence；Scope 不形成 synthetic owner。声明者是 path 最后一段；外层 composite 只形成前缀，不复制 descendant handle。layout replay 可以改变最终 geometry 与 `finalOccurrence`，但 `originOccurrence` 保留声明来源。第三方嵌套 owner 与 Standard Surface 的正式 `surface` handle 遵循同一不变量；Plot、Table、Chart 的具体 handle vocabulary 仍需各 owner 的独立 ADR。
 
 ### Lowering-only 入口边界
 

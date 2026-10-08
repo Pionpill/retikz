@@ -9,6 +9,8 @@ keywords: 'Scope、placement.selfAnchor、scale.y、IRScope.placement、ScopePro
 - 决策日期：2026-07-23
 - 关联：[ADR-001](./001-node-anchor-position.md)
 
+> 后续演进：[ADR-049](./049-scope-position-contract.md) 将公开 `placement` 替换为 `position` 的 `kind: 'anchor'` 分支，并增加原点坐标形式。本文的包络、pivot、锚点对齐与引用生命周期语义仍有效；下文旧字段仅记录原决策。
+
 ## 背景
 
 Scope 需要按自身内容包络的中心、边或角对齐外部 target，并让 rotate / scale 绑定最终包络；该语义必须在 Core 中统一处理固有布局、self point、transform 和 placement，不能由 parser 或 renderer 补丁实现

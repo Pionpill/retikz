@@ -5,7 +5,10 @@ import type { FC } from 'react';
 import { versionRows } from './version-order.data';
 
 /** 以长度比较类别，等长标签保持出现序 */
-const labelLength = defineFieldOrder({ name: 'labelLength', compare: (a, b) => String(a).length - String(b).length });
+const labelLength = defineFieldOrder({
+  name: 'labelLength',
+  compare: (a, b) => String(a).length - String(b).length,
+});
 /** 运行时选择具名分类顺序 */
 export type VersionOrderPreviewProps = { order: string };
 /** 内置与自定义通过同一个 order 字段消费 */

@@ -1,0 +1,178 @@
+---
+title: 生命周期
+description: 沿初始化、候选准备、发布、失败与释放，理解 Runtime 各成员如何协作
+---
+
+前面的专题分别介绍了 [Source](/kernel/packages/runtime/source)、[Identity](/kernel/packages/runtime/identity)、[Computation](/kernel/packages/runtime/computation)、[Runtime](/kernel/packages/runtime/transaction)、[Participant](/kernel/packages/runtime/participant) 和 [Trace](/kernel/packages/runtime/trace)。本篇把这些成员放到同一条时间线上，追踪一份状态从进入 Runtime 到最终释放的过程。
+
+贯穿例子是一份节点数据：来源 `graph` 保存 `A: 1, B: 2`，计算将每个值乘以二，参与者负责显示 `2, 4`。随后只把 A 改为 `3`，期望成功后显示 `6, 4`；若提交失败，仍显示 `2, 4`。图中的数字是这个例子的状态摘录，不代表额外的 Runtime 字段。
+
+## 整体流程
+
+先看实例的寿命：定义与注册只建立规则，创建实例才开始持有实际数据；一个实例可以接受多次更新，最终通过 `dispose` 结束。
+
+<ComponentPreview files="lifecycle-overview" size="xs" hideCode type="flow" />
+
+图中每次更新都包含自己的准备、提交与收尾过程。只有成功发布新状态才推进版本；来源没有变化时不推进。Trace 可以在准备中发出，提交观察者则在发布后通知，因此两者不能互相代替。
+
+## 成员与状态
+
+下图按持有时间分三块。每行是职责对照，不是内存结构，也不表示从上到下的调用顺序：
+
+<ComponentPreview files="lifecycle-ownership" size="lg" hideCode type="illustration" />
+
+左上角的 Source 和 Computation Token 可以供多个实例复用，但右上角的来源值、计算结果属于各自实例。Participant Token 关联外部宿主状态，被 Runtime 独占接管；实例结束后也不能把该 Token 再交给另一个实例。
+
+下方是一次事务的资源：新来源值和计算结果先作为候选，成功后成为实例持有值，失败则清理。参与者 `prepare` 返回的 `PreparedCommit` 只覆盖本次修改；它的 `dispose` 清理临时资源，长期宿主资源由参与者自身的 `dispose` 释放。
+
+### 身份如何贯穿更新
+
+例子中 A 的实体身份是 `{ owner: 'graph', path: ['nodes', 'A'] }`，计算的身份则可以是 `{ owner: 'graph', key: 'doubled' }`。前者识别数据中的 A，后者识别计算定义。数值从 `1` 改成 `3` 时，A 的身份保持不变。
+
+Source 可通过 `collectIdentities` 返回完整实体集合，Runtime 在来源准备时校验它。身份集合不自动生成差异，也不决定计算是否执行：来源 `equals` 判断状态变化，计算的显式依赖决定调度，算法再决定能否按身份复用 B 的结果。它所需的身份和数据必须来自来源公开视图或领域提示，不能读取 Runtime 私有身份表。
+
+<SourceLinks
+  sources={[
+    { label: '来源值与身份收集', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    { label: '定义与结果的泛型职责', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: '参与者独占接管', path: 'packages/kernel/runtime/src/participant/internal/index.ts' },
+  ]}
+/>
+
+## 初始化
+
+创建实例时还没有可保留的旧版本。下图按编号阅读：上排准备数据，下排完成宿主提交与初次通知。
+
+<ComponentPreview files="lifecycle-initial" size="md" hideCode type="flow" />
+
+1. Runtime 预检注册表、初始命令和参与者，再接管参与者。来源按注册表顺序执行 `capture → collectIdentities（可选）→ read`，得到只读的 `A: 1, B: 2`。
+2. 计算按依赖顺序调用 `run`，产生 `A: 2, B: 4`。结果经过 `capture` 后，分别由 `readForComputation` 生成仅供本计算后续 `update` 使用的私有视图，由 `read` 生成供下游计算与宿主读取的公开视图。两种视图都从同一份持有结果生成。
+3. 所有参与者先 `prepare`，再全部 `commit`，最后全部 `read`。本例的显示在 commit 中写入，公开读取值在 read 中生成；任一步失败都不能返回一个成功创建的实例。
+4. 初始状态就绪后，版本为 `0`，通知 `observeCommit`，再清理单次提交对象。通知发生在 `createRuntime` 返回之前，回调必须使用事件里的结果。
+
+初始化失败时没有实例供调用方继续查询或重试释放。已接管的参与者及已准备的来源、结果会进入失败清理，诊断随错误返回；如果 `prepare` 尚未返回单次对象就失败，它自己负责清理已分配的临时资源。
+
+<SourceLinks
+  sources={[{ label: '初始化来源、计算、参与者与通知', path: 'packages/kernel/runtime/src/runtime/runtime.ts' }]}
+/>
+
+## 一次更新
+
+### 从旧状态到候选
+
+现在基于版本 `0` 提交完整新来源 `A: 3, B: 2`。下图中间列停在计算准备完成、参与者尚未提交的时刻；重点比较“计算结果”和“公开显示”两行：
+
+<ComponentPreview files="lifecycle-state" size="md" hideCode type="illustration" />
+
+中间列已经算出 `6, 4`，但旧的公开显示仍是 `2, 4`，版本仍为 `0`。候选视图里的快照带候选版本 `1`，不代表已经发布。右列只有在参与者提交及读取全部成功后才成立，此时来源、结果、参与者读取缓存和版本一起切换。
+
+底部蓝色行三列相同，说明实体身份不因状态变化而改变。B 的结果也可以复用，但这种复用来自计算算法。即使复用，发布后的读取快照仍使用当前版本 `1`。
+
+### 准备、提交与发布
+
+把上面的三列状态放回执行过程，发布边界在第 5 步。图中第 4 步修改真实宿主状态；它尚未等于 Runtime 已发布，所以必须有回滚能力。
+
+<ComponentPreview files="lifecycle-update" size="md" hideCode type="flow" />
+
+1. **检查版本与命令**：拒绝过期版本、错误 Token 和重复更新命令，避免准备无效事务。
+2. **准备来源候选**：为提交的来源捕获完整候选，再比较新旧值；未提交的来源直接复用旧值，来源相等的候选会被清理。
+3. **传播计算**：沿声明依赖传播。`auto` 优先尝试增量，`bailout` 保留旧结果，`fallback` 在同一候选视图上改走 `run`。本例按 A 的提示更新对应结果，并复用 B；读取提示、校验提示与决定回退的代码见 [Computation](/kernel/packages/runtime/computation#消费变更提示)。
+4. **提交参与者**：选择受影响或 continuous 的参与者，先全部准备，再全部提交，再生成新的读取缓存。
+5. **统一发布**：来源、计算结果、参与者读取缓存和 revision 一起切换为新状态。
+6. **通知与清理**：依次通知产生新结果的计算、逆依赖释放旧计算结果、逆序释放旧来源值，最后清理本次参与者提交对象。这一步的失败只能追加诊断，不能把已发布状态改回旧版本。
+
+| 阶段             | 使用的数据             | 可观察结果                     | 失败后的边界             |
+| ---------------- | ---------------------- | ------------------------------ | ------------------------ |
+| 来源与计算准备   | 旧状态与新候选         | 可以同步报告 Trace             | 清理候选，保留旧发布状态 |
+| 参与者提交与读取 | 声明依赖的候选         | 真实宿主可能已被修改           | 回滚准备对象，尚不发布   |
+| 发布             | 全部成功的候选         | 新 revision 与全部读取缓存一致 | 发布前失败不跨过此边界   |
+| 通知与旧资源清理 | 已发布事件、被替换资源 | 返回结果和累计队列收集诊断     | 保留新版本               |
+
+Runtime 提供同步编排，不能撤销任意回调自行产生的副作用；宿主恢复能力由参与者实现。回调中不重入 Runtime 的更新与状态读取方法；准备期间用候选视图，通知期间用事件。
+
+<SourceLinks
+  sources={[
+    { label: '候选视图、增量传播与发布边界', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: '候选及提交事件契约', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
+## 无变化与失败
+
+### 哪些路径仍算成功
+
+来源全部相等时，事务返回 `bailout`，计算和参与者都不执行，版本不推进。来源变化而计算全部 `bailout` 时，事务仍发布来源并推进版本，聚合结果为 `committed`。计算 `fallback` 也是成功路径，只是没有采用增量结果。
+
+### 失败发生在哪里
+
+下图三行比较失败相对于发布边界的位置。第一行假设需要的回滚全部成功；第二行单独说明回滚失败，不能把它当作普通重试。
+
+<ComponentPreview files="lifecycle-failure" size="lg" hideCode type="flow" />
+
+- **第一行**：候选计算抛错，或参与者准备、提交、读取失败，事务不发布。已经返回的单次参与者对象按逆序回滚，即使其中一些还没执行 commit；旧数据和旧显示恢复一致后，可以修正输入再提交。
+- **第二行**：rollback 本身失败，真实宿主可能与旧缓存不一致。实例进入 broken，拒绝后续更新及来源、结果、参与者状态读取；仍可查询版本、读取诊断和释放资源。
+- **第三行**：版本 `1` 已发布后，观察者或资源清理失败。调用方仍读取新数据，问题进入诊断；不会回滚成版本 `0`。
+
+Trace 在工作发生时同步送出，即使第一行最终失败，记录也不撤回。计算的候选业务警告仅随成功结果发布；执行、回滚和清理故障按失败路径保留。`observeCommit` 只接收通知前冻结的诊断，晚于通知产生的诊断从最终更新结果或累计队列读取。详见 [Trace · 错误诊断](/kernel/packages/runtime/trace)。
+
+<SourceLinks
+  sources={[
+    { label: '失败聚合、回滚与 broken 状态', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: '同步 Trace 与失败隔离', path: 'packages/kernel/runtime/src/trace/reporter.ts' },
+  ]}
+/>
+
+## 读取与结束
+
+查询 `snapshot`、`result`、`participant` 使用已经发布的读取缓存，不重新执行 capture、计算或参与者 read。旧快照不会自动更新；需要长期保留内容时，公开读取转换应提供独立、安全的值，不能让旧视图依赖即将被释放的内部句柄。
+
+调用 `dispose` 后，Runtime 按下图顺序停止服务并清理。注意第 5 步只重试失败的参与者，不重复释放已经退休的计算结果与来源。
+
+<ComponentPreview files="lifecycle-disposal" size="md" hideCode type="flow" />
+
+参与者先释放，使宿主有机会在来源和结果仍存活时完成清理。随后计算按逆依赖顺序释放，来源按注册顺序逆序释放。Runtime 再尝试本轮失败的参与者；仍有失败时保留 dispose-pending，调用方可以再次 `dispose()`。
+
+开始释放后不能恢复更新；再次重试时来源和计算结果已被释放，参与者不能再依赖它们。`revision()` 和 `diagnostics()` 仍可使用，前者只返回最后发布版本，后者读取并清空诊断队列。
+
+<SourceLinks
+  sources={[
+    { label: '最终释放及参与者重试', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: '来源 exactly-once 清理', path: 'packages/kernel/runtime/src/source/executor.ts' },
+  ]}
+/>
+
+## 源码阅读顺序
+
+按图中的数据交接阅读：先看 Source executor 的准备与清理，再看 Computation 的结果转换，最后沿 Runtime 的初始化、update、观察通知和 dispose 串联；外部状态的可恢复性由 Participant 协议提供。各阶段具体配置回到对应专题的“相关属性”查阅。
+
+<SourceLinks
+  sources={[
+    { label: '来源生命周期', path: 'packages/kernel/runtime/src/source/executor.ts' },
+    { label: '计算结果捕获与读取', path: 'packages/kernel/runtime/src/computation/define.ts' },
+    { label: '跨成员编排', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+    { label: '参与者提交协议', path: 'packages/kernel/runtime/src/participant/types.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime',
+      description: '创建、提交命令与读取接口',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    {
+      title: 'Computation · 计算',
+      description: '增量分支、变更提示与提交观察',
+      url: '/kernel/packages/runtime/computation',
+    },
+    {
+      title: 'Participant · 参与者',
+      description: '实现外部状态的提交和恢复',
+      url: '/kernel/packages/runtime/participant',
+    },
+    { title: 'Trace · 错误诊断', description: '消费失败、警告与工作量记录', url: '/kernel/packages/runtime/trace' },
+  ]}
+/>

@@ -18,7 +18,7 @@ const SourceToLogicalFields: FC<SourceToLogicalFieldsProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="sales"
-        transforms={[{ kind: 'translate', x: 15, y: 20 }]}
+        position={[15, 20]}
         label={{ text: t.sales, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 124 }, value: { width: 70 } }}
         style={{ font: { size: 13 } }}
@@ -29,7 +29,7 @@ const SourceToLogicalFields: FC<SourceToLogicalFieldsProps> = props => {
       />
       <Map
         id="forecast"
-        transforms={[{ kind: 'translate', x: 15, y: 130 }]}
+        position={[15, 130]}
         label={{ text: t.forecast, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 124 }, value: { width: 70 } }}
         style={{ font: { size: 13 } }}
@@ -40,7 +40,7 @@ const SourceToLogicalFields: FC<SourceToLogicalFieldsProps> = props => {
       />
       <Map
         id="normalized"
-        transforms={[{ kind: 'translate', x: 255, y: 75 }]}
+        position={[255, 75]}
         label={{ text: t.normalized, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 124 }, value: { width: 70 } }}
         style={{ fill: 'dodgerblue', font: { size: 13 } }}

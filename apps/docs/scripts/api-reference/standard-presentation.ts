@@ -5,6 +5,7 @@ import { standardSchemaLocalizations } from '../../src/modules/docs/components/m
 import { translateDrawApiReference } from './draw.en';
 import { embedApiReferenceMdx } from './embedded-reference';
 import { translateNodeApiReference } from './node.en';
+import { translateScopeApiReference } from './scope.en';
 import { createStandardApiReferenceMdx } from './standard-schema';
 import type { ApiReferencePackageConfig } from './tex';
 
@@ -160,7 +161,11 @@ const translateSharedApiReference = (source: string): string => {
   try {
     return translateDrawApiReference(source);
   } catch {
-    return translateNodeApiReference(source);
+    try {
+      return translateNodeApiReference(source);
+    } catch {
+      return translateScopeApiReference(source);
+    }
   }
 };
 

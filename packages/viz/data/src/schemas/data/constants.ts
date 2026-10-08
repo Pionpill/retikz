@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/foundation';
 
 /**
  * 字段测量类型关键字
- * @description 字段测量种类；驱动 lowering 的缺省推断、type-driven scale 选型与 guide 格式化
+ * @description 区分连续数值、离散类别与时间，决定字段推断与值解析的语义
  */
 export const DataFieldType = {
   /** 连续：可度量、间距有意义的数值（销量 / 温度 / 价格 / 占比），默认 linear scale */

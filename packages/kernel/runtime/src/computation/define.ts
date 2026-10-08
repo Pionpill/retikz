@@ -164,6 +164,9 @@ const copyTracePhases = (
  * @template TResult capture 产生并由运行时持有和释放的计算结果类型；默认沿用 TResultInput
  * @template TComputationRead 仅供当前计算的 update 读取旧结果的私有视图类型；默认沿用 TResult
  * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开结果视图类型；默认沿用 TResult
+ * @param input 计算身份、依赖、执行回调与结果生命周期
+ * @returns 冻结的计算凭证；回调由运行时私有保存
+ * @throws {RetikzRuntimeError} 计算身份或 Trace 声明无效时抛出
  */
 export const defineRuntimeComputation = <
   TResultInput,

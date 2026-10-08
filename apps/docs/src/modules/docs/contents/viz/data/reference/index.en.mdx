@@ -3,16 +3,16 @@ title: API Reference
 description: Look up @retikz/data JSON contracts and the Definition, registry, data-pipeline, and lineage runtime entry points.
 ---
 
-API Reference is a lookup surface for stable contracts, not a tutorial. Contract collects the serializable data-reference, field-model, and transform schemas. Runtime explains how external rows, function-valued Definitions, registries, and lineage enter the same pure data pipeline.
+API Reference is a lookup surface for stable contracts, not a tutorial. Contract collects data-execution and transform schemas. Data-model interfaces and validation structures are documented in [API Reference](/viz/data/model/api-reference) and [Schema Reference](/viz/data/model/schema-reference). Runtime explains how external rows, function-valued Definitions, registries, and lineage enter the same pure data pipeline.
 
 > This is the reference layer, not component documentation. Start with the [Introduction](/viz/data/introduction), then use [Data Model](/viz/data/model) and [Data Transforms](/viz/data/transform) for task-oriented guidance.
 
 ## Responsibilities
 
-| Topic    | Responsibility                                                      | Reach for it when                                      |
-| -------- | ------------------------------------------------------------------- | ------------------------------------------------------ |
-| Contract | JSON-safe schemas for data references, field models, and transforms | Generating, persisting, or validating Data config      |
-| Runtime  | Definitions, registries, normalization, execution, and lineage      | Integrating a host, registering extensions, or tracing |
+| Topic    | Responsibility                                                 | Reach for it when                                      |
+| -------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| Contract | JSON-safe schemas for data execution and transforms            | Generating, persisting, or validating Data config      |
+| Runtime  | Definitions, registries, normalization, execution, and lineage | Integrating a host, registering extensions, or tracing |
 
 ## Pages
 
@@ -20,7 +20,7 @@ API Reference is a lookup surface for stable contracts, not a tutorial. Contract
   items={[
     {
       title: 'Contract',
-      description: 'Data-reference, field-model, and transform schemas',
+      description: 'Data-execution and transform schemas',
       url: '/viz/data/reference/contract',
     },
     {

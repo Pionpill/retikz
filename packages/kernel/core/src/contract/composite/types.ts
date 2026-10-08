@@ -160,6 +160,11 @@ export type LayoutCompositeCompileContext = CompositeRuntimeInputContext &
     /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
     proposal: LayoutProposal;
     /**
+     * 创建使用局部 Theme 的编译上下文，复用当前 callback 的 probe、replay 与输入所有权
+     * @description 通过 Core 已注册的 Theme definitions 解析覆盖；测量与目标查询使用解析后的主题，不修改父上下文。最终输出仍须由 scope() 声明同一主题边界
+     */
+    withTheme: (theme: NonNullable<IRScopeProps['theme']>) => LayoutCompositeCompileContext;
+    /**
      * 从当前 composite Source occurrence 发出非致命编译 warning
      * @param code 开放的机器可读 warning code
      * @param message 面向调用方的英文消息

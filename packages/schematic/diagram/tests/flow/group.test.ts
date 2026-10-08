@@ -60,7 +60,7 @@ describe('Flow Group Graph surface', () => {
     });
     const parsed = Flow.FlowDiagramSchema.parse(source);
 
-    expect(parsed.groups[0]).toMatchObject(source.groups[0]);
+    expect(parsed.groups[0]).toMatchObject(source.groups![0]);
     expect(Flow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
     expect(Flow.FlowGroupSchema.safeParse({ id: 'group', children: ['item'], caption: {} }).success).toBe(false);
     expect(Flow.FlowGroupSchema.safeParse({ id: 'group', children: ['item'], labels: [] }).success).toBe(false);
@@ -68,7 +68,7 @@ describe('Flow Group Graph surface', () => {
 
   it.each([
     { transforms: [{ kind: 'translate', x: 10, y: 0 }] },
-    { placement: { target: [10, 0] } },
+    { position: { kind: 'anchor', target: [10, 0] } },
     { localNamespace: true },
   ])('rejects Group fields that change Flow geometry or identity: %j', field => {
     const parsed = Flow.FlowDiagramSchema.safeParse({

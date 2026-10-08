@@ -1,4 +1,4 @@
-import type { IRScopePlacement, IRScopeSelfPoint } from '@retikz/core';
+import type { IRScopePosition, IRScopeSelfPoint } from '@retikz/core';
 import { Draw, Layout, Node, Scope } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
 import type { InputTransform } from '@retikz/vanilla';
@@ -8,13 +8,14 @@ const selfPointOf = (
   explicitPoint: ScopeTranslateBasicPreviewValues['selfPoint'] | ScopeTranslateBasicPreviewValues['pivotPoint'],
 ): IRScopeSelfPoint => (value === 'explicit' ? explicitPoint : value);
 
-const placementOf = (values: ScopeTranslateBasicPreviewValues): IRScopePlacement | undefined =>
-  values.placementEnabled
+const positionOf = (values: ScopeTranslateBasicPreviewValues): IRScopePosition =>
+  values.positionEnabled
     ? {
-        target: { id: values.placementTarget },
+        kind: 'anchor',
+        target: { id: values.positionTarget },
         selfAnchor: selfPointOf(values.selfAnchor, values.selfPoint),
       }
-    : undefined;
+    : values.originPosition;
 
 const transformOf = (values: ScopeTranslateBasicPreviewValues): InputTransform => {
   switch (values.operation) {
@@ -72,9 +73,10 @@ export type ScopeTranslateBasicPreviewValues = {
     | 'between-translate'
     | 'rotate'
     | 'scale';
-  placementEnabled: boolean;
+  positionEnabled: boolean;
+  originPosition: [number, number];
   referent: 'O' | 'T';
-  placementTarget: 'O' | 'T';
+  positionTarget: 'O' | 'T';
   selfAnchor: 'center' | 'right' | 'bottom-right' | 'top-left' | 'explicit' | 'origin';
   selfPoint: [number, number];
   translateX: number;
@@ -121,7 +123,7 @@ export const ScopeTranslateBasicPreview = (values: ScopeTranslateBasicPreviewVal
       />
       <Draw way={['O', 'T']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
 
-      <Scope placement={placementOf(values)} transforms={[transformOf(values)]}>
+      <Scope position={positionOf(values)} transforms={[transformOf(values)]}>
         <Circle center={[0, 0]} radius={3} style={{ fill: 'gray', stroke: 'none' }} />
         <Node
           id="Q"

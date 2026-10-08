@@ -20,7 +20,7 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="mark-source"
-        transforms={[{ kind: 'translate', x: 12, y: 24 }]}
+        position={[12, 24]}
         label={label(t.source)}
         layout={{ height: 26, padding: 0, key: { width: 145 }, value: { width: 110 } }}
         style={{ font: { size: 13 } }}
@@ -41,7 +41,7 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
       />
       <Map
         id="mark-default"
-        transforms={[{ kind: 'translate', x: 375, y: 28 }]}
+        position={[375, 28]}
         label={label(t.builtIn)}
         layout={markLayout}
         style={{ font: { size: 13 } }}
@@ -55,7 +55,7 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
       />
       <Map
         id="mark-overlay"
-        transforms={[{ kind: 'translate', x: 375, y: 230 }]}
+        position={[375, 230]}
         label={label(t.overlay)}
         layout={markLayout}
         style={{ font: { size: 13 } }}
@@ -68,7 +68,7 @@ const ChartOverlayMarks: FC<ChartOverlayMarksProps> = props => {
       />
       <Map
         id="mark-result"
-        transforms={[{ kind: 'translate', x: 700, y: 156 }]}
+        position={[700, 156]}
         label={label(t.result)}
         layout={{ height: 34, padding: 0, key: { width: 32 }, value: { width: 115 } }}
         style={{ font: { size: 13 } }}

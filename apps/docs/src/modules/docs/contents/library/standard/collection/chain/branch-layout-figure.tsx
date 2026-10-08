@@ -18,7 +18,7 @@ const BranchLayoutFigure: FC<BranchLayoutFigureProps> = props => {
       {(['independent', 'steps'] as const).map((spacing, index) => (
         <Chain
           key={spacing}
-          transforms={[{ kind: 'translate', x: index * 340, y: 0 }]}
+          position={[index * 340, 0]}
           skeleton={{ items: ['A', { branches: [['Bbbbbbbb', 'C', 'D'], ['E']] }, 'F'] }}
           layout={{ spacing, justify: 'center', branchAlign: 'center' }}
           style={{ font: { size: 14 } }}

@@ -160,8 +160,46 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).toContain('case kind: 1');
     expect(markup).toContain('tuple[0]');
     expect(markup).toContain('union[0]');
+    expect(markup).not.toContain('union[1]');
+    expect(markup).not.toContain('tuple[1]');
 
     for (const translation of ['标签。', '数值。', '标记。', '左值。']) expect(markup).toContain(translation);
+  });
+
+  it('keeps value-only unions inline and expands only object branches of mixed unions', () => {
+    SCHEMA_REGISTRY[entryName] = {
+      ...entry,
+      schema: z.strictObject({
+        order: z.union([z.enum(['ascending', 'descending']), z.string(), z.array(z.union([z.string(), z.number()]))]),
+        mixed: z.union([z.string(), z.array(z.strictObject({ label: z.string() }))]),
+        named: z.union([z.string(), SCHEMA_REGISTRY.DataReferenceSchema.schema]),
+      }),
+    };
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <ZodSchema name={entryName} expandNested />
+      </MemoryRouter>,
+    );
+    expect(markup.match(/union\[1\]/g)).toHaveLength(1);
+    expect(markup).not.toContain('union[0]');
+    expect(markup).not.toContain('union[2]');
+    expect(markup).toContain('ascending');
+    expect(markup).toContain('descending');
+    expect(markup).toContain('>label<');
+    expect(markup).toContain('DataReferenceSchema');
+    expect(markup).not.toContain('>reference<');
+  });
+
+  it('renders a value-only root union as a type instead of an empty table', () => {
+    SCHEMA_REGISTRY[entryName] = { ...entry, schema: z.union([z.string(), z.number()]) };
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <ZodSchema name={entryName} expandNested />
+      </MemoryRouter>,
+    );
+    expect(markup).not.toContain('<table');
+    expect(markup).toContain('string');
+    expect(markup).toContain('number');
   });
 
   it('warns for malformed, mistyped and missing deep description paths', () => {

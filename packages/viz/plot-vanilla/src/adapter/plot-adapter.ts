@@ -23,16 +23,20 @@ import { plotIROf } from '../spec';
 const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
   if (panel === undefined) return node;
 
-  const { x, y, transforms, zIndex, clip, theme } = panel;
-  const panelTransforms =
-    x !== undefined || y !== undefined
-      ? [{ kind: 'translate' as const, x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])]
-      : transforms;
-  if (panelTransforms === undefined && zIndex === undefined && clip === undefined && theme === undefined) return node;
+  const { position, transforms, zIndex, clip, theme } = panel;
+  if (
+    position === undefined &&
+    transforms === undefined &&
+    zIndex === undefined &&
+    clip === undefined &&
+    theme === undefined
+  )
+    return node;
 
   const input: InputScope = {
     type: 'scope',
-    ...(panelTransforms === undefined ? {} : { transforms: panelTransforms }),
+    ...(position === undefined ? {} : { position }),
+    ...(transforms === undefined ? {} : { transforms }),
     ...(zIndex === undefined ? {} : { zIndex }),
     ...(clip === undefined ? {} : { clip }),
     ...(theme === undefined ? {} : { theme }),

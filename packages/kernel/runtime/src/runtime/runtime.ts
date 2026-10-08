@@ -810,7 +810,12 @@ const runComputation = (
   });
 };
 
-/** 创建同步 Snapshot transaction runtime */
+/**
+ * 创建同步 Snapshot transaction runtime
+ * @param options 来源、计算、完整初始输入与可选参与者配置
+ * @returns 已完成初始计算和参与者提交、revision 为 0 的同步 Runtime
+ * @throws {RetikzRuntimeError} 注册绑定、初始输入或参与者无效，以及初始化执行或提交失败时抛出
+ */
 export const createRuntime = (options: RuntimeOptions): Runtime => {
   let computationSources: RuntimeSourceRegistry;
 

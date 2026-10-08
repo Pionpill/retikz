@@ -18,7 +18,14 @@ export const assertFieldOrders = (
   }
 };
 
-/** 解析分类域，保持类别身份、输入数据与显式数组的既有语义 */
+/**
+ * 解析分类域，不修改输入值或显式顺序数组
+ * @param values 原始类别值；仅保留字符串与有限数字并按首次出现顺序去重
+ * @param order 排序名称或非空显式类别数组；undefined 表示按出现顺序。显式数组之后追加未列出的观测类别
+ * @param registry 名称到比较器的映射；省略时使用内置排序注册表
+ * @returns 排列后的分类域；数字和字符串保持各自身份
+ * @throws {RetikzDataError} 排序名称未注册、比较器抛出异常或返回非有限数值
+ */
 export const resolveCategoryDomain = (
   values: Array<unknown>,
   order: IRDataFieldDefinition['order'],

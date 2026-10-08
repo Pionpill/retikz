@@ -603,6 +603,23 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
+          {
+            id: 'trace',
+            label: 'kernel.pkgRuntimeTrace',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'lifecycle',
+            label: 'kernel.pkgRuntimeLifecycle',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgRuntimeApiReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {

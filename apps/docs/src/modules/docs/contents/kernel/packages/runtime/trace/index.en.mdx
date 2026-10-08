@@ -1,0 +1,480 @@
+---
+title: Trace · Errors and diagnostics
+description: Distinguish transaction errors, structured diagnostics and Trace records to locate failures and observe computation work
+---
+
+[Runtime](/kernel/packages/runtime/transaction) and [Participant](/kernel/packages/runtime/participant) explain how data and external state commit together. Callers also need to know why an update failed, whether a successful update produced warnings, and how much work a computation reused.
+
+Runtime offers three channels: an **error** interrupts the current operation, a **diagnostic** records a problem that needs attention, and **Trace** reports execution stages and work counts. A successful update can carry diagnostics, and receiving a Trace record does not mean the transaction ultimately published.
+
+## Overall flow
+
+| Stage                           | API or configuration                                    | Purpose                                                    |
+| ------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------- |
+| Catch failures                  | `try/catch`, `RetikzRuntimeError`                       | Identify the error category, location and original cause   |
+| Report problems                 | `context.diagnose(...)`                                 | Report business warnings from computations or participants |
+| Read operation diagnostics      | Update result `diagnostics`, error `diagnostics`        | Inspect diagnostics attached to this operation             |
+| Consume accumulated diagnostics | `runtime.diagnostics()`                                 | Read and clear the instance's diagnostic queue             |
+| Declare observation             | `tracePhases`                                           | Declare allowed phase, unit and outcome combinations       |
+| Report and receive              | `context.trace.report(...)`, `createRuntime({ trace })` | Report work counts and receive valid records synchronously |
+
+The diagram shows three information channels:
+
+<ComponentPreview files="trace-overview" size="md" hideCode type="flow" />
+
+Use the update's return or thrown error to determine publication status. Diagnostics support follow-up handling; Trace explains the work performed. Neither chooses a retry strategy or user message for the application.
+
+## Connecting observation
+
+Continue with a count Source and a computation that doubles it. The example connects all three channels: negative counts fail computation, counts above `1` generate a business warning, and each normal computation reports a Trace record. To demonstrate a secondary failure, disposing a negative candidate value also deliberately throws.
+
+`tracePhases` declares allowed records, `context.trace.report` supplies counts, and Runtime adds ownership. The `trace` callback stores records in a caller-owned array. Later examples reuse these variables:
+
+Green backgrounds and `+` markers identify the error, diagnostic, and Trace code added in this example.
+
+```ts
+import {
+  createRuntime,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  defineRuntimeComputation,
+  defineRuntimeSource,
+  PerformanceTraceOutcome, // [!code ++]
+  PerformanceTracePhase, // [!code ++]
+  PerformanceTraceUnit, // [!code ++]
+  RetikzRuntimeError, // [!code ++]
+  RetikzRuntimeErrorCode, // [!code ++]
+} from '@retikz/runtime';
+import type { PerformanceTraceRecord } from '@retikz/runtime'; // [!code ++]
+
+const records: Array<PerformanceTraceRecord> = []; // [!code ++]
+let failTraceSink = false; // [!code ++]
+const calculationFailure = new Error('Count must be non-negative'); // [!code ++]
+const cleanupFailure = new Error('Candidate cleanup failed'); // [!code ++]
+
+const count = defineRuntimeSource<number, number, number, never>({
+  key: 'example/count',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: Object.is,
+    dispose: value => {
+      // [!code ++]
+      if (value < 0) throw cleanupFailure; // [!code ++]
+    }, // [!code ++]
+  },
+});
+const doubled = defineRuntimeComputation<number>({
+  id: { owner: count.key, key: 'doubled' },
+  sources: [count],
+  tracePhases: [
+    // [!code ++]
+    {
+      // [!code ++]
+      phase: PerformanceTracePhase.Update, // [!code ++]
+      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      outcomes: [PerformanceTraceOutcome.Full], // [!code ++]
+    }, // [!code ++]
+  ], // [!code ++]
+  run: (view, context) => {
+    // [!code ++]
+    const value = view.snapshot(count).value;
+    if (value < 0) throw calculationFailure; // [!code ++]
+    if (value > 1) {
+      // [!code ++]
+      context.diagnose({
+        // [!code ++]
+        code: 'example/above-preferred-count', // [!code ++]
+        phase: 'run', // [!code ++]
+        message: 'Count exceeds the preferred value', // [!code ++]
+      }); // [!code ++]
+    } // [!code ++]
+    context.trace.report({
+      // [!code ++]
+      phase: PerformanceTracePhase.Update, // [!code ++]
+      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      outcome: PerformanceTraceOutcome.Full, // [!code ++]
+      visited: 1, // [!code ++]
+      reused: 0, // [!code ++]
+      changed: 1, // [!code ++]
+    }); // [!code ++]
+    return { kind: 'full', result: value * 2 };
+  },
+});
+const sources = createRuntimeSourceRegistry([count]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [doubled] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(count, 1)],
+  trace: record => {
+    // [!code ++]
+    records.push(record); // [!code ++]
+    if (failTraceSink) throw new Error('Trace consumer failed'); // [!code ++]
+  }, // [!code ++]
+});
+```
+
+Creation runs the computation too, so the result is already `2` and `records` contains one record. This example has no incremental implementation: each affected execution recomputes fully, reporting `full`, one visited item, zero reused items, and one regenerated item. The algorithm author supplies these counts; Runtime does not infer them by analyzing the algorithm.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Computation observation context and phase declarations',
+      path: 'packages/kernel/runtime/src/computation/types.ts',
+    },
+    { label: 'Runtime Trace receiver configuration', path: 'packages/kernel/runtime/src/runtime/types.ts' },
+  ]}
+/>
+
+## Errors and diagnostics
+
+### Catching errors
+
+`RetikzRuntimeError` is Runtime's structured error. Branch on `code`, locate the failure with `phase`, `owner` or `computation`, and inspect `cause` for the original reason. Do not parse the message to select behavior.
+
+| Member                 | Meaning                                                            |
+| ---------------------- | ------------------------------------------------------------------ |
+| `code`, `message`      | Stable error code and readable explanation                         |
+| `phase`                | Runtime stage where the failure occurred                           |
+| `owner`, `computation` | Optional Source or participant ownership and computation identity  |
+| `cause`                | Original callback exception or input that triggered the error      |
+| `diagnostics`          | Execution, rollback or cleanup diagnostics attached to the failure |
+
+Submitting a negative count fails computation. Runtime then disposes the candidate value, which also fails. Computation remains the primary error; cleanup failure appears in its diagnostics:
+
+```ts
+try {
+  runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(count, -1)],
+  });
+} catch (error) {
+  if (!(error instanceof RetikzRuntimeError)) throw error;
+  console.log(error.code === RetikzRuntimeErrorCode.ComputationRunFailed); // true
+  console.log(error.cause === calculationFailure); // true
+  console.log(error.diagnostics[0]?.cause === cleanupFailure); // true
+}
+console.log(runtime.revision(), runtime.result(doubled).value); // 0, 2
+console.log(runtime.diagnostics().map(item => item.code));
+// ['RUNTIME_SOURCE_DISPOSE_FAILED']
+```
+
+Neither the negative count nor a new result was published. Failure diagnostics also enter the instance queue. If creation fails, there is no Runtime instance to query, so consume diagnostics from the thrown error.
+
+<ComponentAlert
+  type="tip"
+  title="Handle rollback failure separately"
+  description="An ordinary preparation failure can preserve previous state. Participant rollback failure puts the instance into the broken state and blocks further updates and state reads. The error's cause contains trigger and rollback, preserving both failures. Revision reads, diagnostic consumption and disposal remain available."
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Runtime error structure', path: 'packages/kernel/runtime/src/error/errors.ts' },
+    {
+      label: 'Failure diagnostic aggregation and broken state',
+      path: 'packages/kernel/runtime/src/runtime/runtime.ts',
+    },
+  ]}
+/>
+
+### Consuming diagnostics
+
+Computations and participants report business warnings with `context.diagnose({ code, phase, message })`. Runtime adds `severity: 'warning'` and the computation or participant context; callers do not supply those ownership fields. The main diagnostic members are:
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Member                 | Purpose                                                  |
+| ---------------------- | -------------------------------------------------------- |
+| `code`, `message`      | Built-in or application-defined category and explanation |
+| `phase`                | Stage where the problem occurred                         |
+| `severity`             | `warning` or `error`, indicating problem severity        |
+| `owner`, `computation` | Optional ownership and computation identity              |
+| `cause`                | Original exception retained by some built-in diagnostics |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type RuntimeDiagnostic = Readonly<{
+  code: string;
+  phase: RuntimeDiagnosticPhase;
+  severity: 'warning' | 'error';
+  message: string;
+  owner?: string;
+  computation?: RuntimeComputationId;
+  cause?: unknown;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+The following warning does not prevent publication:
+
+```ts
+const updated = runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(count, 2)],
+});
+console.log(updated.revision, runtime.result(doubled).value); // 1, 4
+console.log(updated.diagnostics.map(item => item.code));
+// ['example/above-preferred-count']
+console.log(runtime.diagnostics().length); // 1
+console.log(runtime.diagnostics().length); // 0
+console.log(updated.diagnostics.length); // 1
+```
+
+An update result contains only that operation's diagnostics. The instance queue accumulates unconsumed diagnostics from creation, updates and disposal. `runtime.diagnostics()` **reads and clears the queue** without modifying previously returned arrays. Diagnostics attached to errors or update results can also be read from the queue; choose a primary logging channel to avoid duplicate reporting.
+
+Diagnostics accumulate in the order they occur. Before publication, Runtime freezes one list for every computation's `observeCommit`. Observer exceptions, retirement failures and prepared participant object cleanup happen later, so they appear only in the final update result and accumulated queue:
+
+<ComponentPreview files="trace-diagnostics" size="xs" hideCode type="flow" />
+
+`severity: 'error'` does not itself mean rollback. For example, resource cleanup failure after publication is an error diagnostic, but the new revision has already published. Computation business warnings from failed transactions are not published as committed warnings; execution diagnostics such as Trace and cleanup failures are retained. Diagnostics are not a complete log of all candidate computations.
+
+Do not call `runtime.diagnostics()` from a callback while Runtime is executing: it is subject to the non-reentrancy contract. Consume diagnostics after creation, update or disposal finishes. Diagnostics remain readable in the broken and disposed states.
+
+<SourceLinks
+  sources={[
+    { label: 'Diagnostic fields and categories', path: 'packages/kernel/runtime/src/diagnostic/types.ts' },
+    {
+      label: 'Pre-publication list, final list and diagnostic queue',
+      path: 'packages/kernel/runtime/src/runtime/runtime.ts',
+    },
+  ]}
+/>
+
+## Work traces
+
+### Recording Trace
+
+Trace records **deterministic work counts**, not elapsed time. A record describes how much work an execution visited, reused and changed. Do not interpret `visited` as milliseconds or add counts with different `unit` values.
+
+<DocTabs defaultValue="members">
+<DocTab value="members" label="Properties">
+
+| Member    | Purpose                                                            |
+| --------- | ------------------------------------------------------------------ |
+| `owner`   | Fixed ownership: computation `id.owner` or participant `key`       |
+| `phase`   | Observed stage, such as `compile`, `update` or `commit`            |
+| `unit`    | Counting unit, such as `computation`, `ir-child` or `scene-change` |
+| `outcome` | Execution mode, such as `full`, `incremental` or `fallback`        |
+| `visited` | Number of work items visited                                       |
+| `reused`  | Number of work items reused                                        |
+| `changed` | Number of work items changed or regenerated                        |
+
+</DocTab>
+<DocTab value="definition" label="Type definition">
+
+```ts
+type PerformanceTraceRecord = Readonly<{
+  owner: string;
+  phase: PerformanceTracePhase;
+  unit: PerformanceTraceUnit;
+  outcome: PerformanceTraceOutcome;
+  visited: number;
+  reused: number;
+  changed: number;
+}>;
+```
+
+</DocTab>
+</DocTabs>
+
+Each `tracePhases` entry declares allowed combinations using `phase`, `unit` and `outcomes`. A phase can use several units, but the same phase/unit pair cannot be declared twice and the allowed outcome list cannot be empty. Invalid definitions throw `TraceDefinitionInvalid` and must be fixed during integration.
+
+`context.trace.report(record)` accepts all fields above except `owner`. The record must match a declaration. All three counts must be non-negative safe integers; `reused` and `changed` each cannot exceed `visited`, and `bailout` requires `changed: 0`. Runtime does not require `reused + changed === visited`; the algorithm owns the counting semantics.
+
+The example uses `update` as its observation stage even during initialization. A Trace `phase` is distinct from the candidate view's initial/update `phase`. Records also omit Runtime revision and full computation identity; several computations under one Source can share an `owner`.
+
+Both computation and participant `context.trace` expose only `owner` and `report`, leaving internal diagnostic consumption to Runtime. When used independently of an instance, `createRuntimeTraceReporter({ owner, phases, sink })` additionally returns `diagnostics()`, which reads and clears that reporter's local diagnostics. This is separate from the instance queue.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Trace records, phase declarations and reporter contract',
+      path: 'packages/kernel/runtime/src/trace/types.ts',
+    },
+    { label: 'Record validation and synchronous delivery', path: 'packages/kernel/runtime/src/trace/reporter.ts' },
+  ]}
+/>
+
+### Isolating observation failures
+
+Valid records reach the `trace` receiver synchronously and immediately, possibly before the transaction commits. If a later computation or participant fails, delivered records are not withdrawn. Trace proves that work occurred, not that publication succeeded.
+
+Here the receiver deliberately throws, but the business update still succeeds:
+
+```ts
+failTraceSink = true;
+const observed = runtime.update({
+  baseRevision: runtime.revision(),
+  sources: [createRuntimeSourceUpdate(count, 3)],
+});
+console.log(observed.revision, runtime.result(doubled).value); // 2, 6
+console.log(observed.diagnostics.map(item => item.code));
+// ['example/above-preferred-count', 'RUNTIME_TRACE_SINK_FAILED']
+failTraceSink = false;
+runtime.diagnostics();
+runtime.dispose();
+```
+
+| Problem                                           | Standalone reporter code | Runtime diagnostic code        |
+| ------------------------------------------------- | ------------------------ | ------------------------------ |
+| Record violates declarations or count constraints | `invalid-record`         | `RUNTIME_TRACE_INVALID_RECORD` |
+| Receiver throws                                   | `sink-threw`             | `RUNTIME_TRACE_SINK_FAILED`    |
+| Same reporter invoked during delivery             | `reentrant-report`       | `RUNTIME_TRACE_REENTRANT`      |
+
+Invalid and reentrant records are not delivered. Receiver exceptions do not escape `report`. These failures become error diagnostics without replacing business results. Receiver failure records only its category, not the original exception.
+
+Without a `trace` callback, Runtime still validates reported records but does not send them externally. Rejected records can still generate diagnostics; omitting the receiver does not disable validation.
+
+<SourceLinks
+  sources={[
+    { label: 'Trace failure isolation and reentrancy guard', path: 'packages/kernel/runtime/src/trace/reporter.ts' },
+    { label: 'Mapping Trace failures to Runtime diagnostics', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+### Reporting flow
+
+Follow one report: a computation or participant supplies a record, the reporter validates it and adds ownership, valid records reach the receiver, and observation failures enter diagnostics. The business transaction then finishes on its own success or failure path:
+
+<ComponentPreview files="trace-flow" size="sm" hideCode type="flow" />
+
+Start source reading with reporter validation and receiver isolation. Then follow Runtime's mapping of local diagnostics to computation or participant context, and finally the update result, error object and instance queue.
+
+Runtime converts Source capture, comparison and disposal failures into structured errors or diagnostics; Source callbacks do not receive a computation-style `context.trace`. Computations and Participants report explicitly through their contexts, while Runtime adds ownership and collects diagnostics at transaction boundaries. Configuring a sink does not automatically generate work records for every stage: algorithms and participants supply them. See [Lifecycle](/kernel/packages/runtime/lifecycle#no-change-and-failure) to place these information channels into initialization, commit and disposal order.
+
+## Core application
+
+Core's compilation computation already declares and emits Trace records. Connect a receiver to Runtime to consume them. This example reuses the Runtime imports above and initializes an empty Scene IR:
+
+```ts
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+
+const coreRecords: Array<PerformanceTraceRecord> = [];
+const compile = createCoreComputation({});
+const coreSources = createRuntimeSourceRegistry([CoreSourceDefinition]);
+const coreComputations = createRuntimeComputationRegistry({ sources: coreSources, computations: [compile] });
+const coreRuntime = createRuntime({
+  sources: coreSources,
+  computations: coreComputations,
+  initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, { version: 1, type: 'scene', children: [] })],
+  trace: record => coreRecords.push(record),
+});
+console.log(coreRecords.map(record => [record.owner, record.phase, record.unit, record.outcome]));
+// [['@retikz/core/document', 'update', 'ir-child', 'full']]
+coreRuntime.dispose();
+```
+
+Core's full path reports `ir-child` work; updates can additionally report `scene-change`. Its supported root-node style incremental path reports `incremental` with visited, reused and changed counts. Unsupported incremental work falls back to the full path and reports `fallback`. These describe the algorithm's chosen path; Runtime does not infer Core's counts.
+
+Core domain diagnostics reside in compilation `output.diagnostics`. Runtime transaction, cleanup and observation diagnostics come from update results or the instance queue. Their owners differ. When Core detects a ChangeSet mismatch with actual state, it also explains the fallback through the computation's fallback diagnostics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core phase declarations, reporting and fallback diagnostics',
+      path: 'packages/kernel/core/src/compile/incremental/computation.ts',
+    },
+  ]}
+/>
+
+## Related props
+
+Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.
+
+<ComponentProps
+  items={[
+    {
+      name: 'RetikzRuntimeError',
+      kind: 'type',
+      type: 'RetikzRuntimeError',
+      description:
+        'Public errors carry code, message, phase, optional owner/computation/cause, and diagnostics. Branch on code; inspect cause for the original failure.',
+    },
+    {
+      name: 'context.diagnose',
+      kind: 'property',
+      type: '(warning: { code: string; phase: RuntimeDiagnosticPhase; message: string }) => void',
+      description:
+        'Reports commit-safe business warnings; Runtime adds ownership. Failed computation candidate warnings are not published as committed warnings.',
+    },
+    {
+      name: 'Runtime.diagnostics',
+      kind: 'property',
+      type: '() => ReadonlyArray<RuntimeDiagnostic>',
+      description:
+        'Drains the accumulated queue; entries carry code, phase, severity, message and optional owner, computation and cause.',
+    },
+    {
+      name: 'tracePhases',
+      kind: 'property',
+      type: 'ReadonlyArray<RuntimeTracePhaseDefinition>',
+      description:
+        'Each item is `{ phase, unit, outcomes }`. phase: compile/update/commit; unit: ir-child/scene-primitive/computation/scene-change; non-empty outcomes may contain full/incremental/bailout/fallback/commit. These are algorithm declarations, not Runtime initial/update phases.',
+      required: false,
+      defaultValue: '[]',
+    },
+    {
+      name: 'context.trace.report',
+      kind: 'property',
+      type: "(record: Omit<PerformanceTraceRecord, 'owner'>) => void",
+      description:
+        'Takes phase, unit, outcome, visited, reused and changed; counts are non-negative safe integers, reused/changed each cannot exceed visited, and bailout has changed = 0.',
+    },
+    {
+      name: 'trace',
+      kind: 'property',
+      type: '(record: PerformanceTraceRecord) => void',
+      description:
+        'Synchronously receives valid records with owner added. Exceptions are isolated; records may precede publication and are not retracted on rollback.',
+    },
+    {
+      name: 'createRuntimeTraceReporter',
+      kind: 'function',
+      type: '<const TOwner extends string>(input: CreateRuntimeTraceReporterInput<TOwner>) => RuntimeTraceReporter<TOwner>',
+      description:
+        'Standalone reporter accepts `{ owner: TOwner, phases: ReadonlyArray<RuntimeTracePhaseDefinition>, sink: PerformanceTraceSink }`; returns owner, report and diagnostics to drain local faults.',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Public exports', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: 'Main contracts', path: 'packages/kernel/runtime/src/trace/types.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Lifecycle',
+      description: 'Follow member collaboration through initialization, updates, failures and disposal',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
+    {
+      title: 'Runtime',
+      description: 'Revision checks and atomic publication',
+      url: '/kernel/packages/runtime/transaction',
+    },
+    {
+      title: 'Participant',
+      description: 'External commits, rollback and resource disposal',
+      url: '/kernel/packages/runtime/participant',
+    },
+    {
+      title: 'Computation',
+      description: 'Execution modes and post-publication notifications',
+      url: '/kernel/packages/runtime/computation',
+    },
+  ]}
+/>

@@ -45,7 +45,7 @@ const parent = defineComposite({
     return {
       children: [
         context.scope(
-          { transforms: [{ kind: 'translate', x: 7, y: 8 }] },
+          { position: [7, 8] },
           [context.replay(probe.result, { transforms: [{ kind: 'translate', x: 30, y: 40 }] })],
           [{ id: 'frame', role: 'parent', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
         ),
@@ -62,7 +62,7 @@ describe('spatial handle layout replay', () => {
       children: [
         {
           type: 'scope',
-          transforms: [{ kind: 'translate', x: 2, y: 3 }],
+          position: [2, 3],
           children: [{ namespace: 'third', type: 'parent', id: 'outer' }],
         },
       ],

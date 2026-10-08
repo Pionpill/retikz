@@ -122,14 +122,37 @@ export const logicFigureDiagramThemeStyle = {
   resolve: () => ({}),
 };
 
-/** 站点逻辑图不覆盖 Flow 布局默认值 */
+/** 站点逻辑图沿用 Flow 布局默认值 */
 export const logicFigureFlowThemeStyle = defineFlowThemeStyle({ name: logicFigureThemeName, resolve: () => ({}) });
+
+const logicFigureRules: NonNullable<LogicFigureFlowGraphProps['graphRules']> = [
+  {
+    type: 'entity',
+    selector: { kind: LogicFigureEntityKind.Important },
+    style: { color: 'dodgerblue' },
+  },
+  {
+    type: 'entity',
+    selector: { kind: LogicFigureEntityKind.ImportantData },
+    style: { color: 'darkorange' },
+  },
+  {
+    type: 'entity',
+    selector: { kind: LogicFigureEntityKind.Algorithm },
+    style: { color: 'darkviolet' },
+  },
+];
 
 /** Secondary 使用独立于主色与 group 的中性浅底，状态由文字颜色保留 */
 export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
   name: logicFigureThemeName,
   resolve: theme => ({
+    defaults: {
+      entity: { style: { font: { size: 14 } } },
+      relation: { labelFont: { size: 12 } },
+    },
     rules: [
+      ...logicFigureRules,
       {
         type: 'entity',
         selector: { kind: LogicFigureEntityKind.Secondary },
@@ -150,33 +173,14 @@ export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
 
 type LogicFigureFlowGraphProps = Pick<FlowDiagramProps, 'entityKinds' | 'graphRules' | 'theme' | 'graphThemeStyles'>;
 
-const logicFigureRules: NonNullable<LogicFigureFlowGraphProps['graphRules']> = [
-  {
-    type: 'entity',
-    selector: { kind: LogicFigureEntityKind.Important },
-    style: { color: 'dodgerblue' },
-  },
-  {
-    type: 'entity',
-    selector: { kind: LogicFigureEntityKind.ImportantData },
-    style: { color: 'darkorange' },
-  },
-  {
-    type: 'entity',
-    selector: { kind: LogicFigureEntityKind.Algorithm },
-    style: { color: 'darkviolet' },
-  },
-];
-
 /** Docs Relation kind 对应的稳定 Graph role */
 export const logicFigureRelationRoleByKind: Readonly<Record<LogicFigureRelationKindValue, string>> = {
   [LogicFigureRelationKind.Secondary]: RelationRole.Dependency,
 };
 
-/** 为需要自行决定 semantic rule 优先级的 Graph 提供 Docs logic vocabulary 参数 */
-export const logicFigureGraphProps = (semanticColors = true): LogicFigureFlowGraphProps => ({
+/** 提供 Docs logic vocabulary 与主题定义；样式规则由主题按 kind 匹配 */
+export const logicFigureGraphProps = (): LogicFigureFlowGraphProps => ({
   theme: { style: logicFigureThemeName },
   graphThemeStyles: [logicFigureGraphThemeStyle],
   entityKinds: logicFigureEntityDefinitions,
-  ...(semanticColors ? { graphRules: logicFigureRules } : {}),
 });

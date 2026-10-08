@@ -14,7 +14,7 @@ keywords: 'Runtime、Computation、transaction、事务、原子提交'
 
 ADR-011 已冻结 source value、Snapshot 与 identity，但多个 Source / Computation 的依赖、候选隔离和原子提交仍需统一。React / Vanilla 或 Tier 2 若自行组织 update，会形成不同的 stale、fallback、错误和资源生命周期。
 
-alpha.2 只交付同步 transaction；它仍必须从第一天隔离 candidate，并只把完整结果一次发布，为 alpha.3 concurrent prepare 保留正确性边界。
+本决策交付同步 transaction；候选状态保持隔离，完整结果一次发布。并发准备属于后续独立决策，不承诺具体 alpha 批次。
 
 ## 决策：只读 Candidate、无 Fork Computation Result、必填 Base Revision
 
@@ -186,9 +186,9 @@ type RuntimeCommitEvent<TPublicRead> =
     }>;
 ```
 
-与 Source 相同，Computation Definition 是 typed token，author callbacks只存在 `defineRuntimeComputation()` 创建的 private executor中。`RuntimeComputationTokenBrand`不导出 value，Definition可直接进入 registry/dependencies，object literal不能构造；private WeakSet拒绝 foreign/JavaScript伪 token并报 `RUNTIME_COMPUTATION_TOKEN_INVALID`。Computation registry存 `RuntimeComputationToken`；具体 Definition可进入异构 dependencies / computations collection而不赋给 `RuntimeComputationDefinition<unknown, ...>`。实现只允许 define helper内部以 token identity守卫做一次 `unknown` narrowing，禁止 `any` 或在 graph/runtime重新 cast callback。
+与 Source 相同，Computation Definition 是 typed token，只有 `defineRuntimeComputation()` 能创建，author callbacks 不公开。伪造或 foreign token 以 `RUNTIME_COMPUTATION_TOKEN_INVALID` 拒绝。Registry 保存 `RuntimeComputationToken`；具体 Definition 可以进入异构 dependencies / computations 集合，并保留各自输入与结果类型的关联。
 
-`defineRuntimeComputation()`要求 id.owner/id.key都是非空字符串并用 code-unit exact equality；helper复制并冻结 id、sources、computations、tracePhases及每个 outcomes数组，固定 callback references。创建后修改 author input/arrays不改变 graph或 trace capability；invalid id以 `RUNTIME_COMPUTATION_ID_INVALID`拒绝。Computation registry创建时在 private WeakMap绑定传入的 Source registry object identity；runtime必须传同一个 Source registry实例，不接受“相同 definitions但不同 registry”，并在任何 participant/capture前以 `RUNTIME_REGISTRY_MISMATCH`拒绝。这样 Computation dependencies不能绕过已验证 source token集合。
+`defineRuntimeComputation()`要求 id.owner/id.key都是非空字符串并用 code-unit exact equality；helper复制并冻结 id、sources、computations、tracePhases及每个 outcomes数组，固定 callback references。创建后修改 author input/arrays不改变 graph或 trace capability；invalid id以 `RUNTIME_COMPUTATION_ID_INVALID`拒绝。Computation registry 绑定创建时传入的 Source registry identity；runtime必须传同一个 Source registry实例，不接受“相同 definitions但不同 registry”，并在任何 participant/capture前以 `RUNTIME_REGISTRY_MISMATCH`拒绝。这样 Computation dependencies不能绕过已验证 source token集合。
 
 `tracePhases`是可选 immutable声明，默认为空数组，空数组合法；Definition helper拒绝重复 `phase+unit`、空 outcomes或不属于 ADR-010 union的值。Runtime从唯一 `PerformanceTraceSink`为每次 Computation invocation创建 owner-bound reporter，owner固定为 `computation.id.owner`，只开放该 Definition声明的 phase/unit/outcome。Computation callback只能取得该 reporter，不能改 owner或追加未声明预算 key；无 sink时 reporter仍校验但不产生外部 side effect。领域完整入口自己的 trace（例如 `compileToScene()` compile phase）与 Computation context trace是互斥调用路径，不得在一次 Computation invocation重复发射。
 
@@ -273,9 +273,9 @@ const createRuntime = (options: RuntimeOptions): Runtime;
 
 ```
 
-`createRuntimeSourceInput/Update()` 在 concrete owner泛型仍在作用域时闭包捕获正确 value/change并返回不暴露 callback的 erased command；private `RuntimeSourceCommandBrand` value与 WeakSet guard使 object literal / foreign command在TypeScript和JavaScript两层均被拒绝，stable code为 `RUNTIME_SOURCE_COMMAND_INVALID`。错误 value或 ChangeSet类型在 builder调用点由 TypeScript拒绝。Runtime只接受这些 command，不接受 `{ source, value }` object literal。Initial snapshot必须精确覆盖 source registry，重复/缺失/额外 owner都拒绝。Runtime创建时 capture initial values、首次 read全部成功后按拓扑 full run Computation并发布 revision 0；随后每个 Computation observer按拓扑恰好调用一次，最后才返回 runtime。任一步失败都先反向清理已 capture result，再反向清理 owner，最终不返回 runtime。空 Computation graph合法。
+`createRuntimeSourceInput/Update()` 按具体 owner 类型接受 value/change，返回不暴露 callback 的 command；Runtime 拒绝 object literal 与 foreign command，稳定错误码为 `RUNTIME_SOURCE_COMMAND_INVALID`。错误 value或 ChangeSet类型在 builder调用点由 TypeScript拒绝。Runtime只接受这些 command，不接受 `{ source, value }` object literal。Initial snapshot必须精确覆盖 source registry，重复/缺失/额外 owner都拒绝。Runtime创建时 capture initial values、首次 read全部成功后按拓扑 full run Computation并发布 revision 0；随后每个 Computation observer按拓扑恰好调用一次，最后才返回 runtime。任一步失败都先反向清理已 capture result，再反向清理 owner，最终不返回 runtime。空 Computation graph合法。
 
-`RuntimeRevision`在 TypeScript中只能从 Runtime API取得 branded value，但运行时是 `0..Number.MAX_SAFE_INTEGER` integer；JavaScript可传入相同数值，Runtime只验证 safe integer与 current/base equality，不声称鉴别来源。`createRuntimeChangeSet()`对 base做同样数值校验，并以 private brand/WeakSet保证 ChangeSet envelope来自 factory，再复制/冻结 changes容器。current已经是 MAX时，只有 `sources: []`可直接 bailout；任何非空 update都在 capture前以 `RUNTIME_REVISION_EXHAUSTED`拒绝，即使其 value之后可能 semantic equal。
+`RuntimeRevision`在 TypeScript中只能从 Runtime API取得 branded value，但运行时是 `0..Number.MAX_SAFE_INTEGER` integer；JavaScript可传入相同数值，Runtime只验证 safe integer与 current/base equality，不声称鉴别来源。`createRuntimeChangeSet()`对 base做同样数值校验，并要求 ChangeSet envelope 来自 factory，再复制/冻结 changes容器。current已经是 MAX时，只有 `sources: []`可直接 bailout；任何非空 update都在 capture前以 `RUNTIME_REVISION_EXHAUSTED`拒绝，即使其 value之后可能 semantic equal。
 
 `update()` 校验顺序固定：runtime disposed → baseRevision必须等于 current → source command/token有效且 duplicate/unknown检查 → 每个 ChangeSet base必须等于 envelope base → empty sources bailout → revision exhaustion → capture/identity/equals → Computation prepare。非 MAX revision下所有 owner equals current返回 bailout，不递增 revision。Source改变但 Computation graph为空时提交 owner Snapshot，outcome为 `committed`。
 
@@ -334,6 +334,6 @@ Renderer commit participant、prepare/commit/rollback token、不可恢复 rollb
 
 ## 遗留风险与后续
 
-- alpha.2 Runtime 只同步执行；优先级、取消、Worker、时间片和 progressive presentation 留给 alpha.3。
+- Runtime 当前只同步执行；优先级、取消、Worker、时间片与渐进呈现属于未排期的 ADR-040、ADR-041、ADR-042，不属于本次交付。
 - Runtime 只保证候选隔离和原子 pointer publish；Core contribution 与 renderer commit participant 仍由 ADR-013、ADR-014 完成，participant 与 broken Runtime 不属于本 ADR 当前公开面。
 - observer 与 retire failure 发生在 publish 之后，只进入 diagnostic queue，不回滚已经公开的 revision。

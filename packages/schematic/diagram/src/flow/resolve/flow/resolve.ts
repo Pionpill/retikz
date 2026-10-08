@@ -21,7 +21,7 @@ import type {
   IRFlowLayout,
   IRFlowRelation,
 } from '../../schemas';
-import { FlowEndpointOverlapSchema } from '../../schemas';
+import { FlowDiagramSchema, FlowEndpointOverlapSchema } from '../../schemas';
 import { mergeFlowDefaults, mergeFlowLayoutIntent, resolveFlowTheme } from '../theme';
 import type {
   CanonicalFlowDiagram,
@@ -33,6 +33,9 @@ import type {
   FlowResolveContext,
   FlowSourcePath,
 } from './types';
+
+/** 应用 Schema 默认值后的 Source 声明目录 */
+type FlowCatalogSource = Required<Pick<IRFlowDiagram, 'groups' | 'layouts'>> & IRFlowDiagram;
 
 type FlowContainmentOwner = Readonly<{
   id?: string;
@@ -63,7 +66,7 @@ const registerId = (state: ResolveState, id: string, path: FlowSourcePath): void
   state.elementPaths.set(id, path);
 };
 
-const registerCatalogs = (source: IRFlowDiagram, state: ResolveState): void => {
+const registerCatalogs = (source: FlowCatalogSource, state: ResolveState): void => {
   source.entities.forEach((entity, entityIndex) => {
     const path: FlowSourcePath = ['entities', entityIndex];
     registerId(state, entity.id, path);
@@ -136,7 +139,7 @@ const registerChildren = (
   });
 };
 
-const assertAcyclicScopes = (source: IRFlowDiagram, state: ResolveState): void => {
+const assertAcyclicScopes = (source: FlowCatalogSource, state: ResolveState): void => {
   const visiting = new Set<string>();
   const visited = new Set<string>();
   const scopes = [...source.groups, ...source.layouts];
@@ -168,7 +171,7 @@ const assertAcyclicScopes = (source: IRFlowDiagram, state: ResolveState): void =
   scopes.forEach(visitScope);
 };
 
-const assertCompleteContainment = (source: IRFlowDiagram, state: ResolveState): void => {
+const assertCompleteContainment = (source: FlowCatalogSource, state: ResolveState): void => {
   registerChildren(state, source.children, ['children']);
   source.groups.forEach((group, groupIndex) => {
     registerChildren(state, group.children, ['groups', groupIndex, 'children'], group.id);
@@ -537,8 +540,13 @@ export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveCo
     owners: new Map(),
     elementPaths: new Map(),
   };
-  registerCatalogs(source, state);
-  assertCompleteContainment(source, state);
+  const catalogs = {
+    ...source,
+    groups: source.groups ?? FlowDiagramSchema.shape.groups.parse(undefined),
+    layouts: source.layouts ?? FlowDiagramSchema.shape.layouts.parse(undefined),
+  };
+  registerCatalogs(catalogs, state);
+  assertCompleteContainment(catalogs, state);
   const elements = source.children.map(id => resolveElementRecord(id, state));
   const groups = projectFlowGroups(
     elements,

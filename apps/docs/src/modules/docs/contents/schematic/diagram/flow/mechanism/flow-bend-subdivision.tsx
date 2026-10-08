@@ -20,7 +20,7 @@ const FlowBendSubdivision: FC<FlowBendSubdivisionProps> = props => {
       {t.stages.map((title, stage) => {
         const divisions = [1, 2, 8][stage];
         return (
-          <Scope key={title} transforms={[{ kind: 'translate', x: stage * 250, y: 0 }]}>
+          <Scope key={title} position={[stage * 250, 0]}>
             <Node position={[100, 0]} text={title} style={{ stroke: 'none', font: { size: 14 } }} />
             {Array.from({ length: divisions }, (_, index) => {
               const box = bendFigureBounds(index / divisions, (index + 1) / divisions);

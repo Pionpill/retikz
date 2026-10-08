@@ -19,7 +19,7 @@ const ChartEncodingsMap: FC<ChartEncodingsMapProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="encoding-data"
-        transforms={[{ kind: 'translate', x: 12, y: 28 }]}
+        position={[12, 28]}
         label={label(t.data)}
         layout={{ height: 34, padding: 0, key: { width: 90 }, value: { width: 70 } }}
         style={{ font: { size: 13 } }}
@@ -31,7 +31,7 @@ const ChartEncodingsMap: FC<ChartEncodingsMapProps> = props => {
       />
       <Map
         id="encoding-recipe"
-        transforms={[{ kind: 'translate', x: 260, y: 28 }]}
+        position={[260, 28]}
         label={label(t.encodings)}
         layout={{ height: 34, padding: 0, key: { width: 60 }, value: { width: 100 } }}
         style={{ font: { size: 13 } }}
@@ -43,7 +43,7 @@ const ChartEncodingsMap: FC<ChartEncodingsMapProps> = props => {
       />
       <Map
         id="encoding-mark"
-        transforms={[{ kind: 'translate', x: 508, y: 28 }]}
+        position={[508, 28]}
         label={label(t.mark)}
         layout={{ height: 34, padding: 0, key: { width: 60 }, value: { width: 130 } }}
         style={{ font: { size: 13 } }}

@@ -18,7 +18,11 @@ export type PerformanceTraceRecord = Readonly<{
   changed: number;
 }>;
 
-/** 接收已验证性能记录的同步出口 */
+/**
+ * 接收已验证性能记录的同步出口
+ * @param record 已验证并补齐 owner 的性能记录
+ * @returns 无返回值；异常由报告器隔离为 sink-threw 诊断
+ */
 export type PerformanceTraceSink = (record: PerformanceTraceRecord) => void;
 
 /** trace reporter 的非致命诊断 */

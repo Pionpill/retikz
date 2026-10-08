@@ -23,7 +23,7 @@ const InputsFigure: FC<InputsFigureProps> = props => {
         <Map
           key={item.id}
           id={item.id}
-          transforms={[{ kind: 'translate', x: 0, y: i * 85 }]}
+          position={[0, i * 85]}
           label={{ text: item.title, position: 'top', font: { size: 12 }, opacity: 0.8 }}
           entries={[{ key: item.key, value: item.value }]}
           style={{ font: { size: 14 } }}
@@ -31,7 +31,7 @@ const InputsFigure: FC<InputsFigureProps> = props => {
       ))}
       <Map
         id="resolved"
-        transforms={[{ kind: 'translate', x: 350, y: 25 }]}
+        position={[350, 25]}
         label={{ text: t.result, position: 'top', font: { size: 12 }, opacity: 0.8 }}
         entries={[
           { key: 'content.type', value: 'node' },

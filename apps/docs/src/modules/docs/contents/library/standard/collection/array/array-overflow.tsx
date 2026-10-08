@@ -6,13 +6,13 @@ import type { FC } from 'react';
 const ArrayOverflow: FC = () => (
   <Layout viewBox={{ x: -220, y: -65, width: 440, height: 130 }}>
     <Array
-      transforms={[{ kind: 'translate', x: -120, y: 0 }]}
+      position={[-120, 0]}
       items={['ABCDEFGHIJKLMNOPQRST']}
       layout={{ width: 84, height: 40, overflow: 'visible' }}
       style={{ stroke: 'gray' }}
     />
     <Array
-      transforms={[{ kind: 'translate', x: 110, y: 0 }]}
+      position={[110, 0]}
       items={['ABCDEFGHIJKLMNOPQRST']}
       layout={{ width: 84, height: 40, overflow: 'clip' }}
       style={{ stroke: 'gray' }}

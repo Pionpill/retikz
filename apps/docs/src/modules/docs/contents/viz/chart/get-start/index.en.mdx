@@ -83,6 +83,8 @@ The example uses shared components such as `ChartData`, `ChartLayout`, and `Char
 
 ## React hosting and embedding
 
+Use `panel.position` to place a Chart on the canvas, for example `panel={{ position: [120, 40] }}`. Vanilla uses the same `panel.position` field. It follows [Scope positioning](/kernel/components/scope/usage) and also accepts `{ kind: 'anchor', target, selfAnchor }`. Use `panel.transforms` for local rotation, scaling, and additional translation; the panel's own rotation or scaling does not change a point-form position.
+
 Rendering a concrete Chart directly creates exactly one `Layout` / Scene host. Without an authored `layout`, Cartesian coordinates default to `800 × 500` and Polar coordinates default to `400 × 500`. Root `layout.width` / `height` configure both Source and that implicit host; when only one dimension is provided, the other keeps the default for the active coordinate system. `ChartLayout.width` / `height` provide equivalent JSX sugar and mirror into Source when no explicit `layout` exists.
 
 Inside an existing `<Layout>`, Chart contributes only its Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and creates no second SVG. Root `layout` remains the Chart Source border-box. Embedded `ChartLayout` also accepts only `layout`; declaring `width` or `height`, including explicit `undefined`, fails loudly. Configure CSS, renderer/runtime, animation, and compile callbacks on the outer `<Layout>`.
