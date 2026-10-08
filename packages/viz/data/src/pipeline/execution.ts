@@ -17,7 +17,12 @@ import { extractTransformKind } from '../contract';
 import { RetikzDataError } from '../error';
 import { BUILTIN_TRANSFORM_IMPLEMENTATIONS } from '../providers';
 import { prepareLocalDataTransform } from '../providers/execution';
-import { assertDataTransformModel, assertDataTransformResult, resolveDataExecution } from '../resolve';
+import {
+  assertDataTransformModel,
+  assertDataTransformResult,
+  resolveDataExecution,
+  resolveDataTransformOutputModel,
+} from '../resolve';
 import { createDataLineageRecorder, importDataLineageEvents } from './lineage';
 import { readSourceIndex, readSourceIndices } from './provenance';
 import { DEFAULT_TRANSFORM_CONTEXT } from './transform';
@@ -223,7 +228,7 @@ export const createDataTransformExecutor = <TSource = never>(
 
                 return {
                   rows,
-                  model: stage.outputModel,
+                  model: resolveDataTransformOutputModel(result.model, output),
                   ...(result.lineage === undefined && lineage === undefined
                     ? {}
                     : {
@@ -296,7 +301,14 @@ export const createDataTransformExecutor = <TSource = never>(
                   }
 
                   assertActive(request.signal);
-                  assertDataTransformResult(resolution.stages[operationIndex].outputModel, result);
+                  try {
+                    assertDataTransformResult(resolution.stages[operationIndex].outputModel, result);
+                  } catch (cause) {
+                    throw new RetikzDataError(`data: invalid result model or values at index ${operationIndex}`, {
+                      cause,
+                      operationIndex,
+                    });
+                  }
                   const previousEvents = current.kind === 'result' ? (current.result.lineage?.events ?? []) : [];
                   const returnedEvents = result.lineage?.events ?? [];
                   let prefix = 0;

@@ -15,6 +15,16 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: {
+            zh: '待发布：变换结果模型与错误定位修复',
+            en: 'Unreleased: transform result models and diagnostics',
+          },
+          content: {
+            zh: '外部结果补充的字段类型在后续本地保留或继承字段时继续有效，空结果也不会丢失类型证据。阶段结果模型或值域不匹配的错误现在携带 operation 下标并保留原因为 cause。',
+            en: 'Field types supplied by external results survive subsequent local field preservation or inheritance, including empty results. Stage result model or value mismatches now include the operation index and preserve the original cause.',
+          },
+        },
+        {
           label: { zh: '待发布：可扩展分类顺序', en: 'Unreleased: extensible category orders' },
           content: {
             zh: '新增 naturalAscending / naturalDescending，按数字片段排列版本标签。Data 统一提供 defineFieldOrder、resolveFieldOrderRegistry 与 resolveCategoryDomain；Plot、Table 及适配器通过 fieldOrderDefinitions 注入。原有顺序语义不变，Table 不自动重排行列。移除 Plot 的 CategoryOrder / orderedCategoryDomain 导出。',

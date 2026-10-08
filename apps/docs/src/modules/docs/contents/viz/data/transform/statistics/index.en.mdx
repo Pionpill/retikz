@@ -3,9 +3,9 @@ title: Statistical Sub-operators
 description: Use reducers to produce statistical fields, selectors to preserve representative rows, and combine quantile bands, whiskers, and outliers.
 ---
 
-Reducers and selectors are reusable statistical sub-operators inside data transforms. A reducer collapses a group of rows into a field fragment; a selector returns original rows from the group. Both are JSON-serializable configuration executed by built-in or custom Definitions.
+Reducers and selectors are reusable statistical sub-operators inside data transforms. A reducer collapses a group of rows into a field fragment; a selector returns original rows from the group. Their operation configurations are JSON-serializable; Definitions declare semantics, while separate Implementations or external executors perform the computation.
 
-`summarize`, `annotate`, and Plot-registered `bin` reuse built-in or custom reducers. `select` and Plot-registered `relate` reuse built-in or custom selectors. The `annotate` selector entry accepts only the built-in single-row subset. Plot consumes these capabilities but does not own Data's statistical contract.
+Data's `summarize`, `annotate`, and `bin` reuse built-in or custom reducers. `select` and `relate` reuse built-in or custom selectors. The `annotate` selector entry accepts only the built-in single-row subset. Plot consumes these capabilities but does not own Data's statistical contract.
 
 ## Choose a sub-operator
 

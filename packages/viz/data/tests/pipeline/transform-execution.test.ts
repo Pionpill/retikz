@@ -31,6 +31,54 @@ const input = (values: Array<number>): DataTransformStageInput<never> => ({
   result: { rows: values.map(value => ({ value })), model },
 });
 
+it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through empty local %s results', async mode => {
+  const definition = defineTransform({
+    schema: strictObject({ kind: literal('copy-field') }),
+    inputFields: () => ['value'],
+    outputModel: () => ({ kind: 'replace', fields: [{ field: 'copy', type: { from: 'value' } }] }),
+  });
+  const implementation = defineTransformImplementation({
+    definition,
+    apply: rows => rows.map(row => ({ copy: row.value })),
+  });
+  const unknownModel: DataTransformModel = [{ name: 'value' }];
+  const resolution = resolveDataTransforms(
+    [
+      { operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'external', external: 'typed' } },
+      { operation: mode === 'preserve' ? { kind: 'sort', field: 'value' } : { kind: 'copy-field' } },
+    ],
+    unknownModel,
+    { transformRegistry: resolveTransformRegistry([definition]) },
+  );
+  const executor = createDataTransformExecutor({
+    transformImplementations: [implementation],
+    externalProviders: [
+      {
+        name: 'typed',
+        provider: {
+          resolve: stage => ({
+            kind: 'supported',
+            implementation: {
+              definition: stage.definition,
+              execute: () => ({ rows: [], model: [{ name: 'value', type: 'temporal' }] }),
+            },
+          }),
+        },
+      },
+    ],
+  });
+
+  const result = await executeDataTransforms(
+    { kind: 'result', result: { rows: [], model: unknownModel } },
+    resolution,
+    executor,
+  );
+
+  expect(result.rows).toEqual([]);
+  expect(result.model).toEqual([{ name: mode === 'preserve' ? 'value' : 'copy', type: 'temporal' }]);
+  expect(resolution.stages[1].outputModel).toEqual([{ name: mode === 'preserve' ? 'value' : 'copy' }]);
+});
+
 it('resolves custom semantics without computation and rejects mismatched local or external Definition identities', async () => {
   const semantic = () =>
     defineTransform({
@@ -448,7 +496,10 @@ it('does not turn provider exceptions, rejections, cancellation or invalid resul
     ],
   });
 
-  await expect(executeDataTransforms(input([2, 1]), resolution, invalid)).rejects.toThrow(/model/);
+  await expect(executeDataTransforms(input([2, 1]), resolution, invalid)).rejects.toMatchObject({
+    message: expect.stringMatching(/model/),
+    details: { operationIndex: 0 },
+  });
 
   const abort = new AbortController();
   abort.abort(cause);

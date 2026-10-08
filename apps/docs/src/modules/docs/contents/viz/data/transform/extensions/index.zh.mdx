@@ -17,6 +17,8 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 
 `outputModel` 使用 `preserve.outputs` 增补字段，或用 `replace.fields` 替换完整模型。输出字段可以省略类型表示尚无类型证据；`{ from: field }` 沿用已有字段的类型与适用分类顺序。派生字段名由该模型投影。
 
+外部结果可以补充预检时未确定的字段类型。后续本地阶段保留字段或通过 `{ from: field }` 继承字段时，会沿用实际输入模型中的类型证据，即使结果为空；这不会改变预检阶段已经固定的执行路由。
+
 `defineTransformImplementation({ definition, apply })` 引用同一个 Definition。下面的 `scale-field` 读取 `x`，按 `factor` 生成 `scaledX`：
 
 <ComponentPreview
