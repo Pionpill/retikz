@@ -52,18 +52,24 @@ export const LabelDefaultSchema = object({
 /** 复用箭头细节校验规则，供作用域声明默认箭头样式 */
 export const ArrowDefaultSchema = ArrowDetailSchema;
 
-/** Scope placement 的闭合 target：父坐标系显式点或此前已完成的命名实体 */
-export const ScopePlacementTargetSchema = union([PositionSchema, NodeTargetSchema.strict()]).describe(
+/** Scope 锚点对齐的父坐标系目标 */
+export const ScopePositionTargetSchema = union([PositionSchema, strictObject(NodeTargetSchema.shape)]).describe(
   'Parent-frame Cartesian point or previously resolved Node, Coordinate, or Scope target.',
 );
 
-/** Scope 固有包络到父坐标系 target 的锚点对齐放置 */
-export const ScopePlacementSchema = strictObject({
-  target: ScopePlacementTargetSchema.describe('Placement target resolved in the parent coordinate frame.'),
+/** 将变换后的 Scope 自身锚点对齐到目标 */
+export const ScopeAnchorPositionSchema = strictObject({
+  kind: literal('anchor').describe('Anchor alignment position discriminator.'),
+  target: ScopePositionTargetSchema.describe('Alignment target resolved in the parent coordinate frame.'),
   selfAnchor: ScopeSelfPointSchema.optional().describe(
     'Point on the transformed Scope envelope aligned to target. Omitted fields use center.',
   ),
 }).describe('Placement that aligns a transformed intrinsic Scope point to a parent-frame target.');
+
+/** Scope 原点位置或最终锚点对齐 */
+export const ScopePositionSchema = union([PositionSchema, ScopeAnchorPositionSchema]).describe(
+  'Parent-frame origin position applied outside local transforms, or final transformed-envelope anchor alignment.',
+);
 
 /** 后代默认通道与继承屏障 */
 export const ScopeDefaultsSchema = strictObject({
@@ -121,8 +127,8 @@ export const ScopePropsSchema = strictObject({
     .describe(
       'Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time.',
     ),
-  placement: ScopePlacementSchema.optional().describe(
-    'Optional final placement applied after intrinsic layout and local transforms.',
+  position: ScopePositionSchema.default([0, 0]).describe(
+    'Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].',
   ),
   zIndex: number()
     .int()

@@ -33,6 +33,7 @@ import {
   useGraphThemeStyles,
 } from '../../src';
 import { collectEntityInput, collectRelationInput, graphLayoutHostPropsOf } from '../../src/graph/authoring';
+import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 describe('Group React authoring', () => {
   it('produces the same Group Source IR while accepting arbitrary React children', () => {
@@ -48,7 +49,7 @@ describe('Group React authoring', () => {
         </Entity>
       </Group>,
     );
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 
     expect(normalized.ir.children[0]).toEqual({
       namespace: 'graph',
@@ -288,7 +289,7 @@ const WrappedRoute: FC = () =>
 
 const normalizeReact = (element: ReturnType<typeof createElement>) => {
   const input = createInputScene(element);
-  return normalizeScene(input.scene, { adapters: input.adapters });
+  return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 };
 
 describe('@retikz/graph-react package boundary', () => {
@@ -516,7 +517,7 @@ describe('Graph Source and child authoring', () => {
           ],
           localNamespace: true,
           transforms: [{ kind: 'translate', x: 10, y: 20 }],
-          placement: { target: [30, 40], selfAnchor: 'center' },
+          position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
           zIndex: 2,
           clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
           boundingShape: 'circle',
@@ -562,7 +563,7 @@ describe('Graph Source and child authoring', () => {
         ],
         localNamespace: true,
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
-        placement: { target: [30, 40], selfAnchor: 'center' },
+        position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
         zIndex: 2,
         clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
         boundingShape: 'circle',
@@ -755,7 +756,10 @@ describe('Graph Definition options parity', () => {
         <Relation {...props} />
       </Graph>,
     );
-    const reactResult = processToStaticInputResult(react.scene, { adapters: react.adapters, compile: { padding: 0 } });
+    const reactResult = processToStaticInputResult(react.scene, {
+      adapters: synchronousAdapters(react.adapters),
+      compile: { padding: 0 },
+    });
     const vanillaResult = processToStaticInputResult(
       {
         children: [
@@ -784,7 +788,7 @@ describe('Graph Definition options parity', () => {
       dashPattern: [4, 2],
     });
 
-    const normalized = normalizeScene(react.scene, { adapters: react.adapters });
+    const normalized = normalizeScene(react.scene, { adapters: synchronousAdapters(react.adapters) });
 
     expect(normalized.ir.children[0]).toMatchObject({ children: [{ id: 'a' }, { id: 'b' }, { kind: kind.kind }] });
     expect(normalized.ir.children[0]).not.toHaveProperty('relationKinds');
@@ -838,7 +842,7 @@ describe('Graph Definition options parity', () => {
         }),
       ),
     );
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 
     for (const child of normalized.ir.children) {
       for (const key of definitionOptionKeys) expect(child).not.toHaveProperty(key);
@@ -846,7 +850,7 @@ describe('Graph Definition options parity', () => {
 
     expect(() =>
       processToStaticInputResult(input.scene, {
-        adapters: input.adapters,
+        adapters: synchronousAdapters(input.adapters),
         compile: { padding: 0 },
       }),
     ).not.toThrow();

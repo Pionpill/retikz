@@ -68,7 +68,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <Plot id="revenue-a" data={rows} width={220} height={140}>
           <PointMark x="month" y="revenue" />
         </Plot>
-        <Plot id="revenue-b" data={rows} x={240} width={220} height={140}>
+        <Plot id="revenue-b" data={rows} position={[240, 0]} width={220} height={140}>
           <PointMark x="month" y="revenue" />
         </Plot>
       </Layout>,

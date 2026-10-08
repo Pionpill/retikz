@@ -53,31 +53,31 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 
 <ApiTable>
 
-| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
-| `animations?`        | `GroupInputEmbedProps["animations"]`                                                                                                                                                                               | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
-| `background?`        | `GroupInputEmbedProps["background"]`                                                                                                                                                                               | —      | 外框背景覆盖                                           |
-| `border?`            | `GroupInputEmbedProps["border"]`                                                                                                                                                                                   | —      | 外框描边覆盖，整体替换主题值                           |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
-| `caption?`           | `GroupInputEmbedProps["caption"]`                                                                                                                                                                                  | —      | 外框内部的标题说明区                                   |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —      | 可见分组包含的有序绘制子内容                           |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
-| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
-| `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —      | 后代默认样式及继承屏障                                 |
-| `frame?`             | `GroupInputEmbedProps["frame"]`                                                                                                                                                                                    | —      | 固有包络装饰，不参与布局                               |
-| `graphDefaults?`     | `GroupInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —      | 可见后代的稀疏默认值                                   |
-| `graphRules?`        | `GroupInputEmbedProps["graphRules"]`                                                                                                                                                                               | —      | 可见 Entity / Relation 后代的有序规则                  |
-| `id?`                | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
-| `labels?`            | `GroupInputEmbedProps["labels"]`                                                                                                                                                                                   | —      | 非空外围标签数组，只扩展视觉边界                       |
-| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
-| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
-| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，外围标签不受此项裁剪                     |
-| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框内边距，编译时默认 10                        |
-| `placement?`         | `GroupInputEmbedProps["placement"]`                                                                                                                                                                                | —      | 布局与局部变换后的最终对齐放置                         |
-| `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —      | 后代的级联视觉覆盖                                     |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
-| `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —      | 局部变换，数组最后一项先作用于局部点                   |
-| `zIndex?`            | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
+| 成员                 | 类型                                                                                                                                                                                                               | 默认值  | 说明                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------ |
+| `animations?`        | `GroupInputEmbedProps["animations"]`                                                                                                                                                                               | —       | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`        | `GroupInputEmbedProps["background"]`                                                                                                                                                                               | —       | 外框背景覆盖                                           |
+| `border?`            | `GroupInputEmbedProps["border"]`                                                                                                                                                                                   | —       | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | 引用 id 的合成包络形状                                 |
+| `caption?`           | `GroupInputEmbedProps["caption"]`                                                                                                                                                                                  | —       | 外框内部的标题说明区                                   |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | 可见分组包含的有序绘制子内容                           |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | 外框圆角                                               |
+| `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | 后代默认样式及继承屏障                                 |
+| `frame?`             | `GroupInputEmbedProps["frame"]`                                                                                                                                                                                    | —       | 固有包络装饰，不参与布局                               |
+| `graphDefaults?`     | `GroupInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —       | 可见后代的稀疏默认值                                   |
+| `graphRules?`        | `GroupInputEmbedProps["graphRules"]`                                                                                                                                                                               | —       | 可见 Entity / Relation 后代的有序规则                  |
+| `id?`                | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                          |
+| `labels?`            | `GroupInputEmbedProps["labels"]`                                                                                                                                                                                   | —       | 非空外围标签数组，只扩展视觉边界                       |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | 透传的 JSON 元信息                                     |
+| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，外围标签不受此项裁剪                     |
+| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框内边距，编译时默认 10                        |
+| `position?`          | `GroupInputEmbedProps["position"]`                                                                                                                                                                                 | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
+| `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —       | 后代的级联视觉覆盖                                     |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
+| `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —       | 局部变换，数组最后一项先作用于局部点                   |
+| `zIndex?`            | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
 
 </ApiTable>
 
@@ -185,13 +185,13 @@ export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmb
 
 #### createGroup / GroupCreateOptions
 
-- `createGroup`：<ApiSourceLink label={"createGroup"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={10}>组装 Group Source composite</ApiSourceLink>
-- `GroupCreateOptions`：<ApiSourceLink label={"GroupCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={7}>Group Source 工厂输入</ApiSourceLink>
+- `createGroup`：<ApiSourceLink label={"createGroup"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={8}>组装 Group Source composite</ApiSourceLink>
+- `GroupCreateOptions`：<ApiSourceLink label={"GroupCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={5}>Group Source 工厂输入</ApiSourceLink>
 
 ```ts
 export declare const createGroup: (input: GroupCreateOptions) => IRGroup;
 
-export type GroupCreateOptions = Omit<ZodInfer<typeof GroupSchema>, 'namespace' | 'type'>;
+export type GroupCreateOptions = Omit<IRGroup, 'namespace' | 'type'>;
 ```
 
 #### GraphDefinitionOptions
@@ -252,53 +252,9 @@ export type GraphDefinitionOptions = Readonly<{
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable>
-
-| 成员              | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
-| `animations?`     | `ZodInfer<typeof GroupSchema.shape["animations"]>`                                                                                                                                                                 | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
-| `background?`     | `ZodInfer<typeof GroupSchema.shape["background"]>`                                                                                                                                                                 | —      | 外框背景覆盖                                           |
-| `border?`         | `ZodInfer<typeof GroupSchema.shape["border"]>`                                                                                                                                                                     | —      | 外框描边覆盖，整体替换主题值                           |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
-| `caption?`        | `ZodInfer<typeof GroupSchema.shape["caption"]>`                                                                                                                                                                    | —      | 外框内部的标题说明区                                   |
-| `children?`       | `Array<IRChild>`                                                                                                                                                                                                   | —      | 保留作者布局的任意有序子元素                           |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
-| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
-| `defaults?`       | `ZodInfer<typeof GroupSchema.shape["defaults"]>`                                                                                                                                                                   | —      | 后代默认样式及继承屏障                                 |
-| `frame?`          | `ZodInfer<typeof GroupSchema.shape["frame"]>`                                                                                                                                                                      | —      | 固有包络装饰，不参与布局                               |
-| `graphDefaults?`  | `ZodInfer<typeof GroupSchema.shape["graphDefaults"]>`                                                                                                                                                              | —      | 可见后代的稀疏默认值                                   |
-| `graphRules?`     | `ZodInfer<typeof GroupSchema.shape["graphRules"]>`                                                                                                                                                                 | —      | 可见 Entity / Relation 后代的有序规则                  |
-| `id?`             | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
-| `labels?`         | `ZodInfer<typeof GroupSchema.shape["labels"]>`                                                                                                                                                                     | —      | 非空外围标签数组，只扩展视觉边界                       |
-| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
-| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
-| `namespace`       | `"graph"`                                                                                                                                                                                                          | —      | 命名空间，固定为 graph                                 |
-| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，外围标签不受此项裁剪                     |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框内边距，编译时默认 10                        |
-| `placement?`      | `ZodInfer<typeof GroupSchema.shape["placement"]>`                                                                                                                                                                  | —      | 布局与局部变换后的最终对齐放置                         |
-| `style?`          | `ZodInfer<typeof GroupSchema.shape["style"]>`                                                                                                                                                                      | —      | 后代的级联视觉覆盖                                     |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
-| `transforms?`     | `ZodInfer<typeof GroupSchema.shape["transforms"]>`                                                                                                                                                                 | —      | 局部变换，数组最后一项先作用于局部点                   |
-| `type`            | `"group"`                                                                                                                                                                                                          | —      | 记录判别字段，固定为 group                             |
-| `zIndex?`         | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
 ```ts
-export type IRGroup = ZodInfer<typeof GroupSchema>;
+export type IRGroup = Omit<ZodInfer<typeof GroupSchema>, 'position'> & Pick<ZodInput<typeof GroupSchema>, 'position'>;
 ```
-
-</DocTab>
-
-</DocTabs>
 
 #### IRGroupCaption
 

@@ -73,7 +73,7 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 | `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Surface content overflow; does not clip boundary labels.                                                                                        |
 | `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing around the caption and body; compilation defaults to 10.                                                                                |
-| `placement?`         | `GroupInputEmbedProps["placement"]`                                                                                                                                                                                | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `position?`          | `GroupInputEmbedProps["position"]`                                                                                                                                                                                 | `[0,0]` | Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].                                             |
 | `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —       | Cascading graphic overrides for descendants.                                                                                                    |
 | `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
 | `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
@@ -185,13 +185,13 @@ export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmb
 
 #### createGroup / GroupCreateOptions
 
-- `createGroup`: <ApiSourceLink label={"createGroup"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={10}>Create a Group Source composite</ApiSourceLink>
-- `GroupCreateOptions`: <ApiSourceLink label={"GroupCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={7}>Group Source factory input</ApiSourceLink>
+- `createGroup`: <ApiSourceLink label={"createGroup"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={8}>Create a Group Source composite</ApiSourceLink>
+- `GroupCreateOptions`: <ApiSourceLink label={"GroupCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={5}>Group Source factory input</ApiSourceLink>
 
 ```ts
 export declare const createGroup: (input: GroupCreateOptions) => IRGroup;
 
-export type GroupCreateOptions = Omit<ZodInfer<typeof GroupSchema>, 'namespace' | 'type'>;
+export type GroupCreateOptions = Omit<IRGroup, 'namespace' | 'type'>;
 ```
 
 #### GraphDefinitionOptions
@@ -252,53 +252,9 @@ export type GraphDefinitionOptions = Readonly<{
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member            | Type                                                                                                                                                                                                               | Default | Description                                                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`     | `ZodInfer<typeof GroupSchema.shape["animations"]>`                                                                                                                                                                 | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
-| `background?`     | `ZodInfer<typeof GroupSchema.shape["background"]>`                                                                                                                                                                 | —       | Explicit shell background override.                                                                                                             |
-| `border?`         | `ZodInfer<typeof GroupSchema.shape["border"]>`                                                                                                                                                                     | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `caption?`        | `ZodInfer<typeof GroupSchema.shape["caption"]>`                                                                                                                                                                    | —       | Structured caption placed inside the shell.                                                                                                     |
-| `children?`       | `Array<IRChild>`                                                                                                                                                                                                   | —       | Optional ordered arbitrary Core or Tier 2 children.                                                                                             |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-| `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
-| `defaults?`       | `ZodInfer<typeof GroupSchema.shape["defaults"]>`                                                                                                                                                                   | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
-| `frame?`          | `ZodInfer<typeof GroupSchema.shape["frame"]>`                                                                                                                                                                      | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
-| `graphDefaults?`  | `ZodInfer<typeof GroupSchema.shape["graphDefaults"]>`                                                                                                                                                              | —       | Optional sparse Graph defaults for visible descendants.                                                                                         |
-| `graphRules?`     | `ZodInfer<typeof GroupSchema.shape["graphRules"]>`                                                                                                                                                                 | —       | Optional ordered Graph rules for visible descendants.                                                                                           |
-| `id?`             | `string`                                                                                                                                                                                                           | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
-| `labels?`         | `ZodInfer<typeof GroupSchema.shape["labels"]>`                                                                                                                                                                     | —       | Non-empty Core Node labels attached to the Group boundary.                                                                                      |
-| `localNamespace?` | `false \| true`                                                                                                                                                                                                    | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
-| `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
-| `namespace`       | `"graph"`                                                                                                                                                                                                          | —       | Graph semantic element namespace.                                                                                                               |
-| `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Surface content overflow; does not clip boundary labels.                                                                                        |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing around the caption and body; compilation defaults to 10.                                                                                |
-| `placement?`      | `ZodInfer<typeof GroupSchema.shape["placement"]>`                                                                                                                                                                  | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
-| `style?`          | `ZodInfer<typeof GroupSchema.shape["style"]>`                                                                                                                                                                      | —       | Cascading graphic overrides for descendants.                                                                                                    |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
-| `transforms?`     | `ZodInfer<typeof GroupSchema.shape["transforms"]>`                                                                                                                                                                 | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
-| `type`            | `"group"`                                                                                                                                                                                                          | —       | Group Source composite discriminator.                                                                                                           |
-| `zIndex?`         | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
 ```ts
-export type IRGroup = ZodInfer<typeof GroupSchema>;
+export type IRGroup = Omit<ZodInfer<typeof GroupSchema>, 'position'> & Pick<ZodInput<typeof GroupSchema>, 'position'>;
 ```
-
-</DocTab>
-
-</DocTabs>
 
 #### IRGroupCaption
 

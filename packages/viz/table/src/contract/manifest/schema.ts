@@ -215,7 +215,13 @@ const TableDefaultsLayerKindSchema = zodEnum(['neutral', 'style', 'source']).des
 );
 
 /** 校验按有效级联顺序保留的单层表格默认值来源 */
-export const TableDefaultsSourceRecordSchema = strictObject({
+export const TableDefaultsSourceRecordSchema: ReturnType<
+  typeof strictObject<{
+    kind: typeof TableDefaultsLayerKindSchema;
+    path: typeof NonBlankStringSchema;
+    defaults: ZodOptional<typeof TableDefaultsSchema>;
+  }>
+> = strictObject({
   kind: TableDefaultsLayerKindSchema.describe('Resolved Table defaults source kind.'),
   path: NonBlankStringSchema.describe('Stable resolved Table defaults source path.'),
   defaults: TableDefaultsSchema.optional().describe('Sparse defaults contributed by this source.'),

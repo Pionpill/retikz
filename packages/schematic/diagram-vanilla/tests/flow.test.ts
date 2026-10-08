@@ -10,7 +10,6 @@ it('removes and restores Group captions and labels during retained updates', () 
     children: [
       FlowVanilla.flowDiagram({
         entities: [{ id: 'item', text: 'Item' }],
-        layouts: [],
         children: ['group'],
         groups: [
           {
@@ -54,7 +53,6 @@ it('preserves local Layout exclusion through Vanilla authoring', () => {
       { id: 'canvas', text: 'Canvas' },
       { id: 'png', text: 'PNG' },
     ],
-    groups: [],
     layouts: [
       { id: 'row', kind: 'linear', direction: 'right', children: ['canvas', 'png'], excludeFromBounds: ['png'] },
     ],
@@ -62,7 +60,7 @@ it('preserves local Layout exclusion through Vanilla authoring', () => {
   };
   const source = FlowVanilla.normalizeFlowDiagram(input);
 
-  expect(source.layouts[0].excludeFromBounds).toEqual(['png']);
+  expect(source.layouts?.[0]?.excludeFromBounds).toEqual(['png']);
   expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(
     DiagramFlow.FlowDiagramSchema.parse(source),
   );
@@ -146,8 +144,6 @@ describe('@retikz/diagram-vanilla/flow', () => {
               { id: 'a', text: 'A' },
               { id: 'b', text: 'B' },
             ],
-            groups: [],
-            layouts: [],
             children: ['a', 'b'],
             relations: [{ source: 'a', target: 'b', routing: { kind, cornerRadius: 0 } }],
           }),
@@ -194,8 +190,6 @@ describe('@retikz/diagram-vanilla/flow', () => {
           layout: { align: 'start' as const, lineHeight: 18, maxTextWidth: 160 },
         },
       ],
-      groups: [],
-      layouts: [],
       children: ['form'],
     };
 
@@ -214,7 +208,6 @@ describe('@retikz/diagram-vanilla/flow', () => {
         { id: 'request', text: 'Request' },
         { id: 'result', text: 'Result' },
       ],
-      groups: [],
       layouts: [
         {
           kind: 'grid' as const,
@@ -291,7 +284,6 @@ it('容器宽度策略通过 Vanilla 归一化和 JSON 往返保留', () => {
       { id: 'a', text: 'A' },
       { id: 'b', text: 'B' },
     ],
-    groups: [],
     layouts: [
       { id: 'rows', kind: 'linear', direction: 'down', containerWidth: 'match-largest', children: ['row'] },
       { id: 'row', kind: 'linear', direction: 'right', itemWidth: 'fill', children: ['a', 'b'] },
@@ -300,7 +292,9 @@ it('容器宽度策略通过 Vanilla 归一化和 JSON 往返保留', () => {
     relations: [{ source: 'a', target: 'b' }],
   });
 
-  expect(source.layouts[0]).toMatchObject({ containerWidth: 'match-largest' });
-  expect(source.layouts[1]).toMatchObject({ itemWidth: 'fill' });
-  expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+  expect(source.layouts?.[0]).toMatchObject({ containerWidth: 'match-largest' });
+  expect(source.layouts?.[1]).toMatchObject({ itemWidth: 'fill' });
+  expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(
+    DiagramFlow.FlowDiagramSchema.parse(source),
+  );
 });

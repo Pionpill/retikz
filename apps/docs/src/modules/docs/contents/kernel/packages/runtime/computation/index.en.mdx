@@ -22,7 +22,9 @@ Define and register computations first. Runtime executes them during initializat
 
 <ComponentPreview files="computation-overview" size="xs" hideCode type="flow" />
 
-## Defining a computation
+## Definition and dependencies
+
+### Defining a computation
 
 Distinguish three concepts:
 
@@ -43,7 +45,7 @@ declare const defineRuntimeComputation: <
 ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
 ```
 
-The configuration members cooperate as follows. Result conversion is expanded in “Computation results”; diagnostics and Trace receive only a brief introduction here.
+The configuration members cooperate as follows. Result conversion is expanded in “Result management”; observation is covered in [Trace · Errors and diagnostics](/kernel/packages/runtime/trace).
 
 <DocTabs defaultValue="members">
 <DocTab value="members" label="Properties">
@@ -113,10 +115,11 @@ const position = defineRuntimeSource<Position, Position, Position, never>({
 });
 
 const distance = defineRuntimeComputation<number>({
-  id: { owner: position.key, key: 'distance' },
-  sources: [position],
-  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }),
-});
+  // [!code ++]
+  id: { owner: position.key, key: 'distance' }, // [!code ++]
+  sources: [position], // [!code ++]
+  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }), // [!code ++]
+}); // [!code ++]
 ```
 
 `run` returns `{ kind: 'full', result }`, a result derived from complete input. The returned `distance` is still a token, not that numeric value. Runtime associates it with the callbacks internally; subsequent operations must retain the same token object.
@@ -127,8 +130,6 @@ const distance = defineRuntimeComputation<number>({
     { label: 'Associating tokens with execution rules', path: 'packages/kernel/runtime/src/computation/define.ts' },
   ]}
 />
-
-## Dependencies and registration
 
 In a computation definition, `sources` declares Source dependencies and `computations` declares upstream computation dependencies. Think of these as subscriptions to upstream changes: after a call to `runtime.update`, Runtime determines which Sources actually changed and updates affected computations in dependency order. Mutating an external object does not trigger this process automatically.
 
@@ -233,7 +234,7 @@ Registration rejects invalid tokens, duplicate computation IDs, missing Sources 
   ]}
 />
 
-## Computation results
+## Result management
 
 A **result** is data Runtime retains after a computation for later use. The distance `5` produced earlier is a result. It is more than a temporary callback return value and serves three purposes:
 
@@ -315,17 +316,42 @@ After capture, Runtime creates the private view, then the public view, and cache
   ]}
 />
 
-## Incremental updates
+## Execution and propagation
+
+### Candidate phase and execution mode
+
+Runtime can call `run` during both initialization and updates. The candidate view describes the version being prepared, the context identifies the execution path, and the returned outcome describes what the callback produced.
+
+| Member                   | Values and meaning                                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `view.phase`             | `initial` for initialization; `update` for a later transaction                                                    |
+| `view.baseRevision`      | Present only during updates; the currently published revision                                                     |
+| `view.candidateRevision` | Revision to publish on success; `0` during initialization                                                         |
+| `context.execution`      | `full` for full execution, `incremental` for an incremental attempt, `fallback` for full execution after fallback |
+| Returned `kind`          | `run` returns `full`; `update` returns `incremental`, `bailout` or `fallback`                                     |
+
+For an update based on revision `2`, `update` can receive `phase: 'update'`, `candidateRevision: 3` and `execution: 'incremental'`. If it returns `fallback`, Runtime calls `run` with the same candidate view and `execution: 'fallback'`. That callback still returns `kind: 'full'`; the eventual commit event records this computation as `fallback`.
+
+Candidate snapshots also use `candidateRevision`, including reused Source values and upstream results. This does not mean they are already published to the host. See [Lifecycle](/kernel/packages/runtime/lifecycle#an-update) for ordering across members.
+
+<SourceLinks
+  sources={[
+    { label: 'Candidate view and execution context', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: 'Reusing the candidate view for fallback', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+### Incremental updates
 
 **The first execution always calls `run`**. Later executions triggered by dependency changes prefer `update` by default, or call `run` if `update` is omitted. A full strategy, an upstream full or fallback execution, or `update` returning `fallback` also leads to `run`. Computations unaffected by dependency changes are skipped.
 
 `update(previous, view, context)` receives the old result's private view and the candidate data. The author chooses how to obtain the correct result. It has three result forms; `run` always returns `full` with a complete new result.
 
-| `update` result                   | Runtime behavior                                                                            |
-| --------------------------------- | ------------------------------------------------------------------------------------------- |
-| `{ kind: 'incremental', result }` | Captures and prepares a new result, triggering consumers                                    |
-| `{ kind: 'bailout' }`             | Retains the old result without conversions or triggering consumers through this computation |
-| `{ kind: 'fallback' }`            | Abandons the incremental path and calls `run` on the same candidate data                    |
+| `update` result                      | Runtime behavior                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `{ kind: 'incremental', result }`    | Captures and prepares a new result, triggering consumers                                    |
+| `{ kind: 'bailout' }`                | Retains the old result without conversions or triggering consumers through this computation |
+| `{ kind: 'fallback', diagnostics? }` | Abandons the incremental path and calls `run` on the same candidate data                    |
 
 `incremental` carries a **complete new result** produced by an incremental algorithm, not a patch that Runtime merges with the previous result. `bailout` confirms that the old result remains usable. `fallback` says the incremental method is unsuitable and requests `run` with the same candidate inputs; it does not abandon the update.
 
@@ -382,13 +408,158 @@ The callback's `context.execution` identifies the execution mode; `context.trace
   ]}
 />
 
-## Complete flow
+### Consuming change hints
+
+This standalone example replaces coordinates with Source nodes A/B and completes hint creation, consumption and fallback. Each doubled value becomes a label object. Changing only A reuses B's previous label object. Stable Source identities let the algorithm match entities; Runtime does not update them automatically by Identity.
+
+The green `+` marks the new hint-consumption logic; the rest provides definition and execution context:
+
+```ts
+import {
+  createRuntime,
+  createRuntimeSourceRegistry,
+  createRuntimeComputationRegistry,
+  createRuntimeSourceInput,
+  createRuntimeSourceUpdate,
+  createRuntimeChangeSet,
+  createRuntimeIdentity,
+  defineRuntimeSource,
+  defineRuntimeComputation,
+} from '@retikz/runtime';
+
+type NodeKey = 'A' | 'B';
+type Values = Readonly<Record<NodeKey, number>>;
+type Labels = Readonly<Record<NodeKey, Readonly<{ text: string }>>>;
+type Cached = Readonly<{ values: Values; labels: Labels }>;
+const graph = defineRuntimeSource<Values, Values, Values, NodeKey>({
+  key: 'graph',
+  value: {
+    capture: input => Object.freeze({ ...input }),
+    read: value => value,
+    equals: (a, b) => a.A === b.A && a.B === b.B,
+  },
+  collectIdentities: () => ['A', 'B'].map(key => createRuntimeIdentity('graph', ['nodes', key])),
+});
+const label = (value: number) => Object.freeze({ text: String(value * 2) });
+const doubled = defineRuntimeComputation<Cached, Cached, Cached, Labels>({
+  id: { owner: graph.key, key: 'doubled' },
+  sources: [graph],
+  result: { read: result => result.labels },
+  run: view => {
+    const values = view.snapshot(graph).value;
+    return {
+      kind: 'full',
+      result: Object.freeze({
+        values,
+        labels: Object.freeze({ A: label(values.A), B: label(values.B) }),
+      }),
+    };
+  },
+  update: (previous, view) => {
+    // [!code ++]
+    const values = view.snapshot(graph).value; // [!code ++]
+    const hints = view.changeSet(graph)?.changes; // [!code ++]
+    const changed = (['A', 'B'] as const).filter(key => previous.values[key] !== values[key]); // [!code ++]
+    if (!hints || changed.some(key => !hints.includes(key))) {
+      // [!code ++]
+      return {
+        kind: 'fallback',
+        diagnostics: [
+          {
+            // [!code ++]
+            code: 'graph/incomplete-hint',
+            phase: 'update',
+            message: 'Use full calculation', // [!code ++]
+          },
+        ],
+      }; // [!code ++]
+    } // [!code ++]
+    const labels = { ...previous.labels }; // [!code ++]
+    for (const key of changed) labels[key] = label(values[key]); // [!code ++]
+    return { kind: 'incremental', result: Object.freeze({ values, labels: Object.freeze(labels) }) }; // [!code ++]
+  }, // [!code ++]
+});
+const sources = createRuntimeSourceRegistry([graph]);
+const computations = createRuntimeComputationRegistry({ sources, computations: [doubled] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(graph, { A: 1, B: 2 })],
+});
+try {
+  const before = runtime.result(doubled).value;
+  const baseRevision = runtime.revision();
+  const next = runtime.update({
+    baseRevision,
+    sources: [createRuntimeSourceUpdate(graph, { A: 3, B: 2 }, createRuntimeChangeSet<NodeKey>(baseRevision, ['A']))],
+  });
+  console.log(next.outcome, runtime.result(doubled).value.A.text); // 'incremental', '6'
+  console.log(runtime.result(doubled).value.B === before.B); // true
+  const fallback = runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(graph, { A: 4, B: 2 })],
+  });
+  console.log(fallback.outcome, fallback.diagnostics[0]?.code); // 'fallback', 'graph/incomplete-hint'
+  console.log(runtime.result(doubled).value.A.text); // '8'
+} finally {
+  runtime.dispose();
+}
+```
+
+This example compares two fields to verify that hints cover actual changes, so comparison still has a cost. It reuses unchanged label objects, without claiming to eliminate scanning. Larger domains need their own reliable validation strategy. The correspondence between collected identities and NodeKey is defined by this example, not an implicit dependency.
+
+Missing or incomplete hints return fallback with code/phase/message explaining why Runtime must call run. Fallback warnings enter diagnostics with successful results. If later computation or commit fails, candidate computation business warnings are not published as committed warnings; execution and cleanup faults follow the [Trace](/kernel/packages/runtime/trace#consuming-diagnostics) rules.
+
+<SourceLinks
+  sources={[
+    { label: 'ChangeSet creation and forwarding', path: 'packages/kernel/runtime/src/transaction/factories.ts' },
+    { label: 'Fallback warnings and full execution', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+### Computation flow
 
 Define dependencies and execution rules, then let the registry validate and order them. A running instance calls `run/update` when it needs those computations. Result conversions decide what remains available for later updates and what readers can access publicly.
 
 <ComponentPreview files="computation-flow" size="md" hideCode type="flow" />
 
 Inside a computation, `view.result(distance).value` reads the upstream result available for this execution. Outside, `runtime.result(distance).value` reads the published result. Reading does not execute the computation again. Initialization, updates, revisions and publication will be connected in the Runtime chapter; see the [introductory example](/kernel/packages/runtime/usage) for runnable integration code.
+
+## Commit observation
+
+`observeCommit` receives a published public result; it does not decide whether the transaction succeeds. Initialization notifies it before `createRuntime(...)` returns. Later updates notify it only when this computation produces a new result; skipped computations and `bailout` do not notify. Use a [Participant](/kernel/packages/runtime/participant) to update external resources atomically.
+
+| Event member                  | Initialization                         | Update                                                 |
+| ----------------------------- | -------------------------------------- | ------------------------------------------------------ |
+| `phase`                       | `initial`                              | `update`                                               |
+| `baseRevision`                | Absent                                 | Previous revision                                      |
+| `revision`, `result.revision` | `0`                                    | Newly published revision                               |
+| `outcome`                     | `full`                                 | This computation's `full`, `incremental` or `fallback` |
+| `result.value`                | Initial public result                  | New public result                                      |
+| `diagnostics`                 | Diagnostics frozen before notification | Transaction diagnostics frozen before notification     |
+
+Add an observer to the distance computation, register this definition and then create the instance. Consume the event directly; do not read a Runtime variable that has not yet been assigned or reenter instance methods:
+
+```ts
+const observedDistance = defineRuntimeComputation<number>({
+  id: { owner: position.key, key: 'observed-distance' },
+  sources: [position],
+  run: view => ({ kind: 'full', result: Math.hypot(...view.snapshot(position).value) }),
+  observeCommit: event => {
+    // [!code ++]
+    console.log(event.phase, event.revision, event.outcome, event.result.value); // [!code ++]
+  }, // [!code ++]
+});
+```
+
+Observers run synchronously in registry dependency order. The event outcome belongs to this computation and can differ from the aggregate `runtime.update(...)` outcome. An observer exception becomes a diagnostic without undoing publication or preventing later observers. These later diagnostics do not enter the already frozen event list; see [Trace](/kernel/packages/runtime/trace#consuming-diagnostics).
+
+<SourceLinks
+  sources={[
+    { label: 'Commit event members', path: 'packages/kernel/runtime/src/computation/types.ts' },
+    { label: 'Initial and update notifications', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
 
 ## Core application
 
@@ -417,12 +588,87 @@ This maps to the three responsibilities above: `run` compiles a complete documen
   ]}
 />
 
+## Related props
+
+Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineRuntimeComputation',
+      kind: 'function',
+      type: '<TResultInput, TResult = TResultInput, TComputationRead = TResult, TPublicRead = TResult>(input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
+      description:
+        'Defines id, sources and run; optionally configures computations, result, update, tracePhases and observeCommit. Different transform input/output types require the corresponding transform.',
+    },
+    {
+      name: 'createRuntimeComputationRegistry',
+      kind: 'function',
+      type: '(input: RuntimeComputationRegistryInput) => RuntimeComputationRegistry',
+      description:
+        'input is `{ sources: RuntimeSourceRegistry, computations?: ReadonlyArray<RuntimeComputationToken> }`; computations defaults to []. Validates dependencies and sorts topologically.',
+    },
+    {
+      name: 'run',
+      kind: 'property',
+      type: '(view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeRunOutcome<TResultInput>',
+      description:
+        "Returns `{ kind: 'full', result: TResultInput }`; runs initially, under full strategy and on fallback.",
+      required: true,
+    },
+    {
+      name: 'update',
+      kind: 'property',
+      type: '(previous: TComputationRead, view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeUpdateOutcome<TResultInput>',
+      description:
+        "Branches:\n\n- `{ kind: 'incremental', result: TResultInput }`: complete new result.\n\n- `{ kind: 'bailout' }`: reuse old result.\n\n- `{ kind: 'fallback', diagnostics?: ReadonlyArray<RuntimeComputationWarningInput> }`: call run, optionally with business warnings.",
+    },
+    {
+      name: 'context.execution',
+      kind: 'property',
+      type: "'full' | 'incremental' | 'fallback'",
+      description: 'Current callback execution mode, distinct from initial/update lifecycle phase and returned kind.',
+    },
+    {
+      name: 'observeCommit',
+      kind: 'property',
+      type: '(event: RuntimeCommitEvent<TPublicRead>) => void',
+      description:
+        'Events carry phase, revision, outcome, result and diagnostics; update also carries baseRevision. Initialization notifies, bailout does not, and throwing does not undo publication.',
+    },
+    {
+      name: 'result',
+      kind: 'property',
+      type: 'RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>',
+      description:
+        'capture: (input: TResultInput) => TResult; readForComputation: (result: TResult) => TComputationRead; read: (result: TResult) => TPublicRead; dispose?: (result: TResult) => void. Same-type transforms default to identity, without copying or freezing.',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Public exports', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: 'Main contracts', path: 'packages/kernel/runtime/src/computation/types.ts' },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Runtime · Transaction publication',
+      title: 'Lifecycle',
+      description: 'Follow member collaboration through initialization, updates, failures and disposal',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
+    {
+      title: 'Trace · Errors and diagnostics',
+      description: 'Catch failures, consume diagnostics and observe work',
+      url: '/kernel/packages/runtime/trace',
+    },
+    {
+      title: 'Runtime',
       description: 'Instance creation, revisions and atomic publication',
       url: '/kernel/packages/runtime/transaction',
     },

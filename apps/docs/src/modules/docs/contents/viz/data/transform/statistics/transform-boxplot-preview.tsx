@@ -52,7 +52,7 @@ export const renderTransformBoxplotPreview = (values: TransformBoxplotValues) =>
 
   return (
     <Layout viewBox={{ x: 0, y: 0, width: 440, height: 280 }}>
-      <Plot data={boxplotSamples} width={440} height={260} x={0} y={10}>
+      <Plot data={boxplotSamples} width={440} height={260} position={[0, 10]}>
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
         <IntervalMark

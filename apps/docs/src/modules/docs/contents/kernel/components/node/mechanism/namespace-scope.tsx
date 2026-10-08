@@ -28,7 +28,7 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
       />
       <Map
         id="local-frame"
-        transforms={[{ kind: 'translate', x: 20, y: 56 }]}
+        position={[20, 56]}
         label={{ text: t.top, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 152 } }}
         style={{ font: { size: 13 }, textColor: 'currentColor' }}
@@ -49,7 +49,7 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
         style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 20, y: 237 }]}
+        position={[20, 237]}
         label={{ text: t.root, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 206 } }}
         style={{ font: { size: 13 }, textColor: 'currentColor' }}
@@ -69,7 +69,7 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
         ]}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 370, y: 237 }]}
+        position={[370, 237]}
         label={{ text: t.root, opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 206 } }}
         style={{ font: { size: 13 }, textColor: 'currentColor' }}

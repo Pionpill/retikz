@@ -5,7 +5,7 @@ keywords: 'Standard、Surface、Core、child、IRSurface、allocationBounds、vi
 
 # ADR-022：以 Standard Surface 包装任意 Core child
 
-- 状态：Accepted（2026-08-11，Architecture Gate 与 Plan Gate 通过并经人工确认）
+- 状态：Accepted
 - 决策日期：2026-08-11
 - 关联：[Standard v0.1 roadmap](./roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Core ADR-028](../../../../../../kernel/_notes/decisions/v0/v0.5/028-qualified-spatial-handles.md) · [Chart ADR-003](../../../../../../viz/_notes/decisions/chart/v0/v0.1/003-presentation-standard-layout.md)
 
@@ -31,30 +31,17 @@ type SurfaceInput = Readonly<{
     fill: IRPaintValue;
     fillOpacity?: number;
   }>;
-  border?: Omit<IRStandardPathStrokeStyle, 'zIndex'>;
+  border?: z.input<typeof SurfaceBorderSchema>;
   cornerRadius?: number;
 }> &
   IRScopeProps;
 
-type IRSurface = Readonly<{
-  namespace: 'standard';
-  type: 'surface';
-  child: IRChild;
-  padding: Readonly<BoundsInsets>;
-  overflow: LayoutOverflow;
-  background?: Readonly<{
-    fill: IRPaintValue;
-    fillOpacity?: number;
-  }>;
-  border?: Omit<IRStandardPathStrokeStyle, 'zIndex'>;
-  cornerRadius: number;
-}> &
-  IRScopeProps;
+type IRSurface = SurfaceInput;
 ```
 
-公开 schema 从 Core `CompositeBase`、`Child`、`ScopeProps`、paint / opacity / rectangle corner 原子，以及 Layout 的 spacing / overflow 公共契约组合；border 由 Standard 共享 Path stroke schema 仅移除 `zIndex` 后派生，不复制字段。`child` 恰好一个且可以是任意合法 `IRChild`，包括其它 Standard / Layout composite 与 Plot composite。
+公开 schema 从 Core `CompositeBase`、`Child`、`ScopeProps`、paint / opacity / rectangle corner 原子，以及 Layout 的 spacing / overflow 公共契约组合；border 由 Core 主色、整体透明度、描边和 Path 端点转角原子组合，不包含 `zIndex`，不复制字段。`child` 恰好一个且可以是任意合法 `IRChild`，包括其它 Standard / Layout composite 与 Plot composite。
 
-公开 `SurfaceInput = z.input<typeof SurfaceSchema>`，`IRSurface = z.output<typeof SurfaceSchema>`；代码块只展示二者的等价契约形状，不建立手写平行类型。`SurfaceInput` 是 schema input / authoring 类型，允许 optional defaults 与 `number | IRBoxSpacing` padding shorthand。`IRSurface` 是 `SurfaceSchema` 解析后的 canonical output：padding 通过 Core `resolveBoxSpacing(..., 0)` 归一为显式 `top / right / bottom / left`，overflow 物化为 `visible`，corner radius 物化为 `0`；其它 Scope props 与可选 appearance 不被改写。React、Vanilla 与手写 JSON 可以使用不同 input shorthand，但 parity 比较的是解析后的同一个 JSON-safe `IRSurface`。compile callback 只接收 `IRSurface`，不重复解析 shorthand 或 default。
+`IRSurface` 从 Surface schema 的输入契约派生，并复用 Core 的 Scope 与 child 类型；`SurfaceInput` 表达同一稀疏 Source。代码块只展示公开字段关系，不建立手写平行类型。factory 与 adapter 保留省略的默认字段以及 `number | IRBoxSpacing` padding 简写，不把 Canonical 写回持久化输入。显式 schema.parse 物化静态默认；领域 resolve 将 padding 补全为四边数值，并复用 schema 的 overflow 与 cornerRadius 默认。React、Vanilla 与直接 IR 进入同一 Source、resolve 和 compile 链路。
 
 Surface 直接承接父级 layout proposal，不新增 `size`、alignment、gap、header、items 或任意 layout 配置：
 
@@ -105,13 +92,13 @@ Surface 通过 [Core v0.5 ADR-028](../../../../../../kernel/_notes/decisions/v0/
 Surface 继续使用 Core `CompositeDefinition` 和 Standard 的直接 Definition loading：
 
 - `@retikz/standard` 从根入口导出 schema、IR type、factory 与单项 `SurfaceDefinition`
-- `@retikz/standard-react` 提供 `<Surface>`，children 恰好一个可被 Core / Tier 2 builder 下沉的 drawable child；adapter 递归使用 `@retikz/react` 的公开 builder 获取该 child 的 IR 与 provider contributions，再把 Surface root/provider 与 child roots/providers按出现顺序组合成一个 contribution。Surface 不扫描 child IR 猜 provider
-- `@retikz/standard-vanilla` 提供等价 plain helper / embed adapter。其嵌套输入是显式 `{ node: IRChild, providerDependencies?: CoreProviderContribution }` authoring result；普通 Core child只带 `node`，Tier 2 child同时带自身 contribution。adapter 把 Surface root/provider 放在前面并原样追加 child roots/providers
+- `@retikz/standard-react` 提供 `<Surface>`，children 恰好一个 drawable child；React 将其收集为 Vanilla InputChild，并通过同一 Surface InputEmbed adapter 接入，不直接生成 Source 或扫描 IR 猜 provider
+- `@retikz/standard-vanilla` 提供 `surface(InputSurface)` 与 SurfaceInputEmbedAdapter，child 接受 InputChild。同步 lower 使用共享 normalizeChildren，异步 prepare 先登记子项准备，再由 execute 汇合贡献；两条路径共用 Source、provider contribution 与实例输入绑定的转交契约
 - 直接 JSON 作者把 `SurfaceDefinition` 与 child 所需 definitions 一起放入 compile environment
 
 Surface 自身依赖 Layout 的公开 composition capability，但不转手导出 Layout API。跨 capability definition 装配使用 Core provider graph；Standard 不发布 Surface bundle、all preset、内置白名单或 module-level registry。
 
-React/Vanilla 的嵌套 authoring result 只存在于 adapter runtime，不进入 `IRSurface`、Scene 或序列化 JSON。child provider 缺失、重复或冲突仍由 Core provider graph同步诊断；Surface adapter只保留 authored order并拼接 contribution arrays，不自行去重、拓扑排序或合并 datasets。
+React / Vanilla 的作者输入、provider contribution 与实例输入绑定只存在于运行时，不进入 `IRSurface`、Scene 或序列化 JSON。子项绑定按实际 child 位置转交，重复布局测量不重跑准备。child provider 缺失、重复或冲突仍由 Core provider graph 诊断；Surface adapter 保留作者顺序，不自行去重、拓扑排序或合并 datasets。
 
 ## 行为、失败语义与兼容性
 

@@ -594,9 +594,9 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'BoundaryAnchorRefSchema',
     url: '/kernel/components/scope/schema-reference#scopeschema',
   },
-  ScopePlacementTargetSchema: {
-    schema: IR.ScopePlacementSchema.shape.target,
-    label: 'ScopePlacementTargetSchema',
+  ScopePositionTargetSchema: {
+    schema: IR.ScopeAnchorPositionSchema.shape.target,
+    label: 'ScopePositionTargetSchema',
     url: '/kernel/components/scope/schema-reference#scopeschema',
   },
   TranslateSchema: {
@@ -634,9 +634,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'ScaleSchema',
     url: '/kernel/components/scope/schema-reference#scopeschema',
   },
-  ScopePlacementSchema: {
-    schema: IR.ScopePlacementSchema,
-    label: 'ScopePlacement',
+  ScopePositionSchema: { schema: IR.ScopePositionSchema, label: 'ScopePosition' },
+  ScopeAnchorPositionSchema: {
+    schema: IR.ScopeAnchorPositionSchema,
+    label: 'ScopeAnchorPosition',
     url: '/kernel/components/scope/schema-reference#scopeplacementschema',
   },
   ScopeSelfPointSchema: {

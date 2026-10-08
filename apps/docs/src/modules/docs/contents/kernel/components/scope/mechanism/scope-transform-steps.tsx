@@ -44,10 +44,7 @@ const ScopeTransformSteps: FC<ScopeTransformStepsProps> = props => {
             ]}
             style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
-          <Scope
-            transforms={[...transforms]}
-            placement={index === 3 ? { target: [16, 14], selfAnchor: 'origin' } : undefined}
-          >
+          <Scope transforms={[...transforms]} position={index === 3 ? [16, 14] : undefined}>
             <Draw
               way={[
                 [-30, -18],

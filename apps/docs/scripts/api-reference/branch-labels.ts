@@ -14,6 +14,68 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/runtime#RuntimeCandidateView': [
+    {
+      value: 'initial',
+      field: 'phase',
+      type: 'typeof RuntimeComputationPhase.Initial',
+      label: { zh: '初始化', en: 'Initial' },
+    },
+    {
+      value: 'update',
+      field: 'phase',
+      type: 'typeof RuntimeComputationPhase.Update',
+      label: { zh: '更新', en: 'Update' },
+    },
+  ],
+  '@retikz/runtime#RuntimeParticipantCandidateView': [
+    {
+      value: 'initial',
+      field: 'phase',
+      type: 'typeof RuntimeComputationPhase.Initial',
+      label: { zh: '初始化', en: 'Initial' },
+    },
+    {
+      value: 'update',
+      field: 'phase',
+      type: 'typeof RuntimeComputationPhase.Update',
+      label: { zh: '更新', en: 'Update' },
+    },
+  ],
+  '@retikz/runtime#RuntimeCommitEvent': [
+    {
+      value: 'initial',
+      field: 'phase',
+      type: 'typeof RuntimeComputationPhase.Initial',
+      label: { zh: '初始提交', en: 'Initial commit' },
+    },
+    {
+      value: 'update',
+      field: 'phase',
+      type: 'typeof RuntimeComputationPhase.Update',
+      label: { zh: '更新提交', en: 'Update commit' },
+    },
+  ],
+  '@retikz/runtime#RuntimeUpdateOutcome': [
+    {
+      value: 'incremental',
+      field: 'kind',
+      type: 'typeof RuntimeComputationKind.Incremental',
+      label: { zh: '增量结果', en: 'Incremental result' },
+    },
+    {
+      value: 'bailout',
+      field: 'kind',
+      type: 'typeof RuntimeComputationKind.Bailout',
+      label: { zh: '复用结果', en: 'Reuse result' },
+    },
+    {
+      value: 'fallback',
+      field: 'kind',
+      type: 'typeof RuntimeComputationKind.Fallback',
+      label: { zh: '回退全量', en: 'Full fallback' },
+    },
+  ],
   '@retikz/data#IRDataFieldDefinition': [
     { value: 'categorical', field: 'type', type: '"categorical"', label: { zh: '离散类别', en: 'Categorical' } },
     {

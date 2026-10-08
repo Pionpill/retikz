@@ -23,6 +23,23 @@ const path = (id: string): IRChild => ({
 });
 
 describe('Array direct cell identities', () => {
+  it('Map position publishes the same geometry and references as an outer translation', () => {
+    const map = { namespace: 'standard', type: 'map', id: 'map', entries: [{ key: 'key', value: 'value' }] };
+    const positioned = compile([{ ...map, position: [100, 50], transforms: [{ kind: 'scale', x: 2 }] }, path('map')]);
+    const translated = compile([
+      {
+        ...map,
+        transforms: [
+          { kind: 'translate', x: 100, y: 50 },
+          { kind: 'scale', x: 2 },
+        ],
+      },
+      path('map'),
+    ]);
+    expect(positioned.scene).toEqual(translated.scene);
+    expect(positioned.spatialHandles).toEqual(translated.spatialHandles);
+  });
+
   it('formats zero-based ids and rejects invalid helper arguments', () => {
     expect(getArrayCellId('array', 1)).toBe('array-1');
 

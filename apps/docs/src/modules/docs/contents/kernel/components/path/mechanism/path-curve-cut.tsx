@@ -18,7 +18,7 @@ const PathCurveCut: FC<PathCurveCutProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {t.titles.map((title, index) => (
-        <Scope key={title} localNamespace transforms={[{ kind: 'translate', x: index * 235, y: 0 }]}>
+        <Scope key={title} localNamespace position={[index * 235, 0]}>
           <Node position={[90, -105]} text={title} style={{ stroke: 'none', font: { size: 14 } }} />
           {index < 2 && (
             <Path style={{ stroke: 'gray', strokeWidth: 2 }}>
@@ -63,7 +63,7 @@ const PathCurveCut: FC<PathCurveCutProps> = props => {
         </Scope>
       ))}
       <Array
-        transforms={[{ kind: 'translate', x: 115, y: 120 }]}
+        position={[115, 120]}
         label={{ text: t.fragments, opacity: 0.8, font: { size: 12 } }}
         items={[{ content: `${t.left}: move → quad` }, { content: `${t.right}: move → quad` }]}
         style={{ font: { size: 13 } }}

@@ -35,7 +35,7 @@ describe('Chart Vanilla standard composition', () => {
       dataRef: 'bubble.rows',
       data: [{ x: 1, y: 3, size: 5 }],
       encodings: { x: 'x', y: 'y', size: 'size' },
-      panel: { x: 700 },
+      panel: { position: [700, 0] },
     });
     const svg = renderToSvgString(scene({ children: [scatterChart(input), bubble] }), {
       adapters: [ScatterChartInputEmbedAdapter, BubbleChartInputEmbedAdapter],

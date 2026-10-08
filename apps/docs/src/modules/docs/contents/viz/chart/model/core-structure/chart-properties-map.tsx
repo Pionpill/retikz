@@ -19,7 +19,7 @@ const ChartPropertiesMap: FC<ChartPropertiesMapProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="strip-properties"
-        transforms={[{ kind: 'translate', x: 12, y: 28 }]}
+        position={[12, 28]}
         label={label(t.strip)}
         layout={{ height: 34, padding: 0, key: { width: 72 }, value: { width: 238 } }}
         style={{ font: { size: 13 } }}
@@ -30,7 +30,7 @@ const ChartPropertiesMap: FC<ChartPropertiesMapProps> = props => {
       />
       <Map
         id="regression-properties"
-        transforms={[{ kind: 'translate', x: 12, y: 177 }]}
+        position={[12, 177]}
         label={label(t.regression)}
         layout={{ height: 34, padding: 0, key: { width: 90 }, value: { width: 220 } }}
         style={{ font: { size: 13 } }}

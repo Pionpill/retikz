@@ -195,13 +195,13 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const ratio = devicePixelRatio();
 
     // CSS 尺寸与设备像素分离；单轴数值尺寸按内容比例补齐
-    const bitmapSize = computeDisplaySize(
+    const canvasSize = computeDisplaySize(
       scene.layout,
       typeof width === 'number' ? width : undefined,
       typeof height === 'number' ? height : undefined,
     );
-    canvas.width = Math.max(1, Math.round(Number(bitmapSize.width) * ratio));
-    canvas.height = Math.max(1, Math.round(Number(bitmapSize.height) * ratio));
+    canvas.width = Math.max(1, Math.round(Number(canvasSize.width) * ratio));
+    canvas.height = Math.max(1, Math.round(Number(canvasSize.height) * ratio));
     const baseOptions = {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),

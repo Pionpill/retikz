@@ -133,7 +133,7 @@ const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead,
 
 <SourceLinks sources={[{ label: '来源凭证与处理规则的关联', path: 'packages/kernel/runtime/src/source/define.ts' }]} />
 
-## 定义中的职责
+### 转换、比较与释放
 
 `key` 给这一类状态一个稳定名称，Token 则让后续 API 找回这一份定义及其类型。多个运行实例可以共用定义，却各自持有自己的坐标。
 
@@ -152,7 +152,7 @@ const position = defineRuntimeSource<PositionInput, PositionValue, PositionRead,
 
 `equals` 必须覆盖会影响使用者的完整含义，不能只比较对象引用或挑选方便的字段。`dispose` 处理内部值而不是输入对象或公开视图；新旧内部值也不应共享会被独占关闭的资源。何时比较、采用哪份状态、何时清理，属于 Runtime 的更新编排，将在 Runtime 篇串联说明。
 
-`collectIdentities` 是可选扩展字段，用于从内部值列出实体身份，完整说明见 [Identity · 身份](/kernel/packages/runtime/identity#收集与查找)。
+`collectIdentities` 是可选扩展字段，用于从内部值列出实体身份，完整说明见 [Identity · 身份](/kernel/packages/runtime/identity#建立查找集合)。
 
 ## 来源注册
 
@@ -218,13 +218,29 @@ console.log(sources.definitions().map(source => source.key)); // ['example/posit
   ]}
 />
 
-## 完整流程
+### 注册流程
 
 来源定义返回 Token；将所需 Token 交给注册表后，可以按名称查找、验证凭证或列举来源。图中传递的都是定义，不是某一次的状态数据。
 
 <ComponentPreview files="source-registration" size="lg" hideCode type="flow" />
 
 `find(key)` 适合从名称找回定义；`resolve(token)` 验证持有的凭证属于这个注册表，并保留类型信息；`definitions()` 提供全部定义。注册不会调用 `capture`，也不会执行计算。如何将定义和实际输入交给运行实例，可先参考[入门示例](/kernel/packages/runtime/usage)，完整初始化与更新留到 Runtime 篇。
+
+## Runtime 中的来源
+
+### 定义、状态与身份
+
+Source Token 只关联规则。同一个 Token 可以交给多个 Runtime，每个实例分别捕获并持有自己的状态；注册表本身不保存这些值。计算通过声明 `sources` 依赖取得来源读取权限，Runtime 则依据 `equals` 判断是否触发依赖它的计算。
+
+状态中包含多个实体时，可用 `collectIdentities(value)` 返回完整身份集合。Runtime 在 `capture` 之后、`read` 之前验证归属和重复项；实体的 `owner` 应与来源 `key` 一致。这个集合不生成变更提示，也不替代计算的依赖声明。详见 [Identity · 身份](/kernel/packages/runtime/identity#与来源和计算协作)。
+
+### 候选与持有值
+
+初始化时捕获首份状态；更新时先准备候选，再比较新旧内部值。相等时保留旧值并清理候选，变化时交给计算与参与者继续准备，全部成功后才替换已发布状态。来源回调只负责本来源的转换、比较与清理，跨成员顺序见[生命周期](/kernel/packages/runtime/lifecycle)。
+
+<SourceLinks
+  sources={[{ label: '来源准备中的身份验证与读取', path: 'packages/kernel/runtime/src/source/executor.ts' }]}
+/>
 
 ## Core 应用
 
@@ -258,5 +274,78 @@ Token 标识的是来源定义，不保存具体文档；多个 Runtime 可以�
   sources={[
     { label: 'Core 文档来源定义', path: 'packages/kernel/core/src/contract/runtime/source.ts' },
     { label: 'Core 编译计算读取来源', path: 'packages/kernel/core/src/compile/incremental/computation.ts' },
+  ]}
+/>
+
+## 相关属性
+
+这里只收录本篇涉及的公开成员；完整声明与默认行为可从下方源码入口回查。
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineRuntimeSource',
+      kind: 'function',
+      type: '<TInput, TValue, TRead, TChange>(input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>',
+      description: '创建来源 Token；配置包含 key、value 和可选 collectIdentities。定义不捕获数据。',
+    },
+    {
+      name: 'value.capture',
+      kind: 'property',
+      type: '(input: TInput) => TValue',
+      description: '捕获完整输入，返回实例持有值。',
+      required: true,
+    },
+    {
+      name: 'value.read',
+      kind: 'property',
+      type: '(value: TValue) => TRead',
+      description: '生成可安全共享、不携带可释放句柄的只读视图。',
+      required: true,
+    },
+    {
+      name: 'value.equals',
+      kind: 'property',
+      type: '(left: TValue, right: TValue) => boolean',
+      description: '比较完整语义；相等时保留旧值，跳过来源触发的传播。',
+      required: true,
+    },
+    {
+      name: 'value.dispose',
+      kind: 'property',
+      type: '(value: TValue) => void',
+      description: '清理候选、被替换或实例结束时的内部值；无资源时可省略。',
+    },
+    {
+      name: 'collectIdentities',
+      kind: 'property',
+      type: '(value: TValue) => ReadonlyArray<RuntimeIdentity>',
+      description: '返回完整的 `{ owner: string, path: ReadonlyArray<string> }` 集合；owner 必须等于 key，不能重复。',
+    },
+    {
+      name: 'createRuntimeSourceRegistry',
+      kind: 'function',
+      type: '(tokens: Array<RuntimeSourceToken>) => RuntimeSourceRegistry',
+      description: '返回 resolve(definition)、find(key)、definitions()；前者验证原 Token，后两者按名称查找和列举。',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: '公开入口', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: '本篇主要契约', path: 'packages/kernel/runtime/src/source/types.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '生命周期',
+      description: '沿初始化、更新、失败和释放理解成员协作',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
   ]}
 />

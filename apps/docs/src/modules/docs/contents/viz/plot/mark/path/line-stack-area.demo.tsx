@@ -17,8 +17,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         data={stackArea}
         width={360}
         height={230}
-        x={0}
-        y={35}
+        position={[0, 35]}
+
         plotDefaults={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
         <PlotScale dimension="x" type="point" padding={0} />
@@ -44,8 +44,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         width={280}
         height={280}
         coordinate="polar2D"
-        x={410}
-        y={10}
+        position={[410, 10]}
+
         plotDefaults={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
         <PlotScale dimension="y" type="linear" domainPadding={0} />

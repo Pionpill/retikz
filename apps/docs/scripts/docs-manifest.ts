@@ -1,3 +1,5 @@
+// Vite config 在 `@` alias 建立前加载生成器，因此构建工具直接导入纯函数 owner 文件
+
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -13,8 +15,6 @@ import type {
   SubPage,
 } from '../src/modules/docs/data';
 import { getSectionsByArea, modules } from '../src/modules/docs/data';
-
-// Vite config 在 `@` alias 建立前加载生成器，因此构建工具直接导入纯函数 owner 文件
 import { parseDocSource } from '../src/modules/docs/lib/frontmatter';
 
 export const DOCS_SITE_URL = 'https://pionpill.github.io/retikz';

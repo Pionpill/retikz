@@ -7,7 +7,7 @@ const Demo: FC = () => (
   <Layout>
     <Surface
       id="visible-overflow"
-      transforms={[{ kind: 'translate', x: -136, y: 0 }]}
+      position={[-136, 0]}
       padding={6}
       background={{ fill: 'currentColor', fillOpacity: 0.04 }}
       border={{ stroke: 'gray' }}
@@ -26,7 +26,7 @@ const Demo: FC = () => (
     <Node position={[-80, 78]} text="visible" style={{ stroke: 'none', fill: 'none' }} />
     <Surface
       id="clipped-overflow"
-      transforms={[{ kind: 'translate', x: 24, y: 0 }]}
+      position={[24, 0]}
       padding={6}
       background={{ fill: 'currentColor', fillOpacity: 0.04 }}
       border={{ stroke: 'gray' }}

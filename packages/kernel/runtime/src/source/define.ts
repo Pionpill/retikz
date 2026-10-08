@@ -43,6 +43,9 @@ export type RuntimeSourceErasedExecutor = Readonly<{
  * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
  * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
  * @template TChange 领域变更提示的单项类型，由消费它的计算校验并用于增量处理
+ * @param input 来源键及值的捕获、读取、比较和释放契约
+ * @returns 冻结的来源凭证；回调由运行时私有保存
+ * @throws {RetikzRuntimeError} 来源键为空时抛出 TokenInvalid
  */
 export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
   input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,

@@ -86,8 +86,9 @@ describe('<SourcePanel>', () => {
     expect(container.querySelector('[data-active-line-range]')?.getAttribute('data-active-line-range')).toBe('3-4');
     expect(container.querySelector('[data-show-line-numbers]')?.getAttribute('data-show-line-numbers')).toBe('true');
 
-    await act(async () => {
+    await act(() => {
       container.querySelector<HTMLButtonElement>('[data-source-line-highlight-toggle]')?.click();
+      return Promise.resolve();
     });
 
     expect(container.querySelector('[data-active-line-range]')?.getAttribute('data-active-line-range')).toBe('');

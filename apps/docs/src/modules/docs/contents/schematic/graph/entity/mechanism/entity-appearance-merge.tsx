@@ -25,7 +25,7 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
       <Node position={[120, 18]} text={t.authorStage} style={{ fill: 'none', stroke: 'none', font: { size: 13 } }} />
       <Map
         id="status-rule"
-        transforms={[{ kind: 'translate', x: 20, y: 75 }]}
+        position={[20, 75]}
         label={label(t.statusRule)}
         layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
         style={{ font: { size: 12 } }}
@@ -35,7 +35,7 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
       />
       <Map
         id="critical-rule"
-        transforms={[{ kind: 'translate', x: 275, y: 75 }]}
+        position={[275, 75]}
         label={label(t.criticalRule)}
         layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
         style={{ font: { size: 12 } }}
@@ -43,7 +43,7 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
       />
       <Map
         id="projected-source"
-        transforms={[{ kind: 'translate', x: 530, y: 75 }]}
+        position={[530, 75]}
         label={label(t.projectedSource)}
         layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
         style={{ font: { size: 12 } }}
@@ -53,7 +53,7 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
       <Node position={[120, 185]} text={t.themeStage} style={{ fill: 'none', stroke: 'none', font: { size: 13 } }} />
       <Map
         id="theme-defaults"
-        transforms={[{ kind: 'translate', x: 20, y: 245 }]}
+        position={[20, 245]}
         label={label(t.themeDefaults)}
         layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
         style={{ font: { size: 12 } }}
@@ -61,7 +61,7 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
       />
       <Map
         id="source-override"
-        transforms={[{ kind: 'translate', x: 275, y: 245 }]}
+        position={[275, 245]}
         label={label(t.sourceOverride)}
         layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
         style={{ font: { size: 12 } }}
@@ -69,7 +69,7 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
       />
       <Map
         id="final-appearance"
-        transforms={[{ kind: 'translate', x: 530, y: 245 }]}
+        position={[530, 245]}
         label={label(t.finalAppearance)}
         layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
         style={{ font: { size: 12 } }}

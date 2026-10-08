@@ -149,6 +149,7 @@ export const flowApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       title: { zh: `\`@retikz/${owner}/flow\``, en: `\`@retikz/${owner}/flow\`` },
       symbols,
       symbolPairs: pairs,
+      ...(owner === 'diagram' ? { fullMemberSymbols: ['IRFlowDiagram'] } : {}),
     },
   ],
   translate: translateFlowApiReference,

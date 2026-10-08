@@ -42,11 +42,11 @@ const fig = scene({
   authoring: createInspectionVanillaAuthoring({ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }),
   viewBox: { x: 0, y: 0, width: 520, height: 190 },
   children: [
-    scope({ transforms: [{ kind: 'translate', x: 20, y: 34 }] }, [inspectFlexLayout(flexInput('A1', 'A2'))]),
+    scope({ position: [20, 34] }, [inspectFlexLayout(flexInput('A1', 'A2'))]),
     scope(
       {
         authoring: createLayoutInspectionBarrier(),
-        transforms: [{ kind: 'translate', x: 280, y: 34 }],
+        position: [280, 34],
       },
       [inspectFlexLayout(flexInput('B1', 'B2'))],
     ),

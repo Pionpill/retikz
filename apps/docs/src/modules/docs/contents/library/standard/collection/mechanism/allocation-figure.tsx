@@ -51,18 +51,14 @@ const AllocationFigure: FC<AllocationFigureProps> = props => {
         <ArrayItem>{b}</ArrayItem>
       </Array>
       <Array
-        transforms={[{ kind: 'translate', x: 330, y: 0 }]}
+        position={[330, 0]}
         layout={{ width: 'content', padding: 8, gap: 8 }}
         label={{ ...label, text: t.content }}
       >
         <ArrayItem>{a}</ArrayItem>
         <ArrayItem>{b}</ArrayItem>
       </Array>
-      <Map
-        transforms={[{ kind: 'translate', x: 0, y: 125 }]}
-        layout={{ padding: 8, gap: 8 }}
-        label={{ ...label, text: t.map }}
-      >
+      <Map position={[0, 125]} layout={{ padding: 8, gap: 8 }} label={{ ...label, text: t.map }}>
         <MapEntry>
           <MapKey>{a}</MapKey>
           <MapValue>{b}</MapValue>
@@ -72,11 +68,7 @@ const AllocationFigure: FC<AllocationFigureProps> = props => {
           <MapValue>{a}</MapValue>
         </MapEntry>
       </Map>
-      <Matrix
-        transforms={[{ kind: 'translate', x: 330, y: 125 }]}
-        layout={{ padding: 8, gap: 8 }}
-        label={{ ...label, text: t.matrix }}
-      >
+      <Matrix position={[330, 125]} layout={{ padding: 8, gap: 8 }} label={{ ...label, text: t.matrix }}>
         <MatrixRow>
           <MatrixCell>{a}</MatrixCell>
           <MatrixCell>{b}</MatrixCell>
@@ -86,19 +78,11 @@ const AllocationFigure: FC<AllocationFigureProps> = props => {
           <MatrixCell>{b}</MatrixCell>
         </MatrixRow>
       </Matrix>
-      <Chain
-        transforms={[{ kind: 'translate', x: 0, y: 310 }]}
-        layout={{ padding: 8, gap: 24 }}
-        label={{ ...label, text: t.chain }}
-      >
+      <Chain position={[0, 310]} layout={{ padding: 8, gap: 24 }} label={{ ...label, text: t.chain }}>
         <ChainCell>{a}</ChainCell>
         <ChainCell>{b}</ChainCell>
       </Chain>
-      <Array
-        transforms={[{ kind: 'translate', x: 330, y: 310 }]}
-        layout={{ padding: 8, gap: 8 }}
-        label={{ ...label, text: t.fixed }}
-      >
+      <Array position={[330, 310]} layout={{ padding: 8, gap: 8 }} label={{ ...label, text: t.fixed }}>
         <ArrayItem layout={{ width: 60 }}>{a}</ArrayItem>
         <ArrayItem>{b}</ArrayItem>
       </Array>

@@ -23,7 +23,7 @@
 | `layout?`         | `IRMap['layout']`                                                                        | —      | Map 双列布局与间距                                                                             |
 | `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `placement?`      | `IRMap['placement']`                                                                     | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 | `style?`          | `input<typeof MapSchema>['style']`                                                       | —      | Map 集合的整体与键值角色样式输入                                                               |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRMap['transforms']`                                                                    | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
@@ -320,7 +320,7 @@ export type MapValueProps = CellMarkerProps;
 | `layout?`         | `IRMap['layout']`                                                                        | —      | Map 双列布局与间距                                                                             |
 | `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `placement?`      | `IRMap['placement']`                                                                     | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 | `style?`          | `input<typeof MapSchema>['style']`                                                       | —      | Map 集合的整体与键值角色样式输入                                                               |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRMap['transforms']`                                                                    | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
@@ -455,7 +455,7 @@ export declare const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap
 | `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
 | `namespace`       | `"standard"`                                                                             | —      | 命名空间，固定为 standard                                                                      |
-| `placement?`      | `IRScopeProps['placement']`                                                              | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
 | `style?`          | `input<typeof MapSchema>['style']`                                                       | —      | Map 集合的整体与键值角色样式输入                                                               |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |

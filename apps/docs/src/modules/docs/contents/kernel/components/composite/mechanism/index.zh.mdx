@@ -52,6 +52,8 @@ Proposal 是父级提供的**可用空间条件**，不是 child 的真实尺寸
 
 ### 选择、失败与提交
 
+Composite 自身接受局部 `theme` 时，先通过 `context.withTheme(theme)` 创建局部编译上下文，再用它进行测量和 `resolvePathTargets()` 查询。它使用 Core 已注册的主题定义，不修改父上下文，并与原上下文共享输入和 replay 所有权。最终仍用 `context.scope({ theme }, children)` 声明同一主题边界；仅在输出时设置主题会让测量与绘制的字号、节点外框不一致。
+
 每次 `layoutChild()` 都在隔离 transaction 中执行。父 solver 可以比较多组 minimum / natural / range / exact 结果；未选中的 resolved result 与 failed outcome 都不会泄漏 primitive、resource、warning、artifact、namespace、identity 或 observation。选中成功结果时调用 `context.replay(result)`；选中失败时调用 `context.raise(failure)`，Core 会保留原始 provider、source path、cause 与完整 nested probe occurrence。
 
 Failure、result、replay 与 output child 都由 callback-local、compile-local identity 管理，不能伪造、复制后重用、跨 callback / compile 传递或重复提交。Occurrence 中的 `probe[index]` 表示候选 child dispatch，成功提交后的 `replay[index]` 表示最终 output；两者不是同一个阶段。

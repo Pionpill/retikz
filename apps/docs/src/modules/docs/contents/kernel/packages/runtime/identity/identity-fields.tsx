@@ -21,7 +21,7 @@ const IdentityFields: FC<IdentityFieldsProps> = props => {
       ].map(state => (
         <Map
           key={state.x}
-          transforms={[{ kind: 'translate', x: state.x, y: 0 }]}
+          position={[state.x, 0]}
           label={{ text: state.title, font: { size: 12 } }}
           layout={{ height: 28, key: { width: 64 }, value: { width: 190 } }}
           style={{ font: { size: 13 } }}

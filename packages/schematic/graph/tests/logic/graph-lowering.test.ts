@@ -10,7 +10,7 @@ describe('Graph Scope lowering', () => {
       id: 'architecture',
       localNamespace: true,
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
-      placement: { target: [30, 40], selfAnchor: 'center' },
+      position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
       zIndex: 2,
       clip: { kind: 'rect', x: 0, y: 0, width: 200, height: 100 },
       boundingShape: 'circle',
@@ -40,7 +40,7 @@ describe('Graph Scope lowering', () => {
       id: 'architecture',
       localNamespace: true,
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
-      placement: { target: [30, 40], selfAnchor: 'center' },
+      position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
       zIndex: 2,
       clip: { kind: 'rect', x: 0, y: 0, width: 200, height: 100 },
       boundingShape: 'circle',
@@ -78,7 +78,7 @@ describe('Graph Scope lowering', () => {
       Graph.resolveGraphDefinitionOptions(),
     );
 
-    expect(lowered).toEqual({ type: 'scope', children: [] });
+    expect(lowered).toEqual({ type: 'scope', position: [0, 0], children: [] });
     expect(lowered).not.toHaveProperty('id');
     expect(lowered).not.toHaveProperty('localNamespace');
   });

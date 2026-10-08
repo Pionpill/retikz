@@ -24,7 +24,7 @@ const MeasurementFigure: FC<MeasurementFigureProps> = props => {
       {samples.map((sample, i) => (
         <Array
           key={sample.name}
-          transforms={[{ kind: 'translate', x: 250, y: i * 110 }]}
+          position={[250, i * 110]}
           layout={{ padding: 8 }}
           label={{
             text: `${sample.width + 16} × ${sample.height + 16}`,
@@ -67,7 +67,7 @@ const MeasurementFigure: FC<MeasurementFigureProps> = props => {
         />
       ))}
       <Array
-        transforms={[{ kind: 'translate', x: 480, y: 110 }]}
+        position={[480, 110]}
         layout={{ width: 60, padding: 8 }}
         label={{ text: '60 × 52', position: 'bottom', font: { size: 12 }, opacity: 0.8 }}
       >

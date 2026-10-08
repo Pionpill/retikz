@@ -34,7 +34,14 @@ describe('async Plot authoring', () => {
     const second = vi.fn();
     const replacement = vi.fn();
     const input = (onLineage: typeof first) =>
-      scene({ children: [embed({ kind: 'plot', props: { spec: spec(), datasets: { rows }, onLineage } })] });
+      scene({
+        children: [
+          embed({
+            kind: 'plot',
+            props: { spec: spec(), datasets: { rows }, onLineage, panel: { position: [24, 12], zIndex: 3 } },
+          }),
+        ],
+      });
     const options = { adapters: [PlotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
     const a = await createProcessingControllerAsync(input(first), options);
     const b = await createProcessingControllerAsync(input(second), options);

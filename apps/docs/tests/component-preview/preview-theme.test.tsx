@@ -1,11 +1,11 @@
+// @vitest-environment jsdom
+
 import { ChartData } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { ThemeMode } from '@retikz/core';
 import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import { Layout, useTheme } from '@retikz/react';
-
-// @vitest-environment jsdom
 import type { FC } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -26,6 +26,7 @@ import {
 } from '../../src/modules/docs/components/component-preview/theme';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
+import { logicFigureGraphProps } from '../../src/modules/docs/components/logic-figure';
 import ThemeInheritance from '../../src/modules/docs/contents/kernel/components/layout/extend/theme-inheritance';
 import ScatterResponsiveDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
@@ -264,6 +265,32 @@ describe('ComponentPreview global theme', () => {
         </PreviewThemeProvider>,
       ),
     ).not.toThrow();
+  });
+
+  it('keeps logic theme defaults out of Source IR and honors explicit font overrides', () => {
+    const preview = buildPreviewIR(() => (
+      <PreviewFlowDiagram {...logicFigureGraphProps()}>
+        <FlowEntity id="source" text="Source" kind="docs.logic.important" role="activity" />
+        <FlowEntity id="target" text="Target" />
+        <FlowRelation source="source" target="target" label="Next" />
+      </PreviewFlowDiagram>
+    ));
+    const source = preview.sourceIr.children[0];
+    expect(source).not.toHaveProperty('graphRules');
+    expect(source).not.toHaveProperty('flowDefaults');
+    expect(source).not.toHaveProperty('groups');
+    expect(source).not.toHaveProperty('layouts');
+    for (const mode of [ThemeMode.Light, ThemeMode.Dark]) {
+      const output = buildVanillaPreview(preview, { theme: { mode } });
+      expect(output.svg).toContain('font-size="14"');
+      expect(output.svg).toContain('font-size="12"');
+    }
+    const override = buildPreviewIR(() => (
+      <PreviewFlowDiagram {...logicFigureGraphProps()} flowDefaults={{ entity: { style: { font: { size: 20 } } } }}>
+        <FlowEntity id="source" text="Source" />
+      </PreviewFlowDiagram>
+    ));
+    expect(buildVanillaPreview(override, { theme: { mode: ThemeMode.Light } }).svg).toContain('font-size="20"');
   });
 
   it('adds Graph definitions only at the Graph authoring boundary', () => {

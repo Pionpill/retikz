@@ -448,7 +448,7 @@ async function installPackedFixture({ records, tarballsByName, taskDirectory }) 
     'utf8',
   );
 
-  runPnpm(['install', '--offline', '--ignore-scripts'], fixtureDirectory);
+  runPnpm(['install', '--offline', '--ignore-scripts', '--registry', 'https://registry.npmjs.org/'], fixtureDirectory);
 
   const packedManifests = new Map();
 

@@ -3,7 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { ScopeTransformControlId, ScopeTransformVisibleWhen } from './scope-translate-basic.controls';
 
-/** Scope placement and transform playground controls in English */
+/** Scope position and transform playground controls in English */
 export const scopeTranslateBasicEnControls = definePreviewControls({
   presentation: 'panel',
   title: 'Scope local coordinates',
@@ -28,9 +28,19 @@ export const scopeTranslateBasicEnControls = definePreviewControls({
         },
         {
           kind: 'switch',
-          id: ScopeTransformControlId.PlacementEnabled,
-          label: 'Self placement',
+          id: ScopeTransformControlId.AnchorAlignmentEnabled,
+          label: 'Anchor alignment',
           defaultValue: false,
+        },
+        {
+          kind: 'point',
+          id: ScopeTransformControlId.OriginPosition,
+          label: 'Origin position',
+          defaultValue: [0, 0],
+          min: [-100, -80],
+          max: [100, 80],
+          step: 5,
+          visibleWhen: ScopeTransformVisibleWhen.AnchorAlignmentDisabled,
         },
       ],
     },
@@ -43,7 +53,7 @@ export const scopeTranslateBasicEnControls = definePreviewControls({
           id: ScopeTransformControlId.Referent,
           label: 'Referent',
           defaultValue: 'O',
-          visibleWhen: ScopeTransformVisibleWhen.PlacementDisabled,
+          visibleWhen: ScopeTransformVisibleWhen.AnchorAlignmentDisabled,
           options: [
             { value: 'O', label: 'O (left)' },
             { value: 'T', label: 'T (right)' },
@@ -52,13 +62,13 @@ export const scopeTranslateBasicEnControls = definePreviewControls({
       ],
     },
     {
-      label: 'Self placement',
-      visibleWhen: ScopeTransformVisibleWhen.Placement,
+      label: 'Anchor alignment',
+      visibleWhen: ScopeTransformVisibleWhen.AnchorAlignment,
       controls: [
         {
           kind: 'select',
-          id: ScopeTransformControlId.PlacementTarget,
-          label: 'Placement target',
+          id: ScopeTransformControlId.AnchorAlignmentTarget,
+          label: 'Alignment target',
           defaultValue: 'T',
           options: [
             { value: 'O', label: 'O (left)' },
@@ -261,8 +271,9 @@ export const previewControlContract = {
   controls: scopeTranslateBasicEnControls,
   canonicalValues: {
     operation: 'translate',
-    placementEnabled: false,
-    placementTarget: 'T',
+    positionEnabled: false,
+    originPosition: [0, 0],
+    positionTarget: 'T',
     referent: 'O',
     selfAnchor: 'center',
     selfPoint: [0, 0],
@@ -280,5 +291,5 @@ export const previewControlContract = {
     pivot: 'origin',
     pivotPoint: [0, 0],
   },
-  relatedApis: ['Scope.placement', 'Scope.transforms'],
+  relatedApis: ['Scope.position', 'Scope.transforms'],
 } satisfies PreviewControlContract;

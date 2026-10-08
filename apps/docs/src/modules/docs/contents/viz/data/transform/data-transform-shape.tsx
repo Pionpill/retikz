@@ -68,7 +68,7 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
 
   return (
     <Layout>
-      <Scope id="source" transforms={[{ kind: 'translate', x: -282, y: -65 }]}>
+      <Scope id="source" position={[-282, -65]}>
         <DetailTable id="source-table" dataRef="source-rows" data={sourceRows} layout={TABLE_LAYOUT}>
           <DetailColumn
             id="region"
@@ -115,7 +115,7 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
         </Text>
       </Node>
 
-      <Scope id="result" transforms={[{ kind: 'translate', x: 90, y: -39 }]}>
+      <Scope id="result" position={[90, -39]}>
         <DetailTable id="result-table" dataRef="result-rows" data={resultRows} layout={TABLE_LAYOUT}>
           <DetailColumn
             id="region"
