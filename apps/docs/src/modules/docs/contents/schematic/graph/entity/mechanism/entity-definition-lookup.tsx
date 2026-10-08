@@ -40,7 +40,7 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
       />
       <Map
         id="definition-options"
-        transforms={[{ kind: 'translate', x: 215, y: 55 }]}
+        position={[215, 55]}
         label={label(t.options)}
         layout={{ padding: 0, key: { width: 90 }, value: { width: 320 } }}
         style={{ font: { size: 13 } }}
@@ -93,7 +93,7 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
       </Map>
       <Map
         id="builtin-canonical"
-        transforms={[{ kind: 'translate', x: 135, y: 205 }]}
+        position={[135, 205]}
         label={label(t.builtinResult)}
         layout={{ height: 30, padding: 0, key: { width: 108 }, value: { width: 166 } }}
         style={{ font: { size: 12 } }}
@@ -107,7 +107,7 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
       />
       <Map
         id="custom-canonical"
-        transforms={[{ kind: 'translate', x: 445, y: 205 }]}
+        position={[445, 205]}
         label={label(t.customResult)}
         layout={{ height: 30, padding: 0, key: { width: 108 }, value: { width: 166 } }}
         style={{ font: { size: 12 } }}

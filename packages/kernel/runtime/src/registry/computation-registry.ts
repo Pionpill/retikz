@@ -93,7 +93,12 @@ export const sortRuntimeComputationGraph = (
   return Object.freeze(sorted);
 };
 
-/** 注册 Computation Definitions 并验证 Source binding 与 DAG */
+/**
+ * 注册 Computation Definitions 并验证 Source binding 与 DAG
+ * @param input 绑定的来源注册表与待注册计算
+ * @returns 按依赖优先顺序查询计算的冻结注册表
+ * @throws {RetikzRuntimeError} 凭证、依赖绑定、计算身份或依赖图无效时抛出
+ */
 export const createRuntimeComputationRegistry = (
   input: RuntimeComputationRegistryInput,
 ): RuntimeComputationRegistry => {

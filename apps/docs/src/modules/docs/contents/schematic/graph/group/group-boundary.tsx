@@ -20,7 +20,7 @@ const GroupBoundary: FC<GroupBoundaryProps> = props => {
           {text.body}
         </Entity>
       </Group>
-      <Group id="label" transforms={[{ kind: 'translate', x: 300, y: 0 }]} labels={[{ text: text.label }]}>
+      <Group id="label" position={[300, 0]} labels={[{ text: text.label }]}>
         <Entity role="activity" position={[0, 0]}>
           {text.body}
         </Entity>

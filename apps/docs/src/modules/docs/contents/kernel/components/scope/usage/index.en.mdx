@@ -36,7 +36,7 @@ const Demo: FC = () => (
     <Node id="origin" position={[0, 0]}>
       x = 0
     </Node>
-    <Scope transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+    <Scope position={[80, 0]}>
       <Node id="A" position={[0, 0]}>
         A
       </Node>
@@ -68,7 +68,7 @@ const ir: IRScene = {
     { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
     {
       type: 'scope',
-      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      position: [80, 0],
       children: [
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         { type: 'node', id: 'B', position: [100, 0], text: 'B' },
@@ -102,7 +102,7 @@ import { mount } from '@retikz/vanilla/dom';
 const input = scene({
   children: [
     node({ id: 'origin', position: [0, 0], text: 'x = 0' }),
-    scope({ transforms: [{ kind: 'translate', x: 80, y: 0 }] }, [
+    scope({ position: [80, 0] }, [
       node({ id: 'A', position: [0, 0], text: 'A' }),
       node({ id: 'B', position: [100, 0], text: 'B' }),
       path({ way: ['A', 'B'], arrow: '->' }),
@@ -131,7 +131,7 @@ const ir: IRScene = {
     { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
     {
       type: 'scope',
-      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      position: [80, 0],
       children: [
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         { type: 'node', id: 'B', position: [100, 0], text: 'B' },
@@ -158,16 +158,16 @@ Call `view.dispose()` before removing the container to release mounted resources
 
 ## When to use Scope
 
-| Category        | Property               | Effect                                                                  |
-| --------------- | ---------------------- | ----------------------------------------------------------------------- |
-| Group target    | `placement`            | Align the whole group by its own anchor; sees completed targets only    |
-|                 | `id` + `boundingShape` | Make the group referenceable externally; path routes stay out of bounds |
-| Subtree context | `transforms`           | Transform the whole subfigure; does not place raw children              |
-|                 | `localNamespace`       | Isolate reusable child ids; `scope.id` stays in the parent              |
-|                 | `theme`                | Switch a local domain theme; Core primitives are not recolored          |
-|                 | `style` / `defaults`   | Share defaults; explicit element values win                             |
-|                 | `clip`                 | Limit the subtree's visible area; no renderer-specific semantics        |
-|                 | `zIndex`               | Move the group among parent-level content; child order stays unchanged  |
+| Category        | Property               | Effect                                                                    |
+| --------------- | ---------------------- | ------------------------------------------------------------------------- |
+| Group target    | `position`             | Set the parent-frame origin position or align the group by its own anchor |
+|                 | `id` + `boundingShape` | Make the group referenceable externally; path routes stay out of bounds   |
+| Subtree context | `transforms`           | Transform the whole subfigure; does not place raw children                |
+|                 | `localNamespace`       | Isolate reusable child ids; `scope.id` stays in the parent                |
+|                 | `theme`                | Switch a local domain theme; Core primitives are not recolored            |
+|                 | `style` / `defaults`   | Share defaults; explicit element values win                               |
+|                 | `clip`                 | Limit the subtree's visible area; no renderer-specific semantics          |
+|                 | `zIndex`               | Move the group among parent-level content; child order stays unchanged    |
 
 <ComponentAlert
   type="warn"
@@ -179,31 +179,40 @@ Call `view.dispose()` before removing the container to release mounted resources
 
 Five translation forms mirror Node's relative-position model; `rotate` and `scale` set the local axes and scale. Array order follows an SVG transform list, so the last item acts on a local point first.
 
-| kind                | Key fields                     | Effect                                             |
-| ------------------- | ------------------------------ | -------------------------------------------------- |
-| `translate`         | `x`, `y`                       | Fixed Cartesian translation                        |
-| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar placement from an origin or reference target |
-| `at-translate`      | `direction`, `of`, `distance?` | Place in a reference target's direction            |
-| `offset-translate`  | `of`, `offset?`                | Add a local offset to a reference target           |
-| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints                  |
-| `rotate`            | `degrees`, `pivot?`            | Rotate around a Scope self point                   |
-| `scale`             | `x`, `y?`, `pivot?`            | Scale around a Scope self point                    |
+| kind                | Key fields                     | Effect                                            |
+| ------------------- | ------------------------------ | ------------------------------------------------- |
+| `translate`         | `x`, `y`                       | Fixed Cartesian translation                       |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar position from an origin or reference target |
+| `at-translate`      | `direction`, `of`, `distance?` | Place in a reference target's direction           |
+| `offset-translate`  | `of`, `offset?`                | Add a local offset to a reference target          |
+| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints                 |
+| `rotate`            | `degrees`, `pivot?`            | Rotate around a Scope self point                  |
+| `scale`             | `x`, `y?`, `pivot?`            | Scale around a Scope self point                   |
 
 ## Local coordinates
 
-`O` / `T` are fixed referents outside the Scope, while `q` provides its intrinsic envelope. The panel selects one of seven transforms and independently toggles `placement` in every mode; `placement` is not a transform kind, but the outer placement applied after transforms.
+`position` has two forms; `transforms` always describes additional local transforms:
+
+| Form             | Example                                                                   | Result                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Origin position  | `position={[100, 50]}`                                                    | Places the local origin in parent coordinates; local rotation and scaling do not change this base position |
+| Anchor alignment | `position={{ kind: 'anchor', target: { id: 'T' }, selfAnchor: 'right' }}` | Aligns the transformed right anchor exactly with T                                                         |
+
+Omitting position gives the same geometry as `[0, 0]`. With position `[100, 50]` and local `translate(10, 0)`, the origin ends at `[110, 50]`. Anchor alignment can cancel that translation; move target or target.offset to offset the alignment.
+
+`O` / `T` are fixed referents, while `q` provides the intrinsic envelope. Change the origin position and local transform, or enable anchor alignment, to compare the two forms.
 
 <ComponentPreview
   files={['scope-translate-basic', 'scope-translate-basic.preview.tsx']}
-  size="sm"
+  size="md"
   controlPanelDefaultSize={50}
-  caption="Square q is the only envelope subject; the small dot only marks the local origin. Self placement is off by default. When enabled, choose O or T as the placement target; selfAnchor locks the square's selected anchor to it. Final placement then cancels the five translate-only transforms, so the panel hides their ineffective transform referent."
+  caption="Square q is the only envelope subject; the small dot only marks the local origin. Anchor alignment is off by default. When enabled, choose O or T as the position target; selfAnchor locks the square's selected anchor to it. Final position then cancels the five translate-only transforms, so the panel hides their ineffective transform referent."
   defaultSourceFile="scope-translate-basic.preview.tsx"
 />
 
-`placement.target` accepts only a parent-frame `[x, y]` or a previously completed `{ id, anchor?, offset? }`. `selfAnchor` defaults to `center` and also accepts standard anchors, numeric angles, `{ side, fraction }`, `origin`, or an explicit local point.
+In the anchor form, `position.target` accepts only a parent-frame `[x, y]` or a previously completed `{ id, anchor?, offset? }`. `selfAnchor` defaults to `center` and also accepts standard anchors, numeric angles, `{ side, fraction }`, `origin`, or an explicit local point.
 
-`rotate.pivot` and `scale.pivot` use the same self-point vocabulary and default to `origin`. A pivot reads the intrinsic envelope before placement, so moving a Scope cannot feed back into its rotation or scale center. Other relative directions remain local: rotating Scope also rotates the visual direction of `right` with the axes.
+`rotate.pivot` and `scale.pivot` use the same self-point vocabulary and default to `origin`. A pivot reads the intrinsic envelope before position, so moving a Scope cannot feed back into its rotation or scale center. Other relative directions remain local: rotating Scope also rotates the visual direction of `right` with the axes.
 
 ## Group references and namespaces
 
@@ -265,7 +274,7 @@ Use `frame` to add a background or outline to an existing subgraph. The dotted p
 
 `frame: {}` enables a 1-unit outline with no fill. `frame.padding` defaults to 0 and adds spacing outside the content envelope. `boundingShape: 'rectangle'` expands all four sides; `circle` increases the radius. `frame.style` ignores descendant defaults and shares only the effective color context.
 
-The frame stays below every child and follows Scope transforms, placement, and clipping. Its stroke and shadow contribute to automatic framing without changing layout, anchors, or hit regions. An explicit `viewBox` is unchanged. Empty scopes produce no frame, and descendant frames do not enlarge ancestor envelopes. Use Standard Surface for layout padding or container sizing.
+The frame stays below every child and follows Scope transforms, position, and clipping. Its stroke and shadow contribute to automatic framing without changing layout, anchors, or hit regions. An explicit `viewBox` is unchanged. Empty scopes produce no frame, and descendant frames do not enlarge ancestor envelopes. Use Standard Surface for layout padding or container sizing.
 
 Ordinary Paths do not contribute to the existing intrinsic Scope envelope, so a Scope containing only Paths produces no frame. Curves, labels, and markers are not guaranteed to fit inside it. Frames follow envelope contributors such as Nodes and Coordinates rather than measuring all visible pixels.
 
@@ -283,11 +292,11 @@ The following are the props most relevant to this page. See the [API reference](
         'Transform the whole subtree in SVG transform-list order; the last array item acts on local points first.',
     },
     {
-      name: 'placement',
+      name: 'position',
       kind: 'property',
-      type: "IRScope['placement']",
+      type: "IRScope['position']",
       description:
-        'After local layout and transforms, align a chosen anchor on the Scope envelope to a parent-frame target.',
+        'Use [x, y] for the origin position in parent coordinates, or kind: anchor for exact alignment after local transforms.',
     },
     {
       name: 'id',
@@ -330,7 +339,7 @@ The following are the props most relevant to this page. See the [API reference](
 
 ## Errors and limitations
 
-- `placement` can reference only completed targets, never self, descendants, or unfinished Scopes.
+- Anchor-form `position` can reference only completed targets, never self, descendants, or unfinished Scopes.
 - Zero scaling is valid visually, but inverse coordinate projection across it fails.
 - Duplicate ids in one namespace warn and use the later definition. Use `localNamespace` to isolate reusable child ids.
 - Base Scope has no layout-inspection props; use the Layout package’s `LayoutInspectScope` for subtree inspection.

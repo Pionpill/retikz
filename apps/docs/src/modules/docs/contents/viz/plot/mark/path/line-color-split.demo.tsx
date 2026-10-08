@@ -14,12 +14,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout>
-      <Plot data={channelTrend} width={300} height={220} x={0} y={30}>
+      <Plot data={channelTrend} width={300} height={220} position={[0, 30]}>
         <PathMark x="month" y="score" color={color} order="month" />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>
-      <Plot data={channelTrend} width={260} height={260} coordinate="polar2D" x={350} y={0}>
+      <Plot data={channelTrend} width={260} height={260} coordinate="polar2D" position={[350, 0]}>
         <PathMark x="quarter" y="score" color={color} order="month" closed />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />

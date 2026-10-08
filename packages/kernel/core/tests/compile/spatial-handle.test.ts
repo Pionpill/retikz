@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import type { IRChild, IRScene } from '../../src';
-import { compileToScene, CompositeBaseSchema, defineComposite } from '../../src';
+import type { IRChild, IRScene, IRScopePosition } from '../../src';
+import { compileToScene, CompositeBaseSchema, defineComposite, ScopeSchema } from '../../src';
 
 const card = defineComposite({
   namespace: 'third',
@@ -132,12 +132,12 @@ describe('qualified spatial handle compile', () => {
     expect(result.spatialHandles.entries[0]?.geometry.bounds).toEqual(bounds);
   });
 
-  it('projects local rect through Scope placement exactly once', () => {
+  it('projects local rect through Scope anchor position exactly once', () => {
     const result = compileToScene(
       sceneOf([
         {
           type: 'scope',
-          placement: { target: [100, 50] },
+          position: { kind: 'anchor', target: [100, 50] },
           children: [{ namespace: 'third', type: 'card' }],
         },
       ]),
@@ -223,6 +223,26 @@ describe('qualified spatial handle compile', () => {
     expect(() =>
       compileToScene(sceneOf([{ namespace: 'third', type: 'scopedCard' }]), { composites: [scopedCard] }),
     ).toThrow(/spatial.*Scope|Scope.*spatial/i);
+  });
+
+  it.each<{ position: IRScopePosition; accepted: boolean }>([
+    { position: [0, 0], accepted: true },
+    { position: [10, 20], accepted: false },
+    { position: { kind: 'anchor', target: [0, 0] }, accepted: false },
+  ])('result-level handles distinguish zero from spatial Scope position: $position', ({ position, accepted }) => {
+    const positionedCard = defineComposite({
+      namespace: 'third',
+      type: 'positionedCard',
+      schema: CompositeBaseSchema.extend({ namespace: literal('third'), type: literal('positionedCard') }),
+      expand: () => ({
+        children: [ScopeSchema.parse({ type: 'scope', position, children: [] })],
+        spatialHandles: [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
+      }),
+    });
+    const run = () =>
+      compileToScene(sceneOf([{ namespace: 'third', type: 'positionedCard' }]), { composites: [positionedCard] });
+    if (accepted) expect(run().spatialHandles.entries).toHaveLength(1);
+    else expect(run).toThrow(/spatial.*Scope|Scope.*spatial/i);
   });
 
   it('checks duplicate keys only across reachable runtime Scopes', () => {

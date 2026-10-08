@@ -45,7 +45,7 @@ const CircuitDemo: FC = () => (
       </Scope>
 
       {/* Second unit is duplicated by a Scope translate (left 60, down 240); only the id prefix and labels change */}
-      <Scope transforms={[{ kind: 'translate', x: -30, y: 120 }]}>
+      <Scope position={[-30, 120]}>
         <Resistor id="cell2-resistor" position={[450, 100]} label={{ text: 'R2', position: 'top' }} />
         <Meter
           id="cell2-voltmeter"

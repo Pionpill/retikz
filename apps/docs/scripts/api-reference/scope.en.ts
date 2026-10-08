@@ -1,5 +1,12 @@
 /** 经核对的 Scope API 英文说明，标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'Scope 在父坐标系中的原点位置或最终锚点对齐': 'Scope origin position in parent coordinates or final anchor alignment',
+  '坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center':
+    'A coordinate position is applied outside local transforms. The anchor form aligns selfAnchor on the transformed envelope to target; selfAnchor defaults to center',
+  '父坐标系原点位置或最终锚点对齐，省略时为原点':
+    'Origin position in the parent frame or final anchor alignment; defaults to the origin',
+  'Scope 原点位置或最终锚点对齐': 'Scope origin position or final anchor alignment',
+  'Scope 锚点定位允许的闭合目标': 'Closed set of targets accepted by Scope anchor positioning',
   当前作用域内按声明顺序处理的子图元: 'Children processed in declaration order within this Scope',
   '局部变换列表，最后一项先作用于局部点；省略时不施加局部变换':
     'Local transform list; the last item acts on local points first. Omission applies no local transform',
@@ -59,8 +66,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale',
   'Scope 容器组件——TikZ `\\begin{scope}[...]...\\end{scope}` 同义':
     'Scope container, equivalent to TikZ `\\begin{scope}[...]...\\end{scope}`',
-  '给一组节点 / 路径提供局部样式、命名空间、变换、最终锚点定位、裁剪和引用包络':
-    'Provides local styles, namespaces, transforms, final anchor placement, clipping, and reference bounds for a group of nodes and paths',
+  '给一组节点 / 路径提供局部样式、命名空间、原点或锚点定位、局部变换、裁剪和引用包络':
+    'Provides local styles, namespaces, origin or anchor positioning, local transforms, clipping, and reference bounds for a group of nodes and paths',
   '—': '—',
   '': '',
   '级联样式子集（graphic state + 四通道 every-X）抽到共享 ScopeStyleProps，与 `<Layout>` 复用；\n  本类型额外带容器 / 命名空间 / 局部变换 / 屏障 / 栈序 / 裁剪等 scope 专属字段':

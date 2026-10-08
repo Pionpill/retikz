@@ -984,7 +984,8 @@ describe('convertIRToReactNode', () => {
             type: 'scope',
             id: 'cluster',
             localNamespace: true,
-            placement: {
+            position: {
+              kind: 'anchor',
               target: { id: 'hub', anchor: 'top-right', offset: [4, -2] },
               selfAnchor: 'top-left',
             },

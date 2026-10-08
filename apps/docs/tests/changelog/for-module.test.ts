@@ -7,13 +7,13 @@ const membersOf = (id: 'kernel' | 'standard' | 'layout' | 'viz' | 'other'): Set<
   new Set(PACKAGE_GROUPS.find(g => g.id === id)?.members ?? []);
 
 describe('changelogForModule', () => {
-  it('Extension 分区只展示自身的首个 Alpha 发布记录', () => {
+  it('Extension 分区只展示自身发布记录并保留初次 Alpha 历史', () => {
     const releases = changelogForModule('library', 'extension');
 
     expect(releases).toHaveLength(1);
     expect(releases[0].packages.map(block => block.pkg)).toEqual(['@retikz/extension']);
     expect(releases[0].stableDate).toBeNull();
-    expect(releases[0].packages[0].subVersions.map(release => release.version)).toEqual(['alpha.1']);
+    expect(releases[0].packages[0].subVersions.map(release => release.version)).toContain('alpha.1');
   });
 
   it('core 模块只含 core 组包', () => {

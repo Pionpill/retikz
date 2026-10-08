@@ -33,6 +33,7 @@ describe('Chart async data preparation', () => {
       dataExecution: { mode: 'external', external: 'fixture' },
       dataTransformExecutor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }),
       title: 'Prepared chart',
+      panel: { position: [24, 12], transforms: [{ kind: 'scale', x: 0.5 }], zIndex: 3 },
       encodings: {
         x: 'x',
         y: { transform: { operation: { kind: 'normalize', field: 'y', as: 'ratio' } }, output: 'ratio' },
@@ -44,6 +45,7 @@ describe('Chart async data preparation', () => {
     const svg = result.svg;
 
     expect(svg).toContain('Prepared chart');
+    expect(svg).toContain('translate(24 12)');
     expect(svg.match(/<ellipse/g)).toHaveLength(2);
     expect(execute).toHaveBeenCalledOnce();
   });

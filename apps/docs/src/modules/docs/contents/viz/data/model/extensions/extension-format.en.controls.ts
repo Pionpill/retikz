@@ -1,13 +1,13 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { wanRows } from './extension-format.data';
+import { thousandsRows } from './extension-format.data';
 
 /** English data panel for the custom format example */
 export const extensionFormatControls = definePreviewControls({
   presentation: 'panel',
   title: 'Named format',
-  sections: [{ controls: [{ kind: 'table', id: 'rows', label: 'Ten-thousand strings', rows: wanRows }] }],
+  sections: [{ controls: [{ kind: 'table', id: 'rows', label: 'K-suffixed strings', rows: thousandsRows }] }],
 });
 
 /** Stable documentation contract for the custom format example */

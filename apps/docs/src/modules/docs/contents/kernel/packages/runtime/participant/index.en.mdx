@@ -3,7 +3,7 @@ title: Participant
 description: Define participants that consume Sources and computation results and manage external commits, rollback, reads and disposal
 ---
 
-[Runtime · Transaction publication](/kernel/packages/runtime/transaction) explains how Sources and computation results publish together. **Runtime coordinates transactions; a Participant takes part in that process.** Runtime orchestrates computation, preparation, commit, rollback on failure, and resource disposal. Each Participant implements its own external-state logic, follows Runtime's transaction and instance lifecycles, and supplies a read view suited to its consumers.
+[Runtime](/kernel/packages/runtime/transaction) explains how Sources and computation results publish together. **Runtime coordinates transactions; a Participant takes part in that process.** Runtime orchestrates computation, preparation, commit, rollback on failure, and resource disposal. Each Participant implements its own external-state logic, follows Runtime's transaction and instance lifecycles, and supplies a read view suited to its consumers.
 
 <ComponentPreview files="participant-relationship" size="sm" hideCode type="flow" />
 
@@ -30,7 +30,9 @@ Sources hold input, Computations derive results, and Participants consume that d
 
 Participants receive candidate data before publication. Only after all participant commits and reads succeed does Runtime publish Sources, computation results, participant read views and the new revision. The post-publication `observeCommit` notification does not serve this transactional role.
 
-## Defining a participant
+## Definition and integration
+
+### Defining a participant
 
 `defineRuntimeCommitParticipant(options)` returns a token for registration and reads. Its callbacks typically close over a renderer or host resource; a token can be claimed by only one Runtime.
 
@@ -118,23 +120,27 @@ const displayParticipant = defineRuntimeCommitParticipant<DisplayRead>({
   computations: [label],
   revisionPolicy: 'affected',
   prepare: candidate => {
-    const previous = display;
-    const next = Object.freeze({ text: candidate.result(label).value });
+    // [!code ++]
+    const previous = display; // [!code ++]
+    const next = Object.freeze({ text: candidate.result(label).value }); // [!code ++]
     return {
+      // [!code ++]
       commit: () => {
-        display = next;
+        // [!code ++]
+        display = next; // [!code ++]
         if (rejectNextCommit) {
           rejectNextCommit = false;
           throw new Error('Display commit failed');
         }
       },
       rollback: () => {
-        display = previous;
-      },
+        // [!code ++]
+        display = previous; // [!code ++]
+      }, // [!code ++]
       dispose: () => {},
     };
   },
-  read: () => display,
+  read: () => display, // [!code ++]
   dispose: () => {
     display = Object.freeze({ text: '' });
   },
@@ -156,7 +162,7 @@ The example deliberately throws after replacing the display to verify that `roll
   ]}
 />
 
-## Registration and reads
+### Registration and reads
 
 Register participants through the `participants` array passed to `createRuntime`. Dependencies must already be registered. Reading only `label` requires `computations: [label]`; the participant need not also declare the count Source used by that computation.
 
@@ -167,18 +173,18 @@ const runtime = createRuntime({
   sources,
   computations,
   initialSnapshots: [createRuntimeSourceInput(count, 1)],
-  participants: [displayParticipant],
+  participants: [displayParticipant], // [!code ++]
 });
 
 console.log(runtime.revision()); // 0
-console.log(runtime.participant(displayParticipant).text); // Count: 1
+console.log(runtime.participant(displayParticipant).text); // Count: 1 // [!code ++]
 
 runtime.update({
   baseRevision: runtime.revision(),
   sources: [createRuntimeSourceUpdate(count, 2)],
 });
 console.log(runtime.revision()); // 1
-console.log(runtime.participant(displayParticipant).text); // Count: 2
+console.log(runtime.participant(displayParticipant).text); // Count: 2 // [!code ++]
 ```
 
 Initialization prepares, commits and reads every participant, so successful creation already displays `Count: 1`. Failed initialization returns no instance and cleans up the claimed participants.
@@ -192,7 +198,26 @@ Initialization prepares, commits and reads every participant, so successful crea
   ]}
 />
 
-## Per-transaction work
+### Dependencies and triggers
+
+`revisionPolicy` determines whether an update selects the participant:
+
+| Policy       | Selection condition                                                         | Use case                                            |
+| ------------ | --------------------------------------------------------------------------- | --------------------------------------------------- |
+| `affected`   | A declared Source changes or a declared computation produces a new result   | Apply display updates when its dependencies change  |
+| `continuous` | Every transaction with actual Source changes that will advance the revision | External state must follow every published revision |
+
+Both policies execute during initialization. Empty updates and updates whose Sources all compare equal bail out before participants run, including `continuous` participants.
+
+If a participant depends only on a computation that returns `bailout`, `affected` does not run merely because an upstream Source changed. Declaring that Source directly would make its changes a trigger. Unselected participants retain their cached reads; advancing Runtime’s global revision does not call their `read` again.
+
+<SourceLinks
+  sources={[
+    { label: 'Participant selection and transaction bailout', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
+  ]}
+/>
+
+## Participating in a transaction
 
 After this transaction's computations finish, Runtime calls `prepare(candidate, context)`. The first argument, `candidate`, is the **candidate view**: it exposes the new state prepared for this transaction but not yet published. The second argument, `context`, provides Trace and diagnostic capabilities.
 
@@ -206,7 +231,7 @@ For example, when the count changes from `1` to `2`, `candidate.result(label).va
 | `candidateRevision`   | The revision that will publish if this transaction succeeds            |
 | `baseRevision`        | The published base revision of an update; absent during initialization |
 
-`candidate` can read only the participant's declared dependencies and provides neither ChangeSet access nor previous computation results. The participant retains old host state itself, as with `previous` above. `context.trace` reports execution observations and `context.diagnose` reports diagnostics; their usage belongs to the errors and Trace chapter.
+`candidate` can read only the participant's declared dependencies and provides neither ChangeSet access nor previous computation results. The participant retains old host state itself, as with `previous` above. `context.trace` reports execution observations and `context.diagnose` reports diagnostics; see [Trace · Errors and diagnostics](/kernel/packages/runtime/trace).
 
 The returned `RuntimePreparedCommit` belongs to this transaction only:
 
@@ -243,7 +268,7 @@ All callbacks run synchronously. Use the supplied candidate view rather than ree
   ]}
 />
 
-## Failure and rollback
+### Failure and rollback
 
 Participants execute in ascending `key` order: all prepare, then all commit, then all read. Runtime does not finish the entire sequence for one participant before moving to the next. There is no participant dependency graph, and the candidate view cannot read another participant.
 
@@ -258,7 +283,7 @@ Simulate failure in the display example:
 ```ts
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '@retikz/runtime';
 
-rejectNextCommit = true;
+rejectNextCommit = true; // [!code ++]
 try {
   runtime.update({
     baseRevision: runtime.revision(),
@@ -266,13 +291,14 @@ try {
   });
 } catch (error) {
   if (!(error instanceof RetikzRuntimeError) || error.code !== RetikzRuntimeErrorCode.ParticipantCommitFailed) {
+    // [!code ++]
     throw error;
   }
-  console.log(runtime.revision()); // 1
-  console.log(runtime.snapshot(count).value); // 2
-  console.log(runtime.result(label).value); // Count: 2
-  console.log(display.text); // Count: 2
-  console.log(runtime.participant(displayParticipant).text); // Count: 2
+  console.log(runtime.revision()); // 1 // [!code ++]
+  console.log(runtime.snapshot(count).value); // 2 // [!code ++]
+  console.log(runtime.result(label).value); // Count: 2 // [!code ++]
+  console.log(display.text); // Count: 2 // [!code ++]
+  console.log(runtime.participant(displayParticipant).text); // Count: 2 // [!code ++]
 }
 ```
 
@@ -293,25 +319,6 @@ This is a synchronous, rollback-capable commit protocol, not an isolation guaran
       path: 'packages/kernel/runtime/src/runtime/runtime.ts',
     },
     { label: 'Participant error codes', path: 'packages/kernel/runtime/src/error/constants.ts' },
-  ]}
-/>
-
-## Dependencies and triggers
-
-`revisionPolicy` determines whether an update selects the participant:
-
-| Policy       | Selection condition                                                         | Use case                                            |
-| ------------ | --------------------------------------------------------------------------- | --------------------------------------------------- |
-| `affected`   | A declared Source changes or a declared computation produces a new result   | Apply display updates when its dependencies change  |
-| `continuous` | Every transaction with actual Source changes that will advance the revision | External state must follow every published revision |
-
-Both policies execute during initialization. Empty updates and updates whose Sources all compare equal bail out before participants run, including `continuous` participants.
-
-If a participant depends only on a computation that returns `bailout`, `affected` does not run merely because an upstream Source changed. Declaring that Source directly would make its changes a trigger. Unselected participants retain their cached reads; advancing Runtime’s global revision does not call their `read` again.
-
-<SourceLinks
-  sources={[
-    { label: 'Participant selection and transaction bailout', path: 'packages/kernel/runtime/src/runtime/runtime.ts' },
   ]}
 />
 
@@ -337,7 +344,7 @@ Failed initialization returns no instance on which to retry disposal. Participan
   ]}
 />
 
-## Complete flow
+### Ordering around disposal
 
 After candidate computations finish, Runtime processes selected participants by phase. Every participant in the batch completes a step before the next step starts:
 
@@ -384,12 +391,89 @@ Renderer integration uses `createRetainedRenderParticipant` from `@retikz/render
   ]}
 />
 
+## Related props
+
+Only public members used in this chapter are listed; follow the source links below for complete declarations and default behavior.
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineRuntimeCommitParticipant',
+      kind: 'function',
+      type: '<TRead>(input: RuntimeCommitParticipantDefinitionInput<TRead>) => RuntimeCommitParticipant<TRead>',
+      description:
+        'Requires key, revisionPolicy, prepare, read and dispose; optional sources, computations and tracePhases default to []. The instance exclusively owns the token.',
+    },
+    {
+      name: 'revisionPolicy',
+      kind: 'property',
+      type: "'affected' | 'continuous'",
+      description:
+        'affected follows direct dependency changes; continuous runs for transactions with Source changes. Both run initially and skip transaction bailout.',
+      required: true,
+    },
+    {
+      name: 'prepare',
+      kind: 'property',
+      type: '(candidate: RuntimeParticipantCandidateView, context: RuntimeParticipantContext) => RuntimePreparedCommit',
+      description:
+        'Reads declared Source/computation candidates and returns a transaction object; cannot read other participants or ChangeSets. Must clean up if it fails before returning.',
+      required: true,
+    },
+    {
+      name: 'RuntimePreparedCommit',
+      kind: 'type',
+      type: 'Readonly<{ commit: () => void; rollback: () => void; dispose: () => void }>',
+      description:
+        'commit applies staged state; rollback must safely restore even prepared objects not yet committed; dispose releases transaction resources.',
+    },
+    {
+      name: 'read',
+      kind: 'property',
+      type: '() => TRead',
+      description:
+        'Builds a public view after all commits; failure still triggers rollback. Runtime caches it after successful publication.',
+      required: true,
+    },
+    {
+      name: 'dispose',
+      kind: 'property',
+      type: '() => void',
+      description: 'Releases long-lived host resources, distinct from RuntimePreparedCommit.dispose.',
+      required: true,
+    },
+    {
+      name: 'Runtime.participant',
+      kind: 'property',
+      type: '<TRead>(participant: RuntimeCommitParticipant<TRead>) => TRead',
+      description: 'Returns the published cache without rerunning read or wrapping it in a revision envelope.',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Public exports', path: 'packages/kernel/runtime/src/index.ts' },
+    { label: 'Main contracts', path: 'packages/kernel/runtime/src/participant/types.ts' },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Runtime · Transaction publication',
+      title: 'Lifecycle',
+      description: 'Follow member collaboration through initialization, updates, failures and disposal',
+      url: '/kernel/packages/runtime/lifecycle',
+    },
+    {
+      title: 'Trace · Errors and diagnostics',
+      description: 'Catch failures, consume diagnostics and observe work',
+      url: '/kernel/packages/runtime/trace',
+    },
+    {
+      title: 'Runtime',
       description: 'Publishing Sources, computations and revisions together',
       url: '/kernel/packages/runtime/transaction',
     },

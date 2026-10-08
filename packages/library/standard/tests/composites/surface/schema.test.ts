@@ -29,13 +29,14 @@ describe('SurfaceSchema', () => {
   it('materializes static defaults without inventing appearance', () => {
     const source = SurfaceSchema.parse(surface());
 
-    expect(source).toEqual({ ...surface(), padding: 0, overflow: 'visible', cornerRadius: 0 });
+    expect(source).toEqual({ ...surface(), position: [0, 0], padding: 0, overflow: 'visible', cornerRadius: 0 });
 
     const parsed = resolveSurface(source);
 
     expect(parsed).toEqual({
       namespace: 'standard',
       type: 'surface',
+      position: [0, 0],
       child: node,
       padding: { top: 0, right: 0, bottom: 0, left: 0 },
       overflow: 'visible',
@@ -119,7 +120,7 @@ describe('SurfaceSchema', () => {
 
   it('creates sparse Surface IR through the public factory', () => {
     expect(createSurface(surface({ padding: 3 }))).toEqual(surface({ padding: 3 }));
-    expect(resolveSurface(createSurface(surface({ padding: 3 })))).toEqual(
+    expect({ ...resolveSurface(createSurface(surface({ padding: 3 }))), position: [0, 0] }).toEqual(
       resolveSurface(SurfaceSchema.parse(surface({ padding: 3 }))),
     );
   });

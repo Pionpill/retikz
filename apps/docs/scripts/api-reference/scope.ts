@@ -26,7 +26,7 @@ export const scopeSchemaLocalizations = {
       id: '可选引用 id；始终注册到父级命名空间',
       localNamespace: '为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级',
       transforms: '依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析',
-      placement: '在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target',
+      position: '父坐标系中的原点位置，或局部变换后的锚点对齐；缺省为 [0, 0]',
       'defaults.node': '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
       'defaults.path': '只作用于 path-like drawable 的默认样式；箭头使用独立 defaults.arrow 通道',
       'defaults.label': 'node label 与 step / geometry label 共用的默认文字样式',
@@ -43,8 +43,12 @@ export const scopeSchemaLocalizations = {
   ScopeFrameSchema: {
     descriptions: { padding: '均匀装饰间距，默认 0；不参与布局', style: '独立外框样式，仅共享有效颜色上下文' },
   },
-  ScopePlacementSchema: {
-    descriptions: { target: '父坐标系中的定位目标', selfAnchor: '变换后 Scope 包络上的对齐点；省略时使用 center' },
+  ScopeAnchorPositionSchema: {
+    descriptions: {
+      kind: '锚点定位的判别字段',
+      target: '父坐标系中的定位目标',
+      selfAnchor: '变换后 Scope 包络上的对齐点；省略时使用 center',
+    },
   },
   ScopeDefaultsSchema: {
     descriptions: {
@@ -114,7 +118,15 @@ export const scopeApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> 
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/core/src/index.ts'),
         title: { zh: '`@retikz/core`', en: '`@retikz/core`' },
-        symbols: ['IRScope', 'IRScopeProps', 'IRScopeFrame', 'IRScopePlacement', 'IRScopeDefaults'],
+        symbols: [
+          'IRScope',
+          'IRScopeProps',
+          'IRScopeFrame',
+          'IRScopePosition',
+          'IRScopeAnchorPosition',
+          'IRScopePositionTarget',
+          'IRScopeDefaults',
+        ],
       },
     ],
     translate: translateScopeApiReference,

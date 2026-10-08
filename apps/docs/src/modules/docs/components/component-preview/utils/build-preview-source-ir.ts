@@ -135,7 +135,7 @@ const sourceCoreChildOf = (
 ): IRChild => {
   if ('namespace' in input) return input;
   if (input.type === 'coordinate') return input;
-  if (input.type === 'node' || 'position' in input) {
+  if (input.type === 'node' || (input.type === undefined && !('children' in input) && 'position' in input)) {
     return normalizeNode(input);
   }
 

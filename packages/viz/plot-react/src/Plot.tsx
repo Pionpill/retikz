@@ -150,10 +150,9 @@ export type PlotProps<TSource = never> = PlotIRProps<TSource> | PlotDslProps<TSo
 
 /** 从 React 面板 props 组装 Plot Vanilla Input 的 Scope 部分 */
 const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined => {
-  const { x, y, transforms, zIndex, clip, theme } = props;
+  const { position, transforms, zIndex, clip, theme } = props;
   if (
-    x === undefined &&
-    y === undefined &&
+    position === undefined &&
     transforms === undefined &&
     zIndex === undefined &&
     clip === undefined &&
@@ -163,8 +162,7 @@ const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined
   }
 
   return {
-    ...(x === undefined ? {} : { x }),
-    ...(y === undefined ? {} : { y }),
+    ...(position === undefined ? {} : { position }),
     ...(transforms === undefined ? {} : { transforms }),
     ...(zIndex === undefined ? {} : { zIndex }),
     ...(clip === undefined ? {} : { clip }),
@@ -245,6 +243,7 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
   }, [ambientPlotThemeStyles, props]);
   const contentProps = plotContentPropsOf(effectiveProps);
   const authored = resolvePlotAuthoring(contentProps);
+  const panel = createPlotPanelInput(contentProps);
 
   return (
     <Layout
@@ -257,6 +256,7 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
     >
       <EmbeddablePlotContent
         {...authored}
+        {...(panel === undefined ? {} : { panel })}
         dataTransformExecutor={props.dataTransformExecutor}
         signal={props.signal}
         lineage={props.lineage}

@@ -15,7 +15,7 @@ const ConnectionSurfaces: FC<ConnectionSurfacesProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[0, 1, 2].map(index => (
-        <Scope key={index} localNamespace transforms={[{ kind: 'translate', x: index * 180, y: 0 }]}>
+        <Scope key={index} localNamespace position={[index * 180, 0]}>
           <Node
             position={[0, -70]}
             text={labels.titles[index]}

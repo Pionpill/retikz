@@ -15,7 +15,7 @@ const preview = defineControlledBuiltinInspectPreview(
   values => {
     return (
       <InspectLayout registry={registry} viewBox={{ x: -120, y: -110, width: 240, height: 175 }}>
-        <Scope transforms={[{ kind: 'translate', x: values.position[0], y: values.position[1] }]}>
+        <Scope position={[values.position[0], values.position[1]]}>
           <InspectPath
             request={{
               inspector: PATH_INSPECTOR_KEY,

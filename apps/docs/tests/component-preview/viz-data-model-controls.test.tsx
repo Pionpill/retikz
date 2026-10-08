@@ -23,20 +23,20 @@ import { previewControlContract as extensionFormatZh } from '../../src/modules/d
 import { previewControlContract as extensionFormatEn } from '../../src/modules/docs/contents/viz/data/model/extensions/extension-format.en.controls';
 import { previewControlContract as extensionResolverZh } from '../../src/modules/docs/contents/viz/data/model/extensions/extension-resolver.controls';
 import { previewControlContract as extensionResolverEn } from '../../src/modules/docs/contents/viz/data/model/extensions/extension-resolver.en.controls';
-import { renderDataModelOrderPreview } from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order-preview';
-import { previewControlContract as orderZh } from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order.controls';
-import { previewControlContract as orderEn } from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order.en.controls';
-import OrderDemo from '../../src/modules/docs/contents/viz/data/model/fields-and-types/data-model-order.zh.demo';
+import { renderDataModelOrderPreview } from '../../src/modules/docs/contents/viz/data/model/intake/data-model-order-preview';
+import { previewControlContract as orderZh } from '../../src/modules/docs/contents/viz/data/model/intake/data-model-order.controls';
+import { previewControlContract as orderEn } from '../../src/modules/docs/contents/viz/data/model/intake/data-model-order.en.controls';
+import OrderDemo from '../../src/modules/docs/contents/viz/data/model/intake/data-model-order.zh.demo';
 import { previewControlContract as sourceBindingZh } from '../../src/modules/docs/contents/viz/data/model/intake/source-binding.controls';
 import { previewControlContract as sourceBindingEn } from '../../src/modules/docs/contents/viz/data/model/intake/source-binding.en.controls';
 import SourceBindingDemo from '../../src/modules/docs/contents/viz/data/model/intake/source-binding.zh.demo';
+import { renderValidationPolicyPreview } from '../../src/modules/docs/contents/viz/data/model/intake/validation-policy-preview';
+import { previewControlContract as validationZh } from '../../src/modules/docs/contents/viz/data/model/intake/validation-policy.controls';
+import { previewControlContract as validationEn } from '../../src/modules/docs/contents/viz/data/model/intake/validation-policy.en.controls';
+import ValidationDemo from '../../src/modules/docs/contents/viz/data/model/intake/validation-policy.zh.demo';
 import { previewControlContract as valueParsingZh } from '../../src/modules/docs/contents/viz/data/model/intake/value-parsing.controls';
 import { previewControlContract as valueParsingEn } from '../../src/modules/docs/contents/viz/data/model/intake/value-parsing.en.controls';
 import ValueParsingDemo from '../../src/modules/docs/contents/viz/data/model/intake/value-parsing.zh.demo';
-import { renderValidationPolicyPreview } from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy-preview';
-import { previewControlContract as validationZh } from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy.controls';
-import { previewControlContract as validationEn } from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy.en.controls';
-import ValidationDemo from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy.zh.demo';
 
 const roots: Array<ReturnType<typeof createRoot>> = [];
 
@@ -139,9 +139,8 @@ describe('Viz Data model controls', () => {
 
   it('uses large previews for data-table controls', () => {
     const pagePreviews = [
-      ['model/fields-and-types', 3],
-      ['model/intake', 2],
-      ['model/validation', 1],
+      ['model/field-types', 0],
+      ['model/intake', 5],
       ['model/extensions', 3],
     ] as const;
 

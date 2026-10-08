@@ -10,6 +10,8 @@ keywords: 'Core、Tier、omit、strokeWidth、GraphicStyleSchema、pick'
 - 接受日期：2026-08-04
 - 关联：[ADR-020](./020-layout-aware-scope-output.md)
 
+> 后续演进：本文记录原子组合原则与当时的字段形态；当前片段划分以 [Standard ADR-035](../../../../../library/_notes/decisions/standard/v0/v0.1/035-path-schema-atomic-reuse.md) 为准，Source 分组以 [ADR-036](./036-source-ir-semantic-grouping.md) 为准。旧聚合与字段清单不构成当前导出承诺。
+
 ## 背景与目标
 
 Core 当前已经拥有若干可复用的叶子契约，但完整的路径基础契约同时承载了实例身份、通用图形样式、描边、填充、路径几何、provider 选择、标记、标签和结构字段。Standard、Plot 等 Tier 2 及 Chart 等 Tier 3 在表达自己的输入时，因而反复从大型 Core schema 中 `pick` / `omit` 字段，或者重新声明已经属于 Core 的 paint、opacity、dash、shadow、blend mode 等词汇

@@ -201,6 +201,42 @@ const flexArtifactOf = (output: ReturnType<typeof compileToScene>): FlexLayoutCo
 };
 
 describe('FlexLayout compile contract', () => {
+  it('normalizes authored Scope position into the parent slot once', () => {
+    const compilePositioned = (position: [number, number]) =>
+      compileFlex(
+        createFlexLayout({
+          size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 30 } },
+          alignItems: LayoutAlignment.Start,
+          children: [
+            {
+              kind: LayoutItemKind.Flex,
+              key: 'positioned',
+              child: {
+                type: 'scope',
+                id: 'positioned',
+                position,
+                children: [
+                  {
+                    type: 'node',
+                    position: [0, 0],
+                    shape: 'rectangle',
+                    layout: { minimumSize: { width: 20, height: 10 }, padding: 0 },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        exactProposal(100, 30),
+      );
+    const origin = compilePositioned([0, 0]);
+    const moved = compilePositioned([120, -40]);
+    expect(moved.observed.allocationBounds).toEqual(origin.observed.allocationBounds);
+    expect(translationOf(moved.output.scene.primitives, 'positioned')).toEqual(
+      translationOf(origin.output.scene.primitives, 'positioned'),
+    );
+  });
+
   it('uses frozen grow slots, physical gaps and non-zero allocation origins for placement', () => {
     const result = compileFlex(
       createFlexLayout({

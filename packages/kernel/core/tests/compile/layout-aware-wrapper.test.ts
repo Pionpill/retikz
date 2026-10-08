@@ -290,7 +290,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
               id: 'all',
               localNamespace: true,
               transforms: [{ kind: 'rotate', degrees: 30, pivot: [4, 5] }],
-              placement: { target: [20, 30], selfAnchor: [4, 5] },
+              position: { kind: 'anchor', target: [20, 30], selfAnchor: [4, 5] },
               clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
               zIndex: 2,
               boundingShape: 'circle',

@@ -54,7 +54,7 @@ Node 把直接视觉覆盖收进 `style`，把尺寸、间距和文本排布参�
 type IRNode = {
   type: 'node';
   id?: string;
-  position: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | IRBetweenPosition | IRAnchorPosition;
+  position?: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | IRBetweenPosition | IRAnchorPosition;
   shape?: IRShapeValue;
   boundary?: IRBoundary;
   cornerRadius?: number;
@@ -69,6 +69,8 @@ type IRNode = {
   zIndex?: number;
 };
 ```
+
+`position` 可省略，默认使用当前局部坐标系的原点 `[0, 0]`。
 
 `IRNodeStyle` 组合既有 graphic paint、opacity、stroke width、effects、`dashed` / `dotted` / `dashPattern` / `dashOffset`、`textColor` 与 `font`；`IRNodeLayout` 组合 ADR-038 的 `width`、`minimumSize`、`padding`、`margin`、`align`、`lineHeight` 与 `maxTextWidth`。Node 的 `shape`、`boundary`、`cornerRadius`、`rotate` 与 `scale` 仍是显式几何事实。`scale` 保留原有尺寸与连接点语义，不因影响布局而改成布局策略。
 

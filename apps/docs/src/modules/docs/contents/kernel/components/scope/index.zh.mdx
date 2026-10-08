@@ -27,7 +27,7 @@ Scope 位于 Layout 内，可以嵌套。Layout 负责整张图的输入与呈�
 
 ## 选择与边界
 
-需要一起移动、旋转或缩放时使用 `transforms`；需要把整组的某个锚点对齐已有目标时使用 `placement`。需要多次复用带固定 id 的子图时，再开启 `localNamespace`，让内部名字只在自己的范围内解析。
+用 `position={[x, y]}` 指定整组在父坐标系中的原点位置，用 `transforms` 追加旋转、缩放或偏移。需要对齐已有目标时，使用 `position={{ kind: 'anchor', target, selfAnchor }}`。需要多次复用带固定 id 的子图时，再开启 `localNamespace`，让内部名字只在自己的范围内解析。
 
 仅为了整理 JSX，应拆普通 React 组件。需要 Flex、Grid 等自动排列时使用 [Layout 布局包](/library/layout)；需要扩展圆形、路径或组合裁剪时，先查看 [Extension 裁剪扩展](/library/extension/clip)，已有能力不必重新定义。
 

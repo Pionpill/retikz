@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { translateDrawApiReference } from './draw.en';
 import { embedApiReferenceMdx } from './embedded-reference';
+import { translateScopeApiReference } from './scope.en';
 import { createStandardApiReferenceMdx } from './standard-schema';
 import type { ApiReferencePackageConfig } from './tex';
 
@@ -208,8 +209,14 @@ const translations: Record<string, string> = {
 };
 
 /** 复用公共字段翻译，缺译仍由既有生成器报错 */
-const translateCollectionApiReference = (source: string): string =>
-  translations[source] ?? translateDrawApiReference(source);
+const translateCollectionApiReference = (source: string): string => {
+  if (Object.hasOwn(translations, source)) return translations[source];
+  try {
+    return translateScopeApiReference(source);
+  } catch {
+    return translateDrawApiReference(source);
+  }
+};
 
 for (const [source, translation] of Object.entries(translations)) {
   if (source.includes('Array'))

@@ -9,6 +9,10 @@ keywords: 'Layout-aware、Composite、Scope、IRScopeProps、transforms、clip�
 - 决策日期：2026-08-04
 - 关联：[ADR-017](./017-layout-proposal-probe-contract.md) · [ADR-018](./018-inherited-theme-context.md) · [ADR-019](./019-core-atomic-contracts.md)
 
+> 后续演进：本文的 authored Scope / replay 职责边界继续有效；字段形态以 [ADR-036](./036-source-ir-semantic-grouping.md) 为准，视觉覆盖进入 `style`，继承通道进入 `defaults`。下文平铺字段示意记录原决策形态，不是当前 Source 输入示例。
+
+> [ADR-049](./049-scope-position-contract.md) 进一步统一 authored Scope 的定位为 `position`；replay 仍只消费数值 transforms 与 allocation-coordinate clip，不重新求解作者位置。
+
 ## 背景与目标
 
 ADR-017 为 layout-aware Composite 建立了双轴 proposal、probe、一次性 replay、allocation bounds 与 failure isolation。现有 `context.scope()` 只暴露普通 Scope 的一部分结构字段，`replay()` 则承载 compile-local 的数值变换和裁剪外壳。两者的表面不完整且边界容易混淆：上层 composite 可以声明一个 Scope-backed 组合，却无法在同一条 Core 主链上表达普通 Scope 的样式级联、默认值、样式重置或 placement；如果把这些属性塞进 replay wrapper，又会把 authored Scope 语义误当成布局提交细节。

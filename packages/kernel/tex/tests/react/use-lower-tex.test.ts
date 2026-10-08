@@ -1,7 +1,8 @@
+// @vitest-environment jsdom
+
 /// <reference lib="dom" />
 
 import { createElement, Fragment } from 'react';
-// @vitest-environment jsdom
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';

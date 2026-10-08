@@ -26,7 +26,7 @@ const CellFigure: FC<CellFigureProps> = props => {
         style={{ font: { size: 14 } }}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 310, y: 0 }]}
+        position={[310, 0]}
         label={{ text: t.priority, position: 'top', font: { size: 12 }, opacity: 0.8 }}
         entries={[
           { key: t.local, value: 'padding: 4' },

@@ -8,7 +8,7 @@ import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
 const SceneContents: FC = () => (
   <>
-    <Scope transforms={[{ kind: 'translate', x: 20, y: 34 }]}>
+    <Scope position={[20, 34]}>
       <InspectFlexLayout size={{ x: { kind: 'fixed', value: 220 }, y: { kind: 'fixed', value: 110 } }} padding={12}>
         <FlexLayoutItem itemKey="enabled-a" grow={1}>
           <Node position={[0, 0]} text="A1" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />
@@ -18,7 +18,7 @@ const SceneContents: FC = () => (
         </FlexLayoutItem>
       </InspectFlexLayout>
     </Scope>
-    <LayoutInspectScope request={false} transforms={[{ kind: 'translate', x: 280, y: 34 }]}>
+    <LayoutInspectScope request={false} position={[280, 34]}>
       <InspectFlexLayout size={{ x: { kind: 'fixed', value: 220 }, y: { kind: 'fixed', value: 110 } }} padding={12}>
         <FlexLayoutItem itemKey="blocked-a" grow={1}>
           <Node position={[0, 0]} text="B1" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />

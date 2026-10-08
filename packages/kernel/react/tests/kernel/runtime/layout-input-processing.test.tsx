@@ -1,5 +1,6 @@
-import { defineThemeStyle, ThemeMode } from '@retikz/core';
 // @vitest-environment jsdom
+
+import { defineThemeStyle, ThemeMode } from '@retikz/core';
 import type {
   InputEmbedAdapter,
   ProcessingController,

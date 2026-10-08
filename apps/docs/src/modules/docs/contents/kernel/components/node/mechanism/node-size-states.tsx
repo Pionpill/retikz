@@ -14,7 +14,7 @@ const NodeSizeStates: FC<NodeSizeStatesProps> = props => {
   return (
     <Layout>
       {[0, 1, 2].map(stage => (
-        <Scope key={stage} transforms={[{ kind: 'translate', x: stage * 165, y: 0 }]}>
+        <Scope key={stage} position={[stage * 165, 0]}>
           <Node
             position={[0, -55]}
             text={i18n.stages[stage]}

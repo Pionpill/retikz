@@ -19,7 +19,7 @@ const ChartPresentationResolution: FC<ChartPresentationResolutionProps> = props 
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="source-presentation"
-        transforms={[{ kind: 'translate', x: 12, y: 24 }]}
+        position={[12, 24]}
         label={label(t.source)}
         layout={{ height: 30, padding: 0, key: { width: 80 }, value: { width: 190 } }}
         style={{ font: { size: 13 } }}
@@ -32,7 +32,7 @@ const ChartPresentationResolution: FC<ChartPresentationResolutionProps> = props 
       />
       <Array
         id="resolved-flex"
-        transforms={[{ kind: 'translate', x: 435, y: 12 }]}
+        position={[435, 12]}
         label={label(t.resolved)}
         layout={{ direction: 'column', height: 30, width: 145, padding: 0 }}
         style={{ font: { size: 13 } }}

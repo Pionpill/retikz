@@ -1,67 +1,42 @@
 ---
 title: 数据接入
-description: 把外部字段路径和存储格式接到逻辑字段上，在变换前生成统一的规范化行。
+description: 映射字段路径、解析存储格式、指定分类顺序并选择校验策略，让外部数据满足同一份字段模型。
 ---
 
-数据接入把接口、文件或数据库记录转换为消费方可稳定引用的逻辑字段。例如 `{ period, amount }` 可以通过 `fieldMap` 形成 `{ month, revenue }`，存储值再按字段模型（`model`）与格式（`format`）规范化。下面统一用 React `<Plot>` 展示处理结果，但这只是示例宿主：字段路径、字段模型、格式与规范化规则属于 Data，不依赖 Plot，其他消费模块也可以复用。
+先在[字段类型](/viz/data/model/field-types)中约定逻辑字段，再把真实数据接入这份约定。字段映射负责“从哪里取值”，字段类型与格式负责“如何解释值”；例如把 `pricing.amount` 读成逻辑字段 `revenue`，再将 `'50%'` 解析为 `0.5`。接入后再选择跳过、抽样诊断或严格拒绝坏值。示例通过可视化展示 Data 的处理结果。
 
-## 字段路径
+## 字段映射
 
-字段名可以是点路径：`user.address.city` 会逐段读取嵌套对象，叶子必须是字符串、数字、布尔值或时间等标量。解析先检查整段名称是否是行上的直接键，再按 `.` 下钻，所以规范化后的逻辑字段名仍可包含点。
+数据源使用相同字段名与类型时，只需替换数据行；名字不同时，用 `fieldMap` 指定“逻辑字段名 → 物理路径”，消费方继续引用逻辑名。映射必须配合 `model`，且只能映射模型中已声明的字段。省略映射项时按逻辑字段名取值。
 
-```tsx
-<Plot data={rows}>
-  <PathMark x="user.createdAt" y="metrics.revenue" order="user.createdAt" />
-</Plot>
+物理路径支持 `pricing.amount` 这样的点路径。读取时先查找完整名称对应的直接键，再逐段访问嵌套属性。数组不会自动展开；需要一条记录生成多行时，应先整理源数据。
+
+切换下面的实际值、预测值和财务数据源：前两者只替换数据，财务数据额外使用路径映射，下游始终引用 `month` 与 `revenue`。
+
+关键是根据数据源选择 `fieldMap`。下面省略数据选择和消费配置，仅保留映射逻辑：
+
+```ts
+const fieldMap = source === 'finance' ? { month: 'period', revenue: 'amount' } : undefined;
 ```
 
-数组不会被自动展开；需要一行对应多个元素时，应先在数据层把它们展开为独立行。
-
-## 切换数据源
-
-真实数据行不进入可序列化字段契约，因此同一份消费方配置可以换数据源。接入方式按差异大小选择；下面仍以 Plot 配置为例。
-
-### 字段契约不变
-
-如果新旧数据都使用相同的字段名与类型，消费方只需替换数据输入。在下面的 Plot 示例中，就是只替换 `<Plot data>`；实际值与预测值共用一份字段契约和消费配置。
-
-下方的数据源绑定试验场把“同名字段换数据”和“异名字段加 fieldMap”放在同一个消费配置中比较。
-
-### 字段名不同
-
-用 `fieldMap` 把逻辑字段映射到真实路径，数据变换与消费方仍只引用逻辑名。在 Plot 应用中，图元和变换也因此不必感知真实路径：
-
-```tsx
-<Plot
-  data={rows}
-  model={[
-    { name: 'month', type: 'temporal' },
-    { name: 'revenue', type: 'continuous' },
-  ]}
-  fieldMap={{ month: 'period', revenue: 'pricing.amount' }}
->
-  <PathMark x="month" y="revenue" order="month" />
-</Plot>
-```
-
-`fieldMap` 只对齐名字，不做计算；它必须配合 `model` 使用，因为没有字段契约就没有可映射的逻辑名。
+实际值和预测值都含有 `month`、`revenue`，因此不需要映射。财务数据使用 `period`、`amount`，由 `fieldMap` 对齐逻辑名。无论选择哪一组数据，`model` 和下游引用的逻辑字段都保持一致。
 
 <ComponentPreview
   files={['source-binding', 'source-binding-preview.tsx', 'source-binding.data.ts']}
   defaultSourceFile="source-binding-preview.tsx"
   size="lg"
-  caption="图元始终引用 month/revenue；只有财务数据源通过 fieldMap 对齐物理字段。"
+  caption="下游始终引用 month/revenue；只有财务数据源通过 fieldMap 对齐物理字段。"
 />
 
-### 存储形态不同
+映射只改变取值路径，不转换值。映射到不同物理路径时，建议在模型中显式声明 `type` 或 `format`；不要依赖逻辑字段名对原始行进行的自动类型推断。
 
-默认转换能把 `Date`、严格 ISO 字符串与 Unix 时间戳毫秒统一成时间值，也能把有限数值、安全整数 `bigint` 与严格数字串统一成连续值。下面的数据混用了这些形态，但规范化后仍满足同一份字段模型。
+字段映射与真实数据都放在运行时，字段模型只保存字段约定。映射改变时，下游仍按同一组逻辑字段读取数据。
 
-下方的值解析试验场同时展示标准值、内置转换支持的混合值，以及必须声明 format 的报表值。
+## 值解析
 
-## 声明解析格式
+确定字段类型后，默认转换可把有限数值、安全整数 `bigint` 与严格数字串统一为连续值，把 `Date`、严格 ISO 字符串与 Unix 毫秒时间戳统一为时间值。数字串能否转换，与未声明类型时如何推断是两件事；推断规则见[测量类型](/viz/data/model/field-types#测量类型)。
 
-默认转换以外的常见格式写在字段的 `format` 上。格式名进入可序列化字段模型，解析函数由内置或注入的定义（Definition）提供。
+默认转换不支持的存储格式通过字段 `format` 声明。格式名进入模型，内置或运行时注入的定义提供解析函数：
 
 | `format`       | 类型         | 解析                           |
 | -------------- | ------------ | ------------------------------ |
@@ -72,7 +47,9 @@ description: 把外部字段路径和存储格式接到逻辑字段上，在变�
 | `numberString` | `continuous` | 容许空白与千分位逗号的数字串   |
 | `percent`      | `continuous` | 百分比串 `'50%'` 转为 `0.5`    |
 
-`format` 会蕴含类型；如果显式 `type` 与格式绑定的类型冲突，接入阶段会报错。标准接入路径先应用声明式 `format`，再回到内置默认转换。
+`format` 同时确定字段类型；与显式 `type` 冲突时会报错。有格式解析器时只使用该解析器，没有时才使用默认转换；解析失败不会再次尝试默认转换，而是交给[校验策略](/viz/data/model/intake#校验策略)处理。
+
+切换规范数据、混合数据与报表数据，观察同一消费配置如何接收不同存储形态：
 
 <ComponentPreview
   files={['value-parsing', 'value-parsing-preview.tsx', 'value-parsing.data.ts']}
@@ -81,39 +58,136 @@ description: 把外部字段路径和存储格式接到逻辑字段上，在变�
   caption="规范数据与混合数据使用默认转换；报表数据由 slashDate 与 percent 格式解析。"
 />
 
-需要注册自定义格式或使用运行时字段解析器（parser）时，统一参见[扩展机制](/viz/data/model/extensions)。
+自定义格式与运行时解析器见[扩展机制](/viz/data/model/extensions)。规范化后的值按逻辑字段名提供给后续变换和消费方，内部步骤见[运行时机制](/viz/data/reference/runtime)。
 
-## 接入顺序
+## 分类顺序
 
-1. 收集当前配置实际引用的字段。
-2. 用 `fieldMap` 从真实路径取值。
-3. 按字段模型、格式和自动推断确定类型。
-4. 按声明式格式、默认转换解析值。
-5. 把结果写回逻辑字段名，形成规范化行。
+`categorical` 字段默认按数据出现顺序形成分类域。需要 `S → M → L → XL` 这样的业务顺序时，在字段上写 `order`：
 
-后续数据变换与消费模块都只读取规范化行，不再各自重复解析。在 Plot 应用中，这些消费者包括比例尺、图元与定位器。
+| `order`                                      | 效果                                              |
+| -------------------------------------------- | ------------------------------------------------- |
+| 不写 / `'appearance'`                        | 按数据出现序                                      |
+| `'ascending'` / `'descending'`               | 全数值按数值比较，否则按字符串比较                |
+| `'naturalAscending'` / `'naturalDescending'` | 按数字片段自然升序 / 降序排列，适合版本标签与编号 |
+| 数组，如 `['S', 'M', 'L']`                   | 以数组为先，其余实际类别追加到末尾                |
 
-<SourceLinks
-  sources={[
+<ComponentPreview
+  files={['data-model-order', 'data-model-order-preview.tsx', 'data-model-order.data.ts']}
+  defaultSourceFile="data-model-order-preview.tsx"
+  size="lg"
+  caption="源表始终是 XL、S、L、M；控件改变分类域，不重排数据行。"
+/>
+
+`model.order` 排的是**分类域**，不会重排数据行。消费方可以复用这份类别顺序；要改变行的排列，请使用[数据变换里的排序](/viz/data/transform/operations#排序-sort)。
+
+版本号应保留为字符串。`'10.2'` 和 `'10.18'` 按字母升序得到 `10.18 → 10.2`；使用 `order: 'naturalAscending'` 则得到 `10.2 → 10.18`。`naturalDescending` 按相反方向排列。
+
+<ComponentPreview
+  files={['version-order', 'version-order.preview.tsx', 'version-order.data.ts']}
+  defaultSourceFile="version-order.preview.tsx"
+  size="lg"
+  caption="默认使用自然升序；切换字母排序，观察版本位置与颜色域的变化。源行始终不变。"
+/>
+
+自然排序将连续 ASCII 数字按整数片段比较，其余文本按区分大小写的 UTF-16 顺序比较；数字片段在文本片段前，公共片段相同时较短标签在前。它不解析小数、负数或 SemVer，超长整数片段也不会因数值精度而混淆。`'v02'` 与 `'v2'` 比较等价，在自然升降序中都保持出现顺序，但仍是不同类别。
+
+## 校验策略
+
+示例的接入配置使用 `invalid: 'skip'` 作为默认策略：规范化保留数据行，不补造替代值，如何跳过不可用值由消费方决定。若整个字段都没有有效值，应通过抽样诊断定位问题。
+
+`invalid` 决定是否严格拒绝坏值，只有 `skip` 和 `error` 两个取值；`validateData` 是独立的抽样诊断开关，不是第三种 `invalid` 策略。
+
+| 属性           | 取值                            | 行为与用途                                                             |
+| -------------- | ------------------------------- | ---------------------------------------------------------------------- |
+| `invalid`      | `'skip'`（默认）                | 保留规范化行，由消费方跳过非法值，适合容忍少量坏点                     |
+| `invalid`      | `'error'`                       | 全量检查参与字段，遇到非法或缺失值报错，适合数据准入与严格报表         |
+| `validateData` | `false`（默认）                 | 关闭抽样诊断                                                           |
+| `validateData` | `true` 或 `{ sampleRows: 100 }` | 每个参与字段在样本中至少有一个有效值，否则报错，适合排查空图与路径映射 |
+
+`validateData: true` 默认检查前 100 行；传入对象可通过 `sampleRows` 调整抽样行数。抽样诊断允许样本中存在部分坏值，因此不能替代 `invalid: 'error'` 的逐值检查。
+
+下面先选择数据，再切换策略：部分坏值可通过抽样诊断，但严格模式会拒绝；全坏字段会触发抽样错误。切回有效数据可以恢复预览。
+
+<ComponentPreview
+  files={['validation-policy', 'validation-policy-preview.tsx', 'validation-policy.data.ts']}
+  defaultSourceFile="validation-policy-preview.tsx"
+  size="lg"
+  caption="少量坏值可跳过；全坏字段触发抽样诊断；严格模式在首个坏值处失败。"
+/>
+
+`validateData` 与 `invalid` 是示例接入配置中的运行时检查选项，不进入字段模型。`validateData: true` 配合 `invalid: 'skip'` 可在容忍少量坏值的同时发现全坏字段；配合 `invalid: 'error'` 时，先做抽样诊断，再做严格检查。
+
+<ComponentAlert
+  type="tip"
+  title="校验范围"
+  description={
+    <>
+      {' '}
+      本例的检查范围包含配置依赖的源字段，以及 <code>model</code> 显式声明的所有字段。因此，即使下游只使用{' '}
+      <code>x</code>、<code>y</code>
+      ，模型中另一个连续字段缺失也会使严格检查失败。未声明且未被引用的额外源列不参与检查。{' '}
+    </>
+  }
+/>
+
+## 诊断信息
+
+检查针对接入后的规范化值，在数据变换之前发生；错误中的字段名是逻辑字段名，行号是输入行的从零开始索引，不是排序或筛选后的序号。
+
+| 错误信息                                  | 含义与排查方向                                                 |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| `has no valid values in the sampled data` | 该字段在抽样范围内没有有效值；检查物理路径、字段类型与解析格式 |
+| `missing or invalid at row 1`             | 第二条输入行的该字段不可用；检查原始值及解析结果               |
+| 未注册格式或类型冲突                      | 配置本身不成立；先修正声明或注册定义，切换跳过策略无法绕过     |
+
+抽样错误中的 `invalid` / `missing` 计数描述规范化结果，不一定保留原始值失败的原因。抽样通过也不保证其余行有效；`sampleRows: 0` 或空数据不会执行抽样检查。需要逐值保证时选择严格策略。
+
+自定义解析返回不可用值后的处理也遵循上述策略。
+
+## 相关属性
+
+本页涉及的接入成员如下；完整契约见[Data 参考](/viz/data/model/schema-reference)。
+
+<ComponentProps
+  items={[
     {
-      label: 'Plot 消费 Data 能力时的统一准备入口',
-      path: 'packages/viz/plot/src/pipeline/expand/data.ts',
-      startLine: 54,
-      endLine: 164,
+      name: 'fieldMap',
+      kind: 'property',
+      type: 'Record<string, string>',
+      description: '本例接入配置中的逻辑名到物理路径映射，需配合 `model`。省略项使用同名路径。',
     },
     {
-      label: '值写回逻辑字段名形成规范化行',
-      path: 'packages/viz/data/src/providers/data/normalize.ts',
-      startLine: 26,
-      endLine: 47,
+      name: 'format',
+      kind: 'property',
+      type: 'string',
+      description:
+        '字段格式名。内置 `iso`、`epochSeconds`、`epochMillis`、`slashDate` 解析时间，`numberString`、`percent` 解析连续值；自定义名需注入定义。',
+    },
+
+    {
+      name: 'order',
+      kind: 'property',
+      type: 'string | Array<string | number>',
+      description: '分类字段的域顺序：`appearance` 按出现序，`ascending` / `descending` 按数值或字符串比较，`naturalAscending` / `naturalDescending` 按数字片段自然排序；非空数组先列出指定类别，其余类别追加。仅允许最终解析为 categorical 的字段使用。自定义名称需注册。',
+      defaultValue: "'appearance'",
     },
     {
-      label: '格式类型兼容与解析器处理',
-      path: 'packages/viz/data/src/providers/format/orchestrate.ts',
-      startLine: 5,
-      endLine: 41,
+      name: 'invalid',
+      kind: 'property',
+      type: "'skip' | 'error'",
+      description: '`skip` 保留行并交给消费方处理不可用值；`error` 在变换前检查全部参与字段值。',
+      defaultValue: "'skip'",
     },
-  ]}
+    {
+      name: 'validateData',
+      kind: 'property',
+      type: 'boolean | { sampleRows?: number }',
+      description:
+        '`true` 或对象启用抽样诊断；`false` 关闭。`sampleRows` 默认 100，0 不检查。检查模型声明和配置依赖的源字段。',
+      defaultValue: 'false',
+    },
+
+]}
 />
 
 ## 延伸阅读
@@ -121,19 +195,15 @@ description: 把外部字段路径和存储格式接到逻辑字段上，在变�
 <LinkedSections
   items={[
     {
-      title: '字段与类型',
+      title: '字段类型',
       description: '先确定逻辑字段、类型与分类顺序。',
-      url: '/viz/data/model/fields-and-types',
-    },
-    {
-      title: '校验与诊断',
-      description: '决定解析失败与缺失值怎样被处理。',
-      url: '/viz/data/model/validation',
+      url: '/viz/data/model/field-types',
     },
     {
       title: '扩展机制',
       description: '集中了解自定义字段解析与运行时注入。',
       url: '/viz/data/model/extensions',
     },
+    { title: '运行时机制', description: '了解数据准备与消费的内部流程。', url: '/viz/data/reference/runtime' },
   ]}
 />

@@ -47,7 +47,12 @@ export const BUILTIN_FIELD_ORDERS: ReadonlyArray<FieldOrderDefinition> = freezeD
   defineFieldOrder({ name: FieldOrderMode.NaturalDescending, compare: (a, b) => -compareNatural(a, b) }),
 ]);
 
-/** 合并请求内的分类顺序定义，禁止重复和覆盖内置名称 */
+/**
+ * 合并请求内的分类顺序定义，禁止重复和覆盖内置名称
+ * @param definitions 自定义排序列表；省略时仅包含内置排序
+ * @returns 当前请求的只读名称到定义映射
+ * @throws {RetikzDataError} 名称为空白或与内置、自定义名称重复
+ */
 export const resolveFieldOrderRegistry = (
   definitions: ReadonlyArray<FieldOrderDefinition> = [],
 ): ReadonlyMap<string, FieldOrderDefinition> => {

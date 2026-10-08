@@ -30,10 +30,11 @@ export type ScopeProps = ScopeStyleProps &
      */
     transforms?: Array<InputTransform>;
     /**
-     * Scope 最终锚点对齐定位
-     * @description target 是父坐标系显式点或此前已完成的命名实体；selfAnchor 缺省为固有包络 center
+     * Scope 在父坐标系中的原点位置或最终锚点对齐
+     * @description 坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center
+     * @default [0, 0]
      */
-    placement?: IRScope['placement'];
+    position?: IRScope['position'];
     /**
      * 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序
      * @default 0
@@ -60,7 +61,7 @@ export type ScopeProps = ScopeStyleProps &
 
 /**
  * 将子图元组合为作用域，统一设置样式、变换、定位与裁剪
- * @description 给一组节点 / 路径提供局部样式、命名空间、变换、最终锚点定位、裁剪和引用包络
+ * @description 给一组节点 / 路径提供局部样式、命名空间、原点或锚点定位、局部变换、裁剪和引用包络
  */
 export const Scope: FC<ScopeProps> = () => null;
 Scope.displayName = TIKZ_SCOPE;

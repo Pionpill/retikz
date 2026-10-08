@@ -11,7 +11,7 @@ import type { IRScene } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
-import { createInputScene, Layout, Node } from '@retikz/react';
+import { createInputScene, Layout, Node, Scope } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react/presentation';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { normalizeScene } from '@retikz/vanilla';
@@ -177,6 +177,21 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('buildPreviewSource', () => {
+  it('preserves a positioned Scope and its children in authoring Source', () => {
+    const PositionedScopeDemo: FC = () => (
+      <Layout>
+        <Scope position={[120, 40]}>
+          <Node position={[0, 0]}>A</Node>
+        </Scope>
+      </Layout>
+    );
+    expect(buildPreviewIR(PositionedScopeDemo).sourceIr.children[0]).toMatchObject({
+      type: 'scope',
+      position: [120, 40],
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+    });
+  });
+
   it('仅准备预览时保留必要 IR，打开源码后才提供 Vanilla SVG', () => {
     const input = createInput({ Component: ChartDemo });
     const initial = buildPreviewSource({ ...input, includeGeneratedSources: false });

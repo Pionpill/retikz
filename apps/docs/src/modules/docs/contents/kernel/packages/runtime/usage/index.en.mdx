@@ -107,3 +107,5 @@ These defaults do not copy or freeze objects. Definition authors remain responsi
 - Computations may read only declared dependencies. Keep the same Definition tokens when registering and calling APIs.
 - Arrays, Maps, and resource objects cannot blindly reuse this example's capture/read callbacks. Definition authors must prevent unsafe mutable sharing between callers, candidates, and published state.
 - This example owns no external resources and needs no value-level `dispose`. For resource-bearing values, provide cleanup in the owning Source or result definition and call Runtime's `dispose()` when finished.
+
+After this minimal example, read Source → Identity → Computation → Runtime → Participant → Trace, then use the figures in [Lifecycle](/kernel/packages/runtime/lifecycle) to connect member relationships and execution order.

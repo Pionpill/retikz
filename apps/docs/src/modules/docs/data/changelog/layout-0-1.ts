@@ -29,6 +29,26 @@ export const layoutV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-10-08',
+          summary: {
+            zh: '发布组同步',
+            en: 'Release-group alignment',
+          },
+          items: [
+            {
+              label: {
+                zh: '发布组同步',
+                en: 'Release-group alignment',
+              },
+              content: {
+                zh: '随所属发布组同步发布，更新内部依赖及共享契约消费。',
+                en: 'Released with its release group, aligning internal dependencies and shared contract consumption.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-09-14',
           summary: {
@@ -88,6 +108,26 @@ export const layoutV01: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-10-08',
+          summary: {
+            zh: '发布组同步',
+            en: 'Release-group alignment',
+          },
+          items: [
+            {
+              label: {
+                zh: '发布组同步',
+                en: 'Release-group alignment',
+              },
+              content: {
+                zh: '随所属发布组同步发布，更新内部依赖及共享契约消费。',
+                en: 'Released with its release group, aligning internal dependencies and shared contract consumption.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-09-14',
           summary: {
@@ -135,7 +175,7 @@ export const layoutV01: Release = {
       },
       highlights: [
         {
-          label: { zh: '未发布 · BREAKING：专属布局子项', en: 'Unreleased · BREAKING: dedicated layout items' },
+          label: { zh: 'BREAKING：专属布局子项', en: 'BREAKING: dedicated layout items' },
           content: {
             zh: 'React 移除 LayoutItem / LayoutItemProps，改用 FlexLayoutItem、GridLayoutItem、OverlayLayoutItem 及对应 Props。将 LayoutItem kind="flex|grid|overlay" 替换为匹配组件并移除 kind；必须放在对应布局或 Inspect 容器下。Vanilla 与 JSON IR 继续保留 kind，布局求解、itemKey 和子内容语义不变。',
             en: 'React removes LayoutItem / LayoutItemProps in favor of FlexLayoutItem, GridLayoutItem, OverlayLayoutItem, and their Props. Replace LayoutItem kind="flex|grid|overlay" with the matching component and omit kind; place it under the corresponding layout or Inspect container. Vanilla and JSON IR keep kind, with solving, itemKey, and child-content semantics unchanged.',
@@ -143,6 +183,26 @@ export const layoutV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-10-08',
+          summary: {
+            zh: 'BREAKING：专属布局子项',
+            en: 'BREAKING: dedicated layout items',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：专属布局子项',
+                en: 'BREAKING: dedicated layout items',
+              },
+              content: {
+                zh: 'React 移除 LayoutItem / LayoutItemProps，改用 FlexLayoutItem、GridLayoutItem、OverlayLayoutItem 及对应 Props。将 LayoutItem kind="flex|grid|overlay" 替换为匹配组件并移除 kind；必须放在对应布局或 Inspect 容器下。Vanilla 与 JSON IR 继续保留 kind，布局求解、itemKey 和子内容语义不变。',
+                en: 'React removes LayoutItem / LayoutItemProps in favor of FlexLayoutItem, GridLayoutItem, OverlayLayoutItem, and their Props. Replace LayoutItem kind="flex|grid|overlay" with the matching component and omit kind; place it under the corresponding layout or Inspect container. Vanilla and JSON IR keep kind, with solving, itemKey, and child-content semantics unchanged.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.2',
           date: '2026-09-14',
