@@ -14,9 +14,11 @@ describe('Scope API 公开范围', () => {
       'ScopeStyleProps',
       'scope / InputScope',
       'IRScope',
+      'IRScopeAnchorPosition',
       'IRScopeDefaults',
       'IRScopeFrame',
-      'IRScopePlacement',
+      'IRScopePosition',
+      'IRScopePositionTarget',
       'IRScopeProps',
     ]);
 
@@ -34,8 +36,8 @@ describe('Scope API 公开范围', () => {
     expect(frame).toContain('`padding?` | `number` | `0`');
     expect(source).toContain('<ApiValues name="ScopeBoundingShape" />');
     expect(source).toContain('export declare const Scope: FC<ScopeProps>;');
-    expect(source).toContain('`placement?`');
-    expect(source).toContain("IRScope['placement']");
+    expect(source).toContain('`position?`');
+    expect(source).toContain("IRScope['position']");
     expect(source).toContain('HydrationEventProps');
     expect(source).toContain('`authoring?`');
     expect(source).toContain("InputScope['style']");

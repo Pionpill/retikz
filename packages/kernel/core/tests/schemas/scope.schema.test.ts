@@ -104,10 +104,11 @@ describe('ScopeSchema 合法形态', () => {
     }
   });
 
-  it('scope placement 接受闭合 target / selfAnchor，并保持省略默认不物化', () => {
+  it('scope position 接受闭合 target / selfAnchor，并保持省略默认不物化', () => {
     const explicit = ScopeSchema.safeParse({
       type: 'scope',
-      placement: {
+      position: {
+        kind: 'anchor',
         target: { id: 'panel', anchor: 'top-right', offset: [4, -2] },
         selfAnchor: 'top-left',
       },
@@ -115,17 +116,18 @@ describe('ScopeSchema 合法形态', () => {
     });
     const implicit = ScopeSchema.safeParse({
       type: 'scope',
-      placement: { target: [100, 80] },
+      position: { kind: 'anchor', target: [100, 80] },
       children: [],
     });
 
     expect(explicit.success).toBe(true);
-    expect(explicit.success && explicit.data.placement).toEqual({
+    expect(explicit.success && explicit.data.position).toEqual({
+      kind: 'anchor',
       target: { id: 'panel', anchor: 'top-right', offset: [4, -2] },
       selfAnchor: 'top-left',
     });
     expect(implicit.success).toBe(true);
-    expect(implicit.success && implicit.data.placement?.selfAnchor).toBeUndefined();
+    expect(implicit.success && implicit.data.position).toEqual({ kind: 'anchor', target: [100, 80] });
   });
 
   it('scope self point 接受 origin、数字角度、边上比例与显式局部坐标', () => {
@@ -133,17 +135,18 @@ describe('ScopeSchema 合法形态', () => {
       expect(
         ScopeSchema.safeParse({
           type: 'scope',
-          placement: { target: [0, 0], selfAnchor },
+          position: { kind: 'anchor', target: [0, 0], selfAnchor },
           children: [],
         }).success,
       ).toBe(true);
     }
   });
 
-  it('scope placement 与 pivot 可 JSON round-trip', () => {
+  it('scope position 与 pivot 可 JSON round-trip', () => {
     const input = {
       type: 'scope' as const,
-      placement: {
+      position: {
+        kind: 'anchor',
         target: { id: 'panel', anchor: { side: 'right' as const, fraction: 0.5 }, offset: [6, 2] },
         selfAnchor: [8, 12],
       },
@@ -238,14 +241,14 @@ describe('ScopeSchema 拒绝非法形态', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        placement: { target: [0, 0], bogus: true },
+        position: { kind: 'anchor', target: [0, 0], bogus: true },
         children: [],
       }).success,
     ).toBe(false);
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        placement: { target: { id: 'A', bogus: true } },
+        position: { kind: 'anchor', target: { id: 'A', bogus: true } },
         children: [],
       }).success,
     ).toBe(false);
@@ -263,22 +266,37 @@ describe('ScopeSchema 拒绝非法形态', () => {
       expect(
         ScopeSchema.safeParse({
           type: 'scope',
-          placement: { target },
+          position: { kind: 'anchor', target },
           children: [],
         }).success,
       ).toBe(false);
     }
   });
 
-  it('旧 position 字段被 strict schema 拒绝', () => {
+  it('旧 placement 字段被 strict schema 拒绝', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        position: { target: [0, 0] },
+        placement: { target: [0, 0] },
         children: [],
       }).success,
     ).toBe(false);
   });
+});
+
+describe('Scope position 默认与闭合形态', () => {
+  it('parse 物化原点默认，显式点保持 JSON 往返', () => {
+    expect(ScopeSchema.parse({ type: 'scope', children: [] }).position).toEqual([0, 0]);
+    const input = { type: 'scope', position: [120, 30], children: [] };
+    expect(ScopeSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
+  });
+
+  it.each([{ target: [0, 0] }, [1, 2, 3], [Infinity, 0], { kind: 'anchor', target: [0, 0], unknown: true }])(
+    '拒绝不完整或非法 position：%j',
+    position => {
+      expect(ScopeSchema.safeParse({ type: 'scope', position, children: [] }).success).toBe(false);
+    },
+  );
 });
 
 describe('ChildSchema discriminated union 含 scope', () => {

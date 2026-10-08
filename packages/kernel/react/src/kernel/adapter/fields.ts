@@ -66,7 +66,7 @@ export const SCOPE_FIELDS = [
   'id',
   'localNamespace',
   'transforms',
-  'placement',
+  'position',
   'zIndex',
   'clip',
   'boundingShape',

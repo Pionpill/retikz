@@ -235,7 +235,7 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(
       <Layout width={960} height={300}>
         <Plot spec={spec} data={data} plotDefaults={plotDefaults} width={480} height={300} />
-        <Plot spec={spec} data={data} x={480} width={480} height={300} />
+        <Plot position={[480, 0]} spec={spec} data={data} width={480} height={300} />
       </Layout>,
     );
 
@@ -294,12 +294,12 @@ describe('<Plot spec data> 薄包装', () => {
   it('可以作为可嵌入 Tier 2 子组件放进同一个 <Layout>', () => {
     const svg = renderToStaticMarkup(
       <Layout width={580} height={260}>
-        <Plot id="cartesianPanel" data={revenue} width={300} height={220} x={0} y={20}>
+        <Plot position={[0, 20]} id="cartesianPanel" data={revenue} width={300} height={220}>
           <IntervalMark x="quarter" y="value" color="quarter" />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>
-        <Plot id="polarPanel" data={revenue} width={260} height={260} coordinate="polar2D" x={320} y={0}>
+        <Plot position={[320, 0]} id="polarPanel" data={revenue} width={260} height={260} coordinate="polar2D">
           <IntervalMark x="quarter" y="value" color="quarter" />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
@@ -392,11 +392,11 @@ describe('<Plot spec data> 薄包装', () => {
   it('嵌入态默认使用 id 作为 DSL 数据集引用，显式 dataRef 可共享数据源', () => {
     const svg = renderToStaticMarkup(
       <Layout width={580} height={260}>
-        <Plot id="leftPanel" dataRef="shared" data={revenue} width={300} height={220} x={0} y={20}>
+        <Plot position={[0, 20]} id="leftPanel" dataRef="shared" data={revenue} width={300} height={220}>
           <IntervalMark x="quarter" y="value" />
           <PlotAxis dimension="x" />
         </Plot>
-        <Plot id="rightPanel" dataRef="shared" data={revenue} width={260} height={220} x={320} y={20}>
+        <Plot position={[320, 20]} id="rightPanel" dataRef="shared" data={revenue} width={260} height={220}>
           <PathMark x="quarter" y="value" order="quarter" />
           <PlotAxis dimension="x" />
         </Plot>
@@ -434,7 +434,7 @@ describe('<Plot spec data> 薄包装', () => {
         >
           <PointMark x="month" y="revenue" />
         </Plot>
-        <Plot id="directPanel" data={directRows} model={model} width={280} height={220} x={300}>
+        <Plot position={[300, 0]} id="directPanel" data={directRows} model={model} width={280} height={220}>
           <PointMark x="month" y="revenue" />
         </Plot>
       </Layout>,

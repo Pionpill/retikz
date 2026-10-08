@@ -7,7 +7,7 @@ export const fullScopeProps = {
   boundingShape: 'circle',
   theme: { mode: 'dark' },
   transforms: [{ kind: 'translate', x: 4, y: 5 }],
-  placement: { target: [10, 20], selfAnchor: 'center' },
+  position: { kind: 'anchor', target: [10, 20], selfAnchor: 'center' },
   zIndex: 3,
   clip: { kind: 'rect', x: -10, y: -10, width: 40, height: 30 },
   meta: { source: 'scope-props-test' },

@@ -196,7 +196,7 @@ export type BranchDiagramLayoutHostProps = Pick<
 | `mainBranch?`                   | `string`                                                                                 | —       | Declared branch whose nodes remain on one lane.                                                                                                 |
 | `meta?`                         | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `nodes`                         | `Array<IRBranchNode>`                                                                    | —       | Shared node catalog preserving optional size and appearance fields on each node                                                                 |
-| `placement?`                    | `InputBranchDiagram['placement']`                                                        | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `position?`                     | `InputBranchDiagram['position']`                                                         | `[0,0]` | Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].                                             |
 | `presentation?`                 | `InputBranchDiagram['presentation']`                                                     | —       | Diagram presentation regions outside a concrete drawing core.                                                                                   |
 | `readonly relationKinds?`       | `ReadonlyArray<RelationKindDefinition>`                                                  | `[]`    | Custom Relation kind definitions                                                                                                                |
 | `readonly relationPredicates?`  | `ReadonlyArray<RelationPredicateDefinition>`                                             | `[]`    | Custom Relation predicate definitions                                                                                                           |
@@ -824,7 +824,7 @@ export type IRBranch = input<typeof BranchSchema>;
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `output<typeof BranchDiagramSchema>`, with `'layout'`, `'nodes'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `output<typeof BranchDiagramSchema>`, `input<typeof BranchDiagramSchema>`, with `'layout'`, `'nodes'`, `'position'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
@@ -840,10 +840,11 @@ The remaining members are inherited from `output<typeof BranchDiagramSchema>`, w
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type IRBranchDiagram = Omit<output<typeof BranchDiagramSchema>, 'layout' | 'nodes'> & {
-  layout?: IRBranchLayoutIntent;
-  nodes: Array<IRBranchNode>;
-};
+export type IRBranchDiagram = Omit<output<typeof BranchDiagramSchema>, 'layout' | 'nodes' | 'position'> &
+  Pick<input<typeof BranchDiagramSchema>, 'position'> & {
+    layout?: IRBranchLayoutIntent;
+    nodes: Array<IRBranchNode>;
+  };
 ```
 
 </DocTab>

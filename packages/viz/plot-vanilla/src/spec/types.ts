@@ -12,12 +12,7 @@ import type { InputScope } from '@retikz/vanilla';
 import type { InputPlot } from '../normalize/plot';
 
 /** Plot 嵌入到场景时可选的面板 Scope 输入 */
-export type InputPlotPanel = Pick<InputScope, 'clip' | 'theme' | 'transforms' | 'zIndex'> & {
-  /** 面板左上角横坐标 */
-  x?: number;
-  /** 面板左上角纵坐标 */
-  y?: number;
-};
+export type InputPlotPanel = Pick<InputScope, 'clip' | 'position' | 'theme' | 'transforms' | 'zIndex'>;
 
 /** Plot source 的显式阶段互斥输入 */
 export type PlotSource =

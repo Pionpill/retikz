@@ -38,11 +38,7 @@ const ArraySizingFigure: FC<ArraySizingFigureProps> = props => {
       <Array layout={{ padding: 8 }} label={{ ...label, text: '56 × 40' }}>
         <ArrayItem>{a}</ArrayItem>
       </Array>
-      <Array
-        transforms={[{ kind: 'translate', x: 0, y: 85 }]}
-        layout={{ padding: 8 }}
-        label={{ ...label, text: '96 × 52' }}
-      >
+      <Array position={[0, 85]} layout={{ padding: 8 }} label={{ ...label, text: '96 × 52' }}>
         <ArrayItem>{b}</ArrayItem>
       </Array>
       <Draw
@@ -50,7 +46,7 @@ const ArraySizingFigure: FC<ArraySizingFigureProps> = props => {
         arrow="->"
       />
       <Array
-        transforms={[{ kind: 'translate', x: 305, y: 39 }]}
+        position={[305, 39]}
         layout={{ width: 'auto', height: 'auto', padding: 8, gap: 8 }}
         label={{ ...label, text: t.after }}
       >

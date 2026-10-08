@@ -1,4 +1,4 @@
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { FlowEndpointSchema, FlowEndpointTargetSchema } from './schema';
 import type {
@@ -70,8 +70,9 @@ export type IRFlowLayout = ZodInfer<typeof FlowLayoutSchema>;
 export type IRFlowRelation = ZodInfer<typeof FlowRelationSchema>;
 
 /** Flow Diagram 的持久化 Source IR */
-export type IRFlowDiagram = Omit<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'> &
-  Partial<Pick<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'>>;
+export type IRFlowDiagram = Omit<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts' | 'position'> &
+  Partial<Pick<ZodInfer<typeof FlowDiagramSchema>, 'groups' | 'layouts'>> &
+  Pick<ZodInput<typeof FlowDiagramSchema>, 'position'>;
 
 /** 持久化关系端点约束 */
 export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;

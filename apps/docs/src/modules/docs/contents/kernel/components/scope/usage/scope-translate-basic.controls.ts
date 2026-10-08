@@ -4,8 +4,9 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** Scope 局部坐标 playground 使用的稳定字段 id */
 export const ScopeTransformControlId = {
   Operation: 'operation',
-  PlacementEnabled: 'placementEnabled',
-  PlacementTarget: 'placementTarget',
+  OriginPosition: 'originPosition',
+  AnchorAlignmentEnabled: 'positionEnabled',
+  AnchorAlignmentTarget: 'positionTarget',
   Referent: 'referent',
   SelfAnchor: 'selfAnchor',
   SelfPoint: 'selfPoint',
@@ -26,8 +27,8 @@ export const ScopeTransformControlId = {
 
 /** Scope 局部坐标字段按演示能力显示的共享条件 */
 export const ScopeTransformVisibleWhen = {
-  Placement: { controlId: ScopeTransformControlId.PlacementEnabled, oneOf: [true] },
-  PlacementDisabled: { controlId: ScopeTransformControlId.PlacementEnabled, oneOf: [false] },
+  AnchorAlignment: { controlId: ScopeTransformControlId.AnchorAlignmentEnabled, oneOf: [true] },
+  AnchorAlignmentDisabled: { controlId: ScopeTransformControlId.AnchorAlignmentEnabled, oneOf: [false] },
   Referent: {
     controlId: ScopeTransformControlId.Operation,
     oneOf: ['polar-translate', 'at-translate', 'offset-translate'],
@@ -45,7 +46,7 @@ export const ScopeTransformVisibleWhen = {
   ExplicitPivot: { controlId: ScopeTransformControlId.Pivot, oneOf: ['explicit'] },
 } as const;
 
-/** Scope placement 与七种 transform 输入的中文属性面板 */
+/** Scope position 与七种 transform 输入的中文属性面板 */
 export const scopeTranslateBasicControls = definePreviewControls({
   presentation: 'panel',
   title: 'Scope 局部坐标',
@@ -70,9 +71,19 @@ export const scopeTranslateBasicControls = definePreviewControls({
         },
         {
           kind: 'switch',
-          id: ScopeTransformControlId.PlacementEnabled,
-          label: '自身定位',
+          id: ScopeTransformControlId.AnchorAlignmentEnabled,
+          label: '锚点对齐',
           defaultValue: false,
+        },
+        {
+          kind: 'point',
+          id: ScopeTransformControlId.OriginPosition,
+          label: '原点位置',
+          defaultValue: [0, 0],
+          min: [-100, -80],
+          max: [100, 80],
+          step: 5,
+          visibleWhen: ScopeTransformVisibleWhen.AnchorAlignmentDisabled,
         },
       ],
     },
@@ -85,7 +96,7 @@ export const scopeTranslateBasicControls = definePreviewControls({
           id: ScopeTransformControlId.Referent,
           label: '引用点',
           defaultValue: 'O',
-          visibleWhen: ScopeTransformVisibleWhen.PlacementDisabled,
+          visibleWhen: ScopeTransformVisibleWhen.AnchorAlignmentDisabled,
           options: [
             { value: 'O', label: 'O（左）' },
             { value: 'T', label: 'T（右）' },
@@ -94,12 +105,12 @@ export const scopeTranslateBasicControls = definePreviewControls({
       ],
     },
     {
-      label: '自身定位',
-      visibleWhen: ScopeTransformVisibleWhen.Placement,
+      label: '锚点对齐',
+      visibleWhen: ScopeTransformVisibleWhen.AnchorAlignment,
       controls: [
         {
           kind: 'select',
-          id: ScopeTransformControlId.PlacementTarget,
+          id: ScopeTransformControlId.AnchorAlignmentTarget,
           label: '定位目标',
           defaultValue: 'T',
           options: [
@@ -303,8 +314,9 @@ export const previewControlContract = {
   controls: scopeTranslateBasicControls,
   canonicalValues: {
     operation: 'translate',
-    placementEnabled: false,
-    placementTarget: 'T',
+    positionEnabled: false,
+    originPosition: [0, 0],
+    positionTarget: 'T',
     referent: 'O',
     selfAnchor: 'center',
     selfPoint: [0, 0],
@@ -322,5 +334,5 @@ export const previewControlContract = {
     pivot: 'origin',
     pivotPoint: [0, 0],
   },
-  relatedApis: ['Scope.placement', 'Scope.transforms'],
+  relatedApis: ['Scope.position', 'Scope.transforms'],
 } satisfies PreviewControlContract;

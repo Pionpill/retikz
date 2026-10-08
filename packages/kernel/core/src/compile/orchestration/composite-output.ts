@@ -33,7 +33,10 @@ const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
 const containsGeneratedSpatialScope = (children: ReadonlyArray<IRChild>): boolean =>
   children.some(child => {
     if ('namespace' in child || child.type !== 'scope') return false;
-    if (child.placement !== undefined || (child.transforms?.length ?? 0) > 0) return true;
+    const hasPosition =
+      child.position !== undefined &&
+      (!Array.isArray(child.position) || child.position[0] !== 0 || child.position[1] !== 0);
+    if (hasPosition || (child.transforms?.length ?? 0) > 0) return true;
     return containsGeneratedSpatialScope(child.children);
   });
 
@@ -107,7 +110,7 @@ export const validateExpandCompositeOutput = (
       raw.spatialHandles === undefined ? undefined : validateCompositeSpatialHandles(owner, raw.spatialHandles);
     if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children.map(resolveChild))) {
       throw createCompositeContractError(
-        `${owner} cannot declare result-level spatial handles while its generated output contains a Scope with placement or transforms; use layout-aware Scope attachment.`,
+        `${owner} cannot declare result-level spatial handles while its generated output contains a Scope with position or transforms; use layout-aware Scope attachment.`,
       );
     }
 

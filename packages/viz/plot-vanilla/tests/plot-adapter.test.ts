@@ -155,8 +155,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
         spec: salesSpec('sales'),
         datasets,
         panel: {
-          x: 24,
-          y: 12,
+          position: [24, 12],
           transforms: [{ kind: 'scale', x: 0.5, y: 0.5 }],
           zIndex: 3,
         },
@@ -166,10 +165,8 @@ describe('Plot Vanilla Tier2 adapter', () => {
 
     expect(contribution.node).toMatchObject({
       type: 'scope',
-      transforms: [
-        { kind: 'translate', x: 24, y: 12 },
-        { kind: 'scale', x: 0.5, y: 0.5 },
-      ],
+      position: [24, 12],
+      transforms: [{ kind: 'scale', x: 0.5, y: 0.5 }],
       zIndex: 3,
       children: [{ id: 'sales' }],
     });

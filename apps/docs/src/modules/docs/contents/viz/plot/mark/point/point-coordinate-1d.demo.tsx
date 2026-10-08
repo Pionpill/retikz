@@ -10,11 +10,11 @@ import { samples } from './point-coordinates.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Layout>
-    <Plot data={samples} width={300} height={150} coordinate="cartesian1D" x={0} y={40}>
+    <Plot data={samples} width={300} height={150} coordinate="cartesian1D" position={[0, 40]}>
       <PointMark x={values[POINT_COORDINATE_1D_CONTROL_IDS.xField]} color="group" />
       <PlotAxis dimension="x" />
     </Plot>
-    <Plot data={samples} width={230} height={230} coordinate="polar1D" x={360} y={0}>
+    <Plot data={samples} width={230} height={230} coordinate="polar1D" position={[360, 0]}>
       <PointMark x={values[POINT_COORDINATE_1D_CONTROL_IDS.xField]} color="group" />
       <PlotAxis dimension="x" />
     </Plot>

@@ -36,7 +36,7 @@ const Demo: FC = () => (
     <Node id="origin" position={[0, 0]}>
       x = 0
     </Node>
-    <Scope transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+    <Scope position={[80, 0]}>
       <Node id="A" position={[0, 0]}>
         A
       </Node>
@@ -68,7 +68,7 @@ const ir: IRScene = {
     { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
     {
       type: 'scope',
-      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      position: [80, 0],
       children: [
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         { type: 'node', id: 'B', position: [100, 0], text: 'B' },
@@ -102,7 +102,7 @@ import { mount } from '@retikz/vanilla/dom';
 const input = scene({
   children: [
     node({ id: 'origin', position: [0, 0], text: 'x = 0' }),
-    scope({ transforms: [{ kind: 'translate', x: 80, y: 0 }] }, [
+    scope({ position: [80, 0] }, [
       node({ id: 'A', position: [0, 0], text: 'A' }),
       node({ id: 'B', position: [100, 0], text: 'B' }),
       path({ way: ['A', 'B'], arrow: '->' }),
@@ -131,7 +131,7 @@ const ir: IRScene = {
     { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
     {
       type: 'scope',
-      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      position: [80, 0],
       children: [
         { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         { type: 'node', id: 'B', position: [100, 0], text: 'B' },
@@ -160,7 +160,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 | 分类       | 属性                   | 作用                                            |
 | ---------- | ---------------------- | ----------------------------------------------- |
-| 整体对象   | `placement`            | 按自身锚点对齐整组；只引用此前完成的目标        |
+| 整体对象   | `position`             | 设置父坐标系位置，或按自身锚点对齐整组          |
 |            | `id` + `boundingShape` | 让整组可从外部引用；包络不计入 path 走线        |
 | 子树上下文 | `transforms`           | 整体变换子图；不计算子元素原始位置              |
 |            | `localNamespace`       | 隔离可复用子图 id；`scope.id` 仍注册到外层      |
@@ -191,19 +191,28 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 局部坐标
 
-`O` / `T` 是 Scope 外的固定参照点，`q` 提供 Scope 的固有包络。面板选择七种 transform 之一，并可在任意模式下独立开关 `placement`；`placement` 不是 transform kind，而是 transforms 完成后的最外层定位。
+`position` 有两种形式，`transforms` 则始终表示附加局部变换：
+
+| 形式     | 示例                                                                      | 结果                                                   |
+| -------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 原点位置 | `position={[100, 50]}`                                                    | 在父坐标系放置局部原点；自身旋转和缩放不改变这段主位置 |
+| 锚点对齐 | `position={{ kind: 'anchor', target: { id: 'T' }, selfAnchor: 'right' }}` | 将变换后的右侧锚点精确对齐 T                           |
+
+省略位置与 `[0, 0]` 的几何结果相同。原点位置 `[100, 50]` 加局部 `translate(10, 0)` 后，原点在 `[110, 50]`；锚点形式则会抵消影响精确对齐的平移，要继续偏移应修改 target 或 target.offset。
+
+`O` / `T` 是固定参照点，`q` 提供固有包络。在面板中调整原点位置和七种 transform，或开启锚点对齐，观察两种定位形式的区别。
 
 <ComponentPreview
   files={['scope-translate-basic', 'scope-translate-basic.preview.tsx']}
-  size="sm"
+  size="md"
   controlPanelDefaultSize={50}
-  caption="正方形 q 是唯一包络主体，小圆点只标记局部原点。“自身定位”默认关闭；开启后可在 O / T 间切换定位目标，selfAnchor 会把方形的对应锚点锁定到该目标。此时五种纯平移 transform 的位移会被最终定位抵消，因此面板隐藏无效的 transform 引用点。"
+  caption="正方形 q 是唯一包络主体，小圆点只标记局部原点。锚点对齐默认关闭；开启后可在 O / T 间切换定位目标，selfAnchor 会把方形的对应锚点锁定到该目标。此时五种纯平移 transform 的位移会被最终定位抵消，因此面板隐藏无效的 transform 引用点。"
   defaultSourceFile="scope-translate-basic.preview.tsx"
 />
 
-`placement.target` 只接受父坐标系 `[x, y]` 或此前完成的 `{ id, anchor?, offset? }`；`selfAnchor` 缺省为 `center`，也可写标准 anchor、数字角度、`{ side, fraction }`、`origin` 或显式局部坐标。
+锚点形式的 `position.target` 只接受父坐标系 `[x, y]` 或此前完成的 `{ id, anchor?, offset? }`；`selfAnchor` 缺省为 `center`，也可写标准 anchor、数字角度、`{ side, fraction }`、`origin` 或显式局部坐标。
 
-`rotate.pivot` 与 `scale.pivot` 使用同一套自身点并缺省为 `origin`。pivot 只读取 placement 之前的固有包络，因此移动 Scope 不会反过来改变旋转或缩放中心。其它相对方向仍在当前局部坐标系中解释，Scope 旋转后，`right` 的视觉方向会随坐标轴旋转。
+`rotate.pivot` 与 `scale.pivot` 使用同一套自身点并缺省为 `origin`。pivot 只读取 position 之前的固有包络，因此移动 Scope 不会反过来改变旋转或缩放中心。其它相对方向仍在当前局部坐标系中解释，Scope 旋转后，`right` 的视觉方向会随坐标轴旋转。
 
 ## 整体引用与命名空间
 
@@ -282,10 +291,10 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
       description: '按 SVG transform list 的顺序变换整个子图；数组最后一项先作用于局部点。',
     },
     {
-      name: 'placement',
+      name: 'position',
       kind: 'property',
-      type: "IRScope['placement']",
-      description: '在局部布局和变换完成后，把 Scope 自身包络的指定锚点对齐到父坐标系目标。',
+      type: "IRScope['position']",
+      description: '用 [x, y] 指定父坐标系中的原点位置，或用 kind: anchor 在局部变换后精确对齐目标。',
     },
     {
       name: 'id',
@@ -324,7 +333,7 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
 
 ## 错误与限制
 
-- `placement` 只能引用此前已完成的目标，不能引用自身、后代或尚未完成的 Scope。
+- anchor 形式的 `position` 只能引用此前已完成的目标，不能引用自身、后代或尚未完成的 Scope。
 - 零缩放可以用于视觉效果，但跨越它反算局部坐标会失败。
 - 同一命名空间的重复 id 会警告并采用后定义；可复用子图用 `localNamespace` 隔离内部 id。
 - 基础 Scope 不提供布局检查属性；需要检查子树时使用 Layout 包的 `LayoutInspectScope`。

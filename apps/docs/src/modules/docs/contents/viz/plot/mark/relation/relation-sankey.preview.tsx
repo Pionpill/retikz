@@ -17,7 +17,7 @@ export type RelationSankeyPreviewValues = {
 /** 绘制示例图形 */
 export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
   <Layout viewBox={{ x: 0, y: 0, width: 620, height: 360 }}>
-    <Plot data={sankeyData} width={620} height={320} y={42}>
+    <Plot data={sankeyData} width={620} height={320} position={[0, 42]}>
       <RelationMark
         kind="ribbon"
         source={{ project: { x: 'sourceX', y: 'sourceY' } }}
