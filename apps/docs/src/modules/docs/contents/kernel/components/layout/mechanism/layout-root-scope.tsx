@@ -35,7 +35,7 @@ const LayoutRootScope: FC<LayoutRootScopeProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[0, 1].map(index => (
-        <Scope key={index} transforms={[{ kind: 'translate', x: index * 220, y: 0 }]}>
+        <Scope key={index} position={[index * 220, 0]}>
           <LogicFigureFrame border={{ stroke: 'gray' }}>
             <LogicFigureFrameTitle>{index === 0 ? i18n.implicit : i18n.explicit}</LogicFigureFrameTitle>
             {index === 0 ? wrapRootScope(children, { defaults }) : <Scope defaults={defaults}>{children}</Scope>}

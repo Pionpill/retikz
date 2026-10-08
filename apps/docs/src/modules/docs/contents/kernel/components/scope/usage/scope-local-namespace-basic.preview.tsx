@@ -24,7 +24,7 @@ export const ScopeLocalNamespaceBasicPreview = (values: ScopeLocalNamespaceBasic
         corner2={[350, 42]}
         style={{ fill: 'none', stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
-      <Scope localNamespace={values.localNamespace} transforms={[{ kind: 'translate', x: 280, y: 0 }]}>
+      <Scope localNamespace={values.localNamespace} position={[280, 0]}>
         <Node id={innerNodeId} position={[0, 0]}>
           inner {innerNodeId}
         </Node>

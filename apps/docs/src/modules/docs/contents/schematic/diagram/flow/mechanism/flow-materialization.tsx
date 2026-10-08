@@ -20,7 +20,7 @@ const FlowMaterialization: FC<FlowMaterializationProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="output"
-        transforms={[{ kind: 'translate', x: 0, y: 85 }]}
+        position={[0, 85]}
         label={{ text: t.output, font: { size: 12 }, opacity: 0.8 }}
         style={{ font: { size: 13 } }}
         data={{ id: 'receive', bounds: { x: 240, y: 120, width: 80, height: 40 } }}
@@ -32,7 +32,7 @@ const FlowMaterialization: FC<FlowMaterializationProps> = props => {
         style={{ stroke: 'none', fill: 'none' }}
         label={{ text: t.graph, font: { size: 12 } }}
       />
-      <Scope transforms={[{ kind: 'translate', x: 110, y: -80 }]}>
+      <Scope position={[110, -80]}>
         <PreviewGraph>
           <Entity
             id="receive"
@@ -53,7 +53,7 @@ const FlowMaterialization: FC<FlowMaterializationProps> = props => {
       </Scope>
       <Map
         id="artifact"
-        transforms={[{ kind: 'translate', x: 360, y: 175 }]}
+        position={[360, 175]}
         label={{ text: t.artifact, font: { size: 12 }, opacity: 0.8 }}
         style={{ font: { size: 13 } }}
         data={{ kind: 'entity', bounds: { x: 240, y: 120, width: 80, height: 40 } }}

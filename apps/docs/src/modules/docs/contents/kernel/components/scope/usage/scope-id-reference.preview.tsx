@@ -37,7 +37,7 @@ export const ScopeIdReferencePreview = (values: ScopeIdReferencePreviewValues) =
       <Node id="source" position={[-150, 0]}>
         source
       </Node>
-      <Scope id="cluster" boundingShape={values.boundingShape} transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+      <Scope id="cluster" boundingShape={values.boundingShape} position={[80, 0]}>
         <Node id="A" position={[-45, -35]}>
           A
         </Node>

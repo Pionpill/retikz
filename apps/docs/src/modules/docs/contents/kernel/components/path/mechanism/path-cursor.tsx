@@ -30,7 +30,7 @@ const PathCursor: FC<PathCursorProps> = props => {
         index
       />
       {t.states.map((title, index) => (
-        <Scope key={title} localNamespace transforms={[{ kind: 'translate', x: index * 225, y: 180 }]}>
+        <Scope key={title} localNamespace position={[index * 225, 180]}>
           <Map
             label={{ text: title, opacity: 0.8, font: { size: 12 } }}
             layout={{ height: 32, key: { width: 110 }, value: { width: 100 } }}
@@ -43,7 +43,7 @@ const PathCursor: FC<PathCursorProps> = props => {
               { key: { content: t.start }, value: { content: index === 0 ? 'A [0, 0]' : 'C [0, 60]' } },
             ]}
           />
-          <Scope transforms={[{ kind: 'translate', x: 40, y: 110 }]}>
+          <Scope position={[40, 110]}>
             <Draw
               way={[
                 [0, 0],

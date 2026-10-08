@@ -18,14 +18,14 @@ const CoordinateStorage: FC<CoordinateStorageProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="input"
-        transforms={[{ kind: 'translate', x: 20, y: 35 }]}
+        position={[20, 35]}
         label={{ text: t.input, opacity: 0.8, font: { size: 12 } }}
         data={{ id: 'hub', position: [40, 20] }}
         layout={{ height: 30, padding: 4 }}
         style={{ font: { size: 13 } }}
       />
       <Map
-        transforms={[{ kind: 'translate', x: 20, y: 175 }]}
+        position={[20, 175]}
         label={{ text: t.map, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
         layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 145 } }}
         style={{ fill: 'dodgerblue', font: { size: 13 } }}
@@ -33,7 +33,7 @@ const CoordinateStorage: FC<CoordinateStorageProps> = props => {
       />
       <Map
         id="record"
-        transforms={[{ kind: 'translate', x: 410, y: 35 }]}
+        position={[410, 35]}
         label={{ text: t.record, opacity: 0.8, font: { size: 12 } }}
         layout={{ padding: 6 }}
         style={{ font: { size: 13 } }}

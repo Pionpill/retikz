@@ -7,7 +7,7 @@ const Demo: FC = () => (
     <Node id="origin" position={[0, 0]}>
       x = 0
     </Node>
-    <Scope transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+    <Scope position={[80, 0]}>
       <Node id="A" position={[0, 0]}>
         A
       </Node>

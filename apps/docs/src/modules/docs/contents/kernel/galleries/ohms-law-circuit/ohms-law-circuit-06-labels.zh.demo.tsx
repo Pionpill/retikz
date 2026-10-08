@@ -45,7 +45,7 @@ const CircuitDemo: FC = () => (
       </Scope>
 
       {/* 第二组靠 Scope 平移复制（左移 30、下移 120），只换 id 前缀与标注 */}
-      <Scope transforms={[{ kind: 'translate', x: -30, y: 120 }]}>
+      <Scope position={[-30, 120]}>
         <Resistor id="cell2-resistor" position={[450, 100]} label={{ text: 'R2', position: 'top' }} />
         <Meter
           id="cell2-voltmeter"

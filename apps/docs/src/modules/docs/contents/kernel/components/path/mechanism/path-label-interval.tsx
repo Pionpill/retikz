@@ -17,7 +17,7 @@ const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[t.bounds, t.interval].map((title, index) => (
-        <Scope key={title} localNamespace transforms={[{ kind: 'translate', x: index * 340, y: 0 }]}>
+        <Scope key={title} localNamespace position={[index * 340, 0]}>
           <Node position={[90, -110]} text={title} style={{ stroke: 'none', font: { size: 13 } }} />
           <Path style={{ stroke: 'gray', strokeWidth: 2 }}>
             <Step kind="move" to={cutCurve.from} />

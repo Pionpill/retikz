@@ -20,7 +20,7 @@ const ChartDataModelBridge: FC<ChartDataModelBridgeProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="dataset-a"
-        transforms={[{ kind: 'translate', x: 12, y: 28 }]}
+        position={[12, 28]}
         label={label(t.sourceA)}
         layout={mapLayout}
         style={{ font: { size: 13 } }}
@@ -31,7 +31,7 @@ const ChartDataModelBridge: FC<ChartDataModelBridgeProps> = props => {
       />
       <Map
         id="dataset-b"
-        transforms={[{ kind: 'translate', x: 12, y: 194 }]}
+        position={[12, 194]}
         label={label(t.sourceB)}
         layout={mapLayout}
         style={{ font: { size: 13 } }}
@@ -42,7 +42,7 @@ const ChartDataModelBridge: FC<ChartDataModelBridgeProps> = props => {
       />
       <Map
         id="adapter-a"
-        transforms={[{ kind: 'translate', x: 280, y: 28 }]}
+        position={[280, 28]}
         label={label(t.adapterA)}
         layout={{ height: 34, padding: 0, key: { width: 48 }, value: { width: 145 } }}
         style={{ font: { size: 13 } }}
@@ -53,7 +53,7 @@ const ChartDataModelBridge: FC<ChartDataModelBridgeProps> = props => {
       />
       <Map
         id="adapter-b"
-        transforms={[{ kind: 'translate', x: 280, y: 194 }]}
+        position={[280, 194]}
         label={label(t.adapterB)}
         layout={{ height: 34, padding: 0, key: { width: 48 }, value: { width: 145 } }}
         style={{ font: { size: 13 } }}
@@ -64,7 +64,7 @@ const ChartDataModelBridge: FC<ChartDataModelBridgeProps> = props => {
       />
       <Map
         id="chart-encodings"
-        transforms={[{ kind: 'translate', x: 630, y: 111 }]}
+        position={[630, 111]}
         label={label(t.chart)}
         layout={{ height: 34, padding: 0, key: { width: 45 }, value: { width: 45 } }}
         style={{ font: { size: 13 } }}

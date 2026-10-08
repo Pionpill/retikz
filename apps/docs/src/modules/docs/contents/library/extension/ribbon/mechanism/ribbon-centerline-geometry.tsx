@@ -40,7 +40,7 @@ const RibbonCenterlineGeometry: FC<RibbonCenterlineGeometryProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }} extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
       {t.stages.map((title, stage) => (
-        <Scope key={title} transforms={[{ kind: 'translate', x: stage * 235, y: 0 }]}>
+        <Scope key={title} position={[stage * 235, 0]}>
           <Node position={[77, -30]} text={title} style={{ stroke: 'none', font: { size: 14 } }} />
           {stage === 2 && (
             <Path

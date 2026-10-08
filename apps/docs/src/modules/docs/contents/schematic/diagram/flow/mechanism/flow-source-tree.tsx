@@ -20,7 +20,7 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
         id="source"
-        transforms={[{ kind: 'translate', x: 106, y: 0 }]}
+        position={[106, 0]}
         label={{ text: t.source, position: 'left', opacity: 0.8, font: { size: 12 } }}
         style={{ font: { size: 13 } }}
         layout={{ key: { width: 150 } }}
@@ -46,7 +46,7 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
       </Map>
       <Map
         id="tree"
-        transforms={[{ kind: 'translate', x: 0, y: 180 }]}
+        position={[0, 180]}
         label={{ text: t.tree, opacity: 0.8, font: { size: 12 } }}
         style={{ font: { size: 13 } }}
         data={{
@@ -74,7 +74,7 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
         arrow="->"
         label={{ text: t.render, font: { size: 12 }, textColor: 'gray', sloped: false, side: 'right', distance: 90 }}
       />
-      <Scope transforms={[{ kind: 'translate', x: 153, y: 440 }]}>
+      <Scope position={[153, 440]}>
         <PreviewFlowDiagram>
           <FlowGroup id="pipeline">
             <FlowLayout id="steps" kind="linear" direction="right">
