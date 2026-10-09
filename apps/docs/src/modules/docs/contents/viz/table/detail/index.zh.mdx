@@ -37,7 +37,7 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 
 `columns` 与 `DetailColumn` children 只能二选一；两种写法会得到相同的明细表 spec。除 `columns` 外，`DetailTable` 的根属性在两种写法中完全一致。
 
-Table 会先解析每个 Cell 的最终计划：host `theme.mode` 建立 Table owner-local 默认 preset；显式 `theme.style` 再应用注入的同名稀疏 Table defaults，随后由 shared `colors.categorical` 提供视觉编码的公共分类色，Source 的 `tableDefaults`、`appearanceDefaults`、`visualDefaults` 与显式 `layout.borders` 按顺序覆盖默认值。列级配置提供 formatter/presentation 与局部外观，`encodings` 映射原始数据颜色，声明顺序中的 `rules` 最后覆盖匹配 Cell，也可以改写 formatter/presentation 胜者。随后才由胜出的 formatter 把原始字段值转成显示值；这些 defaults 与 layout 字段会写入 JSON-safe IRTable，宿主 `theme` 由 Core Scene / Scope 传播。
+Table 会先解析每个 Cell 的最终计划：host `theme.mode` 建立 Table owner-local 默认 preset；显式 `theme.style` 再应用注入的同名稀疏 Table defaults，随后由 shared `colors.categorical` 提供视觉编码的公共分类色，Source 的 `tableDefaults`、`appearanceDefaults`、`cellLayoutDefaults`、`visualDefaults` 与显式 `layout.borders` 按顺序覆盖默认值。列级配置提供 formatter/presentation 与局部外观，`encodings` 映射原始数据颜色，声明顺序中的 `rules` 最后覆盖匹配 Cell，也可以改写 formatter/presentation 胜者。随后才由胜出的 formatter 把原始字段值转成显示值；这些 defaults 与 layout 字段会写入 JSON-safe IRTable，宿主 `theme` 由 Core Scene / Scope 传播。
 
 ## 例子
 
@@ -243,6 +243,7 @@ result.manifest;
 | `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`       | 把选中 value Cell 的原始值映射到背景或内容颜色                    |
 | `theme?`                         | `DetailTableProps['theme']`                                               | —          | standalone 根 Core Theme；embedded 时由外层 `<Layout>` 提供       |
 | `appearanceDefaults?`            | `DetailTableProps['appearanceDefaults']`                                  | `{}`       | 已存在 body / columnHeader Cell 的稀疏外观默认值                  |
+| `cellLayoutDefaults?`            | `DetailTableProps['cellLayoutDefaults']`                                  | `{}`       | 按 body / columnHeader 提供 padding 默认值，单元格显式值优先      |
 | `visualDefaults?`                | `DetailTableProps['visualDefaults']`                                      | `{}`       | 已存在 visual encoding 的分类色与连续色默认值                     |
 | `tableDefaults?`                 | `DetailTableProps['tableDefaults']`                                       | `{}`       | 稀疏 Table defaults 片段，优先级低于同级显式 Source 字段          |
 | `meta?`                          | `DetailTableProps['meta']`                                                | —          | 写入 IRTable 的 JSON 元数据                                       |

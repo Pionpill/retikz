@@ -44,6 +44,8 @@ probe 只参与求解，不会作为重复图元进入 Scene。最终输出 repl
 
 井字中央的单元格就是 `box`：它由覆盖的轨道、内部 gap 和 span 共同确定；减去 padding 后得到 `contentBox`。随后 child 的占位和肉眼可见范围还可能继续分离。
 
+`cellLayoutDefaults` 按 `body` / `columnHeader` 提供单元格内边距，例如 `{ body: { padding: 4 }, columnHeader: { padding: 4 } }`。同一片段也可由 Table style definition 的 `defaults` 提供，因此示例只需选择主题。优先级为主题默认 → `tableDefaults.cellLayoutDefaults` → 根 `cellLayoutDefaults` → 单元格显式 `layout.padding`（Detail 列通过 `headerLayout` / `bodyLayout` 写入）。显式 `0` 保持无内边距；未配置时基础值仍为 `0`。padding 对象整体替换，不逐边继承；默认片段中的 `null` 清除较低层值。该默认只影响已存在 Cell 的内容区域和自动尺寸贡献，不改变固定行高、列宽，也不创建 Cell。
+
 <ComponentPreview files="table-cell-box" hideCode size="sm" />
 
 从外到内可按下面四层理解。前两层逐层内缩；后两层是内容结果，可见范围不一定留在内容区内。

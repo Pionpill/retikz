@@ -19,7 +19,10 @@ import { validateTableStructureOutput } from './validate';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-const createSemanticTableModel = (output: TableStructureOutput): SemanticTableModel =>
+const createSemanticTableModel = (
+  output: TableStructureOutput,
+  cellLayoutDefaults: NormalizeTableStructureOptions['cellLayoutDefaults'],
+): SemanticTableModel =>
   deepFreeze({
     rows: output.rows.map((row, index) => ({ ...row, index })),
     columns: output.columns.map((column, index) => ({ ...column, index })),
@@ -37,7 +40,10 @@ const createSemanticTableModel = (output: TableStructureOutput): SemanticTableMo
         columns: cell.span?.columns ?? 1,
       },
       layout: {
-        padding: resolveBoxSpacing(cell.layout?.padding, 0),
+        padding: resolveBoxSpacing(
+          cell.layout?.padding ?? cellLayoutDefaults?.[cell.location]?.padding ?? undefined,
+          0,
+        ),
         horizontalAlign: cell.layout?.horizontalAlign ?? TableHorizontalAlignment.Center,
         verticalAlign: cell.layout?.verticalAlign ?? TableVerticalAlignment.Center,
         wrap: cell.layout?.wrap ?? false,
@@ -75,7 +81,7 @@ export const normalizeTableStructure = (
       context,
     );
 
-    return createSemanticTableModel(output);
+    return createSemanticTableModel(output, options.cellLayoutDefaults);
   } catch (error) {
     throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
   }

@@ -43,7 +43,11 @@ const pruneClearedRecords = (value: unknown, preserveRoot = false): unknown => {
   return preserveRoot || Object.keys(result).length > 0 ? result : undefined;
 };
 
-const mergeRecord = (current: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> => {
+const mergeRecord = (
+  current: Record<string, unknown>,
+  patch: Record<string, unknown>,
+  atomicField = 'background',
+): Record<string, unknown> => {
   const result = clone(current);
   Object.entries(patch).forEach(([field, value]) => {
     if (value === undefined) return;
@@ -61,8 +65,8 @@ const mergeRecord = (current: Record<string, unknown>, patch: Record<string, unk
       return;
     }
 
-    if (isRecord(result[field]) && isRecord(value) && field !== 'background') {
-      result[field] = mergeRecord(result[field], value);
+    if (isRecord(result[field]) && isRecord(value) && field !== atomicField) {
+      result[field] = mergeRecord(result[field], value, atomicField);
       return;
     }
 
@@ -103,6 +107,16 @@ export const mergeTableDefaults = (
     delete result.layout;
   } else if (isRecord(patch.layout)) {
     result.layout = mergeLayoutDefaults(isRecord(result.layout) ? result.layout : undefined, patch.layout);
+  }
+
+  if (patch.cellLayoutDefaults === null) {
+    delete result.cellLayoutDefaults;
+  } else if (isRecord(patch.cellLayoutDefaults)) {
+    result.cellLayoutDefaults = mergeRecord(
+      isRecord(result.cellLayoutDefaults) ? result.cellLayoutDefaults : {},
+      patch.cellLayoutDefaults,
+      'padding',
+    );
   }
 
   if (patch.visualDefaults === null) {

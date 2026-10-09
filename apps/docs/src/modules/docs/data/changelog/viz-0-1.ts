@@ -1286,6 +1286,13 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：单元格内边距默认值', en: 'Unreleased: Cell padding defaults' },
+          content: {
+            zh: '新增 cellLayoutDefaults，按 body / columnHeader 为既有单元格提供 padding，主题 definition、tableDefaults 与实例复用同一片段。显式单元格 padding（包括 0）优先，默认片段支持 null 清除；主题默认不展开进 Source IR。',
+            en: 'New cellLayoutDefaults supplies padding to existing body / columnHeader Cells through the same fragment in theme definitions, tableDefaults, and instances. Explicit Cell padding, including 0, wins; null clears lower defaults. Theme defaults remain outside Source IR.',
+          },
+        },
+        {
           label: {
             zh: '待发布：异步数据准备与执行策略',
             en: 'Unreleased: async data preparation and execution policies',

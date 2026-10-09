@@ -9,20 +9,21 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
 
 `IRTable` 是 `IRDetailTable | IRManualTable | IRCustomTable` 的聚合类型。三个变体共享 `namespace + type`，再分别约束 `data` 与 `structure`。
 
-| 字段                  | 类型                                | 默认值     | 描述                                             |
-| --------------------- | ----------------------------------- | ---------- | ------------------------------------------------ |
-| `namespace`           | `'table'`                           | —          | Tier 2 composite 命名空间                        |
-| `type`                | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                             |
-| `id?`                 | `string`                            | —          | 可选稳定 id                                      |
-| `appearanceDefaults?` | `IRTableAppearanceDefaults`         | `{}`       | 已存在 body / columnHeader Cell 的稀疏外观默认值 |
-| `layout?`             | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border                    |
-| `meta?`               | `JsonObject`                        | —          | lowering 原样保留的 JSON-safe 元数据             |
-| `rules?`              | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖                       |
-| `encodings?`          | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道                     |
-| `visualDefaults?`     | `IRTableVisualDefaults`             | `{}`       | 已存在 visual encoding 的颜色范围默认值          |
-| `tableDefaults?`      | `IRTableDefaults`                   | `{}`       | 稀疏默认片段，优先级低于同级显式 Source 字段     |
-| `data?`               | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选            |
-| `structure`           | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure               |
+| 字段                  | 类型                                | 默认值     | 描述                                                         |
+| --------------------- | ----------------------------------- | ---------- | ------------------------------------------------------------ |
+| `namespace`           | `'table'`                           | —          | Tier 2 composite 命名空间                                    |
+| `type`                | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                                         |
+| `id?`                 | `string`                            | —          | 可选稳定 id                                                  |
+| `appearanceDefaults?` | `IRTableAppearanceDefaults`         | `{}`       | 已存在 body / columnHeader Cell 的稀疏外观默认值             |
+| `cellLayoutDefaults?` | `IRTableCellLayoutDefaults`         | `{}`       | 按 body / columnHeader 提供 padding 默认值，单元格显式值优先 |
+| `layout?`             | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border                                |
+| `meta?`               | `JsonObject`                        | —          | lowering 原样保留的 JSON-safe 元数据                         |
+| `rules?`              | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖                                   |
+| `encodings?`          | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道                                 |
+| `visualDefaults?`     | `IRTableVisualDefaults`             | `{}`       | 已存在 visual encoding 的颜色范围默认值                      |
+| `tableDefaults?`      | `IRTableDefaults`                   | `{}`       | 稀疏默认片段，优先级低于同级显式 Source 字段                 |
+| `data?`               | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选                        |
+| `structure`           | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure                           |
 
 ### TableSchema
 
@@ -46,6 +47,7 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
     appearanceDefaults: '已存在 body / columnHeader Cell 的稀疏外观默认值。',
+    cellLayoutDefaults: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
     visualDefaults: '已存在 visual encoding 的颜色范围默认值。',
     tableDefaults: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
@@ -72,6 +74,7 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
     appearanceDefaults: '已存在 body / columnHeader Cell 的稀疏外观默认值。',
+    cellLayoutDefaults: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
     visualDefaults: '已存在 visual encoding 的颜色范围默认值。',
     tableDefaults: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
@@ -300,6 +303,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   description="限制在已有外观、border 与 visual scale 字段内的稀疏 Table defaults 聚合片段。"
   descriptions={{
     appearanceDefaults: '已有 body / columnHeader Cells 的外观默认值。',
+    cellLayoutDefaults: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
     layout: '仅包含 border 的 layout 默认值。',
     visualDefaults: '已有 visual encodings 的颜色范围默认值。',
   }}

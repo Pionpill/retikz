@@ -9,20 +9,21 @@ Base Table contracts define the top-level identity and Cell content shared by ev
 
 `IRTable` aggregates `IRDetailTable | IRManualTable | IRCustomTable`. The three variants share `namespace + type` fields and constrain `data` and `structure` independently.
 
-| Field                 | Type                                | Default        | Description                                              |
-| --------------------- | ----------------------------------- | -------------- | -------------------------------------------------------- |
-| `namespace`           | `'table'`                           | —              | Tier 2 composite namespace                               |
-| `type`                | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                |
-| `id?`                 | `string`                            | —              | Optional stable id                                       |
-| `appearanceDefaults?` | `IRTableAppearanceDefaults`         | `{}`           | Sparse appearance defaults for existing Cells            |
-| `layout?`             | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders              |
-| `meta?`               | `JsonObject`                        | —              | JSON-safe metadata preserved by lowering                 |
-| `rules?`              | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                       |
-| `encodings?`          | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels             |
-| `visualDefaults?`     | `IRTableVisualDefaults`             | `{}`           | Default color ranges for existing visual encodings       |
-| `tableDefaults?`      | `IRTableDefaults`                   | `{}`           | Sparse defaults below explicit Source fields             |
-| `data?`               | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom |
-| `structure`           | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                      |
+| Field                 | Type                                | Default        | Description                                                         |
+| --------------------- | ----------------------------------- | -------------- | ------------------------------------------------------------------- |
+| `namespace`           | `'table'`                           | —              | Tier 2 composite namespace                                          |
+| `type`                | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                           |
+| `id?`                 | `string`                            | —              | Optional stable id                                                  |
+| `appearanceDefaults?` | `IRTableAppearanceDefaults`         | `{}`           | Sparse appearance defaults for existing Cells                       |
+| `cellLayoutDefaults?` | `IRTableCellLayoutDefaults`         | `{}`           | Padding defaults by body / columnHeader; explicit Cell padding wins |
+| `layout?`             | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders                         |
+| `meta?`               | `JsonObject`                        | —              | JSON-safe metadata preserved by lowering                            |
+| `rules?`              | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                                  |
+| `encodings?`          | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels                        |
+| `visualDefaults?`     | `IRTableVisualDefaults`             | `{}`           | Default color ranges for existing visual encodings                  |
+| `tableDefaults?`      | `IRTableDefaults`                   | `{}`           | Sparse defaults below explicit Source fields                        |
+| `data?`               | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom            |
+| `structure`           | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                                 |
 
 ### TableSchema
 

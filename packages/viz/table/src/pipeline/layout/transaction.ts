@@ -233,7 +233,9 @@ const trackLayoutsOf = (
 /** 从 Core Theme 与 Table Source 片段构造同次 defaults resolution */
 const resolveTableDefaults = (
   theme: LayoutCompositeCompileContext['theme'],
-  spec: Pick<IRTable, 'appearanceDefaults' | 'layout' | 'visualDefaults' | 'tableDefaults'> | undefined,
+  spec:
+    | Pick<IRTable, 'appearanceDefaults' | 'cellLayoutDefaults' | 'layout' | 'visualDefaults' | 'tableDefaults'>
+    | undefined,
   tableThemeStyles: LowerTablesOptions['tableThemeStyles'] | undefined,
 ): ResolvedTableDefaults => {
   const base = resolveTableThemeDefaults(theme, tableThemeStyles);
@@ -246,6 +248,10 @@ const resolveTableDefaults = (
   if (spec?.tableDefaults !== undefined) append('$spec/tableDefaults', spec.tableDefaults);
   if (spec?.appearanceDefaults !== undefined) {
     append('$spec/appearanceDefaults', { appearanceDefaults: spec.appearanceDefaults });
+  }
+
+  if (spec?.cellLayoutDefaults !== undefined) {
+    append('$spec/cellLayoutDefaults', { cellLayoutDefaults: spec.cellLayoutDefaults });
   }
 
   if (spec?.layout?.borders !== undefined) {
@@ -779,14 +785,15 @@ export const resolveTableTransaction = (
   options: LowerTablesOptions,
   context: LayoutCompositeCompileContext,
 ): ResolvedTableTransaction => {
+  const tableDefaults = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);
   const semantic = normalizeTableStructure(spec.structure, {
+    cellLayoutDefaults: tableDefaults.defaults.cellLayoutDefaults,
     data: spec.data,
     datasets,
     preparedData:
       (context.runtimeInput as DataTransformResult | undefined) ?? resolveTableData(spec, datasets, options),
     structureDefinitions: options.structureDefinitions,
   });
-  const tableDefaults = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);
   const categoricalPalette = tableDefaults.defaults.visualDefaults?.categorical;
   const sequentialPalette = tableDefaults.defaults.visualDefaults?.sequential;
   const categoricalColors = categoricalPalette === null ? undefined : categoricalPalette;

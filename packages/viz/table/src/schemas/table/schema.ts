@@ -9,7 +9,7 @@ import { TableCellVisualEncodingSchema } from '../encoding';
 import { TableLayoutSchema } from '../layout';
 import { TableCellRuleSchema } from '../rule';
 import { CustomTableStructureSchema, DetailTableStructureSchema, ManualTableStructureSchema } from '../structure';
-import { TableDefaultsSchema, TableVisualDefaultsSchema } from '../style';
+import { TableCellLayoutDefaultsSchema, TableDefaultsSchema, TableVisualDefaultsSchema } from '../style';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
 const TableBaseSchema = CompositeBaseSchema.extend({
@@ -18,6 +18,9 @@ const TableBaseSchema = CompositeBaseSchema.extend({
   ),
   type: literal(TableComposite.Table).describe('Composite type for the top-level Table specification.'),
   id: NonBlankStringSchema.optional().describe('Optional stable Table id used by the lowered root Scope.'),
+  cellLayoutDefaults: TableCellLayoutDefaultsSchema.optional().describe(
+    'Padding defaults for existing body and column-header Cells; explicit Cell padding wins.',
+  ),
   appearanceDefaults: TableAppearanceDefaultsSchema.optional().describe(
     'Sparse appearance defaults for existing body and column-header Cells.',
   ),
@@ -33,7 +36,7 @@ const TableBaseSchema = CompositeBaseSchema.extend({
     'Sparse default ranges for existing Table builtin visual encodings.',
   ),
   tableDefaults: TableDefaultsSchema.optional().describe(
-    'Sparse Table defaults fragment restricted to appearance, border layout, and visual ranges.',
+    'Sparse Table defaults fragment restricted to appearance, Cell padding, border layout, and visual ranges.',
   ),
 });
 
