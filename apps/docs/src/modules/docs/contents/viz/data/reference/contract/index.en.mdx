@@ -19,7 +19,7 @@ Data-model definitions are documented in [Schema Reference](/viz/data/model/sche
 
 <ZodSchema name="DataTransformSchema" />
 
-Built-in transforms share a `kind` discriminator and execute in declaration order. See [Transform Operators](/viz/data/transform/statistics) for the reducer and selector contracts used by `metrics` and `selector`. A custom operation must stay JSON-serializable, while its runtime Definition supplies the precise schema and implementation.
+Built-in transforms share a `kind` discriminator and execute in declaration order. See [Computation Operators](/viz/data/transform/statistics) for the reducer and selector contracts used by `metrics` and `selector`. A custom operation must stay JSON-serializable, while its runtime Definition supplies the precise schema and implementation.
 
 Every transform operation uses `{ kind, params }`: `kind` selects its definition and `params` is a required JSON parameter object. Each `XxxParamsSchema` describes the parameters; `createTransformSchema` combines them with the kind into the complete schemas below. `defineTransform` uses the same factory. Statistical sub-operations retain their own formats.
 

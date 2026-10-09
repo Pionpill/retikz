@@ -1,9 +1,9 @@
 ---
-title: 变换算子
+title: 计算算子
 description: 理解 reducer 与 selector 如何接收分组行、返回局部结果，并由宿主变换组织最终数据。
 ---
 
-**变换算子**是 transform 内部使用的计算单元。当前提供 reducer 和 selector 两类：reducer 返回计算出的字段片段，selector 返回所选记录及可选排名。transform 负责组织输入与输出，算子负责完成其中的具体计算。
+**计算算子**是 transform 内部使用的计算单元。当前提供 reducer 和 selector 两类：reducer 返回计算出的字段片段，selector 返回所选记录及可选排名。transform 负责组织输入与输出，算子负责完成其中的具体计算。
 
 [变换操作](/viz/data/transform/operations)解释整条链如何推进。本页进入单个变换内部，追踪一组数据如何交给算子处理，再由调用它的 transform（即**宿主变换**）组织最终结果。宿主决定分组边界和输出行的形状；算子完成局部计算，不自行推进整条变换链。本文聚焦 reducer 与 selector 的协作机制，不列举全部算子及参数。
 
