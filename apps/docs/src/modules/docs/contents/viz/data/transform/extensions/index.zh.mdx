@@ -1,78 +1,344 @@
 ---
 title: 扩展机制
-description: 定义并注册自定义 transform、reducer 与 selector，分别提供语义声明和本地计算实现。
+description: 通过自定义变换和算子扩展数据处理，了解定义、计算实现与宿主注册的完整过程。
 ---
 
-Data 用 Definition 声明操作含义，用 Implementation 提供计算。操作 `{ kind, params }` 和执行配置可以保存为 JSON；schema、函数、执行器与数据源句柄留在运行时。
+自定义扩展需要说明两件事：操作接受什么参数、会产生什么字段，以及怎样计算这些结果。Data 分别用 Definition（语义定义）和 Implementation（计算实现）描述它们，再由宿主注册和调用。
 
 ## 适用边界
 
-需要新的行处理语义时定义 transform；已有 `summarize` 或 `annotate` 只缺统计方法时定义 reducer；已有 `select` 只缺选行规则时定义 selector。替换计算引擎时复用已有 Definition，不创建含义不同的同名操作。
+先看内置操作能否通过组合完成任务。需要扩展时，根据要改变的部分选择入口：
 
-`kind` 是开放字符串，但自定义名称不能覆盖内置名称。所有入口都从 `@retikz/data` 根目录导出。
+- 自定义变换：增加一种完整的行处理操作，例如按参数派生字段。
+- 自定义算子：保留已有变换的分组和结果组装方式，只增加计算或选行规则。reducer 返回计算出的字段，selector 返回选中的原始行。
 
-## 定义能力
+操作与算子的协作方式见[变换操作](/viz/data/transform/operations)和[计算算子](/viz/data/transform/statistics)。如果只是想让已有操作交给其他计算引擎执行，复用它的 Definition，按[计算契约](/viz/data/transform/computation)接入即可。
 
-`defineTransform` 接收 `kind`、精确 `paramsSchema`、可选 `inputFields` 和必填 `outputModel`。它通过统一的 `createTransformSchema` 组装完整操作 schema；内置与自定义变换遵守同一外壳。回调接收完整 operation，通过 `operation.params` 读取解析后的参数。语义回调只读取参数与字段模型，不读取行或执行计算。需要变换算子的操作通过 `dependencies` 声明完整依赖；`validate` 检查模型相关不变量。
+下面的定义函数都从 `@retikz/data` 导出。自定义 `kind` 可以使用新的字符串，但不能与内置名称或本次注册的其他名称重复。
 
-`outputModel` 使用 `preserve.outputs` 增补字段，或用 `replace.fields` 替换完整模型。输出字段可以省略类型表示尚无类型证据；`{ from: field }` 沿用已有字段的类型与适用分类顺序。派生字段名由该模型投影。
+## 自定义变换
 
-`defineTransformImplementation({ definition, apply })` 引用同一个 Definition。下面的 `scale-field` 读取 `x`，按 `factor` 生成 `scaledX`：
+下面的 `scale-field` 读取 `x`，乘以 `factor`，将结果写入 `scaledX`。调整倍率时，灰色原始点保持不变，蓝色点随派生字段移动：
 
 <ComponentPreview
   files={['extension-transform', 'extension-transform-preview.tsx', 'extension-transform.data.ts']}
   defaultSourceFile="extension-transform-preview.tsx"
   size="lg"
-  caption="灰色点读取原始 x，蓝色点读取 scaledX；固定 x 域让倍率效果保持可见。"
+  caption="灰色点读取 x，蓝色点读取 scaledX；固定 x 轴范围便于比较倍率变化。"
 />
 
-实现应遵守 Definition 的语义，不修改输入数组或输入行。保留原行的展开可以保留来源 Symbol；汇总行通过计算 context 的 `groupProvenance(out, members)` 关联源行。语义 Definition 不持有这些来源 helper。
+<DocSteps>
+<DocStep title="声明参数和字段变化">
 
-### 变换算子
+用 `defineTransform` 声明操作名称、参数约束和字段变化。它接收一个配置对象：
 
-`defineStatisticsReducer` 用 `schema`、`inputFields` 和必填 `outputs` 声明全部输出；非标量或未知类型输出只声明字段名。计算由 `defineStatisticsReducerImplementation({ definition, reduce })` 提供。
+- `kind`（必填）：操作的唯一名称。本例为 `scale-field`，调用时通过 `operation.kind` 引用。
+- `paramsSchema`（必填）：定义 `operation.params` 的结构、默认值和校验规则。本例包含输入字段 `field`、输出字段 `as` 和正数倍率 `factor`。
+- `inputFields`（可选）：返回操作读取的字段名，供系统检查字段依赖。本例读取 `operation.params.field`。
+- `outputModel`（必填）：声明计算后的字段模型。`preserve.outputs` 保留原字段并增加或覆盖字段；`replace.fields` 列出替换后的全部字段。本例新增一个连续字段。
+- `schedule`（可选）：供上层宿主调度，描述执行阶段 `phase`、可绑定的结构类别 `bindingClass` 和字段影响 `fieldEffect`。本例分别为字段派生、字段绑定、保留并扩展原字段。
+- `validate`（可选）：检查操作参数与当前字段模型之间的约束。
+- `dependencies`（可选）：声明本次操作需要的计算依赖，例如要调用的 reducer 或 selector。
 
-`defineRowSelector` 声明 schema 与输入字段；`defineRowSelectorImplementation({ definition, select })` 返回原始行和可选一基排名。`defineRegression` 与 `defineRegressionImplementation({ definition, fit })` 使用相同分离方式。
+这些回调用于分析参数与字段模型，不处理行数据。下面的 `scaleField` 只需读取一个字段并新增字段，因此没有配置 `validate` 和 `dependencies`。
+
+```ts
+import {
+  DataFieldType,
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+  defineTransform,
+} from '@retikz/data';
+import { z } from 'zod';
+
+const scaleField = defineTransform({
+  kind: 'scale-field',
+  paramsSchema: z.strictObject({
+    field: z.string().min(1).describe('Input field read from each row'),
+    as: z.string().min(1).describe('Output field written to each row'),
+    factor: z.number().positive().describe('Serializable multiplication factor'),
+  }),
+  inputFields: operation => [operation.params.field],
+  outputModel: operation => ({
+    kind: 'preserve',
+    outputs: [{ field: operation.params.as, type: DataFieldType.Continuous }],
+  }),
+  schedule: {
+    phase: DataTransformPhase.FieldDerive,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Preserve,
+  },
+});
+```
+
+</DocStep>
+<DocStep title="提供计算实现">
+
+用 `defineTransformImplementation` 引用上一步的定义，在 `apply` 中计算结果。下面逐行乘以倍率，返回新行，保留原字段和来源标记，不修改输入。
+
+```ts
+import { defineTransformImplementation } from '@retikz/data';
+
+const scaleFieldImplementation = defineTransformImplementation({
+  definition: scaleField,
+  apply: (rows, operation) =>
+    rows.map(row => ({
+      ...row,
+      [operation.params.as]: Number(row[operation.params.field]) * operation.params.factor,
+    })),
+});
+```
+
+</DocStep>
+<DocStep title="注册并引用操作">
+
+将定义和实现分别注册到 Plot，再用 `PlotTransform` 引用操作名称和参数。下面承接前两步，绘制派生字段 `scaledX`。
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 4 },
+  { x: 3, y: 3 },
+];
+
+const model: IRDataModel = [
+  { name: 'x', type: 'continuous' },
+  { name: 'y', type: 'continuous' },
+];
+
+export const CustomTransformExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    transformDefinitions={[scaleField]}
+    transformImplementations={[scaleFieldImplementation]}
+  >
+    <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
+    <PointMark x="scaledX" y="y" />
+  </Plot>
+);
+```
+
+Definition 与 Implementation 在运行时注册，JSON 只保存操作名称和参数。实现必须引用同一个定义对象，不能重复注册。其他宿主通过对应的 lowering options 传入这些注册项；外接计算与 Promise 见[计算契约](/viz/data/transform/computation)。
+
+</DocStep>
+</DocSteps>
+
+## 自定义算子
+
+算子只处理宿主交给它的那组数据。下面两个例子使用相同的分组：左图用 `midpoint` 计算最大值和最小值的中点，右图用 `closest-to-mean` 选出最接近均值的原始行。
 
 <ComponentPreview
   files={['extension-statistics', 'extension-statistics-preview.tsx', 'extension-statistics.data.ts']}
   defaultSourceFile="extension-statistics-preview.tsx"
   size="lg"
-  caption="左图的 reducer 生成中点统计行；右图的 selector 保留最接近均值的原始行。"
+  caption="reducer 产生新的统计值，selector 保留符合规则的原始行。"
 />
 
-自定义 selector 可用于 `select` 和声明支持它的操作；Data 的 `annotate` 只接受内置单行 selector 子集。
+例如 A 组的分数为 62、74、91：左图的中点是 76.5；右图选中分数为 74 的那一行。分组和最终输出行的组装仍由 `summarize` 或 `select` 完成。
 
-## 注入与使用
+<DocTabs defaultValue="reducer">
+<DocTab value="reducer" label="reducer 算子">
+<DocSteps>
+<DocStep title="声明参数和输出">
 
-定义与本地实现分别注册。以下是 Plot 的入口；Chart 使用 `lowerOptions` 中的同名选项，Table 使用各自的 lowering options。
+用 `defineStatisticsReducer` 声明算子的参数和输出字段：
 
-| 能力       | 语义数组                       | 同步本地实现数组                   |
-| ---------- | ------------------------------ | ---------------------------------- |
-| transform  | `transformDefinitions`         | `transformImplementations`         |
-| reducer    | `statisticsReducerDefinitions` | `statisticsReducerImplementations` |
-| selector   | `rowSelectorDefinitions`       | `rowSelectorImplementations`       |
-| regression | `regressionDefinitions`        | `regressionImplementations`        |
+- `schema`（必填）：完整算子结构，包含名称 `kind`、输入字段 `field` 和输出字段名 `as`。
+- `inputFields`（可选）：返回读取的字段名，供系统检查字段依赖。
+- `outputs`（必填）：列出返回的全部字段及类型；非标量或类型尚不确定的输出只声明字段名。
 
-宿主声明使用 `{ operation, dataExecution? }`。`operation` 只保存运算参数，`dataExecution` 选择执行方式：
+```ts
+import { DataFieldType, defineStatisticsReducer } from '@retikz/data';
+import { z } from 'zod';
 
-```tsx
-<Plot data={rows} transformDefinitions={[scaleField]} transformImplementations={[scaleFieldImplementation]}>
-  <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
-  <PointMark x="scaledX" y="y" />
-</Plot>
+const midpoint = defineStatisticsReducer({
+  schema: z.strictObject({
+    kind: z.literal('midpoint'),
+    field: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
 ```
 
-直接调用 Data 的同步 `applyTransforms` 时，仍传 operation 数组。执行器的异步路径先用 `resolveDataTransforms` 解析 declaration 与输入模型，再用 `executeDataTransforms` 执行。
+</DocStep>
+<DocStep title="提供计算实现">
 
-外接 Provider、执行模式、异步宿主与数据绑定见[计算契约](/viz/data/transform/computation)。
+`reduce` 接收当前组的行，返回计算出的字段。下面取最大值和最小值的中点；没有有限数值时返回 `NaN`。
 
-## 错误与限制
+```ts
+import { defineStatisticsReducerImplementation } from '@retikz/data';
 
-- 重复语义键、重复实现或 Implementation 引用不同 Definition 时立即失败。
-- 只有 Definition 的扩展可以交给外接入口执行；本地执行必须提供相应 Implementation。
+const midpointImplementation = defineStatisticsReducerImplementation({
+  definition: midpoint,
+  reduce: (rows, operation) => {
+    const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
+    if (values.length === 0) return { [operation.as]: Number.NaN };
+    return { [operation.as]: (Math.min(...values) + Math.max(...values)) / 2 };
+  },
+});
+```
+
+</DocStep>
+<DocStep title="注册并引用算子">
+
+将定义和实现注册到 Plot，再在 `summarize` 的 `metrics` 中引用算子。宿主负责分组，并将返回的 `midpoint` 与分组字段组装成结果行。
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { group: 'A', score: 62 },
+  { group: 'A', score: 74 },
+  { group: 'A', score: 91 },
+];
+
+const model: IRDataModel = [
+  { name: 'group', type: 'categorical' },
+  { name: 'score', type: 'continuous' },
+];
+
+export const CustomReducerExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    statisticsReducerDefinitions={[midpoint]}
+    statisticsReducerImplementations={[midpointImplementation]}
+  >
+    <PlotTransform
+      operation={{
+        kind: 'summarize',
+        params: {
+          groupBy: ['group'],
+          metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
+        },
+      }}
+    />
+    <PointMark x="group" y="midpoint" />
+  </Plot>
+);
+```
+
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="selector" label="selector 算子">
+<DocSteps>
+<DocStep title="声明参数和输入字段">
+
+用 `defineRowSelector` 声明选行规则的参数，不新增统计字段：
+
+- `schema`（必填）：完整算子结构，本例包含名称 `kind` 和输入字段 `field`。
+- `inputFields`（可选）：返回选行时读取的字段名。
+
+```ts
+import { defineRowSelector } from '@retikz/data';
+import { z } from 'zod';
+
+const closestToMean = defineRowSelector({
+  schema: z.strictObject({
+    kind: z.literal('closest-to-mean'),
+    field: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+});
+```
+
+</DocStep>
+<DocStep title="提供选行实现">
+
+`select` 返回选中的原始行，以 `[{ row }]` 表示；需要排名时可附带从 1 开始的 `rank`。下面选出最接近均值的行，距离相同时保留先遇到的行；没有有效候选行时返回空数组。
+
+```ts
+import { defineRowSelectorImplementation } from '@retikz/data';
+
+const closestToMeanImplementation = defineRowSelectorImplementation({
+  definition: closestToMean,
+  select: (rows, operation) => {
+    const candidates = rows
+      .map(row => ({ row, value: Number(row[operation.field]) }))
+      .filter(candidate => Number.isFinite(candidate.value));
+    if (candidates.length === 0) return [];
+
+    const mean = candidates.reduce((sum, candidate) => sum + candidate.value, 0) / candidates.length;
+    const selected = candidates.reduce((best, candidate) =>
+      Math.abs(candidate.value - mean) < Math.abs(best.value - mean) ? candidate : best,
+    );
+
+    return [{ row: selected.row }];
+  },
+});
+```
+
+</DocStep>
+<DocStep title="注册并引用算子">
+
+将定义和实现注册到 Plot，再通过 `select` 的 `selector` 引用算子。下面保留 A 组中分数为 74 的原始行。
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { group: 'A', score: 62 },
+  { group: 'A', score: 74 },
+  { group: 'A', score: 91 },
+];
+
+const model: IRDataModel = [
+  { name: 'group', type: 'categorical' },
+  { name: 'score', type: 'continuous' },
+];
+
+export const CustomSelectorExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    rowSelectorDefinitions={[closestToMean]}
+    rowSelectorImplementations={[closestToMeanImplementation]}
+  >
+    <PlotTransform
+      operation={{
+        kind: 'select',
+        params: {
+          groupBy: ['group'],
+          selector: { kind: 'closest-to-mean', field: 'score' },
+        },
+      }}
+    />
+    <PointMark x="group" y="score" />
+  </Plot>
+);
+```
+
+自定义 selector 可用于 `select` 及明确支持它的变换；`annotate` 只接受内置单行 selector 子集。
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
+
+本地执行时，算子的定义与实现需要成对注册，实现必须引用同一个定义对象；重名和重复实现的检查与自定义变换一致。这些注册项也可通过宿主的 lowering options 传入。
 
 ## 相关属性
+
+以下列出本页的定义与计算入口，完整参数见 [Data API 参考](/viz/data/model/api-reference)。
 
 <ComponentProps
   items={[
@@ -80,13 +346,37 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
       name: 'defineTransform',
       kind: 'function',
       type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: TransformDefinitionInput<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
-      description: '声明 kind、paramsSchema、字段依赖与完整 outputModel，自动组装完整操作 schema，不包含计算。',
+      description: '声明名称、参数 schema 与字段变化；outputModel 必填，语义回调不计算行数据。',
     },
     {
       name: 'defineTransformImplementation',
       kind: 'function',
       type: '<TTransform extends IRDataTransform, TResult extends Array<ExternalRow> | Promise<Array<ExternalRow>>>(implementation: TransformImplementation<TTransform, TResult>) => TransformImplementation<TTransform, TResult>',
-      description: '引用同一 Definition；apply 可以返回行或 Promise，同步宿主只能注入同步实现。',
+      description: '用 definition 引用已注册定义，apply 返回计算后的行；同步宿主要求同步实现。',
+    },
+    {
+      name: 'defineStatisticsReducer',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation = TSource>(definition: StatisticsReducerDefinition<TSource, TOperation>) => StatisticsReducerDefinition<TSource, TOperation>',
+      description: '声明完整 schema、inputFields 和必填 outputs；outputs 列出返回的全部字段。',
+    },
+    {
+      name: 'defineStatisticsReducerImplementation',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation, TResult extends ExternalRow | Promise<ExternalRow>>(implementation: StatisticsReducerImplementation<TSource, TOperation, TResult>) => StatisticsReducerImplementation<TSource, TOperation, TResult>',
+      description: '引用 reducer 定义，reduce 接收当前组的行并返回字段片段，由宿主组装结果。',
+    },
+    {
+      name: 'defineRowSelector',
+      kind: 'function',
+      type: '<TSource extends IRDataSelectorOperation, TOperation = TSource>(definition: RowSelectorDefinition<TSource, TOperation>) => RowSelectorDefinition<TSource, TOperation>',
+      description: '声明完整 schema 和 inputFields，供 select 等明确支持该 selector 的变换使用。',
+    },
+    {
+      name: 'defineRowSelectorImplementation',
+      kind: 'function',
+      type: '<TSource extends IRDataSelectorOperation, TOperation, TResult extends Array<RowSelection> | Promise<Array<RowSelection>>>(implementation: RowSelectorImplementation<TSource, TOperation, TResult>) => RowSelectorImplementation<TSource, TOperation, TResult>',
+      description: '引用 selector 定义，select 返回 { row, rank? } 数组；row 是选中的原始行，rank 从 1 开始。',
     },
   ]}
 />
@@ -96,15 +386,24 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 <LinkedSections
   items={[
     {
+      title: '变换操作',
+      description: '了解操作声明如何解析，以及字段模型如何随变换推进。',
+      url: '/viz/data/transform/operations',
+    },
+    {
+      title: '计算算子',
+      description: '了解 reducer、selector 与宿主如何分工并组装结果。',
+      url: '/viz/data/transform/statistics',
+    },
+    {
       title: '计算契约',
-      description: '了解本地与外接计算的匹配、绑定及结果要求。',
+      description: '为已有定义接入外接计算，选择执行模式并处理结果。',
       url: '/viz/data/transform/computation',
     },
     {
-      title: '契约',
-      description: '查询 JSON-safe operation、declaration 与执行配置。',
-      url: '/viz/data/reference/contract',
+      title: 'Data API 参考',
+      description: '查询定义、实现与运行时入口的完整类型。',
+      url: '/viz/data/model/api-reference',
     },
-    { title: '运行时', description: '查看预检、绑定、执行与结果接入的边界。', url: '/viz/data/reference/runtime' },
   ]}
 />

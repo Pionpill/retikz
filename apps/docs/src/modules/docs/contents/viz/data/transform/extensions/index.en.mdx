@@ -1,78 +1,344 @@
 ---
 title: Extension mechanisms
-description: Define and register custom transforms, reducers and selectors with separate semantics and local implementations.
+description: Extend data processing with custom transforms and operators, from definitions and implementations to host registration.
 ---
 
-Data uses a Definition to describe an operation and an Implementation to compute it. Operations `{ kind, params }` and execution settings are JSON-safe; schemas, functions, executors and source handles remain runtime objects.
+A custom extension describes what parameters an operation accepts, what fields it produces, and how to compute the result. Data separates these responsibilities into a Definition and an Implementation, which the host registers and calls.
 
 ## When to extend
 
-Define a transform for new row semantics, a reducer when `summarize` or `annotate` needs a statistic, or a selector when `select` needs a selection rule. To replace the computation engine, reuse the existing Definition instead of assigning different semantics to the same name.
+First check whether a combination of built-in operations can do the job. If you need an extension, choose its scope:
 
-`kind` is open, but custom names cannot replace built-ins. All entries are exported from the `@retikz/data` root.
+- A custom transform adds a complete row-processing operation, such as deriving a field from parameters.
+- A custom operator adds a computation or row-selection rule while keeping the existing transform's grouping and result assembly. A reducer returns computed fields; a selector returns selected original rows.
 
-## Define the capability
+See [Transform Operations](/viz/data/transform/operations) and [Computation Operators](/viz/data/transform/statistics) for how they work together. To run an existing operation on another engine, reuse its Definition and follow [Computation Contracts](/viz/data/transform/computation).
 
-`defineTransform` accepts `kind`, an exact `paramsSchema`, optional `inputFields`, and required `outputModel`. It assembles the complete operation schema with `createTransformSchema`; built-in and custom transforms share the same envelope. Callbacks receive the complete operation and read parsed parameters through `operation.params`. Semantic callbacks read parameters and field models, never rows or computation. Declare every statistical dependency with `dependencies`; use `validate` for model invariants.
+The definition functions below are exported from `@retikz/data`. A custom `kind` can be a new string, but it must not duplicate a built-in name or another name in the same registry.
 
-Use `preserve.outputs` to extend a model or `replace.fields` to replace it. An output may omit its type when no evidence exists. `{ from: field }` preserves the source type and applicable categorical order. Derived field names are projected from this model.
+## Custom transforms
 
-`defineTransformImplementation({ definition, apply })` references that same Definition. This `scale-field` example reads `x` and creates `scaledX` using `factor`:
+The `scale-field` example reads `x`, multiplies it by `factor`, and writes the result to `scaledX`. Changing the factor moves the blue points while the gray source points stay in place:
 
 <ComponentPreview
   files={['extension-transform', 'extension-transform-preview.tsx', 'extension-transform.data.ts']}
   defaultSourceFile="extension-transform-preview.tsx"
   size="lg"
-  caption="Gray points read x; blue points read scaledX. A fixed x domain keeps the factor visible."
+  caption="Gray points read x; blue points read scaledX. A fixed x-axis domain makes factor changes easy to compare."
 />
 
-Implementations must honor the Definition and leave input arrays and rows unchanged. Spreading an original row preserves its provenance Symbols; use the computation context's `groupProvenance(out, members)` for grouped output. Semantic Definitions do not hold these helpers.
+<DocSteps>
+<DocStep title="Declare parameters and field changes">
 
-### Transform operators
+Use `defineTransform` to declare the operation name, parameter constraints and field changes. It accepts a configuration object:
 
-`defineStatisticsReducer` describes its schema, inputs and every output through required `outputs`. Non-scalar or unknown outputs declare only their names. `defineStatisticsReducerImplementation({ definition, reduce })` supplies computation.
+- `kind` (required): the unique operation name. This example uses `scale-field`, referenced through `operation.kind`.
+- `paramsSchema` (required): defines the structure, defaults and validation rules for `operation.params`. Here it contains the input `field`, output name `as` and positive multiplier `factor`.
+- `inputFields` (optional): returns the field names read by the operation so the system can check field dependencies. Here it reads `operation.params.field`.
+- `outputModel` (required): declares the field model after computation. `preserve.outputs` retains existing fields and adds or overwrites fields; `replace.fields` lists the complete replacement field set. This example adds a continuous field.
+- `schedule` (optional): describes the execution `phase`, allowed `bindingClass` and `fieldEffect` for host scheduling. Here these mean field derivation, field binding, and preserving and extending existing fields.
+- `validate` (optional): checks constraints involving operation parameters and the current field model.
+- `dependencies` (optional): declares computation dependencies for this operation, such as reducers or selectors it calls.
 
-`defineRowSelector` declares a schema and inputs; `defineRowSelectorImplementation({ definition, select })` returns original rows and optional one-based ranks. `defineRegression` and `defineRegressionImplementation({ definition, fit })` follow the same split.
+These callbacks analyze parameters and field models without processing rows. The `scaleField` below only reads a field and adds another, so it does not configure `validate` or `dependencies`.
+
+```ts
+import {
+  DataFieldType,
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+  defineTransform,
+} from '@retikz/data';
+import { z } from 'zod';
+
+const scaleField = defineTransform({
+  kind: 'scale-field',
+  paramsSchema: z.strictObject({
+    field: z.string().min(1).describe('Input field read from each row'),
+    as: z.string().min(1).describe('Output field written to each row'),
+    factor: z.number().positive().describe('Serializable multiplication factor'),
+  }),
+  inputFields: operation => [operation.params.field],
+  outputModel: operation => ({
+    kind: 'preserve',
+    outputs: [{ field: operation.params.as, type: DataFieldType.Continuous }],
+  }),
+  schedule: {
+    phase: DataTransformPhase.FieldDerive,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Preserve,
+  },
+});
+```
+
+</DocStep>
+<DocStep title="Provide the computation">
+
+Reference the definition with `defineTransformImplementation` and compute the result in `apply`. This implementation multiplies each value and returns new rows, preserving existing fields and provenance without modifying the input.
+
+```ts
+import { defineTransformImplementation } from '@retikz/data';
+
+const scaleFieldImplementation = defineTransformImplementation({
+  definition: scaleField,
+  apply: (rows, operation) =>
+    rows.map(row => ({
+      ...row,
+      [operation.params.as]: Number(row[operation.params.field]) * operation.params.factor,
+    })),
+});
+```
+
+</DocStep>
+<DocStep title="Register and reference the operation">
+
+Register the definition and implementation on Plot, then reference the operation name and parameters through `PlotTransform`. This code continues from the previous steps and plots the derived `scaledX` field.
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 4 },
+  { x: 3, y: 3 },
+];
+
+const model: IRDataModel = [
+  { name: 'x', type: 'continuous' },
+  { name: 'y', type: 'continuous' },
+];
+
+export const CustomTransformExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    transformDefinitions={[scaleField]}
+    transformImplementations={[scaleFieldImplementation]}
+  >
+    <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
+    <PointMark x="scaledX" y="y" />
+  </Plot>
+);
+```
+
+Definitions and implementations are registered at runtime; JSON stores only operation names and parameters. An implementation must reference the same definition object and cannot be registered twice. Other hosts accept these registrations through their lowering options. See [Computation Contracts](/viz/data/transform/computation) for external computation and Promises.
+
+</DocStep>
+</DocSteps>
+
+## Custom operators
+
+An operator processes the group of rows supplied by its host. Both examples below use the same groups: the left plot uses `midpoint` to compute the midpoint of the minimum and maximum, while the right plot uses `closest-to-mean` to select the original row nearest to the mean.
 
 <ComponentPreview
   files={['extension-statistics', 'extension-statistics-preview.tsx', 'extension-statistics.data.ts']}
   defaultSourceFile="extension-statistics-preview.tsx"
   size="lg"
-  caption="The reducer on the left creates midpoint rows; the selector on the right retains the original row nearest the mean."
+  caption="The reducer produces a new statistical value; the selector keeps an original row that matches its rule."
 />
 
-Custom selectors work in `select` and operations that explicitly support them. Data's `annotate` accepts only the built-in single-row selector subset.
+Group A has scores of 62, 74 and 91. Its midpoint on the left is 76.5; the right plot selects the row with score 74. The host operations, `summarize` and `select`, still handle grouping and output-row assembly.
 
-## Inject and use
+<DocTabs defaultValue="reducer">
+<DocTab value="reducer" label="Reducer">
+<DocSteps>
+<DocStep title="Declare parameters and outputs">
 
-Register semantic definitions and local implementations separately. Plot exposes these props; Chart accepts the same names in `lowerOptions`, while Table uses its lowering options.
+Use `defineStatisticsReducer` to declare the operator parameters and output fields:
 
-| Capability | Semantic definitions           | Synchronous local implementations  |
-| ---------- | ------------------------------ | ---------------------------------- |
-| transform  | `transformDefinitions`         | `transformImplementations`         |
-| reducer    | `statisticsReducerDefinitions` | `statisticsReducerImplementations` |
-| selector   | `rowSelectorDefinitions`       | `rowSelectorImplementations`       |
-| regression | `regressionDefinitions`        | `regressionImplementations`        |
+- `schema` (required): the complete operator structure, including its `kind`, input `field` and output name `as`.
+- `inputFields` (optional): returns the field names read by the operator for dependency checks.
+- `outputs` (required): lists every returned field and its type. For non-scalar or unknown output types, declare only the field name.
 
-Hosts use `{ operation, dataExecution? }` declarations. `operation` holds computation parameters; `dataExecution` selects execution:
+```ts
+import { DataFieldType, defineStatisticsReducer } from '@retikz/data';
+import { z } from 'zod';
 
-```tsx
-<Plot data={rows} transformDefinitions={[scaleField]} transformImplementations={[scaleFieldImplementation]}>
-  <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
-  <PointMark x="scaledX" y="y" />
-</Plot>
+const midpoint = defineStatisticsReducer({
+  schema: z.strictObject({
+    kind: z.literal('midpoint'),
+    field: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
 ```
 
-Data's synchronous `applyTransforms` still takes operation arrays. For asynchronous execution, first resolve declarations and an input model with `resolveDataTransforms`, then call `executeDataTransforms`.
+</DocStep>
+<DocStep title="Provide the computation">
 
-See [Computation Contracts](/viz/data/transform/computation) for external providers, execution modes, asynchronous hosts and input bindings.
+`reduce` receives the current group of rows and returns the computed fields. This implementation takes the midpoint of the minimum and maximum, or returns `NaN` when no finite values exist.
 
-## Errors and limitations
+```ts
+import { defineStatisticsReducerImplementation } from '@retikz/data';
 
-- Duplicate semantic keys, duplicate implementations and mismatched Definition references fail immediately.
-- Definition-only extensions can execute externally; local execution requires an Implementation.
+const midpointImplementation = defineStatisticsReducerImplementation({
+  definition: midpoint,
+  reduce: (rows, operation) => {
+    const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
+    if (values.length === 0) return { [operation.as]: Number.NaN };
+    return { [operation.as]: (Math.min(...values) + Math.max(...values)) / 2 };
+  },
+});
+```
+
+</DocStep>
+<DocStep title="Register and reference the operator">
+
+Register the definition and implementation on Plot, then reference the operator in `summarize.metrics`. The host groups the rows and combines the returned `midpoint` with the grouping fields.
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { group: 'A', score: 62 },
+  { group: 'A', score: 74 },
+  { group: 'A', score: 91 },
+];
+
+const model: IRDataModel = [
+  { name: 'group', type: 'categorical' },
+  { name: 'score', type: 'continuous' },
+];
+
+export const CustomReducerExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    statisticsReducerDefinitions={[midpoint]}
+    statisticsReducerImplementations={[midpointImplementation]}
+  >
+    <PlotTransform
+      operation={{
+        kind: 'summarize',
+        params: {
+          groupBy: ['group'],
+          metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
+        },
+      }}
+    />
+    <PointMark x="group" y="midpoint" />
+  </Plot>
+);
+```
+
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="selector" label="Selector">
+<DocSteps>
+<DocStep title="Declare parameters and input fields">
+
+Use `defineRowSelector` to declare the selection parameters. It adds no statistical fields:
+
+- `schema` (required): the complete operator structure, here containing its `kind` and input `field`.
+- `inputFields` (optional): returns the field names read during selection.
+
+```ts
+import { defineRowSelector } from '@retikz/data';
+import { z } from 'zod';
+
+const closestToMean = defineRowSelector({
+  schema: z.strictObject({
+    kind: z.literal('closest-to-mean'),
+    field: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+});
+```
+
+</DocStep>
+<DocStep title="Provide the selection">
+
+`select` returns selected original rows as `[{ row }]`, optionally with a `rank` starting at 1. This implementation selects the row nearest to the mean, keeps the first row on a tie, and returns an empty array when no valid candidates exist.
+
+```ts
+import { defineRowSelectorImplementation } from '@retikz/data';
+
+const closestToMeanImplementation = defineRowSelectorImplementation({
+  definition: closestToMean,
+  select: (rows, operation) => {
+    const candidates = rows
+      .map(row => ({ row, value: Number(row[operation.field]) }))
+      .filter(candidate => Number.isFinite(candidate.value));
+    if (candidates.length === 0) return [];
+
+    const mean = candidates.reduce((sum, candidate) => sum + candidate.value, 0) / candidates.length;
+    const selected = candidates.reduce((best, candidate) =>
+      Math.abs(candidate.value - mean) < Math.abs(best.value - mean) ? candidate : best,
+    );
+
+    return [{ row: selected.row }];
+  },
+});
+```
+
+</DocStep>
+<DocStep title="Register and reference the operator">
+
+Register the definition and implementation on Plot, then reference the operator through `select.selector`. This example keeps the original row with score 74 in group A.
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { group: 'A', score: 62 },
+  { group: 'A', score: 74 },
+  { group: 'A', score: 91 },
+];
+
+const model: IRDataModel = [
+  { name: 'group', type: 'categorical' },
+  { name: 'score', type: 'continuous' },
+];
+
+export const CustomSelectorExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    rowSelectorDefinitions={[closestToMean]}
+    rowSelectorImplementations={[closestToMeanImplementation]}
+  >
+    <PlotTransform
+      operation={{
+        kind: 'select',
+        params: {
+          groupBy: ['group'],
+          selector: { kind: 'closest-to-mean', field: 'score' },
+        },
+      }}
+    />
+    <PointMark x="group" y="score" />
+  </Plot>
+);
+```
+
+Custom selectors work with `select` and transforms that explicitly support them. `annotate` accepts only a built-in subset of single-row selectors.
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
+
+For local execution, register both the definition and implementation, with the implementation referencing the same definition object. Duplicate names and implementations follow the same checks as custom transforms. Hosts also accept these registrations through their lowering options.
 
 ## Related props
+
+These are the definition and computation entries used on this page. See the [Data API reference](/viz/data/model/api-reference) for complete parameters.
 
 <ComponentProps
   items={[
@@ -81,14 +347,41 @@ See [Computation Contracts](/viz/data/transform/computation) for external provid
       kind: 'function',
       type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: TransformDefinitionInput<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
       description:
-        'Declares kind, paramsSchema, field dependencies, and complete outputModel; assembles the operation schema without computation.',
+        'Declares a name, parameter schema and field changes. outputModel is required; semantic callbacks do not compute rows.',
     },
     {
       name: 'defineTransformImplementation',
       kind: 'function',
       type: '<TTransform extends IRDataTransform, TResult extends Array<ExternalRow> | Promise<Array<ExternalRow>>>(implementation: TransformImplementation<TTransform, TResult>) => TransformImplementation<TTransform, TResult>',
       description:
-        'References the same Definition. apply returns rows or a Promise; synchronous hosts accept synchronous implementations only.',
+        'References the registered definition and computes rows through apply. Synchronous hosts require synchronous implementations.',
+    },
+    {
+      name: 'defineStatisticsReducer',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation = TSource>(definition: StatisticsReducerDefinition<TSource, TOperation>) => StatisticsReducerDefinition<TSource, TOperation>',
+      description: 'Declares the complete schema, inputFields and required outputs listing every returned field.',
+    },
+    {
+      name: 'defineStatisticsReducerImplementation',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation, TResult extends ExternalRow | Promise<ExternalRow>>(implementation: StatisticsReducerImplementation<TSource, TOperation, TResult>) => StatisticsReducerImplementation<TSource, TOperation, TResult>',
+      description:
+        'References a reducer definition. reduce receives the current group and returns fields for the host to assemble.',
+    },
+    {
+      name: 'defineRowSelector',
+      kind: 'function',
+      type: '<TSource extends IRDataSelectorOperation, TOperation = TSource>(definition: RowSelectorDefinition<TSource, TOperation>) => RowSelectorDefinition<TSource, TOperation>',
+      description:
+        'Declares the complete schema and inputFields for select and transforms that explicitly support the selector.',
+    },
+    {
+      name: 'defineRowSelectorImplementation',
+      kind: 'function',
+      type: '<TSource extends IRDataSelectorOperation, TOperation, TResult extends Array<RowSelection> | Promise<Array<RowSelection>>>(implementation: RowSelectorImplementation<TSource, TOperation, TResult>) => RowSelectorImplementation<TSource, TOperation, TResult>',
+      description:
+        'References a selector definition. select returns an array of { row, rank? }; row is an original selected row and rank starts at 1.',
     },
   ]}
 />
@@ -98,19 +391,24 @@ See [Computation Contracts](/viz/data/transform/computation) for external provid
 <LinkedSections
   items={[
     {
+      title: 'Transform Operations',
+      description: 'Understand declaration parsing and field-model propagation.',
+      url: '/viz/data/transform/operations',
+    },
+    {
+      title: 'Computation Operators',
+      description: 'Understand how reducers, selectors and hosts assemble results.',
+      url: '/viz/data/transform/statistics',
+    },
+    {
       title: 'Computation Contracts',
-      description: 'Understand support matching, input binding and result requirements.',
+      description: 'Connect external computation to existing definitions and choose execution modes.',
       url: '/viz/data/transform/computation',
     },
     {
-      title: 'Contracts',
-      description: 'Look up JSON-safe operations, declarations and execution settings.',
-      url: '/viz/data/reference/contract',
-    },
-    {
-      title: 'Runtime',
-      description: 'Inspect preflight, binding, execution and result ingress.',
-      url: '/viz/data/reference/runtime',
+      title: 'Data API Reference',
+      description: 'Look up complete definition, implementation and runtime types.',
+      url: '/viz/data/model/api-reference',
     },
   ]}
 />
