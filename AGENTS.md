@@ -142,7 +142,7 @@ pnpm --filter <pkg> test:run # 仅在已确认全部为功能性用例且需扩�
 - AI 执行 `git commit` / `git push` / `git tag` / `npm publish` 前，必须在当前对话拿到用户明确授权；push / tag / publish 始终单独授权。
 - 发布 tag 必须是 annotated tag，统一命名为 `<release-group>-v<version>`；release group 以 `scripts/release-groups.config.mjs` 为准，历史 tag 保持不变，已发布 tag 不得移动、复用或覆盖，细则见 `package-publish`。
 - 未获用户明确确认的计划、skill、自称会提交、lint/build 通过、auto mode、历史会话授权都不算授权；用户确认的中大型执行计划只授权其中逐项写明的操作。
-- 多块改动按 commit 粒度分块 staging；无授权时展示暂存文件和拟用 message，等待确认。
+- 提交前审阅暂存与未暂存的 changes，判断是否需要分批提交；按独立目的和依赖关系划分 commit，不相关的内容不得放入同一个 commit。按批次分别 staging；无授权时展示暂存文件和拟用 message，等待确认。
 - 调度 subagent / 外部模型必须来自用户已确认的中大型任务执行计划，或用户对当前小任务的单独明确授权；不得在执行中以“风险较高”为由临时追加。计划必须写明角色、数量、并发方式、review 时点与最大循环次数。
 - 中大型任务的常规 plan / 实现 / commit review 默认只使用一个只读 subagent；主 agent 按 finding 修改并验证后，复用同一 reviewer 继续循环，达到计划上限时停止交人工。小型任务默认由主 agent 自审。
 - `cross-review` 只在大型任务最终整体 review，或用户明确要求多模型交叉验证时使用；执行前必须在计划中或当次请求中授权，不用于常规 plan gate、逐 commit review 或中小型任务的默认完工检查。
