@@ -143,6 +143,30 @@ export const vizSection: Array<Section> = [
           { id: 'runtime', label: 'viz.dataReferenceRuntime' },
         ],
       },
+      {
+        id: 'operators',
+        label: 'viz.dataComputationOperators',
+        sidebarGroup: 'viz.dataComputation',
+        difficulty: DocDifficulty.Beginner,
+        meta: {
+          pageType: 'concept',
+          audience: 'user',
+          capability: 'data.computation.operators',
+          sourceOfTruth: 'runtime',
+        },
+      },
+      {
+        id: 'transforms',
+        label: 'viz.dataComputationTransforms',
+        sidebarGroup: 'viz.dataComputation',
+        difficulty: DocDifficulty.Beginner,
+        meta: {
+          pageType: 'concept',
+          audience: 'user',
+          capability: 'data.computation.transforms',
+          sourceOfTruth: 'runtime',
+        },
+      },
     ],
   },
   {

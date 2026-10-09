@@ -1,0 +1,67 @@
+---
+title: Data transforms
+description: Understand how transforms organize normalized rows, consume operator results, and advance fields and row granularity in order.
+---
+
+A regional revenue chart needs regional summary rows, a product detail view needs individual products, and a trend line may need new sample points. A data transform processes input rows into rows suited to the next step.
+
+Data transforms read normalized rows. The [Data Model](/viz/data/model) first aligns field names, parses values, and validates intake. Transformed rows can feed another transform or a chart, table, or other consumer.
+
+## Output granularity
+
+Granularity describes what one output row represents, such as a product, a region, or a sample position. When choosing a transform, first decide the required granularity, then which fields to retain or create.
+
+| Task                            | Example transform | Output change                                                              |
+| ------------------------------- | ----------------- | -------------------------------------------------------------------------- |
+| Change display order            | `sort`            | Reorder rows while retaining their fields                                  |
+| Produce regional summaries      | `summarize`       | One row per group with group keys and statistical fields                   |
+| Retain representative products  | `select`          | Selected original rows, optionally with a rank field                       |
+| Compare details with statistics | `annotate`        | Preserve the detail row count and add statistical or selection annotations |
+| Generate trend samples          | `smooth`          | New rows containing sample positions and predicted values                  |
+
+Some transforms preserve the row count; others reduce it or generate new rows. Fields can change too, so the next step can only read what the previous step produces.
+
+## Transforms and operators
+
+Suppose product A has revenue of 120 and product B has 80. A sum operator returns a total of 200. `summarize` can place that result in one regional summary row, while `annotate` can attach it to both product detail rows.
+
+Operators perform local calculations. Transforms choose the input, organize computation, and form output rows. The same sum can therefore serve different table structures. Similarly, a row selector can supply `select`, and a prediction model can supply samples for `smooth`.
+
+A transform can also process rows directly. For example, `sort` reorders rows by sort keys without decomposing the task into reduction or row selection. Operators are reusable computation capabilities, not a mandatory step in every transform.
+
+## Transform chains
+
+A transform declaration uses serializable `kind` and `params` fields for the operation name and parameters. A declaration array runs in order; each stage reads the rows and field model produced by the preceding stage.
+
+For example, summarize revenue by region, then sort total revenue in descending order to obtain a regional ranking. After summarization, each row represents a region, and its fields come from group keys and declared statistical outputs. The subsequent sort should read the total revenue field, rather than assume that product detail fields still exist.
+
+Before execution, a Definition supplies parameter constraints, input fields, and the expected output model so the data layer can check field relationships across the chain. The corresponding Implementation or an external computation entry point performs the calculation. Changing the execution method must preserve the declaration's row-processing semantics.
+
+## Consumer boundaries
+
+Transforms process rows and fields in data space. Consumers interpret coordinates, colors, lines, and cell layout; a transform does not choose the final view. The same regional summary data can feed a bar chart or a summary table.
+
+Built-in and custom transforms use the same definition and registration mechanism. Each operation's contract specifies its parameters, accepted operators, defaults, and failure conditions. The result shapes in this overview do not replace those configuration details.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Transform Operations',
+      description:
+        'Examine declaration parsing, field model advancement, computation preflight, and result validation.',
+      url: '/viz/data/transform/operations',
+    },
+    {
+      title: 'Computation Contracts',
+      description: 'Learn how local and external computation execute the same transform semantics.',
+      url: '/viz/data/transform/computation',
+    },
+    {
+      title: 'Extension Mechanisms',
+      description: 'Learn how to define and integrate new row-processing semantics.',
+      url: '/viz/data/transform/extensions',
+    },
+  ]}
+/>

@@ -1,0 +1,68 @@
+---
+title: Computation operators
+description: Learn what reduction, row selection, and fitting return, and how a host turns local computation results into data rows.
+---
+
+Questions such as "What is the total revenue?", "Which record has the highest revenue?", and "What is the revenue trend at a given time?" need different results: statistical fields, an original record, or a predicted value. Computation operators specify the input, parameters, and result of these local calculations.
+
+Here, operators refer to Data's reduction, row selection, and fitting capabilities that a host can invoke. A host is a data processing operation that consumes an operator's result, such as a summary or trend-sampling transform. It determines which input to supply and how the result enters output rows.
+
+## Reduction
+
+A reducer reads a batch of rows and returns a fragment of statistical fields. For two detail rows with revenue of 120 and 80, a sum can return `total: 200`, and a count can return `orders: 2`.
+
+A result may contain one or several fields. A quantile-band calculation can provide lower and upper bounds, quantile points, and a count; the operator declares the specific fields. Reduction results are not always a single number.
+
+The statistical fragment does not determine the final row count. `summarize` combines it with group keys and produces one row per group. `annotate` attaches it to the group's detail rows and preserves the row count. Grouping and output granularity belong to the host.
+
+## Row selection
+
+A selector returns selection records. Each record contains a selected original row and may include a rank, preserving fields such as the product name alongside the revenue used for comparison.
+
+Suppose product A has revenue of 120 and product B has 80. A maximum reducer returns a revenue statistic; selecting the maximum-revenue row returns product A's record. Selection may return no records, one record, or several. The specific operator defines how ties are handled.
+
+The host determines how to consume these records. `select` organizes selected records into output rows and can add a rank field. An `annotate` operation that supports selection statistics uses the results to annotate details. Each host constrains the operators it accepts, so a selector is not necessarily supported by every transform.
+
+## Fitting
+
+A fitting operator reads finite numeric observation pairs, such as time and revenue, and returns a runtime prediction model. The model's `predict(x)` supplies a predicted value at an input position.
+
+The model is not a table of sampled results. A host such as `smooth` chooses the prediction extent and sample positions, then invokes the model to generate new rows. The fitting method and sampling choices can therefore be expressed separately.
+
+## Results and hosts
+
+| Operator      | Computation result                                            | Work left to the host                                        |
+| ------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Reduction     | A fragment of declared statistical fields                     | Combine group keys, create summary rows, or annotate details |
+| Row selection | Selection records containing original rows and optional ranks | Organize output rows, rank fields, or selection annotations  |
+| Fitting       | A runtime prediction model                                    | Choose sample positions and generate prediction rows         |
+
+Each capability has its own result contract; operators do not all return tables. To understand grouping, final row counts, and field changes, read about the [data transform](/viz/data/transforms) consuming the result.
+
+## Declarations and computation
+
+An operator declaration stores its calculation name and parameters and can be included in JSON IR. A runtime Definition specifies parameter and result semantics, while an Implementation supplies the calculation. Functions and prediction models remain at runtime.
+
+Built-in and custom operators are resolved through the corresponding registries. A replacement implementation must preserve the same Definition's semantics; matching names alone do not establish equivalence. Synchronous and asynchronous entry points also have distinct result requirements. See [Computation Contracts](/viz/data/transform/computation) for integration details.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Computation Operators',
+      description: 'Examine how reduction and selection results cooperate with grouping hosts during execution.',
+      url: '/viz/data/transform/statistics',
+    },
+    {
+      title: 'Extension Mechanisms',
+      description: 'Learn how to define and register computation semantics and implementations.',
+      url: '/viz/data/transform/extensions',
+    },
+    {
+      title: 'Contract',
+      description: 'Look up complete operator declarations and related data contracts.',
+      url: '/viz/data/reference/contract',
+    },
+  ]}
+/>
