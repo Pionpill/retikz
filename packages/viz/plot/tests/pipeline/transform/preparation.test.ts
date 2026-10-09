@@ -18,13 +18,13 @@ const specOf = () =>
       ],
     },
     dataExecution: { mode: 'external', external: 'fixture' },
-    transform: [{ operation: { kind: 'normalize', field: 'value', as: 'root' } }],
+    transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'root' } } }],
     scales: [],
     coordinate: { type: 'cartesian2D' },
     marks: [
       {
         type: 'point',
-        transform: [{ operation: { kind: 'normalize', field: 'root', as: 'local' } }],
+        transform: [{ operation: { kind: 'normalize', params: { field: 'root', as: 'local' } } }],
         encoding: { x: { field: 'local' }, y: { field: 'value' } },
       },
     ],
@@ -39,7 +39,7 @@ describe('Plot whole-scope data preparation', () => {
   it('consumes nonzero seeded jitter once across repeated compilation', async () => {
     const spec = specOf();
     spec.dataExecution = { mode: 'builtin' };
-    spec.transform = [{ operation: { kind: 'jitter', xField: 'value', amount: 0.5, seed: 31 } }];
+    spec.transform = [{ operation: { kind: 'jitter', params: { xField: 'value', amount: 0.5, seed: 31 } } }];
     spec.marks[0].transform = [];
     spec.marks[0].encoding = { x: { field: 'value' }, y: { field: 'value' } };
     const plan = await preparePlotData(spec, { dataBindings: { rows: { kind: 'rows', rows } } });
@@ -103,7 +103,7 @@ describe('Plot whole-scope data preparation', () => {
               if (input.kind !== 'result') throw new Error('fixture requires result');
 
               calls.push(`execute:${input.result.rows.length}`);
-              const operation = stage.operation as { field: string; as: string };
+              const operation = stage.operation.params as { field: string; as: string };
 
               return {
                 rows: input.result.rows.map(row => ({ ...row, [operation.as]: Number(row[operation.field]) + 10 })),
@@ -168,7 +168,7 @@ describe('Plot whole-scope data preparation', () => {
             },
     };
     const spec = specOf();
-    spec.marks[0].transform = [{ operation: { kind: 'sort', field: 'root' } }];
+    spec.marks[0].transform = [{ operation: { kind: 'sort', params: { field: 'root' } } }];
     spec.marks[0].encoding = { x: { field: 'root' }, y: { field: 'value' } };
 
     await expect(

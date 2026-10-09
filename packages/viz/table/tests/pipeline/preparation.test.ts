@@ -10,7 +10,9 @@ const detail = (transform = true) =>
     type: 'table',
     data: { reference: 'rows' },
     structure: { kind: 'detail', header: false, columns: [{ id: 'value', field: transform ? 'ratio' : 'value' }] },
-    ...(transform ? { transform: [{ operation: { kind: 'normalize', field: 'value', as: 'ratio' } }] } : {}),
+    ...(transform
+      ? { transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'ratio' } } }] }
+      : {}),
   });
 
 describe('Table data preparation', () => {
@@ -47,7 +49,7 @@ describe('Table data preparation', () => {
     const spec = TableSchema.parse({
       ...detail(false),
       data: { reference: 'rows', model: [{ name: 'value', format: 'iso' }] },
-      transform: [{ operation: { kind: 'sort', field: 'value' } }],
+      transform: [{ operation: { kind: 'sort', params: { field: 'value' } } }],
     });
     const preparation = await prepareTableData(spec, {
       dataBindings: { rows: { kind: 'rows', rows: [{ value: '2026-10-03' }] } },

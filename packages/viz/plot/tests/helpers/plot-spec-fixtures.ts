@@ -31,7 +31,7 @@ export const createPolarPieSpec = (
   namespace: 'plot',
   type: 'plot',
   data: { reference },
-  transform: [{ operation: { kind: 'stack', y: 'value' } }],
+  transform: [{ operation: { kind: 'stack', params: { y: 'value' } } }],
   scales: [
     { type: 'linear', name: scales.angle },
     { type: 'linear', name: scales.radius },
@@ -102,7 +102,7 @@ export const createHistogramSpec = (
   namespace: 'plot',
   type: 'plot',
   data: { reference },
-  transform: [{ operation: { kind: 'bin', field: 'm', step } }],
+  transform: [{ operation: { kind: 'bin', params: { field: 'm', step } } }],
   scales: [
     { type: 'linear', name: scales.x },
     { type: 'linear', name: scales.y },
@@ -162,12 +162,14 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
       {
         operation: {
           kind: 'density',
-          field: 'value',
-          groupBy: ['species'],
-          ...(options.bandwidth ? { bandwidth: options.bandwidth } : {}),
-          sampleCount: options.sampleCount ?? 8,
-          xAs: 'densityX',
-          densityAs: 'density',
+          params: {
+            field: 'value',
+            groupBy: ['species'],
+            ...(options.bandwidth ? { bandwidth: options.bandwidth } : {}),
+            sampleCount: options.sampleCount ?? 8,
+            xAs: 'densityX',
+            densityAs: 'density',
+          },
         },
       },
     ],
@@ -253,13 +255,15 @@ export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOpti
           {
             operation: {
               kind: 'smooth',
-              x: 'time',
-              y: 'value',
-              groupBy: ['series'],
-              ...(options.method ? { method: options.method } : {}),
-              sampleCount: options.sampleCount ?? 8,
-              xAs: 'trendX',
-              yAs: 'trendY',
+              params: {
+                x: 'time',
+                y: 'value',
+                groupBy: ['series'],
+                ...(options.method ? { method: options.method } : {}),
+                sampleCount: options.sampleCount ?? 8,
+                xAs: 'trendX',
+                yAs: 'trendY',
+              },
             },
           },
         ],
@@ -291,35 +295,39 @@ export const boxplotData: ExternalDatasets = {
 /** 按组生成四分位区间、中位数及 1.5 倍四分位距须线的测试变换 */
 export const boxplotSummary: IRDataTransform = {
   kind: 'summarize',
-  groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
-  metrics: [
-    {
-      kind: 'quantile-band',
-      field: 'value',
-      lowerP: 0.25,
-      upperP: 0.75,
-      outputs: {
-        lower: 'boxLow',
-        upper: 'boxHigh',
-        points: [{ p: 0.5, as: 'median' }],
-        whiskerMin: 'whiskerMin',
-        whiskerMax: 'whiskerMax',
+  params: {
+    groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
+    metrics: [
+      {
+        kind: 'quantile-band',
+        field: 'value',
+        lowerP: 0.25,
+        upperP: 0.75,
+        outputs: {
+          lower: 'boxLow',
+          upper: 'boxHigh',
+          points: [{ p: 0.5, as: 'median' }],
+          whiskerMin: 'whiskerMin',
+          whiskerMax: 'whiskerMax',
+        },
+        whisker: { kind: 'spread', factor: 1.5 },
       },
-      whisker: { kind: 'spread', factor: 1.5 },
-    },
-  ],
+    ],
+  },
 };
 
 /** 按组选择 1.5 倍四分位距边界之外的测试数据行 */
 export const boxplotOutside: IRDataTransform = {
   kind: 'select',
-  groupBy: ['group'],
-  selector: {
-    kind: 'outside-quantile-band',
-    field: 'value',
-    lowerP: 0.25,
-    upperP: 0.75,
-    boundary: { kind: 'spread', factor: 1.5 },
+  params: {
+    groupBy: ['group'],
+    selector: {
+      kind: 'outside-quantile-band',
+      field: 'value',
+      lowerP: 0.25,
+      upperP: 0.75,
+      boundary: { kind: 'spread', factor: 1.5 },
+    },
   },
 };
 

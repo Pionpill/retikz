@@ -33,7 +33,8 @@ const input = (values: Array<number>): DataTransformStageInput<never> => ({
 
 it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through empty local %s results', async mode => {
   const definition = defineTransform({
-    schema: strictObject({ kind: literal('copy-field') }),
+    kind: 'copy-field',
+    paramsSchema: strictObject({}),
     inputFields: () => ['value'],
     outputModel: () => ({ kind: 'replace', fields: [{ field: 'copy', type: { from: 'value' } }] }),
   });
@@ -44,8 +45,14 @@ it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through 
   const unknownModel: DataTransformModel = [{ name: 'value' }];
   const resolution = resolveDataTransforms(
     [
-      { operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'external', external: 'typed' } },
-      { operation: mode === 'preserve' ? { kind: 'sort', field: 'value' } : { kind: 'copy-field' } },
+      {
+        operation: { kind: 'sort', params: { field: 'value' } },
+        dataExecution: { mode: 'external', external: 'typed' },
+      },
+      {
+        operation:
+          mode === 'preserve' ? { kind: 'sort', params: { field: 'value' } } : { kind: 'copy-field', params: {} },
+      },
     ],
     unknownModel,
     { transformRegistry: resolveTransformRegistry([definition]) },
@@ -82,22 +89,26 @@ it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through 
 it('resolves custom semantics without computation and rejects mismatched local or external Definition identities', async () => {
   const semantic = () =>
     defineTransform({
-      schema: strictObject({ kind: literal('derive-value'), field: string().default('value') }),
-      inputFields: operation => [operation.field],
+      kind: 'derive-value',
+      paramsSchema: strictObject({ field: string().default('value') }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: 'derived', type: { from: operation.field } }],
+        outputs: [{ field: 'derived', type: { from: operation.params.field } }],
       }),
     });
   const definition = semantic();
   const differentDefinition = semantic();
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'derive-value' } }, { operation: { kind: 'sort', field: 'derived' } }],
+    [
+      { operation: { kind: 'derive-value', params: {} } },
+      { operation: { kind: 'sort', params: { field: 'derived' } } },
+    ],
     model,
     { transformRegistry: resolveTransformRegistry([definition]) },
   );
 
-  expect(resolution.stages[0].operation).toEqual({ kind: 'derive-value', field: 'value' });
+  expect(resolution.stages[0].operation).toEqual({ kind: 'derive-value', params: { field: 'value' } });
   expect(resolution.stages[1].outputModel).toEqual([...model, { name: 'derived', type: 'continuous' }]);
 
   let computed = 0;
@@ -174,7 +185,7 @@ it('routes only the named provider and rejects duplicate or missing registration
     ],
   });
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'external', external: 'b' } }],
+    [{ operation: { kind: 'sort', params: { field: 'value' } }, dataExecution: { mode: 'external', external: 'b' } }],
     model,
   );
 
@@ -183,7 +194,7 @@ it('routes only the named provider and rejects duplicate or missing registration
 
   for (const mode of ['external', 'hybrid'] as const) {
     const missing = resolveDataTransforms(
-      [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode } }],
+      [{ operation: { kind: 'sort', params: { field: 'value' } }, dataExecution: { mode } }],
       model,
     );
 
@@ -224,7 +235,12 @@ it('checks actual native capabilities and provenance requirements without using 
   };
   const executor = createDataTransformExecutor({ externalProviders: [{ name: 'native', provider }] });
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'sort', field: 'label' }, dataExecution: { mode: 'external', external: 'native' } }],
+    [
+      {
+        operation: { kind: 'sort', params: { field: 'label' } },
+        dataExecution: { mode: 'external', external: 'native' },
+      },
+    ],
     nativeModel,
   );
   const unordered: Native = { stableRows: false, provenance: true };
@@ -252,7 +268,7 @@ it('checks actual native capabilities and provenance requirements without using 
 describe('data execution policy and binding', () => {
   it('preserves independent operation parameters and sparse execution configuration', () => {
     const declaration = {
-      operation: { kind: 'custom', dataExecution: { algorithm: 'fast' } },
+      operation: { kind: 'custom', params: { dataExecution: { algorithm: 'fast' } } },
       dataExecution: { external: 'worker' },
     };
 
@@ -260,7 +276,7 @@ describe('data execution policy and binding', () => {
   });
 
   it('executes local stages with the resolved output model', async () => {
-    const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+    const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
 
     expect(await executeDataTransforms(input([3, 1, 2]), resolution, createDataTransformExecutor())).toEqual({
       rows: [{ value: 1 }, { value: 2 }, { value: 3 }],
@@ -286,7 +302,7 @@ describe('data execution policy and binding', () => {
       },
     };
     const resolution = resolveDataTransforms(
-      [{ operation: { kind: 'sort', field: 'value', order: 'descending' } }],
+      [{ operation: { kind: 'sort', params: { field: 'value', order: 'descending' } } }],
       model,
     );
     const executor = createDataTransformExecutor({
@@ -325,8 +341,8 @@ describe('data execution policy and binding', () => {
     };
     const resolution = resolveDataTransforms(
       [
-        { operation: { kind: 'sort', field: 'value' } },
-        { operation: { kind: 'normalize', field: 'value', as: 'ratio' } },
+        { operation: { kind: 'sort', params: { field: 'value' } } },
+        { operation: { kind: 'normalize', params: { field: 'value', as: 'ratio' } } },
       ],
       model,
     );
@@ -379,18 +395,20 @@ it('awaits local reducer, selector and regression dependencies before advancing'
   });
   const resolution = resolveDataTransforms(
     [
-      { operation: { kind: 'annotate', metrics: [{ kind: 'async-sum', as: 'total' }] } },
-      { operation: { kind: 'select', selector: { kind: 'async-first' } } },
+      { operation: { kind: 'annotate', params: { metrics: [{ kind: 'async-sum', as: 'total' }] } } },
+      { operation: { kind: 'select', params: { selector: { kind: 'async-first' } } } },
       {
         operation: {
           kind: 'smooth',
-          x: 'value',
-          y: 'total',
-          xAs: 'x',
-          yAs: 'y',
-          extent: [0, 2],
-          sampleCount: 2,
-          method: { kind: 'async-fit' },
+          params: {
+            x: 'value',
+            y: 'total',
+            xAs: 'x',
+            yAs: 'y',
+            extent: [0, 2],
+            sampleCount: 2,
+            method: { kind: 'async-fit' },
+          },
         },
       },
     ],
@@ -421,7 +439,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
     dataExecution: { external: 'worker' },
     externalProviders: [{ name: 'worker', provider }],
   });
-  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   await executeDataTransforms(input([2, 1]), resolution, executor);
 
   expect(queried).toBe(0);
@@ -431,7 +449,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
   expect(queried).toBe(1);
 
   const override = resolveDataTransforms(
-    [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'builtin' } }],
+    [{ operation: { kind: 'sort', params: { field: 'value' } }, dataExecution: { mode: 'builtin' } }],
     model,
   );
   await executeDataTransforms(input([2, 1]), override, executor, {
@@ -447,7 +465,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
 });
 
 it('does not turn provider exceptions, rejections, cancellation or invalid results into hybrid fallback', async () => {
-  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   const cause = new Error('remote failed');
   const provider: DataTransformImplementationProvider<never> = {
     resolve: stage => ({
@@ -532,7 +550,7 @@ it('rejects model/source drift during binding and consumes execution rights whil
   });
   const ready = await executor.prepare(
     { kind: 'result', model },
-    resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+    resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
   );
   if (ready.kind !== 'ready') throw new Error('expected ready');
 
@@ -561,7 +579,7 @@ it('does not materialize native sources until all stages support the request', a
       return { rows: [{ value: 2 }, { value: 1 }], model };
     },
   });
-  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   const ready = await executor.prepare({ kind: 'source', source, model }, resolution);
 
   expect(materialized).toBe(0);
@@ -585,7 +603,7 @@ it('preserves actual group provenance and records lineage once under explicit sa
     { value: 3, secret: 'b' },
   ]);
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'summarize', metrics: [{ kind: 'sum', field: 'value', as: 'total' }] } }],
+    [{ operation: { kind: 'summarize', params: { metrics: [{ kind: 'sum', field: 'value', as: 'total' }] } } }],
     model,
   );
   const result = await executeDataTransforms(
@@ -633,7 +651,7 @@ it('wraps empty-plan materializer errors and stops local computation after mater
   await expect(
     executeDataTransforms(
       { kind: 'source', source, model },
-      resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+      resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
       cancelled,
       { signal: abort.signal },
     ),
@@ -653,7 +671,7 @@ it('retains the upstream history supplied by an explicitly materialized source',
   });
   const result = await executeDataTransforms(
     { kind: 'source', source, model },
-    resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+    resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
     executor,
   );
 
@@ -696,7 +714,7 @@ it('does not treat lineage summaries as row-level provenance evidence', async ()
   };
   const result = await executeDataTransforms(
     { kind: 'result', result: { rows: [{ value: 1 }], model, lineage } },
-    resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+    resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
     executor,
   );
 

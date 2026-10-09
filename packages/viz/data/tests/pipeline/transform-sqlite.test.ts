@@ -25,11 +25,13 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
   const operations = [
     {
       kind: 'summarize' as const,
-      groupBy: ['group'],
-      metrics: [{ kind: 'sum' as const, field: 'value', as: 'total' }],
+      params: {
+        groupBy: ['group'],
+        metrics: [{ kind: 'sum' as const, field: 'value', as: 'total' }],
+      },
     },
-    { kind: 'sort' as const, field: 'group' },
-    { kind: 'summarize' as const, metrics: [{ kind: 'sum' as const, field: 'total', as: 'grandTotal' }] },
+    { kind: 'sort' as const, params: { field: 'group' } },
+    { kind: 'summarize' as const, params: { metrics: [{ kind: 'sum' as const, field: 'total', as: 'grandTotal' }] } },
   ];
   const executed: Array<string> = [];
   const semantic = resolveTransformRegistry().get('summarize');
@@ -39,9 +41,9 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
       if (
         stage.definition !== semantic ||
         operation.kind !== 'summarize' ||
-        !('metrics' in operation) ||
-        !Array.isArray(operation.metrics) ||
-        operation.metrics.length !== 1 ||
+        !('metrics' in operation.params) ||
+        !Array.isArray(operation.params.metrics) ||
+        operation.params.metrics.length !== 1 ||
         context.requirements.preserveProvenance ||
         context.requirements.lineage !== undefined
       )
@@ -50,7 +52,7 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
           diagnostics: [{ code: 'SQL_SUBSET', message: 'SQLite fixture only implements one sum without provenance' }],
         };
 
-      const metric = operation.metrics[0];
+      const metric = operation.params.metrics[0];
       if (
         metric.kind !== 'sum' ||
         !('field' in metric) ||
@@ -64,7 +66,8 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
       const metricField = metric.field;
       const metricAlias = metric.as;
       const quote = (name: string): string => `"${name.replaceAll('"', '""')}"`;
-      const groupBy = 'groupBy' in operation && Array.isArray(operation.groupBy) ? operation.groupBy : [];
+      const groupBy =
+        'groupBy' in operation.params && Array.isArray(operation.params.groupBy) ? operation.params.groupBy : [];
 
       return {
         kind: 'supported',

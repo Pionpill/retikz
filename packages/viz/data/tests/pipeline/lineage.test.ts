@@ -49,8 +49,10 @@ describe('data lineage runtime', () => {
     const plain = applyTransforms(tagSourceIndex(SALES), [
       {
         kind: 'summarize',
-        groupBy: ['month'],
-        metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        params: {
+          groupBy: ['month'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        },
       },
     ]);
 
@@ -59,8 +61,10 @@ describe('data lineage runtime', () => {
     const { rows, lineage } = applyTransformsWithLineage(SALES, [
       {
         kind: 'summarize',
-        groupBy: ['month'],
-        metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        params: {
+          groupBy: ['month'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        },
       },
     ]);
 
@@ -90,8 +94,10 @@ describe('data lineage runtime', () => {
       [
         {
           kind: 'annotate',
-          groupBy: ['month'],
-          metrics: [{ kind: 'mean', field: 'revenue', as: 'averageRevenue' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'mean', field: 'revenue', as: 'averageRevenue' }],
+          },
         },
       ],
       { lineage: { fieldFlow: true, reducerOperations: true } },
@@ -125,7 +131,7 @@ describe('data lineage runtime', () => {
   it('keeps selector operations independent from reducer operations', () => {
     const selectorOnly = applyTransformsWithLineage(
       SALES,
-      [{ kind: 'select', groupBy: ['month'], selector: { kind: 'top', by: 'revenue', n: 1 } }],
+      [{ kind: 'select', params: { groupBy: ['month'], selector: { kind: 'top', by: 'revenue', n: 1 } } }],
       { lineage: { selectorOperations: true } },
     );
 
@@ -150,8 +156,10 @@ describe('data lineage runtime', () => {
       [
         {
           kind: 'summarize',
-          groupBy: ['month'],
-          metrics: [{ kind: 'count', as: 'rows' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'count', as: 'rows' }],
+          },
         },
       ],
       { lineage: { reducerOperations: true } },
@@ -162,7 +170,7 @@ describe('data lineage runtime', () => {
   });
 
   it('caps row samples and rejects unbounded sample options', () => {
-    const { lineage } = applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+    const { lineage } = applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
       lineage: { rowSamples: { maxRows: 1, fields: ['month', 'revenue'] } },
     });
 
@@ -180,12 +188,12 @@ describe('data lineage runtime', () => {
     ]);
 
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         lineage: { rowSamples: { maxRows: 0, fields: ['month'] } },
       }),
     ).toThrow(/rowSamples.maxRows/);
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         lineage: { rowSamples: { maxRows: 1, fields: [] } },
       }),
     ).toThrow(/rowSamples.fields/);
@@ -193,7 +201,7 @@ describe('data lineage runtime', () => {
 
   it.each([0.5, 1.5, NaN, Infinity])('rejects rowSamples.maxRows=%s', maxRows => {
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         lineage: { rowSamples: { maxRows, fields: ['month'] } },
       }),
     ).toThrow(/rowSamples\.maxRows must be a positive integer/);
@@ -201,7 +209,7 @@ describe('data lineage runtime', () => {
 
   it('rejects a fractional calculationDetails.maxRows', () => {
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         lineage: { calculationDetails: { maxRows: 1.5, fields: ['month'] } },
       }),
     ).toThrow(/calculationDetails\.maxRows must be a positive integer/);
@@ -209,7 +217,7 @@ describe('data lineage runtime', () => {
 
   it.each([0.5, 1.5, NaN, Infinity])('rejects sourceIdentity.maxIndices=%s', maxIndices => {
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         lineage: { sourceIdentity: { maxIndices } },
       }),
     ).toThrow(/sourceIdentity\.maxIndices must be a positive integer/);
@@ -232,25 +240,23 @@ describe('data lineage runtime', () => {
 
   it('records custom transform steps through the shared registry', () => {
     const doubleRevenue = defineTransform({
-      schema: object({
-        kind: literal('double-revenue'),
-        field: NonBlankStringSchema,
-        as: NonBlankStringSchema,
-      }),
-      inputFields: operation => [operation.field],
+      kind: 'double-revenue',
+      paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as }],
+        outputs: [{ field: operation.params.as }],
       }),
     });
     const doubleRevenueImplementation = defineTransformImplementation({
       definition: doubleRevenue,
-      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: Number(row[operation.field]) * 2 })),
+      apply: (rows, operation) =>
+        rows.map(row => ({ ...row, [operation.params.as]: Number(row[operation.params.field]) * 2 })),
     });
 
     const { rows, lineage } = applyTransformsWithLineage(
       [{ revenue: 3 }],
-      [{ kind: 'double-revenue', field: 'revenue', as: 'doubleRevenue' }],
+      [{ kind: 'double-revenue', params: { field: 'revenue', as: 'doubleRevenue' } }],
       {
         registry: resolveTransformRegistry([doubleRevenue]),
         transformImplementations: [doubleRevenueImplementation],
@@ -271,18 +277,19 @@ describe('data lineage runtime', () => {
 
   it('uses the output model as lineage field-flow authority when it is available', () => {
     const derive = defineTransform({
-      schema: object({ kind: literal('derive'), as: NonBlankStringSchema }),
+      kind: 'derive',
+      paramsSchema: object({ as: NonBlankStringSchema }),
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as, type: 'continuous' }],
+        outputs: [{ field: operation.params.as, type: 'continuous' }],
       }),
     });
     const deriveImplementation = defineTransformImplementation({
       definition: derive,
-      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: 1 })),
+      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.params.as]: 1 })),
     });
 
-    const { lineage } = applyTransformsWithLineage([{ source: 1 }], [{ kind: 'derive', as: 'derived' }], {
+    const { lineage } = applyTransformsWithLineage([{ source: 1 }], [{ kind: 'derive', params: { as: 'derived' } }], {
       registry: resolveTransformRegistry([derive]),
       transformImplementations: [deriveImplementation],
       lineage: { fieldFlow: true },
@@ -296,7 +303,9 @@ describe('data lineage runtime', () => {
     const operations = [
       {
         kind: 'summarize' as const,
-        metrics: [{ kind: 'count' as const, as: 'rows' }],
+        params: {
+          metrics: [{ kind: 'count' as const, as: 'rows' }],
+        },
       },
     ];
 
@@ -327,12 +336,16 @@ describe('data lineage runtime', () => {
       [
         {
           kind: 'summarize',
-          groupBy: ['month'],
-          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          },
         },
         {
           kind: 'summarize',
-          metrics: [{ kind: 'count', as: 'monthCount' }],
+          params: {
+            metrics: [{ kind: 'count', as: 'monthCount' }],
+          },
         },
       ],
       { lineage: { sourceIdentity: { mode: 'full' } } },
@@ -349,7 +362,7 @@ describe('data lineage runtime', () => {
 
   it('preserves original row identities when a transformed view enters another lineage run', () => {
     const tagged = tagSourceIndex([{ value: 30 }, { value: 10 }, { value: 20 }]);
-    const sorted = applyTransforms(tagged, [{ kind: 'sort', field: 'value' }]);
+    const sorted = applyTransforms(tagged, [{ kind: 'sort', params: { field: 'value' } }]);
 
     const { rows, lineage } = applyTransformsWithLineage(sorted);
 
@@ -375,10 +388,10 @@ describe('data lineage runtime', () => {
   it('streams sink events without retaining them unless requested', () => {
     const streamed: Array<DataLineageEvent> = [];
 
-    const { lineage } = applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+    const { lineage } = applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
       lineage: { sink: event => streamed.push(event) },
     });
-    const retained = applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+    const retained = applyTransformsWithLineage(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
       lineage: { sink: event => streamed.push(event), retainEvents: true },
     });
 
@@ -410,8 +423,10 @@ describe('data lineage runtime', () => {
       [
         {
           kind: 'summarize',
-          groupBy: ['month'],
-          metrics: [{ kind: 'range', field: 'revenue', as: 'revenueRange' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'range', field: 'revenue', as: 'revenueRange' }],
+          },
         },
       ],
       {
@@ -435,6 +450,8 @@ describe('data lineage runtime', () => {
   });
 
   it('does not produce successful step events when transform lookup fails', () => {
-    expect(() => applyTransformsWithLineage([{ value: 1 }], [{ kind: 'missing', value: 1 }])).toThrow(/not registered/);
+    expect(() => applyTransformsWithLineage([{ value: 1 }], [{ kind: 'missing', params: { value: 1 } }])).toThrow(
+      /not registered/,
+    );
   });
 });

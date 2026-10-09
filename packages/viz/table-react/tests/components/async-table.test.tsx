@@ -49,7 +49,7 @@ describe('Table client preparation', () => {
       model: [{ name: 'value', type: 'continuous' }],
       header: false,
       columns: [{ id: 'ratio', field: 'ratio' }],
-      transform: [{ operation: { kind: 'normalize', field: 'value', as: 'ratio' } }],
+      transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'ratio' } } }],
     });
     const dataBindings = { rows: { kind: 'source' as const, source: { values: [2, 6] } } };
     const onManifest = vi.fn();

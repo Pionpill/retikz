@@ -1032,7 +1032,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_point_accepts_local_transform', () => {
     const m = {
       type: 'point',
-      transform: [{ operation: { kind: 'sort', field: 'score', order: 'descending' } }],
+      transform: [{ operation: { kind: 'sort', params: { field: 'score', order: 'descending' } } }],
       encoding: { x: { field: 'x' }, y: { field: 'score' } },
     };
 
@@ -1046,8 +1046,10 @@ describe('MarkSchema (contract)', () => {
         {
           operation: {
             kind: 'summarize',
-            groupBy: ['series'],
-            metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+            params: {
+              groupBy: ['series'],
+              metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+            },
           },
         },
       ],
@@ -1061,7 +1063,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_reference_accepts_local_transform', () => {
     const m = {
       type: 'reference',
-      transform: [{ operation: { kind: 'derive-interval', startFrom: 'low', endFrom: 'high' } }],
+      transform: [{ operation: { kind: 'derive-interval', params: { startFrom: 'low', endFrom: 'high' } } }],
       encoding: { y: { field: 'intervalEnd' } },
     };
 
@@ -1071,7 +1073,7 @@ describe('MarkSchema (contract)', () => {
   it('custom_mark_accepts_local_transform', () => {
     const m = {
       type: 'dot',
-      transform: [{ operation: { kind: 'top-n', field: 'score', n: 3 } }],
+      transform: [{ operation: { kind: 'top-n', params: { field: 'score', n: 3 } } }],
       encoding: { x: { field: 'x' }, y: { field: 'score' } },
     };
 

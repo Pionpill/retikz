@@ -591,8 +591,10 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
         {
           operation: {
             kind: 'summarize',
-            groupBy: ['region'],
-            metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            params: {
+              groupBy: ['region'],
+              metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            },
           },
         },
       ],
@@ -625,7 +627,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'pts' },
-      transform: [{ operation: { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } }],
+      transform: [{ operation: { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } } }],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },

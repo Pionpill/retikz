@@ -9,7 +9,7 @@ const table = () =>
     dataRef: 'rows',
     header: false,
     columns: [{ id: 'ratio', field: 'ratio' }],
-    transform: [{ operation: { kind: 'normalize', field: 'value', as: 'ratio' } }],
+    transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'ratio' } } }],
   });
 
 describe('async Table authoring', () => {

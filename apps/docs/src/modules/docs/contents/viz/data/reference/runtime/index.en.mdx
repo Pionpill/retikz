@@ -24,6 +24,8 @@ Semantic factories such as `defineTransform` and their `define*Implementation` f
 
 Semantic registries merge built-in and custom Definitions, rejecting duplicate keys and built-in overrides. Open JSON operation schemas store parameters; dispatch parses each operation once with the exact Definition schema. `resolveDataTransforms(declarations, inputModel, options?)` resolves fields and complete output models in order without reading rows or computing results.
 
+`defineTransform({ kind, paramsSchema, ...semantics })` uses `createTransformSchema` to build the shared `{ kind, params }` operation schema. Each transform exposes an exact `XxxParamsSchema`; semantic and computation callbacks read parsed parameters from `operation.params`.
+
 ## Async execution
 
 `createDataTransformExecutor(options?)` holds local implementations, named externalProviders, default dataExecution and optional materializeSource. Priority is executor < host root < declaration; mode and external name inherit independently.

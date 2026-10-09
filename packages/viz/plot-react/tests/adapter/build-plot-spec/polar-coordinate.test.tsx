@@ -102,13 +102,13 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
       encoding: { color: { field: 'value', scale: '__color' } },
     });
-    expect(spec.transform).toEqual([{ operation: { kind: 'stack', y: 'value' } }]);
+    expect(spec.transform).toEqual([{ operation: { kind: 'stack', params: { y: 'value' } } }]);
   });
 
   it('sector_series_orders_stack：<IntervalMark angle series> → stack transform 带 groupBy', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
 
-    expect(spec.transform).toEqual([{ operation: { kind: 'stack', y: 'value', groupBy: 'label' } }]);
+    expect(spec.transform).toEqual([{ operation: { kind: 'stack', params: { y: 'value', groupBy: 'label' } } }]);
     expect(spec.marks[0]).toEqual({
       type: 'interval',
       bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },

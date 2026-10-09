@@ -44,8 +44,10 @@ it('preserves group type evidence while leaving non-scalar extent untyped', () =
       {
         operation: {
           kind: 'summarize',
-          groupBy: ['group'],
-          metrics: [{ kind: 'extent', field: 'value', as: 'range' }],
+          params: {
+            groupBy: ['group'],
+            metrics: [{ kind: 'extent', field: 'value', as: 'range' }],
+          },
         },
       },
     ],
@@ -68,19 +70,21 @@ it('preserves group type evidence while leaving non-scalar extent untyped', () =
   expect(view.model.find(field => field.name === 'payload')).toBeUndefined();
   expect(view.model).toEqual(resolution.stages[0].outputModel);
 
-  const sorted = applyTransformsToDataView(view, [{ kind: 'sort', field: 'group' }]);
+  const sorted = applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'group' } }]);
 
   expect(sorted.model).toEqual(resolution.stages[0].outputModel);
-  expect(() => applyTransformsToDataView(view, [{ kind: 'sort', field: 'payload' }])).toThrow(/missing input field/);
+  expect(() => applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'payload' } }])).toThrow(
+    /missing input field/,
+  );
 });
 
 it('retains unknown field existence across empty transformed scopes', () => {
   const model = [{ name: 'value', type: 'continuous' as const }];
   const input = ingestDataTransformResult(resolveDataTransforms([], model), { rows: [], model });
   const root = applyTransformsToDataView(input, [
-    { kind: 'summarize', groupBy: ['value'], metrics: [{ kind: 'extent', field: 'value', as: 'range' }] },
+    { kind: 'summarize', params: { groupBy: ['value'], metrics: [{ kind: 'extent', field: 'value', as: 'range' }] } },
   ]);
-  const mark = applyTransformsToDataView(root, [{ kind: 'sort', field: 'range' }]);
+  const mark = applyTransformsToDataView(root, [{ kind: 'sort', params: { field: 'range' } }]);
 
   expect(mark.rows).toEqual([]);
   expect(mark.model.find(field => field.name === 'range')).toEqual({ name: 'range' });

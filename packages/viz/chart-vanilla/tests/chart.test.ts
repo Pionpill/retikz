@@ -252,15 +252,12 @@ describe('Chart Vanilla authoring', () => {
 
   it('shares custom transform Definitions with Chart resolution and Plot lowering without serializing runtime', () => {
     const copyField = defineTransform({
-      schema: strictObject({
-        kind: literal('copy-chart-field'),
-        field: NonBlankStringSchema,
-        as: NonBlankStringSchema,
-      }),
-      inputFields: operation => [operation.field],
+      kind: 'copy-chart-field',
+      paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as, type: { from: operation.field } }],
+        outputs: [{ field: operation.params.as, type: { from: operation.params.field } }],
       }),
       schedule: {
         phase: DataTransformPhase.FieldDerive,
@@ -270,14 +267,15 @@ describe('Chart Vanilla authoring', () => {
     });
     const copyFieldImplementation = defineTransformImplementation({
       definition: copyField,
-      apply: (inputRows, operation) => inputRows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
+      apply: (inputRows, operation) =>
+        inputRows.map(row => ({ ...row, [operation.params.as]: row[operation.params.field] })),
     });
     const chart = scatterChart({
       id: 'custom-transform',
       data: rows,
       encodings: {
         x: {
-          transform: { operation: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' } },
+          transform: { operation: { kind: 'copy-chart-field', params: { field: 'x', as: 'copiedX' } } },
           output: 'copiedX',
         },
         y: 'y',

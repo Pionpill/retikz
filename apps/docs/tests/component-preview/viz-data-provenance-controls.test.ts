@@ -101,8 +101,8 @@ describe('Viz Data Plot lineage controls', () => {
         markTopN: 2,
       }),
     ).toEqual({
-      root: [{ kind: 'sort', field: 'revenue', order: 'ascending' }],
-      mark: [{ kind: 'select', selector: { kind: 'top', by: 'revenue', n: 2 } }],
+      root: [{ kind: 'sort', params: { field: 'revenue', order: 'ascending' } }],
+      mark: [{ kind: 'select', params: { selector: { kind: 'top', by: 'revenue', n: 2 } } }],
     });
   });
 

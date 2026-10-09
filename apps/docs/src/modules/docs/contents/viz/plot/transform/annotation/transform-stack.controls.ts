@@ -7,10 +7,12 @@ import { productRevenue } from './transform-stack.data';
 /** 根据实时控件值创建堆叠 operation */
 export const stackOperationOf = (values: { offset: 'zero' | 'normalize' | 'center' | 'overlap' }) => ({
   kind: 'stack',
-  x: 'quarter',
-  y: 'revenue',
-  groupBy: 'product',
-  offset: values.offset,
+  params: {
+    x: 'quarter',
+    y: 'revenue',
+    groupBy: 'product',
+    offset: values.offset,
+  },
 });
 
 /** 堆叠示例的中文控件 */

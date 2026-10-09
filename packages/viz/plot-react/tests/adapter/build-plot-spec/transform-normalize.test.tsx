@@ -12,17 +12,25 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     const spec = buildPlotIR(
       <>
         <PlotTransform
-          operation={{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' }}
+          operation={{
+            kind: 'normalize',
+            params: { field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
+          }}
         />
-        <PlotTransform operation={{ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' }} />
+        <PlotTransform operation={{ kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } }} />
         <IntervalMark x="quarter" y="share" series="product" stack />
       </>,
       '__plot',
     );
 
     expect(spec.transform).toEqual([
-      { operation: { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' } },
-      { operation: { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' } },
+      {
+        operation: {
+          kind: 'normalize',
+          params: { field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
+        },
+      },
+      { operation: { kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } } },
     ]);
 
     // 只剩一条 stack（shortcut stack 被同签名去重），且 mark 确为 stacked interval（lower 会读 y0/y1）
@@ -37,7 +45,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     // 否则该 mark 仍是 stacked interval 却无对应 y0/y1，lower 阶段读空累积界出错
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' }} />
+        <PlotTransform operation={{ kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } }} />
         <IntervalMark x="quarter" y="share" series="product" stack />
         {/* 不同 y/groupBy 签名的另一组堆叠柱：其 shortcut stack 不能被误删 */}
         <IntervalMark x="month" y="revenue" series="region" stack />
@@ -48,8 +56,8 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
 
     // 显式 stack(quarter/share/product) 去重了第一根柱的同签名 shortcut stack；第二根柱(month/revenue/region)的 shortcut stack 保留 → 共两条
     expect(stacks).toHaveLength(2);
-    expect(stacks).toContainEqual({ kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' });
-    expect(stacks).toContainEqual({ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'region' });
+    expect(stacks).toContainEqual({ kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } });
+    expect(stacks).toContainEqual({ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'region' } });
 
     // 两根柱都为 stacked interval（bounds.y extent 读 y0/y1）
     expect(spec.marks.every(m => isBuiltinMark(m) && m.type === 'interval' && m.bounds?.y?.kind === 'extent')).toBe(
@@ -60,33 +68,35 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
   it('derive_interval_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end' }} />
+        <PlotTransform operation={{ kind: 'derive-interval', params: { startFrom: 'start', endFrom: 'end' } }} />
         <IntervalMark x="task" y="end" />
       </>,
       '__plot',
     );
 
-    expect(spec.transform).toEqual([{ operation: { kind: 'derive-interval', startFrom: 'start', endFrom: 'end' } }]);
+    expect(spec.transform).toEqual([
+      { operation: { kind: 'derive-interval', params: { startFrom: 'start', endFrom: 'end' } } },
+    ]);
   });
 
   it('jitter_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 }} />
+        <PlotTransform operation={{ kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } }} />
         <PointMark x="dose" y="response" />
       </>,
       '__plot',
     );
 
     expect(spec.transform).toEqual([
-      { operation: { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } },
+      { operation: { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } } },
     ]);
   });
 
   it('adr02 装配产物过 PlotSchema', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'jitter', axis: 'both', amount: 1, seed: 7 }} />
+        <PlotTransform operation={{ kind: 'jitter', params: { axis: 'both', amount: 1, seed: 7 } }} />
         <PointMark x="x" y="y" />
       </>,
       '__plot',

@@ -3,7 +3,7 @@ title: 扩展机制
 description: 分别定义数据变换语义与计算实现，用统一执行器选择本地、外接或混合计算。
 ---
 
-Data 用 Definition 声明操作含义，用 Implementation 提供计算。操作 `{ kind, ...config }` 和执行配置可以保存为 JSON；schema、函数、执行器与数据源句柄留在运行时。
+Data 用 Definition 声明操作含义，用 Implementation 提供计算。操作 `{ kind, params }` 和执行配置可以保存为 JSON；schema、函数、执行器与数据源句柄留在运行时。
 
 ## 适用边界
 
@@ -13,7 +13,7 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 
 ## 定义能力
 
-`defineTransform` 接收精确 `schema`、可选 `inputFields` 和必填 `outputModel`。语义回调只读取参数与字段模型，不读取行或执行计算。需要统计子算子的操作通过 `dependencies` 声明完整依赖；`validate` 检查模型相关不变量。
+`defineTransform` 接收 `kind`、精确 `paramsSchema`、可选 `inputFields` 和必填 `outputModel`。它通过统一的 `createTransformSchema` 组装完整操作 schema；内置与自定义变换遵守同一外壳。回调接收完整 operation，通过 `operation.params` 读取解析后的参数。语义回调只读取参数与字段模型，不读取行或执行计算。需要统计子算子的操作通过 `dependencies` 声明完整依赖；`validate` 检查模型相关不变量。
 
 `outputModel` 使用 `preserve.outputs` 增补字段，或用 `replace.fields` 替换完整模型。输出字段可以省略类型表示尚无类型证据；`{ from: field }` 沿用已有字段的类型与适用分类顺序。派生字段名由该模型投影。
 
@@ -60,7 +60,7 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 
 ```tsx
 <Plot data={rows} transformDefinitions={[scaleField]} transformImplementations={[scaleFieldImplementation]}>
-  <PlotTransform operation={{ kind: 'scale-field', field: 'x', as: 'scaledX', factor: 2 }} />
+  <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
   <PointMark x="scaledX" y="y" />
 </Plot>
 ```
@@ -115,7 +115,7 @@ Vanilla 使用 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`，或
 ```tsx
 <Layout runtime={{ preparation: 'async' }}>
   <Plot data={rows} dataTransformExecutor={executor} transformDefinitions={[scaleField]}>
-    <PlotTransform operation={{ kind: 'scale-field', field: 'x', as: 'scaledX', factor: 2 }} />
+    <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
     <PointMark x="scaledX" y="y" />
   </Plot>
 </Layout>
@@ -140,8 +140,8 @@ Table 在结构解析前消费变换结果；只有 Detail 和有数据的 Custo
     {
       name: 'defineTransform',
       kind: 'function',
-      type: '<TTransform extends IRDataTransform>(definition: TransformDefinition<TTransform>) => TransformDefinition<TTransform>',
-      description: '声明精确 schema、字段依赖与完整 outputModel，不包含计算。',
+      type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: TransformDefinitionInput<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
+      description: '声明 kind、paramsSchema、字段依赖与完整 outputModel，自动组装完整操作 schema，不包含计算。',
     },
     {
       name: 'defineTransformImplementation',

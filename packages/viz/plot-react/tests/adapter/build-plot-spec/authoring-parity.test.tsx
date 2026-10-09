@@ -16,7 +16,9 @@ const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =
 describe('React 与 framework-neutral authoring parity', () => {
   it('Point placement 产出完全一致的 IRPlot', () => {
     const placement = {
-      adjustments: [{ kind: 'jitter' as const, role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 }],
+      adjustments: [
+        { kind: 'jitter' as const, params: { role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 } },
+      ],
     };
     const react = buildPlotIR(<PointMark x="category" y="value" placement={placement} />, 'points');
     const plain = normalizePlot({

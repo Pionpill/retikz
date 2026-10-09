@@ -341,7 +341,7 @@ describe('<Plot spec data> 薄包装', () => {
         markTransformShortcuts={[
           {
             markType: 'point',
-            build: () => [{ kind: 'normalize', field: 'value', as: 'share' }],
+            build: () => [{ kind: 'normalize', params: { field: 'value', as: 'share' } }],
           },
         ]}
       >

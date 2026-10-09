@@ -14,7 +14,7 @@ import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '.
 
 /** sort transform 实现：按字段升 / 降序稳定排序，等键保持原序 */
 export const applySort = (rows: Array<ExternalRow>, operation: IRDataSortTransform): Array<ExternalRow> => {
-  return [...rows].sort((a, b) => compareRowsByFieldPath(a, b, operation.field, operation.order));
+  return [...rows].sort((a, b) => compareRowsByFieldPath(a, b, operation.params.field, operation.params.order));
 };
 
 /** 默认堆叠下界 / 上界输出字段名 */
@@ -40,10 +40,10 @@ export const DEFAULT_JITTER_Y_FIELD = 'y';
  * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入；normalize offset 拒绝有限负值
  */
 export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTransform): Array<ExternalRow> => {
-  const startField = operation.startField ?? DEFAULT_START_FIELD;
-  const endField = operation.endField ?? DEFAULT_END_FIELD;
-  const offset: StackOffset = operation.offset ?? StackOffset.Zero;
-  const groupByField = operation.groupBy;
+  const startField = operation.params.startField ?? DEFAULT_START_FIELD;
+  const endField = operation.params.endField ?? DEFAULT_END_FIELD;
+  const offset: StackOffset = operation.params.offset ?? StackOffset.Zero;
+  const groupByField = operation.params.groupBy;
   const seriesOrder =
     groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));
   const seriesRank = new Map(seriesOrder.map((series, index) => [series, index] as const));
@@ -61,7 +61,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTrans
   const SINGLE_CHAIN_KEY = Symbol('single-chain');
 
   for (const row of rows) {
-    const key = operation.x === undefined ? SINGLE_CHAIN_KEY : resolveFieldPath(row, operation.x);
+    const key = operation.params.x === undefined ? SINGLE_CHAIN_KEY : resolveFieldPath(row, operation.params.x);
     const bucket = groups.get(key);
     if (bucket) bucket.push(row);
     else groups.set(key, [row]);
@@ -69,14 +69,14 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTrans
 
   const stackGroupBounds = (ordered: Array<ExternalRow>): Map<ExternalRow, [number, number]> => {
     const values = ordered.map(row => {
-      const value = resolveFieldPath(row, operation.y);
+      const value = resolveFieldPath(row, operation.params.y);
       return isFiniteNumber(value) ? value : 0;
     });
     const out = new Map<ExternalRow, [number, number]>();
 
     if (offset === StackOffset.Normalize && values.some(value => value < 0)) {
       throw new RetikzDataError(
-        `data: stack transform offset "normalize" does not support negative values in field "${operation.y}"; use offset "diverging" for signed data`,
+        `data: stack transform offset "normalize" does not support negative values in field "${operation.params.y}"; use offset "diverging" for signed data`,
       );
     }
 
@@ -137,19 +137,19 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTrans
  * @description groupBy 缺省时全行单组；有限负值会报错，缺失 / 非有限值按 0；basis percent 输出 0..100，组和为 0 时输出 0
  */
 export const applyNormalize = (rows: Array<ExternalRow>, operation: IRDataNormalizeTransform): Array<ExternalRow> => {
-  const outField = operation.as ?? operation.field;
-  const scale = operation.basis === NormalizeBasis.Percent ? 100 : 1;
+  const outField = operation.params.as ?? operation.params.field;
+  const scale = operation.params.basis === NormalizeBasis.Percent ? 100 : 1;
   const sums = new Map<string, number>();
   const keyOf = (row: ExternalRow): string =>
-    operation.groupBy === undefined
+    operation.params.groupBy === undefined
       ? ''
-      : JSON.stringify(operation.groupBy.map(field => resolveFieldPath(row, field) ?? null));
+      : JSON.stringify(operation.params.groupBy.map(field => resolveFieldPath(row, field) ?? null));
 
   for (const row of rows) {
-    const value = resolveFieldPath(row, operation.field);
+    const value = resolveFieldPath(row, operation.params.field);
     if (isFiniteNumber(value) && value < 0) {
       throw new RetikzDataError(
-        `data: normalize transform does not support negative values in field "${operation.field}"; handle signed data before normalization`,
+        `data: normalize transform does not support negative values in field "${operation.params.field}"; handle signed data before normalization`,
       );
     }
 
@@ -159,7 +159,7 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: IRDataNormal
   }
 
   return rows.map(row => {
-    const value = resolveFieldPath(row, operation.field);
+    const value = resolveFieldPath(row, operation.params.field);
     const segment = isFiniteNumber(value) ? value : 0;
     const sum = sums.get(keyOf(row)) ?? 0;
     const share = sum === 0 ? 0 : (segment / sum) * scale;
@@ -176,11 +176,11 @@ export const applyDeriveInterval = (
   rows: Array<ExternalRow>,
   operation: IRDataDeriveIntervalTransform,
 ): Array<ExternalRow> => {
-  const startField = operation.startField ?? DEFAULT_DERIVE_START_FIELD;
-  const endField = operation.endField ?? DEFAULT_DERIVE_END_FIELD;
-  const baseline = operation.baseline ?? 0;
-  const twoField = operation.startFrom !== undefined && operation.endFrom !== undefined;
-  if (!twoField && operation.from === undefined) {
+  const startField = operation.params.startField ?? DEFAULT_DERIVE_START_FIELD;
+  const endField = operation.params.endField ?? DEFAULT_DERIVE_END_FIELD;
+  const baseline = operation.params.baseline ?? 0;
+  const twoField = operation.params.startFrom !== undefined && operation.params.endFrom !== undefined;
+  if (!twoField && operation.params.from === undefined) {
     throw new RetikzDataError(
       'data: derive-interval transform requires either `from` (baseline->value) or both `startFrom` and `endFrom`',
     );
@@ -190,12 +190,12 @@ export const applyDeriveInterval = (
 
   return rows.map(row => {
     if (twoField) {
-      const start = finiteOr(resolveFieldPath(row, operation.startFrom as string), baseline);
-      const end = finiteOr(resolveFieldPath(row, operation.endFrom as string), baseline);
+      const start = finiteOr(resolveFieldPath(row, operation.params.startFrom as string), baseline);
+      const end = finiteOr(resolveFieldPath(row, operation.params.endFrom as string), baseline);
       return { ...row, [startField]: start, [endField]: end };
     }
 
-    const end = finiteOr(resolveFieldPath(row, operation.from as string), baseline);
+    const end = finiteOr(resolveFieldPath(row, operation.params.from as string), baseline);
 
     return { ...row, [startField]: baseline, [endField]: end };
   });
@@ -220,11 +220,11 @@ const mulberry32 = (seed: number): (() => number) => {
  * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性
  */
 export const applyJitter = (rows: Array<ExternalRow>, operation: IRDataJitterTransform): Array<ExternalRow> => {
-  const axis = operation.axis ?? JitterAxis.X;
-  const amount = operation.amount ?? 1;
-  const seed = operation.seed ?? 0;
-  const xField = operation.xField ?? DEFAULT_JITTER_X_FIELD;
-  const yField = operation.yField ?? DEFAULT_JITTER_Y_FIELD;
+  const axis = operation.params.axis ?? JitterAxis.X;
+  const amount = operation.params.amount ?? 1;
+  const seed = operation.params.seed ?? 0;
+  const xField = operation.params.xField ?? DEFAULT_JITTER_X_FIELD;
+  const yField = operation.params.yField ?? DEFAULT_JITTER_Y_FIELD;
   const jitterX = axis === JitterAxis.X || axis === JitterAxis.Both;
   const jitterY = axis === JitterAxis.Y || axis === JitterAxis.Both;
   const rng = mulberry32(seed);

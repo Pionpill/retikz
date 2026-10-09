@@ -27,7 +27,7 @@ describe('Plot custom transform documentation', () => {
   it('waterfall Definition derives cumulative interval fields for IntervalMark', () => {
     const rows = waterfallTransformImplementation.apply(
       waterfallRows,
-      { kind: 'waterfall', field: 'delta', initialValue: 60 },
+      { kind: 'waterfall', params: { field: 'delta', initialValue: 60 } },
       DEFAULT_TRANSFORM_CONTEXT,
     );
 

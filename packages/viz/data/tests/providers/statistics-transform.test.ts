@@ -37,12 +37,14 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'summarize',
-        groupBy: ['region'],
-        metrics: [
-          { kind: 'mean', field: 'revenue', as: 'avgRevenue' },
-          { kind: 'median', field: 'revenue', as: 'medianRevenue' },
-          { kind: 'count', as: 'orders' },
-        ],
+        params: {
+          groupBy: ['region'],
+          metrics: [
+            { kind: 'mean', field: 'revenue', as: 'avgRevenue' },
+            { kind: 'median', field: 'revenue', as: 'medianRevenue' },
+            { kind: 'count', as: 'orders' },
+          ],
+        },
       },
     ]);
 
@@ -56,10 +58,12 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(tagSourceIndex(ORDERS), [
       {
         kind: 'summarize',
-        metrics: [
-          { kind: 'count', as: 'orders' },
-          { kind: 'sum', field: 'revenue', as: 'totalRevenue' },
-        ],
+        params: {
+          metrics: [
+            { kind: 'count', as: 'orders' },
+            { kind: 'sum', field: 'revenue', as: 'totalRevenue' },
+          ],
+        },
       },
     ]);
 
@@ -71,8 +75,10 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(tagSourceIndex(ORDERS), [
       {
         kind: 'select',
-        groupBy: ['region'],
-        selector: { kind: 'max', by: 'revenue', tie: 'first' },
+        params: {
+          groupBy: ['region'],
+          selector: { kind: 'max', by: 'revenue', tie: 'first' },
+        },
       },
     ]);
 
@@ -88,9 +94,11 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'select',
-        groupBy: ['region'],
-        selector: { kind: 'top', by: 'revenue', n: 2 },
-        rankAs: 'rank',
+        params: {
+          groupBy: ['region'],
+          selector: { kind: 'top', by: 'revenue', n: 2 },
+          rankAs: 'rank',
+        },
       },
     ]);
 
@@ -106,8 +114,10 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'annotate',
-        groupBy: ['region'],
-        metrics: [{ kind: 'mean', field: 'revenue', as: 'regionMean' }],
+        params: {
+          groupBy: ['region'],
+          metrics: [{ kind: 'mean', field: 'revenue', as: 'regionMean' }],
+        },
       },
     ]);
 
@@ -124,8 +134,10 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'annotate',
-        groupBy: ['region'],
-        selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'regionMax' }],
+        params: {
+          groupBy: ['region'],
+          selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'regionMax' }],
+        },
       },
     ]);
 
@@ -150,10 +162,12 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'relate',
-          groupBy: ['series'],
-          source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
-          target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
-          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          params: {
+            groupBy: ['series'],
+            source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+            target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          },
         },
       ],
     );
@@ -194,12 +208,14 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'bin',
-          field: 'x',
-          step: 5,
-          metrics: [
-            { kind: 'count', as: 'binCount' },
-            { kind: 'mean', field: 'weight', as: 'binMean' },
-          ],
+          params: {
+            field: 'x',
+            step: 5,
+            metrics: [
+              { kind: 'count', as: 'binCount' },
+              { kind: 'mean', field: 'weight', as: 'binMean' },
+            ],
+          },
         },
       ],
     );
@@ -242,8 +258,10 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'summarize',
-          groupBy: ['group'],
-          metrics: [{ kind: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
+          params: {
+            groupBy: ['group'],
+            metrics: [{ kind: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
+          },
         },
       ],
       {
@@ -291,9 +309,11 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'select',
-          groupBy: ['group'],
-          selector: { kind: 'nearest', field: 'value', target: 10 },
-          rankAs: 'rank',
+          params: {
+            groupBy: ['group'],
+            selector: { kind: 'nearest', field: 'value', target: 10 },
+            rankAs: 'rank',
+          },
         },
       ],
       {

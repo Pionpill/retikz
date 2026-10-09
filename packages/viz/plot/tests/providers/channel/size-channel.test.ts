@@ -3,7 +3,7 @@ import { defineTransformImplementation } from '@retikz/data';
 import { DataFieldType, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { literal, number, strictObject, string, union } from 'zod';
+import { number, strictObject, string, union } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
@@ -20,17 +20,17 @@ const SizeChannelTestTransform = {
 
 /** 为每行写入指定派生值，用于验证 transform 输出字段的最终类型推断 */
 const deriveSizeValueTransform = defineTransform({
-  schema: strictObject({
-    kind: literal(SizeChannelTestTransform.DeriveValue).describe('Discriminator for the size channel test transform'),
+  kind: SizeChannelTestTransform.DeriveValue,
+  paramsSchema: strictObject({
     as: NonBlankStringSchema.describe('Output field receiving the derived value'),
     value: union([string(), number()]).describe('Scalar value written to every output row'),
   }).describe('Test-only transform that writes a derived size field'),
-  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.params.as }] }),
 });
 
 const deriveSizeValueTransformImplementation = defineTransformImplementation({
   definition: deriveSizeValueTransform,
-  apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: operation.value })),
+  apply: (rows, operation) => rows.map(row => ({ ...row, [operation.params.as]: operation.params.value })),
 });
 
 const expandOf = (
@@ -100,7 +100,9 @@ const derivedSizePointSpec = (value: string | number): IRPlot =>
     marks: [
       {
         type: 'point',
-        transform: [{ operation: { kind: SizeChannelTestTransform.DeriveValue, as: 'derivedSize', value } }],
+        transform: [
+          { operation: { kind: SizeChannelTestTransform.DeriveValue, params: { as: 'derivedSize', value } } },
+        ],
         size: { kind: 'field', value: 'derivedSize' },
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
       },
@@ -495,7 +497,7 @@ describe('size channel 错误输入', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'normalize', field: 'p', as: 'p' } }],
+          transform: [{ operation: { kind: 'normalize', params: { field: 'p', as: 'p' } } }],
           size: { kind: 'field', value: 'p' },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },

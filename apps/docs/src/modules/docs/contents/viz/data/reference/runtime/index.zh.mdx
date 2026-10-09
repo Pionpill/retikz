@@ -24,6 +24,8 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 
 语义 registry 合并内置与自定义 Definition；重复键或覆盖内置键失败。开放 operation 的 JSON schema 保存参数，dispatch 后由精确 Definition schema 一次解析。`resolveDataTransforms(declarations, inputModel, options?)` 按顺序解析字段与完整输出模型，不读取行或执行计算。
 
+`defineTransform({ kind, paramsSchema, ...semantics })` 通过 `createTransformSchema` 生成统一的 `{ kind, params }` 操作 schema。各变换的 `XxxParamsSchema` 保留精确字段与约束；语义及计算回调从 `operation.params` 读取解析后的参数。
+
 ## 异步执行
 
 `createDataTransformExecutor(options?)` 保存本地实现、具名 externalProviders、默认 dataExecution 和可选 materializeSource。执行配置优先级为执行器 < 宿主根 < 单条 declaration，mode 与 external 名称分别继承。

@@ -25,7 +25,7 @@ const spec = () =>
       { name: 'y', type: 'linear', domain: [0, 1] },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    transform: [{ operation: { kind: 'normalize', field: 'y', as: 'ratio' } }],
+    transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }],
     marks: [{ type: 'point', encoding: { x: { field: 'x', scale: 'x' }, y: { field: 'ratio', scale: 'y' } } }],
   });
 

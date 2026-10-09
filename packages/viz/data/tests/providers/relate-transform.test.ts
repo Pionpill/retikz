@@ -5,9 +5,11 @@ import { applyTransforms, resolveTransformRegistry, TransformSchema } from '../.
 describe('relate transform', () => {
   const operation = {
     kind: 'relate',
-    source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
-    target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
-    measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+    params: {
+      source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
+      target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'x', y: 'value', id: 'id' } },
+      measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+    },
   };
 
   it('accepts relate schema and preserves JSON round trip', () => {
@@ -18,8 +20,10 @@ describe('relate transform', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'relate',
-        source: { selector: { kind: 'min' }, fields: { id: 'id' } },
-        target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
+        params: {
+          source: { selector: { kind: 'min' }, fields: { id: 'id' } },
+          target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
+        },
       }),
     ).toThrow();
   });
@@ -28,8 +32,10 @@ describe('relate transform', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'relate',
-        source: { selector: { kind: 'first' }, fields: {} },
-        target: { selector: { kind: 'last' }, fields: { id: 'id' } },
+        params: {
+          source: { selector: { kind: 'first' }, fields: {} },
+          target: { selector: { kind: 'last' }, fields: { id: 'id' } },
+        },
       }),
     ).toThrow();
   });
@@ -67,7 +73,7 @@ describe('relate transform', () => {
         { group: 'B', id: 'b1', x: 0, value: 7 },
         { group: 'B', id: 'b2', x: 1, value: 15 },
       ],
-      [{ ...operation, groupBy: ['group'] }],
+      [{ ...operation, params: { ...operation.params, groupBy: ['group'] } }],
       { registry: resolveTransformRegistry() },
     );
 
@@ -87,9 +93,11 @@ describe('relate transform', () => {
       [
         {
           kind: 'relate',
-          groupBy: ['group'],
-          source: { selector: { kind: 'max', by: 'value', tie: 'last' }, fields: { id: 'id' } },
-          target: { selector: { kind: 'first' }, fields: { id: 'id' } },
+          params: {
+            groupBy: ['group'],
+            source: { selector: { kind: 'max', by: 'value', tie: 'last' }, fields: { id: 'id' } },
+            target: { selector: { kind: 'first' }, fields: { id: 'id' } },
+          },
         },
       ],
       { registry: resolveTransformRegistry() },

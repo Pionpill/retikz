@@ -3,7 +3,7 @@ title: Extension mechanisms
 description: Define transform semantics separately from computation, then choose local, external or hybrid execution with one executor.
 ---
 
-Data uses a Definition to describe an operation and an Implementation to compute it. Operations `{ kind, ...config }` and execution settings are JSON-safe; schemas, functions, executors and source handles remain runtime objects.
+Data uses a Definition to describe an operation and an Implementation to compute it. Operations `{ kind, params }` and execution settings are JSON-safe; schemas, functions, executors and source handles remain runtime objects.
 
 ## When to extend
 
@@ -13,7 +13,7 @@ Define a transform for new row semantics, a reducer when `summarize` or `annotat
 
 ## Define the capability
 
-`defineTransform` accepts an exact `schema`, optional `inputFields` and required `outputModel`. Semantic callbacks read parameters and field models, never rows or computation. Declare every statistical dependency with `dependencies`; use `validate` for model invariants.
+`defineTransform` accepts `kind`, an exact `paramsSchema`, optional `inputFields`, and required `outputModel`. It assembles the complete operation schema with `createTransformSchema`; built-in and custom transforms share the same envelope. Callbacks receive the complete operation and read parsed parameters through `operation.params`. Semantic callbacks read parameters and field models, never rows or computation. Declare every statistical dependency with `dependencies`; use `validate` for model invariants.
 
 Use `preserve.outputs` to extend a model or `replace.fields` to replace it. An output may omit its type when no evidence exists. `{ from: field }` preserves the source type and applicable categorical order. Derived field names are projected from this model.
 
@@ -60,7 +60,7 @@ Hosts use `{ operation, dataExecution? }` declarations. `operation` holds comput
 
 ```tsx
 <Plot data={rows} transformDefinitions={[scaleField]} transformImplementations={[scaleFieldImplementation]}>
-  <PlotTransform operation={{ kind: 'scale-field', field: 'x', as: 'scaledX', factor: 2 }} />
+  <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
   <PointMark x="scaledX" y="y" />
 </Plot>
 ```
@@ -115,7 +115,7 @@ Use Vanilla `renderPlotAsync`, `renderChartAsync`, `renderTableAsync`, or `proce
 ```tsx
 <Layout runtime={{ preparation: 'async' }}>
   <Plot data={rows} dataTransformExecutor={executor} transformDefinitions={[scaleField]}>
-    <PlotTransform operation={{ kind: 'scale-field', field: 'x', as: 'scaledX', factor: 2 }} />
+    <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
     <PointMark x="scaledX" y="y" />
   </Plot>
 </Layout>
@@ -140,8 +140,9 @@ Table consumes transformed data before structure resolution. Detail and data-bou
     {
       name: 'defineTransform',
       kind: 'function',
-      type: '<TTransform extends IRDataTransform>(definition: TransformDefinition<TTransform>) => TransformDefinition<TTransform>',
-      description: 'Declares an exact schema, field dependencies and complete outputModel without computation.',
+      type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: TransformDefinitionInput<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
+      description:
+        'Declares kind, paramsSchema, field dependencies, and complete outputModel; assembles the operation schema without computation.',
     },
     {
       name: 'defineTransformImplementation',

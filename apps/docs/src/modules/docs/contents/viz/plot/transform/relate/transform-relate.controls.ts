@@ -18,10 +18,12 @@ export const relateOperationOf = (values: {
   targetSelector: keyof typeof endpointSelectors;
 }) => ({
   kind: 'relate',
-  ...(values.pairingScope === 'series' ? { groupBy: ['series'] } : {}),
-  source: { selector: endpointSelectors[values.sourceSelector], fields: { id: 'id' } },
-  target: { selector: endpointSelectors[values.targetSelector], fields: { id: 'id' } },
-  measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+  params: {
+    ...(values.pairingScope === 'series' ? { groupBy: ['series'] } : {}),
+    source: { selector: endpointSelectors[values.sourceSelector], fields: { id: 'id' } },
+    target: { selector: endpointSelectors[values.targetSelector], fields: { id: 'id' } },
+    measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+  },
 });
 
 /** 行配对示例的中文控件 */

@@ -45,7 +45,7 @@ Definition and Implementation remain runtime objects, registered through `transf
   transformDefinitions={[waterfallTransform]}
   transformImplementations={[waterfallTransformImplementation]}
 >
-  <PlotTransform operation={{ kind: 'waterfall', field: 'delta', initialValue: 60 }} />
+  <PlotTransform operation={{ kind: 'waterfall', params: { field: 'delta', initialValue: 60 } }} />
   <IntervalMark x="period" color="direction" bounds={{ y: { kind: 'extent', from: 'from', to: 'to' } }} />
 </Plot>
 ```

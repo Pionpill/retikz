@@ -21,12 +21,12 @@ export const assembledTransformsOf = (
   ];
   const stackSignature = (transform: IRDataStackTransform): string =>
     JSON.stringify([
-      transform.x ?? null,
-      transform.y,
-      transform.groupBy ?? null,
-      transform.offset ?? 'zero',
-      transform.startField ?? null,
-      transform.endField ?? null,
+      transform.params.x ?? null,
+      transform.params.y,
+      transform.params.groupBy ?? null,
+      transform.params.offset ?? 'zero',
+      transform.params.startField ?? null,
+      transform.params.endField ?? null,
     ]);
   const explicitStackSignatures = new Set(
     explicitTransforms

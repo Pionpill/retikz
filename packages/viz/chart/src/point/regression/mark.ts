@@ -95,14 +95,16 @@ export const resolveRegressionMarkGroup = (
   const createTrend = (settings: IRRegressionChartProperties, explicitStroke = false): IRPlotMarkOperation => {
     const smooth: JsonObject = {
       kind: DataTransform.Smooth,
-      x,
-      y,
-      ...(series === undefined ? {} : { groupBy: [series.field] }),
-      ...(settings.method === undefined ? {} : { method: settings.method }),
-      ...(settings.sampleCount === undefined ? {} : { sampleCount: settings.sampleCount }),
-      ...(settings.extent === undefined ? {} : { extent: settings.extent }),
-      xAs: trendXField,
-      yAs: trendYField,
+      params: {
+        x,
+        y,
+        ...(series === undefined ? {} : { groupBy: [series.field] }),
+        ...(settings.method === undefined ? {} : { method: settings.method }),
+        ...(settings.sampleCount === undefined ? {} : { sampleCount: settings.sampleCount }),
+        ...(settings.extent === undefined ? {} : { extent: settings.extent }),
+        xAs: trendXField,
+        yAs: trendYField,
+      },
     };
     const trend = settings.trend ?? {};
     const path: JsonObject = {

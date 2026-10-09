@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { literal, object } from 'zod';
+import { object } from 'zod';
 
 import type { ExternalRow } from '../../src';
 import {
@@ -23,13 +23,15 @@ describe('density transform schema (contract)', () => {
   it('accepts density transform and preserves JSON round trip', () => {
     const operation = {
       kind: 'density',
-      field: 'value',
-      groupBy: ['species'],
-      bandwidth: { kind: 'silverman' },
-      sampleCount: 96,
-      extent: [0, 10],
-      xAs: 'densityX',
-      densityAs: 'density',
+      params: {
+        field: 'value',
+        groupBy: ['species'],
+        bandwidth: { kind: 'silverman' },
+        sampleCount: 96,
+        extent: [0, 10],
+        xAs: 'densityX',
+        densityAs: 'density',
+      },
     };
 
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
@@ -37,18 +39,26 @@ describe('density transform schema (contract)', () => {
 
   it('rejects malformed density JSON with useful zod errors', () => {
     expect(() =>
-      TransformSchema.parse({ kind: 'density', field: 'value', sampleCount: 1, xAs: 'x', densityAs: 'density' }),
-    ).toThrow();
-    expect(() =>
-      TransformSchema.parse({ kind: 'density', field: 'value', extent: [4, 4], xAs: 'x', densityAs: 'density' }),
+      TransformSchema.parse({
+        kind: 'density',
+        params: { field: 'value', sampleCount: 1, xAs: 'x', densityAs: 'density' },
+      }),
     ).toThrow();
     expect(() =>
       TransformSchema.parse({
         kind: 'density',
-        field: 'value',
-        bandwidth: { kind: 'value', value: -1 },
-        xAs: 'x',
-        densityAs: 'density',
+        params: { field: 'value', extent: [4, 4], xAs: 'x', densityAs: 'density' },
+      }),
+    ).toThrow();
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'density',
+        params: {
+          field: 'value',
+          bandwidth: { kind: 'value', value: -1 },
+          xAs: 'x',
+          densityAs: 'density',
+        },
       }),
     ).toThrow();
   });
@@ -66,12 +76,14 @@ describe('density transform behavior (contract)', () => {
     const out = applyTransforms(rows.slice(0, 2), [
       densityOperation({
         kind: 'density',
-        field: 'value',
-        bandwidth: { kind: 'value', value: 2 },
-        sampleCount: 5,
-        extent: [0, 8],
-        xAs: 'densityX',
-        densityAs: 'density',
+        params: {
+          field: 'value',
+          bandwidth: { kind: 'value', value: 2 },
+          sampleCount: 5,
+          extent: [0, 8],
+          xAs: 'densityX',
+          densityAs: 'density',
+        },
       }),
     ]);
 
@@ -87,7 +99,7 @@ describe('density transform behavior (contract)', () => {
   it('uses Silverman bandwidth by default and emits sorted samples', () => {
     const out = applyTransforms(
       [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 4 }, { value: 8 }],
-      [densityOperation({ kind: 'density', field: 'value', xAs: 'densityX', densityAs: 'density' })],
+      [densityOperation({ kind: 'density', params: { field: 'value', xAs: 'densityX', densityAs: 'density' } })],
     );
 
     expect(out).toHaveLength(64);
@@ -104,12 +116,14 @@ describe('density transform behavior (contract)', () => {
     const out = applyTransforms(rows, [
       densityOperation({
         kind: 'density',
-        field: 'value',
-        groupBy: ['species'],
-        bandwidth: { kind: 'value', value: 2 },
-        sampleCount: 3,
-        xAs: 'densityX',
-        densityAs: 'density',
+        params: {
+          field: 'value',
+          groupBy: ['species'],
+          bandwidth: { kind: 'value', value: 2 },
+          sampleCount: 3,
+          xAs: 'densityX',
+          densityAs: 'density',
+        },
       }),
     ]);
 
@@ -132,11 +146,13 @@ describe('density transform behavior (contract)', () => {
       [
         densityOperation({
           kind: 'density',
-          field: 'value',
-          bandwidth: { kind: 'value', value: 1 },
-          sampleCount: 3,
-          xAs: 'x',
-          densityAs: 'd',
+          params: {
+            field: 'value',
+            bandwidth: { kind: 'value', value: 1 },
+            sampleCount: 3,
+            xAs: 'x',
+            densityAs: 'd',
+          },
         }),
       ],
     );
@@ -149,11 +165,13 @@ describe('density transform behavior (contract)', () => {
       [
         densityOperation({
           kind: 'density',
-          field: 'value',
-          bandwidth: { kind: 'value', value: 2 },
-          sampleCount: 2,
-          xAs: 'x',
-          densityAs: 'd',
+          params: {
+            field: 'value',
+            bandwidth: { kind: 'value', value: 2 },
+            sampleCount: 2,
+            xAs: 'x',
+            densityAs: 'd',
+          },
         }),
       ],
     );
@@ -165,19 +183,19 @@ describe('density transform behavior (contract)', () => {
     expect(() =>
       applyTransforms(
         [{ value: 5 }],
-        [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })],
+        [densityOperation({ kind: 'density', params: { field: 'value', xAs: 'x', densityAs: 'd' } })],
       ),
     ).toThrow(/bandwidth|sample/i);
     expect(() =>
       applyTransforms(
         [{ value: 5 }, { value: 5 }],
-        [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })],
+        [densityOperation({ kind: 'density', params: { field: 'value', xAs: 'x', densityAs: 'd' } })],
       ),
     ).toThrow(/bandwidth|identical/i);
     expect(() =>
       applyTransforms(
         [{ value: 'NA' }],
-        [densityOperation({ kind: 'density', field: 'value', xAs: 'x', densityAs: 'd' })],
+        [densityOperation({ kind: 'density', params: { field: 'value', xAs: 'x', densityAs: 'd' } })],
       ),
     ).toThrow(/finite/i);
   });
@@ -187,12 +205,14 @@ describe('density transform behavior (contract)', () => {
     const out = applyTransforms(tagged, [
       densityOperation({
         kind: 'density',
-        field: 'value',
-        groupBy: ['species'],
-        bandwidth: { kind: 'value', value: 2 },
-        sampleCount: 2,
-        xAs: 'densityX',
-        densityAs: 'density',
+        params: {
+          field: 'value',
+          groupBy: ['species'],
+          bandwidth: { kind: 'value', value: 2 },
+          sampleCount: 2,
+          xAs: 'densityX',
+          densityAs: 'density',
+        },
       }),
     ]);
 
@@ -202,7 +222,8 @@ describe('density transform behavior (contract)', () => {
 
   it('rejects custom transform registration collisions with density', () => {
     const collision = defineTransform({
-      schema: object({ kind: literal('density') }),
+      kind: 'density',
+      paramsSchema: object({}),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
 

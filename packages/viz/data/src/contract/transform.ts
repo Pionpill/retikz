@@ -1,9 +1,10 @@
-import type { ValueOf } from '@retikz/foundation';
-import type { ZodType } from 'zod';
+import type { JsonValue, ValueOf } from '@retikz/foundation';
+import type { output, ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
 
 import { RetikzDataError } from '../error';
 import type { DataFieldType, IRDataTransform } from '../schemas';
+import { createTransformSchema } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataTransformDependency, DataTransformModel } from './execution';
 import type { DataLineageRecorder } from './lineage';
@@ -139,7 +140,7 @@ export type TransformSemanticContext = Readonly<{
 
 /**
  * 数据变换的运行时定义
- * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 IRDataTransform
+ * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, params }` 形态的 IRDataTransform
  * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
  */
 export type TransformDefinition<TTransform extends IRDataTransform = IRDataTransform> = {
@@ -157,15 +158,27 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
   schedule?: DataTransformSchedule;
 };
 
-/**
- * 定义一个 transform definition
- * @description 保留 schema、字段影响与依赖声明之间的泛型关联；内置与自定义 transform 都经同一 registry 入口解析
- * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
- * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
- */
-export const defineTransform = <TTransform extends IRDataTransform>(
-  def: TransformDefinition<TTransform>,
-): TransformDefinition<TTransform> => def;
+/** 变换作者提供参数 schema，完整操作 schema 由统一工厂组装 */
+export type TransformDefinitionInput<
+  TKind extends string,
+  TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
+> = Omit<TransformDefinition<{ kind: TKind; params: output<TParamsSchema> }>, 'schema'> & {
+  /** 变换注册名称 */
+  kind: TKind;
+  /** 具体参数的持久化契约，保留默认值及跨字段约束 */
+  paramsSchema: TParamsSchema;
+};
+
+/** 组装变换定义，保留判别名称、参数解析结果与语义回调之间的关联 */
+export const defineTransform = <
+  const TKind extends string,
+  TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
+>(
+  def: TransformDefinitionInput<TKind, TParamsSchema>,
+) => {
+  const { kind, paramsSchema, ...semantics } = def;
+  return { ...semantics, schema: createTransformSchema(kind, paramsSchema) };
+};
 
 /**
  * registry 内部使用的宽类型

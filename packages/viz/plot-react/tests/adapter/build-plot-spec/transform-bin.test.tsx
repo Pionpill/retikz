@@ -10,19 +10,19 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
   it('transform_bin_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'bin', field: 'measurement', count: 20 }} />
+        <PlotTransform operation={{ kind: 'bin', params: { field: 'measurement', count: 20 } }} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
     );
 
-    expect(spec.transform).toEqual([{ operation: { kind: 'bin', field: 'measurement', count: 20 } }]);
+    expect(spec.transform).toEqual([{ operation: { kind: 'bin', params: { field: 'measurement', count: 20 } } }]);
   });
 
   it('bar_x0x1_histogram_continuous_x_not_band', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'bin', field: 'm', step: 5 }} />
+        <PlotTransform operation={{ kind: 'bin', params: { field: 'm', step: 5 } }} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
@@ -62,8 +62,10 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
         <PlotTransform
           operation={{
             kind: 'summarize',
-            groupBy: ['region'],
-            metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+            params: {
+              groupBy: ['region'],
+              metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+            },
           }}
         />
         <IntervalMark x="region" y="totalRevenue" />
@@ -75,8 +77,10 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       {
         operation: {
           kind: 'summarize',
-          groupBy: ['region'],
-          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          params: {
+            groupBy: ['region'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          },
         },
       },
     ]);
@@ -94,8 +98,10 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
         {
           operation: {
             kind: 'summarize',
-            groupBy: ['region'],
-            metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            params: {
+              groupBy: ['region'],
+              metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            },
           },
         },
       ],
@@ -105,8 +111,10 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       {
         operation: {
           kind: 'summarize',
-          groupBy: ['region'],
-          metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+          params: {
+            groupBy: ['region'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+          },
         },
       },
     ]);
@@ -116,7 +124,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     // 显式 stack operation 存在时，IntervalMark stack 的 shortcut 不再注入
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }} />
+        <PlotTransform operation={{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }} />
         <IntervalMark x="month" y="revenue" series="product" stack />
       </>,
       '__plot',
@@ -131,7 +139,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
 
   it('options_transforms_with_stack_suppresses_shortcut_stack', () => {
     const spec = buildPlotIR(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
-      transforms: [{ operation: { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' } }],
+      transforms: [{ operation: { kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } } }],
     });
 
     expect(
@@ -146,8 +154,10 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
         <PlotTransform
           operation={{
             kind: 'summarize',
-            groupBy: ['month', 'product'],
-            metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            params: {
+              groupBy: ['month', 'product'],
+              metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            },
           }}
         />
         <IntervalMark x="month" y="total" series="product" stack />
@@ -155,14 +165,14 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
       '__plot',
     );
 
-    expect(spec.transform?.[0].operation).toMatchObject({ kind: 'summarize' });
-    expect(spec.transform?.[1].operation).toMatchObject({ kind: 'stack' });
+    expect(spec.transform?.[0].operation).toMatchObject({ kind: 'summarize', params: {} });
+    expect(spec.transform?.[1].operation).toMatchObject({ kind: 'stack', params: {} });
   });
 
   it('transform 装配产物过 PlotSchema', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform operation={{ kind: 'bin', field: 'm', count: 10 }} />
+        <PlotTransform operation={{ kind: 'bin', params: { field: 'm', count: 10 } }} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',

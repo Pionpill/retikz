@@ -1034,7 +1034,7 @@ describe('Typed Point Chart React declarations', () => {
         <ChartData data={[{ amount: 1, margin: 2, region: 'north' }]} />
         <ScatterEncodings x="amount" y="margin" column="region" facet={{ spacing: { panelGap: 12 } }} />
         <ChartExtension>
-          <PlotTransform operation={{ kind: 'sort', field: 'amount', order: 'descending' }} />
+          <PlotTransform operation={{ kind: 'sort', params: { field: 'amount', order: 'descending' } }} />
           <PlotAxis dimension="x" grid />
         </ChartExtension>
       </>,
@@ -1048,7 +1048,7 @@ describe('Typed Point Chart React declarations', () => {
         facet: { spacing: { panelGap: 12 } },
       },
       plotExtension: {
-        transform: [{ operation: { kind: 'sort', field: 'amount', order: 'descending' } }],
+        transform: [{ operation: { kind: 'sort', params: { field: 'amount', order: 'descending' } } }],
         guides: [{ type: 'axis', dimension: 'x', grid: true }],
       },
     });
@@ -1074,15 +1074,15 @@ describe('Typed Point Chart React declarations', () => {
       <>
         <ChartData data={[{ amount: 1, margin: 2 }]} />
         <ScatterEncodings x="amount" y="margin" />
-        <ChartExtension transform={[{ operation: { kind: 'sort', field: 'amount', order: 'descending' } }]}>
-          <PlotTransform operation={{ kind: 'sort', field: 'margin', order: 'ascending' }} />
+        <ChartExtension transform={[{ operation: { kind: 'sort', params: { field: 'amount', order: 'descending' } } }]}>
+          <PlotTransform operation={{ kind: 'sort', params: { field: 'margin', order: 'ascending' } }} />
         </ChartExtension>
       </>,
     );
 
     expect(input.source.plotExtension?.transform).toEqual([
-      { operation: { kind: 'sort', field: 'amount', order: 'descending' } },
-      { operation: { kind: 'sort', field: 'margin', order: 'ascending' } },
+      { operation: { kind: 'sort', params: { field: 'amount', order: 'descending' } } },
+      { operation: { kind: 'sort', params: { field: 'margin', order: 'ascending' } } },
     ]);
 
     expect(() =>

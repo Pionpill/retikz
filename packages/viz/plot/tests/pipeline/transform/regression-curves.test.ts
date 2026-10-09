@@ -49,15 +49,17 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
           {
             operation: {
               kind: 'smooth',
-              x: 'x',
-              y: 'y',
-              xAs: 'tx',
-              yAs: 'ty',
-              sampleCount: 8,
-              method: { kind: 'degree-fit', degree },
+              params: {
+                x: 'x',
+                y: 'y',
+                xAs: 'tx',
+                yAs: 'ty',
+                sampleCount: 8,
+                method: { kind: 'degree-fit', degree },
+              },
             },
           },
-          ...(later ? [{ operation: { kind: 'sort', field: 'tx' } }] : []),
+          ...(later ? [{ operation: { kind: 'sort', params: { field: 'tx' } } }] : []),
         ],
       },
     ],
@@ -115,7 +117,10 @@ it('rejects invalid intermediate predictions', () => {
         { x: 1, y: 1 },
         { x: 3, y: 3 },
       ],
-      { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
+      {
+        kind: 'smooth',
+        params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
+      },
       {
         ...DEFAULT_TRANSFORM_CONTEXT,
         regressionRegistry: registry,
@@ -132,7 +137,7 @@ it('rejects a degenerate inferred extent even when a custom fitter accepts the o
         { x: 1, y: 1 },
         { x: 1, y: 2 },
       ],
-      { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } },
+      { kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } } },
       {
         ...DEFAULT_TRANSFORM_CONTEXT,
         regressionRegistry: resolveRegressionRegistry([definition]),

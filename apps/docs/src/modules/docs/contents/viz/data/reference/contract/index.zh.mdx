@@ -29,12 +29,18 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 
 内置 transform 共用 `kind` 判别字段，并按数组声明顺序执行。`metrics` 和 `selector` 的统计子算子契约见[统计子算子](/viz/data/transform/statistics)；自定义 operation 必须保持 JSON 可序列化，并由运行时 Definition 提供精确 schema 与实现。
 
+所有变换操作统一为 `{ kind, params }`：`kind` 选择定义，`params` 是必填的 JSON 参数对象。各 `XxxParamsSchema` 只描述具体参数，`createTransformSchema` 将它与 kind 组合为下列完整 schema；`defineTransform` 复用同一工厂。统计子算子继续保留各自格式。
+
 ### SortTransformSchema
 
 <ZodSchema
   name="SortTransformSchema"
   description="按一个字段稳定重排行。"
-  descriptions={{ kind: '排序 transform 判别值。', field: '排序字段。', order: '排序方向；默认升序。' }}
+  descriptions={{
+    kind: '排序 transform 判别值。',
+    'params.field': '排序字段。',
+    'params.order': '排序方向；默认升序。',
+  }}
 />
 
 ### SummarizeTransformSchema
@@ -44,8 +50,8 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="按可选分组键把多行规约成指标行。"
   descriptions={{
     kind: '汇总 transform 判别值。',
-    groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
-    metrics: '一个或多个 reducer 指标；输出字段不能重复或覆盖分组字段。',
+    'params.groupBy': '分组键字段；省略或空数组表示全部行属于一组。',
+    'params.metrics': '一个或多个 reducer 指标；输出字段不能重复或覆盖分组字段。',
   }}
 />
 
@@ -56,9 +62,9 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="按可选分组键选择代表行。"
   descriptions={{
     kind: '选择 transform 判别值。',
-    groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
-    selector: '用于选择代表行的 row selector operation。',
-    rankAs: '可选的一基排名输出字段。',
+    'params.groupBy': '分组键字段；省略或空数组表示全部行属于一组。',
+    'params.selector': '用于选择代表行的 row selector operation。',
+    'params.rankAs': '可选的一基排名输出字段。',
   }}
 />
 
@@ -69,9 +75,9 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="把组级指标或代表行结果回填到每个输入行。"
   descriptions={{
     kind: '标注 transform 判别值。',
-    groupBy: '分组键字段；省略或空数组表示全部行属于一组。',
-    metrics: '可选 reducer 指标。',
-    selectors: '可选单行 selector 标注；metrics 与 selectors 至少提供一项。',
+    'params.groupBy': '分组键字段；省略或空数组表示全部行属于一组。',
+    'params.metrics': '可选 reducer 指标。',
+    'params.selectors': '可选单行 selector 标注；metrics 与 selectors 至少提供一项。',
   }}
 />
 
@@ -82,12 +88,12 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="在每个 x 分组内按 series 累加 y，为每行派生区间上下界。"
   descriptions={{
     kind: '堆叠变换判别值。',
-    x: '分组键字段；省略时把所有行累加为一条链，可用于饼图扇区。',
-    y: '在每个分组内累加的数值字段。',
-    groupBy: '决定各堆叠分段和顺序的 series 字段；省略时按数据行顺序。',
-    startField: '每个分段下界输出字段，默认 y0。',
-    endField: '每个分段上界输出字段，默认 y1。',
-    offset: '基线偏移：zero、normalize、diverging、center 或 overlap。',
+    'params.x': '分组键字段；省略时把所有行累加为一条链，可用于饼图扇区。',
+    'params.y': '在每个分组内累加的数值字段。',
+    'params.groupBy': '决定各堆叠分段和顺序的 series 字段；省略时按数据行顺序。',
+    'params.startField': '每个分段下界输出字段，默认 y0。',
+    'params.endField': '每个分段上界输出字段，默认 y1。',
+    'params.offset': '基线偏移：zero、normalize、diverging、center 或 overlap。',
   }}
 />
 
@@ -98,15 +104,15 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="把连续字段划分为区间，每个 bin 输出一行边界与聚合指标。"
   descriptions={{
     kind: '分箱变换判别值。',
-    field: '要分箱的连续字段。',
-    count: '目标 bin 数；与 step / thresholds 互斥，默认 10。',
-    step: '数据单位中的固定 bin 宽度；与 count / thresholds 互斥。',
-    thresholds: '显式内部边界；K 个阈值形成 K+1 个 bin。',
-    extent: '覆盖分箱 domain 的 [min, max]；省略时使用观测范围。',
-    nice: '仅 count 策略中把边界取整为易读数值，默认 true。',
-    startField: '每个 bin 下边界输出字段，默认 binStart。',
-    endField: '每个 bin 上边界输出字段，默认 binEnd。',
-    metrics: '每个 bin 的 reducer 指标，默认输出 binCount。',
+    'params.field': '要分箱的连续字段。',
+    'params.count': '目标 bin 数；与 step / thresholds 互斥，默认 10。',
+    'params.step': '数据单位中的固定 bin 宽度；与 count / thresholds 互斥。',
+    'params.thresholds': '显式内部边界；K 个阈值形成 K+1 个 bin。',
+    'params.extent': '覆盖分箱 domain 的 [min, max]；省略时使用观测范围。',
+    'params.nice': '仅 count 策略中把边界取整为易读数值，默认 true。',
+    'params.startField': '每个 bin 下边界输出字段，默认 binStart。',
+    'params.endField': '每个 bin 上边界输出字段，默认 binEnd。',
+    'params.metrics': '每个 bin 的 reducer 指标，默认输出 binCount。',
   }}
 />
 
@@ -117,14 +123,14 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="在每个分组中选取 source / target 行，输出 RelationMark 可消费的关系行。"
   descriptions={{
     kind: '关联变换判别值。',
-    groupBy: '定义独立关系组的一个或多个字段。',
-    source: '源端点行选择器与字段投影。',
+    'params.groupBy': '定义独立关系组的一个或多个字段。',
+    'params.source': '源端点行选择器与字段投影。',
     'source.selector': '选择 source 端点源行的 selector 操作。',
     'source.fields': 'source 输出字段后缀到源行字段的非空映射。',
-    target: '目标端点行选择器与字段投影。',
+    'params.target': '目标端点行选择器与字段投影。',
     'target.selector': '选择 target 端点源行的 selector 操作。',
     'target.fields': 'target 输出字段后缀到源行字段的非空映射。',
-    measures: '基于选中 source / target 计算的可选成对指标。',
+    'params.measures': '基于选中 source / target 计算的可选成对指标。',
   }}
 />
 
@@ -147,10 +153,10 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="用分组总和除以每行数值，产生分组占比。"
   descriptions={{
     kind: '归一化变换判别值。',
-    field: '计算组内占比的非负数值字段。',
-    groupBy: '形成归一化组的复合键字段；省略时对全部行归一化。',
-    basis: '输出 fraction 0..1 或 percent 0..100，默认 fraction。',
-    as: '占比输出字段；省略时就地覆盖输入字段。',
+    'params.field': '计算组内占比的非负数值字段。',
+    'params.groupBy': '形成归一化组的复合键字段；省略时对全部行归一化。',
+    'params.basis': '输出 fraction 0..1 或 percent 0..100，默认 fraction。',
+    'params.as': '占比输出字段；省略时就地覆盖输入字段。',
   }}
 />
 
@@ -161,12 +167,12 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="从单个数值字段或两个显式字段派生每行 [start, end] 区间。"
   descriptions={{
     kind: '区间派生变换判别值。',
-    from: '从 baseline 到字段值的区间模式中的数值字段。',
-    baseline: '单字段模式的区间起点，默认 0。',
-    startFrom: '显式双字段模式的区间起点字段。',
-    endFrom: '显式双字段模式的区间终点字段。',
-    startField: '派生区间起点的输出字段，默认 y0。',
-    endField: '派生区间终点的输出字段，默认 y1。',
+    'params.from': '从 baseline 到字段值的区间模式中的数值字段。',
+    'params.baseline': '单字段模式的区间起点，默认 0。',
+    'params.startFrom': '显式双字段模式的区间起点字段。',
+    'params.endFrom': '显式双字段模式的区间终点字段。',
+    'params.startField': '派生区间起点的输出字段，默认 y0。',
+    'params.endField': '派生区间终点的输出字段，默认 y1。',
   }}
 />
 
@@ -177,11 +183,11 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="使用可复现 PRNG 对连续位置字段添加数据空间偏移。"
   descriptions={{
     kind: '抖动变换判别值。',
-    axis: '要扰动的位置字段，默认 x。',
-    xField: 'axis 包含 x 时扰动的连续数值字段，默认 x。',
-    yField: 'axis 包含 y 时扰动的连续数值字段，默认 y。',
-    amount: '缩放前数据单位中的最大绝对偏移，默认 1。',
-    seed: '确定性 PRNG 整数种子，默认 0。',
+    'params.axis': '要扰动的位置字段，默认 x。',
+    'params.xField': 'axis 包含 x 时扰动的连续数值字段，默认 x。',
+    'params.yField': 'axis 包含 y 时扰动的连续数值字段，默认 y。',
+    'params.amount': '缩放前数据单位中的最大绝对偏移，默认 1。',
+    'params.seed': '确定性 PRNG 整数种子，默认 0。',
   }}
 />
 
@@ -192,13 +198,13 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="按组对一维高斯 KDE 采样，输出 PathMark 可消费的密度行。"
   descriptions={{
     kind: '密度变换判别值。',
-    field: '一维 KDE 样本的连续源字段。',
-    groupBy: '独立拟合密度的分组键。',
-    bandwidth: 'KDE 带宽策略，默认 Silverman 经验法。',
-    sampleCount: '每组均匀输出的密度样本数，默认 64。',
-    extent: '可选采样范围 [min, max]；省略时在观测范围外补三个带宽。',
-    xAs: '密度样本位置输出字段。',
-    densityAs: 'KDE 密度值输出字段。',
+    'params.field': '一维 KDE 样本的连续源字段。',
+    'params.groupBy': '独立拟合密度的分组键。',
+    'params.bandwidth': 'KDE 带宽策略，默认 Silverman 经验法。',
+    'params.sampleCount': '每组均匀输出的密度样本数，默认 64。',
+    'params.extent': '可选采样范围 [min, max]；省略时在观测范围外补三个带宽。',
+    'params.xAs': '密度样本位置输出字段。',
+    'params.densityAs': 'KDE 密度值输出字段。',
   }}
 />
 
@@ -213,14 +219,14 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   description="拟合趋势模型并按组输出 PathMark 可消费的趋势行。"
   descriptions={{
     kind: '趋势平滑变换判别值。',
-    x: '自变量的连续字段。',
-    y: '因变量的连续字段。',
-    groupBy: '独立拟合趋势的分组键。',
-    method: '回归方法；支持 linear、quadratic、polynomial、logarithmic、exponential 与 power，默认 linear。',
-    sampleCount: '每组均匀输出的趋势样本数，默认 64。',
-    extent: '可选采样范围 [min, max]；省略时使用有限 x 观测范围。',
-    xAs: '趋势样本 x 位置输出字段。',
-    yAs: '预测 y 值输出字段。',
+    'params.x': '自变量的连续字段。',
+    'params.y': '因变量的连续字段。',
+    'params.groupBy': '独立拟合趋势的分组键。',
+    'params.method': '回归方法；支持 linear、quadratic、polynomial、logarithmic、exponential 与 power，默认 linear。',
+    'params.sampleCount': '每组均匀输出的趋势样本数，默认 64。',
+    'params.extent': '可选采样范围 [min, max]；省略时使用有限 x 观测范围。',
+    'params.xAs': '趋势样本 x 位置输出字段。',
+    'params.yAs': '预测 y 值输出字段。',
   }}
 />
 

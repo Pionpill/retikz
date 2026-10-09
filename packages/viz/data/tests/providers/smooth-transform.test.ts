@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { literal, object } from 'zod';
+import { object } from 'zod';
 
 import type { ExternalRow } from '../../src';
 import {
@@ -23,14 +23,16 @@ describe('smooth transform schema (contract)', () => {
   it('accepts smooth transform and preserves JSON round trip', () => {
     const operation = {
       kind: 'smooth',
-      x: 'time',
-      y: 'value',
-      groupBy: ['series'],
-      method: { kind: 'linear' },
-      sampleCount: 96,
-      extent: [0, 10],
-      xAs: 'trendX',
-      yAs: 'trendY',
+      params: {
+        x: 'time',
+        y: 'value',
+        groupBy: ['series'],
+        method: { kind: 'linear' },
+        sampleCount: 96,
+        extent: [0, 10],
+        xAs: 'trendX',
+        yAs: 'trendY',
+      },
     };
 
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
@@ -48,11 +50,13 @@ describe('smooth transform schema (contract)', () => {
   ])('accepts complete regression method object: $kind $order', method => {
     const operation = {
       kind: 'smooth',
-      x: 'time',
-      y: 'value',
-      method,
-      xAs: 'trendX',
-      yAs: 'trendY',
+      params: {
+        x: 'time',
+        y: 'value',
+        method,
+        xAs: 'trendX',
+        yAs: 'trendY',
+      },
     };
 
     expect(TransformSchema.parse(operation)).toEqual(operation);
@@ -60,19 +64,21 @@ describe('smooth transform schema (contract)', () => {
 
   it('rejects malformed smooth JSON with useful zod errors', () => {
     expect(() =>
-      TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', sampleCount: 1, xAs: 'x', yAs: 'y' }),
+      TransformSchema.parse({ kind: 'smooth', params: { x: 'time', y: 'value', sampleCount: 1, xAs: 'x', yAs: 'y' } }),
     ).toThrow();
     expect(() =>
-      TransformSchema.parse({ kind: 'smooth', x: 'time', y: 'value', extent: [4, 4], xAs: 'x', yAs: 'y' }),
+      TransformSchema.parse({ kind: 'smooth', params: { x: 'time', y: 'value', extent: [4, 4], xAs: 'x', yAs: 'y' } }),
     ).toThrow();
     expect(() =>
       TransformSchema.parse({
         kind: 'smooth',
-        x: 'time',
-        y: 'value',
-        method: { kind: '' },
-        xAs: 'x',
-        yAs: 'y',
+        params: {
+          x: 'time',
+          y: 'value',
+          method: { kind: '' },
+          xAs: 'x',
+          yAs: 'y',
+        },
       }),
     ).toThrow();
   });
@@ -92,12 +98,14 @@ describe('smooth transform behavior (contract)', () => {
     const out = applyTransforms(rows.slice(0, 3), [
       smoothOperation({
         kind: 'smooth',
-        x: 'time',
-        y: 'value',
-        sampleCount: 5,
-        extent: [0, 4],
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'time',
+          y: 'value',
+          sampleCount: 5,
+          extent: [0, 4],
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
     ]);
 
@@ -112,37 +120,43 @@ describe('smooth transform behavior (contract)', () => {
     const quadratic = applyTransforms(quadraticRows, [
       smoothOperation({
         kind: 'smooth',
-        x: 'x',
-        y: 'y',
-        method: { kind: 'quadratic' },
-        sampleCount: 5,
-        extent: [-2, 2],
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'x',
+          y: 'y',
+          method: { kind: 'quadratic' },
+          sampleCount: 5,
+          extent: [-2, 2],
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
     ]);
     const polynomialDegreeTwo = applyTransforms(quadraticRows, [
       smoothOperation({
         kind: 'smooth',
-        x: 'x',
-        y: 'y',
-        method: { kind: 'polynomial', order: 2 },
-        sampleCount: 5,
-        extent: [-2, 2],
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'x',
+          y: 'y',
+          method: { kind: 'polynomial', order: 2 },
+          sampleCount: 5,
+          extent: [-2, 2],
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
     ]);
     const polynomialDefault = applyTransforms(cubicRows, [
       smoothOperation({
         kind: 'smooth',
-        x: 'x',
-        y: 'y',
-        method: { kind: 'polynomial' },
-        sampleCount: 5,
-        extent: [-2, 2],
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'x',
+          y: 'y',
+          method: { kind: 'polynomial' },
+          sampleCount: 5,
+          extent: [-2, 2],
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
     ]);
 
@@ -164,13 +178,15 @@ describe('smooth transform behavior (contract)', () => {
       [
         smoothOperation({
           kind: 'smooth',
-          x: 'x',
-          y: 'y',
-          method: { kind: 'logarithmic' },
-          sampleCount: 2,
-          extent: [1, Math.exp(3)],
-          xAs: 'trendX',
-          yAs: 'trendY',
+          params: {
+            x: 'x',
+            y: 'y',
+            method: { kind: 'logarithmic' },
+            sampleCount: 2,
+            extent: [1, Math.exp(3)],
+            xAs: 'trendX',
+            yAs: 'trendY',
+          },
         }),
       ],
     );
@@ -179,13 +195,15 @@ describe('smooth transform behavior (contract)', () => {
       [
         smoothOperation({
           kind: 'smooth',
-          x: 'x',
-          y: 'y',
-          method: { kind: 'exponential' },
-          sampleCount: 3,
-          extent: [0, 4],
-          xAs: 'trendX',
-          yAs: 'trendY',
+          params: {
+            x: 'x',
+            y: 'y',
+            method: { kind: 'exponential' },
+            sampleCount: 3,
+            extent: [0, 4],
+            xAs: 'trendX',
+            yAs: 'trendY',
+          },
         }),
       ],
     );
@@ -194,13 +212,15 @@ describe('smooth transform behavior (contract)', () => {
       [
         smoothOperation({
           kind: 'smooth',
-          x: 'x',
-          y: 'y',
-          method: { kind: 'power' },
-          sampleCount: 4,
-          extent: [1, 4],
-          xAs: 'trendX',
-          yAs: 'trendY',
+          params: {
+            x: 'x',
+            y: 'y',
+            method: { kind: 'power' },
+            sampleCount: 4,
+            extent: [1, 4],
+            xAs: 'trendX',
+            yAs: 'trendY',
+          },
         }),
       ],
     );
@@ -218,10 +238,12 @@ describe('smooth transform behavior (contract)', () => {
     const out = applyTransforms(rows.slice(0, 3), [
       smoothOperation({
         kind: 'smooth',
-        x: 'time',
-        y: 'value',
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'time',
+          y: 'value',
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
     ]);
 
@@ -240,12 +262,14 @@ describe('smooth transform behavior (contract)', () => {
     const out = applyTransforms(rows, [
       smoothOperation({
         kind: 'smooth',
-        x: 'time',
-        y: 'value',
-        groupBy: ['series'],
-        sampleCount: 3,
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'time',
+          y: 'value',
+          groupBy: ['series'],
+          sampleCount: 3,
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
     ]);
 
@@ -270,7 +294,7 @@ describe('smooth transform behavior (contract)', () => {
         { time: Number.NaN, value: 99 },
         { time: 2, value: 5 },
       ],
-      [smoothOperation({ kind: 'smooth', x: 'time', y: 'value', sampleCount: 2, xAs: 'x', yAs: 'y' })],
+      [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', sampleCount: 2, xAs: 'x', yAs: 'y' } })],
     );
 
     expect(out).toEqual([
@@ -283,7 +307,7 @@ describe('smooth transform behavior (contract)', () => {
     expect(() =>
       applyTransforms(
         [{ time: 1, value: 2 }],
-        [smoothOperation({ kind: 'smooth', x: 'time', y: 'value', xAs: 'x', yAs: 'y' })],
+        [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', xAs: 'x', yAs: 'y' } })],
       ),
     ).toThrow(/finite|two/i);
     expect(() =>
@@ -292,7 +316,7 @@ describe('smooth transform behavior (contract)', () => {
           { time: 1, value: 2 },
           { time: 1, value: 4 },
         ],
-        [smoothOperation({ kind: 'smooth', x: 'time', y: 'value', xAs: 'x', yAs: 'y' })],
+        [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', xAs: 'x', yAs: 'y' } })],
       ),
     ).toThrow(/variance|vertical|x/i);
   });
@@ -305,7 +329,7 @@ describe('smooth transform behavior (contract)', () => {
 
     expect(() =>
       applyTransforms(insufficientRows, [
-        smoothOperation({ kind: 'smooth', x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' }),
+        smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' } }),
       ]),
     ).toThrow(/pairs|samples|degree|order/i);
   });
@@ -322,11 +346,13 @@ describe('smooth transform behavior (contract)', () => {
         [
           smoothOperation({
             kind: 'smooth',
-            x: 'x',
-            y: 'y',
-            method: { kind: 'polynomial', order: 3 },
-            xAs: 'trendX',
-            yAs: 'trendY',
+            params: {
+              x: 'x',
+              y: 'y',
+              method: { kind: 'polynomial', order: 3 },
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
           }),
         ],
       ),
@@ -342,11 +368,13 @@ describe('smooth transform behavior (contract)', () => {
         [
           smoothOperation({
             kind: 'smooth',
-            x: 'x',
-            y: 'y',
-            method: { kind: 'polynomial', order: 6 },
-            xAs: 'trendX',
-            yAs: 'trendY',
+            params: {
+              x: 'x',
+              y: 'y',
+              method: { kind: 'polynomial', order: 6 },
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
           }),
         ],
       ),
@@ -389,7 +417,7 @@ describe('smooth transform behavior (contract)', () => {
   ])('fails loud for %s', (_name, method, invalidRows) => {
     expect(() =>
       applyTransforms(invalidRows, [
-        smoothOperation({ kind: 'smooth', x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' }),
+        smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' } }),
       ]),
     ).toThrow(/positive|domain|logarithmic|exponential|power/i);
   });
@@ -416,12 +444,14 @@ describe('smooth transform behavior (contract)', () => {
       applyTransforms(validRows, [
         smoothOperation({
           kind: 'smooth',
-          x: 'x',
-          y: 'y',
-          method,
-          extent: [0, 2],
-          xAs: 'trendX',
-          yAs: 'trendY',
+          params: {
+            x: 'x',
+            y: 'y',
+            method,
+            extent: [0, 2],
+            xAs: 'trendX',
+            yAs: 'trendY',
+          },
         }),
       ]),
     ).toThrow(/extent|positive|domain/i);
@@ -434,7 +464,7 @@ describe('smooth transform behavior (contract)', () => {
           { x: -1e308, y: -1e308 },
           { x: 1e308, y: 1e308 },
         ],
-        [smoothOperation({ kind: 'smooth', x: 'x', y: 'y', xAs: 'trendX', yAs: 'trendY' })],
+        [smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'trendX', yAs: 'trendY' } })],
       ),
     ).toThrow(/finite|coefficient|variance/i);
 
@@ -447,13 +477,15 @@ describe('smooth transform behavior (contract)', () => {
         [
           smoothOperation({
             kind: 'smooth',
-            x: 'x',
-            y: 'y',
-            method: { kind: 'exponential' },
-            extent: [0, 1000],
-            sampleCount: 2,
-            xAs: 'trendX',
-            yAs: 'trendY',
+            params: {
+              x: 'x',
+              y: 'y',
+              method: { kind: 'exponential' },
+              extent: [0, 1000],
+              sampleCount: 2,
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
           }),
         ],
       ),
@@ -472,12 +504,14 @@ describe('smooth transform behavior (contract)', () => {
         [
           smoothOperation({
             kind: 'smooth',
-            x: 'x',
-            y: 'y',
-            groupBy: ['series'],
-            method: { kind: 'logarithmic' },
-            xAs: 'trendX',
-            yAs: 'trendY',
+            params: {
+              x: 'x',
+              y: 'y',
+              groupBy: ['series'],
+              method: { kind: 'logarithmic' },
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
           }),
         ],
       ),
@@ -489,12 +523,14 @@ describe('smooth transform behavior (contract)', () => {
     const out = applyTransforms(tagged, [
       smoothOperation({
         kind: 'smooth',
-        x: 'time',
-        y: 'value',
-        groupBy: ['series'],
-        sampleCount: 2,
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'time',
+          y: 'value',
+          groupBy: ['series'],
+          sampleCount: 2,
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
     ]);
 
@@ -504,7 +540,8 @@ describe('smooth transform behavior (contract)', () => {
 
   it('rejects custom transform registration collisions with smooth', () => {
     const collision = defineTransform({
-      schema: object({ kind: literal('smooth') }),
+      kind: 'smooth',
+      paramsSchema: object({}),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
 

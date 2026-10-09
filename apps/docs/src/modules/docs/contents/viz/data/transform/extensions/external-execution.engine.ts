@@ -24,7 +24,7 @@ export const createScaleFieldProvider = (onComplete: () => void): DataTransformI
           const result = {
             rows: input.result.rows.map(row => ({
               ...row,
-              [operation.as]: Number(row[operation.field]) * operation.factor,
+              [operation.params.as]: Number(row[operation.params.field]) * operation.params.factor,
             })),
             model: stage.outputModel,
           };

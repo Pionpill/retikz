@@ -26,25 +26,29 @@ export const relationIntervalRowsOf = (values: { [RELATION_INTERVAL_CONTROL_IDS.
 /** 下降关系层的端点配对 operation */
 export const relationDecreaseOperation = {
   kind: 'relate',
-  groupBy: ['pair'],
-  source: {
-    selector: { kind: 'min', by: 'decreaseOrder' },
-    fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+  params: {
+    groupBy: ['pair'],
+    source: {
+      selector: { kind: 'min', by: 'decreaseOrder' },
+      fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+    },
+    target: { selector: { kind: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
+    measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
   },
-  target: { selector: { kind: 'max', by: 'decreaseOrder' }, fields: { x: 'slot', y: 'value' } },
-  measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
 } as const;
 
 /** 上升关系层的端点配对 operation */
 export const relationIncreaseOperation = {
   kind: 'relate',
-  groupBy: ['pair'],
-  source: {
-    selector: { kind: 'min', by: 'increaseOrder' },
-    fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+  params: {
+    groupBy: ['pair'],
+    source: {
+      selector: { kind: 'min', by: 'increaseOrder' },
+      fields: { x: 'slot', y: 'value', viaY: 'routeY' },
+    },
+    target: { selector: { kind: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
+    measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
   },
-  target: { selector: { kind: 'max', by: 'increaseOrder' }, fields: { x: 'slot', y: 'value' } },
-  measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
 } as const;
 
 /** 区间关系路由的中文属性面板 */

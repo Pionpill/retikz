@@ -871,15 +871,12 @@ describe('Chart providers through Core compile', () => {
 
   it('shares custom runtime Definitions between Chart encoding resolution and Plot lowering', () => {
     const copyField = defineTransform({
-      schema: strictObject({
-        kind: literal('copy-chart-field'),
-        field: NonBlankStringSchema,
-        as: NonBlankStringSchema,
-      }),
-      inputFields: operation => [operation.field],
+      kind: 'copy-chart-field',
+      paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as, type: { from: operation.field } }],
+        outputs: [{ field: operation.params.as, type: { from: operation.params.field } }],
       }),
       schedule: {
         phase: DataTransformPhase.FieldDerive,
@@ -889,7 +886,8 @@ describe('Chart providers through Core compile', () => {
     });
     const copyFieldImplementation = defineTransformImplementation({
       definition: copyField,
-      apply: (inputRows, operation) => inputRows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
+      apply: (inputRows, operation) =>
+        inputRows.map(row => ({ ...row, [operation.params.as]: row[operation.params.field] })),
     });
     const lowerOptions: LowerPlotsOptions = {
       transformDefinitions: [copyField],
@@ -904,7 +902,7 @@ describe('Chart providers through Core compile', () => {
         chartType: 'scatter',
         encodings: {
           x: {
-            transform: { operation: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' } },
+            transform: { operation: { kind: 'copy-chart-field', params: { field: 'x', as: 'copiedX' } } },
             output: 'copiedX',
           },
           y: 'y',

@@ -16,6 +16,16 @@ export const vizV02: Release = {
       highlights: [
         {
           label: {
+            zh: '待发布：BREAKING 统一 transform 参数',
+            en: 'Unreleased: BREAKING unified transform parameters',
+          },
+          content: {
+            zh: '所有数据变换统一使用 { kind, params }。各变换公开 XxxParamsSchema，defineTransform 接收 kind 与 paramsSchema，通过 createTransformSchema 组装完整操作契约。Plot、Chart、Table 及适配器同步采用新写法；operation/dataExecution 外层声明、统计子算子、计算算法与默认行为保持不变，不保留扁平写法。',
+            en: 'All data transforms use { kind, params }. Each exposes XxxParamsSchema; defineTransform accepts kind and paramsSchema and assembles the operation contract through createTransformSchema. Plot, Chart, Table, and adapters use this shape. The operation/dataExecution declaration, statistical sub-operations, algorithms, and defaults are unchanged; flat operations are removed.',
+          },
+        },
+        {
+          label: {
             zh: '待发布：变换结果模型与错误定位修复',
             en: 'Unreleased: transform result models and diagnostics',
           },
@@ -51,8 +61,8 @@ export const vizV02: Release = {
         {
           label: { zh: '单一 Source 校验边界', en: 'Single Source validation boundary' },
           content: {
-            zh: 'transform、reducer 与 selector 的开放配置由各自 Source schema 通过 JSON catchall 校验；registry dispatch 后只运行命中的 Definition schema，不再在前后重复执行通用 JSON object 检查。',
-            en: 'Open transform, reducer, and selector configuration is validated by each Source schema through a JSON catchall. After registry dispatch, only the matched Definition schema runs, with no generic JSON-object checks before or after it.',
+            zh: 'transform 的 params JSON 对象、reducer 与 selector 的开放配置由各自 Source schema 校验；registry dispatch 后只运行命中的 Definition schema，不再在前后重复执行通用 JSON object 检查。',
+            en: 'Transform params JSON objects and open reducer and selector configuration are validated by their Source schemas. After registry dispatch, only the matched Definition schema runs, with no generic JSON-object checks before or after it.',
           },
         },
       ],

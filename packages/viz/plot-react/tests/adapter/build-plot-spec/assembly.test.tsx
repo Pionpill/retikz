@@ -285,9 +285,11 @@ describe('buildPlotIR 装配', () => {
       {
         operation: {
           kind: 'relate',
-          source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
-          target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
-          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          params: {
+            source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+            target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
+            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          },
         },
       },
     ];

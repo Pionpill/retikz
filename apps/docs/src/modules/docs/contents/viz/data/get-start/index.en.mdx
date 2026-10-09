@@ -36,11 +36,13 @@ const canonicalRows = normalizeRows(rows, fieldTypeMap);
 const transforms: Array<IRDataTransform> = [
   {
     kind: 'summarize',
-    groupBy: ['region'],
-    metrics: [
-      { kind: 'sum', field: 'revenue', as: 'total' },
-      { kind: 'count', as: 'rows' },
-    ],
+    params: {
+      groupBy: ['region'],
+      metrics: [
+        { kind: 'sum', field: 'revenue', as: 'total' },
+        { kind: 'count', as: 'rows' },
+      ],
+    },
   },
 ];
 

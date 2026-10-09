@@ -402,8 +402,10 @@ export const applyDeclaration = (
 
       into.shortcutTransforms.push({
         kind: DataTransform.Stack,
-        y: angle,
-        ...(series !== undefined ? { groupBy: series } : {}),
+        params: {
+          y: angle,
+          ...(series !== undefined ? { groupBy: series } : {}),
+        },
       });
       const colorEnc = colorChannel(color, series ?? group) ?? colorChannel(angle, undefined);
       into.marks.push({
@@ -557,19 +559,23 @@ export const applyDeclaration = (
 
       into.shortcutTransforms.push({
         kind: DataTransform.Normalize,
-        field: valueField,
-        groupBy: [categoryField],
-        basis: 'percent',
+        params: {
+          field: valueField,
+          groupBy: [categoryField],
+          basis: 'percent',
+        },
       });
     }
 
     if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
       into.shortcutTransforms.push({
         kind: DataTransform.Stack,
-        x: categoryField,
-        y: valueField,
-        groupBy: arrangementGroup,
-        ...(arrangement === 'stack' && stackOffset !== undefined ? { offset: stackOffset } : {}),
+        params: {
+          x: categoryField,
+          y: valueField,
+          groupBy: arrangementGroup,
+          ...(arrangement === 'stack' && stackOffset !== undefined ? { offset: stackOffset } : {}),
+        },
       });
     }
 

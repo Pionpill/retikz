@@ -18,9 +18,11 @@ export const RELATION_PATH_CONTROL_IDS = {
 /** 根据实时控件值创建路径极值配对 operation */
 export const relationPathOperationOf = (values: { [RELATION_PATH_CONTROL_IDS.anchor]: 'x' | 'y' }) => ({
   kind: 'relate',
-  source: { selector: { kind: 'min', by: values[RELATION_PATH_CONTROL_IDS.anchor] }, fields: { id: 'id' } },
-  target: { selector: { kind: 'max', by: values[RELATION_PATH_CONTROL_IDS.anchor] }, fields: { id: 'id' } },
-  measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+  params: {
+    source: { selector: { kind: 'min', by: values[RELATION_PATH_CONTROL_IDS.anchor] }, fields: { id: 'id' } },
+    target: { selector: { kind: 'max', by: values[RELATION_PATH_CONTROL_IDS.anchor] }, fields: { id: 'id' } },
+    measures: [{ op: 'difference', field: 'y', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+  },
 });
 
 /** 路径极值关系的中文属性面板 */

@@ -10,6 +10,8 @@ keywords: Data、transform、stack、bin、normalize、relate、density、smooth
 - 关联：[data v0 roadmap](../roadmap.md) · [Data 设计](../../../../architecture/data-design.md) · [Data 能力边界](../../../../architecture/data-capability-complete.md)
 - 替代：[Data v0.1 ADR-002](../v0.1/002-shared-provider-boundary.md) 中的 transform 归属决策及 [Plot v0.1 ADR-102](../../../plot/v0/v0.1/102-plot-transform-registration.md)
 
+> 操作外壳与 Definition 作者接口由 [ADR-004](./004-transform-parameters.md) 替代：统一使用 `{ kind, params }` 和 `kind/paramsSchema` 定义。下文关于保留既有操作配置形态的决策不再适用，其余数据语义和执行职责保持。
+
 ## 背景与目标
 
 数据变换的声明与接口契约已由 Data 提供，但部分计算仍由 Plot 定义与注册。调用方因此必须选择宿主 registry，才能处理同一组行数据。字段、统计与结果模型语义应由 Data 统一拥有，绘图用途不决定纯数据算法的归属。

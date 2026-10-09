@@ -441,8 +441,10 @@ export const resolveChartEncodingTransforms = <
           phase: DataTransformPhase.RowShape,
           operation: {
             kind: DataTransform.Summarize,
-            groupBy,
-            metrics: aggregateMappings.map(mapping => mapping.operation),
+            params: {
+              groupBy,
+              metrics: aggregateMappings.map(mapping => mapping.operation),
+            },
           },
           fieldEffect: DataTransformFieldEffect.Replace,
           inputs: [...groupBy, ...aggregateMappings.flatMap(mapping => mapping.inputs)],

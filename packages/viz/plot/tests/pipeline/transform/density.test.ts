@@ -15,10 +15,12 @@ describe('density transform behavior (contract)', () => {
     collectTransformFields(
       densityOperation({
         kind: 'density',
-        field: 'value',
-        groupBy: ['species'],
-        xAs: 'densityX',
-        densityAs: 'density',
+        params: {
+          field: 'value',
+          groupBy: ['species'],
+          xAs: 'densityX',
+          densityAs: 'density',
+        },
       }),
       createFieldCollector(fields),
       derivedOutputs,
@@ -41,7 +43,12 @@ describe('density transform behavior (contract)', () => {
         ],
       },
       transform: [
-        { operation: { kind: 'density', field: 'value', groupBy: ['species'], xAs: 'densityX', densityAs: 'density' } },
+        {
+          operation: {
+            kind: 'density',
+            params: { field: 'value', groupBy: ['species'], xAs: 'densityX', densityAs: 'density' },
+          },
+        },
       ],
       scales: [
         { type: 'linear', name: 'x' },

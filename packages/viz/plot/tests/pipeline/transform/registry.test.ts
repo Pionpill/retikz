@@ -15,7 +15,7 @@ import {
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { literal, object, string } from 'zod';
+import { object, string } from 'zod';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
@@ -23,13 +23,10 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 const doubleDefinition = defineTransform({
-  schema: object({
-    kind: literal('double'),
-    field: NonBlankStringSchema,
-    as: NonBlankStringSchema,
-  }),
-  inputFields: operation => [operation.field],
-  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+  kind: 'double',
+  paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+  inputFields: operation => [operation.params.field],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.params.as }] }),
 });
 
 const doubleDefinitionImplementation = defineTransformImplementation({
@@ -37,23 +34,19 @@ const doubleDefinitionImplementation = defineTransformImplementation({
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
-      [operation.as]: Number(row[operation.field]) * 2,
+      [operation.params.as]: Number(row[operation.params.field]) * 2,
     })),
 });
 
 const groupSumDefinition = defineTransform({
-  schema: object({
-    kind: literal('group-sum'),
-    groupBy: NonBlankStringSchema,
-    field: NonBlankStringSchema,
-    as: NonBlankStringSchema,
-  }),
-  inputFields: operation => [operation.groupBy, operation.field],
+  kind: 'group-sum',
+  paramsSchema: object({ groupBy: NonBlankStringSchema, field: NonBlankStringSchema, as: NonBlankStringSchema }),
+  inputFields: operation => [operation.params.groupBy, operation.params.field],
   outputModel: operation => ({
     kind: 'replace',
     fields: [
-      { field: operation.groupBy, type: { from: operation.groupBy } },
-      { field: operation.as, type: 'continuous' },
+      { field: operation.params.groupBy, type: { from: operation.params.groupBy } },
+      { field: operation.params.as, type: 'continuous' },
     ],
   }),
 });
@@ -64,15 +57,15 @@ const groupSumDefinitionImplementation = defineTransformImplementation({
     const groups = new Map<string, Array<ExternalRow>>();
 
     for (const row of rows) {
-      const key = String(row[operation.groupBy]);
+      const key = String(row[operation.params.groupBy]);
       groups.set(key, [...(groups.get(key) ?? []), row]);
     }
 
     return [...groups.entries()].map(([key, members]) =>
       context.groupProvenance(
         {
-          [operation.groupBy]: key,
-          [operation.as]: members.reduce((sum, row) => sum + Number(row[operation.field] ?? 0), 0),
+          [operation.params.groupBy]: key,
+          [operation.params.as]: members.reduce((sum, row) => sum + Number(row[operation.params.field] ?? 0), 0),
         },
         members,
       ),
@@ -155,10 +148,12 @@ describe('transform registry (contract)', () => {
 
   it('define_transform_preserves_schema_and_extracts_kind', () => {
     expect(extractTransformKind(doubleDefinition.schema)).toBe('double');
-    expect(doubleDefinition.schema.parse({ kind: 'double', field: 'x', as: 'x2' })).toEqual({
+    expect(doubleDefinition.schema.parse({ kind: 'double', params: { field: 'x', as: 'x2' } })).toEqual({
       kind: 'double',
-      field: 'x',
-      as: 'x2',
+      params: {
+        field: 'x',
+        as: 'x2',
+      },
     });
   });
 
@@ -168,7 +163,8 @@ describe('transform registry (contract)', () => {
     );
 
     const builtinCollision = defineTransform({
-      schema: object({ kind: literal('sort') }),
+      kind: 'sort',
+      paramsSchema: object({}),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
 
@@ -177,7 +173,7 @@ describe('transform registry (contract)', () => {
 
   it('malformed_registration_schema_throws', () => {
     const missingLiteralKind: AnyTransformDefinition = {
-      schema: object({ kind: string() }),
+      schema: object({ kind: string(), params: object({}) }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     };
 
@@ -187,7 +183,7 @@ describe('transform registry (contract)', () => {
 
   it('custom_transform_apply_uses_same_registry_pipeline', () => {
     const registry = resolveTransformRegistry([doubleDefinition]);
-    const rows = applyTransforms([{ x: 2, y: 5 }], [{ kind: 'double', field: 'x', as: 'x2' }], {
+    const rows = applyTransforms([{ x: 2, y: 5 }], [{ kind: 'double', params: { field: 'x', as: 'x2' } }], {
       registry,
       transformImplementations: [doubleDefinitionImplementation],
     });
@@ -196,34 +192,37 @@ describe('transform registry (contract)', () => {
   });
 
   it('input_and_output_fields_feed_source_field_collection', () => {
-    const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
+    const spec = pointSpec([{ operation: { kind: 'double', params: { field: 'x', as: 'x2' } } }]);
     const fields = collectSourceFields(spec, resolveTransformRegistry([doubleDefinition]));
 
     expect([...fields].sort()).toEqual(['x', 'y']);
   });
 
   it('unknown_or_invalid_custom_operation_throws_at_lowering', () => {
-    const spec = pointSpec([{ operation: { kind: 'double', field: 'x' } }]);
+    const spec = pointSpec([{ operation: { kind: 'double', params: { field: 'x' } } }]);
 
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).toThrow();
     expect(() =>
-      compile(pointSpec([{ operation: { kind: 'unknown-transform', field: 'x', as: 'x2' } }]), { d: [{ x: 2, y: 5 }] }),
+      compile(pointSpec([{ operation: { kind: 'unknown-transform', params: { field: 'x', as: 'x2' } } }]), {
+        d: [{ x: 2, y: 5 }],
+      }),
     ).toThrow(/not registered/i);
   });
 
   it('custom_output_fields_strict_model_passes_when_registered', () => {
-    const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
+    const spec = pointSpec([{ operation: { kind: 'double', params: { field: 'x', as: 'x2' } } }]);
 
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).not.toThrow();
   });
 
   it('custom_output_fields_strict_model_rejects_when_omitted', () => {
     const missingOutputDefinition = defineTransform({
-      schema: doubleDefinition.schema,
-      inputFields: operation => [operation.field],
+      kind: 'double',
+      paramsSchema: doubleDefinition.schema.shape.params,
+      inputFields: operation => [operation.params.field],
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
-    const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
+    const spec = pointSpec([{ operation: { kind: 'double', params: { field: 'x', as: 'x2' } } }]);
 
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] }, [missingOutputDefinition])).toThrow(/x2/);
   });
@@ -236,7 +235,7 @@ describe('transform registry (contract)', () => {
         { group: 'A', value: 3 },
         { group: 'B', value: 5 },
       ]),
-      [{ kind: 'group-sum', groupBy: 'group', field: 'value', as: 'total' }],
+      [{ kind: 'group-sum', params: { groupBy: 'group', field: 'value', as: 'total' } }],
       { registry, transformImplementations: [groupSumDefinitionImplementation] },
     );
 
@@ -253,8 +252,8 @@ describe('transform registry (contract)', () => {
     const rows = applyTransforms(
       [{ x: 2 }, { x: 1 }],
       [
-        { kind: 'double', field: 'x', as: 'x2' },
-        { kind: 'sort', field: 'x2', order: 'descending' },
+        { kind: 'double', params: { field: 'x', as: 'x2' } },
+        { kind: 'sort', params: { field: 'x2', order: 'descending' } },
       ],
       { registry, transformImplementations: [doubleDefinitionImplementation] },
     );

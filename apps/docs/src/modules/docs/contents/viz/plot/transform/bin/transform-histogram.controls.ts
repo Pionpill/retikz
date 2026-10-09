@@ -15,14 +15,14 @@ export const histogramOperationOf = (values: {
 }): IRDataBinTransform => {
   const thresholds = values.thresholdPreset === 'focused' ? [3, 5, 7, 10, 14] : [4, 8, 12, 16];
   if (values.strategy === 'count') {
-    return { kind: 'bin', field: 'measurement', count: values.count, extent: [0, 20], nice: false };
+    return { kind: 'bin', params: { field: 'measurement', count: values.count, extent: [0, 20], nice: false } };
   }
 
   if (values.strategy === 'step') {
-    return { kind: 'bin', field: 'measurement', step: values.step, extent: [0, 20] };
+    return { kind: 'bin', params: { field: 'measurement', step: values.step, extent: [0, 20] } };
   }
 
-  return { kind: 'bin', field: 'measurement', thresholds, extent: [0, 20] };
+  return { kind: 'bin', params: { field: 'measurement', thresholds, extent: [0, 20] } };
 };
 
 /** 分箱示例的中文控件 */

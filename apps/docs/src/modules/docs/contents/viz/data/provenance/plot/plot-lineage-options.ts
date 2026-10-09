@@ -46,9 +46,9 @@ export const buildPlotLineageOptions = (values: ControlledPlotLineageOptions): P
 
 /** 把 controls 映射为 Plot 根级排序与 mark-local Top-N */
 export const buildPlotLineageTransforms = (values: ControlledPlotTransformOptions): PlotLineageTransforms => ({
-  root: values.rootSortEnabled ? [{ kind: 'sort', field: 'revenue', order: values.rootSortOrder }] : [],
+  root: values.rootSortEnabled ? [{ kind: 'sort', params: { field: 'revenue', order: values.rootSortOrder } }] : [],
   mark: values.markSelectEnabled
-    ? [{ kind: 'select', selector: { kind: 'top', by: 'revenue', n: values.markTopN } }]
+    ? [{ kind: 'select', params: { selector: { kind: 'top', by: 'revenue', n: values.markTopN } } }]
     : [],
 });
 

@@ -23,16 +23,18 @@ export const cartesianJitterOperationOf = (values: {
   [POINT_JITTER_CARTESIAN_CONTROL_IDS.seed]: number;
 }) => ({
   kind: 'jitter' as const,
-  role: 'x',
-  span:
-    values[POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind] === 'ratio'
-      ? { kind: 'ratio' as const, value: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.ratio] }
-      : values[POINT_JITTER_CARTESIAN_CONTROL_IDS.range],
-  distribution:
-    values[POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution] === 'normal'
-      ? { kind: 'normal' as const, sigma: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma] }
-      : { kind: 'uniform' as const },
-  seed: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.seed],
+  params: {
+    role: 'x',
+    span:
+      values[POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind] === 'ratio'
+        ? { kind: 'ratio' as const, value: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.ratio] }
+        : values[POINT_JITTER_CARTESIAN_CONTROL_IDS.range],
+    distribution:
+      values[POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution] === 'normal'
+        ? { kind: 'normal' as const, sigma: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma] }
+        : { kind: 'uniform' as const },
+    seed: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.seed],
+  },
 });
 
 /** 直角坐标位置散布的中文属性面板 */

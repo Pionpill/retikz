@@ -82,13 +82,15 @@ const createPointJitterMappingSchema = (role: 'x' | 'y', chartType: string) =>
     scale: PointPositionScaleBindingSchema.optional(),
   })
     .superRefine((mapping, context) => {
-      const axis = mapping.transform.operation.axis ?? 'x';
+      const axis = mapping.transform.operation.params.axis ?? 'x';
       const field =
-        role === 'x' ? (mapping.transform.operation.xField ?? 'x') : (mapping.transform.operation.yField ?? 'y');
+        role === 'x'
+          ? (mapping.transform.operation.params.xField ?? 'x')
+          : (mapping.transform.operation.params.yField ?? 'y');
       if (axis !== role) {
         context.addIssue({
           code: 'custom',
-          path: ['transform', 'operation', 'axis'],
+          path: ['transform', 'operation', 'params', 'axis'],
           message: `${chartType} ${role} jitter must target only the ${role} axis`,
         });
       }

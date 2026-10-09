@@ -13,6 +13,8 @@ keywords: Data、transform、Definition、executor、outputModel、statistics、
 - 实例结果接入：[Kernel ADR-048](../../../../../../kernel/_notes/decisions/v0/v0.5/048-composite-runtime-input.md)，运行时视图绑定真实 Source 位置，嵌套及生成子项显式转交，不重复执行变换
 - 修订：ADR-001 中 Definition 同时拥有计算的契约，以及 [Data v0.1 ADR-002](../v0.1/002-shared-provider-boundary.md) 的统计 Definition 执行绑定；其能力归属继续有效
 
+> 操作外壳与 Definition 作者接口由 [ADR-004](./004-transform-parameters.md) 替代：统一使用 `{ kind, params }` 和 `kind/paramsSchema` 定义。下文关于保留既有操作配置形态的决策不再适用，其余数据语义和执行职责保持。
+
 ## 背景与目标
 
 Data 已统一拥有行数据变换，但 `TransformDefinition` 仍强制携带本地 `apply`。字段依赖和输出模型推导也依赖混有 provenance helper 与计算实现的 context。第三方引擎因此无法只依据声明理解、检查并执行变换。

@@ -16,7 +16,6 @@ import {
   discriminatedUnion,
   enum as zodEnum,
   literal,
-  looseObject,
   strictObject,
   union,
 } from 'zod';
@@ -33,17 +32,22 @@ import {
   RESERVED_TRANSFORM_KINDS,
   RowSelectorTie,
 } from './constants';
+import { createTransformSchema } from './factory';
 import { DataTransformKindSchema } from './kind';
 import { reducerOutputFieldsOf } from './output-fields';
 import { ReducerMetricsSchema } from './reducer';
 import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './selector';
 
 /** 校验按单字段及指定方向排序的数据变换 */
-export const SortTransformSchema = strictObject({
-  kind: literal(DataTransform.Sort).describe('Discriminator: sort rows'),
+export const SortParamsSchema = strictObject({
   field: NonBlankStringSchema.describe('Sort field'),
   order: zodEnum(DataSortOrder).optional().describe('Sort direction; default ascending'),
 }).describe('Sort rows by one field');
+
+/** SortTransformSchema 的完整变换操作契约 */
+export const SortTransformSchema = createTransformSchema(DataTransform.Sort, SortParamsSchema).describe(
+  'SortTransform operation',
+);
 
 /** 校验分组字段列表，省略或空列表表示所有行属于同一组 */
 export const GroupBySchema = array(NonBlankStringSchema)
@@ -51,8 +55,7 @@ export const GroupBySchema = array(NonBlankStringSchema)
   .describe('Group key fields; omitted or empty means one group');
 
 /** 校验将分组数据归约为指标行的操作，指标输出字段不得覆盖分组字段 */
-export const SummarizeTransformSchema = strictObject({
-  kind: literal(DataTransform.Summarize).describe('Discriminator: summarize transform'),
+export const SummarizeParamsSchema = strictObject({
   groupBy: GroupBySchema,
   metrics: ReducerMetricsSchema.describe('Reducer metrics'),
 })
@@ -72,13 +75,22 @@ export const SummarizeTransformSchema = strictObject({
   })
   .describe('Group rows into metric rows');
 
+/** SummarizeTransformSchema 的完整变换操作契约 */
+export const SummarizeTransformSchema = createTransformSchema(DataTransform.Summarize, SummarizeParamsSchema).describe(
+  'SummarizeTransform operation',
+);
+
 /** 校验按组选择代表行并可选输出一基排名的操作 */
-export const SelectTransformSchema = strictObject({
-  kind: literal(DataTransform.Select).describe('Discriminator: select transform'),
+export const SelectParamsSchema = strictObject({
   groupBy: GroupBySchema,
   selector: SelectorOperationSchema.describe('Row selector'),
   rankAs: NonBlankStringSchema.optional().describe('One-based rank output field'),
 }).describe('Select representative rows per group');
+
+/** SelectTransformSchema 的完整变换操作契约 */
+export const SelectTransformSchema = createTransformSchema(DataTransform.Select, SelectParamsSchema).describe(
+  'SelectTransform operation',
+);
 
 const AnnotateSelectorTieSchema = union([literal(RowSelectorTie.First), literal(RowSelectorTie.Last)])
   .optional()
@@ -107,8 +119,7 @@ export const AnnotateSelectorSchema = strictObject({
 }).describe('Single-row selector annotation');
 
 /** 校验为行追加分组指标或选择器注解的操作，拒绝重复输出字段 */
-export const AnnotateTransformSchema = strictObject({
-  kind: literal(DataTransform.Annotate).describe('Discriminator: annotate transform'),
+export const AnnotateParamsSchema = strictObject({
   groupBy: GroupBySchema,
   metrics: ReducerMetricsSchema.optional().describe('Reducer metrics'),
   selectors: array(AnnotateSelectorSchema).min(1).optional().describe('Single-row selector annotations'),
@@ -138,9 +149,13 @@ export const AnnotateTransformSchema = strictObject({
   })
   .describe('Append group metrics or selector annotations');
 
+/** AnnotateTransformSchema 的完整变换操作契约 */
+export const AnnotateTransformSchema = createTransformSchema(DataTransform.Annotate, AnnotateParamsSchema).describe(
+  'AnnotateTransform operation',
+);
+
 /** 按分组累计数值并生成每行起止字段的变换配置 */
-export const StackTransformSchema = object({
-  kind: literal(DataTransform.Stack).describe('Discriminator: cumulative stacking within each x group'),
+export const StackParamsSchema = object({
   x: NonBlankStringSchema.optional().describe(
     'Grouping key field: rows sharing this value stack together (the categorical axis field); omit to accumulate all rows into a single cumulative chain (e.g. pie wedges)',
   ),
@@ -159,11 +174,13 @@ export const StackTransformSchema = object({
     ),
 }).describe('Stack transform: within each x group, accumulate y across series and derive [start, end] bounds per row');
 
+/** StackTransformSchema 的完整变换操作契约 */
+export const StackTransformSchema = createTransformSchema(DataTransform.Stack, StackParamsSchema).describe(
+  'StackTransform operation',
+);
+
 /** 连续字段分桶并生成桶边界与统计结果的变换配置 */
-export const BinTransformSchema = strictObject({
-  kind: literal(DataTransform.Bin).describe(
-    'Discriminator: bin a continuous field into discrete intervals (changes row count)',
-  ),
+export const BinParamsSchema = strictObject({
   field: NonBlankStringSchema.describe(
     'Continuous source field to bin; its value range is the binning domain unless extent is set',
   ),
@@ -194,6 +211,11 @@ export const BinTransformSchema = strictObject({
   'Bin transform: partition a continuous field into intervals, emitting one row per bin with [start, end] edges and reducer metrics',
 );
 
+/** BinTransformSchema 的完整变换操作契约 */
+export const BinTransformSchema = createTransformSchema(DataTransform.Bin, BinParamsSchema).describe(
+  'BinTransform operation',
+);
+
 /** 从选中端点行映射字段的配置 */
 export const EndpointProjectionSchema = strictObject({
   selector: SelectorOperationSchema.describe('Selector choosing the endpoint source row'),
@@ -220,10 +242,7 @@ export const PairMeasureOperationSchema = union([
 ]).describe('Pair measure operation computed from selected source and target rows');
 
 /** 按组选择 source / target 并生成配对结果行的变换配置 */
-export const RelateTransformSchema = strictObject({
-  kind: literal(DataTransform.Relate).describe(
-    'Discriminator: derive source-target relation rows from selected data rows',
-  ),
+export const RelateParamsSchema = strictObject({
   groupBy: GroupBySchema,
   source: EndpointProjectionSchema.describe('Source endpoint selector and field projection'),
   target: EndpointProjectionSchema.describe('Target endpoint selector and field projection'),
@@ -235,9 +254,13 @@ export const RelateTransformSchema = strictObject({
   'Relate transform: select source and target rows per group and emit relation rows with projected endpoint fields',
 );
 
+/** RelateTransformSchema 的完整变换操作契约 */
+export const RelateTransformSchema = createTransformSchema(DataTransform.Relate, RelateParamsSchema).describe(
+  'RelateTransform operation',
+);
+
 /** 将非负数值转换为组内占比的变换配置 */
-export const NormalizeTransformSchema = object({
-  kind: literal(DataTransform.Normalize).describe('Discriminator: within-group percentage normalization'),
+export const NormalizeParamsSchema = object({
   field: NonBlankStringSchema.describe(
     'Non-negative numeric field whose within-group share is computed; finite negative values are rejected and non-finite values count as zero',
   ),
@@ -257,9 +280,13 @@ export const NormalizeTransformSchema = object({
   'Normalize transform: divide each row value by its group sum, yielding a within-group share; row-preserving. Compose before a stack transform for percentage stacking',
 );
 
+/** NormalizeTransformSchema 的完整变换操作契约 */
+export const NormalizeTransformSchema = createTransformSchema(DataTransform.Normalize, NormalizeParamsSchema).describe(
+  'NormalizeTransform operation',
+);
+
 /** 从单值与基线或双端点字段逐行派生区间的变换配置 */
-export const DeriveIntervalTransformSchema = object({
-  kind: literal(DataTransform.DeriveInterval).describe('Discriminator: per-row interval [start, end] derivation'),
+export const DeriveIntervalParamsSchema = object({
   from: NonBlankStringSchema.optional().describe(
     'Value field driving a baseline-to-value interval (start = baseline, end = field value); omit only when using explicit startFrom / endFrom',
   ),
@@ -278,9 +305,14 @@ export const DeriveIntervalTransformSchema = object({
   'Derive-interval transform: per-row [start, end] from one value field (baseline-to-value) or two explicit fields; row-preserving. Distinct from stack (which accumulates across rows into a cumulative chain)',
 );
 
+/** DeriveIntervalTransformSchema 的完整变换操作契约 */
+export const DeriveIntervalTransformSchema = createTransformSchema(
+  DataTransform.DeriveInterval,
+  DeriveIntervalParamsSchema,
+).describe('DeriveIntervalTransform operation');
+
 /** 在数据单位中对数值字段施加确定性扰动的变换配置 */
-export const JitterTransformSchema = object({
-  kind: literal(DataTransform.Jitter).describe('Discriminator: deterministic positional jitter'),
+export const JitterParamsSchema = object({
   axis: zodEnum(JitterAxis)
     .optional()
     .describe(
@@ -305,6 +337,11 @@ export const JitterTransformSchema = object({
   'Jitter transform: add a deterministic pseudo-random offset in data units to a continuous numeric positional field; row-preserving and JSON-serializable',
 );
 
+/** JitterTransformSchema 的完整变换操作契约 */
+export const JitterTransformSchema = createTransformSchema(DataTransform.Jitter, JitterParamsSchema).describe(
+  'JitterTransform operation',
+);
+
 /** Gaussian KDE 的自动或显式带宽配置 */
 export const DensityBandwidthSchema = discriminatedUnion('kind', [
   strictObject({
@@ -321,8 +358,7 @@ export const DensityBandwidthSchema = discriminatedUnion('kind', [
 ]).describe('Density transform bandwidth strategy');
 
 /** 按组生成一维 Gaussian KDE 采样行的变换配置 */
-export const DensityTransformSchema = strictObject({
-  kind: literal(DataTransform.Density).describe('Discriminator: sample one-dimensional KDE density rows'),
+export const DensityParamsSchema = strictObject({
   field: NonBlankStringSchema.describe('Continuous source field used as the one-dimensional KDE sample value'),
   groupBy: GroupBySchema,
   bandwidth: DensityBandwidthSchema.optional().describe('KDE bandwidth strategy; default Silverman rule of thumb'),
@@ -366,9 +402,13 @@ export const DensityTransformSchema = strictObject({
   })
   .describe('Density transform: sample one-dimensional Gaussian KDE rows');
 
+/** DensityTransformSchema 的完整变换操作契约 */
+export const DensityTransformSchema = createTransformSchema(DataTransform.Density, DensityParamsSchema).describe(
+  'DensityTransform operation',
+);
+
 /** 按组拟合并生成预测采样行的变换配置 */
-export const SmoothTransformSchema = strictObject({
-  kind: literal(DataTransform.Smooth).describe('Discriminator: sample trend rows from a fitted smooth model'),
+export const SmoothParamsSchema = strictObject({
   x: NonBlankStringSchema.describe('Continuous source field used as the independent x value'),
   y: NonBlankStringSchema.describe('Continuous source field used as the dependent y value'),
   groupBy: GroupBySchema,
@@ -413,6 +453,11 @@ export const SmoothTransformSchema = strictObject({
   })
   .describe('Smooth transform: sample regression trend rows');
 
+/** SmoothTransformSchema 的完整变换操作契约 */
+export const SmoothTransformSchema = createTransformSchema(DataTransform.Smooth, SmoothParamsSchema).describe(
+  'SmoothTransform operation',
+);
+
 /** 校验按 kind 区分的内置数据变换操作 */
 export const BuiltinTransformSchema = discriminatedUnion('kind', [
   SortTransformSchema,
@@ -429,16 +474,13 @@ export const BuiltinTransformSchema = discriminatedUnion('kind', [
   SmoothTransformSchema,
 ]).describe('Built-in data transform operation');
 
-const ExternalTransformObjectSchema = looseObject({
+/** 校验带 JSON 参数的自定义数据变换操作 */
+export const ExternalTransformSchema = strictObject({
   kind: DataTransformKindSchema.refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
     message: 'external transform kind must not collide with a built-in or removed transform kind',
   }).describe('Discriminator: custom transform kind'),
-});
-
-/** 校验带 JSON 配置的自定义数据变换操作 */
-export const ExternalTransformSchema = ExternalTransformObjectSchema.catchall(JsonValueSchema).describe(
-  'Custom transform operation with JSON config',
-);
+  params: record(string(), JsonValueSchema).describe('JSON object containing custom transform parameters'),
+}).describe('Custom transform operation with JSON parameters');
 
 /** 校验内置或自定义的数据变换声明 */
 export const TransformSchema = union([BuiltinTransformSchema, ExternalTransformSchema]).describe(

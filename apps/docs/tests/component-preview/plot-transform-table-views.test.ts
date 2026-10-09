@@ -21,7 +21,7 @@ describe('Plot transform table views', () => {
         { quarter: 'Q1', product: 'A', revenue: 30 },
         { quarter: 'Q1', product: 'B', revenue: 45 },
       ],
-      () => ({ kind: 'stack', x: 'quarter', y: 'revenue', groupBy: 'product' }),
+      () => ({ kind: 'stack', params: { x: 'quarter', y: 'revenue', groupBy: 'product' } }),
     );
     const resultRows = views[1].rows;
 

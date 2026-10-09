@@ -39,7 +39,7 @@ export const ExternalExecutionPreview: FC<ExternalExecutionPreviewProps> = props
         dataExecution={{ mode, external: 'promise-engine' }}
         dataTransformExecutor={executor}
       >
-        <PlotTransform operation={{ kind: 'scale-field', field: 'x', as: 'scaledX', factor }} />
+        <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor } }} />
         <PlotScale dimension="x" type="linear" domain={[0, 16]} />
         <PointMark x="x" y="y" fill="#94a3b8" size={5} />
         <PointMark x="scaledX" y="y" fill="#2563eb" size={7} />

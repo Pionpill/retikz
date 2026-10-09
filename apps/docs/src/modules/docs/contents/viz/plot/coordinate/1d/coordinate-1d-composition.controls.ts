@@ -28,8 +28,10 @@ export const COORDINATE_1D_COMPOSITION_CONTROL_IDS = {
 /** 汇聚目标点使用的分组统计 operation */
 export const coordinate1DCompositionOperation = {
   kind: 'summarize',
-  groupBy: ['practiceX', 'practiceId', 'practiceLabel', 'practiceGlyph', 'relationColor'],
-  metrics: [{ kind: 'count', as: 'thingCount' }],
+  params: {
+    groupBy: ['practiceX', 'practiceId', 'practiceLabel', 'practiceGlyph', 'relationColor'],
+    metrics: [{ kind: 'count', as: 'thingCount' }],
+  },
 } as const;
 
 /** 一维映射后二次组合的中文控件 */

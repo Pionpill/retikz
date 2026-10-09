@@ -13,35 +13,22 @@ import {
 import type { AnyTransformImplementation, TransformSemanticContext } from '../../contract';
 import type { RegressionModel, RegressionPair } from '../../contract';
 import { RetikzDataError } from '../../error';
-import type {
-  IRDataAnnotateTransform,
-  IRDataSelectTransform,
-  IRDataSortTransform,
-  IRDataSummarizeTransform,
-  IRDataBinTransform,
-  IRDataDensityTransform,
-  IRDataDeriveIntervalTransform,
-  IRDataJitterTransform,
-  IRDataNormalizeTransform,
-  IRDataRelateTransform,
-  IRDataSmoothTransform,
-  IRDataStackTransform,
-} from '../../schemas';
+import type { IRDataBinTransform } from '../../schemas';
 import {
-  AnnotateTransformSchema,
-  SelectTransformSchema,
-  SortTransformSchema,
-  SummarizeTransformSchema,
+  AnnotateParamsSchema,
+  SelectParamsSchema,
+  SortParamsSchema,
+  SummarizeParamsSchema,
   DataFieldType,
-  BinTransformSchema,
-  DensityTransformSchema,
-  DeriveIntervalTransformSchema,
+  BinParamsSchema,
+  DensityParamsSchema,
+  DeriveIntervalParamsSchema,
   JitterAxis,
-  JitterTransformSchema,
-  NormalizeTransformSchema,
-  RelateTransformSchema,
-  SmoothTransformSchema,
-  StackTransformSchema,
+  JitterParamsSchema,
+  NormalizeParamsSchema,
+  RelateParamsSchema,
+  SmoothParamsSchema,
+  StackParamsSchema,
 } from '../../schemas';
 import { resolveRegressionDependency } from '../regression';
 import { freezeDefinitions, resolveImplementationRegistry } from '../shared';
@@ -130,9 +117,10 @@ export const createAsyncBuiltinTransformImplementations = (
 ];
 
 /** 内置 sort transform definition；读取排序字段并稳定重排输入行 */
-const sortTransformDefinition = defineTransform<IRDataSortTransform>({
-  schema: SortTransformSchema,
-  inputFields: operation => [operation.field],
+const sortTransformDefinition = defineTransform({
+  kind: 'sort',
+  paramsSchema: SortParamsSchema,
+  inputFields: operation => [operation.params.field],
   outputModel: () => ({ kind: 'preserve', outputs: [] }),
   schedule: {
     phase: DataTransformPhase.RowOrder,
@@ -148,26 +136,30 @@ const sortTransformImplementation = defineTransformImplementation({
 });
 
 /** 内置 summarize transform definition；声明 groupBy 与 reducer 输入字段，并输出 reducer 派生字段 */
-const summarizeTransformDefinition = defineTransform<IRDataSummarizeTransform>({
-  schema: SummarizeTransformSchema,
+const summarizeTransformDefinition = defineTransform({
+  kind: 'summarize',
+  paramsSchema: SummarizeParamsSchema,
   validate: (operation, context) =>
-    validateReducerMetrics(operation.metrics, context, {
-      reservedFields: new Set(operation.groupBy ?? []),
+    validateReducerMetrics(operation.params.metrics, context, {
+      reservedFields: new Set(operation.params.groupBy ?? []),
       reservedLabel: 'a groupBy field',
     }),
   dependencies: (operation, context) =>
-    operation.metrics.map(metric => resolveReducerDependency(metric, context.statisticsReducerRegistry)),
+    operation.params.metrics.map(metric => resolveReducerDependency(metric, context.statisticsReducerRegistry)),
   inputFields: (operation, context) => [
-    ...(operation.groupBy ?? []),
-    ...operation.metrics.flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
+    ...(operation.params.groupBy ?? []),
+    ...operation.params.metrics.flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
   ],
   outputModel: (operation, context) => {
-    const outputs = operation.metrics.flatMap(metric =>
+    const outputs = operation.params.metrics.flatMap(metric =>
       reducerOutputDescriptors(metric, context.statisticsReducerRegistry),
     );
     return {
       kind: 'replace',
-      fields: [...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } as const })), ...outputs],
+      fields: [
+        ...(operation.params.groupBy ?? []).map(field => ({ field, type: { from: field } as const })),
+        ...outputs,
+      ],
     };
   },
 });
@@ -179,16 +171,20 @@ const summarizeTransformImplementation = defineTransformImplementation({
 });
 
 /** 内置 select transform definition；声明 groupBy 与 selector 输入字段，并可输出 rankAs 字段 */
-const selectTransformDefinition = defineTransform<IRDataSelectTransform>({
-  schema: SelectTransformSchema,
-  dependencies: (operation, context) => [resolveSelectorDependency(operation.selector, context.rowSelectorRegistry)],
+const selectTransformDefinition = defineTransform({
+  kind: 'select',
+  paramsSchema: SelectParamsSchema,
+  dependencies: (operation, context) => [
+    resolveSelectorDependency(operation.params.selector, context.rowSelectorRegistry),
+  ],
   inputFields: (operation, context) => [
-    ...(operation.groupBy ?? []),
-    ...selectorInputFields(operation.selector, context.rowSelectorRegistry),
+    ...(operation.params.groupBy ?? []),
+    ...selectorInputFields(operation.params.selector, context.rowSelectorRegistry),
   ],
   outputModel: operation => ({
     kind: 'preserve',
-    outputs: operation.rankAs === undefined ? [] : [{ field: operation.rankAs, type: DataFieldType.Continuous }],
+    outputs:
+      operation.params.rankAs === undefined ? [] : [{ field: operation.params.rankAs, type: DataFieldType.Continuous }],
   }),
 });
 
@@ -199,33 +195,38 @@ const selectTransformImplementation = defineTransformImplementation({
 });
 
 /** 内置 annotate transform definition；声明 groupBy、reducer、selector 输入字段，并输出全部回填字段 */
-const annotateTransformDefinition = defineTransform<IRDataAnnotateTransform>({
-  schema: AnnotateTransformSchema,
+const annotateTransformDefinition = defineTransform({
+  kind: 'annotate',
+  paramsSchema: AnnotateParamsSchema,
   validate: (operation, context) =>
-    validateReducerMetrics(operation.metrics ?? [], context, {
-      reservedFields: new Set((operation.selectors ?? []).map(selector => selector.as)),
+    validateReducerMetrics(operation.params.metrics ?? [], context, {
+      reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
       reservedLabel: 'an annotate selector output field',
     }),
   dependencies: (operation, context) => [
-    ...(operation.metrics ?? []).map(metric => resolveReducerDependency(metric, context.statisticsReducerRegistry)),
-    ...(operation.selectors ?? []).map(annotation =>
+    ...(operation.params.metrics ?? []).map(metric =>
+      resolveReducerDependency(metric, context.statisticsReducerRegistry),
+    ),
+    ...(operation.params.selectors ?? []).map(annotation =>
       resolveSelectorDependency(annotation.selector, context.rowSelectorRegistry),
     ),
   ],
   inputFields: (operation, context) => [
-    ...(operation.groupBy ?? []),
-    ...(operation.metrics ?? []).flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
-    ...(operation.selectors ?? []).flatMap(selector =>
+    ...(operation.params.groupBy ?? []),
+    ...(operation.params.metrics ?? []).flatMap(metric =>
+      reducerInputFields(metric, context.statisticsReducerRegistry),
+    ),
+    ...(operation.params.selectors ?? []).flatMap(selector =>
       selectorInputFields(selector.selector, context.rowSelectorRegistry),
     ),
   ],
   outputModel: (operation, context) => ({
     kind: 'preserve',
     outputs: [
-      ...(operation.metrics ?? []).flatMap(metric =>
+      ...(operation.params.metrics ?? []).flatMap(metric =>
         reducerOutputDescriptors(metric, context.statisticsReducerRegistry),
       ),
-      ...(operation.selectors ?? []).map(annotation => {
+      ...(operation.params.selectors ?? []).map(annotation => {
         const selector = annotation.selector;
         return {
           field: annotation.as,
@@ -242,18 +243,19 @@ const annotateTransformImplementation = defineTransformImplementation({
   apply: (rows, operation, context) => applyAnnotate(rows, operation, context),
 });
 
-const stackTransformDefinition = defineTransform<IRDataStackTransform>({
-  schema: StackTransformSchema,
+const stackTransformDefinition = defineTransform({
+  kind: 'stack',
+  paramsSchema: StackParamsSchema,
   inputFields: operation => [
-    operation.y,
-    ...(operation.x !== undefined ? [operation.x] : []),
-    ...(operation.groupBy !== undefined ? [operation.groupBy] : []),
+    operation.params.y,
+    ...(operation.params.x !== undefined ? [operation.params.x] : []),
+    ...(operation.params.groupBy !== undefined ? [operation.params.groupBy] : []),
   ],
   outputModel: operation => ({
     kind: 'preserve',
     outputs: [
-      { field: operation.startField ?? DEFAULT_START_FIELD, type: DataFieldType.Continuous },
-      { field: operation.endField ?? DEFAULT_END_FIELD, type: DataFieldType.Continuous },
+      { field: operation.params.startField ?? DEFAULT_START_FIELD, type: DataFieldType.Continuous },
+      { field: operation.params.endField ?? DEFAULT_END_FIELD, type: DataFieldType.Continuous },
     ],
   }),
   schedule: {
@@ -276,7 +278,7 @@ const binOutputModel = (operation: IRDataBinTransform, context: TransformSemanti
   );
   const output = binOutputFields(operation);
   const fields: Array<DataTransformOutputDescriptor> = [
-    { field: operation.field, type: { from: operation.field } },
+    { field: operation.params.field, type: { from: operation.params.field } },
     { field: output.startField, type: DataFieldType.Continuous },
     { field: output.endField, type: DataFieldType.Continuous },
     ...metricDescriptors,
@@ -285,12 +287,13 @@ const binOutputModel = (operation: IRDataBinTransform, context: TransformSemanti
   return { kind: 'replace' as const, fields };
 };
 
-const binTransformDefinition = defineTransform<IRDataBinTransform>({
-  schema: BinTransformSchema,
+const binTransformDefinition = defineTransform({
+  kind: 'bin',
+  paramsSchema: BinParamsSchema,
   dependencies: (operation, context) =>
     binMetricOperations(operation).map(metric => resolveReducerDependency(metric, context.statisticsReducerRegistry)),
   inputFields: (operation, context) => [
-    operation.field,
+    operation.params.field,
     ...binMetricOperations(operation).flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
   ],
   outputModel: binOutputModel,
@@ -307,12 +310,13 @@ const binTransformImplementation = defineTransformImplementation({
   apply: (rows, operation, context) => applyBin(rows, operation, context),
 });
 
-const normalizeTransformDefinition = defineTransform<IRDataNormalizeTransform>({
-  schema: NormalizeTransformSchema,
-  inputFields: operation => [operation.field, ...(operation.groupBy ?? [])],
+const normalizeTransformDefinition = defineTransform({
+  kind: 'normalize',
+  paramsSchema: NormalizeParamsSchema,
+  inputFields: operation => [operation.params.field, ...(operation.params.groupBy ?? [])],
   outputModel: operation => ({
     kind: 'preserve',
-    outputs: [{ field: operation.as ?? operation.field, type: DataFieldType.Continuous }],
+    outputs: [{ field: operation.params.as ?? operation.params.field, type: DataFieldType.Continuous }],
   }),
   schedule: {
     phase: DataTransformPhase.FieldDerive,
@@ -327,15 +331,18 @@ const normalizeTransformImplementation = defineTransformImplementation({
   apply: (rows, operation) => applyNormalize(rows, operation),
 });
 
-const deriveIntervalTransformDefinition = defineTransform<IRDataDeriveIntervalTransform>({
-  schema: DeriveIntervalTransformSchema,
+const deriveIntervalTransformDefinition = defineTransform({
+  kind: 'derive-interval',
+  paramsSchema: DeriveIntervalParamsSchema,
   inputFields: operation =>
-    [operation.from, operation.startFrom, operation.endFrom].filter((field): field is string => field !== undefined),
+    [operation.params.from, operation.params.startFrom, operation.params.endFrom].filter(
+      (field): field is string => field !== undefined,
+    ),
   outputModel: operation => ({
     kind: 'preserve',
     outputs: [
-      { field: operation.startField ?? DEFAULT_DERIVE_START_FIELD, type: DataFieldType.Continuous },
-      { field: operation.endField ?? DEFAULT_DERIVE_END_FIELD, type: DataFieldType.Continuous },
+      { field: operation.params.startField ?? DEFAULT_DERIVE_START_FIELD, type: DataFieldType.Continuous },
+      { field: operation.params.endField ?? DEFAULT_DERIVE_END_FIELD, type: DataFieldType.Continuous },
     ],
   }),
   schedule: {
@@ -351,33 +358,34 @@ const deriveIntervalTransformImplementation = defineTransformImplementation({
   apply: (rows, operation) => applyDeriveInterval(rows, operation),
 });
 
-const relateTransformDefinition = defineTransform<IRDataRelateTransform>({
-  schema: RelateTransformSchema,
+const relateTransformDefinition = defineTransform({
+  kind: 'relate',
+  paramsSchema: RelateParamsSchema,
   dependencies: (operation, context) => [
-    resolveSelectorDependency(operation.source.selector, context.rowSelectorRegistry),
-    resolveSelectorDependency(operation.target.selector, context.rowSelectorRegistry),
+    resolveSelectorDependency(operation.params.source.selector, context.rowSelectorRegistry),
+    resolveSelectorDependency(operation.params.target.selector, context.rowSelectorRegistry),
   ],
   inputFields: (operation, context) => [
-    ...(operation.groupBy ?? []),
-    ...selectorInputFields(operation.source.selector, context.rowSelectorRegistry),
-    ...selectorInputFields(operation.target.selector, context.rowSelectorRegistry),
-    ...Object.values(operation.source.fields),
-    ...Object.values(operation.target.fields),
-    ...(operation.measures ?? []).map(measure => measure.field),
+    ...(operation.params.groupBy ?? []),
+    ...selectorInputFields(operation.params.source.selector, context.rowSelectorRegistry),
+    ...selectorInputFields(operation.params.target.selector, context.rowSelectorRegistry),
+    ...Object.values(operation.params.source.fields),
+    ...Object.values(operation.params.target.fields),
+    ...(operation.params.measures ?? []).map(measure => measure.field),
   ],
   outputModel: operation => ({
     kind: 'replace',
     fields: [
-      ...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
-      ...Object.entries(operation.source.fields).map(([field, sourceField]) => ({
+      ...(operation.params.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
+      ...Object.entries(operation.params.source.fields).map(([field, sourceField]) => ({
         field: relationEndpointOutputField('source', field),
         type: { from: sourceField },
       })),
-      ...Object.entries(operation.target.fields).map(([field, sourceField]) => ({
+      ...Object.entries(operation.params.target.fields).map(([field, sourceField]) => ({
         field: relationEndpointOutputField('target', field),
         type: { from: sourceField },
       })),
-      ...(operation.measures ?? []).flatMap(measure => [
+      ...(operation.params.measures ?? []).flatMap(measure => [
         { field: measure.as, type: DataFieldType.Continuous } as const,
         ...(measure.labelAs !== undefined
           ? [{ field: measure.labelAs, type: DataFieldType.Categorical } as const]
@@ -393,20 +401,29 @@ const relateTransformImplementation = defineTransformImplementation({
   apply: (rows, operation, context) => applyRelate(rows, operation, context),
 });
 
-const jitterTransformDefinition = defineTransform<IRDataJitterTransform>({
-  schema: JitterTransformSchema,
+const jitterTransformDefinition = defineTransform({
+  kind: 'jitter',
+  paramsSchema: JitterParamsSchema,
   inputFields: operation => {
-    const axis = operation.axis ?? JitterAxis.X;
+    const axis = operation.params.axis ?? JitterAxis.X;
     return [
-      axis === JitterAxis.X || axis === JitterAxis.Both ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
-      axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
+      axis === JitterAxis.X || axis === JitterAxis.Both
+        ? (operation.params.xField ?? DEFAULT_JITTER_X_FIELD)
+        : undefined,
+      axis === JitterAxis.Y || axis === JitterAxis.Both
+        ? (operation.params.yField ?? DEFAULT_JITTER_Y_FIELD)
+        : undefined,
     ].filter((field): field is string => field !== undefined);
   },
   outputModel: operation => {
-    const axis = operation.axis ?? JitterAxis.X;
+    const axis = operation.params.axis ?? JitterAxis.X;
     const fields = [
-      axis === JitterAxis.X || axis === JitterAxis.Both ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
-      axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
+      axis === JitterAxis.X || axis === JitterAxis.Both
+        ? (operation.params.xField ?? DEFAULT_JITTER_X_FIELD)
+        : undefined,
+      axis === JitterAxis.Y || axis === JitterAxis.Both
+        ? (operation.params.yField ?? DEFAULT_JITTER_Y_FIELD)
+        : undefined,
     ].filter((field): field is string => field !== undefined);
 
     return {
@@ -427,15 +444,16 @@ const jitterTransformImplementation = defineTransformImplementation({
   apply: (rows, operation) => applyJitter(rows, operation),
 });
 
-const densityTransformDefinition = defineTransform<IRDataDensityTransform>({
-  schema: DensityTransformSchema,
+const densityTransformDefinition = defineTransform({
+  kind: 'density',
+  paramsSchema: DensityParamsSchema,
   inputFields: operation => densityInputFields(operation),
   outputModel: operation => ({
     kind: 'replace',
     fields: [
-      ...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
-      { field: operation.xAs, type: DataFieldType.Continuous },
-      { field: operation.densityAs, type: DataFieldType.Continuous },
+      ...(operation.params.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
+      { field: operation.params.xAs, type: DataFieldType.Continuous },
+      { field: operation.params.densityAs, type: DataFieldType.Continuous },
     ],
   }),
 });
@@ -446,18 +464,19 @@ const densityTransformImplementation = defineTransformImplementation({
   apply: (rows, operation, context) => applyDensity(rows, operation, context),
 });
 
-const smoothTransformDefinition = defineTransform<IRDataSmoothTransform>({
-  schema: SmoothTransformSchema,
+const smoothTransformDefinition = defineTransform({
+  kind: 'smooth',
+  paramsSchema: SmoothParamsSchema,
   dependencies: (operation, context) => [
-    resolveRegressionDependency(operation.method ?? { kind: 'linear' }, context.regressionRegistry),
+    resolveRegressionDependency(operation.params.method ?? { kind: 'linear' }, context.regressionRegistry),
   ],
   inputFields: operation => smoothInputFields(operation),
   outputModel: operation => ({
     kind: 'replace',
     fields: [
-      ...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
-      { field: operation.xAs, type: DataFieldType.Continuous },
-      { field: operation.yAs, type: DataFieldType.Continuous },
+      ...(operation.params.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
+      { field: operation.params.xAs, type: DataFieldType.Continuous },
+      { field: operation.params.yAs, type: DataFieldType.Continuous },
     ],
   }),
 });

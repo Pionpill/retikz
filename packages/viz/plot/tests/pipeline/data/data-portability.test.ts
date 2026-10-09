@@ -13,7 +13,7 @@ import {
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { literal, object } from 'zod';
+import { object } from 'zod';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -75,13 +75,10 @@ const inheritedRecord = <T>(key: string, value: T): Record<string, T> =>
   Object.create(ownRecord(key, value)) as Record<string, T>;
 
 const doubleDefinition = defineTransform({
-  schema: object({
-    kind: literal('double'),
-    field: NonBlankStringSchema,
-    as: NonBlankStringSchema,
-  }),
-  inputFields: operation => [operation.field],
-  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+  kind: 'double',
+  paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+  inputFields: operation => [operation.params.field],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.params.as }] }),
 });
 
 const doubleDefinitionImplementation = defineTransformImplementation({
@@ -89,7 +86,7 @@ const doubleDefinitionImplementation = defineTransformImplementation({
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
-      [operation.as]: Number(row[operation.field]) * 2,
+      [operation.params.as]: Number(row[operation.params.field]) * 2,
     })),
 });
 
@@ -191,7 +188,7 @@ describe('coerce-before-transform 关键回归', () => {
       ],
       new Map([['v', DataFieldType.Continuous]]),
     );
-    const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }], {
+    const stacked = applyTransforms(normalized, [{ kind: 'stack', params: { x: 'm', y: 'v' } }], {
       registry: resolveTransformRegistry(),
     });
 
@@ -326,7 +323,7 @@ describe('custom transform data portability（contract）', () => {
           { name: 'y', type: 'continuous' },
         ],
       },
-      transform: [{ operation: { kind: 'double', field: 'x', as: 'x2' } }],
+      transform: [{ operation: { kind: 'double', params: { field: 'x', as: 'x2' } } }],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -347,8 +344,9 @@ describe('custom transform data portability（contract）', () => {
 
   it('strict_model_rejects_unregistered_custom_output_field', () => {
     const missingOutputDefinition = defineTransform({
-      schema: doubleDefinition.schema,
-      inputFields: operation => [operation.field],
+      kind: 'double',
+      paramsSchema: doubleDefinition.schema.shape.params,
+      inputFields: operation => [operation.params.field],
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
     const missingOutputDefinitionImplementation = defineTransformImplementation({

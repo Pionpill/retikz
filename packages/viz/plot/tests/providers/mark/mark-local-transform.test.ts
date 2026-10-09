@@ -50,8 +50,10 @@ const groupPointSpec = (): IRPlot =>
           {
             operation: {
               kind: 'summarize',
-              groupBy: ['category'],
-              metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+              params: {
+                groupBy: ['category'],
+                metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+              },
             },
           },
         ],
@@ -61,13 +63,10 @@ const groupPointSpec = (): IRPlot =>
   });
 
 const doubleTransform = defineTransform({
-  schema: object({
-    kind: literal('double-local'),
-    field: NonBlankStringSchema,
-    as: NonBlankStringSchema,
-  }),
-  inputFields: operation => [operation.field],
-  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+  kind: 'double-local',
+  paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+  inputFields: operation => [operation.params.field],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.params.as }] }),
 });
 
 const doubleTransformImplementation = defineTransformImplementation({
@@ -75,7 +74,7 @@ const doubleTransformImplementation = defineTransformImplementation({
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
-      [operation.as]: Number(row[operation.field]) * 2,
+      [operation.params.as]: Number(row[operation.params.field]) * 2,
     })),
 });
 
@@ -108,8 +107,10 @@ describe('mark-local transform', () => {
         {
           operation: {
             kind: 'summarize',
-            groupBy: ['group'],
-            metrics: [{ kind: 'extent', field: 'value', as: 'range' }],
+            params: {
+              groupBy: ['group'],
+              metrics: [{ kind: 'extent', field: 'value', as: 'range' }],
+            },
           },
         },
       ],
@@ -121,7 +122,7 @@ describe('mark-local transform', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'sort', field: 'range' } }],
+          transform: [{ operation: { kind: 'sort', params: { field: 'range' } } }],
           encoding: { x: { field: 'group' }, y: { field: 'range' } },
         },
       ],
@@ -168,7 +169,7 @@ describe('mark-local transform', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'normalize', field: 'value', as: 'value' } }],
+          transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'value' } } }],
           encoding: { x: { field: 'x' }, y: { field: 'value' } },
         },
       ],
@@ -195,8 +196,10 @@ describe('mark-local transform', () => {
             {
               operation: {
                 kind: 'summarize',
-                groupBy: ['category'],
-                metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+                params: {
+                  groupBy: ['category'],
+                  metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+                },
               },
             },
           ],
@@ -237,7 +240,7 @@ describe('mark-local transform', () => {
         marks: [
           {
             type: 'point',
-            transform: [{ operation: { kind: 'double-local', field: 'value', as: 'double' } }],
+            transform: [{ operation: { kind: 'double-local', params: { field: 'value', as: 'double' } } }],
             encoding: { x: { field: 'x' }, y: { field: 'double' } },
           },
         ],
@@ -267,7 +270,7 @@ describe('mark-local transform', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'double-local', field: 'value', as: 'double' } }],
+          transform: [{ operation: { kind: 'double-local', params: { field: 'value', as: 'double' } } }],
           encoding: { x: { field: 'x' }, y: { field: 'double' } },
         },
       ],

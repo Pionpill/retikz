@@ -10,11 +10,13 @@ export const LINE_TRANSFORM_GROUPING_ID = 'line-transform-grouping';
 /** 根据实时控件值创建趋势拟合 operation */
 export const lineTransformOperationOf = (values: { [LINE_TRANSFORM_GROUPING_ID]: 'overall' | 'channel' }) => ({
   kind: 'smooth',
-  x: 'day',
-  y: 'value',
-  xAs: 'trendX',
-  yAs: 'trendY',
-  ...(values[LINE_TRANSFORM_GROUPING_ID] === 'channel' ? { groupBy: ['channel'] } : {}),
+  params: {
+    x: 'day',
+    y: 'value',
+    xAs: 'trendX',
+    yAs: 'trendY',
+    ...(values[LINE_TRANSFORM_GROUPING_ID] === 'channel' ? { groupBy: ['channel'] } : {}),
+  },
 });
 
 /** 路径层局部变换的中文属性面板 */

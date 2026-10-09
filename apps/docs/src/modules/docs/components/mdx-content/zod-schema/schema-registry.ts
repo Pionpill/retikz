@@ -1873,6 +1873,66 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'DataTransform',
     url: '/viz/data/reference/contract#datatransformschema',
   },
+  SortParamsSchema: {
+    schema: DataIR.SortParamsSchema,
+    label: 'SortParams',
+    url: '/viz/data/reference/contract#sorttransformschema',
+  },
+  SummarizeParamsSchema: {
+    schema: DataIR.SummarizeParamsSchema,
+    label: 'SummarizeParams',
+    url: '/viz/data/reference/contract#summarizetransformschema',
+  },
+  SelectParamsSchema: {
+    schema: DataIR.SelectParamsSchema,
+    label: 'SelectParams',
+    url: '/viz/data/reference/contract#selecttransformschema',
+  },
+  AnnotateParamsSchema: {
+    schema: DataIR.AnnotateParamsSchema,
+    label: 'AnnotateParams',
+    url: '/viz/data/reference/contract#annotatetransformschema',
+  },
+  StackParamsSchema: {
+    schema: DataIR.StackParamsSchema,
+    label: 'StackParams',
+    url: '/viz/data/reference/contract#stacktransformschema',
+  },
+  BinParamsSchema: {
+    schema: DataIR.BinParamsSchema,
+    label: 'BinParams',
+    url: '/viz/data/reference/contract#bintransformschema',
+  },
+  NormalizeParamsSchema: {
+    schema: DataIR.NormalizeParamsSchema,
+    label: 'NormalizeParams',
+    url: '/viz/data/reference/contract#normalizetransformschema',
+  },
+  DeriveIntervalParamsSchema: {
+    schema: DataIR.DeriveIntervalParamsSchema,
+    label: 'DeriveIntervalParams',
+    url: '/viz/data/reference/contract#deriveintervaltransformschema',
+  },
+  RelateParamsSchema: {
+    schema: DataIR.RelateParamsSchema,
+    label: 'RelateParams',
+    url: '/viz/data/reference/contract#relatetransformschema',
+  },
+  JitterParamsSchema: {
+    schema: DataIR.JitterParamsSchema,
+    label: 'JitterParams',
+    url: '/viz/data/reference/contract#jittertransformschema',
+  },
+  DensityParamsSchema: {
+    schema: DataIR.DensityParamsSchema,
+    label: 'DensityParams',
+    url: '/viz/data/reference/contract#densitytransformschema',
+  },
+  SmoothParamsSchema: {
+    schema: DataIR.SmoothParamsSchema,
+    label: 'SmoothParams',
+    url: '/viz/data/reference/contract#smoothtransformschema',
+  },
   SortTransformSchema: {
     schema: DataIR.SortTransformSchema,
     label: 'SortTransform',

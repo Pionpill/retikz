@@ -92,7 +92,9 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       series: 'product',
       bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } },
     });
-    expect(spec.transform).toEqual([{ operation: { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' } }]);
+    expect(spec.transform).toEqual([
+      { operation: { kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } } },
+    ]);
   });
 
   it('scale_x_time', () => {

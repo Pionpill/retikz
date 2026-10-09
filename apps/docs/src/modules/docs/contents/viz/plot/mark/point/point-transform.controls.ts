@@ -16,10 +16,12 @@ export const pointTransformOperationOf = (values: {
   [POINT_TRANSFORM_CONTROL_IDS.seed]: number;
 }) => ({
   kind: 'jitter',
-  axis: 'y',
-  yField: 'orders',
-  amount: values[POINT_TRANSFORM_CONTROL_IDS.amount],
-  seed: values[POINT_TRANSFORM_CONTROL_IDS.seed],
+  params: {
+    axis: 'y',
+    yField: 'orders',
+    amount: values[POINT_TRANSFORM_CONTROL_IDS.amount],
+    seed: values[POINT_TRANSFORM_CONTROL_IDS.seed],
+  },
 });
 
 /** 点层变换 playground 的中文属性面板 */

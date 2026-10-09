@@ -9,27 +9,29 @@ describe('quantile-band statistics schema (contract)', () => {
   it('accepts quantile-band reducer and preserves JSON round trip', () => {
     const operation = {
       kind: 'summarize',
-      groupBy: ['group'],
-      metrics: [
-        {
-          kind: 'quantile-band',
-          field: 'value',
-          lowerP: 0.25,
-          upperP: 0.75,
-          outputs: {
-            lower: 'boxLow',
-            upper: 'boxHigh',
-            points: [{ p: 0.5, as: 'median' }],
-            spread: 'boxSpread',
-            lowerFence: 'lowerFence',
-            upperFence: 'upperFence',
-            whiskerMin: 'whiskerMin',
-            whiskerMax: 'whiskerMax',
-            count: 'count',
+      params: {
+        groupBy: ['group'],
+        metrics: [
+          {
+            kind: 'quantile-band',
+            field: 'value',
+            lowerP: 0.25,
+            upperP: 0.75,
+            outputs: {
+              lower: 'boxLow',
+              upper: 'boxHigh',
+              points: [{ p: 0.5, as: 'median' }],
+              spread: 'boxSpread',
+              lowerFence: 'lowerFence',
+              upperFence: 'upperFence',
+              whiskerMin: 'whiskerMin',
+              whiskerMax: 'whiskerMax',
+              count: 'count',
+            },
+            whisker: { kind: 'spread', factor: 1.5 },
           },
-          whisker: { kind: 'spread', factor: 1.5 },
-        },
-      ],
+        ],
+      },
     };
 
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
@@ -38,15 +40,17 @@ describe('quantile-band statistics schema (contract)', () => {
   it('accepts outside-quantile-band selector and preserves JSON round trip', () => {
     const operation = {
       kind: 'select',
-      groupBy: ['group'],
-      selector: {
-        kind: 'outside-quantile-band',
-        field: 'value',
-        lowerP: 0.1,
-        upperP: 0.9,
-        boundary: { kind: 'band' },
+      params: {
+        groupBy: ['group'],
+        selector: {
+          kind: 'outside-quantile-band',
+          field: 'value',
+          lowerP: 0.1,
+          upperP: 0.9,
+          boundary: { kind: 'band' },
+        },
+        rankAs: 'rank',
       },
-      rankAs: 'rank',
     };
 
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
@@ -56,26 +60,30 @@ describe('quantile-band statistics schema (contract)', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
-        metrics: [
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.8,
-            upperP: 0.2,
-            outputs: { lower: 'low', upper: 'high' },
-          },
-        ],
+        params: {
+          metrics: [
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.8,
+              upperP: 0.2,
+              outputs: { lower: 'low', upper: 'high' },
+            },
+          ],
+        },
       }),
     ).toThrow();
 
     expect(() =>
       TransformSchema.parse({
         kind: 'select',
-        selector: {
-          kind: 'outside-quantile-band',
-          field: 'value',
-          lowerP: 0.9,
-          upperP: 0.9,
+        params: {
+          selector: {
+            kind: 'outside-quantile-band',
+            field: 'value',
+            lowerP: 0.9,
+            upperP: 0.9,
+          },
         },
       }),
     ).toThrow();
@@ -85,34 +93,38 @@ describe('quantile-band statistics schema (contract)', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
-        metrics: [
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.25,
-            upperP: 0.75,
-            outputs: {
-              lower: 'boundary',
-              upper: 'boundary',
+        params: {
+          metrics: [
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.25,
+              upperP: 0.75,
+              outputs: {
+                lower: 'boundary',
+                upper: 'boundary',
+              },
             },
-          },
-        ],
+          ],
+        },
       }),
     ).toThrow();
 
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
-        metrics: [
-          { kind: 'mean', field: 'value', as: 'boxLow' },
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.25,
-            upperP: 0.75,
-            outputs: { lower: 'boxLow', upper: 'boxHigh' },
-          },
-        ],
+        params: {
+          metrics: [
+            { kind: 'mean', field: 'value', as: 'boxLow' },
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.25,
+              upperP: 0.75,
+              outputs: { lower: 'boxLow', upper: 'boxHigh' },
+            },
+          ],
+        },
       }),
     ).toThrow();
   });
@@ -121,28 +133,32 @@ describe('quantile-band statistics schema (contract)', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
-        metrics: [
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.25,
-            upperP: 0.75,
-            outputs: { lower: 'boxLow', upper: 'boxHigh' },
-            whisker: { kind: 'spread', factor: -1 },
-          },
-        ],
+        params: {
+          metrics: [
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.25,
+              upperP: 0.75,
+              outputs: { lower: 'boxLow', upper: 'boxHigh' },
+              whisker: { kind: 'spread', factor: -1 },
+            },
+          ],
+        },
       }),
     ).toThrow();
 
     expect(() =>
       TransformSchema.parse({
         kind: 'select',
-        selector: {
-          kind: 'outside-quantile-band',
-          field: 'value',
-          lowerP: 0.25,
-          upperP: 0.75,
-          boundary: { kind: 'spread', factor: -1 },
+        params: {
+          selector: {
+            kind: 'outside-quantile-band',
+            field: 'value',
+            lowerP: 0.25,
+            upperP: 0.75,
+            boundary: { kind: 'spread', factor: -1 },
+          },
         },
       }),
     ).toThrow();
@@ -165,29 +181,31 @@ describe('quantile-band statistics behavior (contract)', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'summarize',
-        groupBy: ['group'],
-        metrics: [
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.25,
-            upperP: 0.75,
-            outputs: {
-              lower: 'boxLow',
-              upper: 'boxHigh',
-              points: [{ p: 0.5, as: 'median' }],
-              spread: 'spread',
-              lowerFence: 'lowerFence',
-              upperFence: 'upperFence',
-              whiskerMin: 'whiskerMin',
-              whiskerMax: 'whiskerMax',
-              min: 'min',
-              max: 'max',
-              count: 'count',
+        params: {
+          groupBy: ['group'],
+          metrics: [
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.25,
+              upperP: 0.75,
+              outputs: {
+                lower: 'boxLow',
+                upper: 'boxHigh',
+                points: [{ p: 0.5, as: 'median' }],
+                spread: 'spread',
+                lowerFence: 'lowerFence',
+                upperFence: 'upperFence',
+                whiskerMin: 'whiskerMin',
+                whiskerMax: 'whiskerMax',
+                min: 'min',
+                max: 'max',
+                count: 'count',
+              },
+              whisker: { kind: 'spread', factor: 1.5 },
             },
-            whisker: { kind: 'spread', factor: 1.5 },
-          },
-        ],
+          ],
+        },
       },
     ]);
 
@@ -223,21 +241,23 @@ describe('quantile-band statistics behavior (contract)', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'summarize',
-        groupBy: ['group'],
-        metrics: [
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.1,
-            upperP: 0.9,
-            outputs: {
-              lower: 'p10',
-              upper: 'p90',
-              points: [{ p: 0.5, as: 'p50' }],
-              spread: 'p80Spread',
+        params: {
+          groupBy: ['group'],
+          metrics: [
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.1,
+              upperP: 0.9,
+              outputs: {
+                lower: 'p10',
+                upper: 'p90',
+                points: [{ p: 0.5, as: 'p50' }],
+                spread: 'p80Spread',
+              },
             },
-          },
-        ],
+          ],
+        },
       },
     ]);
 
@@ -248,17 +268,19 @@ describe('quantile-band statistics behavior (contract)', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'summarize',
-        groupBy: ['group'],
-        metrics: [
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.25,
-            upperP: 0.75,
-            outputs: { lower: 'low', upper: 'high', whiskerMin: 'whiskerMin', whiskerMax: 'whiskerMax' },
-            whisker: { kind: 'minMax' },
-          },
-        ],
+        params: {
+          groupBy: ['group'],
+          metrics: [
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.25,
+              upperP: 0.75,
+              outputs: { lower: 'low', upper: 'high', whiskerMin: 'whiskerMin', whiskerMax: 'whiskerMax' },
+              whisker: { kind: 'minMax' },
+            },
+          ],
+        },
       },
     ]);
 
@@ -274,24 +296,26 @@ describe('quantile-band statistics behavior (contract)', () => {
       [
         {
           kind: 'summarize',
-          groupBy: ['group'],
-          metrics: [
-            {
-              kind: 'quantile-band',
-              field: 'value',
-              lowerP: 0.25,
-              upperP: 0.75,
-              outputs: {
-                lower: 'low',
-                upper: 'high',
-                points: [{ p: 0.5, as: 'mid' }],
-                whiskerMin: 'min',
-                whiskerMax: 'max',
-                count: 'count',
+          params: {
+            groupBy: ['group'],
+            metrics: [
+              {
+                kind: 'quantile-band',
+                field: 'value',
+                lowerP: 0.25,
+                upperP: 0.75,
+                outputs: {
+                  lower: 'low',
+                  upper: 'high',
+                  points: [{ p: 0.5, as: 'mid' }],
+                  whiskerMin: 'min',
+                  whiskerMax: 'max',
+                  count: 'count',
+                },
+                whisker: { kind: 'spread' },
               },
-              whisker: { kind: 'spread' },
-            },
-          ],
+            ],
+          },
         },
       ],
     );
@@ -306,15 +330,17 @@ describe('quantile-band statistics behavior (contract)', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'select',
-        groupBy: ['group'],
-        selector: {
-          kind: 'outside-quantile-band',
-          field: 'value',
-          lowerP: 0.2,
-          upperP: 0.8,
-          boundary: { kind: 'band' },
+        params: {
+          groupBy: ['group'],
+          selector: {
+            kind: 'outside-quantile-band',
+            field: 'value',
+            lowerP: 0.2,
+            upperP: 0.8,
+            boundary: { kind: 'band' },
+          },
+          rankAs: 'rank',
         },
-        rankAs: 'rank',
       },
     ]);
 
@@ -338,13 +364,15 @@ describe('quantile-band statistics behavior (contract)', () => {
       [
         {
           kind: 'select',
-          groupBy: ['group'],
-          selector: {
-            kind: 'outside-quantile-band',
-            field: 'value',
-            lowerP: 0.25,
-            upperP: 0.75,
-            boundary: { kind: 'spread', factor: 1.5 },
+          params: {
+            groupBy: ['group'],
+            selector: {
+              kind: 'outside-quantile-band',
+              field: 'value',
+              lowerP: 0.25,
+              upperP: 0.75,
+              boundary: { kind: 'spread', factor: 1.5 },
+            },
           },
         },
       ],
@@ -360,16 +388,18 @@ describe('quantile-band statistics behavior (contract)', () => {
     collectTransformFields(
       {
         kind: 'summarize',
-        groupBy: ['group'],
-        metrics: [
-          {
-            kind: 'quantile-band',
-            field: 'value',
-            lowerP: 0.25,
-            upperP: 0.75,
-            outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
-          },
-        ],
+        params: {
+          groupBy: ['group'],
+          metrics: [
+            {
+              kind: 'quantile-band',
+              field: 'value',
+              lowerP: 0.25,
+              upperP: 0.75,
+              outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
+            },
+          ],
+        },
       },
       createFieldCollector(fields),
       derivedOutputs,
@@ -395,16 +425,18 @@ describe('quantile-band statistics behavior (contract)', () => {
         {
           operation: {
             kind: 'summarize',
-            groupBy: ['group'],
-            metrics: [
-              {
-                kind: 'quantile-band',
-                field: 'value',
-                lowerP: 0.25,
-                upperP: 0.75,
-                outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
-              },
-            ],
+            params: {
+              groupBy: ['group'],
+              metrics: [
+                {
+                  kind: 'quantile-band',
+                  field: 'value',
+                  lowerP: 0.25,
+                  upperP: 0.75,
+                  outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
+                },
+              ],
+            },
           },
         },
       ],

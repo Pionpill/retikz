@@ -7,8 +7,8 @@ import { tasks } from './transform-derive-interval.data';
 /** 根据实时控件值创建区间派生 operation */
 export const deriveIntervalOperationOf = (values: { mode: 'fields' | 'baseline'; baseline: number }) =>
   values.mode === 'fields'
-    ? ({ kind: 'derive-interval', startFrom: 'start', endFrom: 'end' } as const)
-    : ({ kind: 'derive-interval', from: 'end', baseline: values.baseline } as const);
+    ? ({ kind: 'derive-interval', params: { startFrom: 'start', endFrom: 'end' } } as const)
+    : ({ kind: 'derive-interval', params: { from: 'end', baseline: values.baseline } } as const);
 
 /** 派生区间示例的中文控件 */
 export const deriveIntervalControls = definePreviewControls({

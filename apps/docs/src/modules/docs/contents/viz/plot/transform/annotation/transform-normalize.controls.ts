@@ -13,12 +13,14 @@ export const normalizeOperationsOf = (values: {
 }): Array<IRDataTransform> => [
   {
     kind: 'normalize',
-    field: 'amount',
-    ...(values.grouping === 'quarter' ? { groupBy: ['quarter'] } : {}),
-    basis: values.basis,
-    as: 'share',
+    params: {
+      field: 'amount',
+      ...(values.grouping === 'quarter' ? { groupBy: ['quarter'] } : {}),
+      basis: values.basis,
+      as: 'share',
+    },
   },
-  { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' },
+  { kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } },
 ];
 
 /** 归一化示例的中文控件 */

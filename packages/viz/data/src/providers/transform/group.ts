@@ -109,7 +109,7 @@ function* computeSelectorAnnotations(
 ): TransformComputation<ExternalRow> {
   const out: ExternalRow = {};
 
-  for (const annotation of operation.selectors ?? []) {
+  for (const annotation of operation.params.selectors ?? []) {
     const selections = yield* computeTransformValue(() => computation.select(rows, annotation.selector));
     if (selections.length === 0) continue;
 
@@ -130,17 +130,17 @@ export function* computeSummarize(
 ): TransformComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
 
-  for (const group of groupRowsByFields(rows, operation.groupBy)) {
+  for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     output.push(
       context.groupProvenance(
         {
           ...group.values,
           ...(yield* computeReducerMetrics(
             group.rows,
-            operation.metrics,
+            operation.params.metrics,
             context,
             {
-              reservedFields: new Set(operation.groupBy ?? []),
+              reservedFields: new Set(operation.params.groupBy ?? []),
               reservedLabel: 'a groupBy field',
             },
             computation,
@@ -171,13 +171,13 @@ export function* computeSelect(
 ): TransformComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
 
-  for (const group of groupRowsByFields(rows, operation.groupBy)) {
-    const selections = yield* computeTransformValue(() => computation.select(group.rows, operation.selector));
+  for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
+    const selections = yield* computeTransformValue(() => computation.select(group.rows, operation.params.selector));
     output.push(
       ...selections.map(selection => ({
         ...selection.row,
-        ...(operation.rankAs !== undefined && selection.rank !== undefined
-          ? { [operation.rankAs]: selection.rank }
+        ...(operation.params.rankAs !== undefined && selection.rank !== undefined
+          ? { [operation.params.rankAs]: selection.rank }
           : {}),
       })),
     );
@@ -203,22 +203,22 @@ export function* computeAnnotate(
 ): TransformComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
 
-  for (const group of groupRowsByFields(rows, operation.groupBy)) {
+  for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     const metricFields =
-      operation.metrics === undefined
+      operation.params.metrics === undefined
         ? {}
         : yield* computeReducerMetrics(
             group.rows,
-            operation.metrics,
+            operation.params.metrics,
             context,
             {
-              reservedFields: new Set((operation.selectors ?? []).map(selector => selector.as)),
+              reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
               reservedLabel: 'an annotate selector output field',
             },
             computation,
           );
     const selectorFields =
-      operation.selectors === undefined
+      operation.params.selectors === undefined
         ? {}
         : yield* computeSelectorAnnotations(group.rows, operation, context, computation);
     output.push(...group.rows.map(row => ({ ...row, ...metricFields, ...selectorFields })));
@@ -247,20 +247,22 @@ const DEFAULT_BIN_COUNT = 10;
 
 /** bin 的边界输出字段名，validate 剔除派生字段时复用 */
 export const binOutputFields = (operation: IRDataBinTransform): { startField: string; endField: string } => ({
-  startField: operation.startField ?? DEFAULT_BIN_START_FIELD,
-  endField: operation.endField ?? DEFAULT_BIN_END_FIELD,
+  startField: operation.params.startField ?? DEFAULT_BIN_START_FIELD,
+  endField: operation.params.endField ?? DEFAULT_BIN_END_FIELD,
 });
 
 /** bin 指标列表；缺省时用 count 指标产生默认频数列 */
-export const binMetricOperations = (operation: IRDataBinTransform): NonNullable<IRDataBinTransform['metrics']> =>
-  operation.metrics ?? [{ kind: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
+export const binMetricOperations = (
+  operation: IRDataBinTransform,
+): NonNullable<IRDataBinTransform['params']['metrics']> =>
+  operation.params.metrics ?? [{ kind: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
 /** 由策略计算分箱边界；count / step / thresholds 三策略互斥 */
 const binEdges = (operation: IRDataBinTransform, values: Array<number>): Array<number> => {
   const strategies = [
-    operation.count !== undefined,
-    operation.step !== undefined,
-    operation.thresholds !== undefined,
+    operation.params.count !== undefined,
+    operation.params.step !== undefined,
+    operation.params.thresholds !== undefined,
   ].filter(Boolean).length;
   if (strategies > 1) {
     throw new RetikzDataError(
@@ -269,17 +271,17 @@ const binEdges = (operation: IRDataBinTransform, values: Array<number>): Array<n
   }
 
   const [observedMin, observedMax] = values.length > 0 ? [Math.min(...values), Math.max(...values)] : [0, 0];
-  const [domainMin, domainMax] = operation.extent ?? [observedMin, observedMax];
+  const [domainMin, domainMax] = operation.params.extent ?? [observedMin, observedMax];
 
-  if (operation.thresholds !== undefined) {
-    const interior = [...operation.thresholds]
+  if (operation.params.thresholds !== undefined) {
+    const interior = [...operation.params.thresholds]
       .sort((a, b) => a - b)
       .filter(threshold => threshold > domainMin && threshold < domainMax);
     return [domainMin, ...interior, domainMax];
   }
 
-  if (operation.step !== undefined) {
-    const step = operation.step;
+  if (operation.params.step !== undefined) {
+    const step = operation.params.step;
     const span = domainMax - domainMin;
     const binCount = Math.max(1, Math.ceil(span / step - DEFAULT_EPSILON));
     const edges = Array.from({ length: binCount + 1 }, (_, i) => domainMin + i * step);
@@ -288,10 +290,10 @@ const binEdges = (operation: IRDataBinTransform, values: Array<number>): Array<n
     return edges;
   }
 
-  const count = operation.count ?? DEFAULT_BIN_COUNT;
-  const nice = operation.nice ?? true;
+  const count = operation.params.count ?? DEFAULT_BIN_COUNT;
+  const nice = operation.params.nice ?? true;
   let [lo, hi] = [domainMin, domainMax];
-  if (nice && operation.extent === undefined) {
+  if (nice && operation.params.extent === undefined) {
     [lo, hi] = d3ScaleLinear().domain([domainMin, domainMax]).nice(count).domain() as [number, number];
   }
 
@@ -306,7 +308,7 @@ const binEdges = (operation: IRDataBinTransform, values: Array<number>): Array<n
 /** 合并分桶内的 reducer 结果，保持分桶操作的字段覆盖语义 */
 function* computeBinMetrics(
   rows: Array<ExternalRow>,
-  metrics: ReadonlyArray<NonNullable<IRDataBinTransform['metrics']>[number]>,
+  metrics: ReadonlyArray<NonNullable<IRDataBinTransform['params']['metrics']>[number]>,
   computation: GroupComputation,
 ): TransformComputation<ExternalRow> {
   const out: ExternalRow = {};
@@ -331,13 +333,13 @@ export function* computeBin(
 
   const { startField, endField } = binOutputFields(operation);
   const metrics = binMetricOperations(operation);
-  const observed = finiteFieldValuesOf(rows, operation.field);
+  const observed = finiteFieldValuesOf(rows, operation.params.field);
   const edges = binEdges(operation, observed);
   const binCount = edges.length - 1;
   const buckets: Array<Array<ExternalRow>> = Array.from({ length: binCount }, () => []);
 
   for (const row of rows) {
-    const value = resolveFieldPath(row, operation.field);
+    const value = resolveFieldPath(row, operation.params.field);
     if (!isFiniteNumber(value)) continue;
 
     let index = -1;
@@ -362,7 +364,7 @@ export function* computeBin(
     const out: ExternalRow = {
       [startField]: start,
       [endField]: end,
-      [operation.field]: (start + end) / 2,
+      [operation.params.field]: (start + end) / 2,
       ...(yield* computeBinMetrics(members, metrics, computation)),
     };
     output.push(context.groupProvenance(out, members));
@@ -387,7 +389,7 @@ export const relationEndpointOutputField = (prefix: 'source' | 'target', suffix:
 
 const endpointFieldsOf = (
   prefix: 'source' | 'target',
-  projection: IRDataRelateTransform['source'],
+  projection: IRDataRelateTransform['params']['source'],
   row: ExternalRow,
 ): ExternalRow => {
   const out: ExternalRow = {};
@@ -406,7 +408,7 @@ const pairMeasureFieldsOf = (
 ): ExternalRow => {
   const out: ExternalRow = {};
 
-  for (const measure of operation.measures ?? []) {
+  for (const measure of operation.params.measures ?? []) {
     const sourceValue = Number(resolveFieldPath(source, measure.field));
     const targetValue = Number(resolveFieldPath(target, measure.field));
     const delta = targetValue - sourceValue;
@@ -429,9 +431,13 @@ export function* computeRelate(
 ): TransformComputation<Array<ExternalRow>> {
   const output: Array<ExternalRow> = [];
 
-  for (const group of groupRowsByFields(rows, operation.groupBy)) {
-    const sources = yield* computeTransformValue(() => computation.select(group.rows, operation.source.selector));
-    const targets = yield* computeTransformValue(() => computation.select(group.rows, operation.target.selector));
+  for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
+    const sources = yield* computeTransformValue(() =>
+      computation.select(group.rows, operation.params.source.selector),
+    );
+    const targets = yield* computeTransformValue(() =>
+      computation.select(group.rows, operation.params.target.selector),
+    );
     if (sources.length === 0 || targets.length === 0) continue;
 
     const source = sources[0].row;
@@ -440,8 +446,8 @@ export function* computeRelate(
       context.groupProvenance(
         {
           ...group.values,
-          ...endpointFieldsOf('source', operation.source, source),
-          ...endpointFieldsOf('target', operation.target, target),
+          ...endpointFieldsOf('source', operation.params.source, source),
+          ...endpointFieldsOf('target', operation.params.target, target),
           ...pairMeasureFieldsOf(operation, source, target),
         },
         [source, target],

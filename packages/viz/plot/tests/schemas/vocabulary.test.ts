@@ -96,20 +96,24 @@ describe('schema vocabulary constants', () => {
     expect(
       TransformSchema.parse({
         kind: 'select',
-        selector: {
-          kind: SelectorOperationKind.Top,
-          by: 'value',
-          n: 1,
-          tie: RowSelectorTie.All,
+        params: {
+          selector: {
+            kind: SelectorOperationKind.Top,
+            by: 'value',
+            n: 1,
+            tie: RowSelectorTie.All,
+          },
         },
       }),
     ).toEqual({
       kind: 'select',
-      selector: {
-        kind: 'top',
-        by: 'value',
-        n: 1,
-        tie: 'all',
+      params: {
+        selector: {
+          kind: 'top',
+          by: 'value',
+          n: 1,
+          tie: 'all',
+        },
       },
     });
   });
