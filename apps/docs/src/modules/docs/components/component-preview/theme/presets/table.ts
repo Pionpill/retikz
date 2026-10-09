@@ -2,6 +2,7 @@ import type { ResolvedTheme } from '@retikz/core';
 import type { IRTableDefaults } from '@retikz/table';
 import { defineTableThemeStyle, TableDefaultsSchema } from '@retikz/table';
 
+import { logicFigureTableThemeStyle } from '../../../logic-figure';
 import { PreviewThemeStyle } from '../constants';
 
 type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
@@ -127,7 +128,8 @@ const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRTableDefault
 
 /** docs 维护的三个 Table reference Theme definitions */
 export const PreviewTableThemeStyles = [
-  PreviewThemeStyle.Academic,
-  PreviewThemeStyle.Vibrant,
-  PreviewThemeStyle.Clean,
-].map(style => defineTableThemeStyle({ name: style, resolve: theme => ({ defaults: defaultsOf(style, theme) }) }));
+  ...[PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean].map(style =>
+    defineTableThemeStyle({ name: style, resolve: theme => ({ defaults: defaultsOf(style, theme) }) }),
+  ),
+  logicFigureTableThemeStyle,
+];

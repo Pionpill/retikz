@@ -18,9 +18,34 @@ import {
   collectPreviewChartSources,
 } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
+import DataTransformDemo from '../../src/modules/docs/contents/viz/data/transform/data-transform-shape.zh.demo';
 import { createGraphPreviewSource } from '../../src/modules/docs/preview';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
+
+it('keeps data-transform source IR semantic without inline visual styles', () => {
+  const preview = buildPreviewIR(DataTransformDemo);
+  const source = JSON.stringify(preview.sourceIr);
+  expect(source).not.toContain('"stroke"');
+  expect(source).not.toContain('"font"');
+  expect(source).not.toContain('"headerLayout"');
+  expect(source).not.toContain('"bodyLayout"');
+  expect(source).not.toContain('"cellLayoutDefaults"');
+  expect(preview.sourceIr.theme).toEqual({ style: 'docs.logic' });
+  expect(source).toContain('docs.logic.operation');
+  expect(source).toContain('summarize');
+});
+
+it('preserves the Layout theme selector in source and runtime preview IR', () => {
+  const Demo: FC = () => (
+    <Layout theme={{ style: 'docs.logic', mode: 'dark' }}>
+      <Node>Theme</Node>
+    </Layout>
+  );
+  const preview = buildPreviewIR(Demo);
+  expect(preview.sourceIr.theme).toEqual({ style: 'docs.logic', mode: 'dark' });
+  expect(preview.ir.theme).toEqual(preview.sourceIr.theme);
+});
 
 const hookedProviderKey = { capability: 'composite' as const, namespace: 'hooked', type: 'demo' };
 

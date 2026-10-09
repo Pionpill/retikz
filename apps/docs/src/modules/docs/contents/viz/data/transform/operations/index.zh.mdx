@@ -1,157 +1,140 @@
 ---
 title: 变换操作
-description: 查询 Data 十二种内置变换的输入输出关系，并组合排序、汇总、选行与统计回填。
+description: 追踪变换声明如何推导字段模型、匹配计算实现，并按顺序生成经过校验的数据结果。
 ---
 
-`@retikz/data` 内置十二种行数据变换操作（operation）。它们只处理规范化行，不知道结果最终会进入图形、表格还是其它消费模块；本页用 Plot 作为默认示例宿主。
+**Transform**（数据变换）是对输入数据进行计算与转换、得到结果数据的处理步骤。原始数据往往记录的是一条条明细，而我们想查看的可能是每组的总量、部分代表记录，或按某个数值排列的结果。Transform 的作用就是把已有数据整理、计算成适合当前问题的数据。
 
-## 全部内置操作
+一次变换可以改变字段的值、增加或移除字段、改变行数，也可以只调整行的顺序。结果仍然是数据，可以继续交给下一次变换，也可以交给表格或图形展示。表格的颜色、边框等外观由展示组件负责。
 
-十二种 operation 的 schema、Definition、registry 和计算都从 `@retikz/data` 根入口提供。操作按声明顺序执行；改变行粒度的操作会替换结果模型，后续只能读取保留下来的字段。
-
-| 操作                                 | 输入 → 输出                       | 示例/参考                                  |
-| ------------------------------------ | --------------------------------- | ------------------------------------------ |
-| sort / summarize / select / annotate | 明细 → 重排、汇总、选行或回填结果 | 本页后续示例                               |
-| stack / normalize                    | 数值明细 → 累计区间或组内占比     | [绘图组合](/viz/plot/transform/annotation) |
-| derive-interval / jitter             | 数值字段 → 起止字段或确定性扰动   | [字段派生](/viz/plot/transform/row)        |
-| bin                                  | 连续观测 → 分桶边界与统计行       | [分桶示例](/viz/plot/transform/bin)        |
-| relate                               | 分组与两端 selector → 配对结果行  | [关联示例](/viz/plot/transform/relate)     |
-| density / smooth                     | 数值样本 → 密度或拟合预测行       | [统计采样](/viz/plot/transform/statistics) |
-
-完整配置见 [Data 契约](/viz/data/reference/contract#datatransformschema)。`applyTransforms(rows, operations)` 可独立执行这些操作；Plot 与 Chart 使用同一数据契约。
-
-## 能力一览
-
-| kind        | 行数  | 数据语义                         | 常见用途                   |
-| ----------- | ----- | -------------------------------- | -------------------------- |
-| `sort`      | N → N | 按字段稳定重排行                 | 固定时间顺序、整理后续输入 |
-| `summarize` | N → G | 按组生成统计行                   | 分组汇总、统计摘要         |
-| `select`    | N → K | 按组选择原始代表行               | 极值、top-N、异常样本      |
-| `annotate`  | N → N | 把组统计或代表值广播回每条明细行 | 均值线、阈值标签、上下文层 |
-
-## 排序 sort
-
-`sort` 按一个字段稳定重排行。等值时保留原始相对顺序，适合在折线连接、时间序列展示或后续分组处理前固定行序。
-
-`null`、`undefined`、`NaN` 与无穷值按 missing 处理，无论升序还是降序都稳定排在有效值之后。
-
-注意把它和字段契约里的 [`order`](/viz/data/model/intake#分类顺序) 分开：`sort` 排的是数据行，`order` 排的是分类域。
-
-<ComponentPreview
-  files={['transform-sort', 'transform-sort-preview.tsx', 'transform-sort.data.ts']}
-  defaultSourceFile="transform-sort-preview.tsx"
-  size="lg"
-  caption="柱子的横向顺序就是当前 sort 输出行序；切换字段或方向后，月份会按对应规则重新排列。"
+<ComponentAlert
+  type="warn"
+  title="可视化数据计算的核心"
+  description="Transform 是可视化组数据计算层最重要的内容。后续 Plot、Chart、Table 中几乎所有的数据计算能力都源自 transform；理解它的输入、计算过程与输出，是理解这些组件如何处理数据的基础。"
 />
 
-`IRDataSortTransform` 的 `kind` 固定为 `'sort'`。
+本页说明 transform 的作用与执行过程，不说明具体 transform。阅读前可先了解[数据模型](/viz/data/model)中的行与字段。
 
-| prop     | 类型                               | 默认值        | 说明     |
-| -------- | ---------------------------------- | ------------- | -------- |
-| `field`  | `string`                           | —             | 排序字段 |
-| `order?` | <ApiValues name="DataSortOrder" /> | `'ascending'` | 排序方向 |
+下面用同一份四行明细贯穿全文：先按 `team` 汇总，再按新生成的 `total` 降序排列。左表是输入，右表由真实的 Data 执行入口计算，Table 只显示结果。
 
-## 汇总 summarize
+<ComponentPreview files="transform-pipeline-example" hideCode type="illustration" size="md" />
 
-`summarize` 按 `groupBy` 分组，并用 `metrics` 把每组明细规约成一行。输出行保留组键，每个规约器（reducer）都必须显式写 `as` 字段名。
+右表只剩 `team / total / count`，且 B 组的 60 排在 A 组的 40 前面。这里有两个独立变化：第一阶段改变字段与行粒度，第二阶段读取第一阶段的结果并重排行。`count` 是组内记录数，不是把 `item` 改名。
 
-同一个变换操作内的输出名必须唯一：规约器输出不能与 `groupBy` 重名，也不能互相重名。内置规约器的静态字段冲突会在 Schema 解析阶段报错；自定义规约器由定义（Definition）的 `outputs` 声明动态字段，字段冲突会在执行规约器前报错。
+## 整体流程
 
-<ComponentPreview
-  files={['transform-summarize', 'transform-summarize-preview.tsx', 'transform-summarize.data.ts']}
-  defaultSourceFile="transform-summarize-preview.tsx"
-  size="lg"
-  caption="数据表是订单明细，柱形是每个 region 规约到统一指标字段后的结果。"
-/>
+Transform 的过程本质上是**数据内容的计算与转换**：接收输入行，按照指定规则读取字段、计算数值或组织记录，再产出结果行。多个 transform 可以按顺序串联，前一步的输出就是后一步的输入。
 
-`IRDataSummarizeTransform` 的 `kind` 固定为 `'summarize'`。
+在上面的例子中，四条明细先按 `team` 分组，对每组的 `value` 求和并统计记录数，得到两条汇总记录；随后根据汇总后的 `total` 调整行序，得到右侧的结果。这里的分组、求和和计数共同完成一次汇总变换，排序则是接在它后面的另一次变换。
 
-| prop       | 类型                   | 默认值   | 说明                                   |
-| ---------- | ---------------------- | -------- | -------------------------------------- |
-| `groupBy?` | `Array<string>`        | 全局单组 | 分组键字段，支持复合键                 |
-| `metrics`  | `IRDataReducerMetrics` | —        | 组内统计指标，每个规约器必须写输出字段 |
+为了执行这个过程，系统同时管理**行数据**与**字段模型**：行数据承载实际计算的值，字段模型说明每一步可以读取哪些字段、将产出哪些字段。下面再从实现层面说明如何描述规则、检查输入并执行计算：
 
-```tsx
-<PlotTransform
-  operation={{
-    kind: 'summarize',
-    groupBy: ['region'],
-    metrics: [
-      { kind: 'sum', field: 'revenue', as: 'total' },
-      { kind: 'median', field: 'revenue', as: 'median' },
-      { kind: 'count', as: 'orders' },
-    ],
-  }}
-/>
+- **声明**：可序列化的操作参数，用 `kind` 指明语义。
+- **定义**（Definition）：规定参数结构、输入字段、输出模型和依赖的子算子。
+- **计算实现**（Implementation）：提供真正处理数据的函数，并绑定对应定义。
+
+定义让系统在计算前判断链路是否成立；实现负责产生数据值。下面是同步行数据入口的主线。
+
+<ComponentPreview files="transform-overview" hideCode type="flow" size="xs" />
+
+模型解析不执行统计。只有整条链的语义与计算实现通过预检后，才开始处理数据行。
+
+<SourceLinks sources={[{ label: '同步变换入口', path: 'packages/viz/data/src/pipeline/transform.ts' }]} />
+
+## 声明解析
+
+注册表以 `kind` 找到唯一的 Definition，再用该定义的 schema 解析作者参数。未知操作或不合法参数在这里失败，错误携带操作位置；后面的模型推导消费已解析声明。
+
+以前面例子中的第二步为例，它声明“按 `total` 降序排列”：
+
+```json
+{ "kind": "sort", "params": { "field": "total", "order": "descending" } }
 ```
 
-## 代表行选择 select
+解析时，系统先用 `kind: 'sort'` 在注册表中找到排序定义，再交给它的完整操作 schema 检查声明。统一外壳包含 `kind` 和 `params`，排序参数由 `SortParamsSchema` 定义；`defineTransform` 将两者组合起来。其中 `params.field` 必须是非空白字符串，`params.order` 若提供，必须是合法的排序方向。这里的 `total` 和 `descending` 满足这些要求，因此得到解析后的排序声明；此时还没有读取数据行，也没有真正排序。
 
-`select` 按组运行行选择器（selector），并输出被选中的原始行。它不会把数值规约成新的统计对象，因此会保留城市名、ID、锚点等原始字段，同时只留下组内极值、前 N 名或异常行。
+如果把 `kind` 写成未注册的名称，系统找不到定义；如果将 `params.field` 写成空字符串，或将 `params.order` 写成 `'sideways'`，则会在该定义的 schema 校验中失败。
 
-<ComponentPreview
-  files={['transform-select', 'transform-select-preview.tsx', 'transform-select.data.ts']}
-  defaultSourceFile="transform-select-preview.tsx"
-  size="lg"
-  caption="每个点仍对应一条原始城市行；并列值让 first、last 与 all 的差异可见。"
+但 `field: 'total'` 通过解析，只代表字段名的写法合法，不代表输入中已经存在 `total`。这个字段由前一步汇总产生，所以还需要下一阶段结合字段模型检查它是否可读。
+
+<SourceLinks sources={[{ label: '声明解析与阶段解析', path: 'packages/viz/data/src/resolve/transform/resolve.ts' }]} />
+
+## 字段模型推进
+
+这一阶段在计算开始前，推导**每一步之后的数据结构**。字段模型记录字段名及已知类型；系统读取变换定义中的 `outputModel`，沿声明顺序推导后续阶段可用的字段。
+
+在贯穿本文的例子中，汇总定义说明结果将包含 `team/total/count`，排序定义则保留这些字段。系统因此能提前得到下面的结构变化，此时还没有计算出 40 或 60。
+
+<ComponentPreview files="transform-model" hideCode type="flow" size="xs" />
+
+推导出的输出模型会成为下一阶段的输入模型，所以排序可以读取 `total`。如果把排序提前，或者在汇总后读取已移除的 `item`，模型推进时就能发现链路无法衔接。字段类型也随模型一起传递。
+
+这一阶段产出的是各阶段的预期字段模型，供后续执行与结果校验使用。它描述数据将变成什么结构，具体数值由计算实现产生。
+
+<ComponentAlert
+  type="tip"
+  title="补充：子算子依赖"
+  description="子算子会在后续的「统计子算子」一节介绍，这里可以先跳过。它们的依赖也在这一阶段解析：例如汇总声明里的两个 metric，会分别关联对应的 reducer 定义，并随阶段一起进入后续预检。"
 />
 
-`IRDataSelectTransform` 的 `kind` 固定为 `'select'`。
-
-| prop       | 类型                      | 默认值   | 说明                   |
-| ---------- | ------------------------- | -------- | ---------------------- |
-| `groupBy?` | `Array<string>`           | 全局单组 | 分组键字段             |
-| `selector` | `IRDataSelectorOperation` | —        | 组内代表行选择规则     |
-| `rankAs?`  | `string`                  | —        | 把一基 rank 写入该字段 |
-
-```tsx
-<PlotTransform
-  operation={{ kind: 'select', groupBy: ['region'], selector: { kind: 'top', by: 'revenue', n: 3 }, rankAs: 'rank' }}
-/>
-```
-
-## 统计标注 annotate
-
-`annotate` 先按 `groupBy` 分组，再把规约器结果或行选择器选中的代表值回填到组内每一行。它适合在明细点旁边画组均值线、组中位数带或分组阈值。
-
-行选择器标注只接受至多选中一行的内置规则：`min` / `max`、`first` / `last` / `nth`，以及固定 `n: 1` 的 `top` / `bottom`。平局策略可以用默认的 `first` 或 `last`，不能用 `all`。多行选择与 `outside-quantile-band` 应改用 `select`，其它单值统计应写成规约器。
-
-<ComponentPreview
-  files={['transform-annotate', 'transform-annotate-preview.tsx', 'transform-annotate.data.ts']}
-  defaultSourceFile="transform-annotate-preview.tsx"
-  size="lg"
-  caption="明细点始终保留，参考线读取广播回每行的当前基准统计字段。"
+<SourceLinks
+  sources={[
+    { label: '模型推进与依赖解析', path: 'packages/viz/data/src/resolve/transform/resolve.ts' },
+    { label: '内置变换的语义定义', path: 'packages/viz/data/src/providers/transform/definitions.ts' },
+  ]}
 />
 
-`IRDataAnnotateTransform` 的 `kind` 固定为 `'annotate'`，并且至少提供 `metrics` 或 `selectors`。
+## 计算实现预检
 
-| prop         | 类型                            | 默认值   | 说明                   |
-| ------------ | ------------------------------- | -------- | ---------------------- |
-| `groupBy?`   | `Array<string>`                 | 全局单组 | 分组键，支持复合键     |
-| `metrics?`   | `IRDataReducerMetrics`          | —        | 要广播回每行的统计指标 |
-| `selectors?` | `Array<IRDataAnnotateSelector>` | —        | 广播单行代表值         |
+字段模型确定后，系统还要在计算开始前确认**当前环境能执行整条变换链**。Definition 描述操作的含义与输出结构，Implementation 才提供处理行数据的函数；预检负责为各阶段匹配可用的计算实现。
 
-```tsx
-<PlotTransform
-  operation={{
-    kind: 'annotate',
-    groupBy: ['store'],
-    metrics: [{ kind: 'mean', field: 'revenue', as: 'storeMean' }],
-    selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }],
-  }}
+例如，汇总后的字段足够供排序使用，说明数据结构能够衔接。但如果本次运行环境缺少排序实现，同步入口会在开始汇总之前报错，整条链都不会开始计算。预检覆盖全部阶段，避免前半段已经算完才发现后半段无法执行。
+
+<ComponentPreview files="transform-preflight" hideCode type="flow" size="md" />
+
+匹配时，实现必须绑定解析阶段选中的同一个 Definition；仅有相同的 `kind` 还不够。若操作依赖其它子算子，其计算实现也要一并就绪。预检通过后，系统才会依次调用各阶段的 `apply`。
+
+原生数据源或异步计算通过执行器完成准备：`prepare` 协商整条链的执行能力，`bind` 绑定与准备描述匹配的输入，最后由 `execute` 执行。准备结果不支持时不会开始计算，绑定后的执行权只能消费一次。
+
+<SourceLinks
+  sources={[
+    { label: '同步实现预检', path: 'packages/viz/data/src/pipeline/transform.ts' },
+    { label: 'prepare、bind 与 execute', path: 'packages/viz/data/src/pipeline/execution.ts' },
+  ]}
 />
-```
 
-`annotate` 的指标输出与行选择器的 `as` 字段也不能重名。规约器与行选择器的完整子算子范围见[统计子算子](/viz/data/transform/statistics)。
+## 结果校验
 
-## 公开类型
+这一阶段发生在**计算实现返回数据之后**。同步入口先执行汇总，得到 A 组总量 40、B 组总量 60，再将返回的结果与提前推导的输出模型核对；通过后才交给排序，排序结果同样经过校验。
 
-变换 Schema 的派生类型统一使用 `IRDataXxx`。
+例如，`total` 已被声明为连续数值字段，实现却返回字符串 `"forty"`，结果校验就会失败，后续排序不会执行。校验关注结果模型是否符合预期，以及已知类型字段的实际值是否符合值域约束；它不会重新求和来证明 40 算得对不对，算法正确性仍由计算实现负责。
 
-| 范围     | 类型                                                                                                  |
-| -------- | ----------------------------------------------------------------------------------------------------- |
-| 整体联合 | `IRDataTransform`、`IRDataBuiltinTransform`                                                           |
-| 内置变换 | `IRDataSortTransform`、`IRDataSummarizeTransform`、`IRDataSelectTransform`、`IRDataAnnotateTransform` |
-| 嵌套配置 | `IRDataOrderBy`、`IRDataAnnotateSelector`                                                             |
+<ComponentPreview files="transform-result" hideCode type="flow" size="md" />
 
-需要在 Plot React 中声明这些操作时，见 [`Transform`](/viz/data/transform/overview)；需要注册自定义 `kind` 时，见[扩展机制](/viz/data/transform/extensions)。
+校验通过后，结果同时保留规范行与字段模型，供下一阶段或展示组件消费。`applyTransformsToDataView` 返回这两部分，便捷入口 `applyTransforms` 只返回行数组。
+
+计算抛错或结果校验失败都会终止后续阶段。此时计算已经发生，预检和结果校验都不能撤销已产生的外部计算副作用。
+
+<SourceLinks
+  sources={[
+    { label: '结果接入与校验入口', path: 'packages/viz/data/src/resolve/transform/ingest.ts' },
+    { label: '阶段错误边界', path: 'packages/viz/data/src/pipeline/transform.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+下图沿同步 `applyTransforms` 路径给出源码阅读锚点。上下文与注册表在本次调用中建立；所有阶段模型先解析完成，再逐阶段计算和校验。
+
+<ComponentPreview files="transform-execution" hideCode type="flow" size="lg" />
+
+先从 `applyTransforms` 看输入如何建立为 DataView，再读 `resolveParsedDataTransforms` 的模型推进，最后回到 `applyToView` 看实现匹配、循环执行与结果接入。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展机制', description: '定义并注册新的数据处理语义与计算实现。', url: '/viz/data/transform/extensions' },
+    { title: 'Data 来源追溯', description: '追踪执行过程中的来源与统计事件。', url: '/viz/data/provenance/data' },
+  ]}
+/>

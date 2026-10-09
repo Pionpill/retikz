@@ -1,11 +1,14 @@
-import { defineThemeStyle, ThemeMode } from '@retikz/core';
+﻿import { defineThemeStyle, ThemeMode } from '@retikz/core';
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import { defineFlowThemeStyle } from '@retikz/diagram/flow';
 import { defineEntityKind, defineGraphThemeStyle, defineRelationKind, RelationRole } from '@retikz/graph';
 import type { GraphProps } from '@retikz/graph-react';
+import { defineTableThemeStyle } from '@retikz/table';
 
 /** Docs 逻辑图使用的稳定 Entity kind */
 export const LogicFigureEntityKind = {
+  Caption: 'docs.logic.caption',
+  Operation: 'docs.logic.operation',
   Important: 'docs.logic.important',
   ImportantData: 'docs.logic.importantData',
   Secondary: 'docs.logic.secondary',
@@ -25,6 +28,8 @@ export type LogicFigureRelationKindValue = (typeof LogicFigureRelationKind)[keyo
 
 /** Docs 逻辑图在 React 与 Vanilla 中共用的 Entity kind definitions */
 export const logicFigureEntityDefinitions = [
+  defineEntityKind({ kind: LogicFigureEntityKind.Caption, role: 'participant', description: 'Figure caption' }),
+  defineEntityKind({ kind: LogicFigureEntityKind.Operation, role: 'activity', description: 'Data operation' }),
   defineEntityKind({
     kind: LogicFigureEntityKind.Important,
     role: 'participant',
@@ -103,6 +108,7 @@ export const logicFigureEntityDefinitions = [
 ] as const;
 
 export const logicFigureRelationKinds: NonNullable<GraphProps['relationKinds']> = [
+  defineRelationKind({ kind: 'docs.logic.dataFlow', role: 'flow', description: 'Data transformation flow' }),
   defineRelationKind({
     kind: LogicFigureRelationKind.Secondary,
     role: RelationRole.Dependency,
@@ -112,6 +118,47 @@ export const logicFigureRelationKinds: NonNullable<GraphProps['relationKinds']> 
 ] as const;
 
 const logicFigureThemeName = 'docs.logic';
+
+/** 站点逻辑图中的表格统一使用紧凑正文与加粗表头 */
+export const logicFigureTableThemeStyle = defineTableThemeStyle({
+  name: logicFigureThemeName,
+  resolve: () => ({
+    defaults: {
+      cellLayoutDefaults: { body: { padding: 4 }, columnHeader: { padding: 4 } },
+      appearanceDefaults: {
+        body: {
+          content: {
+            defaults: {
+              node: { style: { font: { size: 14 } } },
+              label: { font: { size: 14 } },
+            },
+          },
+        },
+        columnHeader: {
+          background: { fill: 'lightgray', fillOpacity: 0.3 },
+          content: {
+            defaults: {
+              node: { style: { font: { size: 12, weight: 'bold' } } },
+              label: { font: { size: 12, weight: 'bold' } },
+            },
+          },
+        },
+      },
+      layout: {
+        borders: {
+          outer: {
+            top: { kind: 'line', stroke: 'gray', width: 1 },
+            right: { kind: 'line', stroke: 'gray', width: 1 },
+            bottom: { kind: 'line', stroke: 'gray', width: 1 },
+            left: { kind: 'line', stroke: 'gray', width: 1 },
+          },
+          horizontal: { kind: 'line', stroke: 'lightgray', width: 1 },
+          vertical: { kind: 'line', stroke: 'lightgray', width: 1 },
+        },
+      },
+    },
+  }),
+});
 
 /** 站点逻辑图沿用 Core 默认色板，只在 Graph 层提供语义外观 */
 export const logicFigureCoreThemeStyle = defineThemeStyle({ name: logicFigureThemeName, resolve: () => ({}) });
@@ -153,6 +200,27 @@ export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
     },
     rules: [
       ...logicFigureRules,
+      {
+        type: 'entity',
+        selector: { kind: LogicFigureEntityKind.Caption },
+        style: { stroke: 'none', fill: 'none', textColor: 'gray' },
+      },
+      {
+        type: 'entity',
+        selector: { kind: LogicFigureEntityKind.Operation },
+        style: {
+          stroke: 'gray',
+          strokeWidth: 1,
+          fill: 'lightgray',
+          fillOpacity: 0.16,
+          textColor: theme.mode === ThemeMode.Light ? '#18181b' : '#fafafa',
+        },
+      },
+      {
+        type: 'relation',
+        selector: { kind: 'docs.logic.dataFlow' },
+        style: { stroke: 'gray', strokeWidth: 1 },
+      },
       {
         type: 'entity',
         selector: { kind: LogicFigureEntityKind.Secondary },

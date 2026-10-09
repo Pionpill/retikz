@@ -62,7 +62,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'extensions',
             label: 'viz.dataModelExtensions',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -79,19 +79,8 @@ export const vizSection: Array<Section> = [
         label: 'viz.dataTransform',
         sidebarGroup: 'viz.dataContents',
         children: [
-          {
-            id: 'overview',
-            label: 'viz.dataTransformComponent',
-            difficulty: DocDifficulty.Beginner,
-            meta: {
-              pageType: 'component',
-              audience: 'user',
-              capability: 'data.transform.component',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Advanced },
-          { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Advanced },
+          { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Internals },
+          { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Internals },
           {
             id: 'extensions',
             label: 'viz.dataTransformExtensions',

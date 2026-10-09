@@ -332,7 +332,6 @@
     "dataModelApiReference": "API Reference",
     "dataModelSchemaReference": "Schema Reference",
     "dataTransform": "Data Transforms",
-    "dataTransformComponent": "Transform",
     "dataTransformOperations": "Transform Operations",
     "dataTransformStatistics": "Statistical Sub-operators",
     "dataTransformExtensions": "Extension Mechanisms",

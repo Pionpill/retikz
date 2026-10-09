@@ -1,73 +1,101 @@
 ---
 title: 统计子算子
-description: 用规约器生成统计字段，用行选择器保留原始代表行，并组合分位区间、须线与异常点。
+description: 理解 reducer 与 selector 如何接收分组行、返回局部结果，并由宿主变换组织最终数据。
 ---
 
-规约器（reducer）与行选择器（selector）是数据变换内部复用的统计子算子。规约器把一组行规约成字段片段；行选择器从组内返回原始行。它们的操作配置可 JSON 序列化；Definition 声明语义，独立 Implementation 或外部执行器负责计算。
+[变换操作](/viz/data/transform/operations)解释整条链如何推进。本页进入单个变换内部，追踪一组数据如何被统计子算子消费，再交回宿主。
 
-Data 的 `summarize`、`annotate` 与 `bin` 会复用内置或自定义规约器；`select` 与 `relate` 会复用内置或自定义行选择器。`annotate` 的行选择器入口只接受内置单行子集。Plot 只是这些能力的消费者，不拥有 Data 的统计契约。
+这里的**宿主**是调用子算子的 transform。它决定分组边界和最终输出行的形状；子算子完成局部计算，不自行推进整条变换链。本文聚焦 reducer 与 selector 的协作机制，不列举全部算子及参数。
 
-## 如何选择
+## 整体流程
 
-| 目标                              | 使用                  | 返回什么                       |
-| --------------------------------- | --------------------- | ------------------------------ |
-| 计算总和、均值、分位数等新字段    | 规约器                | 由 `as` / `outputs` 命名的字段 |
-| 保留极值、前 N 名或异常点的完整行 | 行选择器              | 原始行及其 ID、标签等字段      |
-| 把单值统计广播回每条明细          | `annotate` + 规约器   | 带统计字段的原始行             |
-| 把某条代表行的值广播回组内        | `annotate` + 行选择器 | 带代表值字段的原始行           |
+- **Reducer**（归约器）：接收一组行，返回统计字段片段，例如 `{ total: 40, count: 2 }` 中的一个或多个字段。
+- **Selector**（行选择器）：接收一组行，返回所选原始行的引用，以及可选排名信息。
+- **宿主变换**：决定把字段片段组装为新行、广播回明细，或把选择结果组织为输出行。
 
-## 规约器 Reducer
+<ComponentPreview files="statistics-overview" hideCode type="flow" size="lg" />
 
-| kind            | 读取配置                                | 输出配置  | 语义                                   |
-| --------------- | --------------------------------------- | --------- | -------------------------------------- |
-| `count`         | —                                       | `as`      | 组内行数                               |
-| `sum`           | `field`                                 | `as`      | 有限数值之和                           |
-| `mean`          | `field`                                 | `as`      | 算术平均                               |
-| `median`        | `field`                                 | `as`      | 中位数                                 |
-| `min` / `max`   | `field`                                 | `as`      | 最小值 / 最大值                        |
-| `extent`        | `field`                                 | `as`      | `[min, max]` 区间                      |
-| `quantile`      | `field`、`p`                            | `as`      | 概率 `p` 对应的单个分位点              |
-| `quantile-band` | `field`、`lowerP`、`upperP`、`whisker?` | `outputs` | 分位区间及可选离散度、须线、极值与计数 |
+分组是宿主交给子算子的输入边界，并不是每个 reducer 内部重新执行的完整 transform。相同子算子可被不同宿主复用，最终行数由宿主的输出语义决定。
 
-普通规约器都用 `as` 指定一个输出字段。`quantile-band` 一次产生多个关联字段，因此改用 `outputs` 显式命名：`lower`、`upper` 必填，`points`、`spread`、`lowerFence`、`upperFence`、`whiskerMin`、`whiskerMax`、`min`、`max`、`count` 按需添加；所有输出名必须唯一。
+<SourceLinks sources={[{ label: '分组宿主与计算调度', path: 'packages/viz/data/src/providers/transform/group.ts' }]} />
 
-`whisker` 可以是 `{ kind: 'minMax' }`，也可以是 `{ kind: 'spread', factor?: number }`；离散度（spread）的默认系数为 `1.5`。
+## 分组与调用边界
 
-当字段没有任何有限数值时，`sum` 仍按空和返回 `0`，`count` 返回组内行数；`mean`、`median`、`min`、`max`、`extent`、`quantile` 与 `quantile-band` 返回非法值哨兵（invalid sentinel），交给下游的跳过或报错策略处理，不会伪造成 `0`。
+宿主先根据组键构造每组的行集合，然后把当前组的行与子算子参数交给计算调度。子算子定义声明读取哪些字段；reducer 定义还声明输出字段，让外层在执行前推导模型、检查输出名冲突。
 
-## 行选择器 Selector
+语义定义与计算实现分别注册。调度时不仅匹配 `kind`，还核对实现绑定的 Definition，避免用同名但不同语义的计算替换已解析契约。内置与自定义子算子经过相同的定义和实现匹配机制。
 
-| kind                    | 必填配置                    | 可选配置   | 选择规则                         |
-| ----------------------- | --------------------------- | ---------- | -------------------------------- |
-| `min` / `max`           | `by`                        | `tie`      | 数值字段的极小 / 极大行          |
-| `first` / `last`        | —                           | `orderBy`  | 当前顺序或显式排序后的首 / 尾行  |
-| `top` / `bottom`        | `by`、`n`                   | `tie`      | 排名前 / 后 N 行                 |
-| `nth`                   | `orderBy`、`index`          | —          | 排序后的零基下标行               |
-| `outside-quantile-band` | `field`、`lowerP`、`upperP` | `boundary` | 分位区间或离散度围栏之外的原始行 |
-
-`tie` 默认 `first`，也可以选 `last` 或 `all`。`orderBy` 是 `{ field, order? }` 数组，`order` 默认 `ascending`。`outside-quantile-band.boundary` 默认 `{ kind: 'band' }`；需要常见箱线图异常点时，使用 `{ kind: 'spread', factor?: 1.5 }`。
-
-`select` 可以使用完整的内置或自定义行选择器集合；`annotate` 只接受内置且至多返回一行的子集，不接受自定义行选择器。具体限制见[统计标注](/viz/data/transform/operations#统计标注-annotate)。
-
-## 组合箱线图数据
-
-`quantile-band` 用 `lowerP` 和 `upperP` 表达任意分位区间，不把字段固定为 Q1 / Q3；`outside-quantile-band` 则返回区间外的原始行，因此能保留异常样本的 ID、标签与来源信息。
-
-<ComponentPreview
-  files={['transform-boxplot', 'transform-boxplot-preview.tsx', 'transform-boxplot.data.ts']}
-  defaultSourceFile="transform-boxplot-preview.tsx"
-  size="lg"
-  caption="箱体、中央分位点与须线来自 quantile-band；异常点由共享同一概率和倍数的 outside-quantile-band 保留。"
+<SourceLinks
+  sources={[
+    { label: '子算子注册与调度', path: 'packages/viz/data/src/providers/statistics/registry.ts' },
+    { label: '分组边界', path: 'packages/viz/data/src/providers/transform/shared.ts' },
+  ]}
 />
 
-上面的箱线图没有专用 `BoxPlotMark`。Data 变换负责产出箱体、中位数、须线和区间外原始点；Plot 示例只用 `IntervalMark`、`ReferenceMark` 与 `PointMark` 消费这些字段。
+## 归约结果的组装
 
-## 公开类型
+观察下方左右表：四条明细变成两个统计行，`item` 与 `value` 消失，新增 `total` 与 `count`。结果通过实际汇总变换计算。
 
-| 范围     | 类型                                                                                   |
-| -------- | -------------------------------------------------------------------------------------- |
-| 规约器   | `IRDataReducerOperation`、`IRDataReducerMetrics`、`IRDataQuantileBandReducerOperation` |
-| 行选择器 | `IRDataSelectorOperation`、`IRDataOutsideQuantileBandSelectorOperation`                |
-| 排序规则 | `IRDataOrderBy`                                                                        |
+<ComponentPreview files="reducer-example" hideCode type="illustration" size="md" />
 
-需要注册自定义规约器或行选择器时，统一参见[扩展机制](/viz/data/transform/extensions)。
+以 A 组为例，宿主传入值为 10、30 的两条明细。两个 reducer 分别返回 `{ total: 40 }` 与 `{ count: 2 }`，宿主将字段片段合并，再加上组键 `{ team: 'A' }`，得到完整输出行。
+
+reducer 的返回值不是完整的数据表，也不一定只是一个数。多输出的 reducer 可以返回多个声明字段。合并前要检查字段名：两个 metric 不能写同一个输出名，统计输出也不能覆盖宿主保留的组键。
+
+这里每组一行来自汇总宿主。如果宿主将同一统计字段广播到每条明细，输入行数可以保持不变；无需为此另造一套“回填版 reducer”。
+
+<SourceLinks
+  sources={[
+    { label: '字段冲突检查与汇总组装', path: 'packages/viz/data/src/providers/transform/group.ts' },
+    { label: 'Reducer 定义及实现', path: 'packages/viz/data/src/providers/statistics/reducers.ts' },
+  ]}
+/>
+
+## 行选择结果的组装
+
+下面使用相同输入，每组选择 `value` 最大的行。右侧仍保留 `item`，因为选择器返回的是原始记录，而不是只返回最大数值。
+
+<ComponentPreview files="selector-example" hideCode type="illustration" size="md" />
+
+A 组选择 a2，B 组选择 b2。selector 返回的选择记录包含 `row`，还可以带 `rank`；宿主读取这些记录，复制所选行，并在声明需要时写入排名字段。不要把子算子的选择记录直接当作最终输出行。
+
+选择结果可以是零行、一行或多行。并列如何处理由具体 selector 决定；宿主消费选择结果，不能假定每组永远只有一个代表。相同的“最大值”字样也不能抹平两类契约的差别：归约得到统计字段，选择保留记录身份及其其它字段。
+
+<SourceLinks
+  sources={[
+    { label: 'Selector 实现与选择记录', path: 'packages/viz/data/src/providers/statistics/selectors.ts' },
+    { label: '选择结果组织为输出行', path: 'packages/viz/data/src/providers/transform/group.ts' },
+  ]}
+/>
+
+## 数值与执行边界
+
+是否读取字段、如何筛选缺失值、空输入返回什么，由具体子算子语义规定，不由宿主统一填零。例如计数可以统计记录数，数值归约则需要决定哪些字段值参与计算；两者不能共用“有效数值个数”这一假设。具体规则属于各算子的用法与契约说明。
+
+分组算法通过共享计算调度调用子算子。同步入口使用同步实现；异步路径可以等待子计算完成，再继续组装结果。共享的是分组和组装逻辑，而不是让同步入口隐式接收 Promise。
+
+子算子失败会终止当前宿主计算，并由外层变换链标记失败阶段。这里没有跳过失败组并返回部分统计表的默认机制。
+
+<SourceLinks
+  sources={[
+    { label: '同步与异步计算衔接', path: 'packages/viz/data/src/providers/transform/computation.ts' },
+    { label: '分组计算契约', path: 'packages/viz/data/src/providers/transform/group.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+下图以同步分组宿主为例。归约与选择是两条可选分支，图中斜线两侧不是需要依次执行的操作。
+
+<ComponentPreview files="statistics-execution" hideCode type="flow" size="lg" />
+
+从 `computeSummarize` 或 `computeSelect` 看宿主如何划分输入与组织输出，再进入 `applyReducerOperation` 或 `applySelectorOperation` 看定义解析和实现调度，最后阅读相应实现的 `reduce` 或 `select`。这样能区分统计算法本身与宿主赋予它的表结构语义。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展机制', description: '定义并注册新的数据处理语义与计算实现。', url: '/viz/data/transform/extensions' },
+    { title: 'Data 来源追溯', description: '追踪执行过程中的来源与统计事件。', url: '/viz/data/provenance/data' },
+  ]}
+/>

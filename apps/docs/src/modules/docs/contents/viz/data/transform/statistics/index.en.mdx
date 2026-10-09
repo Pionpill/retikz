@@ -1,73 +1,119 @@
 ---
-title: Statistical Sub-operators
-description: Use reducers to produce statistical fields, selectors to preserve representative rows, and combine quantile bands, whiskers, and outliers.
+title: Statistical Suboperators
+description: Understand how reducers and selectors consume grouped rows, return local results, and let their host transform assemble output data.
 ---
 
-Reducers and selectors are reusable statistical sub-operators inside data transforms. A reducer collapses a group of rows into a field fragment; a selector returns original rows from the group. Their operation configurations are JSON-serializable; Definitions declare semantics, while separate Implementations or external executors perform the computation.
+[Transform operations](/viz/data/transform/operations) explains the whole chain. This page looks inside one transform, following a group of rows into a statistical suboperator and back to its host.
 
-Data's `summarize`, `annotate`, and `bin` reuse built-in or custom reducers. `select` and `relate` reuse built-in or custom selectors. The `annotate` selector entry accepts only the built-in single-row subset. Plot consumes these capabilities but does not own Data's statistical contract.
+The **host** is the transform calling the suboperator. It owns grouping boundaries and final output shape; the suboperator performs a local computation, not a whole transform pipeline. This page explains reducer and selector cooperation rather than listing operators and parameters.
 
-## Choose a sub-operator
+## Overall flow
 
-| Goal                                              | Use                   | Returns                                 |
-| ------------------------------------------------- | --------------------- | --------------------------------------- |
-| Compute sum, mean, quantiles, or other new fields | reducer               | Fields named by `as` or `outputs`       |
-| Preserve complete extreme, top-N, or outlier rows | selector              | Original rows with ids, labels, etc.    |
-| Broadcast one statistic to every detail row       | `annotate` + reducer  | Original rows with a statistical field  |
-| Broadcast values from one representative row      | `annotate` + selector | Original rows with representative value |
+- **Reducer**: consumes a group of rows and returns a field fragment, such as one or more fields in `{ total: 40, count: 2 }`.
+- **Selector**: consumes a group and returns references to selected original rows, optionally with rank information.
+- **Host transform**: assembles fields into new rows, broadcasts them onto detail rows, or turns selections into output rows.
 
-## Reducers
+<ComponentPreview files="statistics-overview" hideCode type="flow" size="lg" />
 
-| kind            | input config                            | output config | meaning                                             |
-| --------------- | --------------------------------------- | ------------- | --------------------------------------------------- |
-| `count`         | —                                       | `as`          | Number of rows in the group                         |
-| `sum`           | `field`                                 | `as`          | Sum of finite numeric values                        |
-| `mean`          | `field`                                 | `as`          | Arithmetic mean                                     |
-| `median`        | `field`                                 | `as`          | Median                                              |
-| `min` / `max`   | `field`                                 | `as`          | Minimum / maximum                                   |
-| `extent`        | `field`                                 | `as`          | `[min, max]` extent                                 |
-| `quantile`      | `field`, `p`                            | `as`          | One quantile at probability `p`                     |
-| `quantile-band` | `field`, `lowerP`, `upperP`, `whisker?` | `outputs`     | Quantile interval plus optional spread and whiskers |
+Grouping defines the input boundary supplied by the host; it is not a complete transform repeated inside each reducer. Different hosts can reuse the same suboperator. Final row counts follow the host's output semantics.
 
-Ordinary reducers use `as` for one output field. `quantile-band` produces related fields together, so it uses an `outputs` mapping instead: `lower` and `upper` are required; add `points`, `spread`, `lowerFence`, `upperFence`, `whiskerMin`, `whiskerMax`, `min`, `max`, and `count` as needed. Every output name must be unique.
-
-`whisker` may be `{ kind: 'minMax' }` or `{ kind: 'spread', factor?: number }`; the default spread factor is `1.5`.
-
-When a field has no finite numeric values, `sum` keeps the empty-sum identity `0` and `count` reports the group row count. `mean`, `median`, `min`, `max`, `extent`, `quantile`, and `quantile-band` return an invalid sentinel for downstream skip / error handling instead of fabricating zero.
-
-## Selectors
-
-| kind                    | required config             | optional config | selection rule                                        |
-| ----------------------- | --------------------------- | --------------- | ----------------------------------------------------- |
-| `min` / `max`           | `by`                        | `tie`           | Row with the numeric minimum / maximum                |
-| `first` / `last`        | —                           | `orderBy`       | First / last row in current or explicit order         |
-| `top` / `bottom`        | `by`, `n`                   | `tie`           | First / last N ranked rows                            |
-| `nth`                   | `orderBy`, `index`          | —               | Zero-based row after explicit ordering                |
-| `outside-quantile-band` | `field`, `lowerP`, `upperP` | `boundary`      | Original rows outside a quantile band or spread fence |
-
-`tie` defaults to `first` and also accepts `last` or `all`. `orderBy` is an array of `{ field, order? }`, with `order` defaulting to `ascending`. `outside-quantile-band.boundary` defaults to `{ kind: 'band' }`; for conventional boxplot outliers, use `{ kind: 'spread', factor?: 1.5 }`.
-
-`select` accepts the complete built-in or custom selector set. `annotate` accepts only the built-in subset that returns at most one row and does not accept custom selectors. See [annotate](/viz/data/transform/operations#annotate) for the exact restriction.
-
-## Compose boxplot data
-
-`quantile-band` uses `lowerP` and `upperP` for arbitrary quantile intervals instead of hard-coding q1 / q3. `outside-quantile-band` returns original rows beyond that interval, preserving outlier ids, labels, and provenance.
-
-<ComponentPreview
-  files={['transform-boxplot', 'transform-boxplot-preview.tsx', 'transform-boxplot.data.ts']}
-  defaultSourceFile="transform-boxplot-preview.tsx"
-  size="lg"
-  caption="quantile-band produces the box, middle quantile, and whiskers; outside-quantile-band keeps outliers using the same probabilities and factor."
+<SourceLinks
+  sources={[
+    { label: 'Grouped hosts and computation dispatch', path: 'packages/viz/data/src/providers/transform/group.ts' },
+  ]}
 />
 
-The boxplot above has no dedicated `BoxPlotMark`. Data transforms produce the box, median, whisker, and outlier rows; the Plot example only consumes those fields through `IntervalMark`, `ReferenceMark`, and `PointMark`.
+## Grouping and invocation
 
-## Public types
+The host first collects rows by group keys, then passes each group and suboperator parameters to computation dispatch. Definitions declare input fields; reducer definitions also declare outputs so the outer pipeline can derive models and check output-name collisions before execution.
 
-| Scope     | Types                                                                                  |
-| --------- | -------------------------------------------------------------------------------------- |
-| Reducers  | `IRDataReducerOperation`, `IRDataReducerMetrics`, `IRDataQuantileBandReducerOperation` |
-| Selectors | `IRDataSelectorOperation`, `IRDataOutsideQuantileBandSelectorOperation`                |
-| Ordering  | `IRDataOrderBy`                                                                        |
+Semantic definitions and implementations are registered separately. Dispatch matches both `kind` and the bound Definition, preventing a same-named computation with different semantics from replacing the resolved contract. Built-in and custom suboperators use the same matching mechanism.
 
-See [Extension Mechanisms](/viz/data/transform/extensions) to register a custom reducer or selector.
+<SourceLinks
+  sources={[
+    { label: 'Registration and dispatch', path: 'packages/viz/data/src/providers/statistics/registry.ts' },
+    { label: 'Grouping boundaries', path: 'packages/viz/data/src/providers/transform/shared.ts' },
+  ]}
+/>
+
+## Assembling reduced fields
+
+Compare the tables: four detail rows become two summary rows. `item` and `value` disappear; `total` and `count` are added. A real summary transform computes the right-hand table.
+
+<ComponentPreview files="reducer-example" hideCode type="illustration" size="md" />
+
+For team A, the host passes the two records with values 10 and 30. Two reducers return `{ total: 40 }` and `{ count: 2 }`. The host merges the fragments and adds `{ team: 'A' }` to form a complete output row.
+
+A reducer returns neither a complete table nor necessarily a single number. A multi-output reducer can return several declared fields. Before merging, output names are checked: metrics cannot write the same name, nor overwrite reserved group keys.
+
+One row per group comes from the summary host. Another host can broadcast the same statistical fields onto every detail row and preserve row count, without inventing a separate broadcast-specific reducer.
+
+<SourceLinks
+  sources={[
+    { label: 'Collision checks and assembly', path: 'packages/viz/data/src/providers/transform/group.ts' },
+    {
+      label: 'Reducer definitions and implementations',
+      path: 'packages/viz/data/src/providers/statistics/reducers.ts',
+    },
+  ]}
+/>
+
+## Assembling selected rows
+
+With the same input, select the row with the greatest `value` in each group. The result still contains `item`: a selector returns an original record, not just its maximum value.
+
+<ComponentPreview files="selector-example" hideCode type="illustration" size="md" />
+
+Team A selects a2 and team B selects b2. Each selection contains `row` and may contain `rank`. The host consumes these selections, copies the selected rows, and writes a ranking field when requested. Selection records themselves are not the final output rows.
+
+A selector may return zero, one, or multiple selections. Tie handling belongs to the specific selector; the host cannot assume exactly one representative per group. Similar names such as “maximum” do not erase the contract distinction: reduction produces fields, while selection retains record identity and other fields.
+
+<SourceLinks
+  sources={[
+    { label: 'Selector implementations', path: 'packages/viz/data/src/providers/statistics/selectors.ts' },
+    { label: 'Selection-to-row assembly', path: 'packages/viz/data/src/providers/transform/group.ts' },
+  ]}
+/>
+
+## Numeric and execution boundaries
+
+Field access, missing-value filtering, and empty-input results belong to each suboperator's semantics; the host does not universally substitute zero. A count may count records, while a numeric reduction decides which field values participate. Both cannot be modeled as “the number of valid numeric values.” Individual usage and contract documentation owns these details.
+
+Grouped algorithms invoke suboperators through shared computation dispatch. The synchronous path uses synchronous implementations; an asynchronous path may wait for a subcomputation before assembling results. Grouping and assembly are shared, without silently accepting Promises in the synchronous API.
+
+A suboperator failure stops its host computation, and the outer chain identifies the failing stage. There is no default mechanism that skips failed groups and returns a partial statistical table.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Synchronous and asynchronous computation',
+      path: 'packages/viz/data/src/providers/transform/computation.ts',
+    },
+    { label: 'Grouped computation contract', path: 'packages/viz/data/src/providers/transform/group.ts' },
+  ]}
+/>
+
+## Implementation walkthrough
+
+This diagram follows synchronous grouped hosts. Reduction and selection are alternative branches; names separated by a slash are not sequential operations.
+
+<ComponentPreview files="statistics-execution" hideCode type="flow" size="lg" />
+
+Read `computeSummarize` or `computeSelect` for input boundaries and output assembly, then `applyReducerOperation` or `applySelectorOperation` for definition parsing and dispatch. Finally read the implementation's `reduce` or `select`. This separates the statistical algorithm from the table semantics supplied by its host.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extension Mechanisms',
+      description: 'Define and register new semantics and computation implementations.',
+      url: '/viz/data/transform/extensions',
+    },
+    {
+      title: 'Data Provenance',
+      description: 'Trace provenance and statistical events during execution.',
+      url: '/viz/data/provenance/data',
+    },
+  ]}
+/>

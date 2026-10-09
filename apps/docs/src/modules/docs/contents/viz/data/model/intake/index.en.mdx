@@ -78,7 +78,7 @@ Categorical fields form their domain in data-appearance order by default. Put `o
   caption="The source table remains XL, S, L, M; controls change the category domain without reordering rows."
 />
 
-`model.order` orders the **categorical domain** without reordering rows. Consumers can reuse this category order; use [data-transform sorting](/viz/data/transform/operations#sort) to change row order.
+`model.order` orders the **categorical domain** without reordering rows. Consumers can reuse this category order; use a `sort` transform to change row order. See [Transform Operations](/viz/data/transform/operations) for its execution pipeline.
 
 Keep versions as strings. Alphabetical ascending places `'10.18'` before `'10.2'`; `order: 'naturalAscending'` produces `10.2 → 10.18`. Use `naturalDescending` for the opposite direction.
 

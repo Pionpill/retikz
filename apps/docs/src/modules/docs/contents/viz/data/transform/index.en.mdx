@@ -5,13 +5,11 @@ description: Data transforms rewrite canonical rows in order and make sorting, s
 
 Data transforms belong to `@retikz/data`. They read canonical rows produced by the data model, process them in order, and return new canonical rows for charts, tables, and other consumers.
 
-This site uses Plot as the default example host only because a chart makes changes in row count, order, and statistical fields easy to see. Plot's React API can apply these capabilities through `<PlotTransform>`, `dataTransforms`, or mark-local `transform`; those entry points are not part of Data itself.
-
 ## Overall flow
 
 The following `summarize` example starts with canonical product-level detail. Grouping by `region` returns region-level summary rows, replacing `product` and `revenue` with the derived `total` and `orders` fields.
 
-<ComponentPreview files="data-transform-shape" size="sm" previewClassName="!p-3" hideCode />
+<ComponentPreview files="data-transform-shape" size="md" previewClassName="!p-3" hideCode />
 
 This example changes both row grain and the field set, but not every transform changes the column shape: `sort` only reorders rows, `select` primarily changes row count, and `annotate` preserves detail rows while adding statistical fields.
 
@@ -25,12 +23,11 @@ Every operation is JSON-serializable configuration backed by a Definition that s
 
 ## Responsibilities
 
-| Topic                     | Responsibility                                                    | Read it when                                      |
-| ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- |
-| Transform                 | Declare Plot React operations and understand multi-entry ordering | You compose a pipeline in JSX or debug its order  |
-| Transform Operations      | `sort`, `summarize`, `select`, and `annotate`                     | You reorder, aggregate, or retain original rows   |
-| Statistical Sub-operators | Reducers, selectors, and quantile-band composition                | You compute metrics, choose extremes, or boxplots |
-| Extension Mechanisms      | Custom transform, reducer, and selector Definitions               | Built-ins cannot express new processing semantics |
+| Topic                     | Responsibility                                        | Read it when                                             |
+| ------------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| Transform Operations      | Declaration parsing, model propagation, and execution | You want to understand pipeline validation and execution |
+| Statistical Sub-operators | Reducer / selector cooperation with their host        | You want to trace local computation into output rows     |
+| Extension Mechanisms      | Custom transform, reducer, and selector Definitions   | Built-ins cannot express new processing semantics        |
 
 Data owns all twelve built-ins. Their drawing compositions are shown under [Plot transforms](/viz/plot/transform), and complete contracts live in [Data Contract](/viz/data/reference/contract#datatransformschema). Registration of custom transforms, reducers, and selectors is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Data Provenance](/viz/data/provenance/data).
 
@@ -39,19 +36,13 @@ Data owns all twelve built-ins. Their drawing compositions are shown under [Plot
 <LinkedSections
   items={[
     {
-      title: 'Transform',
-      description:
-        'Declare transforms in Plot React and understand component, array, and automatic transform ordering.',
-      url: '/viz/data/transform/overview',
-    },
-    {
       title: 'Transform Operations',
-      description: 'Look up the semantics, parameters, and examples for the Data built-ins.',
+      description: 'Follow declaration parsing, model propagation, preflight, and validation.',
       url: '/viz/data/transform/operations',
     },
     {
       title: 'Statistical Sub-operators',
-      description: 'Compose reducers and selectors to produce metrics or preserve representative rows.',
+      description: 'Understand how hosts assemble reduced fields and row selections.',
       url: '/viz/data/transform/statistics',
     },
     {

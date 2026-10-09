@@ -5,13 +5,11 @@ description: 数据变换按顺序改写规范化行，并把排序、汇总、�
 
 数据变换属于 `@retikz/data`。它们读取数据模型产出的规范化行，按顺序处理后输出新的规范化行，可供图形、表格或其它消费模块使用。
 
-本站默认用 Plot 展示变换结果，只是因为图形更容易观察行数、顺序和统计字段的变化。在 Plot 的 React 写法中，可以通过 `<PlotTransform>`、`dataTransforms` 或图元局部 `transform` 使用这些能力；这些入口不属于 Data 本身。
-
 ## 整体流程
 
 下面以 `summarize` 为例：输入是商品粒度的规范化明细，变换按 `region` 分组后，输出改成地区粒度的汇总行。`product`、`revenue` 被汇总结果字段 `total`、`orders` 取代。
 
-<ComponentPreview files="data-transform-shape" size="sm" previewClassName="!p-3" hideCode />
+<ComponentPreview files="data-transform-shape" size="md" previewClassName="!p-3" hideCode />
 
 这个例子同时改变了行粒度和字段集合，但并非所有变换都会改列结构：`sort` 只重排行，`select` 主要改变行数，`annotate` 则保留明细行并增加统计字段。
 
@@ -25,12 +23,11 @@ description: 数据变换按顺序改写规范化行，并把排序、汇总、�
 
 ## 职责一览
 
-| 主题       | 负责什么                                              | 何时阅读                                   |
-| ---------- | ----------------------------------------------------- | ------------------------------------------ |
-| Transform  | 在 Plot React 中声明变换操作，并确认多入口执行顺序    | 用 JSX 组织数据管线或排查变换顺序时        |
-| 变换操作   | `sort`、`summarize`、`select`、`annotate`             | 要重排行、生成统计行或保留代表原始行时     |
-| 统计子算子 | 规约器（reducer）、行选择器（selector）与分位区间组合 | 要计算统计字段、选择极值或组织箱线图数据时 |
-| 扩展机制   | 自定义变换、规约器与行选择器定义                      | 内置操作无法表达新的数据处理语义时         |
+| 主题       | 负责什么                         | 何时阅读                           |
+| ---------- | -------------------------------- | ---------------------------------- |
+| 变换操作   | 声明解析、模型推进与计算执行     | 要理解变换链如何校验与执行时       |
+| 统计子算子 | reducer / selector 与宿主的协作  | 要理解局部统计如何组织为输出行时   |
+| 扩展机制   | 自定义变换、规约器与行选择器定义 | 内置操作无法表达新的数据处理语义时 |
 
 Data 统一提供十二种内置变换；堆叠、分桶、区间、关联、扰动与统计采样的绘图组合示例见[绘图语法的变换](/viz/plot/transform)，完整字段契约见 [Data 参考](/viz/data/reference/contract#datatransformschema)。自定义变换、规约器或行选择器的注册方式集中放在[扩展机制](/viz/data/transform/extensions)，运行链路事件则见[Data 来源追溯](/viz/data/provenance/data)。
 
@@ -39,18 +36,13 @@ Data 统一提供十二种内置变换；堆叠、分桶、区间、关联、扰
 <LinkedSections
   items={[
     {
-      title: '变换组件',
-      description: '在 Plot React 中声明变换，并理解组件、数组与自动变换的顺序。',
-      url: '/viz/data/transform/overview',
-    },
-    {
       title: '变换操作',
-      description: '查询 Data 内置操作与输入输出关系，并组合常用数据处理步骤。',
+      description: '追踪声明解析、字段模型推进、实现预检与结果校验。',
       url: '/viz/data/transform/operations',
     },
     {
       title: '统计子算子',
-      description: '组合规约器与行选择器，生成统计字段或保留原始代表行。',
+      description: '理解归约字段与行选择如何由宿主组织为结果。',
       url: '/viz/data/transform/statistics',
     },
     {

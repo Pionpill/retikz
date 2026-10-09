@@ -332,7 +332,6 @@
     "dataModelApiReference": "API 参考",
     "dataModelSchemaReference": "Schema 参考",
     "dataTransform": "数据变换",
-    "dataTransformComponent": "变换组件",
     "dataTransformOperations": "变换操作",
     "dataTransformStatistics": "统计子算子",
     "dataTransformExtensions": "扩展机制",
