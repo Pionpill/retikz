@@ -333,7 +333,7 @@
     "dataModelSchemaReference": "Schema Reference",
     "dataTransform": "Data Transforms",
     "dataTransformOperations": "Transform Operations",
-    "dataTransformStatistics": "Statistical Sub-operators",
+    "dataTransformStatistics": "Transform Operators",
     "dataTransformExtensions": "Extension Mechanisms",
     "dataProvenance": "Data Traceability",
     "dataProvenanceData": "Data Provenance",

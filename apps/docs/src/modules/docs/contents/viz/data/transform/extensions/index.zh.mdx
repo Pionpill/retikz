@@ -13,7 +13,7 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 
 ## 定义能力
 
-`defineTransform` 接收 `kind`、精确 `paramsSchema`、可选 `inputFields` 和必填 `outputModel`。它通过统一的 `createTransformSchema` 组装完整操作 schema；内置与自定义变换遵守同一外壳。回调接收完整 operation，通过 `operation.params` 读取解析后的参数。语义回调只读取参数与字段模型，不读取行或执行计算。需要统计子算子的操作通过 `dependencies` 声明完整依赖；`validate` 检查模型相关不变量。
+`defineTransform` 接收 `kind`、精确 `paramsSchema`、可选 `inputFields` 和必填 `outputModel`。它通过统一的 `createTransformSchema` 组装完整操作 schema；内置与自定义变换遵守同一外壳。回调接收完整 operation，通过 `operation.params` 读取解析后的参数。语义回调只读取参数与字段模型，不读取行或执行计算。需要变换算子的操作通过 `dependencies` 声明完整依赖；`validate` 检查模型相关不变量。
 
 `outputModel` 使用 `preserve.outputs` 增补字段，或用 `replace.fields` 替换完整模型。输出字段可以省略类型表示尚无类型证据；`{ from: field }` 沿用已有字段的类型与适用分类顺序。派生字段名由该模型投影。
 
@@ -30,7 +30,7 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 
 实现应遵守 Definition 的语义，不修改输入数组或输入行。保留原行的展开可以保留来源 Symbol；汇总行通过计算 context 的 `groupProvenance(out, members)` 关联源行。语义 Definition 不持有这些来源 helper。
 
-### 统计子算子
+### 变换算子
 
 `defineStatisticsReducer` 用 `schema`、`inputFields` 和必填 `outputs` 声明全部输出；非标量或未知类型输出只声明字段名。计算由 `defineStatisticsReducerImplementation({ definition, reduce })` 提供。
 

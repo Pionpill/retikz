@@ -333,7 +333,7 @@
     "dataModelSchemaReference": "Schema 参考",
     "dataTransform": "数据变换",
     "dataTransformOperations": "变换操作",
-    "dataTransformStatistics": "统计子算子",
+    "dataTransformStatistics": "变换算子",
     "dataTransformExtensions": "扩展机制",
     "dataProvenance": "数据溯源",
     "dataProvenanceData": "Data 来源追溯",

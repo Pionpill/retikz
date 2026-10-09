@@ -55,7 +55,7 @@ Data 将“随行传播的来源”与“解释一次运行的事件”分成两
 
 ## 记录计算链路
 
-需要解释变换顺序、字段输入输出或统计子算子时，用 `applyTransformsWithLineage` 代替 `applyTransforms`。两者执行相同的变换定义（Definition）；前者额外返回运行时事件。
+需要解释变换顺序、字段输入输出或变换算子时，用 `applyTransformsWithLineage` 代替 `applyTransforms`。两者执行相同的变换定义（Definition）；前者额外返回运行时事件。
 
 ```ts
 import { applyTransformsWithLineage } from '@retikz/data';

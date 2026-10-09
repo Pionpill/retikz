@@ -30,7 +30,7 @@ External results may supply field types that were unknown during preflight. Subs
 
 Implementations must honor the Definition and leave input arrays and rows unchanged. Spreading an original row preserves its provenance Symbols; use the computation context's `groupProvenance(out, members)` for grouped output. Semantic Definitions do not hold these helpers.
 
-### Statistical operations
+### Transform operators
 
 `defineStatisticsReducer` describes its schema, inputs and every output through required `outputs`. Non-scalar or unknown outputs declare only their names. `defineStatisticsReducerImplementation({ definition, reduce })` supplies computation.
 

@@ -1,15 +1,44 @@
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
+import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { logicFigureGraphProps, logicFigureRelationKinds } from '@/modules/docs/components/logic-figure';
 
-import { TransformMechanismFlow } from '../TransformMechanismFlow';
 import { statisticsOverviewI18n } from './statistics-overview.i18n';
 
-/** 流程图语言参数 */
+/** 图示语言 */
 export type DemoProps = { lang?: Lang };
-/** 显示当前范围内的执行链 */
+/** 分别展示 reducer 计算与 selector 筛选的独立链路 */
 const Demo: FC<DemoProps> = props => {
   const { lang = 'zh' } = props;
-  return <TransformMechanismFlow stages={statisticsOverviewI18n[lang]} />;
+  const { input, output, branches } = statisticsOverviewI18n[lang];
+  const entity = (id: string, [title, detail]: [string, string]) => ({
+    id,
+    role: 'activity' as const,
+    text: [{ text: title }, { text: detail, fill: 'gray', font: { size: 12 } }],
+  });
+  return (
+    <PreviewFlowDiagram {...logicFigureGraphProps()} relationKinds={logicFigureRelationKinds}>
+      <FlowLayout id="comparison" kind="linear" direction="right" align="center">
+        <FlowEntities items={[entity('input', input)]} />
+        <FlowLayout id="branches" kind="linear" direction="down">
+          {branches.map((stages, row) => (
+            <FlowLayout key={row} id={`case-${row}`} kind="linear" direction="right" align="center">
+              <FlowEntities items={stages.map((label, index) => entity(`case-${row}-${index}`, label))} />
+            </FlowLayout>
+          ))}
+        </FlowLayout>
+        <FlowEntities items={[entity('output', output)]} />
+      </FlowLayout>
+      <FlowRelations
+        items={branches.flatMap((_, row) => [
+          { source: 'input', target: `case-${row}-0` },
+          { source: `case-${row}-0`, target: `case-${row}-1` },
+          { source: `case-${row}-1`, target: 'output' },
+        ])}
+      />
+    </PreviewFlowDiagram>
+  );
 };
 export default Demo;

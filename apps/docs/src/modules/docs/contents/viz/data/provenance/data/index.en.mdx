@@ -55,7 +55,7 @@ The key invariant is: **never invent one source when the result is not uniquely 
 
 ## Recording Calculation Lineage
 
-Use `applyTransformsWithLineage` instead of `applyTransforms` when you need transform order, field inputs and outputs, or statistical sub-operators. Both execute the same transform Definitions; the former additionally returns runtime events.
+Use `applyTransformsWithLineage` instead of `applyTransforms` when you need transform order, field inputs and outputs, or transform operators. Both execute the same transform Definitions; the former additionally returns runtime events.
 
 ```ts
 import { applyTransformsWithLineage } from '@retikz/data';

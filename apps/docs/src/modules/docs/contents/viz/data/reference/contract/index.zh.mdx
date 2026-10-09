@@ -27,9 +27,9 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 
 <ZodSchema name="DataTransformSchema" description="内置或运行时注册的通用 Data transform operation 联合。" />
 
-内置 transform 共用 `kind` 判别字段，并按数组声明顺序执行。`metrics` 和 `selector` 的统计子算子契约见[统计子算子](/viz/data/transform/statistics)；自定义 operation 必须保持 JSON 可序列化，并由运行时 Definition 提供精确 schema 与实现。
+内置 transform 共用 `kind` 判别字段，并按数组声明顺序执行。`metrics` 和 `selector` 的变换算子契约见[变换算子](/viz/data/transform/statistics)；自定义 operation 必须保持 JSON 可序列化，并由运行时 Definition 提供精确 schema 与实现。
 
-所有变换操作统一为 `{ kind, params }`：`kind` 选择定义，`params` 是必填的 JSON 参数对象。各 `XxxParamsSchema` 只描述具体参数，`createTransformSchema` 将它与 kind 组合为下列完整 schema；`defineTransform` 复用同一工厂。统计子算子继续保留各自格式。
+所有变换操作统一为 `{ kind, params }`：`kind` 选择定义，`params` 是必填的 JSON 参数对象。各 `XxxParamsSchema` 只描述具体参数，`createTransformSchema` 将它与 kind 组合为下列完整 schema；`defineTransform` 复用同一工厂。变换算子继续保留各自格式。
 
 ### SortTransformSchema
 

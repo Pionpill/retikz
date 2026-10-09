@@ -1,42 +1,39 @@
 ---
-title: Statistical Suboperators
+title: Transform Operators
 description: Understand how reducers and selectors consume grouped rows, return local results, and let their host transform assemble output data.
 ---
 
-[Transform operations](/viz/data/transform/operations) explains the whole chain. This page looks inside one transform, following a group of rows into a statistical suboperator and back to its host.
+A **transform operator** is a computation unit used inside a transform. Two categories are currently provided: reducers return computed field fragments, while selectors return selected records and optional ranks. The transform organizes inputs and outputs; operators perform the individual computations.
 
-The **host** is the transform calling the suboperator. It owns grouping boundaries and final output shape; the suboperator performs a local computation, not a whole transform pipeline. This page explains reducer and selector cooperation rather than listing operators and parameters.
+[Transform operations](/viz/data/transform/operations) explains how the whole chain progresses. This page looks inside one transform, following a group of rows through an operator and back to the calling transform, its **host**, which assembles the final result. The host owns grouping boundaries and output row shape; operators perform local computations without advancing the whole chain. This page focuses on reducer and selector cooperation rather than listing every operator and parameter.
 
 ## Overall flow
 
-- **Reducer**: consumes a group of rows and returns a field fragment, such as one or more fields in `{ total: 40, count: 2 }`.
+- **Reducer**: consumes a group of rows and returns declared fields, such as one or more fields in `{ total: 40, count: 2 }`.
 - **Selector**: consumes a group and returns references to selected original rows, optionally with rank information.
 - **Host transform**: assembles fields into new rows, broadcasts them onto detail rows, or turns selections into output rows.
 
-<ComponentPreview files="statistics-overview" hideCode type="flow" size="lg" />
+The categories differ in their results and have separate definition, implementation, and registration contracts. Selectors may also compare, sort, or compute ranks; their final result is a row selection. Custom operators extend the corresponding category, and hosts consume results according to its contract.
 
-Grouping defines the input boundary supplied by the host; it is not a complete transform repeated inside each reducer. Different hosts can reuse the same suboperator. Final row counts follow the host's output semantics.
+The diagram compares two independent paths using the same values: the reducer above reduces rows to fields, while the selector below selects existing records. Both return their results to the host.
 
-<SourceLinks
-  sources={[
-    { label: 'Grouped hosts and computation dispatch', path: 'packages/viz/data/src/providers/transform/group.ts' },
-  ]}
-/>
+<ComponentPreview files="statistics-overview" hideCode type="flow" size="md" />
 
-## Grouping and invocation
+Operators also serve transforms beyond aggregation: `annotate` writes computation results back onto detail rows while preserving row count, `select` outputs selected records, and `relate` uses selectors to choose source and target records. Different hosts can reuse the same operator. Final row counts follow the host's output semantics.
 
-The host first collects rows by group keys, then passes each group and suboperator parameters to computation dispatch. Definitions declare input fields; reducer definitions also declare outputs so the outer pipeline can derive models and check output-name collisions before execution.
+For the grouped invocation shown above, the host collects rows by group keys, then passes each group and operator parameters to computation dispatch. Definitions declare input fields; reducer definitions also declare outputs so the outer pipeline can derive models and check output-name collisions before execution.
 
 Semantic definitions and implementations are registered separately. Dispatch matches both `kind` and the bound Definition, preventing a same-named computation with different semantics from replacing the resolved contract. Built-in and custom suboperators use the same matching mechanism.
 
 <SourceLinks
   sources={[
+    { label: 'Grouped hosts and computation dispatch', path: 'packages/viz/data/src/providers/transform/group.ts' },
     { label: 'Registration and dispatch', path: 'packages/viz/data/src/providers/statistics/registry.ts' },
     { label: 'Grouping boundaries', path: 'packages/viz/data/src/providers/transform/shared.ts' },
   ]}
 />
 
-## Assembling reduced fields
+## reducer operators
 
 Compare the tables: four detail rows become two summary rows. `item` and `value` disappear; `total` and `count` are added. A real summary transform computes the right-hand table.
 
@@ -58,7 +55,7 @@ One row per group comes from the summary host. Another host can broadcast the sa
   ]}
 />
 
-## Assembling selected rows
+## selector operators
 
 With the same input, select the row with the greatest `value` in each group. The result still contains `item`: a selector returns an original record, not just its maximum value.
 
