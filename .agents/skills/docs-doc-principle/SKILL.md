@@ -50,6 +50,7 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 
 ## 共性约束
 
+- 文档撰写、改写与翻译默认使用 `/humanizer:humanizer`，先读取当前可用的该 skill，再按其规则起草和自审；保留技术事实、契约、代码与链接，不为消除 AI 表达而删改必要信息。
 - 所有文档中，讲解可操作功能的每个小节必须就地提供 demo，并提供直接控制本节 API、效果可观察的 controls；不得仅引用其它小节的试验场代替。接入说明、纯概念、原理与参考清单不算功能节；入门接入保留最小静态示例。按 [Controls](references/controls.md) 验证参数、边界值与 Reset。
 
 - 普通文档 zh/en 成对，zh 为写作真源；博客语言例外由博客入口规定。公开签名、JSDoc、schema 与默认值仍以源码为契约真源。
