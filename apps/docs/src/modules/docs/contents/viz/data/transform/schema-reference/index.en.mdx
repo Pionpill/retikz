@@ -1,0 +1,196 @@
+---
+title: Schema Reference
+description: Look up fields, types, and constraints for data transforms, computation operators, and execution configuration.
+---
+
+Look up transform declarations, parameters, and computation-operator schemas exported by the `@retikz/data` root entry. See [Transform operations](/viz/data/transform/operations) for usage and [API Reference](/viz/data/transform/api-reference) for runtime types and functions.
+
+Configuration is separate from computation implementations. Defaults described below may be applied at runtime; only a schema-level `.default()` materializes a value during validation.
+
+## DataExecutionSchema
+
+Configuration is inherited from executor defaults, host configuration, then the individual declaration. mode and external inherit independently; the schema does not materialize the builtin default.
+
+<ZodSchema name="DataExecutionSchema" />
+
+## DataTransformDeclarationSchema
+
+<ZodSchema name="DataTransformDeclarationSchema" />
+
+## TransformSchema
+
+Every transform uses `{ kind, params }`. Custom parameters must be JSON objects; rows, functions, and source handles are supplied at runtime.
+
+<ZodSchema name="DataTransformSchema" />
+
+## ExternalTransformSchema
+
+This schema checks the JSON shape. The registered Definition validates exact parameters with its paramsSchema.
+
+<ZodSchema name="ExternalTransformSchema" />
+
+## SortTransformSchema
+
+<ZodSchema name="SortTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="SortParamsSchema" />
+
+## SummarizeTransformSchema
+
+<ZodSchema name="SummarizeTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="SummarizeParamsSchema" />
+
+## SelectTransformSchema
+
+<ZodSchema name="SelectTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="SelectParamsSchema" />
+
+## AnnotateTransformSchema
+
+<ZodSchema name="AnnotateTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="AnnotateParamsSchema" />
+
+## StackTransformSchema
+
+<ZodSchema name="StackTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="StackParamsSchema" />
+
+## BinTransformSchema
+
+<ZodSchema name="BinTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="BinParamsSchema" />
+
+## NormalizeTransformSchema
+
+<ZodSchema name="NormalizeTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="NormalizeParamsSchema" />
+
+## DeriveIntervalTransformSchema
+
+<ZodSchema name="DeriveIntervalTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="DeriveIntervalParamsSchema" />
+
+## RelateTransformSchema
+
+<ZodSchema name="RelateTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="RelateParamsSchema" />
+
+## JitterTransformSchema
+
+<ZodSchema name="JitterTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="JitterParamsSchema" />
+
+## DensityTransformSchema
+
+<ZodSchema name="DensityTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="DensityParamsSchema" />
+
+## SmoothTransformSchema
+
+<ZodSchema name="SmoothTransformSchema" />
+
+The `params` object:
+
+<ZodSchema name="SmoothParamsSchema" />
+
+## AnnotateSelectorSchema
+
+Annotations accept built-in single-row selectors only.
+
+<ZodSchema name="AnnotateSelectorSchema" />
+
+## EndpointProjectionSchema
+
+<ZodSchema name="EndpointProjectionSchema" />
+
+## PairMeasureOperationSchema
+
+<ZodSchema name="PairMeasureOperationSchema" />
+
+## DensityBandwidthSchema
+
+<ZodSchema name="DensityBandwidthSchema" />
+
+## ReducerOperationSchema
+
+count takes kind and as; field reducers also take field. quantile uses p; quantile-band uses lowerP, upperP, and outputs. Additional custom fields must be JSON values.
+
+<ZodSchema name="ReducerOperationSchema" />
+
+## ReducerMetricsSchema
+
+<ZodSchema name="ReducerMetricsSchema" />
+
+## QuantileBandReducerOperationSchema
+
+<ZodSchema name="QuantileBandReducerOperationSchema" />
+
+## QuantileBandOutputsSchema
+
+All output field names must be unique.
+
+<ZodSchema name="QuantileBandOutputsSchema" />
+
+## QuantileBandPointOutputSchema
+
+<ZodSchema name="QuantileBandPointOutputSchema" />
+
+## QuantileBandWhiskerSchema
+
+<ZodSchema name="QuantileBandWhiskerSchema" />
+
+## SelectorOperationSchema
+
+Each branch accepts its own parameters. Additional custom selector fields must be JSON values.
+
+<ZodSchema name="SelectorOperationSchema" />
+
+## OrderBySchema
+
+<ZodSchema name="OrderBySchema" />
+
+## OutsideQuantileBandSelectorOperationSchema
+
+<ZodSchema name="OutsideQuantileBandSelectorOperationSchema" />
+
+## OutsideQuantileBandBoundarySchema
+
+<ZodSchema name="OutsideQuantileBandBoundarySchema" />
+
+## RegressionMethodSchema
+
+The selected Definition validates exact parameters. Built-ins are linear, quadratic, polynomial, logarithmic, exponential, and power; polynomial accepts order from 2 to 6, defaulting to 3.
+
+<ZodSchema name="RegressionMethodSchema" />

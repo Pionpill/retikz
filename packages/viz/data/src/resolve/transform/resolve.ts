@@ -51,7 +51,13 @@ export type DataTransformResolveOptions = Omit<TransformSemanticContext, 'model'
     transformRegistry?: ReadonlyMap<string, AnyTransformDefinition>;
   }>;
 
-/** 从唯一 outputModel 推进完整字段模型 */
+/**
+ * 从唯一 outputModel 推进完整字段模型
+ * @param input 当前完整字段模型
+ * @param output 本阶段保留或替换字段的语义声明
+ * @returns 推进后的完整字段模型，不修改输入数组
+ * @throws {RetikzDataError} 输出字段重复或类型继承引用不存在的输入字段
+ */
 export const resolveDataTransformOutputModel = (
   input: DataTransformModel,
   output: DataTransformOutputModel,
@@ -130,7 +136,14 @@ export const resolveParsedDataTransforms = (
   return { inputModel, stages };
 };
 
-/** 公开纯语义入口，按精确 schema 一次解析并逐阶段推进模型 */
+/**
+ * 公开纯语义入口，按精确 schema 一次解析并逐阶段推进模型
+ * @param declarations 按执行顺序排列的变换声明
+ * @param inputModel 首阶段可见的完整字段模型
+ * @param options 请求内的语义注册表；省略时使用内置定义
+ * @returns 包含全部阶段、精确操作与预期输出模型的计划，不计算行数据
+ * @throws {RetikzDataError} 变换未注册、参数无效、输入字段缺失或语义回调失败
+ */
 export const resolveDataTransforms = (
   declarations: ReadonlyArray<IRDataTransformDeclaration>,
   inputModel: DataTransformModel,
@@ -142,7 +155,13 @@ export const resolveDataTransforms = (
     options,
   );
 
-/** 分别继承 mode/external，完整继承后才补 builtin 默认 */
+/**
+ * 分别继承 mode/external，完整继承后才补 builtin 默认
+ * @param defaults 执行器默认配置；省略时没有这一层覆盖
+ * @param root 宿主根配置，优先于执行器默认值
+ * @param declaration 单条声明配置，优先于宿主根配置
+ * @returns 分别继承 mode 与 external 的配置；mode 最终缺省为 builtin
+ */
 export const resolveDataExecution = (
   defaults?: IRDataExecution,
   root?: IRDataExecution,

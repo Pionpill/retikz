@@ -175,14 +175,28 @@ const applyToView = (
   return { dataView, ...(lineage === undefined ? {} : { lineage }) };
 };
 
-/** 按声明顺序同步推进规范 DataView */
+/**
+ * 按声明顺序同步推进规范 DataView
+ * @param view 已规范化的输入数据视图
+ * @param operations 按顺序执行的变换操作；省略时为空列表
+ * @param options 语义注册表与同步计算实现；省略时使用内置计算
+ * @returns 计算后的完整数据视图
+ * @throws {RetikzDataError} 语义解析、计算或结果校验失败
+ */
 export const applyTransformsToDataView = (
   view: DataView,
   operations: Array<IRDataTransform> = [],
   options: ApplyTransformsOptions = {},
 ): DataView => (operations.length === 0 ? view : applyToView(view, operations, options).dataView);
 
-/** 同步行数据便捷入口；全计划预检后只执行一次 */
+/**
+ * 同步行数据便捷入口；全计划预检后只执行一次
+ * @param rows 已规范化的输入行数组
+ * @param operations 按顺序执行的变换操作；省略时为空列表
+ * @param options 语义注册表与同步计算实现；省略时使用内置计算
+ * @returns 计算后的行数组
+ * @throws {RetikzDataError} 语义解析、计算或结果校验失败
+ */
 export const applyTransforms = (
   rows: Array<ExternalRow>,
   operations: Array<IRDataTransform> = [],
@@ -214,7 +228,15 @@ const collectRowInputFields = (
   return [...fields];
 };
 
-/** 从唯一语义模型投影派生字段，供宿主 strict 引用检查 */
+/**
+ * 从唯一语义模型投影派生字段，供宿主 strict 引用检查
+ * @param transform 待分析的变换操作
+ * @param fields 接收输入字段名的收集器
+ * @param derivedOutputs 接收派生字段名的集合，会就地更新
+ * @param registry 变换定义注册表；省略时使用内置定义
+ * @param semantic 统计定义与可选输入模型；省略时使用空模型
+ * @throws {RetikzDataError} 变换未注册、参数解析或字段语义回调失败
+ */
 export const collectTransformFields = (
   transform: IRDataTransform,
   fields: FieldCollector,
@@ -264,7 +286,14 @@ export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
   lineage: DataLineageRun;
 }>;
 
-/** 一次同步执行并返回实际来源事件 */
+/**
+ * 一次同步执行并返回实际来源事件
+ * @param view 已规范化的输入数据视图
+ * @param operations 按顺序执行的变换操作；省略时为空列表
+ * @param options 语义注册表与同步计算实现；省略时使用内置计算
+ * @returns 计算后的完整数据视图与执行事件
+ * @throws {RetikzDataError} 语义解析、计算或结果校验失败
+ */
 export const applyTransformsToDataViewWithLineage = (
   view: DataView,
   operations: Array<IRDataTransform> = [],
@@ -275,7 +304,14 @@ export const applyTransformsToDataViewWithLineage = (
   return { dataView: result.dataView, lineage };
 };
 
-/** 行数据同步来源便捷入口 */
+/**
+ * 行数据同步来源便捷入口
+ * @param rows 已规范化的输入行数组
+ * @param operations 按顺序执行的变换操作；省略时为空列表
+ * @param options 语义注册表与同步计算实现；省略时使用内置计算
+ * @returns 计算后的行数组与执行事件
+ * @throws {RetikzDataError} 语义解析、计算或结果校验失败
+ */
 export const applyTransformsWithLineage = (
   rows: Array<ExternalRow>,
   operations: Array<IRDataTransform> = [],

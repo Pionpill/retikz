@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveRegression, ExternalTransformSchema, BuiltinTransformSchema, TransformSchema } from '../../src';
+import { resolveRegression, ExternalTransformSchema, TransformSchema } from '../../src';
+import { BuiltinTransformSchema } from '../../src/schemas/transform';
 
 describe('TransformSchema sort / stack', () => {
   // Happy path

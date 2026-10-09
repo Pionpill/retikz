@@ -30,7 +30,7 @@ Every operation is JSON-serializable configuration backed by a Definition that s
 | Computation Contracts | Local and external support, binding and execution     | You need another execution engine or asynchronous input  |
 | Extension Mechanisms  | Custom transform, reducer, and selector Definitions   | Built-ins cannot express new processing semantics        |
 
-Data owns all twelve built-ins. Their drawing compositions are shown under [Plot transforms](/viz/plot/transform), and complete contracts live in [Data Contract](/viz/data/reference/contract#datatransformschema). Registration of custom transforms, reducers, and selectors is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Data Provenance](/viz/data/provenance/data).
+Data owns all twelve built-ins. Their drawing compositions are shown under [Plot transforms](/viz/plot/transform), and complete contracts live in [Schema Reference](/viz/data/transform/schema-reference). Registration of custom transforms, reducers, and selectors is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Data Provenance](/viz/data/provenance/data).
 
 ## Pages
 
@@ -55,6 +55,16 @@ Data owns all twelve built-ins. Their drawing compositions are shown under [Plot
       title: 'Extension Mechanisms',
       description: 'Register custom transform, reducer, and selector Definitions.',
       url: '/viz/data/transform/extensions',
+    },
+    {
+      title: 'API Reference',
+      description: 'Look up public transform definitions, implementations, registries, and executors.',
+      url: '/viz/data/transform/api-reference',
+    },
+    {
+      title: 'Schema Reference',
+      description: 'Look up fields and constraints for transforms, operators, and execution configuration.',
+      url: '/viz/data/transform/schema-reference',
     },
   ]}
 />

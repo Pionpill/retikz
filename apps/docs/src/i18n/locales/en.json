@@ -337,6 +337,8 @@
     "dataTransform": "Data Transforms",
     "dataTransformOperations": "Transform Operations",
     "dataTransformStatistics": "Computation Operators",
+    "dataTransformApiReference": "API Reference",
+    "dataTransformSchemaReference": "Schema Reference",
     "dataTransformComputation": "Computation Contracts",
     "dataTransformExtensions": "Extension Mechanisms",
     "dataProvenance": "Data Traceability",

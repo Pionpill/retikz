@@ -39,6 +39,8 @@ const inputModelOf = <TSource>(input: DataTransformStageInput<TSource>): DataTra
 /**
  * 将实际输入投影为无行数据的能力描述
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ * @param input 实际源输入或计算结果
+ * @returns 保留源句柄或结果模型的预检描述，不读取或复制行数据
  */
 export const describeDataTransformInput = <TSource>(
   input: DataTransformStageInput<TSource>,
@@ -53,6 +55,9 @@ const hasProvenance = <TSource>(input: DataTransformStageInput<TSource>): boolea
 /**
  * 创建有作用域的执行策略；所有支持检查完成后才绑定并计算
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ * @param options 执行默认值、本地实现和具名外接 Provider；省略时使用内置计算
+ * @returns 可预检、绑定并执行固定阶段计划的执行器
+ * @throws {RetikzDataError} Provider 名称重复或计算实现重复注册
  */
 export const createDataTransformExecutor = <TSource = never>(
   options: DataTransformExecutionOptions<TSource> = {},
@@ -374,6 +379,12 @@ export const createDataTransformExecutor = <TSource = never>(
 /**
  * 统一异步入口；准备不支持时不计算，绑定后的执行只消费一次
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ * @param input 本次实际源输入或已计算结果
+ * @param resolution 不读取行数据的语义解析结果
+ * @param executor 承担能力预检与计算的执行器
+ * @param options 本次执行覆盖、来源要求与取消信号；省略时不追加请求配置
+ * @returns 所有阶段完成并校验后的结果 Promise
+ * @throws {RetikzDataError} 预检不支持、输入不匹配、计算或结果校验失败，或请求被取消；Promise 会拒绝
  */
 export const executeDataTransforms = async <TSource>(
   input: DataTransformStageInput<TSource>,

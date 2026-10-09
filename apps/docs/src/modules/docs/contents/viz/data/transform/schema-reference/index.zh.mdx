@@ -1,0 +1,572 @@
+---
+title: Schema 参考
+description: 查询数据变换、计算算子与执行配置的字段、类型和校验约束。
+---
+
+查询 `@retikz/data` 根入口公开的变换声明、参数和计算算子 Schema。用法见[变换操作](/viz/data/transform/operations)，运行时类型和函数见 [API 参考](/viz/data/transform/api-reference)。
+
+配置与计算实现分开保存。下文说明中的“默认”可能由运行时补齐；只有 Schema 声明的 `.default()` 才会在校验时物化。
+
+## DataExecutionSchema
+
+配置优先级为执行器默认值、宿主根配置、单条声明。mode 和 external 分别继承；Schema 不会物化 builtin 默认值。
+
+<ZodSchema
+  name="DataExecutionSchema"
+  description="继承后的阶段执行策略。"
+  descriptions={{
+    mode: '阶段执行模式：builtin、external 或 hybrid；继承后仍省略时使用 builtin',
+    external: '具名外接 Provider 的注册名称',
+  }}
+/>
+
+## DataTransformDeclarationSchema
+
+<ZodSchema
+  name="DataTransformDeclarationSchema"
+  description="变换操作与执行策略分别保存。"
+  descriptions={{
+    operation: '要执行的变换操作，包含 kind 与 params',
+    dataExecution: '仅覆盖当前声明的执行配置',
+  }}
+/>
+
+## TransformSchema
+
+所有变换使用 `{ kind, params }`。自定义参数必须是 JSON 对象；行数据、函数和源句柄由运行时提供。
+
+<ZodSchema
+  name="DataTransformSchema"
+  description="内置或自定义变换操作。"
+  descriptions={{
+    kind: '内置或已注册的自定义变换名称',
+    params: '必填参数对象；具体字段由对应变换的参数 Schema 校验',
+  }}
+/>
+
+## ExternalTransformSchema
+
+这里检查 JSON 形态。注册的 Definition 还会用自己的 paramsSchema 校验精确参数。
+
+<ZodSchema
+  name="ExternalTransformSchema"
+  description="自定义变换的可序列化参数。"
+  descriptions={{
+    kind: '自定义变换名称，不能与内置名称冲突',
+    params: '自定义变换的 JSON 参数对象',
+  }}
+/>
+
+## SortTransformSchema
+
+<ZodSchema
+  name="SortTransformSchema"
+  description="按一个字段稳定排序。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 SortParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="SortParamsSchema"
+  description="按一个字段稳定排序。"
+  descriptions={{
+    field: '排序字段',
+    order: '排序方向；默认升序',
+  }}
+/>
+
+## SummarizeTransformSchema
+
+<ZodSchema
+  name="SummarizeTransformSchema"
+  description="按组输出指标行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 SummarizeParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="SummarizeParamsSchema"
+  description="按组输出指标行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    metrics: '非空归约指标列表；输出字段不能重复或覆盖分组字段',
+  }}
+/>
+
+## SelectTransformSchema
+
+<ZodSchema
+  name="SelectTransformSchema"
+  description="按组选择代表行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 SelectParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="SelectParamsSchema"
+  description="按组选择代表行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    selector: '选择代表行的计算算子',
+    rankAs: '可选的一基排名输出字段',
+  }}
+/>
+
+## AnnotateTransformSchema
+
+<ZodSchema
+  name="AnnotateTransformSchema"
+  description="将组级指标或代表行结果回填到输入行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 AnnotateParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="AnnotateParamsSchema"
+  description="将组级指标或代表行结果回填到输入行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    metrics: '可选归约指标',
+    selectors: '可选单行选择器注解；与 metrics 至少提供一项',
+  }}
+/>
+
+## StackTransformSchema
+
+<ZodSchema
+  name="StackTransformSchema"
+  description="跨行累加数值，生成起止字段。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 StackParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="StackParamsSchema"
+  description="跨行累加数值，生成起止字段。"
+  descriptions={{
+    x: '堆叠分组字段；省略时全部行累加为一条链',
+    y: '组内累加的数值字段',
+    groupBy: '系列字段，决定分段及其顺序；省略时按数据行顺序',
+    startField: '分段下界输出字段；默认 y0',
+    endField: '分段上界输出字段；默认 y1',
+    offset: '基线策略：zero、normalize、diverging、center 或 overlap；默认 zero',
+  }}
+/>
+
+## BinTransformSchema
+
+<ZodSchema
+  name="BinTransformSchema"
+  description="连续字段分桶，输出桶边界与指标。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 BinParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="BinParamsSchema"
+  description="连续字段分桶，输出桶边界与指标。"
+  descriptions={{
+    field: '连续数值源字段',
+    count: '目标桶数，与 step、thresholds 互斥；未指定策略时默认 10',
+    step: '数据单位中的固定桶宽，与 count、thresholds 互斥',
+    thresholds: '按升序给出的桶内部边界，与 count、step 互斥',
+    extent: '可选分桶范围 [min, max]；默认观测范围',
+    nice: '是否调整 count 策略的边界为易读数值；默认 true',
+    startField: '桶下界输出字段；默认 binStart',
+    endField: '桶上界输出字段；默认 binEnd',
+    metrics: '每桶归约指标；默认输出名为 binCount 的 count 指标',
+  }}
+/>
+
+## NormalizeTransformSchema
+
+<ZodSchema
+  name="NormalizeTransformSchema"
+  description="将非负数值转换为组内占比。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 NormalizeParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="NormalizeParamsSchema"
+  description="将非负数值转换为组内占比。"
+  descriptions={{
+    field: '非负数值字段；有限负数会报错，非有限值按零处理',
+    groupBy: '非空分组字段列表；省略时按全部行的总和归一化',
+    basis: 'fraction 输出 0..1，percent 输出 0..100；默认 fraction',
+    as: '占比输出字段；省略时覆盖输入字段',
+  }}
+/>
+
+## DeriveIntervalTransformSchema
+
+<ZodSchema
+  name="DeriveIntervalTransformSchema"
+  description="从单值与基线或两个端点字段派生区间。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 DeriveIntervalParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="DeriveIntervalParamsSchema"
+  description="从单值与基线或两个端点字段派生区间。"
+  descriptions={{
+    from: '单值模式的源字段；仅在使用 startFrom 与 endFrom 时可省略',
+    baseline: '单值模式的起点；默认 0，必须是有限数值',
+    startFrom: '双字段模式的起点字段；与 endFrom 成对，优先于 from 与 baseline',
+    endFrom: '双字段模式的终点字段；与 startFrom 成对',
+    startField: '区间起点输出字段；默认 y0',
+    endField: '区间终点输出字段；默认 y1',
+  }}
+/>
+
+## RelateTransformSchema
+
+<ZodSchema
+  name="RelateTransformSchema"
+  description="按组选择两个端点并生成关系行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 RelateParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="RelateParamsSchema"
+  description="按组选择两个端点并生成关系行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    source: '源端点的选择器和字段映射',
+    target: '目标端点的选择器和字段映射',
+    measures: '可选的非空配对计算列表',
+    'source.selector': '选择源端点行的计算算子',
+    'source.fields': '输出字段后缀到源行字段的非空映射',
+    'target.selector': '选择目标端点行的计算算子',
+    'target.fields': '输出字段后缀到目标行字段的非空映射',
+  }}
+/>
+
+## JitterTransformSchema
+
+<ZodSchema
+  name="JitterTransformSchema"
+  description="在数据单位中加入可复现的扰动。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 JitterParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="JitterParamsSchema"
+  description="在数据单位中加入可复现的扰动。"
+  descriptions={{
+    axis: '扰动 x、y 或 both；默认 x，字段必须是连续数值',
+    xField: 'x 方向连续数值字段；默认 x',
+    yField: 'y 方向连续数值字段；默认 y',
+    amount: '最大绝对偏移量，单位与数据相同；默认 1，偏移取自 [-amount, amount]',
+    seed: '整数随机种子；默认 0，相同种子产生相同偏移',
+  }}
+/>
+
+## DensityTransformSchema
+
+<ZodSchema
+  name="DensityTransformSchema"
+  description="按组生成一维高斯核密度采样行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 DensityParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="DensityParamsSchema"
+  description="按组生成一维高斯核密度采样行。"
+  descriptions={{
+    field: '核密度估计的连续数值源字段',
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    bandwidth: '带宽策略；默认 Silverman 经验规则',
+    sampleCount: '每组等距采样行数，至少 2；默认 64',
+    extent: '可选采样范围；省略时在观测范围两端各扩展三个带宽',
+    xAs: '采样位置输出字段',
+    densityAs: '密度值输出字段',
+  }}
+/>
+
+## SmoothTransformSchema
+
+<ZodSchema
+  name="SmoothTransformSchema"
+  description="按组拟合并生成预测采样行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 SmoothParamsSchema 校验的参数对象',
+  }}
+/>
+
+参数对象 `params`：
+
+<ZodSchema
+  name="SmoothParamsSchema"
+  description="按组拟合并生成预测采样行。"
+  descriptions={{
+    x: '自变量的连续数值源字段',
+    y: '因变量的连续数值源字段',
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    method: '拟合方法；默认普通最小二乘线性回归',
+    sampleCount: '每组等距采样行数，至少 2；默认 64',
+    extent: '可选采样范围；省略时采用有限 x 的观测范围',
+    xAs: '采样 x 输出字段',
+    yAs: '预测 y 输出字段',
+  }}
+/>
+
+## AnnotateSelectorSchema
+
+不接受自定义选择器或多行选择结果。
+
+<ZodSchema
+  name="AnnotateSelectorSchema"
+  description="指定回填的单行选择结果。"
+  descriptions={{
+    selector: '内置单行选择器；top、bottom 的 n 固定为 1，并列策略只能为 first 或 last',
+    as: '注解输出字段',
+  }}
+/>
+
+## EndpointProjectionSchema
+
+<ZodSchema
+  name="EndpointProjectionSchema"
+  description="选择关系端点行并映射字段。"
+  descriptions={{
+    selector: '选择端点来源行的计算算子',
+    fields: '输出字段后缀到源行字段的非空映射；生成 sourceX、targetX 等字段',
+  }}
+/>
+
+## PairMeasureOperationSchema
+
+<ZodSchema
+  name="PairMeasureOperationSchema"
+  description="从两个端点计算差值。"
+  descriptions={{
+    op: '配对计算类型，目前为 difference',
+    field: '从两个端点读取的数值字段',
+    as: '目标减源的数值差输出字段',
+    labelAs: '可选差值文本输出字段',
+    labelPrefix: '非负差值文本的可选前缀，如 +',
+  }}
+/>
+
+## DensityBandwidthSchema
+
+<ZodSchema
+  name="DensityBandwidthSchema"
+  description="核密度估计的带宽策略。"
+  descriptions={{
+    kind: 'silverman 自动估计带宽，value 使用显式带宽',
+    value: '显式正有限带宽，单位与源数据相同',
+  }}
+/>
+
+## ReducerOperationSchema
+
+count 只需要 kind 和 as；字段归约通常还需要 field。quantile 使用 p，quantile-band 使用 lowerP、upperP 和 outputs。自定义算子的额外字段必须是 JSON 值。
+
+<ZodSchema
+  name="ReducerOperationSchema"
+  description="内置或自定义归约操作。"
+  descriptions={{
+    kind: '归约算子名称',
+    field: '数值源字段；count 不读取字段',
+    as: '输出字段',
+    p: '分位概率，取值 0..1',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    outputs: '结果的输出字段映射',
+    whisker: '可选须线策略',
+  }}
+/>
+
+## ReducerMetricsSchema
+
+<ZodSchema name="ReducerMetricsSchema" description="具有唯一输出字段的非空归约指标列表。" descriptions={{}} />
+
+## QuantileBandReducerOperationSchema
+
+<ZodSchema
+  name="QuantileBandReducerOperationSchema"
+  description="一次计算分位区间及其派生结果。"
+  descriptions={{
+    kind: '固定为 quantile-band',
+    field: '数值源字段',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    outputs: '结果的输出字段映射',
+    whisker: '可选须线策略',
+    'outputs.lower': '下界输出字段',
+    'outputs.upper': '上界输出字段',
+    'outputs.points': '可选额外分位点输出列表',
+    'outputs.spread': '区间跨度输出字段',
+    'outputs.lowerFence': '下围栏输出字段',
+    'outputs.upperFence': '上围栏输出字段',
+    'outputs.whiskerMin': '下须线输出字段',
+    'outputs.whiskerMax': '上须线输出字段',
+    'outputs.min': '最小值输出字段',
+    'outputs.max': '最大值输出字段',
+    'outputs.count': '有效数值个数输出字段',
+  }}
+/>
+
+## QuantileBandOutputsSchema
+
+所有输出字段名必须唯一。
+
+<ZodSchema
+  name="QuantileBandOutputsSchema"
+  description="分位区间结果的输出字段名。"
+  descriptions={{
+    lower: '下界输出字段',
+    upper: '上界输出字段',
+    points: '可选额外分位点输出列表',
+    spread: '区间跨度输出字段',
+    lowerFence: '下围栏输出字段',
+    upperFence: '上围栏输出字段',
+    whiskerMin: '下须线输出字段',
+    whiskerMax: '上须线输出字段',
+    min: '最小值输出字段',
+    max: '最大值输出字段',
+    count: '有效数值个数输出字段',
+  }}
+/>
+
+## QuantileBandPointOutputSchema
+
+<ZodSchema
+  name="QuantileBandPointOutputSchema"
+  description="一个额外分位点的输出。"
+  descriptions={{
+    p: '分位概率，取值 0..1',
+    as: '输出字段',
+  }}
+/>
+
+## QuantileBandWhiskerSchema
+
+<ZodSchema
+  name="QuantileBandWhiskerSchema"
+  description="分位区间须线策略。"
+  descriptions={{
+    kind: 'minMax 使用观测极值，spread 使用区间跨度构造围栏',
+    factor: '非负跨度倍数；默认 1.5',
+  }}
+/>
+
+## SelectorOperationSchema
+
+各分支只接受对应参数。自定义选择器的额外字段必须是 JSON 值。
+
+<ZodSchema
+  name="SelectorOperationSchema"
+  description="内置或自定义行选择操作。"
+  descriptions={{
+    kind: '行选择算子名称',
+    by: '数值排名字段',
+    tie: '并列策略；默认 first',
+    orderBy: '选择前的排序规则；first、last 省略时保留当前顺序',
+    n: 'top、bottom 选择的正整数行数',
+    index: 'nth 的零基行下标',
+    field: '分位区间筛选的数值源字段',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    boundary: '分位区间外筛选的边界策略；默认 band',
+  }}
+/>
+
+## OrderBySchema
+
+<ZodSchema
+  name="OrderBySchema"
+  description="代表行选择前的稳定排序规则。"
+  descriptions={{
+    field: '排序字段',
+    order: '排序方向；默认升序',
+  }}
+/>
+
+## OutsideQuantileBandSelectorOperationSchema
+
+<ZodSchema
+  name="OutsideQuantileBandSelectorOperationSchema"
+  description="选择分位区间或围栏外的原始行。"
+  descriptions={{
+    kind: '固定为 outside-quantile-band',
+    field: '数值源字段',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    boundary: '边界策略；默认 band',
+  }}
+/>
+
+## OutsideQuantileBandBoundarySchema
+
+<ZodSchema
+  name="OutsideQuantileBandBoundarySchema"
+  description="分位区间外筛选的边界策略。"
+  descriptions={{
+    kind: 'band 使用分位区间边界，spread 使用跨度围栏',
+    factor: '非负跨度倍数；默认 1.5',
+  }}
+/>
+
+## RegressionMethodSchema
+
+具体参数由选中的 Definition 校验。内置方法包含 linear、quadratic、polynomial、logarithmic、exponential 和 power；polynomial 的 order 为 2..6，默认 3。
+
+<ZodSchema
+  name="RegressionMethodSchema"
+  description="可序列化的拟合方法参数。"
+  descriptions={{
+    kind: '已注册的拟合方法名称',
+  }}
+/>

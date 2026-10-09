@@ -1,6 +1,7 @@
 import type { ExternalRow } from '@retikz/data';
-import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
+
+import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '../../src/providers/transform';
 
 describe('transform shared helpers', () => {
   it('groups rows by field values while preserving first-seen group order and key values', () => {

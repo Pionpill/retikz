@@ -4,13 +4,15 @@ import { toJSONSchema } from 'zod';
 import {
   BuiltinDataFieldFormat,
   BuiltinDataTransform,
-  DataTransformKindSchema,
   FieldFormatSchema,
   BuiltinReducerOperationKind,
-  ReducerOperationKindSchema,
   BuiltinSelectorOperationKind,
-  SelectorOperationKindSchema,
 } from '../../src';
+import {
+  DataTransformKindSchema,
+  ReducerOperationKindSchema,
+  SelectorOperationKindSchema,
+} from '../../src/schemas/transform';
 
 describe('Data registry-backed open string schemas', () => {
   it('hints built-in formats while preserving custom provider names', () => {

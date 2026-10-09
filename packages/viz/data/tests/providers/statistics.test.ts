@@ -5,24 +5,25 @@ import {
   defineStatisticsReducerImplementation,
   defineRowSelectorImplementation,
   resolveRowSelectorImplementationRegistry,
-  applyReducerOperation,
-  applySelectorOperation,
-  BuiltinReducerOperationSchemas,
-  BuiltinSelectorOperationSchemas,
   DataFieldType,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
   defineStatisticsReducer,
   BuiltinReducerOperationKind,
   ReducerOperationSchema,
-  reducerOutputDescriptors,
-  reducerOutputFields,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerImplementationRegistry,
   resolveStatisticsReducerRegistry,
   BuiltinSelectorOperationKind,
   SelectorOperationSchema,
 } from '../../src';
+import {
+  applyReducerOperation,
+  applySelectorOperation,
+  reducerOutputDescriptors,
+  reducerOutputFields,
+} from '../../src/providers/statistics';
+import { BuiltinReducerOperationSchemas, BuiltinSelectorOperationSchemas } from '../../src/schemas/transform';
 
 describe('statistics provider schema boundaries', () => {
   it('uses the schema owner instances for every built-in definition', () => {

@@ -5,7 +5,7 @@ import {
   DEFAULT_TRANSFORM_CONTEXT,
   resolveRegressionRegistry,
   resolveRegressionImplementationRegistry,
-  applySmooth,
+  applyTransforms,
 } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
@@ -112,19 +112,23 @@ it('rejects invalid intermediate predictions', () => {
   const registry = resolveRegressionRegistry([brokenDefinition]);
 
   expect(() =>
-    applySmooth(
+    applyTransforms(
       [
         { x: 1, y: 1 },
         { x: 3, y: 3 },
       ],
+      [
+        {
+          kind: 'smooth',
+          params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
+        },
+      ],
       {
-        kind: 'smooth',
-        params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
-      },
-      {
-        ...DEFAULT_TRANSFORM_CONTEXT,
-        regressionRegistry: registry,
-        regressionImplementationRegistry: resolveRegressionImplementationRegistry(registry, [brokenImplementation]),
+        context: {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          regressionRegistry: registry,
+          regressionImplementationRegistry: resolveRegressionImplementationRegistry(registry, [brokenImplementation]),
+        },
       },
     ),
   ).toThrow(/non-finite/);
@@ -132,19 +136,21 @@ it('rejects invalid intermediate predictions', () => {
 
 it('rejects a degenerate inferred extent even when a custom fitter accepts the observations', () => {
   expect(() =>
-    applySmooth(
+    applyTransforms(
       [
         { x: 1, y: 1 },
         { x: 1, y: 2 },
       ],
-      { kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } } },
+      [{ kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } } }],
       {
-        ...DEFAULT_TRANSFORM_CONTEXT,
-        regressionRegistry: resolveRegressionRegistry([definition]),
-        regressionImplementationRegistry: resolveRegressionImplementationRegistry(
-          resolveRegressionRegistry([definition]),
-          [implementation],
-        ),
+        context: {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          regressionRegistry: resolveRegressionRegistry([definition]),
+          regressionImplementationRegistry: resolveRegressionImplementationRegistry(
+            resolveRegressionRegistry([definition]),
+            [implementation],
+          ),
+        },
       },
     ),
   ).toThrow(/extent/);

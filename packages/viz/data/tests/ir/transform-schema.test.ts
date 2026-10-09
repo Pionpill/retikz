@@ -5,8 +5,6 @@ import {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
   DataScalarReducerOperationSchema,
-  ExternalReducerOperationSchema,
-  ExternalSelectorOperationSchema,
   ExternalTransformSchema,
   OrderBySchema,
   OutsideQuantileBandBoundarySchema,
@@ -21,6 +19,7 @@ import {
   SummarizeTransformSchema,
   TransformSchema,
 } from '../../src';
+import { ExternalReducerOperationSchema, ExternalSelectorOperationSchema } from '../../src/schemas/transform';
 
 const closedObjectSchemaCases: Array<{
   name: string;

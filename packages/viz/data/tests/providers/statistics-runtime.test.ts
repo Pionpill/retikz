@@ -3,21 +3,23 @@ import { literal, strictObject } from 'zod';
 
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../src';
 import {
-  applyReducerOperation,
-  applySelectorOperation,
   DataSortOrder,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
   defineStatisticsReducer,
-  reducerInputFields,
   BuiltinReducerOperationKind,
-  reducerOutputFields,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerRegistry,
   RowSelectorTie,
-  selectorInputFields,
   BuiltinSelectorOperationKind,
 } from '../../src';
+import {
+  applyReducerOperation,
+  applySelectorOperation,
+  reducerInputFields,
+  reducerOutputFields,
+  selectorInputFields,
+} from '../../src/providers/statistics';
 
 describe('statistics provider runtime', () => {
   it('computes every scalar reducer from finite field values', () => {

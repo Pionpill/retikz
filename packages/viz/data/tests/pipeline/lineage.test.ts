@@ -17,8 +17,8 @@ import {
   resolveTransformRegistry,
   SOURCE_INDICES,
   tagSourceIndex,
-  withGroupProvenance,
 } from '../../src';
+import { withGroupProvenance } from '../../src/pipeline';
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },

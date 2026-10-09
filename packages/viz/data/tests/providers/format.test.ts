@@ -6,9 +6,9 @@ import {
   BuiltinDataFieldFormat,
   DataFieldType,
   defineFieldFormat,
-  isBuiltinFieldFormat,
   resolveFormatRegistry,
 } from '../../src';
+import { isBuiltinFieldFormat } from '../../src/providers/format';
 
 /** 读取已注册内置 format；缺失时让测试直接失败 */
 const formatOf = (name: string) => {

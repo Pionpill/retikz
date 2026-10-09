@@ -158,7 +158,11 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
   schedule?: DataTransformSchedule;
 };
 
-/** 变换作者提供参数 schema，完整操作 schema 由统一工厂组装 */
+/**
+ * 变换作者提供参数 schema，完整操作 schema 由统一工厂组装
+ * @template TKind 变换操作的固定注册名称
+ * @template TParamsSchema 参数对象的输入与解析契约，决定回调中 params 的类型
+ */
 export type TransformDefinitionInput<
   TKind extends string,
   TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
@@ -169,7 +173,13 @@ export type TransformDefinitionInput<
   paramsSchema: TParamsSchema;
 };
 
-/** 组装变换定义，保留判别名称、参数解析结果与语义回调之间的关联 */
+/**
+ * 组装变换定义，保留判别名称、参数解析结果与语义回调之间的关联
+ * @template TKind 变换操作的固定注册名称
+ * @template TParamsSchema 参数对象的输入与解析契约，决定回调中 params 的类型
+ * @param def 名称、参数 schema 与字段语义；不会自动注册
+ * @returns 由统一工厂组装完整操作 schema 的语义定义
+ */
 export const defineTransform = <
   const TKind extends string,
   TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
@@ -219,6 +229,8 @@ export type TransformImplementation<
  * 保留语义定义与实际计算参数之间的泛型关联
  * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
  * @template TResult 变换计算返回的数据行数组或其 Promise 类型
+ * @param implementation 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineTransformImplementation = <
   TTransform extends IRDataTransform,
@@ -249,6 +261,9 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
 /**
  * 从 transform definition schema 中提取 registry key
  * @description definition schema 必须是包含 `kind: z.literal('<transform-kind>')` 的 ZodObject；该 literal 值就是 registry 唯一键
+ * @param schema 注册定义的对象 schema，kind 必须是非空字符串字面量
+ * @returns kind 字面量的字符串值
+ * @throws {RetikzDataError} schema 不是对象或 kind 不是有效字面量
  */
 export const extractTransformKind = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject)) {

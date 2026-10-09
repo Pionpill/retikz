@@ -10,6 +10,7 @@
     "check:site": "pnpm run check:static && pnpm run check:build && pnpm run check:runtime",
     "check:static": "node scripts/check-doc-static.mjs",
     "dev": "vite",
+    "generate:data-transform-api-reference": "tsx scripts/generate-data-transform-api-reference.ts && oxfmt --threads 3 src/modules/docs/contents/viz/data/transform/api-reference/_includes/generated.*.mdx",
     "generate:layout-api-reference": "tsx scripts/generate-layout-api-reference.ts",
     "generate:api-reference": "tsx scripts/generate-api-references.ts && oxfmt src/modules/docs/contents/**/_includes/generated.*.mdx",
     "generate:ribbon-api-reference": "tsx scripts/generate-ribbon-api-reference.ts && oxfmt --threads 3 src/modules/docs/contents/library/extension/ribbon/api-reference/_includes/generated.zh.mdx src/modules/docs/contents/library/extension/ribbon/api-reference/_includes/generated.en.mdx",

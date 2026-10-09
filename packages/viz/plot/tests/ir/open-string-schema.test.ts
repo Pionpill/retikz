@@ -1,5 +1,5 @@
 import { ShapeNameSchema } from '@retikz/core';
-import { BuiltinDataTransform, DataTransformKindSchema } from '@retikz/data';
+import { BuiltinDataTransform, ExternalTransformSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
@@ -31,7 +31,7 @@ describe('Plot registry-backed open string schemas', () => {
   });
 
   it.each([
-    ['transform', DataTransformKindSchema, Object.values(BuiltinDataTransform)],
+    ['transform', ExternalTransformSchema.shape.kind, Object.values(BuiltinDataTransform)],
     ['scale', PlotScaleTypeSchema, Object.values(BuiltinPlotScale)],
   ])('keeps %s provider keys open while retaining built-in hints', (_label, schema, builtins) => {
     expect(toJSONSchema(schema)).toMatchObject({

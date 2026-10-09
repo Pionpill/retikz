@@ -518,6 +518,9 @@ export const BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND: ReadonlyMap<string, AnyTrans
 /**
  * 解析 transform registry
  * @description 内置 transform 总是先注册；用户自定义 definition 不能覆盖内置 kind，也不能彼此重复
+ * @param custom 自定义语义定义；省略时仅注册内置定义
+ * @returns 每次调用独立创建的名称到定义映射
+ * @throws {RetikzDataError} 注册名称重复或定义的 kind 不符合要求
  */
 export const resolveTransformRegistry = (
   custom?: ReadonlyArray<AnyTransformDefinition>,
@@ -556,6 +559,10 @@ export const BUILTIN_TRANSFORM_IMPLEMENTATIONS: ReadonlyArray<AnySynchronousTran
 /**
  * 独立计算 registry；内置和自定义引用同一语义身份
  * @template TImplementation 自定义变换实现类型，默认限定同步数据行数组结果
+ * @param definitions 已注册的语义定义；省略时使用内置定义注册表
+ * @param custom 自定义计算实现；省略时仅注册内置实现
+ * @returns 名称到计算实现的映射，保留同步与异步结果类型
+ * @throws {RetikzDataError} 实现重复、对应定义未注册或 Definition 对象身份不一致
  */
 export const resolveTransformImplementationRegistry = <
   TImplementation extends AnyTransformImplementation = AnySynchronousTransformImplementation,
