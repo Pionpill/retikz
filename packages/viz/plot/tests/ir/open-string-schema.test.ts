@@ -1,20 +1,25 @@
 import { ShapeNameSchema } from '@retikz/core';
-import { DataTransform, DataTransformKindSchema } from '@retikz/data';
+import { BuiltinDataTransform, DataTransformKindSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
 import { ShapeChannelSchema } from '../../src/schemas/encoding';
-import { ColorSchemeNameSchema, PlotColorScheme, PlotScale, PlotScaleTypeSchema } from '../../src/schemas/scale';
+import {
+  ColorSchemeNameSchema,
+  BuiltinPlotColorScheme,
+  BuiltinPlotScale,
+  PlotScaleTypeSchema,
+} from '../../src/schemas/scale';
 
 describe('Plot registry-backed open string schemas', () => {
   it('hints built-in color schemes while preserving custom resolver names', () => {
     expect(toJSONSchema(ColorSchemeNameSchema)).toMatchObject({
       anyOf: [
-        { type: 'string', enum: Object.values(PlotColorScheme) },
+        { type: 'string', enum: Object.values(BuiltinPlotColorScheme) },
         { type: 'string', minLength: 1 },
       ],
     });
-    expect(ColorSchemeNameSchema.parse(PlotColorScheme.Viridis)).toBe(PlotColorScheme.Viridis);
+    expect(ColorSchemeNameSchema.parse(BuiltinPlotColorScheme.Viridis)).toBe(BuiltinPlotColorScheme.Viridis);
     expect(ColorSchemeNameSchema.parse('custom.brand')).toBe('custom.brand');
     expect(() => ColorSchemeNameSchema.parse('   ')).toThrow();
   });
@@ -26,8 +31,8 @@ describe('Plot registry-backed open string schemas', () => {
   });
 
   it.each([
-    ['transform', DataTransformKindSchema, Object.values(DataTransform)],
-    ['scale', PlotScaleTypeSchema, Object.values(PlotScale)],
+    ['transform', DataTransformKindSchema, Object.values(BuiltinDataTransform)],
+    ['scale', PlotScaleTypeSchema, Object.values(BuiltinPlotScale)],
   ])('keeps %s provider keys open while retaining built-in hints', (_label, schema, builtins) => {
     expect(toJSONSchema(schema)).toMatchObject({
       anyOf: [

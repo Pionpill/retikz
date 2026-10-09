@@ -2,11 +2,11 @@ import { strictObject, string } from 'zod';
 
 import { defineCellFormatter } from '../../contract';
 import { RetikzTableError } from '../../error';
-import { TableCellFormatter } from '../../schemas';
+import { BuiltinTableCellFormatter } from '../../schemas';
 
 /** 把 boolean 映射为显式标签的内置 formatter */
 export const BOOLEAN_CELL_FORMATTER = defineCellFormatter({
-  name: TableCellFormatter.Boolean,
+  name: BuiltinTableCellFormatter.Boolean,
   optionsSchema: strictObject({
     trueText: string().optional(),
     falseText: string().optional(),

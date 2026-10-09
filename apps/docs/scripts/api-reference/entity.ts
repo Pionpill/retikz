@@ -9,7 +9,7 @@ import { createApiReferenceMdx } from './tex';
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 const entityMemberValueSets = {
-  role: { name: 'EntityRole', open: true },
+  role: { name: 'BuiltinEntityRole', open: true },
   status: { name: 'GraphStatus' },
 } as const;
 
@@ -32,7 +32,7 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   {
     owner: 'graph',
     symbols: [
-      'EntityRole',
+      'BuiltinEntityRole',
       'GraphStatus',
       'IRGraphEntity',
       'createEntity',

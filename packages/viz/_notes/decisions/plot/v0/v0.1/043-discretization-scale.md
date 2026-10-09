@@ -29,13 +29,13 @@ keywords: 'scale、quantize、threshold、quantile、domain、color、scaleQuant
 
 本轮三者**输出域只做 color**（决策 ③）——离散 size / opacity 档（D1）需求驱动再做；与「高级 Scales 服务颜色」主线一致。离散色的颜色档**复用 [ADR-042](./042-continuous-color-scale.md) 的 scheme / range schema**：从命名 scheme 采样 N 个离散色，或用户直接给 range 颜色数组。**故本 ADR dep ADR-042**（共用配色词表与 range 形态，非并行）。
 
-## 决策：`PlotScale` 新增 `quantize` / `threshold` / `quantile`，连续 domain → 离散 color 档，颜色复用 ADR-042 scheme/range
+## 决策：`BuiltinPlotScale` 新增 `quantize` / `threshold` / `quantile`，连续 domain → 离散 color 档，颜色复用 ADR-042 scheme/range
 
 三个独立判别串。输出色 = 从 ADR-042 命名 scheme 等距采样 N 档，或 `range` 显式颜色数组。lowering 经 d3 `scaleQuantize` / `scaleThreshold` / `scaleQuantile`。
 
 ```ts
-// ir/scale.ts —— PlotScale 追加（沿 DrawWay 风格）
-export const PlotScale = {
+// ir/scale.ts —— BuiltinPlotScale 追加（沿 DrawWay 风格）
+export const BuiltinPlotScale = {
   /* …linear/band/point/ordinal/time/log/pow/sqrt/sequential/diverging… */
   /** 分位化等宽：连续 domain 等宽切 count 段 → 离散 color 档 */
   Quantize: 'quantize',
@@ -46,17 +46,17 @@ export const PlotScale = {
 } as const;
 
 // QuantizeColorScaleSchema：
-//   type: z.literal(PlotScale.Quantize) / name
+//   type: z.literal(BuiltinPlotScale.Quantize) / name
 //   domain?: [number, number]（省略→数据 [min,max]）
 //   count?: z.number().int().min(2)（档数，默认 5）
-//   scheme?: z.nativeEnum(PlotColorScheme)（复用 ADR-042，默认 'viridis'）
+//   scheme?: z.nativeEnum(BuiltinPlotColorScheme)（复用 ADR-042，默认 'viridis'）
 //   range?: z.array(z.string()).min(2)（显式离散色数组，覆盖 scheme；长度即档数）
 // ThresholdColorScaleSchema：
-//   type: z.literal(PlotScale.Threshold) / name
+//   type: z.literal(BuiltinPlotScale.Threshold) / name
 //   breakpoints: z.array(z.number()).min(1)（严格升序断点；必填——阈值无默认）
 //   scheme? / range?: range 长度须 = breakpoints.length + 1（强校验，决策 ④）
 // QuantileColorScaleSchema：
-//   type: z.literal(PlotScale.Quantile) / name
+//   type: z.literal(BuiltinPlotScale.Quantile) / name
 //   count?: z.number().int().min(2)（分位档数，默认 5）
 //   scheme? / range?: 长度 = count
 //   ❌ 无显式数值 domain——分位由数据定（决策 ⑤；给显式 domain → fail-loud）
@@ -68,7 +68,7 @@ export const PlotScale = {
 理由：
 
 1. **补全 GoG 离散化三件套**：quantize/threshold/quantile 覆盖「等宽 / 业务断点 / 抗偏斜」三类真实需求，d3 现成。
-2. **颜色复用 ADR-042**：不另造配色词表——同一 `PlotColorScheme` + range，离散色 = 连续 scheme 的采样。这是 dep ADR-042 的实质。
+2. **颜色复用 ADR-042**：不另造配色词表——同一 `BuiltinPlotColorScheme` + range，离散色 = 连续 scheme 的采样。这是 dep ADR-042 的实质。
 3. **fail-loud 契约清晰**：threshold 断点升序 + 色数匹配强校验、quantile 不接受显式数值 domain，避免静默截断 / 语义冲突。
 
 **最终校准（2026-06-08，与实现/测试对齐）**：

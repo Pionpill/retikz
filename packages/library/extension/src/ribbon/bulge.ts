@@ -1,12 +1,12 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import { RibbonWidthProfile } from './constants';
+import { BuiltinRibbonWidthProfile } from './constants';
 import { defineRibbonWidthProfile } from './profile-define';
 
 /** Extension Ribbon 内置 bulge profile */
 export const BulgeRibbonWidthProfileDefinition = defineRibbonWidthProfile({
-  name: RibbonWidthProfile.Bulge,
+  name: BuiltinRibbonWidthProfile.Bulge,
   paramsSchema: strictObject({ base: NonNegativeNumberSchema, peak: NonNegativeNumberSchema }),
   widthAt: ({ offset, params }) => {
     const t = Math.sin(Math.PI * offset);

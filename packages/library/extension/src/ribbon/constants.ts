@@ -19,7 +19,7 @@ export const RibbonAlignment = {
 } as const;
 
 /** 可通过名称引用的内置带状路径端帽 */
-export const RibbonCap = {
+export const BuiltinRibbonCap = {
   /** 按局部圆心、半径和扫掠方向构造圆弧端帽 */
   Arc: 'arc',
   /** 直接连接端面两侧，不沿路径方向延伸 */
@@ -57,7 +57,7 @@ export const RibbonTaperInterpolation = {
 } as const;
 
 /** Extension 内置 Ribbon 宽度 profile 名 */
-export const RibbonWidthProfile = {
+export const BuiltinRibbonWidthProfile = {
   /** 使用中部鼓起的内置宽度曲线 */
   Bulge: 'bulge',
 } as const;
@@ -66,7 +66,7 @@ export type RibbonMode = ValueOf<typeof RibbonMode>;
 
 export type RibbonAlignment = ValueOf<typeof RibbonAlignment>;
 
-export type RibbonCap = ValueOf<typeof RibbonCap>;
+export type BuiltinRibbonCap = ValueOf<typeof BuiltinRibbonCap>;
 
 export type RibbonArcCapSweep = ValueOf<typeof RibbonArcCapSweep>;
 

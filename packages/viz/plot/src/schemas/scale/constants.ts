@@ -2,9 +2,9 @@ import type { ValueOf } from '@retikz/foundation';
 
 /**
  * scale 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'linear'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 z.enum）
+ * @description discriminated union 判别字段，成员里写 z.literal(BuiltinPlotScale.x)（不用 z.enum）
  */
-export const PlotScale = {
+export const BuiltinPlotScale = {
   /** 连续线性映射 */
   Linear: 'linear',
   /** 分类带：每个类别占一段等宽 band（柱状图 x 轴） */
@@ -38,7 +38,7 @@ export const PlotScale = {
 } as const;
 
 /** 内置 scale type 集；供 CustomScaleSchema 排除内置判别串（模块常量，非 zod） */
-export const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(PlotScale));
+export const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(BuiltinPlotScale));
 
 /** 连续位置 scale 的 domain padding 单位 */
 export const PlotDomainPaddingKind = {
@@ -49,7 +49,7 @@ export const PlotDomainPaddingKind = {
 } as const;
 
 /** 内置命名配色方案名 */
-export const PlotColorScheme = {
+export const BuiltinPlotColorScheme = {
   Blues: 'blues',
   Greens: 'greens',
   Greys: 'greys',
@@ -74,10 +74,10 @@ export const PlotColorScheme = {
 } as const;
 
 /** scale 类型 */
-export type PlotScale = ValueOf<typeof PlotScale>;
+export type BuiltinPlotScale = ValueOf<typeof BuiltinPlotScale>;
 
 /** 内置命名配色方案名 */
-export type PlotColorScheme = ValueOf<typeof PlotColorScheme>;
+export type BuiltinPlotColorScheme = ValueOf<typeof BuiltinPlotColorScheme>;
 
 /** position scale 的 domain padding 单位 */
 export type PlotDomainPaddingKind = ValueOf<typeof PlotDomainPaddingKind>;

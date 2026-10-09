@@ -9,7 +9,7 @@ export const TableVisualChannel = {
 } as const;
 
 /** Table 内置 Cell visual scale 名 */
-export const TableCellVisualScale = {
+export const BuiltinTableCellVisualScale = {
   OrdinalColor: 'ordinal-color',
   SequentialColor: 'sequential-color',
   ThresholdColor: 'threshold-color',

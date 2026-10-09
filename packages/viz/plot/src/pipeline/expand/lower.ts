@@ -106,7 +106,7 @@ import {
   AxisGridApplyTo,
   CoordinateViewPlacementKind,
   PLOT_NAMESPACE,
-  PlotCoordinate,
+  BuiltinPlotCoordinate,
   PlotLayerZIndex,
   PlotSchema,
 } from '../../schemas';
@@ -125,11 +125,11 @@ import type { LowerPlotsOptions, MarkDataView } from './types';
 
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
-  frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
+  frame?.type !== BuiltinPlotCoordinate.Cartesian1D && frame?.type !== BuiltinPlotCoordinate.Polar1D;
 
 const coordinateScaleNameOf = (coordinate: IRPlotCoordinateOperation, role: DimensionRole): string | undefined => {
   const field =
-    coordinate.type === PlotCoordinate.Polar1D || coordinate.type === PlotCoordinate.Polar2D
+    coordinate.type === BuiltinPlotCoordinate.Polar1D || coordinate.type === BuiltinPlotCoordinate.Polar2D
       ? role === 'x'
         ? 'angle'
         : role === 'y'

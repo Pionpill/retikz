@@ -8,7 +8,7 @@ import type {
 } from '@retikz/core';
 import {
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -251,7 +251,7 @@ const structuralGuideOffset = (
   const guide = result.alignmentGuides?.find(value => value.dimension === axis && value.name === name);
   const slotSize = slotSizeOn(result, axis);
   if (guide === undefined)
-    return { offset: name === LayoutAlignmentGuideName.FirstBaseline ? 0 : slotSize, real: false };
+    return { offset: name === BuiltinLayoutAlignmentGuideName.FirstBaseline ? 0 : slotSize, real: false };
 
   return {
     offset: Math.min(Math.max(guide.position - allocationStartOn(result, axis), 0), slotSize),
@@ -270,7 +270,7 @@ const placedGuideCoordinate = (
   if (guide !== undefined) return { coordinate: guide.position + placed.translation.y, real: true };
 
   const edge =
-    name === LayoutAlignmentGuideName.FirstBaseline
+    name === BuiltinLayoutAlignmentGuideName.FirstBaseline
       ? placed.result.allocationBounds.y
       : placed.result.allocationBounds.y + placed.result.allocationBounds.height;
 
@@ -284,7 +284,7 @@ const outgoingLineGuide = (
   placedBySource: ReadonlyArray<PlacedFlexItem | undefined>,
 ): number => {
   const traversal =
-    name === LayoutAlignmentGuideName.FirstBaseline ? line.itemIndexes : [...line.itemIndexes].reverse();
+    name === BuiltinLayoutAlignmentGuideName.FirstBaseline ? line.itemIndexes : [...line.itemIndexes].reverse();
   const participants = traversal
     .map(index => placedBySource[index])
     .filter((placed): placed is PlacedFlexItem => placed !== undefined && placed.alignment === name);
@@ -476,8 +476,10 @@ export const compileFlexLayout = (
           marginStart: margins.start,
           marginEnd: margins.end,
           alignment,
-          firstBaselineOffset: structuralGuideOffset(result, axes.cross, LayoutAlignmentGuideName.FirstBaseline).offset,
-          lastBaselineOffset: structuralGuideOffset(result, axes.cross, LayoutAlignmentGuideName.LastBaseline).offset,
+          firstBaselineOffset: structuralGuideOffset(result, axes.cross, BuiltinLayoutAlignmentGuideName.FirstBaseline)
+            .offset,
+          lastBaselineOffset: structuralGuideOffset(result, axes.cross, BuiltinLayoutAlignmentGuideName.LastBaseline)
+            .offset,
         };
       }),
     );
@@ -585,8 +587,8 @@ export const compileFlexLayout = (
       const crossSlotSize = slotSizeOn(finalResult, axes.cross);
       const guideName =
         alignment === LayoutAlignment.LastBaseline
-          ? LayoutAlignmentGuideName.LastBaseline
-          : LayoutAlignmentGuideName.FirstBaseline;
+          ? BuiltinLayoutAlignmentGuideName.LastBaseline
+          : BuiltinLayoutAlignmentGuideName.FirstBaseline;
       const guideOffset = structuralGuideOffset(finalResult, axes.cross, guideName).offset;
       const crossSlotStart = resolveFlexItemCrossSlotStart(line, crossSlotSize, crossMargins, alignment, guideOffset);
 
@@ -600,8 +602,8 @@ export const compileFlexLayout = (
       if (alignment === LayoutAlignment.FirstBaseline || alignment === LayoutAlignment.LastBaseline) {
         const baselineName =
           alignment === LayoutAlignment.FirstBaseline
-            ? LayoutAlignmentGuideName.FirstBaseline
-            : LayoutAlignmentGuideName.LastBaseline;
+            ? BuiltinLayoutAlignmentGuideName.FirstBaseline
+            : BuiltinLayoutAlignmentGuideName.LastBaseline;
         const target =
           line.crossStart +
           (alignment === LayoutAlignment.FirstBaseline
@@ -659,14 +661,14 @@ export const compileFlexLayout = (
     const last = physicalLines.at(-1)!;
     alignmentGuides = Object.freeze([
       Object.freeze({
-        name: LayoutAlignmentGuideName.FirstBaseline,
+        name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
-        position: outgoingLineGuide(LayoutAlignmentGuideName.FirstBaseline, first, placedBySource),
+        position: outgoingLineGuide(BuiltinLayoutAlignmentGuideName.FirstBaseline, first, placedBySource),
       }),
       Object.freeze({
-        name: LayoutAlignmentGuideName.LastBaseline,
+        name: BuiltinLayoutAlignmentGuideName.LastBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
-        position: outgoingLineGuide(LayoutAlignmentGuideName.LastBaseline, last, placedBySource),
+        position: outgoingLineGuide(BuiltinLayoutAlignmentGuideName.LastBaseline, last, placedBySource),
       }),
     ]);
   }

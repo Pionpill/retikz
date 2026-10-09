@@ -1,7 +1,7 @@
 import { globSync, readFileSync } from 'node:fs';
 
 import { WebFontSizePreset } from '@retikz/core';
-import { EntityRole, GraphStatus } from '@retikz/graph';
+import { BuiltinEntityRole, GraphStatus } from '@retikz/graph';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -27,7 +27,7 @@ describe('<ApiValues>', () => {
   });
 
   it('reads Graph role and status values from public constants', () => {
-    expect(API_VALUE_REGISTRY.EntityRole.values).toEqual(Object.values(EntityRole));
+    expect(API_VALUE_REGISTRY.BuiltinEntityRole.values).toEqual(Object.values(BuiltinEntityRole));
     expect(API_VALUE_REGISTRY.GraphStatus.values).toEqual(Object.values(GraphStatus));
   });
 

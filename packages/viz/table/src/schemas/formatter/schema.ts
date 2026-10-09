@@ -1,10 +1,10 @@
 import { createOpenStringSchema, JsonObjectSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import { TableCellFormatter } from './constants';
+import { BuiltinTableCellFormatter } from './constants';
 
 /** Table 内置 formatter 与自定义注册名共享的开放名称 schema */
-export const TableCellFormatterNameSchema = createOpenStringSchema(TableCellFormatter).describe(
+export const TableCellFormatterNameSchema = createOpenStringSchema(BuiltinTableCellFormatter).describe(
   'Exact registered Cell formatter provider name. Whitespace is preserved.',
 );
 

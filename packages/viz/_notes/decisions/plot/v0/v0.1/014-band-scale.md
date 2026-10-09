@@ -23,8 +23,8 @@ keywords: 'band、point、scale、bandwidth、projector、PositionScale、scaleB
 判别串保持裸字面量第一形态（JSON / LLM 写 `{ type: 'band' }`），常量供手写补全：
 
 ```ts
-export const PlotScale = { Linear: 'linear', Band: 'band', Point: 'point' } as const;
-export type ScaleType = ValueOf<typeof PlotScale>;
+export const BuiltinPlotScale = { Linear: 'linear', Band: 'band', Point: 'point' } as const;
+export type ScaleType = ValueOf<typeof BuiltinPlotScale>;
 ```
 
 分类标量限 `z.union([z.string(), z.number()])`（不含 boolean/null）；band 字段 `domain? / paddingInner? / paddingOuter? / align?`、point 字段 `domain? / padding? / align?`，全 optional、全 JSON 可序列化。

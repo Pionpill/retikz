@@ -1,5 +1,5 @@
 import type { PathCurve } from '@retikz/plot';
-import { PathMark, PlotAxis, PlotLegend, PlotScale } from '@retikz/plot-react';
+import { PathMark, PlotAxis, PlotLegend, BuiltinPlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -21,8 +21,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
         plotDefaults={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
-        <PlotScale dimension="x" type="point" padding={0} />
-        <PlotScale dimension="y" type="linear" domainPadding={0} />
+        <BuiltinPlotScale dimension="x" type="point" padding={0} />
+        <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
         <PathMark
           x="month"
           y="y1"
@@ -48,7 +48,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
         plotDefaults={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
-        <PlotScale dimension="y" type="linear" domainPadding={0} />
+        <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
         <PathMark
           x="month"
           y="y1"

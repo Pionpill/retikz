@@ -12,10 +12,10 @@ import {
   union,
 } from 'zod';
 
-import { DataFieldFormat, DataFieldType, FieldOrderMode } from './constants';
+import { BuiltinDataFieldFormat, DataFieldType, BuiltinFieldOrderMode } from './constants';
 
 /** 校验内置或自定义的字段值解析格式名称 */
-export const FieldFormatSchema = createOpenStringSchema(DataFieldFormat).describe(
+export const FieldFormatSchema = createOpenStringSchema(BuiltinDataFieldFormat).describe(
   'Field value-parsing format name; built-in or custom.',
 );
 
@@ -26,7 +26,10 @@ const FieldDefinitionBaseSchema = strictObject({
 });
 
 /** 分类字段的顺序声明；省略时按数据出现顺序 */
-const FieldOrderSchema = union([createOpenStringSchema(FieldOrderMode), array(union([string(), number()])).min(1)])
+const FieldOrderSchema = union([
+  createOpenStringSchema(BuiltinFieldOrderMode),
+  array(union([string(), number()])).min(1),
+])
   .optional()
   .describe('Category order; omitted means appearance order');
 

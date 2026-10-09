@@ -22,15 +22,15 @@ describe('时间位置比例尺文档示例', () => {
     expect(demoSource).toContain('data={visits}');
     expect(demoSource).toContain('defineControlledPreview');
     expect(demoSource).toContain('export const previewControls');
-    expect(demoSource).not.toContain('<PlotScale');
+    expect(demoSource).not.toContain('<BuiltinPlotScale');
     expect(dataSource).toContain('export const visits');
     expect(dataSource).not.toContain('visitsByTimeSpan');
   });
 
   it('双语说明把示例限定为比例尺推导证据', () => {
-    expect(chinesePage).toContain('横轴没有显式声明 PlotScale');
+    expect(chinesePage).toContain('横轴没有显式声明 BuiltinPlotScale');
     expect(chinesePage).not.toContain('选择时间跨度');
-    expect(englishPage).toContain('does not declare PlotScale explicitly');
+    expect(englishPage).toContain('does not declare BuiltinPlotScale explicitly');
     expect(englishPage).not.toContain('Choose a time span');
   });
 });

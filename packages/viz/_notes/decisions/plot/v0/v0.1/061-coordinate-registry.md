@@ -40,7 +40,7 @@ v0.1 stable 的内置坐标集合为 `cartesian2D`、`polar2D`、`cartesian1D` �
 ## 影响
 
 - ⚠️ BREAKING：`options.coordinates` / `<Plot coordinates>` 从 Record 改为 Array。
-- ⚠️ BREAKING：删除 `PlotCoordinate.Custom` 与旧 `{type:'custom',name,roles,params}` 形态。
+- ⚠️ BREAKING：删除 `BuiltinPlotCoordinate.Custom` 与旧 `{type:'custom',name,roles,params}` 形态。
 - `@retikz/plot` 公开 `defineCoordinate`、`CoordinateDefinition`、`CoordinateResolveContext`、`CoordinateResolution`、`CoordinateOp`。
 - core IR 不变；coordinate 只消费并产出 plot runtime frame。
 

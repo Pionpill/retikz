@@ -1,5 +1,5 @@
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import { RelationRole } from '@retikz/graph';
+import { BuiltinRelationRole } from '@retikz/graph';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -81,25 +81,25 @@ const Demo: FC<CoordinateConversionFlowI18nFigureProps> = props => {
           {
             source: 'centered-shape',
             target: 'rotate',
-            role: RelationRole.Dependency,
+            role: BuiltinRelationRole.Dependency,
             kind: LogicFigureRelationKind.Secondary,
           },
           {
             source: 'centered-shape',
             target: 'translate',
-            role: RelationRole.Dependency,
+            role: BuiltinRelationRole.Dependency,
             kind: LogicFigureRelationKind.Secondary,
           },
           {
             source: 'centered-shape',
             target: 'remove-center',
-            role: RelationRole.Dependency,
+            role: BuiltinRelationRole.Dependency,
             kind: LogicFigureRelationKind.Secondary,
           },
           {
             source: 'centered-shape',
             target: 'inverse-rotate',
-            role: RelationRole.Dependency,
+            role: BuiltinRelationRole.Dependency,
             kind: LogicFigureRelationKind.Secondary,
           },
         ]}

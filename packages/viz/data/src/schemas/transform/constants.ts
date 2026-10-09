@@ -4,7 +4,7 @@ import type { ValueOf } from '@retikz/foundation';
  * transform operation kind 关键字
  * @description 数据变换 operation 的判别字段；schema、provider definition 与 registry 诊断共用这些稳定取值
  */
-export const DataTransform = {
+export const BuiltinDataTransform = {
   /** 按字段排序 */
   Sort: 'sort',
   /** 分组汇总：groupBy 字段分组 + 多个 reducer metric → 每组一行（改行数） */
@@ -41,7 +41,7 @@ export const DataSortOrder = {
 } as const;
 
 /** 内置统计 reducer operation kind 关键字 */
-export const ReducerOperationKind = {
+export const BuiltinReducerOperationKind = {
   /** 统计组内行数 */
   Count: 'count',
   /** 对数值字段求和 */
@@ -63,23 +63,23 @@ export const ReducerOperationKind = {
 } as const;
 
 /** 读取 numeric field 的内置统计 reducer operation kind 子集 */
-export const FieldReducerOperationKind = {
+export const BuiltinFieldReducerOperationKind = {
   /** 对数值字段求和 */
-  Sum: ReducerOperationKind.Sum,
+  Sum: BuiltinReducerOperationKind.Sum,
   /** 对数值字段求算术平均值 */
-  Mean: ReducerOperationKind.Mean,
+  Mean: BuiltinReducerOperationKind.Mean,
   /** 对数值字段求中位数 */
-  Median: ReducerOperationKind.Median,
+  Median: BuiltinReducerOperationKind.Median,
   /** 对数值字段求最小值 */
-  Min: ReducerOperationKind.Min,
+  Min: BuiltinReducerOperationKind.Min,
   /** 对数值字段求最大值 */
-  Max: ReducerOperationKind.Max,
+  Max: BuiltinReducerOperationKind.Max,
   /** 对数值字段求最小值和最大值区间 */
-  Extent: ReducerOperationKind.Extent,
+  Extent: BuiltinReducerOperationKind.Extent,
 } as const;
 
 /** 内置 row selector operation kind 关键字 */
-export const SelectorOperationKind = {
+export const BuiltinSelectorOperationKind = {
   /** 选择排序字段最小的行 */
   Min: 'min',
   /** 选择排序字段最大的行 */
@@ -99,27 +99,27 @@ export const SelectorOperationKind = {
 } as const;
 
 /** 按数值字段取极值的 row selector operation kind 子集 */
-export const MinMaxSelectorOperationKind = {
+export const BuiltinMinMaxSelectorOperationKind = {
   /** 选择排序字段最小的行 */
-  Min: SelectorOperationKind.Min,
+  Min: BuiltinSelectorOperationKind.Min,
   /** 选择排序字段最大的行 */
-  Max: SelectorOperationKind.Max,
+  Max: BuiltinSelectorOperationKind.Max,
 } as const;
 
 /** 按现有顺序或显式排序取行的 row selector operation kind 子集 */
-export const FirstLastSelectorOperationKind = {
+export const BuiltinFirstLastSelectorOperationKind = {
   /** 选择当前顺序或显式排序后的第一行 */
-  First: SelectorOperationKind.First,
+  First: BuiltinSelectorOperationKind.First,
   /** 选择当前顺序或显式排序后的最后一行 */
-  Last: SelectorOperationKind.Last,
+  Last: BuiltinSelectorOperationKind.Last,
 } as const;
 
 /** 按排序名次取行的 row selector operation kind 子集 */
-export const TopBottomSelectorOperationKind = {
+export const BuiltinTopBottomSelectorOperationKind = {
   /** 选择排序字段最高名次的行 */
-  Top: SelectorOperationKind.Top,
+  Top: BuiltinSelectorOperationKind.Top,
   /** 选择排序字段最低名次的行 */
-  Bottom: SelectorOperationKind.Bottom,
+  Bottom: BuiltinSelectorOperationKind.Bottom,
 } as const;
 
 /** row selector 平局处理策略 */
@@ -133,13 +133,17 @@ export const RowSelectorTie = {
 } as const;
 
 /** transform operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_TRANSFORM_KINDS: ReadonlySet<string> = new Set(Object.values(DataTransform));
+export const RESERVED_TRANSFORM_KINDS: ReadonlySet<string> = new Set(Object.values(BuiltinDataTransform));
 
 /** 统计 reducer operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(ReducerOperationKind));
+export const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(
+  Object.values(BuiltinReducerOperationKind),
+);
 
 /** row selector operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(SelectorOperationKind));
+export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(
+  Object.values(BuiltinSelectorOperationKind),
+);
 
 /** stack baseline offset 策略 */
 export const StackOffset = {
@@ -188,28 +192,28 @@ export const DensityBandwidthKind = {
 } as const;
 
 /** transform operation kind 取值 */
-export type DataTransform = ValueOf<typeof DataTransform>;
+export type BuiltinDataTransform = ValueOf<typeof BuiltinDataTransform>;
 
 /** data 排序方向取值 */
 export type DataSortOrder = ValueOf<typeof DataSortOrder>;
 
 /** 内置统计 reducer operation kind 取值 */
-export type ReducerOperationKind = ValueOf<typeof ReducerOperationKind>;
+export type BuiltinReducerOperationKind = ValueOf<typeof BuiltinReducerOperationKind>;
 
 /** 读取 numeric field 的内置统计 reducer operation kind 取值 */
-export type FieldReducerOperationKind = ValueOf<typeof FieldReducerOperationKind>;
+export type BuiltinFieldReducerOperationKind = ValueOf<typeof BuiltinFieldReducerOperationKind>;
 
 /** 内置 row selector operation kind 取值 */
-export type SelectorOperationKind = ValueOf<typeof SelectorOperationKind>;
+export type BuiltinSelectorOperationKind = ValueOf<typeof BuiltinSelectorOperationKind>;
 
 /** 按数值字段取极值的 row selector operation kind 取值 */
-export type MinMaxSelectorOperationKind = ValueOf<typeof MinMaxSelectorOperationKind>;
+export type BuiltinMinMaxSelectorOperationKind = ValueOf<typeof BuiltinMinMaxSelectorOperationKind>;
 
 /** 按现有顺序或显式排序取行的 row selector operation kind 取值 */
-export type FirstLastSelectorOperationKind = ValueOf<typeof FirstLastSelectorOperationKind>;
+export type BuiltinFirstLastSelectorOperationKind = ValueOf<typeof BuiltinFirstLastSelectorOperationKind>;
 
 /** 按排序名次取行的 row selector operation kind 取值 */
-export type TopBottomSelectorOperationKind = ValueOf<typeof TopBottomSelectorOperationKind>;
+export type BuiltinTopBottomSelectorOperationKind = ValueOf<typeof BuiltinTopBottomSelectorOperationKind>;
 
 /** row selector 平局处理策略值 */
 export type RowSelectorTie = ValueOf<typeof RowSelectorTie>;

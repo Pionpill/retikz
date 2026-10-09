@@ -3,16 +3,16 @@
  * @description SVG（svg/animation）与 Canvas（canvas/drawScene）共用，避免两端通道语义漂移
  */
 import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
-import { Anchor, AnimationProperty, CenterAnchor } from '@retikz/core';
+import { Anchor, BuiltinAnimationProperty, CenterAnchor } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */
 const TRANSFORM_PROPERTIES = new Set<string>([
-  AnimationProperty.TranslateX,
-  AnimationProperty.TranslateY,
-  AnimationProperty.Rotate,
-  AnimationProperty.Scale,
-  AnimationProperty.ScaleX,
-  AnimationProperty.ScaleY,
+  BuiltinAnimationProperty.TranslateX,
+  BuiltinAnimationProperty.TranslateY,
+  BuiltinAnimationProperty.Rotate,
+  BuiltinAnimationProperty.Scale,
+  BuiltinAnimationProperty.ScaleX,
+  BuiltinAnimationProperty.ScaleY,
 ]);
 
 /** 通道分类：css 直属 / transform / pathDraw 揭示 / viewBox 镜头 / 自定义 */
@@ -21,13 +21,13 @@ export type PropertyClass = 'css' | 'transform' | 'pathDraw' | 'viewBox' | 'cust
 /** 把 property 名归类 */
 export const classifyProperty = (property: string): PropertyClass => {
   if (TRANSFORM_PROPERTIES.has(property)) return 'transform';
-  if (property === AnimationProperty.PathDraw) return 'pathDraw';
-  if (property === AnimationProperty.ViewBox) return 'viewBox';
+  if (property === BuiltinAnimationProperty.PathDraw) return 'pathDraw';
+  if (property === BuiltinAnimationProperty.ViewBox) return 'viewBox';
   if (
-    property === AnimationProperty.Opacity ||
-    property === AnimationProperty.Fill ||
-    property === AnimationProperty.Stroke ||
-    property === AnimationProperty.StrokeWidth
+    property === BuiltinAnimationProperty.Opacity ||
+    property === BuiltinAnimationProperty.Fill ||
+    property === BuiltinAnimationProperty.Stroke ||
+    property === BuiltinAnimationProperty.StrokeWidth
   ) {
     return 'css';
   }

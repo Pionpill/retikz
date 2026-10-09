@@ -22,7 +22,7 @@ const animationPresetSymbols: ReadonlySet<string> = new Set([
 /** 视觉参考只投影各能力拥有的公开导出 */
 export const visualApiSymbols = {
   pattern: [
-    'PatternShape',
+    'BuiltinPatternShape',
     'IRPatternPaint',
     'IRPatternLineStyle',
     'IRPatternLineStyleCycle',
@@ -38,8 +38,8 @@ export const visualApiSymbols = {
     'IRAnimationTrack',
     'IRKeyframe',
     'AnimationPresetOptions',
-    'AnimationProperty',
-    'AnimationEasing',
+    'BuiltinAnimationProperty',
+    'BuiltinAnimationEasing',
     'AnimationDirection',
     'AnimationFill',
     'AnimationTrigger',

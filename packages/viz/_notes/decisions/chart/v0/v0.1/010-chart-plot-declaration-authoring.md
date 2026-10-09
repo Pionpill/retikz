@@ -23,15 +23,15 @@ Plot React 已经使用 headless declaration component 表达 transform、scale�
 
 `@retikz/plot-react` 的非 Mark declaration component 统一使用 `PlotXxx` 名称：
 
-| 现有名称    | 新名称          | Props 名称           |
-| ----------- | --------------- | -------------------- |
-| `Facet`     | `PlotFacet`     | `PlotFacetProps`     |
-| `Scaffold`  | `PlotScaffold`  | `PlotScaffoldProps`  |
-| `Track`     | `PlotTrack`     | `PlotTrackProps`     |
-| `Axis`      | `PlotAxis`      | `PlotAxisProps`      |
-| `Legend`    | `PlotLegend`    | `PlotLegendProps`    |
-| `Scale`     | `PlotScale`     | `PlotScaleProps`     |
-| `Transform` | `PlotTransform` | `PlotTransformProps` |
+| 现有名称    | 新名称             | Props 名称           |
+| ----------- | ------------------ | -------------------- |
+| `Facet`     | `PlotFacet`        | `PlotFacetProps`     |
+| `Scaffold`  | `PlotScaffold`     | `PlotScaffoldProps`  |
+| `Track`     | `PlotTrack`        | `PlotTrackProps`     |
+| `Axis`      | `PlotAxis`         | `PlotAxisProps`      |
+| `Legend`    | `PlotLegend`       | `PlotLegendProps`    |
+| `Scale`     | `BuiltinPlotScale` | `PlotScaleProps`     |
+| `Transform` | `PlotTransform`    | `PlotTransformProps` |
 
 根组件继续名为 `Plot`；`PlotPlot` 不增加信息。Mark declaration 的命名由 Mark 自身契约决定，不属于本 ADR 的改名范围。Theme provider、runtime API 与非 declaration function 已经具有明确语义，也不按本表机械改名。
 

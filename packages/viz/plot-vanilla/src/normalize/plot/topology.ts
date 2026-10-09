@@ -1,5 +1,5 @@
 import type { IRDataStackTransform, IRDataTransform, IRDataTransformDeclaration } from '@retikz/data';
-import { DataTransform } from '@retikz/data';
+import { BuiltinDataTransform } from '@retikz/data';
 
 import type { NormalizationState, PlotAuthoringContext } from './contracts';
 import { buildShortcutTransforms } from './scale-coordinate';
@@ -7,7 +7,7 @@ import { buildShortcutTransforms } from './scale-coordinate';
 type Collected = NormalizationState;
 
 const isStackTransform = (transform: IRDataTransform): transform is IRDataStackTransform =>
-  transform.kind === DataTransform.Stack;
+  transform.kind === BuiltinDataTransform.Stack;
 
 /** 归并根 transforms、声明 transforms 与 mark shortcut transforms */
 export const assembledTransformsOf = (

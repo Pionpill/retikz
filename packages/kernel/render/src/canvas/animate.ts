@@ -5,7 +5,7 @@
  *   自定义通道 → 注册表 interpolate + applyCanvas，未注册 warn+skip。viewBox 是 scene 根镜头、不在元素级
  */
 import type { ScenePrimitive } from '@retikz/core';
-import { AnimationProperty } from '@retikz/core';
+import { BuiltinAnimationProperty } from '@retikz/core';
 
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import {
@@ -67,9 +67,9 @@ const asNumber = (value: unknown): number => (typeof value === 'number' ? value 
 
 const isUnsupportedGroupStyleProperty = (prim: ScenePrimitive, property: string): boolean =>
   prim.type === 'group' &&
-  (property === AnimationProperty.Fill ||
-    property === AnimationProperty.Stroke ||
-    property === AnimationProperty.StrokeWidth);
+  (property === BuiltinAnimationProperty.Fill ||
+    property === BuiltinAnimationProperty.Stroke ||
+    property === BuiltinAnimationProperty.StrokeWidth);
 
 /**
  * 给时刻 time 把 prim 的 tracks 应用到 ctx，返回带覆盖值的 prim（无覆盖则原样返回）
@@ -124,39 +124,39 @@ export const applyPrimAnimations = (
     const value = result.value;
 
     switch (track.property) {
-      case AnimationProperty.Opacity:
+      case BuiltinAnimationProperty.Opacity:
         overrides.opacity = asNumber(value);
         break;
-      case AnimationProperty.Fill:
+      case BuiltinAnimationProperty.Fill:
         overrides.fill = value;
         break;
-      case AnimationProperty.Stroke:
+      case BuiltinAnimationProperty.Stroke:
         overrides.stroke = value;
         break;
-      case AnimationProperty.StrokeWidth:
+      case BuiltinAnimationProperty.StrokeWidth:
         overrides.strokeWidth = asNumber(value);
         break;
-      case AnimationProperty.TranslateX:
+      case BuiltinAnimationProperty.TranslateX:
         ctx.translate(asNumber(value), 0);
         break;
-      case AnimationProperty.TranslateY:
+      case BuiltinAnimationProperty.TranslateY:
         ctx.translate(0, asNumber(value));
         break;
-      case AnimationProperty.Rotate:
-      case AnimationProperty.Scale:
-      case AnimationProperty.ScaleX:
-      case AnimationProperty.ScaleY: {
+      case BuiltinAnimationProperty.Rotate:
+      case BuiltinAnimationProperty.Scale:
+      case BuiltinAnimationProperty.ScaleX:
+      case BuiltinAnimationProperty.ScaleY: {
         const [ox, oy] = resolveTransformOrigin(prim, track.origin) ?? [0, 0];
         ctx.translate(ox, oy);
-        if (track.property === AnimationProperty.Rotate) ctx.rotate(asNumber(value) * DEG_TO_RAD);
-        else if (track.property === AnimationProperty.ScaleX) ctx.scale(asNumber(value), 1);
-        else if (track.property === AnimationProperty.ScaleY) ctx.scale(1, asNumber(value));
+        if (track.property === BuiltinAnimationProperty.Rotate) ctx.rotate(asNumber(value) * DEG_TO_RAD);
+        else if (track.property === BuiltinAnimationProperty.ScaleX) ctx.scale(asNumber(value), 1);
+        else if (track.property === BuiltinAnimationProperty.ScaleY) ctx.scale(1, asNumber(value));
         else ctx.scale(asNumber(value), asNumber(value));
 
         ctx.translate(-ox, -oy);
         break;
       }
-      case AnimationProperty.PathDraw: {
+      case BuiltinAnimationProperty.PathDraw: {
         const v = asNumber(value);
 
         // 完全揭示（settled）时不加 dash override，渲染完整 base 描边——approxLength 对曲线低估时，

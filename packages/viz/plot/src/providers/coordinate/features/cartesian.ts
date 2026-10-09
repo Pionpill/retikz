@@ -25,14 +25,14 @@ import {
   Cartesian1DOrientation,
   Cartesian1DSchema,
   Cartesian2DSchema,
-  PlotCoordinate,
-  PlotScale,
+  BuiltinPlotCoordinate,
+  BuiltinPlotScale,
 } from '../../../schemas';
 import type { Margins, Rect } from '../../../shared';
 import { computePlotArea, estimateLabelWidth } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
-type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
+type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Cartesian2D }>;
 
 /** 空刻度集：某维度无 axis 时给 GuideContext 的占位 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -150,12 +150,12 @@ const addMarginReserve = (base: Partial<Margins> | undefined, extra: Margins): M
 
 /** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理） */
 const hasExplicitContinuousRange = (def: IRPlotScaleOperation): boolean =>
-  (def.type === PlotScale.Linear ||
-    def.type === PlotScale.Log ||
-    def.type === PlotScale.Pow ||
-    def.type === PlotScale.Sqrt ||
-    def.type === PlotScale.Symlog ||
-    def.type === PlotScale.Radial) &&
+  (def.type === BuiltinPlotScale.Linear ||
+    def.type === BuiltinPlotScale.Log ||
+    def.type === BuiltinPlotScale.Pow ||
+    def.type === BuiltinPlotScale.Sqrt ||
+    def.type === BuiltinPlotScale.Symlog ||
+    def.type === BuiltinPlotScale.Radial) &&
   'range' in def &&
   def.range !== undefined;
 
@@ -166,7 +166,7 @@ const hasExplicitContinuousRange = (def: IRPlotScaleOperation): boolean =>
  */
 export type CartesianCoordinateFrame = {
   /** 判别字段：2D 笛卡尔 */
-  type: typeof PlotCoordinate.Cartesian2D;
+  type: typeof BuiltinPlotCoordinate.Cartesian2D;
   /** 位置角色序（[x, y]）；mark 按此序取 encoding 通道值 */
   roles: ReadonlyArray<DimensionRole>;
   /** x（水平）位置 scale */
@@ -216,7 +216,7 @@ export const createCartesianCoordinate = (
   };
 
   return {
-    type: PlotCoordinate.Cartesian2D,
+    type: BuiltinPlotCoordinate.Cartesian2D,
     roles: ['x', 'y'],
     primary,
     secondary,
@@ -252,7 +252,7 @@ export const createCartesianCoordinate = (
  */
 export type Cartesian1DCoordinateFrame = {
   /** 判别字段：1D 笛卡尔直线 */
-  type: typeof PlotCoordinate.Cartesian1D;
+  type: typeof BuiltinPlotCoordinate.Cartesian1D;
   /** 位置角色序（[x]，单通道） */
   roles: ReadonlyArray<DimensionRole>;
   /** 轴向（horizontal 沿 x、vertical 沿 y） */
@@ -302,7 +302,7 @@ export const createCartesian1DCoordinate = (
   };
 
   return {
-    type: PlotCoordinate.Cartesian1D,
+    type: BuiltinPlotCoordinate.Cartesian1D,
     roles: ['x'],
     orientation,
     baseline,

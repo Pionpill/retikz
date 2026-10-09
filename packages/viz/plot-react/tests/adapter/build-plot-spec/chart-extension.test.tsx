@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { resolvePlotExtensionAuthoring } from '../../../src';
-import { PlotAxis, PlotFacet, PlotLegend, PlotScale, PlotTransform, PointMark } from '../../../src/components';
+import { PlotAxis, PlotFacet, PlotLegend, BuiltinPlotScale, PlotTransform, PointMark } from '../../../src/components';
 import { Plot } from '../../../src/Plot';
 
 const extensionContext = (overrides: Partial<PlotAuthoringContext> = {}): PlotAuthoringContext => ({
@@ -88,7 +88,7 @@ describe('Plot chart-extension declaration normalization', () => {
       [
         <PlotTransform key="sort" operation={{ kind: 'sort', params: { field: 'amount', order: 'descending' } }} />,
         <PointMark key="point" id="extension.point" x="amount" y="margin" />,
-        <PlotScale key="scale" dimension="x" type="log" base={2} />,
+        <BuiltinPlotScale key="scale" dimension="x" type="log" base={2} />,
         <PlotAxis key="axis" dimension="x" grid />,
         <PlotLegend key="legend" channel="color" title="Series" />,
       ],
@@ -275,7 +275,7 @@ describe('Plot chart-extension declaration normalization', () => {
 
     expectDeclarationError(
       () =>
-        normalizeExtension(<PlotScale dimension="x" type="linear" />, {
+        normalizeExtension(<BuiltinPlotScale dimension="x" type="linear" />, {
           scales: {
             value: [{ type: 'linear', name: 'recipe.x' }],
             path: ['props', 'scales'],

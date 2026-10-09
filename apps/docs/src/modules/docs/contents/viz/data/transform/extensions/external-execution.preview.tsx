@@ -1,5 +1,5 @@
 import { createDataTransformExecutor } from '@retikz/data';
-import { Plot, PlotAxis, PlotScale, PlotTransform, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PlotTransform, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 
@@ -40,7 +40,7 @@ export const ExternalExecutionPreview: FC<ExternalExecutionPreviewProps> = props
         dataTransformExecutor={executor}
       >
         <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor } }} />
-        <PlotScale dimension="x" type="linear" domain={[0, 16]} />
+        <BuiltinPlotScale dimension="x" type="linear" domain={[0, 16]} />
         <PointMark x="x" y="y" fill="#94a3b8" size={5} />
         <PointMark x="scaledX" y="y" fill="#2563eb" size={7} />
         <PlotAxis dimension="x" /> <PlotAxis dimension="y" grid />

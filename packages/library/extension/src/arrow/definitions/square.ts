@@ -1,12 +1,12 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
-import { ExtensionArrowName } from '../constants';
+import { BuiltinExtensionArrowName } from '../constants';
 import { filledPath, hollowPath } from './_utils';
 
 /** 可选实心方形箭头 Definition */
 export const SquareArrowDefinition = defineArrow({
-  name: ExtensionArrowName.Square,
+  name: BuiltinExtensionArrowName.Square,
   backX: 0,
   lineContactX: 0,
   emit: context => [
@@ -29,7 +29,7 @@ export const SquareArrowProvider: CoreDependencyProvider = Object.freeze({
 
 /** 可选空心方形箭头 Definition */
 export const OpenSquareArrowDefinition = defineArrow({
-  name: ExtensionArrowName.OpenSquare,
+  name: BuiltinExtensionArrowName.OpenSquare,
   hollow: true,
   backX: 1,
   lineContactX: 1,

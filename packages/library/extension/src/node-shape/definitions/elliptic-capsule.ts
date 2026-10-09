@@ -9,7 +9,7 @@ import {
   rect,
 } from '@retikz/core';
 
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 import type { EllipticCapShapeParams } from './_elliptic-cap';
 import {
   circumscribeEllipticCaps,
@@ -24,7 +24,7 @@ export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
 
 /** 仅由闭合半椭圆端外轮廓组成的 Elliptic Capsule Definition */
 export const EllipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapeParams>({
-  name: ExtensionShapeName.EllipticCapsule,
+  name: BuiltinExtensionShapeName.EllipticCapsule,
   paramsSchema: EllipticCapShapeParamsSchema,
   circumscribe: circumscribeEllipticCaps,
   boundaryPoint: (bounds, toward, params) => localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),

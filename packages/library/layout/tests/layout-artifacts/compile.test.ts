@@ -4,7 +4,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
@@ -58,7 +58,7 @@ const ArtifactLeafDefinition = defineComposite({
         ? []
         : [
             {
-              name: LayoutAlignmentGuideName.FirstBaseline,
+              name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
               dimension: LayoutAlignmentGuideDimension.Y,
               position: node.firstBaseline,
             } as const,
@@ -67,7 +67,7 @@ const ArtifactLeafDefinition = defineComposite({
         ? []
         : [
             {
-              name: LayoutAlignmentGuideName.LastBaseline,
+              name: BuiltinLayoutAlignmentGuideName.LastBaseline,
               dimension: LayoutAlignmentGuideDimension.Y,
               position: node.lastBaseline,
             } as const,

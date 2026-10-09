@@ -20,7 +20,7 @@ import type { PolarCoordinateFrame } from '../../../contract';
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotIntervalBound, IRPlotIntervalMark, IRPlotMark } from '../../../schemas';
-import { IntervalBoundKind, IntervalMarkSchema, PlotCoordinate, PlotMark } from '../../../schemas';
+import { IntervalBoundKind, IntervalMarkSchema, BuiltinPlotCoordinate, BuiltinPlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import type { CartesianCoordinateFrame } from '../../coordinate';
 import { isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
@@ -278,7 +278,8 @@ const boundOutputInterval = (
       return [lo, hi];
     }
     case IntervalBoundKind.Full: {
-      if (axis === 'secondary' && frame.type === PlotCoordinate.Polar2D) return [frame.innerRadius, frame.outerRadius];
+      if (axis === 'secondary' && frame.type === BuiltinPlotCoordinate.Polar2D)
+        return [frame.innerRadius, frame.outerRadius];
       return scale.range();
     }
   }
@@ -308,7 +309,7 @@ export const intervalCell = (
     ctx,
   );
   if (secondary === null) return null;
-  if (frame.type === PlotCoordinate.Polar2D) {
+  if (frame.type === BuiltinPlotCoordinate.Polar2D) {
     if (Math.abs(primary[1] - primary[0]) < DEFAULT_EPSILON) return null;
     if (Math.abs(secondary[1] - secondary[0]) < DEFAULT_EPSILON) return null;
   }
@@ -434,7 +435,7 @@ export const markCell = (
   frame: CoordinateFrame,
   ctx?: IntervalContext,
 ): Cell | null => {
-  if (mark.type !== PlotMark.Interval) return null;
+  if (mark.type !== BuiltinPlotMark.Interval) return null;
   if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame))
     return ctx ? intervalCell(mark, row, frame, ctx) : null;
   if (isGenericCoordinateFrame(frame) && hasProjectCell(frame)) return genericIntervalCell(mark, row, frame, ctx);
@@ -444,7 +445,7 @@ export const markCell = (
 
 /** interval cell 类 mark 某行的 series 值（写进 datum meta；series 字段拆分） */
 const cellSeriesValue = (mark: IRPlotMark, row: ExternalRow): unknown =>
-  mark.type === PlotMark.Interval && mark.series !== undefined ? resolveFieldPath(row, mark.series) : undefined;
+  mark.type === BuiltinPlotMark.Interval && mark.series !== undefined ? resolveFieldPath(row, mark.series) : undefined;
 
 const resolvePolarCellPull = (mark: IRPlotIntervalMark, row: ExternalRow): number => {
   const pull = mark.pull;
@@ -598,7 +599,7 @@ export const lowerIntervalLayer = (
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
-  if (mark.type !== PlotMark.Interval) return null;
+  if (mark.type !== BuiltinPlotMark.Interval) return null;
 
   // interval 需要坐标帧提供 cell 几何投影；内置和自定义帧都走同一 projectCell 契约。
   if (!hasProjectCell(frame)) {

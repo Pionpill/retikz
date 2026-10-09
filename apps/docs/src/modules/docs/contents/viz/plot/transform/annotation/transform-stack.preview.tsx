@@ -1,4 +1,4 @@
-import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale, PlotTransform } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -24,7 +24,7 @@ export const TransformStackPreview = (values: TransformStackPreviewValues, lang:
   return (
     <Plot data={productRevenue} width={420} height={260}>
       <PlotTransform operation={{ ...stackOperationOf(values) }} />
-      <PlotScale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
       <IntervalMark
         x="quarter"
         color="product"

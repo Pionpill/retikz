@@ -1,5 +1,5 @@
 import type { AnimationPresetOptions, IRAnimationOrigin, IRAnimationTrack, ScaleInOptions } from '@retikz/core';
-import { AnimationProperty, scaleIn } from '@retikz/core';
+import { BuiltinAnimationProperty, scaleIn } from '@retikz/core';
 
 /** 把公共项叠到 track（duration/easing 取 opts 覆盖否则 preset 默认；delay/trigger 仅在给定时写入） */
 const applyBase = (
@@ -23,7 +23,7 @@ export type GrowUpOptions = AnimationPresetOptions & {
 
 /** 从基线长出：`scaleY` 0→1，支点底边（柱状图入场） */
 export const growUp = (opts: GrowUpOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.ScaleY,
+  property: BuiltinAnimationProperty.ScaleY,
   keyframes: [
     { at: 0, value: 0 },
     { at: 1, value: 1 },
@@ -42,7 +42,7 @@ export type PulseOptions = AnimationPresetOptions & {
 
 /** 脉冲：`scale` 1→peak→1 无限循环（强调 / 心跳） */
 export const pulse = (opts: PulseOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.Scale,
+  property: BuiltinAnimationProperty.Scale,
   keyframes: [
     { at: 0, value: 1 },
     { at: 0.5, value: opts.peak ?? 1.1 },
@@ -61,7 +61,7 @@ export type SpinOptions = AnimationPresetOptions & {
 
 /** 旋转：`rotate` 0→360 无限循环、匀速（loader） */
 export const spin = (opts: SpinOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.Rotate,
+  property: BuiltinAnimationProperty.Rotate,
   keyframes: [
     { at: 0, value: 0 },
     { at: 1, value: 360 },
@@ -81,7 +81,7 @@ export type FlashOptions = AnimationPresetOptions & {
 
 /** 闪一下强调：`opacity` 1→dim→1，默认闪 2 次（末帧 = base = 完整可见） */
 export const flash = (opts: FlashOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.Opacity,
+  property: BuiltinAnimationProperty.Opacity,
   keyframes: [
     { at: 0, value: 1 },
     { at: 0.5, value: opts.dim ?? 0 },
@@ -101,7 +101,7 @@ export type BlinkOptions = AnimationPresetOptions & {
 
 /** 持续闪烁：`opacity` 1→dim→1 无限循环（blink = 无限版 flash） */
 export const blink = (opts: BlinkOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.Opacity,
+  property: BuiltinAnimationProperty.Opacity,
   keyframes: [
     { at: 0, value: 1 },
     { at: 0.5, value: opts.dim ?? 0 },
@@ -125,7 +125,7 @@ export type WiggleOptions = AnimationPresetOptions & {
 export const wiggle = (opts: WiggleOptions = {}): IRAnimationTrack => {
   const angle = opts.angle ?? 5;
   return {
-    property: AnimationProperty.Rotate,
+    property: BuiltinAnimationProperty.Rotate,
     keyframes: [
       { at: 0, value: 0 },
       { at: 0.25, value: angle },

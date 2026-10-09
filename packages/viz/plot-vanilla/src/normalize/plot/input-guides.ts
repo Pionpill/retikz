@@ -9,7 +9,7 @@ export type InputPlotAxis = {
    * custom coordinate 使用 definition 声明的 role。维度须匹配坐标系合法集，否则 lowering fail-loud
    */
   dimension: string;
-  /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <PlotScale dimension={dimension} type={scale} /> */
+  /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <BuiltinPlotScale dimension={dimension} type={scale} /> */
   scale?: InputPlotPositionScaleType;
   /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid */
   line?: IRPlotAxisGuide['line'];

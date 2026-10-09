@@ -1,5 +1,5 @@
 import type { IRPlot, IRPlotGuide } from '@retikz/plot';
-import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide } from '@retikz/plot';
+import { PLOT_NAMESPACE, PlotComposite, BuiltinPlotCoordinate, PlotGuide } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
@@ -121,7 +121,7 @@ export const normalizePlotIR = (
  */
 export const decorateDefaultGuides = (spec: IRPlot): IRPlot => {
   if (spec.coordinate === undefined) return spec;
-  if (spec.coordinate.type !== PlotCoordinate.Cartesian2D) return spec;
+  if (spec.coordinate.type !== BuiltinPlotCoordinate.Cartesian2D) return spec;
 
   const guides = spec.guides ?? [];
   if (guides.some(guide => guide.type === PlotGuide.Axis)) return spec;

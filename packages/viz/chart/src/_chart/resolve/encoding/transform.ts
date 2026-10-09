@@ -6,7 +6,12 @@ import type {
   IRDataTransform,
   IRDataTransformDeclaration,
 } from '@retikz/data';
-import { DataTransform, DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
+import {
+  BuiltinDataTransform,
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+} from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 
 import { RetikzChartError } from '../../../error';
@@ -440,7 +445,7 @@ export const resolveChartEncodingTransforms = <
           slotIndex: summarySlotIndex,
           phase: DataTransformPhase.RowShape,
           operation: {
-            kind: DataTransform.Summarize,
+            kind: BuiltinDataTransform.Summarize,
             params: {
               groupBy,
               metrics: aggregateMappings.map(mapping => mapping.operation),

@@ -13,15 +13,15 @@ import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObje
 import {
   RibbonAlignment,
   RibbonArcCapSweep,
-  RibbonCap,
+  BuiltinRibbonCap,
   RibbonTaperInterpolation,
   RibbonWidthInterpolation,
-  RibbonWidthProfile,
+  BuiltinRibbonWidthProfile,
 } from './constants';
 import type { IRRibbonDirection } from './types';
 
 /** Extension 内置 Ribbon profile 与自定义注册名共享的开放名称 schema */
-export const RibbonWidthProfileNameSchema = createOpenStringSchema(RibbonWidthProfile).describe(
+export const RibbonWidthProfileNameSchema = createOpenStringSchema(BuiltinRibbonWidthProfile).describe(
   'Ribbon width profile name assembled from Extension profile definitions and provider contributions.',
 );
 
@@ -34,7 +34,7 @@ export const RibbonArcCapSchema = strictObject({
 
 /** 内置与自定义端帽共用的持久化引用 */
 export const RibbonCapSchema = strictObject({
-  name: createOpenStringSchema(RibbonCap).describe('Registered ribbon cap name.'),
+  name: createOpenStringSchema(BuiltinRibbonCap).describe('Registered ribbon cap name.'),
   params: JsonObjectSchema.optional().describe('JSON-safe cap parameters.'),
 }).describe('Reference to a registered ribbon cap.');
 

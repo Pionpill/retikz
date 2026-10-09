@@ -24,7 +24,7 @@ export const GraphType = {
 } as const;
 
 /** Entity 的内置上位语义角色 */
-export const EntityRole = {
+export const BuiltinEntityRole = {
   /** 主动参与、负责或提供能力的主体 */
   Participant: 'participant',
   /** 发生的工作、动作或转换过程 */
@@ -42,7 +42,7 @@ export const EntityRole = {
 } as const;
 
 /** Relation 的内置语义角色 */
-export const RelationRole = {
+export const BuiltinRelationRole = {
   /** 一般关联关系 */
   Association: 'association',
   /** 依赖关系 */
@@ -71,10 +71,10 @@ export const GraphStatus = {
 export type GraphType = ValueOf<typeof GraphType>;
 
 /** Entity 内置角色词汇值 */
-export type EntityRole = ValueOf<typeof EntityRole>;
+export type BuiltinEntityRole = ValueOf<typeof BuiltinEntityRole>;
 
 /** Relation 内置角色词汇值 */
-export type RelationRole = ValueOf<typeof RelationRole>;
+export type BuiltinRelationRole = ValueOf<typeof BuiltinRelationRole>;
 
 /** Graph 内置语义状态词汇值 */
 export type GraphStatus = ValueOf<typeof GraphStatus>;

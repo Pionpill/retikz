@@ -120,7 +120,7 @@ PlotAxis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成
 | 属性          | 类型                          | 默认值   | 描述                                                                                            |
 | ------------- | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
 | `dimension`   | `PlotAxisProps['dimension']`  | —        | 要解释的维度：cartesian / polar 使用 x / y；必须匹配当前坐标系                                  |
-| `scale?`      | `PlotAxisProps['scale']`      | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<PlotScale dimension="..." type="..." />`                  |
+| `scale?`      | `PlotAxisProps['scale']`      | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<BuiltinPlotScale dimension="..." type="..." />`           |
 | `placement?`  | `PlotAxisProps['placement']`  | 自动推断 | 轴线摆放；分支 `kind` 见 <ApiValues name="AxisPlacementKind" />；`origin` 仅适用于 cartesian    |
 | `line?`       | `PlotAxisProps['line']`       | 默认轴线 | 轴线样式与端点几何；`extent` 和 `arrow` 目前仅适用于 cartesian                                  |
 | `crossing?`   | `PlotAxisProps['crossing']`   | 正常刻度 | 交叉值处的 tick / label 策略；`label:'corner'` 可把共享原点标签移到角落                         |

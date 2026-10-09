@@ -1,4 +1,4 @@
-import { IntervalMark, PlotAxis, PlotScale, RelationMark } from '@retikz/plot-react';
+import { IntervalMark, PlotAxis, BuiltinPlotScale, RelationMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -37,8 +37,8 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
   return (
     <Layout viewBox={{ x: -20, y: -50, width: 660, height: 390 }}>
       <Plot data={data} width={620} height={320}>
-        <PlotScale dimension="x" type="band" paddingOuter={0} />
-        <PlotScale dimension="y" type="linear" domainPadding={{ lower: 0 }} />
+        <BuiltinPlotScale dimension="x" type="band" paddingOuter={0} />
+        <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ lower: 0 }} />
         <PlotAxis dimension="x" tickLabels={false} />
         <PlotAxis dimension="y" grid ticks={{ count: 4 }} />
         <IntervalMark

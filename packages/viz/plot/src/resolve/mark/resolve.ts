@@ -6,7 +6,7 @@ import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
-import { isBuiltinMark, PlotMark } from '../../schemas';
+import { isBuiltinMark, BuiltinPlotMark } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
 
 /** 查找 mark definition；未注册 type 会给出上下文明确的 fail-loud 诊断 */
@@ -65,7 +65,7 @@ export const datumAnchor = (
   intervalContext?: IntervalContext,
 ): [number, number] | null => {
   const { definition, operation } = resolveMarkOperation(mark, context);
-  if (isBuiltinMark(operation) && operation.type === PlotMark.Interval) {
+  if (isBuiltinMark(operation) && operation.type === BuiltinPlotMark.Interval) {
     const geometry = intervalCellGeometry(operation, row, frame, intervalContext);
     return geometry === null ? null : cellGeometryAnchor(geometry);
   }

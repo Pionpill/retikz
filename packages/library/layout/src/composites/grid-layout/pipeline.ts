@@ -8,7 +8,7 @@ import type {
 } from '@retikz/core';
 import {
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -184,7 +184,7 @@ const placedGuideCoordinate = (
   if (guide !== undefined) return { coordinate: guide.position + placed.translation.y, real: true };
 
   const edge =
-    name === LayoutAlignmentGuideName.FirstBaseline
+    name === BuiltinLayoutAlignmentGuideName.FirstBaseline
       ? placed.result.allocationBounds.y
       : placed.result.allocationBounds.y + placed.result.allocationBounds.height;
 
@@ -215,7 +215,7 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
     return canonical.coordinate;
   }
 
-  const traversal = name === LayoutAlignmentGuideName.FirstBaseline ? ordered : [...ordered].reverse();
+  const traversal = name === BuiltinLayoutAlignmentGuideName.FirstBaseline ? ordered : [...ordered].reverse();
   const real = traversal.map(item => placedGuideCoordinate(item, name)).find(candidate => candidate.real);
   if (real !== undefined) return real.coordinate;
 
@@ -417,24 +417,26 @@ export const compileGridLayout = (
       const target = row.start + (metrics.firstTarget ?? 0);
       const guide = result.alignmentGuides?.find(
         value =>
-          value.dimension === LayoutAlignmentGuideDimension.Y && value.name === LayoutAlignmentGuideName.FirstBaseline,
+          value.dimension === LayoutAlignmentGuideDimension.Y &&
+          value.name === BuiltinLayoutAlignmentGuideName.FirstBaseline,
       );
       y = target - (guide?.position ?? result.allocationBounds.y);
       resolvedSlot = Object.freeze({
         ...resolvedSlot,
-        y: target - gridStructuralGuideOffset(result, LayoutAlignmentGuideName.FirstBaseline).offset,
+        y: target - gridStructuralGuideOffset(result, BuiltinLayoutAlignmentGuideName.FirstBaseline).offset,
       });
     } else if (item.rowSpan === 1 && alignment === LayoutAlignment.LastBaseline) {
       const metrics = finalRowMetrics[item.rowStart];
       const target = row.start + row.size - (metrics.size - (metrics.lastTarget ?? metrics.size));
       const guide = result.alignmentGuides?.find(
         value =>
-          value.dimension === LayoutAlignmentGuideDimension.Y && value.name === LayoutAlignmentGuideName.LastBaseline,
+          value.dimension === LayoutAlignmentGuideDimension.Y &&
+          value.name === BuiltinLayoutAlignmentGuideName.LastBaseline,
       );
       y = target - (guide?.position ?? result.allocationBounds.y + result.allocationBounds.height);
       resolvedSlot = Object.freeze({
         ...resolvedSlot,
-        y: target - gridStructuralGuideOffset(result, LayoutAlignmentGuideName.LastBaseline).offset,
+        y: target - gridStructuralGuideOffset(result, BuiltinLayoutAlignmentGuideName.LastBaseline).offset,
       });
     } else {
       y = alignAllocationInSlot(slot, result.allocationBounds, 'y', alignment);
@@ -487,14 +489,14 @@ export const compileGridLayout = (
   if (rowsWithItems.length > 0) {
     alignmentGuides = Object.freeze([
       Object.freeze({
-        name: LayoutAlignmentGuideName.FirstBaseline,
+        name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
-        position: outgoingRowGuide(LayoutAlignmentGuideName.FirstBaseline, rowsWithItems[0].items),
+        position: outgoingRowGuide(BuiltinLayoutAlignmentGuideName.FirstBaseline, rowsWithItems[0].items),
       }),
       Object.freeze({
-        name: LayoutAlignmentGuideName.LastBaseline,
+        name: BuiltinLayoutAlignmentGuideName.LastBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
-        position: outgoingRowGuide(LayoutAlignmentGuideName.LastBaseline, rowsWithItems.at(-1)!.items),
+        position: outgoingRowGuide(BuiltinLayoutAlignmentGuideName.LastBaseline, rowsWithItems.at(-1)!.items),
       }),
     ]);
   }

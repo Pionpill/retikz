@@ -1,4 +1,4 @@
-import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { segments } from './scale-band.data';
 
@@ -23,11 +23,16 @@ export const ScaleBandPreview = (values: ScaleBandPreviewValues) => {
         </>
       )}
       {values.scaleType === 'band' ? (
-        <PlotScale dimension="x" type="band" paddingInner={values.paddingInner} paddingOuter={values.paddingOuter} />
+        <BuiltinPlotScale
+          dimension="x"
+          type="band"
+          paddingInner={values.paddingInner}
+          paddingOuter={values.paddingOuter}
+        />
       ) : (
-        <PlotScale dimension="x" type="point" padding={values.padding} />
+        <BuiltinPlotScale dimension="x" type="point" padding={values.padding} />
       )}
-      <PlotScale dimension="y" type="linear" domainPadding={0} />
+      <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
     </Plot>

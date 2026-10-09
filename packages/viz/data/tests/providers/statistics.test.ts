@@ -13,14 +13,14 @@ import {
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
   defineStatisticsReducer,
-  ReducerOperationKind,
+  BuiltinReducerOperationKind,
   ReducerOperationSchema,
   reducerOutputDescriptors,
   reducerOutputFields,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerImplementationRegistry,
   resolveStatisticsReducerRegistry,
-  SelectorOperationKind,
+  BuiltinSelectorOperationKind,
   SelectorOperationSchema,
 } from '../../src';
 
@@ -29,25 +29,25 @@ describe('statistics provider schema boundaries', () => {
     const reducerRegistry = resolveStatisticsReducerRegistry();
     const selectorRegistry = resolveRowSelectorRegistry();
     const reducerSchemas = [
-      [ReducerOperationKind.Count, BuiltinReducerOperationSchemas.Count],
-      [ReducerOperationKind.Sum, BuiltinReducerOperationSchemas.Sum],
-      [ReducerOperationKind.Mean, BuiltinReducerOperationSchemas.Mean],
-      [ReducerOperationKind.Median, BuiltinReducerOperationSchemas.Median],
-      [ReducerOperationKind.Min, BuiltinReducerOperationSchemas.Min],
-      [ReducerOperationKind.Max, BuiltinReducerOperationSchemas.Max],
-      [ReducerOperationKind.Extent, BuiltinReducerOperationSchemas.Extent],
-      [ReducerOperationKind.Quantile, BuiltinReducerOperationSchemas.Quantile],
-      [ReducerOperationKind.QuantileBand, BuiltinReducerOperationSchemas.QuantileBand],
+      [BuiltinReducerOperationKind.Count, BuiltinReducerOperationSchemas.Count],
+      [BuiltinReducerOperationKind.Sum, BuiltinReducerOperationSchemas.Sum],
+      [BuiltinReducerOperationKind.Mean, BuiltinReducerOperationSchemas.Mean],
+      [BuiltinReducerOperationKind.Median, BuiltinReducerOperationSchemas.Median],
+      [BuiltinReducerOperationKind.Min, BuiltinReducerOperationSchemas.Min],
+      [BuiltinReducerOperationKind.Max, BuiltinReducerOperationSchemas.Max],
+      [BuiltinReducerOperationKind.Extent, BuiltinReducerOperationSchemas.Extent],
+      [BuiltinReducerOperationKind.Quantile, BuiltinReducerOperationSchemas.Quantile],
+      [BuiltinReducerOperationKind.QuantileBand, BuiltinReducerOperationSchemas.QuantileBand],
     ] as const;
     const selectorSchemas = [
-      [SelectorOperationKind.Min, BuiltinSelectorOperationSchemas.Min],
-      [SelectorOperationKind.Max, BuiltinSelectorOperationSchemas.Max],
-      [SelectorOperationKind.First, BuiltinSelectorOperationSchemas.First],
-      [SelectorOperationKind.Last, BuiltinSelectorOperationSchemas.Last],
-      [SelectorOperationKind.Top, BuiltinSelectorOperationSchemas.Top],
-      [SelectorOperationKind.Bottom, BuiltinSelectorOperationSchemas.Bottom],
-      [SelectorOperationKind.Nth, BuiltinSelectorOperationSchemas.Nth],
-      [SelectorOperationKind.OutsideQuantileBand, BuiltinSelectorOperationSchemas.OutsideQuantileBand],
+      [BuiltinSelectorOperationKind.Min, BuiltinSelectorOperationSchemas.Min],
+      [BuiltinSelectorOperationKind.Max, BuiltinSelectorOperationSchemas.Max],
+      [BuiltinSelectorOperationKind.First, BuiltinSelectorOperationSchemas.First],
+      [BuiltinSelectorOperationKind.Last, BuiltinSelectorOperationSchemas.Last],
+      [BuiltinSelectorOperationKind.Top, BuiltinSelectorOperationSchemas.Top],
+      [BuiltinSelectorOperationKind.Bottom, BuiltinSelectorOperationSchemas.Bottom],
+      [BuiltinSelectorOperationKind.Nth, BuiltinSelectorOperationSchemas.Nth],
+      [BuiltinSelectorOperationKind.OutsideQuantileBand, BuiltinSelectorOperationSchemas.OutsideQuantileBand],
     ] as const;
 
     for (const [kind, schema] of reducerSchemas) expect(reducerRegistry.get(kind)?.schema).toBe(schema);
@@ -56,8 +56,8 @@ describe('statistics provider schema boundaries', () => {
   });
 
   it('rejects extra built-in fields consistently at schema and direct dispatch boundaries', () => {
-    const reducer = { kind: ReducerOperationKind.Sum, field: 'value', as: 'total', typo: true } as const;
-    const selector = { kind: SelectorOperationKind.Min, by: 'value', typo: true } as const;
+    const reducer = { kind: BuiltinReducerOperationKind.Sum, field: 'value', as: 'total', typo: true } as const;
+    const selector = { kind: BuiltinSelectorOperationKind.Min, by: 'value', typo: true } as const;
 
     expect(ReducerOperationSchema.safeParse(reducer).success).toBe(false);
     expect(() => applyReducerOperation([{ value: 2 }], reducer, DEFAULT_TRANSFORM_CONTEXT)).toThrow();

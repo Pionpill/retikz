@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -19,8 +19,8 @@ export const TransformSmoothPreview = (values: TransformSmoothPreviewValues, lan
 
   return (
     <Plot data={trendSamples} width={440} height={260}>
-      <PlotScale dimension="x" type="linear" domain={[-1, 5]} />
-      <PlotScale dimension="y" type="linear" domain={[0, 10]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[-1, 5]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[0, 10]} />
       <PointMark color="series" fillOpacity={0.72} x="time" y="value" />
       <PathMark
         color="series"

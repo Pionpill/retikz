@@ -1,4 +1,4 @@
-import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 
 import { axisCartesianPlaygroundRows } from './axis-cartesian-playground.data';
 
@@ -111,8 +111,8 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
 
     return (
       <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
-        <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
-        <PlotScale dimension="y" type="linear" domain={[-5, 35]} />
+        <BuiltinPlotScale dimension="x" type="linear" domain={[-35, 35]} />
+        <BuiltinPlotScale dimension="y" type="linear" domain={[-5, 35]} />
         <PathMark x="x" y="y" order="x" stroke="#2563eb" />
         <PlotAxis
           dimension="x"
@@ -137,8 +137,8 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
 
   return (
     <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
-      <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
-      <PlotScale dimension="y" type="linear" domain={[0, 35]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[-35, 35]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[0, 35]} />
       <PathMark x="x" y="y" order="x" stroke="#2563eb" />
       <PlotAxis dimension="x" ticks={ticks} grid={grid} title="x" />
       <PlotAxis dimension="y" ticks={{ count: 5 }} title="y" />

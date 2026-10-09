@@ -5,7 +5,7 @@ import {
   applyTransforms,
   defineTransform,
   extractTransformKind,
-  DataTransform,
+  BuiltinDataTransform,
   DataTransformBindingClass,
   DataTransformFieldEffect,
   DataTransformPhase,
@@ -112,38 +112,38 @@ describe('transform registry (contract)', () => {
   it('builtin_registry_contains_all_transform_kinds', () => {
     const registry = resolveTransformRegistry();
 
-    expect([...registry.keys()].sort()).toEqual(Object.values(DataTransform).sort());
+    expect([...registry.keys()].sort()).toEqual(Object.values(BuiltinDataTransform).sort());
   });
 
   it('publishes schedules for field-bindable plot transforms', () => {
     const registry = resolveTransformRegistry();
 
-    expect(registry.get(DataTransform.Stack)?.schedule).toEqual({
+    expect(registry.get(BuiltinDataTransform.Stack)?.schedule).toEqual({
       phase: DataTransformPhase.CumulativeDerive,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(DataTransform.Bin)?.schedule).toEqual({
+    expect(registry.get(BuiltinDataTransform.Bin)?.schedule).toEqual({
       phase: DataTransformPhase.RowShape,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Replace,
     });
-    expect(registry.get(DataTransform.Normalize)?.schedule).toEqual({
+    expect(registry.get(BuiltinDataTransform.Normalize)?.schedule).toEqual({
       phase: DataTransformPhase.FieldDerive,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(DataTransform.DeriveInterval)?.schedule).toEqual({
+    expect(registry.get(BuiltinDataTransform.DeriveInterval)?.schedule).toEqual({
       phase: DataTransformPhase.CumulativeDerive,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(DataTransform.Jitter)?.schedule).toEqual({
+    expect(registry.get(BuiltinDataTransform.Jitter)?.schedule).toEqual({
       phase: DataTransformPhase.FieldAdjust,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(DataTransform.Density)?.schedule).toBeUndefined();
+    expect(registry.get(BuiltinDataTransform.Density)?.schedule).toBeUndefined();
   });
 
   it('define_transform_preserves_schema_and_extracts_kind', () => {

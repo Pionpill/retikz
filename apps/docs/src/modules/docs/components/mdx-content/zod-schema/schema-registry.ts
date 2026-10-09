@@ -1534,7 +1534,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   EntityRoleSchema: {
     schema: GraphIR.EntityRoleSchema,
-    label: 'EntityRole',
+    label: 'BuiltinEntityRole',
     url: '/schematic/graph/entity/schema-reference#entityroleschema',
   },
   RelationSchema: {
@@ -1544,7 +1544,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   RelationRoleSchema: {
     schema: GraphIR.RelationRoleSchema,
-    label: 'RelationRole',
+    label: 'BuiltinRelationRole',
     url: '/schematic/graph/relation/schema-reference#relationroleschema',
   },
   RelationKindSchema: {
@@ -1870,7 +1870,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   DataTransformSchema: {
     schema: DataIR.TransformSchema,
-    label: 'DataTransform',
+    label: 'BuiltinDataTransform',
     url: '/viz/data/reference/contract#datatransformschema',
   },
   SortParamsSchema: {
@@ -2366,7 +2366,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   PlotCoordinateSchema: {
     schema: IRPlot.CoordinateSchema,
-    label: 'PlotCoordinate',
+    label: 'BuiltinPlotCoordinate',
     url: '/viz/plot/reference/coordinate#coordinateschema',
   },
   Cartesian2DSchema: {

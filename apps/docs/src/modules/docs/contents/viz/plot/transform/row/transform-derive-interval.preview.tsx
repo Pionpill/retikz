@@ -1,4 +1,4 @@
-import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale, PlotTransform } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -18,7 +18,7 @@ export const TransformDeriveIntervalPreview = (values: TransformDeriveIntervalPr
   return (
     <Plot data={tasks} width={420} height={260}>
       <PlotTransform operation={{ ...deriveIntervalOperationOf(values) }} />
-      <PlotScale dimension="y" type="linear" domain={[0, 12]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[0, 12]} />
       <IntervalMark x="task" color="phase" bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }} />
       <PlotAxis dimension="x" title={i18n.task} />
       <PlotAxis dimension="y" title={i18n.progress} grid />

@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { POINT_JITTER_POLAR_CONTROL_IDS, polarJitterOperationOf } from './point-jitter-polar.controls';
 import { polarJitterPoints } from './point-jitter.data';
@@ -28,11 +28,11 @@ export const PointJitterPolarPreview = (values: PointJitterPolarPreviewValues) =
         }}
       />
       {continuous ? (
-        <PlotScale dimension="x" type="linear" domain={[0, 360]} />
+        <BuiltinPlotScale dimension="x" type="linear" domain={[0, 360]} />
       ) : (
-        <PlotScale dimension="x" type="point" />
+        <BuiltinPlotScale dimension="x" type="point" />
       )}
-      <PlotScale dimension="y" type="linear" domainPadding={{ upper: continuous ? 5 : 28 }} />
+      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ upper: continuous ? 5 : 28 }} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
     </Plot>

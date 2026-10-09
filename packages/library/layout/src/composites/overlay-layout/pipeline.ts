@@ -8,7 +8,7 @@ import type {
 } from '@retikz/core';
 import {
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -185,7 +185,7 @@ const placedGuideCoordinate = (
   if (guide !== undefined) return { coordinate: guide.position + placed.translation.y, real: true };
 
   const edge =
-    name === LayoutAlignmentGuideName.FirstBaseline
+    name === BuiltinLayoutAlignmentGuideName.FirstBaseline
       ? placed.result.allocationBounds.y
       : placed.result.allocationBounds.y + placed.result.allocationBounds.height;
 
@@ -201,7 +201,7 @@ const outgoingOverlayGuide = (
   if (baselineTarget !== undefined) return baselineTarget;
 
   const ordered = [...placed].sort((first, second) => first.sourceIndex - second.sourceIndex);
-  const traversal = name === LayoutAlignmentGuideName.FirstBaseline ? ordered : [...ordered].reverse();
+  const traversal = name === BuiltinLayoutAlignmentGuideName.FirstBaseline ? ordered : [...ordered].reverse();
   const real = traversal.map(item => placedGuideCoordinate(item, name)).find(candidate => candidate.real);
   if (real !== undefined) return real.coordinate;
 
@@ -291,7 +291,7 @@ export const compileOverlayLayout = (
         (item.authored.alignSelf ?? node.alignItems) === name,
     );
     if (participants.length === 0) return undefined;
-    if (name === LayoutAlignmentGuideName.FirstBaseline) {
+    if (name === BuiltinLayoutAlignmentGuideName.FirstBaseline) {
       const ascent = Math.max(
         ...participants.map(
           item => item.margin.top + overlayStructuralGuideOffset(finalResults[item.sourceIndex], name).offset,
@@ -310,8 +310,8 @@ export const compileOverlayLayout = (
     return content.y + content.height - descent;
   };
 
-  const firstTarget = baselineTargetOf(LayoutAlignmentGuideName.FirstBaseline);
-  const lastTarget = baselineTargetOf(LayoutAlignmentGuideName.LastBaseline);
+  const firstTarget = baselineTargetOf(BuiltinLayoutAlignmentGuideName.FirstBaseline);
+  const lastTarget = baselineTargetOf(BuiltinLayoutAlignmentGuideName.LastBaseline);
 
   const placedBySource: Array<PlacedOverlayItem> = measured.map((item, sourceIndex) => {
     const authored = item.authored;
@@ -337,7 +337,8 @@ export const compileOverlayLayout = (
     if (authored.placement.kind === OverlayPlacementKind.Aligned && alignment === LayoutAlignment.FirstBaseline) {
       const guide = result.alignmentGuides?.find(
         value =>
-          value.dimension === LayoutAlignmentGuideDimension.Y && value.name === LayoutAlignmentGuideName.FirstBaseline,
+          value.dimension === LayoutAlignmentGuideDimension.Y &&
+          value.name === BuiltinLayoutAlignmentGuideName.FirstBaseline,
       );
       const source = guide?.position ?? result.allocationBounds.y;
       y = (firstTarget ?? content.y) - source;
@@ -345,12 +346,13 @@ export const compileOverlayLayout = (
         ...resolvedSlot,
         y:
           (firstTarget ?? content.y) -
-          overlayStructuralGuideOffset(result, LayoutAlignmentGuideName.FirstBaseline).offset,
+          overlayStructuralGuideOffset(result, BuiltinLayoutAlignmentGuideName.FirstBaseline).offset,
       });
     } else if (authored.placement.kind === OverlayPlacementKind.Aligned && alignment === LayoutAlignment.LastBaseline) {
       const guide = result.alignmentGuides?.find(
         value =>
-          value.dimension === LayoutAlignmentGuideDimension.Y && value.name === LayoutAlignmentGuideName.LastBaseline,
+          value.dimension === LayoutAlignmentGuideDimension.Y &&
+          value.name === BuiltinLayoutAlignmentGuideName.LastBaseline,
       );
       const source = guide?.position ?? result.allocationBounds.y + result.allocationBounds.height;
       y = (lastTarget ?? content.y + content.height) - source;
@@ -358,7 +360,7 @@ export const compileOverlayLayout = (
         ...resolvedSlot,
         y:
           (lastTarget ?? content.y + content.height) -
-          overlayStructuralGuideOffset(result, LayoutAlignmentGuideName.LastBaseline).offset,
+          overlayStructuralGuideOffset(result, BuiltinLayoutAlignmentGuideName.LastBaseline).offset,
       });
     }
 
@@ -401,14 +403,14 @@ export const compileOverlayLayout = (
   if (alignedIncluded.length > 0) {
     alignmentGuides = Object.freeze([
       Object.freeze({
-        name: LayoutAlignmentGuideName.FirstBaseline,
+        name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
-        position: outgoingOverlayGuide(LayoutAlignmentGuideName.FirstBaseline, alignedIncluded, firstTarget),
+        position: outgoingOverlayGuide(BuiltinLayoutAlignmentGuideName.FirstBaseline, alignedIncluded, firstTarget),
       }),
       Object.freeze({
-        name: LayoutAlignmentGuideName.LastBaseline,
+        name: BuiltinLayoutAlignmentGuideName.LastBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
-        position: outgoingOverlayGuide(LayoutAlignmentGuideName.LastBaseline, alignedIncluded, lastTarget),
+        position: outgoingOverlayGuide(BuiltinLayoutAlignmentGuideName.LastBaseline, alignedIncluded, lastTarget),
       }),
     ]);
   }

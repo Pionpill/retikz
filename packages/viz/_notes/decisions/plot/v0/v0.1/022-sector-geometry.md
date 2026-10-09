@@ -74,7 +74,7 @@ schema 草案（详见实现契约）：
 ```ts
 // ir/mark.ts —— describe 英文
 export const SectorMarkSchema = z.object({
-  type: z.literal(PlotMark.Sector), // 'sector'
+  type: z.literal(BuiltinPlotMark.Sector), // 'sector'
   startField: z.string().min(1).optional(), // cumulative lower-bound field (matches transform startField; default "y0")
   endField: z.string().min(1).optional(), // cumulative upper-bound field (default "y1")
   ...markBase, // id + encoding（color 区分扇片）

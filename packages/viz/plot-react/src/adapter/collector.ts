@@ -20,7 +20,7 @@ import {
   PlotFacet,
   PlotLegend,
   PlotScaffold,
-  PlotScale,
+  BuiltinPlotScale,
   PlotTrack,
   PlotTransform,
   PointMark,
@@ -39,7 +39,7 @@ const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefin
   if (element.type === RelationMark) return 'relation-mark';
   if (element.type === PlotAxis) return 'axis';
   if (element.type === PlotLegend) return 'legend';
-  if (element.type === PlotScale) return 'scale';
+  if (element.type === BuiltinPlotScale) return 'scale';
   if (element.type === PlotTransform) return 'transform';
 
   return undefined;

@@ -3,29 +3,29 @@
  * @description CSS @keyframes（keyframes.ts）与 WAAPI 描述（waapi.ts）共用本模块，避免两端映射漂移
  */
 import type { IRAnimationTrack, ScenePrimitive } from '@retikz/core';
-import { AnimationProperty } from '@retikz/core';
+import { BuiltinAnimationProperty } from '@retikz/core';
 
 import type { CubicBezier, EasingRegistry } from '../../animation';
 import { classifyProperty, primHasStroke, resolveTransformOrigin, sampleColorOklch } from '../../animation';
 
 /** CSS 直属通道 → SVG/CSS 属性名（opacity / fill / stroke / stroke-width） */
 export const cssPropertyName = (property: string): string =>
-  property === AnimationProperty.StrokeWidth ? 'stroke-width' : property;
+  property === BuiltinAnimationProperty.StrokeWidth ? 'stroke-width' : property;
 
 /** transform 通道单值 → SVG transform 函数串（绕 transform-origin 支点，故不在此带支点坐标） */
 export const transformValue = (property: string, value: number): string => {
   switch (property) {
-    case AnimationProperty.TranslateX:
+    case BuiltinAnimationProperty.TranslateX:
       return `translate(${value}px, 0)`;
-    case AnimationProperty.TranslateY:
+    case BuiltinAnimationProperty.TranslateY:
       return `translate(0, ${value}px)`;
-    case AnimationProperty.Rotate:
+    case BuiltinAnimationProperty.Rotate:
       return `rotate(${value}deg)`;
-    case AnimationProperty.Scale:
+    case BuiltinAnimationProperty.Scale:
       return `scale(${value})`;
-    case AnimationProperty.ScaleX:
+    case BuiltinAnimationProperty.ScaleX:
       return `scale(${value}, 1)`;
-    case AnimationProperty.ScaleY:
+    case BuiltinAnimationProperty.ScaleY:
       return `scale(1, ${value})`;
     default:
       return 'none';
@@ -124,7 +124,8 @@ export const expandTrack = (
 
   if (cls === 'css') {
     const cssProperty = cssPropertyName(track.property);
-    const isColor = track.property === AnimationProperty.Fill || track.property === AnimationProperty.Stroke;
+    const isColor =
+      track.property === BuiltinAnimationProperty.Fill || track.property === BuiltinAnimationProperty.Stroke;
     if (!isColor) {
       return {
         cssProperty,

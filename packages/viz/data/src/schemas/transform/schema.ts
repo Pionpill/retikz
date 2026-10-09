@@ -28,7 +28,7 @@ import {
   PairMeasureOperationKind,
   StackOffset,
   DataSortOrder,
-  DataTransform,
+  BuiltinDataTransform,
   RESERVED_TRANSFORM_KINDS,
   RowSelectorTie,
 } from './constants';
@@ -45,7 +45,7 @@ export const SortParamsSchema = strictObject({
 }).describe('Sort rows by one field');
 
 /** SortTransformSchema 的完整变换操作契约 */
-export const SortTransformSchema = createTransformSchema(DataTransform.Sort, SortParamsSchema).describe(
+export const SortTransformSchema = createTransformSchema(BuiltinDataTransform.Sort, SortParamsSchema).describe(
   'SortTransform operation',
 );
 
@@ -76,9 +76,10 @@ export const SummarizeParamsSchema = strictObject({
   .describe('Group rows into metric rows');
 
 /** SummarizeTransformSchema 的完整变换操作契约 */
-export const SummarizeTransformSchema = createTransformSchema(DataTransform.Summarize, SummarizeParamsSchema).describe(
-  'SummarizeTransform operation',
-);
+export const SummarizeTransformSchema = createTransformSchema(
+  BuiltinDataTransform.Summarize,
+  SummarizeParamsSchema,
+).describe('SummarizeTransform operation');
 
 /** 校验按组选择代表行并可选输出一基排名的操作 */
 export const SelectParamsSchema = strictObject({
@@ -88,7 +89,7 @@ export const SelectParamsSchema = strictObject({
 }).describe('Select representative rows per group');
 
 /** SelectTransformSchema 的完整变换操作契约 */
-export const SelectTransformSchema = createTransformSchema(DataTransform.Select, SelectParamsSchema).describe(
+export const SelectTransformSchema = createTransformSchema(BuiltinDataTransform.Select, SelectParamsSchema).describe(
   'SelectTransform operation',
 );
 
@@ -150,9 +151,10 @@ export const AnnotateParamsSchema = strictObject({
   .describe('Append group metrics or selector annotations');
 
 /** AnnotateTransformSchema 的完整变换操作契约 */
-export const AnnotateTransformSchema = createTransformSchema(DataTransform.Annotate, AnnotateParamsSchema).describe(
-  'AnnotateTransform operation',
-);
+export const AnnotateTransformSchema = createTransformSchema(
+  BuiltinDataTransform.Annotate,
+  AnnotateParamsSchema,
+).describe('AnnotateTransform operation');
 
 /** 按分组累计数值并生成每行起止字段的变换配置 */
 export const StackParamsSchema = object({
@@ -175,7 +177,7 @@ export const StackParamsSchema = object({
 }).describe('Stack transform: within each x group, accumulate y across series and derive [start, end] bounds per row');
 
 /** StackTransformSchema 的完整变换操作契约 */
-export const StackTransformSchema = createTransformSchema(DataTransform.Stack, StackParamsSchema).describe(
+export const StackTransformSchema = createTransformSchema(BuiltinDataTransform.Stack, StackParamsSchema).describe(
   'StackTransform operation',
 );
 
@@ -212,7 +214,7 @@ export const BinParamsSchema = strictObject({
 );
 
 /** BinTransformSchema 的完整变换操作契约 */
-export const BinTransformSchema = createTransformSchema(DataTransform.Bin, BinParamsSchema).describe(
+export const BinTransformSchema = createTransformSchema(BuiltinDataTransform.Bin, BinParamsSchema).describe(
   'BinTransform operation',
 );
 
@@ -255,7 +257,7 @@ export const RelateParamsSchema = strictObject({
 );
 
 /** RelateTransformSchema 的完整变换操作契约 */
-export const RelateTransformSchema = createTransformSchema(DataTransform.Relate, RelateParamsSchema).describe(
+export const RelateTransformSchema = createTransformSchema(BuiltinDataTransform.Relate, RelateParamsSchema).describe(
   'RelateTransform operation',
 );
 
@@ -281,9 +283,10 @@ export const NormalizeParamsSchema = object({
 );
 
 /** NormalizeTransformSchema 的完整变换操作契约 */
-export const NormalizeTransformSchema = createTransformSchema(DataTransform.Normalize, NormalizeParamsSchema).describe(
-  'NormalizeTransform operation',
-);
+export const NormalizeTransformSchema = createTransformSchema(
+  BuiltinDataTransform.Normalize,
+  NormalizeParamsSchema,
+).describe('NormalizeTransform operation');
 
 /** 从单值与基线或双端点字段逐行派生区间的变换配置 */
 export const DeriveIntervalParamsSchema = object({
@@ -307,7 +310,7 @@ export const DeriveIntervalParamsSchema = object({
 
 /** DeriveIntervalTransformSchema 的完整变换操作契约 */
 export const DeriveIntervalTransformSchema = createTransformSchema(
-  DataTransform.DeriveInterval,
+  BuiltinDataTransform.DeriveInterval,
   DeriveIntervalParamsSchema,
 ).describe('DeriveIntervalTransform operation');
 
@@ -338,7 +341,7 @@ export const JitterParamsSchema = object({
 );
 
 /** JitterTransformSchema 的完整变换操作契约 */
-export const JitterTransformSchema = createTransformSchema(DataTransform.Jitter, JitterParamsSchema).describe(
+export const JitterTransformSchema = createTransformSchema(BuiltinDataTransform.Jitter, JitterParamsSchema).describe(
   'JitterTransform operation',
 );
 
@@ -403,7 +406,7 @@ export const DensityParamsSchema = strictObject({
   .describe('Density transform: sample one-dimensional Gaussian KDE rows');
 
 /** DensityTransformSchema 的完整变换操作契约 */
-export const DensityTransformSchema = createTransformSchema(DataTransform.Density, DensityParamsSchema).describe(
+export const DensityTransformSchema = createTransformSchema(BuiltinDataTransform.Density, DensityParamsSchema).describe(
   'DensityTransform operation',
 );
 
@@ -454,7 +457,7 @@ export const SmoothParamsSchema = strictObject({
   .describe('Smooth transform: sample regression trend rows');
 
 /** SmoothTransformSchema 的完整变换操作契约 */
-export const SmoothTransformSchema = createTransformSchema(DataTransform.Smooth, SmoothParamsSchema).describe(
+export const SmoothTransformSchema = createTransformSchema(BuiltinDataTransform.Smooth, SmoothParamsSchema).describe(
   'SmoothTransform operation',
 );
 

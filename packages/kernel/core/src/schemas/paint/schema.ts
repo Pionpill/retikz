@@ -10,10 +10,10 @@ import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, o
 import { AngleDegreesSchema } from '../scalar';
 import { PathLineCapSchema, PathLineJoinSchema, StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, OpacitySchema } from '../style';
-import { ImageFit, PatternShape } from './constants';
+import { ImageFit, BuiltinPatternShape } from './constants';
 
 /** Core 内置 pattern motif 与自定义注册名共享的开放名称 schema */
-export const PatternShapeNameSchema = createOpenStringSchema(PatternShape).describe(
+export const PatternShapeNameSchema = createOpenStringSchema(BuiltinPatternShape).describe(
   'Pattern motif provider name: a Core built-in or a custom name registered via CompileOptions.patterns.',
 );
 

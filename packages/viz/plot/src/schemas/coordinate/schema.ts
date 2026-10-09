@@ -1,11 +1,18 @@
 import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { discriminatedUnion, enum as zodEnum, literal, looseObject, number, object, union } from 'zod';
 
-import { BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, PlotCoordinate, PolarInterpolation } from './constants';
+import {
+  BUILTIN_COORDINATE_TYPES,
+  Cartesian1DOrientation,
+  BuiltinPlotCoordinate,
+  PolarInterpolation,
+} from './constants';
 
 /** 校验二维笛卡尔坐标系及其 x、y 位置比例尺绑定 */
 export const Cartesian2DSchema = object({
-  type: literal(PlotCoordinate.Cartesian2D).describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
+  type: literal(BuiltinPlotCoordinate.Cartesian2D).describe(
+    'Discriminator: 2D cartesian space, x horizontal / y vertical',
+  ),
   x: NonBlankStringSchema.optional().describe(
     'Scale name for the x (horizontal) channel; omit to derive a default scale from the bound field type',
   ),
@@ -16,7 +23,7 @@ export const Cartesian2DSchema = object({
 
 /** 校验二维极坐标系的角度、半径比例尺与角度范围、内半径几何 */
 export const Polar2DSchema = object({
-  type: literal(PlotCoordinate.Polar2D).describe(
+  type: literal(BuiltinPlotCoordinate.Polar2D).describe(
     'Discriminator: 2D polar space, angle around the center / radius outward',
   ),
   angle: NonBlankStringSchema.optional().describe(
@@ -47,7 +54,7 @@ export const Polar2DSchema = object({
 
 /** 校验沿直线排列的一维坐标系，另一屏幕轴固定在基线上 */
 export const Cartesian1DSchema = object({
-  type: literal(PlotCoordinate.Cartesian1D).describe(
+  type: literal(BuiltinPlotCoordinate.Cartesian1D).describe(
     'Discriminator: 1D cartesian line; one position dimension, the other screen axis collapses to a fixed baseline',
   ),
   x: NonBlankStringSchema.optional().describe(
@@ -64,7 +71,7 @@ export const Cartesian1DSchema = object({
 
 /** 校验将单个角度维度投影到固定半径圆周的一维极坐标系 */
 export const Polar1DSchema = object({
-  type: literal(PlotCoordinate.Polar1D).describe(
+  type: literal(BuiltinPlotCoordinate.Polar1D).describe(
     'Discriminator: 1D polar circle; one angular position dimension on a fixed-radius circle (cyclic / periodic data)',
   ),
   angle: NonBlankStringSchema.optional().describe(

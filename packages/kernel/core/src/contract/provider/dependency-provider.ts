@@ -17,7 +17,7 @@ export const CoreProviderCapability = {
   Arrow: 'arrow',
   Pattern: 'pattern',
   PathGenerator: 'pathGenerator',
-  PathKind: 'pathKind',
+  BuiltinPathKind: 'pathKind',
   Composite: 'composite',
 } as const;
 

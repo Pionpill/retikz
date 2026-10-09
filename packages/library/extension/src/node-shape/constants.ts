@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 
 /** Extension 提供的可选形状 provider 名称 */
-export const ExtensionShapeName = {
+export const BuiltinExtensionShapeName = {
   /** 任意闭合轮廓形状 */
   Contour: 'contour',
   /** 十字形状 */
@@ -23,4 +23,4 @@ export const ExtensionShapeName = {
 } as const;
 
 /** Extension 形状 provider 名称取值 */
-export type ExtensionShapeName = ValueOf<typeof ExtensionShapeName>;
+export type BuiltinExtensionShapeName = ValueOf<typeof BuiltinExtensionShapeName>;

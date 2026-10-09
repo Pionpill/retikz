@@ -2,11 +2,11 @@ import type { ValueOf } from '@retikz/foundation';
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）。
+ * @description discriminated union 判别字段，成员里写 z.literal(BuiltinPlotMark.x)（不用 z.enum）。
  *   5 个抽象 mark = 3 个维度 mark（point / path / interval，描述数据在坐标空间的 k 维几何）
  *   + 1 个特殊 mark（reference，复用维度 mark 投影但语义不等同）
  */
-export const PlotMark = {
+export const BuiltinPlotMark = {
   /** 维度 mark / 0D：坐标元组上的实体 / glyph / 文本 anchor（散点 + 文本标签） */
   Point: 'point',
   /** 维度 mark / 1D：有序点连成的一维轨迹（折线 / 闭合轮廓） */
@@ -132,10 +132,10 @@ export const MarkValueKind = {
 } as const;
 
 /** 内置 mark type 集合；自定义 mark 的 type 不能与之冲突 */
-export const BUILTIN_MARK_TYPES = new Set<string>(Object.values(PlotMark));
+export const BUILTIN_MARK_TYPES = new Set<string>(Object.values(BuiltinPlotMark));
 
 /** mark 类型 */
-export type PlotMark = ValueOf<typeof PlotMark>;
+export type BuiltinPlotMark = ValueOf<typeof BuiltinPlotMark>;
 
 /** mark 值来源变体 */
 export type MarkValueKind = ValueOf<typeof MarkValueKind>;

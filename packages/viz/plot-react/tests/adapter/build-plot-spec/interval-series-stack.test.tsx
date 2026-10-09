@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
-import { PlotScale } from '../../../src/components/scales';
+import { BuiltinPlotScale } from '../../../src/components/scales';
 
-describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => {
+describe('buildPlotIR IntervalMark / color / series / stack / BuiltinPlotScale', () => {
   it('barmark_equivalence_band_x', () => {
     const spec = buildPlotIR(<IntervalMark x="month" y="revenue" />, '__plot');
     const expected: IRPlot = {
@@ -29,7 +29,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     const spec = buildPlotIR(
       <>
         <IntervalMark x="month" y="revenue" />
-        <PlotScale dimension="x" type="band" paddingInner={0} paddingOuter={0} align={0.25} />
+        <BuiltinPlotScale dimension="x" type="band" paddingInner={0} paddingOuter={0} align={0.25} />
       </>,
       '__plot',
     );
@@ -101,7 +101,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
     const spec = buildPlotIR(
       <>
         <PathMark x="date" y="v" />
-        <PlotScale dimension="x" type="time" />
+        <BuiltinPlotScale dimension="x" type="time" />
       </>,
       '__plot',
     );
@@ -114,7 +114,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       buildPlotIR(
         <>
           <PathMark x="d" y="v" />
-          <PlotScale dimension="x" type="log" />
+          <BuiltinPlotScale dimension="x" type="log" />
         </>,
         '__plot',
       ).scales[0],
@@ -123,7 +123,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       buildPlotIR(
         <>
           <PathMark x="d" y="v" />
-          <PlotScale dimension="x" type="sqrt" />
+          <BuiltinPlotScale dimension="x" type="sqrt" />
         </>,
         '__plot',
       ).scales[0],
@@ -131,13 +131,13 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
   });
 
   it('scale_y_log_sqrt_on_value_axis', () => {
-    // <PlotScale dimension="y"> 作用于值轴（__y，scales[1]）；缺省 linear
+    // <BuiltinPlotScale dimension="y"> 作用于值轴（__y，scales[1]）；缺省 linear
     expect(buildPlotIR(<PathMark x="d" y="v" />, '__plot').scales[1]).toEqual({ type: 'linear', name: '__y' });
     expect(
       buildPlotIR(
         <>
           <PathMark x="d" y="v" />
-          <PlotScale dimension="y" type="log" />
+          <BuiltinPlotScale dimension="y" type="log" />
         </>,
         '__plot',
       ).scales[1],
@@ -146,7 +146,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       buildPlotIR(
         <>
           <PointMark x="d" y="v" />
-          <PlotScale dimension="y" type="sqrt" />
+          <BuiltinPlotScale dimension="y" type="sqrt" />
         </>,
         '__plot',
       ).scales[1],
@@ -159,7 +159,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       buildPlotIR(
         <>
           <PathMark x="d" y="v" />
-          <PlotScale dimension="y" type="symlog" />
+          <BuiltinPlotScale dimension="y" type="symlog" />
         </>,
         '__plot',
       ).scales[1],
@@ -168,7 +168,7 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       buildPlotIR(
         <>
           <PointMark x="d" y="v" />
-          <PlotScale dimension="y" type="radial" />
+          <BuiltinPlotScale dimension="y" type="radial" />
         </>,
         '__plot',
       ).scales[1],
@@ -180,8 +180,8 @@ describe('buildPlotIR IntervalMark / color / series / stack / PlotScale', () => 
       buildPlotIR(
         <>
           <PathMark x="d" y="v" />
-          <PlotScale dimension="x" type="time" />
-          <PlotScale dimension="x" type="linear" />
+          <BuiltinPlotScale dimension="x" type="time" />
+          <BuiltinPlotScale dimension="x" type="linear" />
         </>,
         '__plot',
       ),

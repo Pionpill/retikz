@@ -6,7 +6,7 @@ import {
   RibbonPathSchema,
   RibbonPathOptionsSchema,
   RibbonWidthSchema,
-  RibbonWidthProfile,
+  BuiltinRibbonWidthProfile,
   RibbonWidthProfileNameSchema,
 } from '../../src/ribbon';
 
@@ -33,11 +33,11 @@ describe('Extension Ribbon schema', () => {
   it('hints the built-in width profile while preserving custom provider names', () => {
     expect(toJSONSchema(RibbonWidthProfileNameSchema)).toMatchObject({
       anyOf: [
-        { type: 'string', enum: Object.values(RibbonWidthProfile) },
+        { type: 'string', enum: Object.values(BuiltinRibbonWidthProfile) },
         { type: 'string', minLength: 1 },
       ],
     });
-    expect(RibbonWidthProfileNameSchema.parse(RibbonWidthProfile.Bulge)).toBe(RibbonWidthProfile.Bulge);
+    expect(RibbonWidthProfileNameSchema.parse(BuiltinRibbonWidthProfile.Bulge)).toBe(BuiltinRibbonWidthProfile.Bulge);
     expect(RibbonWidthProfileNameSchema.parse('custom.profile')).toBe('custom.profile');
     expect(() => RibbonWidthProfileNameSchema.parse('   ')).toThrow();
   });

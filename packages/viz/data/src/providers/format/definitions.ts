@@ -4,7 +4,7 @@ import { isFiniteNumber } from '@retikz/math';
 import type { FieldFormatDefinition } from '../../contract';
 import { defineFieldFormat } from '../../contract';
 import { RetikzDataError } from '../../error';
-import { DataFieldFormat, DataFieldType } from '../../schemas';
+import { BuiltinDataFieldFormat, DataFieldType } from '../../schemas';
 import { coerceValue } from '../data';
 import { freezeDefinitions } from '../shared';
 
@@ -75,42 +75,42 @@ const parsePercent = (raw: unknown): number => {
 
 /** ISO temporal 内置格式；复用默认 temporal coercion */
 const isoFormat = defineFieldFormat({
-  name: DataFieldFormat.Iso,
+  name: BuiltinDataFieldFormat.Iso,
   impliedType: DataFieldType.Temporal,
   parse: raw => coerceValue(raw, DataFieldType.Temporal),
 });
 
 /** epochSeconds temporal 内置格式；把秒级时间戳放大为 epoch ms */
 const epochSecondsFormat = defineFieldFormat({
-  name: DataFieldFormat.EpochSeconds,
+  name: BuiltinDataFieldFormat.EpochSeconds,
   impliedType: DataFieldType.Temporal,
   parse: raw => toEpochNumber(raw) * 1000,
 });
 
 /** epochMillis temporal 内置格式；把有限数值直接视为 epoch ms */
 const epochMillisFormat = defineFieldFormat({
-  name: DataFieldFormat.EpochMillis,
+  name: BuiltinDataFieldFormat.EpochMillis,
   impliedType: DataFieldType.Temporal,
   parse: raw => toEpochNumber(raw),
 });
 
 /** slashDate temporal 内置格式；只接受 YYYY/MM/DD 并按 UTC 零点解释 */
 const slashDateFormat = defineFieldFormat({
-  name: DataFieldFormat.SlashDate,
+  name: BuiltinDataFieldFormat.SlashDate,
   impliedType: DataFieldType.Temporal,
   parse: parseSlashDate,
 });
 
 /** numberString continuous 内置格式；接受带千分位逗号的宽松数字串 */
 const numberStringFormat = defineFieldFormat({
-  name: DataFieldFormat.NumberString,
+  name: BuiltinDataFieldFormat.NumberString,
   impliedType: DataFieldType.Continuous,
   parse: parseNumberString,
 });
 
 /** percent continuous 内置格式；把百分比字面量转换为比例数值 */
 const percentFormat = defineFieldFormat({
-  name: DataFieldFormat.Percent,
+  name: BuiltinDataFieldFormat.Percent,
   impliedType: DataFieldType.Continuous,
   parse: parsePercent,
 });

@@ -1,11 +1,11 @@
 import { BendDirection } from '@retikz/core';
 import {
   BuiltinRegressionMethod,
-  FieldOrderMode,
+  BuiltinFieldOrderMode,
   DataSortOrder,
-  ReducerOperationKind,
+  BuiltinReducerOperationKind,
   RowSelectorTie,
-  SelectorOperationKind,
+  BuiltinSelectorOperationKind,
   DensityBandwidthKind,
   JitterAxis,
   NormalizeBasis,
@@ -31,7 +31,7 @@ describe('schema vocabulary constants', () => {
   it('exports plot transform and data vocabularies as const objects', () => {
     expect(Object.values(DataSortOrder).sort()).toEqual(['ascending', 'descending']);
     expect(Object.values(RowSelectorTie).sort()).toEqual(['all', 'first', 'last']);
-    expect(Object.values(ReducerOperationKind).sort()).toEqual([
+    expect(Object.values(BuiltinReducerOperationKind).sort()).toEqual([
       'count',
       'extent',
       'max',
@@ -42,7 +42,7 @@ describe('schema vocabulary constants', () => {
       'quantile-band',
       'sum',
     ]);
-    expect(Object.values(SelectorOperationKind).sort()).toEqual([
+    expect(Object.values(BuiltinSelectorOperationKind).sort()).toEqual([
       'bottom',
       'first',
       'last',
@@ -52,7 +52,7 @@ describe('schema vocabulary constants', () => {
       'outside-quantile-band',
       'top',
     ]);
-    expect(Object.values(FieldOrderMode).sort()).toEqual([
+    expect(Object.values(BuiltinFieldOrderMode).sort()).toEqual([
       'appearance',
       'ascending',
       'descending',
@@ -98,7 +98,7 @@ describe('schema vocabulary constants', () => {
         kind: 'select',
         params: {
           selector: {
-            kind: SelectorOperationKind.Top,
+            kind: BuiltinSelectorOperationKind.Top,
             by: 'value',
             n: 1,
             tie: RowSelectorTie.All,

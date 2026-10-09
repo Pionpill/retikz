@@ -17,7 +17,7 @@ import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject, union } from 'zod';
 
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 
 const CrossDimensionSchema = strictObject({
   default: PositiveNumberSchema.describe('Fallback dimension in user units.'),
@@ -127,7 +127,7 @@ const circumscribeCross = (halfWidth: number, halfHeight: number, params: CrossS
 
 /** 可选 Cross 形状 Definition */
 export const CrossShapeDefinition = defineShape<CrossShapeParams>({
-  name: ExtensionShapeName.Cross,
+  name: BuiltinExtensionShapeName.Cross,
   paramsSchema: CrossShapeParamsSchema,
   circumscribe: (halfWidth, halfHeight, params) => {
     const geometry = circumscribeCross(halfWidth, halfHeight, params);

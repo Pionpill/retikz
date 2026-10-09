@@ -2,10 +2,10 @@ import { createOpenStringSchema, JsonObjectSchema, NonBlankStringSchema } from '
 import { enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { TableCellSelectorSchema } from '../rule';
-import { TableCellVisualScale, TableVisualChannel } from './constants';
+import { BuiltinTableCellVisualScale, TableVisualChannel } from './constants';
 
 /** Table 内置 visual scale 与自定义注册名共享的开放名称 schema */
-export const TableCellVisualScaleNameSchema = createOpenStringSchema(TableCellVisualScale).describe(
+export const TableCellVisualScaleNameSchema = createOpenStringSchema(BuiltinTableCellVisualScale).describe(
   'Registered Table Cell visual scale definition name.',
 );
 

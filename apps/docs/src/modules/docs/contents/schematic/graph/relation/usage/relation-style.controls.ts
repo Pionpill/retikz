@@ -1,4 +1,4 @@
-import { GraphStatus, RelationRole } from '@retikz/graph';
+import { GraphStatus, BuiltinRelationRole } from '@retikz/graph';
 
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
@@ -36,13 +36,13 @@ export const createPreviewControlContract = (lang: Lang) => {
             kind: 'select',
             id: RelationStyleControlId.Role,
             label: copy.controls[2],
-            defaultValue: RelationRole.Flow,
+            defaultValue: BuiltinRelationRole.Flow,
             options: [
-              { value: RelationRole.Association, label: copy.controls[3] },
-              { value: RelationRole.Dependency, label: copy.controls[4] },
-              { value: RelationRole.Generalization, label: copy.controls[5] },
-              { value: RelationRole.Flow, label: copy.controls[6] },
-              { value: RelationRole.Influence, label: copy.controls[7] },
+              { value: BuiltinRelationRole.Association, label: copy.controls[3] },
+              { value: BuiltinRelationRole.Dependency, label: copy.controls[4] },
+              { value: BuiltinRelationRole.Generalization, label: copy.controls[5] },
+              { value: BuiltinRelationRole.Flow, label: copy.controls[6] },
+              { value: BuiltinRelationRole.Influence, label: copy.controls[7] },
             ],
           },
           {
@@ -147,7 +147,7 @@ export const createPreviewControlContract = (lang: Lang) => {
   return {
     controls: relationStyleControls,
     canonicalValues: {
-      role: RelationRole.Flow,
+      role: BuiltinRelationRole.Flow,
       status: '',
       content: 'Next step',
       sourceColor: 'currentColor',

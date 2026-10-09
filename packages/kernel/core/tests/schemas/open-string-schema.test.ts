@@ -11,7 +11,7 @@ import {
   BuiltinShape,
   EasingSchema,
   PathStructureSchema,
-  PatternShape,
+  BuiltinPatternShape,
   PatternShapeNameSchema,
   ShapeNameSchema,
 } from '../../src';
@@ -29,7 +29,7 @@ describe('Core registry-backed open string schemas', () => {
   it('exposes built-in shape vocabularies without closing custom names', () => {
     expectOpenStringSchema(ShapeNameSchema, Object.values(BuiltinShape));
     expectOpenStringSchema(ArrowShapeSchema, Object.values(BuiltinArrowShape));
-    expectOpenStringSchema(PatternShapeNameSchema, Object.values(PatternShape));
+    expectOpenStringSchema(PatternShapeNameSchema, Object.values(BuiltinPatternShape));
 
     expect(ShapeNameSchema.parse('custom.shape')).toBe('custom.shape');
     expect(ArrowShapeSchema.parse('custom.arrow')).toBe('custom.arrow');

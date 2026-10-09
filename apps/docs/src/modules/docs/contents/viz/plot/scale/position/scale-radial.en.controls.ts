@@ -54,5 +54,5 @@ export const scaleRadialControls = definePreviewControls({
 export const previewControlContract = {
   controls: scaleRadialControls,
   canonicalValues: { dataPreset: 'square' },
-  relatedApis: ['PlotScale.type'],
+  relatedApis: ['BuiltinPlotScale.type'],
 } satisfies PreviewControlContract;

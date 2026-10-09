@@ -54,8 +54,8 @@ export const vizV02: Release = {
         {
           label: { zh: '待发布：BREAKING 数据变换统一归属', en: 'Unreleased: BREAKING unified data transforms' },
           content: {
-            zh: 'stack、bin、normalize、derive-interval、relate、jitter、density 与 smooth 的 schema、类型和实现迁入 @retikz/data 根入口，与既有四种操作共用默认 registry；从 DataTransform 和 IRDataXxxTransform 导入，不再使用 Plot 的具体变换导出或组合 registry。PlotTransform 作者组件保留；宿主声明使用 operation 包装，执行策略独立配置，操作默认值与声明顺序保持不变。',
-            en: 'The schemas, types, and implementations of stack, bin, normalize, derive-interval, relate, jitter, density, and smooth move to the @retikz/data package root and share the default registry with its four existing operations. Import DataTransform and IRDataXxxTransform from Data instead of Plot-specific exports or its combined registry. The PlotTransform authoring component remains; host declarations wrap operation parameters and configure execution separately, preserving operation defaults and declaration order.',
+            zh: 'stack、bin、normalize、derive-interval、relate、jitter、density 与 smooth 的 schema、类型和实现迁入 @retikz/data 根入口，与既有四种操作共用默认 registry；从 BuiltinDataTransform 和 IRDataXxxTransform 导入，不再使用 Plot 的具体变换导出或组合 registry。PlotTransform 作者组件保留；宿主声明使用 operation 包装，执行策略独立配置，操作默认值与声明顺序保持不变。',
+            en: 'The schemas, types, and implementations of stack, bin, normalize, derive-interval, relate, jitter, density, and smooth move to the @retikz/data package root and share the default registry with its four existing operations. Import BuiltinDataTransform and IRDataXxxTransform from Data instead of Plot-specific exports or its combined registry. The PlotTransform authoring component remains; host declarations wrap operation parameters and configure execution separately, preserving operation defaults and declaration order.',
           },
         },
         {

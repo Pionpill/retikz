@@ -9,7 +9,7 @@ import { createApiReferenceMdx } from './tex';
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 const relationMemberValueSets = {
-  role: { name: 'RelationRole', open: true },
+  role: { name: 'BuiltinRelationRole', open: true },
   direction: { name: 'RelationDirection' },
   status: { name: 'GraphStatus' },
 } as const;
@@ -44,7 +44,7 @@ export const relationApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   {
     owner: 'graph',
     symbols: [
-      'RelationRole',
+      'BuiltinRelationRole',
       'RelationDirection',
       'GraphStatus',
       'IRGraphRelation',

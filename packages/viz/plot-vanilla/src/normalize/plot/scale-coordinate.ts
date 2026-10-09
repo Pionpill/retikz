@@ -1,7 +1,7 @@
 import type { IRDataModel, IRDataTransform } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import type { IRPlotMark, IRPlotScale } from '@retikz/plot';
-import { PlotScale } from '@retikz/plot';
+import { BuiltinPlotScale } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
@@ -30,10 +30,10 @@ export const buildColorScale = (colorFields: Array<string>, model: IRDataModel |
       const type = typeByField.get(field);
       return type === DataFieldType.Continuous || type === DataFieldType.Temporal;
     });
-    if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
+    if (anyContinuous) return { type: BuiltinPlotScale.Sequential, name: AUTO_COLOR };
   }
 
-  return { type: PlotScale.Ordinal, name: AUTO_COLOR };
+  return { type: BuiltinPlotScale.Ordinal, name: AUTO_COLOR };
 };
 
 type ContinuousScaleProps = Extract<InputPlotScale, { type: Exclude<InputPlotPositionScaleType, 'band' | 'point'> }>;
@@ -89,21 +89,21 @@ export const buildPositionScale = (
 
   switch (type) {
     case 'linear':
-      return { type: PlotScale.Linear, name, ...scaleOptions };
+      return { type: BuiltinPlotScale.Linear, name, ...scaleOptions };
     case 'time':
-      return { type: PlotScale.Time, name, ...scaleOptions };
+      return { type: BuiltinPlotScale.Time, name, ...scaleOptions };
     case 'band':
-      return { type: PlotScale.Band, name, ...bandOptions };
+      return { type: BuiltinPlotScale.Band, name, ...bandOptions };
     case 'point':
-      return { type: PlotScale.Point, name, ...pointOptions };
+      return { type: BuiltinPlotScale.Point, name, ...pointOptions };
     case 'log':
-      return { type: PlotScale.Log, name, ...scaleOptions };
+      return { type: BuiltinPlotScale.Log, name, ...scaleOptions };
     case 'sqrt':
-      return { type: PlotScale.Sqrt, name, ...scaleOptions };
+      return { type: BuiltinPlotScale.Sqrt, name, ...scaleOptions };
     case 'symlog':
-      return { type: PlotScale.Symlog, name, ...scaleOptions };
+      return { type: BuiltinPlotScale.Symlog, name, ...scaleOptions };
     case 'radial':
-      return { type: PlotScale.Radial, name, ...scaleOptions };
+      return { type: BuiltinPlotScale.Radial, name, ...scaleOptions };
     default: {
       // 穷尽守卫：新增 InputPlotPositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
       const exhaustive: never = type;
@@ -112,11 +112,11 @@ export const buildPositionScale = (
   }
 };
 
-/** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <PlotScale dimension="x"> 或缺省 linear */
+/** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <BuiltinPlotScale dimension="x"> 或缺省 linear */
 export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (forceBand && explicit !== undefined && explicit.type !== 'band') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark> (bar / heatmap) requires a band x scale; omit <PlotScale dimension="x" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> (bar / heatmap) requires a band x scale; omit <BuiltinPlotScale dimension="x" /> or set type="band"',
     );
   }
 
@@ -125,11 +125,11 @@ export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScal
   return buildPositionScale(AUTO_X, explicit?.type ?? 'linear', explicit);
 };
 
-/** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <PlotScale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
+/** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <BuiltinPlotScale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (hasRect && explicit !== undefined && explicit.type !== 'band') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark> (heatmap) requires a band y scale; omit <PlotScale dimension="y" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> (heatmap) requires a band y scale; omit <BuiltinPlotScale dimension="y" /> or set type="band"',
     );
   }
 
@@ -145,22 +145,22 @@ export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale 
 export const buildAngleScale = (collected: Collected, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (collected.hasBar && explicit !== undefined && explicit.type !== 'band') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark> in polar coordinates requires a band angle scale; omit <PlotScale dimension="x" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> in polar coordinates requires a band angle scale; omit <BuiltinPlotScale dimension="x" /> or set type="band"',
     );
   }
 
   if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
     throw new RetikzPlotVanillaError(
-      'buildPlotIR: <IntervalMark angle> requires a linear angle scale; omit <PlotScale dimension="angle" /> or use type="linear"',
+      'buildPlotIR: <IntervalMark angle> requires a linear angle scale; omit <BuiltinPlotScale dimension="angle" /> or use type="linear"',
     );
   }
 
   if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit.type, explicit);
-  if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
-  if (collected.hasBar) return { type: PlotScale.Band, name: AUTO_ANGLE };
-  if (collected.hasClosedLine) return { type: PlotScale.Point, name: AUTO_ANGLE };
+  if (collected.hasSector) return { type: BuiltinPlotScale.Linear, name: AUTO_ANGLE };
+  if (collected.hasBar) return { type: BuiltinPlotScale.Band, name: AUTO_ANGLE };
+  if (collected.hasClosedLine) return { type: BuiltinPlotScale.Point, name: AUTO_ANGLE };
 
-  return { type: PlotScale.Linear, name: AUTO_ANGLE };
+  return { type: BuiltinPlotScale.Linear, name: AUTO_ANGLE };
 };
 
 type ScaleRole = 'x' | 'y' | 'angle' | 'radius';

@@ -1,5 +1,5 @@
 import type { IRDataFieldDefinition } from '@retikz/data';
-import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -25,7 +25,7 @@ export const renderDataModelOrderPreview = (values: DataModelOrderValues) => (
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <IntervalMark x="size" y="value" color="size" />
-    <PlotScale dimension="y" type="linear" domainPadding={0} />
+    <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

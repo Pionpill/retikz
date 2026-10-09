@@ -8,7 +8,7 @@ import { buildPlotIR } from '../../../src/adapter';
 import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/composition';
 import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
-import { PlotScale } from '../../../src/components/scales';
+import { BuiltinPlotScale } from '../../../src/components/scales';
 
 const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
@@ -146,7 +146,7 @@ describe('React 与 framework-neutral authoring parity', () => {
     const spec = buildPlotIR(
       <>
         <PlotFacet id="sales" column="region" />
-        <PlotScale dimension="x" type="time" />
+        <BuiltinPlotScale dimension="x" type="time" />
         <PointMark facetId="sales" x="month" y="revenue" />
       </>,
       'sales',
@@ -295,8 +295,8 @@ describe('React 与 framework-neutral authoring parity', () => {
     };
     const react = buildPlotIR(
       <>
-        <PlotScale dimension="x" type="linear" />
-        <PlotScale dimension="y" type="linear" />
+        <BuiltinPlotScale dimension="x" type="linear" />
+        <BuiltinPlotScale dimension="y" type="linear" />
         <PointMark x="day" y="temperature" />
       </>,
       'weather',

@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { PathMarkSchema, PlotMark } from '@retikz/plot';
+import { PathMarkSchema, BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -63,7 +63,7 @@ export const resolveConnectedScatterMarkGroup = (
   const pointProperties: JsonObject = { ...(properties.point ?? {}) };
   const separateColors = properties.colorMode === 'mark';
   const path: JsonObject = {
-    type: PlotMark.Path,
+    type: BuiltinPlotMark.Path,
     order,
     closed: false,
     ...(series === undefined ? {} : { series: series.field }),

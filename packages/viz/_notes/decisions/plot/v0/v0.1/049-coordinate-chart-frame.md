@@ -35,4 +35,4 @@ alpha.12 证明“内置坐标系走 bespoke 分支、自定义坐标系走 cust
 
 ## 兼容性
 
-实验性 `PlotCoordinate.Custom`、`createCustomFrame` 与 Record 形态 coordinates 未作为稳定版本发布，不保留 alias。迁移到 `defineCoordinate()`、`CoordinateDefinition`、`createCoordinateFrame()` 与数组形态 `coordinates`。
+实验性 `BuiltinPlotCoordinate.Custom`、`createCustomFrame` 与 Record 形态 coordinates 未作为稳定版本发布，不保留 alias。迁移到 `defineCoordinate()`、`CoordinateDefinition`、`createCoordinateFrame()` 与数组形态 `coordinates`。

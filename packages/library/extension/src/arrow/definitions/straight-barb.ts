@@ -1,11 +1,11 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
-import { ExtensionArrowName } from '../constants';
+import { BuiltinExtensionArrowName } from '../constants';
 
 /** 可选开放直线倒钩箭头 Definition */
 export const StraightBarbArrowDefinition = defineArrow({
-  name: ExtensionArrowName.StraightBarb,
+  name: BuiltinExtensionArrowName.StraightBarb,
   hollow: true,
   backX: 1,
   lineContactX: 9,

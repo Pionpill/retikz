@@ -9,7 +9,7 @@ import {
   rect,
 } from '@retikz/core';
 
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 import type { EllipticCapShapeParams } from './_elliptic-cap';
 import {
   circumscribeEllipticCaps,
@@ -24,7 +24,7 @@ export type CylinderShapeParams = EllipticCapShapeParams;
 
 /** 可选 Cylinder 形状 Definition */
 export const CylinderShapeDefinition = defineShape<CylinderShapeParams>({
-  name: ExtensionShapeName.Cylinder,
+  name: BuiltinExtensionShapeName.Cylinder,
   paramsSchema: EllipticCapShapeParamsSchema,
   circumscribe: circumscribeEllipticCaps,
   boundaryPoint: (bounds, toward, params) => localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),

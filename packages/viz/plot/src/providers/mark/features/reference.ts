@@ -19,7 +19,7 @@ import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotMarkGeometryLabel, IRPlotMarkNodeLabel, IRPlotReferenceMark } from '../../../schemas';
-import { PlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
+import { BuiltinPlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import type { CartesianCoordinateFrame } from '../../coordinate';
 import { isCartesianCoordinateFrame, isPolarCoordinateFrame, polarFixedRadiusSteps } from '../../coordinate';
@@ -526,7 +526,7 @@ export const lowerReferenceLayer = (
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
-  if (mark.type !== PlotMark.Reference) return null;
+  if (mark.type !== BuiltinPlotMark.Reference) return null;
 
   const shape = referenceShape(mark);
   if (shape.kind === ReferenceMarkKind.Region) {

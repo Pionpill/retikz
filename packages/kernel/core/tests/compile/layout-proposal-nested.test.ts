@@ -18,7 +18,7 @@ import {
   formatCompileOccurrence,
   isNodeLayoutCompileArtifact,
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -171,7 +171,7 @@ const runNestedFixture = (): FixtureRun => {
       if (textProbe.kind === LayoutChildProbeKind.Failed) return context.raise(textProbe.failure);
 
       const selectedGuide = textProbe.result.alignmentGuides?.find(
-        guide => guide.name === LayoutAlignmentGuideName.FirstBaseline,
+        guide => guide.name === BuiltinLayoutAlignmentGuideName.FirstBaseline,
       );
       if (selectedGuide === undefined) throw new Error('expected the selected text first baseline guide');
 
@@ -283,7 +283,7 @@ describe('three-level layout proposal closure', () => {
     expect(selectedParentResult.visualBounds).toEqual(selectedObservation.text.visualBounds);
 
     const selectedLeafGuide = selectedObservation.text.alignmentGuides?.find(
-      guide => guide.name === LayoutAlignmentGuideName.FirstBaseline,
+      guide => guide.name === BuiltinLayoutAlignmentGuideName.FirstBaseline,
     );
 
     expect(selectedLeafGuide).toBeDefined();

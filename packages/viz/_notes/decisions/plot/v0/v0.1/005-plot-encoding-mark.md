@@ -26,8 +26,8 @@ keywords: 'Plot、Channel、Encoding、Point、Line、Mark、union、encoding'
 
 ```ts
 /** mark 类型判别值集（const 对象 + 派生类型；后续加 bar / area / sector / rule / text…） */
-export const PlotMark = { Point: 'point', Line: 'line' } as const;
-export type MarkType = ValueOf<typeof PlotMark>;
+export const BuiltinPlotMark = { Point: 'point', Line: 'line' } as const;
+export type MarkType = ValueOf<typeof BuiltinPlotMark>;
 ```
 
 理由：

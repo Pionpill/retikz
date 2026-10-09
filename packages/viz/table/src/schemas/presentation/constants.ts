@@ -1,4 +1,4 @@
 /** Table 内置 Cell presentation 名 */
-export const TableCellPresentation = {
+export const BuiltinTableCellPresentation = {
   Text: 'text',
 } as const;

@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
-import { PlotGuide, PlotScale } from '@retikz/plot';
+import { PlotGuide, BuiltinPlotScale } from '@retikz/plot';
 
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
@@ -40,24 +40,36 @@ const fieldConsumers: ReadonlyArray<ChartEncodingFieldConsumer<RangedDotEncoding
   {
     ...yConsumer,
     slot: 'category',
-    scale: { family: 'position', positionRole: 'y', recipeFallback: { name: yScaleName, type: PlotScale.Point } },
+    scale: {
+      family: 'position',
+      positionRole: 'y',
+      recipeFallback: { name: yScaleName, type: BuiltinPlotScale.Point },
+    },
   },
   {
     ...xConsumer,
     slot: 'start',
-    scale: { family: 'position', positionRole: 'x', recipeFallback: { name: xScaleName, type: PlotScale.Linear } },
+    scale: {
+      family: 'position',
+      positionRole: 'x',
+      recipeFallback: { name: xScaleName, type: BuiltinPlotScale.Linear },
+    },
   },
   {
     ...xConsumer,
     slot: 'end',
-    scale: { family: 'position', positionRole: 'x', recipeFallback: { name: xScaleName, type: PlotScale.Linear } },
+    scale: {
+      family: 'position',
+      positionRole: 'x',
+      recipeFallback: { name: xScaleName, type: BuiltinPlotScale.Linear },
+    },
   },
   {
     slot: 'color',
     scale: {
       family: 'channel',
-      type: PlotScale.Ordinal,
-      recipeFallback: { name: colorScaleName, type: PlotScale.Ordinal },
+      type: BuiltinPlotScale.Ordinal,
+      recipeFallback: { name: colorScaleName, type: BuiltinPlotScale.Ordinal },
     },
   },
 ];
@@ -102,8 +114,8 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     const cartesian = pointCartesian2DOf(ChartType.RangedDot);
     const scales = [
       { value: cartesian.scales[0], replaceable: true },
-      { value: { type: PlotScale.Point, name: yScaleName }, replaceable: true },
-      ...(hasColor ? [{ value: { type: PlotScale.Ordinal, name: colorScaleName }, replaceable: true }] : []),
+      { value: { type: BuiltinPlotScale.Point, name: yScaleName }, replaceable: true },
+      ...(hasColor ? [{ value: { type: BuiltinPlotScale.Ordinal, name: colorScaleName }, replaceable: true }] : []),
     ];
     const guides: Array<IRPlotGuide> = [
       ...pointAxisGuidesOf(),

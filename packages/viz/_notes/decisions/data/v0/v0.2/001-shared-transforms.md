@@ -29,15 +29,15 @@ keywords: Data、transform、stack、bin、normalize、relate、density、smooth
 JSON operation 继续用 `kind` 判别，并保留当前字段配置。运行时 Definition 描述输入字段、输出字段与字段类型变化，以及适用时的 schedule；执行结果仍为行数据及可选 provenance/lineage。
 
 ```ts
-import { applyTransforms, DataTransform, type IRDataTransform } from '@retikz/data';
+import { applyTransforms, BuiltinDataTransform, type IRDataTransform } from '@retikz/data';
 
 const operations: Array<IRDataTransform> = [
   {
-    kind: DataTransform.Summarize,
+    kind: BuiltinDataTransform.Summarize,
     groupBy: ['region', 'product'],
     metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
   },
-  { kind: DataTransform.Stack, x: 'region', y: 'total', groupBy: 'product' },
+  { kind: BuiltinDataTransform.Stack, x: 'region', y: 'total', groupBy: 'product' },
 ];
 const rows = applyTransforms(sourceRows, operations);
 ```

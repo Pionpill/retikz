@@ -60,7 +60,7 @@ export type EntityProps = Omit<InputEntity, 'type'> &
 |           | `kind?`             | `string`                                                                                         | —       | Open stable subtype key whose registration identity is the selected Entity role and kind.                                                                                   |
 |           | `label?`            | `EntityInputEmbedProps["label"]`                                                                 | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                               |
 |           | `predicate?`        | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | Optional precise semantic predicate reference.                                                                                                                              |
-|           | `role`              | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
+|           | `role`              | <ApiValues name="BuiltinEntityRole" /> \| `string`                                               | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
 |           | `text?`             | `EntityInputEmbedProps["text"]`                                                                  | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex. |
 | Geometry  | `position?`         | `EntityInputEmbedProps["position"]`                                                              | —       | Optional Core Node placement.                                                                                                                                               |
 |           | `rotate?`           | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                 |
@@ -108,7 +108,7 @@ export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 |           | `kind?`             | `string`                                                                                         | —       | Open stable subtype key whose registration identity is the selected Entity role and kind.                                                                                   |
 |           | `label?`            | `EntityCreateOptions['label']`                                                                   | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                               |
 |           | `predicate?`        | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | Optional precise semantic predicate reference.                                                                                                                              |
-|           | `role`              | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
+|           | `role`              | <ApiValues name="BuiltinEntityRole" /> \| `string`                                               | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
 |           | `text?`             | `EntityCreateOptions['text']`                                                                    | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex. |
 |           | `readonly type`     | `'entity'`                                                                                       | —       | Entity authoring input discriminator, fixed to entity                                                                                                                       |
 | Geometry  | `position?`         | `EntityCreateOptions['position']`                                                                | —       | Optional Core Node placement.                                                                                                                                               |
@@ -479,7 +479,7 @@ export type GraphDefinitionOptions = Readonly<{
 |           | `label?`      | `ZodInfer<typeof EntitySchema.shape["label"]>`                                                   | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                               |
 |           | `namespace`   | `"graph"`                                                                                        | —       | Graph semantic element namespace.                                                                                                                                           |
 |           | `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | Optional precise semantic predicate reference.                                                                                                                              |
-|           | `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
+|           | `role`        | <ApiValues name="BuiltinEntityRole" /> \| `string`                                               | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
 |           | `text?`       | `ZodInfer<typeof EntitySchema.shape["text"]>`                                                    | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex. |
 |           | `type`        | `"entity"`                                                                                       | —       | Entity Source record discriminator.                                                                                                                                         |
 | Geometry  | `position?`   | `ZodInfer<typeof EntitySchema.shape["position"]>`                                                | —       | Optional Core Node placement.                                                                                                                                               |
@@ -506,16 +506,16 @@ export type IRGraphEntity = ZodInfer<typeof EntitySchema>;
 
 </DocTabs>
 
-### EntityRole
+### BuiltinEntityRole
 
 <p>
-  <ApiSourceLink label={'EntityRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={27}>
+  <ApiSourceLink label={'BuiltinEntityRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={27}>
     Built-in high-level semantic roles of Entity
   </ApiSourceLink>
 </p>
 
 ```ts
-export const EntityRole = {
+export const BuiltinEntityRole = {
   Participant: 'participant',
   Activity: 'activity',
   Event: 'event',
@@ -525,7 +525,7 @@ export const EntityRole = {
   Concept: 'concept',
 } as const;
 
-export type EntityRole = ValueOf<typeof EntityRole>;
+export type BuiltinEntityRole = ValueOf<typeof BuiltinEntityRole>;
 ```
 
 ### GraphStatus

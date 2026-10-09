@@ -14,7 +14,7 @@ import type {
   IRTarget,
   IRTextRun,
 } from '../../schemas';
-import { BendAngleSchema, PathKind, SmoothTensionSchema } from '../../schemas';
+import { BendAngleSchema, BuiltinPathKind, SmoothTensionSchema } from '../../schemas';
 import {
   isAtPositionLike,
   isBetweenPositionLike,
@@ -57,7 +57,8 @@ const LABEL_POSITION: Record<string, number> = {
 };
 
 /** 判断 Path 是否为内置 Stroke 宿主 */
-const isBuiltinStrokePath = (path: ResolvedPathSource): boolean => (path.kind ?? PathKind.Stroke) === PathKind.Stroke;
+const isBuiltinStrokePath = (path: ResolvedPathSource): boolean =>
+  (path.kind ?? BuiltinPathKind.Stroke) === BuiltinPathKind.Stroke;
 
 /** 判断 Path 是否没有有效填充 */
 const hasNoEffectivePathFill = (path: ResolvedPathSource): boolean =>

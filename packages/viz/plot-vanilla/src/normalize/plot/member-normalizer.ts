@@ -1,5 +1,5 @@
 import type { IRDataTransformDeclaration } from '@retikz/data';
-import { DataTransform } from '@retikz/data';
+import { BuiltinDataTransform } from '@retikz/data';
 import type {
   IRPlotIntervalBounds,
   IRPlotPointFillStyle,
@@ -10,7 +10,7 @@ import type {
   IRPlotPointZIndexStyle,
   IRPlotTextChannel,
 } from '@retikz/plot';
-import { IntervalBoundKind, PlotGuide, PlotMark } from '@retikz/plot';
+import { IntervalBoundKind, PlotGuide, BuiltinPlotMark } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
@@ -174,7 +174,7 @@ export const applyDeclaration = (
     const effectiveTrackId = trackId ?? context.trackId;
 
     into.marks.push({
-      type: PlotMark.Path,
+      type: BuiltinPlotMark.Path,
       ...(id !== undefined ? { id } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),
       ...(xAxisId !== undefined ? { xAxisId } : {}),
@@ -267,7 +267,7 @@ export const applyDeclaration = (
     const effectiveTrackId = trackId ?? context.trackId;
 
     into.marks.push({
-      type: PlotMark.Point,
+      type: BuiltinPlotMark.Point,
       ...(id !== undefined ? { id } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),
       ...(xAxisId !== undefined ? { xAxisId } : {}),
@@ -401,7 +401,7 @@ export const applyDeclaration = (
       }
 
       into.shortcutTransforms.push({
-        kind: DataTransform.Stack,
+        kind: BuiltinDataTransform.Stack,
         params: {
           y: angle,
           ...(series !== undefined ? { groupBy: series } : {}),
@@ -409,7 +409,7 @@ export const applyDeclaration = (
       });
       const colorEnc = colorChannel(color, series ?? group) ?? colorChannel(angle, undefined);
       into.marks.push({
-        type: PlotMark.Interval,
+        type: BuiltinPlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
         ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
@@ -445,7 +445,7 @@ export const applyDeclaration = (
 
       const colorEnc = colorChannel(color, series ?? group);
       into.marks.push({
-        type: PlotMark.Interval,
+        type: BuiltinPlotMark.Interval,
         ...(id !== undefined ? { id } : {}),
         ...(coordinateView !== undefined ? { coordinateView } : {}),
         ...(xAxisId !== undefined ? { xAxisId } : {}),
@@ -558,7 +558,7 @@ export const applyDeclaration = (
       }
 
       into.shortcutTransforms.push({
-        kind: DataTransform.Normalize,
+        kind: BuiltinDataTransform.Normalize,
         params: {
           field: valueField,
           groupBy: [categoryField],
@@ -569,7 +569,7 @@ export const applyDeclaration = (
 
     if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
       into.shortcutTransforms.push({
-        kind: DataTransform.Stack,
+        kind: BuiltinDataTransform.Stack,
         params: {
           x: categoryField,
           y: valueField,
@@ -596,7 +596,7 @@ export const applyDeclaration = (
     if (histogram) bounds = { ...(bounds ?? {}), x: { kind: IntervalBoundKind.Extent, from: x0, to: x1 } };
 
     into.marks.push({
-      type: PlotMark.Interval,
+      type: BuiltinPlotMark.Interval,
       ...(id !== undefined ? { id } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),
       ...(xAxisId !== undefined ? { xAxisId } : {}),
@@ -639,7 +639,7 @@ export const applyDeclaration = (
     const colorEnc = colorChannel(color, undefined);
     const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
     into.marks.push({
-      type: PlotMark.Relation,
+      type: BuiltinPlotMark.Relation,
       ...(id !== undefined ? { id } : {}),
       ...(kind !== undefined ? { kind } : {}),
       ...(coordinateView !== undefined ? { coordinateView } : {}),

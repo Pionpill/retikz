@@ -18,7 +18,7 @@ import { buildIntervalContext, intervalCellGeometry, resolveMarkRegistry } from 
 import { coordinateScopeIdOf } from '../../resolve/composition';
 import { datumAnchor } from '../../resolve/mark';
 import type { IRPlot, IRPlotMark } from '../../schemas';
-import { isBuiltinMark, PlotMark } from '../../schemas';
+import { isBuiltinMark, BuiltinPlotMark } from '../../schemas';
 import { DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 import type { PlotDataArtifactLowerResult } from '../expand/lower';
@@ -28,7 +28,7 @@ type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
 
 /** 取某 mark 的 series 字段名（无则 undefined）；只有 path / interval 含 series */
 const seriesFieldOf = (mark: IRPlotMark): string | undefined =>
-  mark.type === PlotMark.Path || mark.type === PlotMark.Interval ? mark.series : undefined;
+  mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Interval ? mark.series : undefined;
 
 type RenderDatumEntry = PlotAnchorResolution & {
   transformedIndex: number;
@@ -243,7 +243,11 @@ export const buildPlotLocatorFromDataArtifact = (
     transformedIndex: number,
   ): { position: [number, number]; row: ExternalRow; mark: IRPlotMark } | null => {
     const markDataView = structuralMarkDataViewOf(markIndex);
-    if (markDataView === undefined || !isBuiltinMark(markDataView.mark) || markDataView.mark.type !== PlotMark.Path) {
+    if (
+      markDataView === undefined ||
+      !isBuiltinMark(markDataView.mark) ||
+      markDataView.mark.type !== BuiltinPlotMark.Path
+    ) {
       return null;
     }
 
@@ -335,7 +339,7 @@ export const buildPlotLocatorFromDataArtifact = (
     if (rows === undefined) return null;
 
     const intervalContext: IntervalContext | undefined =
-      mark.type === PlotMark.Interval ? buildIntervalContext(mark, frame, rows) : undefined;
+      mark.type === BuiltinPlotMark.Interval ? buildIntervalContext(mark, frame, rows) : undefined;
     let sumX = 0;
     let sumY = 0;
     let count = 0;
@@ -346,7 +350,7 @@ export const buildPlotLocatorFromDataArtifact = (
       if (fieldValue !== value && String(fieldValue) !== String(value)) continue;
 
       const position =
-        mark.type === PlotMark.Interval
+        mark.type === BuiltinPlotMark.Interval
           ? (() => {
               const geometry = intervalCellGeometry(mark, row, frame, intervalContext);
               return geometry === null || !isRenderableCellGeometry(geometry) ? null : cellGeometryAnchor(geometry);

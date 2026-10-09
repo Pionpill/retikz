@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis, PlotLegend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
-import { PlotScale } from '../../../src/components/scales';
+import { BuiltinPlotScale } from '../../../src/components/scales';
 import { PlotTransform } from '../../../src/components/transform';
 import { resolvePlotAuthoring } from '../../../src/plot-runtime';
 
@@ -19,7 +19,7 @@ describe('Plot member extraction characterization', () => {
         <PointMark id="points" x="x" y="y" fill="category" resolveLabel={resolvePointLabel} />
         <PathMark id="trend" x="x" y="y" order="x" series="category" />
         <IntervalMark id="bars" x="category" y="value" />
-        <PlotScale dimension="y" type="log" base={2} />
+        <BuiltinPlotScale dimension="y" type="log" base={2} />
         <PlotAxis dimension="x" grid />
         <PlotLegend channel="color" title="Category" />
       </>,

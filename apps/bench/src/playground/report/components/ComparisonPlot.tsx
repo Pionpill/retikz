@@ -1,4 +1,4 @@
-import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import type { ComparisonChartRow } from '../view-model';
@@ -30,7 +30,7 @@ export const ComparisonPlot: FC<ComparisonPlotProps> = props => {
       style={{ width: '100%', height: '100%', color: 'var(--muted-foreground)' }}
     >
       <IntervalMark x="policy" y="median" color="policy" fillOpacity={0.9} />
-      <PlotScale
+      <BuiltinPlotScale
         dimension="x"
         type="band"
         paddingInner={rows.length === 1 ? 0.6 : 0.35}

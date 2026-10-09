@@ -1,8 +1,8 @@
 import {
   AnimationDirection,
-  AnimationEasing,
+  BuiltinAnimationEasing,
   AnimationFill,
-  AnimationProperty,
+  BuiltinAnimationProperty,
   AnimationTrigger,
   BendDirection,
   BlendMode,
@@ -15,11 +15,11 @@ import {
   NodeTextAlign,
   PathCloseMode,
   PathFillRule,
-  PathKind,
+  BuiltinPathKind,
   PathLineCap,
   PathLineJoin,
   PathThickness,
-  PatternShape,
+  BuiltinPatternShape,
   ScopeBoundingShape,
   ShadowPreset,
   Side,
@@ -27,17 +27,17 @@ import {
 } from '@retikz/core';
 import {
   BuiltinRegressionMethod,
-  DataFieldFormat,
+  BuiltinDataFieldFormat,
   DataFieldType,
   DataSortOrder,
-  FieldOrderMode,
+  BuiltinFieldOrderMode,
   DensityBandwidthKind,
   JitterAxis,
   NormalizeBasis,
   PairMeasureOperationKind,
   StackOffset,
 } from '@retikz/data';
-import { EntityRole, GraphStatus, RelationRole, RelationDirection } from '@retikz/graph';
+import { BuiltinEntityRole, GraphStatus, BuiltinRelationRole, RelationDirection } from '@retikz/graph';
 import {
   FlexLayoutDirection,
   FlexLayoutWrap,
@@ -95,14 +95,14 @@ export const API_VALUE_REGISTRY = {
   AnimationDirection: {
     values: Object.values(AnimationDirection),
   },
-  AnimationEasing: {
-    values: Object.values(AnimationEasing),
+  BuiltinAnimationEasing: {
+    values: Object.values(BuiltinAnimationEasing),
   },
   AnimationFill: {
     values: Object.values(AnimationFill),
   },
-  AnimationProperty: {
-    values: Object.values(AnimationProperty),
+  BuiltinAnimationProperty: {
+    values: Object.values(BuiltinAnimationProperty),
   },
   AnimationTrigger: {
     values: Object.values(AnimationTrigger),
@@ -137,8 +137,8 @@ export const API_VALUE_REGISTRY = {
   BuiltinShape: {
     values: Object.values(BuiltinShape),
   },
-  DataFieldFormat: {
-    values: Object.values(DataFieldFormat),
+  BuiltinDataFieldFormat: {
+    values: Object.values(BuiltinDataFieldFormat),
   },
   DataFieldType: {
     values: Object.values(DataFieldType),
@@ -149,13 +149,13 @@ export const API_VALUE_REGISTRY = {
   DensityBandwidthKind: {
     values: Object.values(DensityBandwidthKind),
   },
-  RelationRole: { values: Object.values(RelationRole) },
+  BuiltinRelationRole: { values: Object.values(BuiltinRelationRole) },
   RelationDirection: { values: Object.values(RelationDirection) },
-  EntityRole: {
-    values: Object.values(EntityRole),
+  BuiltinEntityRole: {
+    values: Object.values(BuiltinEntityRole),
   },
-  FieldOrderMode: {
-    values: Object.values(FieldOrderMode),
+  BuiltinFieldOrderMode: {
+    values: Object.values(BuiltinFieldOrderMode),
   },
   FoldStepVia: {
     values: Object.values(FoldStepVia),
@@ -241,8 +241,8 @@ export const API_VALUE_REGISTRY = {
   PathFillRule: {
     values: Object.values(PathFillRule),
   },
-  PathKind: {
-    values: Object.values(PathKind),
+  BuiltinPathKind: {
+    values: Object.values(BuiltinPathKind),
   },
   PathLineCap: {
     values: Object.values(PathLineCap),
@@ -253,8 +253,8 @@ export const API_VALUE_REGISTRY = {
   PathThickness: {
     values: Object.values(PathThickness),
   },
-  PatternShape: {
-    values: Object.values(PatternShape),
+  BuiltinPatternShape: {
+    values: Object.values(BuiltinPatternShape),
   },
   ReferenceMarkKind: {
     values: Object.values(ReferenceMarkKind),

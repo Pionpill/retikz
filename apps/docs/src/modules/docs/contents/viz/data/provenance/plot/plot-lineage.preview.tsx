@@ -1,5 +1,5 @@
 import type { PlotLineageRun } from '@retikz/plot';
-import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 import type { FC } from 'react';
 import { useCallback, useState } from 'react';
 
@@ -54,7 +54,7 @@ export const PlotLineagePreview: FC<PlotLineagePreviewProps> = props => {
             color="month"
             transform={transforms.mark.map(operation => ({ operation }))}
           />
-          <PlotScale dimension="y" type="linear" domainPadding={0} />
+          <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>

@@ -32,7 +32,7 @@ import { pulse } from '@retikz/extension';
 import { CircleDefinition } from '@retikz/standard/shape';
 ```
 
-官方扩展的集合与名称常量统一使用 `ExtensionShapeDefinitions`、`ExtensionShapeProviders`、`ExtensionShapeName` 等 owner 名称。扩展实现产生的错误使用 `RetikzExtensionError` 与 `EXTENSION_*` 错误码，原有错误分类、details 与 cause 保持一致。Core 产生的诊断仍归 Core。
+官方扩展的集合与名称常量统一使用 `ExtensionShapeDefinitions`、`ExtensionShapeProviders`、`BuiltinExtensionShapeName` 等 owner 名称。扩展实现产生的错误使用 `RetikzExtensionError` 与 `EXTENSION_*` 错误码，原有错误分类、details 与 cause 保持一致。Core 产生的诊断仍归 Core。
 
 所有 provider 的注册 key、输入数据、默认值、几何、Scene 输出和冲突处理保持原行为。React、Vanilla、直接 compile 使用相同 Definitions 与 Core provider resolver；不新增宿主专用装配机制。已持久化的图形数据无需转换。
 

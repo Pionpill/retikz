@@ -1,12 +1,12 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
-import { ExtensionArrowName } from '../constants';
+import { BuiltinExtensionArrowName } from '../constants';
 import { openStrokePath } from './_utils';
 
 /** 可选 Bar 箭头 Definition */
 export const BarArrowDefinition = defineArrow({
-  name: ExtensionArrowName.Bar,
+  name: BuiltinExtensionArrowName.Bar,
   hollow: true,
   backX: 9,
   lineContactX: 9,

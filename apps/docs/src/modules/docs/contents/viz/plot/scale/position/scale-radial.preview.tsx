@@ -1,4 +1,4 @@
-import { IntervalMark, Plot, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, Plot, BuiltinPlotScale } from '@retikz/plot-react';
 
 import { evenSteps, rainfall, squareSteps } from './scale-radial.data';
 
@@ -19,7 +19,7 @@ export const ScaleRadialPreview = (values: ScaleRadialPreviewValues) => {
         </figcaption>
         <Plot data={data} width={190} height={190} coordinate={{ type: 'polar2D' }}>
           <IntervalMark x="category" y="value" color="category" />
-          <PlotScale dimension="y" type="linear" domainPadding={0} />
+          <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
         </Plot>
       </figure>
       <figure className="grid justify-items-center gap-1">
@@ -28,7 +28,7 @@ export const ScaleRadialPreview = (values: ScaleRadialPreviewValues) => {
         </figcaption>
         <Plot data={data} width={190} height={190} coordinate={{ type: 'polar2D' }}>
           <IntervalMark x="category" y="value" color="category" />
-          <PlotScale dimension="y" type="radial" domainPadding={0} />
+          <BuiltinPlotScale dimension="y" type="radial" domainPadding={0} />
         </Plot>
       </figure>
     </div>

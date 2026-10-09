@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis } from '../../../src/components/guides';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
-import { PlotScale } from '../../../src/components/scales';
+import { BuiltinPlotScale } from '../../../src/components/scales';
 
 describe('buildPlotIR composition adapter surface', () => {
   const composition: NonNullable<IRPlot['composition']> = {
@@ -75,8 +75,8 @@ describe('buildPlotIR composition adapter surface', () => {
   it('fills composition view coordinate scale bindings from declared scales', () => {
     const spec = buildPlotIR(
       <>
-        <PlotScale dimension="x" type="linear" />
-        <PlotScale dimension="y" type="linear" />
+        <BuiltinPlotScale dimension="x" type="linear" />
+        <BuiltinPlotScale dimension="y" type="linear" />
         <PointMark x="day" y="temperature" />
       </>,
       'weather',
@@ -105,8 +105,8 @@ describe('buildPlotIR composition adapter surface', () => {
   it('fills shared scaffold coordinate scale bindings from declared scales', () => {
     const spec = buildPlotIR(
       <>
-        <PlotScale dimension="x" type="linear" />
-        <PlotScale dimension="y" type="linear" />
+        <BuiltinPlotScale dimension="x" type="linear" />
+        <BuiltinPlotScale dimension="y" type="linear" />
         <PointMark coordinateView="events" x="week" y="count" />
       </>,
       'ops',

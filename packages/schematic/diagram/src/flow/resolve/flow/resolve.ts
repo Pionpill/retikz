@@ -2,10 +2,10 @@ import type { IRChild, IRTarget } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGroup, IRGroupCaptionText } from '@retikz/graph';
 import {
-  EntityRole,
+  BuiltinEntityRole,
   GraphType,
   mergeGraphDefaults,
-  RelationRole,
+  BuiltinRelationRole,
   resolveGraph,
   resolveGraphDefinitionOptions,
   resolveRelation,
@@ -215,7 +215,7 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
     type: GraphType.Entity,
     id: source.id,
     text: source.text,
-    role: source.role ?? EntityRole.Concept,
+    role: source.role ?? BuiltinEntityRole.Concept,
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.group === undefined ? {} : { group: source.group }),
     ...(source.status === undefined ? {} : { status: source.status }),
@@ -428,7 +428,7 @@ const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: R
     type: GraphType.Relation,
     source: { id: source.source.id, ...(source.source.anchor === undefined ? {} : { anchor: source.source.anchor }) },
     target: { id: source.target.id, ...(source.target.anchor === undefined ? {} : { anchor: source.target.anchor }) },
-    role: source.role ?? RelationRole.Flow,
+    role: source.role ?? BuiltinRelationRole.Flow,
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),
     ...(source.direction === undefined ? {} : { direction: source.direction }),

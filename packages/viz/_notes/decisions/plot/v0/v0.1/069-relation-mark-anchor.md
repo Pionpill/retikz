@@ -39,7 +39,7 @@ ADR-059/060 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代�
 
 ## 影响
 
-- supersede ADR-059/060 中 `LinkMark` / `link` 方向；不新增 `PlotMark.Link` 作为通用关系能力。
+- supersede ADR-059/060 中 `LinkMark` / `link` 方向；不新增 `BuiltinPlotMark.Link` 作为通用关系能力。
 - 新增 public `RelationMark`、`AnchorId`、`PlotTargetRef`、`RelationRouteStep` 等 schema / 类型。
 - React 新增 `<RelationMark>`，并给 Point / Path / Interval props 增加 `anchorId`。
 - core 不改动；只消费 core Coordinate、Path、NodeTarget、StepLabel 等既有能力。

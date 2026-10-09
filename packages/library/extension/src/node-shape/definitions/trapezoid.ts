@@ -5,7 +5,7 @@ import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, strictObject } from 'zod';
 
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 import {
   circumscribeRoundedPolygon,
   emitPolygon,
@@ -67,7 +67,7 @@ const trapezoidVertices =
 
 /** 可选 Trapezoid 形状 Definition */
 export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
-  name: ExtensionShapeName.Trapezoid,
+  name: BuiltinExtensionShapeName.Trapezoid,
   paramsSchema: TrapezoidShapeParamsSchema,
   circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
     const ratio = shortSideRatioOf(params);
@@ -77,7 +77,7 @@ export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
         : { halfWidth: innerHalfWidth, halfHeight: innerHalfHeight / ratio };
 
     return circumscribeRoundedPolygon(
-      ExtensionShapeName.Trapezoid,
+      BuiltinExtensionShapeName.Trapezoid,
       innerHalfWidth,
       innerHalfHeight,
       sharp,

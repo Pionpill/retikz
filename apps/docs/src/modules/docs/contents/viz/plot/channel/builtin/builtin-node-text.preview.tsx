@@ -1,5 +1,5 @@
 import { BuiltinShape } from '@retikz/core';
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { nodeTextRows } from './builtin-node-text.data';
 
@@ -38,8 +38,8 @@ export const BuiltinNodeTextPreview = (values: BuiltinNodeTextPreviewValues) => 
     width={520}
     height={360}
   >
-    <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} domainPadding={0} />
-    <PlotScale dimension="y" type="linear" domain={[8, 24]} domainPadding={0} />
+    <BuiltinPlotScale dimension="x" type="linear" domain={[0.5, 3.5]} domainPadding={0} />
+    <BuiltinPlotScale dimension="y" type="linear" domain={[8, 24]} domainPadding={0} />
     <PointMark
       x="x"
       y="nodeY"

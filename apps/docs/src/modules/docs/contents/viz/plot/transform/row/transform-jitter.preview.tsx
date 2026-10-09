@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotScale, PlotTransform, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PlotTransform, PointMark } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -18,8 +18,8 @@ export const TransformJitterPreview = (values: TransformJitterPreviewValues, lan
   return (
     <Plot data={samples} width={420} height={260}>
       <PlotTransform operation={{ ...jitterOperationOf(values) }} />
-      <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
-      <PlotScale dimension="y" type="linear" domain={[10, 32]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[10, 32]} />
       <PointMark x="dose" y="response" />
       <PlotAxis dimension="x" title={i18n.jittered} />
       <PlotAxis dimension="y" title={i18n.response} grid />

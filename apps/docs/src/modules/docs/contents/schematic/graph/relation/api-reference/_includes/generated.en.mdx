@@ -471,7 +471,7 @@ export type GraphDefinitionOptions = Readonly<{
 | `meta?`                | `Record<string, JsonValue>`                                                                                                                                                           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
 | `namespace`            | `"graph"`                                                                                                                                                                             | —       | Graph semantic element namespace.                                                                                                                                            |
 | `predicate?`           | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                                                                                                                  | —       | Optional precise semantic predicate reference.                                                                                                                               |
-| `role`                 | <ApiValues name="RelationRole" /> \| `string`                                                                                                                                         | —       | Open Relation role key resolved by the configured registry.                                                                                                                  |
+| `role`                 | <ApiValues name="BuiltinRelationRole" /> \| `string`                                                                                                                                  | —       | Open Relation role key resolved by the configured registry.                                                                                                                  |
 | `rotate?`              | `number`                                                                                                                                                                              | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
 | `roundedCorners?`      | `number`                                                                                                                                                                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                                                                     | —       | Optional complete Core Path step sequence in the Graph root coordinate space.                                                                                                |
@@ -853,6 +853,26 @@ export type RelationRoleDefinition = Readonly<{
 
 </DocTabs>
 
+### BuiltinRelationRole
+
+<p>
+  <ApiSourceLink label={'BuiltinRelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={45}>
+    Built-in Relation semantic roles
+  </ApiSourceLink>
+</p>
+
+```ts
+export const BuiltinRelationRole = {
+  Association: 'association',
+  Dependency: 'dependency',
+  Generalization: 'generalization',
+  Flow: 'flow',
+  Influence: 'influence',
+} as const;
+
+export type BuiltinRelationRole = ValueOf<typeof BuiltinRelationRole>;
+```
+
 ### GraphStatus
 
 <p>
@@ -893,26 +913,6 @@ export const RelationDirection = {
 } as const;
 
 export type RelationDirection = ValueOf<typeof RelationDirection>;
-```
-
-### RelationRole
-
-<p>
-  <ApiSourceLink label={'RelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={45}>
-    Built-in Relation semantic roles
-  </ApiSourceLink>
-</p>
-
-```ts
-export const RelationRole = {
-  Association: 'association',
-  Dependency: 'dependency',
-  Generalization: 'generalization',
-  Flow: 'flow',
-  Influence: 'influence',
-} as const;
-
-export type RelationRole = ValueOf<typeof RelationRole>;
 ```
 
 ### createGraphDefinitions

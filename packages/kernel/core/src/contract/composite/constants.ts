@@ -29,7 +29,7 @@ export const LayoutAlignmentGuideDimension = {
 } as const;
 
 /** Core 提供的稳定对齐参考线名称 */
-export const LayoutAlignmentGuideName = {
+export const BuiltinLayoutAlignmentGuideName = {
   /** 首行基线 */
   FirstBaseline: 'first-baseline',
   /** 末行基线 */
@@ -66,7 +66,7 @@ export type LayoutIntrinsicMode = ValueOf<typeof LayoutIntrinsicMode>;
 export type LayoutAlignmentGuideDimension = ValueOf<typeof LayoutAlignmentGuideDimension>;
 
 /** Core 内置 alignment guide 的稳定名称 */
-export type LayoutAlignmentGuideName = ValueOf<typeof LayoutAlignmentGuideName>;
+export type BuiltinLayoutAlignmentGuideName = ValueOf<typeof BuiltinLayoutAlignmentGuideName>;
 
 /** child probe 的结果判别值 */
 export type LayoutChildProbeKind = ValueOf<typeof LayoutChildProbeKind>;

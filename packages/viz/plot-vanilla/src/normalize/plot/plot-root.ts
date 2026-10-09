@@ -1,5 +1,5 @@
 import type { IRPlotCoordinateOperation, IRPlotScale } from '@retikz/plot';
-import { PlotCoordinate, PlotGuide, PlotMark } from '@retikz/plot';
+import { BuiltinPlotCoordinate, PlotGuide, BuiltinPlotMark } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import { normalizePlotBindings } from './bindings';
@@ -59,13 +59,16 @@ export const normalizePlotRoot = (
     );
   }
 
-  if (coordKind === 'polar2D' && collected.marks.some(mark => mark.type === PlotMark.Path && mark.closed !== false)) {
+  if (
+    coordKind === 'polar2D' &&
+    collected.marks.some(mark => mark.type === BuiltinPlotMark.Path && mark.closed !== false)
+  ) {
     collected.hasClosedLine = true;
   }
 
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
-  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <PlotScale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
+  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <BuiltinPlotScale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
   // 直接调用 buildPlotIR 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）
   const shouldDeferPositionScales = context.model !== undefined || rootContext.deferPositionScaleInference === true;
   let coordinate: IRPlotCoordinateOperation;
@@ -76,13 +79,13 @@ export const normalizePlotRoot = (
     const radiusScale = buildPositionScale(AUTO_RADIUS, explicitScales.radius?.type ?? 'linear', explicitScales.radius);
     coordinate = shouldDeferPositionScales
       ? {
-          type: PlotCoordinate.Polar2D,
+          type: BuiltinPlotCoordinate.Polar2D,
           ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}),
           ...(explicitScales.radius !== undefined ? { radius: AUTO_RADIUS } : {}),
           ...polar,
         }
       : {
-          type: PlotCoordinate.Polar2D,
+          type: BuiltinPlotCoordinate.Polar2D,
           angle: AUTO_ANGLE,
           radius: AUTO_RADIUS,
           ...polar,
@@ -92,7 +95,7 @@ export const normalizePlotRoot = (
       ...(!shouldDeferPositionScales || explicitScales.radius !== undefined ? [radiusScale] : []),
     ];
   } else if (coordKind === 'cartesian1D') {
-    // 单维直线：orientation 取对象配置；单一位置 scale 可由 <PlotScale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
+    // 单维直线：orientation 取对象配置；单一位置 scale 可由 <BuiltinPlotScale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
     const orientation =
       typeof coordinateInput === 'object' && coordinateInput.type === 'cartesian1D'
         ? coordinateInput.orientation
@@ -100,11 +103,11 @@ export const normalizePlotRoot = (
     const xScale = buildCartesianXScale(false, explicitScales.x);
     coordinate = shouldDeferPositionScales
       ? {
-          type: PlotCoordinate.Cartesian1D,
+          type: BuiltinPlotCoordinate.Cartesian1D,
           ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}),
           ...(orientation !== undefined ? { orientation } : {}),
         }
-      : { type: PlotCoordinate.Cartesian1D, x: AUTO_X, ...(orientation !== undefined ? { orientation } : {}) };
+      : { type: BuiltinPlotCoordinate.Cartesian1D, x: AUTO_X, ...(orientation !== undefined ? { orientation } : {}) };
     scales = !shouldDeferPositionScales || explicitScales.x !== undefined ? [xScale] : [];
   } else if (coordKind === 'polar1D') {
     // 单角向圆周：半径占比 + 角向区间取对象配置；角向 scale 默认 linear（无 model；周期连续量）
@@ -116,8 +119,12 @@ export const normalizePlotRoot = (
     };
     const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle?.type ?? 'linear', explicitScales.angle);
     coordinate = shouldDeferPositionScales
-      ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom }
-      : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
+      ? {
+          type: BuiltinPlotCoordinate.Polar1D,
+          ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}),
+          ...geom,
+        }
+      : { type: BuiltinPlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
     scales = !shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : [];
   } else if (coordKind === 'custom') {
     // 自定义坐标系：IR 直接存 { type:<customType>, ...config }；roles / 投影函数来自运行时 CoordinateDefinition
@@ -139,11 +146,11 @@ export const normalizePlotRoot = (
     const yScale = buildCartesianYScale(collected.hasRect, explicitScales.y);
     coordinate = shouldDeferPositionScales
       ? {
-          type: PlotCoordinate.Cartesian2D,
+          type: BuiltinPlotCoordinate.Cartesian2D,
           ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}),
           ...(explicitScales.y !== undefined ? { y: AUTO_Y } : {}),
         }
-      : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
+      : { type: BuiltinPlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
     scales = [
       ...(!shouldDeferPositionScales || explicitScales.x !== undefined ? [xScale] : []),
       ...(!shouldDeferPositionScales || explicitScales.y !== undefined ? [yScale] : []),
@@ -168,7 +175,7 @@ export const normalizePlotRoot = (
   });
 
   // topology 规范化会为 framework-neutral plain authoring 补 cartesian 默认 scale；React defer 路径只移除本次补出的维度，
-  // 保留用户显式 <PlotScale> 与多轴 binding 需要的派生 scale，让 lowering 继续按实际字段类型推断
+  // 保留用户显式 <BuiltinPlotScale> 与多轴 binding 需要的派生 scale，让 lowering 继续按实际字段类型推断
   const normalizedScales =
     shouldDeferPositionScales &&
     coordKind === 'cartesian2D' &&

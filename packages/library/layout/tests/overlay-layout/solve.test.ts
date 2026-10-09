@@ -1,5 +1,5 @@
 import type { LayoutChildResult } from '@retikz/core';
-import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz/core';
+import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { LayoutAlignment, LayoutSizeParticipation, OverlayPlacementKind } from '../../src';
@@ -34,7 +34,7 @@ const result = (
       ? []
       : [
           {
-            name: LayoutAlignmentGuideName.FirstBaseline,
+            name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
             dimension: LayoutAlignmentGuideDimension.Y,
             position: options.firstBaseline,
           } as const,
@@ -43,7 +43,7 @@ const result = (
       ? []
       : [
           {
-            name: LayoutAlignmentGuideName.LastBaseline,
+            name: BuiltinLayoutAlignmentGuideName.LastBaseline,
             dimension: LayoutAlignmentGuideDimension.Y,
             position: options.lastBaseline,
           } as const,

@@ -15,11 +15,17 @@ import type {
 import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../schemas';
-import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema, PolarInterpolation } from '../../../schemas';
+import {
+  BuiltinPlotCoordinate,
+  BuiltinPlotScale,
+  Polar1DSchema,
+  Polar2DSchema,
+  PolarInterpolation,
+} from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
-type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Polar2D }>;
+type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Polar2D }>;
 
 /** 空刻度集：某维度无 axis 时给 GuideContext 的占位 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -33,13 +39,13 @@ const axisRole = (dimension: string): string => {
 
 /** 连续角轴需要段内采样弯弧；分类角轴类别间无中间值，走弦 */
 const isContinuousAngleScale = (scaleType: string): boolean =>
-  scaleType === PlotScale.Linear ||
-  scaleType === PlotScale.Time ||
-  scaleType === PlotScale.Log ||
-  scaleType === PlotScale.Pow ||
-  scaleType === PlotScale.Sqrt ||
-  scaleType === PlotScale.Symlog ||
-  scaleType === PlotScale.Radial;
+  scaleType === BuiltinPlotScale.Linear ||
+  scaleType === BuiltinPlotScale.Time ||
+  scaleType === BuiltinPlotScale.Log ||
+  scaleType === BuiltinPlotScale.Pow ||
+  scaleType === BuiltinPlotScale.Sqrt ||
+  scaleType === BuiltinPlotScale.Symlog ||
+  scaleType === BuiltinPlotScale.Radial;
 
 /**
  * 极坐标输出空间点 → 屏幕点
@@ -102,7 +108,7 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
   };
 
   return {
-    type: PlotCoordinate.Polar2D,
+    type: BuiltinPlotCoordinate.Polar2D,
     roles: ['x', 'y'],
     center: input.center,
     innerRadius: input.innerRadius,
@@ -463,7 +469,7 @@ const polarAngularLayoutLabelsOf = (
  */
 export type Polar1DCoordinateFrame = {
   /** 判别字段：1D 极坐标圆周 */
-  type: typeof PlotCoordinate.Polar1D;
+  type: typeof BuiltinPlotCoordinate.Polar1D;
   /** 位置角色序（[angle]，单通道；x→angle 别名取值） */
   roles: ReadonlyArray<DimensionRole>;
   /** 圆心（屏幕坐标） */
@@ -532,7 +538,7 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DC
   };
 
   return {
-    type: PlotCoordinate.Polar1D,
+    type: BuiltinPlotCoordinate.Polar1D,
     roles: ['x'],
     center: input.center,
     radius: input.radius,

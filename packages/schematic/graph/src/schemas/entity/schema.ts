@@ -2,12 +2,12 @@ import { NodeLayoutSchema, NodeSchema } from '@retikz/core';
 import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { literal, strictObject, string } from 'zod';
 
-import { EntityRole, GRAPH_NAMESPACE, GraphType } from '../../shared';
+import { BuiltinEntityRole, GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphPredicateRefSchema } from '../predicate';
 import { GraphStatusSchema } from '../status';
 
 /** 校验由图角色注册表解析的开放实体角色键 */
-export const EntityRoleSchema = createOpenStringSchema(EntityRole).describe(
+export const EntityRoleSchema = createOpenStringSchema(BuiltinEntityRole).describe(
   'Open Entity role key resolved by the configured Graph role registry.',
 );
 

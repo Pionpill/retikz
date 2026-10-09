@@ -23,8 +23,8 @@ scale 设计成 `z.discriminatedUnion('type', [...])`，alpha.1 只一个成员 
 
 ```ts
 /** scale 类型判别值集（const 对象 + 派生类型；后续加 band / log / time / ordinal…） */
-export const PlotScale = { Linear: 'linear' } as const;
-export type ScaleType = ValueOf<typeof PlotScale>;
+export const BuiltinPlotScale = { Linear: 'linear' } as const;
+export type ScaleType = ValueOf<typeof BuiltinPlotScale>;
 ```
 
 理由：

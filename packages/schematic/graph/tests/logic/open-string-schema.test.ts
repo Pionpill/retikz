@@ -19,7 +19,7 @@ describe('Graph registry-backed open string schemas', () => {
       Graph.EntitySchema.parse({
         namespace: 'graph',
         type: 'entity',
-        role: Graph.EntityRole.Participant,
+        role: Graph.BuiltinEntityRole.Participant,
         kind: 'custom.entity-kind',
         predicate: { name: 'custom.entity-predicate' },
       }),
@@ -45,8 +45,8 @@ describe('Graph registry-backed open string schemas', () => {
   });
 
   it('exposes built-in values without closing Entity and Relation extension keys', () => {
-    expectOpenStringSchema(Graph.EntityRoleSchema, Object.values(Graph.EntityRole));
-    expectOpenStringSchema(Graph.RelationRoleSchema, Object.values(Graph.RelationRole));
+    expectOpenStringSchema(Graph.EntityRoleSchema, Object.values(Graph.BuiltinEntityRole));
+    expectOpenStringSchema(Graph.RelationRoleSchema, Object.values(Graph.BuiltinRelationRole));
 
     expect(toJSONSchema(Graph.RelationKindSchema)).toMatchObject({ type: 'string' });
     expect(toJSONSchema(Graph.RelationKindSchema)).not.toHaveProperty('anyOf');
@@ -68,7 +68,7 @@ describe('Graph registry-backed open string schemas', () => {
 
     expect(
       Graph.GraphEntityThemeSelectorSchema.parse({
-        role: [Graph.EntityRole.Activity, 'custom.entity-role'],
+        role: [Graph.BuiltinEntityRole.Activity, 'custom.entity-role'],
         kind: 'custom.entity-kind',
       }),
     ).toEqual({
@@ -77,7 +77,7 @@ describe('Graph registry-backed open string schemas', () => {
     });
     expect(
       Graph.GraphRelationThemeSelectorSchema.parse({
-        role: Graph.RelationRole.Dependency,
+        role: Graph.BuiltinRelationRole.Dependency,
         kind: ['custom.relation-kind'],
         direction: 'forward',
       }),
@@ -85,7 +85,9 @@ describe('Graph registry-backed open string schemas', () => {
     expect(() => Graph.GraphEntityThemeSelectorSchema.parse({ variant: 'fill' })).toThrow();
     expect(() => Graph.GraphRelationThemeSelectorSchema.parse({ variant: 'default' })).toThrow();
     expect(() =>
-      Graph.GraphEntityThemeSelectorSchema.parse({ role: [Graph.EntityRole.Activity, Graph.EntityRole.Activity] }),
+      Graph.GraphEntityThemeSelectorSchema.parse({
+        role: [Graph.BuiltinEntityRole.Activity, Graph.BuiltinEntityRole.Activity],
+      }),
     ).toThrow(/Duplicate/);
   });
 

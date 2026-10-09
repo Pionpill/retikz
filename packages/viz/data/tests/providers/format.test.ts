@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { DataFieldTypeMap } from '../../src';
 import {
   collectFormatFields,
-  DataFieldFormat,
+  BuiltinDataFieldFormat,
   DataFieldType,
   defineFieldFormat,
   isBuiltinFieldFormat,
@@ -19,10 +19,10 @@ const formatOf = (name: string) => {
 
 describe('field format provider runtime', () => {
   it('parses all built-in temporal formats and rejects invalid inputs', () => {
-    const iso = formatOf(DataFieldFormat.Iso);
-    const epochSeconds = formatOf(DataFieldFormat.EpochSeconds);
-    const epochMillis = formatOf(DataFieldFormat.EpochMillis);
-    const slashDate = formatOf(DataFieldFormat.SlashDate);
+    const iso = formatOf(BuiltinDataFieldFormat.Iso);
+    const epochSeconds = formatOf(BuiltinDataFieldFormat.EpochSeconds);
+    const epochMillis = formatOf(BuiltinDataFieldFormat.EpochMillis);
+    const slashDate = formatOf(BuiltinDataFieldFormat.SlashDate);
 
     expect(iso.parse('2024-02-29')).toBe(Date.UTC(2024, 1, 29));
     expect(Number.isNaN(iso.parse('2023-02-29'))).toBe(true);
@@ -39,8 +39,8 @@ describe('field format provider runtime', () => {
   });
 
   it('parses built-in numeric string and percent formats', () => {
-    const numberString = formatOf(DataFieldFormat.NumberString);
-    const percent = formatOf(DataFieldFormat.Percent);
+    const numberString = formatOf(BuiltinDataFieldFormat.NumberString);
+    const percent = formatOf(BuiltinDataFieldFormat.Percent);
 
     expect(numberString.parse(' 1,234.5 ')).toBe(1234.5);
     expect(numberString.parse(12)).toBe(12);
@@ -55,7 +55,7 @@ describe('field format provider runtime', () => {
   });
 
   it('recognizes only built-in format names', () => {
-    for (const format of Object.values(DataFieldFormat)) expect(isBuiltinFieldFormat(format)).toBe(true);
+    for (const format of Object.values(BuiltinDataFieldFormat)) expect(isBuiltinFieldFormat(format)).toBe(true);
 
     expect(isBuiltinFieldFormat('currency')).toBe(false);
   });
@@ -79,7 +79,7 @@ describe('field format provider runtime', () => {
       parse: () => 0,
     });
     const duplicateBuiltin = defineFieldFormat({
-      name: DataFieldFormat.Percent,
+      name: BuiltinDataFieldFormat.Percent,
       impliedType: DataFieldType.Continuous,
       parse: () => 0,
     });
@@ -105,8 +105,8 @@ describe('field format provider runtime', () => {
     ]);
     const result = collectFormatFields(
       [
-        { name: 'amount', format: DataFieldFormat.Percent },
-        { name: 'createdAt', type: DataFieldType.Temporal, format: DataFieldFormat.EpochMillis },
+        { name: 'amount', format: BuiltinDataFieldFormat.Percent },
+        { name: 'createdAt', type: DataFieldType.Temporal, format: BuiltinDataFieldFormat.EpochMillis },
         { name: 'unused', format: 'not-registered' },
       ],
       baseTypes,
@@ -131,7 +131,7 @@ describe('field format provider runtime', () => {
     ).toThrow('data: field format "not-registered" is not registered');
     expect(() =>
       collectFormatFields(
-        [{ name: 'value', type: DataFieldType.Categorical, format: DataFieldFormat.Percent }],
+        [{ name: 'value', type: DataFieldType.Categorical, format: BuiltinDataFieldFormat.Percent }],
         new Map([['value', DataFieldType.Categorical]]),
         new Set(['value']),
       ),

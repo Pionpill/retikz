@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { cartesianJitterOperationOf } from './point-jitter-cartesian.controls';
 import { jitterPoints } from './point-jitter.data';
@@ -23,8 +23,8 @@ export const PointJitterCartesianPreview = (values: PointJitterCartesianPreviewV
       color={{ kind: 'constant', value: '#2563eb' }}
       placement={{ adjustments: [cartesianJitterOperationOf(values)] }}
     />
-    <PlotScale dimension="x" type="point" />
-    <PlotScale dimension="y" type="linear" domainPadding={{ upper: 6 }} />
+    <BuiltinPlotScale dimension="x" type="point" />
+    <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ upper: 6 }} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

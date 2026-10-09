@@ -1,7 +1,7 @@
 ﻿import { defineThemeStyle, ThemeMode } from '@retikz/core';
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import { defineFlowThemeStyle } from '@retikz/diagram/flow';
-import { defineEntityKind, defineGraphThemeStyle, defineRelationKind, RelationRole } from '@retikz/graph';
+import { defineEntityKind, defineGraphThemeStyle, defineRelationKind, BuiltinRelationRole } from '@retikz/graph';
 import type { GraphProps } from '@retikz/graph-react';
 import { defineTableThemeStyle } from '@retikz/table';
 
@@ -111,7 +111,7 @@ export const logicFigureRelationKinds: NonNullable<GraphProps['relationKinds']> 
   defineRelationKind({ kind: 'docs.logic.dataFlow', role: 'flow', description: 'Data transformation flow' }),
   defineRelationKind({
     kind: LogicFigureRelationKind.Secondary,
-    role: RelationRole.Dependency,
+    role: BuiltinRelationRole.Dependency,
     description: 'Secondary logic relationship',
     directions: { forward: { dashPattern: [6, 4] } },
   }),
@@ -243,7 +243,7 @@ type LogicFigureFlowGraphProps = Pick<FlowDiagramProps, 'entityKinds' | 'graphRu
 
 /** Docs Relation kind 对应的稳定 Graph role */
 export const logicFigureRelationRoleByKind: Readonly<Record<LogicFigureRelationKindValue, string>> = {
-  [LogicFigureRelationKind.Secondary]: RelationRole.Dependency,
+  [LogicFigureRelationKind.Secondary]: BuiltinRelationRole.Dependency,
 };
 
 /** 提供 Docs logic vocabulary 与主题定义；样式规则由主题按 kind 匹配 */

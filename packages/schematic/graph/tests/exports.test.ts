@@ -120,7 +120,7 @@ describe('@retikz/graph package boundary', () => {
   });
 
   it('exposes the three independent member vocabularies and extension hooks', () => {
-    expect(graphExports.EntityRole).toEqual({
+    expect(graphExports.BuiltinEntityRole).toEqual({
       Participant: 'participant',
       Activity: 'activity',
       Event: 'event',
@@ -129,7 +129,7 @@ describe('@retikz/graph package boundary', () => {
       Resource: 'resource',
       Concept: 'concept',
     });
-    expect(graphExports.RelationRole).toEqual({
+    expect(graphExports.BuiltinRelationRole).toEqual({
       Association: 'association',
       Dependency: 'dependency',
       Generalization: 'generalization',

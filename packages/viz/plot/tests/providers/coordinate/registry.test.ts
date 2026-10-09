@@ -11,7 +11,7 @@ import {
   readCoordinateScaleNames,
 } from '../../../src/contract';
 import { BUILTIN_COORDINATES, resolveCoordinateRegistry } from '../../../src/providers';
-import { PlotCoordinate } from '../../../src/schemas';
+import { BuiltinPlotCoordinate } from '../../../src/schemas';
 
 const archDefinition = defineCoordinate({
   schema: object({
@@ -53,31 +53,31 @@ describe('coordinate registry（contract spec）', () => {
   });
 
   it('coordinate_scale_binding_defaults_to_role_named_operation_fields', () => {
-    const definition = resolveCoordinateRegistry().get(PlotCoordinate.Cartesian2D);
+    const definition = resolveCoordinateRegistry().get(BuiltinPlotCoordinate.Cartesian2D);
 
     expect(definition).toBeDefined();
 
     if (definition === undefined) return;
 
-    const operation = { type: PlotCoordinate.Cartesian2D, x: 'horizontal' } as const;
+    const operation = { type: BuiltinPlotCoordinate.Cartesian2D, x: 'horizontal' } as const;
 
     expect(readCoordinateScaleNames(definition, operation)).toEqual({ x: 'horizontal' });
     expect(bindCoordinateScaleNames(definition, operation, { y: 'vertical' })).toEqual({
-      type: PlotCoordinate.Cartesian2D,
+      type: BuiltinPlotCoordinate.Cartesian2D,
       x: 'horizontal',
       y: 'vertical',
     });
   });
 
   it('polar_coordinate_scale_binding_aliases_x/y_roles_to_angle/radius_fields', () => {
-    const definition = resolveCoordinateRegistry().get(PlotCoordinate.Polar2D);
+    const definition = resolveCoordinateRegistry().get(BuiltinPlotCoordinate.Polar2D);
 
     expect(definition).toBeDefined();
 
     if (definition === undefined) return;
 
     const operation = {
-      type: PlotCoordinate.Polar2D,
+      type: BuiltinPlotCoordinate.Polar2D,
       startAngle: 0,
       endAngle: 360,
       innerRadius: 0,
@@ -121,7 +121,7 @@ describe('coordinate registry（contract spec）', () => {
 
   it('builtin_coordinate_definitions_cover_public_builtin_types', () => {
     expect(BUILTIN_COORDINATES.map(def => extractCoordinateType(def.schema)).sort()).toEqual(
-      Object.values(PlotCoordinate).sort(),
+      Object.values(BuiltinPlotCoordinate).sort(),
     );
   });
 
@@ -133,7 +133,9 @@ describe('coordinate registry（contract spec）', () => {
 
   it('duplicate_builtin_coordinate_type_throws', () => {
     const malformed: AnyCoordinateDefinition = {
-      schema: object({ type: literal(PlotCoordinate.Cartesian2D).describe('Collides with a built-in coordinate') }),
+      schema: object({
+        type: literal(BuiltinPlotCoordinate.Cartesian2D).describe('Collides with a built-in coordinate'),
+      }),
       roles: ['x'],
       resolve: archDefinition.resolve,
     };

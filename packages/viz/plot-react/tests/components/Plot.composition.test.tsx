@@ -3,7 +3,7 @@ import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '../../src';
+import { IntervalMark, PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -164,7 +164,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     expect(svg).toContain('Q1');
   });
 
-  // <IntervalMark> / <PlotScale> 渲染契约
+  // <IntervalMark> / <BuiltinPlotScale> 渲染契约
   it('barmark_renders_rect：<IntervalMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
@@ -226,7 +226,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const svg = renderToStaticMarkup(
       <Plot data={trend} width={480} height={300}>
         <PathMark x="date" y="v" order="date" />
-        <PlotScale dimension="x" type="time" />
+        <BuiltinPlotScale dimension="x" type="time" />
         <PlotAxis dimension="x" />
       </Plot>,
     );

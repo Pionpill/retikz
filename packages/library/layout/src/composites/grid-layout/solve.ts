@@ -1,5 +1,5 @@
 import type { LayoutChildResult } from '@retikz/core';
-import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz/core';
+import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '@retikz/core';
 
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { LayoutInsets, LayoutRect } from '../internal';
@@ -104,7 +104,7 @@ export const gridStructuralGuideOffset = (
   const slotHeight = slotHeightOf(result);
   if (guide === undefined) {
     return Object.freeze({
-      offset: name === LayoutAlignmentGuideName.FirstBaseline ? 0 : slotHeight,
+      offset: name === BuiltinLayoutAlignmentGuideName.FirstBaseline ? 0 : slotHeight,
       real: false,
     });
   }
@@ -132,14 +132,14 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
       compensatedLayoutSum([participant.margin.top, slotHeight, participant.margin.bottom]),
     );
     if (participant.alignment === LayoutAlignment.FirstBaseline) {
-      const guide = gridStructuralGuideOffset(participant.result, LayoutAlignmentGuideName.FirstBaseline);
+      const guide = gridStructuralGuideOffset(participant.result, BuiltinLayoutAlignmentGuideName.FirstBaseline);
       firstAscent = Math.max(firstAscent, participant.margin.top + guide.offset);
       firstDescent = Math.max(firstDescent, slotHeight - guide.offset + participant.margin.bottom);
       hasFirst = true;
     }
 
     if (participant.alignment === LayoutAlignment.LastBaseline) {
-      const guide = gridStructuralGuideOffset(participant.result, LayoutAlignmentGuideName.LastBaseline);
+      const guide = gridStructuralGuideOffset(participant.result, BuiltinLayoutAlignmentGuideName.LastBaseline);
       lastAscent = Math.max(lastAscent, participant.margin.top + guide.offset);
       lastDescent = Math.max(lastDescent, slotHeight - guide.offset + participant.margin.bottom);
       hasLast = true;

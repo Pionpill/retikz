@@ -80,18 +80,18 @@ Pass it to the consumer's `model` property to parse `revenue: '12'` as `revenue:
 
 Each field declaration is an `IRDataFieldDefinition` exported from `@retikz/data`. It is a union distinguished by `type`, with these shared fields:
 
-| Shared field | Type                                             | Responsibility                                                                                                  |
-| ------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `name`       | `string`                                         | Required non-blank logical field name referenced by transforms and consumers                                    |
-| `format?`    | <ApiValues name="DataFieldFormat" /> \| `string` | Optional built-in or custom parsing format; omission uses default coercion, and a named format can imply a type |
+| Shared field | Type                                                    | Responsibility                                                                                                  |
+| ------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `name`       | `string`                                                | Required non-blank logical field name referenced by transforms and consumers                                    |
+| `format?`    | <ApiValues name="BuiltinDataFieldFormat" /> \| `string` | Optional built-in or custom parsing format; omission uses default coercion, and a named format can imply a type |
 
 Besides the shared fields, a field declaration has two further fields: `type` specifies the measurement type, inferred from format or data when omitted; `order` specifies the category-domain order, and whether it is allowed depends on `type`. Their combination constraints are:
 
-| `type`                        | Field meaning                        | `order` constraint                                                                                                                                                        |
-| ----------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'categorical'`               | Discrete categories                  | Optional; accepts <ApiValues name="FieldOrderMode" />, a custom name, or a non-empty `Array<string \| number>`                                                            |
-| `'continuous'` / `'temporal'` | Continuous numbers / dates and times | Forbidden, including `'appearance'`                                                                                                                                       |
-| Omitted                       | Type inferred from format or data    | Optional; accepts <ApiValues name="FieldOrderMode" />, a custom name, or a non-empty `Array<string \| number>`; resolution fails if the resulting type is non-categorical |
+| `type`                        | Field meaning                        | `order` constraint                                                                                                                                                               |
+| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'categorical'`               | Discrete categories                  | Optional; accepts <ApiValues name="BuiltinFieldOrderMode" />, a custom name, or a non-empty `Array<string \| number>`                                                            |
+| `'continuous'` / `'temporal'` | Continuous numbers / dates and times | Forbidden, including `'appearance'`                                                                                                                                              |
+| Omitted                       | Type inferred from format or data    | Optional; accepts <ApiValues name="BuiltinFieldOrderMode" />, a custom name, or a non-empty `Array<string \| number>`; resolution fails if the resulting type is non-categorical |
 
 **Omitting a field type is different from omitting a field declaration.** You can write `{ name: 'region' }` to retain type inference. Once `model` is declared, however, every source field referenced by the current pipeline must be listed, and field names must be unique. For example, referencing `revenue` when the model contains only `size` fails. Unreferenced extra columns in the raw data need not be listed.
 

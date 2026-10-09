@@ -21,15 +21,15 @@ import {
   union,
 } from 'zod';
 
-import { BUILTIN_SCALE_TYPES, PlotColorScheme, PlotDomainPaddingKind, PlotScale } from './constants';
+import { BUILTIN_SCALE_TYPES, BuiltinPlotColorScheme, PlotDomainPaddingKind, BuiltinPlotScale } from './constants';
 
 /** Plot scale type：保留内置提示并允许注册自定义Definition key */
-export const PlotScaleTypeSchema = createOpenStringSchema(PlotScale).describe(
+export const PlotScaleTypeSchema = createOpenStringSchema(BuiltinPlotScale).describe(
   'Built-in scale type or a custom registered scale type',
 );
 
 /** 校验非空配色名称，具体内置或自定义名称在降低阶段解析 */
-export const ColorSchemeNameSchema = createOpenStringSchema(PlotColorScheme).describe(
+export const ColorSchemeNameSchema = createOpenStringSchema(BuiltinPlotColorScheme).describe(
   'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-blank string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
 );
 
@@ -117,7 +117,7 @@ const ContinuousPositionDomainShape = {
 
 /** 校验从数值定义域连续线性映射到输出范围的比例尺 */
 export const LinearScaleSchema = object({
-  type: literal(PlotScale.Linear).describe('Discriminator: continuous linear scale'),
+  type: literal(BuiltinPlotScale.Linear).describe('Discriminator: continuous linear scale'),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
   domain: tuple([number(), number()])
     .optional()
@@ -135,7 +135,7 @@ export const BandScaleSchema = object({
   domainPadding: DomainPaddingSchema.optional().describe(
     'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
   ),
-  type: literal(PlotScale.Band).describe(
+  type: literal(BuiltinPlotScale.Band).describe(
     'Discriminator: categorical band scale; each category occupies one equal-width band',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
@@ -158,7 +158,7 @@ export const PointScaleSchema = object({
   domainPadding: DomainPaddingSchema.optional().describe(
     'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
   ),
-  type: literal(PlotScale.Point).describe(
+  type: literal(BuiltinPlotScale.Point).describe(
     'Discriminator: categorical point scale; categories land on evenly spaced points (zero bandwidth)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
@@ -171,7 +171,7 @@ export const PointScaleSchema = object({
 
 /** 校验离散类别到离散视觉输出范围的顺序比例尺 */
 export const OrdinalScaleSchema = object({
-  type: literal(PlotScale.Ordinal).describe(
+  type: literal(BuiltinPlotScale.Ordinal).describe(
     'Discriminator: ordinal scale mapping a discrete domain to a discrete output range (typically colors)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional channel scale ref'),
@@ -193,7 +193,7 @@ export const OrdinalScaleSchema = object({
 
 /** 校验以毫秒时间戳为输入、按可读时间边界生成刻度的时间比例尺 */
 export const TimeScaleSchema = object({
-  type: literal(PlotScale.Time).describe('Discriminator: continuous time scale over epoch-millisecond instants'),
+  type: literal(BuiltinPlotScale.Time).describe('Discriminator: continuous time scale over epoch-millisecond instants'),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
   domain: tuple([number(), number()])
     .optional()
@@ -211,7 +211,7 @@ export const TimeScaleSchema = object({
 
 /** 校验连续对数映射的位置比例尺 */
 export const LogScaleSchema = object({
-  type: literal(PlotScale.Log).describe(
+  type: literal(BuiltinPlotScale.Log).describe(
     'Discriminator: continuous logarithmic scale (domain must be strictly positive)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
@@ -233,7 +233,7 @@ export const LogScaleSchema = object({
 
 /** 校验按指定指数进行连续幂映射的位置比例尺 */
 export const PowScaleSchema = object({
-  type: literal(PlotScale.Pow).describe('Discriminator: continuous power scale'),
+  type: literal(BuiltinPlotScale.Pow).describe('Discriminator: continuous power scale'),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
   domain: tuple([number(), number()])
     .optional()
@@ -251,7 +251,7 @@ export const PowScaleSchema = object({
 
 /** 校验按平方根映射数值的位置比例尺，可用于面积感知的尺寸编码 */
 export const SqrtScaleSchema = object({
-  type: literal(PlotScale.Sqrt).describe(
+  type: literal(BuiltinPlotScale.Sqrt).describe(
     'Discriminator: continuous square-root scale (pow with exponent 0.5; area-perceptual)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y or a size channel'),
@@ -274,7 +274,7 @@ export const SqrtScaleSchema = object({
 
 /** 校验近零线性、两端对数且支持跨零数据的对称对数比例尺 */
 export const SymlogScaleSchema = object({
-  type: literal(PlotScale.Symlog).describe(
+  type: literal(BuiltinPlotScale.Symlog).describe(
     'Discriminator: continuous symmetric-log scale (linear near zero, logarithmic in the tails; admits zero and negative values)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
@@ -301,7 +301,7 @@ export const SymlogScaleSchema = object({
 
 /** 校验使面积与输入值成比例的半径映射比例尺 */
 export const RadialScaleSchema = object({
-  type: literal(PlotScale.Radial).describe(
+  type: literal(BuiltinPlotScale.Radial).describe(
     'Discriminator: continuous radial scale whose output radius is area-true (the square-root mapping that makes encoded area proportional to value)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y or a polar radius role'),
@@ -322,7 +322,7 @@ export const RadialScaleSchema = object({
 
 /** 校验连续单调定义域到单向色带的颜色映射 */
 export const SequentialColorScaleSchema = object({
-  type: literal(PlotScale.Sequential).describe(
+  type: literal(BuiltinPlotScale.Sequential).describe(
     'Discriminator: continuous sequential color scale (monotone quantity to a one-directional color band)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
@@ -347,7 +347,7 @@ export const SequentialColorScaleSchema = object({
 
 /** 校验围绕有意义中点向两侧发散的连续颜色映射 */
 export const DivergingColorScaleSchema = object({
-  type: literal(PlotScale.Diverging).describe(
+  type: literal(BuiltinPlotScale.Diverging).describe(
     'Discriminator: continuous diverging color scale (a quantity with a meaningful midpoint to a two-sided color band)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
@@ -372,7 +372,7 @@ export const DivergingColorScaleSchema = object({
 
 /** 校验将连续定义域等宽分箱并赋予离散颜色的比例尺 */
 export const QuantizeColorScaleSchema = object({
-  type: literal(PlotScale.Quantize).describe(
+  type: literal(BuiltinPlotScale.Quantize).describe(
     'Discriminator: quantize color scale (a continuous domain cut into equal-width bins, each bin a discrete color)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
@@ -401,7 +401,7 @@ export const QuantizeColorScaleSchema = object({
 
 /** 校验按显式升序断点分箱并赋予离散颜色的比例尺 */
 export const ThresholdColorScaleSchema = object({
-  type: literal(PlotScale.Threshold).describe(
+  type: literal(BuiltinPlotScale.Threshold).describe(
     'Discriminator: threshold color scale (user-defined breakpoints cut the domain into bins, each bin a discrete color)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
@@ -425,7 +425,7 @@ export const ThresholdColorScaleSchema = object({
 
 /** 校验按数据分位数分箱并赋予离散颜色的比例尺 */
 export const QuantileColorScaleSchema = object({
-  type: literal(PlotScale.Quantile).describe(
+  type: literal(BuiltinPlotScale.Quantile).describe(
     'Discriminator: quantile color scale (the data is cut at quantiles into bins of roughly equal sample count, each bin a discrete color)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),

@@ -22,10 +22,10 @@ keywords: 'interval、bar、mark、baseline、value、bandwidth、rectangle、No
 
 `MarkSchema` 加 `interval` 成员（`type` 判别位，非破坏）。encoding 复用现有 `x`（band 类别）/ `y`（数值）位置通道，无新字段。lowering 对每行：x 中心 = band scale 的 `coordinate(category)`、柱宽 = `bandwidth`；y 端点 = `yScale.coordinate(0)`（baseline，clamp 进 range）与 `yScale.coordinate(value)`；柱 = 中心在 `[xc, (yBase+yVal)/2]`、`minimumWidth=bandwidth`、`minimumHeight=|yBase−yVal|` 的 rectangle Node。共享样式（shape / padding0 / fill / 无描边）上提到图层 Scope 的 `nodeDefault`（沿用 alpha.1「Scope 承载共享、Node 只留几何」原则）。
 
-判别串是决策的一部分——`type:'interval'` 进 `PlotMark` 常量：
+判别串是决策的一部分——`type:'interval'` 进 `BuiltinPlotMark` 常量：
 
 ```ts
-export const PlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } as const;
+export const BuiltinPlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } as const;
 ```
 
 理由：

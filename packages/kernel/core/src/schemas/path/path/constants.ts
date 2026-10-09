@@ -9,7 +9,7 @@ export const PathFillRule = {
 } as const;
 
 /** 路径编译 kind 关键字 */
-export const PathKind = {
+export const BuiltinPathKind = {
   /** 标准描边路径 */
   Stroke: 'stroke',
 } as const;
@@ -18,4 +18,4 @@ export const PathKind = {
 export type PathFillRule = ValueOf<typeof PathFillRule>;
 
 /** 路径编译 kind 关键字类型 */
-export type PathKind = ValueOf<typeof PathKind>;
+export type BuiltinPathKind = ValueOf<typeof BuiltinPathKind>;

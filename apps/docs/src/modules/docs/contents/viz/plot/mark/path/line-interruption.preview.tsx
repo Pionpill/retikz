@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, PlotLegend, PlotScale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotLegend, BuiltinPlotScale } from '@retikz/plot-react';
 
 import { interruptedArea } from './line-interruption.data';
 
@@ -21,8 +21,8 @@ export const LineInterruptionPreview = (values: LineInterruptionPreviewValues) =
       coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}
       plotDefaults={{ palette: { categorical: ['#0f8f98', '#8cf27e'] } }}
     >
-      <PlotScale dimension="x" type="linear" domainPadding={0} />
-      <PlotScale dimension="y" type="linear" domainPadding={0} />
+      <BuiltinPlotScale dimension="x" type="linear" domainPadding={0} />
+      <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
       {values.showFill ? (
         <PathMark
           x="year"

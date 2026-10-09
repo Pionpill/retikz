@@ -13,7 +13,7 @@ import type {
   IRDataRelateTransform,
   IRDataSelectorOperation,
 } from '../../schemas';
-import { ReducerOperationKind } from '../../schemas';
+import { BuiltinReducerOperationKind } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
 import { applyReducerOperation, applySelectorOperation, reducerOutputFields } from '../statistics';
@@ -255,7 +255,7 @@ export const binOutputFields = (operation: IRDataBinTransform): { startField: st
 export const binMetricOperations = (
   operation: IRDataBinTransform,
 ): NonNullable<IRDataBinTransform['params']['metrics']> =>
-  operation.params.metrics ?? [{ kind: ReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
+  operation.params.metrics ?? [{ kind: BuiltinReducerOperationKind.Count, as: DEFAULT_BIN_COUNT_FIELD }];
 
 /** 由策略计算分箱边界；count / step / thresholds 三策略互斥 */
 const binEdges = (operation: IRDataBinTransform, values: Array<number>): Array<number> => {

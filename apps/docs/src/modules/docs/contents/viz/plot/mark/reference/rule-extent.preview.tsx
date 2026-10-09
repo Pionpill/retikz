@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotLegend, PlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, BuiltinPlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
 
 import { referenceSpans } from './rule-extent.data';
 
@@ -30,8 +30,8 @@ export const RuleExtentPreview = (values: RuleExtentPreviewValues) => {
       height={280}
       coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
     >
-      <PlotScale dimension="x" type="linear" domain={[0, 120]} />
-      <PlotScale dimension="y" type="linear" domain={[15, 95]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[0, 120]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[15, 95]} />
       <ReferenceMark y="threshold" extentField="spanStart" extentToField="spanEnd" color="tier" strokeWidth={2} />
       <PointMark x="spanStart" y="threshold" color="tier" minimumSize={6} />
       <PointMark x="spanEnd" y="threshold" color="tier" minimumSize={6} />

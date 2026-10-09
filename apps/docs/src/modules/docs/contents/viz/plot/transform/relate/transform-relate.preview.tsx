@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, PlotScale, PointMark, RelationMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark, RelationMark } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -18,8 +18,8 @@ export const TransformRelatePreview = (values: TransformRelatePreviewValues, lan
   const i18n = transformRelateI18n[lang];
   return (
     <Plot data={monthlyTrend} width={520} height={320}>
-      <PlotScale dimension="x" type="linear" domain={[0.5, 6.5]} />
-      <PlotScale dimension="y" type="linear" domain={[20, 62]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[0.5, 6.5]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[20, 62]} />
       <PathMark
         color="series"
         series="series"

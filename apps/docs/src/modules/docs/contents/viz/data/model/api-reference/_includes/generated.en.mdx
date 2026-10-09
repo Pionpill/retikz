@@ -418,15 +418,15 @@ export type ResolveField = (
 
 ```ts
 export const BUILTIN_FIELD_ORDERS: ReadonlyArray<FieldOrderDefinition> = freezeDefinitions([
-  defineFieldOrder({ name: FieldOrderMode.Appearance, compare: () => 0 }),
-  defineFieldOrder({ name: FieldOrderMode.Ascending, compare: compareAscending }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.Appearance, compare: () => 0 }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.Ascending, compare: compareAscending }),
   defineFieldOrder({
-    name: FieldOrderMode.Descending,
+    name: BuiltinFieldOrderMode.Descending,
     compare: (a, b, context) =>
       -compareAscending(a, b, context) || context.values.indexOf(b) - context.values.indexOf(a),
   }),
-  defineFieldOrder({ name: FieldOrderMode.NaturalAscending, compare: compareNatural }),
-  defineFieldOrder({ name: FieldOrderMode.NaturalDescending, compare: (a, b) => -compareNatural(a, b) }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.NaturalAscending, compare: compareNatural }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.NaturalDescending, compare: (a, b) => -compareNatural(a, b) }),
 ]);
 ```
 
@@ -453,16 +453,20 @@ export const BUILTIN_FORMATS: ReadonlyArray<FieldFormatDefinition> = freezeDefin
 ]);
 ```
 
-### DataFieldFormat
+### BuiltinDataFieldFormat
 
 <p>
-  <ApiSourceLink label={'DataFieldFormat'} path={'packages/viz/data/src/schemas/data/constants.ts'} startLine={31}>
+  <ApiSourceLink
+    label={'BuiltinDataFieldFormat'}
+    path={'packages/viz/data/src/schemas/data/constants.ts'}
+    startLine={31}
+  >
     Built-in field-value parsing format names
   </ApiSourceLink>
 </p>
 
 ```ts
-export const DataFieldFormat = {
+export const BuiltinDataFieldFormat = {
   Iso: 'iso',
   EpochSeconds: 'epochSeconds',
   EpochMillis: 'epochMillis',
@@ -471,7 +475,31 @@ export const DataFieldFormat = {
   Percent: 'percent',
 } as const;
 
-export type DataFieldFormat = ValueOf<typeof DataFieldFormat>;
+export type BuiltinDataFieldFormat = ValueOf<typeof BuiltinDataFieldFormat>;
+```
+
+### BuiltinFieldOrderMode
+
+<p>
+  <ApiSourceLink
+    label={'BuiltinFieldOrderMode'}
+    path={'packages/viz/data/src/schemas/data/constants.ts'}
+    startLine={17}
+  >
+    Category-order strategies
+  </ApiSourceLink>
+</p>
+
+```ts
+export const BuiltinFieldOrderMode = {
+  Appearance: 'appearance',
+  Ascending: 'ascending',
+  Descending: 'descending',
+  NaturalAscending: 'naturalAscending',
+  NaturalDescending: 'naturalDescending',
+} as const;
+
+export type BuiltinFieldOrderMode = ValueOf<typeof BuiltinFieldOrderMode>;
 ```
 
 ### DataFieldType
@@ -492,26 +520,6 @@ export const DataFieldType = {
 } as const;
 
 export type DataFieldType = ValueOf<typeof DataFieldType>;
-```
-
-### FieldOrderMode
-
-<p>
-  <ApiSourceLink label={'FieldOrderMode'} path={'packages/viz/data/src/schemas/data/constants.ts'} startLine={17}>
-    Category-order strategies
-  </ApiSourceLink>
-</p>
-
-```ts
-export const FieldOrderMode = {
-  Appearance: 'appearance',
-  Ascending: 'ascending',
-  Descending: 'descending',
-  NaturalAscending: 'naturalAscending',
-  NaturalDescending: 'naturalDescending',
-} as const;
-
-export type FieldOrderMode = ValueOf<typeof FieldOrderMode>;
 ```
 
 ### defineFieldFormat

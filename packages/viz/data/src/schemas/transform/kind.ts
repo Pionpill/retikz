@@ -1,18 +1,18 @@
 import { createOpenStringSchema } from '@retikz/foundation';
 
-import { DataTransform, ReducerOperationKind, SelectorOperationKind } from './constants';
+import { BuiltinDataTransform, BuiltinReducerOperationKind, BuiltinSelectorOperationKind } from './constants';
 
 /** Data transform operation kind：保留内置提示并允许注册自定义 Definition key */
-export const DataTransformKindSchema = createOpenStringSchema(DataTransform).describe(
+export const DataTransformKindSchema = createOpenStringSchema(BuiltinDataTransform).describe(
   'Built-in transform kind or a custom registered transform kind',
 );
 
 /** Statistics reducer operation kind：保留内置提示并允许注册自定义 Definition key */
-export const ReducerOperationKindSchema = createOpenStringSchema(ReducerOperationKind).describe(
+export const ReducerOperationKindSchema = createOpenStringSchema(BuiltinReducerOperationKind).describe(
   'Built-in reducer kind or a custom registered reducer kind',
 );
 
 /** Row selector operation kind：保留内置提示并允许注册自定义 Definition key */
-export const SelectorOperationKindSchema = createOpenStringSchema(SelectorOperationKind).describe(
+export const SelectorOperationKindSchema = createOpenStringSchema(BuiltinSelectorOperationKind).describe(
   'Built-in selector kind or a custom registered selector kind',
 );

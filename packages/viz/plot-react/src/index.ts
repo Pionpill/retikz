@@ -22,7 +22,7 @@ export {
   PlotFacet,
   PlotLegend,
   PlotScaffold,
-  PlotScale,
+  BuiltinPlotScale,
   PlotTrack,
   PlotTransform,
   PointMark,

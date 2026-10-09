@@ -17,7 +17,7 @@ import type { infer as ZodInfer } from 'zod';
 import { array, number, strictObject, tuple } from 'zod';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 
 const ContourShapeParamsSchema = strictObject({
   points: array(tuple([number(), number()]))
@@ -57,7 +57,7 @@ const worldVertices = (rect: Rect, params: ContourShapeParams): Array<Position> 
 
 /** 可选 Contour 形状 Definition */
 export const ContourShapeDefinition = defineShape<ContourShapeParams>({
-  name: ExtensionShapeName.Contour,
+  name: BuiltinExtensionShapeName.Contour,
   paramsSchema: ContourShapeParamsSchema,
   circumscribe: (_halfWidth, _halfHeight, params) => {
     const bounds = boundsOf(params.points);

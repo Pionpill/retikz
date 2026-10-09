@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { PlotMark, RelationMarkSchema } from '@retikz/plot';
+import { BuiltinPlotMark, RelationMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -86,7 +86,7 @@ export const resolveRangedDotMark = (
   const path = rangePathOf(range);
 
   return RelationMarkSchema.parse({
-    type: PlotMark.Relation,
+    type: BuiltinPlotMark.Relation,
     source: { project: { x: start, y: category } },
     target: { project: { x: end, y: category } },
     style,

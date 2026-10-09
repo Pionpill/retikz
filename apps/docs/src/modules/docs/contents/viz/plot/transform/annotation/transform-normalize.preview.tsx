@@ -1,4 +1,4 @@
-import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale, PlotTransform } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -20,7 +20,7 @@ export const TransformNormalizePreview = (values: TransformNormalizePreviewValue
       {normalizeOperationsOf(values).map((operation, index) => (
         <PlotTransform key={index} operation={{ ...operation }} />
       ))}
-      <PlotScale dimension="y" type="linear" domain={values.basis === 'percent' ? [0, 100] : [0, 1]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={values.basis === 'percent' ? [0, 100] : [0, 1]} />
       <IntervalMark x="quarter" y="share" series="product" stack />
       <PlotAxis dimension="x" title={i18n.quarter} />
       <PlotAxis dimension="y" title={values.basis === 'percent' ? i18n.share : i18n.share2} grid />

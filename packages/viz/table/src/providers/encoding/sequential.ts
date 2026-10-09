@@ -4,7 +4,7 @@ import { number, strictObject, tuple } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
 import { RetikzTableError } from '../../error';
-import { TableCellVisualScale } from '../../schemas';
+import { BuiltinTableCellVisualScale } from '../../schemas';
 
 const domainSchema = tuple([number(), number()]).refine(([start, end]) => start <= end, {
   message: 'sequential-color domain start must be less than or equal to end',
@@ -14,7 +14,7 @@ const rangeSchema = tuple([CssColorSchema, CssColorSchema]);
 
 /** 连续数值颜色 scale */
 export const SEQUENTIAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
-  name: TableCellVisualScale.SequentialColor,
+  name: BuiltinTableCellVisualScale.SequentialColor,
   optionsSchema: strictObject({
     domain: domainSchema.optional(),
     range: rangeSchema.optional(),
