@@ -98,6 +98,46 @@ This diagram follows synchronous grouped hosts. Reduction and selection are alte
 
 Read `computeSummarize` or `computeSelect` for input boundaries and output assembly, then `applyReducerOperation` or `applySelectorOperation` for definition parsing and dispatch. Finally read the implementation's `reduce` or `select`. This separates the statistical algorithm from the table semantics supplied by its host.
 
+## Related props
+
+The following public members relate to this page. See the [Data API reference](/viz/data/model/api-reference) for the full API and the [contract reference](/viz/data/reference/contract) for declarations.
+
+<ComponentProps
+  items={[
+    {
+      name: 'StatisticsReducerDefinition.outputs',
+      kind: 'property',
+      type: '(operation: TReducerOperation) => Array<DataTransformOutputDescriptor>',
+      description:
+        'Required on reducer definitions; declares all output fields. Each descriptor has `field: string` and optional `type: DataFieldType | { from: string }`; `from` inherits an existing field type. Used for model derivation and output-name collision checks.',
+      required: true,
+    },
+    {
+      name: 'StatisticsReducerImplementation.reduce',
+      kind: 'property',
+      type: '(rows: Array<ExternalRow>, operation: TOperation, context: TransformContext) => TResult',
+      description:
+        'Required reducer callback. `TResult` is an `ExternalRow` or its Promise: a fragment of declared fields for the host to merge or broadcast. Synchronous entry points accept only synchronous results.',
+      required: true,
+    },
+    {
+      name: 'RowSelectorImplementation.select',
+      kind: 'property',
+      type: '(rows: Array<ExternalRow>, operation: TOperation) => TResult',
+      description:
+        'Required selector callback. `TResult` is an `Array<RowSelection>` or its Promise, containing zero, one, or multiple selections. Synchronous entry points accept only synchronous results.',
+      required: true,
+    },
+    {
+      name: 'RowSelection',
+      kind: 'type',
+      type: '{ row: ExternalRow; rank?: number }',
+      description:
+        '`row` is the selected source row and `rank` is an optional one-based rank. The host assembles output rows from selections; for example, select uses `rankAs` to name the output rank field.',
+    },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections

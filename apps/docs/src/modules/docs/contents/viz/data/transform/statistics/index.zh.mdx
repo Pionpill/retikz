@@ -92,6 +92,46 @@ A 组选择 a2，B 组选择 b2。selector 返回的选择记录包含 `row`，�
 
 从 `computeSummarize` 或 `computeSelect` 看宿主如何划分输入与组织输出，再进入 `applyReducerOperation` 或 `applySelectorOperation` 看定义解析和实现调度，最后阅读相应实现的 `reduce` 或 `select`。这样能区分统计算法本身与宿主赋予它的表结构语义。
 
+## 相关属性
+
+以下列出本页涉及的公开成员；完整 API 见 [Data API 参考](/viz/data/model/api-reference)，声明结构见[契约参考](/viz/data/reference/contract)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'StatisticsReducerDefinition.outputs',
+      kind: 'property',
+      type: '(operation: TReducerOperation) => Array<DataTransformOutputDescriptor>',
+      description:
+        '归约定义的必填成员，声明完整输出字段。每项含 `field: string` 和可选 `type: DataFieldType | { from: string }`；`from` 复用已有字段类型。用于执行前的字段模型推导和输出名冲突检查。',
+      required: true,
+    },
+    {
+      name: 'StatisticsReducerImplementation.reduce',
+      kind: 'property',
+      type: '(rows: Array<ExternalRow>, operation: TOperation, context: TransformContext) => TResult',
+      description:
+        '归约实现的必填回调。`TResult` 为 `ExternalRow` 或其 Promise，返回声明字段组成的片段，由宿主合并或回填；同步入口只接受同步结果。',
+      required: true,
+    },
+    {
+      name: 'RowSelectorImplementation.select',
+      kind: 'property',
+      type: '(rows: Array<ExternalRow>, operation: TOperation) => TResult',
+      description:
+        '选择实现的必填回调。`TResult` 为 `Array<RowSelection>` 或其 Promise，返回零条、一条或多条选择记录；同步入口只接受同步结果。',
+      required: true,
+    },
+    {
+      name: 'RowSelection',
+      kind: 'type',
+      type: '{ row: ExternalRow; rank?: number }',
+      description:
+        '`row` 为所选原始行，`rank` 为可选的一基排名。宿主负责把选择记录组织为输出行，例如 select 通过 `rankAs` 指定排名输出字段。',
+    },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections

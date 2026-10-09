@@ -132,6 +132,36 @@ The diagram gives source anchors along the synchronous `applyTransforms` path. C
 
 Start with `applyTransforms` to see input becoming a DataView, follow `resolveParsedDataTransforms` for model propagation, then return to `applyToView` for implementation matching, execution, and ingestion.
 
+## Related props
+
+The following public members relate to this page. See the [Data API reference](/viz/data/model/api-reference) for the full API and the [contract reference](/viz/data/reference/contract) for declarations.
+
+<ComponentProps
+  items={[
+    {
+      name: 'IRDataSortTransform',
+      kind: 'type',
+      type: '{ kind: "sort"; params: { field: string; order?: "ascending" | "descending" } }',
+      description:
+        'The complete sort declaration used on this page. `kind` selects the definition and `params` holds its parameters. `field` is required; omitted `order` means ascending, while `descending` means descending.',
+    },
+    {
+      name: 'applyTransforms',
+      kind: 'function',
+      type: '(rows: Array<ExternalRow>, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => Array<ExternalRow>',
+      description:
+        'Executes the transform chain synchronously after whole-chain preflight, validating each result and returning rows only. `operations` defaults to an empty array and `options` to an empty object.',
+    },
+    {
+      name: 'applyTransformsToDataView',
+      kind: 'function',
+      type: '(view: DataView, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => DataView',
+      description:
+        'Accepts an existing DataView and returns a DataView containing rows and their field model. Use it when the model must be retained; optional arguments have the same defaults as applyTransforms.',
+    },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections

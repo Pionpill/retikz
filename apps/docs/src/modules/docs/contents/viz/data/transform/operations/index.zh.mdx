@@ -130,6 +130,36 @@ Transform 的过程本质上是**数据内容的计算与转换**：接收输入
 
 先从 `applyTransforms` 看输入如何建立为 DataView，再读 `resolveParsedDataTransforms` 的模型推进，最后回到 `applyToView` 看实现匹配、循环执行与结果接入。
 
+## 相关属性
+
+以下列出本页涉及的公开成员；完整 API 见 [Data API 参考](/viz/data/model/api-reference)，声明结构见[契约参考](/viz/data/reference/contract)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'IRDataSortTransform',
+      kind: 'type',
+      type: '{ kind: "sort"; params: { field: string; order?: "ascending" | "descending" } }',
+      description:
+        '本文排序示例的完整声明。`kind` 选择变换定义，`params` 保存该变换的参数；`field` 必填，`order` 省略时升序，`descending` 为降序。',
+    },
+    {
+      name: 'applyTransforms',
+      kind: 'function',
+      type: '(rows: Array<ExternalRow>, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => Array<ExternalRow>',
+      description:
+        '同步执行变换链，完成全链预检后依次计算并校验结果，只返回行数组。`operations` 默认为空数组，`options` 默认为空对象。',
+    },
+    {
+      name: 'applyTransformsToDataView',
+      kind: 'function',
+      type: '(view: DataView, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => DataView',
+      description:
+        '接收已有 DataView，并返回包含行数据与字段模型的 DataView。适合需要保留模型信息的调用方；可选参数默认值与 applyTransforms 相同。',
+    },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections
