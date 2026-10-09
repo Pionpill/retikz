@@ -334,6 +334,7 @@
     "dataTransform": "数据变换",
     "dataTransformOperations": "变换操作",
     "dataTransformStatistics": "变换算子",
+    "dataTransformComputation": "计算契约",
     "dataTransformExtensions": "扩展机制",
     "dataProvenance": "数据溯源",
     "dataProvenanceData": "Data 来源追溯",

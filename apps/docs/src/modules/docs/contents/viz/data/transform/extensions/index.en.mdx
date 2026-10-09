@@ -1,6 +1,6 @@
 ---
 title: Extension mechanisms
-description: Define transform semantics separately from computation, then choose local, external or hybrid execution with one executor.
+description: Define and register custom transforms, reducers and selectors with separate semantics and local implementations.
 ---
 
 Data uses a Definition to describe an operation and an Implementation to compute it. Operations `{ kind, params }` and execution settings are JSON-safe; schemas, functions, executors and source handles remain runtime objects.
@@ -16,8 +16,6 @@ Define a transform for new row semantics, a reducer when `summarize` or `annotat
 `defineTransform` accepts `kind`, an exact `paramsSchema`, optional `inputFields`, and required `outputModel`. It assembles the complete operation schema with `createTransformSchema`; built-in and custom transforms share the same envelope. Callbacks receive the complete operation and read parsed parameters through `operation.params`. Semantic callbacks read parameters and field models, never rows or computation. Declare every statistical dependency with `dependencies`; use `validate` for model invariants.
 
 Use `preserve.outputs` to extend a model or `replace.fields` to replace it. An output may omit its type when no evidence exists. `{ from: field }` preserves the source type and applicable categorical order. Derived field names are projected from this model.
-
-External results may supply field types that were unknown during preflight. Subsequent local stages that preserve a field or inherit it through `{ from: field }` retain the type evidence from the actual input model, even when the result is empty. This does not change the execution routes fixed during preflight.
 
 `defineTransformImplementation({ definition, apply })` references that same Definition. This `scale-field` example reads `x` and creates `scaledX` using `factor`:
 
@@ -67,71 +65,12 @@ Hosts use `{ operation, dataExecution? }` declarations. `operation` holds comput
 
 Data's synchronous `applyTransforms` still takes operation arrays. For asynchronous execution, first resolve declarations and an input model with `resolveDataTransforms`, then call `executeDataTransforms`.
 
-## External computation and Promises
-
-`DataTransformImplementationProvider.resolve(stage, context)` reports support before computation. A supported entry references `stage.definition` and supplies `execute(input)`, returning `{ rows, model }` or a Promise. Recognize an adapted Definition's identity and check parameters, statistical dependencies, input types and provenance requirements; a matching `kind` alone does not establish support.
-
-This example provider supports the `scale-field` Definition above on canonical rows and returns a Promise. Changing modes preserves semantics; the counter records actual completed external computations:
-
-<ComponentPreview
-  files={[
-    'external-execution',
-    'external-execution.preview.tsx',
-    'external-execution.engine.ts',
-    'extension-transform-preview.tsx',
-    'extension-transform.data.ts',
-  ]}
-  defaultSourceFile="external-execution.engine.ts"
-  size="lg"
-  caption="Local mode leaves the external counter unchanged; external and hybrid modes obtain the same blue points through a Promise."
-/>
-
-Register the external entry and reference its name:
-
-```ts
-import { createDataTransformExecutor } from '@retikz/data';
-
-const executor = createDataTransformExecutor({
-  dataExecution: { mode: 'hybrid', external: 'engine' },
-  externalProviders: [{ name: 'engine', provider }],
-  transformImplementations: [scaleFieldImplementation],
-});
-```
-
-| mode       | Stage selection                                                                            |
-| ---------- | ------------------------------------------------------------------------------------------ |
-| `builtin`  | Local implementations only; the final default                                              |
-| `external` | Every stage must be supported externally, otherwise the request fails                      |
-| `hybrid`   | Prefer external support; choose local only when preflight explicitly reports `unsupported` |
-
-Priority increases from executor defaults to Plot / Chart / Table root settings to individual declarations. `mode` and `external` inherit independently. Registering a provider does not change the mode. Exceptions, rejections, cancellation and invalid results never trigger hybrid recomputation.
-
-### Hosts and bindings
-
-Standalone React Plot, Chart and Table clients automatically use shared asynchronous preparation. In an outer Layout, set `runtime={{ preparation: 'async' }}`. The whole author tree preflights before computation and publishes atomically; a current failure preserves the committed frame, while stale and post-unmount results are ignored.
-
-Use Vanilla `renderPlotAsync`, `renderChartAsync`, `renderTableAsync`, or `processToStaticInputResultAsync` with the corresponding adapters. Synchronous entries and synchronous React SSR accept local synchronous computation only; use asynchronous Vanilla entries for external or Promise SSR.
-
-```tsx
-<Layout runtime={{ preparation: 'async' }}>
-  <Plot data={rows} dataTransformExecutor={executor} transformDefinitions={[scaleField]}>
-    <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
-    <PointMark x="scaledX" y="y" />
-  </Plot>
-</Layout>
-```
-
-`dataBindings` maps reference names to `rows`, `result` or `source` and is mutually exclusive with raw data props. `rows` uses source parsing. `result` supplies a complete logical model and is not reparsed. Native `source` requires an explicit complete `data.model`; an adapter or `materializeSource` must produce canonical results. Results and native sources reject source formats, parsers and field maps.
-
-Table consumes transformed data before structure resolution. Detail and data-bound Custom Tables accept declarations; Manual and unbound Custom Tables reject them. Table `sourceIndex` addresses rows in this bound result, not database keys or pre-aggregation source row numbers.
+See [Computation Contracts](/viz/data/transform/computation) for external providers, execution modes, asynchronous hosts and input bindings.
 
 ## Errors and limitations
 
 - Duplicate semantic keys, duplicate implementations and mismatched Definition references fail immediately.
 - Definition-only extensions can execute externally; local execution requires an Implementation.
-- Preflight performs no computation. After every stage is supported, `bind(actualInput)` fixes the actual input; each execution instance can execute once.
-- Empty outputs retain unknown fields and categorical order; extra payload fields do not become model fields.
-- `signal` cancels the request without recomputation. Applications still own connections, credentials and network resources.
 
 ## Related props
 
@@ -151,21 +90,6 @@ Table consumes transformed data before structure resolution. Detail and data-bou
       description:
         'References the same Definition. apply returns rows or a Promise; synchronous hosts accept synchronous implementations only.',
     },
-    {
-      name: 'dataExecution',
-      kind: 'property',
-      type: '{ mode?: "builtin" | "external" | "hybrid"; external?: string }',
-      description:
-        'Mode and external name inherit independently; root and declaration settings override executor defaults.',
-      defaultValue: 'builtin',
-    },
-    {
-      name: 'createDataTransformExecutor',
-      kind: 'function',
-      type: '<TSource = never>(options?: DataTransformExecutionOptions<TSource>) => DataTransformExecutor<TSource>',
-      description:
-        'Holds named externalProviders, local implementations, optional materializeSource and function defaults.',
-    },
   ]}
 />
 
@@ -173,6 +97,11 @@ Table consumes transformed data before structure resolution. Detail and data-bou
 
 <LinkedSections
   items={[
+    {
+      title: 'Computation Contracts',
+      description: 'Understand support matching, input binding and result requirements.',
+      url: '/viz/data/transform/computation',
+    },
     {
       title: 'Contracts',
       description: 'Look up JSON-safe operations, declarations and execution settings.',

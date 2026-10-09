@@ -1,0 +1,266 @@
+---
+title: 计算契约
+description: 理解本地与外接计算如何匹配同一变换语义，并通过准备、绑定、执行返回规范数据。
+---
+
+同一条变换声明可以交给本地实现，也可以交给外接计算入口。**计算契约**规定如何确认支持、绑定输入和交回结果，使更换计算方式后仍遵守相同的字段语义。外接入口可以返回 Promise；它不必是远程服务，也不自动提供数据库或网络适配。
+
+## 整体流程
+
+- **Definition**：声明操作参数、字段依赖与预期输出模型。
+- **Implementation**：提供与该 Definition 对应的具体计算。
+- **Provider**：在计算前判断某个阶段能否由外接入口执行，并返回阶段实现或不支持的原因。
+- **执行器**：按执行配置选择各阶段实现，先准备整条链，再绑定实际输入并执行。
+
+下图从已经解析的变换计划开始。准备阶段确定整条链能否执行；绑定和计算使用这份固定计划。
+
+<ComponentPreview files="computation-overview" hideCode type="flow" size="xs" />
+
+例如内置 `sort` 按 `value` 升序排列记录。本地与外接实现都必须遵守相同的比较规则，保持字段模型，并在排序键相等时保留原有顺序。
+
+<SourceLinks
+  sources={[{ label: '阶段、Provider 与执行器契约', path: 'packages/viz/data/src/contract/execution.ts' }]}
+/>
+
+## 外接计算
+
+`DataTransformImplementationProvider.resolve(stage, context)` 在计算前声明支持或不支持。支持项引用当前 `stage.definition`，返回 `execute(input)`；计算返回 `{ rows, model }` 或其 Promise。adapter 应明确识别已适配的 Definition 身份，并确认参数、统计依赖、输入类型与来源要求，不能仅凭同名 `kind` 推断支持。
+
+下面使用内置 `sort`，无需注册自定义 Definition。演示 Provider 从内置注册表取得排序定义，复用公开排序算法并通过 Promise 返回结果，用于观察异步执行流程。切换执行模式应得到相同顺序；切换排序方向会改变表格行序。累计次数只统计外接入口真正完成的计算：
+
+<ComponentPreview
+  files={[
+    'external-execution',
+    'external-execution.preview.tsx',
+    'external-execution.engine.ts',
+    'external-execution.data.ts',
+  ]}
+  defaultSourceFile="external-execution.engine.ts"
+  hideCode={false}
+  size="md"
+  caption="三种模式得到相同的排序结果；只有外接计算完成时计数增加。"
+/>
+
+下面按接入顺序拆解代码，省略 demo 的控件和计数器，保留外接计算所需的部分。
+
+<DocSteps>
+
+<DocStep title="取得内置 sort 定义">
+
+这里接入的是内置排序的另一种计算实现。先取得它的 Definition 身份，并导入参数 schema 和比较函数，使外接实现遵守同一套排序语义。
+
+```ts
+import {
+  compareRowsByFieldPath,
+  BuiltinDataTransform,
+  resolveTransformRegistry,
+  SortTransformSchema,
+} from '@retikz/data';
+import type { DataTransformImplementationProvider } from '@retikz/data';
+
+const sortDefinition = resolveTransformRegistry().get(BuiltinDataTransform.Sort);
+```
+
+</DocStep>
+
+<DocStep title="实现 Provider 与阶段计算">
+
+对照下面代码中的 `provider` 对象：执行器在预检时调用其 `resolve(stage, context)` 方法，检查 Definition 和输入描述，此时不读取或排序行数据。支持时，`resolve` 返回包含 `implementation.execute` 的结果；执行器随后调用这个 `execute(input)` 方法，传入实际行数据并取得计算结果的 Promise。
+
+这里仍在当前线程排序，`Promise.resolve()` 只演示异步返回，不代表远程调用或后台线程。接入真实计算服务时，将计算调用放在 `execute` 内，并把结果转换为规范的 `{ rows, model }`。本例复制行数组后排序，保留原字段模型。
+
+```ts
+const provider: DataTransformImplementationProvider<never> = {
+  resolve: (stage, context) => {
+    if (stage.definition !== sortDefinition || context.input.kind !== 'result') {
+      return {
+        kind: 'unsupported',
+        diagnostics: [{ code: 'UNSUPPORTED', message: 'Only built-in sort on canonical rows is supported' }],
+      };
+    }
+
+    const operation = SortTransformSchema.parse(stage.operation);
+    return {
+      kind: 'supported',
+      implementation: {
+        definition: stage.definition,
+        execute: async input => {
+          if (input.kind !== 'result') throw new Error('Expected canonical rows');
+          await Promise.resolve();
+          return {
+            rows: [...input.result.rows].sort((a, b) =>
+              compareRowsByFieldPath(a, b, operation.params.field, operation.params.order),
+            ),
+            model: input.result.model,
+          };
+        },
+      },
+    };
+  },
+};
+```
+
+</DocStep>
+
+<DocStep title="将 Provider 注册到执行器">
+
+给 Provider 一个名称，后续通过 `external` 引用。执行器在组件外创建，保持稳定引用；注册只让入口可用，具体是否选择它由执行配置决定。
+
+```ts
+import { createDataTransformExecutor } from '@retikz/data';
+
+const executor = createDataTransformExecutor({
+  externalProviders: [{ name: 'promise-engine', provider }],
+});
+```
+
+执行器的 `prepare(inputDescriptor, resolution, options)` 会依据输入模型、操作参数和依赖，查询整条变换链的支持情况，不计算或搬运行数据。整链可执行才返回 `ready`，否则返回带诊断的 `unsupported`；查询异常会终止请求。
+
+</DocStep>
+
+<DocStep title="注入宿主并选择外接执行">
+
+`dataTransformExecutor` 注入执行器，`dataExecution` 选择已注册的入口，`transform` 继续声明内置 `sort` 的参数。这里显式使用 `external`，确保排序必须由该 Provider 执行。
+
+```tsx
+import { DetailColumn, DetailTable } from '@retikz/table-react';
+import type { FC } from 'react';
+
+const rows = [
+  { item: 'A', value: 30 },
+  { item: 'B', value: 10 },
+  { item: 'C', value: 20 },
+  { item: 'D', value: 20 },
+];
+
+export const SortedTable: FC = () => (
+  <DetailTable
+    id="sorted-records"
+    dataRef="records"
+    data={rows}
+    dataTransformExecutor={executor}
+    dataExecution={{ mode: 'external', external: 'promise-engine' }}
+    transform={[{ operation: { kind: 'sort', params: { field: 'value', order: 'ascending' } } }]}
+  >
+    <DetailColumn id="item" field="item" header={{ kind: 'value', value: 'item' }} />
+    <DetailColumn id="value" field="value" header={{ kind: 'value', value: 'value' }} />
+  </DetailTable>
+);
+```
+
+上面的 Table 宿主会自动完成准备、绑定和执行，无需在组件中手动调用 Provider。准备成功后，`ready.bind(actualInput)` 将实际输入绑定到固定计划：输入必须与准备描述匹配，绑定时不会重新选择实现。绑定实例的 `execute()` 再依次调用各阶段的 `implementation.execute(input)`，将前一阶段的结果传给下一阶段。每个绑定实例只能执行一次，首次调用即消耗执行权，失败或取消后也不能重用。
+
+</DocStep>
+
+</DocSteps>
+
+渲染结果为 B、C、D、A；C、D 的排序键相同，原有先后顺序保留。
+
+## 执行模式
+
+以同一条 `summarize → sort` 变换链为例，假设本地实现完整，而外接 Provider 只支持 `sort`。下图对比三种模式：`builtin` 全部本地计算；`external` 因汇总不受支持而在计算前终止；`hybrid` 先本地汇总，再将汇总结果交给外接排序。
+
+<ComponentPreview files="computation-modes" hideCode type="flow" size="lg" />
+
+所有模式都先完成整链预检，再开始计算。图中的 hybrid 路由在预检时已经确定；外接计算开始后的失败不会改用本地实现。
+
+| mode       | 阶段选择                                                |
+| ---------- | ------------------------------------------------------- |
+| `builtin`  | 只使用本地实现；这是最终缺省模式                        |
+| `external` | 每个阶段都必须被外接入口支持；不支持则整次请求失败      |
+| `hybrid`   | 优先外接；只在预检明确返回 `unsupported` 时选择本地实现 |
+
+执行器默认配置 < Plot / Chart / Table 根配置 < 单条 declaration 配置，优先级从左到右升高。`mode` 与 `external` 分别继承；注册 provider 本身不切换模式。异常、拒绝、取消和非法结果均不触发 hybrid 补算。
+
+<SourceLinks sources={[{ label: '执行模式与阶段选择', path: 'packages/viz/data/src/pipeline/execution.ts' }]} />
+
+## 结果与失败
+
+外接实现返回 `{ rows, model, lineage? }`。其中，`rows` 保存计算后的规范值行，`model` 描述这些行的完整逻辑字段模型。执行器会检查字段模型和行中的值，通过校验后才把结果交给下一阶段。行中额外附带的 payload 字段不会自动加入字段模型。
+
+即使没有输出行，也要返回完整的 `model`，保留字段信息和分类顺序。外接结果还可以补充预检时未确定的字段类型；后续本地阶段保留这些字段，或通过 `{ from: field }` 继承字段时，会继续使用结果中确定的类型。这对空结果同样有效，也不会改变预检时选定的本地或外接实现。
+
+可选的 `lineage` 用于记录执行事件。它描述执行过程，不提供每一行的来源标记。
+
+计算抛出异常、Promise 被拒绝、结果未通过校验或请求被取消时，执行器会终止本次请求。hybrid 模式也不会在此时改用本地实现；选择本地实现的条件见前面的“执行模式”。
+
+取消请求通过 `signal` 传给外接实现，适配器需要响应它并停止底层计算。连接、凭据和网络资源仍由应用及适配器管理；已经发生的外部副作用，执行器无法撤销。
+
+<SourceLinks
+  sources={[
+    { label: '规范结果校验', path: 'packages/viz/data/src/resolve/transform/ingest.ts' },
+    { label: '取消与执行错误边界', path: 'packages/viz/data/src/pipeline/execution.ts' },
+  ]}
+/>
+
+## 宿主与数据绑定
+
+在 React 客户端中，独立使用 Plot、Chart 或 Table 时，组件会自动通过共享运行时完成异步准备。放入 Layout 后，需要在外层设置 `runtime={{ preparation: 'async' }}`，如下所示：
+
+```tsx
+<Layout runtime={{ preparation: 'async' }}>
+  <Plot data={rows} dataTransformExecutor={executor}>
+    <PlotTransform operation={{ kind: 'sort', params: { field: 'x', order: 'ascending' } }} />
+    <PointMark x="x" y="y" />
+  </Plot>
+</Layout>
+```
+
+Layout 会先对其管理的全部输入完成预检，再执行计算，并将结果作为一次更新提交。当前请求失败时保留已有画面；请求已过期或组件已卸载时，计算结果不会再更新画面。
+
+使用 Vanilla 时，选择 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`，也可以使用配置了对应 adapter 的 `processToStaticInputResultAsync`。同步入口和 React 同步 SSR 只支持本地同步计算。SSR 如需外接计算或等待 Promise，应使用异步 Vanilla 入口。
+
+除了直接传入原始数据，还可以用 `dataBindings` 按数据引用名提供输入；两种方式不能同时使用。绑定支持以下三种形式：
+
+| 绑定形式 | 输入要求与处理方式                                                                                   |
+| -------- | ---------------------------------------------------------------------------------------------------- |
+| `rows`   | 提供原始行数据，由系统完成源格式解析。                                                               |
+| `result` | 提供规范结果及完整的逻辑 `model`，系统不会再次解析源数据。                                           |
+| `source` | 提供原生数据源，并显式设置完整的 `data.model`；适配器或 `materializeSource` 负责将其转换为规范结果。 |
+
+源数据的 format / parser / field map 配置只适用于需要源解析的输入，不能用于规范结果或原生源。
+
+<SourceLinks sources={[{ label: '输入绑定与执行请求', path: 'packages/viz/data/src/contract/execution.ts' }]} />
+
+## 完整实现流程
+
+下图给出源码阅读顺序：先解析声明，再准备和绑定实际输入，最后执行并校验规范结果。
+
+<ComponentPreview files="computation-execution" hideCode type="flow" size="md" />
+
+从 `resolveDataTransforms` 读取语义解析入口，再沿 `createDataTransformExecutor` 的 `prepare`、`bind` 和 `execute` 查看各阶段选择及结果传递。
+
+## 相关属性
+
+完整类型见 [Data API 参考](/viz/data/model/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'DataTransformResult',
+      kind: 'type',
+      type: '{ rows: Array<ExternalRow>; model: DataTransformModel; lineage?: DataLineageRun }',
+      description:
+        '外接阶段返回的规范结果。model 是完整逻辑字段数组，保留 name、type 与适用的 order；lineage 是可选执行事件，不替代行级来源。',
+    },
+    {
+      name: 'dataExecution',
+      kind: 'property',
+      type: '{ mode?: "builtin" | "external" | "hybrid"; external?: string }',
+      description:
+        '`mode` 与 `external` 独立继承。`builtin` 只用本地实现，`external` 要求外接支持，`hybrid` 优先外接且仅在预检不支持时选本地。最终未指定 mode 时使用 builtin；根和单条声明可以覆盖执行器默认配置。',
+    },
+    {
+      name: 'createDataTransformExecutor',
+      kind: 'function',
+      type: '<TSource = never>(options?: DataTransformExecutionOptions<TSource>) => DataTransformExecutor<TSource>',
+      description: '持有具名 externalProviders、本地 implementations、可选 materializeSource 与函数默认配置。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: '运行时参考', description: '查询执行与结果接入入口。', url: '/viz/data/reference/runtime' }]}
+/>

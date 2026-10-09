@@ -1,6 +1,6 @@
 ---
 title: 扩展机制
-description: 分别定义数据变换语义与计算实现，用统一执行器选择本地、外接或混合计算。
+description: 定义并注册自定义 transform、reducer 与 selector，分别提供语义声明和本地计算实现。
 ---
 
 Data 用 Definition 声明操作含义，用 Implementation 提供计算。操作 `{ kind, params }` 和执行配置可以保存为 JSON；schema、函数、执行器与数据源句柄留在运行时。
@@ -16,8 +16,6 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 `defineTransform` 接收 `kind`、精确 `paramsSchema`、可选 `inputFields` 和必填 `outputModel`。它通过统一的 `createTransformSchema` 组装完整操作 schema；内置与自定义变换遵守同一外壳。回调接收完整 operation，通过 `operation.params` 读取解析后的参数。语义回调只读取参数与字段模型，不读取行或执行计算。需要变换算子的操作通过 `dependencies` 声明完整依赖；`validate` 检查模型相关不变量。
 
 `outputModel` 使用 `preserve.outputs` 增补字段，或用 `replace.fields` 替换完整模型。输出字段可以省略类型表示尚无类型证据；`{ from: field }` 沿用已有字段的类型与适用分类顺序。派生字段名由该模型投影。
-
-外部结果可以补充预检时未确定的字段类型。后续本地阶段保留字段或通过 `{ from: field }` 继承字段时，会沿用实际输入模型中的类型证据，即使结果为空；这不会改变预检阶段已经固定的执行路由。
 
 `defineTransformImplementation({ definition, apply })` 引用同一个 Definition。下面的 `scale-field` 读取 `x`，按 `factor` 生成 `scaledX`：
 
@@ -67,71 +65,12 @@ Data 用 Definition 声明操作含义，用 Implementation 提供计算。操�
 
 直接调用 Data 的同步 `applyTransforms` 时，仍传 operation 数组。执行器的异步路径先用 `resolveDataTransforms` 解析 declaration 与输入模型，再用 `executeDataTransforms` 执行。
 
-## 外接计算与 Promise
-
-`DataTransformImplementationProvider.resolve(stage, context)` 在计算前声明支持或不支持。支持项引用当前 `stage.definition`，返回 `execute(input)`；计算返回 `{ rows, model }` 或其 Promise。adapter 应明确识别已适配的 Definition 身份，并确认参数、统计依赖、输入类型与来源要求，不能仅凭同名 `kind` 推断支持。
-
-下面的演示入口只支持上方的 `scale-field` 语义与规范行输入，用 Promise 返回实际结果。切换模式不会改变计算含义；累计次数只统计外接入口真正完成的计算：
-
-<ComponentPreview
-  files={[
-    'external-execution',
-    'external-execution.preview.tsx',
-    'external-execution.engine.ts',
-    'extension-transform-preview.tsx',
-    'extension-transform.data.ts',
-  ]}
-  defaultSourceFile="external-execution.engine.ts"
-  size="lg"
-  caption="本地模式不增加外接计数；外接和混合模式通过 Promise 得到相同的蓝色点。"
-/>
-
-注册外接入口后，通过名称引用：
-
-```ts
-import { createDataTransformExecutor } from '@retikz/data';
-
-const executor = createDataTransformExecutor({
-  dataExecution: { mode: 'hybrid', external: 'engine' },
-  externalProviders: [{ name: 'engine', provider }],
-  transformImplementations: [scaleFieldImplementation],
-});
-```
-
-| mode       | 阶段选择                                                |
-| ---------- | ------------------------------------------------------- |
-| `builtin`  | 只使用本地实现；这是最终缺省模式                        |
-| `external` | 每个阶段都必须被外接入口支持；不支持则整次请求失败      |
-| `hybrid`   | 优先外接；只在预检明确返回 `unsupported` 时选择本地实现 |
-
-执行器默认配置 < Plot / Chart / Table 根配置 < 单条 declaration 配置，优先级从左到右升高。`mode` 与 `external` 分别继承；注册 provider 本身不切换模式。异常、拒绝、取消和非法结果均不触发 hybrid 补算。
-
-### 宿主与数据绑定
-
-独立 Plot、Chart、Table 的 React 客户端自动使用共享异步准备。嵌入外层 Layout 时设置 `runtime={{ preparation: 'async' }}`；外层全部输入先完成预检，随后执行并原子提交。当前请求失败保留旧画面，过期结果和卸载后的结果不再发布。
-
-Vanilla 使用 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`，或带对应 adapter 的 `processToStaticInputResultAsync`。同步入口及 React 同步 SSR 只接受本地同步计算；需要外接或 Promise 的 SSR 使用异步 Vanilla 入口。
-
-```tsx
-<Layout runtime={{ preparation: 'async' }}>
-  <Plot data={rows} dataTransformExecutor={executor} transformDefinitions={[scaleField]}>
-    <PlotTransform operation={{ kind: 'scale-field', params: { field: 'x', as: 'scaledX', factor: 2 } }} />
-    <PointMark x="scaledX" y="y" />
-  </Plot>
-</Layout>
-```
-
-`dataBindings` 按数据引用名绑定 `rows`、`result` 或 `source`，与原始数据 prop 互斥。`rows` 完成源格式解析；`result` 携带完整逻辑 `model`，不会再次解析；原生 `source` 必须显式提供完整 `data.model`，并由适配器或 `materializeSource` 输出规范结果。规范结果和原生源不接收源 format / parser / field map。
-
-Table 在结构解析前消费变换结果；只有 Detail 和有数据的 Custom 支持 declaration，Manual 与无数据 Custom 拒绝。Table 的 `sourceIndex` 指向本次绑定结果的行，不表示外部数据库主键或聚合前原始行号。
+外接 Provider、执行模式、异步宿主与数据绑定见[计算契约](/viz/data/transform/computation)。
 
 ## 错误与限制
 
 - 重复语义键、重复实现或 Implementation 引用不同 Definition 时立即失败。
 - 只有 Definition 的扩展可以交给外接入口执行；本地执行必须提供相应 Implementation。
-- 全请求预检不会执行计算。所有阶段支持后，`bind(actualInput)` 固定实际输入；每个执行实例只能调用一次 `execute`。
-- 空输出保留未知字段与分类顺序；额外 payload 字段不自动成为模型字段。
-- `signal` 取消请求且不补算；应用仍负责底层连接、凭据和网络资源。
 
 ## 相关属性
 
@@ -149,19 +88,6 @@ Table 在结构解析前消费变换结果；只有 Detail 和有数据的 Custo
       type: '<TTransform extends IRDataTransform, TResult extends Array<ExternalRow> | Promise<Array<ExternalRow>>>(implementation: TransformImplementation<TTransform, TResult>) => TransformImplementation<TTransform, TResult>',
       description: '引用同一 Definition；apply 可以返回行或 Promise，同步宿主只能注入同步实现。',
     },
-    {
-      name: 'dataExecution',
-      kind: 'property',
-      type: '{ mode?: "builtin" | "external" | "hybrid"; external?: string }',
-      description: 'mode 和外接名称独立继承；根和单条声明可以覆盖执行器默认配置。',
-      defaultValue: 'builtin',
-    },
-    {
-      name: 'createDataTransformExecutor',
-      kind: 'function',
-      type: '<TSource = never>(options?: DataTransformExecutionOptions<TSource>) => DataTransformExecutor<TSource>',
-      description: '持有具名 externalProviders、本地 implementations、可选 materializeSource 与函数默认配置。',
-    },
   ]}
 />
 
@@ -169,6 +95,11 @@ Table 在结构解析前消费变换结果；只有 Detail 和有数据的 Custo
 
 <LinkedSections
   items={[
+    {
+      title: '计算契约',
+      description: '了解本地与外接计算的匹配、绑定及结果要求。',
+      url: '/viz/data/transform/computation',
+    },
     {
       title: '契约',
       description: '查询 JSON-safe operation、declaration 与执行配置。',

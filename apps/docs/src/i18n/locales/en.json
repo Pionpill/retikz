@@ -334,6 +334,7 @@
     "dataTransform": "Data Transforms",
     "dataTransformOperations": "Transform Operations",
     "dataTransformStatistics": "Transform Operators",
+    "dataTransformComputation": "Computation Contracts",
     "dataTransformExtensions": "Extension Mechanisms",
     "dataProvenance": "Data Traceability",
     "dataProvenanceData": "Data Provenance",

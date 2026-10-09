@@ -82,6 +82,17 @@ export const vizSection: Array<Section> = [
           { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Internals },
           { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Internals },
           {
+            id: 'computation',
+            label: 'viz.dataTransformComputation',
+            difficulty: DocDifficulty.Internals,
+            meta: {
+              pageType: 'architecture',
+              audience: 'integrator',
+              capability: 'data.transform.computation',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
             id: 'extensions',
             label: 'viz.dataTransformExtensions',
             difficulty: DocDifficulty.Internals,

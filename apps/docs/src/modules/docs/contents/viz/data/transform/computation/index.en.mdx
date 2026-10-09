@@ -1,0 +1,277 @@
+---
+title: Computation Contracts
+description: Understand how local and external computation honor the same transform semantics through preparation, binding and execution.
+---
+
+The same transform declaration can run through a local implementation or an external computation entry. **Computation contracts** specify support checks, input binding and result delivery so that changing execution preserves field semantics. An external entry may return a Promise; it need not be remote and does not automatically provide database or network adapters.
+
+## Overall flow
+
+- **Definition**: declares parameters, field dependencies and the expected output model.
+- **Implementation**: computes the operation described by that Definition.
+- **Provider**: determines whether an external entry can handle a stage, returning an implementation or diagnostics.
+- **Executor**: selects implementations according to execution settings, prepares the whole chain, then binds actual input and executes it.
+
+The diagram starts with an already resolved transform plan. Preparation determines support for the whole chain; binding and computation use that fixed plan.
+
+<ComponentPreview files="computation-overview" hideCode type="flow" size="xs" />
+
+For example, built-in `sort` orders records by `value`. Local and external implementations must use the same comparison rules, preserve the field model, and retain the original order of equal keys.
+
+<SourceLinks
+  sources={[{ label: 'Stage, provider and executor contracts', path: 'packages/viz/data/src/contract/execution.ts' }]}
+/>
+
+## External computation
+
+`DataTransformImplementationProvider.resolve(stage, context)` reports support before computation. A supported entry references `stage.definition` and supplies `execute(input)`, returning `{ rows, model }` or a Promise. Recognize an adapted Definition's identity and check parameters, statistical dependencies, input types and provenance requirements; a matching `kind` alone does not establish support.
+
+This example uses built-in `sort` without registering a custom Definition. The provider obtains its definition from the built-in registry, reuses the public sorting algorithm and returns a Promise to demonstrate asynchronous execution. Switching execution modes preserves row order; switching sort direction changes the table order. The counter records completed external computations:
+
+<ComponentPreview
+  files={[
+    'external-execution',
+    'external-execution.preview.tsx',
+    'external-execution.engine.ts',
+    'external-execution.data.ts',
+  ]}
+  defaultSourceFile="external-execution.engine.ts"
+  hideCode={false}
+  size="md"
+  caption="All three modes produce the same sorted rows; the counter increases only when external computation completes."
+/>
+
+The following steps build the integration in order. Demo controls and the counter are omitted to focus on external computation.
+
+<DocSteps>
+
+<DocStep title="Obtain the built-in sort definition">
+
+This supplies another implementation of built-in sorting. Obtain its Definition identity and import the parameter schema and comparison function so the implementation follows the same sorting semantics.
+
+```ts
+import {
+  compareRowsByFieldPath,
+  BuiltinDataTransform,
+  resolveTransformRegistry,
+  SortTransformSchema,
+} from '@retikz/data';
+import type { DataTransformImplementationProvider } from '@retikz/data';
+
+const sortDefinition = resolveTransformRegistry().get(BuiltinDataTransform.Sort);
+```
+
+</DocStep>
+
+<DocStep title="Implement the provider and stage computation">
+
+Look at the `provider` object in the code below: during preflight, the executor calls its `resolve(stage, context)` method to check the Definition and input descriptor, without reading or sorting rows. When supported, `resolve` returns a result containing `implementation.execute`. The executor later calls this `execute(input)` method with actual rows and receives a Promise for the computed result.
+
+Sorting still runs on the current thread here. `Promise.resolve()` demonstrates asynchronous return, not a remote call or a worker. To connect a real computation service, call it inside `execute` and convert its output to canonical `{ rows, model }`. This example sorts a copy of the row array and preserves the field model.
+
+```ts
+const provider: DataTransformImplementationProvider<never> = {
+  resolve: (stage, context) => {
+    if (stage.definition !== sortDefinition || context.input.kind !== 'result') {
+      return {
+        kind: 'unsupported',
+        diagnostics: [{ code: 'UNSUPPORTED', message: 'Only built-in sort on canonical rows is supported' }],
+      };
+    }
+
+    const operation = SortTransformSchema.parse(stage.operation);
+    return {
+      kind: 'supported',
+      implementation: {
+        definition: stage.definition,
+        execute: async input => {
+          if (input.kind !== 'result') throw new Error('Expected canonical rows');
+          await Promise.resolve();
+          return {
+            rows: [...input.result.rows].sort((a, b) =>
+              compareRowsByFieldPath(a, b, operation.params.field, operation.params.order),
+            ),
+            model: input.result.model,
+          };
+        },
+      },
+    };
+  },
+};
+```
+
+</DocStep>
+
+<DocStep title="Register the provider with an executor">
+
+Name the provider so execution settings can reference it through `external`. Create the executor outside the component to keep its reference stable. Registration makes the entry available; execution settings determine whether it is selected.
+
+```ts
+import { createDataTransformExecutor } from '@retikz/data';
+
+const executor = createDataTransformExecutor({
+  externalProviders: [{ name: 'promise-engine', provider }],
+});
+```
+
+The executor’s `prepare(inputDescriptor, resolution, options)` checks support for the entire transform chain using input models, parameters and dependencies, without computing or moving rows. It returns `ready` only when the whole chain can execute, or `unsupported` with diagnostics otherwise. Exceptions during capability queries stop the request.
+
+</DocStep>
+
+<DocStep title="Inject the executor and select external execution">
+
+`dataTransformExecutor` injects the executor, `dataExecution` selects its registered entry, and `transform` still declares built-in `sort` parameters. Explicit `external` mode requires this provider to execute the sort.
+
+```tsx
+import { DetailColumn, DetailTable } from '@retikz/table-react';
+import type { FC } from 'react';
+
+const rows = [
+  { item: 'A', value: 30 },
+  { item: 'B', value: 10 },
+  { item: 'C', value: 20 },
+  { item: 'D', value: 20 },
+];
+
+export const SortedTable: FC = () => (
+  <DetailTable
+    id="sorted-records"
+    dataRef="records"
+    data={rows}
+    dataTransformExecutor={executor}
+    dataExecution={{ mode: 'external', external: 'promise-engine' }}
+    transform={[{ operation: { kind: 'sort', params: { field: 'value', order: 'ascending' } } }]}
+  >
+    <DetailColumn id="item" field="item" header={{ kind: 'value', value: 'item' }} />
+    <DetailColumn id="value" field="value" header={{ kind: 'value', value: 'value' }} />
+  </DetailTable>
+);
+```
+
+The Table host above automatically prepares, binds and executes the request; the component does not call the provider manually. After preparation succeeds, `ready.bind(actualInput)` binds actual input to the fixed plan. Input must match the preparation descriptor, and binding does not select implementations again. The bound instance’s `execute()` then calls each stage’s `implementation.execute(input)` in order, passing each result to the next stage. Each bound instance can execute once: the first call consumes its execution right, including when it fails or is cancelled.
+
+</DocStep>
+
+</DocSteps>
+
+The rendered order is B, C, D, A. C and D retain their original order because their keys are equal.
+
+## Execution modes
+
+Consider the same `summarize → sort` chain, with complete local implementations and an external provider that supports only `sort`. In `builtin` mode, both stages run locally. In `external` mode, unsupported aggregation stops the request before computation. In `hybrid` mode, local aggregation passes its result to external sorting.
+
+<ComponentPreview files="computation-modes" hideCode type="flow" size="lg" />
+
+Every mode completes whole-chain preflight before computation starts. The hybrid route shown here is fixed during preflight; a failure after external computation begins does not switch execution to a local implementation.
+
+| mode       | Stage selection                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| `builtin`  | Local implementations only; the final default                                              |
+| `external` | Every stage must be supported externally, otherwise the request fails                      |
+| `hybrid`   | Prefer external support; choose local only when preflight explicitly reports `unsupported` |
+
+Priority increases from executor defaults to Plot / Chart / Table root settings to individual declarations. `mode` and `external` inherit independently. Registering a provider does not change the mode. Exceptions, rejections, cancellation and invalid results never trigger hybrid recomputation.
+
+<SourceLinks
+  sources={[{ label: 'Execution modes and stage selection', path: 'packages/viz/data/src/pipeline/execution.ts' }]}
+/>
+
+## Results and failures
+
+An external implementation returns `{ rows, model, lineage? }`. The `rows` contain the computed canonical value rows, and `model` describes their complete logical field model. The executor checks the model and row values before passing the result to the next stage. Extra payload fields in a row are not automatically added to the field model.
+
+Return the complete `model` even when there are no output rows, preserving field information and categorical order. External results may also supply field types that were unknown during preflight. Subsequent local stages that preserve those fields or inherit them through `{ from: field }` continue to use the types established by the result. This also applies to empty results and does not change the local or external implementations selected during preflight.
+
+Optional `lineage` records execution events. It describes the execution process without providing provenance markers for individual rows.
+
+The executor stops the request if computation throws, a Promise rejects, result validation fails or the request is cancelled. Hybrid mode does not switch to a local implementation at this point; see “Execution modes” above for when local implementations are selected.
+
+Cancellation requests reach the external implementation through `signal`. The adapter must respond and stop the underlying computation. Applications and adapters still manage connections, credentials and network resources. The executor cannot undo external side effects that have already occurred.
+
+<SourceLinks
+  sources={[
+    { label: 'Canonical result validation', path: 'packages/viz/data/src/resolve/transform/ingest.ts' },
+    { label: 'Cancellation and execution errors', path: 'packages/viz/data/src/pipeline/execution.ts' },
+  ]}
+/>
+
+## Hosts and bindings
+
+In React clients, standalone Plot, Chart and Table components automatically prepare data asynchronously through the shared runtime. When placing them inside a Layout, set `runtime={{ preparation: 'async' }}` on that Layout:
+
+```tsx
+<Layout runtime={{ preparation: 'async' }}>
+  <Plot data={rows} dataTransformExecutor={executor}>
+    <PlotTransform operation={{ kind: 'sort', params: { field: 'x', order: 'ascending' } }} />
+    <PointMark x="x" y="y" />
+  </Plot>
+</Layout>
+```
+
+Layout preflights all inputs it manages before computation, then commits the results together as one update. If the current request fails, the existing view remains. Results from expired requests or unmounted components no longer update the view.
+
+For Vanilla, use `renderPlotAsync`, `renderChartAsync` or `renderTableAsync`. You can also use `processToStaticInputResultAsync` with the corresponding adapter. Synchronous entries and synchronous React SSR support only local synchronous computation. For SSR that needs external computation or awaits a Promise, use an asynchronous Vanilla entry.
+
+You can pass raw data directly or use `dataBindings` to supply inputs by data reference name. These options are mutually exclusive. Bindings accept three forms:
+
+| Binding  | Required input and handling                                                                                                        |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `rows`   | Raw rows that go through source parsing.                                                                                           |
+| `result` | A canonical result with a complete logical `model`. Source data is not parsed again.                                               |
+| `source` | A native data source with an explicit, complete `data.model`. An adapter or `materializeSource` converts it to a canonical result. |
+
+Source format / parser / field map settings apply only to inputs that require source parsing. They cannot be used with canonical results or native sources.
+
+<SourceLinks
+  sources={[{ label: 'Input binding and execution requests', path: 'packages/viz/data/src/contract/execution.ts' }]}
+/>
+
+## Implementation walkthrough
+
+Follow these source entry points: resolve declarations, prepare and bind actual input, then execute and validate canonical results.
+
+<ComponentPreview files="computation-execution" hideCode type="flow" size="md" />
+
+Start at `resolveDataTransforms`, then follow `prepare`, `bind` and `execute` in `createDataTransformExecutor` for stage selection and result propagation.
+
+## Related props
+
+See the [Data API reference](/viz/data/model/api-reference) for complete types.
+
+<ComponentProps
+  items={[
+    {
+      name: 'DataTransformResult',
+      kind: 'type',
+      type: '{ rows: Array<ExternalRow>; model: DataTransformModel; lineage?: DataLineageRun }',
+      description:
+        'The canonical result returned by an external stage. model is the complete logical field array, retaining name, type and applicable order. Optional lineage events do not replace row-level provenance.',
+    },
+    {
+      name: 'dataExecution',
+      kind: 'property',
+      type: '{ mode?: "builtin" | "external" | "hybrid"; external?: string }',
+      description:
+        '`mode` and `external` inherit independently. `builtin` uses local implementations, `external` requires external support, and `hybrid` prefers external support and selects local only on preflight unsupported. The final default mode is builtin; root and declaration settings override executor defaults.',
+    },
+    {
+      name: 'createDataTransformExecutor',
+      kind: 'function',
+      type: '<TSource = never>(options?: DataTransformExecutionOptions<TSource>) => DataTransformExecutor<TSource>',
+      description:
+        'Holds named externalProviders, local implementations, optional materializeSource and function defaults.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime Reference',
+      description: 'Look up execution and result ingress APIs.',
+      url: '/viz/data/reference/runtime',
+    },
+  ]}
+/>

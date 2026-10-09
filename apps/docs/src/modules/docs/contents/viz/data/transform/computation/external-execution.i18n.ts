@@ -11,7 +11,9 @@ export const externalExecutionI18n: Record<
     builtin: string;
     external: string;
     hybrid: string;
-    factor: string;
+    order: string;
+    ascending: string;
+    descending: string;
     completed: string;
   }
 > = {
@@ -23,7 +25,9 @@ export const externalExecutionI18n: Record<
     builtin: '全本地',
     external: '全外接',
     hybrid: '混合',
-    factor: '倍率',
+    order: '排序方向',
+    ascending: '升序',
+    descending: '降序',
     completed: '外接 Promise 累计完成次数',
   },
   en: {
@@ -34,7 +38,9 @@ export const externalExecutionI18n: Record<
     builtin: 'Local only',
     external: 'External only',
     hybrid: 'Hybrid',
-    factor: 'Factor',
+    order: 'Sort order',
+    ascending: 'Ascending',
+    descending: 'Descending',
     completed: 'Completed external Promises',
   },
 };

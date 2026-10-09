@@ -2,10 +2,10 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { customTransformRows } from './extension-transform.data';
+import { executionRows } from './external-execution.data';
 import { externalExecutionI18n } from './external-execution.i18n';
 
-/** 三模式使用相同字段语义与固定坐标域 */
+/** 三模式使用相同的内置排序语义 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const i18n = externalExecutionI18n[lang];
   return {
@@ -16,7 +16,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         {
           label: i18n.data,
           defaultCollapsed: true,
-          controls: [{ kind: 'table', id: 'rows', label: i18n.data, rows: customTransformRows }],
+          controls: [{ kind: 'table', id: 'rows', label: i18n.data, rows: executionRows }],
         },
         {
           label: i18n.execution,
@@ -32,13 +32,22 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
                 { value: 'hybrid', label: i18n.hybrid },
               ],
             },
-            { kind: 'range', id: 'factor', label: i18n.factor, defaultValue: 2, min: 1, max: 3, step: 0.5 },
+            {
+              kind: 'select',
+              id: 'order',
+              label: i18n.order,
+              defaultValue: 'ascending',
+              options: [
+                { value: 'ascending', label: i18n.ascending },
+                { value: 'descending', label: i18n.descending },
+              ],
+            },
           ],
         },
       ],
     }),
-    canonicalValues: { mode: 'hybrid', factor: 2 },
-    relatedApis: ['IRDataExecution.mode', 'PlotTransform.operation'],
+    canonicalValues: { mode: 'hybrid', order: 'ascending' },
+    relatedApis: ['IRDataExecution.mode', 'IRDataSortTransform.params.order'],
   } satisfies PreviewControlContract;
 };
 

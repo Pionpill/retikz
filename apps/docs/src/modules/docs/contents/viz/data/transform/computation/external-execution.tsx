@@ -18,6 +18,6 @@ export type ExternalExecutionProps = { lang?: Lang };
 const ExternalExecution: FC<ExternalExecutionProps> = props => {
   const { lang = 'zh' } = props;
   const values = usePreviewControls(createPreviewControlContract(lang).controls);
-  return <ExternalExecutionPreview lang={lang} mode={values.mode} factor={values.factor} />;
+  return <ExternalExecutionPreview lang={lang} mode={values.mode} order={values.order} />;
 };
 export default ExternalExecution;
