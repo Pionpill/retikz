@@ -79,8 +79,8 @@ export const vizSection: Array<Section> = [
         label: 'viz.dataTransform',
         sidebarGroup: 'viz.dataContents',
         children: [
-          { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Internals },
-          { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Internals },
+          { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Advanced },
+          { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Advanced },
           {
             id: 'computation',
             label: 'viz.dataTransformComputation',
