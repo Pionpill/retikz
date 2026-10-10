@@ -26,11 +26,11 @@ Every operation is JSON-serializable configuration backed by a Definition that s
 | Topic                 | Responsibility                                        | Read it when                                             |
 | --------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
 | Transform Operations  | Declaration parsing, model propagation, and execution | You want to understand pipeline validation and execution |
-| Computation Operators | Reducer / selector cooperation with their host        | You want to trace local computation into output rows     |
+| Computation Operators | Selector / reducer cooperation with their host        | You want to trace local computation into output rows     |
 | Computation Contracts | Local and external support, binding and execution     | You need another execution engine or asynchronous input  |
 | Extension Mechanisms  | Custom transform, reducer, and selector Definitions   | Built-ins cannot express new processing semantics        |
 
-Data owns all twelve built-ins. Their drawing compositions are shown under [Plot transforms](/viz/plot/transform), and complete contracts live in [Schema Reference](/viz/data/transform/schema-reference). Registration of custom transforms, reducers, and selectors is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Data Provenance](/viz/data/provenance/data).
+Data owns all twelve built-ins. Their drawing compositions are shown under [Plot transforms](/viz/plot/transform), and complete contracts live in [Schema Reference](/viz/data/transform/schema-reference). Registration of custom transforms, selectors, and reducers is centralized under [Extension Mechanisms](/viz/data/transform/extensions), while runtime lineage events live under [Data Provenance](/viz/data/provenance/data).
 
 ## Pages
 

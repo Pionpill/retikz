@@ -14,12 +14,12 @@ export const statisticsOverviewI18n: Record<
     output: ['宿主组织结果', '按变换语义输出行'],
     branches: [
       [
-        ['Reducer 归约', 'sum(y)'],
-        ['返回字段片段', '{ total: 40 }'],
-      ],
-      [
         ['Selector 选行', 'max(y)'],
         ['返回原始行', 'y: 30 的行引用'],
+      ],
+      [
+        ['Reducer 归约', 'sum(y)'],
+        ['返回字段片段', '{ total: 40 }'],
       ],
       [
         ['Regression 拟合', 'linear(x,y)'],
@@ -32,12 +32,12 @@ export const statisticsOverviewI18n: Record<
     output: ['Host assembles', 'Output rows per transform'],
     branches: [
       [
-        ['Reducer reduces', 'sum(y)'],
-        ['Returns fields', '{ total: 40 }'],
-      ],
-      [
         ['Selector selects', 'max(y)'],
         ['Returns source row', 'Row with y: 30'],
+      ],
+      [
+        ['Reducer reduces', 'sum(y)'],
+        ['Returns fields', '{ total: 40 }'],
       ],
       [
         ['Regression fits', 'linear(x,y)'],

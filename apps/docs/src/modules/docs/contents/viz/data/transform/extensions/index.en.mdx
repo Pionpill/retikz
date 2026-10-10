@@ -10,7 +10,7 @@ A custom extension describes its parameters, results and computation. Data separ
 First check whether a combination of built-in operations can do the job. If you need an extension, choose its scope:
 
 - A custom transform adds a complete row-processing operation, such as deriving a field from parameters.
-- A custom operator adds a computation, selection or fitting rule while keeping the existing transform's grouping and result assembly. A reducer returns computed fields, a selector returns original rows, and a regression operator returns a prediction model.
+- A custom operator adds a computation, selection or fitting rule while keeping the existing transform's grouping and result assembly. A selector returns original rows, a reducer returns computed fields, and a regression operator returns a prediction model.
 
 See [Transform Operations](/viz/data/transform/operations) and [Computation Operators](/viz/data/transform/statistics) for how they work together. To run an existing operation on another engine, reuse its Definition and follow [Computation Contracts](/viz/data/transform/computation).
 
@@ -38,7 +38,7 @@ Use `defineTransform` to declare the operation name, parameter constraints and f
 - `outputModel` (required): declares the field model after computation. `preserve.outputs` retains existing fields and adds or overwrites fields; `replace.fields` lists the complete replacement field set. This example adds a continuous field.
 - `schedule` (optional): describes the execution `phase`, allowed `bindingClass` and `fieldEffect` for host scheduling. Here these mean field derivation, field binding, and preserving and extending existing fields.
 - `validate` (optional): checks constraints involving operation parameters and the current field model.
-- `dependencies` (optional): declares computation dependencies for this operation, such as reducers or selectors it calls.
+- `dependencies` (optional): declares computation dependencies for this operation, such as selectors or reducers it calls.
 
 These callbacks analyze parameters and field models without processing rows. The `scaleField` below only reads a field and adds another, so it does not configure `validate` or `dependencies`.
 
@@ -139,102 +139,12 @@ An operator processes the group of rows supplied by its host. Both examples belo
   files={['extension-statistics', 'extension-statistics-preview.tsx', 'extension-statistics.data.ts']}
   defaultSourceFile="extension-statistics-preview.tsx"
   size="lg"
-  caption="The reducer produces a new statistical value; the selector keeps an original row that matches its rule."
+  caption="The selector keeps an original row that matches its rule; the reducer produces a new statistical value."
 />
 
 Group A has scores of 62, 74 and 91. Its midpoint on the left is 76.5; the right plot selects the row with score 74. The host operations, `summarize` and `select`, still handle grouping and output-row assembly.
 
-<DocTabs defaultValue="reducer">
-<DocTab value="reducer" label="Reducer">
-<DocSteps>
-<DocStep title="Declare parameters and outputs">
-
-Use `defineStatisticsReducer` to declare the operator parameters and output fields:
-
-- `schema` (required): the complete operator structure, including its `kind`, input `field` and output name `as`.
-- `inputFields` (optional): returns the field names read by the operator for dependency checks.
-- `outputs` (required): lists every returned field and its type. For non-scalar or unknown output types, declare only the field name.
-
-```ts
-import { DataFieldType, defineStatisticsReducer } from '@retikz/data';
-import { z } from 'zod';
-
-const midpoint = defineStatisticsReducer({
-  schema: z.strictObject({
-    kind: z.literal('midpoint'),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
-  inputFields: operation => [operation.field],
-  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
-});
-```
-
-</DocStep>
-<DocStep title="Provide the computation">
-
-`reduce` receives the current group of rows and returns the computed fields. This implementation takes the midpoint of the minimum and maximum, or returns `NaN` when no finite values exist.
-
-```ts
-import { defineStatisticsReducerImplementation } from '@retikz/data';
-
-const midpointImplementation = defineStatisticsReducerImplementation({
-  definition: midpoint,
-  reduce: (rows, operation) => {
-    const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
-    if (values.length === 0) return { [operation.as]: Number.NaN };
-    return { [operation.as]: (Math.min(...values) + Math.max(...values)) / 2 };
-  },
-});
-```
-
-</DocStep>
-<DocStep title="Register and reference the operator">
-
-Register the definition and implementation on Plot, then reference the operator in `summarize.metrics`. The host groups the rows and combines the returned `midpoint` with the grouping fields.
-
-```tsx
-import type { IRDataModel } from '@retikz/data';
-import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
-
-const rows = [
-  { group: 'A', score: 62 },
-  { group: 'A', score: 74 },
-  { group: 'A', score: 91 },
-];
-
-const model: IRDataModel = [
-  { name: 'group', type: 'categorical' },
-  { name: 'score', type: 'continuous' },
-];
-
-export const CustomReducerExample: FC = () => (
-  <Plot
-    data={rows}
-    model={model}
-    width={420}
-    height={260}
-    statisticsReducerDefinitions={[midpoint]}
-    statisticsReducerImplementations={[midpointImplementation]}
-  >
-    <PlotTransform
-      operation={{
-        kind: 'summarize',
-        params: {
-          groupBy: ['group'],
-          metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
-        },
-      }}
-    />
-    <PointMark x="group" y="midpoint" />
-  </Plot>
-);
-```
-
-</DocStep>
-</DocSteps>
-</DocTab>
+<DocTabs defaultValue="selector">
 <DocTab value="selector" label="Selector">
 <DocSteps>
 <DocStep title="Declare parameters and input fields">
@@ -328,6 +238,96 @@ export const CustomSelectorExample: FC = () => (
 ```
 
 Custom selectors work with `select` and transforms that explicitly support them. `annotate` accepts only a built-in subset of single-row selectors.
+
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="reducer" label="Reducer">
+<DocSteps>
+<DocStep title="Declare parameters and outputs">
+
+Use `defineStatisticsReducer` to declare the operator parameters and output fields:
+
+- `schema` (required): the complete operator structure, including its `kind`, input `field` and output name `as`.
+- `inputFields` (optional): returns the field names read by the operator for dependency checks.
+- `outputs` (required): lists every returned field and its type. For non-scalar or unknown output types, declare only the field name.
+
+```ts
+import { DataFieldType, defineStatisticsReducer } from '@retikz/data';
+import { z } from 'zod';
+
+const midpoint = defineStatisticsReducer({
+  schema: z.strictObject({
+    kind: z.literal('midpoint'),
+    field: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+```
+
+</DocStep>
+<DocStep title="Provide the computation">
+
+`reduce` receives the current group of rows and returns the computed fields. This implementation takes the midpoint of the minimum and maximum, or returns `NaN` when no finite values exist.
+
+```ts
+import { defineStatisticsReducerImplementation } from '@retikz/data';
+
+const midpointImplementation = defineStatisticsReducerImplementation({
+  definition: midpoint,
+  reduce: (rows, operation) => {
+    const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
+    if (values.length === 0) return { [operation.as]: Number.NaN };
+    return { [operation.as]: (Math.min(...values) + Math.max(...values)) / 2 };
+  },
+});
+```
+
+</DocStep>
+<DocStep title="Register and reference the operator">
+
+Register the definition and implementation on Plot, then reference the operator in `summarize.metrics`. The host groups the rows and combines the returned `midpoint` with the grouping fields.
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { group: 'A', score: 62 },
+  { group: 'A', score: 74 },
+  { group: 'A', score: 91 },
+];
+
+const model: IRDataModel = [
+  { name: 'group', type: 'categorical' },
+  { name: 'score', type: 'continuous' },
+];
+
+export const CustomReducerExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    statisticsReducerDefinitions={[midpoint]}
+    statisticsReducerImplementations={[midpointImplementation]}
+  >
+    <PlotTransform
+      operation={{
+        kind: 'summarize',
+        params: {
+          groupBy: ['group'],
+          metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
+        },
+      }}
+    />
+    <PointMark x="group" y="midpoint" />
+  </Plot>
+);
+```
 
 </DocStep>
 </DocSteps>
@@ -455,19 +455,6 @@ These are the definition and computation entries used on this page. See the [Dat
         'References the registered definition and computes rows through apply. Synchronous hosts require synchronous implementations.',
     },
     {
-      name: 'defineStatisticsReducer',
-      kind: 'function',
-      type: '<TSource extends IRDataReducerOperation, TOperation = TSource>(definition: StatisticsReducerDefinition<TSource, TOperation>) => StatisticsReducerDefinition<TSource, TOperation>',
-      description: 'Declares the complete schema, inputFields and required outputs listing every returned field.',
-    },
-    {
-      name: 'defineStatisticsReducerImplementation',
-      kind: 'function',
-      type: '<TSource extends IRDataReducerOperation, TOperation, TResult extends ExternalRow | Promise<ExternalRow>>(implementation: StatisticsReducerImplementation<TSource, TOperation, TResult>) => StatisticsReducerImplementation<TSource, TOperation, TResult>',
-      description:
-        'References a reducer definition. reduce receives the current group and returns fields for the host to assemble.',
-    },
-    {
       name: 'defineRowSelector',
       kind: 'function',
       type: '<TSource extends IRDataSelectorOperation, TOperation = TSource>(definition: RowSelectorDefinition<TSource, TOperation>) => RowSelectorDefinition<TSource, TOperation>',
@@ -480,6 +467,19 @@ These are the definition and computation entries used on this page. See the [Dat
       type: '<TSource extends IRDataSelectorOperation, TOperation, TResult extends Array<RowSelection> | Promise<Array<RowSelection>>>(implementation: RowSelectorImplementation<TSource, TOperation, TResult>) => RowSelectorImplementation<TSource, TOperation, TResult>',
       description:
         'References a selector definition. select returns an array of { row, rank? }; row is an original selected row and rank starts at 1.',
+    },
+    {
+      name: 'defineStatisticsReducer',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation = TSource>(definition: StatisticsReducerDefinition<TSource, TOperation>) => StatisticsReducerDefinition<TSource, TOperation>',
+      description: 'Declares the complete schema, inputFields and required outputs listing every returned field.',
+    },
+    {
+      name: 'defineStatisticsReducerImplementation',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation, TResult extends ExternalRow | Promise<ExternalRow>>(implementation: StatisticsReducerImplementation<TSource, TOperation, TResult>) => StatisticsReducerImplementation<TSource, TOperation, TResult>',
+      description:
+        'References a reducer definition. reduce receives the current group and returns fields for the host to assemble.',
     },
     {
       name: 'defineRegression',

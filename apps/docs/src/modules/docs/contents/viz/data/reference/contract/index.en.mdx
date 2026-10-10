@@ -19,7 +19,7 @@ Data-model definitions are documented in [Schema Reference](/viz/data/model/sche
 
 <ZodSchema name="DataTransformSchema" />
 
-Built-in transforms share a `kind` discriminator and execute in declaration order. See [Computation Operators](/viz/data/transform/statistics) for the reducer and selector contracts used by `metrics` and `selector`. A custom operation must stay JSON-serializable, while its runtime Definition supplies the precise schema and implementation.
+Built-in transforms share a `kind` discriminator and execute in declaration order. See [Computation Operators](/viz/data/transform/statistics) for the selector and reducer contracts used by `metrics` and `selector`. A custom operation must stay JSON-serializable, while its runtime Definition supplies the precise schema and implementation.
 
 Every transform operation uses `{ kind, params }`: `kind` selects its definition and `params` is a required JSON parameter object. Each `XxxParamsSchema` describes the parameters; `createTransformSchema` combines them with the kind into the complete schemas below. `defineTransform` uses the same factory. Statistical sub-operations retain their own formats.
 
@@ -87,25 +87,6 @@ Every transform operation uses `{ kind, params }`: `kind` selects its definition
 
 <ZodSchema name="RegressionMethodSchema" />
 
-## ReducerMetricsSchema
-
-<ZodSchema name="ReducerMetricsSchema" />
-
-### ReducerOperationSchema
-
-<ZodSchema name="ReducerOperationSchema" />
-
-| `kind`          | Fields                                                     | Result                                                                |
-| --------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- |
-| `count`         | `as`                                                       | Output the row count                                                  |
-| `sum` / `mean`  | `field`, `as`                                              | Output a numeric-field sum or arithmetic mean                         |
-| `median`        | `field`, `as`                                              | Output the numeric-field median                                       |
-| `min` / `max`   | `field`, `as`                                              | Output the numeric-field minimum or maximum                           |
-| `extent`        | `field`, `as.min`, `as.max`                                | Output the numeric-field minimum and maximum as two continuous fields |
-| `quantile`      | `field`, `p`, `as`                                         | Output the quantile at probability `p`                                |
-| `quantile-band` | `field`, `lowerP`, `upperP`, `outputs`, optional `whisker` | Output a band, extra quantiles, spread, and whiskers                  |
-| Custom `kind`   | JSON-safe config                                           | Parse and run through the matching `StatisticsReducerDefinition`      |
-
 ## SelectorOperationSchema
 
 <ZodSchema name="SelectorOperationSchema" />
@@ -125,6 +106,25 @@ Every transform operation uses `{ kind, params }`: `kind` selects its definition
 
 Annotate excludes `outside-quantile-band`. For `top` / `bottom`, `n` is fixed to `1`, and ties may select only the first or last row, so each annotation field maps to at most one source row.
 
+## ReducerMetricsSchema
+
+<ZodSchema name="ReducerMetricsSchema" />
+
+### ReducerOperationSchema
+
+<ZodSchema name="ReducerOperationSchema" />
+
+| `kind`          | Fields                                                     | Result                                                                |
+| --------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- |
+| `count`         | `as`                                                       | Output the row count                                                  |
+| `sum` / `mean`  | `field`, `as`                                              | Output a numeric-field sum or arithmetic mean                         |
+| `median`        | `field`, `as`                                              | Output the numeric-field median                                       |
+| `min` / `max`   | `field`, `as`                                              | Output the numeric-field minimum or maximum                           |
+| `extent`        | `field`, `as.min`, `as.max`                                | Output the numeric-field minimum and maximum as two continuous fields |
+| `quantile`      | `field`, `p`, `as`                                         | Output the quantile at probability `p`                                |
+| `quantile-band` | `field`, `lowerP`, `upperP`, `outputs`, optional `whisker` | Output a band, extra quantiles, spread, and whiskers                  |
+| Custom `kind`   | JSON-safe config                                           | Parse and run through the matching `StatisticsReducerDefinition`      |
+
 <SourceLinks
   sources={[
     {
@@ -132,12 +132,12 @@ Annotate excludes `outside-quantile-band`. For `top` / `bottom`, `n` is fixed to
       path: 'packages/viz/data/src/schemas/transform/schema.ts',
     },
     {
-      label: 'Reducer operation schemas',
-      path: 'packages/viz/data/src/schemas/transform/reducer.ts',
-    },
-    {
       label: 'Row selector operation schemas',
       path: 'packages/viz/data/src/schemas/transform/selector.ts',
+    },
+    {
+      label: 'Reducer operation schemas',
+      path: 'packages/viz/data/src/schemas/transform/reducer.ts',
     },
   ]}
 />

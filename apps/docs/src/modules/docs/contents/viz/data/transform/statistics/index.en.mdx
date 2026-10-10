@@ -1,22 +1,22 @@
 ---
 title: Computation Operators
-description: Understand how reducers, selectors and regression operators return fields, records or prediction models for hosts to assemble output data.
+description: Understand how selectors, reducers and regression operators return records, fields or prediction models for hosts to assemble output data.
 ---
 
-A **transform operator** is a computation unit used inside a transform. Three families are available: reducers return fields, selectors return records and optional ranks, and regression operators return prediction models. The transform organizes inputs and outputs; operators perform the individual computations.
+A **transform operator** is a computation unit used inside a transform. Three families are available: selectors return records and optional ranks, reducers return fields, and regression operators return prediction models. The transform organizes inputs and outputs; operators perform the individual computations.
 
 [Transform operations](/viz/data/transform/operations) explains how the whole chain progresses. This page looks inside one transform, following a group of rows through an operator and back to the calling transform, its **host**, which assembles the final result. The host owns grouping boundaries and output row shape; operators perform local computations without advancing the whole chain. This page follows all three families through their hosts. See [Computation operators](/viz/data/operators) for built-in methods and parameters.
 
 ## Overall flow
 
-- **Reducer**: consumes a group of rows and returns declared fields, such as one or more fields in `{ total: 40, count: 2 }`.
 - **Selector**: consumes a group and returns references to selected original rows, optionally with rank information.
+- **Reducer**: consumes a group of rows and returns declared fields, such as one or more fields in `{ total: 40, count: 2 }`.
 - **Regression**: consumes finite observation pairs and returns a model with `predict(x)`.
 - **Host transform**: assembles fields into new rows, broadcasts them onto detail rows, turns selections into output rows, or samples a model to generate predictions.
 
 The three families differ in their results and have separate definition, implementation, and registration contracts. Selectors may also compare, sort, or compute ranks; their final result is a row selection. Custom operators extend the corresponding category, and hosts consume results according to its contract.
 
-The diagram compares three independent paths for the same observations: reduction returns fields, selection returns original rows, and fitting returns a prediction model. Hosts assemble statistics, selections and predictions respectively.
+The diagram compares three independent paths for the same observations: selection returns original rows, reduction returns fields, and fitting returns a prediction model. Hosts assemble selections, statistics and predictions respectively.
 
 <ComponentPreview files="statistics-overview" hideCode type="flow" size="lg" />
 
@@ -31,6 +31,23 @@ Semantic definitions and implementations are registered separately. Dispatch mat
     { label: 'Grouped hosts and computation dispatch', path: 'packages/viz/data/src/providers/transform/group.ts' },
     { label: 'Registration and dispatch', path: 'packages/viz/data/src/providers/statistics/registry.ts' },
     { label: 'Grouping boundaries', path: 'packages/viz/data/src/providers/transform/shared.ts' },
+  ]}
+/>
+
+## selector operators
+
+Select the row with the greatest `value` in each group. The result still contains `item`: a selector returns an original record, not just its maximum value.
+
+<ComponentPreview files="selector-example" hideCode type="illustration" size="md" />
+
+Team A selects a2 and team B selects b2. Each selection contains `row` and may contain `rank`. The host consumes these selections, copies the selected rows, and writes a ranking field when requested. Selection records themselves are not the final output rows.
+
+A selector may return zero, one, or multiple selections. Tie handling belongs to the specific selector; the host cannot assume exactly one representative per group. Similar names such as “maximum” do not erase the contract distinction: reduction produces fields, while selection retains record identity and other fields.
+
+<SourceLinks
+  sources={[
+    { label: 'Selector implementations', path: 'packages/viz/data/src/providers/statistics/selectors.ts' },
+    { label: 'Selection-to-row assembly', path: 'packages/viz/data/src/providers/transform/group.ts' },
   ]}
 />
 
@@ -53,23 +70,6 @@ One row per group comes from the summary host. Another host can broadcast the sa
       label: 'Reducer definitions and implementations',
       path: 'packages/viz/data/src/providers/statistics/reducers.ts',
     },
-  ]}
-/>
-
-## selector operators
-
-With the same input, select the row with the greatest `value` in each group. The result still contains `item`: a selector returns an original record, not just its maximum value.
-
-<ComponentPreview files="selector-example" hideCode type="illustration" size="md" />
-
-Team A selects a2 and team B selects b2. Each selection contains `row` and may contain `rank`. The host consumes these selections, copies the selected rows, and writes a ranking field when requested. Selection records themselves are not the final output rows.
-
-A selector may return zero, one, or multiple selections. Tie handling belongs to the specific selector; the host cannot assume exactly one representative per group. Similar names such as “maximum” do not erase the contract distinction: reduction produces fields, while selection retains record identity and other fields.
-
-<SourceLinks
-  sources={[
-    { label: 'Selector implementations', path: 'packages/viz/data/src/providers/statistics/selectors.ts' },
-    { label: 'Selection-to-row assembly', path: 'packages/viz/data/src/providers/transform/group.ts' },
   ]}
 />
 
@@ -120,11 +120,11 @@ A suboperator failure stops its host computation, and the outer chain identifies
 
 ## Implementation walkthrough
 
-This diagram follows synchronous grouped hosts. Reduction and selection are alternative branches; names separated by a slash are not sequential operations.
+This diagram follows synchronous grouped hosts. Selection and reduction are alternative branches; names separated by a slash are not sequential operations.
 
 <ComponentPreview files="statistics-execution" hideCode type="flow" size="lg" />
 
-Read `computeSummarize` or `computeSelect` for input boundaries and output assembly, then `applyReducerOperation` or `applySelectorOperation` for definition parsing and dispatch. Finally read the implementation's `reduce` or `select`. This separates the statistical algorithm from the table semantics supplied by its host.
+Read `computeSelect` or `computeSummarize` for input boundaries and output assembly, then `applySelectorOperation` or `applyReducerOperation` for definition parsing and dispatch. Finally read the implementation's `select` or `reduce`. This separates the statistical algorithm from the table semantics supplied by its host.
 
 ## Related props
 
@@ -132,6 +132,21 @@ The following public members relate to this page. See the [Data API reference](/
 
 <ComponentProps
   items={[
+    {
+      name: 'RowSelectorImplementation.select',
+      kind: 'property',
+      type: '(rows: Array<ExternalRow>, operation: TOperation) => TResult',
+      description:
+        'Required selector callback. `TResult` is an `Array<RowSelection>` or its Promise, containing zero, one, or multiple selections. Synchronous entry points accept only synchronous results.',
+      required: true,
+    },
+    {
+      name: 'RowSelection',
+      kind: 'type',
+      type: '{ row: ExternalRow; rank?: number }',
+      description:
+        '`row` is the selected source row and `rank` is an optional one-based rank. The host assembles output rows from selections; for example, select uses `rankAs` to name the output rank field.',
+    },
     {
       name: 'StatisticsReducerDefinition.outputs',
       kind: 'property',
@@ -147,21 +162,6 @@ The following public members relate to this page. See the [Data API reference](/
       description:
         'Required reducer callback. `TResult` is an `ExternalRow` or its Promise: a fragment of declared fields for the host to merge or broadcast. Synchronous entry points accept only synchronous results.',
       required: true,
-    },
-    {
-      name: 'RowSelectorImplementation.select',
-      kind: 'property',
-      type: '(rows: Array<ExternalRow>, operation: TOperation) => TResult',
-      description:
-        'Required selector callback. `TResult` is an `Array<RowSelection>` or its Promise, containing zero, one, or multiple selections. Synchronous entry points accept only synchronous results.',
-      required: true,
-    },
-    {
-      name: 'RowSelection',
-      kind: 'type',
-      type: '{ row: ExternalRow; rank?: number }',
-      description:
-        '`row` is the selected source row and `rank` is an optional one-based rank. The host assembles output rows from selections; for example, select uses `rankAs` to name the output rank field.',
     },
     {
       name: 'RegressionImplementation.fit',
@@ -197,7 +197,7 @@ The following public members relate to this page. See the [Data API reference](/
     {
       title: 'Data Provenance',
       description: 'Trace provenance and statistical events during execution.',
-      url: '/viz/data/provenance/data',
+      url: '/viz/data/provenance',
     },
   ]}
 />

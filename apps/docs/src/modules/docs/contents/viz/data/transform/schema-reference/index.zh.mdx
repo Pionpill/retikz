@@ -409,6 +409,63 @@ description: 查询数据变换、计算算子与执行配置的字段、类型�
   }}
 />
 
+## SelectorOperationSchema
+
+各分支只接受对应参数。自定义选择器的额外字段必须是 JSON 值。
+
+<ZodSchema
+  name="SelectorOperationSchema"
+  description="内置或自定义行选择操作。"
+  descriptions={{
+    kind: '行选择算子名称',
+    by: '数值排名字段',
+    tie: '并列策略；默认 first',
+    orderBy: '选择前的排序规则；first、last 省略时保留当前顺序',
+    n: 'top、bottom 选择的正整数行数',
+    index: 'nth 的零基行下标',
+    field: '分位区间筛选的数值源字段',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    boundary: '分位区间外筛选的边界策略；默认 band',
+  }}
+/>
+
+## OrderBySchema
+
+<ZodSchema
+  name="OrderBySchema"
+  description="代表行选择前的稳定排序规则。"
+  descriptions={{
+    field: '排序字段',
+    order: '排序方向；默认升序',
+  }}
+/>
+
+## OutsideQuantileBandSelectorOperationSchema
+
+<ZodSchema
+  name="OutsideQuantileBandSelectorOperationSchema"
+  description="选择分位区间或围栏外的原始行。"
+  descriptions={{
+    kind: '固定为 outside-quantile-band',
+    field: '数值源字段',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    boundary: '边界策略；默认 band',
+  }}
+/>
+
+## OutsideQuantileBandBoundarySchema
+
+<ZodSchema
+  name="OutsideQuantileBandBoundarySchema"
+  description="分位区间外筛选的边界策略。"
+  descriptions={{
+    kind: 'band 使用分位区间边界，spread 使用跨度围栏',
+    factor: '非负跨度倍数；默认 1.5',
+  }}
+/>
+
 ## ReducerOperationSchema
 
 count 只需要 kind 和 as；字段归约通常还需要 field。extent 用 as.min 和 as.max 指定两个不同的连续型输出字段；单值算子的 as 为字符串。quantile 使用 p，quantile-band 使用 lowerP、upperP 和 outputs。自定义算子的额外字段必须是 JSON 值。
@@ -498,63 +555,6 @@ count 只需要 kind 和 as；字段归约通常还需要 field。extent 用 as.
   description="分位区间须线策略。"
   descriptions={{
     kind: 'minMax 使用观测极值，spread 使用区间跨度构造围栏',
-    factor: '非负跨度倍数；默认 1.5',
-  }}
-/>
-
-## SelectorOperationSchema
-
-各分支只接受对应参数。自定义选择器的额外字段必须是 JSON 值。
-
-<ZodSchema
-  name="SelectorOperationSchema"
-  description="内置或自定义行选择操作。"
-  descriptions={{
-    kind: '行选择算子名称',
-    by: '数值排名字段',
-    tie: '并列策略；默认 first',
-    orderBy: '选择前的排序规则；first、last 省略时保留当前顺序',
-    n: 'top、bottom 选择的正整数行数',
-    index: 'nth 的零基行下标',
-    field: '分位区间筛选的数值源字段',
-    lowerP: '下界分位概率，必须小于 upperP',
-    upperP: '上界分位概率',
-    boundary: '分位区间外筛选的边界策略；默认 band',
-  }}
-/>
-
-## OrderBySchema
-
-<ZodSchema
-  name="OrderBySchema"
-  description="代表行选择前的稳定排序规则。"
-  descriptions={{
-    field: '排序字段',
-    order: '排序方向；默认升序',
-  }}
-/>
-
-## OutsideQuantileBandSelectorOperationSchema
-
-<ZodSchema
-  name="OutsideQuantileBandSelectorOperationSchema"
-  description="选择分位区间或围栏外的原始行。"
-  descriptions={{
-    kind: '固定为 outside-quantile-band',
-    field: '数值源字段',
-    lowerP: '下界分位概率，必须小于 upperP',
-    upperP: '上界分位概率',
-    boundary: '边界策略；默认 band',
-  }}
-/>
-
-## OutsideQuantileBandBoundarySchema
-
-<ZodSchema
-  name="OutsideQuantileBandBoundarySchema"
-  description="分位区间外筛选的边界策略。"
-  descriptions={{
-    kind: 'band 使用分位区间边界，spread 使用跨度围栏',
     factor: '非负跨度倍数；默认 1.5',
   }}
 />

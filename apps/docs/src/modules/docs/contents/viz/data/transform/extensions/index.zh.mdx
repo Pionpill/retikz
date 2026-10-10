@@ -10,7 +10,7 @@ description: 通过自定义变换和算子扩展数据处理，了解定义、�
 先看内置操作能否通过组合完成任务。需要扩展时，根据要改变的部分选择入口：
 
 - 自定义变换：增加一种完整的行处理操作，例如按参数派生字段。
-- 自定义算子：保留已有变换的分组和结果组装方式，只增加计算、选行或拟合规则。reducer 返回计算出的字段，selector 返回选中的原始行，regression 返回预测模型。
+- 自定义算子：保留已有变换的分组和结果组装方式，只增加计算、选行或拟合规则。selector 返回选中的原始行，reducer 返回计算出的字段，regression 返回预测模型。
 
 操作与算子的协作方式见[变换操作](/viz/data/transform/operations)和[计算算子](/viz/data/transform/statistics)。如果只是想让已有操作交给其他计算引擎执行，复用它的 Definition，按[计算契约](/viz/data/transform/computation)接入即可。
 
@@ -38,7 +38,7 @@ description: 通过自定义变换和算子扩展数据处理，了解定义、�
 - `outputModel`（必填）：声明计算后的字段模型。`preserve.outputs` 保留原字段并增加或覆盖字段；`replace.fields` 列出替换后的全部字段。本例新增一个连续字段。
 - `schedule`（可选）：供上层宿主调度，描述执行阶段 `phase`、可绑定的结构类别 `bindingClass` 和字段影响 `fieldEffect`。本例分别为字段派生、字段绑定、保留并扩展原字段。
 - `validate`（可选）：检查操作参数与当前字段模型之间的约束。
-- `dependencies`（可选）：声明本次操作需要的计算依赖，例如要调用的 reducer 或 selector。
+- `dependencies`（可选）：声明本次操作需要的计算依赖，例如要调用的 selector 或 reducer。
 
 这些回调用于分析参数与字段模型，不处理行数据。下面的 `scaleField` 只需读取一个字段并新增字段，因此没有配置 `validate` 和 `dependencies`。
 
@@ -139,102 +139,12 @@ Definition 与 Implementation 在运行时注册，JSON 只保存操作名称和
   files={['extension-statistics', 'extension-statistics-preview.tsx', 'extension-statistics.data.ts']}
   defaultSourceFile="extension-statistics-preview.tsx"
   size="lg"
-  caption="reducer 产生新的统计值，selector 保留符合规则的原始行。"
+  caption="selector 保留符合规则的原始行，reducer 产生新的统计值。"
 />
 
 例如 A 组的分数为 62、74、91：左图的中点是 76.5；右图选中分数为 74 的那一行。分组和最终输出行的组装仍由 `summarize` 或 `select` 完成。
 
-<DocTabs defaultValue="reducer">
-<DocTab value="reducer" label="reducer 算子">
-<DocSteps>
-<DocStep title="声明参数和输出">
-
-用 `defineStatisticsReducer` 声明算子的参数和输出字段：
-
-- `schema`（必填）：完整算子结构，包含名称 `kind`、输入字段 `field` 和输出字段名 `as`。
-- `inputFields`（可选）：返回读取的字段名，供系统检查字段依赖。
-- `outputs`（必填）：列出返回的全部字段及类型；非标量或类型尚不确定的输出只声明字段名。
-
-```ts
-import { DataFieldType, defineStatisticsReducer } from '@retikz/data';
-import { z } from 'zod';
-
-const midpoint = defineStatisticsReducer({
-  schema: z.strictObject({
-    kind: z.literal('midpoint'),
-    field: z.string().min(1),
-    as: z.string().min(1),
-  }),
-  inputFields: operation => [operation.field],
-  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
-});
-```
-
-</DocStep>
-<DocStep title="提供计算实现">
-
-`reduce` 接收当前组的行，返回计算出的字段。下面取最大值和最小值的中点；没有有限数值时返回 `NaN`。
-
-```ts
-import { defineStatisticsReducerImplementation } from '@retikz/data';
-
-const midpointImplementation = defineStatisticsReducerImplementation({
-  definition: midpoint,
-  reduce: (rows, operation) => {
-    const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
-    if (values.length === 0) return { [operation.as]: Number.NaN };
-    return { [operation.as]: (Math.min(...values) + Math.max(...values)) / 2 };
-  },
-});
-```
-
-</DocStep>
-<DocStep title="注册并引用算子">
-
-将定义和实现注册到 Plot，再在 `summarize` 的 `metrics` 中引用算子。宿主负责分组，并将返回的 `midpoint` 与分组字段组装成结果行。
-
-```tsx
-import type { IRDataModel } from '@retikz/data';
-import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
-import type { FC } from 'react';
-
-const rows = [
-  { group: 'A', score: 62 },
-  { group: 'A', score: 74 },
-  { group: 'A', score: 91 },
-];
-
-const model: IRDataModel = [
-  { name: 'group', type: 'categorical' },
-  { name: 'score', type: 'continuous' },
-];
-
-export const CustomReducerExample: FC = () => (
-  <Plot
-    data={rows}
-    model={model}
-    width={420}
-    height={260}
-    statisticsReducerDefinitions={[midpoint]}
-    statisticsReducerImplementations={[midpointImplementation]}
-  >
-    <PlotTransform
-      operation={{
-        kind: 'summarize',
-        params: {
-          groupBy: ['group'],
-          metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
-        },
-      }}
-    />
-    <PointMark x="group" y="midpoint" />
-  </Plot>
-);
-```
-
-</DocStep>
-</DocSteps>
-</DocTab>
+<DocTabs defaultValue="selector">
 <DocTab value="selector" label="selector 算子">
 <DocSteps>
 <DocStep title="声明参数和输入字段">
@@ -328,6 +238,96 @@ export const CustomSelectorExample: FC = () => (
 ```
 
 自定义 selector 可用于 `select` 及明确支持它的变换；`annotate` 只接受内置单行 selector 子集。
+
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="reducer" label="reducer 算子">
+<DocSteps>
+<DocStep title="声明参数和输出">
+
+用 `defineStatisticsReducer` 声明算子的参数和输出字段：
+
+- `schema`（必填）：完整算子结构，包含名称 `kind`、输入字段 `field` 和输出字段名 `as`。
+- `inputFields`（可选）：返回读取的字段名，供系统检查字段依赖。
+- `outputs`（必填）：列出返回的全部字段及类型；非标量或类型尚不确定的输出只声明字段名。
+
+```ts
+import { DataFieldType, defineStatisticsReducer } from '@retikz/data';
+import { z } from 'zod';
+
+const midpoint = defineStatisticsReducer({
+  schema: z.strictObject({
+    kind: z.literal('midpoint'),
+    field: z.string().min(1),
+    as: z.string().min(1),
+  }),
+  inputFields: operation => [operation.field],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+```
+
+</DocStep>
+<DocStep title="提供计算实现">
+
+`reduce` 接收当前组的行，返回计算出的字段。下面取最大值和最小值的中点；没有有限数值时返回 `NaN`。
+
+```ts
+import { defineStatisticsReducerImplementation } from '@retikz/data';
+
+const midpointImplementation = defineStatisticsReducerImplementation({
+  definition: midpoint,
+  reduce: (rows, operation) => {
+    const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
+    if (values.length === 0) return { [operation.as]: Number.NaN };
+    return { [operation.as]: (Math.min(...values) + Math.max(...values)) / 2 };
+  },
+});
+```
+
+</DocStep>
+<DocStep title="注册并引用算子">
+
+将定义和实现注册到 Plot，再在 `summarize` 的 `metrics` 中引用算子。宿主负责分组，并将返回的 `midpoint` 与分组字段组装成结果行。
+
+```tsx
+import type { IRDataModel } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
+
+const rows = [
+  { group: 'A', score: 62 },
+  { group: 'A', score: 74 },
+  { group: 'A', score: 91 },
+];
+
+const model: IRDataModel = [
+  { name: 'group', type: 'categorical' },
+  { name: 'score', type: 'continuous' },
+];
+
+export const CustomReducerExample: FC = () => (
+  <Plot
+    data={rows}
+    model={model}
+    width={420}
+    height={260}
+    statisticsReducerDefinitions={[midpoint]}
+    statisticsReducerImplementations={[midpointImplementation]}
+  >
+    <PlotTransform
+      operation={{
+        kind: 'summarize',
+        params: {
+          groupBy: ['group'],
+          metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
+        },
+      }}
+    />
+    <PointMark x="group" y="midpoint" />
+  </Plot>
+);
+```
 
 </DocStep>
 </DocSteps>
@@ -453,18 +453,6 @@ Plot 通过 `regressionDefinitions` 和 `regressionImplementations` 接收相同
       description: '用 definition 引用已注册定义，apply 返回计算后的行；同步宿主要求同步实现。',
     },
     {
-      name: 'defineStatisticsReducer',
-      kind: 'function',
-      type: '<TSource extends IRDataReducerOperation, TOperation = TSource>(definition: StatisticsReducerDefinition<TSource, TOperation>) => StatisticsReducerDefinition<TSource, TOperation>',
-      description: '声明完整 schema、inputFields 和必填 outputs；outputs 列出返回的全部字段。',
-    },
-    {
-      name: 'defineStatisticsReducerImplementation',
-      kind: 'function',
-      type: '<TSource extends IRDataReducerOperation, TOperation, TResult extends ExternalRow | Promise<ExternalRow>>(implementation: StatisticsReducerImplementation<TSource, TOperation, TResult>) => StatisticsReducerImplementation<TSource, TOperation, TResult>',
-      description: '引用 reducer 定义，reduce 接收当前组的行并返回字段片段，由宿主组装结果。',
-    },
-    {
       name: 'defineRowSelector',
       kind: 'function',
       type: '<TSource extends IRDataSelectorOperation, TOperation = TSource>(definition: RowSelectorDefinition<TSource, TOperation>) => RowSelectorDefinition<TSource, TOperation>',
@@ -475,6 +463,18 @@ Plot 通过 `regressionDefinitions` 和 `regressionImplementations` 接收相同
       kind: 'function',
       type: '<TSource extends IRDataSelectorOperation, TOperation, TResult extends Array<RowSelection> | Promise<Array<RowSelection>>>(implementation: RowSelectorImplementation<TSource, TOperation, TResult>) => RowSelectorImplementation<TSource, TOperation, TResult>',
       description: '引用 selector 定义，select 返回 { row, rank? } 数组；row 是选中的原始行，rank 从 1 开始。',
+    },
+    {
+      name: 'defineStatisticsReducer',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation = TSource>(definition: StatisticsReducerDefinition<TSource, TOperation>) => StatisticsReducerDefinition<TSource, TOperation>',
+      description: '声明完整 schema、inputFields 和必填 outputs；outputs 列出返回的全部字段。',
+    },
+    {
+      name: 'defineStatisticsReducerImplementation',
+      kind: 'function',
+      type: '<TSource extends IRDataReducerOperation, TOperation, TResult extends ExternalRow | Promise<ExternalRow>>(implementation: StatisticsReducerImplementation<TSource, TOperation, TResult>) => StatisticsReducerImplementation<TSource, TOperation, TResult>',
+      description: '引用 reducer 定义，reduce 接收当前组的行并返回字段片段，由宿主组装结果。',
     },
     {
       name: 'defineRegression',

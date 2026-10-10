@@ -16,8 +16,8 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 | 契约       | 语义 Definition                             | 计算 Implementation |
 | ---------- | ------------------------------------------- | ------------------- |
 | transform  | schema、输入字段、outputModel、dependencies | apply               |
-| reducer    | schema、输入字段、outputs                   | reduce              |
 | selector   | schema、输入字段                            | select              |
+| reducer    | schema、输入字段、outputs                   | reduce              |
 | regression | schema                                      | fit                 |
 
 `defineTransform` 等语义工厂与对应 `define*Implementation` 分别注册。实现必须引用注册表中的同一个 Definition，不能用相同 kind 替代身份。内置语义与实现也遵守此契约。FieldFormatDefinition 继续拥有源值 parser，不参与此次计算分离。
@@ -122,4 +122,4 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 
 - [契约](/viz/data/reference/contract)：运行时消费的 JSON-safe schema
 - [Data 来源追溯](/viz/data/provenance/data)：provenance 与 lineage 的使用场景和可视化解释
-- [数据变换扩展](/viz/data/transform/extensions)：自定义 transform、reducer 与 selector
+- [数据变换扩展](/viz/data/transform/extensions)：自定义 transform、selector 与 reducer

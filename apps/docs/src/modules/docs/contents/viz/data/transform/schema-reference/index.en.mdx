@@ -143,6 +143,24 @@ Annotations accept built-in single-row selectors only.
 
 <ZodSchema name="DensityBandwidthSchema" />
 
+## SelectorOperationSchema
+
+Each branch accepts its own parameters. Additional custom selector fields must be JSON values.
+
+<ZodSchema name="SelectorOperationSchema" />
+
+## OrderBySchema
+
+<ZodSchema name="OrderBySchema" />
+
+## OutsideQuantileBandSelectorOperationSchema
+
+<ZodSchema name="OutsideQuantileBandSelectorOperationSchema" />
+
+## OutsideQuantileBandBoundarySchema
+
+<ZodSchema name="OutsideQuantileBandBoundarySchema" />
+
 ## ReducerOperationSchema
 
 count takes kind and as; field reducers also take field. extent uses as.min and as.max to name two distinct continuous output fields; single-value reducers use a string as. quantile uses p; quantile-band uses lowerP, upperP, and outputs. Additional custom fields must be JSON values.
@@ -170,24 +188,6 @@ All output field names must be unique.
 ## QuantileBandWhiskerSchema
 
 <ZodSchema name="QuantileBandWhiskerSchema" />
-
-## SelectorOperationSchema
-
-Each branch accepts its own parameters. Additional custom selector fields must be JSON values.
-
-<ZodSchema name="SelectorOperationSchema" />
-
-## OrderBySchema
-
-<ZodSchema name="OrderBySchema" />
-
-## OutsideQuantileBandSelectorOperationSchema
-
-<ZodSchema name="OutsideQuantileBandSelectorOperationSchema" />
-
-## OutsideQuantileBandBoundarySchema
-
-<ZodSchema name="OutsideQuantileBandBoundarySchema" />
 
 ## RegressionMethodSchema
 
