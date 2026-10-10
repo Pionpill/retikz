@@ -1,0 +1,38 @@
+---
+title: 关系生成
+description: 从每组选择源端与目标端，输出投影字段与可选差值。
+---
+
+需要比较两条代表记录或生成连线两端的数据时，使用 `relate`。它输出关系行，端点如何绘制由后续消费模块决定。
+
+## relate · 关系生成
+
+`relate` 在每组中分别选择 source 与 target，把两端字段投影到一条关系行，并可计算 target 减 source 的差值。`fields` 的键是输出后缀，值是原始字段名，例如 `{ id: "record" }` 在 source 端输出 `sourceId`，在 target 端输出 `targetId`。结果只保留组键、投影字段和差值字段。
+
+两端均使用 [selector](/viz/data/operators/selector)；某端未选中记录时该组不输出关系行，不会对多个选择结果做笛卡尔配对。关系生成的 Schema 为 `RelateTransformSchema`，参数如下：
+
+| 属性                            | 类型                                | 说明                                           |
+| ------------------------------- | ----------------------------------- | ---------------------------------------------- |
+| `kind`                          | `'relate'`                          | 变换类型                                       |
+| `params.groupBy`                | `Array<string>`                     | 可选，分组字段；省略或空数组表示全部记录为一组 |
+| `params.source`                 | `IRDataEndpointProjection`          | 必填，源端选择器与字段投影                     |
+| `params.source.selector`        | `IRDataSelectorOperation`           | 必填，源端选择器；多个结果仅取第一个           |
+| `params.source.fields`          | `Record<string, string>`            | 必填，非空输出后缀到输入字段的映射             |
+| `params.target`                 | `IRDataEndpointProjection`          | 必填，目标端选择器与字段投影                   |
+| `params.target.selector`        | `IRDataSelectorOperation`           | 必填，目标端选择器；多个结果仅取第一个         |
+| `params.target.fields`          | `Record<string, string>`            | 必填，非空输出后缀到输入字段的映射             |
+| `params.measures`               | `Array<IRDataPairMeasureOperation>` | 可选，非空配对指标列表                         |
+| `params.measures[].op`          | `'difference'`                      | 必填，计算目标减源的差值                       |
+| `params.measures[].field`       | `string`                            | 必填，两端读取的数值字段                       |
+| `params.measures[].as`          | `string`                            | 必填，差值输出字段名                           |
+| `params.measures[].labelAs`     | `string`                            | 可选，差值的文本输出字段                       |
+| `params.measures[].labelPrefix` | `string`                            | 可选，非负差值的文本前缀，例如 +               |
+
+<ComponentPreview
+  files={['relation-relate', 'relation-relate.preview.tsx', 'relation-relate.data.ts', 'relation-generation.data.ts']}
+  defaultSourceFile="relation-relate.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换最小到最大与首行到末行，观察 sourceId、targetId 及 delta。橙色仅标记被选中的端点记录；关闭差值列后仍输出两端标识"
+/>

@@ -1,0 +1,54 @@
+---
+title: Aggregation and annotation
+description: Summarize each group into one row, or annotate detail rows with statistics and selected values.
+---
+
+Use `summarize` for one statistics row per group, and `annotate` to place group statistics beside detail rows. Both reuse [reducer](/viz/data/operators/reducer) operations; annotation also supports single-row [selector](/viz/data/operators/selector) results.
+
+## summarize
+
+`summarize` runs one or more reducers per group and emits one row containing the group keys and metric fields. Other detail fields are dropped. Multiple group fields form a hierarchy in list order, preserving first-seen keys at each level. Metric output fields must be distinct and must not overwrite group keys. Its Schema is `SummarizeTransformSchema`; parameters are listed below:
+
+| Property         | Type                            | Description                                                                           |
+| ---------------- | ------------------------------- | ------------------------------------------------------------------------------------- |
+| `kind`           | `'summarize'`                   | Transform kind                                                                        |
+| `params.groupBy` | `Array<string>`                 | Optional group fields; omitted or empty means one group                               |
+| `params.metrics` | `Array<IRDataReducerOperation>` | Required non-empty reducer list; each operation declares its output fields through as |
+
+<ComponentPreview
+  files={[
+    'group-summarize',
+    'group-summarize.preview.tsx',
+    'group-summarize.data.ts',
+    'aggregation-annotation.data.ts',
+  ]}
+  defaultSourceFile="group-summarize.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch grouping and sum, mean or count; compare the output row count and stat column. Orange marks participating value cells, blue marks statistics, and team remains unmarked"
+/>
+
+## annotate
+
+`annotate` preserves detail fields and row count, broadcasting each group result to every member. Output follows group order and may differ from input order. Provide metrics, selectors or both, with distinct output names. Results can overwrite existing fields, so choose names that preserve any detail fields you still need.
+
+Supported selectors are min/max, first/last, top/bottom and nth. Min/max allow only first/last tie handling; top/bottom require n = 1. A selector with by writes that field from the selected row; otherwise it writes the selection rank. If no row is selected, that annotation field is not written. Its Schema is `AnnotateTransformSchema`; parameters are listed below:
+
+| Property                      | Type                                 | Description                                                                |
+| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
+| `kind`                        | `'annotate'`                         | Transform kind                                                             |
+| `params.groupBy`              | `Array<string>`                      | Optional group fields; omitted or empty means one group                    |
+| `params.metrics`              | `Array<IRDataReducerOperation>`      | Optional non-empty reducer list; results are written to every group member |
+| `params.selectors`            | `Array<IRDataAnnotateSelector>`      | Optional non-empty list of single-row selector annotations                 |
+| `params.selectors[].selector` | `IRDataAnnotateSelector["selector"]` | Required built-in selector restricted to at most one selected row          |
+| `params.selectors[].as`       | `string`                             | Required annotation output field                                           |
+
+<ComponentPreview
+  files={['group-annotate', 'group-annotate.preview.tsx', 'group-annotate.data.ts', 'aggregation-annotation.data.ts']}
+  defaultSourceFile="group-annotate.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch group sum and maximum annotation. Each member receives the same total or peak. Selector annotations contain a value or rank, not an embedded row"
+/>

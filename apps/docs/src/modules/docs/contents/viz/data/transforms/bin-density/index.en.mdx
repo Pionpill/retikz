@@ -1,0 +1,68 @@
+---
+title: Binning and density
+description: Convert continuous observations into bin statistics or Gaussian kernel density samples.
+---
+
+`bin` assigns observations to intervals and computes per-bin statistics; `density` estimates density at continuous positions. Both produce new rows containing group keys, rather than preserving detail rows.
+
+## bin
+
+`bin` emits one row per interval, including group keys, the midpoint under the original field name, edges and reducer outputs. Empty bins are emitted too. Bounds are inferred per group; an explicit extent gives all groups the same domain. count, step and thresholds are mutually exclusive, with ten bins when all are omitted.
+
+Intervals include the lower edge and exclude the upper edge, except the final bin includes the upper domain bound. Non-finite and out-of-domain observations do not enter bins. Output fields must not overwrite group keys; metric names should also avoid midpoint and edge fields. Its Schema is `BinTransformSchema`; parameters are listed below:
+
+| Property            | Type                            | Description                                                                                     |
+| ------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `kind`              | `'bin'`                         | Transform kind                                                                                  |
+| `params.groupBy`    | `Array<string>`                 | Optional group fields; omitted or empty means one group                                         |
+| `params.field`      | `string`                        | Required numeric field; the output under that name is the bin midpoint                          |
+| `params.count`      | `number`                        | Optional positive integer count; default 10 when no strategy is provided                        |
+| `params.step`       | `number`                        | Optional positive width; the final bin ends at the domain upper bound                           |
+| `params.thresholds` | `Array<number>`                 | Optional non-empty interior boundaries; sorted and restricted to the domain                     |
+| `params.extent`     | `[number, number]`              | Optional common domain; omitted uses each group’s observed min and max                          |
+| `params.nice`       | `boolean`                       | Optional nice inferred bounds for count strategy; default true; explicit extent stays unchanged |
+| `params.startField` | `string`                        | Optional lower-edge field; default binStart                                                     |
+| `params.endField`   | `string`                        | Optional upper-edge field; default binEnd                                                       |
+| `params.metrics`    | `Array<IRDataReducerOperation>` | Optional non-empty reducers per bin; default count writes binCount                              |
+
+<ComponentPreview
+  files={['distribution-bin', 'distribution-bin.preview.tsx', 'distribution-bin.data.ts', 'bin-density.data.ts']}
+  defaultSourceFile="distribution-bin.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-auto [&_[data-slot=preview-theme-boundary]>div>div]:h-max [&_[data-slot=preview-theme-boundary]>div>div]:min-h-full [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="This example fixes the domain at 0–60 and uses three bins for readability. Change count, width or fixed thresholds, then group by team to inspect empty bins, edges and binCount"
+/>
+
+## density
+
+`density` uses one-dimensional Gaussian kernel density estimation (KDE) to produce density samples: at each position it averages Gaussian kernels centered on the observations. Density is neither a row count nor a percentage. Smaller bandwidths retain local variation; larger bandwidths smooth it. Each group emits sampleCount rows.
+
+Automatic bandwidth requires at least two finite samples with non-zero dispersion in each group; use an explicit positive bandwidth for a single value or identical values. Groups without finite samples fail. Output names must differ and must not overwrite group keys. Its Schema is `DensityTransformSchema`; parameters are listed below:
+
+| Property                 | Type                     | Description                                                                   |
+| ------------------------ | ------------------------ | ----------------------------------------------------------------------------- |
+| `kind`                   | `'density'`              | Transform kind                                                                |
+| `params.groupBy`         | `Array<string>`          | Optional group fields; omitted or empty means one group                       |
+| `params.field`           | `string`                 | Required continuous sample field                                              |
+| `params.bandwidth`       | `IRDataDensityBandwidth` | Optional bandwidth strategy; default silverman                                |
+| `params.bandwidth.kind`  | `'silverman' \| 'value'` | Required when bandwidth is supplied; automatic or explicit                    |
+| `params.bandwidth.value` | `number`                 | Required positive bandwidth for value strategy                                |
+| `params.sampleCount`     | `number`                 | Optional evenly spaced samples per group; integer ≥ 2; default 64             |
+| `params.extent`          | `[number, number]`       | Optional increasing extent; default observed range padded by three bandwidths |
+| `params.xAs`             | `string`                 | Required sample-position output field                                         |
+| `params.densityAs`       | `string`                 | Required density output field                                                 |
+
+<ComponentPreview
+  files={[
+    'distribution-density',
+    'distribution-density.preview.tsx',
+    'distribution-density.data.ts',
+    'bin-density.data.ts',
+  ]}
+  defaultSourceFile="distribution-density.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="[&_[data-slot=preview-theme-boundary]>div]:overflow-auto [&_[data-slot=preview-theme-boundary]>div>div]:h-max [&_[data-slot=preview-theme-boundary]>div>div]:min-h-full [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="To keep the table short, this example uses four samples per group over 0–60. Switch automatic and explicit bandwidth, sample count and grouping; inspect sample and density"
+/>

@@ -1,0 +1,54 @@
+---
+title: 汇总与标注
+description: 每组汇总为一行，或把统计与选择结果回填到原始明细。
+---
+
+需要每组一行的统计表时使用 `summarize`；需要在明细旁显示组内统计时使用 `annotate`。两者复用 [reducer](/viz/data/operators/reducer)，标注还可使用 [selector](/viz/data/operators/selector) 的单行选择结果。
+
+## summarize · 汇总
+
+`summarize` 按组执行一个或多个归约算子，每组输出一行，只保留组键与指标字段，原有明细字段不会自动保留。多个分组字段按列表顺序逐层展开，每层保留键首次出现的顺序。各指标输出字段必须互不重复，并且不得覆盖分组字段。汇总的 Schema 为 `SummarizeTransformSchema`，参数如下：
+
+| 属性             | 类型                            | 说明                                                 |
+| ---------------- | ------------------------------- | ---------------------------------------------------- |
+| `kind`           | `'summarize'`                   | 变换类型                                             |
+| `params.groupBy` | `Array<string>`                 | 可选，分组字段；省略或空数组表示全部记录为一组       |
+| `params.metrics` | `Array<IRDataReducerOperation>` | 必填，非空归约算子列表；输出字段名由各算子的 as 声明 |
+
+<ComponentPreview
+  files={[
+    'group-summarize',
+    'group-summarize.preview.tsx',
+    'group-summarize.data.ts',
+    'aggregation-annotation.data.ts',
+  ]}
+  defaultSourceFile="group-summarize.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换分组与求和、均值、计数，观察输出行数及 stat 列。橙色标记参与计算的 value，蓝色标记统计结果，team 保持普通颜色"
+/>
+
+## annotate · 标注
+
+`annotate` 保留每条明细的原有字段与行数，把同组的统计结果回填到每行；分组后输出顺序按组展开，不保证原始行序。`metrics` 与 `selectors` 至少提供一项，也可以同时使用，新增字段名必须互不重复。已有字段可被同名结果覆盖，选择输出名时应避开仍需保留的明细字段。
+
+单行选择支持 min/max、first/last、top/bottom 和 nth；min/max 的并列策略仅允许 first/last，top/bottom 的 n 固定为 1。选择器带有 `by` 时写入选中行的该字段值，否则写入选择排名；未选中记录时不写入该标注字段。标注的 Schema 为 `AnnotateTransformSchema`，参数如下：
+
+| 属性                          | 类型                                 | 说明                                           |
+| ----------------------------- | ------------------------------------ | ---------------------------------------------- |
+| `kind`                        | `'annotate'`                         | 变换类型                                       |
+| `params.groupBy`              | `Array<string>`                      | 可选，分组字段；省略或空数组表示全部记录为一组 |
+| `params.metrics`              | `Array<IRDataReducerOperation>`      | 可选，非空归约算子列表，结果写到组内每行       |
+| `params.selectors`            | `Array<IRDataAnnotateSelector>`      | 可选，非空单行选择标注列表                     |
+| `params.selectors[].selector` | `IRDataAnnotateSelector["selector"]` | 必填，只支持至多选中一行的内置选择器           |
+| `params.selectors[].as`       | `string`                             | 必填，标注输出字段名                           |
+
+<ComponentPreview
+  files={['group-annotate', 'group-annotate.preview.tsx', 'group-annotate.data.ts', 'aggregation-annotation.data.ts']}
+  defaultSourceFile="group-annotate.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换组内求和与最大值标注，观察同组每条明细拥有相同的 total 或 peak。选择器标注写入数值或排名，不嵌入整条记录"
+/>

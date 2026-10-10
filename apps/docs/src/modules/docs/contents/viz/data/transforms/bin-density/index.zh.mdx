@@ -1,0 +1,68 @@
+---
+title: 分桶与密度
+description: 将连续观测转换为分桶统计行或高斯核密度采样行。
+---
+
+`bin` 把观测划入区间并统计每箱结果；`density` 在连续位置估计数值分布的密度。两者都生成新行，保留分组字段，不保留全部明细字段。
+
+## bin · 分桶
+
+`bin` 对数值字段分箱，每箱输出一行，包含分组键、以原字段名写出的箱中点、边界及归约结果。空箱也有输出。每组独立计算边界，显式 `extent` 则让各组共用范围；`count`、`step`、`thresholds` 三种策略互斥，全部省略时使用 10 箱。
+
+区间通常左闭右开，最后一箱包含上界。非有限值和范围外观测不计入箱内；输出字段不得覆盖分组键，统计字段名也应避开中点和边界字段。分桶的 Schema 为 `BinTransformSchema`，参数如下：
+
+| 属性                | 类型                            | 说明                                                                      |
+| ------------------- | ------------------------------- | ------------------------------------------------------------------------- |
+| `kind`              | `'bin'`                         | 变换类型                                                                  |
+| `params.groupBy`    | `Array<string>`                 | 可选，分组字段；省略或空数组表示全部记录为一组                            |
+| `params.field`      | `string`                        | 必填，待分箱的数值字段；输出同名字段为箱中点                              |
+| `params.count`      | `number`                        | 可选，正整数箱数，未提供策略时默认 10                                     |
+| `params.step`       | `number`                        | 可选，正数箱宽，最后一箱截到范围上界                                      |
+| `params.thresholds` | `Array<number>`                 | 可选，非空内部边界列表，按升序处理并筛选范围内边界                        |
+| `params.extent`     | `[number, number]`              | 可选，共用分箱范围；省略取组内观测最小值和最大值                          |
+| `params.nice`       | `boolean`                       | 可选，count 策略下调整推导范围为易读刻度，默认 true；显式 extent 保持不变 |
+| `params.startField` | `string`                        | 可选，下界输出字段，默认 binStart                                         |
+| `params.endField`   | `string`                        | 可选，上界输出字段，默认 binEnd                                           |
+| `params.metrics`    | `Array<IRDataReducerOperation>` | 可选，非空箱内归约列表；默认 count 写入 binCount                          |
+
+<ComponentPreview
+  files={['distribution-bin', 'distribution-bin.preview.tsx', 'distribution-bin.data.ts', 'bin-density.data.ts']}
+  defaultSourceFile="distribution-bin.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-auto [&_[data-slot=preview-theme-boundary]>div>div]:h-max [&_[data-slot=preview-theme-boundary]>div>div]:min-h-full [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="本例显式使用 0～60 范围，默认 3 箱以便阅读。切换箱数、宽度或固定边界，并开启 team 分组，观察空箱、边界与 binCount"
+/>
+
+## density · 密度采样
+
+`density` 用一维高斯核密度估计（KDE）把有限数值样本转换成密度采样行：在每个采样位置叠加各观测的高斯核并取平均。密度不是行数或百分比，受带宽影响。较小带宽保留局部起伏，较大带宽让分布更平滑。每组输出 `sampleCount` 行。
+
+自动带宽要求每组至少两个有限且具有非零离散程度的样本；单点或相同值样本应指定正带宽。没有有限样本会报错。两个输出名必须不同，且不得覆盖分组键。密度采样的 Schema 为 `DensityTransformSchema`，参数如下：
+
+| 属性                     | 类型                     | 说明                                                 |
+| ------------------------ | ------------------------ | ---------------------------------------------------- |
+| `kind`                   | `'density'`              | 变换类型                                             |
+| `params.groupBy`         | `Array<string>`          | 可选，分组字段；省略或空数组表示全部记录为一组       |
+| `params.field`           | `string`                 | 必填，连续数值样本字段                               |
+| `params.bandwidth`       | `IRDataDensityBandwidth` | 可选，带宽策略，默认 silverman                       |
+| `params.bandwidth.kind`  | `'silverman' \| 'value'` | 提供 bandwidth 时必填，自动或显式带宽                |
+| `params.bandwidth.value` | `number`                 | value 策略必填，正数带宽                             |
+| `params.sampleCount`     | `number`                 | 可选，每组等间距采样数，整数且至少 2，默认 64        |
+| `params.extent`          | `[number, number]`       | 可选，递增采样范围；默认观测范围向两端各扩展三倍带宽 |
+| `params.xAs`             | `string`                 | 必填，采样位置输出字段                               |
+| `params.densityAs`       | `string`                 | 必填，密度输出字段                                   |
+
+<ComponentPreview
+  files={[
+    'distribution-density',
+    'distribution-density.preview.tsx',
+    'distribution-density.data.ts',
+    'bin-density.data.ts',
+  ]}
+  defaultSourceFile="distribution-density.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="[&_[data-slot=preview-theme-boundary]>div]:overflow-auto [&_[data-slot=preview-theme-boundary]>div>div]:h-max [&_[data-slot=preview-theme-boundary]>div>div]:min-h-full [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="为控制表格长度，本例默认每组采样 4 点，范围固定 0～60。切换自动或指定带宽，调整采样数与分组，观察 sample 和 density"
+/>

@@ -1,0 +1,38 @@
+---
+title: Relation generation
+description: Select source and target endpoints per group and emit projected fields with optional differences.
+---
+
+Use `relate` to compare two representative records or generate data for connection endpoints. It emits relation rows; downstream consumers determine how to draw them.
+
+## relate
+
+`relate` selects source and target within each group, projects endpoint fields into one relation row, and can compute target minus source. A fields key is an output suffix and its value is a source field. For example, `{ id: "record" }` produces sourceId on the source endpoint and targetId on the target endpoint. Output contains only group keys, projected fields and pair measures.
+
+Both endpoints use [selector](/viz/data/operators/selector). A group with no selection on either endpoint emits no relation row. Multiple selections do not form a Cartesian product. Its Schema is `RelateTransformSchema`; parameters are listed below:
+
+| Property                        | Type                                | Description                                                  |
+| ------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| `kind`                          | `'relate'`                          | Transform kind                                               |
+| `params.groupBy`                | `Array<string>`                     | Optional group fields; omitted or empty means one group      |
+| `params.source`                 | `IRDataEndpointProjection`          | Required source selector and field projection                |
+| `params.source.selector`        | `IRDataSelectorOperation`           | Required source selector; only the first selection is used   |
+| `params.source.fields`          | `Record<string, string>`            | Required non-empty output-suffix to input-field map          |
+| `params.target`                 | `IRDataEndpointProjection`          | Required target selector and field projection                |
+| `params.target.selector`        | `IRDataSelectorOperation`           | Required target selector; only the first selection is used   |
+| `params.target.fields`          | `Record<string, string>`            | Required non-empty output-suffix to input-field map          |
+| `params.measures`               | `Array<IRDataPairMeasureOperation>` | Optional non-empty pair-measure list                         |
+| `params.measures[].op`          | `'difference'`                      | Required operation; computes target minus source             |
+| `params.measures[].field`       | `string`                            | Required numeric field read from both endpoints              |
+| `params.measures[].as`          | `string`                            | Required difference output field                             |
+| `params.measures[].labelAs`     | `string`                            | Optional difference-label output field                       |
+| `params.measures[].labelPrefix` | `string`                            | Optional text prefix for non-negative differences, such as + |
+
+<ComponentPreview
+  files={['relation-relate', 'relation-relate.preview.tsx', 'relation-relate.data.ts', 'relation-generation.data.ts']}
+  defaultSourceFile="relation-relate.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch minimum-to-maximum and first-to-last; inspect sourceId, targetId and delta. Orange marks only selected endpoints. Disabling the difference still emits both endpoint IDs"
+/>

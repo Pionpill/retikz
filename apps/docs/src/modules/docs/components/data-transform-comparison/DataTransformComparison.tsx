@@ -82,11 +82,36 @@ export const DataTransformComparison: FC<DataTransformComparisonProps> = props =
         height: maxTableHeight + 66,
       }}
     >
+      <Node
+        id="operator"
+        position={[0, 0]}
+        layout={{ minimumSize: { width: 64, height: 30 }, padding: { left: 12, right: 12, top: 6, bottom: 6 } }}
+        shape={{ type: 'rectangle', params: { cornerRadius: 6 } }}
+        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 12 } }}
+      >
+        {operation}
+      </Node>
       {tables.map(table => {
         const { id, config, x, height, color, showEmpty } = table;
         const width = config.columns.length * (config.columnWidth ?? 70);
         return (
-          <Scope key={id} position={[x, -height / 2]}>
+          <Scope
+            key={id}
+            transforms={[
+              {
+                kind: 'between-translate',
+                between: [
+                  [x, -height / 2],
+                  {
+                    id: 'operator',
+                    anchor: id === 'source' ? 'left' : 'right',
+                    offset: [id === 'source' ? -width : 0, -height / 2],
+                  },
+                ],
+                fraction: 0.5,
+              },
+            ]}
+          >
             <PreviewDetailTable
               id={id}
               dataRef={config.dataRef}
@@ -113,15 +138,6 @@ export const DataTransformComparison: FC<DataTransformComparisonProps> = props =
           </Scope>
         );
       })}
-      <Node
-        id="operator"
-        position={[0, 0]}
-        layout={{ minimumSize: { width: 64, height: 30 }, padding: { left: 12, right: 12, top: 6, bottom: 6 } }}
-        shape={{ type: 'rectangle', params: { cornerRadius: 6 } }}
-        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 12 } }}
-      >
-        {operation}
-      </Node>
       <Node position={[0, -32]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
         {host}
       </Node>

@@ -1,0 +1,102 @@
+---
+title: Numeric derivation
+description: Preserve rows while deriving stack bounds, group shares, per-row intervals or jittered values.
+---
+
+These transforms preserve row count while deriving bounds, shares or perturbed values. `stack` and `normalize` compute across groups; `derive-interval` and `jitter` work per row.
+
+## stack
+
+`stack` accumulates y among rows sharing the same x value, adding start and end fields per row. Omitting x creates one accumulation chain. Here groupBy is a single series field used to order segments, rather than an array of calculation group fields. Series use first-seen order across the input, while output rows retain input order.
+
+Its Schema is `StackTransformSchema`; parameters are listed below:
+
+| Property            | Type                                                                            | Description                                                                                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`              | `'stack'`                                                                       | Transform kind                                                                                                                                                                                                                         |
+| `params.x`          | `string`                                                                        | Optional accumulation group field; omitted means one chain                                                                                                                                                                             |
+| `params.y`          | `string`                                                                        | Required numeric field to accumulate                                                                                                                                                                                                   |
+| `params.groupBy`    | `string`                                                                        | Optional series-order field; omitted means input row order                                                                                                                                                                             |
+| `params.startField` | `string`                                                                        | Optional start output field; default y0                                                                                                                                                                                                |
+| `params.endField`   | `string`                                                                        | Optional end output field; default y1                                                                                                                                                                                                  |
+| `params.offset`     | `'zero'`<br />`'normalize'`<br />`'diverging'`<br />`'center'`<br />`'overlap'` | Optional; default: accumulate from zero<br />Scale non-negative values to 0–1; reject finite negatives<br />Accumulate positive and negative values separately<br />Center the full accumulation chain<br />Start each segment at zero |
+
+<ComponentPreview
+  files={['numeric-stack', 'numeric-stack.preview.tsx', 'numeric-stack.data.ts', 'numeric-derivation.data.ts']}
+  defaultSourceFile="numeric-stack.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="The sample includes a negative value, so the controls omit normalize. Compare diverging, centered and overlap baselines, then toggle team groups and item series order. Inspect y0 and y1; input row order remains intact"
+/>
+
+## normalize
+
+`normalize` divides each value by its group total. fraction produces shares from 0 to 1, and percent from 0 to 100. Row count and input order are preserved. Omitting as overwrites the source field; setting as adds a field. Finite negative values fail, missing or non-finite values count as zero, and a zero total produces zero shares. Its Schema is `NormalizeTransformSchema`; parameters are listed below:
+
+| Property         | Type                      | Description                                                             |
+| ---------------- | ------------------------- | ----------------------------------------------------------------------- |
+| `kind`           | `'normalize'`             | Transform kind                                                          |
+| `params.field`   | `string`                  | Required non-negative numeric field                                     |
+| `params.groupBy` | `Array<string>`           | Optional non-empty group-field list; omitted means global normalization |
+| `params.basis`   | `'fraction' \| 'percent'` | Optional output scale; default fraction                                 |
+| `params.as`      | `string`                  | Optional share output field; omitted overwrites the source              |
+
+<ComponentPreview
+  files={[
+    'numeric-normalize',
+    'numeric-normalize.preview.tsx',
+    'numeric-normalize.data.ts',
+    'numeric-derivation.data.ts',
+  ]}
+  defaultSourceFile="numeric-normalize.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Grouping changes the denominator. By default a share column is added; enable overwrite to inspect value. Percent scales the result by 100"
+/>
+
+## derive-interval
+
+`derive-interval` builds a baseline-to-value interval per row, or reads both endpoints from fields. It preserves rows, fields and input order without accumulating other records. When both startFrom and endFrom are set, they take precedence; otherwise from is required. Non-finite endpoints fall back to the baseline, and reversed endpoints are not automatically swapped. Its Schema is `DeriveIntervalTransformSchema`; parameters are listed below:
+
+| Property            | Type                | Description                                                    |
+| ------------------- | ------------------- | -------------------------------------------------------------- |
+| `kind`              | `'derive-interval'` | Transform kind                                                 |
+| `params.from`       | `string`            | Required in single-value mode; endpoint field                  |
+| `params.baseline`   | `number`            | Optional single-value start and non-finite fallback; default 0 |
+| `params.startFrom`  | `string`            | Required for two-field mode; start field paired with endFrom   |
+| `params.endFrom`    | `string`            | Required for two-field mode; end field paired with startFrom   |
+| `params.startField` | `string`            | Optional start output field; default y0                        |
+| `params.endField`   | `string`            | Optional end output field; default y1                          |
+
+<ComponentPreview
+  files={['numeric-interval', 'numeric-interval.preview.tsx', 'numeric-interval.data.ts', 'numeric-derivation.data.ts']}
+  defaultSourceFile="numeric-interval.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch baseline-to-value and two-field modes. Two-field mode reads low and value; the inactive baseline control is hidden"
+/>
+
+## jitter
+
+`jitter` adds deterministic pseudo-random offsets to continuous fields, often to separate overlapping observations. Offsets use data units in [-amount, amount], rather than pixels. The same input order, axis, seed and amount reproduce the same result; non-finite values are preserved. Rows and order stay intact, and specified fields are overwritten. Its Schema is `JitterTransformSchema`; parameters are listed below:
+
+| Property        | Type                   | Description                                              |
+| --------------- | ---------------------- | -------------------------------------------------------- |
+| `kind`          | `'jitter'`             | Transform kind                                           |
+| `params.axis`   | `'x' \| 'y' \| 'both'` | Optional axis; default x                                 |
+| `params.xField` | `string`               | Optional x numeric field; default x                      |
+| `params.yField` | `string`               | Optional y numeric field; default y                      |
+| `params.amount` | `number`               | Optional non-negative maximum absolute offset; default 1 |
+| `params.seed`   | `number`               | Optional integer random seed; default 0                  |
+
+<ComponentPreview
+  files={['numeric-jitter', 'numeric-jitter.preview.tsx', 'numeric-jitter.data.ts', 'numeric-derivation.data.ts']}
+  defaultSourceFile="numeric-jitter.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Input x values repeat. Change axis, amount and seed to inspect overwritten fields. Zero amount restores source values; table formatting keeps three decimal places"
+/>

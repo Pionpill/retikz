@@ -1,0 +1,48 @@
+---
+title: 行组织
+description: 使用 sort 重排数据行，使用 select 按组保留原始记录并可选输出排名。
+---
+
+行组织变换调整数据行的顺序或保留范围。`sort` 保留全部行并改变顺序，`select` 输出选择算子选中的原始记录；两者都保留原有字段，`select` 还可添加排名字段。
+
+## sort · 排序
+
+`sort` 按单个字段升序或降序排列记录，保留行数与原有字段。提供 `groupBy` 时只在各组内排序，组按字段列表顺序逐层展开，每层保留父组内键值首次出现顺序；省略或空数组表示全局排序。例如 `groupBy: ['team', 'item']` 先按 team 分组，再在各 team 内按 item 分组；本例依次输出 A phone、A book、B phone、B book。分组键不隐式按字母或数值排序。排序是稳定的：同组内相同排序键的记录保持输入中的相对顺序。排序的 Schema 为 `SortTransformSchema`，参数如下：
+
+| 属性             | 类型                          | 说明                                               |
+| ---------------- | ----------------------------- | -------------------------------------------------- |
+| `kind`           | `'sort'`                      | 变换类型                                           |
+| `params.groupBy` | `Array<string>`               | 可选，计算分组字段；省略或空数组表示全部记录为一组 |
+| `params.field`   | `string`                      | 必填，排序字段名，不能为空                         |
+| `params.order`   | `'ascending' \| 'descending'` | 可选，排序方向，默认 `'ascending'`                 |
+
+<ComponentPreview
+  files={['row-sort', 'row-sort.preview.tsx', 'row-sort.data.ts', 'row-organization.data.ts']}
+  defaultSourceFile="row-sort.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-70 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换全局、team、item 或 team + item 分组，观察组内排序。橙色标记参与排序的全部输入，蓝色标记输出，team 保持普通颜色。同组 r3 与 r7 的 value 均为 30，排序后仍保持 r3 在前"
+/>
+
+## select · 选择原始行
+
+`select` 先按 `groupBy` 分组，再在每组中执行 `selector`，输出所选记录的原有字段。省略 `groupBy` 或设为空数组时，全部记录属于同一组。多个分组字段共同构成组合键，例如 `team` 与 `item` 都相同的记录才属于同一组。组的输出顺序与 sort 一致：按字段顺序逐层分组，每层保留首次出现顺序。某组未选中记录时，该组不产生输出行。
+
+提供 `rankAs` 时，将选择算子返回的一基排名写入指定字段；省略时不增加排名列。排名的具体含义由算子决定，各算子的选择与并列策略见 [selector](/viz/data/operators/selector)。选择原始行的 Schema 为 `SelectTransformSchema`，参数如下：
+
+| 属性              | 类型                      | 说明                                               |
+| ----------------- | ------------------------- | -------------------------------------------------- |
+| `kind`            | `'select'`                | 变换类型                                           |
+| `params.groupBy`  | `Array<string>`           | 可选，分组字段列表；省略或空数组表示全部记录为一组 |
+| `params.selector` | `IRDataSelectorOperation` | 必填，组内执行的选择算子声明                       |
+| `params.rankAs`   | `string`                  | 可选，一基排名的输出字段名，不能为空               |
+
+<ComponentPreview
+  files={['row-select', 'row-select.preview.tsx', 'row-select.data.ts', 'row-organization.data.ts']}
+  defaultSourceFile="row-select.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-70 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="选择全部并列最大值，四种分组分别选出 1、2、2、5 条记录。相同商品内也可选择；team + item 分组时 A 的 book 选出 r3、r7 两条并列记录。橙色只标记实际选中的输入，蓝色标记输出及可选排名，team 保持普通颜色"
+/>

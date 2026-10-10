@@ -1,0 +1,43 @@
+import type { Lang } from '@/i18n';
+
+/** 图内标注与控制面板的同源双语文案 */
+export const transformDemoI18n = {
+  zh: {
+    count: '计数',
+    empty: '没有输出记录',
+    global: '不分组',
+    group: '计算分组',
+    item: '按 item',
+    mean: '平均值',
+    metric: '统计方式',
+    metrics: '组内求和',
+    mode: '计算方式',
+    result: '变换结果',
+    selector: '组内最大值标注',
+    source: '原始记录',
+    sum: '求和',
+    team: '按 team',
+    teamItem: '按 team + item',
+    group_summarize: '汇总',
+    group_annotate: '标注',
+  },
+  en: {
+    count: 'Count',
+    empty: 'No output rows',
+    global: 'No grouping',
+    group: 'Calculation group',
+    item: 'By item',
+    mean: 'Mean',
+    metric: 'Statistic',
+    metrics: 'Group sum',
+    mode: 'Calculation mode',
+    result: 'Transformed rows',
+    selector: 'Group maximum annotation',
+    source: 'Original rows',
+    sum: 'Sum',
+    team: 'By team',
+    teamItem: 'By team + item',
+    group_summarize: 'Summarize',
+    group_annotate: 'Annotate',
+  },
+} satisfies Record<Lang, Record<string, string>>;

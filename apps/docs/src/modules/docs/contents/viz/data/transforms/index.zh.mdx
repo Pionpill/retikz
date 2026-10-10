@@ -43,6 +43,31 @@ Data 的变换读取已经规范化的行。字段名称对齐、值解析和接
 
 内置与自定义变换通过同一套定义和注册机制接入。具体参数、可用算子范围、默认值及失败条件属于各操作的契约；总览中的结果形态不能代替完整配置说明。
 
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '行组织', description: '排序与选择原始记录。', url: '/viz/data/transforms/row-organization' },
+    {
+      title: '汇总与标注',
+      description: '把统计结果汇总为组行，或回填到明细。',
+      url: '/viz/data/transforms/aggregation-annotation',
+    },
+    {
+      title: '数值派生',
+      description: '派生堆叠区间、占比、单行区间与扰动数值。',
+      url: '/viz/data/transforms/numeric-derivation',
+    },
+    { title: '分桶与密度', description: '生成分桶统计行与密度采样行。', url: '/viz/data/transforms/bin-density' },
+    { title: '趋势采样', description: '将拟合模型转换为等间距预测行。', url: '/viz/data/transforms/trend-sampling' },
+    {
+      title: '关系生成',
+      description: '选择两端记录并生成关系与差值。',
+      url: '/viz/data/transforms/relation-generation',
+    },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections

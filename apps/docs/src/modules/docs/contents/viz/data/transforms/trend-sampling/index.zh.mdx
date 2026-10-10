@@ -1,0 +1,33 @@
+---
+title: 趋势采样
+description: 按组拟合观测，并在等间距位置输出趋势预测行。
+---
+
+已有观测点需要转换成连续趋势的采样数据时，使用 `smooth`。它先拟合模型，再产生预测行，供图形或表格继续使用。
+
+## smooth · 趋势采样
+
+`smooth` 按组读取有限的 `(x, y)` 对，调用 [regression](/viz/data/operators/regression) 拟合模型，再在等间距位置生成预测值。它输出分组键、采样 x 和预测 y，不保留输入明细。regression 算子返回模型，smooth 变换负责把模型转换为新数据行。
+
+拟合前提由所选方法决定，例如二次拟合需要足够的不同 x。推导采样范围时要求至少两个不同的有限 x；显式范围不能代替模型所需的有效输入。两个输出字段必须不同，并避开组键。趋势采样的 Schema 为 `SmoothTransformSchema`，参数如下：
+
+| 属性                 | 类型                 | 说明                                           |
+| -------------------- | -------------------- | ---------------------------------------------- |
+| `kind`               | `'smooth'`           | 变换类型                                       |
+| `params.groupBy`     | `Array<string>`      | 可选，分组字段；省略或空数组表示全部记录为一组 |
+| `params.x`           | `string`             | 必填，自变量数值字段                           |
+| `params.y`           | `string`             | 必填，因变量数值字段                           |
+| `params.method`      | `IRRegressionMethod` | 可选，已注册拟合方法声明，默认 linear          |
+| `params.sampleCount` | `number`             | 可选，每组采样数，整数且至少 2，默认 64        |
+| `params.extent`      | `[number, number]`   | 可选，递增采样范围；默认组内有限 x 的范围      |
+| `params.xAs`         | `string`             | 必填，采样 x 输出字段                          |
+| `params.yAs`         | `string`             | 必填，预测 y 输出字段                          |
+
+<ComponentPreview
+  files={['trend-smooth', 'trend-smooth.preview.tsx', 'trend-smooth.data.ts', 'trend-sampling.data.ts']}
+  defaultSourceFile="trend-smooth.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-112 sm:h-112 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="本例默认每组 4 个采样点。切换线性与二次拟合、分组、采样数或扩展范围；扩展范围会在观测范围之外生成预测，不表示新增观测"
+/>

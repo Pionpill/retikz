@@ -1,0 +1,102 @@
+---
+title: 数值派生
+description: 保留数据行，派生堆叠边界、组内占比、单行区间或数值扰动。
+---
+
+以下变换保留行数，用已有数值计算区间、占比或扰动后的数值。`stack` 与 `normalize` 涉及组内计算，`derive-interval` 与 `jitter` 逐行处理。
+
+## stack · 堆叠
+
+`stack` 在同一个 `x` 值对应的记录中累计 `y`，为每行增加起点与终点字段。省略 `x` 时，全部行共用一条累计链。这里的 `groupBy` 是一个系列字段名，用于排列组内片段；它不是其它变换使用的计算分组字段数组。系列顺序取该字段在全体输入中首次出现的顺序，最终输出仍保持原行序。
+
+堆叠的 Schema 为 `StackTransformSchema`，参数如下：
+
+| 属性                | 类型                                                                            | 说明                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`              | `'stack'`                                                                       | 变换类型                                                                                                                        |
+| `params.x`          | `string`                                                                        | 可选，累计分组字段；省略表示全部行一组                                                                                          |
+| `params.y`          | `string`                                                                        | 必填，组内累计的数值字段                                                                                                        |
+| `params.groupBy`    | `string`                                                                        | 可选，系列排序字段；省略按输入行序累计                                                                                          |
+| `params.startField` | `string`                                                                        | 可选，片段起点输出字段，默认 y0                                                                                                 |
+| `params.endField`   | `string`                                                                        | 可选，片段终点输出字段，默认 y1                                                                                                 |
+| `params.offset`     | `'zero'`<br />`'normalize'`<br />`'diverging'`<br />`'center'`<br />`'overlap'` | 可选，默认从 0 累计<br />将非负值归一到 0～1，拒绝有限负值<br />将正负值分别累计<br />让整条累计链居中<br />让每个片段从 0 开始 |
+
+<ComponentPreview
+  files={['numeric-stack', 'numeric-stack.preview.tsx', 'numeric-stack.data.ts', 'numeric-derivation.data.ts']}
+  defaultSourceFile="numeric-stack.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="样本包含一个负值，因此控件不提供 normalize 策略。比较正负分开、居中和重叠策略，切换 team 分组与 item 系列排序，观察 y0、y1；原始行序保持不变"
+/>
+
+## normalize · 归一化
+
+`normalize` 将每行数值除以所在组的总和，得到组内占比；`fraction` 输出 0～1，`percent` 输出 0～100。它保留行数与原行序。省略 `as` 会覆盖输入字段，提供 `as` 则写入新字段。有限负值会报错，缺失或非有限数值按 0 计算，组总和为 0 时输出 0。归一化的 Schema 为 `NormalizeTransformSchema`，参数如下：
+
+| 属性             | 类型                      | 说明                                       |
+| ---------------- | ------------------------- | ------------------------------------------ |
+| `kind`           | `'normalize'`             | 变换类型                                   |
+| `params.field`   | `string`                  | 必填，非负数值字段                         |
+| `params.groupBy` | `Array<string>`           | 可选，非空分组字段列表；省略表示全局归一化 |
+| `params.basis`   | `'fraction' \| 'percent'` | 可选，占比单位，默认 fraction              |
+| `params.as`      | `string`                  | 可选，占比输出字段；省略覆盖原字段         |
+
+<ComponentPreview
+  files={[
+    'numeric-normalize',
+    'numeric-normalize.preview.tsx',
+    'numeric-normalize.data.ts',
+    'numeric-derivation.data.ts',
+  ]}
+  defaultSourceFile="numeric-normalize.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换分组后分母随组改变。默认新增 share 列，开启覆盖后查看 value；切换百分比，结果放大 100 倍"
+/>
+
+## derive-interval · 派生区间
+
+`derive-interval` 逐行为一个数值建立基线区间，也可以直接从两个端点字段读取区间。它保留行数、原字段与原行序，不累计其它记录。`startFrom` 与 `endFrom` 同时提供时优先使用两字段模式；否则需要 `from`。非有限端点回退到基线，不会自动交换大小颠倒的端点。派生区间的 Schema 为 `DeriveIntervalTransformSchema`，参数如下：
+
+| 属性                | 类型                | 说明                                           |
+| ------------------- | ------------------- | ---------------------------------------------- |
+| `kind`              | `'derive-interval'` | 变换类型                                       |
+| `params.from`       | `string`            | 单值模式必填，区间终点字段                     |
+| `params.baseline`   | `number`            | 可选，单值模式起点及非有限端点的回退值，默认 0 |
+| `params.startFrom`  | `string`            | 两字段模式必填，起点字段，与 endFrom 配对      |
+| `params.endFrom`    | `string`            | 两字段模式必填，终点字段，与 startFrom 配对    |
+| `params.startField` | `string`            | 可选，起点输出字段，默认 y0                    |
+| `params.endField`   | `string`            | 可选，终点输出字段，默认 y1                    |
+
+<ComponentPreview
+  files={['numeric-interval', 'numeric-interval.preview.tsx', 'numeric-interval.data.ts', 'numeric-derivation.data.ts']}
+  defaultSourceFile="numeric-interval.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换基线到数值与两个端点字段。两字段模式读取 low 和 value，此时隐藏不再生效的基线控件"
+/>
+
+## jitter · 数值扰动
+
+`jitter` 给连续数值字段添加确定性的伪随机偏移，常用于分散重叠观测。偏移在数据单位中计算，范围为 `[-amount, amount]`，不是像素距离。相同输入行序、方向、种子与幅度产生相同结果；非有限数值保留原值。它保持行数与行序，直接改写指定字段。数值扰动的 Schema 为 `JitterTransformSchema`，参数如下：
+
+| 属性            | 类型                   | 说明                           |
+| --------------- | ---------------------- | ------------------------------ |
+| `kind`          | `'jitter'`             | 变换类型                       |
+| `params.axis`   | `'x' \| 'y' \| 'both'` | 可选，扰动方向，默认 x         |
+| `params.xField` | `string`               | 可选，x 方向数值字段，默认 x   |
+| `params.yField` | `string`               | 可选，y 方向数值字段，默认 y   |
+| `params.amount` | `number`               | 可选，非负最大绝对偏移，默认 1 |
+| `params.seed`   | `number`               | 可选，整数随机种子，默认 0     |
+
+<ComponentPreview
+  files={['numeric-jitter', 'numeric-jitter.preview.tsx', 'numeric-jitter.data.ts', 'numeric-derivation.data.ts']}
+  defaultSourceFile="numeric-jitter.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="原始 x 存在重复值。调整方向、幅度与种子，观察被改写的列；幅度为 0 时恢复原值，数字仅在表格中保留三位小数"
+/>

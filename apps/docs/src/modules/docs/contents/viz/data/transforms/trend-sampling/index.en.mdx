@@ -1,0 +1,33 @@
+---
+title: Trend sampling
+description: Fit observations per group and emit trend predictions at evenly spaced positions.
+---
+
+Use `smooth` to convert observations into sampled trend data. It fits a model, then emits prediction rows for charts, tables or further transforms.
+
+## smooth
+
+`smooth` reads finite (x, y) pairs per group, fits a [regression](/viz/data/operators/regression) model, and predicts at evenly spaced positions. Output contains group keys, sampled x and predicted y; input detail fields are dropped. The regression operation returns a model, while smooth turns that model into new rows.
+
+The chosen method determines fitting requirements, such as sufficient distinct x values for quadratic fitting. Inferring an extent requires at least two distinct finite x values; an explicit extent does not replace the model’s input requirements. Output field names must differ and avoid group keys. Its Schema is `SmoothTransformSchema`; parameters are listed below:
+
+| Property             | Type                 | Description                                                           |
+| -------------------- | -------------------- | --------------------------------------------------------------------- |
+| `kind`               | `'smooth'`           | Transform kind                                                        |
+| `params.groupBy`     | `Array<string>`      | Optional group fields; omitted or empty means one group               |
+| `params.x`           | `string`             | Required numeric independent-variable field                           |
+| `params.y`           | `string`             | Required numeric dependent-variable field                             |
+| `params.method`      | `IRRegressionMethod` | Optional registered regression method; default linear                 |
+| `params.sampleCount` | `number`             | Optional samples per group; integer ≥ 2; default 64                   |
+| `params.extent`      | `[number, number]`   | Optional increasing sampling extent; default finite x range per group |
+| `params.xAs`         | `string`             | Required sampled x output field                                       |
+| `params.yAs`         | `string`             | Required predicted y output field                                     |
+
+<ComponentPreview
+  files={['trend-smooth', 'trend-smooth.preview.tsx', 'trend-smooth.data.ts', 'trend-sampling.data.ts']}
+  defaultSourceFile="trend-smooth.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-112 sm:h-112 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="This example defaults to four samples per group. Change linear or quadratic fitting, grouping, count or extent. Extending the range creates predictions outside observations, not new observations"
+/>
