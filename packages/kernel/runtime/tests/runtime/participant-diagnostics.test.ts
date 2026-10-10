@@ -89,7 +89,8 @@ describe('runtime runtime participant diagnostics', () => {
     expect(getRuntimeTraceReporterDiagnosticDrainCount(report)).toBe(5);
   });
 
-  it('无效 diagnose 输入转 execution diagnostic，不向 callback 反抛', () => {
+  it('warning getter 异常转 execution diagnostic，不向 callback 反抛', () => {
+    const getterCause = new Error('warning getter failed');
     const owner = defineCounterSource();
     const sources = createRuntimeSourceRegistry([owner]);
     const computations = createRuntimeComputationRegistry({ sources });
@@ -100,9 +101,15 @@ describe('runtime runtime participant diagnostics', () => {
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: (_candidate, context) => {
-        const diagnose = context.diagnose as (input: unknown) => void;
-
-        expect(() => diagnose({ code: 'BROKEN', phase: 'prepare' })).not.toThrow();
+        expect(() =>
+          context.diagnose({
+            get code(): string {
+              throw getterCause;
+            },
+            phase: 'prepare',
+            message: 'warning',
+          }),
+        ).not.toThrow();
 
         context.diagnose({ code: 'VALID', phase: 'prepare', message: 'valid' });
 
@@ -118,11 +125,15 @@ describe('runtime runtime participant diagnostics', () => {
       participants: [participant],
     });
 
-    expect(runtime.diagnostics().map(diagnostic => diagnostic.code)).toEqual([
+    const diagnostics = runtime.diagnostics();
+    expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
       RuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
       'VALID',
     ]);
+    expect(diagnostics[0]?.cause).toBe(getterCause);
 
+    // 无法读取 warning 仍允许事务成功发布与后续 warning 进入队列
+    expect(runtime.revision()).toBe(0);
     runtime.dispose();
   });
 

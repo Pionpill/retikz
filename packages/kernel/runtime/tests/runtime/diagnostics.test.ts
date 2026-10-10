@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
+import { defineRuntimeCommitParticipant, RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
 import type { RuntimeCommitEvent, RuntimeComputationTraceReporter } from '../../src/computation';
 import { defineRuntimeComputation, RuntimeComputationKind, RuntimeComputationPhase } from '../../src/computation';
 import { RetikzRuntimeError } from '../../src/error';
@@ -236,7 +236,7 @@ describe('runtime runtime diagnostics', () => {
     expect(runtime.diagnostics()).toEqual([]);
   });
 
-  it('统一注入 context 与 fallback warning 归属，不接受 JavaScript spoof 字段', () => {
+  it('统一注入 context 与 fallback warning 归属，额外字段不改变分类', () => {
     const owner = defineRuntimeSource<number, number, number, never>({
       key: 'counter',
       value: {
@@ -265,8 +265,7 @@ describe('runtime runtime diagnostics', () => {
           computation: { owner: 'spoofed-owner', key: 'spoofed-computation' },
         };
         if (updates === 1) {
-          const diagnose = context.diagnose as (diagnostic: unknown) => void;
-          diagnose(spoofedWarning);
+          context.diagnose(spoofedWarning);
           return { kind: RuntimeComputationKind.Incremental, result: view.snapshot(owner).value };
         }
 
@@ -752,5 +751,146 @@ describe('runtime runtime diagnostics', () => {
     expect(runtime.diagnostics()).toEqual([
       expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord }),
     ]);
+  });
+
+  it.each(['source', 'result', 'observer', 'participant'])('不可转成文本的 $0 异常不打断更新或后序释放', boundary => {
+    const cause = Object.create(null);
+    const cleanup: Array<string> = [];
+    let shouldFail = false;
+    const define = (key: string) =>
+      defineRuntimeSource<number, number, number, never>({
+        key,
+        value: {
+          capture: value => value,
+          read: value => value,
+          equals: (left, right) => left === right,
+          dispose: value => {
+            cleanup.push(`${key}:${value}`);
+            if (shouldFail && boundary === 'source' && key === 'b') throw cause;
+          },
+        },
+      });
+    const a = define('a');
+    const b = define('b');
+    const sources = createRuntimeSourceRegistry([a, b]);
+    const computation = defineRuntimeComputation<number>({
+      id: { owner: 'a', key: 'value' },
+      sources: [a],
+      run: view => ({ kind: 'full', result: view.snapshot(a).value }),
+      observeCommit: () => {
+        if (shouldFail && boundary === 'observer') throw cause;
+      },
+      result: {
+        dispose: value => {
+          cleanup.push(`result:${value}`);
+          if (shouldFail && boundary === 'result') throw cause;
+        },
+      },
+    });
+    const participant = defineRuntimeCommitParticipant({
+      key: 'participant',
+      sources: [a],
+      revisionPolicy: 'continuous',
+      prepare: () => ({
+        commit: () => undefined,
+        rollback: () => undefined,
+        dispose: () => {
+          cleanup.push('token');
+          if (shouldFail && boundary === 'participant') throw cause;
+        },
+      }),
+      read: () => 1,
+      dispose: () => undefined,
+    });
+    const runtime = createRuntime({
+      sources,
+      computations: createRuntimeComputationRegistry({ sources, computations: [computation] }),
+      initialSnapshots: [createRuntimeSourceInput(a, 1), createRuntimeSourceInput(b, 1)],
+      participants: [participant],
+    });
+    cleanup.length = 0;
+    shouldFail = true;
+    const result = runtime.update({
+      baseRevision: runtime.revision(),
+      sources: [createRuntimeSourceUpdate(a, 2), createRuntimeSourceUpdate(b, 2)],
+    });
+    expect(result.revision).toBe(1);
+    expect(runtime.result(computation).value).toBe(2);
+    expect(cleanup).toEqual(['result:1', 'b:1', 'a:1', 'token']);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0].cause).toBe(cause);
+    expect(result.diagnostics[0].message.length).toBeGreaterThan(0);
+    shouldFail = false;
+    runtime.dispose();
+  });
+
+  it('清理异常的 message getter 失败不覆盖初始化的主要读取异常', () => {
+    const primary = new Error('read failed');
+    const secondary = Object.defineProperty(new Error(), 'message', {
+      get: () => {
+        throw new Error('message failed');
+      },
+    });
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: () => {
+          throw primary;
+        },
+        equals: (left, right) => left === right,
+        dispose: () => {
+          throw secondary;
+        },
+      },
+    });
+    const sources = createRuntimeSourceRegistry([owner]);
+    let failure: unknown;
+    try {
+      createRuntime({
+        sources,
+        computations: createRuntimeComputationRegistry({ sources }),
+        initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+      });
+    } catch (cause) {
+      failure = cause;
+    }
+    expect(failure).toBeInstanceOf(RetikzRuntimeError);
+    if (!(failure instanceof RetikzRuntimeError)) throw new Error('expected lifecycle error');
+    expect(failure.code).toBe(RetikzRuntimeErrorCode.ReadFailed);
+    expect(failure.cause).toBe(primary);
+    expect(failure.diagnostics[0].cause).toBe(secondary);
+  });
+
+  it('最终 Source dispose 的不可转成文本异常不阻断清理和 disposed 门禁', () => {
+    const cleanup: Array<string> = [];
+    const cause = Object.create(null);
+    const define = (key: string) =>
+      defineRuntimeSource<number, number, number, never>({
+        key,
+        value: {
+          capture: value => value,
+          read: value => value,
+          equals: (left, right) => left === right,
+          dispose: () => {
+            cleanup.push(key);
+            if (key === 'b') throw cause;
+          },
+        },
+      });
+    const a = define('a');
+    const b = define('b');
+    const sources = createRuntimeSourceRegistry([a, b]);
+    const runtime = createRuntime({
+      sources,
+      computations: createRuntimeComputationRegistry({ sources }),
+      initialSnapshots: [createRuntimeSourceInput(a, 1), createRuntimeSourceInput(b, 1)],
+    });
+    expect(() => runtime.dispose()).not.toThrow();
+    expect(cleanup).toEqual(['b', 'a']);
+    expect(runtime.diagnostics()[0].cause).toBe(cause);
+    expect(() => runtime.snapshot(a)).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.Disposed }));
+    runtime.dispose();
+    expect(cleanup).toEqual(['b', 'a']);
   });
 });

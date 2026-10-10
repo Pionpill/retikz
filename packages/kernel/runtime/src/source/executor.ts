@@ -1,4 +1,5 @@
 import { RuntimeDiagnosticCode } from '../diagnostic';
+import { getRuntimeDiagnosticMessage } from '../diagnostic/internal';
 import type { RuntimeSourceExecutionResult, RuntimeSourceLifecycleDiagnostic } from '../error';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeSourcePhase } from '../error';
 import type { RuntimeIdentityLookup } from '../identity';
@@ -83,7 +84,7 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
         owner: definition.key,
         phase: RuntimeSourcePhase.Retire,
         severity: 'error',
-        message: cause instanceof Error ? cause.message : String(cause),
+        message: getRuntimeDiagnosticMessage(cause),
         cause,
       }),
     ]);

@@ -128,46 +128,6 @@ describe('runtime runtime participant failure lifecycle', () => {
     runtime.dispose();
   });
 
-  it('prepare 返回 malformed token 时稳定拒绝且不执行 commit', () => {
-    const owner = defineCounterSource();
-    const sources = createRuntimeSourceRegistry([owner]);
-    const computations = createRuntimeComputationRegistry({ sources });
-    let commitCalls = 0;
-    let disposeCalls = 0;
-    const malformed = {
-      commit: () => {
-        commitCalls += 1;
-      },
-    };
-    const participant = defineRuntimeCommitParticipant({
-      key: 'malformed',
-      sources: [owner],
-      computations: [],
-      revisionPolicy: 'affected',
-      tracePhases: [],
-      prepare: (() => malformed) as unknown as RuntimeCommitParticipantDefinitionInput<
-        Readonly<Record<string, never>>
-      >['prepare'],
-      read: () => Object.freeze({}),
-      dispose: () => {
-        disposeCalls += 1;
-      },
-    });
-
-    expect(() =>
-      createRuntime({
-        sources,
-        computations,
-        initialSnapshots: [createRuntimeSourceInput(owner, 1)],
-        participants: [participant],
-      }),
-    ).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed, cause: malformed }),
-    );
-    expect(commitCalls).toBe(0);
-    expect(disposeCalls).toBe(1);
-  });
-
   it('claim 后 owner initial capture 失败仍释放 participant 并永久 consumed', () => {
     const trigger = new Error('capture failed');
     const owner = defineRuntimeSource<number, number, number, never>({

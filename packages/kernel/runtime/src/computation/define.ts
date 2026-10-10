@@ -1,5 +1,6 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
 import { RuntimeDiagnosticCode } from '../diagnostic';
+import { getRuntimeDiagnosticMessage } from '../diagnostic/internal';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeSourceToken } from '../source';
 import type { RuntimeRevision } from '../source';
@@ -122,7 +123,7 @@ const resultDisposeDiagnostic = (computation: RuntimeComputationToken, cause: un
     code: RuntimeDiagnosticCode.ResultDisposeFailed,
     phase: 'result-dispose',
     severity: 'error',
-    message: cause instanceof Error ? cause.message : String(cause),
+    message: getRuntimeDiagnosticMessage(cause),
     owner: computation.id.owner,
     computation: computation.id,
     cause,

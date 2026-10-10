@@ -155,7 +155,7 @@ console.log(identities.values().map(identity => identity.path));
 // [['nodes', 'A'], ['nodes', 'B']]
 ```
 
-`has` checks a complete identity: a child path does not imply that its parent exists. A missing identity from the same Source returns `false`; an identity from another Source throws. Construction also rejects foreign owners and duplicate complete paths. An empty identity list is valid.
+`has` checks a complete identity: a child path does not imply that its parent exists. A missing identity from the same Source returns `false`; an identity from another Source throws. Construction reuses the identity constructor’s validation, rejecting empty paths, blank segments, sparse paths, foreign owners and duplicate complete paths. An empty identity list is valid.
 
 `values()` returns identities in segment-by-segment string order, with shorter prefixes first. This is neither insertion order nor locale-sensitive sorting. The lookup owns an independent collection; changing the original list does not affect it.
 
@@ -167,7 +167,7 @@ For example, compare old identities `[A, B]` with new identities `[A, C]`. Query
 
 ### Collecting from a Source
 
-`collectIdentities` receives the complete value produced by `capture` and returns the identities to track within it. Runtime checks ownership and duplicates, then stores an internal lookup. That lookup currently has no public query API and does not automatically drive dependencies or invalidation. Callers needing identity queries still build a lookup from their own identity list, and maintain a data index if they need to retrieve entities.
+`collectIdentities` receives the complete value produced by `capture` and returns the identities to track within it. Runtime applies the same path, ownership and uniqueness validation, then stores an internal lookup. That lookup currently has no public query API and does not automatically drive dependencies or invalidation. Callers needing identity queries still build a lookup from their own identity list, and maintain a data index if they need to retrieve entities.
 
 With a Source's `collectIdentities` callback, Runtime uses this lookup logic while preparing captured state (this section covers the collection contract; update timing and failure handling belong to the Runtime chapter). Reuse `defineRuntimeSource(input)` from [Source](/kernel/packages/runtime/source#defining-a-source): it accepts Source configuration and returns a token. Here, `collectIdentities(value)` additionally accepts the internal value and returns all entity identities. Define a graph Source that captures an independent read-only node list and collects every node's identity:
 

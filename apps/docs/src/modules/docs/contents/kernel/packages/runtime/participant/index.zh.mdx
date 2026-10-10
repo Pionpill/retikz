@@ -261,7 +261,10 @@ type RuntimePreparedCommit = Readonly<{
 所有回调同步执行。回调中使用传入的候选视图，不重入调用 Runtime 的更新或读取方法；`revision()` 可以查询当时已发布的版本，但新版本此时尚未发布。
 
 <SourceLinks
-  sources={[{ label: '候选视图与单次提交契约', path: 'packages/kernel/runtime/src/participant/types.ts' }]}
+  sources={[
+    { label: '候选依赖读取与参与者准备', path: 'packages/kernel/runtime/src/runtime/participant.ts' },
+    { label: '候选视图与单次提交契约', path: 'packages/kernel/runtime/src/participant/types.ts' },
+  ]}
 />
 
 ### 失败与回滚

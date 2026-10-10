@@ -236,6 +236,8 @@ Diagnostics accumulate in the order they occur. Before publication, Runtime free
 
 `severity: 'error'` does not itself mean rollback. For example, resource cleanup failure after publication is an error diagnostic, but the new revision has already published. Computation business warnings from failed transactions are not published as committed warnings; execution diagnostics such as Trace and cleanup failures are retained. Diagnostics are not a complete log of all candidate computations.
 
+Source, computation-result and participant cleanup failures, along with commit-observer failures, preserve the original thrown value as the diagnostic’s `cause`. If that value cannot be converted to text, or reading its `message` throws, Runtime uses a stable explanation and continues subsequent observation or cleanup, preserving published state or the original primary error.
+
 Do not call `runtime.diagnostics()` from a callback while Runtime is executing: it is subject to the non-reentrancy contract. Consume diagnostics after creation, update or disposal finishes. Diagnostics remain readable in the broken and disposed states.
 
 <SourceLinks

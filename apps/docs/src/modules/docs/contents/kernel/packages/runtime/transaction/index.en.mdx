@@ -28,6 +28,10 @@ One transaction may update several Sources. Omitted Sources retain their values,
 
 `createRuntime(options)` accepts registries and initial input, returning an instance for updates and reads. Creation synchronously captures initial values and computes results, publishing revision `0` on success.
 
+Creation fixes the Source and Computation registries, update strategy, Trace sink and participant list for the instance. Replacing those fields on the caller’s configuration object does not change the existing instance; create another instance for a different configuration.
+
+Configuration, update input and callback results follow their TypeScript contracts; plain JavaScript callers are responsible for type validation. Runtime still checks token and registry membership, dependencies, revisions and resource ownership invariants.
+
 ```ts
 declare const createRuntime: (options: RuntimeOptions) => Runtime;
 ```
