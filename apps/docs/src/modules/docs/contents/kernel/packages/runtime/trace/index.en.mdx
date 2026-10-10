@@ -42,8 +42,6 @@ import {
   defineRuntimeComputation,
   defineRuntimeSource,
   PerformanceTraceOutcome, // [!code ++]
-  PerformanceTracePhase, // [!code ++]
-  PerformanceTraceUnit, // [!code ++]
   RetikzRuntimeError, // [!code ++]
   RetikzRuntimeErrorCode, // [!code ++]
 } from '@retikz/runtime';
@@ -73,8 +71,8 @@ const doubled = defineRuntimeComputation<number>({
     // [!code ++]
     {
       // [!code ++]
-      phase: PerformanceTracePhase.Update, // [!code ++]
-      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      phase: 'evaluate', // [!code ++]
+      unit: 'counter-value', // [!code ++]
       outcomes: [PerformanceTraceOutcome.Full], // [!code ++]
     }, // [!code ++]
   ], // [!code ++]
@@ -93,8 +91,8 @@ const doubled = defineRuntimeComputation<number>({
     } // [!code ++]
     context.trace.report({
       // [!code ++]
-      phase: PerformanceTracePhase.Update, // [!code ++]
-      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      phase: 'evaluate', // [!code ++]
+      unit: 'counter-value', // [!code ++]
       outcome: PerformanceTraceOutcome.Full, // [!code ++]
       visited: 1, // [!code ++]
       reused: 0, // [!code ++]
@@ -275,8 +273,8 @@ Trace records **deterministic work counts**, not elapsed time. A record describe
 ```ts
 type PerformanceTraceRecord = Readonly<{
   owner: string;
-  phase: PerformanceTracePhase;
-  unit: PerformanceTraceUnit;
+  phase: string;
+  unit: string;
   outcome: PerformanceTraceOutcome;
   visited: number;
   reused: number;
@@ -287,11 +285,13 @@ type PerformanceTraceRecord = Readonly<{
 </DocTab>
 </DocTabs>
 
-Each `tracePhases` entry declares allowed combinations using `phase`, `unit` and `outcomes`. A phase can use several units, but the same phase/unit pair cannot be declared twice and the allowed outcome list cannot be empty. Invalid definitions throw `TraceDefinitionInvalid` and must be fixed during integration.
+The record owner defines phase and unit names; Runtime has no domain-name whitelist. This example owns `evaluate` and `counter-value`. Core provides IR / Scene units, while Render provides backend stages. Names use exact string equality without case conversion or whitespace trimming.
+
+Each `tracePhases` entry declares allowed combinations using `phase`, `unit` and `outcomes`. A phase can use several units, but the same phase/unit pair cannot be declared twice and the allowed outcome list cannot be empty. Invalid definitions throw `TraceDefinitionInvalid` and must be fixed during integration. Declarations are captured at creation; later changes to the input objects or arrays cannot expand reporting permissions. Omitting `tracePhases` defaults to an empty list that permits no records.
 
 `context.trace.report(record)` accepts all fields above except `owner`. The record must match a declaration. All three counts must be non-negative safe integers; `reused` and `changed` each cannot exceed `visited`, and `bailout` requires `changed: 0`. Runtime does not require `reused + changed === visited`; the algorithm owns the counting semantics.
 
-The example uses `update` as its observation stage even during initialization. A Trace `phase` is distinct from the candidate view's initial/update `phase`. Records also omit Runtime revision and full computation identity; several computations under one Source can share an `owner`.
+The example uses the custom name `evaluate` as its observation stage even during initialization. A Trace `phase` is distinct from the candidate view's initial/update `phase`. Records also omit Runtime revision and full computation identity; several computations under one Source can share an `owner`.
 
 Both computation and participant `context.trace` expose only `owner` and `report`, leaving internal diagnostic consumption to Runtime. When used independently of an instance, `createRuntimeTraceReporter({ owner, phases, sink })` additionally returns `diagnostics()`, which reads and clears that reporter's local diagnostics. This is separate from the instance queue.
 
@@ -376,6 +376,23 @@ coreRuntime.dispose();
 
 Core's full path reports `ir-child` work; updates can additionally report `scene-change`. Its supported root-node style incremental path reports `incremental` with visited, reused and changed counts. Unsupported incremental work falls back to the full path and reports `fallback`. These describe the algorithm's chosen path; Runtime does not infer Core's counts.
 
+When calling `compileToScene` independently, create a reporter with Core's public phases and units. `CoreTracePhase` names compilation stages, while `CoreTraceUnit` names the IR / Scene entities being counted. The reporter's `phases` declares the combinations allowed for this execution. This example reuses the `PerformanceTraceOutcome` import above:
+
+```ts
+import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { createRuntimeTraceReporter } from '@retikz/runtime';
+
+const compileTrace = createRuntimeTraceReporter({
+  owner: '@retikz/core',
+  phases: [{ phase: CoreTracePhase.Compile, unit: CoreTraceUnit.IrChild, outcomes: [PerformanceTraceOutcome.Full] }],
+  sink: record => console.log(record),
+});
+compileToScene({ version: 1, type: 'scene', children: [] }, { trace: compileTrace });
+console.log(compileTrace.diagnostics()); // []
+```
+
+Render exposes backend phases through `RenderTracePhase` in the corresponding public `@retikz/render/svg`, `@retikz/render/canvas`, or `@retikz/render/runtime` entry. Scene entity counts reuse `CoreTraceUnit`. Plot, Table, and custom owners may each declare `compile`, or name domain stages such as `axis-layout`. Compare records by owner, phase, and unit together; a shared phase name does not make work counts interchangeable.
+
 Core domain diagnostics reside in compilation `output.diagnostics`. Runtime transaction, cleanup and observation diagnostics come from update results or the instance queue. Their owners differ. When Core detects a ChangeSet mismatch with actual state, it also explains the fallback through the computation's fallback diagnostics.
 
 <SourceLinks
@@ -419,7 +436,7 @@ Only public members used in this chapter are listed; follow the source links bel
       kind: 'property',
       type: 'ReadonlyArray<RuntimeTracePhaseDefinition>',
       description:
-        'Each item is `{ phase, unit, outcomes }`. phase: compile/update/commit; unit: ir-child/scene-primitive/computation/scene-change; non-empty outcomes may contain full/incremental/bailout/fallback/commit. These are algorithm declarations, not Runtime initial/update phases.',
+        'Each item is `{ phase, unit, outcomes }`. phase and unit are owner-defined strings; non-empty outcomes may contain full/incremental/bailout/fallback/commit. These are algorithm declarations, not Runtime initial/update phases.',
       required: false,
       defaultValue: '[]',
     },

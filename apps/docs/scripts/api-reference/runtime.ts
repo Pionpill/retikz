@@ -102,8 +102,6 @@ const groups = [
       'RuntimeTraceReporter',
       'PerformanceTraceRecord',
       'PerformanceTraceSink',
-      'PerformanceTracePhase',
-      'PerformanceTraceUnit',
       'PerformanceTraceOutcome',
       'PerformanceTraceDiagnostic',
     ],

@@ -10,8 +10,6 @@ import {
   defineRuntimeCommitParticipant,
   defineRuntimeSource,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
   RetikzRuntimeErrorCode,
   RuntimeDiagnosticCode,
   RuntimeComputationPhase,
@@ -241,8 +239,8 @@ describe('runtime runtime participant failure lifecycle', () => {
       revisionPolicy: 'affected',
       tracePhases: [
         {
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.SceneChange,
+          phase: 'update',
+          unit: 'scene-change',
           outcomes: [PerformanceTraceOutcome.Incremental],
         },
       ],

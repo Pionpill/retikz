@@ -193,7 +193,7 @@ export type RuntimeSourceToken = Readonly<{
   <ApiSourceLink
     label={'createRuntimeSourceRegistry'}
     path={'packages/kernel/runtime/src/registry/source-registry.ts'}
-    startLine={46}
+    startLine={40}
   >
     注册来源 token，并拒绝无效 token 与重复 key
   </ApiSourceLink>
@@ -819,7 +819,7 @@ export type RuntimeComputationId = Readonly<{
   <ApiSourceLink
     label={'defineRuntimeComputation'}
     path={'packages/kernel/runtime/src/computation/define.ts'}
-    startLine={171}
+    startLine={172}
   >
     创建不暴露 author callbacks 的 typed Computation token
   </ApiSourceLink>
@@ -1639,8 +1639,8 @@ export type RuntimeComputationTraceReporter = Pick<RuntimeTraceReporter, 'owner'
 
 ### createRuntime / RuntimeOptions
 
-- `createRuntime`：<ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={819}>创建同步 Snapshot transaction runtime</ApiSourceLink>
-- `RuntimeOptions`：<ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>同步 Runtime runtime 的创建配置</ApiSourceLink>
+- `createRuntime`：<ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={487}>创建同步 Snapshot transaction runtime</ApiSourceLink>
+- `RuntimeOptions`：<ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>同步 Runtime 的创建配置，创建后固定注册表、更新策略与 trace 引用</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1741,7 +1741,7 @@ export type Runtime = Readonly<{
     path={'packages/kernel/runtime/src/runtime/constants.ts'}
     startLine={4}
   >
-    Runtime Runtime 更新策略
+    Runtime 更新策略
   </ApiSourceLink>
 </p>
 
@@ -2461,11 +2461,11 @@ export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Re
 
 <ApiTable>
 
-| 成员                | 类型                                     | 默认值 | 说明               |
-| ------------------- | ---------------------------------------- | ------ | ------------------ |
-| `readonly outcomes` | `ReadonlyArray<PerformanceTraceOutcome>` | —      | 阶段允许报告的结果 |
-| `readonly phase`    | `PerformanceTracePhase`                  | —      | 阶段名称           |
-| `readonly unit`     | `PerformanceTraceUnit`                   | —      | 阶段唯一的计数单位 |
+| 成员                | 类型                                     | 默认值 | 说明                                          |
+| ------------------- | ---------------------------------------- | ------ | --------------------------------------------- |
+| `readonly outcomes` | `ReadonlyArray<PerformanceTraceOutcome>` | —      | 阶段允许报告的结果                            |
+| `readonly phase`    | `string`                                 | —      | owner 自定义的阶段名称                        |
+| `readonly unit`     | `string`                                 | —      | 与阶段共同标识声明组合的 owner 自定义计数单位 |
 
 </ApiTable>
 
@@ -2475,8 +2475,8 @@ export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Re
 
 ```ts
 export type RuntimeTracePhaseDefinition = Readonly<{
-  phase: PerformanceTracePhase;
-  unit: PerformanceTraceUnit;
+  phase: string;
+  unit: string;
   outcomes: ReadonlyArray<PerformanceTraceOutcome>;
 }>;
 ```
@@ -2543,9 +2543,9 @@ export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
 | `readonly changed` | `number`                  | —      | 本阶段发生变化的实体 occurrence 数 |
 | `readonly outcome` | `PerformanceTraceOutcome` | —      | 阶段的完成方式                     |
 | `readonly owner`   | `string`                  | —      | 发出记录的 owner                   |
-| `readonly phase`   | `PerformanceTracePhase`   | —      | 被观测的执行阶段                   |
+| `readonly phase`   | `string`                  | —      | 被观测的执行阶段                   |
 | `readonly reused`  | `number`                  | —      | 本阶段复用的实体 occurrence 数     |
-| `readonly unit`    | `PerformanceTraceUnit`    | —      | 阶段使用的计数单位                 |
+| `readonly unit`    | `string`                  | —      | 阶段使用的计数单位                 |
 | `readonly visited` | `number`                  | —      | 本阶段访问的实体 occurrence 数     |
 
 </ApiTable>
@@ -2557,8 +2557,8 @@ export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
 ```ts
 export type PerformanceTraceRecord = Readonly<{
   owner: string;
-  phase: PerformanceTracePhase;
-  unit: PerformanceTraceUnit;
+  phase: string;
+  unit: string;
   outcome: PerformanceTraceOutcome;
   visited: number;
   reused: number;
@@ -2603,50 +2603,13 @@ export type PerformanceTraceSink = (record: PerformanceTraceRecord) => void;
 
 </DocTabs>
 
-### PerformanceTracePhase
-
-<p>
-  <ApiSourceLink label={'PerformanceTracePhase'} path={'packages/kernel/runtime/src/trace/constants.ts'} startLine={4}>
-    性能 trace 的执行阶段常量
-  </ApiSourceLink>
-</p>
-
-```ts
-export const PerformanceTracePhase = {
-  Compile: 'compile',
-  Commit: 'commit',
-  Update: 'update',
-} as const;
-
-export type PerformanceTracePhase = ValueOf<typeof PerformanceTracePhase>;
-```
-
-### PerformanceTraceUnit
-
-<p>
-  <ApiSourceLink label={'PerformanceTraceUnit'} path={'packages/kernel/runtime/src/trace/constants.ts'} startLine={17}>
-    性能 trace 的计数单位常量
-  </ApiSourceLink>
-</p>
-
-```ts
-export const PerformanceTraceUnit = {
-  IrChild: 'ir-child',
-  ScenePrimitive: 'scene-primitive',
-  Computation: 'computation',
-  SceneChange: 'scene-change',
-} as const;
-
-export type PerformanceTraceUnit = ValueOf<typeof PerformanceTraceUnit>;
-```
-
 ### PerformanceTraceOutcome
 
 <p>
   <ApiSourceLink
     label={'PerformanceTraceOutcome'}
     path={'packages/kernel/runtime/src/trace/constants.ts'}
-    startLine={32}
+    startLine={4}
   >
     性能 trace 的执行结果常量
   </ApiSourceLink>
@@ -2686,7 +2649,7 @@ export type PerformanceTraceOutcome = ValueOf<typeof PerformanceTraceOutcome>;
 | ---------------- | -------------------------------------------------------- | ------ | --------------------- |
 | `readonly code`  | `'invalid-record' \| 'sink-threw' \| 'reentrant-report'` | —      | 诊断类别              |
 | `readonly owner` | `string`                                                 | —      | reporter 绑定的 owner |
-| `readonly phase` | `PerformanceTracePhase`                                  | —      | 触发诊断的执行阶段    |
+| `readonly phase` | `string`                                                 | —      | 触发诊断的执行阶段    |
 
 </ApiTable>
 
@@ -2698,7 +2661,7 @@ export type PerformanceTraceOutcome = ValueOf<typeof PerformanceTraceOutcome>;
 export type PerformanceTraceDiagnostic = Readonly<{
   code: 'invalid-record' | 'sink-threw' | 'reentrant-report';
   owner: string;
-  phase: PerformanceTracePhase;
+  phase: string;
 }>;
 ```
 

@@ -1,9 +1,4 @@
-import type {
-  PerformanceTracePhase,
-  PerformanceTraceRecord,
-  PerformanceTraceUnit,
-  RuntimeTraceReporter,
-} from '@retikz/runtime';
+import type { PerformanceTraceRecord, RuntimeTraceReporter } from '@retikz/runtime';
 import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 /** 校验一次 full-path trace 的发射基数、诊断与精确工作量 */
@@ -12,8 +7,8 @@ export const assertFullTrace = (
   reporter: RuntimeTraceReporter,
   records: ReadonlyArray<PerformanceTraceRecord>,
   expected: Readonly<{
-    phase: PerformanceTracePhase;
-    unit: PerformanceTraceUnit;
+    phase: PerformanceTraceRecord['phase'];
+    unit: PerformanceTraceRecord['unit'];
     visited: number;
   }>,
 ): PerformanceTraceRecord => {

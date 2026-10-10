@@ -8,13 +8,13 @@ import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '.
 import type { Runtime } from '../../src/runtime';
 import { createRuntime } from '../../src/runtime';
 import { defineRuntimeSource } from '../../src/source';
-import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
+import { PerformanceTraceOutcome } from '../../src/trace';
 import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '../../src/transaction';
 
 const tracePhases = [
   {
-    phase: PerformanceTracePhase.Update,
-    unit: PerformanceTraceUnit.Computation,
+    phase: 'counter-evaluate',
+    unit: 'counter-value',
     outcomes: [PerformanceTraceOutcome.Incremental],
   },
 ];
@@ -41,8 +41,8 @@ describe('runtime runtime diagnostics', () => {
       run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         const invalidRecord = {
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'counter-evaluate',
+          unit: 'counter-value',
           outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
@@ -166,8 +166,8 @@ describe('runtime runtime diagnostics', () => {
           computation: { owner: 'spoofed-owner', key: 'spoofed-computation' },
         });
         context.trace.report({
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'counter-evaluate',
+          unit: 'counter-value',
           outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,
@@ -492,8 +492,8 @@ describe('runtime runtime diagnostics', () => {
       expectedCode: RuntimeDiagnosticCode.TraceReentrant,
       createSink: (readReporter: () => RuntimeComputationTraceReporter | undefined) => () => {
         readReporter()?.report({
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'counter-evaluate',
+          unit: 'counter-value',
           outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
@@ -522,8 +522,8 @@ describe('runtime runtime diagnostics', () => {
       update: (_previous, view, context) => {
         activeReporter = context.trace;
         context.trace.report({
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'counter-evaluate',
+          unit: 'counter-value',
           outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
@@ -713,8 +713,8 @@ describe('runtime runtime diagnostics', () => {
       run: view => ({ kind: RuntimeComputationKind.Full, result: view.snapshot(owner).value }),
       update: (_previous, view, context) => {
         context.trace.report({
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'counter-evaluate',
+          unit: 'counter-value',
           outcome: PerformanceTraceOutcome.Incremental,
           visited: 0,
           reused: 1,

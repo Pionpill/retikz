@@ -3,3 +3,4 @@ export * from './geometry';
 export * from './path-thickness';
 export * from './position';
 export * from './theme';
+export * from './trace';

@@ -193,7 +193,7 @@ export type RuntimeSourceToken = Readonly<{
   <ApiSourceLink
     label={'createRuntimeSourceRegistry'}
     path={'packages/kernel/runtime/src/registry/source-registry.ts'}
-    startLine={46}
+    startLine={40}
   >
     Registers Source tokens, rejecting invalid tokens and duplicate keys
   </ApiSourceLink>
@@ -819,7 +819,7 @@ export type RuntimeComputationId = Readonly<{
   <ApiSourceLink
     label={'defineRuntimeComputation'}
     path={'packages/kernel/runtime/src/computation/define.ts'}
-    startLine={171}
+    startLine={172}
   >
     Creates a typed Computation token without exposing author callbacks
   </ApiSourceLink>
@@ -1639,8 +1639,8 @@ export type RuntimeComputationTraceReporter = Pick<RuntimeTraceReporter, 'owner'
 
 ### createRuntime / RuntimeOptions
 
-- `createRuntime`: <ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={819}>Creates a synchronous snapshot transaction runtime</ApiSourceLink>
-- `RuntimeOptions`: <ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>Options for creating a synchronous Runtime</ApiSourceLink>
+- `createRuntime`: <ApiSourceLink label={"createRuntime"} path={"packages/kernel/runtime/src/runtime/runtime.ts"} startLine={487}>Creates a synchronous snapshot transaction runtime</ApiSourceLink>
+- `RuntimeOptions`: <ApiSourceLink label={"RuntimeOptions"} path={"packages/kernel/runtime/src/runtime/types.ts"} startLine={11}>Configuration for a synchronous Runtime; registries, update strategy, and trace callback are fixed at creation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1741,7 +1741,7 @@ export type Runtime = Readonly<{
     path={'packages/kernel/runtime/src/runtime/constants.ts'}
     startLine={4}
   >
-    Runtime update strategies
+    Runtime update strategy
   </ApiSourceLink>
 </p>
 
@@ -2461,11 +2461,11 @@ export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Re
 
 <ApiTable>
 
-| Member              | Type                                     | Default | Description                        |
-| ------------------- | ---------------------------------------- | ------- | ---------------------------------- |
-| `readonly outcomes` | `ReadonlyArray<PerformanceTraceOutcome>` | —       | Outcomes the phase may report      |
-| `readonly phase`    | `PerformanceTracePhase`                  | —       | Phase name                         |
-| `readonly unit`     | `PerformanceTraceUnit`                   | —       | Single counting unit for the phase |
+| Member              | Type                                     | Default | Description                                                                       |
+| ------------------- | ---------------------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `readonly outcomes` | `ReadonlyArray<PerformanceTraceOutcome>` | —       | Outcomes the phase may report                                                     |
+| `readonly phase`    | `string`                                 | —       | Owner-defined phase name                                                          |
+| `readonly unit`     | `string`                                 | —       | Owner-defined counting unit that identifies a declaration together with its phase |
 
 </ApiTable>
 
@@ -2475,8 +2475,8 @@ export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Re
 
 ```ts
 export type RuntimeTracePhaseDefinition = Readonly<{
-  phase: PerformanceTracePhase;
-  unit: PerformanceTraceUnit;
+  phase: string;
+  unit: string;
   outcomes: ReadonlyArray<PerformanceTraceOutcome>;
 }>;
 ```
@@ -2543,9 +2543,9 @@ export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
 | `readonly changed` | `number`                  | —       | Number of entity occurrences changed in this phase |
 | `readonly outcome` | `PerformanceTraceOutcome` | —       | How the phase completed                            |
 | `readonly owner`   | `string`                  | —       | Owner emitting the record                          |
-| `readonly phase`   | `PerformanceTracePhase`   | —       | Observed execution phase                           |
+| `readonly phase`   | `string`                  | —       | Observed execution phase                           |
 | `readonly reused`  | `number`                  | —       | Number of entity occurrences reused in this phase  |
-| `readonly unit`    | `PerformanceTraceUnit`    | —       | Counting unit used by the phase                    |
+| `readonly unit`    | `string`                  | —       | Counting unit used by the phase                    |
 | `readonly visited` | `number`                  | —       | Number of entity occurrences visited in this phase |
 
 </ApiTable>
@@ -2557,8 +2557,8 @@ export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
 ```ts
 export type PerformanceTraceRecord = Readonly<{
   owner: string;
-  phase: PerformanceTracePhase;
-  unit: PerformanceTraceUnit;
+  phase: string;
+  unit: string;
   outcome: PerformanceTraceOutcome;
   visited: number;
   reused: number;
@@ -2603,50 +2603,13 @@ export type PerformanceTraceSink = (record: PerformanceTraceRecord) => void;
 
 </DocTabs>
 
-### PerformanceTracePhase
-
-<p>
-  <ApiSourceLink label={'PerformanceTracePhase'} path={'packages/kernel/runtime/src/trace/constants.ts'} startLine={4}>
-    Performance trace phase constants
-  </ApiSourceLink>
-</p>
-
-```ts
-export const PerformanceTracePhase = {
-  Compile: 'compile',
-  Commit: 'commit',
-  Update: 'update',
-} as const;
-
-export type PerformanceTracePhase = ValueOf<typeof PerformanceTracePhase>;
-```
-
-### PerformanceTraceUnit
-
-<p>
-  <ApiSourceLink label={'PerformanceTraceUnit'} path={'packages/kernel/runtime/src/trace/constants.ts'} startLine={17}>
-    Performance trace counting unit constants
-  </ApiSourceLink>
-</p>
-
-```ts
-export const PerformanceTraceUnit = {
-  IrChild: 'ir-child',
-  ScenePrimitive: 'scene-primitive',
-  Computation: 'computation',
-  SceneChange: 'scene-change',
-} as const;
-
-export type PerformanceTraceUnit = ValueOf<typeof PerformanceTraceUnit>;
-```
-
 ### PerformanceTraceOutcome
 
 <p>
   <ApiSourceLink
     label={'PerformanceTraceOutcome'}
     path={'packages/kernel/runtime/src/trace/constants.ts'}
-    startLine={32}
+    startLine={4}
   >
     Performance trace outcome constants
   </ApiSourceLink>
@@ -2686,7 +2649,7 @@ export type PerformanceTraceOutcome = ValueOf<typeof PerformanceTraceOutcome>;
 | ---------------- | -------------------------------------------------------- | ------- | --------------------------------------------- |
 | `readonly code`  | `'invalid-record' \| 'sink-threw' \| 'reentrant-report'` | —       | Diagnostic category                           |
 | `readonly owner` | `string`                                                 | —       | Owner bound to the reporter                   |
-| `readonly phase` | `PerformanceTracePhase`                                  | —       | Execution phase that triggered the diagnostic |
+| `readonly phase` | `string`                                                 | —       | Execution phase that triggered the diagnostic |
 
 </ApiTable>
 
@@ -2698,7 +2661,7 @@ export type PerformanceTraceOutcome = ValueOf<typeof PerformanceTraceOutcome>;
 export type PerformanceTraceDiagnostic = Readonly<{
   code: 'invalid-record' | 'sink-threw' | 'reentrant-report';
   owner: string;
-  phase: PerformanceTracePhase;
+  phase: string;
 }>;
 ```
 

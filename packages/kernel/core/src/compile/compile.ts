@@ -1,8 +1,9 @@
 import type { RuntimeRevision } from '@retikz/runtime';
-import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
+import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 import type { AnyCompositeDefinition, CompileObserverDefinition, CompileObserverOutput, Scene } from '../contract';
 import type { IRScene } from '../schemas';
+import { CoreTracePhase, CoreTraceUnit } from '../shared';
 import type { RuntimePrimitiveMetadataTable } from './orchestration';
 import {
   compileChildrenToPrimitives,
@@ -112,8 +113,8 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
   const spatialHandleIndex = materializeSpatialHandleIndex(spatialHandles, round);
   if (context.trace !== undefined) {
     context.trace.reporter.report({
-      phase: PerformanceTracePhase.Compile,
-      unit: PerformanceTraceUnit.IrChild,
+      phase: CoreTracePhase.Compile,
+      unit: CoreTraceUnit.IrChild,
       outcome: PerformanceTraceOutcome.Full,
       visited: context.trace.visited,
       reused: 0,

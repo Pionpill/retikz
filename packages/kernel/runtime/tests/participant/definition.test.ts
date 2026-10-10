@@ -43,8 +43,8 @@ describe('runtime commit participant definition', () => {
     const outcomes: Array<runtime.PerformanceTraceOutcome> = [runtime.PerformanceTraceOutcome.Incremental];
     const tracePhases = [
       {
-        phase: runtime.PerformanceTracePhase.Update,
-        unit: runtime.PerformanceTraceUnit.SceneChange,
+        phase: 'update',
+        unit: 'scene-change',
         outcomes,
       },
     ];
@@ -63,8 +63,8 @@ describe('runtime commit participant definition', () => {
 
     expect(participant.tracePhases).toEqual([
       {
-        phase: runtime.PerformanceTracePhase.Update,
-        unit: runtime.PerformanceTraceUnit.SceneChange,
+        phase: 'update',
+        unit: 'scene-change',
         outcomes: [runtime.PerformanceTraceOutcome.Incremental],
       },
     ]);

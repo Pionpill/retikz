@@ -20,12 +20,7 @@ import {
 } from '../../src/registry';
 import type { RuntimeSourceToken, RuntimeRevision } from '../../src/source';
 import { defineRuntimeSource } from '../../src/source';
-import {
-  createRuntimeTraceReporter,
-  PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
-} from '../../src/trace';
+import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '../../src/trace';
 
 const defineSource = (key: string) =>
   defineRuntimeSource<number, number, number, never>({
@@ -80,8 +75,8 @@ describe('runtime computation definition and registry', () => {
     const outcomes: Array<PerformanceTraceOutcome> = [PerformanceTraceOutcome.Full];
     const tracePhases = [
       {
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.Computation,
+        phase: 'update',
+        unit: 'computation',
         outcomes,
       },
     ];
@@ -137,8 +132,8 @@ describe('runtime computation definition and registry', () => {
     expect(executor.computations).toEqual([]);
     expect(executor.tracePhases).toEqual([
       {
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.Computation,
+        phase: 'update',
+        unit: 'computation',
         outcomes: [PerformanceTraceOutcome.Full],
       },
     ]);
@@ -156,18 +151,18 @@ describe('runtime computation definition and registry', () => {
 
   it.each([
     {
-      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Computation, outcomes: [] }],
+      tracePhases: [{ phase: 'update', unit: 'computation', outcomes: [] }],
     },
     {
       tracePhases: [
         {
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'update',
+          unit: 'computation',
           outcomes: [PerformanceTraceOutcome.Full],
         },
         {
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'update',
+          unit: 'computation',
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],

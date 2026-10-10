@@ -9,8 +9,6 @@ import {
   defineRuntimeCommitParticipant,
   defineRuntimeSource,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
   RetikzRuntimeError,
   RetikzRuntimeErrorCode,
   RuntimeDiagnosticCode,
@@ -40,16 +38,16 @@ describe('runtime runtime participant diagnostics', () => {
       revisionPolicy: 'continuous',
       tracePhases: [
         {
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.SceneChange,
+          phase: 'backend-reconcile',
+          unit: 'host-operation',
           outcomes: [PerformanceTraceOutcome.Incremental],
         },
       ],
       prepare: (_candidate, context) => {
         capturedContext = context;
         context.trace.report({
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.SceneChange,
+          phase: 'backend-reconcile',
+          unit: 'host-operation',
           outcome: PerformanceTraceOutcome.Incremental,
           visited: 1,
           reused: 0,
@@ -79,7 +77,10 @@ describe('runtime runtime participant diagnostics', () => {
     const report = capturedContext.trace.report;
 
     expect(getRuntimeTraceReporterDiagnosticDrainCount(report)).toBe(4);
-    expect(runtime.diagnostics().map(diagnostic => diagnostic.code)).toEqual([
+    const diagnostics = runtime.diagnostics();
+    expect(diagnostics[0]?.phase).toBe('trace');
+    expect(diagnostics[0]?.message).toContain('backend-reconcile');
+    expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
       RuntimeDiagnosticCode.TraceSinkFailed,
       'RENDER_FALLBACK',
     ]);
@@ -149,8 +150,8 @@ describe('runtime runtime participant diagnostics', () => {
       revisionPolicy: 'continuous',
       tracePhases: [
         {
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.SceneChange,
+          phase: 'update',
+          unit: 'scene-change',
           outcomes: [PerformanceTraceOutcome.Incremental],
         },
       ],

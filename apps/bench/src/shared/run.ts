@@ -1,4 +1,11 @@
-import { compileToScene, CORE_SOURCE_KEY, CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import {
+  compileToScene,
+  CORE_SOURCE_KEY,
+  CoreSourceDefinition,
+  createCoreComputation,
+  CoreTracePhase,
+  CoreTraceUnit,
+} from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeSourceInput,
@@ -8,8 +15,6 @@ import {
   createRuntime,
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
 } from '@retikz/runtime';
 
 import type { BenchmarkExecution, DeterministicBenchmarkResult } from './budget';
@@ -48,8 +53,8 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
       owner: '@retikz/core',
       phases: [
         {
-          phase: PerformanceTracePhase.Compile,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Compile,
+          unit: CoreTraceUnit.IrChild,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
@@ -57,8 +62,8 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     });
     const compiled = compileToScene(createSimpleNodeScene(size), { trace: reporter });
     const coreRecord = assertFullTrace(`core-full-${size}`, reporter, coreRecords, {
-      phase: PerformanceTracePhase.Compile,
-      unit: PerformanceTraceUnit.IrChild,
+      phase: CoreTracePhase.Compile,
+      unit: CoreTraceUnit.IrChild,
       visited: size,
     });
     const sceneOracle = stableHash(compiled.scene);
@@ -87,8 +92,8 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     const result = session.result(program).value;
     const record = assertSingleTraceRecord('core-single-entity-update-5000', records, {
       owner: CORE_SOURCE_KEY,
-      phase: PerformanceTracePhase.Update,
-      unit: PerformanceTraceUnit.IrChild,
+      phase: CoreTracePhase.Update,
+      unit: CoreTraceUnit.IrChild,
       outcome: PerformanceTraceOutcome.Incremental,
       visited: 5_000,
       reused: 4_999,
@@ -96,8 +101,8 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
     });
     assertSingleTraceRecord('core-single-entity-update-5000', records, {
       owner: CORE_SOURCE_KEY,
-      phase: PerformanceTracePhase.Update,
-      unit: PerformanceTraceUnit.SceneChange,
+      phase: CoreTracePhase.Update,
+      unit: CoreTraceUnit.SceneChange,
       outcome: PerformanceTraceOutcome.Incremental,
       visited: 1,
       reused: 0,

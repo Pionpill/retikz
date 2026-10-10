@@ -6,7 +6,7 @@ import { defineRuntimeComputation, RuntimeComputationKind } from '../../src/comp
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
 import { createRuntime } from '../../src/runtime';
 import { defineRuntimeSource } from '../../src/source';
-import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
+import { PerformanceTraceOutcome } from '../../src/trace';
 import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '../../src/transaction';
 
 const defineSource = () =>
@@ -226,16 +226,16 @@ describe('runtime callback contract', () => {
       computations: [],
       tracePhases: [
         {
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'update',
+          unit: 'computation',
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
       result: { capture: value => value, readForComputation: value => value, read: value => value },
       run: (view, context) => {
         context.trace.report({
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Computation,
+          phase: 'update',
+          unit: 'computation',
           outcome: PerformanceTraceOutcome.Full,
           visited: 0,
           reused: 1,

@@ -1,14 +1,10 @@
+import { CoreTraceUnit } from '@retikz/core';
 import type { Scene } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-import {
-  createRuntimeTraceReporter,
-  PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
-} from '@retikz/runtime';
+import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
-import { buildSvgDocument } from '../../../src/svg';
+import { buildSvgDocument, RenderTracePhase } from '../../../src/svg';
 
 const scene: Scene = {
   layout: { x: 0, y: 0, width: 40, height: 20 },
@@ -30,8 +26,8 @@ describe('buildSvgDocument performance trace', () => {
       owner: '@retikz/render:svg',
       phases: [
         {
-          phase: PerformanceTracePhase.Commit,
-          unit: PerformanceTraceUnit.ScenePrimitive,
+          phase: RenderTracePhase.Commit,
+          unit: CoreTraceUnit.ScenePrimitive,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
@@ -44,8 +40,8 @@ describe('buildSvgDocument performance trace', () => {
     expect(records).toEqual([
       {
         owner: '@retikz/render:svg',
-        phase: PerformanceTracePhase.Commit,
-        unit: PerformanceTraceUnit.ScenePrimitive,
+        phase: RenderTracePhase.Commit,
+        unit: CoreTraceUnit.ScenePrimitive,
         outcome: PerformanceTraceOutcome.Full,
         visited: 3,
         reused: 0,

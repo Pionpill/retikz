@@ -42,8 +42,6 @@ import {
   defineRuntimeComputation,
   defineRuntimeSource,
   PerformanceTraceOutcome, // [!code ++]
-  PerformanceTracePhase, // [!code ++]
-  PerformanceTraceUnit, // [!code ++]
   RetikzRuntimeError, // [!code ++]
   RetikzRuntimeErrorCode, // [!code ++]
 } from '@retikz/runtime';
@@ -73,8 +71,8 @@ const doubled = defineRuntimeComputation<number>({
     // [!code ++]
     {
       // [!code ++]
-      phase: PerformanceTracePhase.Update, // [!code ++]
-      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      phase: 'evaluate', // [!code ++]
+      unit: 'counter-value', // [!code ++]
       outcomes: [PerformanceTraceOutcome.Full], // [!code ++]
     }, // [!code ++]
   ], // [!code ++]
@@ -93,8 +91,8 @@ const doubled = defineRuntimeComputation<number>({
     } // [!code ++]
     context.trace.report({
       // [!code ++]
-      phase: PerformanceTracePhase.Update, // [!code ++]
-      unit: PerformanceTraceUnit.Computation, // [!code ++]
+      phase: 'evaluate', // [!code ++]
+      unit: 'counter-value', // [!code ++]
       outcome: PerformanceTraceOutcome.Full, // [!code ++]
       visited: 1, // [!code ++]
       reused: 0, // [!code ++]
@@ -266,8 +264,8 @@ Trace 是**确定性的工作量记录**，没有耗时字段。本例的一条�
 ```ts
 type PerformanceTraceRecord = Readonly<{
   owner: string;
-  phase: PerformanceTracePhase;
-  unit: PerformanceTraceUnit;
+  phase: string;
+  unit: string;
   outcome: PerformanceTraceOutcome;
   visited: number;
   reused: number;
@@ -278,11 +276,13 @@ type PerformanceTraceRecord = Readonly<{
 </DocTab>
 </DocTabs>
 
-`tracePhases` 中每项用 `phase`、`unit` 和 `outcomes` 声明可报告的组合。同一阶段可以使用不同单位，但同一阶段与单位不能重复声明，允许的结果列表不能为空；定义错误会抛出 `TraceDefinitionInvalid`，应在接入时修正。
+phase 与 unit 由记录所属的 owner 定义，Runtime 不提供领域名称白名单。本例的 `evaluate` 与 `counter-value` 是调用方自己的词汇；Core 的 IR / Scene 单位由 Core 提供，后端阶段由 Render 提供。名称按精确字符串比较，不进行大小写转换或去除空格。
+
+`tracePhases` 中每项用 `phase`、`unit` 和 `outcomes` 声明可报告的组合。同一阶段可以使用不同单位，但同一阶段与单位不能重复声明，允许的结果列表不能为空；定义错误会抛出 `TraceDefinitionInvalid`，应在接入时修正。声明在创建时形成快照，之后修改原始对象或数组不会扩大报告权限；省略 `tracePhases` 时默认为空，不能报告任何记录。
 
 `context.trace.report(record)` 接收上表除 `owner` 外的字段。记录必须符合已声明的组合；三个计数都是非负安全整数，`reused` 和 `changed` 各自不能超过 `visited`，`bailout` 的 `changed` 必须为 `0`。Runtime 不要求 `reused + changed === visited`，具体计数含义由算法负责。
 
-本例使用 `update` 作为算法的观测阶段，初始化也会报告它；Trace 的 `phase` 不等同于候选视图区分首次与后续执行的 `phase`。记录也不包含 Runtime 版本或完整计算身份，同一来源下多个计算可能共享 `owner`。
+本例使用自定义的 `evaluate` 作为算法的观测阶段，初始化也会报告它；Trace 的 `phase` 不等同于候选视图区分首次与后续执行的 `phase`。记录也不包含 Runtime 版本或完整计算身份，同一来源下多个计算可能共享 `owner`。
 
 计算与参与者的 `context.trace` 都只提供 `owner` 和 `report`，由 Runtime 统一消费内部诊断。只有脱离实例独立使用 `createRuntimeTraceReporter({ owner, phases, sink })` 时，返回的 reporter 才另外提供 `diagnostics()`，读取并清空它自己的局部诊断；这与实例诊断队列不同。
 
@@ -364,6 +364,23 @@ coreRuntime.dispose();
 
 Core 的全量路径报告 `ir-child` 工作量；更新时还可报告 `scene-change`。受支持的根节点样式增量路径报告 `incremental` 及访问、复用和变化计数；不能增量处理时回退全量路径，记录 `fallback`。这说明算法采用了什么路径，不表示 Runtime 替 Core 推断了计数。
 
+独立调用 `compileToScene` 时，可用 Core 的公开阶段与单位创建 reporter。`CoreTracePhase` 描述编译阶段，`CoreTraceUnit` 描述被计数的 IR / Scene 实体；传入 reporter 的 `phases` 才是这次执行允许报告的组合。下面沿用前文的 `PerformanceTraceOutcome` 导入：
+
+```ts
+import { compileToScene, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
+import { createRuntimeTraceReporter } from '@retikz/runtime';
+
+const compileTrace = createRuntimeTraceReporter({
+  owner: '@retikz/core',
+  phases: [{ phase: CoreTracePhase.Compile, unit: CoreTraceUnit.IrChild, outcomes: [PerformanceTraceOutcome.Full] }],
+  sink: record => console.log(record),
+});
+compileToScene({ version: 1, type: 'scene', children: [] }, { trace: compileTrace });
+console.log(compileTrace.diagnostics()); // []
+```
+
+Render 的后端阶段使用 `RenderTracePhase`，从对应的 `@retikz/render/svg`、`@retikz/render/canvas` 或 `@retikz/render/runtime` 公开入口导入；计数 Scene 实体时复用 `CoreTraceUnit`。Plot、Table 和自定义 owner 可以各自声明 `compile`，也可以使用 `axis-layout` 等领域阶段。比较记录时同时使用 owner、phase 和 unit，不能仅凭阶段同名就合并工作量。
+
 Core 的领域诊断保存在编译输出的 `output.diagnostics`；Runtime 的事务、清理与观测诊断来自更新返回值或实例队列。两者归属不同。Core 发现 ChangeSet 与实际状态不符时，还会通过计算的 fallback 诊断说明回退原因。
 
 <SourceLinks
@@ -405,7 +422,7 @@ Core 的领域诊断保存在编译输出的 `output.diagnostics`；Runtime 的�
       kind: 'property',
       type: 'ReadonlyArray<RuntimeTracePhaseDefinition>',
       description:
-        '每项为 `{ phase, unit, outcomes }`。phase: compile/update/commit；unit: ir-child/scene-primitive/computation/scene-change；outcomes 非空，可含 full/incremental/bailout/fallback/commit。组合表示算法声明，阶段不等于 Runtime 的 initial/update。',
+        '每项为 `{ phase, unit, outcomes }`。phase 与 unit 是 owner 自定义字符串；outcomes 非空，可含 full/incremental/bailout/fallback/commit。组合表示算法声明，阶段不等于 Runtime 的 initial/update。',
       required: false,
       defaultValue: '[]',
     },
