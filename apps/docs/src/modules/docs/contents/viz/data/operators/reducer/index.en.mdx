@@ -1,0 +1,205 @@
+---
+title: reducer · Reduction
+description: Use built-in reducers for counts, sums, centers, extrema, extents, and quantile bands, and form summary rows with summarize.
+---
+
+A batch of orders can become a total revenue, a median, or a numeric interval. A reducer reads a group of rows and returns the declared statistical fields. This page uses `summarize` to combine those fields with group keys into summary rows. See [Computation operators](/viz/data/operators) for the division of responsibilities.
+
+There are nine built-in reducers, grouped below by related behavior. The demos compare one order dataset with its actual output in side-by-side tables. “Group by team” controls the host's `params.groupBy`; turning it off puts all orders in one group. Orange marks source value cells supporting the current result; blue marks statistical columns. For order statistics, all value cells tied at a selected endpoint are highlighted.
+
+## count · Count
+
+`count` counts rows in a group without reading a numeric field, including rows with missing numeric values. Its schema is `BuiltinReducerOperationSchemas.Count`, with the following parameters:
+
+| Property | Type      | Description                                      |
+| -------- | --------- | ------------------------------------------------ |
+| `kind`   | `'count'` | Computation type                                 |
+| `as`     | `string`  | Required, nonblank name for the row-count output |
+
+<ComponentPreview
+  files={['reducer-count', 'reducer-count.preview.tsx', 'reducer-count.data.ts']}
+  defaultSourceFile="reducer-count.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Order details on the left, counts on the right; blue marks the new count column. Toggle grouping to compare group counts with the total"
+/>
+
+## sum · Sum
+
+`sum` adds the finite numbers in the specified field and returns their total. Missing and nonfinite values do not contribute. Its schema is `BuiltinReducerOperationSchemas.Sum`, with the following parameters:
+
+| Property | Type     | Description                                  |
+| -------- | -------- | -------------------------------------------- |
+| `kind`   | `'sum'`  | Computation type                             |
+| `field`  | `string` | Required, nonblank numeric source field name |
+| `as`     | `string` | Required, nonblank sum output field name     |
+
+<ComponentPreview
+  files={[
+    'reducer-sum',
+    'reducer-sum.preview.tsx',
+    'reducer-sum.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-sum.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Adjust the revenue of order 4 in team A and compare the details on the left with total on the right; blue marks statistical columns"
+/>
+
+## mean / median · Mean and median
+
+`mean` computes the arithmetic mean of finite numbers. `median` sorts them and takes the middle value, averaging the two middle values for an even count. Both skip missing and nonfinite values. Their schemas are `BuiltinReducerOperationSchemas.Mean` and `BuiltinReducerOperationSchemas.Median`, with the following parameters:
+
+| Property | Type                 | Description                                      |
+| -------- | -------------------- | ------------------------------------------------ |
+| `kind`   | `'mean' \| 'median'` | Computation type                                 |
+| `field`  | `string`             | Required, nonblank numeric source field name     |
+| `as`     | `string`             | Required, nonblank statistical output field name |
+
+<ComponentPreview
+  files={[
+    'reducer-center',
+    'reducer-center.preview.tsx',
+    'reducer-center.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-center.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between mean and median, then adjust the revenue of order 4 in team A to see how center responds to a large value"
+/>
+
+## min / max · Minimum and maximum
+
+`min` and `max` return the finite numeric extrema of the specified field. Their schemas are `BuiltinReducerOperationSchemas.Min` and `BuiltinReducerOperationSchemas.Max`, with the following parameters:
+
+| Property | Type             | Description                                   |
+| -------- | ---------------- | --------------------------------------------- |
+| `kind`   | `'min' \| 'max'` | Computation type                              |
+| `field`  | `string`         | Required, nonblank numeric source field name  |
+| `as`     | `string`         | Required, nonblank extremum output field name |
+
+<ComponentAlert
+  type="tip"
+  title="How this differs from selector min/max"
+  description={
+    <>
+      Reducer min/max write the extreme value to the statistical field named by <code>as</code>;{' '}
+      <a href="/viz/data/operators/selector">selector min/max</a> select the original records with that value, preserve
+      their other fields, and use <code>tie</code> to choose one or all tied records. Use a reducer when you need the
+      extreme value, and a selector when you need the records that produced it.
+    </>
+  }
+/>
+
+<ComponentPreview
+  files={[
+    'reducer-extrema',
+    'reducer-extrema.preview.tsx',
+    'reducer-extrema.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-extrema.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between minimum and maximum and compare the source values with extreme; adjust order 4 in team A to see when the extremum changes"
+/>
+
+## extent · Extent
+
+`extent` computes the finite numeric minimum and maximum of the specified field and writes them to two continuous fields. Its schema is `BuiltinReducerOperationSchemas.Extent`, with the following parameters:
+
+| Property | Type       | Description                                                          |
+| -------- | ---------- | -------------------------------------------------------------------- |
+| `kind`   | `'extent'` | Computation type                                                     |
+| `field`  | `string`   | Required, nonblank numeric source field name                         |
+| `as.min` | `string`   | Required, nonblank minimum output field name                         |
+| `as.max` | `string`   | Required, nonblank maximum output field name, distinct from `as.min` |
+
+<ComponentPreview
+  files={[
+    'reducer-extent',
+    'reducer-extent.preview.tsx',
+    'reducer-extent.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-extent.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Adjust the revenue of order 4 in team A and observe the min and max columns"
+/>
+
+## quantile · Quantile
+
+`quantile` returns the quantile at a specified probability. After sorting the finite numbers, the position is $h=(m-1)p$, where $m$ is the number of participating values. Positions between two values use linear interpolation, so the result need not be an input value. `p=0` and `p=1` return the minimum and maximum. Its schema is `BuiltinReducerOperationSchemas.Quantile`, with the following parameters:
+
+| Property | Type         | Description                                            |
+| -------- | ------------ | ------------------------------------------------------ |
+| `kind`   | `'quantile'` | Computation type                                       |
+| `field`  | `string`     | Required, nonblank numeric source field name           |
+| `p`      | `number`     | Required, probability from 0 to 1, including endpoints |
+| `as`     | `string`     | Required, nonblank quantile output field name          |
+
+<ComponentPreview
+  files={[
+    'reducer-quantile',
+    'reducer-quantile.preview.tsx',
+    'reducer-quantile.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-quantile.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Move the probability slider and compare the source values with quantile to observe interpolation and both endpoints"
+/>
+
+## quantile-band · Quantile band
+
+`quantile-band` computes lower and upper quantiles in one operation. It can also output additional quantiles, interval width, finite-value count, and whiskers. Each result is named separately through `outputs`.
+
+For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMax` whiskers use the observed minimum and maximum. `spread` constructs fences $[L-fS,U+fS]$, then takes whisker endpoints from actual observations inside those fences. Fences and whiskers are separate results. Its schema is `BuiltinReducerOperationSchemas.QuantileBand`, with the following parameters:
+
+| Property              | Type                               | Description                                                        |
+| --------------------- | ---------------------------------- | ------------------------------------------------------------------ |
+| `kind`                | `'quantile-band'`                  | Computation type                                                   |
+| `field`               | `string`                           | Required, nonblank numeric source field name                       |
+| `lowerP`              | `number`                           | Required, from 0 to 1; must be less than upperP                    |
+| `upperP`              | `number`                           | Required, from 0 to 1                                              |
+| `outputs`             | `object`                           | Required output mapping; all names must be nonblank and unique     |
+| `outputs.lower`       | `string`                           | Required, lower quantile output field name                         |
+| `outputs.upper`       | `string`                           | Required, upper quantile output field name                         |
+| `outputs.points`      | `Array<{ p: number; as: string }>` | Optional, nonempty list of additional quantiles                    |
+| `outputs.points[].p`  | `number`                           | Required, probability from 0 to 1                                  |
+| `outputs.points[].as` | `string`                           | Required, output field name for this quantile                      |
+| `outputs.spread`      | `string`                           | Optional, interval-width output field name                         |
+| `outputs.lowerFence`  | `string`                           | Optional, lower fence output field name for spread                 |
+| `outputs.upperFence`  | `string`                           | Optional, upper fence output field name for spread                 |
+| `outputs.whiskerMin`  | `string`                           | Optional, lower whisker output field name                          |
+| `outputs.whiskerMax`  | `string`                           | Optional, upper whisker output field name                          |
+| `outputs.min`         | `string`                           | Optional, minimum output field name across all finite observations |
+| `outputs.max`         | `string`                           | Optional, maximum output field name across all finite observations |
+| `outputs.count`       | `string`                           | Optional, finite-value count output field name                     |
+| `whisker`             | `object`                           | Optional whisker strategy; omitted means no whiskers               |
+| `whisker.kind`        | `'minMax' \| 'spread'`             | Required when whisker is supplied; selects the strategy            |
+| `whisker.factor`      | `number`                           | Optional, nonnegative, defaults to 1.5; used only by spread        |
+
+<ComponentPreview
+  files={[
+    'reducer-band',
+    'reducer-band.preview.tsx',
+    'reducer-band.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-band.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="The defaults show the 0.25 to 0.75 quantile interval with 1.5-times-spread fences. The demo also outputs a finite-value count, so all finite source value cells are orange. Switch whisker strategies and compare the blue columns; scroll wide tables horizontally"
+/>

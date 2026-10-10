@@ -333,6 +333,8 @@
     "dataModelSchemaReference": "Schema Reference",
     "dataComputation": "Computation and transforms",
     "dataComputationOperators": "Computation operators",
+    "dataComputationReducer": "reducer · Reduction",
+    "dataComputationSelector": "selector · Selection",
     "dataComputationRegression": "regression · Fitting",
     "dataComputationTransforms": "Data transforms",
     "dataTransform": "Data Transforms",

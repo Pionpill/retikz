@@ -157,6 +157,28 @@ export const vizSection: Array<Section> = [
         },
         children: [
           {
+            id: 'selector',
+            label: 'viz.dataComputationSelector',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.selector',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'reducer',
+            label: 'viz.dataComputationReducer',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.reducer',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
             id: 'regression',
             label: 'viz.dataComputationRegression',
             difficulty: DocDifficulty.Beginner,

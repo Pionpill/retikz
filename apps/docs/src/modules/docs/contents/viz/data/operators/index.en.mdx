@@ -1,70 +1,58 @@
 ---
 title: Computation operators
-description: Learn what reduction, row selection, and fitting return, and how a host turns local computation results into data rows.
+description: Browse selection, reduction, and fitting capabilities and their built-in operators.
 ---
 
-Questions such as "What is the total revenue?", "Which record has the highest revenue?", and "What is the revenue trend at a given time?" need different results: statistical fields, an original record, or a predicted value. Computation operators specify the input, parameters, and result of these local calculations.
+Computation operators perform calculations within data transforms, producing statistics, selecting records, or fitting trends; see [Data capabilities · Computation operators](/viz/data/transform/statistics) for how operators work with transforms.
 
-Here, operators refer to Data's reduction, row selection, and fitting capabilities that a host can invoke. A host is a data processing operation that consumes an operator's result, such as a summary or trend-sampling transform. It determines which input to supply and how the result enters output rows.
+| Type       | Name      | Characteristics                                                                              |
+| ---------- | --------- | -------------------------------------------------------------------------------------------- |
+| selector   | Selection | Selects existing records and preserves their field values without producing new observations |
+| reducer    | Reduction | Computes statistics for a group of rows, producing new statistical fields                    |
+| regression | Fitting   | Fits a model to observations for transforms to generate predicted data                       |
 
-Keep original detail data separate from transform results. Built-in hosts do not modify the input rows in place: reducer results produce statistical rows or detail rows with added statistical fields, selector results produce selected records, and regression returns a model for `smooth` to generate prediction rows. In a transform chain, the next stage reads these output rows; they are not automatically appended to the original data.
+Keep original detail data separate from transform results. Built-in hosts do not modify the input rows in place: selector results produce selected records, reducer results produce statistical rows or detail rows with added statistical fields, and regression returns a model for `smooth` to generate prediction rows. In a transform chain, the next stage reads these output rows; they are not automatically appended to the original data.
+
+## Selection
+
+Selectors pick original records by value, order, or rank; see [selector · Selection](/viz/data/operators/selector) for parameters and examples.
+
+| Operator                | Name                            | Description                                                                          |
+| ----------------------- | ------------------------------- | ------------------------------------------------------------------------------------ |
+| `min`                   | Minimum-value records           | Selects records with the smallest value of a numeric field                           |
+| `max`                   | Maximum-value records           | Selects records with the largest value of a numeric field                            |
+| `first`                 | First row                       | Selects the first row in input order or an explicit sort order                       |
+| `last`                  | Last row                        | Selects the last row in input order or an explicit sort order                        |
+| `top`                   | Highest N rows                  | Takes the first N rows in descending numeric order, with cutoff tie handling         |
+| `bottom`                | Lowest N rows                   | Takes the first N rows in ascending numeric order, with cutoff tie handling          |
+| `nth`                   | Row at a specified position     | Selects a row by zero-based index after sorting; out-of-range indices return no rows |
+| `outside-quantile-band` | Records outside a quantile band | Selects records strictly outside a quantile band or expanded fences                  |
 
 ## Reduction
 
-A reducer reads a batch of rows and returns a fragment of statistical fields. For two detail rows with revenue of 120 and 80, a sum can return `total: 200`, and a count can return `orders: 2`.
+Reducers compute one or more statistical fields from a group of rows; see [reducer · Reduction](/viz/data/operators/reducer) for parameters and examples.
 
-A result may contain one or several fields. A quantile-band calculation can provide lower and upper bounds, quantile points, and a count; the operator declares the specific fields. Reduction results are not always a single number.
-
-The statistical fragment does not determine the final row count. `summarize` combines it with group keys and produces one row per group. `annotate` attaches it to the group's detail rows and preserves the row count. Grouping and output granularity belong to the host.
-
-## Row selection
-
-A selector returns selection records. Each record contains a selected original row and may include a rank, preserving fields such as the product name alongside the revenue used for comparison.
-
-Suppose product A has revenue of 120 and product B has 80. A maximum reducer returns a revenue statistic; selecting the maximum-revenue row returns product A's record. Selection may return no records, one record, or several. The specific operator defines how ties are handled.
-
-The host determines how to consume these records. `select` organizes selected records into output rows and can add a rank field. An `annotate` operation that supports selection statistics uses the results to annotate details. Each host constrains the operators it accepts, so a selector is not necessarily supported by every transform.
+| Operator        | Name                         | Description                                                                                 |
+| --------------- | ---------------------------- | ------------------------------------------------------------------------------------------- |
+| `count`         | Row count                    | Counts input rows                                                                           |
+| `sum`           | Sum                          | Adds finite numeric values from a field                                                     |
+| `mean`          | Arithmetic mean              | Computes the mean of a field's finite numeric values                                        |
+| `median`        | Median                       | Takes the middle sorted value, averaging the two middle values for an even count            |
+| `min`           | Minimum value                | Returns a field's smallest finite numeric value                                             |
+| `max`           | Maximum value                | Returns a field's largest finite numeric value                                              |
+| `extent`        | Minimum and maximum interval | Computes the minimum and maximum and writes them to two continuous fields                   |
+| `quantile`      | Quantile                     | Computes a quantile at a probability, using linear interpolation when needed                |
+| `quantile-band` | Quantile band                | Computes lower and upper quantiles, with optional spread, count, whiskers, and other fields |
 
 ## Fitting
 
-A fitting operator reads finite numeric observation pairs, such as time and revenue, and returns a runtime prediction model. The model's `predict(x)` supplies a predicted value at an input position. See [regression · Fitting](/viz/data/operators/regression) for parameters and examples.
+Fitting operators build prediction models from observations for transforms to generate predicted data. See [regression · Fitting](/viz/data/operators/regression) for parameters and examples.
 
-The model is not a table of sampled results. A host such as `smooth` chooses the prediction extent and sample positions, then invokes the model to generate new rows. The fitting method and sampling choices can therefore be expressed separately.
-
-## Results and hosts
-
-| Operator      | Computation result                                            | Work left to the host                                        |
-| ------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
-| Reduction     | A fragment of declared statistical fields                     | Combine group keys, create summary rows, or annotate details |
-| Row selection | Selection records containing original rows and optional ranks | Organize output rows, rank fields, or selection annotations  |
-| Fitting       | A runtime prediction model                                    | Choose sample positions and generate prediction rows         |
-
-Each capability has its own result contract; operators do not all return tables. To understand grouping, final row counts, and field changes, read about the [data transform](/viz/data/transforms) consuming the result.
-
-## Declarations and computation
-
-An operator declaration stores its calculation name and parameters and can be included in JSON IR. A runtime Definition specifies parameter and result semantics, while an Implementation supplies the calculation. Functions and prediction models remain at runtime.
-
-Built-in and custom operators are resolved through the corresponding registries. A replacement implementation must preserve the same Definition's semantics; matching names alone do not establish equivalence. Synchronous and asynchronous entry points also have distinct result requirements. See [Computation Contracts](/viz/data/transform/computation) for integration details.
-
-## Further reading
-
-<LinkedSections
-  items={[
-    {
-      title: 'Computation Operators',
-      description: 'Examine how reduction and selection results cooperate with grouping hosts during execution.',
-      url: '/viz/data/transform/statistics',
-    },
-    {
-      title: 'Extension Mechanisms',
-      description: 'Learn how to define and register computation semantics and implementations.',
-      url: '/viz/data/transform/extensions',
-    },
-    {
-      title: 'Contract',
-      description: 'Look up complete operator declarations and related data contracts.',
-      url: '/viz/data/reference/contract',
-    },
-  ]}
-/>
+| Operator      | Name                   | Description                                                                                                                                   |
+| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linear`      | Linear regression      | Fits a straight-line relationship between the independent and dependent variables                                                             |
+| `quadratic`   | Quadratic regression   | Fits a quadratic curve                                                                                                                        |
+| `polynomial`  | Polynomial regression  | Fits a polynomial curve of the specified degree                                                                                               |
+| `logarithmic` | Logarithmic regression | Fits a linear relationship between the dependent variable and the logarithm of the independent variable; requires positive independent values |
+| `exponential` | Exponential regression | Fits an exponential curve; requires positive dependent values                                                                                 |
+| `power`       | Power regression       | Fits a power curve; requires positive independent and dependent values                                                                        |

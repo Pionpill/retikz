@@ -1,0 +1,136 @@
+---
+title: selector · 选择
+description: 使用内置 selector 选择极值行、首末行、排名记录、指定位置或分位区间外的行，并通过 select 保留原始字段。
+---
+
+selector 从一组数据中选择原始记录，保留这些记录的字段。本页用 `select` 输出选中记录，并通过宿主的 `rankAs` 添加排名列。算子与宿主的职责见[计算算子总览](/viz/data/operators)。
+
+内置 selector 共八个，下文按同类能力合并小节。各 demo 用左右表格比较订单明细与实际选择结果；“按组统计”控制宿主的 `params.groupBy`，关闭后在全部订单中选择。橙色标记选中记录的 `item` 和 `value`，蓝色标记输出内容及排名；`team` 保持普通颜色。
+
+## min / max · 极值行
+
+`min` 和 `max` 选择数值字段最小或最大的原始行，跳过缺失值和非有限数值。并列时，`first` 取输入中较早的记录，`last` 取较晚的记录，`all` 保留全部同值记录。单条选择的排名为 1；选择多条并列记录时，排名按输出顺序从 1 连续编号。极值行的 Schema 分别为 `BuiltinSelectorOperationSchemas.Min` 和 `BuiltinSelectorOperationSchemas.Max`，参数如下：
+
+| 属性   | 类型                         | 说明                                     |
+| ------ | ---------------------------- | ---------------------------------------- |
+| `kind` | `'min' \| 'max'`             | 选择类型                                 |
+| `by`   | `string`                     | 必填，读取的数值字段名，不能为空         |
+| `tie`  | `'first' \| 'last' \| 'all'` | 可选，并列极值的处理策略，默认 `'first'` |
+
+<ComponentPreview
+  files={[
+    'selector-extrema',
+    'selector-extrema.preview.tsx',
+    'selector-extrema.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-extrema.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="每组默认有两条并列最小值和最大值；切换算子与并列策略，观察选中记录，也可调整 a4 的收入打破并列"
+/>
+
+## first / last · 首行与末行
+
+`first` 和 `last` 选择组内首行或末行。省略 `orderBy` 时沿用当前输入顺序；提供规则时先稳定排序，相同排序键保留输入中的相对顺序。这两个算子不要求排序字段为有限数值，返回的排名均为 1。首行与末行的 Schema 分别为 `BuiltinSelectorOperationSchemas.First` 和 `BuiltinSelectorOperationSchemas.Last`，参数如下：
+
+| 属性              | 类型                          | 说明                                             |
+| ----------------- | ----------------------------- | ------------------------------------------------ |
+| `kind`            | `'first' \| 'last'`           | 选择类型                                         |
+| `orderBy`         | `Array<IRDataOrderBy>`        | 可选，非空的排序规则列表；省略时沿用当前输入顺序 |
+| `orderBy[].field` | `string`                      | 必填，该条规则读取的字段名，不能为空             |
+| `orderBy[].order` | `'ascending' \| 'descending'` | 可选，排序方向，默认 `'ascending'`               |
+
+<ComponentPreview
+  files={[
+    'selector-ends',
+    'selector-ends.preview.tsx',
+    'selector-ends.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-ends.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换首行和末行，再切换原始顺序与收入排序，比较左右表格中的记录"
+/>
+
+## top / bottom · 最高与最低 N 行
+
+`top` 按数值降序选择最高 N 行，`bottom` 按数值升序选择最低 N 行；两者跳过缺失值和非有限数值，排名按输出顺序从 1 连续编号。并列策略作用在第 N 行的截断边界：`first` 保留稳定排序的前 N 行，`all` 纳入边界上的全部同值记录，`last` 将最后一个位置替换为边界并列记录中的末条。最高与最低 N 行的 Schema 分别为 `BuiltinSelectorOperationSchemas.Top` 和 `BuiltinSelectorOperationSchemas.Bottom`，参数如下：
+
+| 属性   | 类型                         | 说明                                                                     |
+| ------ | ---------------------------- | ------------------------------------------------------------------------ |
+| `kind` | `'top' \| 'bottom'`          | 选择类型                                                                 |
+| `by`   | `string`                     | 必填，读取的数值字段名，不能为空                                         |
+| `n`    | `number`                     | 必填，正整数；超过有效行数时取全部有效行                                 |
+| `tie`  | `'first' \| 'last' \| 'all'` | 可选，第 N 行边界的并列策略，默认 `'first'`；`'all'` 可能使结果超过 N 行 |
+
+<ComponentPreview
+  files={[
+    'selector-ranked',
+    'selector-ranked.preview.tsx',
+    'selector-ranked.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-ranked.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="选择最高两行并切换并列策略，观察选中的 item 与右侧 rank 列"
+/>
+
+## nth · 指定位置
+
+`nth` 按必填的 `orderBy` 稳定排序，再选择零基下标 `index` 对应的原始行。下标 0 表示第一行，返回排名为 1；其它位置的排名为 `index + 1`。下标越过组内行数时，该组没有选择结果。指定位置的 Schema 为 `BuiltinSelectorOperationSchemas.Nth`，参数如下：
+
+| 属性              | 类型                          | 说明                               |
+| ----------------- | ----------------------------- | ---------------------------------- |
+| `kind`            | `'nth'`                       | 选择类型                           |
+| `orderBy`         | `Array<IRDataOrderBy>`        | 必填，非空的排序规则列表           |
+| `orderBy[].field` | `string`                      | 必填，排序字段名，不能为空         |
+| `orderBy[].order` | `'ascending' \| 'descending'` | 可选，排序方向，默认 `'ascending'` |
+| `index`           | `number`                      | 必填，非负整数，排序后的零基下标   |
+
+<ComponentPreview
+  files={[
+    'selector-nth',
+    'selector-nth.preview.tsx',
+    'selector-nth.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-nth.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="将下标调至 4，观察四行分组的空结果；关闭分组后再次比较"
+/>
+
+## outside-quantile-band · 区间外选择
+
+`outside-quantile-band` 计算数值字段的上下分位点，再选择边界之外的原始行，跳过缺失值和非有限数值。设分位点为 $L$、$U$，`band` 使用区间 $[L,U]$；`spread` 使用围栏 $[L-f(U-L),U+f(U-L)]$。只选择严格小于下界或严格大于上界的记录，等于边界的值属于区间内。输出沿用原始输入顺序，排名从 1 连续编号。区间外选择的 Schema 为 `BuiltinSelectorOperationSchemas.OutsideQuantileBand`，参数如下：
+
+| 属性              | 类型                      | 说明                                           |
+| ----------------- | ------------------------- | ---------------------------------------------- |
+| `kind`            | `'outside-quantile-band'` | 选择类型                                       |
+| `field`           | `string`                  | 必填，读取的数值字段名，不能为空               |
+| `lowerP`          | `number`                  | 必填，范围为 0 到 1，必须小于 `upperP`         |
+| `upperP`          | `number`                  | 必填，范围为 0 到 1                            |
+| `boundary`        | `object`                  | 可选，边界策略；省略时使用 `band`              |
+| `boundary.kind`   | `'band' \| 'spread'`      | 提供 `boundary` 时必填，选择分位区间或扩展围栏 |
+| `boundary.factor` | `number`                  | 可选，非负数，默认 1.5；仅 `spread` 策略使用   |
+
+<ComponentPreview
+  files={[
+    'selector-outside',
+    'selector-outside.preview.tsx',
+    'selector-outside.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-outside.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="示例采用 P25、P75 和 1.5 倍 spread 围栏；切换为 band，比较选中的原始订单"
+/>

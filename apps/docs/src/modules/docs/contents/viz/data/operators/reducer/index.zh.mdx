@@ -1,0 +1,204 @@
+---
+title: reducer · 规约
+description: 使用内置 reducer 计算行数、总和、集中趋势、极值、范围和分位区间，并通过 summarize 形成汇总行。
+---
+
+一批订单可以规约成总收入，也可以规约成中位数或一个数值区间。reducer 读取一组行，返回声明的统计字段；本页用 `summarize` 把这些字段与组键合成汇总行。两者的职责区别见[计算算子总览](/viz/data/operators)。
+
+内置 reducer 共九个，下文按同类能力合并小节。各 demo 用左右表格比较同一批订单的输入与实际输出；“按组统计”对应宿主的 `params.groupBy`，关闭后全部订单属于一组。橙色标记支撑当前结果的原始 value，蓝色标记统计列；排序统计遇到并列端点时，所有同值单元格都会标记。
+
+## count · 计数
+
+`count` 统计组内行数，不读取数值字段，数值缺失的行也会计入。计数的 Schema 为 `BuiltinReducerOperationSchemas.Count`，参数如下：
+
+| 属性   | 类型      | 说明                           |
+| ------ | --------- | ------------------------------ |
+| `kind` | `'count'` | 计算类型                       |
+| `as`   | `string`  | 必填，行数输出字段名，不能为空 |
+
+<ComponentPreview
+  files={['reducer-count', 'reducer-count.preview.tsx', 'reducer-count.data.ts']}
+  defaultSourceFile="reducer-count.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="左侧是订单明细，右侧是计数结果；蓝色标记新增的 count 列。切换分组，比较每组行数与总行数"
+/>
+
+## sum · 求和
+
+`sum` 将指定字段的有限数值相加，返回总和；缺失值和非有限数值不参与计算。求和的 Schema 为 `BuiltinReducerOperationSchemas.Sum`，参数如下：
+
+| 属性    | 类型     | 说明                             |
+| ------- | -------- | -------------------------------- |
+| `kind`  | `'sum'`  | 计算类型                         |
+| `field` | `string` | 必填，读取的数值字段名，不能为空 |
+| `as`    | `string` | 必填，总和输出字段名，不能为空   |
+
+<ComponentPreview
+  files={[
+    'reducer-sum',
+    'reducer-sum.preview.tsx',
+    'reducer-sum.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-sum.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="调整 A 组第 4 笔收入，比较左侧明细与右侧 total；蓝色标记统计列"
+/>
+
+## mean / median · 均值与中位数
+
+`mean` 计算有限数值的算术平均数；`median` 排序后取中间值，偶数个值时取中间两个数的均值。两者都跳过缺失值和非有限数值。均值与中位数的 Schema 分别为 `BuiltinReducerOperationSchemas.Mean` 和 `BuiltinReducerOperationSchemas.Median`，参数如下：
+
+| 属性    | 类型                 | 说明                             |
+| ------- | -------------------- | -------------------------------- |
+| `kind`  | `'mean' \| 'median'` | 计算类型                         |
+| `field` | `string`             | 必填，读取的数值字段名，不能为空 |
+| `as`    | `string`             | 必填，统计输出字段名，不能为空   |
+
+<ComponentPreview
+  files={[
+    'reducer-center',
+    'reducer-center.preview.tsx',
+    'reducer-center.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-center.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换均值和中位数，再调整 A 组第 4 笔收入，观察右侧 center 对偏大收入的响应"
+/>
+
+## min / max · 最小值与最大值
+
+`min` 和 `max` 返回指定字段的有限数值极值。最小值与最大值的 Schema 分别为 `BuiltinReducerOperationSchemas.Min` 和 `BuiltinReducerOperationSchemas.Max`，参数如下：
+
+| 属性    | 类型             | 说明                             |
+| ------- | ---------------- | -------------------------------- |
+| `kind`  | `'min' \| 'max'` | 计算类型                         |
+| `field` | `string`         | 必填，读取的数值字段名，不能为空 |
+| `as`    | `string`         | 必填，极值输出字段名，不能为空   |
+
+<ComponentAlert
+  type="tip"
+  title="与 selector min/max 的区别"
+  description={
+    <>
+      reducer 的 min/max 将最值写入 <code>as</code> 指定的统计字段；
+      <a href="/viz/data/operators/selector">selector 的 min/max</a> 选择达到最值的原始记录，保留其它字段，并通过
+      <code>tie</code> 控制并列时选一条还是全部。只需要最值时用 reducer，需要知道哪条记录达到最值时用 selector。
+    </>
+  }
+/>
+
+<ComponentPreview
+  files={[
+    'reducer-extrema',
+    'reducer-extrema.preview.tsx',
+    'reducer-extrema.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-extrema.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换最小值和最大值，比较原始收入与右侧 extreme；调整 A 组第 4 笔收入查看极值变化"
+/>
+
+## extent · 数值范围
+
+`extent` 同时计算指定字段的有限数值最小值与最大值，分别写入两个连续型字段。数值范围的 Schema 为 `BuiltinReducerOperationSchemas.Extent`，参数如下：
+
+| 属性     | 类型       | 说明                                               |
+| -------- | ---------- | -------------------------------------------------- |
+| `kind`   | `'extent'` | 计算类型                                           |
+| `field`  | `string`   | 必填，读取的数值字段名，不能为空                   |
+| `as.min` | `string`   | 必填，非空的最小值输出字段名                       |
+| `as.max` | `string`   | 必填，非空的最大值输出字段名，不能与 `as.min` 相同 |
+
+<ComponentPreview
+  files={[
+    'reducer-extent',
+    'reducer-extent.preview.tsx',
+    'reducer-extent.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-extent.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="调整 A 组第 4 笔收入，观察 min 与 max 两列的变化"
+/>
+
+## quantile · 分位数
+
+`quantile` 输出指定概率位置的分位点。有限数值排序后，位置为 $h=(m-1)p$，其中 $m$ 是参与计算的数值个数；位置落在两个数之间时线性插值，结果可以不是输入中的某个值。`p=0` 和 `p=1` 分别得到最小值和最大值。分位数的 Schema 为 `BuiltinReducerOperationSchemas.Quantile`，参数如下：
+
+| 属性    | 类型         | 说明                                    |
+| ------- | ------------ | --------------------------------------- |
+| `kind`  | `'quantile'` | 计算类型                                |
+| `field` | `string`     | 必填，读取的数值字段名，不能为空        |
+| `p`     | `number`     | 必填，分位概率，范围为 0 到 1，包含端点 |
+| `as`    | `string`     | 必填，分位点输出字段名，不能为空        |
+
+<ComponentPreview
+  files={[
+    'reducer-quantile',
+    'reducer-quantile.preview.tsx',
+    'reducer-quantile.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-quantile.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="拖动分位概率，比较原始收入与右侧 quantile，观察插值结果及两个端点"
+/>
+
+## quantile-band · 分位区间
+
+`quantile-band` 一次计算上下分位点，也可输出额外分位点、区间宽度、有限值计数和须线。各结果通过 `outputs` 单独命名。
+
+令上下分位点为 $L$、$U$，区间宽度为 $S=U-L$。`minMax` 须线取观测最小值与最大值；`spread` 先构造围栏 $[L-fS,U+fS]$，再从围栏内的实际观测取须线端点。围栏与须线是不同结果。分位区间的 Schema 为 `BuiltinReducerOperationSchemas.QuantileBand`，参数如下：
+
+| 属性                  | 类型                               | 说明                                             |
+| --------------------- | ---------------------------------- | ------------------------------------------------ |
+| `kind`                | `'quantile-band'`                  | 计算类型                                         |
+| `field`               | `string`                           | 必填，读取的数值字段名，不能为空                 |
+| `lowerP`              | `number`                           | 必填，范围为 0 到 1，必须小于 upperP             |
+| `upperP`              | `number`                           | 必填，范围为 0 到 1                              |
+| `outputs`             | `object`                           | 必填，输出字段映射；所有字段名不能为空且不可重复 |
+| `outputs.lower`       | `string`                           | 必填，下分位点输出字段名                         |
+| `outputs.upper`       | `string`                           | 必填，上分位点输出字段名                         |
+| `outputs.points`      | `Array<{ p: number; as: string }>` | 可选，非空的额外分位点列表                       |
+| `outputs.points[].p`  | `number`                           | 必填，分位概率，范围为 0 到 1                    |
+| `outputs.points[].as` | `string`                           | 必填，该分位点的输出字段名                       |
+| `outputs.spread`      | `string`                           | 可选，区间宽度输出字段名                         |
+| `outputs.lowerFence`  | `string`                           | 可选，spread 策略的下围栏输出字段名              |
+| `outputs.upperFence`  | `string`                           | 可选，spread 策略的上围栏输出字段名              |
+| `outputs.whiskerMin`  | `string`                           | 可选，须线最小值输出字段名                       |
+| `outputs.whiskerMax`  | `string`                           | 可选，须线最大值输出字段名                       |
+| `outputs.min`         | `string`                           | 可选，全部有限观测的最小值输出字段名             |
+| `outputs.max`         | `string`                           | 可选，全部有限观测的最大值输出字段名             |
+| `outputs.count`       | `string`                           | 可选，有限数值个数输出字段名                     |
+| `whisker`             | `object`                           | 可选，须线策略；省略时不计算须线                 |
+| `whisker.kind`        | `'minMax' \| 'spread'`             | 提供 whisker 时必填，选择须线策略                |
+| `whisker.factor`      | `number`                           | 可选，非负数，默认 1.5；仅 spread 策略使用       |
+
+<ComponentPreview
+  files={[
+    'reducer-band',
+    'reducer-band.preview.tsx',
+    'reducer-band.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="reducer-band.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="默认展示 0.25 到 0.75 的分位区间及 1.5 倍间距围栏。由于同时输出有效值计数，所有有效 value 都标为橙色。切换须线策略，比较蓝色统计列；宽表可横向滚动"
+/>

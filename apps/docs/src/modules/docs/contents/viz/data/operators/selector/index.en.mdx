@@ -1,0 +1,136 @@
+---
+title: selector · Selection
+description: Use built-in selectors to choose extreme rows, first or last rows, ranked records, a specific position, or rows outside a quantile band, while preserving original fields through select.
+---
+
+A selector chooses original records from a group of rows and preserves their fields. This page uses `select` to output the chosen records and the host's `rankAs` to add a rank column. See the [operator overview](/viz/data/operators) for the responsibilities of operators and host transforms.
+
+The eight built-in selectors are grouped by purpose below. Each demo compares order details on the left with actual selection results on the right. “Group by team” controls the host's `params.groupBy`; turning it off selects across all orders. Orange marks the selected records' `item` and `value` cells. Blue marks output content and ranks; `team` keeps its normal color.
+
+## min / max · Extreme rows
+
+`min` and `max` select the original rows with the smallest or largest numeric field values, skipping missing and non-finite values. For ties, `first` selects the earlier input record, `last` selects the later one, and `all` keeps every tied record. A single selection has rank 1; multiple tied records receive consecutive ranks starting at 1 in output order. Their schemas are `BuiltinSelectorOperationSchemas.Min` and `BuiltinSelectorOperationSchemas.Max`, with the following parameters:
+
+| Property | Type                         | Description                                  |
+| -------- | ---------------------------- | -------------------------------------------- |
+| `kind`   | `'min' \| 'max'`             | Selection type                               |
+| `by`     | `string`                     | Required, nonblank numeric source field name |
+| `tie`    | `'first' \| 'last' \| 'all'` | Optional tie strategy, defaults to `'first'` |
+
+<ComponentPreview
+  files={[
+    'selector-extrema',
+    'selector-extrema.preview.tsx',
+    'selector-extrema.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-extrema.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Each group starts with two tied minima and maxima. Switch the operator and tie strategy to compare selected records, or adjust a4's revenue to break its tie"
+/>
+
+## first / last · First and last rows
+
+`first` and `last` select the first or last row in each group. Omitting `orderBy` keeps the current input order; providing it sorts stably before selection, preserving relative input order for equal keys. These selectors do not require finite numeric sort fields, and both return rank 1. Their schemas are `BuiltinSelectorOperationSchemas.First` and `BuiltinSelectorOperationSchemas.Last`, with the following parameters:
+
+| Property          | Type                          | Description                                                              |
+| ----------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| `kind`            | `'first' \| 'last'`           | Selection type                                                           |
+| `orderBy`         | `Array<IRDataOrderBy>`        | Optional, nonempty list of sort rules; omitted keeps current input order |
+| `orderBy[].field` | `string`                      | Required, nonblank field name for this rule                              |
+| `orderBy[].order` | `'ascending' \| 'descending'` | Optional sort direction, defaults to `'ascending'`                       |
+
+<ComponentPreview
+  files={[
+    'selector-ends',
+    'selector-ends.preview.tsx',
+    'selector-ends.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-ends.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between first and last, then compare input order with revenue ordering in the two tables"
+/>
+
+## top / bottom · Highest and lowest N rows
+
+`top` selects the highest N rows in descending numeric order; `bottom` selects the lowest N rows in ascending order. Both skip missing and non-finite values and assign consecutive ranks starting at 1 in output order. The tie strategy applies at the Nth-row cutoff: `first` keeps the first N rows of the stable sort, `all` includes every record tied at the boundary, and `last` replaces the final position with the last record tied at that boundary. Their schemas are `BuiltinSelectorOperationSchemas.Top` and `BuiltinSelectorOperationSchemas.Bottom`, with the following parameters:
+
+| Property | Type                         | Description                                                                               |
+| -------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `kind`   | `'top' \| 'bottom'`          | Selection type                                                                            |
+| `by`     | `string`                     | Required, nonblank numeric source field name                                              |
+| `n`      | `number`                     | Required positive integer; values above the valid row count select all valid rows         |
+| `tie`    | `'first' \| 'last' \| 'all'` | Optional cutoff tie strategy, defaults to `'first'`; `'all'` can produce more than N rows |
+
+<ComponentPreview
+  files={[
+    'selector-ranked',
+    'selector-ranked.preview.tsx',
+    'selector-ranked.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-ranked.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Select the highest two rows and switch the tie strategy; compare the selected item values and the rank column"
+/>
+
+## nth · Specific position
+
+`nth` sorts stably using the required `orderBy`, then selects the original row at zero-based `index`. Index 0 selects the first row with rank 1; other positions have rank `index + 1`. An index beyond a group's row count produces no selection for that group. Its schema is `BuiltinSelectorOperationSchemas.Nth`, with the following parameters:
+
+| Property          | Type                          | Description                                                     |
+| ----------------- | ----------------------------- | --------------------------------------------------------------- |
+| `kind`            | `'nth'`                       | Selection type                                                  |
+| `orderBy`         | `Array<IRDataOrderBy>`        | Required, nonempty list of sort rules                           |
+| `orderBy[].field` | `string`                      | Required, nonblank sort field name                              |
+| `orderBy[].order` | `'ascending' \| 'descending'` | Optional sort direction, defaults to `'ascending'`              |
+| `index`           | `number`                      | Required nonnegative integer, zero-based position after sorting |
+
+<ComponentPreview
+  files={[
+    'selector-nth',
+    'selector-nth.preview.tsx',
+    'selector-nth.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-nth.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Set the index to 4 to see empty results for four-row groups, then turn off grouping and compare again"
+/>
+
+## outside-quantile-band · Outside-band selection
+
+`outside-quantile-band` computes lower and upper quantiles of a numeric field, then selects original rows outside the boundaries, skipping missing and non-finite values. For quantiles $L$ and $U$, `band` uses $[L,U]$, while `spread` uses fences $[L-f(U-L),U+f(U-L)]$. Only records strictly below the lower boundary or above the upper boundary are selected; values equal to a boundary remain inside. Output keeps the original input order and receives consecutive ranks starting at 1. Its schema is `BuiltinSelectorOperationSchemas.OutsideQuantileBand`, with the following parameters:
+
+| Property          | Type                      | Description                                                                        |
+| ----------------- | ------------------------- | ---------------------------------------------------------------------------------- |
+| `kind`            | `'outside-quantile-band'` | Selection type                                                                     |
+| `field`           | `string`                  | Required, nonblank numeric source field name                                       |
+| `lowerP`          | `number`                  | Required, between 0 and 1; must be less than `upperP`                              |
+| `upperP`          | `number`                  | Required, between 0 and 1                                                          |
+| `boundary`        | `object`                  | Optional boundary strategy; omitted uses `band`                                    |
+| `boundary.kind`   | `'band' \| 'spread'`      | Required when `boundary` is supplied; selects the quantile band or expanded fences |
+| `boundary.factor` | `number`                  | Optional nonnegative multiplier, defaults to 1.5; used only by `spread`            |
+
+<ComponentPreview
+  files={[
+    'selector-outside',
+    'selector-outside.preview.tsx',
+    'selector-outside.data.ts',
+    '/viz/data/operators/operator-samples.data.ts',
+  ]}
+  defaultSourceFile="selector-outside.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="The demo uses P25, P75, and spread fences with a factor of 1.5; switch to band and compare the selected orders"
+/>
