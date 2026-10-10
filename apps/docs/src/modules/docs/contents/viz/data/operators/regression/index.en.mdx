@@ -1,0 +1,176 @@
+---
+title: regression · Fitting
+description: Build prediction models with six built-in fitting methods, generate trend samples through smooth, and compare curve shapes, degree and numeric constraints.
+---
+
+Fitting starts by choosing a model form, estimates its parameters from existing data, then uses the model to calculate predictions. For a straight line, the process has three steps:
+
+1. Choose the model $y=a+bx$ and least squares to estimate its coefficients. The formula is fixed, but $a$ and $b$ are still unknown.
+2. Pass the observed $(x,y)$ pairs to the fitting algorithm to estimate intercept $a$ and slope $b$, producing a callable prediction model.
+3. Choose a set of $x$ positions and calculate their $y$ values with the model to generate prediction points.
+
+In Data, `method` selects the fitting method, the operator's `fit` estimates parameters and returns a model, and `smooth` calls its `predict(x)` to generate prediction rows. For polynomial fitting, the degree is chosen beforehand; the data determines the coefficients.
+
+Gray points on this page show observations; the blue line connects predictions. Predictions are not new observations, and the curve need not pass through every original point.
+
+<ComponentAlert
+  type="tip"
+  title="Original data and predictions"
+  description="Fitting does not append predictions to the original detail table. The default demo keeps its 9 observations unchanged, while smooth generates 32 separate prediction rows. The scatter points use the original data; the fitted line uses predictions independently. If smooth runs on the whole data chain, subsequent stages receive those 32 prediction rows. To retain both observations and predictions in one table, combine the two datasets explicitly."
+/>
+
+## Using fitting operators
+
+Import `BuiltinRegressionMethod` and `applyTransforms` from `@retikz/data`. Set the method in `smooth.params.method` to produce prediction rows. The same operation declaration can also be executed by a host such as Plot.
+
+<ComponentPreview files="regression-minimal" hideCode size="lg" />
+
+```ts
+import { applyTransforms, BuiltinRegressionMethod } from '@retikz/data';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 4 },
+  { x: 4, y: 4 },
+  { x: 5, y: 6 },
+  { x: 6, y: 10 },
+  { x: 7, y: 16 },
+  { x: 8, y: 21 },
+  { x: 9, y: 33 },
+];
+const trend = applyTransforms(rows, [
+  {
+    kind: 'smooth',
+    params: {
+      x: 'x',
+      y: 'y',
+      method: { kind: BuiltinRegressionMethod.Linear },
+      sampleCount: 32,
+      xAs: 'trendX',
+      yAs: 'trendY',
+    },
+  },
+]);
+// trend contains 32 rows, each with trendX and trendY
+```
+
+`sampleCount` controls the number of predictions and defaults to 64. `extent` controls the sampling range and defaults to the valid observations' $x$ range. These settings change output positions and counts without changing the observations used to fit the model. With `groupBy`, each group is fitted and sampled independently; output retains group keys and the two prediction fields.
+
+## Linear and polynomial models
+
+These methods use least squares in the original data space to estimate the coefficients below:
+
+| Method     | Declaration                                              | Curve                      |
+| ---------- | -------------------------------------------------------- | -------------------------- |
+| Linear     | `{ kind: BuiltinRegressionMethod.Linear }`               | $y=a+bx$                   |
+| Quadratic  | `{ kind: BuiltinRegressionMethod.Quadratic }`            | $y=a+bx+cx^2$              |
+| Polynomial | `{ kind: BuiltinRegressionMethod.Polynomial, order: 3 }` | $y=a_0+a_1x+\cdots+a_dx^d$ |
+
+| Parameter      | Values                          | Purpose                         |
+| -------------- | ------------------------------- | ------------------------------- |
+| `method.kind`  | linear, quadratic or polynomial | Selects the model form          |
+| `method.order` | Integer from 2 to 6, default 3  | Highest degree; polynomial only |
+
+Switch methods to compare a straight line with curves, then choose polynomial to adjust its degree. Changing the last observation refits the model. With fewer samples, the blue hollow points spread apart and their connecting line shows more visible corners.
+
+<ComponentPreview
+  files={['regression-polynomial', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-preview.tsx"
+  size="lg"
+  caption="Gray points are observations and blue hollow points are predictions. The demo uses 32 samples; the host default is 64."
+/>
+
+Linear fitting needs at least two valid pairs with varying $x$. Quadratic fitting needs at least three distinct $x$ values; degree $d$ needs at least $d+1$. A higher degree may follow these observations more closely but can also fluctuate between points or outside the observed range. Choose it based on the data relationship.
+
+## Logarithmic, exponential and power models
+
+These methods apply logarithmic transformations to observations, then use linear least squares. Predictions are returned in the original data space.
+
+| Method      | Declaration                                     | Curve        | Positive-value requirements        |
+| ----------- | ----------------------------------------------- | ------------ | ---------------------------------- |
+| Logarithmic | `{ kind: BuiltinRegressionMethod.Logarithmic }` | $y=a+b\ln x$ | Observed and sampled $x>0$         |
+| Exponential | `{ kind: BuiltinRegressionMethod.Exponential }` | $y=ae^{bx}$  | Observed $y>0$                     |
+| Power       | `{ kind: BuiltinRegressionMethod.Power }`       | $y=ax^b$     | Observed $x,y>0$ and sampled $x>0$ |
+
+These methods have no additional method parameters. Compare their growth shapes on the same positive observations below, then adjust the last observation to see how each model responds.
+
+<ComponentPreview
+  files={['regression-transformed', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-preview.tsx"
+  size="lg"
+  caption="All observed x and y values are positive. Axis ranges stay fixed while you compare the three curves."
+/>
+
+Each method needs at least two valid pairs with varying transformed $x$. Exponential and power models fit $y$ in logarithmic space, so their results differ from models that minimize error directly in the original space. Logarithmic and power sampling ranges must exclude zero and negative values.
+
+## Numeric and output constraints
+
+`smooth` passes only pairs with finite numeric $x$ and $y$ to the operator. It does not convert numeric strings. Zero and negative numbers are finite and still reach fitting; violating a method's positive-value requirements fails the computation.
+
+Insufficient observations, a rank-deficient design matrix or non-finite predictions fail the current transform. Prediction rows contain group keys, `xAs` and `yAs`, without other original fields such as order names. `xAs` and `yAs` must differ and cannot overwrite group keys. Sample count determines output row count independently of input count.
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'BuiltinRegressionMethod',
+      kind: 'type',
+      type: 'linear | quadratic | polynomial | logarithmic | exponential | power',
+      description: 'Built-in method names, referenced through members such as Linear and Quadratic.',
+    },
+    {
+      name: 'IRDataSmoothTransform.params.method',
+      kind: 'property',
+      type: 'IRRegressionMethod',
+      description: 'Method and serializable parameters; defaults to linear.',
+    },
+    {
+      name: 'IRDataSmoothTransform.params.sampleCount',
+      kind: 'property',
+      type: 'number',
+      description: 'Prediction count per group; at least 2, default 64.',
+    },
+    {
+      name: 'IRDataSmoothTransform.params.extent',
+      kind: 'property',
+      type: '[number, number]',
+      description:
+        'Increasing sampling range; defaults to the valid observations’ x range without filtering fitting observations.',
+    },
+    {
+      name: 'RegressionModel.predict',
+      kind: 'property',
+      type: '(x: number) => number',
+      description: 'Predicts y in the original data space. The model exists only at runtime and is not stored in IR.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Computation operator internals',
+      description: 'Follow prediction models into host-generated output rows.',
+      url: '/viz/data/transform/statistics',
+    },
+    {
+      title: 'Extension mechanisms',
+      description: 'Define and register a custom fitting method.',
+      url: '/viz/data/transform/extensions',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up fitting definitions, implementations and runtime entries.',
+      url: '/viz/data/transform/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up method declarations and smooth parameters.',
+      url: '/viz/data/transform/schema-reference',
+    },
+  ]}
+/>

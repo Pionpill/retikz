@@ -7,6 +7,8 @@ Questions such as "What is the total revenue?", "Which record has the highest re
 
 Here, operators refer to Data's reduction, row selection, and fitting capabilities that a host can invoke. A host is a data processing operation that consumes an operator's result, such as a summary or trend-sampling transform. It determines which input to supply and how the result enters output rows.
 
+Keep original detail data separate from transform results. Built-in hosts do not modify the input rows in place: reducer results produce statistical rows or detail rows with added statistical fields, selector results produce selected records, and regression returns a model for `smooth` to generate prediction rows. In a transform chain, the next stage reads these output rows; they are not automatically appended to the original data.
+
 ## Reduction
 
 A reducer reads a batch of rows and returns a fragment of statistical fields. For two detail rows with revenue of 120 and 80, a sum can return `total: 200`, and a count can return `orders: 2`.
@@ -25,7 +27,7 @@ The host determines how to consume these records. `select` organizes selected re
 
 ## Fitting
 
-A fitting operator reads finite numeric observation pairs, such as time and revenue, and returns a runtime prediction model. The model's `predict(x)` supplies a predicted value at an input position.
+A fitting operator reads finite numeric observation pairs, such as time and revenue, and returns a runtime prediction model. The model's `predict(x)` supplies a predicted value at an input position. See [regression · Fitting](/viz/data/operators/regression) for parameters and examples.
 
 The model is not a table of sampled results. A host such as `smooth` chooses the prediction extent and sample positions, then invokes the model to generate new rows. The fitting method and sampling choices can therefore be expressed separately.
 

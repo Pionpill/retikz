@@ -3,14 +3,14 @@ title: Extension mechanisms
 description: Extend data processing with custom transforms and operators, from definitions and implementations to host registration.
 ---
 
-A custom extension describes what parameters an operation accepts, what fields it produces, and how to compute the result. Data separates these responsibilities into a Definition and an Implementation, which the host registers and calls.
+A custom extension describes its parameters, results and computation. Data separates these responsibilities into a Definition and an Implementation, which the host registers and calls.
 
 ## When to extend
 
 First check whether a combination of built-in operations can do the job. If you need an extension, choose its scope:
 
 - A custom transform adds a complete row-processing operation, such as deriving a field from parameters.
-- A custom operator adds a computation or row-selection rule while keeping the existing transform's grouping and result assembly. A reducer returns computed fields; a selector returns selected original rows.
+- A custom operator adds a computation, selection or fitting rule while keeping the existing transform's grouping and result assembly. A reducer returns computed fields, a selector returns original rows, and a regression operator returns a prediction model.
 
 See [Transform Operations](/viz/data/transform/operations) and [Computation Operators](/viz/data/transform/statistics) for how they work together. To run an existing operation on another engine, reuse its Definition and follow [Computation Contracts](/viz/data/transform/computation).
 
@@ -332,13 +332,111 @@ Custom selectors work with `select` and transforms that explicitly support them.
 </DocStep>
 </DocSteps>
 </DocTab>
+<DocTab value="regression" label="regression operator">
+
+This example defines a line through the origin, $y=bx$. Gray points show observations; the blue line comes from `smooth` sampling the model.
+
+<ComponentPreview
+  files={[
+    'extension-regression',
+    'extension-regression.preview.tsx',
+    'extension-regression.definition.ts',
+    'extension-regression.data.ts',
+  ]}
+  defaultSourceFile="extension-regression.definition.ts"
+  size="lg"
+  caption="Offset the observations: the slope changes while the line still passes through the origin."
+/>
+
+<DocSteps>
+<DocStep title="Declare the fitting method">
+
+`defineRegression` accepts these members:
+
+- `schema` (required): the complete method parameters. This example only declares `kind`.
+- `validateExtent` (optional): checks whether the sampling range lies within the method’s prediction domain. This model accepts any finite $x$ and needs no additional constraint.
+
+```ts
+import { defineRegression } from '@retikz/data';
+import { z } from 'zod';
+
+const throughOrigin = defineRegression({
+  schema: z.strictObject({ kind: z.literal('through-origin') }),
+});
+```
+
+</DocStep>
+<DocStep title="Fit and return a prediction model">
+
+`fit` receives the group’s finite observation pairs, computes $b=\frac{\sum xy}{\sum x^2}$, and returns a model with `predict(x)`. `smooth` handles grouping, sampling and output fields; this callback does not generate rows.
+
+```ts
+import { defineRegressionImplementation, RetikzDataError } from '@retikz/data';
+
+const throughOriginImplementation = defineRegressionImplementation({
+  definition: throughOrigin,
+  fit: pairs => {
+    const sumXX = pairs.reduce((sum, pair) => sum + pair.x * pair.x, 0);
+    if (pairs.length === 0 || !Number.isFinite(sumXX) || sumXX <= 0) {
+      throw new RetikzDataError('through-origin requires observations with nonzero x');
+    }
+    const slope = pairs.reduce((sum, pair) => sum + pair.x * pair.y, 0) / sumXX;
+    return { predict: x => slope * x };
+  },
+});
+```
+
+</DocStep>
+<DocStep title="Register and use the method">
+
+The synchronous Data entry receives a fitting registry and a separate implementation. `smooth.params.method` references the same `kind` and produces 32 predictions. The range starts at zero, so the first point is the origin.
+
+```ts
+import { applyTransforms, resolveRegressionRegistry } from '@retikz/data';
+
+const rows = [
+  { x: 1, y: 3 },
+  { x: 2, y: 6 },
+  { x: 3, y: 6 },
+  { x: 4, y: 9 },
+  { x: 5, y: 11 },
+  { x: 6, y: 13 },
+];
+const trend = applyTransforms(
+  rows,
+  [
+    {
+      kind: 'smooth',
+      params: {
+        x: 'x',
+        y: 'y',
+        method: { kind: 'through-origin' },
+        extent: [0, 6],
+        sampleCount: 32,
+        xAs: 'trendX',
+        yAs: 'trendY',
+      },
+    },
+  ],
+  {
+    context: { regressionRegistry: resolveRegressionRegistry([throughOrigin]) },
+    regressionImplementations: [throughOriginImplementation],
+  },
+);
+```
+
+Plot accepts the same registrations through `regressionDefinitions` and `regressionImplementations`; see the demo source for rendering. Method names and parameters can be stored in JSON, while prediction functions exist only at runtime. Predictions must be finite; failures stop the current transform. Promise implementations require an asynchronous execution entry and cannot be passed to `applyTransforms`.
+
+</DocStep>
+</DocSteps>
+</DocTab>
 </DocTabs>
 
 For local execution, register both the definition and implementation, with the implementation referencing the same definition object. Duplicate names and implementations follow the same checks as custom transforms. Hosts also accept these registrations through their lowering options.
 
 ## Related props
 
-These are the definition and computation entries used on this page. See the [Data API reference](/viz/data/model/api-reference) for complete parameters.
+These are the definition and computation entries used on this page. See the [Data API reference](/viz/data/transform/api-reference) for complete parameters.
 
 <ComponentProps
   items={[
@@ -383,6 +481,19 @@ These are the definition and computation entries used on this page. See the [Dat
       description:
         'References a selector definition. select returns an array of { row, rank? }; row is an original selected row and rank starts at 1.',
     },
+    {
+      name: 'defineRegression',
+      kind: 'function',
+      type: '<TSource extends IRRegressionMethod, TOperation = TSource>(definition: RegressionDefinition<TSource, TOperation>) => RegressionDefinition<TSource, TOperation>',
+      description: 'Declares the exact method schema and optional prediction-domain checks without registering it.',
+    },
+    {
+      name: 'defineRegressionImplementation',
+      kind: 'function',
+      type: '<TSource extends IRRegressionMethod, TOperation, TResult extends RegressionModel | Promise<RegressionModel>>(implementation: RegressionImplementation<TSource, TOperation, TResult>) => RegressionImplementation<TSource, TOperation, TResult>',
+      description:
+        'References the fitting definition; fit returns a model with predict. Synchronous entries require a synchronous model.',
+    },
   ]}
 />
 
@@ -397,7 +508,7 @@ These are the definition and computation entries used on this page. See the [Dat
     },
     {
       title: 'Computation Operators',
-      description: 'Understand how reducers, selectors and hosts assemble results.',
+      description: 'Understand how the three operator families cooperate with hosts.',
       url: '/viz/data/transform/statistics',
     },
     {
@@ -408,7 +519,7 @@ These are the definition and computation entries used on this page. See the [Dat
     {
       title: 'Data API Reference',
       description: 'Look up complete definition, implementation and runtime types.',
-      url: '/viz/data/model/api-reference',
+      url: '/viz/data/transform/api-reference',
     },
   ]}
 />

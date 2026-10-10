@@ -1,23 +1,24 @@
 ---
 title: 计算算子
-description: 理解 reducer 与 selector 如何接收分组行、返回局部结果，并由宿主变换组织最终数据。
+description: 理解 reducer、selector 和 regression 如何返回字段、记录或预测模型，再由宿主组织输出数据。
 ---
 
-**计算算子**是 transform 内部使用的计算单元。当前提供 reducer 和 selector 两类：reducer 返回计算出的字段片段，selector 返回所选记录及可选排名。transform 负责组织输入与输出，算子负责完成其中的具体计算。
+**计算算子**是 transform 内部使用的计算单元。当前提供三类：reducer 返回计算出的字段片段，selector 返回所选记录及可选排名，regression 返回预测模型。transform 负责组织输入与输出，算子负责完成其中的具体计算。
 
-[变换操作](/viz/data/transform/operations)解释整条链如何推进。本页进入单个变换内部，追踪一组数据如何交给算子处理，再由调用它的 transform（即**宿主变换**）组织最终结果。宿主决定分组边界和输出行的形状；算子完成局部计算，不自行推进整条变换链。本文聚焦 reducer 与 selector 的协作机制，不列举全部算子及参数。
+[变换操作](/viz/data/transform/operations)解释整条链如何推进。本页进入单个变换内部，追踪一组数据如何交给算子处理，再由调用它的 transform（即**宿主变换**）组织最终结果。宿主决定分组边界和输出行的形状；算子完成局部计算，不自行推进整条变换链。本文追踪三类算子与宿主的协作；内置方法及参数见[计算算子用法](/viz/data/operators)。
 
 ## 整体流程
 
 - **Reducer**（归约器）：接收一组行，返回声明的字段片段，例如 `{ total: 40, count: 2 }` 中的一个或多个字段。
 - **Selector**（行选择器）：接收一组行，返回所选原始行的引用，以及可选排名信息。
-- **宿主变换**：决定把字段片段组装为新行、广播回明细，或把选择结果组织为输出行。
+- **Regression**（拟合器）：接收有限观测对，返回带 `predict(x)` 的模型。
+- **宿主变换**：决定把字段片段组装为新行、广播回明细，把选择结果组织为输出行，或沿模型采样生成预测行。
 
-两类算子按返回结果区分，各有对应的定义、实现和注册入口。selector 也会进行比较、排序或排名计算，最终返回的是行选择结果。自定义算子可通过对应入口扩展，宿主按各自契约消费结果。
+三类算子按返回结果区分，各有对应的定义、实现和注册入口。selector 也会进行比较、排序或排名计算，最终返回的是行选择结果。自定义算子可通过对应入口扩展，宿主按各自契约消费结果。
 
-下图用同一组数值对照两条独立链路：上方 reducer 归约得到字段片段，下方 selector 选出已有记录。两条链路都把结果交回宿主。
+下图对照同一组观测的三条独立链路：归约得到字段片段，选择得到原始行，拟合得到预测模型。宿主分别组装统计行、所选行和预测行。
 
-<ComponentPreview files="statistics-overview" hideCode type="flow" size="md" />
+<ComponentPreview files="statistics-overview" hideCode type="flow" size="lg" />
 
 算子也用于聚合之外的变换：`annotate` 将计算结果回填到明细并保留行数，`select` 输出选中的记录，`relate` 用 selector 选择关系的起点与终点记录。相同算子可被不同宿主复用，最终行数由宿主的输出语义决定。
 
@@ -69,6 +70,30 @@ A 组选择 a2，B 组选择 b2。selector 返回的选择记录包含 `row`，�
   ]}
 />
 
+## regression 算子
+
+拟合器接收的是有限的 $(x,y)$ 观测对，返回一个可以调用的模型。以下例子先显示原始观测，再由线性模型生成蓝色预测线；灰点仍留在原位。
+
+<ComponentPreview files="regression-example" hideCode type="illustration" size="lg" />
+
+`method` 先确定模型形式和拟合算法。例如选择 `linear`，模型就是 $y=a+bx$，但截距 $a$ 和斜率 $b$ 尚未确定。`smooth` 按 `groupBy` 分组，提取每组有效观测，交给实现的 `fit`；`fit` 用这些观测求出 $a$、$b$，再返回带 `predict(x)` 的 `RegressionModel`。
+
+例如用 $(1,10)$、$(3,30)$ 拟合直线，会得到 $a=0$、$b=10$，于是模型可以通过 $y=10x$ 预测。随后宿主在 $[1,3]$ 中选取三个采样位置，调用 `predict(x)`，生成 $(1,10)$、$(2,20)$、$(3,30)$ 三个点。模型参数由观测求出，采样位置和输出字段由宿主决定；中间的点是预测值，并非选中的原始记录。
+
+省略采样范围时，宿主使用有效观测的 $x$ 范围；显式范围只影响预测，不过滤用于拟合的观测。方法定义可通过 `validateExtent` 检查预测域，例如对数模型要求采样的 $x>0$。模型函数仅在运行时使用，最终生成的预测行才进入后续变换。
+
+下图按源码入口追踪拟合与采样的交接。每组先拟合，再校验范围、生成预测行；发生错误时终止当前变换。
+
+<ComponentPreview files="regression-execution" hideCode type="flow" size="lg" />
+
+<SourceLinks
+  sources={[
+    { label: '提取观测、分组与采样', path: 'packages/viz/data/src/providers/transform/smooth.ts' },
+    { label: '方法解析与预测结果校验', path: 'packages/viz/data/src/providers/regression/registry.ts' },
+    { label: '拟合模型与预测契约', path: 'packages/viz/data/src/contract/regression.ts' },
+  ]}
+/>
+
 ## 数值与执行边界
 
 是否读取字段、如何筛选缺失值、空输入返回什么，由具体子算子语义规定，不由宿主统一填零。例如计数可以统计记录数，数值归约则需要决定哪些字段值参与计算；两者不能共用“有效数值个数”这一假设。具体规则属于各算子的用法与契约说明。
@@ -94,7 +119,7 @@ A 组选择 a2，B 组选择 b2。selector 返回的选择记录包含 `row`，�
 
 ## 相关属性
 
-以下列出本页涉及的公开成员；完整 API 见 [Data API 参考](/viz/data/model/api-reference)，声明结构见[契约参考](/viz/data/reference/contract)。
+以下列出本页涉及的公开成员；完整 API 见 [Data API 参考](/viz/data/transform/api-reference)，声明结构见 [Schema 参考](/viz/data/transform/schema-reference)。
 
 <ComponentProps
   items={[
@@ -128,6 +153,18 @@ A 组选择 a2，B 组选择 b2。selector 返回的选择记录包含 `row`，�
       type: '{ row: ExternalRow; rank?: number }',
       description:
         '`row` 为所选原始行，`rank` 为可选的一基排名。宿主负责把选择记录组织为输出行，例如 select 通过 `rankAs` 指定排名输出字段。',
+    },
+    {
+      name: 'RegressionImplementation.fit',
+      kind: 'property',
+      type: '(pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => RegressionModel | Promise<RegressionModel>',
+      description: '接收当前组的有限观测对，返回预测模型；同步入口只接受同步结果。',
+    },
+    {
+      name: 'RegressionModel.predict',
+      kind: 'property',
+      type: '(x: number) => number',
+      description: '接收采样位置，返回原始数据空间的有限预测值；输出行由宿主生成。',
     },
   ]}
 />

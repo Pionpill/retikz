@@ -149,13 +149,25 @@ export const vizSection: Array<Section> = [
         id: 'operators',
         label: 'viz.dataComputationOperators',
         sidebarGroup: 'viz.dataComputation',
-        difficulty: DocDifficulty.Beginner,
         meta: {
-          pageType: 'concept',
+          pageType: 'group',
           audience: 'user',
           capability: 'data.computation.operators',
           sourceOfTruth: 'runtime',
         },
+        children: [
+          {
+            id: 'regression',
+            label: 'viz.dataComputationRegression',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.regression',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
       },
       {
         id: 'transforms',

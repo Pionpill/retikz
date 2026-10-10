@@ -3,14 +3,14 @@ title: 扩展机制
 description: 通过自定义变换和算子扩展数据处理，了解定义、计算实现与宿主注册的完整过程。
 ---
 
-自定义扩展需要说明两件事：操作接受什么参数、会产生什么字段，以及怎样计算这些结果。Data 分别用 Definition（语义定义）和 Implementation（计算实现）描述它们，再由宿主注册和调用。
+自定义扩展需要说明操作接受什么参数、返回什么结果，以及怎样计算这些结果。Data 分别用 Definition（语义定义）和 Implementation（计算实现）描述它们，再由宿主注册和调用。
 
 ## 适用边界
 
 先看内置操作能否通过组合完成任务。需要扩展时，根据要改变的部分选择入口：
 
 - 自定义变换：增加一种完整的行处理操作，例如按参数派生字段。
-- 自定义算子：保留已有变换的分组和结果组装方式，只增加计算或选行规则。reducer 返回计算出的字段，selector 返回选中的原始行。
+- 自定义算子：保留已有变换的分组和结果组装方式，只增加计算、选行或拟合规则。reducer 返回计算出的字段，selector 返回选中的原始行，regression 返回预测模型。
 
 操作与算子的协作方式见[变换操作](/viz/data/transform/operations)和[计算算子](/viz/data/transform/statistics)。如果只是想让已有操作交给其他计算引擎执行，复用它的 Definition，按[计算契约](/viz/data/transform/computation)接入即可。
 
@@ -332,13 +332,111 @@ export const CustomSelectorExample: FC = () => (
 </DocStep>
 </DocSteps>
 </DocTab>
+<DocTab value="regression" label="regression 算子">
+
+下面定义一个过原点的直线模型 $y=bx$。灰点是观测，蓝线由 `smooth` 对模型采样得到。
+
+<ComponentPreview
+  files={[
+    'extension-regression',
+    'extension-regression.preview.tsx',
+    'extension-regression.definition.ts',
+    'extension-regression.data.ts',
+  ]}
+  defaultSourceFile="extension-regression.definition.ts"
+  size="lg"
+  caption="调整观测值偏移，直线斜率会改变，仍经过原点。"
+/>
+
+<DocSteps>
+<DocStep title="声明拟合方法">
+
+`defineRegression` 接收以下成员：
+
+- `schema`（必填）：完整方法参数，本例只有名称 `kind`。
+- `validateExtent`（可选）：检查采样范围是否在方法支持的预测域内。本例允许任意有限 $x$，无需额外约束。
+
+```ts
+import { defineRegression } from '@retikz/data';
+import { z } from 'zod';
+
+const throughOrigin = defineRegression({
+  schema: z.strictObject({ kind: z.literal('through-origin') }),
+});
+```
+
+</DocStep>
+<DocStep title="拟合并返回预测模型">
+
+`fit` 接收当前组的有限观测对，计算斜率 $b=\frac{\sum xy}{\sum x^2}$，返回带 `predict(x)` 的模型。分组、采样和输出字段由 `smooth` 处理；这里不生成数据行。
+
+```ts
+import { defineRegressionImplementation, RetikzDataError } from '@retikz/data';
+
+const throughOriginImplementation = defineRegressionImplementation({
+  definition: throughOrigin,
+  fit: pairs => {
+    const sumXX = pairs.reduce((sum, pair) => sum + pair.x * pair.x, 0);
+    if (pairs.length === 0 || !Number.isFinite(sumXX) || sumXX <= 0) {
+      throw new RetikzDataError('through-origin requires observations with nonzero x');
+    }
+    const slope = pairs.reduce((sum, pair) => sum + pair.x * pair.y, 0) / sumXX;
+    return { predict: x => slope * x };
+  },
+});
+```
+
+</DocStep>
+<DocStep title="注册并引用方法">
+
+下面使用 Data 的同步入口，将定义放入拟合注册表，并单独传入计算实现。`smooth.params.method` 引用相同的 `kind`，得到 32 个预测点；范围从 0 开始，因此第一点为原点。
+
+```ts
+import { applyTransforms, resolveRegressionRegistry } from '@retikz/data';
+
+const rows = [
+  { x: 1, y: 3 },
+  { x: 2, y: 6 },
+  { x: 3, y: 6 },
+  { x: 4, y: 9 },
+  { x: 5, y: 11 },
+  { x: 6, y: 13 },
+];
+const trend = applyTransforms(
+  rows,
+  [
+    {
+      kind: 'smooth',
+      params: {
+        x: 'x',
+        y: 'y',
+        method: { kind: 'through-origin' },
+        extent: [0, 6],
+        sampleCount: 32,
+        xAs: 'trendX',
+        yAs: 'trendY',
+      },
+    },
+  ],
+  {
+    context: { regressionRegistry: resolveRegressionRegistry([throughOrigin]) },
+    regressionImplementations: [throughOriginImplementation],
+  },
+);
+```
+
+Plot 通过 `regressionDefinitions` 和 `regressionImplementations` 接收相同注册项，完整绘制见 demo 源码。方法名称和参数可存入 JSON；带函数的预测模型只用于运行时。预测必须返回有限值，失败会终止当前变换。Promise 实现需使用异步执行入口，不能交给 `applyTransforms`。
+
+</DocStep>
+</DocSteps>
+</DocTab>
 </DocTabs>
 
 本地执行时，算子的定义与实现需要成对注册，实现必须引用同一个定义对象；重名和重复实现的检查与自定义变换一致。这些注册项也可通过宿主的 lowering options 传入。
 
 ## 相关属性
 
-以下列出本页的定义与计算入口，完整参数见 [Data API 参考](/viz/data/model/api-reference)。
+以下列出本页的定义与计算入口，完整参数见 [Data API 参考](/viz/data/transform/api-reference)。
 
 <ComponentProps
   items={[
@@ -378,6 +476,18 @@ export const CustomSelectorExample: FC = () => (
       type: '<TSource extends IRDataSelectorOperation, TOperation, TResult extends Array<RowSelection> | Promise<Array<RowSelection>>>(implementation: RowSelectorImplementation<TSource, TOperation, TResult>) => RowSelectorImplementation<TSource, TOperation, TResult>',
       description: '引用 selector 定义，select 返回 { row, rank? } 数组；row 是选中的原始行，rank 从 1 开始。',
     },
+    {
+      name: 'defineRegression',
+      kind: 'function',
+      type: '<TSource extends IRRegressionMethod, TOperation = TSource>(definition: RegressionDefinition<TSource, TOperation>) => RegressionDefinition<TSource, TOperation>',
+      description: '声明拟合方法的精确 schema 与可选预测域校验；不自动注册。',
+    },
+    {
+      name: 'defineRegressionImplementation',
+      kind: 'function',
+      type: '<TSource extends IRRegressionMethod, TOperation, TResult extends RegressionModel | Promise<RegressionModel>>(implementation: RegressionImplementation<TSource, TOperation, TResult>) => RegressionImplementation<TSource, TOperation, TResult>',
+      description: '引用拟合定义，fit 接收观测对并返回带 predict 的模型；同步入口要求同步模型。',
+    },
   ]}
 />
 
@@ -392,7 +502,7 @@ export const CustomSelectorExample: FC = () => (
     },
     {
       title: '计算算子',
-      description: '了解 reducer、selector 与宿主如何分工并组装结果。',
+      description: '了解三类算子与宿主如何分工并组装结果。',
       url: '/viz/data/transform/statistics',
     },
     {
@@ -403,7 +513,7 @@ export const CustomSelectorExample: FC = () => (
     {
       title: 'Data API 参考',
       description: '查询定义、实现与运行时入口的完整类型。',
-      url: '/viz/data/model/api-reference',
+      url: '/viz/data/transform/api-reference',
     },
   ]}
 />

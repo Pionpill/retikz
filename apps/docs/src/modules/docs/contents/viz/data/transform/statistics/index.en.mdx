@@ -1,23 +1,24 @@
 ---
 title: Computation Operators
-description: Understand how reducers and selectors consume grouped rows, return local results, and let their host transform assemble output data.
+description: Understand how reducers, selectors and regression operators return fields, records or prediction models for hosts to assemble output data.
 ---
 
-A **transform operator** is a computation unit used inside a transform. Two categories are currently provided: reducers return computed field fragments, while selectors return selected records and optional ranks. The transform organizes inputs and outputs; operators perform the individual computations.
+A **transform operator** is a computation unit used inside a transform. Three families are available: reducers return fields, selectors return records and optional ranks, and regression operators return prediction models. The transform organizes inputs and outputs; operators perform the individual computations.
 
-[Transform operations](/viz/data/transform/operations) explains how the whole chain progresses. This page looks inside one transform, following a group of rows through an operator and back to the calling transform, its **host**, which assembles the final result. The host owns grouping boundaries and output row shape; operators perform local computations without advancing the whole chain. This page focuses on reducer and selector cooperation rather than listing every operator and parameter.
+[Transform operations](/viz/data/transform/operations) explains how the whole chain progresses. This page looks inside one transform, following a group of rows through an operator and back to the calling transform, its **host**, which assembles the final result. The host owns grouping boundaries and output row shape; operators perform local computations without advancing the whole chain. This page follows all three families through their hosts. See [Computation operators](/viz/data/operators) for built-in methods and parameters.
 
 ## Overall flow
 
 - **Reducer**: consumes a group of rows and returns declared fields, such as one or more fields in `{ total: 40, count: 2 }`.
 - **Selector**: consumes a group and returns references to selected original rows, optionally with rank information.
-- **Host transform**: assembles fields into new rows, broadcasts them onto detail rows, or turns selections into output rows.
+- **Regression**: consumes finite observation pairs and returns a model with `predict(x)`.
+- **Host transform**: assembles fields into new rows, broadcasts them onto detail rows, turns selections into output rows, or samples a model to generate predictions.
 
-The categories differ in their results and have separate definition, implementation, and registration contracts. Selectors may also compare, sort, or compute ranks; their final result is a row selection. Custom operators extend the corresponding category, and hosts consume results according to its contract.
+The three families differ in their results and have separate definition, implementation, and registration contracts. Selectors may also compare, sort, or compute ranks; their final result is a row selection. Custom operators extend the corresponding category, and hosts consume results according to its contract.
 
-The diagram compares two independent paths using the same values: the reducer above reduces rows to fields, while the selector below selects existing records. Both return their results to the host.
+The diagram compares three independent paths for the same observations: reduction returns fields, selection returns original rows, and fitting returns a prediction model. Hosts assemble statistics, selections and predictions respectively.
 
-<ComponentPreview files="statistics-overview" hideCode type="flow" size="md" />
+<ComponentPreview files="statistics-overview" hideCode type="flow" size="lg" />
 
 Operators also serve transforms beyond aggregation: `annotate` writes computation results back onto detail rows while preserving row count, `select` outputs selected records, and `relate` uses selectors to choose source and target records. Different hosts can reuse the same operator. Final row counts follow the host's output semantics.
 
@@ -72,6 +73,33 @@ A selector may return zero, one, or multiple selections. Tie handling belongs to
   ]}
 />
 
+## regression operators
+
+A fitting operator receives finite $(x,y)$ observations and returns a callable model. The example keeps the gray observations in place and draws blue predictions from a linear model.
+
+<ComponentPreview files="regression-example" hideCode type="illustration" size="lg" />
+
+`method` first selects the model form and fitting algorithm. With `linear`, the model is $y=a+bx$, but intercept $a$ and slope $b$ are still unknown. `smooth` groups rows by `groupBy`, extracts each group's valid observations and passes them to the implementation's `fit`. It estimates $a$ and $b$ from those observations and returns a `RegressionModel` with `predict(x)`.
+
+For example, fitting a line to $(1,10)$ and $(3,30)$ gives $a=0$ and $b=10$, so the model predicts through $y=10x$. The host then chooses three sample positions in $[1,3]$ and calls `predict(x)` to produce $(1,10)$, $(2,20)$ and $(3,30)$. Observations determine model parameters; the host determines sample positions and output fields. The middle point is a prediction, not a selected original record.
+
+Without an explicit sampling range, the host uses the valid observations' $x$ range. An explicit range changes predictions without filtering fitting observations. A definition may check the prediction domain through `validateExtent`; logarithmic models, for example, require sampled $x>0$. Model functions stay at runtime; their generated prediction rows enter subsequent transforms.
+
+The diagram follows fitting and sampling through source entry points. Each group is fitted before range validation and prediction-row generation. An error stops the current transform.
+
+<ComponentPreview files="regression-execution" hideCode type="flow" size="lg" />
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Observation extraction, grouping and sampling',
+      path: 'packages/viz/data/src/providers/transform/smooth.ts',
+    },
+    { label: 'Method parsing and prediction checks', path: 'packages/viz/data/src/providers/regression/registry.ts' },
+    { label: 'Model and prediction contracts', path: 'packages/viz/data/src/contract/regression.ts' },
+  ]}
+/>
+
 ## Numeric and execution boundaries
 
 Field access, missing-value filtering, and empty-input results belong to each suboperator's semantics; the host does not universally substitute zero. A count may count records, while a numeric reduction decides which field values participate. Both cannot be modeled as “the number of valid numeric values.” Individual usage and contract documentation owns these details.
@@ -100,7 +128,7 @@ Read `computeSummarize` or `computeSelect` for input boundaries and output assem
 
 ## Related props
 
-The following public members relate to this page. See the [Data API reference](/viz/data/model/api-reference) for the full API and the [contract reference](/viz/data/reference/contract) for declarations.
+The following public members relate to this page. See the [Data API reference](/viz/data/transform/api-reference) for the full API and the [Schema reference](/viz/data/transform/schema-reference) for declarations.
 
 <ComponentProps
   items={[
@@ -134,6 +162,20 @@ The following public members relate to this page. See the [Data API reference](/
       type: '{ row: ExternalRow; rank?: number }',
       description:
         '`row` is the selected source row and `rank` is an optional one-based rank. The host assembles output rows from selections; for example, select uses `rankAs` to name the output rank field.',
+    },
+    {
+      name: 'RegressionImplementation.fit',
+      kind: 'property',
+      type: '(pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => RegressionModel | Promise<RegressionModel>',
+      description:
+        'Consumes the group’s finite observations and returns a prediction model; synchronous entries only accept synchronous results.',
+    },
+    {
+      name: 'RegressionModel.predict',
+      kind: 'property',
+      type: '(x: number) => number',
+      description:
+        'Returns a finite prediction in the original data space at a sampled position. The host generates output rows.',
     },
   ]}
 />

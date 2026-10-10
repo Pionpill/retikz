@@ -9,7 +9,7 @@ import { statisticsOverviewI18n } from './statistics-overview.i18n';
 
 /** 图示语言 */
 export type DemoProps = { lang?: Lang };
-/** 分别展示 reducer 计算与 selector 筛选的独立链路 */
+/** 对照归约字段、选择记录与拟合模型的独立链路 */
 const Demo: FC<DemoProps> = props => {
   const { lang = 'zh' } = props;
   const { input, output, branches } = statisticsOverviewI18n[lang];

@@ -1,0 +1,167 @@
+---
+title: regression · 拟合
+description: 使用六种内置拟合方法建立预测模型，通过 smooth 生成趋势点，比较曲线形状、阶数与数值约束。
+---
+
+拟合先选定模型形式，再用现有数据求出模型参数，最后用模型计算预测点。以直线为例，过程分为三步：
+
+1. 选择直线模型 $y=a+bx$，确定用最小二乘估计系数。此时公式已确定，$a$、$b$ 还未知。
+2. 将已有的 $(x,y)$ 观测交给拟合算法，求出截距 $a$ 和斜率 $b$，得到可以调用的预测模型。
+3. 选取一组 $x$ 位置，代入模型计算对应的 $y$，生成新的预测点。
+
+在 Data 中，`method` 选择拟合方法，算子的 `fit` 根据观测求参数并返回模型，`smooth` 调用模型的 `predict(x)` 生成预测行。选择多项式时，阶数也是预先选定的，曲线系数则由数据求出。
+
+本页的灰点是原始观测，蓝线连接预测点。预测点不是新增的真实观测，曲线也不要求经过每个原始点。
+
+<ComponentAlert
+  type="tip"
+  title="原始明细与预测数据"
+  description="拟合不会向原始明细表中追加预测点。默认演示中的 9 行原始观测保持不变，smooth 另行生成 32 行预测数据：散点使用原始数据，拟合线单独使用预测数据。如果将 smooth 用于整条数据链，后续步骤收到的是这 32 行预测数据；要同时保留原始点和预测点，需要显式合并两份数据。"
+/>
+
+## 接入方式
+
+从 `@retikz/data` 导入 `BuiltinRegressionMethod` 和 `applyTransforms`。把拟合方法放在 `smooth.params.method` 中，调用后得到预测数据行；也可以将同一操作声明交给 Plot 等宿主执行。
+
+<ComponentPreview files="regression-minimal" hideCode size="lg" />
+
+```ts
+import { applyTransforms, BuiltinRegressionMethod } from '@retikz/data';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 4 },
+  { x: 4, y: 4 },
+  { x: 5, y: 6 },
+  { x: 6, y: 10 },
+  { x: 7, y: 16 },
+  { x: 8, y: 21 },
+  { x: 9, y: 33 },
+];
+const trend = applyTransforms(rows, [
+  {
+    kind: 'smooth',
+    params: {
+      x: 'x',
+      y: 'y',
+      method: { kind: BuiltinRegressionMethod.Linear },
+      sampleCount: 32,
+      xAs: 'trendX',
+      yAs: 'trendY',
+    },
+  },
+]);
+// trend 包含 32 行，每行有 trendX 和 trendY
+```
+
+`sampleCount` 控制预测点数，省略时为 64。`extent` 控制采样范围，省略时使用有效观测的 $x$ 范围；它们改变输出点的位置和数量，不改变用于拟合的观测集。提供 `groupBy` 时，各组独立拟合并采样，输出保留组键和两个预测字段。
+
+## 线性与多项式
+
+这三种方法在原始数据空间中做最小二乘拟合，估计下面公式中的系数：
+
+| 方法   | 声明                                                     | 曲线形式                   |
+| ------ | -------------------------------------------------------- | -------------------------- |
+| 线性   | `{ kind: BuiltinRegressionMethod.Linear }`               | $y=a+bx$                   |
+| 二次   | `{ kind: BuiltinRegressionMethod.Quadratic }`            | $y=a+bx+cx^2$              |
+| 多项式 | `{ kind: BuiltinRegressionMethod.Polynomial, order: 3 }` | $y=a_0+a_1x+\cdots+a_dx^d$ |
+
+| 参数           | 取值                            | 作用                             |
+| -------------- | ------------------------------- | -------------------------------- |
+| `method.kind`  | linear、quadratic 或 polynomial | 选择模型形式                     |
+| `method.order` | 2–6 的整数，默认 3              | 仅 polynomial 使用，指定最高阶数 |
+
+切换方法可以比较直线与曲线；选择多项式后调整阶数。改变末次观测值时，模型会重新拟合。采样点数越少，蓝色空心点越稀疏，连接线也更容易显出折角。
+
+<ComponentPreview
+  files={['regression-polynomial', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-preview.tsx"
+  size="lg"
+  caption="灰点是观测，蓝色空心点是预测；示例使用 32 个采样点，宿主默认值为 64。"
+/>
+
+线性至少需要两对有效观测且 $x$ 有变化。二次至少需要三个不同的 $x$；$d$ 阶多项式至少需要 $d+1$ 个不同的 $x$。高阶曲线可能更贴近这些观测，也可能在点间或观测范围外出现较大波动，阶数不能替代对数据关系的判断。
+
+## 对数、指数与幂函数
+
+这三种方法先对观测做对数变换，再进行线性最小二乘拟合。返回的预测值会还原到原始数据空间。
+
+| 方法   | 声明                                            | 曲线形式     | 正值要求                     |
+| ------ | ----------------------------------------------- | ------------ | ---------------------------- |
+| 对数   | `{ kind: BuiltinRegressionMethod.Logarithmic }` | $y=a+b\ln x$ | 观测与采样的 $x>0$           |
+| 指数   | `{ kind: BuiltinRegressionMethod.Exponential }` | $y=ae^{bx}$  | 观测的 $y>0$                 |
+| 幂函数 | `{ kind: BuiltinRegressionMethod.Power }`       | $y=ax^b$     | 观测的 $x,y>0$，采样的 $x>0$ |
+
+这些方法没有额外的方法参数。在下方同一组正值观测上切换方法，可以比较增长形状；调整末次观测值，观察各方法怎样响应变化。
+
+<ComponentPreview
+  files={['regression-transformed', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-preview.tsx"
+  size="lg"
+  caption="所有观测的 x、y 都为正；坐标范围保持固定，便于比较三种曲线。"
+/>
+
+三种方法均至少需要两对有效观测，变换后的 $x$ 必须有变化。指数和幂函数在对数空间拟合 $y$，因此与直接在原空间最小化误差的模型会有不同结果。对数、幂函数的采样范围不能包含零或负数。
+
+## 数值与输出边界
+
+`smooth` 只把 $x$、$y$ 都为有限数值的观测交给算子，不把数值字符串转换为数字。零和负数是有限数值，仍会进入拟合；若违反方法的正值要求，计算会失败。
+
+观测不足、设计矩阵秩不足或预测产生非有限值时，当前变换失败。预测行由组键、`xAs` 和 `yAs` 组成，不保留订单名等其它原始字段；`xAs`、`yAs` 也不能重名或覆盖组键。采样点数决定输出行数，与输入记录数无关。
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'BuiltinRegressionMethod',
+      kind: 'type',
+      type: 'linear | quadratic | polynomial | logarithmic | exponential | power',
+      description: '内置拟合方法名称；通过 Linear、Quadratic 等成员引用。',
+    },
+    {
+      name: 'IRDataSmoothTransform.params.method',
+      kind: 'property',
+      type: 'IRRegressionMethod',
+      description: '拟合方法及可序列化参数，省略时采用 linear。',
+    },
+    {
+      name: 'IRDataSmoothTransform.params.sampleCount',
+      kind: 'property',
+      type: 'number',
+      description: '每组预测点数，至少 2，省略时为 64。',
+    },
+    {
+      name: 'IRDataSmoothTransform.params.extent',
+      kind: 'property',
+      type: '[number, number]',
+      description: '递增采样范围，省略时使用有效观测的 x 范围；不筛选拟合观测。',
+    },
+    {
+      name: 'RegressionModel.predict',
+      kind: 'property',
+      type: '(x: number) => number',
+      description: '在原始数据空间预测 y；模型只存在于运行时，不写入 IR。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '计算算子原理',
+      description: '追踪拟合模型如何交给宿主生成预测行。',
+      url: '/viz/data/transform/statistics',
+    },
+    { title: '扩展机制', description: '定义并注册自定义拟合方法。', url: '/viz/data/transform/extensions' },
+    { title: 'API 参考', description: '查询拟合定义、实现与运行时入口。', url: '/viz/data/transform/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询方法声明与 smooth 参数结构。',
+      url: '/viz/data/transform/schema-reference',
+    },
+  ]}
+/>
