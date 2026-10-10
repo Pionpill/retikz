@@ -1,176 +1,113 @@
 ---
 title: regression · Fitting
-description: Build prediction models with six built-in fitting methods, generate trend samples through smooth, and compare curve shapes, degree and numeric constraints.
+description: Fit prediction models with six built-in methods and compare curves with fitted values at the original observation positions.
 ---
 
-Fitting starts by choosing a model form, estimates its parameters from existing data, then uses the model to calculate predictions. For a straight line, the process has three steps:
+Fitting estimates the coefficients of a chosen formula from $(x,y)$ observations and returns a callable prediction model. Call `resolveRegression(method).fit(rows)` to obtain the model, then `predict(x)` to calculate predictions. The model exists only at runtime and is not stored in IR. The curve need not pass through every observation.
 
-1. Choose the model $y=a+bx$ and least squares to estimate its coefficients. The formula is fixed, but $a$ and $b$ are still unknown.
-2. Pass the observed $(x,y)$ pairs to the fitting algorithm to estimate intercept $a$ and slope $b$, producing a callable prediction model.
-3. Choose a set of $x$ positions and calculate their $y$ values with the model to generate prediction points.
+Each method below has its own demo. The default graph shows gray observations and a blue fitted curve. In table mode, the left table keeps the original `x,y`; the right table adds a blue `fittedY` column to the same 9 observations. This column is a demo projection calculated from the model, not a field automatically added by the fitting operator. Orange marks the data used for fitting. Both views use the same model; sample count only changes the number of prediction points in the graph.
 
-In Data, `method` selects the fitting method, the operator's `fit` estimates parameters and returns a model, and `smooth` calls its `predict(x)` to generate prediction rows. For polynomial fitting, the degree is chosen beforehand; the data determines the coefficients.
+To use fitting through the [`smooth` host](/viz/data/transform/statistics), place the method declaration in `params.method`. `smooth` reads observations whose `x,y` are both finite numbers, without converting numeric strings, and generates separate prediction rows: 64 per group by default. Its default sampling range spans valid observed $x$ values and does not filter fitting observations. Prediction rows do not automatically preserve other original fields. Insufficient observations, a rank-deficient matrix or non-finite predictions cause computation to fail.
 
-Gray points on this page show observations; the blue line connects predictions. Predictions are not new observations, and the curve need not pass through every original point.
+## linear · Linear
 
-<ComponentAlert
-  type="tip"
-  title="Original data and predictions"
-  description="Fitting does not append predictions to the original detail table. The default demo keeps its 9 observations unchanged, while smooth generates 32 separate prediction rows. The scatter points use the original data; the fitted line uses predictions independently. If smooth runs on the whole data chain, subsequent stages receive those 32 prediction rows. To retain both observations and predictions in one table, combine the two datasets explicitly."
+`linear` fits the line $y=a+bx$ by least squares. It describes relationships with an approximately constant rate of change. It requires at least two valid observations with varying $x$. Its Schema is `BuiltinRegressionMethodSchemas.Linear`. Parameters:
+
+| Property | Type       | Description    |
+| -------- | ---------- | -------------- |
+| `kind`   | `'linear'` | Fitting method |
+
+<ComponentPreview
+  files={['regression-linear', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between graph and table to compare the same model’s curve and fittedY; changing the last observation refits the model"
 />
 
-## Using fitting operators
+## quadratic · Quadratic
 
-Import `BuiltinRegressionMethod` and `applyTransforms` from `@retikz/data`. Set the method in `smooth.params.method` to produce prediction rows. The same operation declaration can also be executed by a host such as Plot.
+`quadratic` fits $y=a+bx+cx^2$ by least squares. It can describe curvature or a single turning point. It requires at least three distinct $x$ values. Its Schema is `BuiltinRegressionMethodSchemas.Quadratic`. Parameters:
 
-<ComponentPreview files="regression-minimal" hideCode size="lg" />
+| Property | Type          | Description    |
+| -------- | ------------- | -------------- |
+| `kind`   | `'quadratic'` | Fitting method |
 
-```ts
-import { applyTransforms, BuiltinRegressionMethod } from '@retikz/data';
+<ComponentPreview
+  files={['regression-quadratic', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between graph and table to compare the same model’s curve and fittedY; changing the last observation refits the model"
+/>
 
-const rows = [
-  { x: 1, y: 2 },
-  { x: 2, y: 3 },
-  { x: 3, y: 4 },
-  { x: 4, y: 4 },
-  { x: 5, y: 6 },
-  { x: 6, y: 10 },
-  { x: 7, y: 16 },
-  { x: 8, y: 21 },
-  { x: 9, y: 33 },
-];
-const trend = applyTransforms(rows, [
-  {
-    kind: 'smooth',
-    params: {
-      x: 'x',
-      y: 'y',
-      method: { kind: BuiltinRegressionMethod.Linear },
-      sampleCount: 32,
-      xAs: 'trendX',
-      yAs: 'trendY',
-    },
-  },
-]);
-// trend contains 32 rows, each with trendX and trendY
-```
+## polynomial · Polynomial
 
-`sampleCount` controls the number of predictions and defaults to 64. `extent` controls the sampling range and defaults to the valid observations' $x$ range. These settings change output positions and counts without changing the observations used to fit the model. With `groupBy`, each group is fitted and sampled independently; output retains group keys and the two prediction fields.
+`polynomial` fits $y=a_0+a_1x+\cdots+a_dx^d$ by least squares. `order` sets the degree $d$; the observations determine the coefficients. A degree-$d$ fit requires at least $d+1$ distinct $x$ values. Higher degrees can increase fluctuations between observations or outside their range and are not necessarily a better choice. Its Schema is `BuiltinRegressionMethodSchemas.Polynomial`. Parameters:
 
-## Linear and polynomial models
-
-These methods use least squares in the original data space to estimate the coefficients below:
-
-| Method     | Declaration                                              | Curve                      |
-| ---------- | -------------------------------------------------------- | -------------------------- |
-| Linear     | `{ kind: BuiltinRegressionMethod.Linear }`               | $y=a+bx$                   |
-| Quadratic  | `{ kind: BuiltinRegressionMethod.Quadratic }`            | $y=a+bx+cx^2$              |
-| Polynomial | `{ kind: BuiltinRegressionMethod.Polynomial, order: 3 }` | $y=a_0+a_1x+\cdots+a_dx^d$ |
-
-| Parameter      | Values                          | Purpose                         |
-| -------------- | ------------------------------- | ------------------------------- |
-| `method.kind`  | linear, quadratic or polynomial | Selects the model form          |
-| `method.order` | Integer from 2 to 6, default 3  | Highest degree; polynomial only |
-
-Switch methods to compare a straight line with curves, then choose polynomial to adjust its degree. Changing the last observation refits the model. With fewer samples, the blue hollow points spread apart and their connecting line shows more visible corners.
+| Property | Type           | Description                                              |
+| -------- | -------------- | -------------------------------------------------------- |
+| `kind`   | `'polynomial'` | Fitting method                                           |
+| `order`  | `number`       | Optional integer from 2 to 6, default 3; sets the degree |
 
 <ComponentPreview
   files={['regression-polynomial', 'regression-preview.tsx', 'regression-samples.data.ts']}
-  defaultSourceFile="regression-preview.tsx"
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
   size="lg"
-  caption="Gray points are observations and blue hollow points are predictions. The demo uses 32 samples; the host default is 64."
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between graph and table to compare the same model’s curve and fittedY; changing the last observation refits the model"
 />
 
-Linear fitting needs at least two valid pairs with varying $x$. Quadratic fitting needs at least three distinct $x$ values; degree $d$ needs at least $d+1$. A higher degree may follow these observations more closely but can also fluctuate between points or outside the observed range. Choose it based on the data relationship.
+## logarithmic · Logarithmic
 
-## Logarithmic, exponential and power models
+`logarithmic` fits $y=a+b\ln x$, which can describe a gradually slowing change. It applies linear least squares after taking the logarithm of $x$ and predicts $y$ in the original space. It requires at least two valid observations with varying $x$. Observed and predicted $x$ values must be positive. Its Schema is `BuiltinRegressionMethodSchemas.Logarithmic`. Parameters:
 
-These methods apply logarithmic transformations to observations, then use linear least squares. Predictions are returned in the original data space.
-
-| Method      | Declaration                                     | Curve        | Positive-value requirements        |
-| ----------- | ----------------------------------------------- | ------------ | ---------------------------------- |
-| Logarithmic | `{ kind: BuiltinRegressionMethod.Logarithmic }` | $y=a+b\ln x$ | Observed and sampled $x>0$         |
-| Exponential | `{ kind: BuiltinRegressionMethod.Exponential }` | $y=ae^{bx}$  | Observed $y>0$                     |
-| Power       | `{ kind: BuiltinRegressionMethod.Power }`       | $y=ax^b$     | Observed $x,y>0$ and sampled $x>0$ |
-
-These methods have no additional method parameters. Compare their growth shapes on the same positive observations below, then adjust the last observation to see how each model responds.
+| Property | Type            | Description    |
+| -------- | --------------- | -------------- |
+| `kind`   | `'logarithmic'` | Fitting method |
 
 <ComponentPreview
-  files={['regression-transformed', 'regression-preview.tsx', 'regression-samples.data.ts']}
-  defaultSourceFile="regression-preview.tsx"
+  files={['regression-logarithmic', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
   size="lg"
-  caption="All observed x and y values are positive. Axis ranges stay fixed while you compare the three curves."
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between graph and table to compare the same model’s curve and fittedY; changing the last observation refits the model"
 />
 
-Each method needs at least two valid pairs with varying transformed $x$. Exponential and power models fit $y$ in logarithmic space, so their results differ from models that minimize error directly in the original space. Logarithmic and power sampling ranges must exclude zero and negative values.
+## exponential · Exponential
 
-## Numeric and output constraints
+`exponential` fits $y=ae^{bx}$, which can describe proportional growth or decay. It applies linear least squares to the logarithm of $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$ and positive observed $y$. Its Schema is `BuiltinRegressionMethodSchemas.Exponential`. Parameters:
 
-`smooth` passes only pairs with finite numeric $x$ and $y$ to the operator. It does not convert numeric strings. Zero and negative numbers are finite and still reach fitting; violating a method's positive-value requirements fails the computation.
+| Property | Type            | Description    |
+| -------- | --------------- | -------------- |
+| `kind`   | `'exponential'` | Fitting method |
 
-Insufficient observations, a rank-deficient design matrix or non-finite predictions fail the current transform. Prediction rows contain group keys, `xAs` and `yAs`, without other original fields such as order names. `xAs` and `yAs` must differ and cannot overwrite group keys. Sample count determines output row count independently of input count.
-
-## Related props
-
-<ComponentProps
-  items={[
-    {
-      name: 'BuiltinRegressionMethod',
-      kind: 'type',
-      type: 'linear | quadratic | polynomial | logarithmic | exponential | power',
-      description: 'Built-in method names, referenced through members such as Linear and Quadratic.',
-    },
-    {
-      name: 'IRDataSmoothTransform.params.method',
-      kind: 'property',
-      type: 'IRRegressionMethod',
-      description: 'Method and serializable parameters; defaults to linear.',
-    },
-    {
-      name: 'IRDataSmoothTransform.params.sampleCount',
-      kind: 'property',
-      type: 'number',
-      description: 'Prediction count per group; at least 2, default 64.',
-    },
-    {
-      name: 'IRDataSmoothTransform.params.extent',
-      kind: 'property',
-      type: '[number, number]',
-      description:
-        'Increasing sampling range; defaults to the valid observations’ x range without filtering fitting observations.',
-    },
-    {
-      name: 'RegressionModel.predict',
-      kind: 'property',
-      type: '(x: number) => number',
-      description: 'Predicts y in the original data space. The model exists only at runtime and is not stored in IR.',
-    },
-  ]}
+<ComponentPreview
+  files={['regression-exponential', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between graph and table to compare the same model’s curve and fittedY; changing the last observation refits the model"
 />
 
-## Further reading
+## power · Power
 
-<LinkedSections
-  items={[
-    {
-      title: 'Computation operator internals',
-      description: 'Follow prediction models into host-generated output rows.',
-      url: '/viz/data/transform/statistics',
-    },
-    {
-      title: 'Extension mechanisms',
-      description: 'Define and register a custom fitting method.',
-      url: '/viz/data/transform/extensions',
-    },
-    {
-      title: 'API reference',
-      description: 'Look up fitting definitions, implementations and runtime entries.',
-      url: '/viz/data/transform/api-reference',
-    },
-    {
-      title: 'Schema reference',
-      description: 'Look up method declarations and smooth parameters.',
-      url: '/viz/data/transform/schema-reference',
-    },
-  ]}
+`power` fits $y=ax^b$ to describe power-law relationships. It applies linear least squares after taking the logarithm of both $x$ and $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$, positive observed $x$ and $y$, and positive prediction positions. Its Schema is `BuiltinRegressionMethodSchemas.Power`. Parameters:
+
+| Property | Type      | Description    |
+| -------- | --------- | -------------- |
+| `kind`   | `'power'` | Fitting method |
+
+<ComponentPreview
+  files={['regression-power', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="Switch between graph and table to compare the same model’s curve and fittedY; changing the last observation refits the model"
 />
