@@ -251,7 +251,7 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 | `sum` / `mean`  | `field`、`as`                                          | 输出数值字段的总和或算术平均值                  |
 | `median`        | `field`、`as`                                          | 输出数值字段的中位数                            |
 | `min` / `max`   | `field`、`as`                                          | 输出数值字段的最小值或最大值                    |
-| `extent`        | `field`、`as`                                          | 输出数值字段的最小值与最大值区间                |
+| `extent`        | `field`、`as.min`、`as.max`                            | 将数值字段的最小值与最大值输出为两个连续型字段  |
 | `quantile`      | `field`、`p`、`as`                                     | 输出概率 `p` 对应的分位点                       |
 | `quantile-band` | `field`、`lowerP`、`upperP`、`outputs`、可选 `whisker` | 一次输出分位区间、附加分位点、spread 与 whisker |
 | 自定义 `kind`   | JSON-safe 配置                                         | 由匹配的 `StatisticsReducerDefinition` 解析执行 |

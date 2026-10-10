@@ -106,11 +106,8 @@ describe('mark-local transform', () => {
       transform: [
         {
           operation: {
-            kind: 'summarize',
-            params: {
-              groupBy: ['group'],
-              metrics: [{ kind: 'extent', field: 'value', as: 'range' }],
-            },
+            kind: 'double-local',
+            params: { field: 'value', as: 'range' },
           },
         },
       ],
@@ -127,8 +124,19 @@ describe('mark-local transform', () => {
         },
       ],
     });
-    const { dataArtifact } = lowerPlotWithDataArtifact(spec, { rows: [] });
-    const expectedModel = [{ name: 'group', type: 'categorical', order: ['B', 'A'] }, { name: 'range' }];
+    const { dataArtifact } = lowerPlotWithDataArtifact(
+      spec,
+      { rows: [] },
+      {
+        transformDefinitions: [doubleTransform],
+        transformImplementations: [doubleTransformImplementation],
+      },
+    );
+    const expectedModel = [
+      { name: 'value', type: 'continuous' },
+      { name: 'group', type: 'categorical', order: ['B', 'A'] },
+      { name: 'range' },
+    ];
 
     expect(dataArtifact.rootDataView.model).toEqual(expectedModel);
     expect(dataArtifact.markDataViews[0].dataView.model).toEqual(expectedModel);

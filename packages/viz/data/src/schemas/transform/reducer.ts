@@ -24,6 +24,24 @@ const createFieldReducerOperationSchema = <TKind extends string>(kind: TKind) =>
     as: NonBlankStringSchema.describe('Output field'),
   }).describe('Field reducer operation');
 
+/** extent reducer 输出字段映射；最小值和最大值字段名不得相同 */
+const ExtentReducerOutputsSchema = strictObject({
+  min: NonBlankStringSchema.describe('Minimum output field'),
+  max: NonBlankStringSchema.describe('Maximum output field'),
+})
+  .refine(outputs => outputs.min !== outputs.max, {
+    message: 'extent output fields must be distinct',
+    path: ['max'],
+  })
+  .describe('Extent output field mapping');
+
+/** extent reducer operation schema；把有限数值范围输出为两个标量字段 */
+const ExtentReducerOperationSchema = strictObject({
+  kind: literal(BuiltinReducerOperationKind.Extent).describe('Discriminator: extent reducer'),
+  field: NonBlankStringSchema.describe('Numeric source field'),
+  as: ExtentReducerOutputsSchema.describe('Distinct minimum and maximum output field names'),
+}).describe('Extent reducer operation');
+
 /** quantile reducer operation schema；输出指定概率位置的单个分位点 */
 const QuantileReducerOperationSchema = strictObject({
   kind: literal(BuiltinReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
@@ -122,7 +140,7 @@ export const BuiltinReducerOperationSchemas = Object.freeze({
   Median: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Median),
   Min: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Min),
   Max: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Max),
-  Extent: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Extent),
+  Extent: ExtentReducerOperationSchema,
   Quantile: QuantileReducerOperationSchema,
   QuantileBand: QuantileBandReducerOperationSchema,
 });

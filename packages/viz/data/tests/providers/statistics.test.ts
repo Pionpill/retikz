@@ -66,7 +66,7 @@ describe('statistics provider schema boundaries', () => {
     expect(() => applySelectorOperation([{ value: 2 }], selector, DEFAULT_TRANSFORM_CONTEXT)).toThrow();
   });
 
-  it('exposes scalar reducer output descriptors without treating extent as scalar', () => {
+  it('exposes continuous output descriptors for scalar reducers and both extent endpoints', () => {
     expect(reducerOutputDescriptors({ kind: 'count', as: 'rows' })).toEqual([
       { field: 'rows', type: DataFieldType.Continuous },
     ]);
@@ -76,7 +76,14 @@ describe('statistics provider schema boundaries', () => {
     expect(reducerOutputDescriptors({ kind: 'quantile', field: 'value', p: 0.5, as: 'median' })).toEqual([
       { field: 'median', type: DataFieldType.Continuous },
     ]);
-    expect(reducerOutputDescriptors({ kind: 'extent', field: 'value', as: 'range' })).toEqual([{ field: 'range' }]);
+    expect(reducerOutputDescriptors({ kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } })).toEqual([
+      { field: 'low', type: DataFieldType.Continuous },
+      { field: 'high', type: DataFieldType.Continuous },
+    ]);
+    expect(reducerOutputFields({ kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } })).toEqual([
+      'low',
+      'high',
+    ]);
   });
 
   it('uses the registered reducer descriptor for custom scalar candidates', () => {

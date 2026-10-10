@@ -22,7 +22,7 @@ import {
 } from '../../src/providers/statistics';
 
 describe('statistics provider runtime', () => {
-  it('computes every scalar reducer from finite field values', () => {
+  it('computes scalar reducers and extent endpoints from finite field values', () => {
     const rows = [{ value: 1 }, { value: 4 }, { value: 9 }, { value: Number.NaN }, { value: Infinity }, {}];
 
     expect(
@@ -66,10 +66,10 @@ describe('statistics provider runtime', () => {
     expect(
       applyReducerOperation(
         rows,
-        { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: 'result' },
+        { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: { min: 'low', max: 'high' } },
         DEFAULT_TRANSFORM_CONTEXT,
       ),
-    ).toEqual({ result: [1, 9] });
+    ).toEqual({ low: 1, high: 9 });
     expect(
       applyReducerOperation(
         rows,
@@ -116,10 +116,10 @@ describe('statistics provider runtime', () => {
     expect(
       applyReducerOperation(
         rows,
-        { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: 'result' },
+        { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: { min: 'low', max: 'high' } },
         DEFAULT_TRANSFORM_CONTEXT,
       ),
-    ).toEqual({ result: [1, 1_000_000] });
+    ).toEqual({ low: 1, high: 1_000_000 });
     expect(
       applyReducerOperation(
         rows,
@@ -160,12 +160,12 @@ describe('statistics provider runtime', () => {
 
     const extent = applyReducerOperation(
       [],
-      { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: 'result' },
+      { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: { min: 'low', max: 'high' } },
       DEFAULT_TRANSFORM_CONTEXT,
-    ).result;
+    );
 
-    expect(Array.isArray(extent)).toBe(true);
-    expect((extent as Array<unknown>).every(value => typeof value === 'number' && Number.isNaN(value))).toBe(true);
+    expect(Number.isNaN(extent.low)).toBe(true);
+    expect(Number.isNaN(extent.high)).toBe(true);
 
     const band = applyReducerOperation(
       [],

@@ -68,7 +68,7 @@ preserve 保留未覆盖字段的分类 order；`{ from: field }` 同时沿用�
 | `RegressionDefinition`        | schema、方法语义、预测域约束                              | `RegressionImplementation.fit`           |
 | `TransformDefinition`         | schema、输入字段、输出模型、依赖、领域校验、可选 schedule | `TransformImplementation.apply`          |
 
-reducer 的 outputs 必须声明全部字段；数组或其它非标量结果可以不声明测量类型。例如 `extent` 仍返回数组，不能标为 continuous，也不能因无法表达其类型而清空其它已证明字段的类型。
+reducer 的 outputs 必须声明全部字段。`extent` 使用 `as: { min, max }` 指定两个必填、非空且互不相同的输出字段，将有限数值最小值与最大值分别输出为 continuous；空组的两个端点均为 NaN，不接受字符串 as。自定义 reducer 的数组或其它非标量结果可以不声明测量类型，也不能因无法表达其类型而清空其它已证明字段的类型。
 
 本地 Implementation 引用一个语义 Definition，使用其解析后的参数，不拥有第二份 schema 或默认值。`defineTransformImplementation`、`defineStatisticsReducerImplementation`、`defineRowSelectorImplementation` 和 `defineRegressionImplementation` 保持 Definition 与回调的泛型关联。既有 `defineXxx` 入口用于语义 Definition。
 

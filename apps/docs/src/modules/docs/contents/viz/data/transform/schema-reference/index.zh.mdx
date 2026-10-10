@@ -411,7 +411,7 @@ description: 查询数据变换、计算算子与执行配置的字段、类型�
 
 ## ReducerOperationSchema
 
-count 只需要 kind 和 as；字段归约通常还需要 field。quantile 使用 p，quantile-band 使用 lowerP、upperP 和 outputs。自定义算子的额外字段必须是 JSON 值。
+count 只需要 kind 和 as；字段归约通常还需要 field。extent 用 as.min 和 as.max 指定两个不同的连续型输出字段；单值算子的 as 为字符串。quantile 使用 p，quantile-band 使用 lowerP、upperP 和 outputs。自定义算子的额外字段必须是 JSON 值。
 
 <ZodSchema
   name="ReducerOperationSchema"
@@ -419,7 +419,7 @@ count 只需要 kind 和 as；字段归约通常还需要 field。quantile 使�
   descriptions={{
     kind: '归约算子名称',
     field: '数值源字段；count 不读取字段',
-    as: '输出字段',
+    as: '单值算子的输出字段名；extent 使用包含 min、max 的对象',
     p: '分位概率，取值 0..1',
     lowerP: '下界分位概率，必须小于 upperP',
     upperP: '上界分位概率',

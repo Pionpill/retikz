@@ -19,7 +19,11 @@ import {
   SummarizeTransformSchema,
   TransformSchema,
 } from '../../src';
-import { ExternalReducerOperationSchema, ExternalSelectorOperationSchema } from '../../src/schemas/transform';
+import {
+  BuiltinReducerOperationSchemas,
+  ExternalReducerOperationSchema,
+  ExternalSelectorOperationSchema,
+} from '../../src/schemas/transform';
 
 const closedObjectSchemaCases: Array<{
   name: string;
@@ -27,6 +31,11 @@ const closedObjectSchemaCases: Array<{
   value: Record<string, unknown>;
 }> = [
   { name: 'order-by', schema: OrderBySchema, value: { field: 'month', order: 'ascending' } },
+  {
+    name: 'extent reducer',
+    schema: BuiltinReducerOperationSchemas.Extent,
+    value: { kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } },
+  },
   { name: 'quantile point', schema: QuantileBandPointOutputSchema, value: { p: 0.5, as: 'median' } },
   { name: 'min/max whisker', schema: QuantileBandWhiskerSchema, value: { kind: 'minMax' } },
   { name: 'spread whisker', schema: QuantileBandWhiskerSchema, value: { kind: 'spread', factor: 1.5 } },
@@ -105,9 +114,74 @@ describe('transform schema', () => {
       as: 'metric',
     });
     expect(DataScalarReducerOperationSchema.safeParse({ kind: 'mean' }).success).toBe(false);
-    expect(DataScalarReducerOperationSchema.safeParse({ kind: 'extent', field: 'value', as: 'range' }).success).toBe(
-      false,
-    );
+    expect(
+      DataScalarReducerOperationSchema.safeParse({ kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } })
+        .success,
+    ).toBe(false);
+  });
+
+  it.each([
+    'range',
+    { min: 'low' },
+    { max: 'high' },
+    { min: '', max: 'high' },
+    { min: 'low', max: ' ' },
+    { min: 'same', max: 'same' },
+    { min: 'low', max: 'high', extra: true },
+  ])('rejects invalid extent output mappings: %j', as => {
+    expect(BuiltinReducerOperationSchemas.Extent.safeParse({ kind: 'extent', field: 'value', as }).success).toBe(false);
+  });
+
+  it('reports extent endpoint conflicts at their declaration paths', () => {
+    const duplicateEndpoint = BuiltinReducerOperationSchemas.Extent.safeParse({
+      kind: 'extent',
+      field: 'value',
+      as: { min: 'same', max: 'same' },
+    });
+    expect(duplicateEndpoint.success).toBe(false);
+    if (!duplicateEndpoint.success) expect(duplicateEndpoint.error.issues[0].path).toEqual(['as', 'max']);
+
+    const cases = [
+      {
+        operation: {
+          kind: 'summarize',
+          params: {
+            groupBy: ['group'],
+            metrics: [{ kind: 'extent', field: 'value', as: { min: 'group', max: 'high' } }],
+          },
+        },
+        path: ['params', 'metrics', 0, 'as', 'min'],
+      },
+      {
+        operation: {
+          kind: 'summarize',
+          params: {
+            metrics: [
+              { kind: 'count', as: 'high' },
+              { kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } },
+            ],
+          },
+        },
+        path: ['params', 'metrics', 1, 'as', 'max'],
+      },
+      {
+        operation: {
+          kind: 'annotate',
+          params: {
+            metrics: [{ kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } }],
+            selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'high' }],
+          },
+        },
+        path: ['params', 'selectors', 0, 'as'],
+      },
+    ];
+    for (const { operation, path } of cases) {
+      expect(TransformSchema.safeParse(operation).success).toBe(false);
+      const schema = operation.kind === 'summarize' ? SummarizeTransformSchema : AnnotateTransformSchema;
+      const result = schema.safeParse(operation);
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues).toContainEqual(expect.objectContaining({ path }));
+    }
   });
 
   it('rejects transform output fields that collide within one operation', () => {

@@ -95,16 +95,16 @@ Every transform operation uses `{ kind, params }`: `kind` selects its definition
 
 <ZodSchema name="ReducerOperationSchema" />
 
-| `kind`          | Fields                                                     | Result                                                           |
-| --------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| `count`         | `as`                                                       | Output the row count                                             |
-| `sum` / `mean`  | `field`, `as`                                              | Output a numeric-field sum or arithmetic mean                    |
-| `median`        | `field`, `as`                                              | Output the numeric-field median                                  |
-| `min` / `max`   | `field`, `as`                                              | Output the numeric-field minimum or maximum                      |
-| `extent`        | `field`, `as`                                              | Output the numeric-field minimum/maximum extent                  |
-| `quantile`      | `field`, `p`, `as`                                         | Output the quantile at probability `p`                           |
-| `quantile-band` | `field`, `lowerP`, `upperP`, `outputs`, optional `whisker` | Output a band, extra quantiles, spread, and whiskers             |
-| Custom `kind`   | JSON-safe config                                           | Parse and run through the matching `StatisticsReducerDefinition` |
+| `kind`          | Fields                                                     | Result                                                                |
+| --------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- |
+| `count`         | `as`                                                       | Output the row count                                                  |
+| `sum` / `mean`  | `field`, `as`                                              | Output a numeric-field sum or arithmetic mean                         |
+| `median`        | `field`, `as`                                              | Output the numeric-field median                                       |
+| `min` / `max`   | `field`, `as`                                              | Output the numeric-field minimum or maximum                           |
+| `extent`        | `field`, `as.min`, `as.max`                                | Output the numeric-field minimum and maximum as two continuous fields |
+| `quantile`      | `field`, `p`, `as`                                         | Output the quantile at probability `p`                                |
+| `quantile-band` | `field`, `lowerP`, `upperP`, `outputs`, optional `whisker` | Output a band, extra quantiles, spread, and whiskers                  |
+| Custom `kind`   | JSON-safe config                                           | Parse and run through the matching `StatisticsReducerDefinition`      |
 
 ## SelectorOperationSchema
 
