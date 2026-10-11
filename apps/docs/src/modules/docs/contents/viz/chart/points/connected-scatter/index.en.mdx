@@ -183,7 +183,7 @@ Follow each country's trajectory to read joint change. Time is represented by co
   defaultSourceFile="connected-scatter-encodings.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: ConnectedScatterEncodings](#connectedscatterencodings).
+For complete properties and constraints, see [API reference: ConnectedScatterEncodings](#connectedscatterencodings--irconnectedscatterchartencodings--connectedscatterchartencodingsschema).
 
 `order` controls connections within each group; input rows need not be sorted. The input rows are 3, 1, 2, 4. Enable “Sort by step” to connect steps 1 through 4, or disable it to follow input order. Point positions always depend only on `x` and `y`.
 
@@ -265,7 +265,7 @@ South Africa 2005 is intentionally missing in this example. Bridging changes the
   defaultSourceFile="connected-scatter-basic.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: ConnectedScatterProperties](#connectedscatterproperties).
+For complete properties and constraints, see [API reference: ConnectedScatterProperties](#connectedscatterproperties--irconnectedscatterchartproperties--connectedscatterchartpropertiesschema).
 
 ### Connected scatter marks
 
@@ -340,7 +340,7 @@ Each group draws the path before its points so the line does not cover observati
   defaultSourceFile="connected-scatter-marks.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: ConnectedScatterMark](#connectedscattermark).
+For complete properties and constraints, see [API reference: ConnectedScatterMark](#connectedscattermark--irconnectedscattermark--connectedscatterchartmarkschema).
 
 ## Extended usage
 
@@ -405,77 +405,9 @@ Chart resolves one connected-scatter mark to an open Plot Path and a Plot Point 
   ]}
 />
 
-## API reference
+## API Reference
 
-React uses `ConnectedScatterChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `connectedScatterChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'connected-scatter'`. React and the Vanilla API supply the chart type automatically.
-
-In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, and presentation, see [General Structure](/viz/chart/model/general-structure).
-
-#### ConnectedScatterEncodings
-
-Corresponds to `ConnectedScatterEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
-
-| Channel        | Input form                   | Description                                                                |
-| -------------- | ---------------------------- | -------------------------------------------------------------------------- |
-| `x / y`        | Field name, position mapping | Required observation positions                                             |
-| `order`        | Field name, direct mapping   | Required within-group connection order; not array order                    |
-| `series`       | Field name, direct mapping   | Split trajectories and categorical colors/legend; accepts an ordinal scale |
-| `row / column` | Field name, facet dimension  | Create row or column facets                                                |
-| `facet`        | `IRPlotFacetOptions`         | Configures facets; requires at least one of `row` and `column`             |
-
-Shared mapping parameters are not expanded here; see the [encoding schema](#connectedscatterchartencodingsschema) for exact inputs.
-
-#### ConnectedScatterProperties
-
-Corresponds to `ConnectedScatterProperties`, Vanilla `properties` and IR `recipe.properties`.
-
-| Category   | Property            | Type                                                     | Description                                                                                                                                                                                                        |
-| ---------- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Appearance | `point`             | `IRConnectedScatterPointProperties`                      | Sets observation point appearance; excludes `zIndex`                                                                                                                                                               |
-|            | `path`              | `IRConnectedScatterPathProperties`                       | Sets open-path appearance                                                                                                                                                                                          |
-|            | `colorMode`         | `'series'`, `'mark'`, `'muted'`                          | Defaults to `series` (shared point/path color); `mark` assigns adjacent palette colors to each series point/path. `muted` shares colors with 60% default path opacity. Explicit paints and opacity take precedence |
-| Connection | `path.curve`        | `PathCurve`                                              | Defaults to `linear`; supports linear, step, stepBefore, stepAfter, basis, cardinal, catmullRom, monotoneX, monotoneY, natural                                                                                     |
-| Connection | `path.connectNulls` | boolean or stroke object                                 | Break by default; `true` or `{}` bridges gaps with a dashed stroke. Supports stroke, strokeWidth, strokeOpacity, dashPattern, dashOffset, lineCap, and lineJoin                                                    |
-| Padding    | `autoPadding`       | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance                                                                                                            |
-|            | `domainPadding`     | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                                                                                                                           |
-
-See the [properties schema](#connectedscatterchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
-
-#### ConnectedScatterMark
-
-Corresponds to `ConnectedScatterMark`, Vanilla `marks` and IR `recipe.marks`.
-
-| Property     | Type                                      | Description                                                      |
-| ------------ | ----------------------------------------- | ---------------------------------------------------------------- |
-| `override`   | `boolean`                                 | Replace the complete path-and-point group, otherwise append      |
-| `encodings`  | `ConnectedScatterChartMark['encodings']`  | Override direct fields only; series is always inherited          |
-| `properties` | `ConnectedScatterChartMark['properties']` | Merge appearance per member; chart padding policies are excluded |
-
-## Schema reference
-
-These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
-
-#### ConnectedScatterChartSchema
-
-<ZodSchema name="ConnectedScatterChartSchema" shallow />
-
-#### ConnectedScatterChartRecipeSchema
-
-<ZodSchema name="ConnectedScatterChartRecipeSchema" shallow />
-
-#### ConnectedScatterChartEncodingsSchema
-
-<ZodSchema name="ConnectedScatterChartEncodingsSchema" shallow />
-
-#### ConnectedScatterChartPropertiesSchema
-
-<ZodSchema name="ConnectedScatterChartPropertiesSchema" shallow />
-
-#### ConnectedScatterChartMarkSchema
-
-`encodings` accepts only optional field-name strings for x, y, order, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `colorMode`, `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
-
-<ZodSchema name="ConnectedScatterChartMarkSchema" shallow />
+{/* @include viz/chart/points/connected-scatter/generated */}
 
 ## Further reading
 

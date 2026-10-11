@@ -11,8 +11,11 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 `min` 和 `max` 选择数值字段最小或最大的原始行，跳过缺失值和非有限数值。并列时，`first` 取输入中较早的记录，`last` 取较晚的记录，`all` 保留全部同值记录。单条选择的排名为 1；选择多条并列记录时，排名按输出顺序从 1 连续编号。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.max</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性   | 类型                         | 说明                                     |
 | ------ | ---------------------------- | ---------------------------------------- |
@@ -21,6 +24,15 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `tie`  | `'first' \| 'last' \| 'all'` | 可选，并列极值的处理策略，默认 `'first'` |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `min`
@@ -48,6 +60,7 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -68,8 +81,11 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 `first` 和 `last` 选择组内首行或末行。省略 `orderBy` 时沿用当前输入顺序；提供规则时先稳定排序，相同排序键保留输入中的相对顺序。这两个算子不要求排序字段为有限数值，返回的排名均为 1。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"IRDataOrderBy"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={53}>IRDataOrderBy</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.first</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.last</ApiSourceLink> / <ApiSourceLink label={"OrderBySchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={20}>OrderBySchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性              | 类型                          | 说明                                             |
 | ----------------- | ----------------------------- | ------------------------------------------------ |
@@ -79,6 +95,17 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `orderBy[].order` | `'ascending' \| 'descending'` | 可选，排序方向，默认 `'ascending'`               |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+
+export type IRDataOrderBy = ZodInfer<typeof OrderBySchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `first`
@@ -115,6 +142,7 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -135,8 +163,11 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 `top` 按数值降序选择最高 N 行，`bottom` 按数值升序选择最低 N 行；两者跳过缺失值和非有限数值，排名按输出顺序从 1 连续编号。并列策略作用在第 N 行的截断边界：`first` 保留稳定排序的前 N 行，`all` 纳入边界上的全部同值记录，`last` 将最后一个位置替换为边界并列记录中的末条。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.top</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.bottom</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性   | 类型                         | 说明                                                                     |
 | ------ | ---------------------------- | ------------------------------------------------------------------------ |
@@ -146,6 +177,15 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `tie`  | `'first' \| 'last' \| 'all'` | 可选，第 N 行边界的并列策略，默认 `'first'`；`'all'` 可能使结果超过 N 行 |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `top`
@@ -175,6 +215,7 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -195,8 +236,11 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 `nth` 按必填的 `orderBy` 稳定排序，再选择零基下标 `index` 对应的原始行。下标 0 表示第一行，返回排名为 1；其它位置的排名为 `index + 1`。下标越过组内行数时，该组没有选择结果。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"IRDataOrderBy"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={53}>IRDataOrderBy</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.nth</ApiSourceLink> / <ApiSourceLink label={"OrderBySchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={20}>OrderBySchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性              | 类型                          | 说明                               |
 | ----------------- | ----------------------------- | ---------------------------------- |
@@ -207,6 +251,17 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `index`           | `number`                      | 必填，非负整数，排序后的零基下标   |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+
+export type IRDataOrderBy = ZodInfer<typeof OrderBySchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `nth`
@@ -233,6 +288,7 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -253,8 +309,11 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 `outside-quantile-band` 计算数值字段的上下分位点，再选择边界之外的原始行，跳过缺失值和非有限数值。设分位点为 $L$、$U$，`band` 使用区间 $[L,U]$；`spread` 使用围栏 $[L-f(U-L),U+f(U-L)]$。只选择严格小于下界或严格大于上界的记录，等于边界的值属于区间内。输出沿用原始输入顺序，排名从 1 连续编号。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataOutsideQuantileBandSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={50}>IRDataOutsideQuantileBandSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"OutsideQuantileBandSelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={68}>OutsideQuantileBandSelectorOperationSchema</ApiSourceLink> / <ApiSourceLink label={"OutsideQuantileBandBoundarySchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={57}>OutsideQuantileBandBoundarySchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性              | 类型                      | 说明                                           |
 | ----------------- | ------------------------- | ---------------------------------------------- |
@@ -267,6 +326,15 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `boundary.factor` | `number`                  | 可选，非负数，默认 1.5；仅 `spread` 策略使用   |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataOutsideQuantileBandSelectorOperation = ZodInfer<typeof OutsideQuantileBandSelectorOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `OutsideQuantileBandSelectorOperationSchema`
@@ -295,6 +363,7 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

@@ -180,7 +180,7 @@ Toggle grouping to compare pooled and within-species trends. A pooled associatio
   defaultSourceFile="regression-encodings.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: RegressionEncodings](#regressionencodings).
+For complete properties and constraints, see [API reference: RegressionEncodings](#regressionencodings--irregressionchartencodings--regressionchartencodingsschema).
 
 ### Regression properties
 
@@ -246,7 +246,7 @@ Increasing sampleCount does not raise model order or fix insufficient observatio
   defaultSourceFile="regression-basic.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: RegressionProperties](#regressionproperties).
+For complete properties and constraints, see [API reference: RegressionProperties](#regressionproperties--irregressionchartproperties--regressionchartpropertiesschema).
 
 ### Regression marks
 
@@ -321,7 +321,7 @@ RegressionMark inherits series and cannot introduce a different grouping rule.
   defaultSourceFile="regression-marks.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: RegressionMark](#regressionmark).
+For complete properties and constraints, see [API reference: RegressionMark](#regressionmark--irregressionmark--regressionchartmarkschema).
 
 ## Extended usage
 
@@ -601,85 +601,9 @@ Direct IR stores the same JSON object in `recipe.properties.method`; pass the sa
 
 Custom methods also work in `extraMethods[].method`. Each group is fitted independently. `fit` must be synchronous and pure without mutating observations. Nonfinite predictions, unknown parameters, missing methods and duplicate registrations fail explicitly. Use `validateExtent(operation, extent)` for method-specific prediction domains.
 
-## API reference
+## API Reference
 
-React uses `RegressionChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `regressionChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'regression'`. React and the Vanilla API supply the chart type automatically.
-
-In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, and presentation, see [General Structure](/viz/chart/model/general-structure).
-
-#### RegressionEncodings
-
-Corresponds to `RegressionEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
-
-| Channel        | Input form                   | Description                                                                               |
-| -------------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
-| `x / y`        | Field name, position mapping | Required predictor and response                                                           |
-| `series`       | Field name, direct mapping   | Fit groups separately with shared categorical colors and legend; accepts an ordinal scale |
-| `row / column` | Field name, facet dimension  | Fit independently within each panel                                                       |
-| `facet`        | `IRPlotFacetOptions`         | Configures facets; requires at least one of `row` and `column`                            |
-
-Shared mapping parameters are not expanded here; see the [encoding schema](#regressionchartencodingsschema) for exact inputs.
-
-#### RegressionProperties
-
-Corresponds to `RegressionProperties`, Vanilla `properties` and IR `recipe.properties`.
-
-| Category   | Property        | Type                                                     | Description                                                                                             |
-| ---------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Fitting    | `method`        | `IRRegressionChartProperties['method']`                  | Selects the fitting method and parameters                                                               |
-|            | `extraMethods`  | `Array<IRRegressionExtraMethod>`                         | Ordered additional trends sharing the observations; omitted means none                                  |
-|            | `sampleCount`   | `number`                                                 | Prediction count per group; integer at least 2, default 64                                              |
-|            | `extent`        | `[number, number]`                                       | Increasing prediction interval; defaults to that group’s finite x range                                 |
-| Appearance | `point`         | `IRRegressionPointProperties`                            | Sets observation point appearance                                                                       |
-| Trend      | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | Default `catmullRom`; inherited by extra trends unless overridden                                       |
-|            | `trend`         | `IRRegressionTrendProperties`                            | Sets trend appearance without changing the fit                                                          |
-| Padding    | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
-|            | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
-
-See the [properties schema](#regressionchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
-
-#### RegressionMark
-
-Corresponds to `RegressionMark`, Vanilla `marks` and IR `recipe.marks`.
-
-| Property     | Type                                | Description                                                                                                                                       |
-| ------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `override`   | `boolean`                           | Replace the complete observation-and-trend group, otherwise append                                                                                |
-| `hidePoints` | `boolean`                           | Defaults to `false`; `true` omits this mark’s observation points while retaining the main and additional trends.                                  |
-| `encodings`  | `RegressionChartMark['encodings']`  | Override direct fields in the same data; series cannot be overridden                                                                              |
-| `properties` | `RegressionChartMark['properties']` | Replace method, sampleCount or extent; merge point/trend members; replace extraMethods as a whole, with [] clearing it; excludes padding policies |
-
-## Schema reference
-
-These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
-
-#### RegressionChartSchema
-
-<ZodSchema name="RegressionChartSchema" shallow />
-
-#### RegressionChartRecipeSchema
-
-<ZodSchema name="RegressionChartRecipeSchema" shallow />
-
-#### RegressionChartEncodingsSchema
-
-<ZodSchema name="RegressionChartEncodingsSchema" shallow />
-
-#### RegressionChartPropertiesSchema
-
-<ZodSchema name="RegressionChartPropertiesSchema" shallow />
-
-#### RegressionExtraMethodSchema
-
-Each entry requires a fitting method and inherits sampling and appearance settings from its group. It generates only a trend line. Array order determines drawing order; method colors and legends are not assigned automatically. A failed fit aborts the whole chart.
-
-<ZodSchema name="RegressionExtraMethodSchema" shallow />
-
-#### RegressionChartMarkSchema
-
-`encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
-
-<ZodSchema name="RegressionChartMarkSchema" shallow />
+{/* @include viz/chart/points/regression/generated */}
 
 ## Further reading
 

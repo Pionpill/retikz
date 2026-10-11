@@ -9,8 +9,11 @@ Use `summarize` for one statistics row per group, and `annotate` to place group 
 
 `summarize` runs one or more reducers per group and emits one row containing the group keys and metric fields. Other detail fields are dropped. Multiple group fields form a hierarchy in list order, preserving first-seen keys at each level. Metric output fields must be distinct and must not overwrite group keys. Its Schema is `SummarizeTransformSchema`; parameters are listed below:
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSummarizeTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={56}>IRDataSummarizeTransform</ApiSourceLink> / <ApiSourceLink label={"SummarizeTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={84}>SummarizeTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SummarizeParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={63}>SummarizeParamsSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property         | Type                            | Description                                                                           |
 | ---------------- | ------------------------------- | ------------------------------------------------------------------------------------- |
@@ -19,6 +22,15 @@ Use `summarize` for one statistics row per group, and `annotate` to place group 
 | `params.metrics` | `Array<IRDataReducerOperation>` | Required non-empty reducer list; each operation declares its output fields through as |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSummarizeTransform = ZodInfer<typeof SummarizeTransformSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SummarizeTransformSchema`
@@ -30,6 +42,7 @@ Use `summarize` for one statistics row per group, and `annotate` to place group 
 <ZodSchema name="SummarizeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -52,8 +65,11 @@ Use `summarize` for one statistics row per group, and `annotate` to place group 
 
 Supported selectors are min/max, first/last, top/bottom and nth. Min/max allow only first/last tie handling; top/bottom require n = 1. A selector with by writes that field from the selected row; otherwise it writes the selection rank. If no row is selected, that annotation field is not written. Its Schema is `AnnotateTransformSchema`; parameters are listed below:
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataAnnotateTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={65}>IRDataAnnotateTransform</ApiSourceLink> / <ApiSourceLink label={"IRDataAnnotateSelector"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={62}>IRDataAnnotateSelector</ApiSourceLink> / <ApiSourceLink label={"AnnotateTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={159}>AnnotateTransformSchema</ApiSourceLink> / <ApiSourceLink label={"AnnotateParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={128}>AnnotateParamsSchema</ApiSourceLink> / <ApiSourceLink label={"AnnotateSelectorSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={122}>AnnotateSelectorSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property                      | Type                                 | Description                                                                |
 | ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
@@ -65,6 +81,17 @@ Supported selectors are min/max, first/last, top/bottom and nth. Min/max allow o
 | `params.selectors[].as`       | `string`                             | Required annotation output field                                           |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataAnnotateTransform = ZodInfer<typeof AnnotateTransformSchema>;
+
+export type IRDataAnnotateSelector = ZodInfer<typeof AnnotateSelectorSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `AnnotateTransformSchema`
@@ -80,6 +107,7 @@ Supported selectors are min/max, first/last, top/bottom and nth. Min/max allow o
 <ZodSchema name="AnnotateSelectorSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

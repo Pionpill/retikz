@@ -135,7 +135,7 @@ type RuntimeSourceExecutionResult<T> = Readonly<{
 }>;
 ```
 
-Private executor的 `prepare/compare`成功返回 `RuntimeSourceExecutionResult`。Source 不提供领域变更提示校验回调，提示完整性由消费它的 Computation 负责。primary失败抛 `RetikzRuntimeError`，cleanup产生的 secondary diagnostics按发生顺序附在 error上，供 ADR-012聚合。`retire`不产生 primary throw，返回全部 lifecycle diagnostics以便继续清理其它 value。collector结果除逐项调用 identity validator外，还必须验证 `identity.owner === definition.key`，并用 segment exact equality检查整个集合在 owner内唯一；稀疏/非数组/duplicate/mismatch都属于 collect-identities phase。
+Private executor的 `prepare/compare`成功返回 `RuntimeSourceExecutionResult`。Source 不提供领域变更提示校验回调，提示完整性由消费它的 Computation 负责。primary失败抛 `RetikzRuntimeError`，cleanup产生的 secondary diagnostics按发生顺序附在 error上，供 ADR-012聚合。`retire`不产生 primary throw，返回全部 lifecycle diagnostics以便继续清理其它 value。collector结果除逐项调用 identity validator外，还必须验证 `identity.owner === definition.key`，并用 segment exact equality检查整个集合在 owner内唯一；空路径、空白段、稀疏路径、duplicate 与 mismatch 都属于 collect-identities phase。collector 的返回类型由 TypeScript 契约保证，纯 JavaScript 调用方自行校验类型。
 
 稳定错误分类：
 

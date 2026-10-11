@@ -1,17 +1,13 @@
+import { CoreTracePhase, CoreTraceUnit } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-import {
-  createRuntimeTraceReporter,
-  PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
-} from '@retikz/runtime';
+import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
 import { assertFullTrace, assertSingleTraceRecord } from '../src/shared';
 
 const expected = Object.freeze({
-  phase: PerformanceTracePhase.Compile,
-  unit: PerformanceTraceUnit.IrChild,
+  phase: CoreTracePhase.Compile,
+  unit: CoreTraceUnit.IrChild,
   visited: 1,
 });
 
@@ -22,16 +18,16 @@ describe('full trace assertion', () => {
       owner: '@retikz/core',
       phases: [
         {
-          phase: PerformanceTracePhase.Compile,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Compile,
+          unit: CoreTraceUnit.IrChild,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
       sink: record => records.push(record),
     });
     reporter.report({
-      phase: PerformanceTracePhase.Compile,
-      unit: PerformanceTraceUnit.IrChild,
+      phase: CoreTracePhase.Compile,
+      unit: CoreTraceUnit.IrChild,
       outcome: PerformanceTraceOutcome.Full,
       visited: 1,
       reused: 0,
@@ -47,24 +43,24 @@ describe('full trace assertion', () => {
       owner: '@retikz/core',
       phases: [
         {
-          phase: PerformanceTracePhase.Compile,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Compile,
+          unit: CoreTraceUnit.IrChild,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
       sink: record => records.push(record),
     });
     reporter.report({
-      phase: PerformanceTracePhase.Compile,
-      unit: PerformanceTraceUnit.IrChild,
+      phase: CoreTracePhase.Compile,
+      unit: CoreTraceUnit.IrChild,
       outcome: PerformanceTraceOutcome.Full,
       visited: 1,
       reused: 0,
       changed: 1,
     });
     reporter.report({
-      phase: PerformanceTracePhase.Compile,
-      unit: PerformanceTraceUnit.IrChild,
+      phase: CoreTracePhase.Compile,
+      unit: CoreTraceUnit.IrChild,
       outcome: PerformanceTraceOutcome.Full,
       visited: -1,
       reused: 0,
@@ -78,8 +74,8 @@ describe('full trace assertion', () => {
 describe('single trace assertion', () => {
   const incremental: PerformanceTraceRecord = Object.freeze({
     owner: '@retikz/render:svg',
-    phase: PerformanceTracePhase.Update,
-    unit: PerformanceTraceUnit.SceneChange,
+    phase: CoreTracePhase.Update,
+    unit: CoreTraceUnit.SceneChange,
     outcome: PerformanceTraceOutcome.Incremental,
     visited: 1,
     reused: 0,
@@ -89,7 +85,7 @@ describe('single trace assertion', () => {
   it('允许其它unit记录，但拒绝同unit额外outcome或工作量漂移', () => {
     const unrelated: PerformanceTraceRecord = Object.freeze({
       ...incremental,
-      unit: PerformanceTraceUnit.IrChild,
+      unit: CoreTraceUnit.IrChild,
       visited: 5_000,
       reused: 4_999,
     });

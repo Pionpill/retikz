@@ -1,0 +1,42 @@
+React 使用 `RangedDotChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `rangedDotChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'ranged-dot'`。React 与 Vanilla API 会补齐图形类型。
+
+React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局与标题配置见 [通用结构](/viz/chart/model/general-structure)。
+
+#### RangedDotEncodings
+
+对应 `RangedDotEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
+
+| 通道           | 输入形式             | 说明                                        |
+| -------------- | -------------------- | ------------------------------------------- |
+| `category`     | 字段名、位置映射     | 必需；固定映射 y 类别位置                   |
+| `start / end`  | 字段名、位置映射     | 必需；共用 x 尺度，显式尺度名必须一致       |
+| `color`        | 字段名、颜色映射     | 两个端点和连接线共用的颜色字段              |
+| `row / column` | 字段名、分面维度     | 按行、列分面                                |
+| `facet`        | `IRPlotFacetOptions` | 配置分面；须配合 `row`、`column` 中至少一项 |
+
+公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#rangeddotencodings--irrangeddotchartencodings--rangeddotchartencodingsschema)。
+
+#### RangedDotProperties
+
+对应 `RangedDotProperties`、Vanilla `properties` 和 IR `recipe.properties`。
+
+| 分类   | 属性            | 类型                                                     | 说明                                                             |
+| ------ | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| 端点   | `point`         | `IRRangedDotPointProperties`                             | 设置两个端点的共享外观                                           |
+|        | `startPoint`    | `IRRangedDotPointProperties`                             | 覆盖起点外观                                                     |
+|        | `endPoint`      | `IRRangedDotPointProperties`                             | 覆盖终点外观                                                     |
+| 连接线 | `range`         | `IRRangedDotRangeProperties`                             | 设置区间连接线外观                                               |
+| 留白   | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+|        | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
+
+完整属性结构见 [属性 Schema](#rangeddotproperties--irrangeddotchartproperties--rangeddotchartpropertiesschema)；公共外观配置不在这里展开。
+
+#### RangedDotMark
+
+对应 `RangedDotMark`、Vanilla `marks` 和 IR `recipe.marks`。
+
+| 属性         | 类型                               | 说明                                       |
+| ------------ | ---------------------------------- | ------------------------------------------ |
+| `override`   | `boolean`                          | 替换完整端点与连接线组合，否则追加         |
+| `encodings`  | `RangedDotChartMark['encodings']`  | 只覆盖直接字段；颜色映射继承 recipe        |
+| `properties` | `RangedDotChartMark['properties']` | 各成员外观对象分别合并；不开放图表留白策略 |

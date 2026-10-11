@@ -11,8 +11,11 @@ Use `relate` to compare two representative records or generate data for connecti
 
 Both endpoints use [selector](/viz/data/operators/selector). A group with no selection on either endpoint emits no relation row. Multiple selections do not form a Cartesian product. Its Schema is `RelateTransformSchema`; parameters are listed below:
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataRelateTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={92}>IRDataRelateTransform</ApiSourceLink> / <ApiSourceLink label={"IRDataEndpointProjection"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={86}>IRDataEndpointProjection</ApiSourceLink> / <ApiSourceLink label={"IRDataPairMeasureOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={89}>IRDataPairMeasureOperation</ApiSourceLink> / <ApiSourceLink label={"RelateTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={295}>RelateTransformSchema</ApiSourceLink> / <ApiSourceLink label={"RelateParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={282}>RelateParamsSchema</ApiSourceLink> / <ApiSourceLink label={"EndpointProjectionSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={257}>EndpointProjectionSchema</ApiSourceLink> / <ApiSourceLink label={"PairMeasureOperationSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={267}>PairMeasureOperationSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property                        | Type                                | Description                                                  |
 | ------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
@@ -32,6 +35,19 @@ Both endpoints use [selector](/viz/data/operators/selector). A group with no sel
 | `params.measures[].labelPrefix` | `string`                            | Optional text prefix for non-negative differences, such as + |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataRelateTransform = ZodInfer<typeof RelateTransformSchema>;
+
+export type IRDataEndpointProjection = ZodInfer<typeof EndpointProjectionSchema>;
+
+export type IRDataPairMeasureOperation = ZodInfer<typeof PairMeasureOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `RelateTransformSchema`
@@ -51,6 +67,7 @@ Both endpoints use [selector](/viz/data/operators/selector). A group with no sel
 <ZodSchema name="PairMeasureOperationSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

@@ -28,6 +28,10 @@ description: 创建运行实例，将来源更新与计算结果作为一次事�
 
 `createRuntime(options)` 接收来源、计算及初始输入，返回可更新和读取的运行实例。创建过程同步完成初始捕获与计算，成功后版本为 `0`。
 
+实例在创建时固定来源与计算注册表、更新策略、Trace 接收函数及参与者列表。之后替换调用方配置对象上的这些字段不会改变既有实例；需要另一组配置时，创建新实例。
+
+配置、更新输入和回调返回值遵循 TypeScript 契约；纯 JavaScript 调用方负责类型校验。Runtime 仍检查 Token 与注册表归属、依赖、版本和资源所有权等运行时不变量。
+
 ```ts
 declare const createRuntime: (options: RuntimeOptions) => Runtime;
 ```

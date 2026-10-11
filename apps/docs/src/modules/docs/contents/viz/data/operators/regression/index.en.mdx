@@ -13,14 +13,18 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 `linear` fits the line $y=a+bx$ by least squares. It describes relationships with an approximately constant rate of change. It requires at least two valid observations with varying $x$. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Linear"} path={"packages/viz/data/src/schemas/regression/schema.ts"} startLine={14}>BuiltinRegressionMethodSchemas.Linear</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type       | Description    |
 | -------- | ---------- | -------------- |
 | `kind`   | `'linear'` | Fitting method |
 
 </DocTab>
+
 <DocTab value="schema" label="Schema">
 
 Built-in `linear` parameter schema
@@ -33,6 +37,7 @@ Built-in `linear` parameter schema
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -48,14 +53,18 @@ Built-in `linear` parameter schema
 
 `quadratic` fits $y=a+bx+cx^2$ by least squares. It can describe curvature or a single turning point. It requires at least three distinct $x$ values. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Quadratic"} path={"packages/viz/data/src/schemas/regression/schema.ts"} startLine={14}>BuiltinRegressionMethodSchemas.Quadratic</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type          | Description    |
 | -------- | ------------- | -------------- |
 | `kind`   | `'quadratic'` | Fitting method |
 
 </DocTab>
+
 <DocTab value="schema" label="Schema">
 
 Built-in `quadratic` parameter schema
@@ -68,6 +77,7 @@ Built-in `quadratic` parameter schema
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -83,8 +93,11 @@ Built-in `quadratic` parameter schema
 
 `polynomial` fits $y=a_0+a_1x+\cdots+a_dx^d$ by least squares. `order` sets the degree $d$; the observations determine the coefficients. A degree-$d$ fit requires at least $d+1$ distinct $x$ values. Higher degrees can increase fluctuations between observations or outside their range and are not necessarily a better choice. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Polynomial"} path={"packages/viz/data/src/schemas/regression/schema.ts"} startLine={14}>BuiltinRegressionMethodSchemas.Polynomial</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type           | Description                                              |
 | -------- | -------------- | -------------------------------------------------------- |
@@ -92,6 +105,7 @@ Built-in `quadratic` parameter schema
 | `order`  | `number`       | Optional integer from 2 to 6, default 3; sets the degree |
 
 </DocTab>
+
 <DocTab value="schema" label="Schema">
 
 Built-in `polynomial` parameter schema
@@ -104,6 +118,7 @@ Built-in `polynomial` parameter schema
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -119,14 +134,18 @@ Built-in `polynomial` parameter schema
 
 `logarithmic` fits $y=a+b\ln x$, which can describe a gradually slowing change. It applies linear least squares after taking the logarithm of $x$ and predicts $y$ in the original space. It requires at least two valid observations with varying $x$. Observed and predicted $x$ values must be positive. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Logarithmic"} path={"packages/viz/data/src/schemas/regression/schema.ts"} startLine={14}>BuiltinRegressionMethodSchemas.Logarithmic</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type            | Description    |
 | -------- | --------------- | -------------- |
 | `kind`   | `'logarithmic'` | Fitting method |
 
 </DocTab>
+
 <DocTab value="schema" label="Schema">
 
 Built-in `logarithmic` parameter schema
@@ -139,6 +158,7 @@ Built-in `logarithmic` parameter schema
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -154,14 +174,18 @@ Built-in `logarithmic` parameter schema
 
 `exponential` fits $y=ae^{bx}$, which can describe proportional growth or decay. It applies linear least squares to the logarithm of $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$ and positive observed $y$. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Exponential"} path={"packages/viz/data/src/schemas/regression/schema.ts"} startLine={14}>BuiltinRegressionMethodSchemas.Exponential</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type            | Description    |
 | -------- | --------------- | -------------- |
 | `kind`   | `'exponential'` | Fitting method |
 
 </DocTab>
+
 <DocTab value="schema" label="Schema">
 
 Built-in `exponential` parameter schema
@@ -174,6 +198,7 @@ Built-in `exponential` parameter schema
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -189,14 +214,18 @@ Built-in `exponential` parameter schema
 
 `power` fits $y=ax^b$ to describe power-law relationships. It applies linear least squares after taking the logarithm of both $x$ and $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$, positive observed $x$ and $y$, and positive prediction positions. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Power"} path={"packages/viz/data/src/schemas/regression/schema.ts"} startLine={14}>BuiltinRegressionMethodSchemas.Power</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type      | Description    |
 | -------- | --------- | -------------- |
 | `kind`   | `'power'` | Fitting method |
 
 </DocTab>
+
 <DocTab value="schema" label="Schema">
 
 Built-in `power` parameter schema
@@ -209,6 +238,7 @@ Built-in `power` parameter schema
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

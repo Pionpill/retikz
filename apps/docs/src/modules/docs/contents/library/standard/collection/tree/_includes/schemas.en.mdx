@@ -1,0 +1,9 @@
+Source retains strings or configured nodes and sparse overrides; the factory does not fill defaults. Parsing layout materializes its static defaults. Node and connection defaults apply after merging overrides.
+
+#### TreeSchema
+
+<ZodSchema
+  name="TreeSchema"
+  description="A static ordered tree of text nodes and parent-child connections"
+  expandNested
+/>

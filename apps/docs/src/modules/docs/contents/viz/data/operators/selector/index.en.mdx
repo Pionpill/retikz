@@ -11,8 +11,11 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 `min` and `max` select the original rows with the smallest or largest numeric field values, skipping missing and non-finite values. For ties, `first` selects the earlier input record, `last` selects the later one, and `all` keeps every tied record. A single selection has rank 1; multiple tied records receive consecutive ranks starting at 1 in output order. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.max</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type                         | Description                                  |
 | -------- | ---------------------------- | -------------------------------------------- |
@@ -21,6 +24,15 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `tie`    | `'first' \| 'last' \| 'all'` | Optional tie strategy, defaults to `'first'` |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `min`
@@ -32,6 +44,7 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 <ZodSchema name="SelectorOperationSchema.max" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -52,8 +65,11 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 `first` and `last` select the first or last row in each group. Omitting `orderBy` keeps the current input order; providing it sorts stably before selection, preserving relative input order for equal keys. These selectors do not require finite numeric sort fields, and both return rank 1. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"IRDataOrderBy"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={53}>IRDataOrderBy</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.first</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.last</ApiSourceLink> / <ApiSourceLink label={"OrderBySchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={20}>OrderBySchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property          | Type                          | Description                                                              |
 | ----------------- | ----------------------------- | ------------------------------------------------------------------------ |
@@ -63,6 +79,17 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `orderBy[].order` | `'ascending' \| 'descending'` | Optional sort direction, defaults to `'ascending'`                       |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+
+export type IRDataOrderBy = ZodInfer<typeof OrderBySchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `first`
@@ -78,6 +105,7 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 <ZodSchema name="OrderBySchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -98,8 +126,11 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 `top` selects the highest N rows in descending numeric order; `bottom` selects the lowest N rows in ascending order. Both skip missing and non-finite values and assign consecutive ranks starting at 1 in output order. The tie strategy applies at the Nth-row cutoff: `first` keeps the first N rows of the stable sort, `all` includes every record tied at the boundary, and `last` replaces the final position with the last record tied at that boundary. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.top</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.bottom</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type                         | Description                                                                               |
 | -------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
@@ -109,6 +140,15 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `tie`    | `'first' \| 'last' \| 'all'` | Optional cutoff tie strategy, defaults to `'first'`; `'all'` can produce more than N rows |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `top`
@@ -120,6 +160,7 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 <ZodSchema name="SelectorOperationSchema.bottom" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -140,8 +181,11 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 `nth` sorts stably using the required `orderBy`, then selects the original row at zero-based `index`. Index 0 selects the first row with rank 1; other positions have rank `index + 1`. An index beyond a group's row count produces no selection for that group. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={47}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"IRDataOrderBy"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={53}>IRDataOrderBy</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={118}>SelectorOperationSchema.nth</ApiSourceLink> / <ApiSourceLink label={"OrderBySchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={20}>OrderBySchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property          | Type                          | Description                                                     |
 | ----------------- | ----------------------------- | --------------------------------------------------------------- |
@@ -152,6 +196,17 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `index`           | `number`                      | Required nonnegative integer, zero-based position after sorting |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+
+export type IRDataOrderBy = ZodInfer<typeof OrderBySchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectorOperationSchema` · `nth`
@@ -163,6 +218,7 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 <ZodSchema name="OrderBySchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -183,8 +239,11 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 `outside-quantile-band` computes lower and upper quantiles of a numeric field, then selects original rows outside the boundaries, skipping missing and non-finite values. For quantiles $L$ and $U$, `band` uses $[L,U]$, while `spread` uses fences $[L-f(U-L),U+f(U-L)]$. Only records strictly below the lower boundary or above the upper boundary are selected; values equal to a boundary remain inside. Output keeps the original input order and receives consecutive ranks starting at 1. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataOutsideQuantileBandSelectorOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={50}>IRDataOutsideQuantileBandSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"OutsideQuantileBandSelectorOperationSchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={68}>OutsideQuantileBandSelectorOperationSchema</ApiSourceLink> / <ApiSourceLink label={"OutsideQuantileBandBoundarySchema"} path={"packages/viz/data/src/schemas/transform/selector.ts"} startLine={57}>OutsideQuantileBandBoundarySchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property          | Type                      | Description                                                                        |
 | ----------------- | ------------------------- | ---------------------------------------------------------------------------------- |
@@ -197,6 +256,15 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `boundary.factor` | `number`                  | Optional nonnegative multiplier, defaults to 1.5; used only by `spread`            |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataOutsideQuantileBandSelectorOperation = ZodInfer<typeof OutsideQuantileBandSelectorOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `OutsideQuantileBandSelectorOperationSchema`
@@ -208,6 +276,7 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 <ZodSchema name="OutsideQuantileBandBoundarySchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

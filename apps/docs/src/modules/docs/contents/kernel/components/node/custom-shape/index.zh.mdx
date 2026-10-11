@@ -46,7 +46,7 @@ const badge = defineShape({
 });
 ```
 
-定义至少回答四个问题：内容需要多大的外接框、连线朝某方向时停在哪里、认识哪些专属 anchor、最终输出哪些 `ScenePrimitive`。如果希望内置 circle / ellipse 的 `fit: 'tight'` 贴合该形状，还应提供 `connectionEnvelope`；上例直接复用矩形的安全包络。字段签名集中在 [API 参考](/kernel/components/node/api-reference)。
+定义至少回答四个问题：内容需要多大的外接框、连线朝某方向时停在哪里、认识哪些专属 anchor、最终输出哪些 `ScenePrimitive`。如果希望内置 circle / ellipse 的 `fit: 'tight'` 贴合该形状，还应提供 `connectionEnvelope`；上例直接复用矩形的安全包络。字段签名集中在 [API 参考](/kernel/components/node/reference)。
 
 ### 带参数的形状
 
@@ -112,7 +112,7 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 
 ## 相关属性
 
-[完整 API 参考](/kernel/components/node/api-reference)
+[完整 API 参考](/kernel/components/node/reference)
 
 <ComponentProps
   items={[
@@ -137,7 +137,6 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
   items={[
     { title: '基础用法', url: '/kernel/components/node/usage' },
     { title: '实现原理', url: '/kernel/components/node/mechanism' },
-    { title: 'API 参考', url: '/kernel/components/node/api-reference' },
-    { title: 'Schema 参考', url: '/kernel/components/node/schema-reference' },
+    { title: 'API 参考', url: '/kernel/components/node/reference' },
   ]}
 />

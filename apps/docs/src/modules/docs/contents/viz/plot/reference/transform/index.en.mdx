@@ -3,7 +3,7 @@ title: Contract - Transforms
 description: Query shared and mark-local data transform scopes in Plot and the owning Data operation contracts.
 ---
 
-Plot's `transform` consumes `IRDataTransform` from the `@retikz/data` package root. Data owns the schemas, definitions, and computation of all twelve built-in operations. Complete field contracts are in [Data Contract](/viz/data/reference/contract#datatransformschema).
+Plot's `transform` consumes `IRDataTransform` from the `@retikz/data` package root. Data owns the schemas, definitions, and computation of all twelve built-in operations. Complete field contracts are in [Data Schema Reference](/viz/data/transform/reference#irdatatransform--transformschema).
 
 ## Data scopes
 
@@ -19,6 +19,6 @@ Operations execute in declaration order. After row or field changes, subsequent 
 
 Import `TransformSchema`, `BuiltinDataTransform`, and concrete `IRDataXxxTransform` types from `@retikz/data`. Plot does not re-export these data contracts.
 
-- [Data JSON Contract](/viz/data/reference/contract#datatransformschema)
+- [Data Schema Reference](/viz/data/transform/reference#irdatatransform--transformschema)
 - [Data Transform Operations](/viz/data/transform/operations)
 - [Composition examples in Plot](/viz/plot/transform)

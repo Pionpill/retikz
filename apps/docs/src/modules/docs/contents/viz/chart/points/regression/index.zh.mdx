@@ -180,7 +180,7 @@ Iris 数据包含 150 条鸢尾花观测。横轴为萼片长度，纵轴为花�
   defaultSourceFile="regression-encodings.preview.tsx"
 />
 
-完整属性与约束见 [API 参考：RegressionEncodings](#regressionencodings)。
+完整属性与约束见 [API 参考：RegressionEncodings](#regressionencodings--irregressionchartencodings--regressionchartencodingsschema)。
 
 ### 回归属性
 
@@ -246,7 +246,7 @@ recipe: {
   defaultSourceFile="regression-basic.preview.tsx"
 />
 
-完整属性与约束见 [API 参考：RegressionProperties](#regressionproperties)。
+完整属性与约束见 [API 参考：RegressionProperties](#regressionproperties--irregressionchartproperties--regressionchartpropertiesschema)。
 
 ### 回归图元
 
@@ -321,7 +321,7 @@ RegressionMark 始终继承 series，不能在同一个图元里改成另一套�
   defaultSourceFile="regression-marks.preview.tsx"
 />
 
-完整属性与约束见 [API 参考：RegressionMark](#regressionmark)。
+完整属性与约束见 [API 参考：RegressionMark](#regressionmark--irregressionmark--regressionchartmarkschema)。
 
 ## 扩展用法
 
@@ -597,160 +597,7 @@ const chart = regressionChart({
 
 ## API 参考
 
-React 使用 `RegressionChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `regressionChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'regression'`。React 与 Vanilla API 会补齐图形类型。
-
-React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局与标题配置见 [通用结构](/viz/chart/model/general-structure)。
-
-#### RegressionEncodings
-
-对应 `RegressionEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
-
-| 通道           | 输入形式             | 说明                                                    |
-| -------------- | -------------------- | ------------------------------------------------------- |
-| `x / y`        | 字段名、位置映射     | 必需；自变量与因变量，决定点的位置                      |
-| `series`       | 字段名、直接映射     | 分别拟合各组，并共享分类颜色与图例；可绑定 ordinal 尺度 |
-| `row / column` | 字段名、分面维度     | 按当前面板数据独立拟合                                  |
-| `facet`        | `IRPlotFacetOptions` | 配置分面；须配合 `row`、`column` 中至少一项             |
-
-公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#regressionchartencodingsschema)。
-
-#### RegressionProperties
-
-对应 `RegressionProperties`、Vanilla `properties` 和 IR `recipe.properties`。
-
-| 分类 | 属性            | 类型                                                     | 说明                                                             |
-| ---- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| 拟合 | `method`        | `IRRegressionChartProperties['method']`                  | 选择拟合方法及参数                                               |
-|      | `extraMethods`  | `Array<IRRegressionExtraMethod>`                         | 有序追加拟合趋势，共享观测点；省略不追加                         |
-|      | `sampleCount`   | `number`                                                 | 每组预测点数，至少为 2 的整数；省略为 64                         |
-|      | `extent`        | `[number, number]`                                       | 递增的预测范围；省略使用该组有限 x 范围                          |
-| 外观 | `point`         | `IRRegressionPointProperties`                            | 设置观测点外观                                                   |
-| 趋势 | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | 默认 `catmullRom`，额外趋势继承并可覆盖                          |
-|      | `trend`         | `IRRegressionTrendProperties`                            | 设置趋势线外观，不改变拟合方法                                   |
-| 留白 | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
-|      | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
-
-完整属性结构见 [属性 Schema](#regressionchartpropertiesschema)；公共外观配置不在这里展开。
-
-#### RegressionMark
-
-对应 `RegressionMark`、Vanilla `marks` 和 IR `recipe.marks`。
-
-| 属性         | 类型                                | 说明                                                                                                              |
-| ------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `override`   | `boolean`                           | 替换完整观测＋趋势组合，否则追加                                                                                  |
-| `hidePoints` | `boolean`                           | 默认 `false`；为 `true` 时不生成当前图元的散点，保留主趋势和额外趋势。                                            |
-| `encodings`  | `RegressionChartMark['encodings']`  | 覆盖同一数据中的直接字段；不覆盖 series                                                                           |
-| `properties` | `RegressionChartMark['properties']` | method、sampleCount、extent 按字段覆盖，point / trend 内逐项合并；extraMethods 整体替换，空数组清空；不含留白策略 |
-
-## Schema 参考
-
-以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
-
-#### RegressionChartSchema
-
-<ZodSchema
-  name="RegressionChartSchema"
-  shallow
-  description="回归图的 Source IR；嵌套结构在所属小节说明。"
-  descriptions={{
-    namespace: '固定为 chart',
-    type: '固定为 point，表示点图家族',
-    id: '图表标识',
-    background: '图表背景',
-    presentation: '标题、副标题、注释与来源',
-    chartDefaults: '图表内部默认配置',
-    transform: '有序 { operation, dataExecution? } 数据变换声明。',
-    dataExecution: '本 Chart 的稀疏执行配置。',
-    data: '外部数据集引用，不内嵌运行时数据',
-    layout: '图表布局尺寸与间距',
-    coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
-    recipe: '回归图配方',
-    plotExtension: '追加的 Plot 能力配置',
-  }}
-/>
-
-#### RegressionChartRecipeSchema
-
-<ZodSchema
-  name="RegressionChartRecipeSchema"
-  shallow
-  description="回归图配方。"
-  descriptions={{
-    chartType: '固定为 regression',
-    encodings: '字段映射，见下方映射 Schema',
-    properties: '常量属性，见下方属性 Schema',
-    guides: '默认坐标轴、网格与图例开关',
-    marks: '有序图元配置，见下方图元 Schema',
-  }}
-/>
-
-#### RegressionChartEncodingsSchema
-
-<ZodSchema
-  name="RegressionChartEncodingsSchema"
-  shallow
-  description="回归图的字段映射。"
-  descriptions={{
-    x: '横向位置映射',
-    y: '纵向位置映射',
-    series: '序列分组映射',
-    row: '行分面维度',
-    column: '列分面维度',
-    facet: '分面配置，须配合 row 或 column 使用',
-  }}
-/>
-
-#### RegressionChartPropertiesSchema
-
-<ZodSchema
-  name="RegressionChartPropertiesSchema"
-  shallow
-  description="回归图的常量属性。"
-  descriptions={{
-    method: '拟合方法及其参数',
-    extraMethods: '有序额外趋势，见下方额外方法 Schema',
-    sampleCount: '拟合曲线的采样数量',
-    extent: '拟合区间，下界必须小于上界',
-    point: '观测点外观',
-    trend: '拟合趋势线外观',
-    autoPadding: '自动留白策略；省略时使用 max-radius',
-    domainPadding: '显式位置域留白，优先于 autoPadding',
-  }}
-/>
-
-#### RegressionExtraMethodSchema
-
-每项必须指定拟合方法，采样与外观沿用上方配置；只生成趋势线。数组顺序决定额外趋势的绘制顺序，不自动分配方法颜色或方法图例。任意一条趋势拟合失败都会使整张图失败。
-
-<ZodSchema
-  name="RegressionExtraMethodSchema"
-  description="共享观测的额外拟合配置。"
-  shallow
-  descriptions={{
-    method: '必需的拟合方法',
-    sampleCount: '覆盖当前组合的采样数量',
-    extent: '覆盖当前组合的拟合区间',
-    trend: '逐项覆盖当前组合的趋势外观',
-  }}
-/>
-
-#### RegressionChartMarkSchema
-
-`encodings` 只允许 x、y，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
-
-<ZodSchema
-  name="RegressionChartMarkSchema"
-  shallow
-  description="回归图的单个图元配置。"
-  descriptions={{
-    kind: '固定为 regression',
-    override: '为 true 时替换内置同类图元；省略时追加',
-    hidePoints: '默认 false；为 true 时不生成当前图元的散点，保留主趋势与额外趋势',
-    encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
-    properties: '参照上方属性说明；不包含 autoPadding 与 domainPadding',
-  }}
-/>
+{/* @include viz/chart/points/regression/generated */}
 
 ## 延伸阅读
 

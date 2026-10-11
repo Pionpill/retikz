@@ -11,8 +11,11 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 
 区间通常左闭右开，最后一箱包含上界。非有限值和范围外观测不计入箱内；输出字段不得覆盖分组键，统计字段名也应避开中点和边界字段。分桶的 Schema 为 `BinTransformSchema`，参数如下：
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataBinTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={77}>IRDataBinTransform</ApiSourceLink> / <ApiSourceLink label={"BinTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={252}>BinTransformSchema</ApiSourceLink> / <ApiSourceLink label={"BinParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={190}>BinParamsSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性                | 类型                            | 说明                                                                      |
 | ------------------- | ------------------------------- | ------------------------------------------------------------------------- |
@@ -29,6 +32,15 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 | `params.metrics`    | `Array<IRDataReducerOperation>` | 可选，非空箱内归约列表；默认 count 写入 binCount                          |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataBinTransform = ZodInfer<typeof BinTransformSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `BinTransformSchema`
@@ -62,6 +74,7 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -79,8 +92,11 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 
 自动带宽要求每组至少两个有限且具有非零离散程度的样本；单点或相同值样本应指定正带宽。没有有限样本会报错。两个输出名必须不同，且不得覆盖分组键。密度采样的 Schema 为 `DensityTransformSchema`，参数如下：
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataDensityTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={101}>IRDataDensityTransform</ApiSourceLink> / <ApiSourceLink label={"IRDataDensityBandwidth"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={98}>IRDataDensityBandwidth</ApiSourceLink> / <ApiSourceLink label={"DensityTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={444}>DensityTransformSchema</ApiSourceLink> / <ApiSourceLink label={"DensityParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={399}>DensityParamsSchema</ApiSourceLink> / <ApiSourceLink label={"DensityBandwidthSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={384}>DensityBandwidthSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性                     | 类型                     | 说明                                                 |
 | ------------------------ | ------------------------ | ---------------------------------------------------- |
@@ -96,6 +112,17 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 | `params.densityAs`       | `string`                 | 必填，密度输出字段                                   |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataDensityTransform = ZodInfer<typeof DensityTransformSchema>;
+
+export type IRDataDensityBandwidth = ZodInfer<typeof DensityBandwidthSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `DensityTransformSchema`
@@ -137,6 +164,7 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

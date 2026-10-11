@@ -118,10 +118,11 @@ Compilation fails explicitly when the Definition for the selected shape is not i
   defaultSourceFile="cross-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"CrossShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={45}>CrossShapeParams</ApiSourceLink> / <ApiSourceLink label={"CrossShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={35}>CrossShapeParamsSchema</ApiSourceLink>
 
-#### CrossShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A scalar `width` or `height` applies to every matching value. Object forms resolve each value from the most specific field to the broadest fallback: side, axis, then `default`.
 
@@ -131,13 +132,21 @@ Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A sca
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | Four arm heights with axis and default fallbacks           |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### CrossShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CrossShapeParams = ZodInfer<typeof CrossShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="CrossShapeParamsSchema" expandNested />
 
 </DocTab>
+
 </DocTabs>
 
 ## Trapezoid
@@ -150,10 +159,11 @@ Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A sca
   defaultSourceFile="trapezoid-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"TrapezoidShapeParams"} path={"packages/library/extension/src/node-shape/definitions/trapezoid.ts"} startLine={24}>TrapezoidShapeParams</ApiSourceLink> / <ApiSourceLink label={"TrapezoidShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/trapezoid.ts"} startLine={17}>TrapezoidShapeParamsSchema</ApiSourceLink>
 
-#### TrapezoidShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `TrapezoidShapeDefinition`; its parameters have type `TrapezoidShapeParams`:
 
@@ -164,13 +174,21 @@ Inject `TrapezoidShapeDefinition`; its parameters have type `TrapezoidShapeParam
 | `cornerRadius?`   | `number`                                 | Non-negative corner radius; defaults to `0`               |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### TrapezoidShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type TrapezoidShapeParams = ZodInfer<typeof TrapezoidShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="TrapezoidShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Parallelogram
@@ -183,10 +201,11 @@ Inject `TrapezoidShapeDefinition`; its parameters have type `TrapezoidShapeParam
   defaultSourceFile="parallelogram-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"ParallelogramShapeParams"} path={"packages/library/extension/src/node-shape/definitions/parallelogram.ts"} startLine={24}>ParallelogramShapeParams</ApiSourceLink> / <ApiSourceLink label={"ParallelogramShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/parallelogram.ts"} startLine={17}>ParallelogramShapeParamsSchema</ApiSourceLink>
 
-#### ParallelogramShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramShapeParams`:
 
@@ -197,13 +216,21 @@ Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramSh
 | `cornerRadius?`   | `number`            | Non-negative corner radius; defaults to `0`    |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### ParallelogramShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ParallelogramShapeParams = ZodInfer<typeof ParallelogramShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="ParallelogramShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Elongated hexagon
@@ -216,10 +243,11 @@ Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramSh
   defaultSourceFile="hexagon-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"HexagonShapeParams"} path={"packages/library/extension/src/node-shape/definitions/hexagon.ts"} startLine={23}>HexagonShapeParams</ApiSourceLink> / <ApiSourceLink label={"HexagonShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/hexagon.ts"} startLine={17}>HexagonShapeParamsSchema</ApiSourceLink>
 
-#### HexagonShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
 
@@ -229,13 +257,21 @@ Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
 | `cornerRadius?`  | `number` | Non-negative corner radius; defaults to `0`                                          |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### HexagonShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type HexagonShapeParams = ZodInfer<typeof HexagonShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="HexagonShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Cylinder
@@ -248,10 +284,11 @@ Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
   defaultSourceFile="cylinder-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"CylinderShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cylinder.ts"} startLine={23}>CylinderShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
 
-#### CylinderShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`:
 
@@ -261,13 +298,23 @@ Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`
 | `capDepth?` | `number`                     | Non-negative cap depth; defaults to `8` |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### EllipticCapShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type EllipticCapShapeParams = ZodInfer<typeof EllipticCapShapeParamsSchema>;
+
+export type CylinderShapeParams = EllipticCapShapeParams;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="EllipticCapShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Elliptic Capsule
@@ -280,10 +327,11 @@ Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`
   defaultSourceFile="elliptic-capsule-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"EllipticCapsuleShapeParams"} path={"packages/library/extension/src/node-shape/definitions/elliptic-capsule.ts"} startLine={23}>EllipticCapsuleShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
 
-#### EllipticCapsuleShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `EllipticCapsuleShapeDefinition`; its parameters have type `EllipticCapsuleShapeParams`:
 
@@ -293,13 +341,23 @@ Inject `EllipticCapsuleShapeDefinition`; its parameters have type `EllipticCapsu
 | `capDepth?` | `number`                     | Non-negative cap depth; defaults to `8` |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### EllipticCapShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type EllipticCapShapeParams = ZodInfer<typeof EllipticCapShapeParamsSchema>;
+
+export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="EllipticCapShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Sector
@@ -312,10 +370,11 @@ Inject `EllipticCapsuleShapeDefinition`; its parameters have type `EllipticCapsu
   defaultSourceFile="sector-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"SectorShapeParams"} path={"packages/library/extension/src/node-shape/definitions/sector.ts"} startLine={52}>SectorShapeParams</ApiSourceLink> / <ApiSourceLink label={"SectorShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/sector.ts"} startLine={33}>SectorShapeParamsSchema</ApiSourceLink>
 
-#### SectorShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. The `params` object has type `SectorShapeParams`:
 
@@ -328,13 +387,21 @@ Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. The
 | `cornerRadius?` | `number` | Positive-thickness corner radius; omitted or `0` keeps corners sharp     |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### SectorShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type SectorShapeParams = ZodInfer<typeof SectorShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="SectorShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Star
@@ -347,10 +414,11 @@ Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. The
   defaultSourceFile="star-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"StarShapeParams"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={43}>StarShapeParams</ApiSourceLink> / <ApiSourceLink label={"StarShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={22}>StarShapeParamsSchema</ApiSourceLink>
 
-#### StarShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Use `shape={{ type: 'star', params }}` and inject `StarShapeDefinition`. The `params` object has type `StarShapeParams`:
 
@@ -363,13 +431,21 @@ Use `shape={{ type: 'star', params }}` and inject `StarShapeDefinition`. The `pa
 | `cornerRadius?` | `number` | Per-vertex corner radius                         |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### StarShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type StarShapeParams = ZodInfer<typeof StarShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="StarShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Custom contours
@@ -382,10 +458,11 @@ Use `shape={{ type: 'star', params }}` and inject `StarShapeDefinition`. The `pa
   defaultSourceFile="contour-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"ContourShapeParams"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={32}>ContourShapeParams</ApiSourceLink> / <ApiSourceLink label={"ContourShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={22}>ContourShapeParamsSchema</ApiSourceLink>
 
-#### ContourShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Use `shape={{ type: 'contour', params }}` and inject `ContourShapeDefinition`. The `params` object has type `ContourShapeParams`:
 
@@ -395,13 +472,21 @@ Use `shape={{ type: 'contour', params }}` and inject `ContourShapeDefinition`. T
 | `cornerRadius?` | `number`                  | Per-corner radius; omitted or `0` keeps corners sharp                                               |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### ContourShapeParamsSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ContourShapeParams = ZodInfer<typeof ContourShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="ContourShapeParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 ## Further reading

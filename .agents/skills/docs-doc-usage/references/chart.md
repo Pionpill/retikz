@@ -4,7 +4,7 @@
 
 ## 全篇约束
 
-- 采用 [组件合页](../../docs-doc-principle/references/page-contract.md#小体量组件合页) 的顺序：接入方式、基础用法、扩展用法、错误与限制、实现原理、API 参考、Schema 参考、延伸阅读。无真实内容的可选章节不造占位。
+- 采用 [组件合页](../../docs-doc-principle/references/page-contract.md#小体量组件合页) 的顺序：接入方式、基础用法、扩展用法、错误与限制、实现原理、API 参考、延伸阅读。无真实内容的可选章节不造占位。
 - 兼容 React、Vanilla API 与直接 IR。说明某项配置时就近对应三种入口；不要把 React 子组件名称当成通用配置名称。核对真实路径：例如 React `ScatterEncodings`、Vanilla API `encodings`、IR `recipe.encodings`，不能把 Vanilla API 与 IR 的对象层级混为一谈。
 - 手写用法与 API 表格不设“默认值”或“必填”列；必要性、默认行为、继承和冲突等影响调用的信息放在说明列。类型展开为可读结构或文字说明，不只写 `XxxProps['field']` 等索引类型。
 - 公共组件可出现在完整示例中，不在类型页重复讲解。接入方式之外，基础用法只在正文展示当前配置的关键片段，完整示例由 demo 源码视图承载。
@@ -66,9 +66,9 @@ React + JSX 标签内先放该 chart 的专属子组件树，再给完整 JSX。
 
 每节说明 React / Vanilla API / IR 的对应入口，后续字段和约束共用；React 独有要求单独标明。保留准确的类型范围与特殊行为，不重复基础用法的教学过程；完整参考复用已有权威生成内容。基础用法与 API 出现同名标题时，检查生成锚点及所有页内链接的实际目标。
 
-## Schema 参考
+### Schema 收录
 
-位于 API 参考之后，按根 `XxxChartSchema` → recipe → encodings → properties → mark 排列，标题保留真实 Schema 标识符；zh/en 同步。字段读取真实 Schema，遵循 [Schema 参考规则](../../docs-doc-reference/references/schema.md)。
+Schema 收录于上述 API 参考，按真实声明与推导类型配对，通过同层 DocTabs 切换；无配对类型的 Schema 单独使用 H4，名称保留真实标识符并链接源码。按根 `XxxChartSchema` → recipe → encodings → properties → mark 的关系核对收录，zh/en 同步。字段读取真实 Schema，遵循 [Schema 参考规则](../../docs-doc-reference/references/schema.md)。
 
 - 根 Schema 只展示顶层字段，嵌套类型不展开：公共配置由所属文档说明，类型专属配置在后续小节展开。
 - 公共 Schema 在类型列保留名称，不递归展示内部结构。遇到展开内容，先核对源码是否已有具名 Schema，再补文档注册；没有独立名称时保留真实公开访问路径，不为展示新造 Schema、添加生产导出或伪装名称。

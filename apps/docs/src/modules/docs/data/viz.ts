@@ -70,8 +70,7 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'api-reference', label: 'viz.dataModelApiReference' },
-          { id: 'schema-reference', label: 'viz.dataModelSchemaReference' },
+          { id: 'reference', label: 'viz.dataModelApiReference' },
         ],
       },
       {
@@ -103,8 +102,8 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'api-reference', label: 'viz.dataTransformApiReference' },
-          { id: 'schema-reference', label: 'viz.dataTransformSchemaReference' },
+
+          { id: 'reference', label: 'viz.dataTransformReference' },
         ],
       },
       {
@@ -113,15 +112,6 @@ export const vizSection: Array<Section> = [
         sidebarGroup: 'viz.dataContents',
         difficulty: DocDifficulty.Advanced,
         meta: { pageType: 'guide', audience: 'user', capability: 'data.provenance', sourceOfTruth: 'runtime' },
-      },
-      {
-        id: 'reference',
-        label: 'viz.dataReference',
-        sidebarGroup: 'viz.dataContents',
-        children: [
-          { id: 'contract', label: 'viz.dataReferenceContract' },
-          { id: 'runtime', label: 'viz.dataReferenceRuntime' },
-        ],
       },
       {
         id: 'operators',

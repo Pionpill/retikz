@@ -196,7 +196,7 @@ Color and shape provide two ways to identify income groups. Use the controls bel
   caption="Toggle categorical color and shape while positions and sizes stay fixed. HIC, UMC, LMC, and LIC mean high, upper-middle, lower-middle, and low income."
 />
 
-For complete properties and constraints, see [API reference: ScatterEncodings](#scatterencodings).
+For complete properties and constraints, see [API reference: ScatterEncodings](#scatterencodings--irscatterchartencodings--scatterchartencodingsschema).
 
 ### Scatter properties
 
@@ -263,7 +263,7 @@ These constants apply to every point and do not encode a third numeric measure. 
   controls={{ name: 'scatter-appearance' }}
 />
 
-For complete properties and constraints, see [API reference: ScatterProperties](#scatterproperties).
+For complete properties and constraints, see [API reference: ScatterProperties](#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema).
 
 ### Scatter marks
 
@@ -340,7 +340,7 @@ Adjust the radius and opacity to compare point footprints and dense regions. In 
   caption="Adjust point radius and opacity to observe occlusion in dense regions."
 />
 
-For complete properties and constraints, see [API reference: ScatterMark](#scattermark).
+For complete properties and constraints, see [API reference: ScatterMark](#scattermark--scatterchartmarkschema).
 
 ## Extended usage
 
@@ -440,90 +440,9 @@ Chart resolves a scatter mark to a Plot Point. The table shows how position and 
   ]}
 />
 
-## API reference
+## API Reference
 
-This page covers entries and constraints specific to this chart. See the [quick-start example](/viz/chart/get-start#the-first-result) for shared configuration using React components.
-
-React uses `ScatterChart`, configured through its `recipe` prop or the dedicated child components below. The Vanilla API uses `scatterChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'scatter'`. React and the Vanilla API supply the chart type automatically.
-
-React can combine root props and child components for different configuration fields, but each field must be declared only once. For example, providing both `recipe.encodings` and `ScatterEncodings` raises an error. Root-only configuration requires no children.
-
-#### ScatterEncodings
-
-Use `ScatterEncodings` in React, `encodings` in the Vanilla API, and `recipe.encodings` in direct IR.
-
-| Channel          | Input form                   | Description                                                            |
-| ---------------- | ---------------------------- | ---------------------------------------------------------------------- |
-| `x` / `y`        | Field name, position mapping | Required; determines point positions                                   |
-| `color`          | Field name, color mapping    | Colors points by categories or continuous values                       |
-| `size`           | Field name, size mapping     | Requires continuous output; named size scales support only `sqrt`      |
-| `opacity`        | Field name, opacity mapping  | Requires continuous output; named opacity scales support only `linear` |
-| `shape`          | Field name, direct mapping   | Distinguishes categories by shape; does not accept a named scale       |
-| `row` / `column` | Field name, facet dimension  | Creates row or column facets, including ordered hierarchies            |
-| `facet`          | `IRPlotFacetOptions`         | Configures facets; requires `row` or `column`                          |
-
-Mapping objects may reference scales, aggregate, or transform data as supported by each channel. Shared transform parameters are not expanded here. See the [Schema reference](#scatterchartencodingsschema) for exact inputs and [Errors and limitations](#errors-and-limitations) for combination constraints.
-
-#### ScatterProperties
-
-Use `ScatterProperties` in React, `properties` in the Vanilla API, and `recipe.properties` in direct IR. Properties set constant appearance; data-driven values belong in encodings.
-
-| Category       | Property        | Type                                                     | Description                                                                                             |
-| -------------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Shape and size | `size`          | `number`                                                 | Uniform point radius; must be nonnegative                                                               |
-|                | `shape`         | `string`                                                 | Registered shape name                                                                                   |
-| Color and fill | `color`         | `string`                                                 | Sets the primary color                                                                                  |
-|                | `fill`          | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                            |
-| Stroke         | `stroke`        | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                          |
-|                | `strokeWidth`   | `number`                                                 | Stroke width; must be nonnegative                                                                       |
-|                | `dashed`        | `boolean`                                                | Enables a dashed stroke                                                                                 |
-|                | `dotted`        | `boolean`                                                | Enables a dotted stroke                                                                                 |
-|                | `dashPattern`   | `Array<number>`                                          | Custom dash sequence; at least one nonnegative entry                                                    |
-| Opacity        | `opacity`       | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
-|                | `fillOpacity`   | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
-|                | `strokeOpacity` | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
-| Padding        | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
-|                | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
-
-Shared font, label, transform, and shadow options are not explained individually here; see the [properties schema](#scatterchartpropertiesschema) for all fields. See [shared point-chart padding](/viz/chart/points#automatic-edge-padding) for padding behavior and limitations.
-
-#### ScatterMark
-
-Use `ScatterMark` in React, `marks` in the Vanilla API, and `recipe.marks` in direct IR. React marks must be direct children of `ScatterChart`; Vanilla / IR marks declare `kind: 'scatter'`.
-
-| Property     | Type                             | Description                                                                                      |
-| ------------ | -------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `override`   | `boolean`                        | Appends when omitted; `true` replaces the default Scatter mark in place                          |
-| `encodings`  | `ScatterChartMark['encodings']`  | Supports `x`, `y`, `color`, `size`, `opacity`, and `shape`; does not accept full mapping objects |
-| `properties` | `ScatterChartMark['properties']` | Follows the properties above, excluding `autoPadding` and `domainPadding`                        |
-
-Omitted mappings and properties inherit applicable chart settings. If replacement finds no target, the mark is appended and `onWarn` reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`. See the [mark schema](#scatterchartmarkschema) for the full structure.
-
-## Schema reference
-
-These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
-
-#### ScatterChartSchema
-
-<ZodSchema name="ScatterChartSchema" shallow />
-
-#### ScatterChartRecipeSchema
-
-<ZodSchema name="ScatterChartRecipeSchema" shallow />
-
-#### ScatterChartEncodingsSchema
-
-<ZodSchema name="ScatterChartEncodingsSchema" shallow />
-
-#### ScatterChartPropertiesSchema
-
-<ZodSchema name="ScatterChartPropertiesSchema" shallow />
-
-#### ScatterChartMarkSchema
-
-`encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
-
-<ZodSchema name="ScatterChartMarkSchema" shallow />
+{/* @include viz/chart/points/scatter/generated */}
 
 ## Further reading
 

@@ -1,0 +1,74 @@
+以下 schema 来自 `@retikz/graph` 公开入口。有效布局与主题默认在编译时应用，不写回稀疏 Source。共享 Scope / Surface 字段不在此重复展开。
+
+#### GroupSchema
+
+<ZodSchema
+  name="GroupSchema"
+  shallow
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '记录判别字段，固定为 group',
+    frame: '固有包络装饰，不参与布局',
+    style: '后代的级联视觉覆盖',
+    theme: '子树的稀疏主题覆盖',
+    id: '可选引用 id，注册到父命名空间',
+    localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
+    transforms: '局部变换，数组最后一项先作用于局部点',
+    position: '父坐标系中的原点位置或局部变换后的锚点对齐',
+    zIndex: '容器整体在同级中的绘制顺序',
+    clip: '局部坐标系中的裁剪区域',
+    boundingShape: '引用 id 的合成包络形状',
+    meta: '透传的 JSON 元信息',
+    animations: '作用于整体的动画轨道，不参与布局或向后代继承',
+    defaults: '后代默认样式及继承屏障',
+    graphDefaults: '可见后代的稀疏默认值',
+    graphRules: '可见 Entity / Relation 后代的有序规则',
+    caption: '外框内部的标题说明区',
+    labels: '非空外围标签数组，只扩展视觉边界',
+    padding: '内容与外框内边距，编译时默认 10',
+    background: '外框背景覆盖',
+    border: '外框描边覆盖，整体替换主题值',
+    cornerRadius: '外框圆角',
+    overflow: '内容溢出行为，外围标签不受此项裁剪',
+    children: '保留作者布局的任意有序子元素',
+  }}
+/>
+
+#### GroupCaptionSchema
+
+<ZodSchema
+  name="GroupCaptionSchema"
+  shallow
+  descriptions={{
+    side: '相对 body 位于 top 或 bottom，默认 top',
+    direction: '标题与说明的排列方向，默认 horizontal',
+    itemGap: '标题与说明之间的间距，默认 4',
+    bodyGap: '非空 body 与 caption 间距，默认 4',
+    title: '可选标题，至少提供 title / description 之一',
+    description: '可选说明，至少提供 title / description 之一',
+  }}
+/>
+
+#### GroupCaptionTextSchema
+
+<ZodSchema
+  name="GroupCaptionTextSchema"
+  shallow
+  descriptions={{
+    text: '必填文字内容',
+    align: '文字对齐方式',
+    lineHeight: '行高',
+    maxTextWidth: '换行的最大文字宽度',
+    textColor: '文字颜色覆盖',
+    font: '字体配置',
+    opacity: '不透明度',
+  }}
+/>
+
+#### GroupCaptionSideSchema
+
+<ZodSchema name="GroupCaptionSideSchema" shallow />
+
+#### GroupCaptionDirectionSchema
+
+<ZodSchema name="GroupCaptionDirectionSchema" shallow />

@@ -1,5 +1,5 @@
 import type { IRScene, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { compileToScene, CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/core';
+import { compileToScene, CORE_SOURCE_KEY, CoreSourceDefinition, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import type {
   RenderFrameSnapshot,
@@ -10,16 +10,10 @@ import type {
   RetainedRendererFactoryInput,
   RetainedSvgRenderer,
 } from '@retikz/render/runtime';
-import { builtinRetainedRendererFactory, defineRetainedRenderer } from '@retikz/render/runtime';
+import { builtinRetainedRendererFactory, defineRetainedRenderer, RenderTracePhase } from '@retikz/render/runtime';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-import {
-  createRuntimeSourceUpdate,
-  createRuntimeTraceReporter,
-  PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
-} from '@retikz/runtime';
+import { createRuntimeSourceUpdate, createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { mountCanvas, mountSvg } from '@retikz/vanilla/dom';
 
 import type {
@@ -249,8 +243,8 @@ const readRetainedUpdateRecord = (
 ): PerformanceTraceRecord => {
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,
-    phase: PerformanceTracePhase.Update,
-    unit: PerformanceTraceUnit.SceneChange,
+    phase: RenderTracePhase.Update,
+    unit: CoreTraceUnit.SceneChange,
     outcome,
     visited: 1,
     reused: 0,
@@ -427,8 +421,8 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
       owner: '@retikz/render:svg',
       phases: [
         {
-          phase: PerformanceTracePhase.Commit,
-          unit: PerformanceTraceUnit.ScenePrimitive,
+          phase: RenderTracePhase.Commit,
+          unit: CoreTraceUnit.ScenePrimitive,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
@@ -440,8 +434,8 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
       trace: svgReporter,
     });
     const svgRecord = assertFullTrace(`svg-full-${size}`, svgReporter, svgRecords, {
-      phase: PerformanceTracePhase.Commit,
-      unit: PerformanceTraceUnit.ScenePrimitive,
+      phase: RenderTracePhase.Commit,
+      unit: CoreTraceUnit.ScenePrimitive,
       visited: size,
     });
     results.push(toResult(`svg-full-${size}`, stableHash(svg), svgRecord));
@@ -452,8 +446,8 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
       owner: '@retikz/render:canvas',
       phases: [
         {
-          phase: PerformanceTracePhase.Commit,
-          unit: PerformanceTraceUnit.ScenePrimitive,
+          phase: RenderTracePhase.Commit,
+          unit: CoreTraceUnit.ScenePrimitive,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
@@ -461,8 +455,8 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
     });
     drawScene(context, scene, { trace: canvasReporter });
     const canvasRecord = assertFullTrace(`canvas-full-${size}`, canvasReporter, canvasRecords, {
-      phase: PerformanceTracePhase.Commit,
-      unit: PerformanceTraceUnit.ScenePrimitive,
+      phase: RenderTracePhase.Commit,
+      unit: CoreTraceUnit.ScenePrimitive,
       visited: size,
     });
     results.push(toResult(`canvas-full-${size}`, hashCanvasPixels(context), canvasRecord));
@@ -478,8 +472,8 @@ const readRetainedFullRecord = (
 ): PerformanceTraceRecord => {
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,
-    phase: PerformanceTracePhase.Commit,
-    unit: PerformanceTraceUnit.ScenePrimitive,
+    phase: RenderTracePhase.Commit,
+    unit: CoreTraceUnit.ScenePrimitive,
     outcome: PerformanceTraceOutcome.Full,
     visited: 5_000,
     reused: 0,
@@ -631,8 +625,8 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
       owner: '@retikz/core',
       phases: [
         {
-          phase: PerformanceTracePhase.Compile,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Compile,
+          unit: CoreTraceUnit.IrChild,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
@@ -659,8 +653,8 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
       staticView.update(next);
       assertStaticViewMode(staticId, staticView);
       const record = assertFullTrace(staticId, staticReporter, staticRecords, {
-        phase: PerformanceTracePhase.Compile,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Compile,
+        unit: CoreTraceUnit.IrChild,
         visited: 5_000,
       });
       const execution: BenchmarkExecution = Object.freeze({
@@ -704,8 +698,8 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
         const outcome = updateStrategy === 'full' ? PerformanceTraceOutcome.Full : PerformanceTraceOutcome.Incremental;
         const work = assertSingleTraceRecord(id, records, {
           owner: CORE_SOURCE_KEY,
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Update,
+          unit: CoreTraceUnit.IrChild,
           outcome,
           visited: 5_000,
           reused: updateStrategy === 'full' ? 0 : 4_999,

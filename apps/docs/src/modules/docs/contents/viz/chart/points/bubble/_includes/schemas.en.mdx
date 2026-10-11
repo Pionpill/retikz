@@ -1,0 +1,23 @@
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+#### BubbleChartSchema
+
+<ZodSchema name="BubbleChartSchema" shallow />
+
+#### BubbleChartRecipeSchema
+
+<ZodSchema name="BubbleChartRecipeSchema" shallow />
+
+#### BubbleChartEncodingsSchema
+
+<ZodSchema name="BubbleChartEncodingsSchema" shallow />
+
+#### BubbleChartPropertiesSchema
+
+<ZodSchema name="BubbleChartPropertiesSchema" shallow />
+
+#### BubbleChartMarkSchema
+
+`encodings` accepts only optional field-name strings for x, y, color, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties. Bubble size comes from the recipe size mapping and cannot be overridden by a mark.
+
+<ZodSchema name="BubbleChartMarkSchema" shallow />

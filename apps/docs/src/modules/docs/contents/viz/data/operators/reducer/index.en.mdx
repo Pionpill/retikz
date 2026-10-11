@@ -11,8 +11,11 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `count` counts rows in a group without reading a numeric field, including rows with missing numeric values. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.count</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type      | Description                                      |
 | -------- | --------- | ------------------------------------------------ |
@@ -20,6 +23,15 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `as`     | `string`  | Required, nonblank name for the row-count output |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `count`
@@ -27,6 +39,7 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 <ZodSchema name="ReducerOperationSchema.count" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -42,8 +55,11 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `sum` adds the finite numbers in the specified field and returns their total. Missing and nonfinite values do not contribute. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.sum</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type     | Description                                  |
 | -------- | -------- | -------------------------------------------- |
@@ -52,6 +68,15 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `as`     | `string` | Required, nonblank sum output field name     |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `sum`
@@ -59,6 +84,7 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 <ZodSchema name="ReducerOperationSchema.sum" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -79,8 +105,11 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `mean` computes the arithmetic mean of finite numbers. `median` sorts them and takes the middle value, averaging the two middle values for an even count. Both skip missing and nonfinite values. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.mean</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.median</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type                 | Description                                      |
 | -------- | -------------------- | ------------------------------------------------ |
@@ -89,6 +118,15 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `as`     | `string`             | Required, nonblank statistical output field name |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `mean`
@@ -100,6 +138,7 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 <ZodSchema name="ReducerOperationSchema.median" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -120,8 +159,11 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `min` and `max` return the finite numeric extrema of the specified field. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.max</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type             | Description                                   |
 | -------- | ---------------- | --------------------------------------------- |
@@ -130,6 +172,15 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `as`     | `string`         | Required, nonblank extremum output field name |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `min`
@@ -141,6 +192,7 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 <ZodSchema name="ReducerOperationSchema.max" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentAlert
@@ -174,8 +226,11 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `extent` computes the finite numeric minimum and maximum of the specified field and writes them to two continuous fields. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.extent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type       | Description                                                          |
 | -------- | ---------- | -------------------------------------------------------------------- |
@@ -185,6 +240,15 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `as.max` | `string`   | Required, nonblank maximum output field name, distinct from `as.min` |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `extent`
@@ -192,6 +256,7 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 <ZodSchema name="ReducerOperationSchema.extent" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -212,8 +277,11 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `quantile` returns the quantile at a specified probability. After sorting the finite numbers, the position is $h=(m-1)p$, where $m$ is the number of participating values. Positions between two values use linear interpolation, so the result need not be an input value. `p=0` and `p=1` return the minimum and maximum. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.quantile</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property | Type         | Description                                            |
 | -------- | ------------ | ------------------------------------------------------ |
@@ -223,6 +291,15 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `as`     | `string`     | Required, nonblank quantile output field name          |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `quantile`
@@ -230,6 +307,7 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 <ZodSchema name="ReducerOperationSchema.quantile" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -252,8 +330,11 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMax` whiskers use the observed minimum and maximum. `spread` constructs fences $[L-fS,U+fS]$, then takes whisker endpoints from actual observations inside those fences. Fences and whiskers are separate results. Switch between the tabs below to inspect the parameters and schema constraints.
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataQuantileBandReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={44}>IRDataQuantileBandReducerOperation</ApiSourceLink> / <ApiSourceLink label={"QuantileBandReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={121}>QuantileBandReducerOperationSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandOutputsSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={71}>QuantileBandOutputsSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandPointOutputSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={54}>QuantileBandPointOutputSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandWhiskerSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={60}>QuantileBandWhiskerSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property              | Type                               | Description                                                        |
 | --------------------- | ---------------------------------- | ------------------------------------------------------------------ |
@@ -280,6 +361,15 @@ For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMa
 | `whisker.factor`      | `number`                           | Optional, nonnegative, defaults to 1.5; used only by spread        |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataQuantileBandReducerOperation = ZodInfer<typeof QuantileBandReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `QuantileBandReducerOperationSchema`
@@ -299,6 +389,7 @@ For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMa
 <ZodSchema name="QuantileBandWhiskerSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
