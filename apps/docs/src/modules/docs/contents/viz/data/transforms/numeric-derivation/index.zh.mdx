@@ -11,6 +11,9 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 
 堆叠的 Schema 为 `StackTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性                | 类型                                                                            | 说明                                                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `kind`              | `'stack'`                                                                       | 变换类型                                                                                                                        |
@@ -20,6 +23,38 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 | `params.startField` | `string`                                                                        | 可选，片段起点输出字段，默认 y0                                                                                                 |
 | `params.endField`   | `string`                                                                        | 可选，片段终点输出字段，默认 y1                                                                                                 |
 | `params.offset`     | `'zero'`<br />`'normalize'`<br />`'diverging'`<br />`'center'`<br />`'overlap'` | 可选，默认从 0 累计<br />将非负值归一到 0～1，拒绝有限负值<br />将正负值分别累计<br />让整条累计链居中<br />让每个片段从 0 开始 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`StackTransformSchema`
+
+<ZodSchema
+  name="StackTransformSchema"
+  description="跨行累加数值，生成起止字段。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 StackParamsSchema 校验的参数对象',
+  }}
+/>
+
+`StackParamsSchema`
+
+<ZodSchema
+  name="StackParamsSchema"
+  description="跨行累加数值，生成起止字段。"
+  descriptions={{
+    x: '堆叠分组字段；省略时全部行累加为一条链',
+    y: '组内累加的数值字段',
+    groupBy: '系列字段，决定分段及其顺序；省略时按数据行顺序',
+    startField: '分段下界输出字段；默认 y0',
+    endField: '分段上界输出字段；默认 y1',
+    offset: '基线策略：zero、normalize、diverging、center 或 overlap；默认 zero',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['numeric-stack', 'numeric-stack.preview.tsx', 'numeric-stack.data.ts', 'numeric-derivation.data.ts']}
@@ -34,6 +69,9 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 
 `normalize` 将每行数值除以所在组的总和，得到组内占比；`fraction` 输出 0～1，`percent` 输出 0～100。它保留行数与原行序。省略 `as` 会覆盖输入字段，提供 `as` 则写入新字段。有限负值会报错，缺失或非有限数值按 0 计算，组总和为 0 时输出 0。归一化的 Schema 为 `NormalizeTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性             | 类型                      | 说明                                       |
 | ---------------- | ------------------------- | ------------------------------------------ |
 | `kind`           | `'normalize'`             | 变换类型                                   |
@@ -41,6 +79,36 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 | `params.groupBy` | `Array<string>`           | 可选，非空分组字段列表；省略表示全局归一化 |
 | `params.basis`   | `'fraction' \| 'percent'` | 可选，占比单位，默认 fraction              |
 | `params.as`      | `string`                  | 可选，占比输出字段；省略覆盖原字段         |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`NormalizeTransformSchema`
+
+<ZodSchema
+  name="NormalizeTransformSchema"
+  description="将非负数值转换为组内占比。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 NormalizeParamsSchema 校验的参数对象',
+  }}
+/>
+
+`NormalizeParamsSchema`
+
+<ZodSchema
+  name="NormalizeParamsSchema"
+  description="将非负数值转换为组内占比。"
+  descriptions={{
+    field: '非负数值字段；有限负数会报错，非有限值按零处理',
+    groupBy: '非空分组字段列表；省略时按全部行的总和归一化',
+    basis: 'fraction 输出 0..1，percent 输出 0..100；默认 fraction',
+    as: '占比输出字段；省略时覆盖输入字段',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -60,6 +128,9 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 
 `derive-interval` 逐行为一个数值建立基线区间，也可以直接从两个端点字段读取区间。它保留行数、原字段与原行序，不累计其它记录。`startFrom` 与 `endFrom` 同时提供时优先使用两字段模式；否则需要 `from`。非有限端点回退到基线，不会自动交换大小颠倒的端点。派生区间的 Schema 为 `DeriveIntervalTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性                | 类型                | 说明                                           |
 | ------------------- | ------------------- | ---------------------------------------------- |
 | `kind`              | `'derive-interval'` | 变换类型                                       |
@@ -69,6 +140,38 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 | `params.endFrom`    | `string`            | 两字段模式必填，终点字段，与 startFrom 配对    |
 | `params.startField` | `string`            | 可选，起点输出字段，默认 y0                    |
 | `params.endField`   | `string`            | 可选，终点输出字段，默认 y1                    |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`DeriveIntervalTransformSchema`
+
+<ZodSchema
+  name="DeriveIntervalTransformSchema"
+  description="从单值与基线或两个端点字段派生区间。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 DeriveIntervalParamsSchema 校验的参数对象',
+  }}
+/>
+
+`DeriveIntervalParamsSchema`
+
+<ZodSchema
+  name="DeriveIntervalParamsSchema"
+  description="从单值与基线或两个端点字段派生区间。"
+  descriptions={{
+    from: '单值模式的源字段；仅在使用 startFrom 与 endFrom 时可省略',
+    baseline: '单值模式的起点；默认 0，必须是有限数值',
+    startFrom: '双字段模式的起点字段；与 endFrom 成对，优先于 from 与 baseline',
+    endFrom: '双字段模式的终点字段；与 startFrom 成对',
+    startField: '区间起点输出字段；默认 y0',
+    endField: '区间终点输出字段；默认 y1',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['numeric-interval', 'numeric-interval.preview.tsx', 'numeric-interval.data.ts', 'numeric-derivation.data.ts']}
@@ -83,6 +186,9 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 
 `jitter` 给连续数值字段添加确定性的伪随机偏移，常用于分散重叠观测。偏移在数据单位中计算，范围为 `[-amount, amount]`，不是像素距离。相同输入行序、方向、种子与幅度产生相同结果；非有限数值保留原值。它保持行数与行序，直接改写指定字段。数值扰动的 Schema 为 `JitterTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性            | 类型                   | 说明                           |
 | --------------- | ---------------------- | ------------------------------ |
 | `kind`          | `'jitter'`             | 变换类型                       |
@@ -91,6 +197,37 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 | `params.yField` | `string`               | 可选，y 方向数值字段，默认 y   |
 | `params.amount` | `number`               | 可选，非负最大绝对偏移，默认 1 |
 | `params.seed`   | `number`               | 可选，整数随机种子，默认 0     |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`JitterTransformSchema`
+
+<ZodSchema
+  name="JitterTransformSchema"
+  description="在数据单位中加入可复现的扰动。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 JitterParamsSchema 校验的参数对象',
+  }}
+/>
+
+`JitterParamsSchema`
+
+<ZodSchema
+  name="JitterParamsSchema"
+  description="在数据单位中加入可复现的扰动。"
+  descriptions={{
+    axis: '扰动 x、y 或 both；默认 x，字段必须是连续数值',
+    xField: 'x 方向连续数值字段；默认 x',
+    yField: 'y 方向连续数值字段；默认 y',
+    amount: '最大绝对偏移量，单位与数据相同；默认 1，偏移取自 [-amount, amount]',
+    seed: '整数随机种子；默认 0，相同种子产生相同偏移',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['numeric-jitter', 'numeric-jitter.preview.tsx', 'numeric-jitter.data.ts', 'numeric-derivation.data.ts']}

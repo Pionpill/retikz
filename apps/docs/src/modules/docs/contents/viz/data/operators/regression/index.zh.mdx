@@ -11,11 +11,30 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 ## linear · 线性
 
-`linear` 用最小二乘法拟合直线 $y=a+bx$，适合描述近似恒定的变化速率。至少需要两对有效观测，且 $x$ 有变化。对应的 Schema 为 `BuiltinRegressionMethodSchemas.Linear`，参数如下：
+`linear` 用最小二乘法拟合直线 $y=a+bx$，适合描述近似恒定的变化速率。至少需要两对有效观测，且 $x$ 有变化。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型       | 说明     |
 | ------ | ---------- | -------- |
 | `kind` | `'linear'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `linear` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.linear"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 linear',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-linear', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -28,11 +47,30 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 ## quadratic · 二次
 
-`quadratic` 用最小二乘法拟合二次曲线 $y=a+bx+cx^2$，可以描述弯曲趋势或一个转折。至少需要三个不同的 $x$。对应的 Schema 为 `BuiltinRegressionMethodSchemas.Quadratic`，参数如下：
+`quadratic` 用最小二乘法拟合二次曲线 $y=a+bx+cx^2$，可以描述弯曲趋势或一个转折。至少需要三个不同的 $x$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型          | 说明     |
 | ------ | ------------- | -------- |
 | `kind` | `'quadratic'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `quadratic` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.quadratic"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 quadratic',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-quadratic', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -45,12 +83,32 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 ## polynomial · 多项式
 
-`polynomial` 拟合 $y=a_0+a_1x+\cdots+a_dx^d$，其中 `order` 指定最高阶数 $d$，系数由最小二乘法求出。$d$ 阶拟合至少需要 $d+1$ 个不同的 $x$；更高阶可能增加点间或观测范围外的波动，并不一定更合适。对应的 Schema 为 `BuiltinRegressionMethodSchemas.Polynomial`，参数如下：
+`polynomial` 拟合 $y=a_0+a_1x+\cdots+a_dx^d$，其中 `order` 指定最高阶数 $d$，系数由最小二乘法求出。$d$ 阶拟合至少需要 $d+1$ 个不同的 $x$；更高阶可能增加点间或观测范围外的波动，并不一定更合适。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性    | 类型           | 说明                                   |
 | ------- | -------------- | -------------------------------------- |
 | `kind`  | `'polynomial'` | 拟合方式                               |
 | `order` | `number`       | 可选，2–6 的整数，默认 3；指定最高阶数 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `polynomial` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.polynomial"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 polynomial',
+    order: '多项式最高阶数；2–6 的整数，Schema 默认补入 3',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-polynomial', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -63,11 +121,30 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 ## logarithmic · 对数
 
-`logarithmic` 拟合 $y=a+b\ln x$，适合描述变化逐渐放缓的趋势。它对 $x$ 取对数后做线性最小二乘拟合，预测仍返回原空间的 $y$。至少需要两对有效观测，且 $x$ 有变化；观测与预测位置都必须满足 $x>0$。对应的 Schema 为 `BuiltinRegressionMethodSchemas.Logarithmic`，参数如下：
+`logarithmic` 拟合 $y=a+b\ln x$，适合描述变化逐渐放缓的趋势。它对 $x$ 取对数后做线性最小二乘拟合，预测仍返回原空间的 $y$。至少需要两对有效观测，且 $x$ 有变化；观测与预测位置都必须满足 $x>0$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型            | 说明     |
 | ------ | --------------- | -------- |
 | `kind` | `'logarithmic'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `logarithmic` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.logarithmic"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 logarithmic',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-logarithmic', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -80,11 +157,30 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 ## exponential · 指数
 
-`exponential` 拟合 $y=ae^{bx}$，适合描述按比例增长或衰减的趋势。它对 $y$ 取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化，观测必须满足 $y>0$。对应的 Schema 为 `BuiltinRegressionMethodSchemas.Exponential`，参数如下：
+`exponential` 拟合 $y=ae^{bx}$，适合描述按比例增长或衰减的趋势。它对 $y$ 取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化，观测必须满足 $y>0$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型            | 说明     |
 | ------ | --------------- | -------- |
 | `kind` | `'exponential'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `exponential` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.exponential"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 exponential',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-exponential', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -97,11 +193,30 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 ## power · 幂函数
 
-`power` 拟合 $y=ax^b$，适合描述幂律关系。它对 $x$、$y$ 都取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化；观测必须满足 $x,y>0$，预测位置必须满足 $x>0$。对应的 Schema 为 `BuiltinRegressionMethodSchemas.Power`，参数如下：
+`power` 拟合 $y=ax^b$，适合描述幂律关系。它对 $x$、$y$ 都取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化；观测必须满足 $x,y>0$，预测位置必须满足 $x>0$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型      | 说明     |
 | ------ | --------- | -------- |
 | `kind` | `'power'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `power` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.power"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 power',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-power', 'regression-preview.tsx', 'regression-samples.data.ts']}

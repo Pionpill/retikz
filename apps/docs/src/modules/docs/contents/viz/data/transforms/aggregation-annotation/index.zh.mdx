@@ -9,11 +9,42 @@ description: 每组汇总为一行，或把统计与选择结果回填到原始�
 
 `summarize` 按组执行一个或多个归约算子，每组输出一行，只保留组键与指标字段，原有明细字段不会自动保留。多个分组字段按列表顺序逐层展开，每层保留键首次出现的顺序。各指标输出字段必须互不重复，并且不得覆盖分组字段。汇总的 Schema 为 `SummarizeTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性             | 类型                            | 说明                                                 |
 | ---------------- | ------------------------------- | ---------------------------------------------------- |
 | `kind`           | `'summarize'`                   | 变换类型                                             |
 | `params.groupBy` | `Array<string>`                 | 可选，分组字段；省略或空数组表示全部记录为一组       |
 | `params.metrics` | `Array<IRDataReducerOperation>` | 必填，非空归约算子列表；输出字段名由各算子的 as 声明 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SummarizeTransformSchema`
+
+<ZodSchema
+  name="SummarizeTransformSchema"
+  description="按组输出指标行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 SummarizeParamsSchema 校验的参数对象',
+  }}
+/>
+
+`SummarizeParamsSchema`
+
+<ZodSchema
+  name="SummarizeParamsSchema"
+  description="按组输出指标行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    metrics: '非空归约指标列表；输出字段不能重复或覆盖分组字段',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -35,6 +66,9 @@ description: 每组汇总为一行，或把统计与选择结果回填到原始�
 
 单行选择支持 min/max、first/last、top/bottom 和 nth；min/max 的并列策略仅允许 first/last，top/bottom 的 n 固定为 1。选择器带有 `by` 时写入选中行的该字段值，否则写入选择排名；未选中记录时不写入该标注字段。标注的 Schema 为 `AnnotateTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性                          | 类型                                 | 说明                                           |
 | ----------------------------- | ------------------------------------ | ---------------------------------------------- |
 | `kind`                        | `'annotate'`                         | 变换类型                                       |
@@ -43,6 +77,46 @@ description: 每组汇总为一行，或把统计与选择结果回填到原始�
 | `params.selectors`            | `Array<IRDataAnnotateSelector>`      | 可选，非空单行选择标注列表                     |
 | `params.selectors[].selector` | `IRDataAnnotateSelector["selector"]` | 必填，只支持至多选中一行的内置选择器           |
 | `params.selectors[].as`       | `string`                             | 必填，标注输出字段名                           |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`AnnotateTransformSchema`
+
+<ZodSchema
+  name="AnnotateTransformSchema"
+  description="将组级指标或代表行结果回填到输入行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 AnnotateParamsSchema 校验的参数对象',
+  }}
+/>
+
+`AnnotateParamsSchema`
+
+<ZodSchema
+  name="AnnotateParamsSchema"
+  description="将组级指标或代表行结果回填到输入行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    metrics: '可选归约指标',
+    selectors: '可选单行选择器注解；与 metrics 至少提供一项',
+  }}
+/>
+
+`AnnotateSelectorSchema`
+
+<ZodSchema
+  name="AnnotateSelectorSchema"
+  description="指定回填的单行选择结果。"
+  descriptions={{
+    selector: '内置单行选择器；top、bottom 的 n 固定为 1，并列策略只能为 first 或 last',
+    as: '注解输出字段',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['group-annotate', 'group-annotate.preview.tsx', 'group-annotate.data.ts', 'aggregation-annotation.data.ts']}

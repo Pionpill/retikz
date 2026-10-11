@@ -11,6 +11,9 @@ description: 从每组选择源端与目标端，输出投影字段与可选差�
 
 两端均使用 [selector](/viz/data/operators/selector)；某端未选中记录时该组不输出关系行，不会对多个选择结果做笛卡尔配对。关系生成的 Schema 为 `RelateTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性                            | 类型                                | 说明                                           |
 | ------------------------------- | ----------------------------------- | ---------------------------------------------- |
 | `kind`                          | `'relate'`                          | 变换类型                                       |
@@ -27,6 +30,65 @@ description: 从每组选择源端与目标端，输出投影字段与可选差�
 | `params.measures[].as`          | `string`                            | 必填，差值输出字段名                           |
 | `params.measures[].labelAs`     | `string`                            | 可选，差值的文本输出字段                       |
 | `params.measures[].labelPrefix` | `string`                            | 可选，非负差值的文本前缀，例如 +               |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`RelateTransformSchema`
+
+<ZodSchema
+  name="RelateTransformSchema"
+  description="按组选择两个端点并生成关系行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 RelateParamsSchema 校验的参数对象',
+  }}
+/>
+
+`RelateParamsSchema`
+
+<ZodSchema
+  name="RelateParamsSchema"
+  description="按组选择两个端点并生成关系行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    source: '源端点的选择器和字段映射',
+    target: '目标端点的选择器和字段映射',
+    measures: '可选的非空配对计算列表',
+    'source.selector': '选择源端点行的计算算子',
+    'source.fields': '输出字段后缀到源行字段的非空映射',
+    'target.selector': '选择目标端点行的计算算子',
+    'target.fields': '输出字段后缀到目标行字段的非空映射',
+  }}
+/>
+
+`EndpointProjectionSchema`
+
+<ZodSchema
+  name="EndpointProjectionSchema"
+  description="选择关系端点行并映射字段。"
+  descriptions={{
+    selector: '选择端点来源行的计算算子',
+    fields: '输出字段后缀到源行字段的非空映射；生成 sourceX、targetX 等字段',
+  }}
+/>
+
+`PairMeasureOperationSchema`
+
+<ZodSchema
+  name="PairMeasureOperationSchema"
+  description="从两个端点计算差值。"
+  descriptions={{
+    op: '配对计算类型，目前为 difference',
+    field: '从两个端点读取的数值字段',
+    as: '目标减源的数值差输出字段',
+    labelAs: '可选差值文本输出字段',
+    labelPrefix: '非负差值文本的可选前缀，如 +',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['relation-relate', 'relation-relate.preview.tsx', 'relation-relate.data.ts', 'relation-generation.data.ts']}

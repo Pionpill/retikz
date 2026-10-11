@@ -11,11 +11,29 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 ## linear · Linear
 
-`linear` fits the line $y=a+bx$ by least squares. It describes relationships with an approximately constant rate of change. It requires at least two valid observations with varying $x$. Its Schema is `BuiltinRegressionMethodSchemas.Linear`. Parameters:
+`linear` fits the line $y=a+bx$ by least squares. It describes relationships with an approximately constant rate of change. It requires at least two valid observations with varying $x$. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type       | Description    |
 | -------- | ---------- | -------------- |
 | `kind`   | `'linear'` | Fitting method |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+Built-in `linear` parameter schema
+
+<ZodSchema
+  name="BuiltinRegression.linear"
+  descriptions={{
+    kind: 'Fixed regression method: linear',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-linear', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -28,11 +46,29 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 ## quadratic · Quadratic
 
-`quadratic` fits $y=a+bx+cx^2$ by least squares. It can describe curvature or a single turning point. It requires at least three distinct $x$ values. Its Schema is `BuiltinRegressionMethodSchemas.Quadratic`. Parameters:
+`quadratic` fits $y=a+bx+cx^2$ by least squares. It can describe curvature or a single turning point. It requires at least three distinct $x$ values. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type          | Description    |
 | -------- | ------------- | -------------- |
 | `kind`   | `'quadratic'` | Fitting method |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+Built-in `quadratic` parameter schema
+
+<ZodSchema
+  name="BuiltinRegression.quadratic"
+  descriptions={{
+    kind: 'Fixed regression method: quadratic',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-quadratic', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -45,12 +81,30 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 ## polynomial · Polynomial
 
-`polynomial` fits $y=a_0+a_1x+\cdots+a_dx^d$ by least squares. `order` sets the degree $d$; the observations determine the coefficients. A degree-$d$ fit requires at least $d+1$ distinct $x$ values. Higher degrees can increase fluctuations between observations or outside their range and are not necessarily a better choice. Its Schema is `BuiltinRegressionMethodSchemas.Polynomial`. Parameters:
+`polynomial` fits $y=a_0+a_1x+\cdots+a_dx^d$ by least squares. `order` sets the degree $d$; the observations determine the coefficients. A degree-$d$ fit requires at least $d+1$ distinct $x$ values. Higher degrees can increase fluctuations between observations or outside their range and are not necessarily a better choice. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type           | Description                                              |
 | -------- | -------------- | -------------------------------------------------------- |
 | `kind`   | `'polynomial'` | Fitting method                                           |
 | `order`  | `number`       | Optional integer from 2 to 6, default 3; sets the degree |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+Built-in `polynomial` parameter schema
+
+<ZodSchema
+  name="BuiltinRegression.polynomial"
+  descriptions={{
+    kind: 'Fixed regression method: polynomial',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-polynomial', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -63,11 +117,29 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 ## logarithmic · Logarithmic
 
-`logarithmic` fits $y=a+b\ln x$, which can describe a gradually slowing change. It applies linear least squares after taking the logarithm of $x$ and predicts $y$ in the original space. It requires at least two valid observations with varying $x$. Observed and predicted $x$ values must be positive. Its Schema is `BuiltinRegressionMethodSchemas.Logarithmic`. Parameters:
+`logarithmic` fits $y=a+b\ln x$, which can describe a gradually slowing change. It applies linear least squares after taking the logarithm of $x$ and predicts $y$ in the original space. It requires at least two valid observations with varying $x$. Observed and predicted $x$ values must be positive. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type            | Description    |
 | -------- | --------------- | -------------- |
 | `kind`   | `'logarithmic'` | Fitting method |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+Built-in `logarithmic` parameter schema
+
+<ZodSchema
+  name="BuiltinRegression.logarithmic"
+  descriptions={{
+    kind: 'Fixed regression method: logarithmic',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-logarithmic', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -80,11 +152,29 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 ## exponential · Exponential
 
-`exponential` fits $y=ae^{bx}$, which can describe proportional growth or decay. It applies linear least squares to the logarithm of $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$ and positive observed $y$. Its Schema is `BuiltinRegressionMethodSchemas.Exponential`. Parameters:
+`exponential` fits $y=ae^{bx}$, which can describe proportional growth or decay. It applies linear least squares to the logarithm of $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$ and positive observed $y$. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type            | Description    |
 | -------- | --------------- | -------------- |
 | `kind`   | `'exponential'` | Fitting method |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+Built-in `exponential` parameter schema
+
+<ZodSchema
+  name="BuiltinRegression.exponential"
+  descriptions={{
+    kind: 'Fixed regression method: exponential',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-exponential', 'regression-preview.tsx', 'regression-samples.data.ts']}
@@ -97,11 +187,29 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 ## power · Power
 
-`power` fits $y=ax^b$ to describe power-law relationships. It applies linear least squares after taking the logarithm of both $x$ and $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$, positive observed $x$ and $y$, and positive prediction positions. Its Schema is `BuiltinRegressionMethodSchemas.Power`. Parameters:
+`power` fits $y=ax^b$ to describe power-law relationships. It applies linear least squares after taking the logarithm of both $x$ and $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$, positive observed $x$ and $y$, and positive prediction positions. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type      | Description    |
 | -------- | --------- | -------------- |
 | `kind`   | `'power'` | Fitting method |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+Built-in `power` parameter schema
+
+<ZodSchema
+  name="BuiltinRegression.power"
+  descriptions={{
+    kind: 'Fixed regression method: power',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['regression-power', 'regression-preview.tsx', 'regression-samples.data.ts']}

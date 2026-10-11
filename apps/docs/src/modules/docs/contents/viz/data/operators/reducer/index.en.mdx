@@ -9,12 +9,25 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 ## count · Count
 
-`count` counts rows in a group without reading a numeric field, including rows with missing numeric values. Its schema is `BuiltinReducerOperationSchemas.Count`, with the following parameters:
+`count` counts rows in a group without reading a numeric field, including rows with missing numeric values. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type      | Description                                      |
 | -------- | --------- | ------------------------------------------------ |
 | `kind`   | `'count'` | Computation type                                 |
 | `as`     | `string`  | Required, nonblank name for the row-count output |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `count`
+
+<ZodSchema name="ReducerOperationSchema.count" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['reducer-count', 'reducer-count.preview.tsx', 'reducer-count.data.ts']}
@@ -27,13 +40,26 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 ## sum · Sum
 
-`sum` adds the finite numbers in the specified field and returns their total. Missing and nonfinite values do not contribute. Its schema is `BuiltinReducerOperationSchemas.Sum`, with the following parameters:
+`sum` adds the finite numbers in the specified field and returns their total. Missing and nonfinite values do not contribute. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type     | Description                                  |
 | -------- | -------- | -------------------------------------------- |
 | `kind`   | `'sum'`  | Computation type                             |
 | `field`  | `string` | Required, nonblank numeric source field name |
 | `as`     | `string` | Required, nonblank sum output field name     |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `sum`
+
+<ZodSchema name="ReducerOperationSchema.sum" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -51,13 +77,30 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 ## mean / median · Mean and median
 
-`mean` computes the arithmetic mean of finite numbers. `median` sorts them and takes the middle value, averaging the two middle values for an even count. Both skip missing and nonfinite values. Their schemas are `BuiltinReducerOperationSchemas.Mean` and `BuiltinReducerOperationSchemas.Median`, with the following parameters:
+`mean` computes the arithmetic mean of finite numbers. `median` sorts them and takes the middle value, averaging the two middle values for an even count. Both skip missing and nonfinite values. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type                 | Description                                      |
 | -------- | -------------------- | ------------------------------------------------ |
 | `kind`   | `'mean' \| 'median'` | Computation type                                 |
 | `field`  | `string`             | Required, nonblank numeric source field name     |
 | `as`     | `string`             | Required, nonblank statistical output field name |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `mean`
+
+<ZodSchema name="ReducerOperationSchema.mean" />
+
+`ReducerOperationSchema` · `median`
+
+<ZodSchema name="ReducerOperationSchema.median" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -75,13 +118,30 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 ## min / max · Minimum and maximum
 
-`min` and `max` return the finite numeric extrema of the specified field. Their schemas are `BuiltinReducerOperationSchemas.Min` and `BuiltinReducerOperationSchemas.Max`, with the following parameters:
+`min` and `max` return the finite numeric extrema of the specified field. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type             | Description                                   |
 | -------- | ---------------- | --------------------------------------------- |
 | `kind`   | `'min' \| 'max'` | Computation type                              |
 | `field`  | `string`         | Required, nonblank numeric source field name  |
 | `as`     | `string`         | Required, nonblank extremum output field name |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `min`
+
+<ZodSchema name="ReducerOperationSchema.min" />
+
+`ReducerOperationSchema` · `max`
+
+<ZodSchema name="ReducerOperationSchema.max" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentAlert
   type="tip"
@@ -112,7 +172,10 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 ## extent · Extent
 
-`extent` computes the finite numeric minimum and maximum of the specified field and writes them to two continuous fields. Its schema is `BuiltinReducerOperationSchemas.Extent`, with the following parameters:
+`extent` computes the finite numeric minimum and maximum of the specified field and writes them to two continuous fields. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type       | Description                                                          |
 | -------- | ---------- | -------------------------------------------------------------------- |
@@ -120,6 +183,16 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `field`  | `string`   | Required, nonblank numeric source field name                         |
 | `as.min` | `string`   | Required, nonblank minimum output field name                         |
 | `as.max` | `string`   | Required, nonblank maximum output field name, distinct from `as.min` |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `extent`
+
+<ZodSchema name="ReducerOperationSchema.extent" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -137,7 +210,10 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 ## quantile · Quantile
 
-`quantile` returns the quantile at a specified probability. After sorting the finite numbers, the position is $h=(m-1)p$, where $m$ is the number of participating values. Positions between two values use linear interpolation, so the result need not be an input value. `p=0` and `p=1` return the minimum and maximum. Its schema is `BuiltinReducerOperationSchemas.Quantile`, with the following parameters:
+`quantile` returns the quantile at a specified probability. After sorting the finite numbers, the position is $h=(m-1)p$, where $m$ is the number of participating values. Positions between two values use linear interpolation, so the result need not be an input value. `p=0` and `p=1` return the minimum and maximum. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type         | Description                                            |
 | -------- | ------------ | ------------------------------------------------------ |
@@ -145,6 +221,16 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 | `field`  | `string`     | Required, nonblank numeric source field name           |
 | `p`      | `number`     | Required, probability from 0 to 1, including endpoints |
 | `as`     | `string`     | Required, nonblank quantile output field name          |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `quantile`
+
+<ZodSchema name="ReducerOperationSchema.quantile" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -164,7 +250,10 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `quantile-band` computes lower and upper quantiles in one operation. It can also output additional quantiles, interval width, finite-value count, and whiskers. Each result is named separately through `outputs`.
 
-For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMax` whiskers use the observed minimum and maximum. `spread` constructs fences $[L-fS,U+fS]$, then takes whisker endpoints from actual observations inside those fences. Fences and whiskers are separate results. Its schema is `BuiltinReducerOperationSchemas.QuantileBand`, with the following parameters:
+For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMax` whiskers use the observed minimum and maximum. `spread` constructs fences $[L-fS,U+fS]$, then takes whisker endpoints from actual observations inside those fences. Fences and whiskers are separate results. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property              | Type                               | Description                                                        |
 | --------------------- | ---------------------------------- | ------------------------------------------------------------------ |
@@ -189,6 +278,28 @@ For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMa
 | `whisker`             | `object`                           | Optional whisker strategy; omitted means no whiskers               |
 | `whisker.kind`        | `'minMax' \| 'spread'`             | Required when whisker is supplied; selects the strategy            |
 | `whisker.factor`      | `number`                           | Optional, nonnegative, defaults to 1.5; used only by spread        |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`QuantileBandReducerOperationSchema`
+
+<ZodSchema name="QuantileBandReducerOperationSchema" />
+
+`QuantileBandOutputsSchema`
+
+<ZodSchema name="QuantileBandOutputsSchema" />
+
+`QuantileBandPointOutputSchema`
+
+<ZodSchema name="QuantileBandPointOutputSchema" />
+
+`QuantileBandWhiskerSchema`
+
+<ZodSchema name="QuantileBandWhiskerSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[

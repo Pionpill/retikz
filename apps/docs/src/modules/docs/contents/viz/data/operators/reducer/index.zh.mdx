@@ -9,12 +9,32 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 ## count · 计数
 
-`count` 统计组内行数，不读取数值字段，数值缺失的行也会计入。计数的 Schema 为 `BuiltinReducerOperationSchemas.Count`，参数如下：
+`count` 统计组内行数，不读取数值字段，数值缺失的行也会计入。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型      | 说明                           |
 | ------ | --------- | ------------------------------ |
 | `kind` | `'count'` | 计算类型                       |
 | `as`   | `string`  | 必填，行数输出字段名，不能为空 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `count`
+
+<ZodSchema
+  name="ReducerOperationSchema.count"
+  description="计数的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 count',
+    as: '必填，行数输出字段名，不能为空',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['reducer-count', 'reducer-count.preview.tsx', 'reducer-count.data.ts']}
@@ -27,13 +47,34 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 ## sum · 求和
 
-`sum` 将指定字段的有限数值相加，返回总和；缺失值和非有限数值不参与计算。求和的 Schema 为 `BuiltinReducerOperationSchemas.Sum`，参数如下：
+`sum` 将指定字段的有限数值相加，返回总和；缺失值和非有限数值不参与计算。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性    | 类型     | 说明                             |
 | ------- | -------- | -------------------------------- |
 | `kind`  | `'sum'`  | 计算类型                         |
 | `field` | `string` | 必填，读取的数值字段名，不能为空 |
 | `as`    | `string` | 必填，总和输出字段名，不能为空   |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `sum`
+
+<ZodSchema
+  name="ReducerOperationSchema.sum"
+  description="求和的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 sum',
+    field: '必填，读取的数值字段名，不能为空',
+    as: '必填，总和输出字段名，不能为空',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -51,13 +92,46 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 ## mean / median · 均值与中位数
 
-`mean` 计算有限数值的算术平均数；`median` 排序后取中间值，偶数个值时取中间两个数的均值。两者都跳过缺失值和非有限数值。均值与中位数的 Schema 分别为 `BuiltinReducerOperationSchemas.Mean` 和 `BuiltinReducerOperationSchemas.Median`，参数如下：
+`mean` 计算有限数值的算术平均数；`median` 排序后取中间值，偶数个值时取中间两个数的均值。两者都跳过缺失值和非有限数值。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性    | 类型                 | 说明                             |
 | ------- | -------------------- | -------------------------------- |
 | `kind`  | `'mean' \| 'median'` | 计算类型                         |
 | `field` | `string`             | 必填，读取的数值字段名，不能为空 |
 | `as`    | `string`             | 必填，统计输出字段名，不能为空   |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `mean`
+
+<ZodSchema
+  name="ReducerOperationSchema.mean"
+  description="均值与中位数的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 mean',
+    field: '必填，读取的数值字段名，不能为空',
+    as: '必填，统计输出字段名，不能为空',
+  }}
+/>
+
+`ReducerOperationSchema` · `median`
+
+<ZodSchema
+  name="ReducerOperationSchema.median"
+  description="均值与中位数的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 median',
+    field: '必填，读取的数值字段名，不能为空',
+    as: '必填，统计输出字段名，不能为空',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -75,13 +149,46 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 ## min / max · 最小值与最大值
 
-`min` 和 `max` 返回指定字段的有限数值极值。最小值与最大值的 Schema 分别为 `BuiltinReducerOperationSchemas.Min` 和 `BuiltinReducerOperationSchemas.Max`，参数如下：
+`min` 和 `max` 返回指定字段的有限数值极值。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性    | 类型             | 说明                             |
 | ------- | ---------------- | -------------------------------- |
 | `kind`  | `'min' \| 'max'` | 计算类型                         |
 | `field` | `string`         | 必填，读取的数值字段名，不能为空 |
 | `as`    | `string`         | 必填，极值输出字段名，不能为空   |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `min`
+
+<ZodSchema
+  name="ReducerOperationSchema.min"
+  description="最小值与最大值的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 min',
+    field: '必填，读取的数值字段名，不能为空',
+    as: '必填，极值输出字段名，不能为空',
+  }}
+/>
+
+`ReducerOperationSchema` · `max`
+
+<ZodSchema
+  name="ReducerOperationSchema.max"
+  description="最小值与最大值的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 max',
+    field: '必填，读取的数值字段名，不能为空',
+    as: '必填，极值输出字段名，不能为空',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentAlert
   type="tip"
@@ -111,7 +218,10 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 ## extent · 数值范围
 
-`extent` 同时计算指定字段的有限数值最小值与最大值，分别写入两个连续型字段。数值范围的 Schema 为 `BuiltinReducerOperationSchemas.Extent`，参数如下：
+`extent` 同时计算指定字段的有限数值最小值与最大值，分别写入两个连续型字段。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性     | 类型       | 说明                                               |
 | -------- | ---------- | -------------------------------------------------- |
@@ -119,6 +229,26 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `field`  | `string`   | 必填，读取的数值字段名，不能为空                   |
 | `as.min` | `string`   | 必填，非空的最小值输出字段名                       |
 | `as.max` | `string`   | 必填，非空的最大值输出字段名，不能与 `as.min` 相同 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `extent`
+
+<ZodSchema
+  name="ReducerOperationSchema.extent"
+  description="数值范围的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 extent',
+    as: '最小值与最大值的输出字段映射；两个字段名必须不同',
+    field: '必填，读取的数值字段名，不能为空',
+    'as.min': '必填，非空的最小值输出字段名',
+    'as.max': '必填，非空的最大值输出字段名，不能与 as.min 相同',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -136,7 +266,10 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 ## quantile · 分位数
 
-`quantile` 输出指定概率位置的分位点。有限数值排序后，位置为 $h=(m-1)p$，其中 $m$ 是参与计算的数值个数；位置落在两个数之间时线性插值，结果可以不是输入中的某个值。`p=0` 和 `p=1` 分别得到最小值和最大值。分位数的 Schema 为 `BuiltinReducerOperationSchemas.Quantile`，参数如下：
+`quantile` 输出指定概率位置的分位点。有限数值排序后，位置为 $h=(m-1)p$，其中 $m$ 是参与计算的数值个数；位置落在两个数之间时线性插值，结果可以不是输入中的某个值。`p=0` 和 `p=1` 分别得到最小值和最大值。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性    | 类型         | 说明                                    |
 | ------- | ------------ | --------------------------------------- |
@@ -144,6 +277,25 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `field` | `string`     | 必填，读取的数值字段名，不能为空        |
 | `p`     | `number`     | 必填，分位概率，范围为 0 到 1，包含端点 |
 | `as`    | `string`     | 必填，分位点输出字段名，不能为空        |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`ReducerOperationSchema` · `quantile`
+
+<ZodSchema
+  name="ReducerOperationSchema.quantile"
+  description="分位数的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 quantile',
+    field: '必填，读取的数值字段名，不能为空',
+    p: '必填，分位概率，范围为 0 到 1，包含端点',
+    as: '必填，分位点输出字段名，不能为空',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -163,7 +315,10 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `quantile-band` 一次计算上下分位点，也可输出额外分位点、区间宽度、有限值计数和须线。各结果通过 `outputs` 单独命名。
 
-令上下分位点为 $L$、$U$，区间宽度为 $S=U-L$。`minMax` 须线取观测最小值与最大值；`spread` 先构造围栏 $[L-fS,U+fS]$，再从围栏内的实际观测取须线端点。围栏与须线是不同结果。分位区间的 Schema 为 `BuiltinReducerOperationSchemas.QuantileBand`，参数如下：
+令上下分位点为 $L$、$U$，区间宽度为 $S=U-L$。`minMax` 须线取观测最小值与最大值；`spread` 先构造围栏 $[L-fS,U+fS]$，再从围栏内的实际观测取须线端点。围栏与须线是不同结果。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性                  | 类型                               | 说明                                             |
 | --------------------- | ---------------------------------- | ------------------------------------------------ |
@@ -188,6 +343,80 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `whisker`             | `object`                           | 可选，须线策略；省略时不计算须线                 |
 | `whisker.kind`        | `'minMax' \| 'spread'`             | 提供 whisker 时必填，选择须线策略                |
 | `whisker.factor`      | `number`                           | 可选，非负数，默认 1.5；仅 spread 策略使用       |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`QuantileBandReducerOperationSchema`
+
+<ZodSchema
+  name="QuantileBandReducerOperationSchema"
+  description="一次计算分位区间及其派生结果。"
+  descriptions={{
+    kind: '固定为 quantile-band',
+    field: '数值源字段',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    outputs: '结果的输出字段映射',
+    whisker: '可选须线策略',
+    'outputs.lower': '下界输出字段',
+    'outputs.upper': '上界输出字段',
+    'outputs.points': '可选额外分位点输出列表',
+    'outputs.spread': '区间跨度输出字段',
+    'outputs.lowerFence': '下围栏输出字段',
+    'outputs.upperFence': '上围栏输出字段',
+    'outputs.whiskerMin': '下须线输出字段',
+    'outputs.whiskerMax': '上须线输出字段',
+    'outputs.min': '最小值输出字段',
+    'outputs.max': '最大值输出字段',
+    'outputs.count': '有效数值个数输出字段',
+  }}
+/>
+
+`QuantileBandOutputsSchema`
+
+<ZodSchema
+  name="QuantileBandOutputsSchema"
+  description="分位区间结果的输出字段名。"
+  descriptions={{
+    lower: '下界输出字段',
+    upper: '上界输出字段',
+    points: '可选额外分位点输出列表',
+    spread: '区间跨度输出字段',
+    lowerFence: '下围栏输出字段',
+    upperFence: '上围栏输出字段',
+    whiskerMin: '下须线输出字段',
+    whiskerMax: '上须线输出字段',
+    min: '最小值输出字段',
+    max: '最大值输出字段',
+    count: '有效数值个数输出字段',
+  }}
+/>
+
+`QuantileBandPointOutputSchema`
+
+<ZodSchema
+  name="QuantileBandPointOutputSchema"
+  description="一个额外分位点的输出。"
+  descriptions={{
+    p: '分位概率，取值 0..1',
+    as: '输出字段',
+  }}
+/>
+
+`QuantileBandWhiskerSchema`
+
+<ZodSchema
+  name="QuantileBandWhiskerSchema"
+  description="分位区间须线策略。"
+  descriptions={{
+    kind: 'minMax 使用观测极值，spread 使用区间跨度构造围栏',
+    factor: '非负跨度倍数；默认 1.5',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[

@@ -9,13 +9,46 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 ## min / max · 极值行
 
-`min` 和 `max` 选择数值字段最小或最大的原始行，跳过缺失值和非有限数值。并列时，`first` 取输入中较早的记录，`last` 取较晚的记录，`all` 保留全部同值记录。单条选择的排名为 1；选择多条并列记录时，排名按输出顺序从 1 连续编号。极值行的 Schema 分别为 `BuiltinSelectorOperationSchemas.Min` 和 `BuiltinSelectorOperationSchemas.Max`，参数如下：
+`min` 和 `max` 选择数值字段最小或最大的原始行，跳过缺失值和非有限数值。并列时，`first` 取输入中较早的记录，`last` 取较晚的记录，`all` 保留全部同值记录。单条选择的排名为 1；选择多条并列记录时，排名按输出顺序从 1 连续编号。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型                         | 说明                                     |
 | ------ | ---------------------------- | ---------------------------------------- |
 | `kind` | `'min' \| 'max'`             | 选择类型                                 |
 | `by`   | `string`                     | 必填，读取的数值字段名，不能为空         |
 | `tie`  | `'first' \| 'last' \| 'all'` | 可选，并列极值的处理策略，默认 `'first'` |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `min`
+
+<ZodSchema
+  name="SelectorOperationSchema.min"
+  description="选择数值最小的原始行。"
+  descriptions={{
+    kind: '选择类型，固定为 min',
+    by: '读取的数值字段名，不能为空',
+    tie: '并列极值处理策略；省略时运行时使用 first，Schema 不补入默认值',
+  }}
+/>
+
+`SelectorOperationSchema` · `max`
+
+<ZodSchema
+  name="SelectorOperationSchema.max"
+  description="选择数值最大的原始行。"
+  descriptions={{
+    kind: '选择类型，固定为 max',
+    by: '读取的数值字段名，不能为空',
+    tie: '并列极值处理策略；省略时运行时使用 first，Schema 不补入默认值',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -33,7 +66,10 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 ## first / last · 首行与末行
 
-`first` 和 `last` 选择组内首行或末行。省略 `orderBy` 时沿用当前输入顺序；提供规则时先稳定排序，相同排序键保留输入中的相对顺序。这两个算子不要求排序字段为有限数值，返回的排名均为 1。首行与末行的 Schema 分别为 `BuiltinSelectorOperationSchemas.First` 和 `BuiltinSelectorOperationSchemas.Last`，参数如下：
+`first` 和 `last` 选择组内首行或末行。省略 `orderBy` 时沿用当前输入顺序；提供规则时先稳定排序，相同排序键保留输入中的相对顺序。这两个算子不要求排序字段为有限数值，返回的排名均为 1。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性              | 类型                          | 说明                                             |
 | ----------------- | ----------------------------- | ------------------------------------------------ |
@@ -41,6 +77,45 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `orderBy`         | `Array<IRDataOrderBy>`        | 可选，非空的排序规则列表；省略时沿用当前输入顺序 |
 | `orderBy[].field` | `string`                      | 必填，该条规则读取的字段名，不能为空             |
 | `orderBy[].order` | `'ascending' \| 'descending'` | 可选，排序方向，默认 `'ascending'`               |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `first`
+
+<ZodSchema
+  name="SelectorOperationSchema.first"
+  description="首行与末行的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 first',
+    orderBy: '可选，非空的排序规则列表；省略时沿用当前输入顺序',
+  }}
+/>
+
+`SelectorOperationSchema` · `last`
+
+<ZodSchema
+  name="SelectorOperationSchema.last"
+  description="首行与末行的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 last',
+    orderBy: '可选，非空的排序规则列表；省略时沿用当前输入顺序',
+  }}
+/>
+
+`OrderBySchema`
+
+<ZodSchema
+  name="OrderBySchema"
+  description="代表行选择前的稳定排序规则。"
+  descriptions={{
+    field: '排序字段',
+    order: '排序方向；默认升序',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -58,7 +133,10 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 ## top / bottom · 最高与最低 N 行
 
-`top` 按数值降序选择最高 N 行，`bottom` 按数值升序选择最低 N 行；两者跳过缺失值和非有限数值，排名按输出顺序从 1 连续编号。并列策略作用在第 N 行的截断边界：`first` 保留稳定排序的前 N 行，`all` 纳入边界上的全部同值记录，`last` 将最后一个位置替换为边界并列记录中的末条。最高与最低 N 行的 Schema 分别为 `BuiltinSelectorOperationSchemas.Top` 和 `BuiltinSelectorOperationSchemas.Bottom`，参数如下：
+`top` 按数值降序选择最高 N 行，`bottom` 按数值升序选择最低 N 行；两者跳过缺失值和非有限数值，排名按输出顺序从 1 连续编号。并列策略作用在第 N 行的截断边界：`first` 保留稳定排序的前 N 行，`all` 纳入边界上的全部同值记录，`last` 将最后一个位置替换为边界并列记录中的末条。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性   | 类型                         | 说明                                                                     |
 | ------ | ---------------------------- | ------------------------------------------------------------------------ |
@@ -66,6 +144,38 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `by`   | `string`                     | 必填，读取的数值字段名，不能为空                                         |
 | `n`    | `number`                     | 必填，正整数；超过有效行数时取全部有效行                                 |
 | `tie`  | `'first' \| 'last' \| 'all'` | 可选，第 N 行边界的并列策略，默认 `'first'`；`'all'` 可能使结果超过 N 行 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `top`
+
+<ZodSchema
+  name="SelectorOperationSchema.top"
+  description="最高与最低 N 行的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 top',
+    by: '必填，读取的数值字段名，不能为空',
+    n: '必填，正整数；超过有效行数时取全部有效行',
+    tie: "可选，第 N 行边界的并列策略，默认 'first'；'all' 可能使结果超过 N 行",
+  }}
+/>
+
+`SelectorOperationSchema` · `bottom`
+
+<ZodSchema
+  name="SelectorOperationSchema.bottom"
+  description="最高与最低 N 行的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 bottom',
+    by: '必填，读取的数值字段名，不能为空',
+    n: '必填，正整数；超过有效行数时取全部有效行',
+    tie: "可选，第 N 行边界的并列策略，默认 'first'；'all' 可能使结果超过 N 行",
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -83,7 +193,10 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 ## nth · 指定位置
 
-`nth` 按必填的 `orderBy` 稳定排序，再选择零基下标 `index` 对应的原始行。下标 0 表示第一行，返回排名为 1；其它位置的排名为 `index + 1`。下标越过组内行数时，该组没有选择结果。指定位置的 Schema 为 `BuiltinSelectorOperationSchemas.Nth`，参数如下：
+`nth` 按必填的 `orderBy` 稳定排序，再选择零基下标 `index` 对应的原始行。下标 0 表示第一行，返回排名为 1；其它位置的排名为 `index + 1`。下标越过组内行数时，该组没有选择结果。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性              | 类型                          | 说明                               |
 | ----------------- | ----------------------------- | ---------------------------------- |
@@ -92,6 +205,35 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `orderBy[].field` | `string`                      | 必填，排序字段名，不能为空         |
 | `orderBy[].order` | `'ascending' \| 'descending'` | 可选，排序方向，默认 `'ascending'` |
 | `index`           | `number`                      | 必填，非负整数，排序后的零基下标   |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `nth`
+
+<ZodSchema
+  name="SelectorOperationSchema.nth"
+  description="指定位置的参数。"
+  descriptions={{
+    kind: '算子类型，固定为 nth',
+    orderBy: '必填，非空的排序规则列表',
+    index: '必填，非负整数，排序后的零基下标',
+  }}
+/>
+
+`OrderBySchema`
+
+<ZodSchema
+  name="OrderBySchema"
+  description="代表行选择前的稳定排序规则。"
+  descriptions={{
+    field: '排序字段',
+    order: '排序方向；默认升序',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -109,7 +251,10 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 
 ## outside-quantile-band · 区间外选择
 
-`outside-quantile-band` 计算数值字段的上下分位点，再选择边界之外的原始行，跳过缺失值和非有限数值。设分位点为 $L$、$U$，`band` 使用区间 $[L,U]$；`spread` 使用围栏 $[L-f(U-L),U+f(U-L)]$。只选择严格小于下界或严格大于上界的记录，等于边界的值属于区间内。输出沿用原始输入顺序，排名从 1 连续编号。区间外选择的 Schema 为 `BuiltinSelectorOperationSchemas.OutsideQuantileBand`，参数如下：
+`outside-quantile-band` 计算数值字段的上下分位点，再选择边界之外的原始行，跳过缺失值和非有限数值。设分位点为 $L$、$U$，`band` 使用区间 $[L,U]$；`spread` 使用围栏 $[L-f(U-L),U+f(U-L)]$。只选择严格小于下界或严格大于上界的记录，等于边界的值属于区间内。输出沿用原始输入顺序，排名从 1 连续编号。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | 属性              | 类型                      | 说明                                           |
 | ----------------- | ------------------------- | ---------------------------------------------- |
@@ -120,6 +265,37 @@ selector 从一组数据中选择原始记录，保留这些记录的字段。�
 | `boundary`        | `object`                  | 可选，边界策略；省略时使用 `band`              |
 | `boundary.kind`   | `'band' \| 'spread'`      | 提供 `boundary` 时必填，选择分位区间或扩展围栏 |
 | `boundary.factor` | `number`                  | 可选，非负数，默认 1.5；仅 `spread` 策略使用   |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`OutsideQuantileBandSelectorOperationSchema`
+
+<ZodSchema
+  name="OutsideQuantileBandSelectorOperationSchema"
+  description="选择分位区间或围栏外的原始行。"
+  descriptions={{
+    kind: '固定为 outside-quantile-band',
+    field: '数值源字段',
+    lowerP: '下界分位概率，必须小于 upperP',
+    upperP: '上界分位概率',
+    boundary: '边界策略；默认 band',
+  }}
+/>
+
+`OutsideQuantileBandBoundarySchema`
+
+<ZodSchema
+  name="OutsideQuantileBandBoundarySchema"
+  description="分位区间外筛选的边界策略。"
+  descriptions={{
+    kind: 'band 使用分位区间边界，spread 使用跨度围栏',
+    factor: '非负跨度倍数；默认 1.5',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[

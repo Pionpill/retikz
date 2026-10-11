@@ -9,13 +9,30 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 ## min / max · Extreme rows
 
-`min` and `max` select the original rows with the smallest or largest numeric field values, skipping missing and non-finite values. For ties, `first` selects the earlier input record, `last` selects the later one, and `all` keeps every tied record. A single selection has rank 1; multiple tied records receive consecutive ranks starting at 1 in output order. Their schemas are `BuiltinSelectorOperationSchemas.Min` and `BuiltinSelectorOperationSchemas.Max`, with the following parameters:
+`min` and `max` select the original rows with the smallest or largest numeric field values, skipping missing and non-finite values. For ties, `first` selects the earlier input record, `last` selects the later one, and `all` keeps every tied record. A single selection has rank 1; multiple tied records receive consecutive ranks starting at 1 in output order. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type                         | Description                                  |
 | -------- | ---------------------------- | -------------------------------------------- |
 | `kind`   | `'min' \| 'max'`             | Selection type                               |
 | `by`     | `string`                     | Required, nonblank numeric source field name |
 | `tie`    | `'first' \| 'last' \| 'all'` | Optional tie strategy, defaults to `'first'` |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `min`
+
+<ZodSchema name="SelectorOperationSchema.min" />
+
+`SelectorOperationSchema` · `max`
+
+<ZodSchema name="SelectorOperationSchema.max" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -33,7 +50,10 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 ## first / last · First and last rows
 
-`first` and `last` select the first or last row in each group. Omitting `orderBy` keeps the current input order; providing it sorts stably before selection, preserving relative input order for equal keys. These selectors do not require finite numeric sort fields, and both return rank 1. Their schemas are `BuiltinSelectorOperationSchemas.First` and `BuiltinSelectorOperationSchemas.Last`, with the following parameters:
+`first` and `last` select the first or last row in each group. Omitting `orderBy` keeps the current input order; providing it sorts stably before selection, preserving relative input order for equal keys. These selectors do not require finite numeric sort fields, and both return rank 1. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property          | Type                          | Description                                                              |
 | ----------------- | ----------------------------- | ------------------------------------------------------------------------ |
@@ -41,6 +61,24 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `orderBy`         | `Array<IRDataOrderBy>`        | Optional, nonempty list of sort rules; omitted keeps current input order |
 | `orderBy[].field` | `string`                      | Required, nonblank field name for this rule                              |
 | `orderBy[].order` | `'ascending' \| 'descending'` | Optional sort direction, defaults to `'ascending'`                       |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `first`
+
+<ZodSchema name="SelectorOperationSchema.first" />
+
+`SelectorOperationSchema` · `last`
+
+<ZodSchema name="SelectorOperationSchema.last" />
+
+`OrderBySchema`
+
+<ZodSchema name="OrderBySchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -58,7 +96,10 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 ## top / bottom · Highest and lowest N rows
 
-`top` selects the highest N rows in descending numeric order; `bottom` selects the lowest N rows in ascending order. Both skip missing and non-finite values and assign consecutive ranks starting at 1 in output order. The tie strategy applies at the Nth-row cutoff: `first` keeps the first N rows of the stable sort, `all` includes every record tied at the boundary, and `last` replaces the final position with the last record tied at that boundary. Their schemas are `BuiltinSelectorOperationSchemas.Top` and `BuiltinSelectorOperationSchemas.Bottom`, with the following parameters:
+`top` selects the highest N rows in descending numeric order; `bottom` selects the lowest N rows in ascending order. Both skip missing and non-finite values and assign consecutive ranks starting at 1 in output order. The tie strategy applies at the Nth-row cutoff: `first` keeps the first N rows of the stable sort, `all` includes every record tied at the boundary, and `last` replaces the final position with the last record tied at that boundary. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property | Type                         | Description                                                                               |
 | -------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
@@ -66,6 +107,20 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `by`     | `string`                     | Required, nonblank numeric source field name                                              |
 | `n`      | `number`                     | Required positive integer; values above the valid row count select all valid rows         |
 | `tie`    | `'first' \| 'last' \| 'all'` | Optional cutoff tie strategy, defaults to `'first'`; `'all'` can produce more than N rows |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `top`
+
+<ZodSchema name="SelectorOperationSchema.top" />
+
+`SelectorOperationSchema` · `bottom`
+
+<ZodSchema name="SelectorOperationSchema.bottom" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -83,7 +138,10 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 ## nth · Specific position
 
-`nth` sorts stably using the required `orderBy`, then selects the original row at zero-based `index`. Index 0 selects the first row with rank 1; other positions have rank `index + 1`. An index beyond a group's row count produces no selection for that group. Its schema is `BuiltinSelectorOperationSchemas.Nth`, with the following parameters:
+`nth` sorts stably using the required `orderBy`, then selects the original row at zero-based `index`. Index 0 selects the first row with rank 1; other positions have rank `index + 1`. An index beyond a group's row count produces no selection for that group. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property          | Type                          | Description                                                     |
 | ----------------- | ----------------------------- | --------------------------------------------------------------- |
@@ -92,6 +150,20 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `orderBy[].field` | `string`                      | Required, nonblank sort field name                              |
 | `orderBy[].order` | `'ascending' \| 'descending'` | Optional sort direction, defaults to `'ascending'`              |
 | `index`           | `number`                      | Required nonnegative integer, zero-based position after sorting |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectorOperationSchema` · `nth`
+
+<ZodSchema name="SelectorOperationSchema.nth" />
+
+`OrderBySchema`
+
+<ZodSchema name="OrderBySchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -109,7 +181,10 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 
 ## outside-quantile-band · Outside-band selection
 
-`outside-quantile-band` computes lower and upper quantiles of a numeric field, then selects original rows outside the boundaries, skipping missing and non-finite values. For quantiles $L$ and $U$, `band` uses $[L,U]$, while `spread` uses fences $[L-f(U-L),U+f(U-L)]$. Only records strictly below the lower boundary or above the upper boundary are selected; values equal to a boundary remain inside. Output keeps the original input order and receives consecutive ranks starting at 1. Its schema is `BuiltinSelectorOperationSchemas.OutsideQuantileBand`, with the following parameters:
+`outside-quantile-band` computes lower and upper quantiles of a numeric field, then selects original rows outside the boundaries, skipping missing and non-finite values. For quantiles $L$ and $U$, `band` uses $[L,U]$, while `spread` uses fences $[L-f(U-L),U+f(U-L)]$. Only records strictly below the lower boundary or above the upper boundary are selected; values equal to a boundary remain inside. Output keeps the original input order and receives consecutive ranks starting at 1. Switch between the tabs below to inspect the parameters and schema constraints.
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
 
 | Property          | Type                      | Description                                                                        |
 | ----------------- | ------------------------- | ---------------------------------------------------------------------------------- |
@@ -120,6 +195,20 @@ The eight built-in selectors are grouped by purpose below. Each demo compares or
 | `boundary`        | `object`                  | Optional boundary strategy; omitted uses `band`                                    |
 | `boundary.kind`   | `'band' \| 'spread'`      | Required when `boundary` is supplied; selects the quantile band or expanded fences |
 | `boundary.factor` | `number`                  | Optional nonnegative multiplier, defaults to 1.5; used only by `spread`            |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`OutsideQuantileBandSelectorOperationSchema`
+
+<ZodSchema name="OutsideQuantileBandSelectorOperationSchema" />
+
+`OutsideQuantileBandBoundarySchema`
+
+<ZodSchema name="OutsideQuantileBandBoundarySchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[

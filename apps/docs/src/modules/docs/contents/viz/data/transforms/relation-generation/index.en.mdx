@@ -11,6 +11,9 @@ Use `relate` to compare two representative records or generate data for connecti
 
 Both endpoints use [selector](/viz/data/operators/selector). A group with no selection on either endpoint emits no relation row. Multiple selections do not form a Cartesian product. Its Schema is `RelateTransformSchema`; parameters are listed below:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property                        | Type                                | Description                                                  |
 | ------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
 | `kind`                          | `'relate'`                          | Transform kind                                               |
@@ -27,6 +30,28 @@ Both endpoints use [selector](/viz/data/operators/selector). A group with no sel
 | `params.measures[].as`          | `string`                            | Required difference output field                             |
 | `params.measures[].labelAs`     | `string`                            | Optional difference-label output field                       |
 | `params.measures[].labelPrefix` | `string`                            | Optional text prefix for non-negative differences, such as + |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`RelateTransformSchema`
+
+<ZodSchema name="RelateTransformSchema" />
+
+`RelateParamsSchema`
+
+<ZodSchema name="RelateParamsSchema" />
+
+`EndpointProjectionSchema`
+
+<ZodSchema name="EndpointProjectionSchema" />
+
+`PairMeasureOperationSchema`
+
+<ZodSchema name="PairMeasureOperationSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['relation-relate', 'relation-relate.preview.tsx', 'relation-relate.data.ts', 'relation-generation.data.ts']}

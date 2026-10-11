@@ -9,11 +9,28 @@ Use `summarize` for one statistics row per group, and `annotate` to place group 
 
 `summarize` runs one or more reducers per group and emits one row containing the group keys and metric fields. Other detail fields are dropped. Multiple group fields form a hierarchy in list order, preserving first-seen keys at each level. Metric output fields must be distinct and must not overwrite group keys. Its Schema is `SummarizeTransformSchema`; parameters are listed below:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property         | Type                            | Description                                                                           |
 | ---------------- | ------------------------------- | ------------------------------------------------------------------------------------- |
 | `kind`           | `'summarize'`                   | Transform kind                                                                        |
 | `params.groupBy` | `Array<string>`                 | Optional group fields; omitted or empty means one group                               |
 | `params.metrics` | `Array<IRDataReducerOperation>` | Required non-empty reducer list; each operation declares its output fields through as |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SummarizeTransformSchema`
+
+<ZodSchema name="SummarizeTransformSchema" />
+
+`SummarizeParamsSchema`
+
+<ZodSchema name="SummarizeParamsSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[
@@ -35,6 +52,9 @@ Use `summarize` for one statistics row per group, and `annotate` to place group 
 
 Supported selectors are min/max, first/last, top/bottom and nth. Min/max allow only first/last tie handling; top/bottom require n = 1. A selector with by writes that field from the selected row; otherwise it writes the selection rank. If no row is selected, that annotation field is not written. Its Schema is `AnnotateTransformSchema`; parameters are listed below:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property                      | Type                                 | Description                                                                |
 | ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
 | `kind`                        | `'annotate'`                         | Transform kind                                                             |
@@ -43,6 +63,24 @@ Supported selectors are min/max, first/last, top/bottom and nth. Min/max allow o
 | `params.selectors`            | `Array<IRDataAnnotateSelector>`      | Optional non-empty list of single-row selector annotations                 |
 | `params.selectors[].selector` | `IRDataAnnotateSelector["selector"]` | Required built-in selector restricted to at most one selected row          |
 | `params.selectors[].as`       | `string`                             | Required annotation output field                                           |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`AnnotateTransformSchema`
+
+<ZodSchema name="AnnotateTransformSchema" />
+
+`AnnotateParamsSchema`
+
+<ZodSchema name="AnnotateParamsSchema" />
+
+`AnnotateSelectorSchema`
+
+<ZodSchema name="AnnotateSelectorSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['group-annotate', 'group-annotate.preview.tsx', 'group-annotate.data.ts', 'aggregation-annotation.data.ts']}

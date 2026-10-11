@@ -11,6 +11,9 @@ Use `smooth` to convert observations into sampled trend data. It fits a model, t
 
 The chosen method determines fitting requirements, such as sufficient distinct x values for quadratic fitting. Inferring an extent requires at least two distinct finite x values; an explicit extent does not replace the model’s input requirements. Output field names must differ and avoid group keys. Its Schema is `SmoothTransformSchema`; parameters are listed below:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property             | Type                 | Description                                                           |
 | -------------------- | -------------------- | --------------------------------------------------------------------- |
 | `kind`               | `'smooth'`           | Transform kind                                                        |
@@ -22,6 +25,20 @@ The chosen method determines fitting requirements, such as sufficient distinct x
 | `params.extent`      | `[number, number]`   | Optional increasing sampling extent; default finite x range per group |
 | `params.xAs`         | `string`             | Required sampled x output field                                       |
 | `params.yAs`         | `string`             | Required predicted y output field                                     |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SmoothTransformSchema`
+
+<ZodSchema name="SmoothTransformSchema" />
+
+`SmoothParamsSchema`
+
+<ZodSchema name="SmoothParamsSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['trend-smooth', 'trend-smooth.preview.tsx', 'trend-smooth.data.ts', 'trend-sampling.data.ts']}

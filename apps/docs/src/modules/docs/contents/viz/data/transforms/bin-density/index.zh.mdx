@@ -11,6 +11,9 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 
 区间通常左闭右开，最后一箱包含上界。非有限值和范围外观测不计入箱内；输出字段不得覆盖分组键，统计字段名也应避开中点和边界字段。分桶的 Schema 为 `BinTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性                | 类型                            | 说明                                                                      |
 | ------------------- | ------------------------------- | ------------------------------------------------------------------------- |
 | `kind`              | `'bin'`                         | 变换类型                                                                  |
@@ -24,6 +27,42 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 | `params.startField` | `string`                        | 可选，下界输出字段，默认 binStart                                         |
 | `params.endField`   | `string`                        | 可选，上界输出字段，默认 binEnd                                           |
 | `params.metrics`    | `Array<IRDataReducerOperation>` | 可选，非空箱内归约列表；默认 count 写入 binCount                          |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`BinTransformSchema`
+
+<ZodSchema
+  name="BinTransformSchema"
+  description="各组内独立分桶，保留分组字段与类型，输出桶中点、边界及指标；分组字段不得与任何输出字段冲突。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 BinParamsSchema 校验的参数对象',
+  }}
+/>
+
+`BinParamsSchema`
+
+<ZodSchema
+  name="BinParamsSchema"
+  description="各组内独立分桶，保留分组字段与类型，输出桶中点、边界及指标；分组字段不得与任何输出字段冲突。"
+  descriptions={{
+    groupBy: '计算分组字段；省略或空数组表示全部行属于一组。按字段列表顺序逐层分组，每层保留父组内键值首次出现顺序。',
+    field: '连续数值源字段',
+    count: '目标桶数，与 step、thresholds 互斥；未指定策略时默认 10',
+    step: '数据单位中的固定桶宽，与 count、thresholds 互斥',
+    thresholds: '按升序给出的桶内部边界，与 count、step 互斥',
+    extent: '所有组共用的可选范围 [min, max]；省略时使用各组自己的观测范围',
+    nice: '是否调整 count 策略的边界为易读数值；默认 true',
+    startField: '桶下界输出字段；默认 binStart',
+    endField: '桶上界输出字段；默认 binEnd',
+    metrics: '每桶归约指标；默认输出名为 binCount 的 count 指标',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['distribution-bin', 'distribution-bin.preview.tsx', 'distribution-bin.data.ts', 'bin-density.data.ts']}
@@ -40,6 +79,9 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 
 自动带宽要求每组至少两个有限且具有非零离散程度的样本；单点或相同值样本应指定正带宽。没有有限样本会报错。两个输出名必须不同，且不得覆盖分组键。密度采样的 Schema 为 `DensityTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性                     | 类型                     | 说明                                                 |
 | ------------------------ | ------------------------ | ---------------------------------------------------- |
 | `kind`                   | `'density'`              | 变换类型                                             |
@@ -52,6 +94,50 @@ description: 将连续观测转换为分桶统计行或高斯核密度采样行�
 | `params.extent`          | `[number, number]`       | 可选，递增采样范围；默认观测范围向两端各扩展三倍带宽 |
 | `params.xAs`             | `string`                 | 必填，采样位置输出字段                               |
 | `params.densityAs`       | `string`                 | 必填，密度输出字段                                   |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`DensityTransformSchema`
+
+<ZodSchema
+  name="DensityTransformSchema"
+  description="按组生成一维高斯核密度采样行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 DensityParamsSchema 校验的参数对象',
+  }}
+/>
+
+`DensityParamsSchema`
+
+<ZodSchema
+  name="DensityParamsSchema"
+  description="按组生成一维高斯核密度采样行。"
+  descriptions={{
+    field: '核密度估计的连续数值源字段',
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    bandwidth: '带宽策略；默认 Silverman 经验规则',
+    sampleCount: '每组等距采样行数，至少 2；默认 64',
+    extent: '可选采样范围；省略时在观测范围两端各扩展三个带宽',
+    xAs: '采样位置输出字段',
+    densityAs: '密度值输出字段',
+  }}
+/>
+
+`DensityBandwidthSchema`
+
+<ZodSchema
+  name="DensityBandwidthSchema"
+  description="核密度估计的带宽策略。"
+  descriptions={{
+    kind: 'silverman 自动估计带宽，value 使用显式带宽',
+    value: '显式正有限带宽，单位与源数据相同',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[

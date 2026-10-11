@@ -9,12 +9,29 @@ Row organization transforms change row order or which records are retained. `sor
 
 `sort` orders records by one field, preserving every row and field. With `groupBy`, sorting runs independently within each group, and groups are expanded in field-list order, retaining first-seen keys within each parent group. Omitted or empty grouping means global sorting. For example, `groupBy: ['team', 'item']` groups by team, then by item within each team. This example outputs A phone, A book, B phone, then B book. Group keys are not implicitly sorted alphabetically or numerically. Equal sort keys retain their relative order within a group. The sort schema is `SortTransformSchema`, with these parameters:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property         | Type                          | Description                                                         |
 | ---------------- | ----------------------------- | ------------------------------------------------------------------- |
 | `kind`           | `'sort'`                      | Transform kind                                                      |
 | `params.groupBy` | `Array<string>`               | Optional calculation group fields; omitted or empty means one group |
 | `params.field`   | `string`                      | Required, nonblank sort field name                                  |
 | `params.order`   | `'ascending' \| 'descending'` | Optional sort direction; defaults to `'ascending'`                  |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SortTransformSchema`
+
+<ZodSchema name="SortTransformSchema" />
+
+`SortParamsSchema`
+
+<ZodSchema name="SortParamsSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['row-sort', 'row-sort.preview.tsx', 'row-sort.data.ts', 'row-organization.data.ts']}
@@ -31,12 +48,29 @@ Row organization transforms change row order or which records are retained. `sor
 
 When `rankAs` is provided, the selector's one-based rank is written to that field. Omitting it leaves out the rank column. Each selector defines its ranking semantics; see [selector](/viz/data/operators/selector) for selection and tie policies. The row selection schema is `SelectTransformSchema`, with these parameters:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property          | Type                      | Description                                                                    |
 | ----------------- | ------------------------- | ------------------------------------------------------------------------------ |
 | `kind`            | `'select'`                | Transform kind                                                                 |
 | `params.groupBy`  | `Array<string>`           | Optional group fields; omitted or empty means one group containing all records |
 | `params.selector` | `IRDataSelectorOperation` | Required selector declaration to run within each group                         |
 | `params.rankAs`   | `string`                  | Optional, nonblank output field name for one-based ranks                       |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SelectTransformSchema`
+
+<ZodSchema name="SelectTransformSchema" />
+
+`SelectParamsSchema`
+
+<ZodSchema name="SelectParamsSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['row-select', 'row-select.preview.tsx', 'row-select.data.ts', 'row-organization.data.ts']}

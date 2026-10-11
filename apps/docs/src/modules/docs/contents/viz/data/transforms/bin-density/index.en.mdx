@@ -11,6 +11,9 @@ description: Convert continuous observations into bin statistics or Gaussian ker
 
 Intervals include the lower edge and exclude the upper edge, except the final bin includes the upper domain bound. Non-finite and out-of-domain observations do not enter bins. Output fields must not overwrite group keys; metric names should also avoid midpoint and edge fields. Its Schema is `BinTransformSchema`; parameters are listed below:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property            | Type                            | Description                                                                                     |
 | ------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `kind`              | `'bin'`                         | Transform kind                                                                                  |
@@ -24,6 +27,20 @@ Intervals include the lower edge and exclude the upper edge, except the final bi
 | `params.startField` | `string`                        | Optional lower-edge field; default binStart                                                     |
 | `params.endField`   | `string`                        | Optional upper-edge field; default binEnd                                                       |
 | `params.metrics`    | `Array<IRDataReducerOperation>` | Optional non-empty reducers per bin; default count writes binCount                              |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`BinTransformSchema`
+
+<ZodSchema name="BinTransformSchema" />
+
+`BinParamsSchema`
+
+<ZodSchema name="BinParamsSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['distribution-bin', 'distribution-bin.preview.tsx', 'distribution-bin.data.ts', 'bin-density.data.ts']}
@@ -40,6 +57,9 @@ Intervals include the lower edge and exclude the upper edge, except the final bi
 
 Automatic bandwidth requires at least two finite samples with non-zero dispersion in each group; use an explicit positive bandwidth for a single value or identical values. Groups without finite samples fail. Output names must differ and must not overwrite group keys. Its Schema is `DensityTransformSchema`; parameters are listed below:
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | Property                 | Type                     | Description                                                                   |
 | ------------------------ | ------------------------ | ----------------------------------------------------------------------------- |
 | `kind`                   | `'density'`              | Transform kind                                                                |
@@ -52,6 +72,24 @@ Automatic bandwidth requires at least two finite samples with non-zero dispersio
 | `params.extent`          | `[number, number]`       | Optional increasing extent; default observed range padded by three bandwidths |
 | `params.xAs`             | `string`                 | Required sample-position output field                                         |
 | `params.densityAs`       | `string`                 | Required density output field                                                 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`DensityTransformSchema`
+
+<ZodSchema name="DensityTransformSchema" />
+
+`DensityParamsSchema`
+
+<ZodSchema name="DensityParamsSchema" />
+
+`DensityBandwidthSchema`
+
+<ZodSchema name="DensityBandwidthSchema" />
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={[

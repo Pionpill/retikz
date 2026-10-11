@@ -11,6 +11,9 @@ description: 按组拟合观测，并在等间距位置输出趋势预测行。
 
 拟合前提由所选方法决定，例如二次拟合需要足够的不同 x。推导采样范围时要求至少两个不同的有限 x；显式范围不能代替模型所需的有效输入。两个输出字段必须不同，并避开组键。趋势采样的 Schema 为 `SmoothTransformSchema`，参数如下：
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
 | 属性                 | 类型                 | 说明                                           |
 | -------------------- | -------------------- | ---------------------------------------------- |
 | `kind`               | `'smooth'`           | 变换类型                                       |
@@ -22,6 +25,40 @@ description: 按组拟合观测，并在等间距位置输出趋势预测行。
 | `params.extent`      | `[number, number]`   | 可选，递增采样范围；默认组内有限 x 的范围      |
 | `params.xAs`         | `string`             | 必填，采样 x 输出字段                          |
 | `params.yAs`         | `string`             | 必填，预测 y 输出字段                          |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+`SmoothTransformSchema`
+
+<ZodSchema
+  name="SmoothTransformSchema"
+  description="按组拟合并生成预测采样行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 SmoothParamsSchema 校验的参数对象',
+  }}
+/>
+
+`SmoothParamsSchema`
+
+<ZodSchema
+  name="SmoothParamsSchema"
+  description="按组拟合并生成预测采样行。"
+  descriptions={{
+    x: '自变量的连续数值源字段',
+    y: '因变量的连续数值源字段',
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    method: '拟合方法；默认普通最小二乘线性回归',
+    sampleCount: '每组等距采样行数，至少 2；默认 64',
+    extent: '可选采样范围；省略时采用有限 x 的观测范围',
+    xAs: '采样 x 输出字段',
+    yAs: '预测 y 输出字段',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
 
 <ComponentPreview
   files={['trend-smooth', 'trend-smooth.preview.tsx', 'trend-smooth.data.ts', 'trend-sampling.data.ts']}
