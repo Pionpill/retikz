@@ -1,32 +1,244 @@
 ---
 title: 数据溯源
-description: 数据溯源把数据行的来源、变换过程与 Plot 图元语义连接起来，让宿主能够回查、解释和审计一次可视化运行。
+description: 回查变换输出对应的输入记录，记录变换阶段、字段流和算子事件，并限制样本或接收事件回调。
 ---
 
-数据溯源从 Data 建立的来源身份与运行链路开始，再由 Plot 等消费模块补充自己的宿主语义。Data 负责回答“数据从哪里来、经历了什么”，Plot 负责回答“这些数据怎样成为图元”；两层产物保持各自的包边界和公开入口。
+分组汇总后，一行总额可能来自多条明细；排序后，输出位置也不再等于原始位置。Data 可以保留行的来源索引，并记录一次变换执行的过程，供应用回查明细或检查结果。变换声明的写法见[数据变换](/viz/data/transform)。
 
-这组能力只在需要回查、诊断或审计时启用。运行时链路不会写入 JSON IR，Plot 的完整审计产物也不会自动进入 Scene 元数据。
+| 溯源类型 | 记录内容与用途                                           | 读取方式                                              |
+| -------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| 行来源   | 输出行对应的输入索引，用于回查一条或一组原始记录         | 从输出行调用 `readSourceIndex` 或 `readSourceIndices` |
+| 链路事件 | 一次执行中的变换阶段、字段流和算子记录，用于检查计算过程 | 读取返回的 `lineage.events`，或通过 `sink` 回调接收   |
 
-## 职责一览
+两种记录都独立于业务字段。
 
-| 层级          | 职责                                       | 何时查阅                                 |
-| ------------- | ------------------------------------------ | ---------------------------------------- |
-| Data 来源追溯 | 传播行级来源，记录变换与统计操作的运行事件 | 解释数据行来源或检查数据处理过程         |
-| Plot 溯源     | 补充图元、编码、比例尺、布局与定位语义     | 审计可视化运行或从命中图元回查到原始数据 |
+## 接入方式
 
-## 章节内容
+使用 `applyTransforms` 执行变换。`provenance: true` 为未标记输入建立行来源，`lineage: true` 按默认配置记录事件。下面同时开启两者，把四条明细排序后按地区求和，得到 West 总额 6、East 总额 8。
+
+```ts
+import { applyTransforms, readSourceIndices } from '@retikz/data';
+
+const sourceRows = [
+  { region: 'East', period: 1, revenue: 3 },
+  { region: 'East', period: 2, revenue: 5 },
+  { region: 'West', period: 1, revenue: 2 },
+  { region: 'West', period: 2, revenue: 4 },
+];
+const operations = [
+  { kind: 'sort', params: { field: 'revenue', order: 'ascending' } },
+  {
+    kind: 'summarize',
+    params: {
+      groupBy: ['region'],
+      metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+    },
+  },
+] satisfies Array<import('@retikz/data').IRDataTransform>;
+const { rows, lineage } = applyTransforms(sourceRows, operations, { provenance: true, lineage: true });
+const indices = readSourceIndices(rows[0]); // [2, 3]，West 的两条明细
+const details = indices?.map(index => sourceRows[index]);
+console.log(details, lineage?.events);
+```
+
+| 属性         | 默认值  | 说明                                                                                                                           |
+| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `provenance` | `false` | 设为 `true` 时，为未标记输入建立来源索引。已有来源始终保留。                                                                   |
+| `lineage`    | `false` | 省略或 `false` 不记录事件，`true` 使用默认配置，对象形式自定义记录内容、样本和回调。来源摘要读取已有标记，不自动建立来源索引。 |
+
+需要自定义记录范围时，`lineage` 对象支持以下配置；未指定的属性使用默认值：
+
+| 属性                        | 默认值                                    | 说明                                                                                      |
+| --------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `sourceIdentity`            | `{ mode: 'summary', maxIndices: 20 }`     | 记录来源数量、索引前缀和是否截断；`false` 关闭来源摘要，`true` 或 `{}` 使用默认摘要配置。 |
+| `sourceIdentity.mode`       | `'summary'`                               | `'summary'` 只保留索引前缀；`'full'` 保留完整索引。                                       |
+| `sourceIdentity.maxIndices` | `20`                                      | 必须为正整数，限制摘要模式保留的索引数量。                                                |
+| `transformSteps`            | `true`                                    | 记录变换顺序、名称、输入输出行数和字段。                                                  |
+| `fieldFlow`                 | `false`                                   | 设为 `true` 时根据 Definition 的声明记录字段读取与产出关系。                              |
+| `reducerOperations`         | `false`                                   | 设为 `true` 时记录规约配置、字段、行数和来源。                                            |
+| `selectorOperations`        | `false`                                   | 设为 `true` 时记录选择配置、输入来源与选中来源。                                          |
+| `rowSamples`                | `false`                                   | 传入 `{ maxRows, fields }`，记录变换前后的字段值样本。                                    |
+| `calculationDetails`        | `false`                                   | 传入 `{ maxRows, fields }`，记录规约输入值或选择候选样本，还需开启对应的算子记录。        |
+| `sink`                      | 未设置                                    | 传入 `event => ...`，在执行中逐条接收事件。                                               |
+| `retainEvents`              | 有 `sink`：`false`<br />无 `sink`：`true` | 设为 `true` 可同时保留返回的事件数组；没有 `sink` 时始终保留。                            |
+
+已有 `DataView` 时可用 `applyTransformsToDataView`，溯源选项相同；外接执行的接入见[外接计算](/viz/data/transform/computation)。
+
+## 来源如何传播
+
+切换操作，观察同一组输入的输出字段和来源列。所有操作都先按 `revenue` 升序排列。各操作的用法见[变换操作](/viz/data/transforms)。
+
+<ComponentPreview
+  mode="showcase"
+  files={['provenance-rows', 'provenance-rows.preview.tsx', 'provenance-demo.data.ts']}
+  defaultSourceFile="provenance-demo.data.ts"
+  size="md"
+  caption="index、indices 分别展示单行与组级来源。- 和 [] 表示对应标记不存在。"
+/>
+
+`readSourceIndex(row)` 读取单行来源，`readSourceIndices(row)` 读取组级来源。标记存放在 `SOURCE_INDEX` 和 `SOURCE_INDICES` Symbol 键上：字段路径解析与 `JSON.stringify` 忽略它们，对象展开则保留这些可枚举 Symbol。JSON 往返不会保留来源。
+
+`provenance` 默认关闭。只需要行来源时，传入 `{ provenance: true }`，无需记录事件；也可以用 `tagSourceIndex` 单独标记行。已有单行或组级来源始终保留，不会在新一轮调用中重新编号；此时应回查最初建立索引的数据集。
+
+## 记录范围
+
+设置 `lineage: true` 后，默认记录一个 `source` 事件和各阶段的 `transformStep` 摘要，包括行数、声明的输入输出字段及来源摘要。来源摘要默认保留前 20 个索引，其余记录按需开启。
+
+下面固定执行“排序 → 每组选最大行 → 每组求和”。演示将摘要索引上限设为 2，便于观察 `count`、`indices` 和 `truncated`；API 默认值仍是 20。
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'provenance-events',
+    'provenance-events.preview.tsx',
+    'ProvenanceRecordPreview.tsx',
+    'provenance-demo.data.ts',
+  ]}
+  defaultSourceFile="provenance-demo.data.ts"
+  size="xxl"
+  caption="开关改变事件内容，不改变计算结果。左侧展示结果与配置，右侧列出事件；样本只包含指定字段。"
+/>
+
+`sourceIdentity: false` 省略事件中的来源摘要，不移除输出行的标记。`{ mode: 'full' }` 记录完整索引；`maxIndices` 只限制摘要，不限制行上的组级来源集合。
+
+`rowSamples` 和 `calculationDetails` 必须指定正整数 `maxRows` 和非空字段白名单 `fields`。上限作用于每份样本，不是整次运行。`calculationDetails` 还需开启 `selectorOperations` 或 `reducerOperations`，单独设置不会生成算子事件。目前没有独立拟合算子事件，仍可用变换阶段和行样本检查拟合输入输出。
+
+字段流来自定义声明，不逐个追踪单元格或回调内部的计算步骤。事件来源按各行的来源拼接，可能重复；同组多个预测点引用同一组输入时，`count` 不等于去重后的原始行数。
+
+## 消费事件
+
+默认从返回的 `lineage.events` 读取事件。传入 `sink` 可在执行中逐条接收，默认不再保留返回数组；需要两者时设置 `retainEvents: true`。
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'provenance-delivery',
+    'provenance-delivery.preview.tsx',
+    'ProvenanceRecordPreview.tsx',
+    'provenance-demo.data.ts',
+  ]}
+  defaultSourceFile="provenance-delivery.preview.tsx"
+  size="md"
+  caption="左侧展示结果与配置，右侧逐条标明事件是否被回调接收、是否保留在返回值中。"
+/>
+
+```ts
+const result = applyTransforms(sourceRows, operations, {
+  provenance: true,
+  lineage: {
+    sink: event => console.log(event),
+    retainEvents: true,
+  },
+});
+```
+
+没有 `sink` 时，事件始终保留在返回数组中，即使设置 `retainEvents: false`。计算失败会抛出错误，不返回完整结果；回调此前收到的事件只能视为部分执行记录。应用自行决定存储和展示方式，事件不写入数据 IR。
+
+## 自定义变换
+
+保行变换用 `{ ...row, derived: value }` 创建输出即可携带来源。重新组装一行代表多条输入时，应在实现中调用 `context.groupProvenance(output, members)`，传入实际来源成员：
+
+```ts
+apply: (rows, operation, context) => [
+  context.groupProvenance(
+    { total: rows.reduce((sum, row) => sum + Number(row.revenue), 0) },
+    rows,
+  ),
+],
+```
+
+这是变换 Implementation 的计算回调，完整定义与注册见[扩展机制](/viz/data/transform/extensions)。框架从 Definition 读取字段声明，自定义计算需如实声明字段并负责保留来源。不要把输出位置当作原始索引，也不要为无法唯一回查的结果伪造单行来源。
+
+## 相关属性
+
+以下列出本页使用的入口和选项；完整签名见 [API 参考](/viz/data/transform/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'applyTransforms',
+      kind: 'function',
+      type: '(rows: Array<ExternalRow>, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsResult',
+      description: '同步返回 { rows, lineage? }，来源与事件由选项分别开启。',
+    },
+    {
+      name: 'applyTransformsToDataView',
+      kind: 'function',
+      type: '(view: DataView, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsToDataViewResult',
+      description: '已有规范化视图时返回 { dataView, lineage? }。',
+    },
+    {
+      name: 'ApplyTransformsOptions.provenance',
+      kind: 'property',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: '为未标记输入建立行来源，不开启事件记录；已有来源始终保留。',
+    },
+    {
+      name: 'ApplyTransformsOptions.lineage',
+      kind: 'property',
+      type: 'boolean | DataLineageOptions',
+      defaultValue: 'false',
+      description: 'true 使用默认事件配置，对象自定义配置；false 或省略时不记录，不隐式建立行来源。',
+    },
+    {
+      name: 'tagSourceIndex',
+      kind: 'function',
+      type: '(rows: Array<ExternalRow>) => Array<ExternalRow>',
+      description: '复制输入行，仅为未标记行建立索引，保留已有单行或组级来源。',
+    },
+    {
+      name: 'readSourceIndex',
+      kind: 'function',
+      type: '(row: ExternalRow) => number | undefined',
+      description: '读取单行来源，不存在时返回 undefined。',
+    },
+    {
+      name: 'readSourceIndices',
+      kind: 'function',
+      type: '(row: ExternalRow) => Array<number> | undefined',
+      description: '读取组级来源，不存在时返回 undefined。',
+    },
+    {
+      name: 'DataLineageOptions.sourceIdentity',
+      kind: 'property',
+      type: 'boolean | { mode?: "summary" | "full"; maxIndices?: number }',
+      defaultValue: '{ mode: "summary", maxIndices: 20 }',
+      description: 'false 关闭事件来源摘要；summary 截取索引前缀，full 保留完整索引。',
+    },
+    {
+      name: 'DataLineageOptions.rowSamples',
+      kind: 'property',
+      type: 'false | { maxRows: number; fields: Array<string> }',
+      defaultValue: 'false',
+      description: '记录变换输入输出样本，行数须为正整数，字段白名单须非空。',
+    },
+    {
+      name: 'DataLineageOptions.sink',
+      kind: 'property',
+      type: '(event: DataLineageEvent) => void',
+      description: '逐条接收事件，默认不保留返回数组。',
+    },
+    {
+      name: 'DataLineageOptions.retainEvents',
+      kind: 'property',
+      type: 'boolean',
+      description: '有 sink 时默认 false，true 同时保留数组；无 sink 时始终保留。',
+    },
+  ]}
+/>
+
+## 延伸阅读
 
 <LinkedSections
   items={[
+    { title: '变换操作', description: '理解变换链怎样组织行与字段。', url: '/viz/data/transform/operations' },
+    { title: '计算算子', description: '区分统计字段、所选记录和预测模型。', url: '/viz/data/transform/statistics' },
+    { title: '扩展机制', description: '定义并注册自定义变换与计算实现。', url: '/viz/data/transform/extensions' },
     {
-      title: 'Data 来源追溯',
-      description: '理解行级来源元数据、运行时事件及其传播边界。',
-      url: '/viz/data/provenance/data',
-    },
-    {
-      title: 'Plot 溯源',
-      description: '把 Data 链路扩展为图元审计与交互回查产物。',
-      url: '/viz/data/provenance/plot',
+      title: 'API 参考',
+      description: '查询来源、链路选项和执行入口的完整类型。',
+      url: '/viz/data/transform/api-reference',
     },
   ]}
 />

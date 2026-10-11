@@ -9,10 +9,10 @@ import type {
   PreviewControlContract,
   PreviewControlsDefinition,
 } from '../../src/modules/docs/components/component-preview/types';
-import * as plotLineageOptions from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage-options';
-import { buildPlotLineageOptions } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage-options';
-import { previewControlContract as plotLineageZh } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.controls';
-import { previewControlContract as plotLineageEn } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.en.controls';
+import * as plotLineageOptions from '../../src/modules/docs/contents/viz/plot/provenance/plot-lineage-options';
+import { buildPlotLineageOptions } from '../../src/modules/docs/contents/viz/plot/provenance/plot-lineage-options';
+import { previewControlContract as plotLineageZh } from '../../src/modules/docs/contents/viz/plot/provenance/plot-lineage.controls';
+import { previewControlContract as plotLineageEn } from '../../src/modules/docs/contents/viz/plot/provenance/plot-lineage.en.controls';
 
 const comparableContract = (contract: PreviewControlContract) => ({
   controls: JSON.parse(
@@ -157,7 +157,7 @@ describe('Viz Data Plot lineage controls', () => {
 
   it('keeps the chart and lineage summary side by side with the summary using the full preview height', () => {
     const source = readFileSync(
-      resolve('src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.preview.tsx'),
+      resolve('src/modules/docs/contents/viz/plot/provenance/plot-lineage.preview.tsx'),
       'utf8',
     );
 
@@ -175,10 +175,7 @@ describe('Viz Data Plot lineage controls', () => {
 
   it('replaces the duplicated React code block with the controlled preview in both locales', () => {
     for (const locale of ['zh', 'en']) {
-      const source = readFileSync(
-        resolve(`src/modules/docs/contents/viz/data/provenance/plot/index.${locale}.mdx`),
-        'utf8',
-      );
+      const source = readFileSync(resolve(`src/modules/docs/contents/viz/plot/provenance/index.${locale}.mdx`), 'utf8');
 
       expect(source).toContain(
         "files={['plot-lineage', 'plot-lineage.preview.tsx', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}",

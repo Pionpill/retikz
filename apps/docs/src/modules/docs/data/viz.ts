@@ -111,30 +111,8 @@ export const vizSection: Array<Section> = [
         id: 'provenance',
         label: 'viz.dataProvenance',
         sidebarGroup: 'viz.dataContents',
-        children: [
-          {
-            id: 'data',
-            label: 'viz.dataProvenanceData',
-            difficulty: DocDifficulty.Internals,
-            meta: {
-              pageType: 'concept',
-              audience: 'integrator',
-              capability: 'data.provenance',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
-            id: 'plot',
-            label: 'viz.dataProvenancePlot',
-            difficulty: DocDifficulty.Internals,
-            meta: {
-              pageType: 'concept',
-              audience: 'integrator',
-              capability: 'plot.lineage',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
+        difficulty: DocDifficulty.Advanced,
+        meta: { pageType: 'guide', audience: 'user', capability: 'data.provenance', sourceOfTruth: 'runtime' },
       },
       {
         id: 'reference',
@@ -566,6 +544,12 @@ export const vizSection: Array<Section> = [
           { id: 'axis', label: 'viz.compAxis', difficulty: DocDifficulty.Beginner },
           { id: 'legend', label: 'viz.compLegend', difficulty: DocDifficulty.Beginner },
         ],
+      },
+      {
+        id: 'provenance',
+        label: 'viz.plotProvenance',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'guide', audience: 'user', capability: 'plot.lineage', sourceOfTruth: 'runtime' },
       },
       {
         id: 'reference',
