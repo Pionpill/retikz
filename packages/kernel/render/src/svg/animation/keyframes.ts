@@ -4,7 +4,7 @@
  *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
-import { AnimationProperty } from '@retikz/core';
+import { BuiltinAnimationProperty } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 
 import type { EasingRegistry } from '../../animation';
@@ -267,10 +267,11 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
       const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
       if (!result) continue; // 该时刻 track 不活动 → 用 base
       if (cls === 'css') {
-        if (track.property === AnimationProperty.Opacity) staticAttrs.opacity = Number(result.value);
-        else if (track.property === AnimationProperty.Fill) staticAttrs.fill = String(result.value);
-        else if (track.property === AnimationProperty.Stroke) staticAttrs.stroke = String(result.value);
-        else if (track.property === AnimationProperty.StrokeWidth) staticAttrs['stroke-width'] = Number(result.value);
+        if (track.property === BuiltinAnimationProperty.Opacity) staticAttrs.opacity = Number(result.value);
+        else if (track.property === BuiltinAnimationProperty.Fill) staticAttrs.fill = String(result.value);
+        else if (track.property === BuiltinAnimationProperty.Stroke) staticAttrs.stroke = String(result.value);
+        else if (track.property === BuiltinAnimationProperty.StrokeWidth)
+          staticAttrs['stroke-width'] = Number(result.value);
       } else {
         // pathDraw：value 0..1 → stroke-dashoffset 1−value（pathLength=1 归一化）
         staticAttrs.pathLength = 1;

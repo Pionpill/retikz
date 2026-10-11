@@ -1,5 +1,6 @@
-import type { DataFieldFormat } from '../../schemas';
+import type { BuiltinDataFieldFormat } from '../../schemas';
 import { BUILTIN_FIELD_FORMATS } from './constants';
 
-/** 是否内置格式名（收窄到 DataFieldFormat） */
-export const isBuiltinFieldFormat = (format: string): format is DataFieldFormat => BUILTIN_FIELD_FORMATS.has(format);
+/** 是否内置格式名（收窄到 BuiltinDataFieldFormat） */
+export const isBuiltinFieldFormat = (format: string): format is BuiltinDataFieldFormat =>
+  BUILTIN_FIELD_FORMATS.has(format);

@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import type { PlotCoordinate, PolarInterpolation } from '../../schemas';
+import type { BuiltinPlotCoordinate, PolarInterpolation } from '../../schemas';
 import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 
@@ -70,7 +70,7 @@ export type CoordinateFrame = {
  */
 export type PolarCoordinateFrame = {
   /** 判别字段：2D 极坐标 */
-  type: typeof PlotCoordinate.Polar2D;
+  type: typeof BuiltinPlotCoordinate.Polar2D;
   /** 位置角色顺序（[angle, radius]）；mark 按此顺序取 encoding 通道值 */
   roles: ReadonlyArray<DimensionRole>;
   /** 圆心（屏幕坐标） */

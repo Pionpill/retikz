@@ -12,8 +12,10 @@ export const BAR_TRANSFORM_GAP_ID = 'bar-transform-gap';
 /** 根据实时控件值创建区间派生 operation */
 export const barTransformOperationOf = (values: { [BAR_TRANSFORM_BASELINE_ID]: number }) => ({
   kind: 'derive-interval',
-  from: 'revenue',
-  baseline: values[BAR_TRANSFORM_BASELINE_ID],
+  params: {
+    from: 'revenue',
+    baseline: values[BAR_TRANSFORM_BASELINE_ID],
+  },
 });
 
 /** 区间派生变换的中文属性面板 */
@@ -75,7 +77,7 @@ export const previewControlContract = {
   relatedApis: [
     'IntervalMark.transform',
     'IntervalMark.arrangement',
-    'PlotScale.paddingInner',
-    'PlotScale.paddingOuter',
+    'BuiltinPlotScale.paddingInner',
+    'BuiltinPlotScale.paddingOuter',
   ],
 } satisfies PreviewControlContract;

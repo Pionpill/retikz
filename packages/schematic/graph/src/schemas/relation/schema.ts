@@ -17,7 +17,7 @@ import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation
 import type { RefinementCtx, ZodType } from 'zod';
 import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
-import { GRAPH_NAMESPACE, GraphType, RelationRole } from '../../shared';
+import { GRAPH_NAMESPACE, GraphType, BuiltinRelationRole } from '../../shared';
 import { GraphPredicateRefSchema } from '../predicate';
 import { GraphStatusSchema } from '../status';
 import { RelationDirection } from './constants';
@@ -32,7 +32,7 @@ const requireAtLeastOneField = (value: object, context: RefinementCtx): void => 
 export const RelationDirectionSchema = zodEnum(RelationDirection).describe('Semantic Relation direction.');
 
 /** 校验由关系角色注册表解析的开放角色键 */
-export const RelationRoleSchema = createOpenStringSchema(RelationRole).describe(
+export const RelationRoleSchema = createOpenStringSchema(BuiltinRelationRole).describe(
   'Open Relation role key resolved by the configured registry.',
 );
 

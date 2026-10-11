@@ -5,7 +5,7 @@ import {
   CoordinateOperationSchema,
   CoordinateSchema,
   CustomCoordinateSchema,
-  PlotCoordinate,
+  BuiltinPlotCoordinate,
   PolarInterpolation,
 } from '../../src/schemas/coordinate';
 
@@ -240,7 +240,7 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (contract)',
 
 describe('CoordinateOperationSchema coordinate registry 占位（contract）', () => {
   it('CoordinateSchema 保持内置 4-union，不接收旧 custom 判别', () => {
-    expect(Object.values(PlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D']);
+    expect(Object.values(BuiltinPlotCoordinate)).toEqual(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D']);
     expect([...BUILTIN_COORDINATE_TYPES].sort()).toEqual(['cartesian1D', 'cartesian2D', 'polar1D', 'polar2D'].sort());
     expect(() => CoordinateSchema.parse({ type: 'custom', name: 'arch', roles: ['x'] })).toThrow();
   });

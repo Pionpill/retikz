@@ -339,30 +339,6 @@ export const AnimationDirection = {
 export type AnimationDirection = ValueOf<typeof AnimationDirection>;
 ```
 
-### AnimationEasing
-
-<p>
-  <ApiSourceLink
-    label={'AnimationEasing'}
-    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={26}
-  >
-    Named easing presets matching CSS; tracks and keyframes can instead use a cubic-bezier tuple
-  </ApiSourceLink>
-</p>
-
-```ts
-export const AnimationEasing = {
-  Linear: 'linear',
-  Ease: 'ease',
-  EaseIn: 'ease-in',
-  EaseOut: 'ease-out',
-  EaseInOut: 'ease-in-out',
-} as const;
-
-export type AnimationEasing = ValueOf<typeof AnimationEasing>;
-```
-
 ### AnimationFill
 
 <p>
@@ -386,40 +362,6 @@ export const AnimationFill = {
 export type AnimationFill = ValueOf<typeof AnimationFill>;
 ```
 
-### AnimationProperty
-
-<p>
-  <ApiSourceLink
-    label={'AnimationProperty'}
-    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={10}
-  >
-    Renderer-independent animation channels represented by const names and derived types; literals such as opacity
-    remain supported
-  </ApiSourceLink>
-</p>
-
-viewBox is valid only at the scene root for camera animation; element-level viewBox tracks are rejected. pathDraw is stroke-reveal progress from 0 to 1. scaleX/scaleY are nonuniform scale; scale is uniform. Transform origins are specified by track.origin and default to the geometry center. SVG maps channels to WAAPI/CSS; Canvas uses animation-frame interpolation.
-
-```ts
-export const AnimationProperty = {
-  Opacity: 'opacity',
-  Fill: 'fill',
-  Stroke: 'stroke',
-  StrokeWidth: 'strokeWidth',
-  TranslateX: 'translateX',
-  TranslateY: 'translateY',
-  Rotate: 'rotate',
-  Scale: 'scale',
-  ScaleX: 'scaleX',
-  ScaleY: 'scaleY',
-  PathDraw: 'pathDraw',
-  ViewBox: 'viewBox',
-} as const;
-
-export type AnimationProperty = ValueOf<typeof AnimationProperty>;
-```
-
 ### AnimationTrigger
 
 <p>
@@ -437,6 +379,64 @@ export type AnimationProperty = ValueOf<typeof AnimationProperty>;
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
 
 export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;
+```
+
+### BuiltinAnimationEasing
+
+<p>
+  <ApiSourceLink
+    label={'BuiltinAnimationEasing'}
+    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
+    startLine={26}
+  >
+    Named easing presets matching CSS; tracks and keyframes can instead use a cubic-bezier tuple
+  </ApiSourceLink>
+</p>
+
+```ts
+export const BuiltinAnimationEasing = {
+  Linear: 'linear',
+  Ease: 'ease',
+  EaseIn: 'ease-in',
+  EaseOut: 'ease-out',
+  EaseInOut: 'ease-in-out',
+} as const;
+
+export type BuiltinAnimationEasing = ValueOf<typeof BuiltinAnimationEasing>;
+```
+
+### BuiltinAnimationProperty
+
+<p>
+  <ApiSourceLink
+    label={'BuiltinAnimationProperty'}
+    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
+    startLine={10}
+  >
+    Renderer-independent animation channels represented by const names and derived types; literals such as opacity
+    remain supported
+  </ApiSourceLink>
+</p>
+
+viewBox is valid only at the scene root for camera animation; element-level viewBox tracks are rejected. pathDraw is stroke-reveal progress from 0 to 1. scaleX/scaleY are nonuniform scale; scale is uniform. Transform origins are specified by track.origin and default to the geometry center. SVG maps channels to WAAPI/CSS; Canvas uses animation-frame interpolation.
+
+```ts
+export const BuiltinAnimationProperty = {
+  Opacity: 'opacity',
+  Fill: 'fill',
+  Stroke: 'stroke',
+  StrokeWidth: 'strokeWidth',
+  TranslateX: 'translateX',
+  TranslateY: 'translateY',
+  Rotate: 'rotate',
+  Scale: 'scale',
+  ScaleX: 'scaleX',
+  ScaleY: 'scaleY',
+  PathDraw: 'pathDraw',
+  ViewBox: 'viewBox',
+} as const;
+
+export type BuiltinAnimationProperty = ValueOf<typeof BuiltinAnimationProperty>;
 ```
 
 ## Presets and orchestration

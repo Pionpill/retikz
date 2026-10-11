@@ -23,8 +23,8 @@ import type {
 import {
   DivergingColorScaleSchema,
   OrdinalScaleSchema,
-  PlotColorScheme,
-  PlotScale,
+  BuiltinPlotColorScheme,
+  BuiltinPlotScale,
   QuantileColorScaleSchema,
   QuantizeColorScaleSchema,
   SequentialColorScaleSchema,
@@ -40,10 +40,10 @@ import {
 } from '../shared';
 
 /** sequential 缺省配色（感知均匀、色盲友好） */
-const DEFAULT_SEQUENTIAL_SCHEME = PlotColorScheme.Viridis;
+const DEFAULT_SEQUENTIAL_SCHEME = BuiltinPlotColorScheme.Viridis;
 
 /** diverging 缺省配色（两侧红蓝、中点淡） */
-const DEFAULT_DIVERGING_SCHEME = PlotColorScheme.RdBu;
+const DEFAULT_DIVERGING_SCHEME = BuiltinPlotColorScheme.RdBu;
 
 /** 默认离散化档数（choropleth 社区惯例 4–7 档） */
 const DEFAULT_DISCRETE_BIN_COUNT = 5;
@@ -281,7 +281,7 @@ export const discretizedBins = (
   values: ReadonlyArray<number>,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): { colors: Array<string>; edges: Array<number> } => {
-  if (def.type === PlotScale.Threshold) {
+  if (def.type === BuiltinPlotScale.Threshold) {
     const edges = [...def.breakpoints];
     const binCount = edges.length + 1;
     const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
@@ -291,7 +291,7 @@ export const discretizedBins = (
 
   const sorted = [...values].sort((a, b) => a - b);
   const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
-  if (def.type === PlotScale.Quantile) {
+  if (def.type === BuiltinPlotScale.Quantile) {
     const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) =>
       quantileAt(sorted, (index + 1) / binCount),
     );
@@ -364,7 +364,7 @@ const ordinalScaleDefinition = defineScale<IRPlotOrdinalScale>({
       legendForm: 'swatch',
       domain,
       range: domain.map(category => ordinal(category)),
-      scaleType: PlotScale.Ordinal,
+      scaleType: BuiltinPlotScale.Ordinal,
     };
   },
 });
@@ -384,7 +384,7 @@ const sequentialScaleDefinition = defineScale<IRPlotSequentialColorScale>({
       legendForm: 'ramp',
       domain: [lo, hi],
       range: [],
-      scaleType: PlotScale.Sequential,
+      scaleType: BuiltinPlotScale.Sequential,
     };
   },
 });
@@ -406,7 +406,7 @@ const divergingScaleDefinition = defineScale<IRPlotDivergingColorScale>({
       legendForm: 'ramp',
       domain: [lo, hi],
       range: [],
-      scaleType: PlotScale.Diverging,
+      scaleType: BuiltinPlotScale.Diverging,
     };
   },
 });
@@ -430,7 +430,7 @@ const quantizeScaleDefinition = defineScale<IRPlotQuantizeColorScale>({
   resolve: (def, values, ctx) => {
     const themedDef = withSequentialTheme(def, ctx);
     return discretizedResolution(
-      PlotScale.Quantize,
+      BuiltinPlotScale.Quantize,
       themedDef,
       values,
       ctx,
@@ -446,7 +446,7 @@ const thresholdScaleDefinition = defineScale<IRPlotThresholdColorScale>({
   resolve: (def, values, ctx) => {
     const themedDef = withSequentialTheme(def, ctx);
     return discretizedResolution(
-      PlotScale.Threshold,
+      BuiltinPlotScale.Threshold,
       themedDef,
       values,
       ctx,
@@ -462,7 +462,7 @@ const quantileScaleDefinition = defineScale<IRPlotQuantileColorScale>({
   resolve: (def, values, ctx) => {
     const themedDef = withSequentialTheme(def, ctx);
     return discretizedResolution(
-      PlotScale.Quantile,
+      BuiltinPlotScale.Quantile,
       themedDef,
       values,
       ctx,

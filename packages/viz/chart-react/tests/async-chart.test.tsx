@@ -62,7 +62,10 @@ describe('Chart client preparation', () => {
         recipe={{
           encodings: {
             x: 'x',
-            y: { transform: { operation: { kind: 'normalize', field: 'y', as: 'ratio' } }, output: 'ratio' },
+            y: {
+              transform: { operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } },
+              output: 'ratio',
+            },
           },
         }}
       />

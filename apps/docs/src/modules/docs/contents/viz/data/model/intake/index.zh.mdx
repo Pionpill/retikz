@@ -78,7 +78,7 @@ const fieldMap = source === 'finance' ? { month: 'period', revenue: 'amount' } :
   caption="源表始终是 XL、S、L、M；控件改变分类域，不重排数据行。"
 />
 
-`model.order` 排的是**分类域**，不会重排数据行。消费方可以复用这份类别顺序；要改变行的排列，请使用[数据变换里的排序](/viz/data/transform/operations#排序-sort)。
+`model.order` 排的是**分类域**，不会重排数据行。消费方可以复用这份类别顺序；要改变行的排列，请使用 `sort` 变换；其执行链路见[变换操作](/viz/data/transform/operations)。
 
 版本号应保留为字符串。`'10.2'` 和 `'10.18'` 按字母升序得到 `10.18 → 10.2`；使用 `order: 'naturalAscending'` 则得到 `10.2 → 10.18`。`naturalDescending` 按相反方向排列。
 

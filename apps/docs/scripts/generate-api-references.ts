@@ -3,6 +3,7 @@ import path from 'node:path';
 import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeBranchApiReferenceMdx } from './api-reference/branch';
 import { writeDataModelApiReferenceMdx } from './api-reference/data-model';
+import { writeDataTransformApiReferenceMdx } from './api-reference/data-transform';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
 import { writeFlowApiReferenceMdx } from './api-reference/flow';
@@ -94,4 +95,8 @@ await writeFlowApiReferenceMdx(
 
 await writeDataModelApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/viz/data/model/api-reference/_includes'),
+);
+
+await writeDataTransformApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/viz/data/transform/api-reference/_includes'),
 );

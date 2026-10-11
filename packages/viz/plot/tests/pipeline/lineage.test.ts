@@ -80,8 +80,10 @@ const summarySpec = (): IRPlot =>
       {
         operation: {
           kind: 'summarize',
-          groupBy: ['region'],
-          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          params: {
+            groupBy: ['region'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          },
         },
       },
     ],
@@ -94,7 +96,7 @@ const summarySpec = (): IRPlot =>
       {
         id: 'bars',
         type: 'interval',
-        transform: [{ operation: { kind: 'sort', field: 'totalRevenue', order: 'descending' } }],
+        transform: [{ operation: { kind: 'sort', params: { field: 'totalRevenue', order: 'descending' } } }],
         encoding: { x: { field: 'region' }, y: { field: 'totalRevenue' } },
       },
     ],
@@ -212,8 +214,8 @@ describe('plot lineage runtime', () => {
 
   it('keeps original source identities after root reorder and mark-local transforms', () => {
     const spec = pointSpec();
-    spec.transform = [{ operation: { kind: 'sort', field: 'revenue', order: 'descending' } }];
-    spec.marks[0].transform = [{ operation: { kind: 'sort', field: 'revenue', order: 'ascending' } }];
+    spec.transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }];
+    spec.marks[0].transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'ascending' } } }];
 
     const { lineage } = lowerPlotWithLineage(spec, datasets, { lineage: {} });
     const markSource = lineage.data.marks[0]?.events.find(event => event.kind === 'source');
@@ -269,22 +271,20 @@ describe('plot lineage runtime', () => {
   it('executes root and mark-local transforms once for the shared Scene and lineage artifact', () => {
     const applyCounts = { root: 0, mark: 0 };
     const countingTransform = defineTransform({
-      schema: object({
-        kind: literal('count-lineage-apply'),
-        scope: union([literal('root'), literal('mark')]),
-      }),
+      kind: 'count-lineage-apply',
+      paramsSchema: object({ scope: union([literal('root'), literal('mark')]) }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
     const countingTransformImplementation = defineTransformImplementation({
       definition: countingTransform,
       apply: (rows, operation) => {
-        applyCounts[operation.scope] += 1;
+        applyCounts[operation.params.scope] += 1;
         return rows;
       },
     });
     const spec = pointSpec();
-    spec.transform = [{ operation: { kind: 'count-lineage-apply', scope: 'root' } }];
-    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-apply', scope: 'mark' } }];
+    spec.transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'root' } } }];
+    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-apply', params: { scope: 'mark' } } }];
 
     lowerPlotWithLineage(spec, datasets, {
       lineage: {},
@@ -298,22 +298,20 @@ describe('plot lineage runtime', () => {
   it('executes root and mark-local transforms once for a lineage locator request', () => {
     const applyCounts = { root: 0, mark: 0 };
     const countingTransform = defineTransform({
-      schema: object({
-        kind: literal('count-lineage-locator-apply'),
-        scope: union([literal('root'), literal('mark')]),
-      }),
+      kind: 'count-lineage-locator-apply',
+      paramsSchema: object({ scope: union([literal('root'), literal('mark')]) }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
     const countingTransformImplementation = defineTransformImplementation({
       definition: countingTransform,
       apply: (rows, operation) => {
-        applyCounts[operation.scope] += 1;
+        applyCounts[operation.params.scope] += 1;
         return rows;
       },
     });
     const spec = pointSpec();
-    spec.transform = [{ operation: { kind: 'count-lineage-locator-apply', scope: 'root' } }];
-    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-locator-apply', scope: 'mark' } }];
+    spec.transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'root' } } }];
+    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-locator-apply', params: { scope: 'mark' } } }];
 
     createPlotLineageLocator(spec, datasets, {
       lineage: {},
@@ -327,22 +325,20 @@ describe('plot lineage runtime', () => {
   it('executes transforms independently for separate Scene and lineage lowering requests', () => {
     const applyCounts = { root: 0, mark: 0 };
     const countingTransform = defineTransform({
-      schema: object({
-        kind: literal('count-independent-lineage-apply'),
-        scope: union([literal('root'), literal('mark')]),
-      }),
+      kind: 'count-independent-lineage-apply',
+      paramsSchema: object({ scope: union([literal('root'), literal('mark')]) }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
     const countingTransformImplementation = defineTransformImplementation({
       definition: countingTransform,
       apply: (rows, operation) => {
-        applyCounts[operation.scope] += 1;
+        applyCounts[operation.params.scope] += 1;
         return rows;
       },
     });
     const spec = pointSpec();
-    spec.transform = [{ operation: { kind: 'count-independent-lineage-apply', scope: 'root' } }];
-    spec.marks[0].transform = [{ operation: { kind: 'count-independent-lineage-apply', scope: 'mark' } }];
+    spec.transform = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'root' } } }];
+    spec.marks[0].transform = [{ operation: { kind: 'count-independent-lineage-apply', params: { scope: 'mark' } } }];
     const options = {
       lineage: {},
       transformDefinitions: [countingTransform],
@@ -405,7 +401,7 @@ describe('plot lineage runtime', () => {
   it('keeps unknown transform errors aligned with lowerPlots', () => {
     const spec = {
       ...pointSpec(),
-      transform: [{ operation: { kind: 'missing-transform' as const } }],
+      transform: [{ operation: { kind: 'missing-transform' as const, params: {} } }],
     };
 
     expect(() => lowerPlot(spec, datasets)).toThrow(/not registered/);

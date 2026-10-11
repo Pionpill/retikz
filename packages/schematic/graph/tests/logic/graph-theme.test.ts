@@ -390,7 +390,7 @@ describe('Graph Scope and Theme compile semantics', () => {
         rules: [
           {
             type: Graph.GraphType.Entity,
-            selector: { role: Graph.EntityRole.Activity },
+            selector: { role: Graph.BuiltinEntityRole.Activity },
             style: { fill: '#f97316' },
           },
         ],
@@ -402,7 +402,7 @@ describe('Graph Scope and Theme compile semantics', () => {
       Graph.EntitySchema.parse({
         namespace: Graph.GRAPH_NAMESPACE,
         type: Graph.GraphType.Entity,
-        role: Graph.EntityRole.Activity,
+        role: Graph.BuiltinEntityRole.Activity,
       }),
       options,
     );

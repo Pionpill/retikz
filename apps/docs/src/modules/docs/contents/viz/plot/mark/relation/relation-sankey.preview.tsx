@@ -1,4 +1,4 @@
-import { IntervalMark, PlotScale, RelationMark } from '@retikz/plot-react';
+import { IntervalMark, BuiltinPlotScale, RelationMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -46,8 +46,8 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
         labelTextColor="currentColor"
         labelFont={{ size: 11, weight: 'bold' }}
       />
-      <PlotScale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />
-      <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
     </Plot>
   </Layout>
 );

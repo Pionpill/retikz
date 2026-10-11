@@ -338,30 +338,6 @@ export const AnimationDirection = {
 export type AnimationDirection = ValueOf<typeof AnimationDirection>;
 ```
 
-### AnimationEasing
-
-<p>
-  <ApiSourceLink
-    label={'AnimationEasing'}
-    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={26}
-  >
-    缓动具名预设（与 CSS 同名）；track / keyframe 亦可改用 cubic-bezier 四元组
-  </ApiSourceLink>
-</p>
-
-```ts
-export const AnimationEasing = {
-  Linear: 'linear',
-  Ease: 'ease',
-  EaseIn: 'ease-in',
-  EaseOut: 'ease-out',
-  EaseInOut: 'ease-in-out',
-} as const;
-
-export type AnimationEasing = ValueOf<typeof AnimationEasing>;
-```
-
 ### AnimationFill
 
 <p>
@@ -385,42 +361,6 @@ export const AnimationFill = {
 export type AnimationFill = ValueOf<typeof AnimationFill>;
 ```
 
-### AnimationProperty
-
-<p>
-  <ApiSourceLink
-    label={'AnimationProperty'}
-    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={10}
-  >
-    可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
-  </ApiSourceLink>
-</p>
-
-`viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
-`pathDraw` 是 0..1 路径画出进度；`scaleX` / `scaleY` 是非均匀缩放（柱状图从基线长出等），`scale` 是均匀缩放；
-transform 通道（scale / scaleX / scaleY / rotate）的支点见 track 级 `origin`，缺省几何中心。
-各后端按通道翻译：SVG WAAPI/CSS、Canvas rAF 几何 lerp
-
-```ts
-export const AnimationProperty = {
-  Opacity: 'opacity',
-  Fill: 'fill',
-  Stroke: 'stroke',
-  StrokeWidth: 'strokeWidth',
-  TranslateX: 'translateX',
-  TranslateY: 'translateY',
-  Rotate: 'rotate',
-  Scale: 'scale',
-  ScaleX: 'scaleX',
-  ScaleY: 'scaleY',
-  PathDraw: 'pathDraw',
-  ViewBox: 'viewBox',
-} as const;
-
-export type AnimationProperty = ValueOf<typeof AnimationProperty>;
-```
-
 ### AnimationTrigger
 
 <p>
@@ -437,6 +377,66 @@ export type AnimationProperty = ValueOf<typeof AnimationProperty>;
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
 
 export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;
+```
+
+### BuiltinAnimationEasing
+
+<p>
+  <ApiSourceLink
+    label={'BuiltinAnimationEasing'}
+    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
+    startLine={26}
+  >
+    缓动具名预设（与 CSS 同名）；track / keyframe 亦可改用 cubic-bezier 四元组
+  </ApiSourceLink>
+</p>
+
+```ts
+export const BuiltinAnimationEasing = {
+  Linear: 'linear',
+  Ease: 'ease',
+  EaseIn: 'ease-in',
+  EaseOut: 'ease-out',
+  EaseInOut: 'ease-in-out',
+} as const;
+
+export type BuiltinAnimationEasing = ValueOf<typeof BuiltinAnimationEasing>;
+```
+
+### BuiltinAnimationProperty
+
+<p>
+  <ApiSourceLink
+    label={'BuiltinAnimationProperty'}
+    path={'packages/kernel/core/src/schemas/animation/constants.ts'}
+    startLine={10}
+  >
+    可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
+  </ApiSourceLink>
+</p>
+
+`viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
+`pathDraw` 是 0..1 路径画出进度；`scaleX` / `scaleY` 是非均匀缩放（柱状图从基线长出等），`scale` 是均匀缩放；
+transform 通道（scale / scaleX / scaleY / rotate）的支点见 track 级 `origin`，缺省几何中心。
+各后端按通道翻译：SVG WAAPI/CSS、Canvas rAF 几何 lerp
+
+```ts
+export const BuiltinAnimationProperty = {
+  Opacity: 'opacity',
+  Fill: 'fill',
+  Stroke: 'stroke',
+  StrokeWidth: 'strokeWidth',
+  TranslateX: 'translateX',
+  TranslateY: 'translateY',
+  Rotate: 'rotate',
+  Scale: 'scale',
+  ScaleX: 'scaleX',
+  ScaleY: 'scaleY',
+  PathDraw: 'pathDraw',
+  ViewBox: 'viewBox',
+} as const;
+
+export type BuiltinAnimationProperty = ValueOf<typeof BuiltinAnimationProperty>;
 ```
 
 ## 预设与编排

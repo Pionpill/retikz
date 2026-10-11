@@ -1,4 +1,4 @@
-import { IntervalMark, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -36,8 +36,8 @@ export const RectBoundsPreview = (values: RectBoundsPreviewValues) => (
           y: values.mode === 'band' ? { kind: 'band' } : { kind: 'full' },
         }}
       />
-      <PlotScale dimension="x" type="band" paddingOuter={0.15} />
-      <PlotScale dimension="y" type="band" paddingOuter={0} />
+      <BuiltinPlotScale dimension="x" type="band" paddingOuter={0.15} />
+      <BuiltinPlotScale dimension="y" type="band" paddingOuter={0} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" />
     </Plot>

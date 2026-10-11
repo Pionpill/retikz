@@ -1,5 +1,5 @@
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import { RelationRole } from '@retikz/graph';
+import { BuiltinRelationRole } from '@retikz/graph';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -65,7 +65,7 @@ const Demo: FC<TexLowerCacheI18nFigureProps> = props => {
             source: 'parsing-result',
             target: 'cached-content',
             label: i18n.label8,
-            role: RelationRole.Dependency,
+            role: BuiltinRelationRole.Dependency,
             kind: LogicFigureRelationKind.Secondary,
           },
         ]}

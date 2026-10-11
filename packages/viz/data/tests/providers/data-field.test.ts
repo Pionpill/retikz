@@ -3,7 +3,7 @@
 import type { ExternalRow } from '../../src';
 import {
   coerceValue,
-  DataFieldFormat,
+  BuiltinDataFieldFormat,
   DataFieldType,
   normalizeRows,
   resolveFieldPath,
@@ -73,7 +73,7 @@ describe('data field runtime', () => {
   });
 
   it('parses slashDate only when the value is a real YYYY/MM/DD calendar date', () => {
-    const slashDate = resolveFormatRegistry().get(DataFieldFormat.SlashDate);
+    const slashDate = resolveFormatRegistry().get(BuiltinDataFieldFormat.SlashDate);
     const earlyDate = new Date(0);
     earlyDate.setUTCFullYear(1, 0, 1);
     earlyDate.setUTCHours(0, 0, 0, 0);

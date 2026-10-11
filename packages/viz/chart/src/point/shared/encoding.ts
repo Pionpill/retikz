@@ -1,7 +1,7 @@
 import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
-import { PlotGuide, PlotScale } from '@retikz/plot';
+import { PlotGuide, BuiltinPlotScale } from '@retikz/plot';
 
 import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -70,7 +70,7 @@ export const pointPositionFieldConsumersOf = (
     scale: {
       family: 'position',
       positionRole: 'x',
-      recipeFallback: { name: pointRecipeId(chartType, 'scale.x'), type: PlotScale.Linear },
+      recipeFallback: { name: pointRecipeId(chartType, 'scale.x'), type: BuiltinPlotScale.Linear },
     },
   },
   {
@@ -79,7 +79,7 @@ export const pointPositionFieldConsumersOf = (
     scale: {
       family: 'position',
       positionRole: 'y',
-      recipeFallback: { name: pointRecipeId(chartType, 'scale.y'), type: PlotScale.Linear },
+      recipeFallback: { name: pointRecipeId(chartType, 'scale.y'), type: BuiltinPlotScale.Linear },
     },
   },
 ];
@@ -94,13 +94,13 @@ export const pointFieldConsumersOf = (
     slot: 'size',
     transforms: pointContinuousTransformCapabilities,
     outputType: DataFieldType.Continuous,
-    scale: { family: 'position', type: PlotScale.Sqrt },
+    scale: { family: 'position', type: BuiltinPlotScale.Sqrt },
   },
   {
     slot: 'opacity',
     transforms: pointContinuousTransformCapabilities,
     outputType: DataFieldType.Continuous,
-    scale: { family: 'position', type: PlotScale.Linear },
+    scale: { family: 'position', type: BuiltinPlotScale.Linear },
   },
   { slot: 'shape' },
 ];

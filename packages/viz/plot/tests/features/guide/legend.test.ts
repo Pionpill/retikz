@@ -273,7 +273,7 @@ const sectorColorLegendSpec = (): IRPlot =>
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    transform: [{ operation: { kind: 'stack', y: 'value' } }],
+    transform: [{ operation: { kind: 'stack', params: { y: 'value' } } }],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
     scales: [
       { type: 'linear', name: 'a' },

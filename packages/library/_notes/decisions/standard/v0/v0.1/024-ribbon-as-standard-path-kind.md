@@ -64,7 +64,7 @@ type PathKindDefinition<TPath extends IRPathBase, TOwnerOutput extends JsonValue
 
 ## Path host 与 Ribbon options
 
-Core Path 的通用结构保留 `type`、开放 `kind`、`kindOptions`、Path style / decoration / Scope fields，以及可选顶层 `children`。Core 不再知道 `PathKind.Ribbon` 常量、`ribbon` 字段或 Ribbon mode 的跨字段规则。
+Core Path 的通用结构保留 `type`、开放 `kind`、`kindOptions`、Path style / decoration / Scope fields，以及可选顶层 `children`。Core 不再知道 `BuiltinPathKind.Ribbon` 常量、`ribbon` 字段或 Ribbon mode 的跨字段规则。
 
 Ribbon 参数全部进入 `kindOptions`：
 

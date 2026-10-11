@@ -60,7 +60,7 @@ export type EntityProps = Omit<InputEntity, 'type'> &
 |      | `kind?`        | `string`                                                                                         | —      | 可选稳定子类型；注册身份为当前 role 与 kind 的组合                                          |
 |      | `label?`       | `EntityInputEmbedProps["label"]`                                                                 | —      | 附着的单个或多个标签                                                                        |
 |      | `predicate?`   | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | 已注册精确语义的名称与 JSON 参数                                                            |
-|      | `role`         | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
+|      | `role`         | <ApiValues name="BuiltinEntityRole" /> \| `string`                                               | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
 |      | `text?`        | `EntityInputEmbedProps["text"]`                                                                  | —      | 字符串或文字行数组                                                                          |
 | 几何 | `position?`    | `EntityInputEmbedProps["position"]`                                                              | —      | 可选位置；实际绘制前必须由作者或布局补齐                                                    |
 |      | `rotate?`      | `number`                                                                                         | —      | 绕中心旋转的角度                                                                            |
@@ -108,7 +108,7 @@ export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 |      | `kind?`         | `string`                                                                                         | —      | 可选稳定子类型；注册身份为当前 role 与 kind 的组合                                          |
 |      | `label?`        | `EntityCreateOptions['label']`                                                                   | —      | 附着的单个或多个标签                                                                        |
 |      | `predicate?`    | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | 已注册精确语义的名称与 JSON 参数                                                            |
-|      | `role`          | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
+|      | `role`          | <ApiValues name="BuiltinEntityRole" /> \| `string`                                               | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
 |      | `text?`         | `EntityCreateOptions['text']`                                                                    | —      | 字符串或文字行数组                                                                          |
 |      | `readonly type` | `'entity'`                                                                                       | —      | 实体编写输入的判别字段，固定为 entity                                                       |
 | 几何 | `position?`     | `EntityCreateOptions['position']`                                                                | —      | 可选位置；实际绘制前必须由作者或布局补齐                                                    |
@@ -479,7 +479,7 @@ export type GraphDefinitionOptions = Readonly<{
 |      | `label?`      | `ZodInfer<typeof EntitySchema.shape["label"]>`                                                   | —      | 附着的单个或多个标签                                                                        |
 |      | `namespace`   | `"graph"`                                                                                        | —      | 命名空间，固定为 graph                                                                      |
 |      | `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | 已注册精确语义的名称与 JSON 参数                                                            |
-|      | `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
+|      | `role`        | <ApiValues name="BuiltinEntityRole" /> \| `string`                                               | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
 |      | `text?`       | `ZodInfer<typeof EntitySchema.shape["text"]>`                                                    | —      | 字符串或文字行数组                                                                          |
 |      | `type`        | `"entity"`                                                                                       | —      | 记录判别字段，固定为 entity                                                                 |
 | 几何 | `position?`   | `ZodInfer<typeof EntitySchema.shape["position"]>`                                                | —      | 可选位置；实际绘制前必须由作者或布局补齐                                                    |
@@ -506,16 +506,16 @@ export type IRGraphEntity = ZodInfer<typeof EntitySchema>;
 
 </DocTabs>
 
-### EntityRole
+### BuiltinEntityRole
 
 <p>
-  <ApiSourceLink label={'EntityRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={27}>
+  <ApiSourceLink label={'BuiltinEntityRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={27}>
     Entity 的内置上位语义角色
   </ApiSourceLink>
 </p>
 
 ```ts
-export const EntityRole = {
+export const BuiltinEntityRole = {
   Participant: 'participant',
   Activity: 'activity',
   Event: 'event',
@@ -525,7 +525,7 @@ export const EntityRole = {
   Concept: 'concept',
 } as const;
 
-export type EntityRole = ValueOf<typeof EntityRole>;
+export type BuiltinEntityRole = ValueOf<typeof BuiltinEntityRole>;
 ```
 
 ### GraphStatus

@@ -18,7 +18,7 @@ export const DocStep: FC<DocStepProps> = props => {
         className="absolute top-0 left-0 flex size-7 items-center justify-center rounded-full bg-muted text-xs font-medium ring-4 ring-background before:content-[counter(doc-step)]"
       />
       <div className="min-h-7 text-base leading-7 font-semibold">{title}</div>
-      <div className="mt-3 min-w-0 text-sm leading-7 [&>p]:leading-7 [&>p+p]:mt-3 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+      <div className="mt-3 min-w-0 text-sm leading-6 [&>p]:leading-6 [&>p+p]:mt-3 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
         {children}
       </div>
     </li>

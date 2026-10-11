@@ -84,11 +84,13 @@ describe('Scatter Chart encoding resolution', () => {
       {
         operation: {
           kind: 'summarize',
-          groupBy: ['species', 'island'],
-          metrics: [
-            { kind: 'mean', field: 'margin', as: 'meanMargin' },
-            { kind: 'max', field: 'intensity', as: 'maxIntensity' },
-          ],
+          params: {
+            groupBy: ['species', 'island'],
+            metrics: [
+              { kind: 'mean', field: 'margin', as: 'meanMargin' },
+              { kind: 'max', field: 'intensity', as: 'maxIntensity' },
+            ],
+          },
         },
       },
     ]);
@@ -113,8 +115,10 @@ describe('Scatter Chart encoding resolution', () => {
       {
         operation: {
           kind: 'summarize',
-          groupBy: ['margin', 'region', 'market', 'year'],
-          metrics: [{ kind: 'mean', field: 'amount', as: 'meanAmount' }],
+          params: {
+            groupBy: ['margin', 'region', 'market', 'year'],
+            metrics: [{ kind: 'mean', field: 'amount', as: 'meanAmount' }],
+          },
         },
       },
     ]);
@@ -125,22 +129,22 @@ describe('Scatter Chart encoding resolution', () => {
       {
         encodings: {
           y: {
-            transform: { operation: { kind: 'jitter', axis: 'y', yField: 'margin', amount: 0.5 } },
+            transform: { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin', amount: 0.5 } } },
             output: 'margin',
           },
           x: {
-            transform: { operation: { kind: 'normalize', field: 'amount', as: 'amountShare' } },
+            transform: { operation: { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } } },
             output: 'amountShare',
           },
         },
       },
-      { transform: [{ operation: { kind: 'sort', field: 'time', order: 'descending' } }] },
+      { transform: [{ operation: { kind: 'sort', params: { field: 'time', order: 'descending' } } }] },
     );
 
     expect(result.plot.transform).toEqual([
-      { operation: { kind: 'sort', field: 'time', order: 'descending' } },
-      { operation: { kind: 'normalize', field: 'amount', as: 'amountShare' } },
-      { operation: { kind: 'jitter', axis: 'y', yField: 'margin', amount: 0.5 } },
+      { operation: { kind: 'sort', params: { field: 'time', order: 'descending' } } },
+      { operation: { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } } },
+      { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin', amount: 0.5 } } },
     ]);
     expect(result.plot.marks[0]).toMatchObject({
       encoding: { x: { field: 'amountShare' }, y: { field: 'margin' } },
@@ -148,7 +152,7 @@ describe('Scatter Chart encoding resolution', () => {
   });
 
   it('rejects an encoding transform already declared by plotExtension', () => {
-    const operation = { kind: 'normalize', field: 'amount', as: 'amountShare' };
+    const operation = { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } };
 
     expect(() =>
       resolveScatter(
@@ -173,13 +177,13 @@ describe('Scatter Chart encoding resolution', () => {
         {
           encodings: {
             x: {
-              transform: { operation: { kind: 'normalize', field: 'amount', as: 'amountShare' } },
+              transform: { operation: { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } } },
               output: 'amountShare',
             },
             y: 'margin',
           },
         },
-        { transform: [{ operation: { kind: 'normalize', field: 'weight', as: 'amountShare' } }] },
+        { transform: [{ operation: { kind: 'normalize', params: { field: 'weight', as: 'amountShare' } } }] },
       ),
     ).toThrowError(
       expect.objectContaining({
@@ -193,11 +197,11 @@ describe('Scatter Chart encoding resolution', () => {
       resolveScatter({
         encodings: {
           x: {
-            transform: { operation: { kind: 'jitter', axis: 'x', xField: 'amount', amount: 0.5 } },
+            transform: { operation: { kind: 'jitter', params: { axis: 'x', xField: 'amount', amount: 0.5 } } },
             output: 'amount',
           },
           y: {
-            transform: { operation: { kind: 'normalize', field: 'amount', as: 'normalizedAmount' } },
+            transform: { operation: { kind: 'normalize', params: { field: 'amount', as: 'normalizedAmount' } } },
             output: 'normalizedAmount',
           },
         },
@@ -212,7 +216,9 @@ describe('Scatter Chart encoding resolution', () => {
       resolveScatter({
         encodings: {
           x: {
-            transform: { operation: { kind: 'bin', field: 'amount', startField: 'binStart', endField: 'binEnd' } },
+            transform: {
+              operation: { kind: 'bin', params: { field: 'amount', startField: 'binStart', endField: 'binEnd' } },
+            },
             output: 'binStart',
           },
           y: 'margin',
@@ -231,9 +237,11 @@ describe('Scatter Chart encoding resolution', () => {
             transform: {
               operation: {
                 kind: 'bin',
-                field: 'totalMargin',
-                startField: 'binStart',
-                endField: 'binEnd',
+                params: {
+                  field: 'totalMargin',
+                  startField: 'binStart',
+                  endField: 'binEnd',
+                },
               },
             },
             output: 'binStart',
@@ -432,15 +440,12 @@ describe('Scatter Chart encoding resolution', () => {
 
   it('resolves custom transform, reducer and scale operations through owner Definitions', () => {
     const copyField = defineTransform({
-      schema: strictObject({
-        kind: literal('copy-chart-field'),
-        field: NonBlankStringSchema,
-        as: NonBlankStringSchema,
-      }),
-      inputFields: operation => [operation.field],
+      kind: 'copy-chart-field',
+      paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as, type: { from: operation.field } }],
+        outputs: [{ field: operation.params.as, type: { from: operation.params.field } }],
       }),
       schedule: {
         phase: DataTransformPhase.FieldDerive,
@@ -490,7 +495,7 @@ describe('Scatter Chart encoding resolution', () => {
       {
         encodings: {
           x: {
-            transform: { operation: { kind: 'copy-chart-field', field: 'amount', as: 'copiedAmount' } },
+            transform: { operation: { kind: 'copy-chart-field', params: { field: 'amount', as: 'copiedAmount' } } },
             output: 'copiedAmount',
           },
           y: 'margin',
@@ -505,7 +510,7 @@ describe('Scatter Chart encoding resolution', () => {
     );
 
     expect(transformed.plot.transform).toEqual([
-      { operation: { kind: 'copy-chart-field', field: 'amount', as: 'copiedAmount' } },
+      { operation: { kind: 'copy-chart-field', params: { field: 'amount', as: 'copiedAmount' } } },
     ]);
     expect(transformed.plot.scales).toContainEqual({ type: 'mono-chart', name: 'groupMono', tone: 'mono' });
 
@@ -539,8 +544,10 @@ describe('Scatter Chart encoding resolution', () => {
       {
         operation: {
           kind: 'summarize',
-          groupBy: ['group', 'margin'],
-          metrics: [{ kind: 'range-chart-value', field: 'amount', as: 'amountRange' }],
+          params: {
+            groupBy: ['group', 'margin'],
+            metrics: [{ kind: 'range-chart-value', field: 'amount', as: 'amountRange' }],
+          },
         },
       },
     ]);
@@ -605,7 +612,7 @@ describe('Scatter Chart encoding resolution', () => {
     expect(() =>
       resolveScatter({
         encodings: {
-          x: { transform: { operation: { kind: 'missing-transform' } }, output: 'x' },
+          x: { transform: { operation: { kind: 'missing-transform', params: {} } }, output: 'x' },
           y: 'margin',
         },
       }),

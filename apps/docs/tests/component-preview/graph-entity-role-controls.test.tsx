@@ -1,4 +1,4 @@
-import { EntityRole, GraphStatus } from '@retikz/graph';
+import { BuiltinEntityRole, GraphStatus } from '@retikz/graph';
 import type { FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -72,7 +72,9 @@ describe('Entity role and style playground', () => {
       const role = fields.find(field => field.id === 'role');
       const status = fields.find(field => field.id === 'status');
 
-      expect(role?.kind === 'select' && role.options.map(option => option.value)).toEqual(Object.values(EntityRole));
+      expect(role?.kind === 'select' && role.options.map(option => option.value)).toEqual(
+        Object.values(BuiltinEntityRole),
+      );
       expect(status?.kind === 'select' && status.options.map(option => option.value)).toEqual([
         '',
         ...Object.values(GraphStatus),
@@ -110,7 +112,7 @@ describe('Entity role and style playground', () => {
   });
 
   it('七个角色均可绘制；状态改变 SVG，显式主色覆盖语义色且关闭后恢复', () => {
-    for (const role of Object.values(EntityRole)) {
+    for (const role of Object.values(BuiltinEntityRole)) {
       const values = { ...previewControlContract.canonicalValues, role };
       const baseline = renderWithValues(EntityPlayground, previewControlContract, values);
 

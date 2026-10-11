@@ -1,0 +1,228 @@
+---
+title: regression · 拟合
+description: 使用六种内置方法拟合预测模型，逐项比较曲线与原始观测位置上的拟合结果。
+---
+
+拟合从 $(x,y)$ 观测中求出选定公式的系数，返回可调用的预测模型。通过 `resolveRegression(method).fit(rows)` 得到模型后，调用 `predict(x)` 计算预测值；模型只存在于运行时，不写入 IR。曲线不要求经过每个原始点。
+
+下文每种方式各有一个 demo，默认用灰点展示观测、蓝线展示拟合曲线。切换为表格后，左侧保留原始 `x,y`，右侧在相同的 9 行观测上增加蓝色 `fittedY`：它是 demo 调用模型计算的比较列，并非拟合算子自动添加的字段。橙色标记参与拟合的原始数据。两种视图使用同一个模型，采样点数只改变图形的预测点数量。
+
+通过宿主 [`smooth`](/viz/data/transform/statistics) 使用拟合时，将方法声明放在 `params.method`。`smooth` 只读取 `x,y` 都为有限数值的观测，不转换数值字符串；它另行生成预测行，默认每组 64 行。采样范围默认采用有效观测的 $x$ 范围，不会筛选拟合观测；原始字段也不会自动保留到预测行。观测不足、矩阵秩不足或预测非有限时，计算失败。
+
+## linear · 线性
+
+`linear` 用最小二乘法拟合直线 $y=a+bx$，适合描述近似恒定的变化速率。至少需要两对有效观测，且 $x$ 有变化。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
+| 属性   | 类型       | 说明     |
+| ------ | ---------- | -------- |
+| `kind` | `'linear'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `linear` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.linear"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 linear',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+<ComponentPreview
+  files={['regression-linear', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换图形／表格，比较同一模型的曲线和 fittedY；调整末次观测值后重新拟合"
+/>
+
+## quadratic · 二次
+
+`quadratic` 用最小二乘法拟合二次曲线 $y=a+bx+cx^2$，可以描述弯曲趋势或一个转折。至少需要三个不同的 $x$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
+| 属性   | 类型          | 说明     |
+| ------ | ------------- | -------- |
+| `kind` | `'quadratic'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `quadratic` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.quadratic"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 quadratic',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+<ComponentPreview
+  files={['regression-quadratic', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换图形／表格，比较同一模型的曲线和 fittedY；调整末次观测值后重新拟合"
+/>
+
+## polynomial · 多项式
+
+`polynomial` 拟合 $y=a_0+a_1x+\cdots+a_dx^d$，其中 `order` 指定最高阶数 $d$，系数由最小二乘法求出。$d$ 阶拟合至少需要 $d+1$ 个不同的 $x$；更高阶可能增加点间或观测范围外的波动，并不一定更合适。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
+| 属性    | 类型           | 说明                                   |
+| ------- | -------------- | -------------------------------------- |
+| `kind`  | `'polynomial'` | 拟合方式                               |
+| `order` | `number`       | 可选，2–6 的整数，默认 3；指定最高阶数 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `polynomial` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.polynomial"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 polynomial',
+    order: '多项式最高阶数；2–6 的整数，Schema 默认补入 3',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+<ComponentPreview
+  files={['regression-polynomial', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换图形／表格，比较同一模型的曲线和 fittedY；调整末次观测值后重新拟合"
+/>
+
+## logarithmic · 对数
+
+`logarithmic` 拟合 $y=a+b\ln x$，适合描述变化逐渐放缓的趋势。它对 $x$ 取对数后做线性最小二乘拟合，预测仍返回原空间的 $y$。至少需要两对有效观测，且 $x$ 有变化；观测与预测位置都必须满足 $x>0$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
+| 属性   | 类型            | 说明     |
+| ------ | --------------- | -------- |
+| `kind` | `'logarithmic'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `logarithmic` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.logarithmic"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 logarithmic',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+<ComponentPreview
+  files={['regression-logarithmic', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换图形／表格，比较同一模型的曲线和 fittedY；调整末次观测值后重新拟合"
+/>
+
+## exponential · 指数
+
+`exponential` 拟合 $y=ae^{bx}$，适合描述按比例增长或衰减的趋势。它对 $y$ 取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化，观测必须满足 $y>0$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
+| 属性   | 类型            | 说明     |
+| ------ | --------------- | -------- |
+| `kind` | `'exponential'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `exponential` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.exponential"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 exponential',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+<ComponentPreview
+  files={['regression-exponential', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换图形／表格，比较同一模型的曲线和 fittedY；调整末次观测值后重新拟合"
+/>
+
+## power · 幂函数
+
+`power` 拟合 $y=ax^b$，适合描述幂律关系。它对 $x$、$y$ 都取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化；观测必须满足 $x,y>0$，预测位置必须满足 $x>0$。参数与校验约束可在下方页签中切换查看。
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API">
+
+| 属性   | 类型      | 说明     |
+| ------ | --------- | -------- |
+| `kind` | `'power'` | 拟合方式 |
+
+</DocTab>
+<DocTab value="schema" label="Schema">
+
+内置 `power` 参数 Schema
+
+<ZodSchema
+  name="BuiltinRegression.power"
+  description="拟合方法的精确参数。"
+  descriptions={{
+    kind: '拟合方式，固定为 power',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+<ComponentPreview
+  files={['regression-power', 'regression-preview.tsx', 'regression-samples.data.ts']}
+  defaultSourceFile="regression-samples.data.ts"
+  mode="showcase"
+  size="lg"
+  previewClassName="h-85 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换图形／表格，比较同一模型的曲线和 fittedY；调整末次观测值后重新拟合"
+/>

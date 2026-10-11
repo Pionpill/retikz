@@ -69,16 +69,20 @@ const model: IRDataModel = [
 export const midpointSummaryOperationOf = () =>
   ({
     kind: 'summarize',
-    groupBy: ['group'],
-    metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
+    params: {
+      groupBy: ['group'],
+      metrics: [{ kind: 'midpoint', field: 'score', as: 'midpoint' }],
+    },
   }) as const;
 
 /** 构造使用自定义 closest-to-mean selector 的 select operation */
 export const closestToMeanSelectOperationOf = () =>
   ({
     kind: 'select',
-    groupBy: ['group'],
-    selector: { kind: 'closest-to-mean', field: 'score' },
+    params: {
+      groupBy: ['group'],
+      selector: { kind: 'closest-to-mean', field: 'score' },
+    },
   }) as const;
 
 /** 并列渲染 reducer 生成行与 selector 保留行 */

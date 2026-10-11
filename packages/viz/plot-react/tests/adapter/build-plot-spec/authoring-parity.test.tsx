@@ -8,7 +8,7 @@ import { buildPlotIR } from '../../../src/adapter';
 import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/composition';
 import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
-import { PlotScale } from '../../../src/components/scales';
+import { BuiltinPlotScale } from '../../../src/components/scales';
 
 const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
@@ -16,7 +16,9 @@ const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =
 describe('React 与 framework-neutral authoring parity', () => {
   it('Point placement 产出完全一致的 IRPlot', () => {
     const placement = {
-      adjustments: [{ kind: 'jitter' as const, role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 }],
+      adjustments: [
+        { kind: 'jitter' as const, params: { role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 } },
+      ],
     };
     const react = buildPlotIR(<PointMark x="category" y="value" placement={placement} />, 'points');
     const plain = normalizePlot({
@@ -144,7 +146,7 @@ describe('React 与 framework-neutral authoring parity', () => {
     const spec = buildPlotIR(
       <>
         <PlotFacet id="sales" column="region" />
-        <PlotScale dimension="x" type="time" />
+        <BuiltinPlotScale dimension="x" type="time" />
         <PointMark facetId="sales" x="month" y="revenue" />
       </>,
       'sales',
@@ -293,8 +295,8 @@ describe('React 与 framework-neutral authoring parity', () => {
     };
     const react = buildPlotIR(
       <>
-        <PlotScale dimension="x" type="linear" />
-        <PlotScale dimension="y" type="linear" />
+        <BuiltinPlotScale dimension="x" type="linear" />
+        <BuiltinPlotScale dimension="y" type="linear" />
         <PointMark x="day" y="temperature" />
       </>,
       'weather',

@@ -471,7 +471,7 @@ export type GraphDefinitionOptions = Readonly<{
 | `meta?`                | `Record<string, JsonValue>`                                                                                                                                                           | —      | 透传到绘制产物的 JSON 元信息，编译器不解释                                |
 | `namespace`            | `"graph"`                                                                                                                                                                             | —      | 命名空间，固定为 graph                                                    |
 | `predicate?`           | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                                                                                                                  | —      | 已注册的精确语义名称及 JSON 参数                                          |
-| `role`                 | <ApiValues name="RelationRole" /> \| `string`                                                                                                                                         | —      | 开放关系角色 key，运行时须注册                                            |
+| `role`                 | <ApiValues name="BuiltinRelationRole" /> \| `string`                                                                                                                                  | —      | 开放关系角色 key，运行时须注册                                            |
 | `rotate?`              | `number`                                                                                                                                                                              | —      | 路径绕边界中心旋转，端点先求值                                            |
 | `roundedCorners?`      | `number`                                                                                                                                                                              | —      | 线段转角的几何圆角，区别于描边 lineJoin                                   |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                                                                     | —      | 至少两个 Core Step 的完整路径序列，使用 Graph 根坐标空间且禁止 step.label |
@@ -853,6 +853,26 @@ export type RelationRoleDefinition = Readonly<{
 
 </DocTabs>
 
+### BuiltinRelationRole
+
+<p>
+  <ApiSourceLink label={'BuiltinRelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={45}>
+    Relation 的内置语义角色
+  </ApiSourceLink>
+</p>
+
+```ts
+export const BuiltinRelationRole = {
+  Association: 'association',
+  Dependency: 'dependency',
+  Generalization: 'generalization',
+  Flow: 'flow',
+  Influence: 'influence',
+} as const;
+
+export type BuiltinRelationRole = ValueOf<typeof BuiltinRelationRole>;
+```
+
 ### GraphStatus
 
 <p>
@@ -893,26 +913,6 @@ export const RelationDirection = {
 } as const;
 
 export type RelationDirection = ValueOf<typeof RelationDirection>;
-```
-
-### RelationRole
-
-<p>
-  <ApiSourceLink label={'RelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={45}>
-    Relation 的内置语义角色
-  </ApiSourceLink>
-</p>
-
-```ts
-export const RelationRole = {
-  Association: 'association',
-  Dependency: 'dependency',
-  Generalization: 'generalization',
-  Flow: 'flow',
-  Influence: 'influence',
-} as const;
-
-export type RelationRole = ValueOf<typeof RelationRole>;
 ```
 
 ### createGraphDefinitions

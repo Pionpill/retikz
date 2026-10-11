@@ -4,7 +4,7 @@ import { defineTransform } from '@retikz/data';
 import { SOURCE_INDEX } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { literal, object } from 'zod';
+import { object } from 'zod';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -23,13 +23,10 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const doubleDefinition = defineTransform({
-  schema: object({
-    kind: literal('double'),
-    field: NonBlankStringSchema,
-    as: NonBlankStringSchema,
-  }),
-  inputFields: operation => [operation.field],
-  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+  kind: 'double',
+  paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+  inputFields: operation => [operation.params.field],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.params.as }] }),
 });
 
 const doubleDefinitionImplementation = defineTransformImplementation({
@@ -37,23 +34,19 @@ const doubleDefinitionImplementation = defineTransformImplementation({
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
-      [operation.as]: Number(row[operation.field]) * 2,
+      [operation.params.as]: Number(row[operation.params.field]) * 2,
     })),
 });
 
 const groupSumDefinition = defineTransform({
-  schema: object({
-    kind: literal('group-sum'),
-    groupBy: NonBlankStringSchema,
-    field: NonBlankStringSchema,
-    as: NonBlankStringSchema,
-  }),
-  inputFields: operation => [operation.groupBy, operation.field],
+  kind: 'group-sum',
+  paramsSchema: object({ groupBy: NonBlankStringSchema, field: NonBlankStringSchema, as: NonBlankStringSchema }),
+  inputFields: operation => [operation.params.groupBy, operation.params.field],
   outputModel: operation => ({
     kind: 'replace',
     fields: [
-      { field: operation.groupBy, type: { from: operation.groupBy } },
-      { field: operation.as, type: 'continuous' },
+      { field: operation.params.groupBy, type: { from: operation.params.groupBy } },
+      { field: operation.params.as, type: 'continuous' },
     ],
   }),
 });
@@ -64,15 +57,15 @@ const groupSumDefinitionImplementation = defineTransformImplementation({
     const groups = new Map<string, Array<Record<string, unknown>>>();
 
     for (const row of rows) {
-      const key = String(row[operation.groupBy]);
+      const key = String(row[operation.params.groupBy]);
       groups.set(key, [...(groups.get(key) ?? []), row]);
     }
 
     return [...groups.entries()].map(([key, members]) =>
       context.groupProvenance(
         {
-          [operation.groupBy]: key,
-          [operation.as]: members.reduce((sum, row) => sum + Number(row[operation.field] ?? 0), 0),
+          [operation.params.groupBy]: key,
+          [operation.params.as]: members.reduce((sum, row) => sum + Number(row[operation.params.field] ?? 0), 0),
         },
         members,
       ),
@@ -163,7 +156,7 @@ const pieSpec = (over: { id?: string } = {}): IRPlot =>
     type: 'plot',
     ...(over.id ? { id: over.id } : {}),
     data: { reference: 'd' },
-    transform: [{ operation: { kind: 'stack', y: 'v' } }],
+    transform: [{ operation: { kind: 'stack', params: { y: 'v' } } }],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
     scales: [
       { type: 'linear', name: 'a' },
@@ -315,12 +308,14 @@ describe('datum locator — happy path', () => {
             {
               operation: {
                 kind: 'smooth',
-                x: 'x',
-                y: 'y',
-                groupBy: ['series'],
-                sampleCount: 2,
-                xAs: 'trendX',
-                yAs: 'trendY',
+                params: {
+                  x: 'x',
+                  y: 'y',
+                  groupBy: ['series'],
+                  sampleCount: 2,
+                  xAs: 'trendX',
+                  yAs: 'trendY',
+                },
               },
             },
           ],
@@ -615,7 +610,7 @@ describe('datum locator — bug hunter regressions', () => {
       type: 'plot',
       id: 'sales',
       data: { reference: 'sales' },
-      transform: [{ operation: { kind: 'sort', field: 'revenue', order: 'descending' } }],
+      transform: [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }],
       scales: [
         { type: 'band', name: 'xMonth' },
         { type: 'linear', name: 'yRevenue' },
@@ -674,7 +669,7 @@ describe('datum locator transform registry parity', () => {
       type: 'plot',
       id: 'custom',
       data: { reference: 'd' },
-      transform: [{ operation: { kind: 'double', field: 'x', as: 'x2' } }],
+      transform: [{ operation: { kind: 'double', params: { field: 'x', as: 'x2' } } }],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -717,7 +712,7 @@ describe('datum locator transform registry parity', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'sort', field: 'revenue', order: 'descending' } }],
+          transform: [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }],
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
       ],
@@ -748,7 +743,7 @@ describe('datum locator transform registry parity', () => {
       type: 'plot',
       id: 'grouped',
       data: { reference: 'd' },
-      transform: [{ operation: { kind: 'group-sum', groupBy: 'group', field: 'value', as: 'total' } }],
+      transform: [{ operation: { kind: 'group-sum', params: { groupBy: 'group', field: 'value', as: 'total' } } }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -813,7 +808,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
       type: 'plot',
       id: 'stk',
       data: { reference: 'd' },
-      transform: [{ operation: { kind: 'stack', x: 'cat', y: 'v', groupBy: 'g' } }],
+      transform: [{ operation: { kind: 'stack', params: { x: 'cat', y: 'v', groupBy: 'g' } } }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },

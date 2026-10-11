@@ -2,7 +2,7 @@ import type { FieldOrderDefinition } from '../contract';
 import { RetikzDataError } from '../error';
 import { inferCategoryDomain, resolveFieldOrderRegistry } from '../providers';
 import type { IRDataFieldDefinition } from '../schemas';
-import { FieldOrderMode } from '../schemas';
+import { BuiltinFieldOrderMode } from '../schemas';
 
 /** 校验模型引用的分类顺序，即使当前没有观测值也不能忽略未知名称 */
 export const assertFieldOrders = (
@@ -36,7 +36,7 @@ export const resolveCategoryDomain = (
     const specified = new Set(order);
     return [...order, ...categories.filter(value => !specified.has(value))];
   }
-  const name = order ?? FieldOrderMode.Appearance;
+  const name = order ?? BuiltinFieldOrderMode.Appearance;
   const definition = registry.get(name);
   if (definition === undefined) throw new RetikzDataError(`data: unknown field order "${name}"`);
   const context = { values: categories };

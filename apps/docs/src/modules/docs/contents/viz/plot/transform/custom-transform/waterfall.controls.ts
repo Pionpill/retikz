@@ -13,8 +13,10 @@ export const CUSTOM_TRANSFORM_CONTROL_IDS = {
 /** 根据实时控件值创建自定义 waterfall operation */
 export const waterfallOperationOf = (values: { [CUSTOM_TRANSFORM_CONTROL_IDS.initialValue]: number }) => ({
   kind: 'waterfall',
-  field: 'delta',
-  initialValue: values[CUSTOM_TRANSFORM_CONTROL_IDS.initialValue],
+  params: {
+    field: 'delta',
+    initialValue: values[CUSTOM_TRANSFORM_CONTROL_IDS.initialValue],
+  },
 });
 
 /** 自定义瀑布变换的中文属性面板 */

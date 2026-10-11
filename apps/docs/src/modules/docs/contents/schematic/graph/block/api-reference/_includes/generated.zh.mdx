@@ -722,8 +722,8 @@ export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmb
 
 ### createBlock / BlockCreateOptions
 
-- `createBlock`：<ApiSourceLink label={"createBlock"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={25}>组装 Block Source record</ApiSourceLink>
-- `BlockCreateOptions`：<ApiSourceLink label={"BlockCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={13}>Block Source record 的作者输入</ApiSourceLink>
+- `createBlock`：<ApiSourceLink label={"createBlock"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={20}>组装 Block Source record</ApiSourceLink>
+- `BlockCreateOptions`：<ApiSourceLink label={"BlockCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={8}>Block Source record 的作者输入</ApiSourceLink>
 
 ```ts
 export declare const createBlock: (input: BlockCreateOptions) => IRBlock;
@@ -733,8 +733,8 @@ export type BlockCreateOptions = Omit<IRBlock, 'namespace' | 'type'>;
 
 ### createBlockHeader / BlockHeaderCreateOptions
 
-- `createBlockHeader`：<ApiSourceLink label={"createBlockHeader"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={32}>组装 Block Header Source record</ApiSourceLink>
-- `BlockHeaderCreateOptions`：<ApiSourceLink label={"BlockHeaderCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={16}>Block Header Source record 的作者输入</ApiSourceLink>
+- `createBlockHeader`：<ApiSourceLink label={"createBlockHeader"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={27}>组装 Block Header Source record</ApiSourceLink>
+- `BlockHeaderCreateOptions`：<ApiSourceLink label={"BlockHeaderCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={11}>Block Header Source record 的作者输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -770,8 +770,8 @@ export type BlockHeaderCreateOptions = Omit<IRBlockHeader, 'namespace' | 'type'>
 
 ### createBlockSection / BlockSectionCreateOptions
 
-- `createBlockSection`：<ApiSourceLink label={"createBlockSection"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={39}>组装 Block Section Source record</ApiSourceLink>
-- `BlockSectionCreateOptions`：<ApiSourceLink label={"BlockSectionCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={19}>Block Section Source record 的作者输入</ApiSourceLink>
+- `createBlockSection`：<ApiSourceLink label={"createBlockSection"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={34}>组装 Block Section Source record</ApiSourceLink>
+- `BlockSectionCreateOptions`：<ApiSourceLink label={"BlockSectionCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={14}>Block Section Source record 的作者输入</ApiSourceLink>
 
 ```ts
 export declare const createBlockSection: (input: BlockSectionCreateOptions) => IRBlockSection;
@@ -781,8 +781,8 @@ export type BlockSectionCreateOptions = Omit<IRBlockSection, 'namespace' | 'type
 
 ### createBlockRow / BlockRowCreateOptions
 
-- `createBlockRow`：<ApiSourceLink label={"createBlockRow"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={46}>组装 Block Row Source record</ApiSourceLink>
-- `BlockRowCreateOptions`：<ApiSourceLink label={"BlockRowCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={22}>Block Row Source record 的作者输入</ApiSourceLink>
+- `createBlockRow`：<ApiSourceLink label={"createBlockRow"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={41}>组装 Block Row Source record</ApiSourceLink>
+- `BlockRowCreateOptions`：<ApiSourceLink label={"BlockRowCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/block.ts"} startLine={17}>Block Row Source record 的作者输入</ApiSourceLink>
 
 **公共属性**
 
@@ -1032,7 +1032,7 @@ export type GraphDefinitionOptions = Readonly<{
 ### IRBlock
 
 <p>
-  <ApiSourceLink label={'IRBlock'} path={'packages/schematic/graph/src/schemas/block/types.ts'} startLine={23}>
+  <ApiSourceLink label={'IRBlock'} path={'packages/schematic/graph/src/schemas/block/types.ts'} startLine={24}>
     块语义组合节点的持久化输入
   </ApiSourceLink>
 </p>
@@ -1185,7 +1185,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 ### IRCodeBlock
 
 <p>
-  <ApiSourceLink label={'IRCodeBlock'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={25}>
+  <ApiSourceLink label={'IRCodeBlock'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={26}>
     代码实体共享事实与开放 composite 标识；具体实体由独立 schema 派生
   </ApiSourceLink>
 </p>
@@ -1261,7 +1261,7 @@ export type IRCodeBlockProps = Omit<ZodInfer<typeof CodeBlockPropsSchema>, 'posi
 ### IRCodeLogic
 
 <p>
-  <ApiSourceLink label={'IRCodeLogic'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={20}>
+  <ApiSourceLink label={'IRCodeLogic'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={21}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1295,7 +1295,7 @@ export type IRCodeLogic = ZodInfer<typeof CodeLogicSchema>;
 ### IRCodeMethod
 
 <p>
-  <ApiSourceLink label={'IRCodeMethod'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={22}>
+  <ApiSourceLink label={'IRCodeMethod'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={23}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1330,7 +1330,7 @@ export type IRCodeMethod = ZodInfer<typeof CodeMethodSchema>;
 ### IRCodeParameter
 
 <p>
-  <ApiSourceLink label={'IRCodeParameter'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={14}>
+  <ApiSourceLink label={'IRCodeParameter'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={15}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1365,7 +1365,7 @@ export type IRCodeParameter = ZodInfer<typeof CodeParameterSchema>;
 ### IRCodeProperty
 
 <p>
-  <ApiSourceLink label={'IRCodeProperty'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={18}>
+  <ApiSourceLink label={'IRCodeProperty'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={19}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -1402,7 +1402,7 @@ export type IRCodeProperty = ZodInfer<typeof CodePropertySchema>;
 ### IRCodeSignature
 
 <p>
-  <ApiSourceLink label={'IRCodeSignature'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={16}>
+  <ApiSourceLink label={'IRCodeSignature'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={17}>
     查看源码
   </ApiSourceLink>
 </p>

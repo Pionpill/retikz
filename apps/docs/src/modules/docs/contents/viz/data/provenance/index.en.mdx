@@ -1,32 +1,257 @@
 ---
-title: Data Traceability
-description: Data traceability connects row provenance, transformation history, and Plot semantics so hosts can inspect, explain, and audit a visualization run.
+title: Data provenance
+description: Trace transform outputs to input records, record transform, field-flow and operator events, and limit samples or consume events through a callback.
 ---
 
-Data traceability begins with source identity and runtime lineage established by Data, then lets consumers such as Plot add their own host semantics. Data answers where data came from and what happened to it; Plot explains how that data became marks. Each layer keeps its own package boundary and public entry points.
+A summary row can represent several detail records, and sorting changes output positions. Data preserves source indices so an application can look up contributing records or inspect a computation. See [Data transforms](/viz/data/transform) for operation declarations.
 
-Enable these capabilities only for trace-back, diagnostics, or audits. Runtime lineage does not enter JSON IR, and Plot's complete audit artifact is not automatically written into Scene metadata.
+| Provenance type | Records and purpose                                                                                  | How to read it                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Row provenance  | Input indices behind an output row, for looking up one or more original records                      | Call `readSourceIndex` or `readSourceIndices` on the output row                 |
+| Lineage events  | Transform stages, field flow and operator records from one execution, for inspecting the computation | Read the returned `lineage.events`, or receive events through a `sink` callback |
 
-## Responsibilities
+Both forms remain separate from business fields.
 
-| Layer           | Responsibility                                                        | Reach for it when                                            |
-| --------------- | --------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Data Provenance | Propagate row sources and record transform and statistical operations | Explaining row origins or inspecting data processing         |
-| Plot Lineage    | Add mark, encoding, scale, layout, and locator semantics              | Auditing visualization runs or tracing marks back to sources |
+## Using provenance
 
-## Chapters
+Use `applyTransforms` to execute operations. `provenance: true` assigns sources to unmarked inputs, and `lineage: true` records events with the default configuration. The example enables both, sorts four sales records and sums revenue by region, producing West with a total of 6 and East with a total of 8.
+
+```ts
+import { applyTransforms, readSourceIndices } from '@retikz/data';
+
+const sourceRows = [
+  { region: 'East', period: 1, revenue: 3 },
+  { region: 'East', period: 2, revenue: 5 },
+  { region: 'West', period: 1, revenue: 2 },
+  { region: 'West', period: 2, revenue: 4 },
+];
+const operations = [
+  { kind: 'sort', params: { field: 'revenue', order: 'ascending' } },
+  {
+    kind: 'summarize',
+    params: {
+      groupBy: ['region'],
+      metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+    },
+  },
+] satisfies Array<import('@retikz/data').IRDataTransform>;
+const { rows, lineage } = applyTransforms(sourceRows, operations, { provenance: true, lineage: true });
+const indices = readSourceIndices(rows[0]); // [2, 3], the two West records
+const details = indices?.map(index => sourceRows[index]);
+console.log(details, lineage?.events);
+```
+
+| Property     | Default | Description                                                                                                                                                                                                                                |
+| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `provenance` | `false` | Set it to `true` to assign source indices to unmarked inputs. Existing sources are always retained.                                                                                                                                        |
+| `lineage`    | `false` | Omit it or pass `false` to disable event recording, `true` to use the default configuration, or an object to customize event content, samples and a callback. Source summaries read existing markers without assigning new source indices. |
+
+To customize recording scope, use a `lineage` object with these properties. Omitted properties use their defaults:
+
+| Property                    | Default                                          | Description                                                                                                                                     |
+| --------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sourceIdentity`            | `{ mode: 'summary', maxIndices: 20 }`            | Records source count, an index prefix and truncation. `false` disables source summaries; `true` or `{}` uses the default summary configuration. |
+| `sourceIdentity.mode`       | `'summary'`                                      | `'summary'` retains an index prefix; `'full'` retains all indices.                                                                              |
+| `sourceIdentity.maxIndices` | `20`                                             | A positive integer limiting the number of indices retained in summary mode.                                                                     |
+| `transformSteps`            | `true`                                           | Records transform order, names, input/output row counts and fields.                                                                             |
+| `fieldFlow`                 | `false`                                          | Set it to `true` to record field reads and outputs declared by the Definition.                                                                  |
+| `reducerOperations`         | `false`                                          | Set it to `true` to record reducer configuration, fields, row counts and sources.                                                               |
+| `selectorOperations`        | `false`                                          | Set it to `true` to record selector configuration, input sources and selected sources.                                                          |
+| `rowSamples`                | `false`                                          | Pass `{ maxRows, fields }` to record field-value samples before and after transforms.                                                           |
+| `calculationDetails`        | `false`                                          | Pass `{ maxRows, fields }` to sample reducer inputs or selector candidates. The corresponding operator recording must also be enabled.          |
+| `sink`                      | Not set                                          | Pass `event => ...` to receive events individually during execution.                                                                            |
+| `retainEvents`              | With `sink`: `false`<br />Without `sink`: `true` | Set it to `true` to also retain the returned event array. Without a `sink`, events are always retained.                                         |
+
+For an existing `DataView`, use `applyTransformsToDataView` with the same provenance options. For external execution, see [External computation](/viz/data/transform/computation).
+
+## How sources propagate
+
+Switch operations to compare output fields and sources for the same inputs. Every option first sorts by `revenue` ascending. See [Transform operations](/viz/data/transforms) for details on each operation.
+
+<ComponentPreview
+  mode="showcase"
+  files={['provenance-rows', 'provenance-rows.preview.tsx', 'provenance-demo.data.ts']}
+  defaultSourceFile="provenance-demo.data.ts"
+  size="md"
+  caption="index and indices display single-row and group sources. - or [] means the corresponding marker is absent."
+/>
+
+`readSourceIndex(row)` reads a single-row source; `readSourceIndices(row)` reads group sources. The markers use `SOURCE_INDEX` and `SOURCE_INDICES` Symbol keys. Field paths and `JSON.stringify` ignore them, while object spread preserves these enumerable Symbols. A JSON round trip loses provenance.
+
+`provenance` is off by default. For row sources without events, pass `{ provenance: true }`, or tag rows separately with `tagSourceIndex`. Existing single-row or group sources survive subsequent calls without renumbering; look them up in the dataset where their indices were first assigned.
+
+## Recording scope
+
+With `lineage: true`, the entry records a `source` event and `transformStep` summaries, with row counts, declared input/output fields and source summaries. Source summaries retain at most 20 indices by default; enable other records individually.
+
+The next example always runs sort, select each group's maximum row, then sum each group. Its summary limit is 2 to expose `count`, `indices` and `truncated`; the API default remains 20.
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'provenance-events',
+    'provenance-events.preview.tsx',
+    'ProvenanceRecordPreview.tsx',
+    'provenance-demo.data.ts',
+  ]}
+  defaultSourceFile="provenance-demo.data.ts"
+  size="xxl"
+  caption="Options change events without changing calculation results. Inspect records in the event table on the right; samples include only whitelisted fields."
+/>
+
+`sourceIdentity: false` omits event source summaries without removing row markers. `{ mode: 'full' }` records all indices. `maxIndices` limits summaries only, not a row's group provenance.
+
+Both `rowSamples` and `calculationDetails` require a positive integer `maxRows` and a nonempty `fields` whitelist. The limit applies to each sample, not the whole run. `calculationDetails` also needs `selectorOperations` or `reducerOperations`; it does not generate operator events by itself. There is currently no separate regression event. Transform steps and row samples still describe fitting inputs and outputs.
+
+Field flow uses declarations, without tracing individual cells or every step in a callback. Event source collections concatenate row sources and can repeat indices. Multiple predictions referencing one group, for example, make `count` differ from the number of distinct original records.
+
+## Consuming events
+
+Read the returned `lineage.events` by default. Supply `sink` to receive events individually during execution; the returned array is then empty by default. Set `retainEvents: true` when both forms are needed.
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'provenance-delivery',
+    'provenance-delivery.preview.tsx',
+    'ProvenanceRecordPreview.tsx',
+    'provenance-demo.data.ts',
+  ]}
+  defaultSourceFile="provenance-delivery.preview.tsx"
+  size="md"
+  caption="Results and options appear on the left; the event table on the right marks callback delivery and retention in the returned array."
+/>
+
+```ts
+const result = applyTransforms(sourceRows, operations, {
+  provenance: true,
+  lineage: {
+    sink: event => console.log(event),
+    retainEvents: true,
+  },
+});
+```
+
+Without `sink`, events always remain in the returned array, even with `retainEvents: false`. A failed computation throws instead of returning a complete result; events already delivered describe only a partial execution. The application chooses storage and display behavior. Events are not written into data IR.
+
+## Custom transforms
+
+A row-preserving implementation can use `{ ...row, derived: value }` to carry sources. When constructing an output representing multiple inputs, call `context.groupProvenance(output, members)` with the actual contributing rows:
+
+```ts
+apply: (rows, operation, context) => [
+  context.groupProvenance(
+    { total: rows.reduce((sum, row) => sum + Number(row.revenue), 0) },
+    rows,
+  ),
+],
+```
+
+This is the computation callback of a transform Implementation; see [Extension mechanisms](/viz/data/transform/extensions) for definition and registration. Stage records read field declarations from the Definition, so custom computations must declare fields accurately and preserve sources. An output position is not an original index. A result without a unique source must not claim single-row provenance.
+
+## Related props
+
+These are the entries and options used here. See [API reference](/viz/data/transform/api-reference) for complete signatures.
+
+<ComponentProps
+  items={[
+    {
+      name: 'applyTransforms',
+      kind: 'function',
+      type: '(rows: Array<ExternalRow>, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsResult',
+      description: 'Synchronously returns { rows, lineage? }; options independently enable sources and events.',
+    },
+    {
+      name: 'applyTransformsToDataView',
+      kind: 'function',
+      type: '(view: DataView, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsToDataViewResult',
+      description: 'Returns { dataView, lineage? } for an existing normalized view.',
+    },
+    {
+      name: 'ApplyTransformsOptions.provenance',
+      kind: 'property',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: 'Assigns sources to unmarked inputs without enabling events; existing sources are retained.',
+    },
+    {
+      name: 'ApplyTransformsOptions.lineage',
+      kind: 'property',
+      type: 'boolean | DataLineageOptions',
+      defaultValue: 'false',
+      description:
+        'true uses default event options, an object customizes them, and false or omission disables recording. Row sources are not assigned implicitly.',
+    },
+    {
+      name: 'tagSourceIndex',
+      kind: 'function',
+      type: '(rows: Array<ExternalRow>) => Array<ExternalRow>',
+      description: 'Copies rows and tags unmarked inputs; preserves existing single-row or group sources.',
+    },
+    {
+      name: 'readSourceIndex',
+      kind: 'function',
+      type: '(row: ExternalRow) => number | undefined',
+      description: 'Reads a single-row source, or undefined when absent.',
+    },
+    {
+      name: 'readSourceIndices',
+      kind: 'function',
+      type: '(row: ExternalRow) => Array<number> | undefined',
+      description: 'Reads group sources, or undefined when absent.',
+    },
+    {
+      name: 'DataLineageOptions.sourceIdentity',
+      kind: 'property',
+      type: 'boolean | { mode?: "summary" | "full"; maxIndices?: number }',
+      defaultValue: '{ mode: "summary", maxIndices: 20 }',
+      description: 'false omits event source summaries; summary retains a prefix, full retains all indices.',
+    },
+    {
+      name: 'DataLineageOptions.rowSamples',
+      kind: 'property',
+      type: 'false | { maxRows: number; fields: Array<string> }',
+      defaultValue: 'false',
+      description: 'Samples transform inputs and outputs with a positive row limit and nonempty field whitelist.',
+    },
+    {
+      name: 'DataLineageOptions.sink',
+      kind: 'property',
+      type: '(event: DataLineageEvent) => void',
+      description: 'Receives events individually; disables returned event retention by default.',
+    },
+    {
+      name: 'DataLineageOptions.retainEvents',
+      kind: 'property',
+      type: 'boolean',
+      description: 'Defaults to false with sink; true keeps the array too. Events always remain without sink.',
+    },
+  ]}
+/>
+
+## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Data Provenance',
-      description: 'Understand row metadata, runtime events, and their propagation boundaries.',
-      url: '/viz/data/provenance/data',
+      title: 'Transform operations',
+      description: 'Follow row and field changes across a transform chain.',
+      url: '/viz/data/transform/operations',
     },
     {
-      title: 'Plot Lineage',
-      description: 'Extend Data lineage into mark audits and interaction trace-back.',
-      url: '/viz/data/provenance/plot',
+      title: 'Computation operators',
+      description: 'Distinguish statistics, selected records and prediction models.',
+      url: '/viz/data/transform/statistics',
+    },
+    {
+      title: 'Extension mechanisms',
+      description: 'Define and register custom transforms and implementations.',
+      url: '/viz/data/transform/extensions',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up source, lineage and execution types.',
+      url: '/viz/data/transform/api-reference',
     },
   ]}
 />

@@ -1,0 +1,52 @@
+---
+title: Schema Reference
+description: Look up shared schemas for transform declarations, execution configuration, and operator contracts.
+---
+
+This page covers shared transform and operator configuration contracts from `@retikz/data`. Find built-in parameters in the Schema tabs under [Computation operators](/viz/data/operators) and [Data transforms](/viz/data/transforms). See [Transform operations](/viz/data/transform/operations) for usage and [API Reference](/viz/data/transform/api-reference) for runtime types and functions.
+
+Configuration is separate from computation implementations. Defaults described below may be applied at runtime; only a schema-level `.default()` materializes a value during validation.
+
+## DataExecutionSchema
+
+Configuration is inherited from executor defaults, host configuration, then the individual declaration. mode and external inherit independently; the schema does not materialize the builtin default.
+
+<ZodSchema name="DataExecutionSchema" />
+
+## DataTransformDeclarationSchema
+
+<ZodSchema name="DataTransformDeclarationSchema" />
+
+## TransformSchema
+
+Every transform uses `{ kind, params }`. Custom parameters must be JSON objects; rows, functions, and source handles are supplied at runtime.
+
+<ZodSchema name="DataTransformSchema" />
+
+## ExternalTransformSchema
+
+This schema checks the JSON shape. The registered Definition validates exact parameters with its paramsSchema.
+
+<ZodSchema name="ExternalTransformSchema" />
+
+## SelectorOperationSchema
+
+Each branch accepts its own parameters. Additional custom selector fields must be JSON values.
+
+<ZodSchema name="SelectorOperationSchema" />
+
+## ReducerOperationSchema
+
+Shared reducer operation configuration. Additional custom fields must be JSON values. See [Reducer operators](/viz/data/operators/reducer) for specific parameters.
+
+<ZodSchema name="ReducerOperationSchema" />
+
+## ReducerMetricsSchema
+
+<ZodSchema name="ReducerMetricsSchema" />
+
+## RegressionMethodSchema
+
+The selected Definition validates method-specific parameters; see [Regression operators](/viz/data/operators/regression).
+
+<ZodSchema name="RegressionMethodSchema" />

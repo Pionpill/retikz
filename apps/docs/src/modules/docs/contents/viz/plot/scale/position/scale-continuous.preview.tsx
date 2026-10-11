@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 import type { ReactElement } from 'react';
 
 import type { previewControlContract } from './scale-continuous.controls';
@@ -11,18 +11,18 @@ const renderScale = (values: typeof previewControlContract.canonicalValues): Rea
     upper: values.domainPadding,
   };
   if (values.scaleType === 'log') {
-    return <PlotScale dimension="y" type="log" base={values.base} domainPadding={domainPadding} />;
+    return <BuiltinPlotScale dimension="y" type="log" base={values.base} domainPadding={domainPadding} />;
   }
 
   if (values.scaleType === 'sqrt') {
-    return <PlotScale dimension="y" type="sqrt" domainPadding={domainPadding} />;
+    return <BuiltinPlotScale dimension="y" type="sqrt" domainPadding={domainPadding} />;
   }
 
   if (values.scaleType === 'symlog') {
-    return <PlotScale dimension="y" type="symlog" constant={values.constant} domainPadding={domainPadding} />;
+    return <BuiltinPlotScale dimension="y" type="symlog" constant={values.constant} domainPadding={domainPadding} />;
   }
 
-  return <PlotScale dimension="y" type="linear" domainPadding={domainPadding} />;
+  return <BuiltinPlotScale dimension="y" type="linear" domainPadding={domainPadding} />;
 };
 
 /** 图形参数 */

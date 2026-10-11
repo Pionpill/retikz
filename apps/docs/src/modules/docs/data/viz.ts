@@ -62,7 +62,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'extensions',
             label: 'viz.dataModelExtensions',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -79,19 +79,19 @@ export const vizSection: Array<Section> = [
         label: 'viz.dataTransform',
         sidebarGroup: 'viz.dataContents',
         children: [
+          { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Advanced },
+          { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Advanced },
           {
-            id: 'overview',
-            label: 'viz.dataTransformComponent',
-            difficulty: DocDifficulty.Beginner,
+            id: 'computation',
+            label: 'viz.dataTransformComputation',
+            difficulty: DocDifficulty.Internals,
             meta: {
-              pageType: 'component',
-              audience: 'user',
-              capability: 'data.transform.component',
+              pageType: 'architecture',
+              audience: 'integrator',
+              capability: 'data.transform.computation',
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Advanced },
-          { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Advanced },
           {
             id: 'extensions',
             label: 'viz.dataTransformExtensions',
@@ -103,36 +103,16 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+          { id: 'api-reference', label: 'viz.dataTransformApiReference' },
+          { id: 'schema-reference', label: 'viz.dataTransformSchemaReference' },
         ],
       },
       {
         id: 'provenance',
         label: 'viz.dataProvenance',
         sidebarGroup: 'viz.dataContents',
-        children: [
-          {
-            id: 'data',
-            label: 'viz.dataProvenanceData',
-            difficulty: DocDifficulty.Internals,
-            meta: {
-              pageType: 'concept',
-              audience: 'integrator',
-              capability: 'data.provenance',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
-            id: 'plot',
-            label: 'viz.dataProvenancePlot',
-            difficulty: DocDifficulty.Internals,
-            meta: {
-              pageType: 'concept',
-              audience: 'integrator',
-              capability: 'plot.lineage',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
+        difficulty: DocDifficulty.Advanced,
+        meta: { pageType: 'guide', audience: 'user', capability: 'data.provenance', sourceOfTruth: 'runtime' },
       },
       {
         id: 'reference',
@@ -141,6 +121,131 @@ export const vizSection: Array<Section> = [
         children: [
           { id: 'contract', label: 'viz.dataReferenceContract' },
           { id: 'runtime', label: 'viz.dataReferenceRuntime' },
+        ],
+      },
+      {
+        id: 'operators',
+        label: 'viz.dataComputationOperators',
+        sidebarGroup: 'viz.dataComputation',
+        meta: {
+          pageType: 'group',
+          audience: 'user',
+          capability: 'data.computation.operators',
+          sourceOfTruth: 'runtime',
+        },
+        children: [
+          {
+            id: 'selector',
+            label: 'viz.dataComputationSelector',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.selector',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'reducer',
+            label: 'viz.dataComputationReducer',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.reducer',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'regression',
+            label: 'viz.dataComputationRegression',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.regression',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
+      {
+        id: 'transforms',
+        label: 'viz.dataComputationTransforms',
+        sidebarGroup: 'viz.dataComputation',
+        meta: {
+          pageType: 'concept',
+          audience: 'user',
+          capability: 'data.computation.transforms',
+          sourceOfTruth: 'runtime',
+        },
+        children: [
+          {
+            id: 'row-organization',
+            label: 'viz.dataTransformsRowOrganization',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.transforms.row-organization',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'aggregation-annotation',
+            label: 'viz.dataTransformsAggregationAnnotation',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.transforms.aggregation-annotation',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'numeric-derivation',
+            label: 'viz.dataTransformsNumericDerivation',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.transforms.numeric-derivation',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'bin-density',
+            label: 'viz.dataTransformsBinDensity',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.transforms.bin-density',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'trend-sampling',
+            label: 'viz.dataTransformsTrendSampling',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.transforms.trend-sampling',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'relation-generation',
+            label: 'viz.dataTransformsRelationGeneration',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'guide',
+              audience: 'user',
+              capability: 'data.computation.transforms.relation-generation',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
     ],
@@ -439,6 +544,12 @@ export const vizSection: Array<Section> = [
           { id: 'axis', label: 'viz.compAxis', difficulty: DocDifficulty.Beginner },
           { id: 'legend', label: 'viz.compLegend', difficulty: DocDifficulty.Beginner },
         ],
+      },
+      {
+        id: 'provenance',
+        label: 'viz.plotProvenance',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'guide', audience: 'user', capability: 'plot.lineage', sourceOfTruth: 'runtime' },
       },
       {
         id: 'reference',

@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { positionAdjustmentRows } from './position-adjustment.data';
@@ -14,7 +14,7 @@ const Demo: FC = () => (
       color={{ kind: 'constant', value: '#dc2626' }}
       placement={{ adjustments: [{ kind: 'screen-nudge', dx: 12, dy: -8 }] }}
     />
-    <PlotScale dimension="x" type="point" />
+    <BuiltinPlotScale dimension="x" type="point" />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />
   </Plot>

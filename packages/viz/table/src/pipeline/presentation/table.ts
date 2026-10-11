@@ -8,7 +8,7 @@ import type {
 } from '../../contract';
 import { RetikzTableError } from '../../error';
 import { resolveCellPresentationRegistry } from '../../providers';
-import { TableCellPayloadKind, TableCellPresentation } from '../../schemas';
+import { TableCellPayloadKind, BuiltinTableCellPresentation } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { applyTableCellContentStyle, presentCellValue } from './present';
 import type { PresentTableOptions, ResolvedTableCellPresentationInput } from './types';
@@ -50,7 +50,7 @@ const defaultCarrierOf = (
   return deepFreeze({
     kind: TableCellPayloadKind.Value,
     ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
-    presentation: structuredClone(semantic.payload.presentation ?? { name: TableCellPresentation.Text }),
+    presentation: structuredClone(semantic.payload.presentation ?? { name: BuiltinTableCellPresentation.Text }),
     appearance,
   });
 };

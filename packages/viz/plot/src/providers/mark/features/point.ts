@@ -10,7 +10,7 @@ import type {
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
-import { PlotMark, PointMarkSchema } from '../../../schemas';
+import { BuiltinPlotMark, PointMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel';
 import type { MarkPaint } from '../shared';
 import {
@@ -65,7 +65,7 @@ export const lowerPoint = (
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
-  if (mark.type !== PlotMark.Point) return null;
+  if (mark.type !== BuiltinPlotMark.Point) return null;
 
   const markProvenance = ctx?.provenance;
   const colorOf = channelValueOf<string>(channels, 'color');

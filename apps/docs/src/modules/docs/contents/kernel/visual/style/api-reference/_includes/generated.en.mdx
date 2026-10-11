@@ -5,7 +5,7 @@
 ### IRPatternLineStyle
 
 <p>
-  <ApiSourceLink label={'IRPatternLineStyle'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={22}>
+  <ApiSourceLink label={'IRPatternLineStyle'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={21}>
     Serializable style overrides for a pattern line motif
   </ApiSourceLink>
 </p>
@@ -47,7 +47,7 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
   <ApiSourceLink
     label={'IRPatternLineStyleCycle'}
     path={'packages/kernel/core/src/schemas/paint/types.ts'}
-    startLine={25}
+    startLine={24}
   >
     Sparse repeating styles for adjacent pattern lines
   </ApiSourceLink>
@@ -81,7 +81,7 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 ### IRPatternPaint
 
 <p>
-  <ApiSourceLink label={'IRPatternPaint'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={19}>
+  <ApiSourceLink label={'IRPatternPaint'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={18}>
     Serializable pattern paint parameters
   </ApiSourceLink>
 </p>
@@ -282,10 +282,14 @@ export type PatternEmitResult = {
 
 </DocTabs>
 
-### PatternShape
+### BuiltinPatternShape
 
 <p>
-  <ApiSourceLink label={'PatternShape'} path={'packages/kernel/core/src/schemas/paint/constants.ts'} startLine={8}>
+  <ApiSourceLink
+    label={'BuiltinPatternShape'}
+    path={'packages/kernel/core/src/schemas/paint/constants.ts'}
+    startLine={8}
+  >
     Built-in pattern motif names, using a const object and ValueOf rather than a TypeScript enum
   </ApiSourceLink>
 </p>
@@ -293,13 +297,13 @@ export type PatternEmitResult = {
 Three built-in motifs: `lines` (horizontal hatching), `dots`, and `grid`. Their tile geometry is emitted at compile time by PatternDefinition.emit in BUILTIN_PATTERNS.
 
 ```ts
-export const PatternShape = {
+export const BuiltinPatternShape = {
   Lines: 'lines',
   Dots: 'dots',
   Grid: 'grid',
 } as const;
 
-export type PatternShape = ValueOf<typeof PatternShape>;
+export type BuiltinPatternShape = ValueOf<typeof BuiltinPatternShape>;
 ```
 
 ### definePattern

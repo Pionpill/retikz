@@ -27,7 +27,7 @@ Plot 提供当前作用域需要的类别集合，消费 Data 返回的有序类
 
 ## 基础数据结构与公开契约
 
-字段 `order` 继续接受非空的 `Array<string | number>`；具名形式由封闭枚举扩为非空白开放字符串。`FieldOrderMode` 提供内置名称提示，未知名称必须由运行时注册解释，不能静默回退。
+字段 `order` 继续接受非空的 `Array<string | number>`；具名形式由封闭枚举扩为非空白开放字符串。`BuiltinFieldOrderMode` 提供内置名称提示，未知名称必须由运行时注册解释，不能静默回退。
 
 ```ts
 const model: IRDataModel = [

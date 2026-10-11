@@ -13,6 +13,8 @@ keywords: Data、transform、Definition、executor、outputModel、statistics、
 - 实例结果接入：[Kernel ADR-048](../../../../../../kernel/_notes/decisions/v0/v0.5/048-composite-runtime-input.md)，运行时视图绑定真实 Source 位置，嵌套及生成子项显式转交，不重复执行变换
 - 修订：ADR-001 中 Definition 同时拥有计算的契约，以及 [Data v0.1 ADR-002](../v0.1/002-shared-provider-boundary.md) 的统计 Definition 执行绑定；其能力归属继续有效
 
+> 操作外壳与 Definition 作者接口由 [ADR-004](./004-transform-parameters.md) 替代：统一使用 `{ kind, params }` 和 `kind/paramsSchema` 定义。下文关于保留既有操作配置形态的决策不再适用，其余数据语义和执行职责保持。
+
 ## 背景与目标
 
 Data 已统一拥有行数据变换，但 `TransformDefinition` 仍强制携带本地 `apply`。字段依赖和输出模型推导也依赖混有 provenance helper 与计算实现的 context。第三方引擎因此无法只依据声明理解、检查并执行变换。
@@ -66,7 +68,7 @@ preserve 保留未覆盖字段的分类 order；`{ from: field }` 同时沿用�
 | `RegressionDefinition`        | schema、方法语义、预测域约束                              | `RegressionImplementation.fit`           |
 | `TransformDefinition`         | schema、输入字段、输出模型、依赖、领域校验、可选 schedule | `TransformImplementation.apply`          |
 
-reducer 的 outputs 必须声明全部字段；数组或其它非标量结果可以不声明测量类型。例如 `extent` 仍返回数组，不能标为 continuous，也不能因无法表达其类型而清空其它已证明字段的类型。
+reducer 的 outputs 必须声明全部字段。`extent` 使用 `as: { min, max }` 指定两个必填、非空且互不相同的输出字段，将有限数值最小值与最大值分别输出为 continuous；空组的两个端点均为 NaN，不接受字符串 as。自定义 reducer 的数组或其它非标量结果可以不声明测量类型，也不能因无法表达其类型而清空其它已证明字段的类型。
 
 本地 Implementation 引用一个语义 Definition，使用其解析后的参数，不拥有第二份 schema 或默认值。`defineTransformImplementation`、`defineStatisticsReducerImplementation`、`defineRowSelectorImplementation` 和 `defineRegressionImplementation` 保持 Definition 与回调的泛型关联。既有 `defineXxx` 入口用于语义 Definition。
 
@@ -114,7 +116,9 @@ reducer 的 outputs 必须声明全部字段；数组或其它非标量结果可
 
 空 operation 不调用 transform 实现：result 输入直接按输入模型接入；source 输入须通过显式 materializeSource 取得可消费结果，缺少该能力时提前失败。
 
-`createDataTransformExecutor(options)` 是统一的实现选择与编排入口，持有本次配置的默认 `dataExecution`、命名外部 providers 及本地 implementations。它不修改进程全局设置，不替换语义 registry。既有同步 `applyTransforms`、`applyTransformsToDataView` 和 lineage 入口继续提供同步内置计算便捷 API，并复用语义解析、实现分派与结果接入规则；外部或混合模式从通用异步入口执行，不把网络请求或 Promise 放入同步 lowering。
+`createDataTransformExecutor(options)` 是统一的实现选择与编排入口，持有本次配置的默认 `dataExecution`、命名外部 providers 及本地 implementations。它不修改进程全局设置，不替换语义 registry。同步 `applyTransforms` 和 `applyTransformsToDataView` 提供本地同步计算便捷 API，并复用语义解析、实现分派与结果接入规则；外部或混合模式从通用异步入口执行，不把网络请求或 Promise 放入同步 lowering。
+
+同步入口统一返回对象：行数组入口返回 `{ rows, lineage? }`，视图入口返回 `{ dataView, lineage? }`。`ApplyTransformsOptions.provenance` 默认关闭，仅开启时为未标记输入建立零基来源索引，已有行级或组级来源始终保留；同步 options 与异步 request 的 `lineage` 接受布尔值或配置对象：省略或 `false` 不追加事件，`true` 使用内置默认配置，对象形式按既有规则补齐未指定的配置。执行器在预检前将开关转换为可选配置对象，Provider requirements 不携带布尔开关。事件记录不隐式开启行来源，来源摘要只引用真实已有的标记；空变换链同样遵守这两个选项。没有启用来源或事件时，空链保持输入数组或视图引用不变。旧的独立 lineage 入口和返回类型直接移除，不保留兼容别名。
 
 `ingestDataTransformResult` 接收匹配的 resolution 与 result，输出 `DataView`。结果 model 必须完整列出逻辑输出字段，字段集合、已有类型和分类 order 与预期一致；未定类型可以由实际结果的有效观测获得证据，非标量字段保持未定。空结果仍携带模型，不用首行猜结构。输入解析 format 不携带到输出，不再次应用源值 parser。
 

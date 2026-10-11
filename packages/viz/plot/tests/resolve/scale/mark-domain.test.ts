@@ -445,7 +445,12 @@ describe('mark padding effective observations', () => {
       marks: base.marks.map(mark => ({
         ...mark,
         transform: [
-          { operation: { kind: 'summarize', groupBy: ['x', 'y'], metrics: [{ kind: 'mean', field: 'r', as: 'r' }] } },
+          {
+            operation: {
+              kind: 'summarize',
+              params: { groupBy: ['x', 'y'], metrics: [{ kind: 'mean', field: 'r', as: 'r' }] },
+            },
+          },
         ],
       })),
     });

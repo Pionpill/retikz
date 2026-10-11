@@ -27,7 +27,7 @@ import {
 
 import type { TickSet } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import { PlotColorScheme } from '../../../schemas';
+import { BuiltinPlotColorScheme } from '../../../schemas';
 import { BUILTIN_COLOR_SCHEMES } from './constants';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
@@ -61,28 +61,28 @@ export const scaleTicks = (
 export type ColorSchemeResolver = (name: string) => (t: number) => string;
 
 /** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
-export const SCHEME_INTERPOLATORS: Record<PlotColorScheme, (t: number) => string> = {
-  [PlotColorScheme.Blues]: d3InterpolateBlues,
-  [PlotColorScheme.Greens]: d3InterpolateGreens,
-  [PlotColorScheme.Greys]: d3InterpolateGreys,
-  [PlotColorScheme.Oranges]: d3InterpolateOranges,
-  [PlotColorScheme.Purples]: d3InterpolatePurples,
-  [PlotColorScheme.Reds]: d3InterpolateReds,
-  [PlotColorScheme.Viridis]: d3InterpolateViridis,
-  [PlotColorScheme.Magma]: d3InterpolateMagma,
-  [PlotColorScheme.Inferno]: d3InterpolateInferno,
-  [PlotColorScheme.Plasma]: d3InterpolatePlasma,
-  [PlotColorScheme.Cividis]: d3InterpolateCividis,
-  [PlotColorScheme.Turbo]: d3InterpolateTurbo,
-  [PlotColorScheme.BrBG]: d3InterpolateBrBG,
-  [PlotColorScheme.PRGn]: d3InterpolatePRGn,
-  [PlotColorScheme.PiYG]: d3InterpolatePiYG,
-  [PlotColorScheme.PuOr]: d3InterpolatePuOr,
-  [PlotColorScheme.RdBu]: d3InterpolateRdBu,
-  [PlotColorScheme.RdGy]: d3InterpolateRdGy,
-  [PlotColorScheme.RdYlBu]: d3InterpolateRdYlBu,
-  [PlotColorScheme.RdYlGn]: d3InterpolateRdYlGn,
-  [PlotColorScheme.Spectral]: d3InterpolateSpectral,
+export const SCHEME_INTERPOLATORS: Record<BuiltinPlotColorScheme, (t: number) => string> = {
+  [BuiltinPlotColorScheme.Blues]: d3InterpolateBlues,
+  [BuiltinPlotColorScheme.Greens]: d3InterpolateGreens,
+  [BuiltinPlotColorScheme.Greys]: d3InterpolateGreys,
+  [BuiltinPlotColorScheme.Oranges]: d3InterpolateOranges,
+  [BuiltinPlotColorScheme.Purples]: d3InterpolatePurples,
+  [BuiltinPlotColorScheme.Reds]: d3InterpolateReds,
+  [BuiltinPlotColorScheme.Viridis]: d3InterpolateViridis,
+  [BuiltinPlotColorScheme.Magma]: d3InterpolateMagma,
+  [BuiltinPlotColorScheme.Inferno]: d3InterpolateInferno,
+  [BuiltinPlotColorScheme.Plasma]: d3InterpolatePlasma,
+  [BuiltinPlotColorScheme.Cividis]: d3InterpolateCividis,
+  [BuiltinPlotColorScheme.Turbo]: d3InterpolateTurbo,
+  [BuiltinPlotColorScheme.BrBG]: d3InterpolateBrBG,
+  [BuiltinPlotColorScheme.PRGn]: d3InterpolatePRGn,
+  [BuiltinPlotColorScheme.PiYG]: d3InterpolatePiYG,
+  [BuiltinPlotColorScheme.PuOr]: d3InterpolatePuOr,
+  [BuiltinPlotColorScheme.RdBu]: d3InterpolateRdBu,
+  [BuiltinPlotColorScheme.RdGy]: d3InterpolateRdGy,
+  [BuiltinPlotColorScheme.RdYlBu]: d3InterpolateRdYlBu,
+  [BuiltinPlotColorScheme.RdYlGn]: d3InterpolateRdYlGn,
+  [BuiltinPlotColorScheme.Spectral]: d3InterpolateSpectral,
 };
 
 /** 内置 scheme 名 → interpolator；未知名 throw（提示经 options.colorSchemes 注册）。自定义解析由调用方在外层叠加 */
@@ -91,7 +91,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
     throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   }
 
-  return SCHEME_INTERPOLATORS[name as PlotColorScheme];
+  return SCHEME_INTERPOLATORS[name as BuiltinPlotColorScheme];
 };
 
 /**
@@ -101,7 +101,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
 export const makeColorSchemeResolver =
   (custom?: Record<string, (t: number) => string>): ColorSchemeResolver =>
   name => {
-    if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorScheme];
+    if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as BuiltinPlotColorScheme];
 
     const customInterpolator = custom?.[name];
     if (customInterpolator !== undefined) return customInterpolator;
@@ -127,7 +127,7 @@ export const toHexColor = (color: string): string => {
 };
 
 /** 离散化色阶缺省配色（与 sequential 同——感知均匀、色盲友好） */
-const DEFAULT_DISCRETE_SCHEME = PlotColorScheme.Viridis;
+const DEFAULT_DISCRETE_SCHEME = BuiltinPlotColorScheme.Viridis;
 
 /**
  * 从命名 scheme 等距采样 count 个离散色（[0,1] 上均匀取点喂 interpolator，归一化为 hex）

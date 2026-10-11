@@ -1534,7 +1534,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   EntityRoleSchema: {
     schema: GraphIR.EntityRoleSchema,
-    label: 'EntityRole',
+    label: 'BuiltinEntityRole',
     url: '/schematic/graph/entity/schema-reference#entityroleschema',
   },
   RelationSchema: {
@@ -1544,7 +1544,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   RelationRoleSchema: {
     schema: GraphIR.RelationRoleSchema,
-    label: 'RelationRole',
+    label: 'BuiltinRelationRole',
     url: '/schematic/graph/relation/schema-reference#relationroleschema',
   },
   RelationKindSchema: {
@@ -1858,60 +1858,275 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'FieldDefinition',
     url: '/viz/data/model/schema-reference#fielddefinitionschema',
   },
+  ExternalTransformSchema: {
+    schema: DataIR.ExternalTransformSchema,
+    label: 'ExternalTransform',
+    url: '/viz/data/transform/schema-reference#externaltransformschema',
+  },
+  QuantileBandReducerOperationSchema: {
+    schema: DataIR.QuantileBandReducerOperationSchema,
+    label: 'QuantileBandReducerOperation',
+    url: '/viz/data/operators/reducer',
+  },
+  QuantileBandOutputsSchema: {
+    schema: DataIR.QuantileBandOutputsSchema,
+    label: 'QuantileBandOutputs',
+    url: '/viz/data/operators/reducer',
+  },
+  QuantileBandPointOutputSchema: {
+    schema: DataIR.QuantileBandPointOutputSchema,
+    label: 'QuantileBandPointOutput',
+    url: '/viz/data/operators/reducer',
+  },
+  QuantileBandWhiskerSchema: {
+    schema: DataIR.QuantileBandWhiskerSchema,
+    label: 'QuantileBandWhisker',
+    url: '/viz/data/operators/reducer',
+  },
+  OrderBySchema: {
+    schema: DataIR.OrderBySchema,
+    label: 'OrderBy',
+    url: '/viz/data/operators/selector',
+  },
+  OutsideQuantileBandSelectorOperationSchema: {
+    schema: DataIR.OutsideQuantileBandSelectorOperationSchema,
+    label: 'OutsideQuantileBandSelectorOperation',
+    url: '/viz/data/operators/selector',
+  },
+  OutsideQuantileBandBoundarySchema: {
+    schema: DataIR.OutsideQuantileBandBoundarySchema,
+    label: 'OutsideQuantileBandBoundary',
+    url: '/viz/data/operators/selector',
+  },
   DataExecutionSchema: {
     schema: DataIR.DataExecutionSchema,
     label: 'DataExecution',
-    url: '/viz/data/reference/contract#dataexecutionschema',
+    url: '/viz/data/transform/schema-reference#dataexecutionschema',
   },
   DataTransformDeclarationSchema: {
     schema: DataIR.DataTransformDeclarationSchema,
     label: 'DataTransformDeclaration',
-    url: '/viz/data/reference/contract#datatransformdeclarationschema',
+    url: '/viz/data/transform/schema-reference#datatransformdeclarationschema',
   },
   DataTransformSchema: {
     schema: DataIR.TransformSchema,
-    label: 'DataTransform',
-    url: '/viz/data/reference/contract#datatransformschema',
+    label: 'BuiltinDataTransform',
+    url: '/viz/data/transform/schema-reference#transformschema',
+  },
+  SortParamsSchema: {
+    schema: DataIR.SortParamsSchema,
+    label: 'SortParams',
+    url: '/viz/data/transforms/row-organization',
+  },
+  SummarizeParamsSchema: {
+    schema: DataIR.SummarizeParamsSchema,
+    label: 'SummarizeParams',
+    url: '/viz/data/transforms/aggregation-annotation',
+  },
+  SelectParamsSchema: {
+    schema: DataIR.SelectParamsSchema,
+    label: 'SelectParams',
+    url: '/viz/data/transforms/row-organization',
+  },
+  AnnotateParamsSchema: {
+    schema: DataIR.AnnotateParamsSchema,
+    label: 'AnnotateParams',
+    url: '/viz/data/transforms/aggregation-annotation',
+  },
+  StackParamsSchema: {
+    schema: DataIR.StackParamsSchema,
+    label: 'StackParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  BinParamsSchema: {
+    schema: DataIR.BinParamsSchema,
+    label: 'BinParams',
+    url: '/viz/data/transforms/bin-density',
+  },
+  NormalizeParamsSchema: {
+    schema: DataIR.NormalizeParamsSchema,
+    label: 'NormalizeParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  DeriveIntervalParamsSchema: {
+    schema: DataIR.DeriveIntervalParamsSchema,
+    label: 'DeriveIntervalParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  RelateParamsSchema: {
+    schema: DataIR.RelateParamsSchema,
+    label: 'RelateParams',
+    url: '/viz/data/transforms/relation-generation',
+  },
+  JitterParamsSchema: {
+    schema: DataIR.JitterParamsSchema,
+    label: 'JitterParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  DensityParamsSchema: {
+    schema: DataIR.DensityParamsSchema,
+    label: 'DensityParams',
+    url: '/viz/data/transforms/bin-density',
+  },
+  SmoothParamsSchema: {
+    schema: DataIR.SmoothParamsSchema,
+    label: 'SmoothParams',
+    url: '/viz/data/transforms/trend-sampling',
   },
   SortTransformSchema: {
     schema: DataIR.SortTransformSchema,
     label: 'SortTransform',
-    url: '/viz/data/reference/contract#sorttransformschema',
+    url: '/viz/data/transforms/row-organization',
   },
   SummarizeTransformSchema: {
     schema: DataIR.SummarizeTransformSchema,
     label: 'SummarizeTransform',
-    url: '/viz/data/reference/contract#summarizetransformschema',
+    url: '/viz/data/transforms/aggregation-annotation',
   },
   SelectTransformSchema: {
     schema: DataIR.SelectTransformSchema,
     label: 'SelectTransform',
-    url: '/viz/data/reference/contract#selecttransformschema',
+    url: '/viz/data/transforms/row-organization',
   },
   AnnotateTransformSchema: {
     schema: DataIR.AnnotateTransformSchema,
     label: 'AnnotateTransform',
-    url: '/viz/data/reference/contract#annotatetransformschema',
+    url: '/viz/data/transforms/aggregation-annotation',
   },
   ReducerMetricsSchema: {
     schema: DataIR.ReducerMetricsSchema,
     label: 'ReducerMetrics',
-    url: '/viz/data/reference/contract#reducermetricsschema',
+    url: '/viz/data/transform/schema-reference#reducermetricsschema',
   },
   ReducerOperationSchema: {
     schema: DataIR.ReducerOperationSchema,
     label: 'ReducerOperation',
-    url: '/viz/data/reference/contract#reduceroperationschema',
+    url: '/viz/data/transform/schema-reference#reduceroperationschema',
   },
   SelectorOperationSchema: {
     schema: DataIR.SelectorOperationSchema,
     label: 'SelectorOperation',
-    url: '/viz/data/reference/contract#selectoroperationschema',
+    url: '/viz/data/transform/schema-reference#selectoroperationschema',
+  },
+  'SelectorOperationSchema.min': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'min')!,
+    label: 'SelectorOperationSchema.min',
+    url: '/viz/data/operators/selector#min--max--极值行',
+  },
+  'SelectorOperationSchema.max': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'max')!,
+    label: 'SelectorOperationSchema.max',
+    url: '/viz/data/operators/selector#min--max--极值行',
+  },
+  'SelectorOperationSchema.first': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'first')!,
+    label: 'SelectorOperationSchema.first',
+    url: '/viz/data/operators/selector#first--last--首行与末行',
+  },
+  'SelectorOperationSchema.last': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'last')!,
+    label: 'SelectorOperationSchema.last',
+    url: '/viz/data/operators/selector#first--last--首行与末行',
+  },
+  'SelectorOperationSchema.top': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'top')!,
+    label: 'SelectorOperationSchema.top',
+    url: '/viz/data/operators/selector#top--bottom--最高与最低-n-行',
+  },
+  'SelectorOperationSchema.bottom': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'bottom')!,
+    label: 'SelectorOperationSchema.bottom',
+    url: '/viz/data/operators/selector#top--bottom--最高与最低-n-行',
+  },
+  'SelectorOperationSchema.nth': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'nth')!,
+    label: 'SelectorOperationSchema.nth',
+    url: '/viz/data/operators/selector#nth--指定位置',
+  },
+  'ReducerOperationSchema.count': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'count')!,
+    label: 'ReducerOperationSchema.count',
+    url: '/viz/data/operators/reducer#count--计数',
+  },
+  'ReducerOperationSchema.sum': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'sum')!,
+    label: 'ReducerOperationSchema.sum',
+    url: '/viz/data/operators/reducer#sum--求和',
+  },
+  'ReducerOperationSchema.mean': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'mean')!,
+    label: 'ReducerOperationSchema.mean',
+    url: '/viz/data/operators/reducer#mean--median--均值与中位数',
+  },
+  'ReducerOperationSchema.median': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'median')!,
+    label: 'ReducerOperationSchema.median',
+    url: '/viz/data/operators/reducer#mean--median--均值与中位数',
+  },
+  'ReducerOperationSchema.min': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'min')!,
+    label: 'ReducerOperationSchema.min',
+    url: '/viz/data/operators/reducer#min--max--最小值与最大值',
+  },
+  'ReducerOperationSchema.max': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'max')!,
+    label: 'ReducerOperationSchema.max',
+    url: '/viz/data/operators/reducer#min--max--最小值与最大值',
+  },
+  'ReducerOperationSchema.extent': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'extent')!,
+    label: 'ReducerOperationSchema.extent',
+    url: '/viz/data/operators/reducer#extent--数值范围',
+  },
+  'ReducerOperationSchema.quantile': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'quantile')!,
+    label: 'ReducerOperationSchema.quantile',
+    url: '/viz/data/operators/reducer#quantile--分位数',
+  },
+  'BuiltinRegression.linear': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(definition => DataIR.extractRegressionKind(definition.schema) === 'linear')!
+      .schema,
+    label: 'BuiltinRegression.linear',
+    url: '/viz/data/operators/regression#linear--线性',
+  },
+  'BuiltinRegression.quadratic': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'quadratic',
+    )!.schema,
+    label: 'BuiltinRegression.quadratic',
+    url: '/viz/data/operators/regression#quadratic--二次',
+  },
+  'BuiltinRegression.polynomial': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'polynomial',
+    )!.schema,
+    label: 'BuiltinRegression.polynomial',
+    url: '/viz/data/operators/regression#polynomial--多项式',
+  },
+  'BuiltinRegression.logarithmic': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'logarithmic',
+    )!.schema,
+    label: 'BuiltinRegression.logarithmic',
+    url: '/viz/data/operators/regression#logarithmic--对数',
+  },
+  'BuiltinRegression.exponential': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'exponential',
+    )!.schema,
+    label: 'BuiltinRegression.exponential',
+    url: '/viz/data/operators/regression#exponential--指数',
+  },
+  'BuiltinRegression.power': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(definition => DataIR.extractRegressionKind(definition.schema) === 'power')!
+      .schema,
+    label: 'BuiltinRegression.power',
+    url: '/viz/data/operators/regression#power--幂函数',
   },
   AnnotateSelectorSchema: {
     schema: DataIR.AnnotateSelectorSchema,
     label: 'AnnotateSelector',
-    url: '/viz/data/reference/contract#annotateselectorschema',
+    url: '/viz/data/transforms/aggregation-annotation',
   },
 
   PlotSchema: {
@@ -2017,62 +2232,62 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   StackTransformSchema: {
     schema: DataIR.StackTransformSchema,
     label: 'StackTransform',
-    url: '/viz/data/reference/contract#stacktransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   BinTransformSchema: {
     schema: DataIR.BinTransformSchema,
     label: 'BinTransform',
-    url: '/viz/data/reference/contract#bintransformschema',
+    url: '/viz/data/transforms/bin-density',
   },
   RelateTransformSchema: {
     schema: DataIR.RelateTransformSchema,
     label: 'RelateTransform',
-    url: '/viz/data/reference/contract#relatetransformschema',
+    url: '/viz/data/transforms/relation-generation',
   },
   EndpointProjectionSchema: {
     schema: DataIR.EndpointProjectionSchema,
     label: 'EndpointProjection',
-    url: '/viz/data/reference/contract#endpointprojectionschema',
+    url: '/viz/data/transforms/relation-generation',
   },
   PairMeasureOperationSchema: {
     schema: DataIR.PairMeasureOperationSchema,
     label: 'PairMeasureOperation',
-    url: '/viz/data/reference/contract#pairmeasureoperationschema',
+    url: '/viz/data/transforms/relation-generation',
   },
   NormalizeTransformSchema: {
     schema: DataIR.NormalizeTransformSchema,
     label: 'NormalizeTransform',
-    url: '/viz/data/reference/contract#normalizetransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   DeriveIntervalTransformSchema: {
     schema: DataIR.DeriveIntervalTransformSchema,
     label: 'DeriveIntervalTransform',
-    url: '/viz/data/reference/contract#deriveintervaltransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   JitterTransformSchema: {
     schema: DataIR.JitterTransformSchema,
     label: 'JitterTransform',
-    url: '/viz/data/reference/contract#jittertransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   DensityTransformSchema: {
     schema: DataIR.DensityTransformSchema,
     label: 'DensityTransform',
-    url: '/viz/data/reference/contract#densitytransformschema',
+    url: '/viz/data/transforms/bin-density',
   },
   DensityBandwidthSchema: {
     schema: DataIR.DensityBandwidthSchema,
     label: 'DensityBandwidth',
-    url: '/viz/data/reference/contract#densitybandwidthschema',
+    url: '/viz/data/transforms/bin-density',
   },
   SmoothTransformSchema: {
     schema: DataIR.SmoothTransformSchema,
     label: 'SmoothTransform',
-    url: '/viz/data/reference/contract#smoothtransformschema',
+    url: '/viz/data/transforms/trend-sampling',
   },
   RegressionMethodSchema: {
     schema: DataIR.RegressionMethodSchema,
     label: 'RegressionMethod',
-    url: '/viz/data/reference/contract#regressionmethodschema',
+    url: '/viz/data/transform/schema-reference#regressionmethodschema',
   },
   MarkSchema: {
     schema: IRPlot.MarkSchema,
@@ -2306,7 +2521,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   PlotCoordinateSchema: {
     schema: IRPlot.CoordinateSchema,
-    label: 'PlotCoordinate',
+    label: 'BuiltinPlotCoordinate',
     url: '/viz/plot/reference/coordinate#coordinateschema',
   },
   Cartesian2DSchema: {

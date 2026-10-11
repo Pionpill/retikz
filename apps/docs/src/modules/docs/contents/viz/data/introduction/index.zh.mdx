@@ -39,7 +39,7 @@ description: 判断 @retikz/data 是否适合当前的数据准备任务，并�
 | 数据校验     | 对参与字段做抽样或全量校验，决定非法值跳过还是报错             | `validateData` / `invalid`        |
 | 变换与交付   | 数据变换改写规范化行，再把结果交给具体消费模块                 | `sort` / `summarize` / 消费方配置 |
 
-`model`、`format` 和数据变换操作可持久化；函数只在运行时参与处理，不进入 IR。自定义字段格式与字段解析见[数据模型扩展](/viz/data/model/extensions)，自定义变换、规约器（reducer）与行选择器（selector）见[数据变换扩展](/viz/data/transform/extensions)。
+`model`、`format` 和数据变换操作可持久化；函数只在运行时参与处理，不进入 IR。自定义字段格式与字段解析见[数据模型扩展](/viz/data/model/extensions)，自定义变换、行选择器（selector）与规约器（reducer）见[数据变换扩展](/viz/data/transform/extensions)。
 
 ## 模块边界
 

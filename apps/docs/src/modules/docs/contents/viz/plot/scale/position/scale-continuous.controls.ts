@@ -137,5 +137,10 @@ export const previewControlContract = {
       },
     },
   ],
-  relatedApis: ['PlotScale.type', 'PlotScale.base', 'PlotScale.constant', 'PlotScale.domainPadding'],
+  relatedApis: [
+    'BuiltinPlotScale.type',
+    'BuiltinPlotScale.base',
+    'BuiltinPlotScale.constant',
+    'BuiltinPlotScale.domainPadding',
+  ],
 } satisfies PreviewControlContract;

@@ -3,7 +3,7 @@ import { createReadonlyMap } from '@retikz/foundation';
 import type { FieldOrderDefinition } from '../../contract';
 import { defineFieldOrder } from '../../contract';
 import { RetikzDataError } from '../../error';
-import { FieldOrderMode } from '../../schemas';
+import { BuiltinFieldOrderMode } from '../../schemas';
 import { freezeDefinitions } from '../shared';
 
 /** 按固定文本序与任意长度 ASCII 整数片段比较类别，不改写原始值 */
@@ -36,15 +36,15 @@ const compareAscending: FieldOrderDefinition['compare'] = (a, b, context) =>
 
 /** 内置与自定义共享相同的比较协议 */
 export const BUILTIN_FIELD_ORDERS: ReadonlyArray<FieldOrderDefinition> = freezeDefinitions([
-  defineFieldOrder({ name: FieldOrderMode.Appearance, compare: () => 0 }),
-  defineFieldOrder({ name: FieldOrderMode.Ascending, compare: compareAscending }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.Appearance, compare: () => 0 }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.Ascending, compare: compareAscending }),
   defineFieldOrder({
-    name: FieldOrderMode.Descending,
+    name: BuiltinFieldOrderMode.Descending,
     compare: (a, b, context) =>
       -compareAscending(a, b, context) || context.values.indexOf(b) - context.values.indexOf(a),
   }),
-  defineFieldOrder({ name: FieldOrderMode.NaturalAscending, compare: compareNatural }),
-  defineFieldOrder({ name: FieldOrderMode.NaturalDescending, compare: (a, b) => -compareNatural(a, b) }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.NaturalAscending, compare: compareNatural }),
+  defineFieldOrder({ name: BuiltinFieldOrderMode.NaturalDescending, compare: (a, b) => -compareNatural(a, b) }),
 ]);
 
 /**

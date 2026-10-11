@@ -103,7 +103,9 @@ describe('normalizePlot', () => {
 
   it('保留 Point placement 并让 plain 与 declaration authoring 形成同形 IR', () => {
     const placement = {
-      adjustments: [{ kind: 'jitter' as const, role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 }],
+      adjustments: [
+        { kind: 'jitter' as const, params: { role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 } },
+      ],
     };
     const plain = normalizePlot({
       data: { reference: 'points' },
