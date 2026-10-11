@@ -3,12 +3,6 @@ import { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputation
 import type { RuntimeDiagnostic } from '../diagnostic';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeCommitParticipant, RuntimeCommitParticipantToken } from '../participant';
-import type { RuntimeCommitParticipantExecutor } from '../participant/internal';
-import {
-  claimRuntimeCommitParticipants,
-  consumeRuntimeCommitParticipant,
-  isRuntimeCommitParticipant,
-} from '../participant/internal';
 import type { RuntimeSourceRegistry } from '../registry';
 import { getRuntimeComputationRegistryExecutor, getRuntimeComputationSourceRegistry } from '../registry';
 import type { RuntimeRevision, RuntimeSourceDefinition, RuntimeSourceExecutor, RuntimeSourceToken } from '../source';
@@ -18,13 +12,7 @@ import { createNextRuntimeRevision, createRuntimeRevision, isRuntimeRevision } f
 import { createRuntimeObserverDiagnostic, runRuntimeComputation } from './computation';
 import { RuntimeUpdateStrategy } from './constants';
 import { createRuntimeContractError, isRuntimeExecutionDiagnostic, withRuntimeFailureDiagnostics } from './error';
-import {
-  collectRuntimeParticipants,
-  createRuntimeParticipantError,
-  createRuntimeParticipantInvocation,
-  createRuntimeParticipantLifecycleDiagnostic,
-  prepareRuntimeParticipant,
-} from './participant';
+import { RuntimeParticipantManager } from './participant';
 import {
   assertRuntimeChangeSetRevisions,
   collectRuntimeSourceCommands,
@@ -36,7 +24,6 @@ import type {
   RuntimeComputationOutcome,
   RuntimeComputationState,
   RuntimeInitialContext,
-  RuntimePreparedParticipantState,
   RuntimeSourceState,
   RuntimeState,
   RuntimeUpdateContext,
@@ -74,6 +61,8 @@ const assertRuntimeUpdateRevision = (baseRevision: RuntimeRevision, currentRevis
 
 /** 持有已提交状态并编排同步事务，单次候选仅保存在方法局部 */
 class RuntimeManager {
+  /** 独占宿主的执行、诊断与释放管理器 */
+  private readonly participantManager: RuntimeParticipantManager;
   /** Source 注册表 */
   private readonly sources: RuntimeOptions['sources'];
 
@@ -85,12 +74,6 @@ class RuntimeManager {
 
   /** 计算更新策略 */
   private readonly updateStrategy: RuntimeUpdateStrategy;
-
-  /** 按 key 排序的独占参与者 */
-  private readonly participants: ReadonlyArray<RuntimeCommitParticipantToken>;
-
-  /** 参与者生命周期执行器 */
-  private readonly participantExecutors: ReadonlyMap<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>;
 
   /** Source 捕获、比较和释放入口 */
   private readonly sourceExecutor: RuntimeSourceExecutor;
@@ -113,49 +96,26 @@ class RuntimeManager {
   /** 累积尚未由 diagnostics() 取走的执行、观察和清理诊断 */
   private diagnosticQueue: Array<RuntimeDiagnostic> = [];
 
-  /** 保留每个宿主最近一次调用的诊断提取入口，供最终释放阶段使用 */
-  private readonly participantDrains = new Map<RuntimeCommitParticipantToken, () => ReadonlyArray<RuntimeDiagnostic>>();
-
   /** 成功提交后缓存的宿主读值，公开读取不再次调用 Participant 的 read 回调 */
   private participantReads = new Map<RuntimeCommitParticipantToken, unknown>();
 
-  /** 尚未成功释放的宿主，释放失败后保留以便重试 */
-  private readonly pendingParticipantDisposals: Set<RuntimeCommitParticipantToken>;
-
   /** 确保重试 Participant 释放时不会重复退役 Source 和 Computation 资源 */
   private hasRetiredResources = false;
-
-  /** 接管参与者并完成初始事务，不暴露半初始化实例 */
+  /** 固定注册表并接管宿主，初始化成功前不暴露实例 */
   constructor(options: RuntimeOptions) {
     const { sources, computations, trace, initialSnapshots } = options;
     assertRuntimeRegistryBinding(sources, computations);
 
     const updateStrategy = options.updateStrategy ?? RuntimeUpdateStrategy.Auto;
+    this.participantManager = new RuntimeParticipantManager(options.participants ?? [], sources, computations, trace);
 
-    const { participants, participantExecutors } = collectRuntimeParticipants(
-      options.participants ?? [],
-      sources,
-      computations,
-    );
-
-    /** 在执行用户生命周期前独占 Participant token，避免同一宿主资源被多个 Runtime 接管 */
-    const alreadyOwnedParticipant = claimRuntimeCommitParticipants(participants);
-    if (alreadyOwnedParticipant !== undefined) {
-      throw createRuntimeContractError(
-        RetikzRuntimeErrorCode.ParticipantAlreadyOwned,
-        'runtime-create',
-        alreadyOwnedParticipant,
-        alreadyOwnedParticipant.key,
-      );
-    }
     this.sources = sources;
     this.computations = computations;
     this.trace = trace;
     this.updateStrategy = updateStrategy;
-    this.participants = participants;
-    this.participantExecutors = participantExecutors;
+
     this.sourceExecutor = createRuntimeSourceExecutor(sources);
-    this.pendingParticipantDisposals = new Set(participants);
+
     this.initialize(initialSnapshots);
   }
 
@@ -163,15 +123,22 @@ class RuntimeManager {
   private initialize(initialSnapshots: RuntimeOptions['initialSnapshots']): void {
     const context: RuntimeInitialContext = {
       initialDiagnostics: [],
-      initialParticipantDiagnostics: [],
-      preparedParticipants: new Map(),
+      participantTransaction: { selectedParticipants: [], preparedParticipants: new Map(), diagnostics: [] },
     };
     try {
       this.sourceStates = prepareRuntimeInitialSources(this.sources, initialSnapshots, this.sourceExecutor);
       this.prepareInitialComputations(context);
-      this.prepareInitialParticipants(context);
-      this.commitInitialParticipants(context);
-      this.readInitialParticipants(context);
+      this.participantManager.prepareInitial(context.participantTransaction, {
+        phase: RuntimeComputationPhase.Initial,
+        baseRevision: undefined,
+        candidateRevision: this.currentRevision,
+        sourceStates: this.sourceStates,
+        computationStates: this.computationStates,
+      });
+      this.participantManager.commit(context.participantTransaction);
+      const candidateReads = new Map<RuntimeCommitParticipantToken, unknown>();
+      this.participantManager.readCandidates(context.participantTransaction, candidateReads);
+      this.participantReads = candidateReads;
     } catch (cause) {
       this.rollbackInitial(context, cause);
     }
@@ -228,9 +195,7 @@ class RuntimeManager {
         candidateDiagnostics: [],
         nextComputationStates: new Map(this.computationStates),
         computationOutcomes: new Map<RuntimeComputationToken, RuntimeComputationOutcome>(),
-        candidateParticipantDiagnostics: [],
-        selectedParticipants: [],
-        preparedUpdateParticipants: new Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>(),
+        participantTransaction: { selectedParticipants: [], preparedParticipants: new Map(), diagnostics: [] },
         nextParticipantReads: new Map(this.participantReads),
       };
       try {
@@ -253,9 +218,20 @@ class RuntimeManager {
       }
       try {
         this.prepareUpdateComputations(context);
-        this.prepareUpdateParticipants(context);
-        this.commitUpdateParticipants(context);
-        this.readUpdateParticipants(context);
+        this.participantManager.prepareUpdate(
+          context.participantTransaction,
+          {
+            phase: RuntimeComputationPhase.Update,
+            baseRevision: this.currentRevision,
+            candidateRevision: context.candidateRevision,
+            sourceStates: context.nextSourceStates,
+            computationStates: context.nextComputationStates,
+          },
+          context.changedSources,
+          context.computationOutcomes,
+        );
+        this.participantManager.commit(context.participantTransaction);
+        this.participantManager.readCandidates(context.participantTransaction, context.nextParticipantReads);
       } catch (cause) {
         this.rollbackUpdate(context, cause);
       }
@@ -293,23 +269,7 @@ class RuntimeManager {
 
   /** 读取已提交的 Participant 宿主视图 */
   readonly participant: Runtime['participant'] = <TRead>(participant: RuntimeCommitParticipant<TRead>): TRead => {
-    const participantCandidate: unknown = participant;
-    if (!isRuntimeCommitParticipant(participantCandidate)) {
-      throw createRuntimeContractError(
-        RetikzRuntimeErrorCode.ParticipantTokenInvalid,
-        'participant',
-        participantCandidate,
-      );
-    }
-
-    if (!this.participantExecutors.has(participant)) {
-      throw createRuntimeContractError(
-        RetikzRuntimeErrorCode.ParticipantUnknown,
-        'participant',
-        participant,
-        participant.key,
-      );
-    }
+    this.participantManager.assertParticipant(participant);
 
     this.assertIdle('participant');
 
@@ -343,7 +303,7 @@ class RuntimeManager {
     if (this.state !== 'broken' && this.state !== 'dispose-pending') this.assertIdle('dispose');
     this.state = 'disposing';
 
-    this.disposePendingParticipants();
+    this.participantManager.disposePending(this.diagnosticQueue);
     if (!this.hasRetiredResources) {
       this.participantReads.clear();
 
@@ -366,10 +326,10 @@ class RuntimeManager {
       }
 
       this.hasRetiredResources = true;
-      if (this.pendingParticipantDisposals.size > 0) this.disposePendingParticipants();
+      if (this.participantManager.hasPendingDisposals()) this.participantManager.disposePending(this.diagnosticQueue);
     }
 
-    this.state = this.pendingParticipantDisposals.size > 0 ? 'dispose-pending' : 'disposed';
+    this.state = this.participantManager.hasPendingDisposals() ? 'dispose-pending' : 'disposed';
   };
 
   /** 按拓扑顺序准备所有初始计算结果 */
@@ -403,154 +363,21 @@ class RuntimeManager {
     }
   }
 
-  /** 为全部宿主准备初始事务 token */
-  private prepareInitialParticipants(context: RuntimeInitialContext): void {
-    for (const participant of this.participants) {
-      const executor = this.participantExecutors.get(participant);
-      if (executor === undefined) {
-        throw new RetikzRuntimeError({
-          code: RetikzRuntimeErrorCode.InternalInvariant,
-          message: 'runtime: missing participant executor',
-          phase: 'participant-prepare',
-          cause: participant,
-        });
-      }
-
-      const invocation = createRuntimeParticipantInvocation(participant, this.trace);
-      this.participantDrains.set(participant, invocation.takeDiagnostics);
-      context.preparedParticipants.set(
-        participant,
-        prepareRuntimeParticipant(participant, executor, {
-          invocation,
-          phase: RuntimeComputationPhase.Initial,
-          baseRevision: undefined,
-          candidateRevision: this.currentRevision,
-          sourceStates: this.sourceStates,
-          computationStates: this.computationStates,
-          diagnostics: context.initialParticipantDiagnostics,
-        }),
-      );
-    }
-  }
-
-  /** 全部准备成功后提交初始宿主状态 */
-  private commitInitialParticipants(context: RuntimeInitialContext): void {
-    for (const participant of this.participants) {
-      try {
-        context.preparedParticipants.get(participant)?.prepared.commit();
-      } catch (cause) {
-        context.initialParticipantDiagnostics.push(
-          ...(context.preparedParticipants.get(participant)?.takeDiagnostics() ?? []),
-        );
-        throw createRuntimeParticipantError(
-          RetikzRuntimeErrorCode.ParticipantCommitFailed,
-          'commit',
-          participant,
-          cause,
-        );
-      }
-
-      context.initialParticipantDiagnostics.push(
-        ...(context.preparedParticipants.get(participant)?.takeDiagnostics() ?? []),
-      );
-    }
-  }
-
-  /** 读取所有已提交宿主，任一失败仍由初始化事务统一回滚 */
-  private readInitialParticipants(context: RuntimeInitialContext): void {
-    const candidateReads = new Map<RuntimeCommitParticipantToken, unknown>();
-    for (const participant of this.participants) {
-      const executor = this.participantExecutors.get(participant);
-      if (executor === undefined) continue;
-
-      try {
-        candidateReads.set(participant, executor.read());
-      } catch (cause) {
-        context.initialParticipantDiagnostics.push(
-          ...(context.preparedParticipants.get(participant)?.takeDiagnostics() ?? []),
-        );
-        throw createRuntimeParticipantError(RetikzRuntimeErrorCode.ParticipantReadFailed, 'read', participant, cause);
-      }
-
-      context.initialParticipantDiagnostics.push(
-        ...(context.preparedParticipants.get(participant)?.takeDiagnostics() ?? []),
-      );
-    }
-    this.participantReads = candidateReads;
-  }
-
   /** 初始化失败时分阶段回滚、释放事务 token、销毁宿主，最后退役计算与 Source */
   private rollbackInitial(context: RuntimeInitialContext, cause: unknown): never {
     /** 初始化失败不返回 Runtime：逆序回滚和释放临时 token，再释放宿主及计算、来源资源 */
     const failedDiagnostics: Array<RuntimeDiagnostic> = [
       ...context.initialDiagnostics.filter(isRuntimeExecutionDiagnostic),
-      ...context.initialParticipantDiagnostics,
+      ...context.participantTransaction.diagnostics,
       ...(cause instanceof RetikzRuntimeError ? cause.diagnostics : []),
     ];
-
-    for (const participant of [...this.participants].reverse()) {
-      const participantState = context.preparedParticipants.get(participant);
-      if (participantState === undefined) continue;
-
-      try {
-        participantState.prepared.rollback();
-        failedDiagnostics.push(...participantState.takeDiagnostics());
-      } catch (rollbackCause) {
-        failedDiagnostics.push(...participantState.takeDiagnostics());
-        failedDiagnostics.push(
-          createRuntimeParticipantLifecycleDiagnostic(
-            RetikzRuntimeErrorCode.ParticipantRollbackFailed,
-            'rollback',
-            participant,
-            rollbackCause,
-          ),
-        );
-      }
-    }
-
-    for (const participant of [...this.participants].reverse()) {
-      const participantState = context.preparedParticipants.get(participant);
-      if (participantState === undefined) continue;
-
-      try {
-        participantState.prepared.dispose();
-        failedDiagnostics.push(...participantState.takeDiagnostics());
-      } catch (disposeCause) {
-        failedDiagnostics.push(...participantState.takeDiagnostics());
-        failedDiagnostics.push(
-          createRuntimeParticipantLifecycleDiagnostic(
-            RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
-            'token-dispose',
-            participant,
-            disposeCause,
-          ),
-        );
-      }
-    }
-
-    for (const participant of [...this.participants].reverse()) {
-      let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
-
-      try {
-        this.participantExecutors.get(participant)?.dispose();
-      } catch (disposeCause) {
-        participantDisposeFailure = Object.freeze({ cause: disposeCause });
-      }
-
-      failedDiagnostics.push(...(this.participantDrains.get(participant)?.() ?? []));
-      if (participantDisposeFailure !== undefined) {
-        failedDiagnostics.push(
-          createRuntimeParticipantLifecycleDiagnostic(
-            RetikzRuntimeErrorCode.ParticipantDisposeFailed,
-            'participant-dispose',
-            participant,
-            participantDisposeFailure.cause,
-          ),
-        );
-      }
-
-      consumeRuntimeCommitParticipant(participant);
-    }
+    this.participantManager.rollback(
+      context.participantTransaction,
+      failedDiagnostics,
+      RuntimeComputationPhase.Initial,
+    );
+    this.participantManager.disposeTokens(context.participantTransaction, failedDiagnostics);
+    this.participantManager.disposeFailedInitial(failedDiagnostics);
 
     this.participantReads.clear();
 
@@ -578,7 +405,7 @@ class RuntimeManager {
   /** 初始事务成功后通知观察者并释放临时 token，后置失败仅进入诊断 */
   private notifyInitial(context: RuntimeInitialContext): void {
     /** 初始化事务已成功，通知初始结果并释放临时 token；这些后置失败仅进入诊断队列 */
-    context.initialDiagnostics.push(...context.initialParticipantDiagnostics);
+    context.initialDiagnostics.push(...context.participantTransaction.diagnostics);
     const frozenInitialDiagnostics = Object.freeze([...context.initialDiagnostics]);
     const completedInitialDiagnostics = [...context.initialDiagnostics];
     this.state = 'observing';
@@ -601,23 +428,7 @@ class RuntimeManager {
         completedInitialDiagnostics.push(createRuntimeObserverDiagnostic(definition, cause));
       }
     }
-
-    for (const participant of [...this.participants].reverse()) {
-      try {
-        context.preparedParticipants.get(participant)?.prepared.dispose();
-        completedInitialDiagnostics.push(...(context.preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
-      } catch (cause) {
-        completedInitialDiagnostics.push(...(context.preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
-        completedInitialDiagnostics.push(
-          createRuntimeParticipantLifecycleDiagnostic(
-            RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
-            'token-dispose',
-            participant,
-            cause,
-          ),
-        );
-      }
-    }
+    this.participantManager.disposeTokens(context.participantTransaction, completedInitialDiagnostics);
 
     this.diagnosticQueue.push(...completedInitialDiagnostics);
     this.state = 'idle';
@@ -673,143 +484,20 @@ class RuntimeManager {
     }
   }
 
-  /** 按依赖变化和 revision 策略选择并准备参与者 */
-  private prepareUpdateParticipants(context: RuntimeUpdateContext): void {
-    /** continuous 参与每次实际推进的 revision；其余仅在声明的依赖受影响时参与 */
-    for (const participant of this.participants) {
-      const isAffected =
-        participant.sources.some(source => context.changedSources.has(source)) ||
-        participant.computations.some(computation => context.computationOutcomes.has(computation));
-      if (participant.revisionPolicy !== 'continuous' && !isAffected) continue;
-
-      context.selectedParticipants.push(participant);
-      const executor = this.participantExecutors.get(participant);
-      if (executor === undefined) {
-        throw new RetikzRuntimeError({
-          code: RetikzRuntimeErrorCode.InternalInvariant,
-          message: 'runtime: missing participant executor',
-          phase: 'participant-commit',
-          cause: participant,
-        });
-      }
-
-      const invocation = createRuntimeParticipantInvocation(participant, this.trace);
-      this.participantDrains.set(participant, invocation.takeDiagnostics);
-      context.preparedUpdateParticipants.set(
-        participant,
-        prepareRuntimeParticipant(participant, executor, {
-          invocation,
-          phase: RuntimeComputationPhase.Update,
-          baseRevision: this.currentRevision,
-          candidateRevision: context.candidateRevision,
-          sourceStates: context.nextSourceStates,
-          computationStates: context.nextComputationStates,
-          diagnostics: context.candidateParticipantDiagnostics,
-        }),
-      );
-    }
-  }
-
-  /** 全部候选准备成功后提交选中的宿主，尚不发布 Runtime 状态 */
-  private commitUpdateParticipants(context: RuntimeUpdateContext): void {
-    /** 全部 prepare 完成后再依次提交宿主；此时尚未发布 Runtime 的候选状态 */
-    for (const participant of context.selectedParticipants) {
-      try {
-        context.preparedUpdateParticipants.get(participant)?.prepared.commit();
-      } catch (cause) {
-        context.candidateParticipantDiagnostics.push(
-          ...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
-        );
-        throw createRuntimeParticipantError(
-          RetikzRuntimeErrorCode.ParticipantCommitFailed,
-          'commit',
-          participant,
-          cause,
-        );
-      }
-
-      context.candidateParticipantDiagnostics.push(
-        ...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
-      );
-    }
-  }
-
-  /** 收集选中宿主的提交后读值，读取失败仍回滚本次事务 */
-  private readUpdateParticipants(context: RuntimeUpdateContext): void {
-    /** 提交后读取也属于事务，任一 read 失败仍需回滚所有已准备的 Participant */
-    for (const participant of context.selectedParticipants) {
-      const executor = this.participantExecutors.get(participant);
-      if (executor === undefined) continue;
-
-      try {
-        context.nextParticipantReads.set(participant, executor.read());
-      } catch (cause) {
-        context.candidateParticipantDiagnostics.push(
-          ...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
-        );
-        throw createRuntimeParticipantError(RetikzRuntimeErrorCode.ParticipantReadFailed, 'read', participant, cause);
-      }
-
-      context.candidateParticipantDiagnostics.push(
-        ...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
-      );
-    }
-  }
-
   /** 回滚所有已准备宿主并清理新候选；回滚失败时封锁 Runtime */
   private rollbackUpdate(context: RuntimeUpdateContext, cause: unknown): never {
     /** 逆序回滚所有已准备 token（含尚未 commit 的项），再释放 token 和本次新建的候选资源 */
     const failedDiagnostics: Array<RuntimeDiagnostic> = [
       ...context.candidateDiagnostics.filter(isRuntimeExecutionDiagnostic),
-      ...context.candidateParticipantDiagnostics,
+      ...context.participantTransaction.diagnostics,
       ...(cause instanceof RetikzRuntimeError ? cause.diagnostics : []),
     ];
-
-    let firstRollbackFailure: Readonly<{ participant: RuntimeCommitParticipantToken; cause: unknown }> | undefined;
-
-    for (const participant of [...context.selectedParticipants].reverse()) {
-      const prepared = context.preparedUpdateParticipants.get(participant)?.prepared;
-      if (prepared === undefined) continue;
-
-      try {
-        prepared.rollback();
-        failedDiagnostics.push(...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
-      } catch (rollbackCause) {
-        failedDiagnostics.push(...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
-        if (firstRollbackFailure === undefined) {
-          firstRollbackFailure = Object.freeze({ participant, cause: rollbackCause });
-        } else {
-          failedDiagnostics.push(
-            createRuntimeParticipantLifecycleDiagnostic(
-              RetikzRuntimeErrorCode.ParticipantRollbackFailed,
-              'rollback',
-              participant,
-              rollbackCause,
-            ),
-          );
-        }
-      }
-    }
-
-    for (const participant of [...context.selectedParticipants].reverse()) {
-      const prepared = context.preparedUpdateParticipants.get(participant)?.prepared;
-      if (prepared === undefined) continue;
-
-      try {
-        prepared.dispose();
-        failedDiagnostics.push(...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
-      } catch (disposeCause) {
-        failedDiagnostics.push(...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
-        failedDiagnostics.push(
-          createRuntimeParticipantLifecycleDiagnostic(
-            RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
-            'token-dispose',
-            participant,
-            disposeCause,
-          ),
-        );
-      }
-    }
+    const firstRollbackFailure = this.participantManager.rollback(
+      context.participantTransaction,
+      failedDiagnostics,
+      RuntimeComputationPhase.Update,
+    );
+    this.participantManager.disposeTokens(context.participantTransaction, failedDiagnostics);
 
     for (const definition of [...this.computations.definitions()].reverse()) {
       const candidate = context.nextComputationStates.get(definition);
@@ -910,27 +598,7 @@ class RuntimeManager {
           .diagnostics.map(mapRuntimeSourceLifecycleDiagnostic),
       );
     }
-
-    for (const participant of [...context.selectedParticipants].reverse()) {
-      try {
-        context.preparedUpdateParticipants.get(participant)?.prepared.dispose();
-        context.candidateDiagnostics.push(
-          ...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
-        );
-      } catch (cause) {
-        context.candidateDiagnostics.push(
-          ...(context.preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
-        );
-        context.candidateDiagnostics.push(
-          createRuntimeParticipantLifecycleDiagnostic(
-            RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
-            'token-dispose',
-            participant,
-            cause,
-          ),
-        );
-      }
-    }
+    this.participantManager.disposeTokens(context.participantTransaction, context.candidateDiagnostics);
   }
 
   /** 同步发布候选和 revision，再通知观察者、退役旧资源并汇总结果 */
@@ -938,7 +606,7 @@ class RuntimeManager {
     /** 发布边界：全部宿主提交和读取已成功，一次同步替换当前状态与 revision */
     const previousSourceStates = this.sourceStates;
     const previousComputationStates = this.computationStates;
-    context.candidateDiagnostics.push(...context.candidateParticipantDiagnostics);
+    context.candidateDiagnostics.push(...context.participantTransaction.diagnostics);
     this.sourceStates = context.nextSourceStates;
     this.computationStates = context.nextComputationStates;
     this.participantReads = context.nextParticipantReads;
@@ -968,37 +636,6 @@ class RuntimeManager {
           : 'committed';
 
     return Object.freeze({ revision: this.currentRevision, outcome, diagnostics: resultDiagnostics });
-  }
-
-  /** 逆序重试尚未释放的宿主，只消费已完成释放的 token */
-  private disposePendingParticipants(): void {
-    for (const participant of [...this.participants].reverse()) {
-      if (!this.pendingParticipantDisposals.has(participant)) continue;
-
-      let participantDisposeFailure: Readonly<{ cause: unknown }> | undefined;
-
-      try {
-        this.participantExecutors.get(participant)?.dispose();
-      } catch (cause) {
-        participantDisposeFailure = Object.freeze({ cause });
-      }
-
-      this.diagnosticQueue.push(...(this.participantDrains.get(participant)?.() ?? []));
-      if (participantDisposeFailure !== undefined) {
-        this.diagnosticQueue.push(
-          createRuntimeParticipantLifecycleDiagnostic(
-            RetikzRuntimeErrorCode.ParticipantDisposeFailed,
-            'participant-dispose',
-            participant,
-            participantDisposeFailure.cause,
-          ),
-        );
-        continue;
-      }
-
-      this.pendingParticipantDisposals.delete(participant);
-      consumeRuntimeCommitParticipant(participant);
-    }
   }
 }
 

@@ -1,6 +1,7 @@
 import type {
   RuntimeComputationErasedExecutor,
   RuntimeComputationKind,
+  RuntimeComputationPhase,
   RuntimeComputationToken,
   RuntimePreparedComputationResult,
 } from '../computation';
@@ -53,10 +54,8 @@ export type RuntimeState =
 export type RuntimeInitialContext = Readonly<{
   /** 初始计算诊断 */
   initialDiagnostics: Array<RuntimeDiagnostic>;
-  /** 初始宿主诊断 */
-  initialParticipantDiagnostics: Array<RuntimeDiagnostic>;
-  /** 已准备的初始事务 token */
-  preparedParticipants: Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>;
+  /** 本次初始化私有的宿主事务 */
+  participantTransaction: RuntimeParticipantTransactionContext;
 }>;
 
 /** Source 候选准备阶段所需的事务状态 */
@@ -80,12 +79,40 @@ export type RuntimeUpdateContext = RuntimeSourceUpdateContext &
     nextComputationStates: Map<RuntimeComputationToken, RuntimeComputationState>;
     /** 本次实际产生新结果的计算执行分类 */
     computationOutcomes: Map<RuntimeComputationToken, RuntimeComputationOutcome>;
-    /** 参与者执行诊断，失败时单独保留 */
-    candidateParticipantDiagnostics: Array<RuntimeDiagnostic>;
-    /** 按提交顺序选择的参与者 */
-    selectedParticipants: Array<RuntimeCommitParticipantToken>;
-    /** 已成功准备的事务 token */
-    preparedUpdateParticipants: Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>;
+    /** 本次更新私有的宿主事务 */
+    participantTransaction: RuntimeParticipantTransactionContext;
     /** 成功读取后待发布的宿主视图 */
     nextParticipantReads: Map<RuntimeCommitParticipantToken, unknown>;
   }>;
+
+/** 单次 Participant 事务，成功与失败阶段复用同一批准备记录 */
+export type RuntimeParticipantTransactionContext = Readonly<{
+  /** 按正序选择的宿主，失败的准备项也保留选择记录 */
+  selectedParticipants: Array<RuntimeCommitParticipantToken>;
+  /** 已成功返回的事务 token */
+  preparedParticipants: Map<RuntimeCommitParticipantToken, RuntimePreparedParticipantState>;
+  /** 宿主诊断，失败事务仍保留 */
+  diagnostics: Array<RuntimeDiagnostic>;
+}>;
+
+/** 首个宿主回滚失败，由 Runtime 决定如何封锁后续读写 */
+export type RuntimeParticipantRollbackFailure = Readonly<{
+  /** 回滚失败的宿主 */
+  participant: RuntimeCommitParticipantToken;
+  /** 原始回滚异常 */
+  cause: unknown;
+}>;
+
+/** 参与者准备所需的候选状态，不包含 Runtime 可变实例 */
+export type RuntimeParticipantCandidateContext = Readonly<{
+  /** 初始化或更新阶段 */
+  phase: RuntimeComputationPhase;
+  /** 初始化时不存在基准版本 */
+  baseRevision: RuntimeRevision | undefined;
+  /** 候选发布后的版本 */
+  candidateRevision: RuntimeRevision;
+  /** 候选来源 */
+  sourceStates: ReadonlyMap<RuntimeSourceToken, RuntimeSourceState>;
+  /** 候选计算结果 */
+  computationStates: ReadonlyMap<RuntimeComputationToken, RuntimeComputationState>;
+}>;
