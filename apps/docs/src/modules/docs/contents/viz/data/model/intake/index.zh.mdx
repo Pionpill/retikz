@@ -58,7 +58,7 @@ const fieldMap = source === 'finance' ? { month: 'period', revenue: 'amount' } :
   caption="规范数据与混合数据使用默认转换；报表数据由 slashDate 与 percent 格式解析。"
 />
 
-自定义格式与运行时解析器见[扩展机制](/viz/data/model/extensions)。规范化后的值按逻辑字段名提供给后续变换和消费方，内部步骤见[运行时机制](/viz/data/reference/runtime)。
+自定义格式与运行时解析器见[扩展机制](/viz/data/model/extensions)。规范化后的值按逻辑字段名提供给后续变换和消费方。
 
 ## 分类顺序
 
@@ -204,6 +204,5 @@ const fieldMap = source === 'finance' ? { month: 'period', revenue: 'amount' } :
       description: '集中了解自定义字段解析与运行时注入。',
       url: '/viz/data/model/extensions',
     },
-    { title: '运行时机制', description: '了解数据准备与消费的内部流程。', url: '/viz/data/reference/runtime' },
   ]}
 />

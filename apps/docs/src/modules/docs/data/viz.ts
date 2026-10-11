@@ -115,15 +115,6 @@ export const vizSection: Array<Section> = [
         meta: { pageType: 'guide', audience: 'user', capability: 'data.provenance', sourceOfTruth: 'runtime' },
       },
       {
-        id: 'reference',
-        label: 'viz.dataReference',
-        sidebarGroup: 'viz.dataContents',
-        children: [
-          { id: 'contract', label: 'viz.dataReferenceContract' },
-          { id: 'runtime', label: 'viz.dataReferenceRuntime' },
-        ],
-      },
-      {
         id: 'operators',
         label: 'viz.dataComputationOperators',
         sidebarGroup: 'viz.dataComputation',
