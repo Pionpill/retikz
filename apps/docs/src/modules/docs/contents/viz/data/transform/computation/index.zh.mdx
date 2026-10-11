@@ -22,6 +22,28 @@ description: 理解本地与外接计算如何匹配同一变换语义，并通�
   sources={[{ label: '阶段、Provider 与执行器契约', path: 'packages/viz/data/src/contract/execution.ts' }]}
 />
 
+## 变换链的形成
+
+Data 提供变换的语义描述与计算能力，执行器接收的是已有顺序的变换链。直接声明 `transform` 数组时，Data 按声明顺序处理；接收结果的消费方只需使用结果行和字段模型。
+
+当消费方需要从分散的声明中组装变换链时，可以读取 Definition 上可选的 `schedule`，依据自己的规则安排阶段并检查操作是否适用。Data 通过这份契约提供三个标记：
+
+| 字段           | 表达的含义                                                 |
+| -------------- | ---------------------------------------------------------- |
+| `phase`        | 操作所属阶段，如字段派生、行排序或字段调整                 |
+| `bindingClass` | 允许的绑定类别：`field` 表达字段绑定，`order` 表达顺序要求 |
+| `fieldEffect`  | 操作保留并扩展字段、替换行与字段结构，还是只重排行         |
+
+例如，消费方收集到归一化和抖动两条声明，可以按“字段派生先于字段调整”的规则生成 `normalize → jitter` 链。阶段顺序、同阶段的先后规则以及允许哪些绑定类别，由消费方确定；`schedule` 本身不会执行排序或增加操作。
+
+下图从左到右展示消费方对多个变换的整链检查：结合各操作的调度标记与输入输出契约，无冲突则通过，存在冲突则抛错。左侧列出同一条链中的操作，不表示并行执行：
+
+<ComponentPreview files="computation-chain" hideCode type="flow" size="sm" />
+
+消费方可以结合 `inputFields`、`outputModel` 提前检查字段依赖，例如后续操作是否读取了前序操作已移除的字段；不符合其组链规则时抛错。Data 仍负责自身的参数、字段语义与执行结果校验。下文的 Provider 预检则检查整条链能否由指定计算入口完成，准备成功后才绑定实际输入并依次执行。
+
+以 `sort` 为例，它声明 `row-order`、`order`、`reorder`，表达只改变行顺序。消费方可以据此判断它是否适合某个声明位置。Data 执行器不会根据这些标记重排显式变换链；`schedule` 也不记录溯源事件。
+
 ## 外接计算
 
 `DataTransformImplementationProvider.resolve(stage, context)` 在计算前声明支持或不支持。支持项引用当前 `stage.definition`，返回 `execute(input)`；计算返回 `{ rows, model }` 或其 Promise。adapter 应明确识别已适配的 Definition 身份，并确认参数、统计依赖、输入类型与来源要求，不能仅凭同名 `kind` 推断支持。
