@@ -40,7 +40,7 @@ describe('Entity API 公开参考', () => {
     const input = section('normalizeEntity / InputEntity');
 
     expect(input).toContain('| Group |');
-    expect(input).toContain('<ApiValues name="EntityRole" /> \\| `string`');
+    expect(input).toContain('<ApiValues name="BuiltinEntityRole" /> \\| `string`');
     expect(input).toContain('<ApiValues name="GraphStatus" />');
     expect(input).toContain('`Array<IRAnimationTrack>`');
     expect(input).toContain('Open Entity role key resolved by the configured Graph role registry.');

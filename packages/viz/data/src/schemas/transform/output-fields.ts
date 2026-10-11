@@ -1,4 +1,4 @@
-import { ReducerOperationKind } from './constants';
+import { BuiltinReducerOperationKind } from './constants';
 
 /** reducer 输出字段及其在 operation 内的 schema path */
 export type ReducerOutputField = {
@@ -16,7 +16,20 @@ const recordOf = (value: unknown): Record<string, unknown> | undefined =>
 export const reducerOutputFieldsOf = (operation: unknown): Array<ReducerOutputField> => {
   const record = recordOf(operation);
   if (record === undefined) return [];
-  if (record.kind !== ReducerOperationKind.QuantileBand) {
+  if (record.kind === BuiltinReducerOperationKind.Extent) {
+    const outputs = recordOf(record.as);
+    if (outputs === undefined) return [];
+
+    const fields: Array<ReducerOutputField> = [];
+    for (const key of ['min', 'max'] as const) {
+      const field = outputs[key];
+      if (typeof field === 'string') fields.push({ field, path: ['as', key] });
+    }
+
+    return fields;
+  }
+
+  if (record.kind !== BuiltinReducerOperationKind.QuantileBand) {
     return typeof record.as === 'string' ? [{ field: record.as, path: ['as'] }] : [];
   }
 

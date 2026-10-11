@@ -7,10 +7,12 @@ import { samples } from './transform-jitter.data';
 /** 根据实时控件值创建横向抖动 operation */
 export const jitterOperationOf = (values: { amount: number; seed: number }) => ({
   kind: 'jitter',
-  axis: 'x',
-  xField: 'dose',
-  amount: values.amount,
-  seed: values.seed,
+  params: {
+    axis: 'x',
+    xField: 'dose',
+    amount: values.amount,
+    seed: values.seed,
+  },
 });
 
 /** 抖动示例的中文控件 */

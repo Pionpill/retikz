@@ -1,0 +1,12 @@
+---
+title: API 参考
+description: 按能力查询数据变换的公开类型、函数与 Schema 字段约束。
+---
+
+本页收录 `@retikz/data` 根入口中与数据变换有关的公开成员，按声明、扩展、解析和执行分组。调用方式见[变换操作](/viz/data/transform/operations)，自定义能力见[扩展机制](/viz/data/transform/extensions)。具体内置参数见[计算算子](/viz/data/operators)和[数据变换](/viz/data/transforms)各小节。
+
+Schema 推导类型与对应 Schema 放在同一参考单元中：「属性」查询字段，「类型定义」查看公开声明，「Schema」查询校验约束。没有可展开属性的类型只提供后两项。独立函数、运行时类型和 Schema 分别保留自身契约。
+
+配置与计算实现分开保存。只有 Schema 声明的 `.default()` 才会在校验时物化；继承和运行时补齐的默认值在对应字段或函数说明中解释。
+
+{/* @include viz/data/transform/reference/generated */}

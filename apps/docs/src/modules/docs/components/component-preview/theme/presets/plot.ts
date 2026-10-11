@@ -1,6 +1,6 @@
 import type { ResolvedTheme, ThemeMode } from '@retikz/core';
 import type { IRPlotAxisRule, IRPlotDefaults } from '@retikz/plot';
-import { definePlotThemeStyle, PlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
+import { definePlotThemeStyle, BuiltinPlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
 
 import { PreviewThemeStyle } from '../constants';
 
@@ -35,8 +35,8 @@ const styles = {
       thickness: 10,
       symbol: 12,
     },
-    sequential: PlotColorScheme.Cividis,
-    diverging: PlotColorScheme.RdBu,
+    sequential: BuiltinPlotColorScheme.Cividis,
+    diverging: BuiltinPlotColorScheme.RdBu,
   },
   vibrant: {
     area: { light: '#E5ECF6', dark: '#111111' },
@@ -55,8 +55,8 @@ const styles = {
       thickness: 14,
       symbol: 14,
     },
-    sequential: PlotColorScheme.Turbo,
-    diverging: PlotColorScheme.Spectral,
+    sequential: BuiltinPlotColorScheme.Turbo,
+    diverging: BuiltinPlotColorScheme.Spectral,
   },
   clean: {
     area: { light: 'none', dark: 'none' },
@@ -75,8 +75,8 @@ const styles = {
       thickness: 10,
       symbol: 12,
     },
-    sequential: PlotColorScheme.Cividis,
-    diverging: PlotColorScheme.RdBu,
+    sequential: BuiltinPlotColorScheme.Cividis,
+    diverging: BuiltinPlotColorScheme.RdBu,
   },
 } as const;
 

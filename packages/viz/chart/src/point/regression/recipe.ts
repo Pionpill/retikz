@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
-import { PlotGuide, PlotScale } from '@retikz/plot';
+import { PlotGuide, BuiltinPlotScale } from '@retikz/plot';
 
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
@@ -34,8 +34,8 @@ const regressionFieldConsumers = [
     slot: 'series',
     scale: {
       family: 'channel',
-      type: PlotScale.Ordinal,
-      recipeFallback: { name: seriesScaleName, type: PlotScale.Ordinal },
+      type: BuiltinPlotScale.Ordinal,
+      recipeFallback: { name: seriesScaleName, type: BuiltinPlotScale.Ordinal },
     },
   },
 ] as const;
@@ -87,7 +87,7 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
       ChartType.Regression,
       [{ kind: ChartType.Regression, plotMarks: resolveRegressionMarkGroup(slots.encodings, slots.properties) }],
       {
-        scales: hasSeries ? [{ type: PlotScale.Ordinal, name: seriesScaleName }] : [],
+        scales: hasSeries ? [{ type: BuiltinPlotScale.Ordinal, name: seriesScaleName }] : [],
         guides,
       },
     );

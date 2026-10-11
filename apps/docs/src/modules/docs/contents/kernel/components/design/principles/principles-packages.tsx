@@ -1,5 +1,5 @@
 import { FlowEntities, FlowGroup, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import { RelationRole } from '@retikz/graph';
+import { BuiltinRelationRole } from '@retikz/graph';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -86,8 +86,13 @@ const Demo: FC<PrinciplesPackagesProps> = props => {
           { source: 'scene', target: 'render' },
           { source: 'render', target: 'svg' },
           { source: 'render', target: 'canvas' },
-          { source: 'tex', target: 'compile', role: RelationRole.Dependency, style: { dashPattern: [4, 3] } },
-          { source: 'compile', target: 'inspect', role: RelationRole.Dependency, style: { dashPattern: [4, 3] } },
+          { source: 'tex', target: 'compile', role: BuiltinRelationRole.Dependency, style: { dashPattern: [4, 3] } },
+          {
+            source: 'compile',
+            target: 'inspect',
+            role: BuiltinRelationRole.Dependency,
+            style: { dashPattern: [4, 3] },
+          },
         ]}
       />
     </PreviewFlowDiagram>

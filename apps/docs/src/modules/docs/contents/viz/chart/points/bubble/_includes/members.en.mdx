@@ -1,0 +1,54 @@
+React uses `BubbleChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `bubbleChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'bubble'`. React and the Vanilla API supply the chart type automatically.
+
+In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, and presentation, see [General Structure](/viz/chart/model/general-structure).
+
+#### BubbleEncodings
+
+Corresponds to `BubbleEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
+
+| Channel        | Input form                   | Description                                                             |
+| -------------- | ---------------------------- | ----------------------------------------------------------------------- |
+| `x / y`        | Field name, position mapping | Required position fields                                                |
+| `size`         | Field name, size mapping     | Required numeric field; uses a sqrt size scale, never a constant radius |
+| `color`        | Field name, color mapping    | Categorical or continuous color                                         |
+| `shape`        | Field name, direct mapping   | Categorical shape; no named scale                                       |
+| `opacity`      | Field name, opacity mapping  | Numeric opacity using a linear scale                                    |
+| `row / column` | Field name, facet dimension  | Row/column facets; arrays specify ordered partition levels              |
+| `facet`        | `IRPlotFacetOptions`         | Configures facets; requires at least one of `row` and `column`          |
+
+Shared mapping parameters are not expanded here; see the [encoding schema](#bubbleencodings--irbubblechartencodings--bubblechartencodingsschema) for exact inputs.
+
+#### BubbleProperties
+
+Corresponds to `BubbleProperties`, Vanilla `properties` and IR `recipe.properties`.
+
+| Category       | Property        | Type                                                     | Description                                                                                                                  |
+| -------------- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Shape          | `shape`         | `string`                                                 | Registered shape name                                                                                                        |
+| Color and fill | `color`         | `string`                                                 | Sets the primary color                                                                                                       |
+|                | `fill`          | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                                                 |
+| Stroke         | `stroke`        | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                                               |
+|                | `strokeWidth`   | `number`                                                 | Stroke width; must be nonnegative; default 1                                                                                 |
+|                | `dashed`        | `boolean`                                                | Enables a dashed stroke                                                                                                      |
+|                | `dotted`        | `boolean`                                                | Enables a dotted stroke                                                                                                      |
+|                | `dashPattern`   | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                                            |
+| Opacity        | `opacity`       | `number`                                                 | Overall opacity, from 0 to 1                                                                                                 |
+|                | `fillOpacity`   | `number`                                                 | Fill opacity, from 0 to 1; default 0.7                                                                                       |
+|                | `strokeOpacity` | `number`                                                 | Stroke opacity, from 0 to 1                                                                                                  |
+| Transform      | `rotate`        | `number`                                                 | Rotation angle                                                                                                               |
+|                | `dx`            | `number`                                                 | Horizontal offset                                                                                                            |
+|                | `dy`            | `number`                                                 | Vertical offset                                                                                                              |
+| Padding        | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy, default point-aware; the object form uses kind for the strategy and clearance for edge clearance |
+|                | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                                     |
+
+See the [properties schema](#bubbleproperties--irbubblechartproperties--bubblechartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
+
+#### BubbleMark
+
+Corresponds to `BubbleMark`, Vanilla `marks` and IR `recipe.marks`.
+
+| Property     | Type                            | Description                                                                        |
+| ------------ | ------------------------------- | ---------------------------------------------------------------------------------- |
+| `override`   | `boolean`                       | Replace the primary bubble mark when true; otherwise append                        |
+| `encodings`  | `BubbleChartMark['encodings']`  | Override x, y, color, shape or opacity using a field name string; size is excluded |
+| `properties` | `BubbleChartMark['properties']` | Override appearance; size, domainPadding and autoPadding are excluded              |

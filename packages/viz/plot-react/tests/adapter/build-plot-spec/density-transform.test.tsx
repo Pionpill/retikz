@@ -13,11 +13,13 @@ describe('buildPlotIR density transform forwarding', () => {
         <PlotTransform
           operation={{
             kind: 'density',
-            field: 'value',
-            groupBy: ['species'],
-            xAs: 'densityX',
-            densityAs: 'density',
-            sampleCount: 96,
+            params: {
+              field: 'value',
+              groupBy: ['species'],
+              xAs: 'densityX',
+              densityAs: 'density',
+              sampleCount: 96,
+            },
           }}
         />
         <PathMark

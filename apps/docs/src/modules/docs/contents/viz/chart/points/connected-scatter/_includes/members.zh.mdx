@@ -1,0 +1,43 @@
+React 使用 `ConnectedScatterChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `connectedScatterChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'connected-scatter'`。React 与 Vanilla API 会补齐图形类型。
+
+React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局与标题配置见 [通用结构](/viz/chart/model/general-structure)。
+
+#### ConnectedScatterEncodings
+
+对应 `ConnectedScatterEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
+
+| 通道           | 输入形式             | 说明                                              |
+| -------------- | -------------------- | ------------------------------------------------- |
+| `x / y`        | 字段名、位置映射     | 必需；观测坐标，决定点的位置                      |
+| `order`        | 字段名、直接映射     | 必需；组内连接顺序，不依赖数组顺序                |
+| `series`       | 字段名、直接映射     | 拆分轨迹并生成分类颜色和图例，可绑定 ordinal 尺度 |
+| `row / column` | 字段名、分面维度     | 按行、列建立分面                                  |
+| `facet`        | `IRPlotFacetOptions` | 配置分面；须配合 `row`、`column` 中至少一项       |
+
+公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#connectedscatterencodings--irconnectedscatterchartencodings--connectedscatterchartencodingsschema)。
+
+#### ConnectedScatterProperties
+
+对应 `ConnectedScatterProperties`、Vanilla `properties` 和 IR `recipe.properties`。
+
+| 分类 | 属性                | 类型                                                     | 说明                                                                                                                                       |
+| ---- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 外观 | `point`             | `IRConnectedScatterPointProperties`                      | 设置观测点外观；不开放 `zIndex`                                                                                                            |
+|      | `path`              | `IRConnectedScatterPathProperties`                       | 设置开放路径外观                                                                                                                           |
+|      | `colorMode`         | `'series'`、`'mark'`、`'muted'`                          | 默认 `series`：同一序列的点线同色；`mark`：每个序列的点线依次使用色板中相邻的两色，`muted` 同色且连线默认透明度 60%；显式颜色与透明度优先  |
+| 连接 | `path.curve`        | `PathCurve`                                              | 默认 `linear`；支持 linear、step、stepBefore、stepAfter、basis、cardinal、catmullRom、monotoneX、monotoneY、natural                        |
+| 连接 | `path.connectNulls` | boolean 或描边对象                                       | 默认断开；`true` 或 `{}` 用虚线连接缺口两侧有效点。对象支持 stroke、strokeWidth、strokeOpacity、dashPattern、dashOffset、lineCap、lineJoin |
+| 留白 | `autoPadding`       | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空                                                                           |
+|      | `domainPadding`     | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                                                                             |
+
+完整属性结构见 [属性 Schema](#connectedscatterproperties--irconnectedscatterchartproperties--connectedscatterchartpropertiesschema)；公共外观配置不在这里展开。
+
+#### ConnectedScatterMark
+
+对应 `ConnectedScatterMark`、Vanilla `marks` 和 IR `recipe.marks`。
+
+| 属性         | 类型                                      | 说明                                       |
+| ------------ | ----------------------------------------- | ------------------------------------------ |
+| `override`   | `boolean`                                 | 替换完整路径与观测点组合，否则追加组合     |
+| `encodings`  | `ConnectedScatterChartMark['encodings']`  | 只覆盖已有直接字段；series 始终继承 recipe |
+| `properties` | `ConnectedScatterChartMark['properties']` | 按成员合并外观，不接受图表留白策略         |

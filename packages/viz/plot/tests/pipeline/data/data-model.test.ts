@@ -112,8 +112,8 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('collect_transform_inputs', () => {
     const spec = buildSpec({
       transform: [
-        { operation: { kind: 'sort', field: 'month' } },
-        { operation: { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' } },
+        { operation: { kind: 'sort', params: { field: 'month' } } },
+        { operation: { kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } } },
       ],
     });
     const fields = collectSourceFields(spec);
@@ -126,7 +126,9 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('derived_fields_not_collected', () => {
     // stack 输出 startField/endField、interval y0Field/y1Field 是派生字段，不应进用户源集
     const spec = buildSpec({
-      transform: [{ operation: { kind: 'stack', x: 'month', y: 'revenue', startField: 'lo', endField: 'hi' } }],
+      transform: [
+        { operation: { kind: 'stack', params: { x: 'month', y: 'revenue', startField: 'lo', endField: 'hi' } } },
+      ],
       marks: [
         {
           type: 'interval',
@@ -203,8 +205,10 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
         {
           operation: {
             kind: 'bin',
-            field: 'measurement',
-            metrics: [{ kind: 'sum', field: 'weight', as: 'totalWeight' }],
+            params: {
+              field: 'measurement',
+              metrics: [{ kind: 'sum', field: 'weight', as: 'totalWeight' }],
+            },
           },
         },
       ],
@@ -234,10 +238,12 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
         {
           operation: {
             kind: 'bin',
-            field: 'm',
-            startField: 'lo',
-            endField: 'hi',
-            metrics: [{ kind: 'count', as: 'n' }],
+            params: {
+              field: 'm',
+              startField: 'lo',
+              endField: 'hi',
+              metrics: [{ kind: 'count', as: 'n' }],
+            },
           },
         },
       ],
@@ -259,8 +265,10 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
         {
           operation: {
             kind: 'summarize',
-            groupBy: ['region', 'product'],
-            metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            params: {
+              groupBy: ['region', 'product'],
+              metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+            },
           },
         },
       ],
@@ -278,7 +286,11 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
 
   it('summarize_count_output_not_collected', () => {
     const spec = buildSpec({
-      transform: [{ operation: { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] } }],
+      transform: [
+        {
+          operation: { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] } },
+        },
+      ],
       marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'count' } } }],
     });
     const fields = collectSourceFields(spec);
@@ -290,7 +302,12 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('normalize_inputs_in_as_out', () => {
     const spec = buildSpec({
       transform: [
-        { operation: { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' } },
+        {
+          operation: {
+            kind: 'normalize',
+            params: { field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
+          },
+        },
       ],
       marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'share' } } }],
     });
@@ -304,7 +321,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('normalize_overwrite_keeps_field', () => {
     // as 缺省（原位覆盖）→ field 仍是用户源字段（被读取）
     const spec = buildSpec({
-      transform: [{ operation: { kind: 'normalize', field: 'amount', groupBy: ['quarter'] } }],
+      transform: [{ operation: { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'] } } }],
       marks: [{ type: 'interval', encoding: { x: { field: 'quarter' }, y: { field: 'amount' } } }],
     });
 
@@ -313,7 +330,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
 
   it('normalize_explicit_same_name_output_keeps_source_field', () => {
     const spec = buildSpec({
-      transform: [{ operation: { kind: 'normalize', field: 'amount', as: 'amount' } }],
+      transform: [{ operation: { kind: 'normalize', params: { field: 'amount', as: 'amount' } } }],
       marks: [{ type: 'point', encoding: { x: { field: 'amount' }, y: { field: 'amount' } } }],
     });
 
@@ -323,8 +340,8 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('chained_transform_outputs_do_not_become_source_fields', () => {
     const spec = buildSpec({
       transform: [
-        { operation: { kind: 'normalize', field: 'amount', as: 'share' } },
-        { operation: { kind: 'normalize', field: 'share', as: 'finalShare' } },
+        { operation: { kind: 'normalize', params: { field: 'amount', as: 'share' } } },
+        { operation: { kind: 'normalize', params: { field: 'share', as: 'finalShare' } } },
       ],
       marks: [{ type: 'point', encoding: { x: { field: 'finalShare' }, y: { field: 'finalShare' } } }],
     });
@@ -337,7 +354,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ operation: { kind: 'normalize', field: 'value', as: 'derived' } }],
+          transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'derived' } } }],
           encoding: { x: { field: 'derived' }, y: { field: 'derived' } },
         },
         { type: 'point', encoding: { x: { field: 'derived' }, y: { field: 'derived' } } },
@@ -351,7 +368,10 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     const spec = buildSpec({
       transform: [
         {
-          operation: { kind: 'derive-interval', startFrom: 'start', endFrom: 'end', startField: 'lo', endField: 'hi' },
+          operation: {
+            kind: 'derive-interval',
+            params: { startFrom: 'start', endFrom: 'end', startField: 'lo', endField: 'hi' },
+          },
         },
       ],
       marks: [
@@ -373,7 +393,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   it('jitter_field_enters_source_set', () => {
     // jitter 原位覆盖被抖连续数值字段（读+写同字段）→ 是用户源字段，须进 strict 集
     const spec = buildSpec({
-      transform: [{ operation: { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 1 } }],
+      transform: [{ operation: { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 1 } } }],
       marks: [{ type: 'point', encoding: { x: { field: 'dose' }, y: { field: 'response' } } }],
     });
 

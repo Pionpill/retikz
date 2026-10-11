@@ -24,10 +24,10 @@ import type {
 import {
   TableCellAppearanceSchema,
   TableCellContentStyleSchema,
-  TableCellFormatter,
+  BuiltinTableCellFormatter,
   TableCellLocation,
   TableCellPayloadKind,
-  TableCellPresentation,
+  BuiltinTableCellPresentation,
   TableFormatterRefSchema,
   TablePresentationRefSchema,
   TableVisualChannel,
@@ -199,8 +199,10 @@ const initialPlanOf = (cell: SemanticTableCell, options: ResolveTableCellPlansOp
   return {
     kind: TableCellPayloadKind.Value,
     ...(cell.id === undefined ? {} : { cellId: cell.id }),
-    formatter: TableFormatterRefSchema.parse(cell.payload.formatter ?? { name: TableCellFormatter.Identity }),
-    presentation: TablePresentationRefSchema.parse(cell.payload.presentation ?? { name: TableCellPresentation.Text }),
+    formatter: TableFormatterRefSchema.parse(cell.payload.formatter ?? { name: BuiltinTableCellFormatter.Identity }),
+    presentation: TablePresentationRefSchema.parse(
+      cell.payload.presentation ?? { name: BuiltinTableCellPresentation.Text },
+    ),
     appearance: structuredClone(initial.appearance),
     trace: {
       formatter: cell.payload.formatter === undefined ? DEFAULT_SOURCE : STRUCTURE_SOURCE,

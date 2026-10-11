@@ -40,7 +40,7 @@ describe('Inspect API Reference', () => {
       ]) {
         const schemaSection = source.split(`### ${schema}\n`)[1]?.split('\n### ')[0];
 
-        expect(schemaSection).toContain('/schema-reference#');
+        expect(schemaSection).toContain('/reference#');
         expect(schemaSection).toContain('ApiSourceLink');
         expect(schemaSection).not.toContain('```');
       }

@@ -103,6 +103,7 @@ export const createRuntimeIdentityLookup = (
   const copied: Array<RuntimeIdentity> = [];
 
   for (const oriIdentity of identities) {
+    assertValidIdentity(oriIdentity.owner, oriIdentity.path);
     if (oriIdentity.owner !== owner) throw identityError(owner, oriIdentity);
 
     const identity = copyIdentity(oriIdentity);

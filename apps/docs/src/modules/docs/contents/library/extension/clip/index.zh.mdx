@@ -103,10 +103,11 @@ console.log(svg);
   defaultSourceFile="circle-ellipse-clip.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"IRCircleClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={13}>IRCircleClip</ApiSourceLink> / <ApiSourceLink label={"IREllipseClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={15}>IREllipseClip</ApiSourceLink> / <ApiSourceLink label={"CircleClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={6}>CircleClipSchema</ApiSourceLink> / <ApiSourceLink label={"EllipseClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={14}>EllipseClipSchema</ApiSourceLink>
 
-#### IRCircleClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 注入 `CircleClipDefinition`：
 
@@ -115,8 +116,6 @@ console.log(svg);
 | `kind`     | `'circle'` | 选择圆形裁剪             |
 | `cx`、`cy` | `number`   | 圆心坐标                 |
 | `r`        | `number`   | 正数半径，单位为用户坐标 |
-
-#### IREllipseClip
 
 注入 `EllipseClipDefinition`：
 
@@ -127,16 +126,23 @@ console.log(svg);
 | `rx`、`ry` | `number`    | 正数横向、纵向半径 |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### CircleClipSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRCircleClip = ZodInfer<typeof CircleClipSchema>;
+
+export type IREllipseClip = ZodInfer<typeof EllipseClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="CircleClipSchema"
   descriptions={{ kind: '圆形裁剪判别字段', cx: '圆心横坐标', cy: '圆心纵坐标', r: '正数半径，单位为用户坐标' }}
 />
-
-#### EllipseClipSchema
 
 <ZodSchema
   name="EllipseClipSchema"
@@ -150,6 +156,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 演示保留原内容的虚线边界；左右分别固定为圆形和椭圆，控制项只改变半径。
@@ -164,10 +171,11 @@ console.log(svg);
   defaultSourceFile="polygon-clip.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"IRPolygonClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={17}>IRPolygonClip</ApiSourceLink> / <ApiSourceLink label={"PolygonClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={23}>PolygonClipSchema</ApiSourceLink>
 
-#### IRPolygonClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 注入 `PolygonClipDefinition`：
 
@@ -177,9 +185,16 @@ console.log(svg);
 | `points` | `Array<[number, number]>` | 至少三个按顺序连接的顶点 |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### PolygonClipSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPolygonClip = ZodInfer<typeof PolygonClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="PolygonClipSchema"
@@ -187,6 +202,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 演示固定 `polygon`，三个点控件直接修改 `points`，可以看到边界随顶点移动。
@@ -197,10 +213,11 @@ console.log(svg);
 
 <ComponentPreview files={['path-clip', 'path-clip.preview.tsx']} size="md" defaultSourceFile="path-clip.preview.tsx" />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"IRPathClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={19}>IRPathClip</ApiSourceLink> / <ApiSourceLink label={"PathClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={29}>PathClipSchema</ApiSourceLink>
 
-#### IRPathClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 注入 `PathClipDefinition`。命令格式可在[自定义路径](/kernel/components/path/custom-path)中查阅。
 
@@ -211,9 +228,16 @@ console.log(svg);
 | `fillRule?` | `'nonzero' \| 'evenodd'` | 填充规则；省略时为 `nonzero` |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### PathClipSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRPathClip = ZodInfer<typeof PathClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="PathClipSchema"
@@ -225,6 +249,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 演示保持命令结构不变，初始使用 `evenodd`；用控件改变命令坐标与 `fillRule`。
@@ -239,10 +264,11 @@ console.log(svg);
   defaultSourceFile="compound-clip.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"IRCompoundClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={21}>IRCompoundClip</ApiSourceLink> / <ApiSourceLink label={"CompoundClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={36}>CompoundClipSchema</ApiSourceLink>
 
-#### IRCompoundClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 注入 `CompoundClipDefinition`，并同时注入每个 child 对应的 Definition。几何交集可通过嵌套多个 `<Scope clip>` 实现。
 
@@ -253,9 +279,16 @@ console.log(svg);
 | `fillRule?` | `'nonzero' \| 'evenodd'` | 组合路径的填充规则；省略时为 `nonzero` |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### CompoundClipSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRCompoundClip = ZodInfer<typeof CompoundClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="CompoundClipSchema"
@@ -267,6 +300,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 演示中的两个 child 始终是圆形，初始使用 `evenodd`；改变半径、中心间距和 `fillRule` 可以对比组合结果。

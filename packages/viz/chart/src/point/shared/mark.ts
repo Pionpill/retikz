@@ -1,6 +1,6 @@
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { PlotMark, PointMarkSchema } from '@retikz/plot';
+import { BuiltinPlotMark, PointMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
 import { pointFieldMappingOf, requiredFieldOf } from './encoding';
@@ -81,7 +81,7 @@ export const resolvePointMark = (
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const mark: JsonObject = {
-    type: PlotMark.Point,
+    type: BuiltinPlotMark.Point,
     encoding: { x: { field: x }, y: { field: y } },
   };
   if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;

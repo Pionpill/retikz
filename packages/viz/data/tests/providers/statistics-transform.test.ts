@@ -8,7 +8,7 @@ import {
   defineRowSelectorImplementation,
   resolveStatisticsReducerImplementationRegistry,
   resolveRowSelectorImplementationRegistry,
-  applyTransforms as applyDataTransforms,
+  applyTransforms,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
   defineStatisticsReducer,
@@ -18,12 +18,6 @@ import {
   readSourceIndices,
   tagSourceIndex,
 } from '../../src';
-
-const applyTransforms = (
-  rows: Array<ExternalRow>,
-  operations?: Parameters<typeof applyDataTransforms>[1],
-  options?: Parameters<typeof applyDataTransforms>[2],
-): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
 
 const ORDERS: Array<ExternalRow> = [
   { region: 'N', product: 'A', revenue: 3 },
@@ -37,14 +31,16 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'summarize',
-        groupBy: ['region'],
-        metrics: [
-          { kind: 'mean', field: 'revenue', as: 'avgRevenue' },
-          { kind: 'median', field: 'revenue', as: 'medianRevenue' },
-          { kind: 'count', as: 'orders' },
-        ],
+        params: {
+          groupBy: ['region'],
+          metrics: [
+            { kind: 'mean', field: 'revenue', as: 'avgRevenue' },
+            { kind: 'median', field: 'revenue', as: 'medianRevenue' },
+            { kind: 'count', as: 'orders' },
+          ],
+        },
       },
-    ]);
+    ]).rows;
 
     expect(out).toEqual([
       { region: 'N', avgRevenue: 4, medianRevenue: 4, orders: 2 },
@@ -56,12 +52,14 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(tagSourceIndex(ORDERS), [
       {
         kind: 'summarize',
-        metrics: [
-          { kind: 'count', as: 'orders' },
-          { kind: 'sum', field: 'revenue', as: 'totalRevenue' },
-        ],
+        params: {
+          metrics: [
+            { kind: 'count', as: 'orders' },
+            { kind: 'sum', field: 'revenue', as: 'totalRevenue' },
+          ],
+        },
       },
-    ]);
+    ]).rows;
 
     expect(out).toEqual([expect.objectContaining({ orders: 4, totalRevenue: 14 })]);
     expect(readSourceIndices(out[0])).toEqual([0, 1, 2, 3]);
@@ -71,10 +69,12 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(tagSourceIndex(ORDERS), [
       {
         kind: 'select',
-        groupBy: ['region'],
-        selector: { kind: 'max', by: 'revenue', tie: 'first' },
+        params: {
+          groupBy: ['region'],
+          selector: { kind: 'max', by: 'revenue', tie: 'first' },
+        },
       },
-    ]);
+    ]).rows;
 
     expect(out).toEqual([
       expect.objectContaining({ region: 'N', product: 'B', revenue: 5 }),
@@ -88,11 +88,13 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'select',
-        groupBy: ['region'],
-        selector: { kind: 'top', by: 'revenue', n: 2 },
-        rankAs: 'rank',
+        params: {
+          groupBy: ['region'],
+          selector: { kind: 'top', by: 'revenue', n: 2 },
+          rankAs: 'rank',
+        },
       },
-    ]);
+    ]).rows;
 
     expect(out.map(row => [row.region, row.revenue, row.rank])).toEqual([
       ['N', 5, 1],
@@ -106,10 +108,12 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'annotate',
-        groupBy: ['region'],
-        metrics: [{ kind: 'mean', field: 'revenue', as: 'regionMean' }],
+        params: {
+          groupBy: ['region'],
+          metrics: [{ kind: 'mean', field: 'revenue', as: 'regionMean' }],
+        },
       },
-    ]);
+    ]).rows;
 
     expect(out.length).toBe(ORDERS.length);
     expect(out.map(row => [row.region, row.revenue, row.regionMean])).toEqual([
@@ -124,10 +128,12 @@ describe('statistical transform algebra (contract)', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'annotate',
-        groupBy: ['region'],
-        selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'regionMax' }],
+        params: {
+          groupBy: ['region'],
+          selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'regionMax' }],
+        },
       },
-    ]);
+    ]).rows;
 
     expect(out.length).toBe(ORDERS.length);
     expect(out.map(row => [row.region, row.revenue, row.regionMax])).toEqual([
@@ -150,13 +156,15 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'relate',
-          groupBy: ['series'],
-          source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
-          target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
-          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          params: {
+            groupBy: ['series'],
+            source: { selector: { kind: 'min', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+            target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
+            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+          },
         },
       ],
-    );
+    ).rows;
 
     expect(out).toEqual([
       expect.objectContaining({
@@ -194,15 +202,17 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'bin',
-          field: 'x',
-          step: 5,
-          metrics: [
-            { kind: 'count', as: 'binCount' },
-            { kind: 'mean', field: 'weight', as: 'binMean' },
-          ],
+          params: {
+            field: 'x',
+            step: 5,
+            metrics: [
+              { kind: 'count', as: 'binCount' },
+              { kind: 'mean', field: 'weight', as: 'binMean' },
+            ],
+          },
         },
       ],
-    );
+    ).rows;
 
     expect(out.map(row => [row.binStart, row.binEnd, row.binCount, row.binMean])).toEqual([
       [1, 6, 2, 15],
@@ -242,8 +252,10 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'summarize',
-          groupBy: ['group'],
-          metrics: [{ kind: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
+          params: {
+            groupBy: ['group'],
+            metrics: [{ kind: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
+          },
         },
       ],
       {
@@ -256,7 +268,7 @@ describe('statistical transform algebra (contract)', () => {
           ),
         },
       },
-    );
+    ).rows;
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', weightedValue: 17.5 })]);
   });
@@ -291,9 +303,11 @@ describe('statistical transform algebra (contract)', () => {
       [
         {
           kind: 'select',
-          groupBy: ['group'],
-          selector: { kind: 'nearest', field: 'value', target: 10 },
-          rankAs: 'rank',
+          params: {
+            groupBy: ['group'],
+            selector: { kind: 'nearest', field: 'value', target: 10 },
+            rankAs: 'rank',
+          },
         },
       ],
       {
@@ -306,7 +320,7 @@ describe('statistical transform algebra (contract)', () => {
           ),
         },
       },
-    );
+    ).rows;
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', value: 9, rank: 1 })]);
   });

@@ -1,4 +1,7 @@
 const translations: Record<string, string> = {
+  '同步 Runtime 的创建配置，创建后固定注册表、更新策略与 trace 引用':
+    'Configuration for a synchronous Runtime; registries, update strategy, and trace callback are fixed at creation',
+  'Runtime 更新策略': 'Runtime update strategy',
   '待注册的来源凭证；空数组建立空注册表': 'Source tokens to register; an empty array creates an empty registry',
   '计算身份或 Trace 声明无效时抛出': 'Invalid computation identity or Trace declarations',
   '已验证并补齐 owner 的性能记录': 'Validated performance record with its owner filled in',
@@ -282,8 +285,9 @@ const translations: Record<string, string> = {
   '产生不携带 disposable handle 的 immutable read view': 'Produces an immutable read view without disposable handles',
   'owner 允许报告的阶段、单位与结果组合': 'Allowed phase, unit, and outcome combinations for an owner',
   阶段允许报告的结果: 'Outcomes the phase may report',
-  阶段名称: 'Phase name',
-  阶段唯一的计数单位: 'Single counting unit for the phase',
+  'owner 自定义的阶段名称': 'Owner-defined phase name',
+  '与阶段共同标识声明组合的 owner 自定义计数单位':
+    'Owner-defined counting unit that identifies a declaration together with its phase',
   '由 Runtime 固定 owner 的同步 trace reporter': 'Synchronous trace reporter with an owner fixed by Runtime',
   '返回并清空 reporter-local 诊断': 'Returns and clears reporter-local diagnostics',
   '一次同步 runtime update 的完整输入': 'Complete input for a synchronous runtime update',

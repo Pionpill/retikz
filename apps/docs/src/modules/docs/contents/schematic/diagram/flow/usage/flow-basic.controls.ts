@@ -15,7 +15,7 @@ export const FlowBasicControlId = {
   FormTextAlign: 'formTextAlign',
   FormLineHeight: 'formLineHeight',
   FormMaxTextWidth: 'formMaxTextWidth',
-  RelationRole: 'relationRole',
+  BuiltinRelationRole: 'relationRole',
   RelationStatus: 'relationStatus',
 } as const;
 
@@ -135,7 +135,7 @@ export const defineFlowBasicControlContract = (copy: FlowBasicControlCopy) => {
         controls: [
           {
             kind: 'select',
-            id: FlowBasicControlId.RelationRole,
+            id: FlowBasicControlId.BuiltinRelationRole,
             label: copy.relationRoleLabel,
             defaultValue: 'flow',
             options: copy.relationRoleOptions,

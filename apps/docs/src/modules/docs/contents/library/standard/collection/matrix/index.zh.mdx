@@ -204,11 +204,3 @@ React 的 items 只放文字配置，嵌套组件使用 JSX；Vanilla 的 conten
 React、Vanilla 与 IR 入口的签名和说明由源码生成。
 
 {/* @include library/standard/collection/matrix/generated */}
-
-## Schema 参考
-
-MatrixSchema 是持久化 Source 真源。工厂保留稀疏输入；显式 parse 会物化静态默认，继承与动态裁切默认在解析阶段处理。
-
-#### MatrixSchema
-
-<ZodSchema name="MatrixSchema" description="矩形单元格、JSON 数据或示意骨架" expandNested />

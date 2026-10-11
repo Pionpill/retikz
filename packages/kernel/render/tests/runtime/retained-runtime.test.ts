@@ -1,5 +1,5 @@
 import type { CoreComputationDefinition, IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation, CoreTraceUnit } from '@retikz/core';
 import { isRetikzError } from '@retikz/foundation';
 import type { PerformanceTraceRecord, RuntimePreparedCommit } from '@retikz/runtime';
 import {
@@ -11,8 +11,6 @@ import {
   defineRuntimeSource,
   defineRuntimeComputation,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
   RetikzRuntimeError,
   RetikzRuntimeErrorCode,
   RuntimeComputationKind,
@@ -33,6 +31,7 @@ import {
   RetainedRendererCapability,
   RetikzRenderError,
   RetikzRenderErrorCode,
+  RenderTracePhase,
 } from '../../src/runtime';
 
 const scene = (text: string): IRScene => ({
@@ -447,12 +446,10 @@ describe('createRetainedRenderParticipant', () => {
     expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
     expect(
-      records.filter(
-        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
-      ),
+      records.filter(record => record.owner === '@retikz/render:svg' && record.unit === CoreTraceUnit.SceneChange),
     ).toEqual([
       expect.objectContaining({
-        phase: PerformanceTracePhase.Update,
+        phase: RenderTracePhase.Update,
         outcome: PerformanceTraceOutcome.Incremental,
       }),
     ]);
@@ -479,12 +476,10 @@ describe('createRetainedRenderParticipant', () => {
     expect(session.result(coreComputation).value.patch?.operations[0]?.kind).toBe('replaceScene');
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
     expect(
-      records.filter(
-        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
-      ),
+      records.filter(record => record.owner === '@retikz/render:svg' && record.unit === CoreTraceUnit.SceneChange),
     ).toEqual([
       expect.objectContaining({
-        phase: PerformanceTracePhase.Update,
+        phase: RenderTracePhase.Update,
         outcome: PerformanceTraceOutcome.Full,
       }),
     ]);
@@ -544,12 +539,10 @@ describe('createRetainedRenderParticipant', () => {
       }),
     ]);
     expect(
-      records.filter(
-        record => record.owner === '@retikz/render:svg' && record.unit === PerformanceTraceUnit.SceneChange,
-      ),
+      records.filter(record => record.owner === '@retikz/render:svg' && record.unit === CoreTraceUnit.SceneChange),
     ).toEqual([
       expect.objectContaining({
-        phase: PerformanceTracePhase.Update,
+        phase: RenderTracePhase.Update,
         outcome: PerformanceTraceOutcome.Fallback,
       }),
     ]);

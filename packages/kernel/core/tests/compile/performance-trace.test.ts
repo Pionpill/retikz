@@ -1,10 +1,5 @@
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-import {
-  createRuntimeTraceReporter,
-  PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
-} from '@retikz/runtime';
+import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -15,6 +10,8 @@ import {
   defineComposite,
   LayoutChildProbeKind,
   NaturalLayoutProposal,
+  CoreTracePhase,
+  CoreTraceUnit,
 } from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
@@ -26,8 +23,8 @@ describe('compileToScene performance trace', () => {
       owner: '@retikz/core',
       phases: [
         {
-          phase: PerformanceTracePhase.Compile,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Compile,
+          unit: CoreTraceUnit.IrChild,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
@@ -48,8 +45,8 @@ describe('compileToScene performance trace', () => {
     expect(records).toEqual([
       {
         owner: '@retikz/core',
-        phase: PerformanceTracePhase.Compile,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Compile,
+        unit: CoreTraceUnit.IrChild,
         outcome: PerformanceTraceOutcome.Full,
         visited: 3,
         reused: 0,
@@ -64,8 +61,8 @@ describe('compileToScene performance trace', () => {
       owner: '@retikz/core',
       phases: [
         {
-          phase: PerformanceTracePhase.Compile,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Compile,
+          unit: CoreTraceUnit.IrChild,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
@@ -80,8 +77,8 @@ describe('compileToScene performance trace', () => {
     expect(records).toEqual([
       {
         owner: '@retikz/core',
-        phase: PerformanceTracePhase.Compile,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Compile,
+        unit: CoreTraceUnit.IrChild,
         outcome: PerformanceTraceOutcome.Full,
         visited: 0,
         reused: 0,
@@ -96,8 +93,8 @@ describe('compileToScene performance trace', () => {
       owner: '@retikz/core',
       phases: [
         {
-          phase: PerformanceTracePhase.Compile,
-          unit: PerformanceTraceUnit.IrChild,
+          phase: CoreTracePhase.Compile,
+          unit: CoreTraceUnit.IrChild,
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],

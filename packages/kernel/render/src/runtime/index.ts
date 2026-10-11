@@ -1,4 +1,5 @@
 export * from '../error';
+export * from '../trace';
 export * from './builtin';
 export * from './config';
 export * from './frame';

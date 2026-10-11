@@ -1,0 +1,12 @@
+---
+title: API 参考
+description: 绘制家族的组件属性、作者输入与扩展契约
+---
+
+本页从 `@retikz/react`、`@retikz/vanilla` 与 `@retikz/core` 公开入口生成绘制家族的局部查询视图。第一次使用见[基础用法](/kernel/components/path/usage)，持久化字段见下方 Schema 页签。
+
+[自定义路径](/kernel/components/path/custom-path#相关属性)介绍 `definePathKind` 的使用方式；本页列出它的两个调用重载。
+
+默认值列读取字段 JSDoc 或 Schema `.default()`。继承自 Schema 的字段仅显示实际声明的默认值；编译阶段的回退与继承行为见字段说明。
+
+{/* @include kernel/components/path/reference/generated */}

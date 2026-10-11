@@ -5,7 +5,7 @@ keywords: 'Table、Source、appearanceDefaults、layout.borders、visualDefaults
 
 # ADR-023：Table Source 默认片段
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-06
 - 主责：Table，目标版本 0.1.0-alpha.3
 - 关联：[alpha.3 roadmap](./roadmap.md) · [Table style preset 与 token resolution](./021-style-preset-and-token-resolution.md) · [Table 完备设计](../../../../architecture/table-visualization-complete.md) · [Core 默认协议](../../../../../../kernel/_notes/decisions/v0/v0.5/037-theme-source-fragments.md)
@@ -20,7 +20,7 @@ Table 以 `tableThemeTokens` 持久化扁平键值，并由 style definition 生
 
 ### Table 实例与默认片段
 
-Table 根新增三个可选正式 Source 片段：
+Table 根提供以下可选正式 Source 片段：
 
 ```json
 {
@@ -48,13 +48,23 @@ Table 根新增三个可选正式 Source 片段：
 
 `visualDefaults` 只包含 Table 内置 visual scale 的 categorical 与 sequential palette。它不生成 encoding、Legend 或 scale；仅在已有 encoding 使用未显式指定 range 的内置 scale 时提供范围默认。显式 encoding range 继续最高优先。categorical palette 默认从 Core effective categorical colors 投影；sequential 的 mode-aware Table baseline 仍由 Table 提供。
 
-`tableDefaults` 是以上三个正式 Source 片段的稀疏子集：`appearanceDefaults`、`layout.borders`、`visualDefaults`。它不得含 data、id、structure、rules、encodings、layout track/gap 或 Cell content。空片段不创建 Cell、border、encoding、Legend 或其它语义对象。
+`tableDefaults` 是正式 Source 片段的稀疏子集：`appearanceDefaults`、`cellLayoutDefaults`、`layout.borders`、`visualDefaults`。它不得含 data、id、structure、rules、encodings、layout track/gap 或 Cell content。空片段不创建 Cell、border、encoding、Legend 或其它语义对象。
+
+### Cell 内边距默认
+
+`cellLayoutDefaults` 按 `body` / `columnHeader` 复用 Cell 的 padding 输入契约，例如 `{ "body": { "padding": 4 }, "columnHeader": { "padding": 4 } }`。它同时可写在 Table Source、`tableDefaults` 和 style definition 的 defaults 中；仅作用于 structure 已生成的对应 location Cell，不创建行、列或 Cell。
+
+本默认面只开放 padding，不包含轨道尺寸、gap、span、位置、对齐、fit 或 overflow。padding 是内容周围的默认留白，参与内容测量和 content box 计算；不改变数据、结构或显式轨道尺寸。未配置时保持基础默认 0。
+
+优先级为基础默认 → style definition → `tableDefaults.cellLayoutDefaults` → Source `cellLayoutDefaults` → 单元格显式 `layout.padding`。Detail 的 `headerLayout` / `bodyLayout` 与 Manual / custom structure 的 Cell layout 使用同一解析链路，显式 0 必须覆盖主题默认。
+
+每个 location 的 padding 作为完整 spacing 值替换，不逐边跨层合并；对象形式未指定的边按 Core spacing 规则补齐。默认片段的 location、padding 或整个 `tableDefaults.cellLayoutDefaults` 可用 null 清除较低层默认；单元格本身的 padding 保持原契约。非法 padding 由同源 schema 拒绝。Manifest 保留同次 defaults 的来源层与最终内容区域，Source IR 不物化主题生成的 padding。
 
 ### Theme 来源与优先级
 
 Table Source 不新增主题名称、base 或 token 输入。Core Scene/Scope 的 effective style/mode 是唯一环境选择。现有 `TableThemeStyleDefinition` 和注入 registry 保留为生成来源，但其输出改为 `TableDefaults`；同名 style 的缺失、重复和 resolver 失败保持明确诊断。本轮不为 Table style Definition 新增 base 继承，Core style 已选择唯一的生效定义。
 
-Table defaults 的顺序为：mode-aware Table baseline → effective Core style 对应的 Table Definition → Source `tableDefaults` → 显式 Source `appearanceDefaults`、`layout.borders`、`visualDefaults` → Cell rule 与 encoding 的既有显式覆盖。Rule 的 selector 和 encoding 的数据映射不进入默认片段；inline Cell appearance、Cell rule、显式 border 与显式 scale range 维持当前更高优先级。
+Table defaults 的顺序为：mode-aware Table baseline → effective Core style 对应的 Table Definition → Source `tableDefaults` → 显式 Source `appearanceDefaults`、`cellLayoutDefaults`、`layout.borders`、`visualDefaults` → Cell rule 与 encoding 的既有显式覆盖。Rule 的 selector 和 encoding 的数据映射不进入默认片段；inline Cell appearance、Cell rule、显式 border 与显式 scale range 维持当前更高优先级。
 
 默认采用对应 Source 片段的覆盖粒度：background、border variant、palette 数组整体替换；content style 的 color 与非空 font 复用 Scope 语义；合法 `false`、`0`、`null` 保留。Style definition base chain 只组织生成来源，不进入 Table Source。
 

@@ -137,7 +137,7 @@ const view = mount(document.getElementById('diagram')!, ir);
   defaultSourceFile="node-position.preview.tsx"
 />
 
-定位引用的对象必须已完成布局并登记（通常是前面声明的同级对象）；方向定位的默认距离来自 `<Layout nodeDistance>`，`between` 的 `fraction: 0.5` 表示中点。完整输入类型见 [API 参考](/kernel/components/node/api-reference)，需要不可见辅助点时使用 [Coordinate](/kernel/components/node/coordinate)。
+定位引用的对象必须已完成布局并登记（通常是前面声明的同级对象）；方向定位的默认距离来自 `<Layout nodeDistance>`，`between` 的 `fraction: 0.5` 表示中点。完整输入类型见 [API 参考](/kernel/components/node/reference)，需要不可见辅助点时使用 [Coordinate](/kernel/components/node/coordinate)。
 
 ## 锚点定位
 
@@ -199,7 +199,7 @@ Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切
 
 ## 相关属性
 
-以下列出定位、锚点对齐和自动贴边直接使用的成员；完整字段与类型见 [API 参考](/kernel/components/node/api-reference)。
+以下列出定位、锚点对齐和自动贴边直接使用的成员；完整字段与类型见 [API 参考](/kernel/components/node/reference)。
 
 <ComponentProps
     items={[
@@ -270,6 +270,6 @@ Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切
     { title: 'Coordinate · 坐标点', description: '组织不可见的辅助位置', url: '/kernel/components/node/coordinate' },
     { title: '自定义连接面', description: '定义并注册新的连接规则', url: '/kernel/components/node/custom' },
     { title: '实现原理', description: '理解尺寸、文字和引用的处理过程', url: '/kernel/components/node/mechanism' },
-    { title: 'API 参考', description: '查询公开入口、类型与扩展契约', url: '/kernel/components/node/api-reference' },
+    { title: 'API 参考', description: '查询公开入口、类型与扩展契约', url: '/kernel/components/node/reference' },
   ]}
 />

@@ -17,7 +17,7 @@ import {
   formatCompileOccurrence,
   isNodeLayoutCompileArtifact,
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -202,12 +202,12 @@ describe('Layout Core layout capability gate', () => {
         allocationBounds: { x: -5, y: -3, width: 20, height: 10 },
         alignmentGuides: [
           {
-            name: LayoutAlignmentGuideName.FirstBaseline,
+            name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
             dimension: LayoutAlignmentGuideDimension.Y,
             position: 4,
           },
           {
-            name: LayoutAlignmentGuideName.LastBaseline,
+            name: BuiltinLayoutAlignmentGuideName.LastBaseline,
             dimension: LayoutAlignmentGuideDimension.Y,
             position: 6,
           },

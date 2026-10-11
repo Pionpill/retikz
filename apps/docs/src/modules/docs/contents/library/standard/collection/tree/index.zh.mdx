@@ -116,11 +116,3 @@ Tree 只呈现输入快照，不管理插入、删除、搜索、平衡或遍历
 ## API 参考
 
 {/* @include library/standard/collection/tree/generated */}
-
-## Schema 参考
-
-Source 保留字符串或对象配置以及稀疏覆盖，factory 不填默认值。解析布局时物化其静态默认，节点和连接的默认在合并覆盖后应用。
-
-#### TreeSchema
-
-<ZodSchema name="TreeSchema" description="文字节点与父子连接构成的静态有序树" expandNested />

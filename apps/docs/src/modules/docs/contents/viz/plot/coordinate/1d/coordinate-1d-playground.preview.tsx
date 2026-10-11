@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 import type { InputPlotCoordinate } from '@retikz/plot-vanilla';
 
 import { oneDimensionalEvents } from './coordinate-1d-playground.data';
@@ -37,7 +37,7 @@ export const Coordinate1dPlaygroundPreview = (values: Coordinate1dPlaygroundPrev
 
   return (
     <Plot data={oneDimensionalEvents} coordinate={coordinate} width={270} height={270}>
-      <PlotScale dimension="x" type="linear" domain={[0, 24]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[0, 24]} />
       <PointMark
         x="hour"
         size={values.pointSize}

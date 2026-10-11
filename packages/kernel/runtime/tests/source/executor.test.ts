@@ -71,17 +71,13 @@ describe('runtime owner executor', () => {
     },
     {
       name: 'sparse',
-      collectIdentities: () => Array(2) as Array<ReturnType<typeof createRuntimeIdentity>>,
+      collectIdentities: () => Array<ReturnType<typeof createRuntimeIdentity>>(2),
     },
     {
       name: 'throw',
       collectIdentities: () => {
         throw new Error('collector failed');
       },
-    },
-    {
-      name: 'non-array',
-      collectIdentities: (() => null) as unknown as () => ReadonlyArray<ReturnType<typeof createRuntimeIdentity>>,
     },
   ])('collector $name 失败时具名报错并清理 candidate', ({ collectIdentities }) => {
     const disposed = vi.fn();
@@ -236,5 +232,20 @@ describe('runtime owner executor', () => {
       expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, cause: disposeCause }),
     ]);
     expect(() => executor.retire(definition, prepared)).toThrow(/already retired/i);
+  });
+
+  it('collector 返回非法路径时保留身份错误并释放 candidate', () => {
+    const disposed = vi.fn();
+    const definition = defineFixtureSource({
+      dispose: disposed,
+      collectIdentities: () => [{ owner: 'fixture', path: [] }],
+    });
+    expect(() => createExecutor(definition).prepare(definition, { values: [1] })).toThrowError(
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.CollectIdentitiesFailed,
+        cause: expect.objectContaining({ code: RetikzRuntimeErrorCode.IdentityInvalid }),
+      }),
+    );
+    expect(disposed).toHaveBeenCalledOnce();
   });
 });

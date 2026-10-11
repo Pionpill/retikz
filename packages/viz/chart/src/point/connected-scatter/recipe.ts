@@ -1,5 +1,5 @@
 import type { IRPlotGuide } from '@retikz/plot';
-import { PlotGuide, PlotScale, PlotMark, isBuiltinMark, isBuiltinScaleOperation } from '@retikz/plot';
+import { PlotGuide, BuiltinPlotScale, BuiltinPlotMark, isBuiltinMark, isBuiltinScaleOperation } from '@retikz/plot';
 
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import { defineChartRecipe } from '../../_chart/contract';
@@ -36,8 +36,8 @@ const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof ConnectedScatt
     slot: 'series',
     scale: {
       family: 'channel',
-      type: PlotScale.Ordinal,
-      recipeFallback: { name: seriesScaleName, type: PlotScale.Ordinal },
+      type: BuiltinPlotScale.Ordinal,
+      recipeFallback: { name: seriesScaleName, type: BuiltinPlotScale.Ordinal },
     },
   },
 ];
@@ -73,7 +73,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
         },
       ],
       {
-        scales: hasSeries ? [{ type: PlotScale.Ordinal, name: seriesScaleName }] : [],
+        scales: hasSeries ? [{ type: BuiltinPlotScale.Ordinal, name: seriesScaleName }] : [],
         guides,
       },
     );
@@ -87,7 +87,7 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     const name =
       typeof series === 'string' ? seriesScaleName : ((series as { scale?: string }).scale ?? seriesScaleName);
     const original = scales.find(scale => scale.name === name);
-    if (original === undefined || !isBuiltinScaleOperation(original) || original.type !== PlotScale.Ordinal) {
+    if (original === undefined || !isBuiltinScaleOperation(original) || original.type !== BuiltinPlotScale.Ordinal) {
       throw new RetikzChartError({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
         message: 'Connected Scatter mark colors require an ordinal series scale',
@@ -131,7 +131,12 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     for (let index = 0; index < context.chartMarks.length - 1; index += 2) {
       const path = context.chartMarks[index];
       const point = context.chartMarks[index + 1];
-      if (!isBuiltinMark(path) || path.type !== PlotMark.Path || !isBuiltinMark(point) || point.type !== PlotMark.Point)
+      if (
+        !isBuiltinMark(path) ||
+        path.type !== BuiltinPlotMark.Path ||
+        !isBuiltinMark(point) ||
+        point.type !== BuiltinPlotMark.Point
+      )
         continue;
       if (point.color?.kind !== 'field') continue;
 

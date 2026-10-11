@@ -62,6 +62,7 @@
 
 - 建立 identity、事务、增量编译和 Scene patch 的共同底座。
 - 明确执行策略与 retained renderer 的协作边界。
+- 将 trace 领域阶段与计数单位交由 owner 声明并注入，保持 Runtime 领域中立：[050](./050-runtime-trace-owner-declarations.md)。
 
 预期效果：
 

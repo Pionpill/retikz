@@ -9,7 +9,7 @@ describe('Block public API reference', () => {
     for (const lang of ['zh', 'en']) {
       const source = readFileSync(
         new URL(
-          `../../src/modules/docs/contents/schematic/graph/block/api-reference/_includes/generated.${lang}.mdx`,
+          `../../src/modules/docs/contents/schematic/graph/block/reference/_includes/generated.${lang}.mdx`,
           import.meta.url,
         ),
         'utf8',
@@ -25,9 +25,9 @@ describe('Block public API reference', () => {
         'CodeBlockComposeContext',
         'createCodeBlockContribution',
       ])
-        expect(source).toContain(`### ${name}`);
+        for (const member of name.split(' / ')) expect(source).toContain(`>${member}</ApiSourceLink>`);
 
-      expect(source).not.toMatch(/^### \w+Schema/gm);
+      expect(source).not.toMatch(/^### /gm);
       expect(source).toContain('BlockRowCreateOptions');
       expect(source).toContain('compose');
 

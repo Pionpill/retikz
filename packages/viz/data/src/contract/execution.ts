@@ -148,8 +148,11 @@ export type DataTransformRequestOptions = Readonly<{
   dataExecution?: IRDataExecution;
   /** 请求保留本次输入真实来源 */
   provenance?: boolean;
-  /** 事件记录要求 */
-  lineage?: DataLineageOptions;
+  /**
+   * true 使用默认事件配置，对象自定义配置；false 或省略时不追加记录
+   * @default false
+   */
+  lineage?: boolean | DataLineageOptions;
   /** 请求取消信号 */
   signal?: AbortSignal;
 }>;

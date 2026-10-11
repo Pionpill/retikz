@@ -44,6 +44,8 @@ A non-spanning Cell contributes its outer size directly to its track. A spanning
 
 The central Cell in the hash-shaped grid is `box`, determined by the covered tracks, their internal gaps, and the Cell's span. Subtracting padding produces `contentBox`. The child's allocation and visibly rendered bounds can then diverge further.
 
+`cellLayoutDefaults` supplies Cell padding by `body` / `columnHeader`, for example `{ body: { padding: 4 }, columnHeader: { padding: 4 } }`. A Table style definition can supply the same fragment through `defaults`, so an example only needs to select the theme. Precedence is theme defaults → `tableDefaults.cellLayoutDefaults` → root `cellLayoutDefaults` → explicit Cell `layout.padding` (set through `headerLayout` / `bodyLayout` for Detail columns). Explicit `0` keeps no padding; the baseline remains `0` when omitted. Padding objects replace the whole spacing value rather than merging sides; `null` in defaults clears lower-layer values. These defaults affect existing Cells' content boxes and auto-size contributions, without changing fixed row or column sizes or creating Cells.
+
 <ComponentPreview files="table-cell-box" hideCode size="sm" />
 
 Read the model as four layers from the outside inward. The first two shrink inward; the last two are content results, so visible bounds do not have to stay inside the content area.

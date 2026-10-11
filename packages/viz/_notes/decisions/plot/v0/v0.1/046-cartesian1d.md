@@ -35,7 +35,7 @@ polar1D 复用 alpha.4 `createPolarFrame` / `projectPolar` + 角向轴，不重�
 
 ## 影响
 
-- **Plot IR**：`PlotCoordinate` 加 `Cartesian1D` / `Polar1D` + `Cartesian1DSchema` / `Polar1DSchema` + `Cartesian1DOrientation`，`CoordinateSchema` union 扩；纯增量。
+- **Plot IR**：`BuiltinPlotCoordinate` 加 `Cartesian1D` / `Polar1D` + `Cartesian1DSchema` / `Polar1DSchema` + `Cartesian1DOrientation`，`CoordinateSchema` union 扩；纯增量。
 - **core**：无新依赖（刻记 / 圆周点下沉 core Node/Path）。
 - **对外 API**：`coordinate="cartesian1D"|"polar1D"`（ADR-048）；纯新增。
 

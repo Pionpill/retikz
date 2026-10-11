@@ -1,12 +1,12 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
-import { ExtensionArrowName } from '../constants';
+import { BuiltinExtensionArrowName } from '../constants';
 import { filledPath, hollowPath } from './_utils';
 
 /** 可选实心风筝形箭头 Definition */
 export const KiteArrowDefinition = defineArrow({
-  name: ExtensionArrowName.Kite,
+  name: BuiltinExtensionArrowName.Kite,
   backX: 0,
   lineContactX: 0,
   defaultLength: 11,
@@ -31,7 +31,7 @@ export const KiteArrowProvider: CoreDependencyProvider = Object.freeze({
 
 /** 可选空心风筝形箭头 Definition */
 export const OpenKiteArrowDefinition = defineArrow({
-  name: ExtensionArrowName.OpenKite,
+  name: BuiltinExtensionArrowName.OpenKite,
   hollow: true,
   backX: 1,
   lineContactX: 1,

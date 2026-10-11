@@ -14,11 +14,11 @@
 | 设计理念：包职责导览               | docs-doc-concept   | beginner（入门）  | 说明包解决什么问题、复用什么能力及职责边界     |
 | 核心概念、设计理念：抽象取舍       | docs-doc-concept   | advanced（进阶）  | 解释公共约束、抽象关系与设计取舍               |
 | 自定义用法：定义并注册新能力       | docs-doc-extension | advanced（进阶）  | 在已有用法上完成定义、注入、引用与验证         |
-| API 参考、Schema 参考              | docs-doc-reference | 不设              | 完整、准确、可扫描地查询契约，不穿插入门教程   |
+| API 参考（含 Schema）              | docs-doc-reference | 不设              | 完整、准确、可扫描地查询契约，不穿插入门教程   |
 | 进阶专题、实现原理、运行原理       | docs-doc-mechanism | internals（底层） | 明确前提，解释执行、数据变化、边界与源码定位   |
 | 跟做一个完整案例                   | docs-doc-example   | beginner（入门）  | 分步累加，每步产生可观察结果                   |
 
-难度只用于需要线性学习的页面，不能因页面太长或术语多而改标签。API 参考、Schema 参考与更新日志是按需检索的资料，不声明难度。基础用法包含底层内容时拆出进阶专题；调用 API 位于底层包不代表其基础教程是底层难度。“进阶”侧栏可包含扩展指南与内部机制，难度仍按页型确定，不统一改成 internals。Showcase 是展示补充规则，沿用所属页型的固定难度。博客是独立文章体系，不套用解决方案页型或据此新增难度字段。
+难度只用于需要线性学习的页面，不能因页面太长或术语多而改标签。API 参考与更新日志是按需检索的资料，不声明难度。基础用法包含底层内容时拆出进阶专题；调用 API 位于底层包不代表其基础教程是底层难度。“进阶”侧栏可包含扩展指南与内部机制，难度仍按页型确定，不统一改成 internals。Showcase 是展示补充规则，沿用所属页型的固定难度。博客是独立文章体系，不套用解决方案页型或据此新增难度字段。
 
 分组总纲在阅读契约上固定入门；当前导航类型若不允许 children 节点声明 difficulty，不强塞字段，不在单篇文档任务中顺带修改类型系统。叶子页按现有字段填写；展示总纲难度需要单独获准的站点任务。
 
@@ -36,8 +36,7 @@
 | 自定义裁剪区等             | Custom clipping, etc.          | custom-clip 等 custom-<capability> |
 | 实现原理                   | Implementation                 | mechanism                          |
 | 具体进阶专题名，如文字测量 | Specific internals topic       | 具体语义词，如 measurement         |
-| API 参考                   | API reference                  | api-reference                      |
-| Schema 参考                | Schema reference               | schema-reference                   |
+| API 参考                   | API Reference                  | reference                          |
 
 - 同一 owner 只有一个自定义教程时使用 custom；多个时都使用 custom-<capability>，标题明确能力名。调用内置扩展仍是普通用法，不使用 custom 页型
 - 基础概念、核心概念、设计理念的组 id 分别为 basic、core、design；basic 只用于概念分组，基础用法叶子统一 usage
@@ -70,19 +69,18 @@
 
 Extension 内多个并列组件或预设共用一页时，按 [拓展包组件专项](../../docs-doc-usage/references/extension.md) 以各能力为 H2 就地组织演示和参考，不套用下方单组件的固定 H2 章节。
 
-页面标题沿用组件命名，URL 使用组件根路径，不追加 usage；整体为 beginner，原理为选读。开篇说明用途与结果，随后 H2 固定顺序如下；具体任务放在对应 H2 下的 H3，不把八类阅读任务交叉混写。
+页面标题沿用组件命名，URL 使用组件根路径，不追加 usage；整体为 beginner，原理为选读。开篇说明用途与结果，随后 H2 固定顺序如下；用法主题放在对应 H2 下的 H3，参考成员使用 H4，不交叉混写阅读任务。
 
-| 中文 H2     | English H2             | 职责                                         |
-| ----------- | ---------------------- | -------------------------------------------- |
-| 接入方式    | Using this topic       | 最小预览与真实接入代码，沿用 DocTabs 契约    |
-| 基础用法    | Basic usage            | 常用任务与必要调用约束                       |
-| 扩展用法    | Extended usage         | 已有能力的组合与高级选项，不承担定义注册教程 |
-| 错误与限制  | Errors and limitations | 真实限制与可观察失败                         |
-| 实现原理    | Implementation         | 解释关键行为的局部机制与源码入口             |
-| API 参考    | API reference          | 当前组件公开入口与成员的源码驱动参考         |
-| Schema 参考 | Schema reference       | 当前组件持久化 IR 的公开 Schema              |
-| 延伸阅读    | Further reading        | 用 LinkedSections 链接相关主题               |
+| 中文 H2    | English H2             | 职责                                         |
+| ---------- | ---------------------- | -------------------------------------------- |
+| 接入方式   | Using this topic       | 最小预览与真实接入代码，沿用 DocTabs 契约    |
+| 基础用法   | Basic usage            | 常用任务与必要调用约束                       |
+| 扩展用法   | Extended usage         | 已有能力的组合与高级选项，不承担定义注册教程 |
+| 错误与限制 | Errors and limitations | 真实限制与可观察失败                         |
+| 实现原理   | Implementation         | 解释关键行为的局部机制与源码入口             |
+| API 参考   | API Reference          | 当前组件公开 API 与 Schema 的同源合并参考    |
+| 延伸阅读   | Further reading        | 用 LinkedSections 链接相关主题               |
 
-固定的是顺序与职责；没有扩展用法、真实限制、独立机制、公开 Schema 或相关链接时省略对应节，不创建空占位。实现原理必须位于 API 参考之前，标题后第一项使用 `<ComponentAlert type="tip">` 提示“本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考”，英文同步；跳过本节不得影响正确使用组件。
+固定的是顺序与职责；没有扩展用法、真实限制、独立机制、参考内容或相关链接时省略对应节，不创建空占位。实现原理必须位于 API 参考之前，标题后第一项使用 `<ComponentAlert type="tip">` 提示“本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考”，英文同步；跳过本节不得影响正确使用组件。
 
-合页不再额外设置“相关属性”或“补充说明”；必要参数就近解释，集中查询交给 API 参考。API / Schema 沿用 `docs-doc-reference` 的生成来源与收录边界，不手写第二套契约；实现原理沿用 `docs-doc-mechanism` 的组件级讲解规则，不套独立原理页的开篇和收尾。已有权威参考时复用同源局部视图，不复制维护。仅调整 skill 不自动授权合并、迁移现有页面。
+合页不再额外设置“相关属性”或“补充说明”；必要参数就近解释，集中查询交给 API 参考。API 参考中的声明与 Schema 沿用 `docs-doc-reference` 的生成来源、合并结构与收录边界，不手写第二套契约；实现原理沿用 `docs-doc-mechanism` 的组件级讲解规则，不套独立原理页的开篇和收尾。已有权威参考时复用同源局部视图，不复制维护。仅调整 skill 不自动授权合并、迁移现有页面。

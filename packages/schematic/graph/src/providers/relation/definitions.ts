@@ -1,7 +1,7 @@
 import type { RelationRoleDefinition } from '../../contract';
 import { defineRelationRole } from '../../contract';
 import { RelationDirection } from '../../schemas';
-import { RelationRole } from '../../shared';
+import { BuiltinRelationRole } from '../../shared';
 
 const noMarker = false as const;
 
@@ -9,7 +9,7 @@ const solid = false as const;
 
 /** 以菱形端标表现一般关联，支持无向、正向、反向与双向 */
 export const AssociationRelationRoleDefinition = defineRelationRole({
-  role: RelationRole.Association,
+  role: BuiltinRelationRole.Association,
   description: '两个对象之间的一般关联',
   defaultDirection: RelationDirection.Forward,
   allowedDirections: [
@@ -40,7 +40,7 @@ export const AssociationRelationRoleDefinition = defineRelationRole({
 
 /** 以正向直线箭头表现依赖方指向被依赖方的关系 */
 export const DependencyRelationRoleDefinition = defineRelationRole({
-  role: RelationRole.Dependency,
+  role: BuiltinRelationRole.Dependency,
   description: '依赖方指向被依赖方的依赖关系',
   defaultDirection: RelationDirection.Forward,
   allowedDirections: [RelationDirection.Forward],
@@ -55,7 +55,7 @@ export const DependencyRelationRoleDefinition = defineRelationRole({
 
 /** 以正向三角箭头表现子类型指向父类型的关系 */
 export const GeneralizationRelationRoleDefinition = defineRelationRole({
-  role: RelationRole.Generalization,
+  role: BuiltinRelationRole.Generalization,
   description: '子类型指向父类型的泛化关系',
   defaultDirection: RelationDirection.Forward,
   allowedDirections: [RelationDirection.Forward],
@@ -70,7 +70,7 @@ export const GeneralizationRelationRoleDefinition = defineRelationRole({
 
 /** 以 stealth 箭头表现流动关系，支持正向、反向与双向 */
 export const FlowRelationRoleDefinition = defineRelationRole({
-  role: RelationRole.Flow,
+  role: BuiltinRelationRole.Flow,
   description: '对象、活动或状态之间的流动关系',
   defaultDirection: RelationDirection.Forward,
   allowedDirections: [RelationDirection.Forward, RelationDirection.Reverse, RelationDirection.Both],
@@ -95,7 +95,7 @@ export const FlowRelationRoleDefinition = defineRelationRole({
 
 /** 以圆形端标表现作用关系，支持正向、反向与双向 */
 export const InfluenceRelationRoleDefinition = defineRelationRole({
-  role: RelationRole.Influence,
+  role: BuiltinRelationRole.Influence,
   description: '一个对象对另一个对象产生作用的影响关系',
   defaultDirection: RelationDirection.Forward,
   allowedDirections: [RelationDirection.Forward, RelationDirection.Reverse, RelationDirection.Both],

@@ -56,7 +56,7 @@ The main lowering path resolves transform, statistics, row-selector, scale, mark
 
 One lowering produces both Core IR and the execution's data artifact: root / mark DataViews, composition resolution, and actual frames. `lowerPlotWithLineage()` builds Core IR children and `PlotLineageRun` from that same execution, so root and mark-local transforms each run once in the request; lineage no longer replays a second data pipeline.
 
-`createPlotLocator()` likewise performs one provenance-enabled lowering, then lets `datum()`, `series()`, and `resolve()` keep reading the same Scene and data artifact. A locator query does not rerun transforms. Creating another locator or independently calling another runtime entry is a new execution request and does not share a cache. Runtime records are never written back into `IRPlot`; see [Plot Lineage](/viz/data/provenance/plot) for options and data boundaries.
+`createPlotLocator()` likewise performs one provenance-enabled lowering, then lets `datum()`, `series()`, and `resolve()` keep reading the same Scene and data artifact. A locator query does not rerun transforms. Creating another locator or independently calling another runtime entry is a new execution request and does not share a cache. Runtime records are never written back into `IRPlot`; see [Plot Lineage](/viz/plot/provenance) for options and data boundaries.
 
 ## Entries and Results
 
@@ -159,7 +159,7 @@ One lowering produces both Core IR and the execution's data artifact: root / mar
     {
       title: 'Plot Lineage',
       description: 'Understand runtime audits, host metadata, and interaction trace-back.',
-      url: '/viz/data/provenance/plot',
+      url: '/viz/plot/provenance',
     },
     {
       title: 'Kernel Design Principles',

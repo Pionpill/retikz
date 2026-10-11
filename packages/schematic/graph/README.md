@@ -11,7 +11,7 @@ Graph, Group, Entity, and Relation are independent public semantic composites:
 
 Group, Entity, and Relation can appear with or without a Graph ancestor. Entity and Relation use independent role, kind, and predicate Definitions, while Group remains a closed composition surface and adds no role/kind registry.
 
-Registry-backed Source fields remain open to custom non-blank keys. Their schemas also expose the built-in `EntityRole` and `RelationRole` values as editor and JSON Schema hints; registration is still validated only during resolve. Entity and Relation kinds have no built-in catalog; every kind must be explicitly registered by the consumer.
+Registry-backed Source fields remain open to custom non-blank keys. Their schemas also expose the built-in `BuiltinEntityRole` and `BuiltinRelationRole` values as editor and JSON Schema hints; registration is still validated only during resolve. Entity and Relation kinds have no built-in catalog; every kind must be explicitly registered by the consumer.
 
 ## Install
 

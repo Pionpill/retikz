@@ -260,6 +260,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：Trace 领域词汇由 owner 注入', en: 'BREAKING: owner-injected Trace vocabulary' },
+          content: {
+            zh: 'Runtime 的 phase / unit 改为 owner 预声明字符串，移除 PerformanceTracePhase / PerformanceTraceUnit 常量与派生类型。Core 阶段及 IR / Scene 单位改从 @retikz/core 的 CoreTracePhase / CoreTraceUnit 导入，后端阶段改用对应 Render 子入口的 RenderTracePhase；自定义 owner 直接声明自己的名称。已有官方记录、计数及失败隔离保持不变。',
+            en: 'Runtime phase / unit fields now use owner-predeclared strings. PerformanceTracePhase / PerformanceTraceUnit constants and derived types are removed. Import Core stages and IR / Scene units as CoreTracePhase / CoreTraceUnit from @retikz/core, and backend stages as RenderTracePhase from the corresponding Render subpath; custom owners declare their own names. Existing official records, counts, and failure isolation are unchanged.',
+          },
+        },
+        {
           label: { zh: 'Typed Computation graph', en: 'Typed Computation graphs' },
           content: {
             zh: '`defineRuntimeComputation()` 保留 artifact input / owned value / private read / public read 四组泛型；builtin/custom Definition 共用一个 registry，依赖按稳定拓扑顺序执行。',

@@ -201,7 +201,7 @@ Switch the discrete axis to exchange the category and yield directions. Point ma
   defaultSourceFile="strip-encodings.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: StripEncodings](#stripencodings).
+For complete properties and constraints, see [API reference: StripEncodings](#stripencodings--irstripchartencodings--stripchartencodingsschema).
 
 ### Strip properties
 
@@ -265,7 +265,7 @@ Keep seed fixed when comparing distributions. Wider jitter does not mean higher 
   defaultSourceFile="strip-basic.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: StripProperties](#stripproperties).
+For complete properties and constraints, see [API reference: StripProperties](#stripproperties--irstripchartproperties--stripchartpropertiesschema).
 
 ### Strip marks
 
@@ -340,7 +340,7 @@ The mark inherits coordinate roles and cannot introduce a local scale. Changing 
   defaultSourceFile="strip-marks.preview.tsx"
 />
 
-For complete properties and constraints, see [API reference: StripMark](#stripmark).
+For complete properties and constraints, see [API reference: StripMark](#stripmark--stripchartmarkschema).
 
 ## Extended usage
 
@@ -427,87 +427,9 @@ Chart selects the jitter axis and validates the coordinate combination. Plot han
   ]}
 />
 
-## API reference
+## API Reference
 
-React uses `StripChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `stripChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'strip'`. React and the Vanilla API supply the chart type automatically.
-
-In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, and presentation, see [General Structure](/viz/chart/model/general-structure).
-
-#### StripEncodings
-
-Corresponds to `StripEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
-
-| Channel   | Input form                 | Description                                                                         |
-| --------- | -------------------------- | ----------------------------------------------------------------------------------- |
-| `x / y`   | Field name, direct mapping | Required direct mappings; exactly one resolved scale is discrete and one continuous |
-| `color`   | Field name, direct mapping | Direct color field with a compatible optional scale                                 |
-| `size`    | Field name, direct mapping | Direct numeric size field using a sqrt scale                                        |
-| `opacity` | Field name, direct mapping | Direct numeric opacity field using a linear scale                                   |
-| `shape`   | Field name, direct mapping | Direct categorical shape field                                                      |
-
-Shared mapping parameters are not expanded here; see the [encoding schema](#stripchartencodingsschema) for exact inputs.
-
-#### StripProperties
-
-Corresponds to `StripProperties`, Vanilla `properties` and IR `recipe.properties`.
-
-| Category       | Property              | Type                                                     | Description                                                                                             |
-| -------------- | --------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Shape and size | `size`                | `number`                                                 | Uniform point radius; must be nonnegative                                                               |
-|                | `shape`               | `string`                                                 | Registered shape name                                                                                   |
-| Color and fill | `color`               | `string`                                                 | Sets the primary color                                                                                  |
-|                | `fill`                | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                            |
-| Stroke         | `stroke`              | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                          |
-|                | `strokeWidth`         | `number`                                                 | Stroke width; must be nonnegative                                                                       |
-|                | `dashed`              | `boolean`                                                | Enables a dashed stroke                                                                                 |
-|                | `dotted`              | `boolean`                                                | Enables a dotted stroke                                                                                 |
-|                | `dashPattern`         | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                       |
-| Opacity        | `opacity`             | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
-|                | `fillOpacity`         | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
-|                | `strokeOpacity`       | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
-| Jitter         | `jitter.span`         | `IRStripChartJitter['span']`                             | Total spread; a number uses role output units, ratio uses 0–1 of tick spacing                           |
-|                | `jitter.distribution` | `IRStripChartJitter['distribution']`                     | Uniform or truncated normal; positive sigma is relative to half the spread                              |
-|                | `jitter.seed`         | `number`                                                 | Repeatable placement for identical ordered data and settings; default 0                                 |
-| Padding        | `autoPadding`         | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
-|                | `domainPadding`       | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
-
-See the [properties schema](#stripchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
-
-#### StripMark
-
-Corresponds to `StripMark`, Vanilla `marks` and IR `recipe.marks`.
-
-| Property     | Type                           | Description                                                                       |
-| ------------ | ------------------------------ | --------------------------------------------------------------------------------- |
-| `override`   | `boolean`                      | Replace the complete strip point mark, otherwise append                           |
-| `encodings`  | `StripChartMark['encodings']`  | x, y, color, size, opacity and shape use field name strings; no mark-local scales |
-| `properties` | `StripChartMark['properties']` | Override placement and appearance; excludes domainPadding / autoPadding           |
-
-## Schema reference
-
-These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
-
-#### StripChartSchema
-
-<ZodSchema name="StripChartSchema" shallow />
-
-#### StripChartRecipeSchema
-
-<ZodSchema name="StripChartRecipeSchema" shallow />
-
-#### StripChartEncodingsSchema
-
-<ZodSchema name="StripChartEncodingsSchema" shallow />
-
-#### StripChartPropertiesSchema
-
-<ZodSchema name="StripChartPropertiesSchema" shallow />
-
-#### StripChartMarkSchema
-
-`encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
-
-<ZodSchema name="StripChartMarkSchema" shallow />
+{/* @include viz/chart/points/strip/generated */}
 
 ## Further reading
 

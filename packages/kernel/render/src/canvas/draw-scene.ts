@@ -1,3 +1,4 @@
+import { CoreTraceUnit } from '@retikz/core';
 import type {
   BlendMode,
   IRDropShadow,
@@ -13,7 +14,7 @@ import type {
   SceneResource,
   TextPrim,
 } from '@retikz/core';
-import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
+import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 import {
   commandArcStart,
@@ -25,6 +26,7 @@ import {
   parseHexColor,
   pathBounds,
 } from '../shared';
+import { RenderTracePhase } from '../trace';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
 import { buildGradientStrokeStyle, fillObjectGradient } from './gradient-paint';
@@ -911,8 +913,8 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
     options.trace.report({
-      phase: PerformanceTracePhase.Commit,
-      unit: PerformanceTraceUnit.ScenePrimitive,
+      phase: RenderTracePhase.Commit,
+      unit: CoreTraceUnit.ScenePrimitive,
       outcome: PerformanceTraceOutcome.Full,
       visited,
       reused: 0,

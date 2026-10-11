@@ -183,7 +183,7 @@ export const previewControlContract = {
   ],
   relatedApis: [
     'IRPaint',
-    'PatternShape',
+    'BuiltinPatternShape',
     'IRPatternPaint.dashed',
     'IRPatternPaint.dotted',
     'IRPatternPaint.dashPattern',

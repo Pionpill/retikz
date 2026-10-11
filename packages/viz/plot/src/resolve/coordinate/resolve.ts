@@ -1,7 +1,7 @@
 import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
 import {
   createDataView,
-  FieldOrderMode,
+  BuiltinFieldOrderMode,
   resolveFieldPath,
   resolveCategoryDomain,
   assertFieldOrders,
@@ -27,7 +27,14 @@ import type {
   IRPlotMarkOperation,
   IRPlotScaleOperation,
 } from '../../schemas';
-import { IntervalBoundKind, isBuiltinMark, PathClosureKind, PlotGuide, PlotMark, PlotScale } from '../../schemas';
+import {
+  IntervalBoundKind,
+  isBuiltinMark,
+  PathClosureKind,
+  PlotGuide,
+  BuiltinPlotMark,
+  BuiltinPlotScale,
+} from '../../schemas';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
@@ -128,7 +135,7 @@ const relationTargetRoleValues = (
   role: DimensionRole,
   rows: Array<ExternalRow>,
 ): Array<unknown> => {
-  if (!isBuiltinMark(mark) || mark.type !== PlotMark.Relation) return [];
+  if (!isBuiltinMark(mark) || mark.type !== BuiltinPlotMark.Relation) return [];
 
   const refs = [
     mark.source,
@@ -215,10 +222,10 @@ const assertRequiredPositionChannels = (
     if (!isBuiltinMark(mark)) continue;
 
     // reference 取向由 encoding.x XOR y 决定（绑一个、缺一个）；其取向校验在 lowerReference fail-loud
-    if (mark.type === PlotMark.Reference || mark.type === PlotMark.Relation) continue;
+    if (mark.type === BuiltinPlotMark.Reference || mark.type === BuiltinPlotMark.Relation) continue;
 
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
-    if (mark.type === PlotMark.Interval) {
+    if (mark.type === BuiltinPlotMark.Interval) {
       const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
 
       for (const channel of required) {
@@ -312,7 +319,7 @@ export const resolveCoordinateFrame = (
       out.push(...relationTargetRoleValues(mark, role, markRows));
 
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
-      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
+      if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Interval && axis !== undefined) {
         out.push(...intervalRoleValues(mark, axis, pick, markRows));
         continue;
       }
@@ -329,14 +336,15 @@ export const resolveCoordinateFrame = (
     if (
       axis !== undefined &&
       node.marks.some(
-        mark => isBuiltinMark(mark) && mark.type === PlotMark.Interval && intervalContributesBaseline(mark, axis),
+        mark =>
+          isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Interval && intervalContributesBaseline(mark, axis),
       )
     )
       out.push(0);
 
     if (includeBaseline) {
       for (const mark of node.marks) {
-        if (isBuiltinMark(mark) && mark.type === PlotMark.Path) {
+        if (isBuiltinMark(mark) && mark.type === BuiltinPlotMark.Path) {
           if (mark.closure?.kind === PathClosureKind.Baseline) {
             out.push(mark.closure.baseline ?? 0);
           } else if (mark.closure?.kind === PathClosureKind.Stack) {
@@ -354,7 +362,11 @@ export const resolveCoordinateFrame = (
     const hasRegularRoleTicks = node.marks.some(mark => {
       const channel = markEncoding(mark)?.[role];
       if (channel === undefined) return false;
-      return !(isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role));
+      return !(
+        isBuiltinMark(mark) &&
+        mark.type === BuiltinPlotMark.Interval &&
+        !intervalBoundConsumesRoleChannel(mark, role)
+      );
     });
     if (hasRegularRoleTicks) return undefined;
 
@@ -363,7 +375,7 @@ export const resolveCoordinateFrame = (
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       const markRows = dataView.rows;
-      if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
+      if (!isBuiltinMark(mark) || mark.type !== BuiltinPlotMark.Interval) continue;
 
       const ticks = intervalProportionalAxisTicks(mark, role, markRows);
       if (ticks === undefined) continue;
@@ -383,7 +395,11 @@ export const resolveCoordinateFrame = (
     const types: Array<DataFieldType> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
-      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
+      if (
+        isBuiltinMark(mark) &&
+        mark.type === BuiltinPlotMark.Interval &&
+        !intervalBoundConsumesRoleChannel(mark, role)
+      )
         continue;
 
       const channel = pick(mark);
@@ -408,7 +424,11 @@ export const resolveCoordinateFrame = (
     const found: Array<NonNullable<IRDataFieldDefinition['order']>> = [];
 
     for (const { mark, dataView } of markDataViewsForRole(role)) {
-      if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
+      if (
+        isBuiltinMark(mark) &&
+        mark.type === BuiltinPlotMark.Interval &&
+        !intervalBoundConsumesRoleChannel(mark, role)
+      )
         continue;
 
       const channel = pick(mark);
@@ -416,7 +436,7 @@ export const resolveCoordinateFrame = (
 
       const definition = dataView.model.find(field => field.name === channel.field);
       const order = definition?.order;
-      if (order === undefined || order === FieldOrderMode.Appearance) continue;
+      if (order === undefined || order === BuiltinFieldOrderMode.Appearance) continue;
 
       found.push(order);
     }
@@ -470,7 +490,7 @@ export const resolveCoordinateFrame = (
     if (
       order !== undefined &&
       isBuiltinScaleOperation(def) &&
-      (def.type === PlotScale.Band || def.type === PlotScale.Point) &&
+      (def.type === BuiltinPlotScale.Band || def.type === BuiltinPlotScale.Point) &&
       def.domain === undefined
     ) {
       return { ...def, domain: resolveCategoryDomain(values, order, context.fieldOrderRegistry) };

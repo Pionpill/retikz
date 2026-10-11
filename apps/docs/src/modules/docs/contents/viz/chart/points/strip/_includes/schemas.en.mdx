@@ -1,0 +1,23 @@
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+#### StripChartSchema
+
+<ZodSchema name="StripChartSchema" shallow />
+
+#### StripChartRecipeSchema
+
+<ZodSchema name="StripChartRecipeSchema" shallow />
+
+#### StripChartEncodingsSchema
+
+<ZodSchema name="StripChartEncodingsSchema" shallow />
+
+#### StripChartPropertiesSchema
+
+<ZodSchema name="StripChartPropertiesSchema" shallow />
+
+#### StripChartMarkSchema
+
+`encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+
+<ZodSchema name="StripChartMarkSchema" shallow />

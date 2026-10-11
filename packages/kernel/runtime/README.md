@@ -10,7 +10,7 @@ retikz 的领域中立运行时契约，负责 ownership、transaction、computa
 pnpm add @retikz/runtime
 ```
 
-This package is ESM-only and requires Node.js 24 or newer.
+This package is ESM-only and requires Node.js 22.12.0 or newer.
 
 ## License
 

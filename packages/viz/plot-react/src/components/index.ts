@@ -15,6 +15,6 @@ export type {
 } from './marks';
 export { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from './marks';
 export type { PlotScaleProps } from './scales';
-export { PlotScale } from './scales';
+export { BuiltinPlotScale } from './scales';
 export type { PlotTransformProps } from './transform';
 export { PlotTransform } from './transform';

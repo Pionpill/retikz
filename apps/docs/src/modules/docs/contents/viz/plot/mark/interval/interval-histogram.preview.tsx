@@ -1,4 +1,4 @@
-import { IntervalMark, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
+import { IntervalMark, PlotAxis, BuiltinPlotScale, PlotTransform } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -35,16 +35,16 @@ export const IntervalHistogramPreview = (values: IntervalHistogramPreviewValues)
         <Plot data={measurements} width={360} height={280} coordinate={coordinate}>
           <PlotTransform operation={{ ...intervalHistogramOperationOf(values.count) }} />
           <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
-          <PlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
-          <PlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
+          <BuiltinPlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
+          <BuiltinPlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>
       ) : (
         <Plot data={laborCosts} width={360} height={280} coordinate={coordinate}>
           <IntervalMark x="country" y="cost" width="gdp" color="country" />
-          <PlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
-          <PlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
+          <BuiltinPlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
+          <BuiltinPlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>

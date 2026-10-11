@@ -5,7 +5,7 @@ import {
   DEFAULT_TRANSFORM_CONTEXT,
   resolveRegressionRegistry,
   resolveRegressionImplementationRegistry,
-  applySmooth,
+  applyTransforms,
 } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
@@ -49,15 +49,17 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
           {
             operation: {
               kind: 'smooth',
-              x: 'x',
-              y: 'y',
-              xAs: 'tx',
-              yAs: 'ty',
-              sampleCount: 8,
-              method: { kind: 'degree-fit', degree },
+              params: {
+                x: 'x',
+                y: 'y',
+                xAs: 'tx',
+                yAs: 'ty',
+                sampleCount: 8,
+                method: { kind: 'degree-fit', degree },
+              },
             },
           },
-          ...(later ? [{ operation: { kind: 'sort', field: 'tx' } }] : []),
+          ...(later ? [{ operation: { kind: 'sort', params: { field: 'tx' } } }] : []),
         ],
       },
     ],
@@ -109,38 +111,49 @@ it('rejects invalid intermediate predictions', () => {
   });
   const registry = resolveRegressionRegistry([brokenDefinition]);
 
-  expect(() =>
-    applySmooth(
-      [
-        { x: 1, y: 1 },
-        { x: 3, y: 3 },
-      ],
-      { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
-      {
-        ...DEFAULT_TRANSFORM_CONTEXT,
-        regressionRegistry: registry,
-        regressionImplementationRegistry: resolveRegressionImplementationRegistry(registry, [brokenImplementation]),
-      },
-    ),
+  expect(
+    () =>
+      applyTransforms(
+        [
+          { x: 1, y: 1 },
+          { x: 3, y: 3 },
+        ],
+        [
+          {
+            kind: 'smooth',
+            params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
+          },
+        ],
+        {
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            regressionRegistry: registry,
+            regressionImplementationRegistry: resolveRegressionImplementationRegistry(registry, [brokenImplementation]),
+          },
+        },
+      ).rows,
   ).toThrow(/non-finite/);
 });
 
 it('rejects a degenerate inferred extent even when a custom fitter accepts the observations', () => {
-  expect(() =>
-    applySmooth(
-      [
-        { x: 1, y: 1 },
-        { x: 1, y: 2 },
-      ],
-      { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } },
-      {
-        ...DEFAULT_TRANSFORM_CONTEXT,
-        regressionRegistry: resolveRegressionRegistry([definition]),
-        regressionImplementationRegistry: resolveRegressionImplementationRegistry(
-          resolveRegressionRegistry([definition]),
-          [implementation],
-        ),
-      },
-    ),
+  expect(
+    () =>
+      applyTransforms(
+        [
+          { x: 1, y: 1 },
+          { x: 1, y: 2 },
+        ],
+        [{ kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } } }],
+        {
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            regressionRegistry: resolveRegressionRegistry([definition]),
+            regressionImplementationRegistry: resolveRegressionImplementationRegistry(
+              resolveRegressionRegistry([definition]),
+              [implementation],
+            ),
+          },
+        },
+      ).rows,
   ).toThrow(/extent/);
 });

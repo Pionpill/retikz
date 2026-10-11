@@ -1,5 +1,5 @@
 import type { ExternalRow, IRDataModel } from '@retikz/data';
-import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 import type { ReactNode } from 'react';
 import { Component } from 'react';
 
@@ -66,7 +66,7 @@ export const renderValidationPolicyPreview = (values: ValidationPolicyValues, me
         style={{ maxWidth: '100%', height: 'auto' }}
       >
         <IntervalMark x="month" y="revenue" color="month" />
-        <PlotScale dimension="y" type="linear" domainPadding={0} />
+        <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>

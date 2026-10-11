@@ -136,4 +136,10 @@ describe('runtime identity', () => {
     expect(lookup.size).toBe(0);
     expect(lookup.values()).toEqual([]);
   });
+
+  it.each([{ path: [] }, { path: [''] }, { path: Array<string>(1) }])('lookup 拒绝非法路径 $path', ({ path }) => {
+    expect(() => createRuntimeIdentityLookup('owner', [{ owner: 'owner', path }])).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.IdentityInvalid }),
+    );
+  });
 });

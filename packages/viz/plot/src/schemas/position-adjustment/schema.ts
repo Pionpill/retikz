@@ -7,7 +7,7 @@ import {
 } from '@retikz/foundation';
 import { array, literal, looseObject, number, strictObject, union } from 'zod';
 
-import { BUILTIN_POSITION_ADJUSTMENT_KINDS, PlotPositionAdjustment } from './constants';
+import { BUILTIN_POSITION_ADJUSTMENT_KINDS, BuiltinPlotPositionAdjustment } from './constants';
 
 /** 离散刻度间距比例形式的 jitter 总宽 */
 export const JitterRatioSpanSchema = strictObject({
@@ -39,7 +39,7 @@ export const PlotRandomDistributionSchema = union([
 
 /** 内置 role-space jitter operation */
 export const JitterPositionAdjustmentSchema = strictObject({
-  kind: literal(PlotPositionAdjustment.Jitter),
+  kind: literal(BuiltinPlotPositionAdjustment.Jitter),
   role: NonBlankStringSchema.optional().describe(
     'Coordinate role to jitter; omit only when exactly one discrete role can be selected',
   ),

@@ -12,7 +12,7 @@ import {
   SectorShapeDefinition,
   SectorShapeProvider,
   ExtensionShapeDefinitions,
-  ExtensionShapeName,
+  BuiltinExtensionShapeName,
   ExtensionShapeProviders,
   StarShapeDefinition,
   StarShapeProvider,
@@ -298,7 +298,7 @@ describe('Extension optional shape definitions', () => {
     expect(StarShapeProvider.makeDefinition({})).toBe(StarShapeDefinition);
     expect(ContourShapeProvider.makeDefinition({})).toBe(ContourShapeDefinition);
     expect(EllipticCapsuleShapeProvider.makeDefinition({})).toBe(EllipticCapsuleShapeDefinition);
-    expect(EllipticCapsuleShapeDefinition.name).toBe(ExtensionShapeName.EllipticCapsule);
+    expect(EllipticCapsuleShapeDefinition.name).toBe(BuiltinExtensionShapeName.EllipticCapsule);
     expect(ExtensionShapeDefinitions).toContain(EllipticCapsuleShapeDefinition);
     expect(ExtensionShapeProviders).toContain(EllipticCapsuleShapeProvider);
   });

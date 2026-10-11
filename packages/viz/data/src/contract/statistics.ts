@@ -31,6 +31,8 @@ export type StatisticsReducerDefinition<
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
  * @template TReducerSource 统计归约 schema 接受的原始声明类型
  * @template TReducerOperation schema 解析后用于字段分析和计算的归约参数类型
+ * @param def 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineStatisticsReducer = <
   TReducerSource extends IRDataReducerOperation,
@@ -82,6 +84,8 @@ export type RowSelectorDefinition<
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
  * @template TSelectorSource 行选择 schema 接受的原始声明类型
  * @template TSelectorOperation schema 解析后用于字段分析和选择的参数类型
+ * @param def 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineRowSelector = <
   TSelectorSource extends IRDataSelectorOperation,
@@ -123,6 +127,8 @@ export type StatisticsReducerImplementation<
  * @template TSource 计算定义 schema 接受的原始声明类型
  * @template TOperation schema 解析后传给计算回调的参数类型
  * @template TResult 归约回调返回的数据行或其 Promise 类型
+ * @param implementation 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineStatisticsReducerImplementation = <
   TSource extends IRDataReducerOperation,
@@ -171,6 +177,8 @@ export type RowSelectorImplementation<
  * @template TSource 计算定义 schema 接受的原始声明类型
  * @template TOperation schema 解析后传给计算回调的参数类型
  * @template TResult 选择回调返回的行选择数组或其 Promise 类型
+ * @param implementation 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineRowSelectorImplementation = <
   TSource extends IRDataSelectorOperation,
@@ -198,6 +206,9 @@ export type AnySynchronousRowSelectorImplementation = Omit<AnyRowSelectorImpleme
 /**
  * 从统计子算子定义 schema 中提取注册键
  * @description reducer 与 row selector 都以 `kind` 作为 registry discriminator；schema 必须把它声明成非空字面量
+ * @param schema 注册定义的对象 schema，kind 必须是非空字符串字面量
+ * @returns kind 字面量的字符串值
+ * @throws {RetikzDataError} schema 不是对象或 kind 不是有效字面量
  */
 export const extractStatisticOperation = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject)) {

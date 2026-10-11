@@ -18,7 +18,7 @@ import {
   PathClosureKind,
   PathCurve,
   PathMarkSchema,
-  PlotMark,
+  BuiltinPlotMark,
   PlotPathConnectNullsStyleSchema,
 } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
@@ -733,7 +733,7 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
  *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud
  */
 export const pathSeriesField = (mark: IRPlotMark, rows: Array<ExternalRow>): string | undefined => {
-  if (mark.type !== PlotMark.Path) return undefined;
+  if (mark.type !== BuiltinPlotMark.Path) return undefined;
 
   const colorField = mark.encoding.color?.field;
   if (mark.series) {
@@ -754,7 +754,7 @@ const lowerPath = (
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,
 ): IRScope | null => {
-  if (mark.type !== PlotMark.Path) return null;
+  if (mark.type !== BuiltinPlotMark.Path) return null;
   if (mark.interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError('lowerPlots: path interpolation override is only supported under polar2D');
   }
@@ -896,7 +896,7 @@ export const lowerPathLayer = (
 ): IRChild | null => {
   const supportsGenericOpenPath =
     isGenericCoordinateFrame(frame) &&
-    mark.type === PlotMark.Path &&
+    mark.type === BuiltinPlotMark.Path &&
     mark.closure === undefined &&
     mark.closed !== true;
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame) && !supportsGenericOpenPath) {
@@ -912,7 +912,7 @@ export const lowerPathLayer = (
     channelDefaultOf<string>(channels, 'color'),
     ctx?.provenance,
   );
-  if (layer === null || mark.type !== PlotMark.Path) return layer;
+  if (layer === null || mark.type !== BuiltinPlotMark.Path) return layer;
 
   const coordinates = pathAnchorCoordinates(mark, rows, frame, ctx);
   const anchoredLayer = coordinates.length === 0 ? layer : { ...layer, children: [...coordinates, ...layer.children] };

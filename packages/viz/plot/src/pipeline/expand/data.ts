@@ -50,7 +50,7 @@ export const applyMarkTransforms = (
     dataView,
     transform.map(declaration => declaration.operation),
     { registry: transformRegistry, context: transformContext },
-  );
+  ).dataView;
 };
 
 /**

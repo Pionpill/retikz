@@ -7,7 +7,7 @@ import type { ValueOf } from '@retikz/foundation';
  *   transform 通道（scale / scaleX / scaleY / rotate）的支点见 track 级 `origin`，缺省几何中心。
  *   各后端按通道翻译：SVG WAAPI/CSS、Canvas rAF 几何 lerp
  */
-export const AnimationProperty = {
+export const BuiltinAnimationProperty = {
   Opacity: 'opacity',
   Fill: 'fill',
   Stroke: 'stroke',
@@ -23,7 +23,7 @@ export const AnimationProperty = {
 } as const;
 
 /** 缓动具名预设（与 CSS 同名）；track / keyframe 亦可改用 cubic-bezier 四元组 */
-export const AnimationEasing = {
+export const BuiltinAnimationEasing = {
   Linear: 'linear',
   Ease: 'ease',
   EaseIn: 'ease-in',
@@ -51,10 +51,10 @@ export const AnimationFill = {
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
 
 /** 内置可动画属性通道名联合 */
-export type AnimationProperty = ValueOf<typeof AnimationProperty>;
+export type BuiltinAnimationProperty = ValueOf<typeof BuiltinAnimationProperty>;
 
 /** 缓动预设名联合 */
-export type AnimationEasing = ValueOf<typeof AnimationEasing>;
+export type BuiltinAnimationEasing = ValueOf<typeof BuiltinAnimationEasing>;
 
 /** 播放方向名联合 */
 export type AnimationDirection = ValueOf<typeof AnimationDirection>;

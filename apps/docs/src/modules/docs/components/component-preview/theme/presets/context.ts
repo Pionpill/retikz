@@ -2,7 +2,7 @@ import type { ChartThemeDefinition } from '@retikz/chart';
 import type { ThemeStyleDefinition } from '@retikz/core';
 import type { FlowDiagramDefinitionOptions, FlowThemeStyleDefinition } from '@retikz/diagram/flow';
 import type { GraphThemeStyleDefinition } from '@retikz/graph';
-import type { EntityKindDefinition } from '@retikz/graph';
+import type { EntityKindDefinition, RelationKindDefinition } from '@retikz/graph';
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { TableThemeStyleDefinition } from '@retikz/table';
 import { createContext, useContext } from 'react';
@@ -13,6 +13,7 @@ import {
   logicFigureEntityDefinitions,
   logicFigureFlowThemeStyle,
   logicFigureGraphThemeStyle,
+  logicFigureRelationKinds,
 } from '../../../logic-figure';
 import { PreviewChartThemeDefinitions } from './chart';
 import { PreviewCoreThemeStyles } from './core';
@@ -29,6 +30,7 @@ export type PreviewThemeDefinitions = Readonly<{
   table: ReadonlyArray<TableThemeStyleDefinition>;
   graph: ReadonlyArray<GraphThemeStyleDefinition>;
   graphEntityKinds: ReadonlyArray<EntityKindDefinition>;
+  graphRelationKinds: ReadonlyArray<RelationKindDefinition>;
 }>;
 
 /** docs reference preset 的稳定 definition bundle */
@@ -41,6 +43,7 @@ export const PreviewThemeDefinitionBundle: PreviewThemeDefinitions = Object.free
   table: PreviewTableThemeStyles,
   graph: [logicFigureGraphThemeStyle],
   graphEntityKinds: logicFigureEntityDefinitions,
+  graphRelationKinds: logicFigureRelationKinds,
 });
 
 export const PreviewThemeDefinitionsContext = createContext<PreviewThemeDefinitions>(PreviewThemeDefinitionBundle);

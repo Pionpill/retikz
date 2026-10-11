@@ -66,7 +66,7 @@ export const PointEncodingSchema = EncodingSchema.extend({
 // ir/mark.ts：PointMarkSchema 的 encoding 改用 PointEncodingSchema（其余 mark 不变）
 ```
 
-**(3) size = radius scale，派生到 sqrt（ADR-037）**：`size.field` 默认合成一个 `sqrt` scale（`PlotScale.Sqrt`，名 `__size_<field>`），domain `[0, maxPositive]`、range `[SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]`（px 常量）。**不新增 `PlotScale.Size` / `Radius` 类型**。**`size.value` 是最终半径（px）、绕过 scale**——它是常量视觉量，不参与 domain 推断 / 边界规则（那些只对 `size.field` 生效）。
+**(3) size = radius scale，派生到 sqrt（ADR-037）**：`size.field` 默认合成一个 `sqrt` scale（`BuiltinPlotScale.Sqrt`，名 `__size_<field>`），domain `[0, maxPositive]`、range `[SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]`（px 常量）。**不新增 `BuiltinPlotScale.Size` / `Radius` 类型**。**`size.value` 是最终半径（px）、绕过 scale**——它是常量视觉量，不参与 domain 推断 / 边界规则（那些只对 `size.field` 生效）。
 
 **(4) ③ 边界契约**：默认 domain `[0, maxPositive]`；**无正值 → 所有点 `SIZE_MIN_RADIUS`**；**仅一个正值 → 映射到 range 上界**；**负值 fail-loud**；**显式 domain 含负数 → 拒绝**。负值校验在 **size resolver / size scale resolver**（读 canonical value 后做**通道级**校验）——`lower/coerce.ts` **不改**全局 continuous 语义（负值对 continuous 字段本身合法）。
 

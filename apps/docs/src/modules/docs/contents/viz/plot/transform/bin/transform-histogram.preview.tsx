@@ -1,4 +1,4 @@
-import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale, PlotTransform } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -20,8 +20,8 @@ export const TransformHistogramPreview = (values: TransformHistogramPreviewValue
   return (
     <Plot data={measurements} width={420} height={260}>
       <PlotTransform operation={{ ...histogramOperationOf(values) }} />
-      <PlotScale dimension="x" type="linear" domain={[0, 20]} />
-      <PlotScale dimension="y" type="linear" domain={[0, 25]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[0, 20]} />
+      <BuiltinPlotScale dimension="y" type="linear" domain={[0, 25]} />
       <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       <PlotAxis dimension="x" title={i18n.measurement} />
       <PlotAxis dimension="y" title={i18n.frequency} grid />

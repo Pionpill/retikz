@@ -5,7 +5,7 @@ import type { ValueOf } from '@retikz/foundation';
  * @description 内置 3 motif：`lines`（横向阴影线）/ `dots`（波点）/ `grid`（横竖网格）。
  *   各 motif 的 tile 几何由 `BUILTIN_PATTERNS` 的 `PatternDefinition.emit` 在 compile 期产出
  */
-export const PatternShape = {
+export const BuiltinPatternShape = {
   Lines: 'lines',
   Dots: 'dots',
   Grid: 'grid',
@@ -25,7 +25,7 @@ export const ImageFit = {
  * 内置 3 pattern motif 名联合
  * @description `BUILTIN_PATTERNS` 的 Record key（保穷尽性约束，不随 `PatternShapeName` 开放而退化为 `string`）
  */
-export type PatternShape = ValueOf<typeof PatternShape>;
+export type BuiltinPatternShape = ValueOf<typeof BuiltinPatternShape>;
 
 /** 图片填充适配方式取值 */
 export type ImageFit = ValueOf<typeof ImageFit>;

@@ -68,7 +68,7 @@ import {
   MarkValueKind,
   PathClosureKind,
   PathCurve,
-  PlotMark,
+  BuiltinPlotMark,
   ReferenceMarkKind,
   RelationGeometryKind,
   RelationOrthogonalLabelStep,
@@ -666,7 +666,7 @@ const corePathStyle = {
 
 /** 校验逐记录生成点图形或文本节点的点标记 */
 export const PointMarkSchema = strictObject({
-  type: literal(PlotMark.Point).describe('Discriminator: one glyph or text label per record'),
+  type: literal(BuiltinPlotMark.Point).describe('Discriminator: one glyph or text label per record'),
   color: PointColorStyleSchema.optional().describe(
     'Glyph color: field-bound datum channel or constant color; overrides constant fill',
   ),
@@ -778,7 +778,7 @@ export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
 
 /** 校验按记录顺序连接为一维轨迹的路径标记 */
 export const PathMarkSchema = object({
-  type: literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
+  type: literal(BuiltinPlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
   order: NonBlankStringSchema.optional().describe(
     'Data field driving connection order; omit for data array order (minimal relation)',
   ),
@@ -890,7 +890,7 @@ export const IntervalBoundsSchema = record(NonBlankStringSchema, unknown())
 
 /** 校验由各角色区间与坐标系共同确定几何的区间标记 */
 export const IntervalMarkSchema = object({
-  type: literal(PlotMark.Interval).describe(
+  type: literal(BuiltinPlotMark.Interval).describe(
     'Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system',
   ),
   series: NonBlankStringSchema.optional().describe(
@@ -936,7 +936,7 @@ export const IntervalMarkSchema = object({
 
 /** 校验常量或逐记录参考线、单轴带与多角色区域约束 */
 export const ReferenceMarkSchema = strictObject({
-  type: literal(PlotMark.Reference).describe(
+  type: literal(BuiltinPlotMark.Reference).describe(
     'Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)',
   ),
   kind: literal(ReferenceMarkKind.Region)
@@ -1075,7 +1075,7 @@ export const RelationRibbonOptionsSchema = strictObject({
 
 /** 校验连接源与目标的关系标记，kind 决定普通描边或带状路径语义 */
 export const RelationMarkSchema = strictObject({
-  type: literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
+  type: literal(BuiltinPlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
   kind: zodEnum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
   source: PlotTargetRefSchema.describe('Relation source target'),
   target: PlotTargetRefSchema.describe('Relation target target'),

@@ -10,14 +10,16 @@ export const smoothOperationsOf = (values: { sampleCount: number; extentMode: 'o
   return [
     {
       kind: 'smooth',
-      x: 'time',
-      y: 'value',
-      groupBy: ['series'],
-      method: { kind: 'linear' },
-      sampleCount: values.sampleCount,
-      ...(extent !== undefined ? { extent } : {}),
-      xAs: 'trendX',
-      yAs: 'trendY',
+      params: {
+        x: 'time',
+        y: 'value',
+        groupBy: ['series'],
+        method: { kind: 'linear' },
+        sampleCount: values.sampleCount,
+        ...(extent !== undefined ? { extent } : {}),
+        xAs: 'trendX',
+        yAs: 'trendY',
+      },
     },
   ];
 };

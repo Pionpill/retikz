@@ -1,13 +1,13 @@
-import type { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from './constants';
+import type { PerformanceTraceOutcome } from './constants';
 
 /** 一次 owner 执行阶段的确定性工作量记录 */
 export type PerformanceTraceRecord = Readonly<{
   /** 发出记录的 owner */
   owner: string;
   /** 被观测的执行阶段 */
-  phase: PerformanceTracePhase;
+  phase: string;
   /** 阶段使用的计数单位 */
-  unit: PerformanceTraceUnit;
+  unit: string;
   /** 阶段的完成方式 */
   outcome: PerformanceTraceOutcome;
   /** 本阶段访问的实体 occurrence 数 */
@@ -32,15 +32,15 @@ export type PerformanceTraceDiagnostic = Readonly<{
   /** reporter 绑定的 owner */
   owner: string;
   /** 触发诊断的执行阶段 */
-  phase: PerformanceTracePhase;
+  phase: string;
 }>;
 
 /** owner 允许报告的阶段、单位与结果组合 */
 export type RuntimeTracePhaseDefinition = Readonly<{
-  /** 阶段名称 */
-  phase: PerformanceTracePhase;
-  /** 阶段唯一的计数单位 */
-  unit: PerformanceTraceUnit;
+  /** owner 自定义的阶段名称 */
+  phase: string;
+  /** 与阶段共同标识声明组合的 owner 自定义计数单位 */
+  unit: string;
   /** 阶段允许报告的结果 */
   outcomes: ReadonlyArray<PerformanceTraceOutcome>;
 }>;

@@ -4,7 +4,7 @@ import { array, number, strictObject } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
 import { RetikzTableError } from '../../error';
-import { TableCellVisualScale } from '../../schemas';
+import { BuiltinTableCellVisualScale } from '../../schemas';
 
 const thresholdsSchema = array(number()).superRefine((thresholds, context) => {
   thresholds.forEach((threshold, index) => {
@@ -18,7 +18,7 @@ const rangeSchema = array(CssColorSchema).min(1);
 
 /** 阈值分档颜色 scale */
 export const THRESHOLD_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
-  name: TableCellVisualScale.ThresholdColor,
+  name: BuiltinTableCellVisualScale.ThresholdColor,
   optionsSchema: strictObject({
     thresholds: thresholdsSchema,
     range: rangeSchema.optional(),

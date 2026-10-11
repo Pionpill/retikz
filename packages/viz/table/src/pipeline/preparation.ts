@@ -156,7 +156,7 @@ const resolveTableDataImpl = (
     createDataView(result.rows, result.model),
     spec.transform.map(declaration => declaration.operation),
     { registry: transformRegistry, context: completeContext },
-  );
+  ).dataView;
 
   return { rows: view.rows, model: view.model };
 };

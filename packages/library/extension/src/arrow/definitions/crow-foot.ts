@@ -1,12 +1,12 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
-import { ExtensionArrowName } from '../constants';
+import { BuiltinExtensionArrowName } from '../constants';
 import { openStrokePath } from './_utils';
 
 /** 可选 CrowFoot 箭头 Definition */
 export const CrowFootArrowDefinition = defineArrow({
-  name: ExtensionArrowName.CrowFoot,
+  name: BuiltinExtensionArrowName.CrowFoot,
   hollow: true,
   backX: 1,
   lineContactX: 1,

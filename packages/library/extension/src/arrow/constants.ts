@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 
 /** Extension 提供的可选箭头 provider 名称 */
-export const ExtensionArrowName = {
+export const BuiltinExtensionArrowName = {
   /** 实心菱形箭头 */
   Diamond: 'diamond',
   /** 空心菱形箭头 */
@@ -23,4 +23,4 @@ export const ExtensionArrowName = {
 } as const;
 
 /** Extension 箭头 provider 名称取值 */
-export type ExtensionArrowName = ValueOf<typeof ExtensionArrowName>;
+export type BuiltinExtensionArrowName = ValueOf<typeof BuiltinExtensionArrowName>;

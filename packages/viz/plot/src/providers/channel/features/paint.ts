@@ -1,7 +1,7 @@
 import type { IRPaint } from '@retikz/core';
 import { PaintSchema } from '@retikz/core';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
-import { DataFieldType, FieldOrderMode } from '@retikz/data';
+import { DataFieldType, BuiltinFieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelScaleResolveContext, MarkChannelDefinition } from '../../../contract';
@@ -9,7 +9,7 @@ import type { ChannelPaletteContext } from '../../../contract';
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
-import { PlotScale } from '../../../schemas';
+import { BuiltinPlotScale } from '../../../schemas';
 
 /** 颜色通道 definition 的名称、取值与图例配置 */
 export type ColorChannelDefinitionOptions = {
@@ -82,17 +82,17 @@ export const makeColorChannelDefinition = (
 
         scaleOperation = found;
       } else {
-        scaleOperation = { type: PlotScale.Ordinal, name: `__${options.channel}_${field}` };
+        scaleOperation = { type: BuiltinPlotScale.Ordinal, name: `__${options.channel}_${field}` };
       }
 
       const rawValues = ctx.rows.map(row => resolveFieldPath(row, field));
       if (
         isBuiltinScaleOperation(scaleOperation) &&
-        scaleOperation.type === PlotScale.Ordinal &&
+        scaleOperation.type === BuiltinPlotScale.Ordinal &&
         scaleOperation.domain === undefined
       ) {
         const order = definition?.order;
-        if (order !== undefined && order !== FieldOrderMode.Appearance) {
+        if (order !== undefined && order !== BuiltinFieldOrderMode.Appearance) {
           scaleOperation = { ...scaleOperation, domain: ctx.resolveCategoryDomain(rawValues, order) };
         }
       }

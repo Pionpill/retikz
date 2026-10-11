@@ -2,8 +2,6 @@ import type { RuntimeTraceReporter } from '@retikz/runtime';
 import {
   defineRuntimeComputation,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
   RuntimeComputationKind,
   RuntimeComputationPhase,
 } from '@retikz/runtime';
@@ -12,6 +10,7 @@ import type { AnyCompositeDefinition } from '../../contract';
 import { CoreSourceDefinition } from '../../contract';
 import { resolveCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { CoreTracePhase, CoreTraceUnit } from '../../shared';
 import { compileCoreSnapshot } from '../compile';
 import { CompileWarningCode } from '../constants';
 import type { CompileWarning } from '../warning';
@@ -70,13 +69,13 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
     computations: [],
     tracePhases: [
       {
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.IrChild,
         outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
       },
       {
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.SceneChange,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.SceneChange,
         outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
       },
     ],
@@ -91,7 +90,7 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
       const counter: RuntimeTraceReporter<'@retikz/core'> = Object.freeze({
         owner: '@retikz/core' as const,
         report: record => {
-          if (record.phase === PerformanceTracePhase.Compile && record.unit === PerformanceTraceUnit.IrChild) {
+          if (record.phase === CoreTracePhase.Compile && record.unit === CoreTraceUnit.IrChild) {
             visited = record.visited;
           }
         },
@@ -141,8 +140,8 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
       });
 
       context.trace.report({
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.IrChild,
         outcome: context.execution,
         visited,
         reused: 0,
@@ -150,8 +149,8 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
       });
       if (isUpdate) {
         context.trace.report({
-          phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.SceneChange,
+          phase: CoreTracePhase.Update,
+          unit: CoreTraceUnit.SceneChange,
           outcome: context.execution,
           visited: 1,
           reused: 0,
@@ -208,16 +207,16 @@ export const createCoreComputation = <const TComposites extends ReadonlyArray<An
       if (incremental === undefined) return { kind: RuntimeComputationKind.Fallback };
 
       context.trace.report({
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.IrChild,
         outcome: PerformanceTraceOutcome.Incremental,
         visited: incremental.reused + 1,
         reused: incremental.reused,
         changed: 1,
       });
       context.trace.report({
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.SceneChange,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.SceneChange,
         outcome: PerformanceTraceOutcome.Incremental,
         visited: incremental.operationCount,
         reused: 0,

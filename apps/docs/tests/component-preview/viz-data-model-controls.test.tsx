@@ -182,16 +182,18 @@ describe('Viz Data model controls', () => {
 
   it('pins the Plot provenance bar examples to the value-axis baseline', () => {
     const demoSource = readFileSync(
-      resolve('src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.preview.tsx'),
+      resolve('src/modules/docs/contents/viz/plot/provenance/plot-lineage.preview.tsx'),
       'utf8',
     );
 
-    expect(demoSource).toContain("import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';");
-    expect(demoSource).toContain('<PlotScale dimension="y" type="linear" domainPadding={0} />');
+    expect(demoSource).toContain(
+      "import { IntervalMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';",
+    );
+    expect(demoSource).toContain('<BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />');
 
     for (const locale of ['zh', 'en']) {
       const source = readFileSync(
-        resolve(`src/modules/docs/contents/viz/data/provenance/plot/index.${locale}.mdx`),
+        resolve(`src/modules/docs/contents/viz/plot/provenance/index.${locale}.mdx`),
         'utf8',
       );
 

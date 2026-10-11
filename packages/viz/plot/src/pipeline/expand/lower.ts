@@ -18,7 +18,6 @@ import { assertFieldOrders, resolveCategoryDomain } from '@retikz/data';
 import type { DataLineageOptions, DataLineageRun, DataTransformResult, DataView, ExternalDatasets } from '@retikz/data';
 import {
   applyTransformsToDataView,
-  applyTransformsToDataViewWithLineage,
   createDataView,
   tagSourceIndex,
   assertAllValuesValid,
@@ -106,7 +105,7 @@ import {
   AxisGridApplyTo,
   CoordinateViewPlacementKind,
   PLOT_NAMESPACE,
-  PlotCoordinate,
+  BuiltinPlotCoordinate,
   PlotLayerZIndex,
   PlotSchema,
 } from '../../schemas';
@@ -125,11 +124,11 @@ import type { LowerPlotsOptions, MarkDataView } from './types';
 
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
-  frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
+  frame?.type !== BuiltinPlotCoordinate.Cartesian1D && frame?.type !== BuiltinPlotCoordinate.Polar1D;
 
 const coordinateScaleNameOf = (coordinate: IRPlotCoordinateOperation, role: DimensionRole): string | undefined => {
   const field =
-    coordinate.type === PlotCoordinate.Polar1D || coordinate.type === PlotCoordinate.Polar2D
+    coordinate.type === BuiltinPlotCoordinate.Polar1D || coordinate.type === BuiltinPlotCoordinate.Polar2D
       ? role === 'x'
         ? 'angle'
         : role === 'y'
@@ -423,27 +422,17 @@ export const lowerPlotWithDataArtifact = (
   const rootTransformResult =
     preparedData !== undefined
       ? { dataView: normalizedDataView, lineage: preparedData.root.lineage ?? { events: [] } }
-      : lineageOptions === undefined
-        ? undefined
-        : applyTransformsToDataViewWithLineage(
-            normalizedDataView,
-            node.transform?.map(declaration => declaration.operation),
-            {
-              registry: transformRegistry,
-              context: transformContext,
-              lineage: lineageOptions,
-            },
-          );
-  const rootDataView =
-    rootTransformResult?.dataView ??
-    applyTransformsToDataView(
-      normalizedDataView,
-      node.transform?.map(declaration => declaration.operation),
-      {
-        registry: transformRegistry,
-        context: transformContext,
-      },
-    );
+      : applyTransformsToDataView(
+          normalizedDataView,
+          node.transform?.map(declaration => declaration.operation),
+          {
+            provenance: lineageOptions !== undefined,
+            registry: transformRegistry,
+            context: transformContext,
+            lineage: lineageOptions,
+          },
+        );
+  const rootDataView = rootTransformResult.dataView;
 
   const compositionResolution = resolveComposition(node);
   const {
@@ -484,7 +473,8 @@ export const lowerPlotWithDataArtifact = (
       };
     }
 
-    const result = applyTransformsToDataViewWithLineage(inputDataView, transform, {
+    const result = applyTransformsToDataView(inputDataView, transform, {
+      provenance: true,
       registry: transformRegistry,
       context: transformContext,
       lineage: lineageOptions,

@@ -1,4 +1,4 @@
-import { IntervalMark, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { IntervalMark, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -28,8 +28,13 @@ export const BarSeriesPreview = (values: BarSeriesPreviewValues) => {
           arrangement={values.mode}
           stackOffset={values.mode === 'stack' ? values.stackOffset : undefined}
         />
-        <PlotScale dimension="x" type="band" paddingInner={values.gap} paddingOuter={isPolar ? values.gap / 2 : 0.15} />
-        <PlotScale dimension="y" type="linear" domainPadding={0} />
+        <BuiltinPlotScale
+          dimension="x"
+          type="band"
+          paddingInner={values.gap}
+          paddingOuter={isPolar ? values.gap / 2 : 0.15}
+        />
+        <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" grid />
       </Plot>

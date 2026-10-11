@@ -9,7 +9,7 @@ import type {
   IRPlotRelationPathGeometry,
   IRPlotTextChannel,
 } from '@retikz/plot';
-import { PlotMark } from '@retikz/plot';
+import { BuiltinPlotMark } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type { NormalizationState } from './contracts';
@@ -253,7 +253,7 @@ export const collectReference = (
   };
 
   into.marks.push({
-    type: PlotMark.Reference,
+    type: BuiltinPlotMark.Reference,
     ...(kind !== undefined ? { kind } : {}),
     ...(interpolation !== undefined ? { interpolation } : {}),
     ...(id !== undefined ? { id } : {}),

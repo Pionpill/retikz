@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
 
 import { scores } from './rule-threshold.data';
 
@@ -21,8 +21,8 @@ export const RuleThresholdPreview = (values: RuleThresholdPreviewValues) => (
     height={280}
     coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
   >
-    <PlotScale dimension="x" type="linear" domain={[0, 120]} />
-    <PlotScale dimension="y" type="linear" domain={[0, 100]} />
+    <BuiltinPlotScale dimension="x" type="linear" domain={[0, 120]} />
+    <BuiltinPlotScale dimension="y" type="linear" domain={[0, 100]} />
     <PointMark x="attempt" y="score" />
     {values.axis === 'x' ? (
       <ReferenceMark x={values.value} color="crimson" />
