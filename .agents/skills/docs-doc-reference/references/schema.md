@@ -1,15 +1,15 @@
 # Schema Reference 与 ZodSchema 按需契约
 
-仅在编写或修改 Schema Reference 词典页、schema registry 或 `<ZodSchema>` 时读取。它不定义由公开导出和 JSDoc 自动生成的 API Reference；概念页中的少量手写说明属于“文中 API 介绍”，分工见 `docs-doc-reference`。
+仅在编写或修改合并 API 参考中的 Schema 内容、schema registry 或 `<ZodSchema>` 时读取。API 声明投影见 [API 生成与翻译](api.md)，合并结构见 [参考页结构](page.md)；概念页中的少量手写说明属于“文中 API 介绍”。
 
 ## 职责
 
-Schema Reference 提供字段完整、可扫描的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。API Reference 中的 Schema 符号仅展示名称与摘要；Schema 推导出的公开类型可由生成器展示一级属性，复用这里维护的中文字段翻译。
+Schema 内容提供字段完整、可扫描的校验查询入口，收录在 API 参考中。推导类型与对应 Schema 共用一个参考单元，Schema 字段通过同层页签查看；独立 Schema 保留自己的单元。推导类型的一级属性表复用这里维护的中文字段翻译。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。
 
-页面位于对应 owner 的 schema-reference，不要求 reference 目录前缀；路径示意：
+独立 API 参考位于对应 owner 的 reference；路径示意：
 
 ```text
-apps/docs/src/modules/docs/contents/<owner-path>/schema-reference/index.{zh,en}.mdx
+apps/docs/src/modules/docs/contents/<owner-path>/reference/index.{zh,en}.mdx
 ```
 
 registry 位于：
@@ -29,7 +29,7 @@ apps/docs/src/modules/docs/components/mdx-content/zod-schema/schema-registry.ts
 ## ZodSchema 规则
 
 - 定义小节标题使用 Schema 原始标识符（保留 Schema 后缀）；只翻译说明，不翻译代码成员
-- 具名 Schema 在引用处显示原名，定义处展示自身字段；当前所有 Schema 类型展示均不使用超链接
+- 具名 Schema 在字段类型引用处显示原名，不加超链接；定义标题中的名称链接真实声明，定义内容展示自身字段
 - 枚举能唯一对应公开常量时复用 `ApiValues` 悬浮展示取值；无法明确对应时直接显示枚举值，不猜测名称。`ApiValues` 保持枚举功能，不承载对象、联合类型或 Schema 详情
 
 - `name` 必须在 registry 注册；schema instance 必须来自包公开入口
@@ -44,7 +44,7 @@ apps/docs/src/modules/docs/components/mdx-content/zod-schema/schema-registry.ts
 
 1. 确认 schema 从所属包根入口公开导出
 2. 在 registry 注册 schema、label 与真实 URL/anchor
-3. 独立参考页按页面层级添加标题；嵌入非独立参考页时，以 H2 标出“Schema 参考”，以 Schema 原名作 H4 标题并添加 `<ZodSchema>`，不增加 H3；zh 补齐字段与嵌套点路径，en 只传 name
+3. 按真实声明与推导类型配对，将 `<ZodSchema>` 放入同层 Schema 页签；无配对类型时以 Schema 原名作 H4，标题名称链接源码。嵌入非独立页时收录于 H2“API 参考”，不另设“Schema 参考”；zh 补齐字段与嵌套点路径，en 只传 name
 4. 独立页面同步 data 与 i18n
 5. 运行 docs `tsc --noEmit`、完整性脚本，并在浏览器确认没有 `Unknown schema` 或中文描述缺失 warning
 
