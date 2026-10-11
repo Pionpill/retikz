@@ -14,6 +14,24 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/data#DataLineageEvent': [
+    { value: 'source', field: 'kind', type: "'source'", label: { zh: '输入来源', en: 'Source' } },
+    { value: 'transformStep', field: 'kind', type: "'transformStep'", label: { zh: '变换阶段', en: 'Transform step' } },
+    { value: 'fieldFlow', field: 'kind', type: "'fieldFlow'", label: { zh: '字段流', en: 'Field flow' } },
+    {
+      value: 'reducerOperation',
+      field: 'kind',
+      type: "'reducerOperation'",
+      label: { zh: '规约操作', en: 'Reducer operation' },
+    },
+    {
+      value: 'selectorOperation',
+      field: 'kind',
+      type: "'selectorOperation'",
+      label: { zh: '选择操作', en: 'Selector operation' },
+    },
+    { value: 'rowSample', field: 'kind', type: "'rowSample'", label: { zh: '行样本', en: 'Row sample' } },
+  ],
   '@retikz/data#DataInputBinding': [
     { value: 'rows', field: 'kind', type: "'rows'", label: { zh: '行数据', en: 'Rows' } },
     { value: 'result', field: 'kind', type: "'result'", label: { zh: '已计算结果', en: 'Computed result' } },

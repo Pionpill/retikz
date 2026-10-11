@@ -4,6 +4,7 @@ import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeBranchApiReferenceMdx } from './api-reference/branch';
 import { writeContextualReferences } from './api-reference/contextual-reference';
 import { writeDataModelApiReferenceMdx } from './api-reference/data-model';
+import { writeDataProvenanceApiReferenceMdx } from './api-reference/data-provenance';
 import { writeDataTransformApiReferenceMdx } from './api-reference/data-transform';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
@@ -104,4 +105,5 @@ await writeDataTransformApiReferenceMdx(
 );
 
 writeManualReferences(path.resolve(docsRoot, 'src/modules/docs/contents'));
+await writeDataProvenanceApiReferenceMdx();
 writeContextualReferences(path.resolve(docsRoot, 'src/modules/docs/contents'));

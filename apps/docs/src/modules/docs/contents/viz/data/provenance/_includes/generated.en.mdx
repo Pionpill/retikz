@@ -1,0 +1,666 @@
+{/* Generated reference. Do not edit manually. */}
+
+**Row provenance**
+
+#### <ApiSourceLink label={"SOURCE_INDEX"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={7}>SOURCE_INDEX</ApiSourceLink>
+
+Marks each input row with `row[SOURCE_INDEX]=i`; the Symbol key is ignored by JSON.stringify and string-path lookup
+
+```ts
+export const SOURCE_INDEX = Symbol('retikz.data.sourceIndex');
+```
+
+#### <ApiSourceLink label={"SOURCE_INDICES"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={23}>SOURCE_INDICES</ApiSourceLink>
+
+Aggregation and binning outputs can represent multiple source rows, so provenance records their source indices
+
+```ts
+export const SOURCE_INDICES = Symbol('retikz.data.sourceIndices');
+```
+
+#### <ApiSourceLink label={"tagSourceIndex"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={68}>tagSourceIndex</ApiSourceLink>
+
+Preserves existing row or group provenance; only unmarked rows use their current array index. Object spread preserves enumerable symbol properties, while resolveFieldPath and JSON ignore them
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name   | Type / signature     | Description                                                                                                   |
+| ---------- | ------ | -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Parameters | `rows` | `Array<ExternalRow>` | Input rows to mark                                                                                            |
+| Returns    | —      | `Array<ExternalRow>` | A new array of shallow row copies; preserves existing provenance and assigns current indices to unmarked rows |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const tagSourceIndex: (rows: Array<ExternalRow>) => Array<ExternalRow>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"readSourceIndex"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={14}>readSourceIndex</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name  | Type / signature      | Description                                       |
+| ---------- | ----- | --------------------- | ------------------------------------------------- |
+| Parameters | `row` | `ExternalRow`         | Row whose provenance is being read                |
+| Returns    | —     | `number \| undefined` | Single-row source index, or undefined when absent |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const readSourceIndex: (row: ExternalRow) => number | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"readSourceIndices"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={30}>readSourceIndices</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name  | Type / signature             | Description                                                                     |
+| ---------- | ----- | ---------------------------- | ------------------------------------------------------------------------------- |
+| Parameters | `row` | `ExternalRow`                | Row whose provenance is being read                                              |
+| Returns    | —     | `Array<number> \| undefined` | Reference to the source index array stored on the row, or undefined when absent |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const readSourceIndices: (row: ExternalRow) => Array<number> | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+**Recording options**
+
+#### <ApiSourceLink label={"DataLineageOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={40}>DataLineageOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                | Type                                   | Default                               | Description                                                                                                              |
+| --------------------- | -------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `calculationDetails?` | `false \| DataValueSampleOptions`      | `false`                               | Records reducer input values or selector candidate details; row and field limits must be explicit                        |
+| `fieldFlow?`          | `boolean`                              | `false`                               | Records field reads and outputs                                                                                          |
+| `reducerOperations?`  | `boolean`                              | `false`                               | Records reducer kind, target fields, and input fields without per-row input values                                       |
+| `retainEvents?`       | `boolean`                              | `options.sink === undefined`          | Whether to retain returned events with a sink; defaults to false with a sink, and events are always retained without one |
+| `rowSamples?`         | `false \| DataValueSampleOptions`      | `false`                               | Records row samples before and after transforms; row and field limits must be explicit                                   |
+| `selectorOperations?` | `boolean`                              | `false`                               | Records selector kind, sorting and grouping options, and selected sourceIdentity, without candidate rankings             |
+| `sink?`               | `DataLineageSink`                      | —                                     | Callback for consuming events as they are emitted                                                                        |
+| `sourceIdentity?`     | `boolean \| DataSourceIdentityOptions` | `{ mode: 'summary', maxIndices: 20 }` | Records sourceIndex / sourceIndices; an options object defaults to summary with maxIndices: 20                           |
+| `transformSteps?`     | `boolean`                              | `true`                                | Records transform order, kind, input and output row counts, and input and output fields                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageOptions = {
+  sourceIdentity?: boolean | DataSourceIdentityOptions;
+  transformSteps?: boolean;
+  fieldFlow?: boolean;
+  reducerOperations?: boolean;
+  selectorOperations?: boolean;
+  rowSamples?: false | DataValueSampleOptions;
+  calculationDetails?: false | DataValueSampleOptions;
+  sink?: DataLineageSink;
+  retainEvents?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataSourceIdentityMode"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={7}>DataSourceIdentityMode</ApiSourceLink>
+
+```ts
+export const DataSourceIdentityMode = {
+  Summary: 'summary',
+  Full: 'full',
+} as const;
+
+export type DataSourceIdentityMode = ValueOf<typeof DataSourceIdentityMode>;
+```
+
+#### <ApiSourceLink label={"DataSourceIdentityOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={18}>DataSourceIdentityOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                     | Default     | Description                                                                             |
+| ------------- | ------------------------ | ----------- | --------------------------------------------------------------------------------------- |
+| `maxIndices?` | `number`                 | `20`        | Length of the sourceIndices prefix retained in summary mode; must be a positive integer |
+| `mode?`       | `DataSourceIdentityMode` | `'summary'` | summary records count and the first maxIndices indices; full requires explicit opt-in   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataSourceIdentityOptions = {
+  mode?: DataSourceIdentityMode;
+  maxIndices?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataValueSampleOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={32}>DataValueSampleOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member    | Type            | Default | Description                                                                                               |
+| --------- | --------------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `fields`  | `Array<string>` | —       | Non-empty allowlist of fields whose values may be recorded; omitting it cannot enable whole-row recording |
+| `maxRows` | `number`        | —       | Maximum number of recorded rows; must be a positive integer                                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataValueSampleOptions = {
+  maxRows: number;
+  fields: Array<string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+**Events and results**
+
+#### <ApiSourceLink label={"DataSourceIdentity"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={86}>DataSourceIdentity</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member      | Type                     | Default | Description                                                                                |
+| ----------- | ------------------------ | ------- | ------------------------------------------------------------------------------------------ |
+| `count`     | `number`                 | —       | Total number of source indices                                                             |
+| `indices`   | `Array<number>`          | —       | Recorded source indices: a capped prefix in summary mode or the complete list in full mode |
+| `mode`      | `DataSourceIdentityMode` | —       | Recording mode: summary is the default bounded summary; full requires explicit opt-in      |
+| `truncated` | `boolean`                | —       | Whether maxIndices truncated the list in summary mode                                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataSourceIdentity = {
+  mode: DataSourceIdentityMode;
+  count: number;
+  indices: Array<number>;
+  truncated: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={198}>DataLineageEvent</ApiSourceLink>
+
+<DocTabs defaultValue="source">
+
+<DocTab value="source" label="Members · Source">
+
+<ApiTable>
+
+| Member            | Type                 | Default | Description                |
+| ----------------- | -------------------- | ------- | -------------------------- |
+| `kind`            | `'source'`           | —       | Event kind                 |
+| `rowCount`        | `number`             | —       | Number of input rows       |
+| `sourceIdentity?` | `DataSourceIdentity` | —       | Input source index summary |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="transformStep" label="Members · Transform step">
+
+<ApiTable>
+
+| Member                  | Type                 | Default | Description                              |
+| ----------------------- | -------------------- | ------- | ---------------------------------------- |
+| `inputFields`           | `Array<string>`      | —       | Input fields declared by the Definition  |
+| `inputRowCount`         | `number`             | —       | Number of input rows                     |
+| `inputSourceIdentity?`  | `DataSourceIdentity` | —       | Input source index summary               |
+| `kind`                  | `'transformStep'`    | —       | Event kind                               |
+| `operationIndex`        | `number`             | —       | Transform index in the declaration array |
+| `operationKind`         | `string`             | —       | Transform kind                           |
+| `outputFields`          | `Array<string>`      | —       | Output fields declared by the Definition |
+| `outputRowCount`        | `number`             | —       | Number of output rows                    |
+| `outputSourceIdentity?` | `DataSourceIdentity` | —       | Output source index summary              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="fieldFlow" label="Members · Field flow">
+
+<ApiTable>
+
+| Member           | Type            | Default | Description                              |
+| ---------------- | --------------- | ------- | ---------------------------------------- |
+| `inputFields`    | `Array<string>` | —       | Input fields declared by the Definition  |
+| `kind`           | `'fieldFlow'`   | —       | Event kind                               |
+| `operationIndex` | `number`        | —       | Transform index in the declaration array |
+| `operationKind`  | `string`        | —       | Transform kind                           |
+| `outputFields`   | `Array<string>` | —       | Output fields declared by the Definition |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="reducerOperation" label="Members · Reducer operation">
+
+<ApiTable>
+
+| Member            | Type                     | Default | Description                                                                                  |
+| ----------------- | ------------------------ | ------- | -------------------------------------------------------------------------------------------- |
+| `detailRows?`     | `Array<ExternalRow>`     | —       | Diagnostic samples; present only when calculationDetails is enabled                          |
+| `inputFields`     | `Array<string>`          | —       | Input fields declared by the Definition                                                      |
+| `kind`            | `'reducerOperation'`     | —       | Event kind                                                                                   |
+| `operation`       | `IRDataReducerOperation` | —       | Reducer configuration summary containing only JSON-safe operation fields, without row values |
+| `operationKind`   | `string`                 | —       | Reducer kind                                                                                 |
+| `outputFields`    | `Array<string>`          | —       | Output fields declared by the Definition                                                     |
+| `rowCount`        | `number`                 | —       | Number of rows consumed by this reducer invocation                                           |
+| `sourceIdentity?` | `DataSourceIdentity`     | —       | Source summary of reducer input rows                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="selectorOperation" label="Members · Selector operation">
+
+<ApiTable>
+
+| Member                    | Type                      | Default | Description                                                                                   |
+| ------------------------- | ------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `detailRows?`             | `Array<ExternalRow>`      | —       | Diagnostic samples; present only when calculationDetails is enabled                           |
+| `inputFields`             | `Array<string>`           | —       | Input fields declared by the Definition                                                       |
+| `kind`                    | `'selectorOperation'`     | —       | Event kind                                                                                    |
+| `operation`               | `IRDataSelectorOperation` | —       | Selector configuration summary containing only JSON-safe operation fields, without row values |
+| `operationKind`           | `string`                  | —       | Selector kind                                                                                 |
+| `rowCount`                | `number`                  | —       | Number of rows consumed by this selector invocation                                           |
+| `selectedSourceIdentity?` | `DataSourceIdentity`      | —       | Source summary of selected rows                                                               |
+| `sourceIdentity?`         | `DataSourceIdentity`      | —       | Source summary of selector input rows                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="rowSample" label="Members · Row sample">
+
+<ApiTable>
+
+| Member           | Type                  | Default | Description                                               |
+| ---------------- | --------------------- | ------- | --------------------------------------------------------- |
+| `kind`           | `'rowSample'`         | —       | Event kind                                                |
+| `operationIndex` | `number`              | —       | Transform index in the declaration array                  |
+| `operationKind`  | `string`              | —       | Transform kind                                            |
+| `phase`          | `'input' \| 'output'` | —       | Whether samples come from transform input or output       |
+| `rows`           | `Array<ExternalRow>`  | —       | Row samples restricted to the configured fields and limit |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageEvent =
+  | DataLineageSourceEvent
+  | DataLineageTransformStepEvent
+  | DataLineageFieldFlowEvent
+  | DataLineageReducerEvent
+  | DataLineageSelectorEvent
+  | DataLineageSampleEvent;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSourceEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={98}>DataLineageSourceEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member            | Type                 | Default | Description                |
+| ----------------- | -------------------- | ------- | -------------------------- |
+| `kind`            | `'source'`           | —       | Event kind                 |
+| `rowCount`        | `number`             | —       | Number of input rows       |
+| `sourceIdentity?` | `DataSourceIdentity` | —       | Input source index summary |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageSourceEvent = {
+  kind: 'source';
+  rowCount: number;
+  sourceIdentity?: DataSourceIdentity;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageTransformStepEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={108}>DataLineageTransformStepEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                  | Type                 | Default | Description                              |
+| ----------------------- | -------------------- | ------- | ---------------------------------------- |
+| `inputFields`           | `Array<string>`      | —       | Input fields declared by the Definition  |
+| `inputRowCount`         | `number`             | —       | Number of input rows                     |
+| `inputSourceIdentity?`  | `DataSourceIdentity` | —       | Input source index summary               |
+| `kind`                  | `'transformStep'`    | —       | Event kind                               |
+| `operationIndex`        | `number`             | —       | Transform index in the declaration array |
+| `operationKind`         | `string`             | —       | Transform kind                           |
+| `outputFields`          | `Array<string>`      | —       | Output fields declared by the Definition |
+| `outputRowCount`        | `number`             | —       | Number of output rows                    |
+| `outputSourceIdentity?` | `DataSourceIdentity` | —       | Output source index summary              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageTransformStepEvent = {
+  kind: 'transformStep';
+  operationIndex: number;
+  operationKind: string;
+  inputRowCount: number;
+  outputRowCount: number;
+  inputFields: Array<string>;
+  outputFields: Array<string>;
+  inputSourceIdentity?: DataSourceIdentity;
+  outputSourceIdentity?: DataSourceIdentity;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageFieldFlowEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={130}>DataLineageFieldFlowEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member           | Type            | Default | Description                              |
+| ---------------- | --------------- | ------- | ---------------------------------------- |
+| `inputFields`    | `Array<string>` | —       | Input fields declared by the Definition  |
+| `kind`           | `'fieldFlow'`   | —       | Event kind                               |
+| `operationIndex` | `number`        | —       | Transform index in the declaration array |
+| `operationKind`  | `string`        | —       | Transform kind                           |
+| `outputFields`   | `Array<string>` | —       | Output fields declared by the Definition |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageFieldFlowEvent = {
+  kind: 'fieldFlow';
+  operationIndex: number;
+  operationKind: string;
+  inputFields: Array<string>;
+  outputFields: Array<string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageReducerEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={144}>DataLineageReducerEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member            | Type                     | Default | Description                                                                                  |
+| ----------------- | ------------------------ | ------- | -------------------------------------------------------------------------------------------- |
+| `detailRows?`     | `Array<ExternalRow>`     | —       | Diagnostic samples; present only when calculationDetails is enabled                          |
+| `inputFields`     | `Array<string>`          | —       | Input fields declared by the Definition                                                      |
+| `kind`            | `'reducerOperation'`     | —       | Event kind                                                                                   |
+| `operation`       | `IRDataReducerOperation` | —       | Reducer configuration summary containing only JSON-safe operation fields, without row values |
+| `operationKind`   | `string`                 | —       | Reducer kind                                                                                 |
+| `outputFields`    | `Array<string>`          | —       | Output fields declared by the Definition                                                     |
+| `rowCount`        | `number`                 | —       | Number of rows consumed by this reducer invocation                                           |
+| `sourceIdentity?` | `DataSourceIdentity`     | —       | Source summary of reducer input rows                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageReducerEvent = {
+  kind: 'reducerOperation';
+  operationKind: string;
+  operation: IRDataReducerOperation;
+  inputFields: Array<string>;
+  outputFields: Array<string>;
+  rowCount: number;
+  sourceIdentity?: DataSourceIdentity;
+  detailRows?: Array<ExternalRow>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSelectorEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={164}>DataLineageSelectorEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                    | Type                      | Default | Description                                                                                   |
+| ------------------------- | ------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `detailRows?`             | `Array<ExternalRow>`      | —       | Diagnostic samples; present only when calculationDetails is enabled                           |
+| `inputFields`             | `Array<string>`           | —       | Input fields declared by the Definition                                                       |
+| `kind`                    | `'selectorOperation'`     | —       | Event kind                                                                                    |
+| `operation`               | `IRDataSelectorOperation` | —       | Selector configuration summary containing only JSON-safe operation fields, without row values |
+| `operationKind`           | `string`                  | —       | Selector kind                                                                                 |
+| `rowCount`                | `number`                  | —       | Number of rows consumed by this selector invocation                                           |
+| `selectedSourceIdentity?` | `DataSourceIdentity`      | —       | Source summary of selected rows                                                               |
+| `sourceIdentity?`         | `DataSourceIdentity`      | —       | Source summary of selector input rows                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageSelectorEvent = {
+  kind: 'selectorOperation';
+  operationKind: string;
+  operation: IRDataSelectorOperation;
+  inputFields: Array<string>;
+  rowCount: number;
+  sourceIdentity?: DataSourceIdentity;
+  selectedSourceIdentity?: DataSourceIdentity;
+  detailRows?: Array<ExternalRow>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSampleEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={184}>DataLineageSampleEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member           | Type                  | Default | Description                                               |
+| ---------------- | --------------------- | ------- | --------------------------------------------------------- |
+| `kind`           | `'rowSample'`         | —       | Event kind                                                |
+| `operationIndex` | `number`              | —       | Transform index in the declaration array                  |
+| `operationKind`  | `string`              | —       | Transform kind                                            |
+| `phase`          | `'input' \| 'output'` | —       | Whether samples come from transform input or output       |
+| `rows`           | `Array<ExternalRow>`  | —       | Row samples restricted to the configured fields and limit |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageSampleEvent = {
+  kind: 'rowSample';
+  operationIndex: number;
+  operationKind: string;
+  phase: 'input' | 'output';
+  rows: Array<ExternalRow>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSink"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={211}>DataLineageSink</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature   | Description                                                           |
+| ---------- | ------- | ------------------ | --------------------------------------------------------------------- |
+| Parameters | `event` | `DataLineageEvent` | The lineage event being emitted                                       |
+| Returns    | —       | `void`             | The callback return value does not contribute to the execution result |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageSink = (event: DataLineageEvent) => void;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageRun"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={266}>DataLineageRun</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member   | Type                      | Default | Description                  |
+| -------- | ------------------------- | ------- | ---------------------------- |
+| `events` | `Array<DataLineageEvent>` | —       | Events retained for this run |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type DataLineageRun = {
+  events: Array<DataLineageEvent>;
+};
+```
+
+</DocTab>
+
+</DocTabs>

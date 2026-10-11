@@ -1,0 +1,666 @@
+{/* Generated reference. Do not edit manually. */}
+
+**行来源**
+
+#### <ApiSourceLink label={"SOURCE_INDEX"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={7}>SOURCE_INDEX</ApiSourceLink>
+
+数据进入 pipeline 时给每行打 `row[SOURCE_INDEX]=i`；Symbol 键不进 JSON.stringify，也不会被字符串路径解析读取
+
+```ts
+export const SOURCE_INDEX = Symbol('retikz.data.sourceIndex');
+```
+
+#### <ApiSourceLink label={"SOURCE_INDICES"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={23}>SOURCE_INDICES</ApiSourceLink>
+
+聚合 / 分箱等输出行可代表一组源行，故 provenance 记录源行索引集合
+
+```ts
+export const SOURCE_INDICES = Symbol('retikz.data.sourceIndices');
+```
+
+#### <ApiSourceLink label={"tagSourceIndex"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={68}>tagSourceIndex</ApiSourceLink>
+
+已有行级或组级来源身份保持不变；未标记行才使用当前数组下标。object spread 会保留可枚举 symbol 属性，resolveFieldPath / JSON 都忽略它
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称   | 类型 / 签名          | 说明                                                           |
+| ------ | ------ | -------------------- | -------------------------------------------------------------- |
+| 参数   | `rows` | `Array<ExternalRow>` | 待标记的输入行                                                 |
+| 返回值 | —      | `Array<ExternalRow>` | 新数组及各行的浅拷贝；保留已有来源，为未标记行建立当前下标来源 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const tagSourceIndex: (rows: Array<ExternalRow>) => Array<ExternalRow>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"readSourceIndex"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={14}>readSourceIndex</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名           | 说明                                 |
+| ------ | ----- | --------------------- | ------------------------------------ |
+| 参数   | `row` | `ExternalRow`         | 待读取来源的行                       |
+| 返回值 | —     | `number \| undefined` | 单行来源索引；不存在时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const readSourceIndex: (row: ExternalRow) => number | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"readSourceIndices"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={30}>readSourceIndices</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名                  | 说明                                               |
+| ------ | ----- | ---------------------------- | -------------------------------------------------- |
+| 参数   | `row` | `ExternalRow`                | 待读取来源的行                                     |
+| 返回值 | —     | `Array<number> \| undefined` | 行上保存的来源索引数组引用；不存在时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const readSourceIndices: (row: ExternalRow) => Array<number> | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+**记录配置**
+
+#### <ApiSourceLink label={"DataLineageOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={40}>DataLineageOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                  | 类型                                   | 默认值                                | 说明                                                                        |
+| --------------------- | -------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------- |
+| `calculationDetails?` | `false \| DataValueSampleOptions`      | `false`                               | 记录 reducer 输入值或 selector 候选详情，必须显式限制行数和字段             |
+| `fieldFlow?`          | `boolean`                              | `false`                               | 记录字段级读取 / 产出关系                                                   |
+| `reducerOperations?`  | `boolean`                              | `false`                               | 记录 reducer kind、目标字段和输入字段，不记录每行输入值                     |
+| `retainEvents?`       | `boolean`                              | `options.sink === undefined`          | 使用 sink 时是否仍在返回值中保留 events；默认 false，未设置 sink 时始终保留 |
+| `rowSamples?`         | `false \| DataValueSampleOptions`      | `false`                               | 记录 transform 前后 row 样本，必须显式限制行数和字段                        |
+| `selectorOperations?` | `boolean`                              | `false`                               | 记录 selector kind、排序 / 分组选项和被选行 sourceIdentity，不记录候选排名  |
+| `sink?`               | `DataLineageSink`                      | —                                     | 事件流式消费回调                                                            |
+| `sourceIdentity?`     | `boolean \| DataSourceIdentityOptions` | `{ mode: 'summary', maxIndices: 20 }` | 记录 sourceIndex / sourceIndices；对象存在时默认 summary + maxIndices: 20   |
+| `transformSteps?`     | `boolean`                              | `true`                                | 记录 transform 顺序、kind、输入 / 输出行数与输入 / 输出字段                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageOptions = {
+  sourceIdentity?: boolean | DataSourceIdentityOptions;
+  transformSteps?: boolean;
+  fieldFlow?: boolean;
+  reducerOperations?: boolean;
+  selectorOperations?: boolean;
+  rowSamples?: false | DataValueSampleOptions;
+  calculationDetails?: false | DataValueSampleOptions;
+  sink?: DataLineageSink;
+  retainEvents?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataSourceIdentityMode"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={7}>DataSourceIdentityMode</ApiSourceLink>
+
+```ts
+export const DataSourceIdentityMode = {
+  Summary: 'summary',
+  Full: 'full',
+} as const;
+
+export type DataSourceIdentityMode = ValueOf<typeof DataSourceIdentityMode>;
+```
+
+#### <ApiSourceLink label={"DataSourceIdentityOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={18}>DataSourceIdentityOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                     | 默认值      | 说明                                                             |
+| ------------- | ------------------------ | ----------- | ---------------------------------------------------------------- |
+| `maxIndices?` | `number`                 | `20`        | summary 模式下保留的 sourceIndices 前缀长度，必须为正整数        |
+| `mode?`       | `DataSourceIdentityMode` | `'summary'` | summary 只记录 count + 前 maxIndices 个索引；full 只允许显式开启 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataSourceIdentityOptions = {
+  mode?: DataSourceIdentityMode;
+  maxIndices?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataValueSampleOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={32}>DataValueSampleOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员      | 类型            | 默认值 | 说明                                                   |
+| --------- | --------------- | ------ | ------------------------------------------------------ |
+| `fields`  | `Array<string>` | —      | 允许记录值的字段白名单，必须非空；不允许省略后记录整行 |
+| `maxRows` | `number`        | —      | 最大记录行数，必须为正整数                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataValueSampleOptions = {
+  maxRows: number;
+  fields: Array<string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+**事件与结果**
+
+#### <ApiSourceLink label={"DataSourceIdentity"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={86}>DataSourceIdentity</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员        | 类型                     | 默认值 | 说明                                                            |
+| ----------- | ------------------------ | ------ | --------------------------------------------------------------- |
+| `count`     | `number`                 | —      | 来源索引总数                                                    |
+| `indices`   | `Array<number>`          | —      | 记录的来源索引；summary 模式为 capped 前缀，full 模式为完整列表 |
+| `mode`      | `DataSourceIdentityMode` | —      | 记录模式；summary 是默认安全摘要，full 只在显式开启时出现       |
+| `truncated` | `boolean`                | —      | summary 模式下是否因 maxIndices 截断                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataSourceIdentity = {
+  mode: DataSourceIdentityMode;
+  count: number;
+  indices: Array<number>;
+  truncated: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={198}>DataLineageEvent</ApiSourceLink>
+
+<DocTabs defaultValue="source">
+
+<DocTab value="source" label="属性 · 输入来源">
+
+<ApiTable>
+
+| 成员              | 类型                 | 默认值 | 说明             |
+| ----------------- | -------------------- | ------ | ---------------- |
+| `kind`            | `'source'`           | —      | 事件类型         |
+| `rowCount`        | `number`             | —      | 输入数据行数     |
+| `sourceIdentity?` | `DataSourceIdentity` | —      | 输入来源索引摘要 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="transformStep" label="属性 · 变换阶段">
+
+<ApiTable>
+
+| 成员                    | 类型                 | 默认值 | 说明                         |
+| ----------------------- | -------------------- | ------ | ---------------------------- |
+| `inputFields`           | `Array<string>`      | —      | definition 声明的输入字段    |
+| `inputRowCount`         | `number`             | —      | 输入行数                     |
+| `inputSourceIdentity?`  | `DataSourceIdentity` | —      | 输入来源索引摘要             |
+| `kind`                  | `'transformStep'`    | —      | 事件类型                     |
+| `operationIndex`        | `number`             | —      | transform 在声明数组中的下标 |
+| `operationKind`         | `string`             | —      | 数据变换种类                 |
+| `outputFields`          | `Array<string>`      | —      | definition 声明的输出字段    |
+| `outputRowCount`        | `number`             | —      | 输出行数                     |
+| `outputSourceIdentity?` | `DataSourceIdentity` | —      | 输出来源索引摘要             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="fieldFlow" label="属性 · 字段流">
+
+<ApiTable>
+
+| 成员             | 类型            | 默认值 | 说明                         |
+| ---------------- | --------------- | ------ | ---------------------------- |
+| `inputFields`    | `Array<string>` | —      | definition 声明的输入字段    |
+| `kind`           | `'fieldFlow'`   | —      | 事件类型                     |
+| `operationIndex` | `number`        | —      | transform 在声明数组中的下标 |
+| `operationKind`  | `string`        | —      | 数据变换种类                 |
+| `outputFields`   | `Array<string>` | —      | definition 声明的输出字段    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="reducerOperation" label="属性 · 规约操作">
+
+<ApiTable>
+
+| 成员              | 类型                     | 默认值 | 说明                                                                    |
+| ----------------- | ------------------------ | ------ | ----------------------------------------------------------------------- |
+| `detailRows?`     | `Array<ExternalRow>`     | —      | 诊断详情样本；仅 calculationDetails 开启时存在                          |
+| `inputFields`     | `Array<string>`          | —      | definition 声明的输入字段                                               |
+| `kind`            | `'reducerOperation'`     | —      | 事件类型                                                                |
+| `operation`       | `IRDataReducerOperation` | —      | reducer operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值 |
+| `operationKind`   | `string`                 | —      | 聚合归约种类                                                            |
+| `outputFields`    | `Array<string>`          | —      | definition 声明的输出字段                                               |
+| `rowCount`        | `number`                 | —      | reducer 本次消费的行数                                                  |
+| `sourceIdentity?` | `DataSourceIdentity`     | —      | reducer 输入行来源摘要                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="selectorOperation" label="属性 · 选择操作">
+
+<ApiTable>
+
+| 成员                      | 类型                      | 默认值 | 说明                                                                     |
+| ------------------------- | ------------------------- | ------ | ------------------------------------------------------------------------ |
+| `detailRows?`             | `Array<ExternalRow>`      | —      | 诊断详情样本；仅 calculationDetails 开启时存在                           |
+| `inputFields`             | `Array<string>`           | —      | definition 声明的输入字段                                                |
+| `kind`                    | `'selectorOperation'`     | —      | 事件类型                                                                 |
+| `operation`               | `IRDataSelectorOperation` | —      | selector operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值 |
+| `operationKind`           | `string`                  | —      | 选择器种类                                                               |
+| `rowCount`                | `number`                  | —      | selector 本次消费的行数                                                  |
+| `selectedSourceIdentity?` | `DataSourceIdentity`      | —      | 被选行来源摘要                                                           |
+| `sourceIdentity?`         | `DataSourceIdentity`      | —      | selector 输入行来源摘要                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="rowSample" label="属性 · 行样本">
+
+<ApiTable>
+
+| 成员             | 类型                  | 默认值 | 说明                            |
+| ---------------- | --------------------- | ------ | ------------------------------- |
+| `kind`           | `'rowSample'`         | —      | 事件类型                        |
+| `operationIndex` | `number`              | —      | transform 在声明数组中的下标    |
+| `operationKind`  | `string`              | —      | 数据变换种类                    |
+| `phase`          | `'input' \| 'output'` | —      | 样本来自 transform 输入还是输出 |
+| `rows`           | `Array<ExternalRow>`  | —      | 裁剪后的 row 样本               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageEvent =
+  | DataLineageSourceEvent
+  | DataLineageTransformStepEvent
+  | DataLineageFieldFlowEvent
+  | DataLineageReducerEvent
+  | DataLineageSelectorEvent
+  | DataLineageSampleEvent;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSourceEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={98}>DataLineageSourceEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员              | 类型                 | 默认值 | 说明             |
+| ----------------- | -------------------- | ------ | ---------------- |
+| `kind`            | `'source'`           | —      | 事件类型         |
+| `rowCount`        | `number`             | —      | 输入数据行数     |
+| `sourceIdentity?` | `DataSourceIdentity` | —      | 输入来源索引摘要 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageSourceEvent = {
+  kind: 'source';
+  rowCount: number;
+  sourceIdentity?: DataSourceIdentity;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageTransformStepEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={108}>DataLineageTransformStepEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                    | 类型                 | 默认值 | 说明                         |
+| ----------------------- | -------------------- | ------ | ---------------------------- |
+| `inputFields`           | `Array<string>`      | —      | definition 声明的输入字段    |
+| `inputRowCount`         | `number`             | —      | 输入行数                     |
+| `inputSourceIdentity?`  | `DataSourceIdentity` | —      | 输入来源索引摘要             |
+| `kind`                  | `'transformStep'`    | —      | 事件类型                     |
+| `operationIndex`        | `number`             | —      | transform 在声明数组中的下标 |
+| `operationKind`         | `string`             | —      | 数据变换种类                 |
+| `outputFields`          | `Array<string>`      | —      | definition 声明的输出字段    |
+| `outputRowCount`        | `number`             | —      | 输出行数                     |
+| `outputSourceIdentity?` | `DataSourceIdentity` | —      | 输出来源索引摘要             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageTransformStepEvent = {
+  kind: 'transformStep';
+  operationIndex: number;
+  operationKind: string;
+  inputRowCount: number;
+  outputRowCount: number;
+  inputFields: Array<string>;
+  outputFields: Array<string>;
+  inputSourceIdentity?: DataSourceIdentity;
+  outputSourceIdentity?: DataSourceIdentity;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageFieldFlowEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={130}>DataLineageFieldFlowEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员             | 类型            | 默认值 | 说明                         |
+| ---------------- | --------------- | ------ | ---------------------------- |
+| `inputFields`    | `Array<string>` | —      | definition 声明的输入字段    |
+| `kind`           | `'fieldFlow'`   | —      | 事件类型                     |
+| `operationIndex` | `number`        | —      | transform 在声明数组中的下标 |
+| `operationKind`  | `string`        | —      | 数据变换种类                 |
+| `outputFields`   | `Array<string>` | —      | definition 声明的输出字段    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageFieldFlowEvent = {
+  kind: 'fieldFlow';
+  operationIndex: number;
+  operationKind: string;
+  inputFields: Array<string>;
+  outputFields: Array<string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageReducerEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={144}>DataLineageReducerEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员              | 类型                     | 默认值 | 说明                                                                    |
+| ----------------- | ------------------------ | ------ | ----------------------------------------------------------------------- |
+| `detailRows?`     | `Array<ExternalRow>`     | —      | 诊断详情样本；仅 calculationDetails 开启时存在                          |
+| `inputFields`     | `Array<string>`          | —      | definition 声明的输入字段                                               |
+| `kind`            | `'reducerOperation'`     | —      | 事件类型                                                                |
+| `operation`       | `IRDataReducerOperation` | —      | reducer operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值 |
+| `operationKind`   | `string`                 | —      | 聚合归约种类                                                            |
+| `outputFields`    | `Array<string>`          | —      | definition 声明的输出字段                                               |
+| `rowCount`        | `number`                 | —      | reducer 本次消费的行数                                                  |
+| `sourceIdentity?` | `DataSourceIdentity`     | —      | reducer 输入行来源摘要                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageReducerEvent = {
+  kind: 'reducerOperation';
+  operationKind: string;
+  operation: IRDataReducerOperation;
+  inputFields: Array<string>;
+  outputFields: Array<string>;
+  rowCount: number;
+  sourceIdentity?: DataSourceIdentity;
+  detailRows?: Array<ExternalRow>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSelectorEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={164}>DataLineageSelectorEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                      | 类型                      | 默认值 | 说明                                                                     |
+| ------------------------- | ------------------------- | ------ | ------------------------------------------------------------------------ |
+| `detailRows?`             | `Array<ExternalRow>`      | —      | 诊断详情样本；仅 calculationDetails 开启时存在                           |
+| `inputFields`             | `Array<string>`           | —      | definition 声明的输入字段                                                |
+| `kind`                    | `'selectorOperation'`     | —      | 事件类型                                                                 |
+| `operation`               | `IRDataSelectorOperation` | —      | selector operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值 |
+| `operationKind`           | `string`                  | —      | 选择器种类                                                               |
+| `rowCount`                | `number`                  | —      | selector 本次消费的行数                                                  |
+| `selectedSourceIdentity?` | `DataSourceIdentity`      | —      | 被选行来源摘要                                                           |
+| `sourceIdentity?`         | `DataSourceIdentity`      | —      | selector 输入行来源摘要                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageSelectorEvent = {
+  kind: 'selectorOperation';
+  operationKind: string;
+  operation: IRDataSelectorOperation;
+  inputFields: Array<string>;
+  rowCount: number;
+  sourceIdentity?: DataSourceIdentity;
+  selectedSourceIdentity?: DataSourceIdentity;
+  detailRows?: Array<ExternalRow>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSampleEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={184}>DataLineageSampleEvent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员             | 类型                  | 默认值 | 说明                            |
+| ---------------- | --------------------- | ------ | ------------------------------- |
+| `kind`           | `'rowSample'`         | —      | 事件类型                        |
+| `operationIndex` | `number`              | —      | transform 在声明数组中的下标    |
+| `operationKind`  | `string`              | —      | 数据变换种类                    |
+| `phase`          | `'input' \| 'output'` | —      | 样本来自 transform 输入还是输出 |
+| `rows`           | `Array<ExternalRow>`  | —      | 裁剪后的 row 样本               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageSampleEvent = {
+  kind: 'rowSample';
+  operationIndex: number;
+  operationKind: string;
+  phase: 'input' | 'output';
+  rows: Array<ExternalRow>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageSink"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={211}>DataLineageSink</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名        | 说明                     |
+| ------ | ------- | ------------------ | ------------------------ |
+| 参数   | `event` | `DataLineageEvent` | 本次发出的链路事件       |
+| 返回值 | —       | `void`             | 回调返回值不参与执行结果 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageSink = (event: DataLineageEvent) => void;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DataLineageRun"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={266}>DataLineageRun</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                      | 默认值 | 说明                 |
+| -------- | ------------------------- | ------ | -------------------- |
+| `events` | `Array<DataLineageEvent>` | —      | 本次运行记录到的事件 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type DataLineageRun = {
+  events: Array<DataLineageEvent>;
+};
+```
+
+</DocTab>
+
+</DocTabs>

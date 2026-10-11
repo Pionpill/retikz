@@ -6,7 +6,11 @@ import type { ExternalRow } from '../shared';
  */
 export const SOURCE_INDEX = Symbol('retikz.data.sourceIndex');
 
-/** 读一行的源序标记；未打标记时返回 undefined */
+/**
+ * 读一行的源序标记；未打标记时返回 undefined
+ * @param row 待读取来源的行
+ * @returns 单行来源索引；不存在时返回 undefined
+ */
 export const readSourceIndex = (row: ExternalRow): number | undefined => {
   const value: unknown = Reflect.get(row, SOURCE_INDEX);
   return typeof value === 'number' ? value : undefined;
@@ -18,7 +22,11 @@ export const readSourceIndex = (row: ExternalRow): number | undefined => {
  */
 export const SOURCE_INDICES = Symbol('retikz.data.sourceIndices');
 
-/** 读一行的组级源序标记；bin / summarize 输出行可能携带 */
+/**
+ * 读一行的组级源序标记；bin / summarize 输出行可能携带
+ * @param row 待读取来源的行
+ * @returns 行上保存的来源索引数组引用；不存在时返回 undefined
+ */
 export const readSourceIndices = (row: ExternalRow): Array<number> | undefined => {
   const value: unknown = Reflect.get(row, SOURCE_INDICES);
   return Array.isArray(value) && value.every((v): v is number => typeof v === 'number') ? value : undefined;
@@ -54,6 +62,8 @@ export const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow
 /**
  * 给每行打源序标记
  * @description 已有行级或组级来源身份保持不变；未标记行才使用当前数组下标。object spread 会保留可枚举 symbol 属性，resolveFieldPath / JSON 都忽略它
+ * @param rows 待标记的输入行
+ * @returns 新数组及各行的浅拷贝；保留已有来源，为未标记行建立当前下标来源
  */
 export const tagSourceIndex = (rows: Array<ExternalRow>): Array<ExternalRow> =>
   rows.map((row, index) =>

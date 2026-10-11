@@ -9,6 +9,31 @@ export type ReferenceGroup = {
 
 /** 显式分组清单，生成时拒绝成员遗漏、未知或重复 */
 export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<ReferenceGroup>>>> = {
+  'viz/data/provenance': [
+    {
+      title: { zh: '行来源', en: 'Row provenance' },
+      members: ['SOURCE_INDEX', 'SOURCE_INDICES', 'tagSourceIndex', 'readSourceIndex', 'readSourceIndices'],
+    },
+    {
+      title: { zh: '记录配置', en: 'Recording options' },
+      members: ['DataLineageOptions', 'DataSourceIdentityMode', 'DataSourceIdentityOptions', 'DataValueSampleOptions'],
+    },
+    {
+      title: { zh: '事件与结果', en: 'Events and results' },
+      members: [
+        'DataSourceIdentity',
+        'DataLineageEvent',
+        'DataLineageSourceEvent',
+        'DataLineageTransformStepEvent',
+        'DataLineageFieldFlowEvent',
+        'DataLineageReducerEvent',
+        'DataLineageSelectorEvent',
+        'DataLineageSampleEvent',
+        'DataLineageSink',
+        'DataLineageRun',
+      ],
+    },
+  ],
   'kernel/components/layout': [
     {
       title: {

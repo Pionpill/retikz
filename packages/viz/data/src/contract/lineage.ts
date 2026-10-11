@@ -16,9 +16,15 @@ export type DataSourceIdentityMode = ValueOf<typeof DataSourceIdentityMode>;
 
 /** 数据来源索引记录选项 */
 export type DataSourceIdentityOptions = {
-  /** summary 只记录 count + 前 maxIndices 个索引；full 只允许显式开启 */
+  /**
+   * summary 只记录 count + 前 maxIndices 个索引；full 只允许显式开启
+   * @default 'summary'
+   */
   mode?: DataSourceIdentityMode;
-  /** summary 模式下保留的 sourceIndices 前缀长度，必须为正整数 */
+  /**
+   * summary 模式下保留的 sourceIndices 前缀长度，必须为正整数
+   * @default 20
+   */
   maxIndices?: number;
 };
 
@@ -32,23 +38,47 @@ export type DataValueSampleOptions = {
 
 /** data lineage 运行时开关 */
 export type DataLineageOptions = {
-  /** 记录 sourceIndex / sourceIndices；对象存在时默认 summary + maxIndices: 20 */
+  /**
+   * 记录 sourceIndex / sourceIndices；对象存在时默认 summary + maxIndices: 20
+   * @default { mode: 'summary', maxIndices: 20 }
+   */
   sourceIdentity?: boolean | DataSourceIdentityOptions;
-  /** 记录 transform 顺序、kind、输入 / 输出行数与输入 / 输出字段 */
+  /**
+   * 记录 transform 顺序、kind、输入 / 输出行数与输入 / 输出字段
+   * @default true
+   */
   transformSteps?: boolean;
-  /** 记录字段级读取 / 产出关系 */
+  /**
+   * 记录字段级读取 / 产出关系
+   * @default false
+   */
   fieldFlow?: boolean;
-  /** 记录 reducer kind、目标字段和输入字段，不记录每行输入值 */
+  /**
+   * 记录 reducer kind、目标字段和输入字段，不记录每行输入值
+   * @default false
+   */
   reducerOperations?: boolean;
-  /** 记录 selector kind、排序 / 分组选项和被选行 sourceIdentity，不记录候选排名 */
+  /**
+   * 记录 selector kind、排序 / 分组选项和被选行 sourceIdentity，不记录候选排名
+   * @default false
+   */
   selectorOperations?: boolean;
-  /** 记录 transform 前后 row 样本，必须显式限制行数和字段 */
+  /**
+   * 记录 transform 前后 row 样本，必须显式限制行数和字段
+   * @default false
+   */
   rowSamples?: false | DataValueSampleOptions;
-  /** 记录 reducer 输入值或 selector 候选详情，必须显式限制行数和字段 */
+  /**
+   * 记录 reducer 输入值或 selector 候选详情，必须显式限制行数和字段
+   * @default false
+   */
   calculationDetails?: false | DataValueSampleOptions;
   /** 事件流式消费回调 */
   sink?: DataLineageSink;
-  /** 使用 sink 时是否仍在返回值中保留 events；默认 false，未设置 sink 时默认 true */
+  /**
+   * 使用 sink 时是否仍在返回值中保留 events；默认 false，未设置 sink 时始终保留
+   * @default options.sink === undefined
+   */
   retainEvents?: boolean;
 };
 
@@ -173,7 +203,11 @@ export type DataLineageEvent =
   | DataLineageSelectorEvent
   | DataLineageSampleEvent;
 
-/** data lineage 事件 sink */
+/**
+ * data lineage 事件 sink
+ * @param event 本次发出的链路事件
+ * @returns 回调返回值不参与执行结果
+ */
 export type DataLineageSink = (event: DataLineageEvent) => void;
 
 /** transform step 记录输入 */
