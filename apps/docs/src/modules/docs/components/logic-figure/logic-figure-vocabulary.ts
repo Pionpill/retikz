@@ -239,7 +239,10 @@ export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
   }),
 });
 
-type LogicFigureFlowGraphProps = Pick<FlowDiagramProps, 'entityKinds' | 'graphRules' | 'theme' | 'graphThemeStyles'>;
+type LogicFigureFlowGraphProps = Pick<
+  FlowDiagramProps,
+  'entityKinds' | 'relationKinds' | 'graphRules' | 'theme' | 'graphThemeStyles'
+>;
 
 /** Docs Relation kind 对应的稳定 Graph role */
 export const logicFigureRelationRoleByKind: Readonly<Record<LogicFigureRelationKindValue, string>> = {
@@ -251,4 +254,5 @@ export const logicFigureGraphProps = (): LogicFigureFlowGraphProps => ({
   theme: { style: logicFigureThemeName },
   graphThemeStyles: [logicFigureGraphThemeStyle],
   entityKinds: logicFigureEntityDefinitions,
+  relationKinds: logicFigureRelationKinds,
 });

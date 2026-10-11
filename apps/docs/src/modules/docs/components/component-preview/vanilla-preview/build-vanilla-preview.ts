@@ -670,6 +670,7 @@ const convertGraphChild = (
       return graph({
         ...input,
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+        relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
         ...(children === undefined ? {} : { children }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
@@ -939,6 +940,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
             roots: [GraphProviderKey],
             providers: createGraphProviders({
               entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+              relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
               graphThemeStyles: PreviewThemeDefinitionBundle.graph,
             }),
           },
@@ -1315,12 +1317,14 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
   const authoring = {
     ...flowAuthoringInput(source),
     entityKinds: '__GRAPH_ENTITY_KINDS__',
+    relationKinds: '__GRAPH_RELATION_KINDS__',
     diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
     flowThemeStyles: '__FLOW_THEME_STYLES__',
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
   const authoringCode = formatVanillaValue(authoring)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
+    .replace("'__GRAPH_RELATION_KINDS__'", 'PreviewThemeDefinitionBundle.graphRelationKinds')
     .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
     .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
     .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
@@ -1346,6 +1350,7 @@ const buildFlowPreview = (
       flowDiagram({
         ...flowAuthoringInput(source),
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+        relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
         diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
         flowThemeStyles: PreviewThemeDefinitionBundle.flow,
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
@@ -1378,11 +1383,13 @@ const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: B
   const authoring = {
     ...branchAuthoringInput(source),
     entityKinds: '__GRAPH_ENTITY_KINDS__',
+    relationKinds: '__GRAPH_RELATION_KINDS__',
     diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
   const authoringCode = formatVanillaValue(authoring)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
+    .replace("'__GRAPH_RELATION_KINDS__'", 'PreviewThemeDefinitionBundle.graphRelationKinds')
     .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
     .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
   const figureCode = formatVanillaValue({
@@ -1407,6 +1414,7 @@ const buildBranchPreview = (
       branchDiagram({
         ...branchAuthoringInput(source),
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+        relationKinds: PreviewThemeDefinitionBundle.graphRelationKinds,
         diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       }),
