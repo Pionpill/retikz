@@ -10,12 +10,6 @@ const runtimeSourceRegistryExecutors = new WeakMap<
 
 const runtimeSourceRegistries = new WeakSet<object>();
 
-const compareCodeUnits = (left: RuntimeSourceToken, right: RuntimeSourceToken): number => {
-  if (left.key < right.key) return -1;
-  if (left.key > right.key) return 1;
-  return 0;
-};
-
 /** 创建 source registry contract 错误 */
 const sourceRegistryError = (
   code:
@@ -60,7 +54,13 @@ export const createRuntimeSourceRegistry = (tokens: Array<RuntimeSourceToken>): 
     executors.set(candidate, getRuntimeSourceDefinitionExecutor(candidate));
   }
 
-  const sorted = Object.freeze([...definitions.values()].sort(compareCodeUnits));
+  const sorted = Object.freeze(
+    [...definitions.values()].sort((left, right) => {
+      if (left.key < right.key) return -1;
+      if (left.key > right.key) return 1;
+      return 0;
+    }),
+  );
   const registry: RuntimeSourceRegistry = Object.freeze({
     resolve: <TInput, TValue, TRead, TChange>(
       definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,

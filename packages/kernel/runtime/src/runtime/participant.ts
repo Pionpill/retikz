@@ -149,21 +149,35 @@ export const createRuntimeParticipantInvocation = (
   return Object.freeze({ context, takeDiagnostics });
 };
 
+/** 本轮 participant 准备所需的候选状态、调用入口与诊断收集器 */
+type RuntimeParticipantPreparationContext = Readonly<{
+  /** 本轮 trace 与 warning 调用上下文及诊断读取入口 */
+  invocation: ReturnType<typeof createRuntimeParticipantInvocation>;
+  /** 初始化或更新阶段 */
+  phase: RuntimeComputationPhase;
+  /** 更新基于的已提交版本，初始化时不存在 */
+  baseRevision: RuntimeRevision | undefined;
+  /** 候选状态完整发布后使用的版本 */
+  candidateRevision: RuntimeRevision;
+  /** 本轮候选 Source 状态 */
+  sourceStates: ReadonlyMap<RuntimeSourceToken, RuntimeSourceState>;
+  /** 本轮候选 Computation 状态 */
+  computationStates: ReadonlyMap<RuntimeComputationToken, RuntimeComputationState>;
+  /** 接收准备期间产生的诊断 */
+  diagnostics: Array<RuntimeDiagnostic>;
+}>;
+
 /** 为 initial / update 的固定候选状态准备一次 participant 提交 */
 export const prepareRuntimeParticipant = (
   participant: RuntimeCommitParticipantToken,
   executor: RuntimeCommitParticipantExecutor,
-  invocation: ReturnType<typeof createRuntimeParticipantInvocation>,
-  phase: RuntimeComputationPhase,
-  baseRevision: RuntimeRevision | undefined,
-  candidateRevision: RuntimeRevision,
-  sourceStates: ReadonlyMap<RuntimeSourceToken, RuntimeSourceState>,
-  computationStates: ReadonlyMap<RuntimeComputationToken, RuntimeComputationState>,
-  diagnostics: Array<RuntimeDiagnostic>,
+  context: RuntimeParticipantPreparationContext,
 ): RuntimePreparedParticipantState => {
+  const { invocation, phase, baseRevision, candidateRevision, sourceStates, computationStates, diagnostics } = context;
   const invocationErrors = new WeakSet<RetikzRuntimeError>();
   const declaredSources = new Set(participant.sources);
   const declaredComputations = new Set(participant.computations);
+
   const lookup = Object.freeze({
     snapshot: <TInput, TValue, TRead, TChange>(
       source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,

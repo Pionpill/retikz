@@ -478,14 +478,11 @@ const runComputation = (
   });
 };
 
-/**
- * 创建同步 Snapshot transaction runtime
- * @param options 来源、计算、完整初始输入与可选参与者配置
- * @returns 已完成初始计算和参与者提交、revision 为 0 的同步 Runtime
- * @throws {RetikzRuntimeError} 注册绑定、初始输入或参与者无效，以及初始化执行或提交失败时抛出
- */
-export const createRuntime = (options: RuntimeOptions): Runtime => {
-  const { sources, computations, trace, initialSnapshots } = options;
+/** 断言 Computation registry 与 Runtime 使用同一个 Source registry */
+const assertRuntimeRegistryBinding = (
+  sources: RuntimeSourceRegistry,
+  computations: RuntimeOptions['computations'],
+): void => {
   let computationSources: RuntimeSourceRegistry;
 
   try {
@@ -497,10 +494,74 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
   if (computationSources !== sources) {
     throw runtimeError(RetikzRuntimeErrorCode.RegistryMismatch, 'runtime-create', computations);
   }
+};
 
-  const updateStrategy = options.updateStrategy ?? RuntimeUpdateStrategy.Auto;
+/** 断言 participant 的依赖无重复且均属于当前注册表 */
+const assertRuntimeParticipantDependencies = (
+  participant: RuntimeCommitParticipantToken,
+  sources: RuntimeSourceRegistry,
+  computations: RuntimeOptions['computations'],
+): void => {
+  const sourceDependencies = new Set<RuntimeSourceToken>();
 
-  const participantsInput = options.participants ?? [];
+  for (const source of participant.sources) {
+    if (sourceDependencies.has(source) || sources.find(source.key) !== source) {
+      throw runtimeError(
+        RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+        'runtime-create',
+        source,
+        participant.key,
+      );
+    }
+
+    sourceDependencies.add(source);
+  }
+
+  const computationDependencies = new Set<RuntimeComputationToken>();
+
+  for (const computation of participant.computations) {
+    if (computationDependencies.has(computation)) {
+      throw runtimeError(
+        RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+        'runtime-create',
+        computation,
+        participant.key,
+      );
+    }
+
+    try {
+      if (computations.find(computation.id) !== computation) {
+        throw new RetikzRuntimeError({
+          code: RetikzRuntimeErrorCode.InternalInvariant,
+          message: 'participant Computation dependency is not registered',
+          phase: 'participant-dependency',
+          cause: computation,
+        });
+      }
+    } catch {
+      throw runtimeError(
+        RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+        'runtime-create',
+        computation,
+        participant.key,
+      );
+    }
+
+    computationDependencies.add(computation);
+  }
+};
+
+/** 校验 participant 身份与依赖，并按 key 收集参与者及其执行器 */
+const collectRuntimeParticipants = (
+  participantsInput: NonNullable<RuntimeOptions['participants']>,
+  sources: RuntimeSourceRegistry,
+  computations: RuntimeOptions['computations'],
+): Readonly<{
+  /** 按 key 排序并冻结的参与者集合 */
+  participants: ReadonlyArray<RuntimeCommitParticipantToken>;
+  /** 与参与者对应的生命周期执行器 */
+  participantExecutors: ReadonlyMap<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>;
+}> => {
   const participantExecutors = new Map<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>();
   const participantKeys = new Set<string>();
   const participants: Array<RuntimeCommitParticipantToken> = [];
@@ -516,53 +577,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
     }
 
     participantKeys.add(participant.key);
-    const sourceDependencies = new Set<RuntimeSourceToken>();
-
-    for (const source of participant.sources) {
-      if (sourceDependencies.has(source) || sources.find(source.key) !== source) {
-        throw runtimeError(
-          RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
-          'runtime-create',
-          source,
-          participant.key,
-        );
-      }
-
-      sourceDependencies.add(source);
-    }
-
-    const computationDependencies = new Set<RuntimeComputationToken>();
-
-    for (const computation of participant.computations) {
-      if (computationDependencies.has(computation)) {
-        throw runtimeError(
-          RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
-          'runtime-create',
-          computation,
-          participant.key,
-        );
-      }
-
-      try {
-        if (computations.find(computation.id) !== computation) {
-          throw new RetikzRuntimeError({
-            code: RetikzRuntimeErrorCode.InternalInvariant,
-            message: 'participant Computation dependency is not registered',
-            phase: 'participant-dependency',
-            cause: computation,
-          });
-        }
-      } catch {
-        throw runtimeError(
-          RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
-          'runtime-create',
-          computation,
-          participant.key,
-        );
-      }
-
-      computationDependencies.add(computation);
-    }
+    assertRuntimeParticipantDependencies(participant, sources, computations);
 
     const executor = getRuntimeCommitParticipantExecutor(participant);
     if (executor === undefined) {
@@ -580,6 +595,77 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
 
   participants.sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
   Object.freeze(participants);
+  return { participants, participantExecutors };
+};
+
+/** 断言更新基于有效且仍为当前版本的 revision */
+const assertRuntimeUpdateRevision = (baseRevision: RuntimeRevision, currentRevision: RuntimeRevision): void => {
+  if (!isRuntimeRevision(baseRevision)) {
+    throw runtimeError(RetikzRuntimeErrorCode.RevisionInvalid, 'update', baseRevision);
+  }
+
+  if (baseRevision !== currentRevision) {
+    throw runtimeError(RetikzRuntimeErrorCode.RevisionStale, 'update', baseRevision);
+  }
+};
+
+/** 校验更新命令的身份、Source 归属与唯一性，并收集对应执行器 */
+const collectRuntimeSourceCommands = (
+  sourceCommands: RuntimeUpdate['sources'],
+  sources: RuntimeSourceRegistry,
+): Map<RuntimeSourceToken, RuntimeSourceCommandExecutor> => {
+  const commands = new Map<RuntimeSourceToken, RuntimeSourceCommandExecutor>();
+
+  for (const command of sourceCommands) {
+    const executor = getRuntimeSourceCommandExecutor(command);
+    if (sources.find(command.source.key) !== command.source) {
+      throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'update', command, command.source.key);
+    }
+
+    if (commands.has(command.source)) {
+      throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'update', command, command.source.key);
+    }
+
+    commands.set(command.source, executor);
+  }
+  return commands;
+};
+
+/** 断言所有变更提示均基于本次更新的原版本 */
+const assertRuntimeChangeSetRevisions = (
+  commands: ReadonlyMap<RuntimeSourceToken, RuntimeSourceCommandExecutor>,
+  baseRevision: RuntimeRevision,
+): void => {
+  for (const [source, executor] of commands) {
+    if (executor.changeSetBaseRevision !== undefined && executor.changeSetBaseRevision !== baseRevision) {
+      throw runtimeError(
+        RetikzRuntimeErrorCode.ChangeSetRevisionMismatch,
+        'change-set',
+        executor.changeSetBaseRevision,
+        source.key,
+      );
+    }
+  }
+};
+
+/**
+ * 创建同步 Snapshot transaction runtime
+ * @param options 来源、计算、完整初始输入与可选参与者配置
+ * @returns 已完成初始计算和参与者提交、revision 为 0 的同步 Runtime
+ * @throws {RetikzRuntimeError} 注册绑定、初始输入或参与者无效，以及初始化执行或提交失败时抛出
+ */
+export const createRuntime = (options: RuntimeOptions): Runtime => {
+  const { sources, computations, trace, initialSnapshots } = options;
+  assertRuntimeRegistryBinding(sources, computations);
+
+  const updateStrategy = options.updateStrategy ?? RuntimeUpdateStrategy.Auto;
+
+  const { participants, participantExecutors } = collectRuntimeParticipants(
+    options.participants ?? [],
+    sources,
+    computations,
+  );
+
   const alreadyOwnedParticipant = claimRuntimeCommitParticipants(participants);
   if (alreadyOwnedParticipant !== undefined) {
     throw runtimeError(
@@ -651,17 +737,15 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       participantDrains.set(participant, invocation.takeDiagnostics);
       preparedParticipants.set(
         participant,
-        prepareRuntimeParticipant(
-          participant,
-          executor,
+        prepareRuntimeParticipant(participant, executor, {
           invocation,
-          RuntimeComputationPhase.Initial,
-          undefined,
-          currentRevision,
+          phase: RuntimeComputationPhase.Initial,
+          baseRevision: undefined,
+          candidateRevision: currentRevision,
           sourceStates,
           computationStates,
-          initialParticipantDiagnostics,
-        ),
+          diagnostics: initialParticipantDiagnostics,
+        }),
       );
     }
 
@@ -808,13 +892,7 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
       const updateState = { broken: false };
 
       try {
-        if (!isRuntimeRevision(update.baseRevision)) {
-          throw runtimeError(RetikzRuntimeErrorCode.RevisionInvalid, 'update', update.baseRevision);
-        }
-
-        if (update.baseRevision !== currentRevision) {
-          throw runtimeError(RetikzRuntimeErrorCode.RevisionStale, 'update', update.baseRevision);
-        }
+        assertRuntimeUpdateRevision(update.baseRevision, currentRevision);
 
         if (update.sources.length === 0) {
           return Object.freeze({
@@ -824,31 +902,8 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
           });
         }
 
-        const commands = new Map<RuntimeSourceToken, RuntimeSourceCommandExecutor>();
-
-        for (const command of update.sources) {
-          const executor = getRuntimeSourceCommandExecutor(command);
-          if (sources.find(command.source.key) !== command.source) {
-            throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'update', command, command.source.key);
-          }
-
-          if (commands.has(command.source)) {
-            throw runtimeError(RetikzRuntimeErrorCode.SourceCommandInvalid, 'update', command, command.source.key);
-          }
-
-          commands.set(command.source, executor);
-        }
-
-        for (const [source, executor] of commands) {
-          if (executor.changeSetBaseRevision !== undefined && executor.changeSetBaseRevision !== update.baseRevision) {
-            throw runtimeError(
-              RetikzRuntimeErrorCode.ChangeSetRevisionMismatch,
-              'change-set',
-              executor.changeSetBaseRevision,
-              source.key,
-            );
-          }
-        }
+        const commands = collectRuntimeSourceCommands(update.sources, sources);
+        assertRuntimeChangeSetRevisions(commands, update.baseRevision);
 
         const candidateRevision = createNextRuntimeRevision(currentRevision);
 
@@ -993,17 +1048,15 @@ export const createRuntime = (options: RuntimeOptions): Runtime => {
             participantDrains.set(participant, invocation.takeDiagnostics);
             preparedUpdateParticipants.set(
               participant,
-              prepareRuntimeParticipant(
-                participant,
-                executor,
+              prepareRuntimeParticipant(participant, executor, {
                 invocation,
-                RuntimeComputationPhase.Update,
-                currentRevision,
+                phase: RuntimeComputationPhase.Update,
+                baseRevision: currentRevision,
                 candidateRevision,
-                nextSourceStates,
-                nextComputationStates,
-                candidateParticipantDiagnostics,
-              ),
+                sourceStates: nextSourceStates,
+                computationStates: nextComputationStates,
+                diagnostics: candidateParticipantDiagnostics,
+              }),
             );
           }
 
