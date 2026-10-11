@@ -13,12 +13,12 @@ import { AngleDegreesSchema } from '../../scalar';
 import { StrokeCapJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
 import { GeometryLabelSchema, StepSchema } from '../step';
-import { PathFillRule, PathKind } from './constants';
+import { PathFillRule, BuiltinPathKind } from './constants';
 
 /** 校验路径内部区域的填充规则 */
 export const PathFillRuleSchema = zodEnum(PathFillRule).describe('Path fill rule keyword.');
 
-const PathKindSchema = createOpenStringSchema(PathKind);
+const PathKindSchema = createOpenStringSchema(BuiltinPathKind);
 
 /** 校验 x 与 y 轴独立指定的路径缩放倍率 */
 export const PathAnisotropicScaleSchema = object({
@@ -141,8 +141,8 @@ export const StrokePathSchema = PathBaseSchema.extend({
   children: array(unknown()).optional().describe('Sequence of source step actions for the stroke path.'),
 })
   .superRefine((path, ctx) => {
-    const kind = path.kind ?? PathKind.Stroke;
-    if (kind !== PathKind.Stroke) {
+    const kind = path.kind ?? BuiltinPathKind.Stroke;
+    if (kind !== BuiltinPathKind.Stroke) {
       ctx.addIssue({
         code: 'custom',
         path: ['kind'],

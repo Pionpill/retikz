@@ -15,6 +15,7 @@ import { previewEmbedPropsOf, previewHostDimensionsOf } from './preview-embed';
 const COMPONENT_EXPANSION_LIMIT = 16;
 
 type PreviewRootProps = {
+  theme?: LayoutProps['theme'];
   extensions?: LayoutProps['extensions'];
   rootScope?: LayoutProps['rootScope'];
   children?: ReactNode;
@@ -89,6 +90,11 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
   const rootAnimations = isLayout ? (props.animations as IRScene['animations'] | undefined) : undefined;
   let ir = normalized.ir;
   let sourceIr = normalized.sourceIr;
+  if (props.theme !== undefined) {
+    const theme = props.theme;
+    ir = { ...ir, theme };
+    sourceIr = { ...sourceIr, theme };
+  }
   if (viewBox !== undefined) {
     ir = { ...ir, viewBox };
     sourceIr = { ...sourceIr, viewBox };

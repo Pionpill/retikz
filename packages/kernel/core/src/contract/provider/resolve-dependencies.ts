@@ -289,7 +289,7 @@ const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProv
     return CoreProviderCapability.Clip;
 
   if ('paramsSchema' in definition && 'boundaryPoint' in definition) return CoreProviderCapability.Boundary;
-  if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.PathKind;
+  if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.BuiltinPathKind;
 
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Contract,
@@ -322,7 +322,7 @@ const definitionIdentity = (
       return { capability, name: (definition as PatternDefinition).name };
     case CoreProviderCapability.PathGenerator:
       return { capability, name: (definition as PathGeneratorDefinition).name };
-    case CoreProviderCapability.PathKind:
+    case CoreProviderCapability.BuiltinPathKind:
       return { capability, name: pathKindName(definition as AnyPathKindDefinition) };
     case CoreProviderCapability.Composite: {
       const composite = definition as AnyCompositeDefinition;
@@ -366,7 +366,7 @@ const appendByCapability = (
     case CoreProviderCapability.PathGenerator:
       definitions.pathGenerators.push(definition as PathGeneratorDefinition);
       return;
-    case CoreProviderCapability.PathKind:
+    case CoreProviderCapability.BuiltinPathKind:
       definitions.pathKinds.push(definition as AnyPathKindDefinition);
       return;
     case CoreProviderCapability.Composite:
@@ -435,7 +435,7 @@ const appendExplicitDefinitions = (
     [CoreProviderCapability.Arrow, explicit.arrows],
     [CoreProviderCapability.Pattern, explicit.patterns],
     [CoreProviderCapability.PathGenerator, explicit.pathGenerators],
-    [CoreProviderCapability.PathKind, explicit.pathKinds],
+    [CoreProviderCapability.BuiltinPathKind, explicit.pathKinds],
     [CoreProviderCapability.Composite, explicit.composites],
   ];
 

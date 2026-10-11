@@ -6,7 +6,7 @@ import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../../src/c
 
 describe('buildPlotIR mark-local transform', () => {
   const markTransform: Array<IRDataTransformDeclaration> = [
-    { operation: { kind: 'sort', field: 'score', order: 'descending' } },
+    { operation: { kind: 'sort', params: { field: 'score', order: 'descending' } } },
   ];
 
   it('point_mark_forwards_local_transform', () => {
@@ -34,7 +34,10 @@ describe('buildPlotIR mark-local transform', () => {
   });
 
   it('mark_transform_shortcut_definitions_append_plot_transforms_without_consuming_mark_local_transform', () => {
-    const shortcutTransform: IRDataTransform = { kind: 'jitter', axis: 'x', xField: 'x', amount: 0.2, seed: 9 };
+    const shortcutTransform: IRDataTransform = {
+      kind: 'jitter',
+      params: { axis: 'x', xField: 'x', amount: 0.2, seed: 9 },
+    };
     const spec = buildPlotIR(<PointMark x="x" y="score" transform={markTransform} />, '__plot', {
       markTransformShortcuts: [
         {

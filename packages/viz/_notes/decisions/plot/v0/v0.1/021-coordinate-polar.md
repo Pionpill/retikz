@@ -91,7 +91,7 @@ polar2D 的 schema 草案（详见实现契约 § Schema 改动）：
 ```ts
 // ir/coordinate.ts —— describe 一律英文
 export const Polar2DSchema = z.object({
-  type: z.literal(PlotCoordinate.Polar2D),
+  type: z.literal(BuiltinPlotCoordinate.Polar2D),
   angle: z.string().min(1), // scale name driving the angle role
   radius: z.string().min(1), // scale name driving the radius role
   startAngle: z.number().default(0), // degrees; 0 = +x, sweeps toward +y (screen y-down), matching core polar

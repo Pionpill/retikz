@@ -38,13 +38,13 @@ const renderLocalizedFlow = (language: 'zh' | 'en'): { key: string; markup: stri
 };
 
 describe('位置比例尺文档结构', () => {
-  it('分组页说明非位置视觉通道与 PlotScale dimension 的边界', () => {
+  it('分组页说明非位置视觉通道与 BuiltinPlotScale dimension 的边界', () => {
     for (const page of [scaleChinesePage, scaleEnglishPage]) {
       expect(page).toContain('size');
       expect(page).toContain('opacity');
       expect(page).toContain('shape');
       expect(page).toContain('/viz/plot/channel/builtin');
-      expect(page).toContain('<PlotScale dimension>');
+      expect(page).toContain('<BuiltinPlotScale dimension>');
     }
   });
 

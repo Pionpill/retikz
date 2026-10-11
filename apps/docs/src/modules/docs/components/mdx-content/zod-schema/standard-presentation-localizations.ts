@@ -39,7 +39,7 @@ export const GridSchemaZhLocalization = {
     frame: '子图下方的包络装饰',
     localNamespace: '为子节点与嵌套作用域启用局部命名空间',
     meta: '编译与渲染不解释的 JSON 元数据',
-    placement: '作用域变换后的对齐定位',
+    position: '父坐标系中的原点位置或作用域变换后的锚点对齐',
     style: '当前作用域的稀疏视觉覆盖',
     theme: '后代复合组件的主题覆盖',
     transforms: '作用域局部变换',

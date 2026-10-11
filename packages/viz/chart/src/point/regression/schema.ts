@@ -10,7 +10,7 @@ import {
   StrokeDashPatternSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
-import { RegressionMethodSchema, SmoothTransformSchema } from '@retikz/data';
+import { RegressionMethodSchema, SmoothParamsSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { PathCurve, PathMarkSchema } from '@retikz/plot';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
@@ -65,17 +65,17 @@ const refineRegressionExtent = (properties: { extent?: Array<number> }, context:
 /** 共享观测数据的额外拟合；省略项继承所在语义组的配置 */
 export const RegressionExtraMethodSchema = strictObject({
   method: RegressionMethodSchema,
-  sampleCount: SmoothTransformSchema.shape.sampleCount,
-  extent: SmoothTransformSchema.shape.extent,
+  sampleCount: SmoothParamsSchema.shape.sampleCount,
+  extent: SmoothParamsSchema.shape.extent,
   trend: RegressionTrendPropertiesSchema.optional(),
 })
   .superRefine(refineRegressionExtent)
   .describe('Additional regression fit sharing observations with inherited sampling and trend properties');
 
 const RegressionPropertiesBaseSchema = strictObject({
-  method: SmoothTransformSchema.shape.method,
-  sampleCount: SmoothTransformSchema.shape.sampleCount,
-  extent: SmoothTransformSchema.shape.extent,
+  method: SmoothParamsSchema.shape.method,
+  sampleCount: SmoothParamsSchema.shape.sampleCount,
+  extent: SmoothParamsSchema.shape.extent,
   point: RegressionPointPropertiesSchema.optional(),
   trend: RegressionTrendPropertiesSchema.optional(),
   extraMethods: array(RegressionExtraMethodSchema)

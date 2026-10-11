@@ -1,12 +1,10 @@
 import type { IRScene } from '@retikz/core';
-import { CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/core';
+import { CORE_SOURCE_KEY, CoreSourceDefinition, CoreTracePhase, CoreTraceUnit } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeSourceUpdate,
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
   RuntimeUpdateStrategy,
 } from '@retikz/runtime';
 import { mountCanvas, mountSvg, VanillaViewMode } from '@retikz/vanilla/dom';
@@ -78,8 +76,8 @@ const resolveLabOutcome = (record: PerformanceTraceRecord): LabOutcomeValue => {
 /** 把公共 trace、Patch 与 timing 样本整理为 UI 稳定结果 */
 export const createLabPolicyResult = (input: CreateLabPolicyResultInput): LabPolicyResult => {
   const work =
-    input.trace.find(record => record.owner === CORE_SOURCE_KEY && record.phase === PerformanceTracePhase.Update) ??
-    input.trace.find(record => record.owner === '@retikz/core' && record.phase === PerformanceTracePhase.Compile) ??
+    input.trace.find(record => record.owner === CORE_SOURCE_KEY && record.phase === CoreTracePhase.Update) ??
+    input.trace.find(record => record.owner === '@retikz/core' && record.phase === CoreTracePhase.Compile) ??
     input.trace.at(0);
   if (work === undefined) throw new Error(`${input.policyId}: Kernel Lab trace is unavailable`);
 
@@ -207,8 +205,8 @@ const executeStaticPolicy = (input: KernelLabPolicyInput, first: IRScene, second
     owner: '@retikz/core',
     phases: [
       {
-        phase: PerformanceTracePhase.Compile,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Compile,
+        unit: CoreTraceUnit.IrChild,
         outcomes: [PerformanceTraceOutcome.Full],
       },
     ],

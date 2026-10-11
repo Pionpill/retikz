@@ -6,7 +6,7 @@ import { readSchemaDescriptions } from './descriptions';
 export const pathSchemaDescriptions = readSchemaDescriptions(
   path.resolve(
     import.meta.dirname,
-    '../../src/modules/docs/contents/kernel/components/path/schema-reference/index.zh.mdx',
+    '../../src/modules/docs/contents/kernel/components/path/reference/_includes/schemas.zh.mdx',
   ),
   'PathSchema',
 );
@@ -15,7 +15,7 @@ export const pathSchemaDescriptions = readSchemaDescriptions(
 export const geometryLabelSchemaDescriptions = readSchemaDescriptions(
   path.resolve(
     import.meta.dirname,
-    '../../src/modules/docs/contents/kernel/components/path/schema-reference/index.zh.mdx',
+    '../../src/modules/docs/contents/kernel/components/path/reference/_includes/schemas.zh.mdx',
   ),
   'GeometryLabelSchema',
 );

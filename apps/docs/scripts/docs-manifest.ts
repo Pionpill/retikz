@@ -97,6 +97,7 @@ const collectRouteDocuments = (moduleId: string, sections: Array<Section>): Arra
 const inferPageType = (document: RouteDocument): DocPageType => {
   if (document.meta?.pageType) return document.meta.pageType;
   if (document.group) return 'group';
+  if (document.parts.includes('reference')) return 'reference';
   if (document.sectionId === undefined) return 'entry';
 
   switch (document.sectionId) {

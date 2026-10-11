@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { resolvePlotExtensionAuthoring } from '../../../src';
-import { PlotAxis, PlotFacet, PlotLegend, PlotScale, PlotTransform, PointMark } from '../../../src/components';
+import { PlotAxis, PlotFacet, PlotLegend, BuiltinPlotScale, PlotTransform, PointMark } from '../../../src/components';
 import { Plot } from '../../../src/Plot';
 
 const extensionContext = (overrides: Partial<PlotAuthoringContext> = {}): PlotAuthoringContext => ({
@@ -86,9 +86,9 @@ describe('Plot chart-extension declaration normalization', () => {
   it('emits only explicit JSON-safe members and preserves their authored order', () => {
     const result = normalizeExtension(
       [
-        <PlotTransform key="sort" operation={{ kind: 'sort', field: 'amount', order: 'descending' }} />,
+        <PlotTransform key="sort" operation={{ kind: 'sort', params: { field: 'amount', order: 'descending' } }} />,
         <PointMark key="point" id="extension.point" x="amount" y="margin" />,
-        <PlotScale key="scale" dimension="x" type="log" base={2} />,
+        <BuiltinPlotScale key="scale" dimension="x" type="log" base={2} />,
         <PlotAxis key="axis" dimension="x" grid />,
         <PlotLegend key="legend" channel="color" title="Series" />,
       ],
@@ -102,7 +102,7 @@ describe('Plot chart-extension declaration normalization', () => {
 
     expect(result).toEqual({
       fragment: {
-        transform: [{ operation: { kind: 'sort', field: 'amount', order: 'descending' } }],
+        transform: [{ operation: { kind: 'sort', params: { field: 'amount', order: 'descending' } } }],
         scales: [{ type: 'log', name: '__x', base: 2 }],
         coordinate: { type: 'cartesian2D', x: '__x', y: 'recipe.y' },
         marks: [
@@ -275,7 +275,7 @@ describe('Plot chart-extension declaration normalization', () => {
 
     expectDeclarationError(
       () =>
-        normalizeExtension(<PlotScale dimension="x" type="linear" />, {
+        normalizeExtension(<BuiltinPlotScale dimension="x" type="linear" />, {
           scales: {
             value: [{ type: 'linear', name: 'recipe.x' }],
             path: ['props', 'scales'],

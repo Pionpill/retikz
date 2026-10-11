@@ -15,7 +15,7 @@ import { resolveScaleDefinition } from '../../resolve/scale';
 import type { EffectivePlotGuideTheme } from '../../resolve/theme';
 import { resolveLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlot, IRPlotLegendGuide, IRPlotScaleOperation, LegendChannelValue } from '../../schemas';
-import { LegendSymbolFit, PlotLayerZIndex, PlotScale } from '../../schemas';
+import { LegendSymbolFit, PlotLayerZIndex, BuiltinPlotScale } from '../../schemas';
 import type { LegendReserve, Rect } from '../../shared';
 import type { LegendEntry, LowerLegendOptions } from '../guide';
 import { lowerLegend } from '../guide';
@@ -152,7 +152,7 @@ const niceNumericTicks = (
 ): Array<{ value: number; offset: number; label: string }> => {
   const [lo, hi] = domain;
   const scale = resolveLinearScale(
-    { type: PlotScale.Linear, name: '__legend_numeric_ticks', domain: [lo, hi] },
+    { type: BuiltinPlotScale.Linear, name: '__legend_numeric_ticks', domain: [lo, hi] },
     [],
     [0, 1],
   );
@@ -171,7 +171,7 @@ const legendRampTickScale = (
   fieldType: DataFieldType | undefined,
 ): PositionScale => {
   const scale = resolveLinearScale(
-    { type: PlotScale.Linear, name: '__legend_ramp_ticks', domain: [domain[0], domain[1]] },
+    { type: BuiltinPlotScale.Linear, name: '__legend_ramp_ticks', domain: [domain[0], domain[1]] },
     [],
     [0, 1],
   );
@@ -212,7 +212,7 @@ const resolveSqrtForLegend = (
 ): ((value: number) => number) => {
   const scale = resolveSqrtScale(
     {
-      type: PlotScale.Sqrt,
+      type: BuiltinPlotScale.Sqrt,
       name: '__legend_size',
       domain: [Math.max(0, domain[0]), domain[1]],
       range: [range[0], range[1]],
@@ -276,7 +276,7 @@ const resolveColorLegend = (
     const colors = resolution.range;
     const formatNumber = resolveLinearScale(
       {
-        type: PlotScale.Linear,
+        type: BuiltinPlotScale.Linear,
         name: '__legend_bin_labels',
         domain: edges.length > 0 ? [edges[0], edges[edges.length - 1]] : [0, 1],
       },

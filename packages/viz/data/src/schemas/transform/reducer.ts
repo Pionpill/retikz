@@ -6,13 +6,13 @@ import {
 } from '@retikz/foundation';
 import { array, discriminatedUnion, literal, looseObject, strictObject, union } from 'zod';
 
-import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
+import { BuiltinReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
 import { ReducerOperationKindSchema } from './kind';
 import { reducerOutputFieldsOf } from './output-fields';
 
 /** count reducer operation schema；只输出组内行数，不读取字段 */
 const CountReducerOperationSchema = strictObject({
-  kind: literal(ReducerOperationKind.Count).describe('Discriminator: count reducer'),
+  kind: literal(BuiltinReducerOperationKind.Count).describe('Discriminator: count reducer'),
   as: NonBlankStringSchema.describe('Output field'),
 }).describe('Count reducer operation');
 
@@ -24,9 +24,27 @@ const createFieldReducerOperationSchema = <TKind extends string>(kind: TKind) =>
     as: NonBlankStringSchema.describe('Output field'),
   }).describe('Field reducer operation');
 
+/** extent reducer 输出字段映射；最小值和最大值字段名不得相同 */
+const ExtentReducerOutputsSchema = strictObject({
+  min: NonBlankStringSchema.describe('Minimum output field'),
+  max: NonBlankStringSchema.describe('Maximum output field'),
+})
+  .refine(outputs => outputs.min !== outputs.max, {
+    message: 'extent output fields must be distinct',
+    path: ['max'],
+  })
+  .describe('Extent output field mapping');
+
+/** extent reducer operation schema；把有限数值范围输出为两个标量字段 */
+const ExtentReducerOperationSchema = strictObject({
+  kind: literal(BuiltinReducerOperationKind.Extent).describe('Discriminator: extent reducer'),
+  field: NonBlankStringSchema.describe('Numeric source field'),
+  as: ExtentReducerOutputsSchema.describe('Distinct minimum and maximum output field names'),
+}).describe('Extent reducer operation');
+
 /** quantile reducer operation schema；输出指定概率位置的单个分位点 */
 const QuantileReducerOperationSchema = strictObject({
-  kind: literal(ReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
+  kind: literal(BuiltinReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
   field: NonBlankStringSchema.describe('Numeric source field'),
   p: NormalizedFractionSchema.describe('Quantile probability'),
   as: NonBlankStringSchema.describe('Output field'),
@@ -101,7 +119,7 @@ export const QuantileBandOutputsSchema = strictObject({
 
 /** quantile-band reducer operation schema；用于一次计算区间、分位点、spread 与 whisker 派生字段 */
 export const QuantileBandReducerOperationSchema = strictObject({
-  kind: literal(ReducerOperationKind.QuantileBand).describe('Discriminator: quantile-band reducer'),
+  kind: literal(BuiltinReducerOperationKind.QuantileBand).describe('Discriminator: quantile-band reducer'),
   field: NonBlankStringSchema.describe('Numeric source field'),
   lowerP: NormalizedFractionSchema.describe('Lower quantile probability'),
   upperP: NormalizedFractionSchema.describe('Upper quantile probability'),
@@ -117,12 +135,12 @@ export const QuantileBandReducerOperationSchema = strictObject({
 /** 内置 reducer operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例 */
 export const BuiltinReducerOperationSchemas = Object.freeze({
   Count: CountReducerOperationSchema,
-  Sum: createFieldReducerOperationSchema(ReducerOperationKind.Sum),
-  Mean: createFieldReducerOperationSchema(ReducerOperationKind.Mean),
-  Median: createFieldReducerOperationSchema(ReducerOperationKind.Median),
-  Min: createFieldReducerOperationSchema(ReducerOperationKind.Min),
-  Max: createFieldReducerOperationSchema(ReducerOperationKind.Max),
-  Extent: createFieldReducerOperationSchema(ReducerOperationKind.Extent),
+  Sum: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Sum),
+  Mean: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Mean),
+  Median: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Median),
+  Min: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Min),
+  Max: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Max),
+  Extent: ExtentReducerOperationSchema,
   Quantile: QuantileReducerOperationSchema,
   QuantileBand: QuantileBandReducerOperationSchema,
 });

@@ -108,4 +108,108 @@ describe('runtime runtime lifecycle', () => {
     expect(result).toEqual({ revision: 1, outcome: 'committed', diagnostics: [] });
     expect(runtime.snapshot(owner)).toEqual({ revision: 1, value: 2 });
   });
+
+  it.each(['sources', 'computations'])('创建后修改 $0 注册表不改变计算图和资源所有权', registry => {
+    const released: Array<string> = [];
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+        dispose: value => {
+          released.push(`source:${value}`);
+        },
+      },
+    });
+    const sources = createRuntimeSourceRegistry([owner]);
+    const computation = defineRuntimeComputation<number>({
+      id: { owner: 'counter', key: 'double' },
+      sources: [owner],
+      result: {
+        dispose: value => {
+          released.push(`result:${value}`);
+        },
+      },
+      run: view => ({ kind: 'full', result: view.snapshot(owner).value * 2 }),
+    });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
+    const options = { sources, computations, initialSnapshots: [createRuntimeSourceInput(owner, 1)] };
+    const runtime = createRuntime(options);
+    if (registry === 'sources') options.sources = createRuntimeSourceRegistry([]);
+    else options.computations = createRuntimeComputationRegistry({ sources });
+    expect(
+      runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(owner, 2)] }),
+    ).toEqual({
+      revision: 1,
+      outcome: 'full',
+      diagnostics: [],
+    });
+    expect(runtime.result(computation)).toEqual({ revision: 1, value: 4 });
+    runtime.dispose();
+    expect(released).toEqual(['result:2', 'source:1', 'result:4', 'source:2']);
+  });
+
+  it('创建后替换注册表不漏掉初始资源释放', () => {
+    const released: Array<number> = [];
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+        dispose: value => {
+          released.push(value);
+        },
+      },
+    });
+    const sources = createRuntimeSourceRegistry([owner]);
+    const options = {
+      sources,
+      computations: createRuntimeComputationRegistry({ sources }),
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+    };
+    const runtime = createRuntime(options);
+    options.sources = createRuntimeSourceRegistry([]);
+    runtime.dispose();
+    expect(released).toEqual([1]);
+  });
+
+  it('Runtime 创建时固定 trace sink 引用', () => {
+    const owner = defineCounterSource();
+    const sources = createRuntimeSourceRegistry([owner]);
+    const calls: Array<string> = [];
+    const computation = defineRuntimeComputation<number>({
+      id: { owner: 'counter', key: 'traced' },
+      sources: [owner],
+      tracePhases: [{ phase: 'update', unit: 'computation', outcomes: ['full'] }],
+      run: (view, context) => {
+        context.trace.report({
+          phase: 'update',
+          unit: 'computation',
+          outcome: 'full',
+          visited: 1,
+          reused: 0,
+          changed: 1,
+        });
+        return { kind: 'full', result: view.snapshot(owner).value };
+      },
+    });
+    const options = {
+      sources,
+      computations: createRuntimeComputationRegistry({ sources, computations: [computation] }),
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+      trace: () => {
+        calls.push('original');
+      },
+    };
+    const runtime = createRuntime(options);
+    calls.length = 0;
+    options.trace = () => {
+      calls.push('replacement');
+    };
+    runtime.update({ baseRevision: runtime.revision(), sources: [createRuntimeSourceUpdate(owner, 2)] });
+    expect(calls).toEqual(['original']);
+    runtime.dispose();
+  });
 });

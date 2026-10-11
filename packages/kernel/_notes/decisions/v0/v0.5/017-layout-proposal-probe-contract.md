@@ -154,12 +154,12 @@ Core built-in child 复用既有真实 layout / geometry / provider 路径，不
 ### Alignment guide
 
 ```ts
-export const LayoutAlignmentGuideName = {
+export const BuiltinLayoutAlignmentGuideName = {
   FirstBaseline: 'first-baseline',
   LastBaseline: 'last-baseline',
 } as const;
 
-export type LayoutAlignmentGuideName = ValueOf<typeof LayoutAlignmentGuideName>;
+export type BuiltinLayoutAlignmentGuideName = ValueOf<typeof BuiltinLayoutAlignmentGuideName>;
 
 export const LayoutAlignmentGuideDimension = {
   X: 'x',
@@ -175,7 +175,7 @@ export type LayoutAlignmentGuide = Readonly<{
 }>;
 ```
 
-`name` 保持开放字符串，使第三方 Composite 可以声明自定义 guide；`LayoutAlignmentGuideName` 仅表达 Core 提供的稳定 first / last baseline 名称。单个 result 内 `dimension + name` 必须唯一，`position` 必须有限，并处于 child-local allocation coordinate；guide 可以位于 slot 或 allocation bounds 外。
+`name` 保持开放字符串，使第三方 Composite 可以声明自定义 guide；`BuiltinLayoutAlignmentGuideName` 仅表达 Core 提供的稳定 first / last baseline 名称。单个 result 内 `dimension + name` 必须唯一，`position` 必须有限，并处于 child-local allocation coordinate；guide 可以位于 slot 或 allocation bounds 外。
 
 Node baseline 只从同一次真实文本 layout 的 line metrics 产生。单行 first / last baseline 相同，多行分别取首行和末行 alphabetic baseline；无正文文本的 child 不伪造 baseline。Guide 不从 `visualBounds`、glyph ink、renderer 或 Node primitive 结构反推。
 

@@ -1,0 +1,58 @@
+---
+title: Computation operators
+description: Browse selection, reduction, and fitting capabilities and their built-in operators.
+---
+
+Computation operators perform calculations within data transforms, producing statistics, selecting records, or fitting trends; see [Data capabilities · Computation operators](/viz/data/transform/statistics) for how operators work with transforms.
+
+| Type       | Name      | Characteristics                                                                              |
+| ---------- | --------- | -------------------------------------------------------------------------------------------- |
+| selector   | Selection | Selects existing records and preserves their field values without producing new observations |
+| reducer    | Reduction | Computes statistics for a group of rows, producing new statistical fields                    |
+| regression | Fitting   | Fits a model to observations for transforms to generate predicted data                       |
+
+Keep original detail data separate from transform results. Built-in hosts do not modify the input rows in place: selector results produce selected records, reducer results produce statistical rows or detail rows with added statistical fields, and regression returns a model for `smooth` to generate prediction rows. In a transform chain, the next stage reads these output rows; they are not automatically appended to the original data.
+
+## Selection
+
+Selectors pick original records by value, order, or rank; see [selector · Selection](/viz/data/operators/selector) for parameters and examples.
+
+| Operator                | Name                            | Description                                                                          |
+| ----------------------- | ------------------------------- | ------------------------------------------------------------------------------------ |
+| `min`                   | Minimum-value records           | Selects records with the smallest value of a numeric field                           |
+| `max`                   | Maximum-value records           | Selects records with the largest value of a numeric field                            |
+| `first`                 | First row                       | Selects the first row in input order or an explicit sort order                       |
+| `last`                  | Last row                        | Selects the last row in input order or an explicit sort order                        |
+| `top`                   | Highest N rows                  | Takes the first N rows in descending numeric order, with cutoff tie handling         |
+| `bottom`                | Lowest N rows                   | Takes the first N rows in ascending numeric order, with cutoff tie handling          |
+| `nth`                   | Row at a specified position     | Selects a row by zero-based index after sorting; out-of-range indices return no rows |
+| `outside-quantile-band` | Records outside a quantile band | Selects records strictly outside a quantile band or expanded fences                  |
+
+## Reduction
+
+Reducers compute one or more statistical fields from a group of rows; see [reducer · Reduction](/viz/data/operators/reducer) for parameters and examples.
+
+| Operator        | Name                         | Description                                                                                 |
+| --------------- | ---------------------------- | ------------------------------------------------------------------------------------------- |
+| `count`         | Row count                    | Counts input rows                                                                           |
+| `sum`           | Sum                          | Adds finite numeric values from a field                                                     |
+| `mean`          | Arithmetic mean              | Computes the mean of a field's finite numeric values                                        |
+| `median`        | Median                       | Takes the middle sorted value, averaging the two middle values for an even count            |
+| `min`           | Minimum value                | Returns a field's smallest finite numeric value                                             |
+| `max`           | Maximum value                | Returns a field's largest finite numeric value                                              |
+| `extent`        | Minimum and maximum interval | Computes the minimum and maximum and writes them to two continuous fields                   |
+| `quantile`      | Quantile                     | Computes a quantile at a probability, using linear interpolation when needed                |
+| `quantile-band` | Quantile band                | Computes lower and upper quantiles, with optional spread, count, whiskers, and other fields |
+
+## Fitting
+
+Fitting operators build prediction models from observations for transforms to generate predicted data. See [regression · Fitting](/viz/data/operators/regression) for parameters and examples.
+
+| Operator      | Name                   | Description                                                                                                                                   |
+| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linear`      | Linear regression      | Fits a straight-line relationship between the independent and dependent variables                                                             |
+| `quadratic`   | Quadratic regression   | Fits a quadratic curve                                                                                                                        |
+| `polynomial`  | Polynomial regression  | Fits a polynomial curve of the specified degree                                                                                               |
+| `logarithmic` | Logarithmic regression | Fits a linear relationship between the dependent variable and the logarithm of the independent variable; requires positive independent values |
+| `exponential` | Exponential regression | Fits an exponential curve; requires positive dependent values                                                                                 |
+| `power`       | Power regression       | Fits a power curve; requires positive independent and dependent values                                                                        |

@@ -308,7 +308,7 @@ export const compileChildrenToPrimitives = (
     };
   };
 
-  /** 校验并脱离 PathKind provider 返回的 primitive 与 bounds point */
+  /** 校验并脱离 BuiltinPathKind provider 返回的 primitive 与 bounds point */
   const validatePathKindCompileResult = (
     kind: string,
     value: unknown,

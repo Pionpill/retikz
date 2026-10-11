@@ -12,11 +12,11 @@ import {
   isBuiltinMark,
   isBuiltinScaleOperation,
   MarkValueKind,
-  PlotCoordinate,
+  BuiltinPlotCoordinate,
   PlotDomainPaddingKind,
   PlotGuide,
-  PlotMark,
-  PlotScale,
+  BuiltinPlotMark,
+  BuiltinPlotScale,
   POINT_DEFAULT_RADIUS,
   SIZE_MAX_RADIUS,
 } from '@retikz/plot';
@@ -26,13 +26,13 @@ import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { IRPointAutoPadding, IRPointPositionDomainPadding } from './schema';
 
 const pointContinuousPositionScaleTypes = new Set<string>([
-  PlotScale.Linear,
-  PlotScale.Time,
-  PlotScale.Log,
-  PlotScale.Pow,
-  PlotScale.Sqrt,
-  PlotScale.Symlog,
-  PlotScale.Radial,
+  BuiltinPlotScale.Linear,
+  BuiltinPlotScale.Time,
+  BuiltinPlotScale.Log,
+  BuiltinPlotScale.Pow,
+  BuiltinPlotScale.Sqrt,
+  BuiltinPlotScale.Symlog,
+  BuiltinPlotScale.Radial,
 ]);
 
 type PointPositionRole = 'x' | 'y';
@@ -68,7 +68,7 @@ const pointRadiusOf = (
     throw invalidPointScaleDefaults(`Point size scale "${size.scale}" is not available`, [...path, 'size', 'scale']);
   }
 
-  if (!isBuiltinScaleOperation(scale) || scale.type !== PlotScale.Sqrt) {
+  if (!isBuiltinScaleOperation(scale) || scale.type !== BuiltinPlotScale.Sqrt) {
     throw invalidPointScaleDefaults(`Point size scale "${size.scale}" must be a sqrt scale`, [
       ...path,
       'size',
@@ -88,12 +88,12 @@ const maximumPointRadiusOf = (
 
   for (const [markIndex, mark] of marks.entries()) {
     if (!isBuiltinMark(mark)) continue;
-    if (mark.type === PlotMark.Point) {
+    if (mark.type === BuiltinPlotMark.Point) {
       radii.push(pointRadiusOf(mark, scalesByName, ['recipe', 'marks', markIndex]));
       continue;
     }
 
-    if (mark.type !== PlotMark.Relation || mark.endpoints === undefined) continue;
+    if (mark.type !== BuiltinPlotMark.Relation || mark.endpoints === undefined) continue;
 
     for (const endpoint of ['source', 'target'] as const) {
       const glyph = mark.endpoints[endpoint];
@@ -124,7 +124,8 @@ const assertSpecificSidesSupport = (
     spatial.coordinate === undefined
       ? (spatial.composition?.views?.map(view => view.coordinate) ?? [])
       : [spatial.coordinate];
-  if (coordinates.length > 0 && coordinates.every(coordinate => coordinate.type === PlotCoordinate.Cartesian2D)) return;
+  if (coordinates.length > 0 && coordinates.every(coordinate => coordinate.type === BuiltinPlotCoordinate.Cartesian2D))
+    return;
 
   const side = (['left', 'right', 'top', 'bottom'] as const).find(
     name => typeof padding === 'object' && padding[name] !== undefined,
@@ -241,7 +242,8 @@ export const resolvePointScaleDefaults = (
     ? () =>
         context.chartMarks.flatMap((mark, index) =>
           isBuiltinMark(mark) &&
-          (mark.type === PlotMark.Point || (mark.type === PlotMark.Relation && mark.endpoints !== undefined))
+          (mark.type === BuiltinPlotMark.Point ||
+            (mark.type === BuiltinPlotMark.Relation && mark.endpoints !== undefined))
             ? [context.identifyMark(index)]
             : [],
         )
@@ -289,10 +291,10 @@ export const pointCartesian2DOf = (
 
   return {
     scales: [
-      { type: PlotScale.Linear, name: x },
-      { type: PlotScale.Linear, name: y },
+      { type: BuiltinPlotScale.Linear, name: x },
+      { type: BuiltinPlotScale.Linear, name: y },
     ],
-    coordinate: { type: PlotCoordinate.Cartesian2D, x, y },
+    coordinate: { type: BuiltinPlotCoordinate.Cartesian2D, x, y },
   };
 };
 

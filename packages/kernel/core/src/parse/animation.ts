@@ -1,5 +1,5 @@
 import type { IRAnimationOrigin, IRAnimationTrack } from '../schemas';
-import { AnimationProperty } from '../schemas';
+import { BuiltinAnimationProperty } from '../schemas';
 
 /** preset 公共可调项（各 preset 在此之上加专有项；默认值由各 preset 给） */
 export type AnimationPresetOptions = {
@@ -26,7 +26,7 @@ const applyBase = (
 
 /** 淡入：`opacity` 0→1（末帧 = base，降级见完整图） */
 export const fadeIn = (opts: AnimationPresetOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.Opacity,
+  property: BuiltinAnimationProperty.Opacity,
   keyframes: [
     { at: 0, value: 0 },
     { at: 1, value: 1 },
@@ -36,7 +36,7 @@ export const fadeIn = (opts: AnimationPresetOptions = {}): IRAnimationTrack => (
 
 /** 描边画出：`pathDraw` 0→1（仅对有描边元素有效） */
 export const drawOn = (opts: AnimationPresetOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.PathDraw,
+  property: BuiltinAnimationProperty.PathDraw,
   keyframes: [
     { at: 0, value: 0 },
     { at: 1, value: 1 },
@@ -54,7 +54,7 @@ export type ScaleInOptions = AnimationPresetOptions & {
 
 /** 缩放入场：`scale` from→1（均匀，绕 origin） */
 export const scaleIn = (opts: ScaleInOptions = {}): IRAnimationTrack => ({
-  property: AnimationProperty.Scale,
+  property: BuiltinAnimationProperty.Scale,
   keyframes: [
     { at: 0, value: opts.from ?? 0.8 },
     { at: 1, value: 1 },
@@ -73,7 +73,7 @@ export type SlideInOptions = AnimationPresetOptions & {
 
 /** 滑入：`translateX|Y` offset→0 */
 export const slideIn = (opts: SlideInOptions = {}): IRAnimationTrack => ({
-  property: (opts.axis ?? 'x') === 'y' ? AnimationProperty.TranslateY : AnimationProperty.TranslateX,
+  property: (opts.axis ?? 'x') === 'y' ? BuiltinAnimationProperty.TranslateY : BuiltinAnimationProperty.TranslateX,
   keyframes: [
     { at: 0, value: opts.offset ?? -20 },
     { at: 1, value: 0 },
@@ -94,7 +94,7 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 /** 变色：`fill|stroke` from→to（oklch 插值，由 renderer 端处理） */
 export const colorShift = (opts: ColorShiftOptions): IRAnimationTrack => {
   return {
-    property: (opts.channel ?? 'fill') === 'stroke' ? AnimationProperty.Stroke : AnimationProperty.Fill,
+    property: (opts.channel ?? 'fill') === 'stroke' ? BuiltinAnimationProperty.Stroke : BuiltinAnimationProperty.Fill,
     keyframes: [
       { at: 0, value: opts.from },
       { at: 1, value: opts.to },
@@ -114,7 +114,7 @@ export type CameraToOptions = AnimationPresetOptions & {
 /** 镜头：scene 根 `viewBox` from→to（挂 `<Layout animations>` / IR 根 `animations`） */
 export const cameraTo = (opts: CameraToOptions): IRAnimationTrack => {
   return {
-    property: AnimationProperty.ViewBox,
+    property: BuiltinAnimationProperty.ViewBox,
     keyframes: [
       { at: 0, value: opts.from },
       { at: 1, value: opts.to },

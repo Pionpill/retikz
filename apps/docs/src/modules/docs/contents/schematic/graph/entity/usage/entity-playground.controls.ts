@@ -1,4 +1,4 @@
-import { EntityRole, GraphStatus } from '@retikz/graph';
+import { BuiltinEntityRole, GraphStatus } from '@retikz/graph';
 
 import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
@@ -20,7 +20,7 @@ export const createPreviewControlContract = (lang: Lang) => {
             id: 'role',
             label: copy.role,
             defaultValue: 'activity',
-            options: Object.values(EntityRole).map((value, index) => ({ value, label: copy.roles[index] })),
+            options: Object.values(BuiltinEntityRole).map((value, index) => ({ value, label: copy.roles[index] })),
           },
           {
             kind: 'select',

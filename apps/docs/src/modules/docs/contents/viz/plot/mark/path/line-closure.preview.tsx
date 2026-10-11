@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 
 import { closureTrend } from './line-closure.data';
 
@@ -26,8 +26,8 @@ export const LineClosurePreview = (values: LineClosurePreviewValues) => {
 
   return (
     <Plot data={closureTrend} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
-      <PlotScale dimension="x" type="point" padding={values.horizontalPadding} />
-      <PlotScale
+      <BuiltinPlotScale dimension="x" type="point" padding={values.horizontalPadding} />
+      <BuiltinPlotScale
         dimension="y"
         type="linear"
         domainPadding={{

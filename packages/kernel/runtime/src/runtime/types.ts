@@ -7,7 +7,7 @@ import type { PerformanceTraceSink } from '../trace';
 import type { RuntimeSourceInput, RuntimeResult, RuntimeUpdate, RuntimeSnapshot } from '../transaction';
 import type { RuntimeUpdateStrategy } from './constants';
 
-/** 同步 Runtime runtime 的创建配置 */
+/** 同步 Runtime 的创建配置，创建后固定注册表、更新策略与 trace 引用 */
 export type RuntimeOptions = Readonly<{
   /** runtime state 所属的 Source registry */
   sources: RuntimeSourceRegistry;

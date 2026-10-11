@@ -1,5 +1,5 @@
 import type { LayoutChildResult } from '@retikz/core';
-import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz/core';
+import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '@retikz/core';
 
 import type { CanonicalOverlayPlacement } from '../../resolve/overlay-layout';
 import type { LayoutInsets, LayoutRect } from '../internal';
@@ -102,7 +102,7 @@ export const overlayStructuralGuideOffset = (
   const slotHeight = result.slotSize.height;
   if (guide === undefined) {
     return Object.freeze({
-      offset: name === LayoutAlignmentGuideName.FirstBaseline ? 0 : slotHeight,
+      offset: name === BuiltinLayoutAlignmentGuideName.FirstBaseline ? 0 : slotHeight,
       real: false,
     });
   }
@@ -159,8 +159,8 @@ export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>):
     height = Math.max(height, slotY + slotHeight + item.margin.bottom, 0);
   }
 
-  const firstBaseline = baselineMetricOf(included, LayoutAlignmentGuideName.FirstBaseline);
-  const lastBaseline = baselineMetricOf(included, LayoutAlignmentGuideName.LastBaseline);
+  const firstBaseline = baselineMetricOf(included, BuiltinLayoutAlignmentGuideName.FirstBaseline);
+  const lastBaseline = baselineMetricOf(included, BuiltinLayoutAlignmentGuideName.LastBaseline);
   if (firstBaseline !== undefined) height = Math.max(height, firstBaseline.ascent + firstBaseline.descent);
   if (lastBaseline !== undefined) height = Math.max(height, lastBaseline.ascent + lastBaseline.descent);
 

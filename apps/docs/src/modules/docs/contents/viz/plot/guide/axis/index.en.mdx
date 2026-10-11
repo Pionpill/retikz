@@ -120,7 +120,7 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 | Prop          | Type                          | Default       | Description                                                                                                                                    |
 | ------------- | ----------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dimension`   | `PlotAxisProps['dimension']`  | —             | Dimension to explain: Cartesian / polar use x / y; it must belong to the current coordinate system                                             |
-| `scale?`      | `PlotAxisProps['scale']`      | auto-derived  | Positional scale shortcut; equivalent to `<PlotScale dimension="..." type="..." />` for the same dimension                                     |
+| `scale?`      | `PlotAxisProps['scale']`      | auto-derived  | Positional scale shortcut; equivalent to `<BuiltinPlotScale dimension="..." type="..." />` for the same dimension                              |
 | `placement?`  | `PlotAxisProps['placement']`  | inferred      | Baseline placement; branch `kind` values are listed by <ApiValues name="AxisPlacementKind" />; `origin` only applies to Cartesian axes         |
 | `line?`       | `PlotAxisProps['line']`       | default line  | PlotAxis-line style and endpoint geometry; `extent` and `arrow` currently apply only to Cartesian axes                                         |
 | `crossing?`   | `PlotAxisProps['crossing']`   | normal ticks  | Tick / label policy at a crossing value; `label:'corner'` can move a shared origin label to a corner                                           |

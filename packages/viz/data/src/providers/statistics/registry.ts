@@ -28,6 +28,10 @@ export { BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS } from './selectors';
 /**
  * 注册独立统计计算，不以 kind 猜测语义等价
  * @template TImplementation 自定义归约实现类型，默认限定同步数据行结果
+ * @param definitions 已注册的语义定义；省略时使用内置定义注册表
+ * @param custom 自定义计算实现；省略时仅注册内置实现
+ * @returns 名称到计算实现的映射，保留同步与异步结果类型
+ * @throws {RetikzDataError} 实现重复、对应定义未注册或 Definition 对象身份不一致
  */
 export const resolveStatisticsReducerImplementationRegistry = <
   TImplementation extends AnyStatisticsReducerImplementation = AnySynchronousStatisticsReducerImplementation,
@@ -44,6 +48,10 @@ export const resolveStatisticsReducerImplementationRegistry = <
 /**
  * 注册独立选择计算
  * @template TImplementation 自定义行选择实现类型，默认限定同步选择结果
+ * @param definitions 已注册的语义定义；省略时使用内置定义注册表
+ * @param custom 自定义计算实现；省略时仅注册内置实现
+ * @returns 名称到计算实现的映射，保留同步与异步结果类型
+ * @throws {RetikzDataError} 实现重复、对应定义未注册或 Definition 对象身份不一致
  */
 export const resolveRowSelectorImplementationRegistry = <
   TImplementation extends AnyRowSelectorImplementation = AnySynchronousRowSelectorImplementation,
@@ -67,7 +75,12 @@ const BUILTIN_ROW_SELECTOR_REGISTRY = createReadonlyMap(
   BUILTIN_ROW_SELECTORS.map(def => [extractStatisticOperation(def.schema), def] as const),
 );
 
-/** 合并内置与自定义统计 reducer 定义，并集中检查 kind 冲突 */
+/**
+ * 合并内置与自定义统计 reducer 定义，并集中检查 kind 冲突
+ * @param custom 自定义语义定义；省略时仅注册内置定义
+ * @returns 每次调用独立创建的名称到定义映射
+ * @throws {RetikzDataError} 注册名称重复或定义的 kind 不符合要求
+ */
 export const resolveStatisticsReducerRegistry = (
   custom?: ReadonlyArray<AnyStatisticsReducerDefinition>,
 ): Map<string, AnyStatisticsReducerDefinition> => {
@@ -82,7 +95,12 @@ export const resolveStatisticsReducerRegistry = (
   return registry;
 };
 
-/** 合并内置与自定义 row selector 定义，并集中检查 kind 冲突 */
+/**
+ * 合并内置与自定义 row selector 定义，并集中检查 kind 冲突
+ * @param custom 自定义语义定义；省略时仅注册内置定义
+ * @returns 每次调用独立创建的名称到定义映射
+ * @throws {RetikzDataError} 注册名称重复或定义的 kind 不符合要求
+ */
 export const resolveRowSelectorRegistry = (
   custom?: ReadonlyArray<AnyRowSelectorDefinition>,
 ): Map<string, AnyRowSelectorDefinition> => {

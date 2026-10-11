@@ -35,34 +35,38 @@ describe('stat-geom composition surface (contract)', () => {
 
   const boxSummary = {
     kind: 'summarize',
-    groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
-    metrics: [
-      {
-        kind: 'quantile-band',
-        field: 'value',
-        lowerP: 0.25,
-        upperP: 0.75,
-        outputs: {
-          lower: 'boxLow',
-          upper: 'boxHigh',
-          points: [{ p: 0.5, as: 'median' }],
-          whiskerMin: 'whiskerMin',
-          whiskerMax: 'whiskerMax',
+    params: {
+      groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
+      metrics: [
+        {
+          kind: 'quantile-band',
+          field: 'value',
+          lowerP: 0.25,
+          upperP: 0.75,
+          outputs: {
+            lower: 'boxLow',
+            upper: 'boxHigh',
+            points: [{ p: 0.5, as: 'median' }],
+            whiskerMin: 'whiskerMin',
+            whiskerMax: 'whiskerMax',
+          },
+          whisker: { kind: 'spread', factor: 1.5 },
         },
-        whisker: { kind: 'spread', factor: 1.5 },
-      },
-    ],
+      ],
+    },
   } as const;
 
   const boxOutside = {
     kind: 'select',
-    groupBy: ['group'],
-    selector: {
-      kind: 'outside-quantile-band',
-      field: 'value',
-      lowerP: 0.25,
-      upperP: 0.75,
-      boundary: { kind: 'spread', factor: 1.5 },
+    params: {
+      groupBy: ['group'],
+      selector: {
+        kind: 'outside-quantile-band',
+        field: 'value',
+        lowerP: 0.25,
+        upperP: 0.75,
+        boundary: { kind: 'spread', factor: 1.5 },
+      },
     },
   } as const;
 
@@ -141,7 +145,12 @@ describe('stat-geom composition surface (contract)', () => {
         {
           type: 'path',
           transform: [
-            { operation: { kind: 'smooth', x: 'time', y: 'value', sampleCount: 5, xAs: 'trendX', yAs: 'trendY' } },
+            {
+              operation: {
+                kind: 'smooth',
+                params: { x: 'time', y: 'value', sampleCount: 5, xAs: 'trendX', yAs: 'trendY' },
+              },
+            },
           ],
           order: 'trendX',
           encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
@@ -152,11 +161,13 @@ describe('stat-geom composition surface (contract)', () => {
             {
               operation: {
                 kind: 'density',
-                field: 'value',
-                bandwidth: { kind: 'value', value: 2 },
-                sampleCount: 4,
-                xAs: 'densityX',
-                densityAs: 'density',
+                params: {
+                  field: 'value',
+                  bandwidth: { kind: 'value', value: 2 },
+                  sampleCount: 4,
+                  xAs: 'densityX',
+                  densityAs: 'density',
+                },
               },
             },
           ],

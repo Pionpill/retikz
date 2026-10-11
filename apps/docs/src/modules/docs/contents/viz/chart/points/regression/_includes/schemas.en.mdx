@@ -1,0 +1,29 @@
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+#### RegressionChartSchema
+
+<ZodSchema name="RegressionChartSchema" shallow />
+
+#### RegressionChartRecipeSchema
+
+<ZodSchema name="RegressionChartRecipeSchema" shallow />
+
+#### RegressionChartEncodingsSchema
+
+<ZodSchema name="RegressionChartEncodingsSchema" shallow />
+
+#### RegressionChartPropertiesSchema
+
+<ZodSchema name="RegressionChartPropertiesSchema" shallow />
+
+#### RegressionExtraMethodSchema
+
+Each entry requires a fitting method and inherits sampling and appearance settings from its group. It generates only a trend line. Array order determines drawing order; method colors and legends are not assigned automatically. A failed fit aborts the whole chart.
+
+<ZodSchema name="RegressionExtraMethodSchema" shallow />
+
+#### RegressionChartMarkSchema
+
+`encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+
+<ZodSchema name="RegressionChartMarkSchema" shallow />

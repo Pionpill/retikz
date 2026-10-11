@@ -1,5 +1,5 @@
 import type { IRPlotRelationRouting } from '@retikz/plot';
-import { Plot, PlotAxis, PlotScale, PointMark, RelationMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { coordinate1DCompositionOperation } from './coordinate-1d-composition.controls';
 import { coordinate1DCompositionRows } from './coordinate-1d-composition.zh.data';
@@ -43,7 +43,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
 
   return (
     <Plot data={coordinate1DCompositionRows} coordinate="cartesian1D" width={560} height={250}>
-      <PlotScale dimension="x" type="linear" domain={[0, 12.5]} />
+      <BuiltinPlotScale dimension="x" type="linear" domain={[0, 12.5]} />
       <PointMark
         x="thingX"
         anchorId={{ prefix: 'thing', field: 'thingId' }}

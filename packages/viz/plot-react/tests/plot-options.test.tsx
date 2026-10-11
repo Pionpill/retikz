@@ -78,8 +78,10 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
           {
             operation: {
               kind: 'summarize',
-              groupBy: ['region'],
-              metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+              params: {
+                groupBy: ['region'],
+                metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+              },
             },
           },
         ]}
@@ -99,7 +101,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
         width={480}
         height={300}
         dataTransforms={[
-          { operation: { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'n' }] } },
+          { operation: { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'n' }] } } },
         ]}
       >
         <IntervalMark x="region" y="n" />

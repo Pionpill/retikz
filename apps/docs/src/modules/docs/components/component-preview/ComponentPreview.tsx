@@ -109,7 +109,8 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
   const isSchematicPreview = segments?.[0] === 'schematic' || name.startsWith('/schematic/');
-  const enableThemeSwitch = !isSchematicPreview && isPreviewThemeStyleDocument(segments?.[0]);
+  const isDataPreview = (segments?.[0] === 'viz' && segments[1] === 'data') || name.startsWith('/viz/data/');
+  const enableThemeSwitch = !isSchematicPreview && !isDataPreview && isPreviewThemeStyleDocument(segments?.[0]);
   const effectiveThemeStyleSelection = enableThemeSwitch ? themeStyleSelection : PreviewThemeStyle.Default;
   const previewTheme = usePreviewTheme(effectiveThemeStyleSelection);
   const controlsDisabled = controlOptions.name === false;

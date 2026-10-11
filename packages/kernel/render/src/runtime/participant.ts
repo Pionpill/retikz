@@ -1,3 +1,4 @@
+import { CoreTraceUnit } from '@retikz/core';
 import type {
   AnyCompositeDefinition,
   CoreComputationDefinition,
@@ -13,13 +14,12 @@ import {
   createRuntimeRevision,
   defineRuntimeCommitParticipant,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
   RuntimeComputationPhase,
 } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import { RenderTracePhase } from '../trace';
 import type { RenderRuntimeConfig } from './config';
 import { RenderRuntimeSourceDefinition } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
@@ -616,13 +616,13 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     revisionPolicy: 'continuous',
     tracePhases: [
       {
-        phase: PerformanceTracePhase.Commit,
-        unit: PerformanceTraceUnit.ScenePrimitive,
+        phase: RenderTracePhase.Commit,
+        unit: CoreTraceUnit.ScenePrimitive,
         outcomes: [PerformanceTraceOutcome.Full],
       },
       {
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.SceneChange,
+        phase: RenderTracePhase.Update,
+        unit: CoreTraceUnit.SceneChange,
         outcomes: [PerformanceTraceOutcome.Full, PerformanceTraceOutcome.Incremental, PerformanceTraceOutcome.Fallback],
       },
     ],
@@ -674,8 +674,8 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
             currentLeaseState.owner = owner;
             const count = countPrimitives(core.snapshot.scene.primitives);
             context.trace.report({
-              phase: PerformanceTracePhase.Commit,
-              unit: PerformanceTraceUnit.ScenePrimitive,
+              phase: RenderTracePhase.Commit,
+              unit: CoreTraceUnit.ScenePrimitive,
               outcome: PerformanceTraceOutcome.Full,
               visited: count,
               reused: 0,
@@ -727,8 +727,8 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           rendererToken.commit();
           committedFrame = nextFrame;
           context.trace.report({
-            phase: PerformanceTracePhase.Update,
-            unit: PerformanceTraceUnit.SceneChange,
+            phase: RenderTracePhase.Update,
+            unit: CoreTraceUnit.SceneChange,
             outcome: fallback
               ? PerformanceTraceOutcome.Fallback
               : directReplace

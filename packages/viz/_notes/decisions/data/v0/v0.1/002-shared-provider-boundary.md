@@ -42,7 +42,7 @@ const operations: Array<IRDataTransform> = [
   { kind: 'summarize', groupBy: ['region'], metrics: [{ op: 'sum', field: 'revenue', as: 'total' }] },
 ];
 
-const rows = applyTransforms(sourceRows, operations);
+const rows = applyTransforms(sourceRows, operations).rows;
 ```
 
 从 data 默认 registry 直接执行 plot-only transform 必须失败；用户应通过 plot lowering，或显式传入对应宿主 definitions。data 不拦截这些 kind 为全局保留字，也不为它们提供兼容别名。

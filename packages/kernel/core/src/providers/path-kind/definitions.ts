@@ -2,11 +2,11 @@ import type { AnyPathKindDefinition } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
 import { definePathKind, StrokePathOwnerOutputSchema } from '../../contract';
 import type { IRPathBase } from '../../schemas';
-import { PathKind, StrokePathSchema } from '../../schemas';
+import { BuiltinPathKind, StrokePathSchema } from '../../schemas';
 
 /** 标准描边 path kind：复用 core 的 stroke emission */
 const strokePathKind = definePathKind<IRPathBase, StrokePathOwnerOutput>({
-  name: PathKind.Stroke,
+  name: BuiltinPathKind.Stroke,
   schema: StrokePathSchema,
   ownerOutput: { schema: StrokePathOwnerOutputSchema },
   compile: context =>

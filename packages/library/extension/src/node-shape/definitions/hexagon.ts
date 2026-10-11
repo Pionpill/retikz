@@ -5,7 +5,7 @@ import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 import {
   circumscribeRoundedPolygon,
   emitPolygon,
@@ -47,12 +47,12 @@ const hexagonVertices =
 
 /** 可选 Hexagon 形状 Definition */
 export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
-  name: ExtensionShapeName.Hexagon,
+  name: BuiltinExtensionShapeName.Hexagon,
   paramsSchema: HexagonShapeParamsSchema,
   circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
     const sharp = { halfWidth: innerHalfWidth + shoulderDepthOf(params), halfHeight: innerHalfHeight };
     return circumscribeRoundedPolygon(
-      ExtensionShapeName.Hexagon,
+      BuiltinExtensionShapeName.Hexagon,
       innerHalfWidth,
       innerHalfHeight,
       sharp,

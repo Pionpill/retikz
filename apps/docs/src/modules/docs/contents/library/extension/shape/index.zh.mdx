@@ -118,10 +118,11 @@ console.log(svg);
   defaultSourceFile="cross-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"CrossShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={45}>CrossShapeParams</ApiSourceLink> / <ApiSourceLink label={"CrossShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={35}>CrossShapeParamsSchema</ApiSourceLink>
 
-#### CrossShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 使用 `shape={{ type: 'cross', params }}` 并注入 `CrossShapeDefinition`。`width` 或 `height` 可以直接使用数字，也可以使用对象；对象字段按“方向 > 轴向 > default”解析，即 `top/right/bottom/left` 优先于 `horizontal/vertical`，再回退到 `default`。
 
@@ -131,9 +132,16 @@ console.log(svg);
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | 四个方向高度，并支持轴向和 default 回退    |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### CrossShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CrossShapeParams = ZodInfer<typeof CrossShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="CrossShapeParamsSchema"
@@ -155,6 +163,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 梯形
@@ -167,10 +176,11 @@ console.log(svg);
   defaultSourceFile="trapezoid-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"TrapezoidShapeParams"} path={"packages/library/extension/src/node-shape/definitions/trapezoid.ts"} startLine={24}>TrapezoidShapeParams</ApiSourceLink> / <ApiSourceLink label={"TrapezoidShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/trapezoid.ts"} startLine={17}>TrapezoidShapeParamsSchema</ApiSourceLink>
 
-#### TrapezoidShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点注入 `TrapezoidShapeDefinition`，参数类型为 `TrapezoidShapeParams`：
 
@@ -181,9 +191,16 @@ console.log(svg);
 | `cornerRadius?`   | `number`                                 | 非负圆角半径；默认为 `0`                       |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### TrapezoidShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type TrapezoidShapeParams = ZodInfer<typeof TrapezoidShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="TrapezoidShapeParamsSchema"
@@ -195,6 +212,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 平行四边形
@@ -207,10 +225,11 @@ console.log(svg);
   defaultSourceFile="parallelogram-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"ParallelogramShapeParams"} path={"packages/library/extension/src/node-shape/definitions/parallelogram.ts"} startLine={24}>ParallelogramShapeParams</ApiSourceLink> / <ApiSourceLink label={"ParallelogramShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/parallelogram.ts"} startLine={17}>ParallelogramShapeParamsSchema</ApiSourceLink>
 
-#### ParallelogramShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点注入 `ParallelogramShapeDefinition`，参数类型为 `ParallelogramShapeParams`：
 
@@ -221,9 +240,16 @@ console.log(svg);
 | `cornerRadius?`   | `number`            | 非负圆角半径；默认为 `0`              |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### ParallelogramShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ParallelogramShapeParams = ZodInfer<typeof ParallelogramShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="ParallelogramShapeParamsSchema"
@@ -235,6 +261,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 长六边形
@@ -247,10 +274,11 @@ console.log(svg);
   defaultSourceFile="hexagon-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"HexagonShapeParams"} path={"packages/library/extension/src/node-shape/definitions/hexagon.ts"} startLine={23}>HexagonShapeParams</ApiSourceLink> / <ApiSourceLink label={"HexagonShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/hexagon.ts"} startLine={17}>HexagonShapeParamsSchema</ApiSourceLink>
 
-#### HexagonShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点注入 `HexagonShapeDefinition`，参数类型为 `HexagonShapeParams`：
 
@@ -260,9 +288,16 @@ console.log(svg);
 | `cornerRadius?`  | `number` | 非负圆角半径；默认为 `0`                      |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### HexagonShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type HexagonShapeParams = ZodInfer<typeof HexagonShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="HexagonShapeParamsSchema"
@@ -273,6 +308,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 圆柱形
@@ -285,10 +321,11 @@ console.log(svg);
   defaultSourceFile="cylinder-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"CylinderShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cylinder.ts"} startLine={23}>CylinderShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
 
-#### CylinderShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点注入 `CylinderShapeDefinition`，参数类型为 `CylinderShapeParams`：
 
@@ -298,9 +335,18 @@ console.log(svg);
 | `capDepth?` | `number`                     | 非负端盖深度；默认为 `8`    |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### EllipticCapShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type EllipticCapShapeParams = ZodInfer<typeof EllipticCapShapeParamsSchema>;
+
+export type CylinderShapeParams = EllipticCapShapeParams;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="EllipticCapShapeParamsSchema"
@@ -311,6 +357,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 半椭圆端胶囊形
@@ -323,10 +370,11 @@ console.log(svg);
   defaultSourceFile="elliptic-capsule-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"EllipticCapsuleShapeParams"} path={"packages/library/extension/src/node-shape/definitions/elliptic-capsule.ts"} startLine={23}>EllipticCapsuleShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
 
-#### EllipticCapsuleShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点注入 `EllipticCapsuleShapeDefinition`，参数类型为 `EllipticCapsuleShapeParams`：
 
@@ -336,9 +384,18 @@ console.log(svg);
 | `capDepth?` | `number`                     | 非负端部深度；默认为 `8`    |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### EllipticCapShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type EllipticCapShapeParams = ZodInfer<typeof EllipticCapShapeParamsSchema>;
+
+export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="EllipticCapShapeParamsSchema"
@@ -349,6 +406,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 扇形
@@ -361,10 +419,11 @@ console.log(svg);
   defaultSourceFile="sector-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"SectorShapeParams"} path={"packages/library/extension/src/node-shape/definitions/sector.ts"} startLine={52}>SectorShapeParams</ApiSourceLink> / <ApiSourceLink label={"SectorShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/sector.ts"} startLine={33}>SectorShapeParamsSchema</ApiSourceLink>
 
-#### SectorShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点使用 `shape={{ type: 'sector', params }}`，并注入 `SectorShapeDefinition`。`params` 类型为 `SectorShapeParams`：
 
@@ -377,9 +436,16 @@ console.log(svg);
 | `cornerRadius?` | `number` | 正厚度 Sector 的转角圆角半径；省略或为 `0` 时保持尖角  |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### SectorShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type SectorShapeParams = ZodInfer<typeof SectorShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="SectorShapeParamsSchema"
@@ -393,6 +459,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 星形
@@ -405,10 +472,11 @@ console.log(svg);
   defaultSourceFile="star-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"StarShapeParams"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={43}>StarShapeParams</ApiSourceLink> / <ApiSourceLink label={"StarShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={22}>StarShapeParamsSchema</ApiSourceLink>
 
-#### StarShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点使用 `shape={{ type: 'star', params }}`，并注入 `StarShapeDefinition`。`params` 类型为 `StarShapeParams`：
 
@@ -421,9 +489,16 @@ console.log(svg);
 | `cornerRadius?` | `number` | 每个顶点的圆角半径                 |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### StarShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type StarShapeParams = ZodInfer<typeof StarShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="StarShapeParamsSchema"
@@ -437,6 +512,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 任意轮廓
@@ -449,10 +525,11 @@ console.log(svg);
   defaultSourceFile="contour-example.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API 参考">
+#### <ApiSourceLink label={"ContourShapeParams"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={32}>ContourShapeParams</ApiSourceLink> / <ApiSourceLink label={"ContourShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={22}>ContourShapeParamsSchema</ApiSourceLink>
 
-#### ContourShapeParams
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 节点使用 `shape={{ type: 'contour', params }}`，并注入 `ContourShapeDefinition`。`params` 类型为 `ContourShapeParams`：
 
@@ -462,9 +539,16 @@ console.log(svg);
 | `cornerRadius?` | `number`                  | 每个转角的圆角半径；省略或为 `0` 时保持尖角                              |
 
 </DocTab>
-<DocTab value="schema" label="Schema 参考">
 
-#### ContourShapeParamsSchema
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ContourShapeParams = ZodInfer<typeof ContourShapeParamsSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema
   name="ContourShapeParamsSchema"
@@ -475,6 +559,7 @@ console.log(svg);
 />
 
 </DocTab>
+
 </DocTabs>
 
 ## 延伸阅读

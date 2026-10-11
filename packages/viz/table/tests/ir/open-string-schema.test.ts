@@ -3,11 +3,11 @@ import type { ZodType } from 'zod';
 import { toJSONSchema } from 'zod';
 
 import {
-  TableCellFormatter,
+  BuiltinTableCellFormatter,
   TableCellFormatterNameSchema,
-  TableCellPresentation,
+  BuiltinTableCellPresentation,
   TableCellPresentationNameSchema,
-  TableCellVisualScale,
+  BuiltinTableCellVisualScale,
   TableCellVisualScaleNameSchema,
 } from '../../src';
 
@@ -22,9 +22,9 @@ const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>):
 
 describe('Table registry-backed open string schemas', () => {
   it('hints all built-in provider names without closing custom registries', () => {
-    expectOpenStringSchema(TableCellFormatterNameSchema, Object.values(TableCellFormatter));
-    expectOpenStringSchema(TableCellPresentationNameSchema, Object.values(TableCellPresentation));
-    expectOpenStringSchema(TableCellVisualScaleNameSchema, Object.values(TableCellVisualScale));
+    expectOpenStringSchema(TableCellFormatterNameSchema, Object.values(BuiltinTableCellFormatter));
+    expectOpenStringSchema(TableCellPresentationNameSchema, Object.values(BuiltinTableCellPresentation));
+    expectOpenStringSchema(TableCellVisualScaleNameSchema, Object.values(BuiltinTableCellVisualScale));
 
     expect(TableCellFormatterNameSchema.parse('custom.formatter')).toBe('custom.formatter');
     expect(TableCellPresentationNameSchema.parse('custom.presentation')).toBe('custom.presentation');

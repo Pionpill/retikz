@@ -55,7 +55,7 @@ const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
 };
 
 const bandwidthOf = (operation: IRDataDensityTransform, sortedValues: Array<number>): number => {
-  if (operation.bandwidth?.kind === DensityBandwidthKind.Value) return operation.bandwidth.value;
+  if (operation.params.bandwidth?.kind === DensityBandwidthKind.Value) return operation.params.bandwidth.value;
   return silvermanBandwidthOf(sortedValues);
 };
 
@@ -64,7 +64,7 @@ const sampleExtentOf = (
   sortedValues: Array<number>,
   bandwidth: number,
 ): [number, number] => {
-  if (operation.extent !== undefined) return operation.extent;
+  if (operation.params.extent !== undefined) return operation.params.extent;
 
   const min = sortedValues[0];
   const max = sortedValues[sortedValues.length - 1];
@@ -81,14 +81,14 @@ const densityAt = (x: number, values: ReadonlyArray<number>, bandwidth: number):
 
 /** 返回 density transform 读取的源字段 */
 export const densityInputFields = (operation: IRDataDensityTransform): Array<string> => [
-  operation.field,
-  ...(operation.groupBy ?? []),
+  operation.params.field,
+  ...(operation.params.groupBy ?? []),
 ];
 
 /** 返回 density transform 写出的派生字段 */
 export const densityOutputFields = (operation: IRDataDensityTransform): Array<string> => [
-  operation.xAs,
-  operation.densityAs,
+  operation.params.xAs,
+  operation.params.densityAs,
 ];
 
 /** density：一维 Gaussian KDE 采样，每组输出 sampleCount 行 */
@@ -97,22 +97,22 @@ export const applyDensity = (
   operation: IRDataDensityTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
-  groupRowsByFields(rows, operation.groupBy).flatMap(group => {
-    const sortedValues = finiteFieldValuesOf(group.rows, operation.field).sort((a, b) => a - b);
+  groupRowsByFields(rows, operation.params.groupBy).flatMap(group => {
+    const sortedValues = finiteFieldValuesOf(group.rows, operation.params.field).sort((a, b) => a - b);
     if (sortedValues.length === 0) {
-      throw new RetikzDataError(`data: density transform field "${operation.field}" has no finite values`);
+      throw new RetikzDataError(`data: density transform field "${operation.params.field}" has no finite values`);
     }
 
     const bandwidth = bandwidthOf(operation, sortedValues);
     const extent = sampleExtentOf(operation, sortedValues, bandwidth);
-    const sampleCount = operation.sampleCount ?? DEFAULT_DENSITY_SAMPLE_COUNT;
+    const sampleCount = operation.params.sampleCount ?? DEFAULT_DENSITY_SAMPLE_COUNT;
 
     return linearSamplesOf(extent, sampleCount).map(x =>
       context.groupProvenance(
         {
           ...group.values,
-          [operation.xAs]: x,
-          [operation.densityAs]: densityAt(x, sortedValues, bandwidth),
+          [operation.params.xAs]: x,
+          [operation.params.densityAs]: densityAt(x, sortedValues, bandwidth),
         },
         group.rows,
       ),

@@ -25,7 +25,12 @@ describe('Plot regression runtime injection', () => {
           type: 'path',
           encoding: { x: { field: 'tx' }, y: { field: 'ty' } },
           transform: [
-            { operation: { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'identity-fit' } } },
+            {
+              operation: {
+                kind: 'smooth',
+                params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'identity-fit' } },
+              },
+            },
           ],
         },
       ],

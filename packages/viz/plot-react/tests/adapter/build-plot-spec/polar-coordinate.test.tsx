@@ -6,7 +6,7 @@ import { createPolarPieSpec } from '../../../../plot/tests/helpers/plot-spec-fix
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis } from '../../../src/components/guides';
 import { IntervalMark, PathMark, ReferenceMark, RelationMark } from '../../../src/components/marks';
-import { PlotScale } from '../../../src/components/scales';
+import { BuiltinPlotScale } from '../../../src/components/scales';
 
 describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius', () => {
   it('forwards coordinate and interpolation-sensitive mark overrides unchanged', () => {
@@ -73,7 +73,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(
       <>
         <IntervalMark x="month" y="amount" />
-        <PlotScale dimension="x" type="band" paddingInner={0.15} paddingOuter={0} />
+        <BuiltinPlotScale dimension="x" type="band" paddingInner={0.15} paddingOuter={0} />
       </>,
       '__plot',
       { coordinate: 'polar2D' },
@@ -102,13 +102,13 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
       encoding: { color: { field: 'value', scale: '__color' } },
     });
-    expect(spec.transform).toEqual([{ operation: { kind: 'stack', y: 'value' } }]);
+    expect(spec.transform).toEqual([{ operation: { kind: 'stack', params: { y: 'value' } } }]);
   });
 
   it('sector_series_orders_stack：<IntervalMark angle series> → stack transform 带 groupBy', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
 
-    expect(spec.transform).toEqual([{ operation: { kind: 'stack', y: 'value', groupBy: 'label' } }]);
+    expect(spec.transform).toEqual([{ operation: { kind: 'stack', params: { y: 'value', groupBy: 'label' } } }]);
     expect(spec.marks[0]).toEqual({
       type: 'interval',
       bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
@@ -148,8 +148,8 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(
       <>
         <PathMark x="theta" y="r" order="theta" />
-        <PlotScale dimension="x" type="point" />
-        <PlotScale dimension="y" type="log" />
+        <BuiltinPlotScale dimension="x" type="point" />
+        <BuiltinPlotScale dimension="y" type="log" />
       </>,
       '__plot',
       { coordinate: 'polar2D' },

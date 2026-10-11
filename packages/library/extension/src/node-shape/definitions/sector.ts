@@ -28,7 +28,7 @@ import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 
 const SectorShapeParamsSchema = strictObject({
   innerRadius: NonNegativeNumberSchema.describe(
@@ -210,7 +210,7 @@ const openSectorBoundaryPoint = (rect: Rect, toward: Position, params: SectorSha
 
 /** 可选 Sector 形状 Definition */
 export const SectorShapeDefinition = defineShape<SectorShapeParams>({
-  name: ExtensionShapeName.Sector,
+  name: BuiltinExtensionShapeName.Sector,
   paramsSchema: SectorShapeParamsSchema,
   circumscribe: (_halfWidth, _halfHeight, params) => computeSectorGeometry(params).aabbHalfAxes,
   circumscribeOffset: params => {

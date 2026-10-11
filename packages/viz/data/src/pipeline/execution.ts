@@ -17,7 +17,13 @@ import { extractTransformKind } from '../contract';
 import { RetikzDataError } from '../error';
 import { BUILTIN_TRANSFORM_IMPLEMENTATIONS } from '../providers';
 import { prepareLocalDataTransform } from '../providers/execution';
-import { assertDataTransformModel, assertDataTransformResult, resolveDataExecution } from '../resolve';
+import {
+  assertDataTransformModel,
+  assertDataTransformResult,
+  resolveDataExecution,
+  resolveDataLineageOptions,
+  resolveDataTransformOutputModel,
+} from '../resolve';
 import { createDataLineageRecorder, importDataLineageEvents } from './lineage';
 import { readSourceIndex, readSourceIndices } from './provenance';
 import { DEFAULT_TRANSFORM_CONTEXT } from './transform';
@@ -34,6 +40,8 @@ const inputModelOf = <TSource>(input: DataTransformStageInput<TSource>): DataTra
 /**
  * 将实际输入投影为无行数据的能力描述
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ * @param input 实际源输入或计算结果
+ * @returns 保留源句柄或结果模型的预检描述，不读取或复制行数据
  */
 export const describeDataTransformInput = <TSource>(
   input: DataTransformStageInput<TSource>,
@@ -48,6 +56,9 @@ const hasProvenance = <TSource>(input: DataTransformStageInput<TSource>): boolea
 /**
  * 创建有作用域的执行策略；所有支持检查完成后才绑定并计算
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ * @param options 执行默认值、本地实现和具名外接 Provider；省略时使用内置计算
+ * @returns 可预检、绑定并执行固定阶段计划的执行器
+ * @throws {RetikzDataError} Provider 名称重复或计算实现重复注册
  */
 export const createDataTransformExecutor = <TSource = never>(
   options: DataTransformExecutionOptions<TSource> = {},
@@ -75,9 +86,10 @@ export const createDataTransformExecutor = <TSource = never>(
     prepare: async (descriptor, resolution, request = {}): Promise<DataTransformPreparation<TSource>> => {
       assertActive(request.signal);
       assertDataTransformModel(resolution.inputModel, descriptor.model);
+      const lineageOptions = resolveDataLineageOptions(request.lineage);
       const requirements = {
         preserveProvenance: request.provenance === true,
-        ...(request.lineage === undefined ? {} : { lineage: request.lineage }),
+        ...(lineageOptions === undefined ? {} : { lineage: lineageOptions }),
       };
       const selected: Array<DataTransformStageImplementation<TSource>> = [];
       const localStages = new Set<number>();
@@ -196,9 +208,9 @@ export const createDataTransformExecutor = <TSource = never>(
                   result,
                 );
                 const lineage =
-                  request.lineage === undefined
+                  lineageOptions === undefined
                     ? undefined
-                    : createDataLineageRecorder({ ...request.lineage, sink: undefined, retainEvents: true });
+                    : createDataLineageRecorder({ ...lineageOptions, sink: undefined, retainEvents: true });
                 const context: TransformContext = { ...DEFAULT_TRANSFORM_CONTEXT, lineage };
                 if (current.kind === 'source') lineage?.recordSource(result.rows);
                 const rows = await local(context).apply(result.rows, stage.operation as never, context);
@@ -223,7 +235,7 @@ export const createDataTransformExecutor = <TSource = never>(
 
                 return {
                   rows,
-                  model: stage.outputModel,
+                  model: resolveDataTransformOutputModel(result.model, output),
                   ...(result.lineage === undefined && lineage === undefined
                     ? {}
                     : {
@@ -276,10 +288,10 @@ export const createDataTransformExecutor = <TSource = never>(
               return (async () => {
                 let current = input;
                 const events = input.kind === 'result' ? [...(input.result.lineage?.events ?? [])] : [];
-                if (request.lineage !== undefined && input.kind === 'result') {
-                  const source = createDataLineageRecorder({ ...request.lineage, sink: undefined, retainEvents: true });
+                if (lineageOptions !== undefined && input.kind === 'result') {
+                  const source = createDataLineageRecorder({ ...lineageOptions, sink: undefined, retainEvents: true });
                   source.recordSource(input.result.rows);
-                  events.push(...importDataLineageEvents(source.events, request.lineage));
+                  events.push(...importDataLineageEvents(source.events, lineageOptions));
                 }
 
                 for (const [operationIndex, implementation] of selected.entries()) {
@@ -296,7 +308,14 @@ export const createDataTransformExecutor = <TSource = never>(
                   }
 
                   assertActive(request.signal);
-                  assertDataTransformResult(resolution.stages[operationIndex].outputModel, result);
+                  try {
+                    assertDataTransformResult(resolution.stages[operationIndex].outputModel, result);
+                  } catch (cause) {
+                    throw new RetikzDataError(`data: invalid result model or values at index ${operationIndex}`, {
+                      cause,
+                      operationIndex,
+                    });
+                  }
                   const previousEvents = current.kind === 'result' ? (current.result.lineage?.events ?? []) : [];
                   const returnedEvents = result.lineage?.events ?? [];
                   let prefix = 0;
@@ -310,11 +329,11 @@ export const createDataTransformExecutor = <TSource = never>(
 
                   const added = returnedEvents.slice(prefix).filter(event => !previousEvents.includes(event));
                   const recorded =
-                    request.lineage === undefined
+                    lineageOptions === undefined
                       ? current.kind === 'source' && localStages.has(operationIndex)
                         ? added
                         : []
-                      : importDataLineageEvents(added, request.lineage, operationIndex);
+                      : importDataLineageEvents(added, lineageOptions, operationIndex);
                   events.push(...recorded);
                   current = {
                     kind: 'result',
@@ -325,18 +344,18 @@ export const createDataTransformExecutor = <TSource = never>(
                 if (current.kind === 'source') {
                   const materialized = await materialize(current);
                   events.push(
-                    ...(request.lineage === undefined
+                    ...(lineageOptions === undefined
                       ? (materialized.lineage?.events ?? [])
-                      : importDataLineageEvents(materialized.lineage?.events ?? [], request.lineage)),
+                      : importDataLineageEvents(materialized.lineage?.events ?? [], lineageOptions)),
                   );
-                  if (request.lineage !== undefined) {
+                  if (lineageOptions !== undefined) {
                     const source = createDataLineageRecorder({
-                      ...request.lineage,
+                      ...lineageOptions,
                       sink: undefined,
                       retainEvents: true,
                     });
                     source.recordSource(materialized.rows);
-                    events.push(...importDataLineageEvents(source.events, request.lineage));
+                    events.push(...importDataLineageEvents(source.events, lineageOptions));
                   }
 
                   current = { kind: 'result', result: materialized };
@@ -348,7 +367,7 @@ export const createDataTransformExecutor = <TSource = never>(
 
                 return {
                   ...result,
-                  ...(events.length === 0 && request.lineage === undefined ? {} : { lineage: { events } }),
+                  ...(events.length === 0 && lineageOptions === undefined ? {} : { lineage: { events } }),
                 };
               })();
             },
@@ -362,6 +381,12 @@ export const createDataTransformExecutor = <TSource = never>(
 /**
  * 统一异步入口；准备不支持时不计算，绑定后的执行只消费一次
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ * @param input 本次实际源输入或已计算结果
+ * @param resolution 不读取行数据的语义解析结果
+ * @param executor 承担能力预检与计算的执行器
+ * @param options 本次执行覆盖、来源要求与取消信号；省略时不追加请求配置
+ * @returns 所有阶段完成并校验后的结果 Promise
+ * @throws {RetikzDataError} 预检不支持、输入不匹配、计算或结果校验失败，或请求被取消；Promise 会拒绝
  */
 export const executeDataTransforms = async <TSource>(
   input: DataTransformStageInput<TSource>,

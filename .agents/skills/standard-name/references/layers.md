@@ -47,4 +47,6 @@
 | Domain 数据结构确定化           | `resolveXxx`                                                           | 纵向领域中从 `IRXxx + XxxResolveContext` 产出 Canonical / Resolution；不得 parse unknown 或 emit primitive                                                       |
 | 语义 lowering / 输出            | `lowerXxx`、`layoutXxx`、`emitXxx`、`collectXxx`                       | 遵循对应 compile 或 pipeline 阶段                                                                                                                                |
 
+- 可扩展能力的内置 key 枚举及其同名取值类型使用 `BuiltinXxx`；开放 schema、类型与 Definition 不加此前缀，闭合枚举不因由库提供就加此前缀
+
 顶层实体 discriminator 使用 `type`，内部 variant 使用 `kind`，命名 provider 使用 `name`。同一 discriminator 必须在 schema、contract、provider index、lookup、diagnostics 与 docs 中保持一致。

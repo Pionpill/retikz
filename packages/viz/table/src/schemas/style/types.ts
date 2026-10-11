@@ -2,6 +2,7 @@ import type { infer as ZodInfer } from 'zod';
 
 import type {
   TableCategoricalPaletteSchema,
+  TableCellLayoutDefaultsSchema,
   TableDefaultsSchema,
   TableLayoutDefaultsSchema,
   TableSequentialPaletteSchema,
@@ -22,3 +23,6 @@ export type IRTableLayoutDefaults = ZodInfer<typeof TableLayoutDefaultsSchema>;
 
 /** Table Source 的稀疏 Table defaults 聚合片段 */
 export type IRTableDefaults = ZodInfer<typeof TableDefaultsSchema>;
+
+/** 按 Cell location 提供的稀疏布局默认值 */
+export type IRTableCellLayoutDefaults = ZodInfer<typeof TableCellLayoutDefaultsSchema>;

@@ -1,5 +1,6 @@
 export * from './data-view';
 export * from './category-domain';
+export * from './lineage';
 export {
   assertDataTransformModel,
   assertDataTransformResult,

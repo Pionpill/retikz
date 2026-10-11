@@ -13,12 +13,14 @@ export const densityOperationOf = (values: {
   sampleCount: number;
 }): IRDataDensityTransform => ({
   kind: 'density',
-  field: 'value',
-  groupBy: ['group'],
-  bandwidth: values.bandwidthMode === 'value' ? { kind: 'value', value: values.bandwidth } : { kind: 'silverman' },
-  sampleCount: values.sampleCount,
-  xAs: 'densityX',
-  densityAs: 'density',
+  params: {
+    field: 'value',
+    groupBy: ['group'],
+    bandwidth: values.bandwidthMode === 'value' ? { kind: 'value', value: values.bandwidth } : { kind: 'silverman' },
+    sampleCount: values.sampleCount,
+    xAs: 'densityX',
+    densityAs: 'density',
+  },
 });
 
 /** 密度示例的中文控件 */

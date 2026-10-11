@@ -8,7 +8,12 @@ import {
 } from '@retikz/foundation';
 import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, strictObject, union } from 'zod';
 
-import { DataSortOrder, RESERVED_SELECTOR_OPERATION_KINDS, RowSelectorTie, SelectorOperationKind } from './constants';
+import {
+  DataSortOrder,
+  RESERVED_SELECTOR_OPERATION_KINDS,
+  RowSelectorTie,
+  BuiltinSelectorOperationKind,
+} from './constants';
 import { SelectorOperationKindSchema } from './kind';
 
 /** row selector 排序规则 schema；用于 first / last / nth 等代表行选择 */
@@ -43,7 +48,7 @@ const createTopBottomSelectorOperationSchema = <TKind extends string>(kind: TKin
 
 /** nth selector operation schema；按显式 orderBy 选择零基下标行 */
 const NthSelectorOperationSchema = strictObject({
-  kind: literal(SelectorOperationKind.Nth).describe('Discriminator: nth row selector'),
+  kind: literal(BuiltinSelectorOperationKind.Nth).describe('Discriminator: nth row selector'),
   orderBy: array(OrderBySchema).min(1).describe('Ordering before selection'),
   index: NonNegativeIntegerSchema.describe('Zero-based row index'),
 }).describe('Nth row selector operation');
@@ -61,7 +66,7 @@ export const OutsideQuantileBandBoundarySchema = discriminatedUnion('kind', [
 
 /** outside-quantile-band selector operation schema；选择分位区间或 spread fence 外的原始行 */
 export const OutsideQuantileBandSelectorOperationSchema = strictObject({
-  kind: literal(SelectorOperationKind.OutsideQuantileBand).describe('Discriminator: outside-band selector'),
+  kind: literal(BuiltinSelectorOperationKind.OutsideQuantileBand).describe('Discriminator: outside-band selector'),
   field: NonBlankStringSchema.describe('Numeric source field'),
   lowerP: NormalizedFractionSchema.describe('Lower quantile probability'),
   upperP: NormalizedFractionSchema.describe('Upper quantile probability'),
@@ -75,12 +80,12 @@ export const OutsideQuantileBandSelectorOperationSchema = strictObject({
 
 /** 内置 selector operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例 */
 export const BuiltinSelectorOperationSchemas = Object.freeze({
-  Min: createMinMaxSelectorOperationSchema(SelectorOperationKind.Min),
-  Max: createMinMaxSelectorOperationSchema(SelectorOperationKind.Max),
-  First: createFirstLastSelectorOperationSchema(SelectorOperationKind.First),
-  Last: createFirstLastSelectorOperationSchema(SelectorOperationKind.Last),
-  Top: createTopBottomSelectorOperationSchema(SelectorOperationKind.Top),
-  Bottom: createTopBottomSelectorOperationSchema(SelectorOperationKind.Bottom),
+  Min: createMinMaxSelectorOperationSchema(BuiltinSelectorOperationKind.Min),
+  Max: createMinMaxSelectorOperationSchema(BuiltinSelectorOperationKind.Max),
+  First: createFirstLastSelectorOperationSchema(BuiltinSelectorOperationKind.First),
+  Last: createFirstLastSelectorOperationSchema(BuiltinSelectorOperationKind.Last),
+  Top: createTopBottomSelectorOperationSchema(BuiltinSelectorOperationKind.Top),
+  Bottom: createTopBottomSelectorOperationSchema(BuiltinSelectorOperationKind.Bottom),
   Nth: NthSelectorOperationSchema,
   OutsideQuantileBand: OutsideQuantileBandSelectorOperationSchema,
 });

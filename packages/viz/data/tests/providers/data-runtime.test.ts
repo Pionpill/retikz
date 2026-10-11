@@ -4,8 +4,6 @@ import type { DataFieldTypeMap, ExternalRow } from '../../src';
 import {
   applyFieldResolver,
   assertAllValuesValid,
-  coerceCategory,
-  coerceNumber,
   coerceTimestamp,
   coerceValue,
   DataFieldType,
@@ -15,6 +13,7 @@ import {
   resolveFieldTypes,
   validateBoundData,
 } from '../../src';
+import { coerceCategory, coerceNumber } from '../../src/providers/data';
 
 describe('data provider runtime boundaries', () => {
   it('coerces only finite decimal values into continuous numbers', () => {

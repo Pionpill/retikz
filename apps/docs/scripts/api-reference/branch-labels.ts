@@ -14,6 +14,40 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/data#DataInputBinding': [
+    { value: 'rows', field: 'kind', type: "'rows'", label: { zh: '行数据', en: 'Rows' } },
+    { value: 'result', field: 'kind', type: "'result'", label: { zh: '已计算结果', en: 'Computed result' } },
+    { value: 'source', field: 'kind', type: "'source'", label: { zh: '原生数据源', en: 'Native source' } },
+  ],
+  '@retikz/data#DataTransformDependency': [
+    { value: 'reducer', field: 'type', type: "'reducer'", label: { zh: '归约依赖', en: 'Reducer' } },
+    { value: 'selector', field: 'type', type: "'selector'", label: { zh: '行选择依赖', en: 'Selector' } },
+    { value: 'regression', field: 'type', type: "'regression'", label: { zh: '拟合依赖', en: 'Regression' } },
+  ],
+  '@retikz/data#DataTransformInputDescriptor': [
+    { value: 'source', field: 'kind', type: "'source'", label: { zh: '原生源预检', en: 'Source descriptor' } },
+    { value: 'result', field: 'kind', type: "'result'", label: { zh: '结果模型预检', en: 'Result descriptor' } },
+  ],
+  '@retikz/data#DataTransformStageInput': [
+    { value: 'source', field: 'kind', type: "'source'", label: { zh: '原生数据源', en: 'Native source' } },
+    { value: 'result', field: 'kind', type: "'result'", label: { zh: '前一阶段结果', en: 'Previous result' } },
+  ],
+  '@retikz/data#DataTransformStageSupport': [
+    { value: 'supported', field: 'kind', type: "'supported'", label: { zh: '支持', en: 'Supported' } },
+    { value: 'unsupported', field: 'kind', type: "'unsupported'", label: { zh: '不支持', en: 'Unsupported' } },
+  ],
+  '@retikz/data#DataTransformPreparation': [
+    { value: 'ready', field: 'kind', type: "'ready'", label: { zh: '准备完成', en: 'Ready' } },
+    { value: 'unsupported', field: 'kind', type: "'unsupported'", label: { zh: '不支持', en: 'Unsupported' } },
+  ],
+  '@retikz/data#DataTransformOutputModel': [
+    { value: 'preserve', field: 'kind', type: "'preserve'", label: { zh: '保留并派生字段', en: 'Preserve fields' } },
+    { value: 'replace', field: 'kind', type: "'replace'", label: { zh: '替换字段集合', en: 'Replace fields' } },
+  ],
+  '@retikz/data#IRDataDensityBandwidth': [
+    { value: 'silverman', field: 'kind', type: '"silverman"', label: { zh: '自动带宽', en: 'Silverman bandwidth' } },
+    { value: 'value', field: 'kind', type: '"value"', label: { zh: '显式带宽', en: 'Explicit bandwidth' } },
+  ],
   '@retikz/runtime#RuntimeCandidateView': [
     {
       value: 'initial',

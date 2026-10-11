@@ -19,10 +19,16 @@ keywords: 'time、scale、scaleUtc、UTC、domain、epoch、Date、scaleTime'
 
 ## 决策：scale union 加 time（domain 为 [startMs, endMs]）；lowering 用 d3 scaleUtc（UTC，环境无关），刻度 / 格式时间感知，纳入 PositionScale
 
-判别串沿用 `PlotScale` 风格（`Time:'time'`，裸 `'time'` 等价可用）：
+判别串沿用 `BuiltinPlotScale` 风格（`Time:'time'`，裸 `'time'` 等价可用）：
 
 ```ts
-export const PlotScale = { Linear: 'linear', Band: 'band', Point: 'point', Ordinal: 'ordinal', Time: 'time' } as const;
+export const BuiltinPlotScale = {
+  Linear: 'linear',
+  Band: 'band',
+  Point: 'point',
+  Ordinal: 'ordinal',
+  Time: 'time',
+} as const;
 ```
 
 理由：

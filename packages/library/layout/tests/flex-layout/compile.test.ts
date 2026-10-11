@@ -5,7 +5,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
@@ -84,7 +84,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
             ? []
             : [
                 {
-                  name: LayoutAlignmentGuideName.FirstBaseline,
+                  name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
                   dimension: LayoutAlignmentGuideDimension.Y,
                   position: node.firstBaseline,
                 } as const,
@@ -93,7 +93,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
             ? []
             : [
                 {
-                  name: LayoutAlignmentGuideName.LastBaseline,
+                  name: BuiltinLayoutAlignmentGuideName.LastBaseline,
                   dimension: LayoutAlignmentGuideDimension.Y,
                   position: node.lastBaseline,
                 } as const,

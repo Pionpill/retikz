@@ -32,14 +32,16 @@ import {
 } from '@retikz/plot';
 import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard/presentation';
 import { TableSchema } from '@retikz/table';
+import GithubSlugger from 'github-slugger';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
+import { expandMdxIncludes } from '@/modules/docs/lib';
 
 describe('SCHEMA_REGISTRY', () => {
   it('contains the documented Kernel, Data, Table, and Plot schema surfaces', () => {
-    expect(SCHEMA_REGISTRY).toMatchObject({
+    const expected = {
       SceneSchema: { schema: SceneSchema },
       ContextualColorSchema: {
         schema: ContextualColorSchema,
@@ -62,19 +64,23 @@ describe('SCHEMA_REGISTRY', () => {
       },
       LegendArtifactSchema: {
         schema: LegendArtifactSchema,
-        url: '/library/standard/presentation/legend#legendartifactschema',
+        url: '/library/standard/presentation/legend#legendartifact',
       },
       SurfaceSchema: {
         schema: SurfaceSchema,
         url: '/library/standard/presentation/surface#surfaceschema',
       },
-      BlockSchema: { schema: BlockSchema, url: '/schematic/graph/block/schema-reference' },
-      BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/schema-reference' },
-      BlockSectionSchema: { schema: BlockSectionSchema, url: '/schematic/graph/block/schema-reference' },
-      BlockRowSchema: { schema: BlockRowSchema, url: '/schematic/graph/block/schema-reference' },
-      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/entity/schema-reference' },
+      BlockSchema: { schema: BlockSchema, url: '/schematic/graph/block/reference' },
+      BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/reference' },
+      BlockSectionSchema: { schema: BlockSectionSchema, url: '/schematic/graph/block/reference' },
+      BlockRowSchema: { schema: BlockRowSchema, url: '/schematic/graph/block/reference' },
+      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/entity/reference' },
       RelationSchema: { schema: RelationSchema },
-    });
+    };
+    for (const [name, entry] of Object.entries(expected)) {
+      expect(SCHEMA_REGISTRY[name].schema, name).toBe(entry.schema);
+      if ('url' in entry) expect(SCHEMA_REGISTRY[name].url, name).toBe(entry.url);
+    }
   });
 
   it('each entry has a schema and label, with an optional documentation URL', () => {
@@ -88,36 +94,35 @@ describe('SCHEMA_REGISTRY', () => {
 
   it('lookupSchema resolves a registered schema by identity', () => {
     expect(lookupSchema(SceneSchema)?.label).toBe('SceneSchema');
-    expect(lookupSchema(CoordinateSchema)?.url).toBe('/kernel/components/node/schema-reference#coordinateschema');
-    expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/components/path/schema-reference#movestepschema');
-    expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/components/path/schema-reference#axislinestepschema');
+    expect(lookupSchema(CoordinateSchema)?.url).toBe(
+      '/kernel/components/node/reference#ircoordinate--coordinateschema',
+    );
+    expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/components/path/reference#movestepschema');
+    expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/components/path/reference#axislinestepschema');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBeUndefined();
     expect(lookupSchema(LayoutInspectSpacingOptionsSchema)?.url).toBe(
-      '/library/layout/flex-layout/schema-reference#layoutinspectspacingoptionsschema',
+      '/library/layout/flex-layout/reference#layoutinspectspacingoptionsschema',
     );
     expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/presentation/legend#legendschema');
-    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/presentation/legend#legendartifactschema');
+    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/presentation/legend#legendartifact');
     expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/presentation/surface#surfaceschema');
   });
 
-  it('links Layout Inspector options to the bilingual schema reference', () => {
-    const referenceRoot = resolve(
-      process.cwd(),
-      'src/modules/docs/contents/library/layout/flex-layout/schema-reference',
-    );
+  it('links Layout Inspector options to the bilingual merged reference', async () => {
+    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/layout/flex-layout/reference');
 
-    for (const lang of ['zh', 'en']) {
-      const source = readFileSync(resolve(referenceRoot, `index.${lang}.mdx`), 'utf8');
+    for (const lang of ['zh', 'en'] as const) {
+      const source = await expandMdxIncludes(readFileSync(resolve(referenceRoot, `index.${lang}.mdx`), 'utf8'), lang);
 
-      expect(source).toContain('## LayoutInspectSpacingOptionsSchema');
-      expect(source).toContain('<ZodSchema name="LayoutInspectSpacingOptionsSchema"');
+      expect(source).toContain('>LayoutInspectSpacingOptionsSchema</ApiSourceLink>');
+      expect(source).toContain('name="LayoutInspectSpacingOptionsSchema"');
     }
   });
 
   it.each(['data', 'table', 'plot'] as const)(
     'keeps every Viz %s contract registry URL on a documented English heading',
-    moduleId => {
+    async moduleId => {
       const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
         entry.url?.startsWith(`/viz/${moduleId}/reference/`),
       );
@@ -131,8 +136,10 @@ describe('SCHEMA_REGISTRY', () => {
           resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
           'utf8',
         );
-        const headingAnchors = Array.from(source.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
-          match[1].toLowerCase().replaceAll(/[^a-z0-9]/g, ''),
+        const slugger = new GithubSlugger();
+        const expanded = await expandMdxIncludes(source, 'en');
+        const headingAnchors = Array.from(expanded.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
+          slugger.slug(match[1].replaceAll(/<[^>]+>/g, '').replaceAll('`', '')),
         );
 
         expect(headingAnchors, `${name} -> ${entry.url}`).toContain(anchor);
@@ -140,9 +147,9 @@ describe('SCHEMA_REGISTRY', () => {
     },
   );
 
-  it('keeps every Standard composite registry URL on a documented English heading', () => {
+  it('keeps every Standard composite registry URL on a documented English heading', async () => {
     const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
-      /^\/library\/standard\/(grid|axes|frame|surface|legend)(#|\/|$)/.test(entry.url ?? ''),
+      /^\/library\/standard\/presentation\/(grid|axes|frame|surface|legend)(#|\/|$)/.test(entry.url ?? ''),
     );
 
     for (const [name, entry] of entries) {
@@ -154,8 +161,10 @@ describe('SCHEMA_REGISTRY', () => {
         resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
         'utf8',
       );
-      const headingAnchors = Array.from(source.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
-        match[1].toLowerCase().replaceAll(/[^a-z0-9]/g, ''),
+      const slugger = new GithubSlugger();
+      const expanded = await expandMdxIncludes(source, 'en');
+      const headingAnchors = Array.from(expanded.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
+        slugger.slug(match[1].replaceAll(/<[^>]+>/g, '').replaceAll('`', '')),
       );
 
       expect(headingAnchors, `${name} -> ${entry.url}`).toContain(anchor);
@@ -164,5 +173,26 @@ describe('SCHEMA_REGISTRY', () => {
 
   it('returns undefined for unregistered schemas', () => {
     expect(lookupSchema(z.string())).toBeUndefined();
+  });
+
+  it('所有有锚点的 Schema 注册链接指向展开后的中英文真实标题', async () => {
+    const failures: Array<string> = [];
+    for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
+      if (!entry.url?.includes('#')) continue;
+      const [route, anchor] = entry.url.split('#');
+      for (const language of ['zh', 'en'] as const) {
+        const raw = readFileSync(
+          resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), `index.${language}.mdx`),
+          'utf8',
+        );
+        const source = (await expandMdxIncludes(raw, language)).replaceAll(/```[\s\S]*?```/g, '');
+        const slugger = new GithubSlugger();
+        const headings = [...source.matchAll(/^#{2,6}\s+(.+)$/gm)].map(match =>
+          slugger.slug(match[1].replaceAll(/<[^>]+>/g, '').replaceAll('`', '')),
+        );
+        if (!headings.includes(decodeURIComponent(anchor))) failures.push(`${name}.${language}: ${entry.url}`);
+      }
+    }
+    expect(failures).toEqual([]);
   });
 });

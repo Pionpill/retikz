@@ -105,11 +105,14 @@ const maxReducerImplementation = defineStatisticsReducerImplementation({
   },
 });
 
-/** extent reducer definition：读取一个数值字段并输出有限值 `[min, max]` 范围 */
+/** extent reducer definition：读取一个数值字段并输出有限值最小值和最大值字段 */
 const extentReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Extent,
   inputFields: operation => [operation.field],
-  outputs: operation => [{ field: operation.as }],
+  outputs: operation => [
+    { field: operation.as.min, type: DataFieldType.Continuous },
+    { field: operation.as.max, type: DataFieldType.Continuous },
+  ],
 });
 
 /** 与 extentReducerDefinition 共享语义的内置计算 */
@@ -118,7 +121,7 @@ const extentReducerImplementation = defineStatisticsReducerImplementation({
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     const { min, max } = finiteExtentOf(values);
-    return { [operation.as]: [min, max] };
+    return { [operation.as.min]: min, [operation.as.max]: max };
   },
 });
 

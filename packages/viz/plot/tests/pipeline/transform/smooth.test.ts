@@ -15,11 +15,13 @@ describe('smooth transform behavior (contract)', () => {
     collectTransformFields(
       smoothOperation({
         kind: 'smooth',
-        x: 'time',
-        y: 'value',
-        groupBy: ['series'],
-        xAs: 'trendX',
-        yAs: 'trendY',
+        params: {
+          x: 'time',
+          y: 'value',
+          groupBy: ['series'],
+          xAs: 'trendX',
+          yAs: 'trendY',
+        },
       }),
       createFieldCollector(fields),
       derivedOutputs,
@@ -43,7 +45,12 @@ describe('smooth transform behavior (contract)', () => {
         ],
       },
       transform: [
-        { operation: { kind: 'smooth', x: 'time', y: 'value', groupBy: ['series'], xAs: 'trendX', yAs: 'trendY' } },
+        {
+          operation: {
+            kind: 'smooth',
+            params: { x: 'time', y: 'value', groupBy: ['series'], xAs: 'trendX', yAs: 'trendY' },
+          },
+        },
       ],
       scales: [
         { type: 'linear', name: 'x' },

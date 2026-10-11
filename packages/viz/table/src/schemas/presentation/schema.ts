@@ -1,10 +1,10 @@
 import { createOpenStringSchema, JsonObjectSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import { TableCellPresentation } from './constants';
+import { BuiltinTableCellPresentation } from './constants';
 
 /** Table 内置 presentation 与自定义注册名共享的开放名称 schema */
-export const TableCellPresentationNameSchema = createOpenStringSchema(TableCellPresentation).describe(
+export const TableCellPresentationNameSchema = createOpenStringSchema(BuiltinTableCellPresentation).describe(
   'Exact registered Cell presentation provider name. Whitespace is preserved.',
 );
 

@@ -30,7 +30,7 @@ import type {
   IRPlotPointNumberStyle,
   IRPlotSqrtScale,
 } from '../../../schemas';
-import { MarkValueKind, PlotScale } from '../../../schemas';
+import { MarkValueKind, BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveSqrtScale } from '../../scale';
 import { PLOT_SHAPE_PALETTE } from '../../theme';
 import { makeMarkValueResolver } from '../shared';
@@ -174,7 +174,7 @@ export const makeNumericNodeResolver = (
     let scale: ((value: number) => number) | undefined;
     if (scaleName !== undefined || options.range !== undefined) {
       let def: IRPlotLinearScale = {
-        type: PlotScale.Linear,
+        type: BuiltinPlotScale.Linear,
         name: scaleName ?? `__${channelName}_${field}`,
         ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
         ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
@@ -183,7 +183,7 @@ export const makeNumericNodeResolver = (
         const found = scaleByName.get(scaleName);
         if (!found)
           throw new RetikzPlotError(`lowerPlots: ${channelName} node channel references unknown scale "${scaleName}"`);
-        if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear)
+        if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Linear)
           throw new RetikzPlotError(
             `lowerPlots: ${channelName} node channel scale "${scaleName}" must be a linear scale`,
           );
@@ -199,7 +199,7 @@ export const makeNumericNodeResolver = (
       channelName === 'opacity' && options.range !== undefined
         ? {
             channel: 'opacity' as const,
-            scaleType: PlotScale.Linear,
+            scaleType: BuiltinPlotScale.Linear,
             domain,
             range: [options.range[0], options.range[1]],
             field,
@@ -270,7 +270,7 @@ export const resolveSizeChannel = (
     const positives = numeric.filter(value => value > 0);
     const maxPositive = positives.length === 0 ? 0 : Math.max(...positives);
     let def: IRPlotSqrtScale = {
-      type: PlotScale.Sqrt,
+      type: BuiltinPlotScale.Sqrt,
       name: scaleName,
       domain: [0, maxPositive],
       range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
@@ -279,7 +279,7 @@ export const resolveSizeChannel = (
     if (channel.scale !== undefined) {
       const found = scaleByName.get(channel.scale);
       if (!found) throw new RetikzPlotError(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
-      if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Sqrt)
+      if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Sqrt)
         throw new RetikzPlotError(
           `lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`,
         );
@@ -306,7 +306,7 @@ export const resolveSizeChannel = (
       },
       descriptor: {
         channel: 'size',
-        scaleType: PlotScale.Sqrt,
+        scaleType: BuiltinPlotScale.Sqrt,
         domain: [...domain],
         range: [...range],
         field,
@@ -355,7 +355,7 @@ export const resolveShapeChannel = (
         return typeof value === 'string' || typeof value === 'number' ? shapeByCategory.get(value) : undefined;
       },
       // shape legend：每类别一形状 swatch，domain = 类别序、range = 对应形状名
-      descriptor: { channel: 'shape', scaleType: PlotScale.Ordinal, domain, range: shapes, field, fieldType },
+      descriptor: { channel: 'shape', scaleType: BuiltinPlotScale.Ordinal, domain, range: shapes, field, fieldType },
     };
   };
 };

@@ -24,11 +24,11 @@ export const inspectApiReferenceConfig = {
   })),
   translate: translateInspectApiReference,
   schemaReferences: {
-    PathInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#pathinspectoptionsschema',
-    NodeInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema',
-    ScopeInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema',
-    ClipInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#clipinspectoptionsschema',
-    CoordinateInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema',
+    PathInspectOptionsSchema: '/kernel/packages/inspect/reference#pathinspectoptionsschema',
+    NodeInspectOptionsSchema: '/kernel/packages/inspect/reference#nodeinspectoptionsschema',
+    ScopeInspectOptionsSchema: '/kernel/packages/inspect/reference#scopeinspectoptionsschema',
+    ClipInspectOptionsSchema: '/kernel/packages/inspect/reference#clipinspectoptionsschema',
+    CoordinateInspectOptionsSchema: '/kernel/packages/inspect/reference#coordinateinspectoptionsschema',
   },
 };
 
@@ -38,4 +38,4 @@ export const createInspectApiReferenceMdx = async (lang: 'zh' | 'en'): Promise<s
 
 /** 写出 Inspect 双语 API Reference include */
 export const writeInspectApiReferenceMdx = async (outputDirectory: string): Promise<void> =>
-  writeApiReferenceMdx(inspectApiReferenceConfig, outputDirectory);
+  writeApiReferenceMdx(inspectApiReferenceConfig, outputDirectory, 'kernel/packages/inspect');

@@ -39,12 +39,14 @@ describe('density area composition (contract)', () => {
         {
           operation: {
             kind: 'density',
-            field: 'value',
-            groupBy: ['group'],
-            bandwidth: { kind: 'value', value: 2 },
-            sampleCount: 4,
-            xAs: 'densityX',
-            densityAs: 'density',
+            params: {
+              field: 'value',
+              groupBy: ['group'],
+              bandwidth: { kind: 'value', value: 2 },
+              sampleCount: 4,
+              xAs: 'densityX',
+              densityAs: 'density',
+            },
           },
         },
       ],
@@ -99,11 +101,13 @@ describe('density area composition (contract)', () => {
             {
               operation: {
                 kind: 'density',
-                field: 'value',
-                bandwidth: { kind: 'value', value: 2 },
-                sampleCount: 5,
-                xAs: 'densityX',
-                densityAs: 'density',
+                params: {
+                  field: 'value',
+                  bandwidth: { kind: 'value', value: 2 },
+                  sampleCount: 5,
+                  xAs: 'densityX',
+                  densityAs: 'density',
+                },
               },
             },
           ],

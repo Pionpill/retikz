@@ -9,8 +9,6 @@ import {
   createRuntime,
   defineRuntimeSource,
   PerformanceTraceOutcome,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
   RetikzRuntimeErrorCode,
   RuntimeComputationKind,
   RuntimeComputationPhase,
@@ -36,6 +34,8 @@ import {
   createCoreComputation,
   defineComposite,
   defineShape,
+  CoreTracePhase,
+  CoreTraceUnit,
 } from '../../../src';
 
 const sceneWithText = (text: string): IRScene => ({
@@ -469,8 +469,8 @@ describe('Core Runtime Computation initial full run', () => {
     expect(records).toEqual([
       {
         owner: CORE_SOURCE_KEY,
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.IrChild,
         outcome: PerformanceTraceOutcome.Full,
         visited: 2,
         reused: 0,
@@ -662,8 +662,8 @@ describe('Core Runtime Computation full fallback update', () => {
     expect(records).toEqual([
       {
         owner: CORE_SOURCE_KEY,
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.IrChild,
         outcome: PerformanceTraceOutcome.Fallback,
         visited: 3,
         reused: 0,
@@ -671,8 +671,8 @@ describe('Core Runtime Computation full fallback update', () => {
       },
       {
         owner: CORE_SOURCE_KEY,
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.SceneChange,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.SceneChange,
         outcome: PerformanceTraceOutcome.Fallback,
         visited: 1,
         reused: 0,
@@ -1061,8 +1061,8 @@ describe('Core Runtime Computation incremental style update', () => {
     expect(records).toEqual([
       {
         owner: CORE_SOURCE_KEY,
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.IrChild,
         outcome: PerformanceTraceOutcome.Incremental,
         visited: 2,
         reused: 1,
@@ -1070,8 +1070,8 @@ describe('Core Runtime Computation incremental style update', () => {
       },
       {
         owner: CORE_SOURCE_KEY,
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.SceneChange,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.SceneChange,
         outcome: PerformanceTraceOutcome.Incremental,
         visited: 1,
         reused: 0,
@@ -1132,8 +1132,8 @@ describe('Core Runtime Computation incremental style update', () => {
     expect(records).toEqual([
       {
         owner: CORE_SOURCE_KEY,
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.IrChild,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.IrChild,
         outcome: PerformanceTraceOutcome.Full,
         visited: 2,
         reused: 0,
@@ -1141,8 +1141,8 @@ describe('Core Runtime Computation incremental style update', () => {
       },
       {
         owner: CORE_SOURCE_KEY,
-        phase: PerformanceTracePhase.Update,
-        unit: PerformanceTraceUnit.SceneChange,
+        phase: CoreTracePhase.Update,
+        unit: CoreTraceUnit.SceneChange,
         outcome: PerformanceTraceOutcome.Full,
         visited: 1,
         reused: 0,

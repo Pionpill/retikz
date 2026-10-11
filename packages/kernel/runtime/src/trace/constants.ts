@@ -1,33 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
 
-/** 性能 trace 的执行阶段常量 */
-export const PerformanceTracePhase = {
-  /** 完整编译阶段 */
-  Compile: 'compile',
-  /** Scene 图元提交阶段 */
-  Commit: 'commit',
-  /** 增量更新阶段 */
-  Update: 'update',
-} as const;
-
-/** 性能 trace 的执行阶段取值类型 */
-export type PerformanceTracePhase = ValueOf<typeof PerformanceTracePhase>;
-
-/** 性能 trace 的计数单位常量 */
-export const PerformanceTraceUnit = {
-  /** IR 子节点计数单位 */
-  IrChild: 'ir-child',
-  /** Scene 图元计数单位 */
-  ScenePrimitive: 'scene-primitive',
-  /** Computation 计数单位 */
-  Computation: 'computation',
-  /** Scene 变更计数单位 */
-  SceneChange: 'scene-change',
-} as const;
-
-/** 性能 trace 的计数单位取值类型 */
-export type PerformanceTraceUnit = ValueOf<typeof PerformanceTraceUnit>;
-
 /** 性能 trace 的执行结果常量 */
 export const PerformanceTraceOutcome = {
   /** 完整执行结果 */

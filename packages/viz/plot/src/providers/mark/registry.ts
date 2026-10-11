@@ -11,7 +11,7 @@ import type {
 import { extractMarkType } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { IRPlotMarkOperation } from '../../schemas';
-import { PlotMark } from '../../schemas';
+import { BuiltinPlotMark } from '../../schemas';
 import {
   intervalMarkDefinition,
   pathMarkDefinition,
@@ -27,12 +27,12 @@ const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<
  * @description 对齐仓库已有 composite / coordinate 工厂注册范式；新增内置 mark = 加一条注册项，不改 lowerMark。
  *   Plot mark schema 仍是静态单一真源，不由此表组装
  */
-export const MARK_REGISTRY: Record<PlotMark, AnyMarkDefinition> = {
-  [PlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
-  [PlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
-  [PlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
-  [PlotMark.Reference]: asAnyMarkDefinition(referenceMarkDefinition),
-  [PlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
+export const MARK_REGISTRY: Record<BuiltinPlotMark, AnyMarkDefinition> = {
+  [BuiltinPlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
+  [BuiltinPlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
+  [BuiltinPlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),
+  [BuiltinPlotMark.Reference]: asAnyMarkDefinition(referenceMarkDefinition),
+  [BuiltinPlotMark.Relation]: asAnyMarkDefinition(relationMarkDefinition),
 };
 
 /** 内置 mark definition registry（按 type 索引）；内置与自定义 mark 共享同一分派流程 */

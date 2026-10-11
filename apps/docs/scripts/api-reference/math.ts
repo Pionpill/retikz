@@ -28,4 +28,4 @@ export const createMathApiReferenceMdx = async (lang: 'zh' | 'en'): Promise<stri
 
 /** 写出 @retikz/math 的双语 API Reference MDX include */
 export const writeMathApiReferenceMdx = async (outputDirectory: string): Promise<void> =>
-  writeApiReferenceMdx(config, outputDirectory);
+  writeApiReferenceMdx(config, outputDirectory, 'kernel/packages/math');

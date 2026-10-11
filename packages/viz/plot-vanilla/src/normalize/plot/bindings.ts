@@ -7,7 +7,13 @@ import type {
   IRPlotMarkOperation,
   IRPlotScaleOperation,
 } from '@retikz/plot';
-import { PlotCoordinate, PlotGuide, PlotMark, PlotScale, resolvePlotFacetComposition } from '@retikz/plot';
+import {
+  BuiltinPlotCoordinate,
+  PlotGuide,
+  BuiltinPlotMark,
+  BuiltinPlotScale,
+  resolvePlotFacetComposition,
+} from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
@@ -47,7 +53,7 @@ const isAxisGuide = (guide: IRPlotGuide): guide is IRPlotAxisGuide => guide.type
 
 /** 判断 mark 是否支持按坐标轴分配 coordinate view */
 const isPositionMark = (mark: InputPlotMark): boolean =>
-  mark.type === PlotMark.Path || mark.type === PlotMark.Point || mark.type === PlotMark.Interval;
+  mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Point || mark.type === BuiltinPlotMark.Interval;
 
 /** 移除 mark 上的 authoring-only binding 字段 */
 const stripMarkBindings = (mark: InputPlotMark): IRPlotMarkOperation => {
@@ -149,11 +155,11 @@ const insertAxisBindingScales = (
   const hasXBinding = xAxisIds.length > 0;
   const hasYBinding = yAxisIds.length > 0;
   const baseXScale = scales.find(scale => scale.name === baseXScaleName) ?? {
-    type: PlotScale.Linear,
+    type: BuiltinPlotScale.Linear,
     name: baseXScaleName,
   };
   const baseYScale = scales.find(scale => scale.name === baseYScaleName) ?? {
-    type: PlotScale.Linear,
+    type: BuiltinPlotScale.Linear,
     name: baseYScaleName,
   };
   const xScales: Array<IRPlotScaleOperation> = xAxisIds.map(axisId => ({
@@ -189,13 +195,13 @@ const insertAxisBindingScales = (
   }
 
   if (!scales.some(scale => scale.name === baseXScaleName)) {
-    out.unshift(...(hasXBinding ? xScales : [{ type: PlotScale.Linear, name: baseXScaleName }]));
+    out.unshift(...(hasXBinding ? xScales : [{ type: BuiltinPlotScale.Linear, name: baseXScaleName }]));
   } else if (hasXBinding && !insertedX) {
     out.unshift(...xScales);
   }
 
   if (!scales.some(scale => scale.name === baseYScaleName)) {
-    out.push(...(hasYBinding ? yScales : [{ type: PlotScale.Linear, name: baseYScaleName }]));
+    out.push(...(hasYBinding ? yScales : [{ type: BuiltinPlotScale.Linear, name: baseYScaleName }]));
   } else if (hasYBinding && !insertedY) {
     out.push(...yScales);
   }
@@ -209,12 +215,12 @@ const ensureCartesianScales = (
   coordinate: IRPlotCoordinateOperation,
 ): Array<IRPlotScaleOperation> => {
   const out = scales.map(scale => ({ ...scale }));
-  if (coordinate.type !== PlotCoordinate.Cartesian2D) return out;
+  if (coordinate.type !== BuiltinPlotCoordinate.Cartesian2D) return out;
 
   const x = typeof coordinate.x === 'string' ? coordinate.x : AUTO_X;
   const y = typeof coordinate.y === 'string' ? coordinate.y : AUTO_Y;
-  if (!out.some(scale => scale.name === x)) out.unshift({ type: PlotScale.Linear, name: x });
-  if (!out.some(scale => scale.name === y)) out.push({ type: PlotScale.Linear, name: y });
+  if (!out.some(scale => scale.name === x)) out.unshift({ type: BuiltinPlotScale.Linear, name: x });
+  if (!out.some(scale => scale.name === y)) out.push({ type: BuiltinPlotScale.Linear, name: y });
 
   return out;
 };
@@ -225,7 +231,7 @@ const fillCoordinateScaleBindings = (
   defaults: IRPlotCoordinateOperation,
 ): IRPlotCoordinateOperation => {
   if (input.type !== defaults.type) return { ...input };
-  if (input.type === PlotCoordinate.Cartesian2D && defaults.type === PlotCoordinate.Cartesian2D) {
+  if (input.type === BuiltinPlotCoordinate.Cartesian2D && defaults.type === BuiltinPlotCoordinate.Cartesian2D) {
     return {
       ...input,
       ...(input.x === undefined && defaults.x !== undefined ? { x: defaults.x } : {}),
@@ -233,11 +239,11 @@ const fillCoordinateScaleBindings = (
     };
   }
 
-  if (input.type === PlotCoordinate.Cartesian1D && defaults.type === PlotCoordinate.Cartesian1D) {
+  if (input.type === BuiltinPlotCoordinate.Cartesian1D && defaults.type === BuiltinPlotCoordinate.Cartesian1D) {
     return { ...input, ...(input.x === undefined && defaults.x !== undefined ? { x: defaults.x } : {}) };
   }
 
-  if (input.type === PlotCoordinate.Polar2D && defaults.type === PlotCoordinate.Polar2D) {
+  if (input.type === BuiltinPlotCoordinate.Polar2D && defaults.type === BuiltinPlotCoordinate.Polar2D) {
     return {
       ...input,
       ...(input.angle === undefined && defaults.angle !== undefined ? { angle: defaults.angle } : {}),
@@ -245,7 +251,7 @@ const fillCoordinateScaleBindings = (
     };
   }
 
-  if (input.type === PlotCoordinate.Polar1D && defaults.type === PlotCoordinate.Polar1D) {
+  if (input.type === BuiltinPlotCoordinate.Polar1D && defaults.type === BuiltinPlotCoordinate.Polar1D) {
     return {
       ...input,
       ...(input.angle === undefined && defaults.angle !== undefined ? { angle: defaults.angle } : {}),
@@ -505,7 +511,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
       throw new RetikzPlotVanillaError(`${ERROR_PREFIX} composition cannot be mixed with facet/scaffold binding sugar`);
     }
 
-    const effectiveCoordinate = coordinate ?? { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
+    const effectiveCoordinate = coordinate ?? { type: BuiltinPlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
 
     return normalizeTopologyBindings(marks, guides, scales, effectiveCoordinate, facets, scaffolds);
   }
@@ -525,8 +531,8 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
     };
   }
 
-  const effectiveCoordinate = coordinate ?? { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
-  if (effectiveCoordinate.type !== PlotCoordinate.Cartesian2D) {
+  const effectiveCoordinate = coordinate ?? { type: BuiltinPlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
+  if (effectiveCoordinate.type !== BuiltinPlotCoordinate.Cartesian2D) {
     throw new RetikzPlotVanillaError(`${ERROR_PREFIX} axis id binding only supports cartesian2D coordinates`);
   }
 
@@ -685,7 +691,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
     .map(axisId => ({
       id: axisId,
       coordinate: {
-        type: PlotCoordinate.Cartesian2D,
+        type: BuiltinPlotCoordinate.Cartesian2D,
         x: axisScaleNameOf(baseXScaleName, axisId),
         y: defaultYScaleName,
       },
@@ -696,7 +702,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
     .map(axisId => ({
       id: axisId,
       coordinate: {
-        type: PlotCoordinate.Cartesian2D,
+        type: BuiltinPlotCoordinate.Cartesian2D,
         x: defaultXScaleName,
         y: axisScaleNameOf(baseYScaleName, axisId),
       },
@@ -712,7 +718,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
       views: [
         {
           id: DEFAULT_AXIS_SCOPE,
-          coordinate: { type: PlotCoordinate.Cartesian2D, x: defaultXScaleName, y: defaultYScaleName },
+          coordinate: { type: BuiltinPlotCoordinate.Cartesian2D, x: defaultXScaleName, y: defaultYScaleName },
         },
         ...xAxisScopes,
         ...yAxisScopes,

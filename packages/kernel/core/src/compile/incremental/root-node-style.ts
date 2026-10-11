@@ -1,10 +1,5 @@
 import type { RuntimeRevision, RuntimeTraceReporter } from '@retikz/runtime';
-import {
-  createRuntimeIdentity,
-  PerformanceTracePhase,
-  PerformanceTraceUnit,
-  runtimeIdentityEquals,
-} from '@retikz/runtime';
+import { createRuntimeIdentity, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type {
   AnyCompositeDefinition,
@@ -15,6 +10,7 @@ import type {
 } from '../../contract';
 import { CORE_SOURCE_KEY } from '../../contract';
 import type { IRNode, IRScene } from '../../schemas';
+import { CoreTracePhase, CoreTraceUnit } from '../../shared';
 import { jsonStructuralEquals } from '../../shared/json';
 import { compileCoreSnapshot } from '../compile';
 import type { CoreSnapshotIndexRead } from './diff';
@@ -162,7 +158,7 @@ export const tryCompileRootNodeStyleUpdate = <
   const counter: RuntimeTraceReporter<'@retikz/core'> = Object.freeze({
     owner: '@retikz/core' as const,
     report: record => {
-      if (record.phase === PerformanceTracePhase.Compile && record.unit === PerformanceTraceUnit.IrChild) {
+      if (record.phase === CoreTracePhase.Compile && record.unit === CoreTraceUnit.IrChild) {
         changedVisited = record.visited;
       }
     },

@@ -15,7 +15,7 @@ import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 
 const MaxStarPoints = 1024;
 
@@ -76,7 +76,7 @@ const worldVertices = (rect: Rect, geometry: StarGeometry): Array<Position> =>
 
 /** 可选 Star 形状 Definition */
 export const StarShapeDefinition = defineShape<StarShapeParams>({
-  name: ExtensionShapeName.Star,
+  name: BuiltinExtensionShapeName.Star,
   paramsSchema: StarShapeParamsSchema,
   circumscribe: (_halfWidth, _halfHeight, params) => starGeometry(params).aabbHalfAxes,
   boundaryPoint: (rect, toward, params) => {
