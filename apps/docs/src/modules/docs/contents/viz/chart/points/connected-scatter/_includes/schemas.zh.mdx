@@ -1,0 +1,87 @@
+以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
+
+#### ConnectedScatterChartSchema
+
+<ZodSchema
+  name="ConnectedScatterChartSchema"
+  shallow
+  description="连接散点图的 Source IR；嵌套结构在所属小节说明。"
+  descriptions={{
+    namespace: '固定为 chart',
+    type: '固定为 point，表示点图家族',
+    id: '图表标识',
+    background: '图表背景',
+    presentation: '标题、副标题、注释与来源',
+    chartDefaults: '图表内部默认配置',
+    transform: '有序 { operation, dataExecution? } 数据变换声明。',
+    dataExecution: '本 Chart 的稀疏执行配置。',
+    data: '外部数据集引用，不内嵌运行时数据',
+    layout: '图表布局尺寸与间距',
+    coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
+    recipe: '连接散点图配方',
+    plotExtension: '追加的 Plot 能力配置',
+  }}
+/>
+
+#### ConnectedScatterChartRecipeSchema
+
+<ZodSchema
+  name="ConnectedScatterChartRecipeSchema"
+  shallow
+  description="连接散点图配方。"
+  descriptions={{
+    chartType: '固定为 connected-scatter',
+    encodings: '字段映射，见下方映射 Schema',
+    properties: '常量属性，见下方属性 Schema',
+    guides: '默认坐标轴、网格与图例开关',
+    marks: '有序图元配置，见下方图元 Schema',
+  }}
+/>
+
+#### ConnectedScatterChartEncodingsSchema
+
+<ZodSchema
+  name="ConnectedScatterChartEncodingsSchema"
+  shallow
+  description="连接散点图的字段映射。"
+  descriptions={{
+    x: '横向位置映射',
+    y: '纵向位置映射',
+    order: '连接顺序字段',
+    series: '序列分组映射',
+    row: '行分面维度',
+    column: '列分面维度',
+    facet: '分面配置，须配合 row 或 column 使用',
+  }}
+/>
+
+#### ConnectedScatterChartPropertiesSchema
+
+<ZodSchema
+  name="ConnectedScatterChartPropertiesSchema"
+  shallow
+  description="连接散点图的常量属性。"
+  descriptions={{
+    point: '观测点外观',
+    path: '连接路径外观',
+    autoPadding: '自动留白策略；省略时使用 max-radius',
+    colorMode: 'series：同序列点线同色；mark：每个序列点线分色；muted：同色且连线默认透明度 60%，显式配置优先',
+    domainPadding: '显式位置域留白，优先于 autoPadding',
+  }}
+/>
+
+#### ConnectedScatterChartMarkSchema
+
+`encodings` 只允许 x、y、order，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `colorMode`、`autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
+
+<ZodSchema
+  name="ConnectedScatterChartMarkSchema"
+  shallow
+  description="连接散点图的单个图元配置。"
+  descriptions={{
+    kind: '固定为 connected-scatter',
+    override: '为 true 时替换内置同类图元；省略时追加',
+    encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
+    properties: '参照上方属性说明；不包含 colorMode、autoPadding 与 domainPadding',
+  }}
+/>

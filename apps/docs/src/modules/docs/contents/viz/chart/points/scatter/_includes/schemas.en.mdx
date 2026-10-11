@@ -1,0 +1,23 @@
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+#### ScatterChartSchema
+
+<ZodSchema name="ScatterChartSchema" shallow />
+
+#### ScatterChartRecipeSchema
+
+<ZodSchema name="ScatterChartRecipeSchema" shallow />
+
+#### ScatterChartEncodingsSchema
+
+<ZodSchema name="ScatterChartEncodingsSchema" shallow />
+
+#### ScatterChartPropertiesSchema
+
+<ZodSchema name="ScatterChartPropertiesSchema" shallow />
+
+#### ScatterChartMarkSchema
+
+`encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+
+<ZodSchema name="ScatterChartMarkSchema" shallow />

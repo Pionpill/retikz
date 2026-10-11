@@ -111,7 +111,7 @@ Coordinate = {
 需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / EdgeLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
 
 - 定位：\`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
-- IR：\`/kernel/components/layout/schema-reference\` · \`/kernel/components/node/schema-reference\` · \`/kernel/components/path/schema-reference\`
+- IR：\`/kernel/components/layout/reference\` · \`/kernel/components/node/reference\` · \`/kernel/components/path/reference\`
 - 组件：\`/kernel/components/{tikz,node/usage,path/usage,path/draw,path/step,path/arrow}\`
 - 形状 sugar：\`/library/standard/shape/circle-ellipse\`
 - 完整范例：\`/kernel/galleries/karl-circle\`
@@ -217,7 +217,7 @@ Coordinate = {
 For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / EdgeLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
 
 - Positioning: \`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
-- IR: \`/kernel/components/layout/schema-reference\` · \`/kernel/components/node/schema-reference\` · \`/kernel/components/path/schema-reference\`
+- IR: \`/kernel/components/layout/reference\` · \`/kernel/components/node/reference\` · \`/kernel/components/path/reference\`
 - Components: \`/kernel/components/{tikz,node/usage,path/usage,path/draw,path/step,path/arrow}\`
 - Shape sugar: \`/library/standard/shape/circle-ellipse\`
 - Worked example: \`/kernel/galleries/karl-circle\`

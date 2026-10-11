@@ -55,4 +55,4 @@ export const createFoundationApiReferenceMdx = async (lang: 'zh' | 'en'): Promis
 
 /** 写出 @retikz/foundation 的双语 API Reference MDX include */
 export const writeFoundationApiReferenceMdx = async (outputDirectory: string): Promise<void> =>
-  writeApiReferenceMdx(config, outputDirectory);
+  writeApiReferenceMdx(config, outputDirectory, 'kernel/packages/foundation');

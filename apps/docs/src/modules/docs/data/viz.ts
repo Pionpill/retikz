@@ -70,8 +70,7 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'api-reference', label: 'viz.dataModelApiReference' },
-          { id: 'schema-reference', label: 'viz.dataModelSchemaReference' },
+          { id: 'reference', label: 'viz.dataModelApiReference' },
         ],
       },
       {
@@ -103,8 +102,8 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'api-reference', label: 'viz.dataTransformApiReference' },
-          { id: 'schema-reference', label: 'viz.dataTransformSchemaReference' },
+
+          { id: 'reference', label: 'viz.dataTransformReference' },
         ],
       },
       {

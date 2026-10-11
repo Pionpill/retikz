@@ -258,7 +258,7 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
 
 **样式默认值。** Scope 同时提供 `style.color`、共享视觉属性 与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
 
-样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时查看 [API 参考](/kernel/components/scope/api-reference)，不必为颜色、线宽或透明度建立额外 Scope。
+样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时查看 [API 参考](/kernel/components/scope/reference)，不必为颜色、线宽或透明度建立额外 Scope。
 
 <ComponentAlert
   type="tip"
@@ -280,7 +280,7 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
 
 ## 相关属性
 
-以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/scope/api-reference)。
+以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/scope/reference)。
 
 <ComponentProps
   items={[
@@ -342,7 +342,7 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
 
 <LinkedSections
   items={[
-    { title: 'Schema 参考', description: '查询可保存的数据结构', url: '/kernel/components/scope/schema-reference' },
+    { title: 'API 参考', description: '查询可保存的数据结构', url: '/kernel/components/scope/reference' },
     { title: '水合', description: '给整体分组绑定事件', url: '/kernel/packages/render/hydration' },
   ]}
 />

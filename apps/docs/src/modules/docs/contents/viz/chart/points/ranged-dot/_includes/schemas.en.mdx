@@ -1,0 +1,23 @@
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+#### RangedDotChartSchema
+
+<ZodSchema name="RangedDotChartSchema" shallow />
+
+#### RangedDotChartRecipeSchema
+
+<ZodSchema name="RangedDotChartRecipeSchema" shallow />
+
+#### RangedDotChartEncodingsSchema
+
+<ZodSchema name="RangedDotChartEncodingsSchema" shallow />
+
+#### RangedDotChartPropertiesSchema
+
+<ZodSchema name="RangedDotChartPropertiesSchema" shallow />
+
+#### RangedDotChartMarkSchema
+
+`encodings` accepts only optional field-name strings for category, start, end, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+
+<ZodSchema name="RangedDotChartMarkSchema" shallow />

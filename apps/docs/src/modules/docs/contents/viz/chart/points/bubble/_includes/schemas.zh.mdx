@@ -1,0 +1,115 @@
+以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
+
+#### BubbleChartSchema
+
+<ZodSchema
+  name="BubbleChartSchema"
+  shallow
+  description="气泡图的 Source IR；嵌套结构在所属小节说明。"
+  descriptions={{
+    namespace: '固定为 chart',
+    type: '固定为 point，表示点图家族',
+    id: '图表标识',
+    background: '图表背景',
+    presentation: '标题、副标题、注释与来源',
+    chartDefaults: '图表内部默认配置',
+    transform: '有序 { operation, dataExecution? } 数据变换声明。',
+    dataExecution: '本 Chart 的稀疏执行配置。',
+    data: '外部数据集引用，不内嵌运行时数据',
+    layout: '图表布局尺寸与间距',
+    coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
+    recipe: '气泡图配方',
+    plotExtension: '追加的 Plot 能力配置',
+  }}
+/>
+
+#### BubbleChartRecipeSchema
+
+<ZodSchema
+  name="BubbleChartRecipeSchema"
+  shallow
+  description="气泡图配方。"
+  descriptions={{
+    chartType: '固定为 bubble',
+    encodings: '字段映射，见下方映射 Schema',
+    properties: '常量属性，见下方属性 Schema',
+    guides: '默认坐标轴、网格与图例开关',
+    marks: '有序图元配置，见下方图元 Schema',
+  }}
+/>
+
+#### BubbleChartEncodingsSchema
+
+<ZodSchema
+  name="BubbleChartEncodingsSchema"
+  shallow
+  description="气泡图的字段映射。"
+  descriptions={{
+    x: '横向位置映射',
+    y: '纵向位置映射',
+    size: '半径映射',
+    color: '颜色映射',
+    opacity: '不透明度映射',
+    shape: '形状映射',
+    row: '行分面维度',
+    column: '列分面维度',
+    facet: '分面配置，须配合 row 或 column 使用',
+  }}
+/>
+
+#### BubbleChartPropertiesSchema
+
+<ZodSchema
+  name="BubbleChartPropertiesSchema"
+  shallow
+  description="气泡图的常量属性。"
+  descriptions={{
+    color: '主色',
+    textColor: '文字颜色',
+    shape: '散点形状',
+    fill: '填充颜色或画笔',
+    stroke: '描边颜色或画笔',
+    strokeWidth: '描边宽度',
+    fillOpacity: '填充不透明度，0 到 1',
+    strokeOpacity: '描边不透明度，0 到 1',
+    opacity: '整体不透明度，0 到 1',
+    rotate: '旋转角度',
+    minimumSize: '最小尺寸',
+    zIndex: '绘制层级',
+    align: '文字对齐方式',
+    lineHeight: '文字行高',
+    maxTextWidth: '文字最大宽度',
+    cornerRadius: '圆角半径',
+    scale: '缩放比例',
+    padding: '内间距',
+    margin: '外间距',
+    dashed: '虚线开关',
+    dotted: '点线开关',
+    dashPattern: '自定义虚线序列',
+    font: '字体配置',
+    boundary: '边界配置',
+    shadow: '阴影配置',
+    blendMode: '混合模式',
+    dx: '水平偏移',
+    dy: '垂直偏移',
+    label: '标签配置',
+    autoPadding: '自动留白策略；省略时使用 point-aware',
+    domainPadding: '显式位置域留白，优先于 autoPadding',
+  }}
+/>
+
+#### BubbleChartMarkSchema
+
+`encodings` 只允许 x、y、color、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。 Bubble 的尺寸来自 recipe.encodings.size 映射，图元不能单独覆盖 size。
+
+<ZodSchema
+  name="BubbleChartMarkSchema"
+  shallow
+  description="气泡图的单个图元配置。"
+  descriptions={{
+    kind: '固定为 bubble',
+    override: '为 true 时替换内置同类图元；省略时追加',
+    encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
+    properties: '参照上方属性说明；不包含 autoPadding 与 domainPadding',
+  }}
+/>

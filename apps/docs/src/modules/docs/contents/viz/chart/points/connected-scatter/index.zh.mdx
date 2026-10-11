@@ -183,7 +183,7 @@ recipe: {
   defaultSourceFile="connected-scatter-encodings.preview.tsx"
 />
 
-完整属性与约束见 [API 参考：ConnectedScatterEncodings](#connectedscatterencodings)。
+完整属性与约束见 [API 参考：ConnectedScatterEncodings](#connectedscatterencodings--irconnectedscatterchartencodings--connectedscatterchartencodingsschema)。
 
 `order` 决定组内连线顺序，不要求输入行预先排好序。下图输入行为 3、1、2、4：开启“按顺序连接”时按 `step` 从 1 到 4 连接，关闭时按输入行顺序连接。点的位置始终由 `x`、`y` 决定。
 
@@ -265,7 +265,7 @@ recipe: {
   defaultSourceFile="connected-scatter-basic.preview.tsx"
 />
 
-完整属性与约束见 [API 参考：ConnectedScatterProperties](#connectedscatterproperties)。
+完整属性与约束见 [API 参考：ConnectedScatterProperties](#connectedscatterproperties--irconnectedscatterchartproperties--connectedscatterchartpropertiesschema)。
 
 ### 连接散点图元
 
@@ -340,7 +340,7 @@ recipe: {
   defaultSourceFile="connected-scatter-marks.preview.tsx"
 />
 
-完整属性与约束见 [API 参考：ConnectedScatterMark](#connectedscattermark)。
+完整属性与约束见 [API 参考：ConnectedScatterMark](#connectedscattermark--irconnectedscattermark--connectedscatterchartmarkschema)。
 
 ## 扩展用法
 
@@ -399,139 +399,7 @@ Chart 将一个连接散点图元解析为一条开放的 Plot Path 和一组 Pl
 
 ## API 参考
 
-React 使用 `ConnectedScatterChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `connectedScatterChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'connected-scatter'`。React 与 Vanilla API 会补齐图形类型。
-
-React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局与标题配置见 [通用结构](/viz/chart/model/general-structure)。
-
-#### ConnectedScatterEncodings
-
-对应 `ConnectedScatterEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
-
-| 通道           | 输入形式             | 说明                                              |
-| -------------- | -------------------- | ------------------------------------------------- |
-| `x / y`        | 字段名、位置映射     | 必需；观测坐标，决定点的位置                      |
-| `order`        | 字段名、直接映射     | 必需；组内连接顺序，不依赖数组顺序                |
-| `series`       | 字段名、直接映射     | 拆分轨迹并生成分类颜色和图例，可绑定 ordinal 尺度 |
-| `row / column` | 字段名、分面维度     | 按行、列建立分面                                  |
-| `facet`        | `IRPlotFacetOptions` | 配置分面；须配合 `row`、`column` 中至少一项       |
-
-公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#connectedscatterchartencodingsschema)。
-
-#### ConnectedScatterProperties
-
-对应 `ConnectedScatterProperties`、Vanilla `properties` 和 IR `recipe.properties`。
-
-| 分类 | 属性                | 类型                                                     | 说明                                                                                                                                       |
-| ---- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 外观 | `point`             | `IRConnectedScatterPointProperties`                      | 设置观测点外观；不开放 `zIndex`                                                                                                            |
-|      | `path`              | `IRConnectedScatterPathProperties`                       | 设置开放路径外观                                                                                                                           |
-|      | `colorMode`         | `'series'`、`'mark'`、`'muted'`                          | 默认 `series`：同一序列的点线同色；`mark`：每个序列的点线依次使用色板中相邻的两色，`muted` 同色且连线默认透明度 60%；显式颜色与透明度优先  |
-| 连接 | `path.curve`        | `PathCurve`                                              | 默认 `linear`；支持 linear、step、stepBefore、stepAfter、basis、cardinal、catmullRom、monotoneX、monotoneY、natural                        |
-| 连接 | `path.connectNulls` | boolean 或描边对象                                       | 默认断开；`true` 或 `{}` 用虚线连接缺口两侧有效点。对象支持 stroke、strokeWidth、strokeOpacity、dashPattern、dashOffset、lineCap、lineJoin |
-| 留白 | `autoPadding`       | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空                                                                           |
-|      | `domainPadding`     | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                                                                             |
-
-完整属性结构见 [属性 Schema](#connectedscatterchartpropertiesschema)；公共外观配置不在这里展开。
-
-#### ConnectedScatterMark
-
-对应 `ConnectedScatterMark`、Vanilla `marks` 和 IR `recipe.marks`。
-
-| 属性         | 类型                                      | 说明                                       |
-| ------------ | ----------------------------------------- | ------------------------------------------ |
-| `override`   | `boolean`                                 | 替换完整路径与观测点组合，否则追加组合     |
-| `encodings`  | `ConnectedScatterChartMark['encodings']`  | 只覆盖已有直接字段；series 始终继承 recipe |
-| `properties` | `ConnectedScatterChartMark['properties']` | 按成员合并外观，不接受图表留白策略         |
-
-## Schema 参考
-
-以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
-
-#### ConnectedScatterChartSchema
-
-<ZodSchema
-  name="ConnectedScatterChartSchema"
-  shallow
-  description="连接散点图的 Source IR；嵌套结构在所属小节说明。"
-  descriptions={{
-    namespace: '固定为 chart',
-    type: '固定为 point，表示点图家族',
-    id: '图表标识',
-    background: '图表背景',
-    presentation: '标题、副标题、注释与来源',
-    chartDefaults: '图表内部默认配置',
-    transform: '有序 { operation, dataExecution? } 数据变换声明。',
-    dataExecution: '本 Chart 的稀疏执行配置。',
-    data: '外部数据集引用，不内嵌运行时数据',
-    layout: '图表布局尺寸与间距',
-    coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
-    recipe: '连接散点图配方',
-    plotExtension: '追加的 Plot 能力配置',
-  }}
-/>
-
-#### ConnectedScatterChartRecipeSchema
-
-<ZodSchema
-  name="ConnectedScatterChartRecipeSchema"
-  shallow
-  description="连接散点图配方。"
-  descriptions={{
-    chartType: '固定为 connected-scatter',
-    encodings: '字段映射，见下方映射 Schema',
-    properties: '常量属性，见下方属性 Schema',
-    guides: '默认坐标轴、网格与图例开关',
-    marks: '有序图元配置，见下方图元 Schema',
-  }}
-/>
-
-#### ConnectedScatterChartEncodingsSchema
-
-<ZodSchema
-  name="ConnectedScatterChartEncodingsSchema"
-  shallow
-  description="连接散点图的字段映射。"
-  descriptions={{
-    x: '横向位置映射',
-    y: '纵向位置映射',
-    order: '连接顺序字段',
-    series: '序列分组映射',
-    row: '行分面维度',
-    column: '列分面维度',
-    facet: '分面配置，须配合 row 或 column 使用',
-  }}
-/>
-
-#### ConnectedScatterChartPropertiesSchema
-
-<ZodSchema
-  name="ConnectedScatterChartPropertiesSchema"
-  shallow
-  description="连接散点图的常量属性。"
-  descriptions={{
-    point: '观测点外观',
-    path: '连接路径外观',
-    autoPadding: '自动留白策略；省略时使用 max-radius',
-    colorMode: 'series：同序列点线同色；mark：每个序列点线分色；muted：同色且连线默认透明度 60%，显式配置优先',
-    domainPadding: '显式位置域留白，优先于 autoPadding',
-  }}
-/>
-
-#### ConnectedScatterChartMarkSchema
-
-`encodings` 只允许 x、y、order，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `colorMode`、`autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
-
-<ZodSchema
-  name="ConnectedScatterChartMarkSchema"
-  shallow
-  description="连接散点图的单个图元配置。"
-  descriptions={{
-    kind: '固定为 connected-scatter',
-    override: '为 true 时替换内置同类图元；省略时追加',
-    encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
-    properties: '参照上方属性说明；不包含 colorMode、autoPadding 与 domainPadding',
-  }}
-/>
+{/* @include viz/chart/points/connected-scatter/generated */}
 
 ## 延伸阅读
 

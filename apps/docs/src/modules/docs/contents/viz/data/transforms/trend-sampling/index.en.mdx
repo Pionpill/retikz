@@ -11,8 +11,11 @@ Use `smooth` to convert observations into sampled trend data. It fits a model, t
 
 The chosen method determines fitting requirements, such as sufficient distinct x values for quadratic fitting. Inferring an extent requires at least two distinct finite x values; an explicit extent does not replace the model’s input requirements. Output field names must differ and avoid group keys. Its Schema is `SmoothTransformSchema`; parameters are listed below:
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSmoothTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={104}>IRDataSmoothTransform</ApiSourceLink> / <ApiSourceLink label={"SmoothTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={495}>SmoothTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SmoothParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={449}>SmoothParamsSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property             | Type                 | Description                                                           |
 | -------------------- | -------------------- | --------------------------------------------------------------------- |
@@ -27,6 +30,15 @@ The chosen method determines fitting requirements, such as sufficient distinct x
 | `params.yAs`         | `string`             | Required predicted y output field                                     |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSmoothTransform = ZodInfer<typeof SmoothTransformSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SmoothTransformSchema`
@@ -38,6 +50,7 @@ The chosen method determines fitting requirements, such as sufficient distinct x
 <ZodSchema name="SmoothParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

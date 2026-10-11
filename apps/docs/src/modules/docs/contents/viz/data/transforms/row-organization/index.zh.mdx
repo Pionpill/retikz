@@ -9,8 +9,11 @@ description: 使用 sort 重排数据行，使用 select 按组保留原始记�
 
 `sort` 按单个字段升序或降序排列记录，保留行数与原有字段。提供 `groupBy` 时只在各组内排序，组按字段列表顺序逐层展开，每层保留父组内键值首次出现顺序；省略或空数组表示全局排序。例如 `groupBy: ['team', 'item']` 先按 team 分组，再在各 team 内按 item 分组；本例依次输出 A phone、A book、B phone、B book。分组键不隐式按字母或数值排序。排序是稳定的：同组内相同排序键的记录保持输入中的相对顺序。排序的 Schema 为 `SortTransformSchema`，参数如下：
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSortTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={32}>IRDataSortTransform</ApiSourceLink> / <ApiSourceLink label={"SortTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={58}>SortTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SortParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={49}>SortParamsSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性             | 类型                          | 说明                                               |
 | ---------------- | ----------------------------- | -------------------------------------------------- |
@@ -20,6 +23,15 @@ description: 使用 sort 重排数据行，使用 select 按组保留原始记�
 | `params.order`   | `'ascending' \| 'descending'` | 可选，排序方向，默认 `'ascending'`                 |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataSortTransform = ZodInfer<typeof SortTransformSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SortTransformSchema`
@@ -46,6 +58,7 @@ description: 使用 sort 重排数据行，使用 select 按组保留原始记�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -63,8 +76,11 @@ description: 使用 sort 重排数据行，使用 select 按组保留原始记�
 
 提供 `rankAs` 时，将选择算子返回的一基排名写入指定字段；省略时不增加排名列。排名的具体含义由算子决定，各算子的选择与并列策略见 [selector](/viz/data/operators/selector)。选择原始行的 Schema 为 `SelectTransformSchema`，参数如下：
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={59}>IRDataSelectTransform</ApiSourceLink> / <ApiSourceLink label={"SelectTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={97}>SelectTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SelectParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={90}>SelectParamsSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性              | 类型                      | 说明                                               |
 | ----------------- | ------------------------- | -------------------------------------------------- |
@@ -74,6 +90,15 @@ description: 使用 sort 重排数据行，使用 select 按组保留原始记�
 | `params.rankAs`   | `string`                  | 可选，一基排名的输出字段名，不能为空               |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataSelectTransform = ZodInfer<typeof SelectTransformSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectTransformSchema`
@@ -100,6 +125,7 @@ description: 使用 sort 重排数据行，使用 select 按组保留原始记�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

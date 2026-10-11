@@ -9,8 +9,11 @@ Row organization transforms change row order or which records are retained. `sor
 
 `sort` orders records by one field, preserving every row and field. With `groupBy`, sorting runs independently within each group, and groups are expanded in field-list order, retaining first-seen keys within each parent group. Omitted or empty grouping means global sorting. For example, `groupBy: ['team', 'item']` groups by team, then by item within each team. This example outputs A phone, A book, B phone, then B book. Group keys are not implicitly sorted alphabetically or numerically. Equal sort keys retain their relative order within a group. The sort schema is `SortTransformSchema`, with these parameters:
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSortTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={32}>IRDataSortTransform</ApiSourceLink> / <ApiSourceLink label={"SortTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={58}>SortTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SortParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={49}>SortParamsSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property         | Type                          | Description                                                         |
 | ---------------- | ----------------------------- | ------------------------------------------------------------------- |
@@ -20,6 +23,15 @@ Row organization transforms change row order or which records are retained. `sor
 | `params.order`   | `'ascending' \| 'descending'` | Optional sort direction; defaults to `'ascending'`                  |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSortTransform = ZodInfer<typeof SortTransformSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SortTransformSchema`
@@ -31,6 +43,7 @@ Row organization transforms change row order or which records are retained. `sor
 <ZodSchema name="SortParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -48,8 +61,11 @@ Row organization transforms change row order or which records are retained. `sor
 
 When `rankAs` is provided, the selector's one-based rank is written to that field. Omitting it leaves out the rank column. Each selector defines its ranking semantics; see [selector](/viz/data/operators/selector) for selection and tie policies. The row selection schema is `SelectTransformSchema`, with these parameters:
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataSelectTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={59}>IRDataSelectTransform</ApiSourceLink> / <ApiSourceLink label={"SelectTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={97}>SelectTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SelectParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={90}>SelectParamsSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Property          | Type                      | Description                                                                    |
 | ----------------- | ------------------------- | ------------------------------------------------------------------------------ |
@@ -59,6 +75,15 @@ When `rankAs` is provided, the selector's one-based rank is written to that fiel
 | `params.rankAs`   | `string`                  | Optional, nonblank output field name for one-based ranks                       |
 
 </DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRDataSelectTransform = ZodInfer<typeof SelectTransformSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `SelectTransformSchema`
@@ -70,6 +95,7 @@ When `rankAs` is provided, the selector's one-based rank is written to that fiel
 <ZodSchema name="SelectParamsSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview

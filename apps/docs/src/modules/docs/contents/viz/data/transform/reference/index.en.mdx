@@ -1,0 +1,12 @@
+---
+title: API Reference
+description: Look up public data transform types, functions, and schema constraints by capability.
+---
+
+This page covers public data transform members from the `@retikz/data` root entry, grouped by declaration, extension, resolution, and execution. See [Transform operations](/viz/data/transform/operations) for usage and [Extension mechanisms](/viz/data/transform/extensions) for custom capabilities. Find built-in parameters under [Computation operators](/viz/data/operators) and [Data transforms](/viz/data/transforms).
+
+Schema-derived types share a reference unit with their schemas: Members lists fields, Type definition shows the public declaration, and Schema shows validation constraints. Types without an expandable member table provide the latter two tabs. Independent functions, runtime types, and schemas retain their own contracts.
+
+Configuration is separate from computation implementations. Only a schema-level `.default()` materializes a value during validation; inherited and runtime defaults are explained in the relevant field or function descriptions.
+
+{/* @include viz/data/transform/reference/generated */}

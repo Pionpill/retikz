@@ -11,8 +11,11 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `count` 统计组内行数，不读取数值字段，数值缺失的行也会计入。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.count</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性   | 类型      | 说明                           |
 | ------ | --------- | ------------------------------ |
@@ -20,6 +23,15 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `as`   | `string`  | 必填，行数输出字段名，不能为空 |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `count`
@@ -34,6 +46,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -49,8 +62,11 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `sum` 将指定字段的有限数值相加，返回总和；缺失值和非有限数值不参与计算。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.sum</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性    | 类型     | 说明                             |
 | ------- | -------- | -------------------------------- |
@@ -59,6 +75,15 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `as`    | `string` | 必填，总和输出字段名，不能为空   |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `sum`
@@ -74,6 +99,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -94,8 +120,11 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `mean` 计算有限数值的算术平均数；`median` 排序后取中间值，偶数个值时取中间两个数的均值。两者都跳过缺失值和非有限数值。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.mean</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.median</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性    | 类型                 | 说明                             |
 | ------- | -------------------- | -------------------------------- |
@@ -104,6 +133,15 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `as`    | `string`             | 必填，统计输出字段名，不能为空   |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `mean`
@@ -131,6 +169,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -151,8 +190,11 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `min` 和 `max` 返回指定字段的有限数值极值。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.max</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性    | 类型             | 说明                             |
 | ------- | ---------------- | -------------------------------- |
@@ -161,6 +203,15 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `as`    | `string`         | 必填，极值输出字段名，不能为空   |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `min`
@@ -188,6 +239,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentAlert
@@ -220,8 +272,11 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `extent` 同时计算指定字段的有限数值最小值与最大值，分别写入两个连续型字段。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.extent</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性     | 类型       | 说明                                               |
 | -------- | ---------- | -------------------------------------------------- |
@@ -231,6 +286,15 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `as.max` | `string`   | 必填，非空的最大值输出字段名，不能与 `as.min` 相同 |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `extent`
@@ -248,6 +312,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -268,8 +333,11 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `quantile` 输出指定概率位置的分位点。有限数值排序后，位置为 $h=(m-1)p$，其中 $m$ 是参与计算的数值个数；位置落在两个数之间时线性插值，结果可以不是输入中的某个值。`p=0` 和 `p=1` 分别得到最小值和最大值。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={35}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={174}>ReducerOperationSchema.quantile</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性    | 类型         | 说明                                    |
 | ------- | ------------ | --------------------------------------- |
@@ -279,6 +347,15 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `as`    | `string`     | 必填，分位点输出字段名，不能为空        |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `ReducerOperationSchema` · `quantile`
@@ -295,6 +372,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
@@ -317,8 +395,11 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 令上下分位点为 $L$、$U$，区间宽度为 $S=U-L$。`minMax` 须线取观测最小值与最大值；`spread` 先构造围栏 $[L-fS,U+fS]$，再从围栏内的实际观测取须线端点。围栏与须线是不同结果。参数与校验约束可在下方页签中切换查看。
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API">
+#### <ApiSourceLink label={"IRDataQuantileBandReducerOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={44}>IRDataQuantileBandReducerOperation</ApiSourceLink> / <ApiSourceLink label={"QuantileBandReducerOperationSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={121}>QuantileBandReducerOperationSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandOutputsSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={71}>QuantileBandOutputsSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandPointOutputSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={54}>QuantileBandPointOutputSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandWhiskerSchema"} path={"packages/viz/data/src/schemas/transform/reducer.ts"} startLine={60}>QuantileBandWhiskerSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 属性                  | 类型                               | 说明                                             |
 | --------------------- | ---------------------------------- | ------------------------------------------------ |
@@ -345,6 +426,15 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 | `whisker.factor`      | `number`                           | 可选，非负数，默认 1.5；仅 spread 策略使用       |
 
 </DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataQuantileBandReducerOperation = ZodInfer<typeof QuantileBandReducerOperationSchema>;
+```
+
+</DocTab>
+
 <DocTab value="schema" label="Schema">
 
 `QuantileBandReducerOperationSchema`
@@ -416,6 +506,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 />
 
 </DocTab>
+
 </DocTabs>
 
 <ComponentPreview
