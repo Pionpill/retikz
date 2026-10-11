@@ -1,6 +1,6 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject } from 'zod';
+import { strictObject } from 'zod';
 
 import type { DataView } from '../../src';
 import {
@@ -37,26 +37,27 @@ describe('resolved data view transforms', () => {
 
   it('preserves input field evidence and adds descriptor-derived output evidence', () => {
     const copyField = defineTransform({
-      schema: strictObject({
-        kind: literal('copy-field'),
-        field: NonBlankStringSchema,
-        as: NonBlankStringSchema,
-      }),
-      inputFields: operation => [operation.field],
+      kind: 'copy-field',
+      paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as, type: { from: operation.field } }],
+        outputs: [{ field: operation.params.as, type: { from: operation.params.field } }],
       }),
     });
     const copyFieldImplementation = defineTransformImplementation({
       definition: copyField,
-      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
+      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.params.as]: row[operation.params.field] })),
     });
 
-    const result = applyTransformsToDataView(sourceView(), [{ kind: 'copy-field', field: 'source', as: 'copy' }], {
-      registry: resolveTransformRegistry([copyField]),
-      transformImplementations: [copyFieldImplementation],
-    });
+    const result = applyTransformsToDataView(
+      sourceView(),
+      [{ kind: 'copy-field', params: { field: 'source', as: 'copy' } }],
+      {
+        registry: resolveTransformRegistry([copyField]),
+        transformImplementations: [copyFieldImplementation],
+      },
+    ).dataView;
 
     expect(result.rows).toEqual([{ source: 2, stale: 'old', copy: 2 }]);
     expect(result.model).toEqual([
@@ -68,21 +69,22 @@ describe('resolved data view transforms', () => {
 
   it('rebuilds replace output maps without retaining stale input evidence', () => {
     const replaceRows = defineTransform({
-      schema: strictObject({ kind: literal('replace-rows'), as: NonBlankStringSchema }),
+      kind: 'replace-rows',
+      paramsSchema: strictObject({ as: NonBlankStringSchema }),
       outputModel: operation => ({
         kind: 'replace',
-        fields: [{ field: operation.as, type: DataFieldType.Continuous }],
+        fields: [{ field: operation.params.as, type: DataFieldType.Continuous }],
       }),
     });
     const replaceRowsImplementation = defineTransformImplementation({
       definition: replaceRows,
-      apply: (_rows, operation) => [{ [operation.as]: 7 }],
+      apply: (_rows, operation) => [{ [operation.params.as]: 7 }],
     });
 
-    const result = applyTransformsToDataView(sourceView(), [{ kind: 'replace-rows', as: 'value' }], {
+    const result = applyTransformsToDataView(sourceView(), [{ kind: 'replace-rows', params: { as: 'value' } }], {
       registry: resolveTransformRegistry([replaceRows]),
       transformImplementations: [replaceRowsImplementation],
-    });
+    }).dataView;
 
     expect(result.rows).toEqual([{ value: 7 }]);
     expect(result.model).toEqual([{ name: 'value', type: DataFieldType.Continuous }]);
@@ -91,32 +93,35 @@ describe('resolved data view transforms', () => {
   it('rejects an unresolved descriptor source before executing the operation', () => {
     let applyCalls = 0;
     const invalidOutput = defineTransform({
-      schema: strictObject({ kind: literal('invalid-output'), as: NonBlankStringSchema }),
+      kind: 'invalid-output',
+      paramsSchema: strictObject({ as: NonBlankStringSchema }),
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as, type: { from: 'missing' } }],
+        outputs: [{ field: operation.params.as, type: { from: 'missing' } }],
       }),
     });
     const invalidOutputImplementation = defineTransformImplementation({
       definition: invalidOutput,
       apply: (rows, operation) => {
         applyCalls += 1;
-        return rows.map(row => ({ ...row, [operation.as]: 1 }));
+        return rows.map(row => ({ ...row, [operation.params.as]: 1 }));
       },
     });
 
-    expect(() =>
-      applyTransformsToDataView(sourceView(), [{ kind: 'invalid-output', as: 'value' }], {
-        registry: resolveTransformRegistry([invalidOutput]),
-        transformImplementations: [invalidOutputImplementation],
-      }),
+    expect(
+      () =>
+        applyTransformsToDataView(sourceView(), [{ kind: 'invalid-output', params: { as: 'value' } }], {
+          registry: resolveTransformRegistry([invalidOutput]),
+          transformImplementations: [invalidOutputImplementation],
+        }).dataView,
     ).toThrow('data: output references unknown field "missing"');
     expect(applyCalls).toBe(0);
   });
 
   it('replaces stale evidence and observes scalar types for explicitly untyped output fields', () => {
     const untypedReplace = defineTransform({
-      schema: strictObject({ kind: literal('untyped-replace') }),
+      kind: 'untyped-replace',
+      paramsSchema: strictObject({}),
       outputModel: () => ({
         kind: 'replace',
         fields: [{ field: 'derived' }],
@@ -127,10 +132,10 @@ describe('resolved data view transforms', () => {
       apply: () => [{ derived: 1 }],
     });
 
-    const result = applyTransformsToDataView(sourceView(), [{ kind: 'untyped-replace' }], {
+    const result = applyTransformsToDataView(sourceView(), [{ kind: 'untyped-replace', params: {} }], {
       registry: resolveTransformRegistry([untypedReplace]),
       transformImplementations: [untypedReplaceImplementation],
-    });
+    }).dataView;
 
     expect(result.rows).toEqual([{ derived: 1 }]);
     expect(result.model).toEqual([{ name: 'derived', type: 'continuous' }]);
@@ -151,10 +156,12 @@ describe('resolved data view transforms', () => {
     const result = applyTransformsToDataView(view, [
       {
         kind: 'summarize',
-        groupBy: ['month'],
-        metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        params: {
+          groupBy: ['month'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        },
       },
-    ]);
+    ]).dataView;
 
     expect(result.rows).toEqual([{ month: 'Jan', totalRevenue: 5 }]);
     expect(result.model).toEqual([

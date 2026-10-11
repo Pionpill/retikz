@@ -14,7 +14,7 @@ export const DataFieldType = {
 } as const;
 
 /** 分类字段顺序策略 */
-export const FieldOrderMode = {
+export const BuiltinFieldOrderMode = {
   /** 按绑定数据里的首次出现顺序排列分类值 */
   Appearance: 'appearance',
   /** 按分类值升序排列；数值用数值比较，其余用字符串比较 */
@@ -28,7 +28,7 @@ export const FieldOrderMode = {
 } as const;
 
 /** 内置字段值解析格式名 */
-export const DataFieldFormat = {
+export const BuiltinDataFieldFormat = {
   /** temporal：严格 ISO（默认，等价不写 format） */
   Iso: 'iso',
   /** temporal：数值 / 数值串按 epoch 秒换算为毫秒 */
@@ -47,7 +47,7 @@ export const DataFieldFormat = {
 export type DataFieldType = ValueOf<typeof DataFieldType>;
 
 /** 分类字段顺序策略取值 */
-export type FieldOrderMode = ValueOf<typeof FieldOrderMode>;
+export type BuiltinFieldOrderMode = ValueOf<typeof BuiltinFieldOrderMode>;
 
 /** 内置字段值解析格式名取值 */
-export type DataFieldFormat = ValueOf<typeof DataFieldFormat>;
+export type BuiltinDataFieldFormat = ValueOf<typeof BuiltinDataFieldFormat>;

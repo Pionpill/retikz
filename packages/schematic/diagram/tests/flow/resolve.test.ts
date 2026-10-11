@@ -1,5 +1,5 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
-import { defineEntityKind, defineRelationKind, RelationRole } from '@retikz/graph';
+import { defineEntityKind, defineRelationKind, BuiltinRelationRole } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
@@ -49,7 +49,7 @@ describe('Flow Source resolve', () => {
         defineEntityKind({ kind: 'docs.logic.important', role: 'activity', description: 'Important logic content' }),
       ],
       relationKinds: [
-        defineRelationKind({ kind: 'docs.logic.data-flow', role: RelationRole.Flow, description: 'Data flow' }),
+        defineRelationKind({ kind: 'docs.logic.data-flow', role: BuiltinRelationRole.Flow, description: 'Data flow' }),
       ],
     };
     const source = {

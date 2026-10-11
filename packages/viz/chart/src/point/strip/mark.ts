@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { PlotPositionAdjustment, PointMarkSchema } from '@retikz/plot';
+import { BuiltinPlotPositionAdjustment, PointMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkDefinition } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -21,7 +21,7 @@ export const resolveStripPointMark = (
     placement: {
       adjustments: [
         {
-          kind: PlotPositionAdjustment.Jitter,
+          kind: BuiltinPlotPositionAdjustment.Jitter,
           ...(jitter === undefined ? {} : jitter),
         },
       ],

@@ -5,8 +5,6 @@ import {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
   DataScalarReducerOperationSchema,
-  ExternalReducerOperationSchema,
-  ExternalSelectorOperationSchema,
   ExternalTransformSchema,
   OrderBySchema,
   OutsideQuantileBandBoundarySchema,
@@ -21,6 +19,11 @@ import {
   SummarizeTransformSchema,
   TransformSchema,
 } from '../../src';
+import {
+  BuiltinReducerOperationSchemas,
+  ExternalReducerOperationSchema,
+  ExternalSelectorOperationSchema,
+} from '../../src/schemas/transform';
 
 const closedObjectSchemaCases: Array<{
   name: string;
@@ -28,6 +31,11 @@ const closedObjectSchemaCases: Array<{
   value: Record<string, unknown>;
 }> = [
   { name: 'order-by', schema: OrderBySchema, value: { field: 'month', order: 'ascending' } },
+  {
+    name: 'extent reducer',
+    schema: BuiltinReducerOperationSchemas.Extent,
+    value: { kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } },
+  },
   { name: 'quantile point', schema: QuantileBandPointOutputSchema, value: { p: 0.5, as: 'median' } },
   { name: 'min/max whisker', schema: QuantileBandWhiskerSchema, value: { kind: 'minMax' } },
   { name: 'spread whisker', schema: QuantileBandWhiskerSchema, value: { kind: 'spread', factor: 1.5 } },
@@ -61,12 +69,12 @@ const closedObjectSchemaCases: Array<{
   {
     name: 'summarize transform',
     schema: SummarizeTransformSchema,
-    value: { kind: 'summarize', groupBy: ['month'], metrics: [{ kind: 'count', as: 'rows' }] },
+    value: { kind: 'summarize', params: { groupBy: ['month'], metrics: [{ kind: 'count', as: 'rows' }] } },
   },
   {
     name: 'select transform',
     schema: SelectTransformSchema,
-    value: { kind: 'select', groupBy: ['month'], selector: { kind: 'min', by: 'value' } },
+    value: { kind: 'select', params: { groupBy: ['month'], selector: { kind: 'min', by: 'value' } } },
   },
   {
     name: 'annotate selector',
@@ -78,21 +86,23 @@ const closedObjectSchemaCases: Array<{
     schema: AnnotateTransformSchema,
     value: {
       kind: 'annotate',
-      groupBy: ['month'],
-      selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'isMax' }],
+      params: {
+        groupBy: ['month'],
+        selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'isMax' }],
+      },
     },
   },
 ];
 
 describe('transform schema', () => {
   it('parses transform operation and survives JSON round-trip', () => {
-    const operation = TransformSchema.parse({ kind: 'sort', field: 'month', order: 'ascending' });
+    const operation = TransformSchema.parse({ kind: 'sort', params: { field: 'month', order: 'ascending' } });
 
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
   it('rejects invalid built-in transform shape at schema boundary', () => {
-    expect(() => TransformSchema.parse({ kind: 'sort', field: '' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'sort', params: { field: '' } })).toThrow();
     expect(ReducerOperationSchema.safeParse({ kind: 'sum' }).success).toBe(false);
     expect(SelectorOperationSchema.safeParse({ kind: 'min' }).success).toBe(false);
   });
@@ -104,33 +114,104 @@ describe('transform schema', () => {
       as: 'metric',
     });
     expect(DataScalarReducerOperationSchema.safeParse({ kind: 'mean' }).success).toBe(false);
-    expect(DataScalarReducerOperationSchema.safeParse({ kind: 'extent', field: 'value', as: 'range' }).success).toBe(
-      false,
-    );
+    expect(
+      DataScalarReducerOperationSchema.safeParse({ kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } })
+        .success,
+    ).toBe(false);
+  });
+
+  it.each([
+    'range',
+    { min: 'low' },
+    { max: 'high' },
+    { min: '', max: 'high' },
+    { min: 'low', max: ' ' },
+    { min: 'same', max: 'same' },
+    { min: 'low', max: 'high', extra: true },
+  ])('rejects invalid extent output mappings: %j', as => {
+    expect(BuiltinReducerOperationSchemas.Extent.safeParse({ kind: 'extent', field: 'value', as }).success).toBe(false);
+  });
+
+  it('reports extent endpoint conflicts at their declaration paths', () => {
+    const duplicateEndpoint = BuiltinReducerOperationSchemas.Extent.safeParse({
+      kind: 'extent',
+      field: 'value',
+      as: { min: 'same', max: 'same' },
+    });
+    expect(duplicateEndpoint.success).toBe(false);
+    if (!duplicateEndpoint.success) expect(duplicateEndpoint.error.issues[0].path).toEqual(['as', 'max']);
+
+    const cases = [
+      {
+        operation: {
+          kind: 'summarize',
+          params: {
+            groupBy: ['group'],
+            metrics: [{ kind: 'extent', field: 'value', as: { min: 'group', max: 'high' } }],
+          },
+        },
+        path: ['params', 'metrics', 0, 'as', 'min'],
+      },
+      {
+        operation: {
+          kind: 'summarize',
+          params: {
+            metrics: [
+              { kind: 'count', as: 'high' },
+              { kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } },
+            ],
+          },
+        },
+        path: ['params', 'metrics', 1, 'as', 'max'],
+      },
+      {
+        operation: {
+          kind: 'annotate',
+          params: {
+            metrics: [{ kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } }],
+            selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'high' }],
+          },
+        },
+        path: ['params', 'selectors', 0, 'as'],
+      },
+    ];
+    for (const { operation, path } of cases) {
+      expect(TransformSchema.safeParse(operation).success).toBe(false);
+      const schema = operation.kind === 'summarize' ? SummarizeTransformSchema : AnnotateTransformSchema;
+      const result = schema.safeParse(operation);
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues).toContainEqual(expect.objectContaining({ path }));
+    }
   });
 
   it('rejects transform output fields that collide within one operation', () => {
     expect(
       TransformSchema.safeParse({
         kind: 'summarize',
-        groupBy: ['group'],
-        metrics: [{ kind: 'count', as: 'group' }],
+        params: {
+          groupBy: ['group'],
+          metrics: [{ kind: 'count', as: 'group' }],
+        },
       }).success,
     ).toBe(false);
     expect(
       TransformSchema.safeParse({
         kind: 'annotate',
-        metrics: [{ kind: 'sum', field: 'value', as: 'stat' }],
-        selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'stat' }],
+        params: {
+          metrics: [{ kind: 'sum', field: 'value', as: 'stat' }],
+          selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'stat' }],
+        },
       }).success,
     ).toBe(false);
     expect(
       TransformSchema.safeParse({
         kind: 'annotate',
-        selectors: [
-          { selector: { kind: 'min', by: 'value' }, as: 'stat' },
-          { selector: { kind: 'max', by: 'value' }, as: 'stat' },
-        ],
+        params: {
+          selectors: [
+            { selector: { kind: 'min', by: 'value' }, as: 'stat' },
+            { selector: { kind: 'max', by: 'value' }, as: 'stat' },
+          ],
+        },
       }).success,
     ).toBe(false);
   });
@@ -166,23 +247,25 @@ describe('transform schema', () => {
   it('accepts custom selectors for select but not annotate', () => {
     const selector = { kind: 'custom-selector', field: 'value' };
 
-    expect(SelectTransformSchema.safeParse({ kind: 'select', selector }).success).toBe(true);
+    expect(SelectTransformSchema.safeParse({ kind: 'select', params: { selector } }).success).toBe(true);
     expect(AnnotateSelectorSchema.safeParse({ selector, as: 'annotation' }).success).toBe(false);
   });
 
   it('rejects unknown keys on built-in transforms without blocking external config', () => {
-    expect(() => TransformSchema.parse({ kind: 'sort', field: 'month', oder: 'descending' })).toThrow();
+    expect(() => TransformSchema.parse({ kind: 'sort', params: { field: 'month', oder: 'descending' } })).toThrow();
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
-        groupBy: ['month'],
-        metrics: [{ kind: 'count', as: 'rows', extra: true }],
+        params: {
+          groupBy: ['month'],
+          metrics: [{ kind: 'count', as: 'rows', extra: true }],
+        },
       }),
     ).toThrow();
 
-    expect(TransformSchema.parse({ kind: 'host-transform', extra: { enabled: true } })).toEqual({
+    expect(TransformSchema.parse({ kind: 'host-transform', params: { extra: { enabled: true } } })).toEqual({
       kind: 'host-transform',
-      extra: { enabled: true },
+      params: { extra: { enabled: true } },
     });
   });
 
@@ -193,12 +276,22 @@ describe('transform schema', () => {
     ['NaN', Number.NaN],
     ['Infinity', Number.POSITIVE_INFINITY],
   ])('reports a custom %s leaf through the native Zod catchall path', (_name, value) => {
-    for (const schema of [ExternalTransformSchema, ExternalReducerOperationSchema, ExternalSelectorOperationSchema]) {
-      const result = schema.safeParse({ kind: 'host-operation', payload: { nested: [0, { bad: value }] } });
+    const schemas: Array<ZodType> = [
+      ExternalTransformSchema,
+      ExternalReducerOperationSchema,
+      ExternalSelectorOperationSchema,
+    ];
+    for (const schema of schemas) {
+      const payload = { nested: [0, { bad: value }] };
+      const isTransform = schema === ExternalTransformSchema;
+      const result = schema.safeParse(
+        isTransform ? { kind: 'host-operation', params: { payload } } : { kind: 'host-operation', payload },
+      );
 
       expect(result.success).toBe(false);
 
-      if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
+      if (!result.success)
+        expect(result.error.issues.at(0)?.path).toEqual(isTransform ? ['params', 'payload'] : ['payload']);
     }
   });
 

@@ -2130,7 +2130,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('keeps hostile PathKind compile output reflection fatal inside a discarded probe', () => {
+  it('keeps hostile BuiltinPathKind compile output reflection fatal inside a discarded probe', () => {
     const hostilePathKind = definePathKind({
       name: 'hostilePathKind',
       schema: PathSchema.extend({ kind: literal('hostilePathKind') }),
@@ -2175,7 +2175,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('snapshots dynamic PathKind bounds points before validation and layout publication', () => {
+  it('snapshots dynamic BuiltinPathKind bounds points before validation and layout publication', () => {
     let boundsPointsReads = 0;
     let xReads = 0;
     const point = new Proxy([10, 0] as [number, number], {

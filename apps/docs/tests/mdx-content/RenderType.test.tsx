@@ -12,7 +12,7 @@ describe('RenderType', () => {
         name="ExampleSchema.transforms"
         repr={{
           kind: 'array',
-          element: { kind: 'ref', name: 'TransformSchema', url: '/kernel/components/scope/schema-reference' },
+          element: { kind: 'ref', name: 'TransformSchema', url: '/kernel/components/scope/reference' },
           constraints: [],
         }}
       />,

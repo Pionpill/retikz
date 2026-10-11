@@ -1,0 +1,117 @@
+---
+title: 关系生成
+description: 从每组选择源端与目标端，输出投影字段与可选差值。
+---
+
+需要比较两条代表记录或生成连线两端的数据时，使用 `relate`。它输出关系行，端点如何绘制由后续消费模块决定。
+
+## relate · 关系生成
+
+`relate` 在每组中分别选择 source 与 target，把两端字段投影到一条关系行，并可计算 target 减 source 的差值。`fields` 的键是输出后缀，值是原始字段名，例如 `{ id: "record" }` 在 source 端输出 `sourceId`，在 target 端输出 `targetId`。结果只保留组键、投影字段和差值字段。
+
+两端均使用 [selector](/viz/data/operators/selector)；某端未选中记录时该组不输出关系行，不会对多个选择结果做笛卡尔配对。关系生成的 Schema 为 `RelateTransformSchema`，参数如下：
+
+#### <ApiSourceLink label={"IRDataRelateTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={92}>IRDataRelateTransform</ApiSourceLink> / <ApiSourceLink label={"IRDataEndpointProjection"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={86}>IRDataEndpointProjection</ApiSourceLink> / <ApiSourceLink label={"IRDataPairMeasureOperation"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={89}>IRDataPairMeasureOperation</ApiSourceLink> / <ApiSourceLink label={"RelateTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={295}>RelateTransformSchema</ApiSourceLink> / <ApiSourceLink label={"RelateParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={282}>RelateParamsSchema</ApiSourceLink> / <ApiSourceLink label={"EndpointProjectionSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={257}>EndpointProjectionSchema</ApiSourceLink> / <ApiSourceLink label={"PairMeasureOperationSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={267}>PairMeasureOperationSchema</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 属性                            | 类型                                | 说明                                           |
+| ------------------------------- | ----------------------------------- | ---------------------------------------------- |
+| `kind`                          | `'relate'`                          | 变换类型                                       |
+| `params.groupBy`                | `Array<string>`                     | 可选，分组字段；省略或空数组表示全部记录为一组 |
+| `params.source`                 | `IRDataEndpointProjection`          | 必填，源端选择器与字段投影                     |
+| `params.source.selector`        | `IRDataSelectorOperation`           | 必填，源端选择器；多个结果仅取第一个           |
+| `params.source.fields`          | `Record<string, string>`            | 必填，非空输出后缀到输入字段的映射             |
+| `params.target`                 | `IRDataEndpointProjection`          | 必填，目标端选择器与字段投影                   |
+| `params.target.selector`        | `IRDataSelectorOperation`           | 必填，目标端选择器；多个结果仅取第一个         |
+| `params.target.fields`          | `Record<string, string>`            | 必填，非空输出后缀到输入字段的映射             |
+| `params.measures`               | `Array<IRDataPairMeasureOperation>` | 可选，非空配对指标列表                         |
+| `params.measures[].op`          | `'difference'`                      | 必填，计算目标减源的差值                       |
+| `params.measures[].field`       | `string`                            | 必填，两端读取的数值字段                       |
+| `params.measures[].as`          | `string`                            | 必填，差值输出字段名                           |
+| `params.measures[].labelAs`     | `string`                            | 可选，差值的文本输出字段                       |
+| `params.measures[].labelPrefix` | `string`                            | 可选，非负差值的文本前缀，例如 +               |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRDataRelateTransform = ZodInfer<typeof RelateTransformSchema>;
+
+export type IRDataEndpointProjection = ZodInfer<typeof EndpointProjectionSchema>;
+
+export type IRDataPairMeasureOperation = ZodInfer<typeof PairMeasureOperationSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
+
+`RelateTransformSchema`
+
+<ZodSchema
+  name="RelateTransformSchema"
+  description="按组选择两个端点并生成关系行。"
+  descriptions={{
+    kind: '变换操作的固定名称',
+    params: '由 RelateParamsSchema 校验的参数对象',
+  }}
+/>
+
+`RelateParamsSchema`
+
+<ZodSchema
+  name="RelateParamsSchema"
+  description="按组选择两个端点并生成关系行。"
+  descriptions={{
+    groupBy: '分组字段；省略或空数组表示全部行属于一组',
+    source: '源端点的选择器和字段映射',
+    target: '目标端点的选择器和字段映射',
+    measures: '可选的非空配对计算列表',
+    'source.selector': '选择源端点行的计算算子',
+    'source.fields': '输出字段后缀到源行字段的非空映射',
+    'target.selector': '选择目标端点行的计算算子',
+    'target.fields': '输出字段后缀到目标行字段的非空映射',
+  }}
+/>
+
+`EndpointProjectionSchema`
+
+<ZodSchema
+  name="EndpointProjectionSchema"
+  description="选择关系端点行并映射字段。"
+  descriptions={{
+    selector: '选择端点来源行的计算算子',
+    fields: '输出字段后缀到源行字段的非空映射；生成 sourceX、targetX 等字段',
+  }}
+/>
+
+`PairMeasureOperationSchema`
+
+<ZodSchema
+  name="PairMeasureOperationSchema"
+  description="从两个端点计算差值。"
+  descriptions={{
+    op: '配对计算类型，目前为 difference',
+    field: '从两个端点读取的数值字段',
+    as: '目标减源的数值差输出字段',
+    labelAs: '可选差值文本输出字段',
+    labelPrefix: '非负差值文本的可选前缀，如 +',
+  }}
+/>
+
+</DocTab>
+
+</DocTabs>
+
+<ComponentPreview
+  files={['relation-relate', 'relation-relate.preview.tsx', 'relation-relate.data.ts', 'relation-generation.data.ts']}
+  defaultSourceFile="relation-relate.data.ts"
+  mode="showcase"
+  size="md"
+  previewClassName="h-62 [&_[data-slot=preview-theme-boundary]>div]:overflow-x-auto [&_[data-slot=preview-theme-boundary]>div>div]:w-max [&_[data-slot=preview-theme-boundary]>div>div]:min-w-full"
+  caption="切换最小到最大与首行到末行，观察 sourceId、targetId 及 delta。橙色仅标记被选中的端点记录；关闭差值列后仍输出两端标识"
+/>

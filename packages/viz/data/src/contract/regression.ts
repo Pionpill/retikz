@@ -34,6 +34,8 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
  * 保留 schema 与回调的参数推断
  * @template TSource 拟合方法 schema 接受的原始声明类型
  * @template TOperation schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致
+ * @param definition 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineRegression = <TSource extends IRRegressionMethod, TOperation = TSource>(
   definition: RegressionDefinition<TSource, TOperation>,
@@ -69,6 +71,8 @@ export type RegressionImplementation<
  * @template TSource 拟合方法 schema 接受的原始声明类型
  * @template TOperation schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致
  * @template TResult 拟合回调返回的模型或模型 Promise 类型
+ * @param implementation 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineRegressionImplementation = <
   TSource extends IRRegressionMethod,
@@ -93,7 +97,12 @@ export type AnySynchronousRegressionImplementation = Omit<AnyRegressionImplement
     fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel;
   }>;
 
-/** 从 Definition 提取唯一注册键 */
+/**
+ * 从 Definition 提取唯一注册键
+ * @param schema 注册定义的对象 schema，kind 必须是非空字符串字面量
+ * @returns kind 字面量的字符串值
+ * @throws {RetikzDataError} schema 不是对象或 kind 不是有效字面量
+ */
 export const extractRegressionKind = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject))
     throw new RetikzDataError('data: regression schema must be an object with a literal kind');

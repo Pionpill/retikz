@@ -28,7 +28,7 @@ keywords: 'PatternDefinition、pattern、motif、MarkerPrimitive、pattern.shape
 
 ### 设计细节（具体决策）
 
-- **`pattern.shape` 开放 string**：新增 `BuiltinPatternName = ValueOf<typeof PATTERN_SHAPES>` / `PatternShapeName = BuiltinPatternName | (string & {})`（照抄 node.shape / arrow.shape）。`image` 分支不变（非 motif，spec 驱动）。
+- **`pattern.shape` 开放 string**：新增 `BuiltinPatternShape = ValueOf<typeof PATTERN_SHAPES>` / `PatternShapeName = BuiltinPatternShape | (string & {})`（照抄 node.shape / arrow.shape）。`image` 分支不变（非 motif，spec 驱动）。
 - **emit-in-compile**：`createPaintRegistry(effectivePatterns, round)`——`resolve` 见 pattern spec 时查表（未注册 throw、带可用名）、构 `PatternEmitContext`（`size` / `color` 缺省 `currentColor` / `background` 缺省透明 / `lineWidth` undefined 时各 motif 自定缺省）、调 `def.emit` 产 motif `MarkerPrimitive[]` → 连同 size / background / rotation 写进 `SceneResource.tile`。gradient / image 资源不变（spec 驱动）。
 - **`SceneResource` 扩**：加可选 `tile?: ResolvedPatternTile`（`{ size, background?, rotation?, motif: MarkerPrimitive[] }`，纯数据无函数，进 Scene）——仅 pattern 资源有；gradient / image 资源仍只 `{ kind, id, spec }`。
 - **react 物化**：`paintDefs.tsx` 对带 `tile` 的资源物化 `<pattern width=size height=size patternUnits="userSpaceOnUse" patternTransform=rotate(...)>` + 可选 background rect + motif `MarkerPrimitive[]`（删 motif switch）；gradient / image 分支不变。

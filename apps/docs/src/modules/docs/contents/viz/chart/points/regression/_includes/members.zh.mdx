@@ -1,0 +1,45 @@
+React 使用 `RegressionChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `regressionChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'regression'`。React 与 Vanilla API 会补齐图形类型。
+
+React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局与标题配置见 [通用结构](/viz/chart/model/general-structure)。
+
+#### RegressionEncodings
+
+对应 `RegressionEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
+
+| 通道           | 输入形式             | 说明                                                    |
+| -------------- | -------------------- | ------------------------------------------------------- |
+| `x / y`        | 字段名、位置映射     | 必需；自变量与因变量，决定点的位置                      |
+| `series`       | 字段名、直接映射     | 分别拟合各组，并共享分类颜色与图例；可绑定 ordinal 尺度 |
+| `row / column` | 字段名、分面维度     | 按当前面板数据独立拟合                                  |
+| `facet`        | `IRPlotFacetOptions` | 配置分面；须配合 `row`、`column` 中至少一项             |
+
+公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#regressionencodings--irregressionchartencodings--regressionchartencodingsschema)。
+
+#### RegressionProperties
+
+对应 `RegressionProperties`、Vanilla `properties` 和 IR `recipe.properties`。
+
+| 分类 | 属性            | 类型                                                     | 说明                                                             |
+| ---- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| 拟合 | `method`        | `IRRegressionChartProperties['method']`                  | 选择拟合方法及参数                                               |
+|      | `extraMethods`  | `Array<IRRegressionExtraMethod>`                         | 有序追加拟合趋势，共享观测点；省略不追加                         |
+|      | `sampleCount`   | `number`                                                 | 每组预测点数，至少为 2 的整数；省略为 64                         |
+|      | `extent`        | `[number, number]`                                       | 递增的预测范围；省略使用该组有限 x 范围                          |
+| 外观 | `point`         | `IRRegressionPointProperties`                            | 设置观测点外观                                                   |
+| 趋势 | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | 默认 `catmullRom`，额外趋势继承并可覆盖                          |
+|      | `trend`         | `IRRegressionTrendProperties`                            | 设置趋势线外观，不改变拟合方法                                   |
+| 留白 | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+|      | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
+
+完整属性结构见 [属性 Schema](#regressionproperties--irregressionchartproperties--regressionchartpropertiesschema)；公共外观配置不在这里展开。
+
+#### RegressionMark
+
+对应 `RegressionMark`、Vanilla `marks` 和 IR `recipe.marks`。
+
+| 属性         | 类型                                | 说明                                                                                                              |
+| ------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`                           | 替换完整观测＋趋势组合，否则追加                                                                                  |
+| `hidePoints` | `boolean`                           | 默认 `false`；为 `true` 时不生成当前图元的散点，保留主趋势和额外趋势。                                            |
+| `encodings`  | `RegressionChartMark['encodings']`  | 覆盖同一数据中的直接字段；不覆盖 series                                                                           |
+| `properties` | `RegressionChartMark['properties']` | method、sampleCount、extent 按字段覆盖，point / trend 内逐项合并；extraMethods 整体替换，空数组清空；不含留白策略 |

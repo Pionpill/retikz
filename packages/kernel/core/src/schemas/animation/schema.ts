@@ -9,11 +9,17 @@ import {
 import { array, enum as zodEnum, literal, number, object, tuple, union } from 'zod';
 
 import { Anchor, CenterAnchor } from '../../shared';
-import { AnimationDirection, AnimationEasing, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
+import {
+  AnimationDirection,
+  BuiltinAnimationEasing,
+  AnimationFill,
+  BuiltinAnimationProperty,
+  AnimationTrigger,
+} from './constants';
 
-const AnimationEasingNameSchema = createOpenStringSchema(AnimationEasing);
+const AnimationEasingNameSchema = createOpenStringSchema(BuiltinAnimationEasing);
 
-const AnimationPropertySchema = createOpenStringSchema(AnimationProperty);
+const AnimationPropertySchema = createOpenStringSchema(BuiltinAnimationProperty);
 
 /** 校验缓动曲线名称或三次贝塞尔控制点四元组 */
 export const EasingSchema = union([
@@ -93,20 +99,20 @@ export const AnimationTrackSchema = object({
   // 内置 property 的 keyframe value 类型校验；自定义 property（非内置名）value 宽松（任意 JSON），交 renderer 注册的插值器
   .superRefine((track, ctx) => {
     const numeric = new Set<string>([
-      AnimationProperty.Opacity,
-      AnimationProperty.StrokeWidth,
-      AnimationProperty.TranslateX,
-      AnimationProperty.TranslateY,
-      AnimationProperty.Rotate,
-      AnimationProperty.Scale,
-      AnimationProperty.ScaleX,
-      AnimationProperty.ScaleY,
-      AnimationProperty.PathDraw,
+      BuiltinAnimationProperty.Opacity,
+      BuiltinAnimationProperty.StrokeWidth,
+      BuiltinAnimationProperty.TranslateX,
+      BuiltinAnimationProperty.TranslateY,
+      BuiltinAnimationProperty.Rotate,
+      BuiltinAnimationProperty.Scale,
+      BuiltinAnimationProperty.ScaleX,
+      BuiltinAnimationProperty.ScaleY,
+      BuiltinAnimationProperty.PathDraw,
     ]);
     track.keyframes.forEach((frame, index) => {
       const value = frame.value;
       const path: Array<string | number> = ['keyframes', index, 'value'];
-      if (track.property === AnimationProperty.ViewBox) {
+      if (track.property === BuiltinAnimationProperty.ViewBox) {
         if (!Array.isArray(value) || value.length !== 4) {
           ctx.addIssue({
             code: 'custom',
@@ -114,7 +120,10 @@ export const AnimationTrackSchema = object({
             message: 'viewBox keyframe value must be a 4-number array [x, y, w, h]',
           });
         }
-      } else if (track.property === AnimationProperty.Fill || track.property === AnimationProperty.Stroke) {
+      } else if (
+        track.property === BuiltinAnimationProperty.Fill ||
+        track.property === BuiltinAnimationProperty.Stroke
+      ) {
         if (typeof value !== 'string') {
           ctx.addIssue({ code: 'custom', path, message: `${track.property} keyframe value must be a color string` });
         }

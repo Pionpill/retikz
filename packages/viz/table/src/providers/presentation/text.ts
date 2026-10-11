@@ -1,11 +1,11 @@
 import { strictObject } from 'zod';
 
 import { defineCellPresentation } from '../../contract';
-import { TableCellPresentation } from '../../schemas';
+import { BuiltinTableCellPresentation } from '../../schemas';
 
 /** 内置 text Cell presentation */
 export const TEXT_CELL_PRESENTATION = defineCellPresentation({
-  name: TableCellPresentation.Text,
+  name: BuiltinTableCellPresentation.Text,
   optionsSchema: strictObject({}),
   present: ({ value }) => ({
     type: 'node',

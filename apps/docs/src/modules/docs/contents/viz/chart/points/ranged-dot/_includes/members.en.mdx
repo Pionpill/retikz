@@ -1,0 +1,42 @@
+React uses `RangedDotChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `rangedDotChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'ranged-dot'`. React and the Vanilla API supply the chart type automatically.
+
+In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, and presentation, see [General Structure](/viz/chart/model/general-structure).
+
+#### RangedDotEncodings
+
+Corresponds to `RangedDotEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
+
+| Channel        | Input form                   | Description                                                       |
+| -------------- | ---------------------------- | ----------------------------------------------------------------- |
+| `category`     | Field name, position mapping | Required; maps to category position on y                          |
+| `start / end`  | Field name, position mapping | Required; share x scale and must use the same explicit scale name |
+| `color`        | Field name, color mapping    | Color shared by both endpoints and their connector                |
+| `row / column` | Field name, facet dimension  | Row or column facets                                              |
+| `facet`        | `IRPlotFacetOptions`         | Configures facets; requires at least one of `row` and `column`    |
+
+Shared mapping parameters are not expanded here; see the [encoding schema](#rangeddotencodings--irrangeddotchartencodings--rangeddotchartencodingsschema) for exact inputs.
+
+#### RangedDotProperties
+
+Corresponds to `RangedDotProperties`, Vanilla `properties` and IR `recipe.properties`.
+
+| Category  | Property        | Type                                                     | Description                                                                                             |
+| --------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Endpoints | `point`         | `IRRangedDotPointProperties`                             | Sets shared appearance for both endpoints                                                               |
+|           | `startPoint`    | `IRRangedDotPointProperties`                             | Overrides start-point appearance                                                                        |
+|           | `endPoint`      | `IRRangedDotPointProperties`                             | Overrides end-point appearance                                                                          |
+| Connector | `range`         | `IRRangedDotRangeProperties`                             | Sets connector appearance                                                                               |
+| Padding   | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+|           | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
+
+See the [properties schema](#rangeddotproperties--irrangeddotchartproperties--rangeddotchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
+
+#### RangedDotMark
+
+Corresponds to `RangedDotMark`, Vanilla `marks` and IR `recipe.marks`.
+
+| Property     | Type                               | Description                                                             |
+| ------------ | ---------------------------------- | ----------------------------------------------------------------------- |
+| `override`   | `boolean`                          | Replace the full endpoint-and-connector group, otherwise append         |
+| `encodings`  | `RangedDotChartMark['encodings']`  | Override direct fields; inherit color from the recipe                   |
+| `properties` | `RangedDotChartMark['properties']` | Merge member appearance separately; chart padding policies are excluded |

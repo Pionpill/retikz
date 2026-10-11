@@ -15,6 +15,33 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：排序与分桶计算分组', en: 'Unreleased: grouped sorting and binning' },
+          content: {
+            zh: 'sort 与 bin 支持可选 params.groupBy，多个字段组成计算分组。sort 在组内稳定排序，组按字段层级及每层首次出现顺序输出；bin 各组独立分桶并保留组字段与类型，显式 extent 让所有组共用范围，来源证据仅包含实际桶成员。未指定分组时行为保持。行组织文档提供全局、team、item 和组合分组控件。',
+            en: 'sort and bin accept optional params.groupBy with composite field keys. sort is stable within each group and emits groups in field hierarchy with first-seen keys at each level. bin computes independent bins, retains group fields and types, shares explicit extents across groups, and tracks only actual bucket members. Ungrouped behavior is unchanged. Row organization demos expose global, team, item, and composite grouping.',
+          },
+        },
+        {
+          label: {
+            zh: '待发布：BREAKING 统一 transform 参数',
+            en: 'Unreleased: BREAKING unified transform parameters',
+          },
+          content: {
+            zh: '所有数据变换统一使用 { kind, params }。各变换公开 XxxParamsSchema，defineTransform 接收 kind 与 paramsSchema，通过 createTransformSchema 组装完整操作契约。Plot、Chart、Table 及适配器同步采用新写法；operation/dataExecution 外层声明、统计子算子、计算算法与默认行为保持不变，不保留扁平写法。',
+            en: 'All data transforms use { kind, params }. Each exposes XxxParamsSchema; defineTransform accepts kind and paramsSchema and assembles the operation contract through createTransformSchema. Plot, Chart, Table, and adapters use this shape. The operation/dataExecution declaration, statistical sub-operations, algorithms, and defaults are unchanged; flat operations are removed.',
+          },
+        },
+        {
+          label: {
+            zh: '待发布：变换结果模型与错误定位修复',
+            en: 'Unreleased: transform result models and diagnostics',
+          },
+          content: {
+            zh: '外部结果补充的字段类型在后续本地保留或继承字段时继续有效，空结果也不会丢失类型证据。阶段结果模型或值域不匹配的错误现在携带 operation 下标并保留原因为 cause。',
+            en: 'Field types supplied by external results survive subsequent local field preservation or inheritance, including empty results. Stage result model or value mismatches now include the operation index and preserve the original cause.',
+          },
+        },
+        {
           label: { zh: '待发布：可扩展分类顺序', en: 'Unreleased: extensible category orders' },
           content: {
             zh: '新增 naturalAscending / naturalDescending，按数字片段排列版本标签。Data 统一提供 defineFieldOrder、resolveFieldOrderRegistry 与 resolveCategoryDomain；Plot、Table 及适配器通过 fieldOrderDefinitions 注入。原有顺序语义不变，Table 不自动重排行列。移除 Plot 的 CategoryOrder / orderedCategoryDomain 导出。',
@@ -34,15 +61,15 @@ export const vizV02: Release = {
         {
           label: { zh: '待发布：BREAKING 数据变换统一归属', en: 'Unreleased: BREAKING unified data transforms' },
           content: {
-            zh: 'stack、bin、normalize、derive-interval、relate、jitter、density 与 smooth 的 schema、类型和实现迁入 @retikz/data 根入口，与既有四种操作共用默认 registry；从 DataTransform 和 IRDataXxxTransform 导入，不再使用 Plot 的具体变换导出或组合 registry。PlotTransform 作者组件保留；宿主声明使用 operation 包装，执行策略独立配置，操作默认值与声明顺序保持不变。',
-            en: 'The schemas, types, and implementations of stack, bin, normalize, derive-interval, relate, jitter, density, and smooth move to the @retikz/data package root and share the default registry with its four existing operations. Import DataTransform and IRDataXxxTransform from Data instead of Plot-specific exports or its combined registry. The PlotTransform authoring component remains; host declarations wrap operation parameters and configure execution separately, preserving operation defaults and declaration order.',
+            zh: 'stack、bin、normalize、derive-interval、relate、jitter、density 与 smooth 的 schema、类型和实现迁入 @retikz/data 根入口，与既有四种操作共用默认 registry；从 BuiltinDataTransform 和 IRDataXxxTransform 导入，不再使用 Plot 的具体变换导出或组合 registry。PlotTransform 作者组件保留；宿主声明使用 operation 包装，执行策略独立配置，操作默认值与声明顺序保持不变。',
+            en: 'The schemas, types, and implementations of stack, bin, normalize, derive-interval, relate, jitter, density, and smooth move to the @retikz/data package root and share the default registry with its four existing operations. Import BuiltinDataTransform and IRDataXxxTransform from Data instead of Plot-specific exports or its combined registry. The PlotTransform authoring component remains; host declarations wrap operation parameters and configure execution separately, preserving operation defaults and declaration order.',
           },
         },
         {
           label: { zh: '单一 Source 校验边界', en: 'Single Source validation boundary' },
           content: {
-            zh: 'transform、reducer 与 selector 的开放配置由各自 Source schema 通过 JSON catchall 校验；registry dispatch 后只运行命中的 Definition schema，不再在前后重复执行通用 JSON object 检查。',
-            en: 'Open transform, reducer, and selector configuration is validated by each Source schema through a JSON catchall. After registry dispatch, only the matched Definition schema runs, with no generic JSON-object checks before or after it.',
+            zh: 'transform 的 params JSON 对象、reducer 与 selector 的开放配置由各自 Source schema 校验；registry dispatch 后只运行命中的 Definition schema，不再在前后重复执行通用 JSON object 检查。',
+            en: 'Transform params JSON objects and open reducer and selector configuration are validated by their Source schemas. After registry dispatch, only the matched Definition schema runs, with no generic JSON-object checks before or after it.',
           },
         },
       ],

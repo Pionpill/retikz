@@ -26,8 +26,8 @@ keywords: 'transform、sort、stack、groupBy、expandPlot、order、rows'
 - **stack**：按 `groupBy`（系列字段）在每个 `x`（分组键）内对 `y`（数值字段）累加，给每行派生 `y0` / `y1`（写到可配置的输出字段，默认 `y0` / `y1`），供堆叠 mark 消费。
 
 ```ts
-export const DataTransform = { Sort: 'sort', Stack: 'stack' } as const;
-export type TransformType = ValueOf<typeof DataTransform>;
+export const BuiltinDataTransform = { Sort: 'sort', Stack: 'stack' } as const;
+export type TransformType = ValueOf<typeof BuiltinDataTransform>;
 ```
 
 理由：

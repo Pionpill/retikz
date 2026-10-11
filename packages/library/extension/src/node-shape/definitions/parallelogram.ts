@@ -5,7 +5,7 @@ import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, strictObject } from 'zod';
 
-import { ExtensionShapeName } from '../constants';
+import { BuiltinExtensionShapeName } from '../constants';
 import {
   circumscribeRoundedPolygon,
   emitPolygon,
@@ -62,7 +62,7 @@ const parallelogramVertices =
 
 /** 可选 Parallelogram 形状 Definition */
 export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams>({
-  name: ExtensionShapeName.Parallelogram,
+  name: BuiltinExtensionShapeName.Parallelogram,
   paramsSchema: ParallelogramShapeParamsSchema,
   circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
     const sharp = {
@@ -70,7 +70,7 @@ export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams
       halfHeight: innerHalfHeight,
     };
     return circumscribeRoundedPolygon(
-      ExtensionShapeName.Parallelogram,
+      BuiltinExtensionShapeName.Parallelogram,
       innerHalfWidth,
       innerHalfHeight,
       sharp,

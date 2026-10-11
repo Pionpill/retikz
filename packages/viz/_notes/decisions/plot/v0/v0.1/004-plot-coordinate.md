@@ -21,8 +21,8 @@ keywords: 'Plot、Cartesian2D、Coordinate、union、scale、cartesian2D、scale
 
 ```ts
 /** 坐标系类型判别值集（const 对象 + 派生类型；后续加 polar2D / linear1D…） */
-export const PlotCoordinate = { Cartesian2D: 'cartesian2D' } as const;
-export type CoordinateType = ValueOf<typeof PlotCoordinate>;
+export const BuiltinPlotCoordinate = { Cartesian2D: 'cartesian2D' } as const;
+export type CoordinateType = ValueOf<typeof BuiltinPlotCoordinate>;
 ```
 
 理由：

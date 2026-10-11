@@ -29,7 +29,7 @@ keywords: 'ribbon、mark、Path、primitive、sankey、transform、endWidth、No
 ```ts
 // 一行 = 一条流带；source / target 各是 { x, y } 字段对，经当前 scope frame.projectRoles 投影出屏幕点。
 RibbonMarkSchema = {
-  type: literal(PlotMark.Ribbon),
+  type: literal(BuiltinPlotMark.Ribbon),
   source: RibbonEndpointSchema,   // { x: Channel, y: Channel } —— 单一字段端点形态，无 union/refine
   target: RibbonEndpointSchema,
   value: string,                  // 流量字段 → width scale → 带宽（user units）

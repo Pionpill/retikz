@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import type { DataTransformImplementationProvider, DataTransformModel, DataTransformStageInput } from '../../src';
 import {
   createDataTransformExecutor,
+  createDataLineageRecorder,
+  applyTransformsToDataView,
+  createDataView,
   DataTransformDeclarationSchema,
   executeDataTransforms,
   resolveDataTransforms,
@@ -31,25 +34,171 @@ const input = (values: Array<number>): DataTransformStageInput<never> => ({
   result: { rows: values.map(value => ({ value })), model },
 });
 
+it.each([true, false])('passes resolved lineage=%s requirements to an external provider', async enabled => {
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
+  const executor = createDataTransformExecutor({
+    dataExecution: { mode: 'external', external: 'engine' },
+    externalProviders: [
+      {
+        name: 'engine',
+        provider: {
+          resolve: (stage, context) => {
+            expect(context.requirements.lineage).toEqual(enabled ? {} : undefined);
+            return {
+              kind: 'supported',
+              implementation: {
+                definition: stage.definition,
+                execute: current => {
+                  if (current.kind !== 'result') throw new Error('expected result input');
+                  const rows = [...current.result.rows].sort((left, right) => Number(left.value) - Number(right.value));
+                  const lineage =
+                    context.requirements.lineage === undefined
+                      ? undefined
+                      : createDataLineageRecorder(context.requirements.lineage);
+                  lineage?.recordTransformStep({
+                    operationIndex: context.operationIndex,
+                    operation: stage.operation,
+                    inputRows: current.result.rows,
+                    outputRows: rows,
+                    inputFields: ['value'],
+                    outputFields: [],
+                  });
+                  return { rows, model, ...(lineage === undefined ? {} : { lineage: { events: lineage.events } }) };
+                },
+              },
+            };
+          },
+        },
+      },
+    ],
+  });
+  const result = await executeDataTransforms(input([2, 1]), resolution, executor, { lineage: enabled });
+  expect(result.rows).toEqual([{ value: 1 }, { value: 2 }]);
+  if (enabled) {
+    expect(result.lineage?.events.map(event => event.kind)).toEqual(['source', 'transformStep']);
+    expect(result.lineage?.events[0]).toMatchObject({ sourceIdentity: { count: 0, indices: [] } });
+  } else expect(result.lineage).toBeUndefined();
+});
+
+it.each([true, false])('uses lineage=%s for local result inputs and empty plans', async enabled => {
+  for (const declarations of [[], [{ operation: { kind: 'sort', params: { field: 'value' } } }]]) {
+    const result = await executeDataTransforms(
+      input([2, 1]),
+      resolveDataTransforms(declarations, model),
+      createDataTransformExecutor(),
+      { lineage: enabled },
+    );
+    expect(result.rows.map(row => row.value)).toEqual(declarations.length === 0 ? [2, 1] : [1, 2]);
+    if (enabled)
+      expect(result.lineage?.events.map(event => event.kind)).toEqual(
+        declarations.length === 0 ? ['source'] : ['source', 'transformStep'],
+      );
+    else expect(result.lineage).toBeUndefined();
+  }
+});
+
+it.each([true, false])('uses lineage=%s for materialized source inputs and empty plans', async enabled => {
+  const source = { name: 'warehouse' };
+  const executor = createDataTransformExecutor<typeof source>({
+    materializeSource: (_source, _model, context) => {
+      expect(context.requirements.lineage).toEqual(enabled ? {} : undefined);
+      return { rows: [{ value: 2 }, { value: 1 }], model };
+    },
+  });
+  for (const declarations of [[], [{ operation: { kind: 'sort', params: { field: 'value' } } }]]) {
+    const result = await executeDataTransforms(
+      { kind: 'source', source, model },
+      resolveDataTransforms(declarations, model),
+      executor,
+      { lineage: enabled },
+    );
+    expect(result.rows.map(row => row.value)).toEqual(declarations.length === 0 ? [2, 1] : [1, 2]);
+    if (enabled)
+      expect(result.lineage?.events.map(event => event.kind)).toEqual(
+        declarations.length === 0 ? ['source'] : ['source', 'transformStep'],
+      );
+    else expect(result.lineage).toBeUndefined();
+  }
+});
+
+it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through empty local %s results', async mode => {
+  const definition = defineTransform({
+    kind: 'copy-field',
+    paramsSchema: strictObject({}),
+    inputFields: () => ['value'],
+    outputModel: () => ({ kind: 'replace', fields: [{ field: 'copy', type: { from: 'value' } }] }),
+  });
+  const implementation = defineTransformImplementation({
+    definition,
+    apply: rows => rows.map(row => ({ copy: row.value })),
+  });
+  const unknownModel: DataTransformModel = [{ name: 'value' }];
+  const resolution = resolveDataTransforms(
+    [
+      {
+        operation: { kind: 'sort', params: { field: 'value' } },
+        dataExecution: { mode: 'external', external: 'typed' },
+      },
+      {
+        operation:
+          mode === 'preserve' ? { kind: 'sort', params: { field: 'value' } } : { kind: 'copy-field', params: {} },
+      },
+    ],
+    unknownModel,
+    { transformRegistry: resolveTransformRegistry([definition]) },
+  );
+  const executor = createDataTransformExecutor({
+    transformImplementations: [implementation],
+    externalProviders: [
+      {
+        name: 'typed',
+        provider: {
+          resolve: stage => ({
+            kind: 'supported',
+            implementation: {
+              definition: stage.definition,
+              execute: () => ({ rows: [], model: [{ name: 'value', type: 'temporal' }] }),
+            },
+          }),
+        },
+      },
+    ],
+  });
+
+  const result = await executeDataTransforms(
+    { kind: 'result', result: { rows: [], model: unknownModel } },
+    resolution,
+    executor,
+  );
+
+  expect(result.rows).toEqual([]);
+  expect(result.model).toEqual([{ name: mode === 'preserve' ? 'value' : 'copy', type: 'temporal' }]);
+  expect(resolution.stages[1].outputModel).toEqual([{ name: mode === 'preserve' ? 'value' : 'copy' }]);
+});
+
 it('resolves custom semantics without computation and rejects mismatched local or external Definition identities', async () => {
   const semantic = () =>
     defineTransform({
-      schema: strictObject({ kind: literal('derive-value'), field: string().default('value') }),
-      inputFields: operation => [operation.field],
+      kind: 'derive-value',
+      paramsSchema: strictObject({ field: string().default('value') }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: 'derived', type: { from: operation.field } }],
+        outputs: [{ field: 'derived', type: { from: operation.params.field } }],
       }),
     });
   const definition = semantic();
   const differentDefinition = semantic();
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'derive-value' } }, { operation: { kind: 'sort', field: 'derived' } }],
+    [
+      { operation: { kind: 'derive-value', params: {} } },
+      { operation: { kind: 'sort', params: { field: 'derived' } } },
+    ],
     model,
     { transformRegistry: resolveTransformRegistry([definition]) },
   );
 
-  expect(resolution.stages[0].operation).toEqual({ kind: 'derive-value', field: 'value' });
+  expect(resolution.stages[0].operation).toEqual({ kind: 'derive-value', params: { field: 'value' } });
   expect(resolution.stages[1].outputModel).toEqual([...model, { name: 'derived', type: 'continuous' }]);
 
   let computed = 0;
@@ -126,7 +275,7 @@ it('routes only the named provider and rejects duplicate or missing registration
     ],
   });
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'external', external: 'b' } }],
+    [{ operation: { kind: 'sort', params: { field: 'value' } }, dataExecution: { mode: 'external', external: 'b' } }],
     model,
   );
 
@@ -135,7 +284,7 @@ it('routes only the named provider and rejects duplicate or missing registration
 
   for (const mode of ['external', 'hybrid'] as const) {
     const missing = resolveDataTransforms(
-      [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode } }],
+      [{ operation: { kind: 'sort', params: { field: 'value' } }, dataExecution: { mode } }],
       model,
     );
 
@@ -176,7 +325,12 @@ it('checks actual native capabilities and provenance requirements without using 
   };
   const executor = createDataTransformExecutor({ externalProviders: [{ name: 'native', provider }] });
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'sort', field: 'label' }, dataExecution: { mode: 'external', external: 'native' } }],
+    [
+      {
+        operation: { kind: 'sort', params: { field: 'label' } },
+        dataExecution: { mode: 'external', external: 'native' },
+      },
+    ],
     nativeModel,
   );
   const unordered: Native = { stableRows: false, provenance: true };
@@ -204,7 +358,7 @@ it('checks actual native capabilities and provenance requirements without using 
 describe('data execution policy and binding', () => {
   it('preserves independent operation parameters and sparse execution configuration', () => {
     const declaration = {
-      operation: { kind: 'custom', dataExecution: { algorithm: 'fast' } },
+      operation: { kind: 'custom', params: { dataExecution: { algorithm: 'fast' } } },
       dataExecution: { external: 'worker' },
     };
 
@@ -212,7 +366,7 @@ describe('data execution policy and binding', () => {
   });
 
   it('executes local stages with the resolved output model', async () => {
-    const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+    const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
 
     expect(await executeDataTransforms(input([3, 1, 2]), resolution, createDataTransformExecutor())).toEqual({
       rows: [{ value: 1 }, { value: 2 }, { value: 3 }],
@@ -238,7 +392,7 @@ describe('data execution policy and binding', () => {
       },
     };
     const resolution = resolveDataTransforms(
-      [{ operation: { kind: 'sort', field: 'value', order: 'descending' } }],
+      [{ operation: { kind: 'sort', params: { field: 'value', order: 'descending' } } }],
       model,
     );
     const executor = createDataTransformExecutor({
@@ -277,8 +431,8 @@ describe('data execution policy and binding', () => {
     };
     const resolution = resolveDataTransforms(
       [
-        { operation: { kind: 'sort', field: 'value' } },
-        { operation: { kind: 'normalize', field: 'value', as: 'ratio' } },
+        { operation: { kind: 'sort', params: { field: 'value' } } },
+        { operation: { kind: 'normalize', params: { field: 'value', as: 'ratio' } } },
       ],
       model,
     );
@@ -331,18 +485,20 @@ it('awaits local reducer, selector and regression dependencies before advancing'
   });
   const resolution = resolveDataTransforms(
     [
-      { operation: { kind: 'annotate', metrics: [{ kind: 'async-sum', as: 'total' }] } },
-      { operation: { kind: 'select', selector: { kind: 'async-first' } } },
+      { operation: { kind: 'annotate', params: { metrics: [{ kind: 'async-sum', as: 'total' }] } } },
+      { operation: { kind: 'select', params: { selector: { kind: 'async-first' } } } },
       {
         operation: {
           kind: 'smooth',
-          x: 'value',
-          y: 'total',
-          xAs: 'x',
-          yAs: 'y',
-          extent: [0, 2],
-          sampleCount: 2,
-          method: { kind: 'async-fit' },
+          params: {
+            x: 'value',
+            y: 'total',
+            xAs: 'x',
+            yAs: 'y',
+            extent: [0, 2],
+            sampleCount: 2,
+            method: { kind: 'async-fit' },
+          },
         },
       },
     ],
@@ -373,7 +529,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
     dataExecution: { external: 'worker' },
     externalProviders: [{ name: 'worker', provider }],
   });
-  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   await executeDataTransforms(input([2, 1]), resolution, executor);
 
   expect(queried).toBe(0);
@@ -383,7 +539,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
   expect(queried).toBe(1);
 
   const override = resolveDataTransforms(
-    [{ operation: { kind: 'sort', field: 'value' }, dataExecution: { mode: 'builtin' } }],
+    [{ operation: { kind: 'sort', params: { field: 'value' } }, dataExecution: { mode: 'builtin' } }],
     model,
   );
   await executeDataTransforms(input([2, 1]), override, executor, {
@@ -399,7 +555,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
 });
 
 it('does not turn provider exceptions, rejections, cancellation or invalid results into hybrid fallback', async () => {
-  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   const cause = new Error('remote failed');
   const provider: DataTransformImplementationProvider<never> = {
     resolve: stage => ({
@@ -448,7 +604,10 @@ it('does not turn provider exceptions, rejections, cancellation or invalid resul
     ],
   });
 
-  await expect(executeDataTransforms(input([2, 1]), resolution, invalid)).rejects.toThrow(/model/);
+  await expect(executeDataTransforms(input([2, 1]), resolution, invalid)).rejects.toMatchObject({
+    message: expect.stringMatching(/model/),
+    details: { operationIndex: 0 },
+  });
 
   const abort = new AbortController();
   abort.abort(cause);
@@ -481,7 +640,7 @@ it('rejects model/source drift during binding and consumes execution rights whil
   });
   const ready = await executor.prepare(
     { kind: 'result', model },
-    resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+    resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
   );
   if (ready.kind !== 'ready') throw new Error('expected ready');
 
@@ -510,7 +669,7 @@ it('does not materialize native sources until all stages support the request', a
       return { rows: [{ value: 2 }, { value: 1 }], model };
     },
   });
-  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model);
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   const ready = await executor.prepare({ kind: 'source', source, model }, resolution);
 
   expect(materialized).toBe(0);
@@ -534,7 +693,7 @@ it('preserves actual group provenance and records lineage once under explicit sa
     { value: 3, secret: 'b' },
   ]);
   const resolution = resolveDataTransforms(
-    [{ operation: { kind: 'summarize', metrics: [{ kind: 'sum', field: 'value', as: 'total' }] } }],
+    [{ operation: { kind: 'summarize', params: { metrics: [{ kind: 'sum', field: 'value', as: 'total' }] } } }],
     model,
   );
   const result = await executeDataTransforms(
@@ -582,7 +741,7 @@ it('wraps empty-plan materializer errors and stops local computation after mater
   await expect(
     executeDataTransforms(
       { kind: 'source', source, model },
-      resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+      resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
       cancelled,
       { signal: abort.signal },
     ),
@@ -590,7 +749,7 @@ it('wraps empty-plan materializer errors and stops local computation after mater
   expect(read).toBe(0);
 });
 
-it('retains the upstream history supplied by an explicitly materialized source', async () => {
+it.each([undefined, false])('retains materialized upstream history when lineage is %s', async lineageOption => {
   const source = { name: 'warehouse' };
   const lineage = { events: [{ kind: 'source' as const, rowCount: 2 }] };
   const executor = createDataTransformExecutor<typeof source>({
@@ -602,8 +761,9 @@ it('retains the upstream history supplied by an explicitly materialized source',
   });
   const result = await executeDataTransforms(
     { kind: 'source', source, model },
-    resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+    resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
     executor,
+    { lineage: lineageOption },
   );
 
   expect(result.rows).toEqual([{ value: 1 }, { value: 2 }]);
@@ -645,9 +805,78 @@ it('does not treat lineage summaries as row-level provenance evidence', async ()
   };
   const result = await executeDataTransforms(
     { kind: 'result', result: { rows: [{ value: 1 }], model, lineage } },
-    resolveDataTransforms([{ operation: { kind: 'sort', field: 'value' } }], model),
+    resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
     executor,
   );
 
   expect(result.lineage).toEqual(lineage);
+});
+
+it('executes hierarchical sort and bin with async custom metrics and bucket-local provenance', async () => {
+  const rows = tagSourceIndex([
+    { team: 'B', item: 'x', value: 10 },
+    { team: 'A', item: 'x', value: 2 },
+    { team: 'B', item: 'y', value: 1 },
+    { team: 'B', item: 'x', value: 0 },
+  ]);
+  const view = createDataView(rows, [
+    { name: 'team', type: 'categorical' },
+    { name: 'item', type: 'categorical' },
+    { name: 'value', type: 'continuous' },
+  ]);
+  const metric = defineStatisticsReducer({
+    schema: strictObject({ kind: literal('bucket-size') }),
+    outputs: () => [{ field: 'size', type: 'continuous' }],
+  });
+  const registry = resolveStatisticsReducerRegistry([metric]);
+  const sync = defineStatisticsReducerImplementation({
+    definition: metric,
+    reduce: members => ({ size: members.length }),
+  });
+  const calls: Array<Array<number>> = [];
+  const asynchronous = defineStatisticsReducerImplementation({
+    definition: metric,
+    reduce: async members => {
+      await Promise.resolve();
+      calls.push(members.map(row => Number(row.value)));
+      return { size: members.length };
+    },
+  });
+  const declarations: Parameters<typeof resolveDataTransforms>[0] = [
+    { operation: { kind: 'sort', params: { field: 'value', groupBy: ['team', 'item'] } } },
+    {
+      operation: {
+        kind: 'bin',
+        params: {
+          field: 'value',
+          groupBy: ['team', 'item'],
+          extent: [0, 10],
+          count: 2,
+          metrics: [{ kind: 'bucket-size' }],
+        },
+      },
+    },
+  ];
+  const expected = applyTransformsToDataView(
+    view,
+    declarations.map(declaration => declaration.operation),
+    { context: { statisticsReducerRegistry: registry }, statisticsReducerImplementations: [sync] },
+  ).dataView;
+  const actual = await executeDataTransforms(
+    { kind: 'result', result: { rows, model: view.model } },
+    resolveDataTransforms(declarations, view.model, { statisticsReducerRegistry: registry }),
+    createDataTransformExecutor({ statisticsReducerImplementations: [asynchronous] }),
+  );
+  expect(actual.rows).toEqual(expected.rows);
+  expect(actual.model).toEqual(expected.model);
+  expect(actual.rows.map(row => [row.team, row.item])).toEqual([
+    ['B', 'x'],
+    ['B', 'x'],
+    ['B', 'y'],
+    ['B', 'y'],
+    ['A', 'x'],
+    ['A', 'x'],
+  ]);
+  expect(actual.rows.map(readSourceIndices)).toEqual([[3], [0], [2], undefined, [1], undefined]);
+  expect(calls).toEqual([[0], [10], [1], [], [2], []]);
 });

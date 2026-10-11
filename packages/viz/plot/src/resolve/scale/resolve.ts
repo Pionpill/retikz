@@ -12,7 +12,7 @@ import { isBuiltinScaleOperation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { safeExtent } from '../../providers';
 import type { IRPlotMarkOperation, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
-import { isBuiltinMark, PathClosureKind, PlotMark, PlotScale } from '../../schemas';
+import { isBuiltinMark, PathClosureKind, BuiltinPlotMark, BuiltinPlotScale } from '../../schemas';
 import { resolvePaddedDomain } from './domain';
 import type { ScaleResolveContext } from './types';
 
@@ -53,7 +53,7 @@ export const resolveBuiltinPositionOperation = (
   const numericValues = values.filter(isFiniteNumber);
 
   switch (operation.type) {
-    case PlotScale.Linear:
+    case BuiltinPlotScale.Linear:
       return {
         ...operation,
         domain: resolvePaddedDomain({
@@ -65,7 +65,7 @@ export const resolveBuiltinPositionOperation = (
           singleValueSpan: operation.singleValueSpan,
         }),
       };
-    case PlotScale.Log: {
+    case BuiltinPlotScale.Log: {
       const positiveValues = numericValues.filter(value => value > 0);
       const [lo, hi] = positiveValues.length === 0 ? [1, 10] : safeExtent(positiveValues);
 
@@ -82,7 +82,7 @@ export const resolveBuiltinPositionOperation = (
         }),
       };
     }
-    case PlotScale.Pow: {
+    case BuiltinPlotScale.Pow: {
       const sourceDomain = operation.domain ?? safeExtent(numericValues);
       const exponent = operation.exponent ?? 2;
       if (!Number.isInteger(exponent) && (sourceDomain[0] < 0 || sourceDomain[1] < 0)) {
@@ -104,7 +104,7 @@ export const resolveBuiltinPositionOperation = (
         }),
       };
     }
-    case PlotScale.Sqrt:
+    case BuiltinPlotScale.Sqrt:
       return {
         ...operation,
         domain: resolvePaddedDomain({
@@ -116,7 +116,7 @@ export const resolveBuiltinPositionOperation = (
           singleValueSpan: operation.singleValueSpan,
         }),
       };
-    case PlotScale.Symlog:
+    case BuiltinPlotScale.Symlog:
       return {
         ...operation,
         domain: resolvePaddedDomain({
@@ -129,7 +129,7 @@ export const resolveBuiltinPositionOperation = (
           constant: operation.constant,
         }),
       };
-    case PlotScale.Radial:
+    case BuiltinPlotScale.Radial:
       return {
         ...operation,
         domain: resolvePaddedDomain({
@@ -141,7 +141,7 @@ export const resolveBuiltinPositionOperation = (
           singleValueSpan: operation.singleValueSpan,
         }),
       };
-    case PlotScale.Time: {
+    case BuiltinPlotScale.Time: {
       const stamps = values.map(coerceTimestamp).filter((stamp): stamp is number => stamp !== null);
       return {
         ...operation,
@@ -262,8 +262,8 @@ export const assertBaselineScaleCompatible = (
   const hasBaselineMark = marks.some(
     mark =>
       isBuiltinMark(mark) &&
-      (mark.type === PlotMark.Interval ||
-        (mark.type === PlotMark.Path &&
+      (mark.type === BuiltinPlotMark.Interval ||
+        (mark.type === BuiltinPlotMark.Path &&
           (mark.closure?.kind === PathClosureKind.Baseline || mark.closure?.kind === PathClosureKind.Stack))),
   );
   if (hasBaselineMark) {
@@ -280,10 +280,10 @@ export const assertBaselineScaleCompatible = (
 export const derivePositionScale = (fieldType: DataFieldType | undefined, name: string): IRPlotScale => {
   switch (fieldType) {
     case DataFieldType.Temporal:
-      return { type: PlotScale.Time, name };
+      return { type: BuiltinPlotScale.Time, name };
     case DataFieldType.Categorical:
-      return { type: PlotScale.Band, name };
+      return { type: BuiltinPlotScale.Band, name };
     default:
-      return { type: PlotScale.Linear, name };
+      return { type: BuiltinPlotScale.Linear, name };
   }
 };

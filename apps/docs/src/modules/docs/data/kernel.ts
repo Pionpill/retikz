@@ -163,13 +163,8 @@ export const kernelSection: Array<Section> = [
           },
           { id: 'mechanism', label: 'kernel.layoutMechanism', difficulty: DocDifficulty.Internals },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.layoutApiReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'schema-reference',
-            label: 'kernel.layoutSchemaReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
@@ -193,13 +188,8 @@ export const kernelSection: Array<Section> = [
           },
           { id: 'mechanism', label: 'kernel.scopeMechanism', difficulty: DocDifficulty.Internals },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.scopeApiReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'schema-reference',
-            label: 'kernel.scopeSchemaReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
@@ -259,13 +249,8 @@ export const kernelSection: Array<Section> = [
           },
           { id: 'mechanism', label: 'kernel.nodeMechanism', difficulty: DocDifficulty.Internals },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.nodeApiReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'schema-reference',
-            label: 'kernel.nodeSchemaReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
@@ -325,13 +310,8 @@ export const kernelSection: Array<Section> = [
           },
           { id: 'mechanism', label: 'kernel.pathMechanism', difficulty: DocDifficulty.Internals },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.pathApiReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'schema-reference',
-            label: 'kernel.pathSchemaReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
@@ -429,14 +409,9 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.visualApiReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'schema-reference',
-            label: 'kernel.visualSchemaReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'schema' },
           },
         ],
       },
@@ -477,14 +452,9 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.visualApiReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'schema-reference',
-            label: 'kernel.visualSchemaReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'schema' },
           },
         ],
       },
@@ -520,7 +490,7 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Beginner,
           },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.pkgFoundationApiReference',
             meta: {
               pageType: 'reference',
@@ -529,7 +499,6 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'schema-reference', label: 'kernel.pkgFoundationSchemaReference' },
         ],
       },
       {
@@ -556,7 +525,7 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
           },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.pkgMathApiReference',
             meta: {
               pageType: 'reference',
@@ -616,7 +585,7 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
           },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.pkgRuntimeApiReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
@@ -652,7 +621,7 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'maintainer', capability: 'kernel.tex' },
           },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.pkgTexApiReference',
             meta: {
               pageType: 'reference',
@@ -682,7 +651,7 @@ export const kernelSection: Array<Section> = [
           },
           { id: 'mechanism', label: 'kernel.pkgInspectMechanism', difficulty: DocDifficulty.Internals },
           {
-            id: 'api-reference',
+            id: 'reference',
             label: 'kernel.pkgInspectApiReference',
             meta: {
               pageType: 'reference',
@@ -691,7 +660,6 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'schema-reference', label: 'kernel.pkgInspectSchemaReference' },
         ],
       },
       {

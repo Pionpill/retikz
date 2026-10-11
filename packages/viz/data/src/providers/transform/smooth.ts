@@ -31,7 +31,7 @@ const finitePairsOf = (rows: Array<ExternalRow>, xField: string, yField: string)
 };
 
 const sampleExtentOf = (operation: IRDataSmoothTransform, pairs: Array<SmoothPair>): [number, number] => {
-  if (operation.extent !== undefined) return operation.extent;
+  if (operation.params.extent !== undefined) return operation.params.extent;
 
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
@@ -49,22 +49,25 @@ const sampleExtentOf = (operation: IRDataSmoothTransform, pairs: Array<SmoothPai
 };
 
 const groupSummaryOf = (operation: IRDataSmoothTransform, values: ExternalRow): string =>
-  operation.groupBy === undefined
+  operation.params.groupBy === undefined
     ? 'ungrouped rows'
-    : operation.groupBy.map(field => `${field}=${JSON.stringify(values[field])}`).join(', ');
+    : operation.params.groupBy.map(field => `${field}=${JSON.stringify(values[field])}`).join(', ');
 
 const smoothMethodOf = (operation: IRDataSmoothTransform): IRRegressionMethod =>
-  operation.method ?? { kind: BuiltinRegressionMethod.Linear };
+  operation.params.method ?? { kind: BuiltinRegressionMethod.Linear };
 
 /** 返回 smooth transform 读取的源字段 */
 export const smoothInputFields = (operation: IRDataSmoothTransform): Array<string> => [
-  operation.x,
-  operation.y,
-  ...(operation.groupBy ?? []),
+  operation.params.x,
+  operation.params.y,
+  ...(operation.params.groupBy ?? []),
 ];
 
 /** 返回 smooth transform 写出的派生字段 */
-export const smoothOutputFields = (operation: IRDataSmoothTransform): Array<string> => [operation.xAs, operation.yAs];
+export const smoothOutputFields = (operation: IRDataSmoothTransform): Array<string> => [
+  operation.params.xAs,
+  operation.params.yAs,
+];
 
 /** smooth：按 method 拟合回归模型，每组输出 sampleCount 个预测点 */
 export function* computeSmooth(
@@ -79,19 +82,19 @@ export function* computeSmooth(
   const method = smoothMethodOf(operation);
   const output: Array<ExternalRow> = [];
 
-  for (const group of groupRowsByFields(rows, operation.groupBy)) {
+  for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     try {
-      const pairs = finitePairsOf(group.rows, operation.x, operation.y);
+      const pairs = finitePairsOf(group.rows, operation.params.x, operation.params.y);
       const model = yield* computeTransformValue(() => regression.fit(pairs));
       const extent = sampleExtentOf(operation, pairs);
       regression.validateExtent(extent);
-      const sampleCount = operation.sampleCount ?? DEFAULT_SMOOTH_SAMPLE_COUNT;
+      const sampleCount = operation.params.sampleCount ?? DEFAULT_SMOOTH_SAMPLE_COUNT;
       const predictions = linearSamplesOf(extent, sampleCount).map(x =>
         context.groupProvenance(
           {
             ...group.values,
-            [operation.xAs]: x,
-            [operation.yAs]: model.predict(x),
+            [operation.params.xAs]: x,
+            [operation.params.yAs]: model.predict(x),
           },
           group.rows,
         ),

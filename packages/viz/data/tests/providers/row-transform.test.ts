@@ -8,6 +8,7 @@ import {
   createDataView,
   DataFieldType,
   readSourceIndices,
+  readSourceIndex,
   tagSourceIndex,
   resolveTransformRegistry,
 } from '../../src';
@@ -18,7 +19,7 @@ const applyTransforms = (
   rows: Array<ExternalRow>,
   operations?: Parameters<typeof applyDataTransforms>[1],
   options?: Parameters<typeof applyDataTransforms>[2],
-): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
+): Array<ExternalRow> => applyDataTransforms(rows, operations, options).rows;
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },
@@ -36,9 +37,9 @@ describe('applyTransforms (contract)', () => {
     ]);
     const stacked = applyTransformsToDataView(
       baseView,
-      [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+      [{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }],
       { registry: TRANSFORM_REGISTRY },
-    );
+    ).dataView;
 
     expect(stacked.model).toEqual([
       { name: 'month', type: DataFieldType.Categorical },
@@ -48,9 +49,9 @@ describe('applyTransforms (contract)', () => {
       { name: 'y1', type: DataFieldType.Continuous },
     ]);
 
-    const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', field: 'revenue' }], {
+    const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', params: { field: 'revenue' } }], {
       registry: TRANSFORM_REGISTRY,
-    });
+    }).dataView;
 
     expect(binned.model).toEqual([
       { name: 'revenue', type: DataFieldType.Continuous },
@@ -69,13 +70,15 @@ describe('applyTransforms (contract)', () => {
   it('sort_ascending', () => {
     const rows = [{ m: 3 }, { m: 1 }, { m: 2 }];
 
-    expect(applyTransforms(rows, [{ kind: 'sort', field: 'm' }]).map(r => r.m)).toEqual([1, 2, 3]);
+    expect(applyTransforms(rows, [{ kind: 'sort', params: { field: 'm' } }]).map(r => r.m)).toEqual([1, 2, 3]);
   });
 
   it('sort_descending', () => {
     const rows = [{ m: 1 }, { m: 3 }, { m: 2 }];
 
-    expect(applyTransforms(rows, [{ kind: 'sort', field: 'm', order: 'descending' }]).map(r => r.m)).toEqual([3, 2, 1]);
+    expect(
+      applyTransforms(rows, [{ kind: 'sort', params: { field: 'm', order: 'descending' } }]).map(r => r.m),
+    ).toEqual([3, 2, 1]);
   });
 
   it('sort_stable', () => {
@@ -84,14 +87,14 @@ describe('applyTransforms (contract)', () => {
       { m: 1, tag: 'b' },
       { m: 0, tag: 'c' },
     ];
-    const out = applyTransforms(rows, [{ kind: 'sort', field: 'm' }]);
+    const out = applyTransforms(rows, [{ kind: 'sort', params: { field: 'm' } }]);
 
     expect(out.map(r => r.tag)).toEqual(['c', 'a', 'b']);
   });
 
   // stack
   it('stack_two_series', () => {
-    const out = applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
+    const out = applyTransforms(SALES, [{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }]);
 
     // 保持输入顺序，追加 y0/y1；Jan: A[0,3] B[3,8]；Feb: A[0,2] B[2,6]
     expect(out[0]).toMatchObject({ month: 'Jan', product: 'A', y0: 0, y1: 3 });
@@ -101,7 +104,7 @@ describe('applyTransforms (contract)', () => {
   });
 
   it('stack_first_segment_zero', () => {
-    const out = applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
+    const out = applyTransforms(SALES, [{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }]);
 
     // 每组首系列 y0 = 0
     expect(out.filter(r => r.product === 'A').every(r => r.y0 === 0)).toBe(true);
@@ -109,7 +112,7 @@ describe('applyTransforms (contract)', () => {
 
   it('stack_single_series', () => {
     const rows = [{ x: 'a', s: 'X', v: 5 }];
-    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's' }]);
+    const out = applyTransforms(rows, [{ kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's' } }]);
 
     expect(out[0]).toMatchObject({ y0: 0, y1: 5 });
   });
@@ -119,7 +122,7 @@ describe('applyTransforms (contract)', () => {
       { x: 'a', s: 'A', v: 3 },
       { x: 'a', s: 'B' }, // 缺 v → 按 0
     ];
-    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's' }]);
+    const out = applyTransforms(rows, [{ kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's' } }]);
 
     expect(out[1]).toMatchObject({ y0: 3, y1: 3 });
   });
@@ -127,7 +130,7 @@ describe('applyTransforms (contract)', () => {
   it('stack_custom_output_fields', () => {
     const rows = [{ x: 'a', s: 'A', v: 2 }];
     const out = applyTransforms(rows, [
-      { kind: 'stack', x: 'x', y: 'v', groupBy: 's', startField: 'lo', endField: 'hi' },
+      { kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', startField: 'lo', endField: 'hi' } },
     ]);
 
     expect(out[0]).toMatchObject({ lo: 0, hi: 2 });
@@ -139,7 +142,9 @@ describe('applyTransforms (contract)', () => {
       { x: 'a', s: 'A', v: 2 },
       { x: 'a', s: 'B', v: 6 },
     ];
-    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'normalize' }]);
+    const out = applyTransforms(rows, [
+      { kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', offset: 'normalize' } },
+    ]);
 
     expect(out.map(row => [row.y0, row.y1])).toEqual([
       [0, 0.25],
@@ -153,9 +158,9 @@ describe('applyTransforms (contract)', () => {
       { x: 'a', s: 'B', v: -1 },
     ];
 
-    expect(() => applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'normalize' }])).toThrow(
-      /stack.*normalize.*negative.*v/i,
-    );
+    expect(() =>
+      applyTransforms(rows, [{ kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', offset: 'normalize' } }]),
+    ).toThrow(/stack.*normalize.*negative.*v/i);
   });
 
   it('stack_offset_normalize_treats_non_finite_values_as_zero', () => {
@@ -164,7 +169,9 @@ describe('applyTransforms (contract)', () => {
       { x: 'a', s: 'B', v: Number.POSITIVE_INFINITY },
       { x: 'a', s: 'C', v: 2 },
     ];
-    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'normalize' }]);
+    const out = applyTransforms(rows, [
+      { kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', offset: 'normalize' } },
+    ]);
 
     expect(out.map(row => [row.y0, row.y1])).toEqual([
       [0, 0],
@@ -179,7 +186,9 @@ describe('applyTransforms (contract)', () => {
       { x: 'a', s: 'B', v: -2 },
       { x: 'a', s: 'C', v: 4 },
     ];
-    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'diverging' }]);
+    const out = applyTransforms(rows, [
+      { kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', offset: 'diverging' } },
+    ]);
 
     expect(out.map(row => [row.y0, row.y1])).toEqual([
       [0, 3],
@@ -193,7 +202,7 @@ describe('applyTransforms (contract)', () => {
       { x: 'a', s: 'A', v: 2 },
       { x: 'a', s: 'B', v: 6 },
     ];
-    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'center' }]);
+    const out = applyTransforms(rows, [{ kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', offset: 'center' } }]);
 
     expect(out.map(row => [row.y0, row.y1])).toEqual([
       [-4, -2],
@@ -206,7 +215,7 @@ describe('applyTransforms (contract)', () => {
       { x: 'a', s: 'A', v: 2 },
       { x: 'a', s: 'B', v: 6 },
     ];
-    const out = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v', groupBy: 's', offset: 'overlap' }]);
+    const out = applyTransforms(rows, [{ kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', offset: 'overlap' } }]);
 
     expect(out.map(row => [row.y0, row.y1])).toEqual([
       [0, 2],
@@ -221,7 +230,7 @@ describe('applyTransforms (contract)', () => {
       { label: 'B', value: 5 },
       { label: 'C', value: 2 },
     ];
-    const out = applyTransforms(SHARE, [{ kind: 'stack', y: 'value' }]);
+    const out = applyTransforms(SHARE, [{ kind: 'stack', params: { y: 'value' } }]);
 
     // 行序累积：A[0,3] B[3,8] C[8,10]
     expect(out[0]).toMatchObject({ label: 'A', y0: 0, y1: 3 });
@@ -235,7 +244,7 @@ describe('applyTransforms (contract)', () => {
         { label: 'A', value: 4 },
         { label: 'B', value: 6 },
       ],
-      [{ kind: 'stack', y: 'value', startField: 'a0', endField: 'a1' }],
+      [{ kind: 'stack', params: { y: 'value', startField: 'a0', endField: 'a1' } }],
     );
 
     expect(out[0]).toMatchObject({ a0: 0, a1: 4 });
@@ -246,8 +255,8 @@ describe('applyTransforms (contract)', () => {
   it('pipeline_sort_then_stack', () => {
     // 先按 product 降序再堆叠 → 系列累加序随排序后的出现序（B 先于 A）
     const out = applyTransforms(SALES, [
-      { kind: 'sort', field: 'product', order: 'descending' },
-      { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' },
+      { kind: 'sort', params: { field: 'product', order: 'descending' } },
+      { kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } },
     ]);
     const janB = out.find(r => r.month === 'Jan' && r.product === 'B');
 
@@ -261,7 +270,7 @@ describe('applyBin (contract)', () => {
   const GAPPED: Array<ExternalRow> = [{ m: 0 }, { m: 1 }, { m: 2 }, { m: 8 }, { m: 9 }, { m: 10 }];
 
   it('bin_count_histogram_exact_bins_and_empty', () => {
-    const out = applyTransforms(GAPPED, [{ kind: 'bin', field: 'm', count: 10 }]);
+    const out = applyTransforms(GAPPED, [{ kind: 'bin', params: { field: 'm', count: 10 } }]);
 
     // 恰 10 箱（count:N → N 个箱，含空箱）
     expect(out.length).toBe(10);
@@ -281,7 +290,7 @@ describe('applyBin (contract)', () => {
 
   it('bin_step_strategy_tiles_from_lower_bound', () => {
     const rows = [{ m: 0 }, { m: 3 }, { m: 7 }, { m: 10 }];
-    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5 }]);
+    const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'm', step: 5 } }]);
 
     // [0,5),[5,10] → 2 箱（last 含上界）；count: 0,3 → bin0=2；7,10 → bin1=2
     expect(out.length).toBe(2);
@@ -291,7 +300,7 @@ describe('applyBin (contract)', () => {
 
   it('bin_step_clamps_last_bin_to_explicit_extent', () => {
     const rows = [{ m: 0 }, { m: 5 }, { m: 6 }, { m: 10 }, { m: 11 }];
-    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 6, extent: [0, 10] }]);
+    const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'm', step: 6, extent: [0, 10] } }]);
 
     expect(out.map(row => [row.binStart, row.binEnd, row.binCount])).toEqual([
       [0, 6, 2],
@@ -303,7 +312,9 @@ describe('applyBin (contract)', () => {
     const rows = [{ m: 5 }, { m: 15 }, { m: 25 }, { m: 35 }];
 
     // K=3 thresholds + extent [0,40] 端点补齐 → edges [0,10,20,30,40] → 4 箱
-    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', thresholds: [10, 20, 30], extent: [0, 40] }]);
+    const out = applyTransforms(rows, [
+      { kind: 'bin', params: { field: 'm', thresholds: [10, 20, 30], extent: [0, 40] } },
+    ]);
 
     expect(out.length).toBe(4);
     expect(out.map(r => [r.binStart, r.binEnd])).toEqual([
@@ -322,26 +333,26 @@ describe('applyBin (contract)', () => {
       { m: 8, w: 5 },
     ];
     const sum = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'sum', field: 'w', as: 'total' }] },
+      { kind: 'bin', params: { field: 'm', step: 5, metrics: [{ kind: 'sum', field: 'w', as: 'total' }] } },
     ]);
 
     // [0,5): w 10,20 → 30；[5,10]: w 5 → 5
     expect(sum.map(r => r.total)).toEqual([30, 5]);
 
     const mean = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'mean', field: 'w', as: 'avg' }] },
+      { kind: 'bin', params: { field: 'm', step: 5, metrics: [{ kind: 'mean', field: 'w', as: 'avg' }] } },
     ]);
 
     expect(mean.map(r => r.avg)).toEqual([15, 5]);
 
     const min = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'min', field: 'w', as: 'min' }] },
+      { kind: 'bin', params: { field: 'm', step: 5, metrics: [{ kind: 'min', field: 'w', as: 'min' }] } },
     ]);
 
     expect(min.map(r => r.min)).toEqual([10, 5]);
 
     const max = applyTransforms(rows, [
-      { kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'max', field: 'w', as: 'max' }] },
+      { kind: 'bin', params: { field: 'm', step: 5, metrics: [{ kind: 'max', field: 'w', as: 'max' }] } },
     ]);
 
     expect(max.map(r => r.max)).toEqual([20, 5]);
@@ -351,7 +362,12 @@ describe('applyBin (contract)', () => {
     // step 从域下界（观测 min = 0）平铺 → [0,5]
     const out = applyTransforms(
       [{ m: 0 }],
-      [{ kind: 'bin', field: 'm', step: 5, startField: 'lo', endField: 'hi', metrics: [{ kind: 'count', as: 'n' }] }],
+      [
+        {
+          kind: 'bin',
+          params: { field: 'm', step: 5, startField: 'lo', endField: 'hi', metrics: [{ kind: 'count', as: 'n' }] },
+        },
+      ],
     );
 
     expect(out[0]).toMatchObject({ lo: 0, hi: 5, n: 1 });
@@ -359,11 +375,11 @@ describe('applyBin (contract)', () => {
   });
 
   it('bin_empty_data_produces_no_bins', () => {
-    expect(applyTransforms([], [{ kind: 'bin', field: 'm', count: 10 }])).toEqual([]);
+    expect(applyTransforms([], [{ kind: 'bin', params: { field: 'm', count: 10 } }])).toEqual([]);
   });
 
   it('bin_single_value_does_not_crash', () => {
-    const out = applyTransforms([{ m: 5 }], [{ kind: 'bin', field: 'm', count: 4 }]);
+    const out = applyTransforms([{ m: 5 }], [{ kind: 'bin', params: { field: 'm', count: 4 } }]);
 
     expect(out.length).toBeGreaterThanOrEqual(1);
     expect(out.every(r => typeof r.binStart === 'number' && typeof r.binEnd === 'number')).toBe(true);
@@ -374,12 +390,15 @@ describe('applyBin (contract)', () => {
 
   it('bin_metric_sum_missing_field_fail_loud', () => {
     expect(() =>
-      applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', step: 5, metrics: [{ kind: 'sum', as: 'sum' }] }]),
+      applyTransforms(
+        [{ m: 1 }],
+        [{ kind: 'bin', params: { field: 'm', step: 5, metrics: [{ kind: 'sum', as: 'sum' }] } }],
+      ),
     ).toThrow();
   });
 
   it('bin_conflicting_strategy_fail_loud', () => {
-    expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', count: 5, step: 2 }])).toThrow(
+    expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', params: { field: 'm', count: 5, step: 2 } }])).toThrow(
       /mutually exclusive|strateg/i,
     );
   });
@@ -387,7 +406,7 @@ describe('applyBin (contract)', () => {
   it('bin_step_float_drift_keeps_domain_max', () => {
     // 浮点箱宽（0.1）+ extent 上界观测：末边乘法/钉值须覆盖 domainMax，否则 1.0 落空被丢（bug hunt 回归）
     const rows: Array<ExternalRow> = Array.from({ length: 11 }, (_, i) => ({ v: i * 0.1 }));
-    const out = applyTransforms(rows, [{ kind: 'bin', field: 'v', step: 0.1, extent: [0, 1] }]);
+    const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'v', step: 0.1, extent: [0, 1] } }]);
 
     // 11 个观测一个不丢
     expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(11);
@@ -396,7 +415,7 @@ describe('applyBin (contract)', () => {
   it('bin_count_float_drift_keeps_domain_max', () => {
     // count 策略下末边钉到 hi：非整除域不丢上界观测
     const rows: Array<ExternalRow> = Array.from({ length: 8 }, (_, i) => ({ v: i }));
-    const out = applyTransforms(rows, [{ kind: 'bin', field: 'v', count: 3, extent: [0, 7] }]);
+    const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'v', count: 3, extent: [0, 7] } }]);
 
     expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(8);
   });
@@ -404,7 +423,7 @@ describe('applyBin (contract)', () => {
   it('bin_thresholds_outside_extent_filtered', () => {
     // 域外阈值剔除：thresholds [3,100] + 观测域 [1,9] → 内部仅 3 → [1,3,9] 两箱，无倒退/丢数
     const rows: Array<ExternalRow> = [{ m: 1 }, { m: 5 }, { m: 9 }];
-    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', thresholds: [3, 100] }]);
+    const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'm', thresholds: [3, 100] } }]);
 
     expect(out.length).toBe(2);
     expect(out.map(r => [r.binStart, r.binEnd])).toEqual([
@@ -417,7 +436,7 @@ describe('applyBin (contract)', () => {
   it('bin_group_level_provenance_source_indices', () => {
     // 分箱产 datum 的 provenance 指向源行集合（组级），而非单 sourceIndex
     const tagged = tagSourceIndex([{ m: 0 }, { m: 1 }, { m: 8 }]); // source idx 0,1,2
-    const out = applyTransforms(tagged, [{ kind: 'bin', field: 'm', step: 5 }]);
+    const out = applyTransforms(tagged, [{ kind: 'bin', params: { field: 'm', step: 5 } }]);
 
     // [0,5): 源行 0,1；[5,10]: 源行 2
     expect(readSourceIndices(out[0])).toEqual([0, 1]);
@@ -436,7 +455,7 @@ describe('applySummarize (contract)', () => {
 
   it('summarize_groupby_sum', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
+      { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] } },
     ]);
 
     expect(out.length).toBe(2);
@@ -447,14 +466,17 @@ describe('applySummarize (contract)', () => {
   it('summarize_requires_explicit_as', () => {
     expect(() =>
       applyTransforms(ORDERS, [
-        { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue' }] },
+        { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue' }] } },
       ]),
     ).toThrow();
   });
 
   it('summarize_multikey_composite', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ kind: 'sum', field: 'revenue', as: 't' }] },
+      {
+        kind: 'summarize',
+        params: { groupBy: ['region', 'product'], metrics: [{ kind: 'sum', field: 'revenue', as: 't' }] },
+      },
     ]);
 
     // 复合键：N/A, N/B, S/A
@@ -468,7 +490,7 @@ describe('applySummarize (contract)', () => {
 
   it('summarize_count_no_field', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] },
+      { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] } },
     ]);
 
     // count 需显式 as、值 = 组行数
@@ -478,20 +500,20 @@ describe('applySummarize (contract)', () => {
 
   it('summarize_mean_min_max', () => {
     const mean = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'mean', field: 'revenue', as: 'v' }] },
+      { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'mean', field: 'revenue', as: 'v' }] } },
     ]);
 
     expect(mean[0].v).toBe(4); // N: (3+5)/2
     expect(mean[1].v).toBe(3); // S: (2+4)/2
 
     const min = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'min', field: 'revenue', as: 'v' }] },
+      { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'min', field: 'revenue', as: 'v' }] } },
     ]);
 
     expect(min.map(r => r.v)).toEqual([3, 2]);
 
     const max = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'max', field: 'revenue', as: 'v' }] },
+      { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'max', field: 'revenue', as: 'v' }] } },
     ]);
 
     expect(max.map(r => r.v)).toEqual([5, 4]);
@@ -499,7 +521,7 @@ describe('applySummarize (contract)', () => {
 
   it('summarize_changes_row_count', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] },
+      { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] } },
     ]);
 
     expect(out.length).not.toBe(ORDERS.length);
@@ -508,14 +530,16 @@ describe('applySummarize (contract)', () => {
 
   it('summarize_missing_field_fail_loud', () => {
     expect(() =>
-      applyTransforms(ORDERS, [{ kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', as: 'total' }] }]),
+      applyTransforms(ORDERS, [
+        { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', as: 'total' }] } },
+      ]),
     ).toThrow();
   });
 
   it('summarize_group_level_provenance_source_indices', () => {
     const tagged = tagSourceIndex(ORDERS); // 0,1,2,3
     const out = applyTransforms(tagged, [
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 't' }] },
+      { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 't' }] } },
     ]);
 
     expect(readSourceIndices(out[0])).toEqual([0, 1]); // N
@@ -525,8 +549,11 @@ describe('applySummarize (contract)', () => {
   // 交互：summarize（改行数）后接 stack（保行数）
   it('summarize_then_stack_chain', () => {
     const out = applyTransforms(ORDERS, [
-      { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
-      { kind: 'stack', x: 'region', y: 'total', groupBy: 'product' },
+      {
+        kind: 'summarize',
+        params: { groupBy: ['region', 'product'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
+      },
+      { kind: 'stack', params: { x: 'region', y: 'total', groupBy: 'product' } },
     ]);
 
     // 聚合 → N/A=3,N/B=5,S/A=6；按 region stack：N: A[0,3] B[3,8]；S: A[0,6]
@@ -549,7 +576,7 @@ describe('applyNormalize (contract)', () => {
 
   it('normalize_group_share_percent', () => {
     const out = applyTransforms(REVENUE, [
-      { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
+      { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' } },
     ]);
 
     // Q1 总 4 → A 75, B 25；Q2 总 10 → A 50, B 50；原 amount 保留
@@ -563,7 +590,9 @@ describe('applyNormalize (contract)', () => {
   });
 
   it('normalize_fraction_default', () => {
-    const out = applyTransforms(REVENUE, [{ kind: 'normalize', field: 'amount', groupBy: ['quarter'], as: 'frac' }]);
+    const out = applyTransforms(REVENUE, [
+      { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'], as: 'frac' } },
+    ]);
 
     expect(out[0].frac).toBeCloseTo(0.75, 9);
   });
@@ -574,9 +603,9 @@ describe('applyNormalize (contract)', () => {
       { g: 'x', v: -1 },
     ];
 
-    expect(() => applyTransforms(rows, [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 'share' }])).toThrow(
-      /normalize.*negative.*v/i,
-    );
+    expect(() =>
+      applyTransforms(rows, [{ kind: 'normalize', params: { field: 'v', groupBy: ['g'], as: 'share' } }]),
+    ).toThrow(/normalize.*negative.*v/i);
   });
 
   it('normalize_treats_non_finite_values_as_zero', () => {
@@ -585,7 +614,7 @@ describe('applyNormalize (contract)', () => {
       { g: 'x', v: Number.NEGATIVE_INFINITY },
       { g: 'x', v: 2 },
     ];
-    const out = applyTransforms(rows, [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 'share' }]);
+    const out = applyTransforms(rows, [{ kind: 'normalize', params: { field: 'v', groupBy: ['g'], as: 'share' } }]);
 
     expect(out.map(row => row.share)).toEqual([0, 0, 1]);
   });
@@ -596,7 +625,7 @@ describe('applyNormalize (contract)', () => {
         { g: 'x', v: 2 },
         { g: 'x', v: 2 },
       ],
-      [{ kind: 'normalize', field: 'v', groupBy: ['g'] }],
+      [{ kind: 'normalize', params: { field: 'v', groupBy: ['g'] } }],
     );
 
     // as 缺省 → 原位覆盖 v
@@ -604,7 +633,10 @@ describe('applyNormalize (contract)', () => {
   });
 
   it('normalize_global_when_no_groupby', () => {
-    const out = applyTransforms([{ v: 1 }, { v: 3 }], [{ kind: 'normalize', field: 'v', basis: 'percent', as: 's' }]);
+    const out = applyTransforms(
+      [{ v: 1 }, { v: 3 }],
+      [{ kind: 'normalize', params: { field: 'v', basis: 'percent', as: 's' } }],
+    );
 
     // 全行单组：总 4 → 25, 75
     expect(out.map(r => r.s)).toEqual([25, 75]);
@@ -616,7 +648,7 @@ describe('applyNormalize (contract)', () => {
         { g: 'z', v: 0 },
         { g: 'z', v: 0 },
       ],
-      [{ kind: 'normalize', field: 'v', groupBy: ['g'], as: 's' }],
+      [{ kind: 'normalize', params: { field: 'v', groupBy: ['g'], as: 's' } }],
     );
 
     // 组和为 0 → share 0（不产 NaN / Infinity）
@@ -626,8 +658,8 @@ describe('applyNormalize (contract)', () => {
   // 交互：normalize → stack = 百分比堆叠（每组 y1 上界 = 100）
   it('normalize_then_stack_percentage_stacking', () => {
     const out = applyTransforms(REVENUE, [
-      { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' },
-      { kind: 'stack', x: 'quarter', y: 'share', groupBy: 'product' },
+      { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' } },
+      { kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } },
     ]);
 
     // 每个 quarter 组最终 y1 上界 = 100
@@ -646,7 +678,7 @@ describe('applyDeriveInterval (contract)', () => {
       { task: 'A', start: 1, end: 5 },
       { task: 'B', start: 3, end: 9 },
     ];
-    const out = applyTransforms(tasks, [{ kind: 'derive-interval', startFrom: 'start', endFrom: 'end' }]);
+    const out = applyTransforms(tasks, [{ kind: 'derive-interval', params: { startFrom: 'start', endFrom: 'end' } }]);
 
     expect(out.length).toBe(2);
     expect(out[0]).toMatchObject({ y0: 1, y1: 5 });
@@ -654,7 +686,7 @@ describe('applyDeriveInterval (contract)', () => {
   });
 
   it('derive_interval_from_baseline', () => {
-    const out = applyTransforms([{ v: 8 }], [{ kind: 'derive-interval', from: 'v', baseline: 2 }]);
+    const out = applyTransforms([{ v: 8 }], [{ kind: 'derive-interval', params: { from: 'v', baseline: 2 } }]);
 
     expect(out[0]).toMatchObject({ y0: 2, y1: 8 });
   });
@@ -662,14 +694,16 @@ describe('applyDeriveInterval (contract)', () => {
   it('derive_interval_custom_fields', () => {
     const out = applyTransforms(
       [{ s: 1, e: 4 }],
-      [{ kind: 'derive-interval', startFrom: 's', endFrom: 'e', startField: 'lo', endField: 'hi' }],
+      [{ kind: 'derive-interval', params: { startFrom: 's', endFrom: 'e', startField: 'lo', endField: 'hi' } }],
     );
 
     expect(out[0]).toMatchObject({ lo: 1, hi: 4 });
   });
 
   it('derive_interval_no_source_fail_loud', () => {
-    expect(() => applyTransforms([{ v: 1 }], [{ kind: 'derive-interval' }])).toThrow(/from|startFrom|endFrom/);
+    expect(() => applyTransforms([{ v: 1 }], [{ kind: 'derive-interval', params: {} }])).toThrow(
+      /from|startFrom|endFrom/,
+    );
   });
 
   // derive-interval（单行）vs stack（跨行累积）产不同 y0/y1
@@ -678,8 +712,8 @@ describe('applyDeriveInterval (contract)', () => {
       { x: 'a', v: 3 },
       { x: 'a', v: 5 },
     ];
-    const derived = applyTransforms(rows, [{ kind: 'derive-interval', from: 'v' }]);
-    const stacked = applyTransforms(rows, [{ kind: 'stack', x: 'x', y: 'v' }]);
+    const derived = applyTransforms(rows, [{ kind: 'derive-interval', params: { from: 'v' } }]);
+    const stacked = applyTransforms(rows, [{ kind: 'stack', params: { x: 'x', y: 'v' } }]);
 
     // derive：每行独立 [0,v]；stack：跨行累积 [0,3],[3,8]
     expect(derived.map(r => [r.y0, r.y1])).toEqual([
@@ -702,7 +736,7 @@ describe('applyJitter (contract)', () => {
   ];
 
   it('jitter_deterministic_same_seed', () => {
-    const op = { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } as const;
+    const op = { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } } as const;
     const a = applyTransforms(SAMPLES, [op]);
     const b = applyTransforms(SAMPLES, [op]);
 
@@ -715,14 +749,20 @@ describe('applyJitter (contract)', () => {
   });
 
   it('jitter_different_seed_differs', () => {
-    const a = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 1 }]);
-    const b = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 2 }]);
+    const a = applyTransforms(SAMPLES, [
+      { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 1 } },
+    ]);
+    const b = applyTransforms(SAMPLES, [
+      { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 2 } },
+    ]);
 
     expect(a.map(r => r.dose)).not.toEqual(b.map(r => r.dose));
   });
 
   it('jitter_preserves_row_count_and_other_fields', () => {
-    const out = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 5 }]);
+    const out = applyTransforms(SAMPLES, [
+      { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 5 } },
+    ]);
 
     expect(out.length).toBe(SAMPLES.length);
 
@@ -731,13 +771,15 @@ describe('applyJitter (contract)', () => {
   });
 
   it('jitter_amount_zero_is_identity', () => {
-    const out = applyTransforms(SAMPLES, [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0, seed: 9 }]);
+    const out = applyTransforms(SAMPLES, [
+      { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0, seed: 9 } },
+    ]);
 
     expect(out.map(r => r.dose)).toEqual(SAMPLES.map(r => r.dose));
   });
 
   it('jitter_both_axes', () => {
-    const out = applyTransforms([{ x: 0, y: 0 }], [{ kind: 'jitter', axis: 'both', amount: 1, seed: 3 }]);
+    const out = applyTransforms([{ x: 0, y: 0 }], [{ kind: 'jitter', params: { axis: 'both', amount: 1, seed: 3 } }]);
 
     expect(typeof out[0].x).toBe('number');
     expect(typeof out[0].y).toBe('number');
@@ -746,10 +788,144 @@ describe('applyJitter (contract)', () => {
   it('jitter_non_finite_value_skipped', () => {
     const out = applyTransforms(
       [{ dose: 'NA', r: 1 }],
-      [{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 1, seed: 0 }],
+      [{ kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 1, seed: 0 } }],
     );
 
     // 非有限值保持原值（不产 NaN）
     expect(out[0].dose).toBe('NA');
+  });
+});
+
+describe('grouped row transforms', () => {
+  it('select and summarize output complete parent groups before the next parent', () => {
+    const rows = tagSourceIndex([
+      { team: 'A', item: 'phone', value: 10 },
+      { team: 'B', item: 'phone', value: 60 },
+      { team: 'A', item: 'book', value: 30 },
+      { team: 'B', item: 'book', value: 5 },
+      { team: 'A', item: 'phone', value: 40 },
+      { team: 'B', item: 'phone', value: 20 },
+      { team: 'A', item: 'book', value: 30 },
+      { team: 'B', item: 'book', value: 35 },
+    ]);
+    const selected = applyTransforms(rows, [
+      {
+        kind: 'select',
+        params: { groupBy: ['team', 'item'], selector: { kind: 'max', by: 'value', tie: 'all' } },
+      },
+    ]);
+    expect(selected.map(readSourceIndex)).toEqual([4, 2, 6, 1, 7]);
+    const summarized = applyTransforms(rows, [
+      {
+        kind: 'summarize',
+        params: { groupBy: ['team', 'item'], metrics: [{ kind: 'count', as: 'count' }] },
+      },
+    ]);
+    expect(summarized.map(row => [row.team, row.item, row.count])).toEqual([
+      ['A', 'phone', 2],
+      ['A', 'book', 2],
+      ['B', 'phone', 2],
+      ['B', 'book', 2],
+    ]);
+    expect(summarized.map(readSourceIndices)).toEqual([
+      [0, 4],
+      [2, 6],
+      [1, 5],
+      [3, 7],
+    ]);
+  });
+  it.each(['ascending', 'descending'] as const)('sorts hierarchical groups stably in field order: %s', order => {
+    const rows = tagSourceIndex([
+      { team: 'Z', item: 'x', value: 2, record: 'r1' },
+      { team: 'A', item: 'x', value: 9, record: 'r2' },
+      { team: 'Z', item: 'y', value: 1, record: 'r3' },
+      { team: 'Z', item: 'x', value: 1, record: 'r4' },
+      { team: 'Z', item: 'x', value: 2, record: 'r5' },
+      { team: 'A', item: 'x', value: 3, record: 'r6' },
+    ]);
+    const original = [...rows];
+    const output = applyTransforms(rows, [
+      { kind: 'sort', params: { field: 'value', groupBy: ['team', 'item'], order } },
+    ]);
+    const indices = order === 'ascending' ? [3, 0, 4, 2, 5, 1] : [0, 4, 3, 2, 1, 5];
+    expect(output).toEqual(indices.map(index => rows[index]));
+    expect(output.map(readSourceIndex)).toEqual(indices);
+    expect(rows).toEqual(original);
+  });
+  it('empty grouping preserves global sort and bin behavior', () => {
+    const rows = [{ value: 3 }, { value: 1 }, { value: 2 }];
+    for (const kind of ['sort', 'bin'] as const)
+      expect(applyTransforms(rows, [{ kind, params: { field: 'value', groupBy: [] } }])).toEqual(
+        applyTransforms(rows, [{ kind, params: { field: 'value' } }]),
+      );
+  });
+  it('bins composite groups with independent domains and retained model types', () => {
+    const view = createDataView(
+      [
+        { team: 'B', item: 'x', value: 10 },
+        { team: 'A', item: 'x', value: 100 },
+        { team: 'B', item: 'y', value: 30 },
+        { team: 'B', item: 'x', value: 20 },
+        { team: 'A', item: 'x', value: 200 },
+        { team: 'B', item: 'y', value: 50 },
+      ],
+      [
+        { name: 'team', type: 'categorical' },
+        { name: 'item', type: 'categorical' },
+        { name: 'value', type: 'continuous' },
+      ],
+    );
+    const output = applyTransformsToDataView(view, [
+      { kind: 'bin', params: { field: 'value', groupBy: ['team', 'item'], count: 2, nice: false } },
+    ]).dataView;
+    expect(output.rows.map(row => [row.team, row.item, row.binStart, row.binEnd, row.binCount])).toEqual([
+      ['B', 'x', 10, 15, 1],
+      ['B', 'x', 15, 20, 1],
+      ['B', 'y', 30, 40, 1],
+      ['B', 'y', 40, 50, 1],
+      ['A', 'x', 100, 150, 1],
+      ['A', 'x', 150, 200, 1],
+    ]);
+    expect(output.model).toEqual([
+      ...view.model,
+      { name: 'binStart', type: 'continuous' },
+      { name: 'binEnd', type: 'continuous' },
+      { name: 'binCount', type: 'continuous' },
+    ]);
+  });
+  it('shared extent keeps empty bins and bucket-local source evidence', () => {
+    const rows = tagSourceIndex([
+      { team: 'B', value: 0 },
+      { team: 'A', value: 10 },
+      { team: 'B', value: 10 },
+      { team: 'A', value: 3 },
+    ]);
+    const output = applyTransforms(rows, [
+      { kind: 'bin', params: { field: 'value', groupBy: ['team'], extent: [0, 10], step: 2 } },
+    ]);
+    expect(output.map(row => [row.team, row.binStart, row.binCount])).toEqual([
+      ['B', 0, 1],
+      ['B', 2, 0],
+      ['B', 4, 0],
+      ['B', 6, 0],
+      ['B', 8, 1],
+      ['A', 0, 0],
+      ['A', 2, 1],
+      ['A', 4, 0],
+      ['A', 6, 0],
+      ['A', 8, 1],
+    ]);
+    expect(output.map(readSourceIndices)).toEqual([
+      [0],
+      undefined,
+      undefined,
+      undefined,
+      [2],
+      undefined,
+      [3],
+      undefined,
+      undefined,
+      [1],
+    ]);
   });
 });

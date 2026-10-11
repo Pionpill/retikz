@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   computeLayout,
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
+  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -33,7 +33,7 @@ describe('layout public API', () => {
     });
     expect(LayoutIntrinsicMode).toEqual({ Minimum: 'minimum', Natural: 'natural' });
     expect(LayoutChildProbeKind).toEqual({ Resolved: 'resolved', Failed: 'failed' });
-    expect(LayoutAlignmentGuideName).toEqual({
+    expect(BuiltinLayoutAlignmentGuideName).toEqual({
       FirstBaseline: 'first-baseline',
       LastBaseline: 'last-baseline',
     });

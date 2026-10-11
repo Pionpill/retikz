@@ -6,8 +6,7 @@ import type {
   ResolvedPatternLineStyle,
 } from '../../contract';
 import { definePattern } from '../../contract';
-import type { BuiltinPatternName } from '../../schemas';
-import { PatternShape } from '../../schemas';
+import { BuiltinPatternShape } from '../../schemas';
 import { defineBuiltinProviderArray } from '../registry/index';
 
 const DEFAULT_PATTERN_SIZE = 8;
@@ -60,7 +59,7 @@ const horizontalLineOf = (tileSize: number, y: number, style: ResolvedPatternLin
 
 /** 横线 pattern motif：在 tile 中线位置绘制一条水平线 */
 const linesPattern = definePattern({
-  name: PatternShape.Lines,
+  name: BuiltinPatternShape.Lines,
   defaultSize: DEFAULT_PATTERN_SIZE,
   emit: context => {
     const styles = context.lineStyleCycle?.styles ?? [baseLineStyleOf(context)];
@@ -81,7 +80,7 @@ const linesPattern = definePattern({
 
 /** 网格 pattern motif：在 tile 中线位置绘制水平线和垂直线 */
 const gridPattern = definePattern({
-  name: PatternShape.Grid,
+  name: BuiltinPatternShape.Grid,
   defaultSize: DEFAULT_PATTERN_SIZE,
   emit: (context): Array<MarkerPrimitive> => {
     const half = context.round(context.size / 2);
@@ -110,7 +109,7 @@ const gridPattern = definePattern({
 
 /** 圆点 pattern motif：在 tile 中心绘制一个圆点 */
 const dotsPattern = definePattern({
-  name: PatternShape.Dots,
+  name: BuiltinPatternShape.Dots,
   defaultSize: DEFAULT_PATTERN_SIZE,
   emit: (context): Array<MarkerPrimitive> => {
     const radius = context.round(context.lineWidth ?? context.size / 5);
@@ -123,7 +122,7 @@ const dotsPattern = definePattern({
 });
 
 /** 内置 pattern provider 注册项 */
-export const BUILTIN_PATTERNS = defineBuiltinProviderArray<PatternDefinition, BuiltinPatternName>([
+export const BUILTIN_PATTERNS = defineBuiltinProviderArray<PatternDefinition, BuiltinPatternShape>([
   linesPattern,
   gridPattern,
   dotsPattern,

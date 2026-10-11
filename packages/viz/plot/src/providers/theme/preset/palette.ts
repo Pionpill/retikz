@@ -1,7 +1,7 @@
 import type { CssColorValue, NonEmptyReadonlyArray } from '@retikz/core';
 
 import type { IRPlotPaletteDefaults } from '../../../schemas';
-import { PlotColorScheme } from '../../../schemas';
+import { BuiltinPlotColorScheme } from '../../../schemas';
 import { PLOT_SHAPE_PALETTE } from '../shape-palette';
 
 /** 读取 Neutral Plot palette defaults */
@@ -10,7 +10,7 @@ export const getNeutralPaletteDefaults = (
 ): IRPlotPaletteDefaults => ({
   categorical: [...categorical],
   series: [...categorical],
-  sequential: PlotColorScheme.Viridis,
-  diverging: PlotColorScheme.RdBu,
+  sequential: BuiltinPlotColorScheme.Viridis,
+  diverging: BuiltinPlotColorScheme.RdBu,
   shape: structuredClone(PLOT_SHAPE_PALETTE),
 });

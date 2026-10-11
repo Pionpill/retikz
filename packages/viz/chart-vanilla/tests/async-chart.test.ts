@@ -36,7 +36,7 @@ describe('Chart async data preparation', () => {
       panel: { position: [24, 12], transforms: [{ kind: 'scale', x: 0.5 }], zIndex: 3 },
       encodings: {
         x: 'x',
-        y: { transform: { operation: { kind: 'normalize', field: 'y', as: 'ratio' } }, output: 'ratio' },
+        y: { transform: { operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }, output: 'ratio' },
       },
     });
     const result = await renderChartAsync(input, {
@@ -76,7 +76,10 @@ describe('Chart async data preparation', () => {
       encodings: {
         x: 'x',
         y: {
-          transform: { operation: { kind: 'normalize', field: 'y', as: 'ratio' }, dataExecution: { mode: 'builtin' } },
+          transform: {
+            operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } },
+            dataExecution: { mode: 'builtin' },
+          },
           output: 'ratio',
         },
       },

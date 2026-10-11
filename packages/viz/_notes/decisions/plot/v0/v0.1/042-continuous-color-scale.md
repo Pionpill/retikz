@@ -1,6 +1,6 @@
 ---
 description: 连续色阶——sequential / diverging color scale + 配色方案词表；背景：连续色编码是 GoG 基础能力，同类库共识清晰：
-keywords: 'sequential、diverging、color、scale、color.field、PlotScale、ordinal'
+keywords: 'sequential、diverging、color、scale、color.field、BuiltinPlotScale、ordinal'
 ---
 
 # ADR-042：连续色阶——sequential / diverging color scale + 配色方案词表
@@ -11,7 +11,7 @@ keywords: 'sequential、diverging、color、scale、color.field、PlotScale、or
 
 ## 背景
 
-alpha.7 [ADR-039](./039-color-series.md) 把 color 收口成真通道，但**连续 / temporal `color.field` 一律 fail-loud**——明确写「连续色阶 sequential / diverging 是 alpha.8」。当前 `PlotScale` 颜色映射只有 `ordinal`（分类 → 离散色），数值字段（温度、密度、收入、相关系数）无法编码成色。
+alpha.7 [ADR-039](./039-color-series.md) 把 color 收口成真通道，但**连续 / temporal `color.field` 一律 fail-loud**——明确写「连续色阶 sequential / diverging 是 alpha.8」。当前 `BuiltinPlotScale` 颜色映射只有 `ordinal`（分类 → 离散色），数值字段（温度、密度、收入、相关系数）无法编码成色。
 
 连续色编码是 GoG 基础能力，同类库共识清晰：
 
@@ -24,13 +24,13 @@ alpha.7 [ADR-039](./039-color-series.md) 把 color 收口成真通道，但**连
 
 **mark 边界（承 alpha.7 ④B/C）**：连续色 per-datum 着色只对 **point / bar / sector** 成立（按 datum 取色）。**line / area 是 path 级整体图元、按 series 着色**，连续字段几乎必然「同 series 内 color 不恒定」，直接命中 v0.1 ADR-039 既有的「同 series 内 color 不恒定 → fail-loud」。故本轮 **line/area + 连续 `color.field` 仍 fail-loud**（一条线沿程渐变的 path/stroke gradient 不做，顺延）。
 
-## 决策：`PlotScale` 新增 `sequential` / `diverging` 两个连续颜色 scale，配色走命名 scheme 词表（可选 range 覆盖），continuous/temporal color 经其映射；line/area 连续色仍 fail-loud
+## 决策：`BuiltinPlotScale` 新增 `sequential` / `diverging` 两个连续颜色 scale，配色走命名 scheme 词表（可选 range 覆盖），continuous/temporal color 经其映射；line/area 连续色仍 fail-loud
 
 新增两个独立判别串（决策 ①：拆两个成员而非「sequential + 可选 midpoint」——判别清晰、裸字面量友好、`.describe` 各自完整）。配色用**命名 scheme 闭枚举**（决策 ②：可序列化进 IR、LLM 可生成）+ 可选 `range`（自定义颜色端点逃生）。lowering 经 d3 `scaleSequential` / `scaleDiverging` + `d3-scale-chromatic` interpolator 求值。
 
 ```ts
-// ir/scale.ts —— PlotScale 追加（沿 DrawWay 风格，裸 'sequential' 同样可用）
-export const PlotScale = {
+// ir/scale.ts —— BuiltinPlotScale 追加（沿 DrawWay 风格，裸 'sequential' 同样可用）
+export const BuiltinPlotScale = {
   Linear: 'linear',
   Band: 'band',
   Point: 'point',
@@ -46,21 +46,21 @@ export const PlotScale = {
 } as const;
 
 // 配色方案命名词表（闭枚举，进 IR；取 d3-scale-chromatic 子集，避免全量撑爆 describe）
-// PlotColorScheme = {
+// BuiltinPlotColorScheme = {
 //   // sequential 单/多色相：Blues Greens Greys Oranges Purples Reds Viridis Magma Inferno Plasma Cividis Turbo
 //   // diverging：BrBG PRGn PiYG PuOr RdBu RdGy RdYlBu RdYlGn Spectral
-// } as const  →  type ColorScheme = ValueOf<typeof PlotColorScheme>
+// } as const  →  type ColorScheme = ValueOf<typeof BuiltinPlotColorScheme>
 
 // SequentialColorScaleSchema：
-//   type: z.literal(PlotScale.Sequential) / name
+//   type: z.literal(BuiltinPlotScale.Sequential) / name
 //   domain?: [number, number]（省略→数据推断 [min,max]；temporal 用时间戳区间）
-//   scheme?: z.nativeEnum(PlotColorScheme)（默认 'viridis'）
+//   scheme?: z.nativeEnum(BuiltinPlotColorScheme)（默认 'viridis'）
 //   range?: [string, string]（两端颜色，覆盖 scheme；与 scheme 互斥优先 range）
 //   nice? / clamp?
 // DivergingColorScaleSchema：
-//   type: z.literal(PlotScale.Diverging) / name
+//   type: z.literal(BuiltinPlotScale.Diverging) / name
 //   domain?: [number, number, number]（[low, mid, high]；省略→ [min, (min+max)/2, max]）
-//   scheme?: z.nativeEnum(PlotColorScheme)（默认 'rdbu'）
+//   scheme?: z.nativeEnum(BuiltinPlotColorScheme)（默认 'rdbu'）
 //   range?: [string, string, string]（覆盖 scheme）
 //   nice? / clamp?
 // ScaleSchema 追加二者进 discriminatedUnion('type', [...])

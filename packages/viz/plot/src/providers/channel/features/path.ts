@@ -11,7 +11,7 @@ import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } f
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
-import { MarkValueKind, PlotScale } from '../../../schemas';
+import { MarkValueKind, BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
@@ -95,7 +95,7 @@ const makeNumericPathResolver = (
     let scale: ((value: number) => number) | undefined;
     if (scaleName !== undefined || options.range !== undefined) {
       let def: IRPlotLinearScale = {
-        type: PlotScale.Linear,
+        type: BuiltinPlotScale.Linear,
         name: scaleName ?? `__path_${channelName}_${source.field}`,
         ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
         ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
@@ -104,7 +104,7 @@ const makeNumericPathResolver = (
         const found = scaleByName.get(scaleName);
         if (!found)
           throw new RetikzPlotError(`lowerPlots: ${channelName} path channel references unknown scale "${scaleName}"`);
-        if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear)
+        if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Linear)
           throw new RetikzPlotError(
             `lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`,
           );

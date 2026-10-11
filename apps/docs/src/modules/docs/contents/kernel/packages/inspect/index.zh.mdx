@@ -150,7 +150,7 @@ const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDri
 </DocTab>
 </DocTabs>
 
-根入口只提供 Definition、注册表、选择与辅助编译；React 与 Vanilla 适配分别从 `/react` 与 `/vanilla` 子入口导入，渲染仍由 `@retikz/render` 负责。先从“内置观测”看到第一个结果，再按需阅读拓展或实现原理。配置字段见 [Schema 参考](/kernel/packages/inspect/schema-reference)。
+根入口只提供 Definition、注册表、选择与辅助编译；React 与 Vanilla 适配分别从 `/react` 与 `/vanilla` 子入口导入，渲染仍由 `@retikz/render` 负责。先从“内置观测”看到第一个结果，再按需阅读拓展或实现原理。配置字段见 [API 参考](/kernel/packages/inspect/reference)。
 
 ## 职责一览
 
@@ -184,12 +184,7 @@ const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDri
     {
       title: 'API 参考',
       description: '根入口与 React、Vanilla 子路径的公开类型、函数和组件',
-      url: '/kernel/packages/inspect/api-reference',
-    },
-    {
-      title: 'Schema 参考',
-      description: '标签开关与内置 Path 观测选项的完整字段契约',
-      url: '/kernel/packages/inspect/schema-reference',
+      url: '/kernel/packages/inspect/reference',
     },
   ]}
 />

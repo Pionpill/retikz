@@ -1,9 +1,10 @@
-import type { ValueOf } from '@retikz/foundation';
-import type { ZodType } from 'zod';
+import type { JsonValue, ValueOf } from '@retikz/foundation';
+import type { output, ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
 
 import { RetikzDataError } from '../error';
 import type { DataFieldType, IRDataTransform } from '../schemas';
+import { createTransformSchema } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataTransformDependency, DataTransformModel } from './execution';
 import type { DataLineageRecorder } from './lineage';
@@ -139,7 +140,7 @@ export type TransformSemanticContext = Readonly<{
 
 /**
  * 数据变换的运行时定义
- * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 IRDataTransform
+ * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, params }` 形态的 IRDataTransform
  * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
  */
 export type TransformDefinition<TTransform extends IRDataTransform = IRDataTransform> = {
@@ -158,14 +159,36 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
 };
 
 /**
- * 定义一个 transform definition
- * @description 保留 schema、字段影响与依赖声明之间的泛型关联；内置与自定义 transform 都经同一 registry 入口解析
- * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
- * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
+ * 变换作者提供参数 schema，完整操作 schema 由统一工厂组装
+ * @template TKind 变换操作的固定注册名称
+ * @template TParamsSchema 参数对象的输入与解析契约，决定回调中 params 的类型
  */
-export const defineTransform = <TTransform extends IRDataTransform>(
-  def: TransformDefinition<TTransform>,
-): TransformDefinition<TTransform> => def;
+export type TransformDefinitionInput<
+  TKind extends string,
+  TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
+> = Omit<TransformDefinition<{ kind: TKind; params: output<TParamsSchema> }>, 'schema'> & {
+  /** 变换注册名称 */
+  kind: TKind;
+  /** 具体参数的持久化契约，保留默认值及跨字段约束 */
+  paramsSchema: TParamsSchema;
+};
+
+/**
+ * 组装变换定义，保留判别名称、参数解析结果与语义回调之间的关联
+ * @template TKind 变换操作的固定注册名称
+ * @template TParamsSchema 参数对象的输入与解析契约，决定回调中 params 的类型
+ * @param def 名称、参数 schema 与字段语义；不会自动注册
+ * @returns 由统一工厂组装完整操作 schema 的语义定义
+ */
+export const defineTransform = <
+  const TKind extends string,
+  TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
+>(
+  def: TransformDefinitionInput<TKind, TParamsSchema>,
+) => {
+  const { kind, paramsSchema, ...semantics } = def;
+  return { ...semantics, schema: createTransformSchema(kind, paramsSchema) };
+};
 
 /**
  * registry 内部使用的宽类型
@@ -206,6 +229,8 @@ export type TransformImplementation<
  * 保留语义定义与实际计算参数之间的泛型关联
  * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
  * @template TResult 变换计算返回的数据行数组或其 Promise 类型
+ * @param implementation 具备精确参数关联的定义或实现；不会自动注册
+ * @returns 原样返回传入对象，保留泛型关联
  */
 export const defineTransformImplementation = <
   TTransform extends IRDataTransform,
@@ -236,6 +261,9 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
 /**
  * 从 transform definition schema 中提取 registry key
  * @description definition schema 必须是包含 `kind: z.literal('<transform-kind>')` 的 ZodObject；该 literal 值就是 registry 唯一键
+ * @param schema 注册定义的对象 schema，kind 必须是非空字符串字面量
+ * @returns kind 字面量的字符串值
+ * @throws {RetikzDataError} schema 不是对象或 kind 不是有效字面量
  */
 export const extractTransformKind = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject)) {

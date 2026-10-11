@@ -1,12 +1,12 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
-import { ExtensionArrowName } from '../constants';
+import { BuiltinExtensionArrowName } from '../constants';
 import { filledPath, hollowPath } from './_utils';
 
 /** 可选实心菱形箭头 Definition */
 export const DiamondArrowDefinition = defineArrow({
-  name: ExtensionArrowName.Diamond,
+  name: BuiltinExtensionArrowName.Diamond,
   backX: 0,
   lineContactX: 0,
   defaultLength: 11,
@@ -31,7 +31,7 @@ export const DiamondArrowProvider: CoreDependencyProvider = Object.freeze({
 
 /** 可选空心菱形箭头 Definition */
 export const OpenDiamondArrowDefinition = defineArrow({
-  name: ExtensionArrowName.OpenDiamond,
+  name: BuiltinExtensionArrowName.OpenDiamond,
   hollow: true,
   backX: 1,
   lineContactX: 1,

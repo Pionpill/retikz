@@ -1,7 +1,7 @@
-import { DataTransform } from '@retikz/data';
+import { BuiltinDataTransform } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { PathMarkSchema, PlotMark } from '@retikz/plot';
+import { PathMarkSchema, BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -94,19 +94,21 @@ export const resolveRegressionMarkGroup = (
   /** 在共享数据上创建一条 mark-local 趋势，仅额外项显式 stroke 可覆盖分类色 */
   const createTrend = (settings: IRRegressionChartProperties, explicitStroke = false): IRPlotMarkOperation => {
     const smooth: JsonObject = {
-      kind: DataTransform.Smooth,
-      x,
-      y,
-      ...(series === undefined ? {} : { groupBy: [series.field] }),
-      ...(settings.method === undefined ? {} : { method: settings.method }),
-      ...(settings.sampleCount === undefined ? {} : { sampleCount: settings.sampleCount }),
-      ...(settings.extent === undefined ? {} : { extent: settings.extent }),
-      xAs: trendXField,
-      yAs: trendYField,
+      kind: BuiltinDataTransform.Smooth,
+      params: {
+        x,
+        y,
+        ...(series === undefined ? {} : { groupBy: [series.field] }),
+        ...(settings.method === undefined ? {} : { method: settings.method }),
+        ...(settings.sampleCount === undefined ? {} : { sampleCount: settings.sampleCount }),
+        ...(settings.extent === undefined ? {} : { extent: settings.extent }),
+        xAs: trendXField,
+        yAs: trendYField,
+      },
     };
     const trend = settings.trend ?? {};
     const path: JsonObject = {
-      type: PlotMark.Path,
+      type: BuiltinPlotMark.Path,
       order: trendXField,
       closed: false,
       curve: RegressionTrendCurveSchema.parse(trend.curve),

@@ -184,27 +184,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   BubbleChartSchema: {
     schema: BubbleChartSchema,
     label: 'BubbleChartSchema',
-    url: '/viz/chart/points/bubble#bubblechartschema',
+    url: '/viz/chart/points/bubble#irbubblechart--bubblechartschema',
   },
   BubbleChartRecipeSchema: {
     schema: BubbleChartRecipeSchema,
     label: 'BubbleChartRecipeSchema',
-    url: '/viz/chart/points/bubble#bubblechartrecipeschema',
+    url: '/viz/chart/points/bubble#irbubblechartrecipe--bubblechartrecipeschema',
   },
   BubbleChartEncodingsSchema: {
     schema: BubbleChartEncodingsSchema,
     label: 'BubbleChartEncodingsSchema',
-    url: '/viz/chart/points/bubble#bubblechartencodingsschema',
+    url: '/viz/chart/points/bubble#bubbleencodings--irbubblechartencodings--bubblechartencodingsschema',
   },
   BubbleChartPropertiesSchema: {
     schema: BubbleChartPropertiesSchema,
     label: 'BubbleChartPropertiesSchema',
-    url: '/viz/chart/points/bubble#bubblechartpropertiesschema',
+    url: '/viz/chart/points/bubble#bubbleproperties--irbubblechartproperties--bubblechartpropertiesschema',
   },
   BubbleChartMarkSchema: {
     schema: BubbleChartMarkSchema,
     label: 'BubbleChartMarkSchema',
-    url: '/viz/chart/points/bubble#bubblechartmarkschema',
+    url: '/viz/chart/points/bubble#bubblemark--bubblechartmarkschema',
   },
   BubblePositionScaleBindingSchema: {
     schema: BubblePositionScaleBindingSchema,
@@ -220,7 +220,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ConnectedScatterChartSchema: {
     schema: ConnectedScatterChartSchema,
     label: 'ConnectedScatterChartSchema',
-    url: '/viz/chart/points/connected-scatter#connectedscatterchartschema',
+    url: '/viz/chart/points/connected-scatter#irconnectedscatterchart--connectedscatterchartschema',
   },
   ConnectedScatterChartRecipeSchema: {
     schema: ConnectedScatterChartRecipeSchema,
@@ -230,7 +230,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ConnectedScatterChartEncodingsSchema: {
     schema: ConnectedScatterChartEncodingsSchema,
     label: 'ConnectedScatterChartEncodingsSchema',
-    url: '/viz/chart/points/connected-scatter#connectedscatterchartencodingsschema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterencodings--irconnectedscatterchartencodings--connectedscatterchartencodingsschema',
   },
   'ConnectedScatterChartEncodingsSchema.shape.x': {
     schema: ConnectedScatterChartEncodingsSchema.shape.x,
@@ -251,12 +251,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ConnectedScatterChartPropertiesSchema: {
     schema: ConnectedScatterChartPropertiesSchema,
     label: 'ConnectedScatterChartPropertiesSchema',
-    url: '/viz/chart/points/connected-scatter#connectedscatterchartpropertiesschema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterproperties--irconnectedscatterchartproperties--connectedscatterchartpropertiesschema',
   },
   ConnectedScatterChartMarkSchema: {
     schema: ConnectedScatterChartMarkSchema,
     label: 'ConnectedScatterChartMarkSchema',
-    url: '/viz/chart/points/connected-scatter#connectedscatterchartmarkschema',
+    url: '/viz/chart/points/connected-scatter#connectedscattermark--irconnectedscattermark--connectedscatterchartmarkschema',
   },
   ConnectedScatterPointPropertiesSchema: {
     schema: ConnectedScatterPointPropertiesSchema,
@@ -273,27 +273,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RangedDotChartSchema: {
     schema: RangedDotChartSchema,
     label: 'RangedDotChartSchema',
-    url: '/viz/chart/points/ranged-dot#rangeddotchartschema',
+    url: '/viz/chart/points/ranged-dot#irrangeddotchart--rangeddotchartschema',
   },
   RangedDotChartRecipeSchema: {
     schema: RangedDotChartRecipeSchema,
     label: 'RangedDotChartRecipeSchema',
-    url: '/viz/chart/points/ranged-dot#rangeddotchartrecipeschema',
+    url: '/viz/chart/points/ranged-dot#irrangeddotchartrecipe--rangeddotchartrecipeschema',
   },
   RangedDotChartEncodingsSchema: {
     schema: RangedDotChartEncodingsSchema,
     label: 'RangedDotChartEncodingsSchema',
-    url: '/viz/chart/points/ranged-dot#rangeddotchartencodingsschema',
+    url: '/viz/chart/points/ranged-dot#rangeddotencodings--irrangeddotchartencodings--rangeddotchartencodingsschema',
   },
   RangedDotChartPropertiesSchema: {
     schema: RangedDotChartPropertiesSchema,
     label: 'RangedDotChartPropertiesSchema',
-    url: '/viz/chart/points/ranged-dot#rangeddotchartpropertiesschema',
+    url: '/viz/chart/points/ranged-dot#rangeddotproperties--irrangeddotchartproperties--rangeddotchartpropertiesschema',
   },
   RangedDotChartMarkSchema: {
     schema: RangedDotChartMarkSchema,
     label: 'RangedDotChartMarkSchema',
-    url: '/viz/chart/points/ranged-dot#rangeddotchartmarkschema',
+    url: '/viz/chart/points/ranged-dot#rangeddotmark--irrangeddotmark--rangeddotchartmarkschema',
   },
   RangedDotPointPropertiesSchema: { schema: RangedDotPointPropertiesSchema, label: 'RangedDotPointPropertiesSchema' },
   RangedDotRangePropertiesSchema: { schema: RangedDotRangePropertiesSchema, label: 'RangedDotRangePropertiesSchema' },
@@ -308,28 +308,28 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RegressionChartSchema: {
     schema: RegressionChartSchema,
     label: 'RegressionChartSchema',
-    url: '/viz/chart/points/regression#regressionchartschema',
+    url: '/viz/chart/points/regression#irregressionchart--regressionchartschema',
   },
   RegressionChartRecipeSchema: {
     schema: RegressionChartRecipeSchema,
     label: 'RegressionChartRecipeSchema',
-    url: '/viz/chart/points/regression#regressionchartrecipeschema',
+    url: '/viz/chart/points/regression#irregressionchartrecipe--regressionchartrecipeschema',
   },
   RegressionChartEncodingsSchema: {
     schema: RegressionChartEncodingsSchema,
     label: 'RegressionChartEncodingsSchema',
-    url: '/viz/chart/points/regression#regressionchartencodingsschema',
+    url: '/viz/chart/points/regression#regressionencodings--irregressionchartencodings--regressionchartencodingsschema',
   },
   RegressionExtraMethodSchema: { schema: RegressionExtraMethodSchema, label: 'RegressionExtraMethodSchema' },
   RegressionChartPropertiesSchema: {
     schema: RegressionChartPropertiesSchema,
     label: 'RegressionChartPropertiesSchema',
-    url: '/viz/chart/points/regression#regressionchartpropertiesschema',
+    url: '/viz/chart/points/regression#regressionproperties--irregressionchartproperties--regressionchartpropertiesschema',
   },
   RegressionChartMarkSchema: {
     schema: RegressionChartMarkSchema,
     label: 'RegressionChartMarkSchema',
-    url: '/viz/chart/points/regression#regressionchartmarkschema',
+    url: '/viz/chart/points/regression#regressionmark--irregressionmark--regressionchartmarkschema',
   },
   RegressionPointPropertiesSchema: {
     schema: RegressionPointPropertiesSchema,
@@ -350,27 +350,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   StripChartSchema: {
     schema: StripChartSchema,
     label: 'StripChartSchema',
-    url: '/viz/chart/points/strip#stripchartschema',
+    url: '/viz/chart/points/strip#irstripchart--stripchartschema',
   },
   StripChartRecipeSchema: {
     schema: StripChartRecipeSchema,
     label: 'StripChartRecipeSchema',
-    url: '/viz/chart/points/strip#stripchartrecipeschema',
+    url: '/viz/chart/points/strip#irstripchartrecipe--stripchartrecipeschema',
   },
   StripChartEncodingsSchema: {
     schema: StripChartEncodingsSchema,
     label: 'StripChartEncodingsSchema',
-    url: '/viz/chart/points/strip#stripchartencodingsschema',
+    url: '/viz/chart/points/strip#stripencodings--irstripchartencodings--stripchartencodingsschema',
   },
   StripChartPropertiesSchema: {
     schema: StripChartPropertiesSchema,
     label: 'StripChartPropertiesSchema',
-    url: '/viz/chart/points/strip#stripchartpropertiesschema',
+    url: '/viz/chart/points/strip#stripproperties--irstripchartproperties--stripchartpropertiesschema',
   },
   StripChartMarkSchema: {
     schema: StripChartMarkSchema,
     label: 'StripChartMarkSchema',
-    url: '/viz/chart/points/strip#stripchartmarkschema',
+    url: '/viz/chart/points/strip#stripmark--stripchartmarkschema',
   },
   StripChartJitterSchema: { schema: StripChartJitterSchema, label: 'StripChartJitterSchema' },
   StripChartMarkPropertiesSchema: { schema: StripChartMarkPropertiesSchema, label: 'StripChartMarkPropertiesSchema' },
@@ -453,27 +453,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ScatterChartSchema: {
     schema: ScatterChartSchema,
     label: 'ScatterChartSchema',
-    url: '/viz/chart/points/scatter#scatterchartschema',
+    url: '/viz/chart/points/scatter#irscatterchart--scatterchartschema',
   },
   ScatterChartRecipeSchema: {
     schema: ScatterChartRecipeSchema,
     label: 'ScatterChartRecipeSchema',
-    url: '/viz/chart/points/scatter#scatterchartrecipeschema',
+    url: '/viz/chart/points/scatter#irscatterchartrecipe--scatterchartrecipeschema',
   },
   ScatterChartEncodingsSchema: {
     schema: ScatterChartEncodingsSchema,
     label: 'ScatterChartEncodingsSchema',
-    url: '/viz/chart/points/scatter#scatterchartencodingsschema',
+    url: '/viz/chart/points/scatter#scatterencodings--irscatterchartencodings--scatterchartencodingsschema',
   },
   ScatterChartPropertiesSchema: {
     schema: ScatterChartPropertiesSchema,
     label: 'ScatterChartPropertiesSchema',
-    url: '/viz/chart/points/scatter#scatterchartpropertiesschema',
+    url: '/viz/chart/points/scatter#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema',
   },
   ScatterChartMarkSchema: {
     schema: ScatterChartMarkSchema,
     label: 'ScatterChartMarkSchema',
-    url: '/viz/chart/points/scatter#scatterchartmarkschema',
+    url: '/viz/chart/points/scatter#scattermark--scatterchartmarkschema',
   },
   AxisScaleSchema: { schema: IR.AxisScaleSchema, label: 'AxisScaleSchema' },
   BoxSizeSchema: { schema: IR.BoxSizeSchema, label: 'BoxSizeSchema' },
@@ -481,32 +481,32 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   NodeInspectOptionsSchema: {
     schema: NodeInspectOptionsSchema,
     label: 'NodeInspectOptions',
-    url: '/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema',
+    url: '/kernel/packages/inspect/reference#nodeinspectoptionsschema',
   },
   ScopeInspectOptionsSchema: {
     schema: ScopeInspectOptionsSchema,
     label: 'ScopeInspectOptions',
-    url: '/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema',
+    url: '/kernel/packages/inspect/reference#scopeinspectoptionsschema',
   },
   ClipInspectOptionsSchema: {
     schema: ClipInspectOptionsSchema,
     label: 'ClipInspectOptions',
-    url: '/kernel/packages/inspect/schema-reference#clipinspectoptionsschema',
+    url: '/kernel/packages/inspect/reference#clipinspectoptionsschema',
   },
   CoordinateInspectOptionsSchema: {
     schema: CoordinateInspectOptionsSchema,
     label: 'CoordinateInspectOptions',
-    url: '/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema',
+    url: '/kernel/packages/inspect/reference#coordinateinspectoptionsschema',
   },
   PathInspectOptionsSchema: {
     schema: PathInspectOptionsSchema,
     label: 'StrokePathInspectOptions',
-    url: '/kernel/packages/inspect/schema-reference#pathinspectoptionsschema',
+    url: '/kernel/packages/inspect/reference#pathinspectoptionsschema',
   },
   SceneSchema: {
     schema: IR.SceneSchema,
     label: 'Scene',
-    url: '/kernel/components/layout/schema-reference#sceneschema',
+    url: '/kernel/components/layout/reference#irscene--sceneschema',
   },
   ThemeSchema: {
     schema: IR.ThemeSchema,
@@ -526,7 +526,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ViewBoxSchema: {
     schema: IR.ViewBoxSchema,
     label: 'ViewBox',
-    url: '/kernel/components/layout/schema-reference#viewboxschema',
+    url: '/kernel/components/layout/reference#irviewbox--viewboxschema',
   },
   CompositeNodeSchema: {
     schema: IR.CompositeNodeSchema,
@@ -535,115 +535,115 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   JsonObjectSchema: {
     schema: JsonObjectSchema,
     label: 'JsonObject',
-    url: '/kernel/packages/foundation/schema-reference#jsonobjectschema',
+    url: '/kernel/packages/foundation/reference#jsonobject--jsonobjectschema',
   },
   JsonValueSchema: {
     schema: JsonValueSchema,
     label: 'JsonValue',
-    url: '/kernel/packages/foundation/schema-reference#jsonvalueschema',
+    url: '/kernel/packages/foundation/reference#jsonvalueschema',
   },
   NonBlankStringSchema: {
     schema: NonBlankStringSchema,
     label: 'NonBlankString',
-    url: '/kernel/packages/foundation/schema-reference#nonblankstringschema',
+    url: '/kernel/packages/foundation/reference#nonblankstringschema',
   },
   PositiveNumberSchema: {
     schema: PositiveNumberSchema,
     label: 'PositiveNumber',
-    url: '/kernel/packages/foundation/schema-reference#positivenumberschema',
+    url: '/kernel/packages/foundation/reference#positivenumberschema',
   },
   NonNegativeNumberSchema: {
     schema: NonNegativeNumberSchema,
     label: 'NonNegativeNumber',
-    url: '/kernel/packages/foundation/schema-reference#nonnegativenumberschema',
+    url: '/kernel/packages/foundation/reference#nonnegativenumberschema',
   },
   PositiveIntegerSchema: {
     schema: PositiveIntegerSchema,
     label: 'PositiveInteger',
-    url: '/kernel/packages/foundation/schema-reference#positiveintegerschema',
+    url: '/kernel/packages/foundation/reference#positiveintegerschema',
   },
   NonNegativeIntegerSchema: {
     schema: NonNegativeIntegerSchema,
     label: 'NonNegativeInteger',
-    url: '/kernel/packages/foundation/schema-reference#nonnegativeintegerschema',
+    url: '/kernel/packages/foundation/reference#nonnegativeintegerschema',
   },
   NormalizedFractionSchema: {
     schema: NormalizedFractionSchema,
     label: 'NormalizedFraction',
-    url: '/kernel/packages/foundation/schema-reference#normalizedfractionschema',
+    url: '/kernel/packages/foundation/reference#normalizedfractionschema',
   },
 
   ScopeFrameSchema: {
     schema: IR.ScopeFrameSchema,
     label: 'ScopeFrame',
-    url: '/kernel/components/scope/schema-reference#scopeframeschema',
+    url: '/kernel/components/scope/reference#irscopeframe--scopeframeschema',
   },
   ScopeFrameStyleSchema: {
     schema: IR.ScopeFrameStyleSchema,
     label: 'ScopeFrameStyle',
-    url: '/kernel/components/scope/schema-reference#scopeframestyleschema',
+    url: '/kernel/components/scope/reference#scopeframestyleschema',
   },
-  ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/components/scope/schema-reference#scopeschema' },
+  ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/components/scope/reference#scopeschema' },
   AnchorRefSchema: {
     schema: IR.AnchorRefSchema,
     label: 'AnchorRefSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   BoundaryAnchorRefSchema: {
     schema: IR.BoundaryAnchorRefSchema,
     label: 'BoundaryAnchorRefSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   ScopePositionTargetSchema: {
     schema: IR.ScopeAnchorPositionSchema.shape.target,
     label: 'ScopePositionTargetSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#irscopepositiontarget--scopepositiontargetschema',
   },
   TranslateSchema: {
     schema: IR.TransformSchema.options[0],
     label: 'TranslateSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   PolarTranslateSchema: {
     schema: IR.TransformSchema.options[1],
     label: 'PolarTranslateSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   AtTranslateSchema: {
     schema: IR.TransformSchema.options[2],
     label: 'AtTranslateSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   OffsetTranslateSchema: {
     schema: IR.TransformSchema.options[3],
     label: 'OffsetTranslateSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   BetweenTranslateSchema: {
     schema: IR.TransformSchema.options[4],
     label: 'BetweenTranslateSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   RotateSchema: {
     schema: IR.TransformSchema.options[5],
     label: 'RotateSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   'core.ScaleSchema': {
     schema: IR.TransformSchema.options[6],
     label: 'ScaleSchema',
-    url: '/kernel/components/scope/schema-reference#scopeschema',
+    url: '/kernel/components/scope/reference#scopeschema',
   },
   ScopePositionSchema: { schema: IR.ScopePositionSchema, label: 'ScopePosition' },
   ScopeAnchorPositionSchema: {
     schema: IR.ScopeAnchorPositionSchema,
     label: 'ScopeAnchorPosition',
-    url: '/kernel/components/scope/schema-reference#scopeplacementschema',
+    url: '/kernel/components/scope/reference#irscopeanchorposition--scopeanchorpositionschema',
   },
   ScopeSelfPointSchema: {
     schema: IR.ScopeSelfPointSchema,
     label: 'ScopeSelfPoint',
-    url: '/kernel/components/scope/schema-reference#scopeselfpointschema',
+    url: '/kernel/components/scope/reference#scopeselfpointschema',
   },
   NodeDefaultSchema: {
     schema: IR.NodeDefaultSchema,
@@ -653,7 +653,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     // 独立定义视图不改变其他页面按原实例展开 defaults 的行为
     schema: IR.ScopeDefaultsSchema.clone(),
     label: 'ScopeDefaultsSchema',
-    url: '/kernel/components/scope/schema-reference#scopedefaultsschema',
+    url: '/kernel/components/scope/reference#irscopedefaults--scopedefaultsschema',
   },
   PathDefaultSchema: {
     schema: IR.PathDefaultSchema,
@@ -667,11 +667,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.TransformSchema,
     label: 'Transform',
   },
-  ClipSchema: { schema: IR.ClipSchema, label: 'Clip', url: '/kernel/components/scope/schema-reference#clipschema' },
+  ClipSchema: { schema: IR.ClipSchema, label: 'Clip', url: '/kernel/components/scope/reference#clipschema' },
   RectClipSchema: {
     schema: IR.RectClipSchema,
     label: 'RectClip',
-    url: '/kernel/components/scope/schema-reference#rectclipschema',
+    url: '/kernel/components/scope/reference#rectclipschema',
   },
   CircleClipSchema: {
     schema: CircleClipSchema,
@@ -696,37 +696,37 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   NodeStyleSchema: {
     schema: IR.NodeStyleSchema,
     label: 'NodeStyleSchema',
-    url: '/kernel/components/node/schema-reference#nodestyleschema',
+    url: '/kernel/components/node/reference#irnodestyle--nodestyleschema',
   },
   NodeLayoutSchema: {
     schema: IR.NodeLayoutSchema,
     label: 'NodeLayoutSchema',
-    url: '/kernel/components/node/schema-reference#nodelayoutschema',
+    url: '/kernel/components/node/reference#irnodelayout--nodelayoutschema',
   },
   NodeLabelBoundaryPositionSchema: {
     schema: IR.NodeLabelBoundaryPositionSchema,
     label: 'NodeLabelBoundaryPositionSchema',
-    url: '/kernel/components/node/schema-reference#nodelabelboundarypositionschema',
+    url: '/kernel/components/node/reference#nodelabelboundarypositionschema',
   },
   NodeLabelPinSchema: {
     schema: IR.NodeLabelPinSchema,
     label: 'NodeLabelPinSchema',
-    url: '/kernel/components/node/schema-reference#nodelabelpinschema',
+    url: '/kernel/components/node/reference#nodelabelpinschema',
   },
   NodeSchema: {
     schema: IR.NodeSchema,
     label: 'NodeSchema',
-    url: '/kernel/components/node/schema-reference#nodeschema',
+    url: '/kernel/components/node/reference#nodeschema',
   },
   NodeLabelSchema: {
     schema: IR.NodeLabelSchema,
     label: 'NodeLabelSchema',
-    url: '/kernel/components/node/schema-reference#nodelabelschema',
+    url: '/kernel/components/node/reference#irnodelabel--nodelabelschema',
   },
   CoordinateSchema: {
     schema: IR.CoordinateSchema,
     label: 'CoordinateSchema',
-    url: '/kernel/components/node/schema-reference#coordinateschema',
+    url: '/kernel/components/node/reference#ircoordinate--coordinateschema',
   },
   FontSchema: { schema: IR.FontSchema, label: 'Font' },
   FontFamilySchema: {
@@ -765,7 +765,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   BoundarySchema: {
     schema: IR.BoundarySchema,
     label: 'BoundarySchema',
-    url: '/kernel/components/node/schema-reference#boundaryschema',
+    url: '/kernel/components/node/reference#boundaryschema',
   },
 
   PathStrokeSchema: {
@@ -788,7 +788,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.PathStructureSchema,
     label: 'PathStructure',
   },
-  PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/components/path/schema-reference#pathschema' },
+  PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/components/path/reference#pathschema' },
   DrawableStyleSchema: {
     schema: IR.DrawableStyleSchema,
     label: 'DrawableStyle',
@@ -800,42 +800,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RibbonPathSchema: {
     schema: RibbonPathSchema,
     label: 'RibbonPath',
-    url: '/library/extension/ribbon/schema-reference#ribbonpathschema',
+    url: '/library/extension/ribbon/reference#ribbonpathschema',
   },
   FixedRibbonWidthSchema: {
     schema: FixedRibbonWidthSchema,
     label: 'FixedRibbonWidth',
-    url: '/library/extension/ribbon/schema-reference#fixedribbonwidthschema',
+    url: '/library/extension/ribbon/reference#fixedribbonwidthschema',
   },
   TaperRibbonWidthSchema: {
     schema: TaperRibbonWidthSchema,
     label: 'TaperRibbonWidth',
-    url: '/library/extension/ribbon/schema-reference#taperribbonwidthschema',
+    url: '/library/extension/ribbon/reference#taperribbonwidthschema',
   },
   RibbonWidthSchema: {
     schema: RibbonWidthSchema,
     label: 'RibbonWidth',
-    url: '/library/extension/ribbon/schema-reference#ribbonwidthschema',
+    url: '/library/extension/ribbon/reference#ribbonwidthschema',
   },
   CenterlineRibbonPathOptionsSchema: {
     schema: CenterlineRibbonPathOptionsSchema,
     label: 'CenterlineRibbonPathOptions',
-    url: '/library/extension/ribbon/schema-reference#centerlineribbonpathoptionsschema',
+    url: '/library/extension/ribbon/reference#centerlineribbonpathoptionsschema',
   },
   BoundaryRibbonPathOptionsSchema: {
     schema: BoundaryRibbonPathOptionsSchema,
     label: 'BoundaryRibbonPathOptions',
-    url: '/library/extension/ribbon/schema-reference#boundaryribbonpathoptionsschema',
+    url: '/library/extension/ribbon/reference#boundaryribbonpathoptionsschema',
   },
   RibbonPathOptionsSchema: {
     schema: RibbonPathOptionsSchema,
     label: 'RibbonPathOptions',
-    url: '/library/extension/ribbon/schema-reference#ribbonpathoptionsschema',
+    url: '/library/extension/ribbon/reference#ribbonpathoptionsschema',
   },
   BoundaryLabelSchema: {
     schema: BoundaryLabelSchema,
     label: 'BoundaryLabel',
-    url: '/kernel/components/node/schema-reference#boundarylabelschema',
+    url: '/kernel/components/node/reference#boundarylabelschema',
   },
   RibbonDirectionSchema: {
     schema: RibbonDirectionSchema,
@@ -844,32 +844,32 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RibbonEndpointSchema: {
     schema: RibbonEndpointSchema,
     label: 'RibbonEndpoint',
-    url: '/library/extension/ribbon/schema-reference#ribbonendpointschema',
+    url: '/library/extension/ribbon/reference#ribbonendpointschema',
   },
   StopsRibbonWidthSchema: {
     schema: StopsRibbonWidthSchema,
     label: 'StopsRibbonWidth',
-    url: '/library/extension/ribbon/schema-reference#stopsribbonwidthschema',
+    url: '/library/extension/ribbon/reference#stopsribbonwidthschema',
   },
   ProfileRibbonWidthSchema: {
     schema: ProfileRibbonWidthSchema,
     label: 'ProfileRibbonWidth',
-    url: '/library/extension/ribbon/schema-reference#profileribbonwidthschema',
+    url: '/library/extension/ribbon/reference#profileribbonwidthschema',
   },
   RibbonArcCapSchema: {
     schema: RibbonArcCapSchema,
     label: 'RibbonArcCap',
-    url: '/library/extension/ribbon/schema-reference#ribbonarccapschema',
+    url: '/library/extension/ribbon/reference#ribbonarccapschema',
   },
   RibbonFixedSamplingSchema: {
     schema: RibbonFixedSamplingSchema,
     label: 'RibbonFixedSampling',
-    url: '/library/extension/ribbon/schema-reference#ribbonfixedsamplingschema',
+    url: '/library/extension/ribbon/reference#ribbonfixedsamplingschema',
   },
   RibbonAdaptiveSamplingSchema: {
     schema: RibbonAdaptiveSamplingSchema,
     label: 'RibbonAdaptiveSampling',
-    url: '/library/extension/ribbon/schema-reference#ribbonadaptivesamplingschema',
+    url: '/library/extension/ribbon/reference#ribbonadaptivesamplingschema',
   },
   CrossShapeParamsSchema: {
     schema: CrossShapeDefinition.paramsSchema,
@@ -914,13 +914,13 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   PathMarkPlacementSchema: {
     schema: IR.PathMarkPlacementSchema,
     label: 'PathMarkPlacement',
-    url: '/kernel/components/path/schema-reference#pathmarkplacementschema',
+    url: '/kernel/components/path/reference#pathmarkplacementschema',
   },
-  StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/schema-reference#stepschema' },
+  StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/reference#stepschema' },
   GeometryLabelSchema: {
     schema: IR.GeometryLabelSchema,
     label: 'GeometryLabel',
-    url: '/kernel/components/path/schema-reference#geometrylabelschema',
+    url: '/kernel/components/path/reference#geometrylabelschema',
   },
   StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel' },
   ControlPointSchema: {
@@ -1005,7 +1005,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   DropShadowSchema: {
     schema: IR.DropShadowSchema,
     label: 'DropShadow',
-    url: '/kernel/visual/style/schema-reference#dropshadowschema',
+    url: '/kernel/visual/style/reference#irdropshadow--dropshadowschema',
   },
   GradientStopSchema: {
     schema: IR.GradientStopSchema,
@@ -1027,27 +1027,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   PatternShapeNameSchema: {
     schema: IR.PatternShapeNameSchema,
     label: 'PatternShapeNameSchema',
-    url: '/kernel/visual/style/schema-reference#patternshapenameschema',
+    url: '/kernel/visual/style/reference#patternshapenameschema',
   },
   PatternLineStyleSchema: {
     schema: IR.PatternLineStyleSchema,
     label: 'PatternLineStyleSchema',
-    url: '/kernel/visual/style/schema-reference#patternlinestyleschema',
+    url: '/kernel/visual/style/reference#irpatternlinestyle--patternlinestyleschema',
   },
   PatternLineStyleOverrideSchema: {
     schema: IR.PatternLineStyleOverrideSchema,
     label: 'PatternLineStyleOverrideSchema',
-    url: '/kernel/visual/style/schema-reference#patternlinestyleoverrideschema',
+    url: '/kernel/visual/style/reference#patternlinestyleoverrideschema',
   },
   PatternLineStyleCycleSchema: {
     schema: IR.PatternLineStyleCycleSchema,
     label: 'PatternLineStyleCycleSchema',
-    url: '/kernel/visual/style/schema-reference#patternlinestylecycleschema',
+    url: '/kernel/visual/style/reference#irpatternlinestylecycle--patternlinestylecycleschema',
   },
   PatternPaintSchema: {
     schema: IR.PatternPaintSchema,
     label: 'PatternPaint',
-    url: '/kernel/visual/style/schema-reference#patternpaintschema',
+    url: '/kernel/visual/style/reference#patternpaintschema',
   },
   ImagePaintSchema: {
     schema: IR.ImagePaintSchema,
@@ -1057,78 +1057,78 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   AnimationTrackSchema: {
     schema: IR.AnimationTrackSchema,
     label: 'AnimationTrack',
-    url: '/kernel/visual/animation/schema-reference#animationtrackschema',
+    url: '/kernel/visual/animation/reference#iranimationtrack--animationtrackschema',
   },
   KeyframeSchema: {
     schema: IR.KeyframeSchema,
     label: 'Keyframe',
-    url: '/kernel/visual/animation/schema-reference#keyframeschema',
+    url: '/kernel/visual/animation/reference#irkeyframe--keyframeschema',
   },
   EasingSchema: {
     schema: IR.EasingSchema,
     label: 'Easing',
-    url: '/kernel/visual/animation/schema-reference#easingschema',
+    url: '/kernel/visual/animation/reference#easingschema',
   },
   TriggerSchema: {
     schema: IR.TriggerSchema,
     label: 'Trigger',
-    url: '/kernel/visual/animation/schema-reference#triggerschema',
+    url: '/kernel/visual/animation/reference#triggerschema',
   },
   EventTriggerSchema: {
     schema: IR.EventTriggerSchema,
     label: 'EventTrigger',
-    url: '/kernel/visual/animation/schema-reference#eventtriggerschema',
+    url: '/kernel/visual/animation/reference#eventtriggerschema',
   },
   OriginSchema: {
     schema: IR.OriginSchema,
     label: 'Origin',
-    url: '/kernel/visual/animation/schema-reference#originschema',
+    url: '/kernel/visual/animation/reference#originschema',
   },
 
   MoveStepSchema: {
     schema: IR.MoveStepSchema,
     label: 'MoveStep',
-    url: '/kernel/components/path/schema-reference#movestepschema',
+    url: '/kernel/components/path/reference#movestepschema',
   },
   LineStepSchema: {
     schema: IR.LineStepSchema,
     label: 'LineStep',
-    url: '/kernel/components/path/schema-reference#linestepschema',
+    url: '/kernel/components/path/reference#linestepschema',
   },
   AxisLineStepSchema: {
     schema: IR.AxisLineStepSchema,
     label: 'AxisLineStep',
-    url: '/kernel/components/path/schema-reference#axislinestepschema',
+    url: '/kernel/components/path/reference#axislinestepschema',
   },
   FoldStepSchema: {
     schema: IR.FoldStepSchema,
     label: 'FoldStep',
-    url: '/kernel/components/path/schema-reference#foldstepschema',
+    url: '/kernel/components/path/reference#foldstepschema',
   },
   CycleStepSchema: {
     schema: IR.CycleStepSchema,
     label: 'CycleStep',
-    url: '/kernel/components/path/schema-reference#cyclestepschema',
+    url: '/kernel/components/path/reference#cyclestepschema',
   },
   CurveStepSchema: {
     schema: IR.CurveStepSchema,
     label: 'CurveStep',
-    url: '/kernel/components/path/schema-reference#curvestepschema',
+    url: '/kernel/components/path/reference#curvestepschema',
   },
   CubicStepSchema: {
     schema: IR.CubicStepSchema,
     label: 'CubicStep',
-    url: '/kernel/components/path/schema-reference#cubicstepschema',
+    url: '/kernel/components/path/reference#cubicstepschema',
   },
   BendStepSchema: {
     schema: IR.BendStepSchema,
     label: 'BendStep',
-    url: '/kernel/components/path/schema-reference#bendstepschema',
+    url: '/kernel/components/path/reference#bendstepschema',
   },
   ArcStepSchema: {
     schema: IR.ArcStepSchema,
     label: 'ArcStep',
-    url: '/kernel/components/path/schema-reference#arcstepschema',
+    url: '/kernel/components/path/reference#arcstepschema',
   },
   CircleSchema: { schema: CircleSchema, label: 'Circle', url: '/library/standard/shape/circle-ellipse#circleschema' },
   EllipseSchema: {
@@ -1152,27 +1152,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   CirclePathStepSchema: {
     schema: IR.CirclePathStepSchema,
     label: 'CirclePathStep',
-    url: '/kernel/components/path/schema-reference#circlepathstepschema',
+    url: '/kernel/components/path/reference#circlepathstepschema',
   },
   EllipsePathStepSchema: {
     schema: IR.EllipsePathStepSchema,
     label: 'EllipsePathStep',
-    url: '/kernel/components/path/schema-reference#ellipsepathstepschema',
+    url: '/kernel/components/path/reference#ellipsepathstepschema',
   },
   RectangleStepSchema: {
     schema: IR.RectangleStepSchema,
     label: 'RectangleStep',
-    url: '/kernel/components/path/schema-reference#rectanglestepschema',
+    url: '/kernel/components/path/reference#rectanglestepschema',
   },
   SmoothStepSchema: {
     schema: IR.SmoothStepSchema,
     label: 'SmoothStep',
-    url: '/kernel/components/path/schema-reference#smoothstepschema',
+    url: '/kernel/components/path/reference#smoothstepschema',
   },
   GeneratorStepSchema: {
     schema: IR.GeneratorStepSchema,
     label: 'GeneratorStep',
-    url: '/kernel/components/path/schema-reference#generatorstepschema',
+    url: '/kernel/components/path/reference#generatorstepschema',
   },
 
   RelativeTargetSchema: {
@@ -1187,94 +1187,94 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ArrowMarkSchema: {
     schema: IR.ArrowMarkSchema,
     label: 'ArrowMark',
-    url: '/kernel/components/path/schema-reference#arrowmarkschema',
+    url: '/kernel/components/path/reference#arrowmarkschema',
   },
   ArrowDetailSchema: {
     schema: IR.ArrowDetailSchema,
     label: 'ArrowDetail',
-    url: '/kernel/components/path/schema-reference#arrowdetailschema',
+    url: '/kernel/components/path/reference#arrowdetailschema',
   },
   ArrowEndDetailSchema: {
     schema: IR.ArrowEndDetailSchema,
     label: 'ArrowEndDetail',
-    url: '/kernel/components/path/schema-reference#arrowenddetailschema',
+    url: '/kernel/components/path/reference#arrowenddetailschema',
   },
 
   LayoutInspectBoundsOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
     label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/flex-layout/schema-reference#layoutinspectboundsoptionsschema',
+    url: '/library/layout/flex-layout/reference#layoutinspectboundsoptionsschema',
   },
   LayoutInspectSpacingOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
     label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/flex-layout/schema-reference#layoutinspectspacingoptionsschema',
+    url: '/library/layout/flex-layout/reference#layoutinspectspacingoptionsschema',
   },
   BaseLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
     label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/flex-layout/schema-reference#baselayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/reference#baselayoutinspectoptionsschema',
   },
   FlexLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
     label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/flex-layout/schema-reference#flexlayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/reference#flexlayoutinspectoptionsschema',
   },
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
     label: 'GridLayoutInspectOptions',
-    url: '/library/layout/grid-layout/schema-reference#gridlayoutinspectoptionsschema',
+    url: '/library/layout/grid-layout/reference#gridlayoutinspectoptionsschema',
   },
   OverlayLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
     label: 'OverlayLayoutInspectOptions',
-    url: '/library/layout/overlay-layout/schema-reference#overlaylayoutinspectoptionsschema',
+    url: '/library/layout/overlay-layout/reference#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {
     schema: LayoutIR.FlexLayoutSchema,
     label: 'FlexLayout',
-    url: '/library/layout/flex-layout/schema-reference#flexlayoutschema',
+    url: '/library/layout/flex-layout/reference#flexlayoutschema',
   },
   GridLayoutSchema: {
     schema: LayoutIR.GridLayoutSchema,
     label: 'GridLayout',
-    url: '/library/layout/grid-layout/schema-reference#gridlayoutschema',
+    url: '/library/layout/grid-layout/reference#gridlayoutschema',
   },
   OverlayLayoutSchema: {
     schema: LayoutIR.OverlayLayoutSchema,
     label: 'OverlayLayout',
-    url: '/library/layout/overlay-layout/schema-reference#overlaylayoutschema',
+    url: '/library/layout/overlay-layout/reference#overlaylayoutschema',
   },
   LayoutItemSchema: {
     schema: LayoutIR.LayoutItemSchema,
     label: 'LayoutItem',
-    url: '/library/layout/flex-layout/schema-reference#layoutitemschema',
+    url: '/library/layout/flex-layout/reference#layoutitemschema',
   },
   LayoutArtifactSchema: {
     schema: LayoutIR.LayoutArtifactSchema,
     label: 'LayoutArtifact',
-    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
+    url: '/library/layout/flex-layout/reference#flexlayoutartifact',
   },
   LayoutSpacingArtifactSchema: {
     schema: LayoutIR.LayoutSpacingArtifactSchema,
     label: 'LayoutSpacingArtifact',
-    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
+    url: '/library/layout/flex-layout/reference#flexlayoutartifact',
   },
   FlexLayoutArtifactSchema: {
     schema: LayoutIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
+    url: '/library/layout/flex-layout/reference#flexlayoutartifact',
   },
   GridLayoutArtifactSchema: {
     schema: LayoutIR.GridLayoutArtifactSchema,
     label: 'GridLayoutArtifact',
-    url: '/library/layout/grid-layout/extended#gridlayoutartifactschema',
+    url: '/library/layout/grid-layout/reference#gridlayoutartifact',
   },
   OverlayLayoutArtifactSchema: {
     schema: LayoutIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
-    url: '/library/layout/overlay-layout/extended#overlaylayoutartifactschema',
+    url: '/library/layout/overlay-layout/reference#overlaylayoutartifact',
   },
   FrameSchema: {
     schema: StandardPresentationIR.FrameSchema,
@@ -1284,12 +1284,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   FrameTitleSchema: {
     schema: StandardPresentationIR.FrameTitleSchema,
     label: 'FrameTitle',
-    url: '/library/standard/presentation/frame#frametitleschema',
+    url: '/library/standard/presentation/frame#frametitleinput--frametitleschema',
   },
   FrameDescriptionSchema: {
     schema: StandardPresentationIR.FrameDescriptionSchema,
     label: 'FrameDescription',
-    url: '/library/standard/presentation/frame#framedescriptionschema',
+    url: '/library/standard/presentation/frame#framedescriptioninput--framedescriptionschema',
   },
   FrameBorderSchema: {
     schema: StandardPresentationIR.FrameBorderSchema,
@@ -1310,7 +1310,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GridLineInputSchema: {
     schema: StandardPresentationIR.GridLineInputSchema,
     label: 'GridLineInput',
-    url: '/library/standard/presentation/grid#gridlineinputschema',
+    url: '/library/standard/presentation/grid#gridlineinput--gridlineinputschema',
     localizations: { zh: GridLineSchemaZhLocalization },
   },
   LegendSchema: {
@@ -1322,7 +1322,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LegendArtifactSchema: {
     schema: StandardPresentationIR.LegendArtifactSchema,
     label: 'LegendArtifact',
-    url: '/library/standard/presentation/legend#legendartifactschema',
+    url: '/library/standard/presentation/legend#legendartifact',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
   TreeSchema: {
@@ -1353,7 +1353,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ArraySchema: {
     schema: StandardCollectionIR.ArraySchema,
     label: 'Array',
-    url: '/library/standard/collection/array#listschema',
+    url: '/library/standard/collection/array#arrayschema',
   },
   MapSchema: {
     schema: StandardCollectionIR.MapSchema,
@@ -1369,82 +1369,82 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   BranchDiagramSchema: {
     schema: BranchIR.BranchDiagramSchema,
     label: 'BranchDiagram',
-    url: '/schematic/diagram/branch/schema-reference#branchdiagramschema',
+    url: '/schematic/diagram/branch/reference#branchdiagramschema',
   },
   BranchNodeSchema: {
     schema: BranchIR.BranchNodeSchema,
     label: 'BranchNode',
-    url: '/schematic/diagram/branch/schema-reference#branchnodeschema',
+    url: '/schematic/diagram/branch/reference#irbranchnode--branchnodeschema',
   },
   BranchSchema: {
     schema: BranchIR.BranchSchema,
     label: 'Branch',
-    url: '/schematic/diagram/branch/schema-reference#branchschema',
+    url: '/schematic/diagram/branch/reference#irbranch--branchschema',
   },
   BranchLayoutIntentSchema: {
     schema: BranchIR.BranchLayoutIntentSchema,
     label: 'BranchLayoutIntent',
-    url: '/schematic/diagram/branch/schema-reference#branchlayoutintentschema',
+    url: '/schematic/diagram/branch/reference#irbranchlayoutintent--branchlayoutintentschema',
   },
   BranchDiagramArtifactSchema: {
     schema: BranchIR.BranchDiagramArtifactSchema,
     label: 'BranchDiagramArtifact',
-    url: '/schematic/diagram/branch/api-reference',
+    url: '/schematic/diagram/branch/reference',
   },
   BranchNodeLayoutSchema: {
     schema: BranchIR.BranchNodeLayoutSchema,
     label: 'BranchNodeLayout',
-    url: '/schematic/diagram/branch/schema-reference#branchnodelayoutschema',
+    url: '/schematic/diagram/branch/reference#branchnodelayoutschema',
   },
   FlowDiagramSchema: {
     schema: DiagramIR.FlowDiagramSchema,
     label: 'FlowDiagram',
-    url: '/schematic/diagram/flow/schema-reference#flowdiagramschema',
+    url: '/schematic/diagram/flow/reference#flowdiagramschema',
   },
   FlowEntitySchema: {
     schema: DiagramIR.FlowEntitySchema,
     label: 'FlowEntity',
-    url: '/schematic/diagram/flow/schema-reference#flowentityschema',
+    url: '/schematic/diagram/flow/reference#flowentityschema',
   },
   FlowGroupSchema: {
     schema: DiagramIR.FlowGroupSchema,
     label: 'FlowGroup',
-    url: '/schematic/diagram/flow/schema-reference#flowgroupschema',
+    url: '/schematic/diagram/flow/reference#flowgroupschema',
   },
   FlowLayoutSchema: {
     schema: DiagramIR.FlowLayoutSchema,
     label: 'FlowLayout',
-    url: '/schematic/diagram/flow/schema-reference#flowlayoutschema',
+    url: '/schematic/diagram/flow/reference#flowlayoutschema',
   },
   FlowEndpointSchema: {
     schema: DiagramIR.FlowEndpointSchema,
     label: 'FlowEndpoint',
-    url: '/schematic/diagram/flow/schema-reference#flowendpointschema',
+    url: '/schematic/diagram/flow/reference#irflowendpoint--flowendpointschema',
   },
   FlowEndpointTargetSchema: {
     schema: DiagramIR.FlowEndpointTargetSchema,
     label: 'FlowEndpointTarget',
-    url: '/schematic/diagram/flow/schema-reference#flowendpointtargetschema',
+    url: '/schematic/diagram/flow/reference#flowendpointtarget--flowendpointtargetschema',
   },
   FlowRelationSchema: {
     schema: DiagramIR.FlowRelationSchema,
     label: 'FlowRelation',
-    url: '/schematic/diagram/flow/schema-reference#flowrelationschema',
+    url: '/schematic/diagram/flow/reference#flowrelationschema',
   },
   FlowRoutingSchema: {
     schema: DiagramIR.FlowRoutingSchema,
     label: 'FlowRouting',
-    url: '/schematic/diagram/flow/schema-reference#flowroutingschema',
+    url: '/schematic/diagram/flow/reference#flowroutingschema',
   },
   FlowDefaultsSchema: {
     schema: DiagramIR.FlowDefaultsSchema,
     label: 'FlowDefaults',
-    url: '/schematic/diagram/flow/schema-reference#flowdefaultsschema',
+    url: '/schematic/diagram/flow/reference#flowdefaultsschema',
   },
   FlowDiagramArtifactSchema: {
     schema: DiagramIR.FlowDiagramArtifactSchema,
     label: 'FlowDiagramArtifact',
-    url: '/schematic/diagram/flow/api-reference#flowdiagramartifact',
+    url: '/schematic/diagram/flow/reference#flowdiagramartifact',
   },
 
   GraphSchema: {
@@ -1475,92 +1475,92 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   BlockTextSchema: {
     schema: GraphIR.BlockTextSchema,
     label: 'BlockText',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   CodeBlockPropsSchema: {
     schema: GraphIR.CodeBlockPropsSchema,
     label: 'CodeBlockProps',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   CodeParameterSchema: {
     schema: GraphIR.CodeParameterSchema,
     label: 'CodeParameter',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   CodeSignatureSchema: {
     schema: GraphIR.CodeSignatureSchema,
     label: 'CodeSignature',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   CodePropertySchema: {
     schema: GraphIR.CodePropertySchema,
     label: 'CodeProperty',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   CodeMethodSchema: {
     schema: GraphIR.CodeMethodSchema,
     label: 'CodeMethod',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   CodeLogicSchema: {
     schema: GraphIR.CodeLogicSchema,
     label: 'CodeLogic',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   BlockSchema: {
     schema: GraphIR.BlockSchema,
     label: 'Block',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   BlockHeaderSchema: {
     schema: GraphIR.BlockHeaderSchema,
     label: 'BlockHeader',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   BlockSectionSchema: {
     schema: GraphIR.BlockSectionSchema,
     label: 'BlockSection',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   BlockRowSchema: {
     schema: GraphIR.BlockRowSchema,
     label: 'BlockRow',
-    url: '/schematic/graph/block/schema-reference',
+    url: '/schematic/graph/block/reference',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',
-    url: '/schematic/graph/entity/schema-reference',
+    url: '/schematic/graph/entity/reference',
   },
   EntityRoleSchema: {
     schema: GraphIR.EntityRoleSchema,
-    label: 'EntityRole',
-    url: '/schematic/graph/entity/schema-reference#entityroleschema',
+    label: 'BuiltinEntityRole',
+    url: '/schematic/graph/entity/reference#entityroleschema',
   },
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
-    url: '/schematic/graph/relation/schema-reference',
+    url: '/schematic/graph/relation/reference',
   },
   RelationRoleSchema: {
     schema: GraphIR.RelationRoleSchema,
-    label: 'RelationRole',
-    url: '/schematic/graph/relation/schema-reference#relationroleschema',
+    label: 'BuiltinRelationRole',
+    url: '/schematic/graph/relation/reference#relationroleschema',
   },
   RelationKindSchema: {
     schema: GraphIR.RelationKindSchema,
     label: 'RelationKind',
-    url: '/schematic/graph/relation/schema-reference#relationkindschema',
+    url: '/schematic/graph/relation/reference#relationkindschema',
   },
   RelationDirectionSchema: {
     schema: GraphIR.RelationDirectionSchema,
     label: 'RelationDirection',
-    url: '/schematic/graph/relation/schema-reference#relationdirectionschema',
+    url: '/schematic/graph/relation/reference#relationdirectionschema',
   },
   GraphRelationMarkerAppearanceSchema: {
     schema: GraphIR.GraphRelationMarkerAppearanceSchema,
     label: 'GraphRelationMarkerAppearance',
-    url: '/schematic/graph/relation/schema-reference#graphrelationmarkerappearanceschema',
+    url: '/schematic/graph/relation/reference#irgraphrelationmarkerappearance--graphrelationmarkerappearanceschema',
   },
   GraphPredicateRefSchema: {
     schema: GraphIR.GraphPredicateRefSchema,
@@ -1841,77 +1841,292 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   DataReferenceSchema: {
     schema: DataIR.DataReferenceSchema,
     label: 'DataReference',
-    url: '/viz/data/model/schema-reference#datareferenceschema',
+    url: '/viz/data/model/reference#irdatareference--datareferenceschema',
   },
   FieldFormatSchema: {
     schema: DataIR.FieldFormatSchema,
     label: 'FieldFormat',
-    url: '/viz/data/model/schema-reference#fieldformatschema',
+    url: '/viz/data/model/reference#fieldformat--fieldformatschema',
   },
   DataModelSchema: {
     schema: DataIR.DataModelSchema,
     label: 'DataModel',
-    url: '/viz/data/model/schema-reference#datamodelschema',
+    url: '/viz/data/model/reference#irdatamodel--datamodelschema',
   },
   FieldDefinitionSchema: {
     schema: DataIR.FieldDefinitionSchema,
     label: 'FieldDefinition',
-    url: '/viz/data/model/schema-reference#fielddefinitionschema',
+    url: '/viz/data/model/reference#irdatafielddefinition--fielddefinitionschema',
+  },
+  ExternalTransformSchema: {
+    schema: DataIR.ExternalTransformSchema,
+    label: 'ExternalTransform',
+    url: '/viz/data/transform/reference#externaltransformschema',
+  },
+  QuantileBandReducerOperationSchema: {
+    schema: DataIR.QuantileBandReducerOperationSchema,
+    label: 'QuantileBandReducerOperation',
+    url: '/viz/data/operators/reducer',
+  },
+  QuantileBandOutputsSchema: {
+    schema: DataIR.QuantileBandOutputsSchema,
+    label: 'QuantileBandOutputs',
+    url: '/viz/data/operators/reducer',
+  },
+  QuantileBandPointOutputSchema: {
+    schema: DataIR.QuantileBandPointOutputSchema,
+    label: 'QuantileBandPointOutput',
+    url: '/viz/data/operators/reducer',
+  },
+  QuantileBandWhiskerSchema: {
+    schema: DataIR.QuantileBandWhiskerSchema,
+    label: 'QuantileBandWhisker',
+    url: '/viz/data/operators/reducer',
+  },
+  OrderBySchema: {
+    schema: DataIR.OrderBySchema,
+    label: 'OrderBy',
+    url: '/viz/data/operators/selector',
+  },
+  OutsideQuantileBandSelectorOperationSchema: {
+    schema: DataIR.OutsideQuantileBandSelectorOperationSchema,
+    label: 'OutsideQuantileBandSelectorOperation',
+    url: '/viz/data/operators/selector',
+  },
+  OutsideQuantileBandBoundarySchema: {
+    schema: DataIR.OutsideQuantileBandBoundarySchema,
+    label: 'OutsideQuantileBandBoundary',
+    url: '/viz/data/operators/selector',
   },
   DataExecutionSchema: {
     schema: DataIR.DataExecutionSchema,
     label: 'DataExecution',
-    url: '/viz/data/reference/contract#dataexecutionschema',
+    url: '/viz/data/transform/reference#irdataexecution--dataexecutionschema',
   },
   DataTransformDeclarationSchema: {
     schema: DataIR.DataTransformDeclarationSchema,
     label: 'DataTransformDeclaration',
-    url: '/viz/data/reference/contract#datatransformdeclarationschema',
+    url: '/viz/data/transform/reference#irdatatransformdeclaration--datatransformdeclarationschema',
   },
   DataTransformSchema: {
     schema: DataIR.TransformSchema,
-    label: 'DataTransform',
-    url: '/viz/data/reference/contract#datatransformschema',
+    label: 'BuiltinDataTransform',
+    url: '/viz/data/transform/reference#irdatatransform--transformschema',
+  },
+  SortParamsSchema: {
+    schema: DataIR.SortParamsSchema,
+    label: 'SortParams',
+    url: '/viz/data/transforms/row-organization',
+  },
+  SummarizeParamsSchema: {
+    schema: DataIR.SummarizeParamsSchema,
+    label: 'SummarizeParams',
+    url: '/viz/data/transforms/aggregation-annotation',
+  },
+  SelectParamsSchema: {
+    schema: DataIR.SelectParamsSchema,
+    label: 'SelectParams',
+    url: '/viz/data/transforms/row-organization',
+  },
+  AnnotateParamsSchema: {
+    schema: DataIR.AnnotateParamsSchema,
+    label: 'AnnotateParams',
+    url: '/viz/data/transforms/aggregation-annotation',
+  },
+  StackParamsSchema: {
+    schema: DataIR.StackParamsSchema,
+    label: 'StackParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  BinParamsSchema: {
+    schema: DataIR.BinParamsSchema,
+    label: 'BinParams',
+    url: '/viz/data/transforms/bin-density',
+  },
+  NormalizeParamsSchema: {
+    schema: DataIR.NormalizeParamsSchema,
+    label: 'NormalizeParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  DeriveIntervalParamsSchema: {
+    schema: DataIR.DeriveIntervalParamsSchema,
+    label: 'DeriveIntervalParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  RelateParamsSchema: {
+    schema: DataIR.RelateParamsSchema,
+    label: 'RelateParams',
+    url: '/viz/data/transforms/relation-generation',
+  },
+  JitterParamsSchema: {
+    schema: DataIR.JitterParamsSchema,
+    label: 'JitterParams',
+    url: '/viz/data/transforms/numeric-derivation',
+  },
+  DensityParamsSchema: {
+    schema: DataIR.DensityParamsSchema,
+    label: 'DensityParams',
+    url: '/viz/data/transforms/bin-density',
+  },
+  SmoothParamsSchema: {
+    schema: DataIR.SmoothParamsSchema,
+    label: 'SmoothParams',
+    url: '/viz/data/transforms/trend-sampling',
   },
   SortTransformSchema: {
     schema: DataIR.SortTransformSchema,
     label: 'SortTransform',
-    url: '/viz/data/reference/contract#sorttransformschema',
+    url: '/viz/data/transforms/row-organization',
   },
   SummarizeTransformSchema: {
     schema: DataIR.SummarizeTransformSchema,
     label: 'SummarizeTransform',
-    url: '/viz/data/reference/contract#summarizetransformschema',
+    url: '/viz/data/transforms/aggregation-annotation',
   },
   SelectTransformSchema: {
     schema: DataIR.SelectTransformSchema,
     label: 'SelectTransform',
-    url: '/viz/data/reference/contract#selecttransformschema',
+    url: '/viz/data/transforms/row-organization',
   },
   AnnotateTransformSchema: {
     schema: DataIR.AnnotateTransformSchema,
     label: 'AnnotateTransform',
-    url: '/viz/data/reference/contract#annotatetransformschema',
+    url: '/viz/data/transforms/aggregation-annotation',
   },
   ReducerMetricsSchema: {
     schema: DataIR.ReducerMetricsSchema,
     label: 'ReducerMetrics',
-    url: '/viz/data/reference/contract#reducermetricsschema',
+    url: '/viz/data/transform/reference#irdatareducermetrics--reducermetricsschema',
   },
   ReducerOperationSchema: {
     schema: DataIR.ReducerOperationSchema,
     label: 'ReducerOperation',
-    url: '/viz/data/reference/contract#reduceroperationschema',
+    url: '/viz/data/transform/reference#irdatareduceroperation--reduceroperationschema',
   },
   SelectorOperationSchema: {
     schema: DataIR.SelectorOperationSchema,
     label: 'SelectorOperation',
-    url: '/viz/data/reference/contract#selectoroperationschema',
+    url: '/viz/data/transform/reference#irdataselectoroperation--selectoroperationschema',
+  },
+  'SelectorOperationSchema.min': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'min')!,
+    label: 'SelectorOperationSchema.min',
+    url: '/viz/data/operators/selector#irdataselectoroperation--selectoroperationschemamin--selectoroperationschemamax',
+  },
+  'SelectorOperationSchema.max': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'max')!,
+    label: 'SelectorOperationSchema.max',
+    url: '/viz/data/operators/selector#irdataselectoroperation--selectoroperationschemamin--selectoroperationschemamax',
+  },
+  'SelectorOperationSchema.first': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'first')!,
+    label: 'SelectorOperationSchema.first',
+    url: '/viz/data/operators/selector#irdataselectoroperation--irdataorderby--selectoroperationschemafirst--selectoroperationschemalast--orderbyschema',
+  },
+  'SelectorOperationSchema.last': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'last')!,
+    label: 'SelectorOperationSchema.last',
+    url: '/viz/data/operators/selector#irdataselectoroperation--irdataorderby--selectoroperationschemafirst--selectoroperationschemalast--orderbyschema',
+  },
+  'SelectorOperationSchema.top': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'top')!,
+    label: 'SelectorOperationSchema.top',
+    url: '/viz/data/operators/selector#irdataselectoroperation--selectoroperationschematop--selectoroperationschemabottom',
+  },
+  'SelectorOperationSchema.bottom': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'bottom')!,
+    label: 'SelectorOperationSchema.bottom',
+    url: '/viz/data/operators/selector#irdataselectoroperation--selectoroperationschematop--selectoroperationschemabottom',
+  },
+  'SelectorOperationSchema.nth': {
+    schema: DataIR.SelectorOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'nth')!,
+    label: 'SelectorOperationSchema.nth',
+    url: '/viz/data/operators/selector#irdataselectoroperation--irdataorderby--selectoroperationschemanth--orderbyschema',
+  },
+  'ReducerOperationSchema.count': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'count')!,
+    label: 'ReducerOperationSchema.count',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemacount',
+  },
+  'ReducerOperationSchema.sum': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'sum')!,
+    label: 'ReducerOperationSchema.sum',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemasum',
+  },
+  'ReducerOperationSchema.mean': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'mean')!,
+    label: 'ReducerOperationSchema.mean',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemamean--reduceroperationschemamedian',
+  },
+  'ReducerOperationSchema.median': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'median')!,
+    label: 'ReducerOperationSchema.median',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemamean--reduceroperationschemamedian',
+  },
+  'ReducerOperationSchema.min': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'min')!,
+    label: 'ReducerOperationSchema.min',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemamin--reduceroperationschemamax',
+  },
+  'ReducerOperationSchema.max': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'max')!,
+    label: 'ReducerOperationSchema.max',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemamin--reduceroperationschemamax',
+  },
+  'ReducerOperationSchema.extent': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'extent')!,
+    label: 'ReducerOperationSchema.extent',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemaextent',
+  },
+  'ReducerOperationSchema.quantile': {
+    schema: DataIR.ReducerOperationSchema.options[0].options.find(schema => schema.shape.kind.value === 'quantile')!,
+    label: 'ReducerOperationSchema.quantile',
+    url: '/viz/data/operators/reducer#irdatareduceroperation--reduceroperationschemaquantile',
+  },
+  'BuiltinRegression.linear': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(definition => DataIR.extractRegressionKind(definition.schema) === 'linear')!
+      .schema,
+    label: 'BuiltinRegression.linear',
+    url: '/viz/data/operators/regression#builtinregressionmethodschemaslinear',
+  },
+  'BuiltinRegression.quadratic': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'quadratic',
+    )!.schema,
+    label: 'BuiltinRegression.quadratic',
+    url: '/viz/data/operators/regression#builtinregressionmethodschemasquadratic',
+  },
+  'BuiltinRegression.polynomial': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'polynomial',
+    )!.schema,
+    label: 'BuiltinRegression.polynomial',
+    url: '/viz/data/operators/regression#builtinregressionmethodschemaspolynomial',
+  },
+  'BuiltinRegression.logarithmic': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'logarithmic',
+    )!.schema,
+    label: 'BuiltinRegression.logarithmic',
+    url: '/viz/data/operators/regression#builtinregressionmethodschemaslogarithmic',
+  },
+  'BuiltinRegression.exponential': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(
+      definition => DataIR.extractRegressionKind(definition.schema) === 'exponential',
+    )!.schema,
+    label: 'BuiltinRegression.exponential',
+    url: '/viz/data/operators/regression#builtinregressionmethodschemasexponential',
+  },
+  'BuiltinRegression.power': {
+    schema: DataIR.BUILTIN_REGRESSIONS.find(definition => DataIR.extractRegressionKind(definition.schema) === 'power')!
+      .schema,
+    label: 'BuiltinRegression.power',
+    url: '/viz/data/operators/regression#builtinregressionmethodschemaspower',
   },
   AnnotateSelectorSchema: {
     schema: DataIR.AnnotateSelectorSchema,
     label: 'AnnotateSelector',
-    url: '/viz/data/reference/contract#annotateselectorschema',
+    url: '/viz/data/transforms/aggregation-annotation',
   },
 
   PlotSchema: {
@@ -2017,62 +2232,62 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   StackTransformSchema: {
     schema: DataIR.StackTransformSchema,
     label: 'StackTransform',
-    url: '/viz/data/reference/contract#stacktransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   BinTransformSchema: {
     schema: DataIR.BinTransformSchema,
     label: 'BinTransform',
-    url: '/viz/data/reference/contract#bintransformschema',
+    url: '/viz/data/transforms/bin-density',
   },
   RelateTransformSchema: {
     schema: DataIR.RelateTransformSchema,
     label: 'RelateTransform',
-    url: '/viz/data/reference/contract#relatetransformschema',
+    url: '/viz/data/transforms/relation-generation',
   },
   EndpointProjectionSchema: {
     schema: DataIR.EndpointProjectionSchema,
     label: 'EndpointProjection',
-    url: '/viz/data/reference/contract#endpointprojectionschema',
+    url: '/viz/data/transforms/relation-generation',
   },
   PairMeasureOperationSchema: {
     schema: DataIR.PairMeasureOperationSchema,
     label: 'PairMeasureOperation',
-    url: '/viz/data/reference/contract#pairmeasureoperationschema',
+    url: '/viz/data/transforms/relation-generation',
   },
   NormalizeTransformSchema: {
     schema: DataIR.NormalizeTransformSchema,
     label: 'NormalizeTransform',
-    url: '/viz/data/reference/contract#normalizetransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   DeriveIntervalTransformSchema: {
     schema: DataIR.DeriveIntervalTransformSchema,
     label: 'DeriveIntervalTransform',
-    url: '/viz/data/reference/contract#deriveintervaltransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   JitterTransformSchema: {
     schema: DataIR.JitterTransformSchema,
     label: 'JitterTransform',
-    url: '/viz/data/reference/contract#jittertransformschema',
+    url: '/viz/data/transforms/numeric-derivation',
   },
   DensityTransformSchema: {
     schema: DataIR.DensityTransformSchema,
     label: 'DensityTransform',
-    url: '/viz/data/reference/contract#densitytransformschema',
+    url: '/viz/data/transforms/bin-density',
   },
   DensityBandwidthSchema: {
     schema: DataIR.DensityBandwidthSchema,
     label: 'DensityBandwidth',
-    url: '/viz/data/reference/contract#densitybandwidthschema',
+    url: '/viz/data/transforms/bin-density',
   },
   SmoothTransformSchema: {
     schema: DataIR.SmoothTransformSchema,
     label: 'SmoothTransform',
-    url: '/viz/data/reference/contract#smoothtransformschema',
+    url: '/viz/data/transforms/trend-sampling',
   },
   RegressionMethodSchema: {
     schema: DataIR.RegressionMethodSchema,
     label: 'RegressionMethod',
-    url: '/viz/data/reference/contract#regressionmethodschema',
+    url: '/viz/data/transform/reference#irregressionmethod--regressionmethodschema',
   },
   MarkSchema: {
     schema: IRPlot.MarkSchema,
@@ -2306,7 +2521,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   PlotCoordinateSchema: {
     schema: IRPlot.CoordinateSchema,
-    label: 'PlotCoordinate',
+    label: 'BuiltinPlotCoordinate',
     url: '/viz/plot/reference/coordinate#coordinateschema',
   },
   Cartesian2DSchema: {

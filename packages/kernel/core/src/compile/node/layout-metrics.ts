@@ -1,7 +1,7 @@
 import { boundsOf, boundsToRect } from '@retikz/math';
 
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
-import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '../../contract';
+import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '../../contract';
 import type { IRPosition } from '../../schemas';
 import { applyTransformChain, projectLayoutToGlobal } from '../transform';
 import type { CompiledNodeLayout } from '../types';
@@ -24,12 +24,12 @@ export const alignmentGuidesOfNode = (
   if (layout.inlineBlock !== undefined) {
     return [
       {
-        name: LayoutAlignmentGuideName.FirstBaseline,
+        name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
         position: firstBaseline,
       },
       {
-        name: LayoutAlignmentGuideName.LastBaseline,
+        name: BuiltinLayoutAlignmentGuideName.LastBaseline,
         dimension: LayoutAlignmentGuideDimension.Y,
         position: round(blockTop + offsets[offsets.length - 1]),
       },
@@ -40,12 +40,12 @@ export const alignmentGuidesOfNode = (
 
   return [
     {
-      name: LayoutAlignmentGuideName.FirstBaseline,
+      name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
       dimension: LayoutAlignmentGuideDimension.Y,
       position: firstBaseline,
     },
     {
-      name: LayoutAlignmentGuideName.LastBaseline,
+      name: BuiltinLayoutAlignmentGuideName.LastBaseline,
       dimension: LayoutAlignmentGuideDimension.Y,
       position: firstBaseline + (offsets.length - 1) * emittedLineHeight,
     },

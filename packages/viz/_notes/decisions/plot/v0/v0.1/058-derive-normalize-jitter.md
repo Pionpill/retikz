@@ -1,6 +1,6 @@
 ---
 description: normalize + derive-interval + jitter
-keywords: 'normalize、derive-interval、jitter、stack、DataTransform.Normalize'
+keywords: 'normalize、derive-interval、jitter、stack、BuiltinDataTransform.Normalize'
 ---
 
 # ADR-058：normalize + derive-interval + jitter
@@ -20,7 +20,7 @@ keywords: 'normalize、derive-interval、jitter、stack、DataTransform.Normaliz
 
 ## 决策
 
-新增 `DataTransform.Normalize`、`DataTransform.DeriveInterval`、`DataTransform.Jitter`。三者均为 row-preserving transform。
+新增 `BuiltinDataTransform.Normalize`、`BuiltinDataTransform.DeriveInterval`、`BuiltinDataTransform.Jitter`。三者均为 row-preserving transform。
 
 `normalize` 在组内计算占比，支持 `groupBy` 数组以及 fraction / percent 输出。组和为 0 时输出 0，不产生 `NaN`。它与 `stack` 正交组合：百分比堆叠由显式 `[normalize, stack]` 表达。
 

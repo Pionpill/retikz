@@ -2,13 +2,12 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
-import type { DataLineageEvent, ExternalRow } from '../../src';
+import type { DataLineageEvent, DataLineageRun, ExternalRow } from '../../src';
 import {
   defineTransformImplementation,
   defineStatisticsReducerImplementation,
   resolveStatisticsReducerImplementationRegistry,
   applyTransforms,
-  applyTransformsWithLineage,
   defineStatisticsReducer,
   defineTransform,
   readSourceIndex,
@@ -17,8 +16,8 @@ import {
   resolveTransformRegistry,
   SOURCE_INDICES,
   tagSourceIndex,
-  withGroupProvenance,
 } from '../../src';
+import { withGroupProvenance } from '../../src/pipeline';
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },
@@ -27,6 +26,12 @@ const SALES: Array<ExternalRow> = [
   { month: 'Feb', product: 'B', revenue: 4 },
   { month: 'Feb', product: 'C', revenue: 6 },
 ];
+
+/** 事件测试要求运行确实存在，不将缺失运行视为空事件 */
+const lineageEventsOf = (lineage: DataLineageRun | undefined): Array<DataLineageEvent> => {
+  if (lineage === undefined) throw new Error('expected an explicitly enabled lineage run');
+  return lineage.events;
+};
 
 const eventsOf = <TKind extends DataLineageEvent['kind']>(
   events: Array<DataLineageEvent>,
@@ -49,27 +54,35 @@ describe('data lineage runtime', () => {
     const plain = applyTransforms(tagSourceIndex(SALES), [
       {
         kind: 'summarize',
-        groupBy: ['month'],
-        metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        params: {
+          groupBy: ['month'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        },
       },
-    ]);
+    ]).rows;
 
     expect(readSourceIndices(plain[0])).toEqual([0, 1]);
 
-    const { rows, lineage } = applyTransformsWithLineage(SALES, [
-      {
-        kind: 'summarize',
-        groupBy: ['month'],
-        metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
-      },
-    ]);
+    const { rows, lineage } = applyTransforms(
+      SALES,
+      [
+        {
+          kind: 'summarize',
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          },
+        },
+      ],
+      { provenance: true, lineage: {} },
+    );
 
     expect(rows).toEqual([
       expect.objectContaining({ month: 'Jan', totalRevenue: 8 }),
       expect.objectContaining({ month: 'Feb', totalRevenue: 12 }),
     ]);
-    expect(eventsOf(lineage.events, 'source')).toHaveLength(1);
-    expect(eventsOf(lineage.events, 'transformStep')).toEqual([
+    expect(eventsOf(lineageEventsOf(lineage), 'source')).toHaveLength(1);
+    expect(eventsOf(lineageEventsOf(lineage), 'transformStep')).toEqual([
       expect.objectContaining({
         operationIndex: 0,
         operationKind: 'summarize',
@@ -80,24 +93,26 @@ describe('data lineage runtime', () => {
         outputSourceIdentity: { mode: 'summary', count: 5, indices: [0, 1, 2, 3, 4], truncated: false },
       }),
     ]);
-    expect(eventsOf(lineage.events, 'rowSample')).toHaveLength(0);
-    expect(eventsOf(lineage.events, 'reducerOperation')).toHaveLength(0);
+    expect(eventsOf(lineageEventsOf(lineage), 'rowSample')).toHaveLength(0);
+    expect(eventsOf(lineageEventsOf(lineage), 'reducerOperation')).toHaveLength(0);
   });
 
   it('records field flow and reducer operations only when their switches are enabled', () => {
-    const { lineage } = applyTransformsWithLineage(
+    const { lineage } = applyTransforms(
       SALES,
       [
         {
           kind: 'annotate',
-          groupBy: ['month'],
-          metrics: [{ kind: 'mean', field: 'revenue', as: 'averageRevenue' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'mean', field: 'revenue', as: 'averageRevenue' }],
+          },
         },
       ],
-      { lineage: { fieldFlow: true, reducerOperations: true } },
+      { provenance: true, lineage: { fieldFlow: true, reducerOperations: true } },
     );
 
-    expect(eventsOf(lineage.events, 'fieldFlow')).toEqual([
+    expect(eventsOf(lineageEventsOf(lineage), 'fieldFlow')).toEqual([
       expect.objectContaining({
         operationIndex: 0,
         operationKind: 'annotate',
@@ -105,7 +120,7 @@ describe('data lineage runtime', () => {
         outputFields: ['averageRevenue'],
       }),
     ]);
-    expect(eventsOf(lineage.events, 'reducerOperation')).toEqual([
+    expect(eventsOf(lineageEventsOf(lineage), 'reducerOperation')).toEqual([
       expect.objectContaining({
         operationKind: 'mean',
         inputFields: ['revenue'],
@@ -119,17 +134,17 @@ describe('data lineage runtime', () => {
         rowCount: 3,
       }),
     ]);
-    expect(eventsOf(lineage.events, 'selectorOperation')).toHaveLength(0);
+    expect(eventsOf(lineageEventsOf(lineage), 'selectorOperation')).toHaveLength(0);
   });
 
   it('keeps selector operations independent from reducer operations', () => {
-    const selectorOnly = applyTransformsWithLineage(
+    const selectorOnly = applyTransforms(
       SALES,
-      [{ kind: 'select', groupBy: ['month'], selector: { kind: 'top', by: 'revenue', n: 1 } }],
-      { lineage: { selectorOperations: true } },
+      [{ kind: 'select', params: { groupBy: ['month'], selector: { kind: 'top', by: 'revenue', n: 1 } } }],
+      { provenance: true, lineage: { selectorOperations: true } },
     );
 
-    expect(eventsOf(selectorOnly.lineage.events, 'selectorOperation')).toEqual([
+    expect(eventsOf(lineageEventsOf(selectorOnly.lineage), 'selectorOperation')).toEqual([
       expect.objectContaining({
         operationKind: 'top',
         operation: { kind: 'top', by: 'revenue', n: 1 },
@@ -143,30 +158,33 @@ describe('data lineage runtime', () => {
         selectedSourceIdentity: { mode: 'summary', count: 1, indices: [4], truncated: false },
       }),
     ]);
-    expect(eventsOf(selectorOnly.lineage.events, 'reducerOperation')).toHaveLength(0);
+    expect(eventsOf(lineageEventsOf(selectorOnly.lineage), 'reducerOperation')).toHaveLength(0);
 
-    const reducerOnly = applyTransformsWithLineage(
+    const reducerOnly = applyTransforms(
       SALES,
       [
         {
           kind: 'summarize',
-          groupBy: ['month'],
-          metrics: [{ kind: 'count', as: 'rows' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'count', as: 'rows' }],
+          },
         },
       ],
-      { lineage: { reducerOperations: true } },
+      { provenance: true, lineage: { reducerOperations: true } },
     );
 
-    expect(eventsOf(reducerOnly.lineage.events, 'reducerOperation')).toHaveLength(2);
-    expect(eventsOf(reducerOnly.lineage.events, 'selectorOperation')).toHaveLength(0);
+    expect(eventsOf(lineageEventsOf(reducerOnly.lineage), 'reducerOperation')).toHaveLength(2);
+    expect(eventsOf(lineageEventsOf(reducerOnly.lineage), 'selectorOperation')).toHaveLength(0);
   });
 
   it('caps row samples and rejects unbounded sample options', () => {
-    const { lineage } = applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+    const { lineage } = applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+      provenance: true,
       lineage: { rowSamples: { maxRows: 1, fields: ['month', 'revenue'] } },
     });
 
-    expect(eventsOf(lineage.events, 'rowSample')).toEqual([
+    expect(eventsOf(lineageEventsOf(lineage), 'rowSample')).toEqual([
       expect.objectContaining({
         operationIndex: 0,
         phase: 'input',
@@ -180,12 +198,14 @@ describe('data lineage runtime', () => {
     ]);
 
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+        provenance: true,
         lineage: { rowSamples: { maxRows: 0, fields: ['month'] } },
       }),
     ).toThrow(/rowSamples.maxRows/);
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+        provenance: true,
         lineage: { rowSamples: { maxRows: 1, fields: [] } },
       }),
     ).toThrow(/rowSamples.fields/);
@@ -193,7 +213,8 @@ describe('data lineage runtime', () => {
 
   it.each([0.5, 1.5, NaN, Infinity])('rejects rowSamples.maxRows=%s', maxRows => {
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+        provenance: true,
         lineage: { rowSamples: { maxRows, fields: ['month'] } },
       }),
     ).toThrow(/rowSamples\.maxRows must be a positive integer/);
@@ -201,7 +222,8 @@ describe('data lineage runtime', () => {
 
   it('rejects a fractional calculationDetails.maxRows', () => {
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+        provenance: true,
         lineage: { calculationDetails: { maxRows: 1.5, fields: ['month'] } },
       }),
     ).toThrow(/calculationDetails\.maxRows must be a positive integer/);
@@ -209,7 +231,8 @@ describe('data lineage runtime', () => {
 
   it.each([0.5, 1.5, NaN, Infinity])('rejects sourceIdentity.maxIndices=%s', maxIndices => {
     expect(() =>
-      applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+      applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+        provenance: true,
         lineage: { sourceIdentity: { maxIndices } },
       }),
     ).toThrow(/sourceIdentity\.maxIndices must be a positive integer/);
@@ -221,37 +244,32 @@ describe('data lineage runtime', () => {
       const option = path.startsWith('rowSamples') ? 'rowSamples' : 'calculationDetails';
 
       expect(() =>
-        Reflect.apply(applyTransformsWithLineage, undefined, [
-          SALES,
-          [],
-          { lineage: { [option]: { maxRows: 1, fields } } },
-        ]),
+        Reflect.apply(applyTransforms, undefined, [SALES, [], { lineage: { [option]: { maxRows: 1, fields } } }]),
       ).toThrow(`data lineage: ${path} must be a non-empty string`);
     },
   );
 
   it('records custom transform steps through the shared registry', () => {
     const doubleRevenue = defineTransform({
-      schema: object({
-        kind: literal('double-revenue'),
-        field: NonBlankStringSchema,
-        as: NonBlankStringSchema,
-      }),
-      inputFields: operation => [operation.field],
+      kind: 'double-revenue',
+      paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
+      inputFields: operation => [operation.params.field],
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as }],
+        outputs: [{ field: operation.params.as }],
       }),
     });
     const doubleRevenueImplementation = defineTransformImplementation({
       definition: doubleRevenue,
-      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: Number(row[operation.field]) * 2 })),
+      apply: (rows, operation) =>
+        rows.map(row => ({ ...row, [operation.params.as]: Number(row[operation.params.field]) * 2 })),
     });
 
-    const { rows, lineage } = applyTransformsWithLineage(
+    const { rows, lineage } = applyTransforms(
       [{ revenue: 3 }],
-      [{ kind: 'double-revenue', field: 'revenue', as: 'doubleRevenue' }],
+      [{ kind: 'double-revenue', params: { field: 'revenue', as: 'doubleRevenue' } }],
       {
+        provenance: true,
         registry: resolveTransformRegistry([doubleRevenue]),
         transformImplementations: [doubleRevenueImplementation],
         lineage: { fieldFlow: true },
@@ -259,61 +277,67 @@ describe('data lineage runtime', () => {
     );
 
     expect(rows).toEqual([expect.objectContaining({ revenue: 3, doubleRevenue: 6 })]);
-    expect(eventsOf(lineage.events, 'transformStep')).toEqual([
+    expect(eventsOf(lineageEventsOf(lineage), 'transformStep')).toEqual([
       expect.objectContaining({
         operationKind: 'double-revenue',
         inputFields: ['revenue'],
         outputFields: ['doubleRevenue'],
       }),
     ]);
-    expect(eventsOf(lineage.events, 'fieldFlow')).toHaveLength(1);
+    expect(eventsOf(lineageEventsOf(lineage), 'fieldFlow')).toHaveLength(1);
   });
 
   it('uses the output model as lineage field-flow authority when it is available', () => {
     const derive = defineTransform({
-      schema: object({ kind: literal('derive'), as: NonBlankStringSchema }),
+      kind: 'derive',
+      paramsSchema: object({ as: NonBlankStringSchema }),
       outputModel: operation => ({
         kind: 'preserve',
-        outputs: [{ field: operation.as, type: 'continuous' }],
+        outputs: [{ field: operation.params.as, type: 'continuous' }],
       }),
     });
     const deriveImplementation = defineTransformImplementation({
       definition: derive,
-      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: 1 })),
+      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.params.as]: 1 })),
     });
 
-    const { lineage } = applyTransformsWithLineage([{ source: 1 }], [{ kind: 'derive', as: 'derived' }], {
+    const { lineage } = applyTransforms([{ source: 1 }], [{ kind: 'derive', params: { as: 'derived' } }], {
+      provenance: true,
       registry: resolveTransformRegistry([derive]),
       transformImplementations: [deriveImplementation],
       lineage: { fieldFlow: true },
     });
 
-    expect(eventsOf(lineage.events, 'transformStep')[0]?.outputFields).toEqual(['derived']);
-    expect(eventsOf(lineage.events, 'fieldFlow')[0]?.outputFields).toEqual(['derived']);
+    expect(eventsOf(lineageEventsOf(lineage), 'transformStep')[0]?.outputFields).toEqual(['derived']);
+    expect(eventsOf(lineageEventsOf(lineage), 'fieldFlow')[0]?.outputFields).toEqual(['derived']);
   });
 
   it('records full source identities only when explicitly requested', () => {
     const operations = [
       {
         kind: 'summarize' as const,
-        metrics: [{ kind: 'count' as const, as: 'rows' }],
+        params: {
+          metrics: [{ kind: 'count' as const, as: 'rows' }],
+        },
       },
     ];
 
-    const summary = applyTransformsWithLineage(SALES, operations, {
+    const summary = applyTransforms(SALES, operations, {
+      provenance: true,
       lineage: { sourceIdentity: { maxIndices: 2 } },
     });
-    const full = applyTransformsWithLineage(SALES, operations, {
+    const full = applyTransforms(SALES, operations, {
+      provenance: true,
       lineage: { sourceIdentity: { mode: 'full' } },
     });
 
-    expect(eventsOf(summary.lineage.events, 'transformStep')[0]?.outputSourceIdentity).toEqual({
+    expect(eventsOf(lineageEventsOf(summary.lineage), 'transformStep')[0]?.outputSourceIdentity).toEqual({
       mode: 'summary',
       count: 5,
       indices: [0, 1],
       truncated: true,
     });
-    expect(eventsOf(full.lineage.events, 'transformStep')[0]?.outputSourceIdentity).toEqual({
+    expect(eventsOf(lineageEventsOf(full.lineage), 'transformStep')[0]?.outputSourceIdentity).toEqual({
       mode: 'full',
       count: 5,
       indices: [0, 1, 2, 3, 4],
@@ -322,24 +346,28 @@ describe('data lineage runtime', () => {
   });
 
   it('keeps source identities through chained grouped transforms', () => {
-    const { rows, lineage } = applyTransformsWithLineage(
+    const { rows, lineage } = applyTransforms(
       SALES,
       [
         {
           kind: 'summarize',
-          groupBy: ['month'],
-          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          },
         },
         {
           kind: 'summarize',
-          metrics: [{ kind: 'count', as: 'monthCount' }],
+          params: {
+            metrics: [{ kind: 'count', as: 'monthCount' }],
+          },
         },
       ],
-      { lineage: { sourceIdentity: { mode: 'full' } } },
+      { provenance: true, lineage: { sourceIdentity: { mode: 'full' } } },
     );
 
     expect(readSourceIndices(rows[0])).toEqual([0, 1, 2, 3, 4]);
-    expect(eventsOf(lineage.events, 'transformStep')[1]?.outputSourceIdentity).toEqual({
+    expect(eventsOf(lineageEventsOf(lineage), 'transformStep')[1]?.outputSourceIdentity).toEqual({
       mode: 'full',
       count: 5,
       indices: [0, 1, 2, 3, 4],
@@ -349,12 +377,12 @@ describe('data lineage runtime', () => {
 
   it('preserves original row identities when a transformed view enters another lineage run', () => {
     const tagged = tagSourceIndex([{ value: 30 }, { value: 10 }, { value: 20 }]);
-    const sorted = applyTransforms(tagged, [{ kind: 'sort', field: 'value' }]);
+    const sorted = applyTransforms(tagged, [{ kind: 'sort', params: { field: 'value' } }]).rows;
 
-    const { rows, lineage } = applyTransformsWithLineage(sorted);
+    const { rows, lineage } = applyTransforms(sorted, [], { provenance: true, lineage: {} });
 
     expect(rows.map(readSourceIndex)).toEqual([1, 2, 0]);
-    expect(eventsOf(lineage.events, 'source')[0]?.sourceIdentity).toEqual({
+    expect(eventsOf(lineageEventsOf(lineage), 'source')[0]?.sourceIdentity).toEqual({
       mode: 'summary',
       count: 3,
       indices: [1, 2, 0],
@@ -366,7 +394,7 @@ describe('data lineage runtime', () => {
     const tagged = tagSourceIndex([{ value: 10 }, { value: 20 }]);
     const grouped = withGroupProvenance({ total: 30 }, tagged);
 
-    const { rows } = applyTransformsWithLineage([grouped]);
+    const { rows } = applyTransforms([grouped], [], { provenance: true, lineage: {} });
 
     expect(readSourceIndex(rows[0])).toBeUndefined();
     expect(readSourceIndices(rows[0])).toEqual([0, 1]);
@@ -375,16 +403,18 @@ describe('data lineage runtime', () => {
   it('streams sink events without retaining them unless requested', () => {
     const streamed: Array<DataLineageEvent> = [];
 
-    const { lineage } = applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+    const { lineage } = applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+      provenance: true,
       lineage: { sink: event => streamed.push(event) },
     });
-    const retained = applyTransformsWithLineage(SALES, [{ kind: 'sort', field: 'revenue' }], {
+    const retained = applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
+      provenance: true,
       lineage: { sink: event => streamed.push(event), retainEvents: true },
     });
 
     expect(streamed.length).toBeGreaterThan(0);
-    expect(lineage.events).toEqual([]);
-    expect(retained.lineage.events.length).toBeGreaterThan(0);
+    expect(lineageEventsOf(lineage)).toEqual([]);
+    expect(lineageEventsOf(retained.lineage).length).toBeGreaterThan(0);
   });
 
   it('uses calculation detail sampling only when explicitly enabled', () => {
@@ -405,16 +435,19 @@ describe('data lineage runtime', () => {
       },
     });
 
-    const { lineage } = applyTransformsWithLineage(
+    const { lineage } = applyTransforms(
       SALES,
       [
         {
           kind: 'summarize',
-          groupBy: ['month'],
-          metrics: [{ kind: 'range', field: 'revenue', as: 'revenueRange' }],
+          params: {
+            groupBy: ['month'],
+            metrics: [{ kind: 'range', field: 'revenue', as: 'revenueRange' }],
+          },
         },
       ],
       {
+        provenance: true,
         context: {
           statisticsReducerRegistry: resolveStatisticsReducerRegistry([range]),
           statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
@@ -426,7 +459,7 @@ describe('data lineage runtime', () => {
       },
     );
 
-    expect(eventsOf(lineage.events, 'reducerOperation')[0]).toEqual(
+    expect(eventsOf(lineageEventsOf(lineage), 'reducerOperation')[0]).toEqual(
       expect.objectContaining({
         operationKind: 'range',
         detailRows: [{ product: 'A', revenue: 3 }],
@@ -435,6 +468,8 @@ describe('data lineage runtime', () => {
   });
 
   it('does not produce successful step events when transform lookup fails', () => {
-    expect(() => applyTransformsWithLineage([{ value: 1 }], [{ kind: 'missing', value: 1 }])).toThrow(/not registered/);
+    expect(() =>
+      applyTransforms([{ value: 1 }], [{ kind: 'missing', params: { value: 1 } }], { provenance: true, lineage: {} }),
+    ).toThrow(/not registered/);
   });
 });

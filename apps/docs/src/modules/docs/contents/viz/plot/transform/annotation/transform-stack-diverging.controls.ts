@@ -7,10 +7,12 @@ import { signedProductChange } from './transform-stack-diverging.data';
 /** 正负分流堆叠 operation */
 export const stackDivergingOperation = {
   kind: 'stack',
-  x: 'quarter',
-  y: 'change',
-  groupBy: 'product',
-  offset: 'diverging',
+  params: {
+    x: 'quarter',
+    y: 'change',
+    groupBy: 'product',
+    offset: 'diverging',
+  },
 } as const;
 
 /** 正负分流堆叠示例的中文只读数据面板 */

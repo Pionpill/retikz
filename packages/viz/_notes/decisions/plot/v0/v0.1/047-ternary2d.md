@@ -33,7 +33,7 @@ ADR-045 把 frame 泛化成 N 通道、x/y 转可选后，ternary2D（三元图�
 
 ## 影响
 
-- **Plot IR**：`PlotCoordinate` 加 `Ternary2D` + `Ternary2DSchema`；`PositionEncodingSchema` 加 a/b/c 可选通道；`GuideDimension` 加 A/B/C；纯增量。
+- **Plot IR**：`BuiltinPlotCoordinate` 加 `Ternary2D` + `Ternary2DSchema`；`PositionEncodingSchema` 加 a/b/c 可选通道；`GuideDimension` 加 A/B/C；纯增量。
 - **core**：无新依赖（三角点 / 三角边 / 网格下沉 core Node/Path）。
 - **对外 API**：`coordinate="ternary2D"` + a/b/c props（ADR-048）；纯新增。
 

@@ -41,7 +41,13 @@ export const assertDataTransformResult = (expected: DataTransformModel, result: 
   }
 };
 
-/** 接入规范结果的完整模型；空行仍保留未定字段与分类顺序 */
+/**
+ * 接入规范结果的完整模型；空行仍保留未定字段与分类顺序
+ * @param resolution 用于核对最终字段模型的语义计划
+ * @param result 含规范值行和完整字段模型的计算结果
+ * @returns 使用结果行与字段模型创建的数据视图，空行仍保留模型
+ * @throws {RetikzDataError} 结果模型或已确定类型的字段值不符合预期
+ */
 export const ingestDataTransformResult = (
   resolution: DataTransformResolution,
   result: DataTransformResult,

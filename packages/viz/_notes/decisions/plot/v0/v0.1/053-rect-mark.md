@@ -19,7 +19,7 @@ keywords: 'rect、mark、band、cell、heatmap、ADR-052、projectCell、sequent
 
 ## 决策：rect = 双 band 正交 cell，几何完全复用 ADR-052 `projectCell`，值经 StyleEncoding color 通道（通常 sequential 色阶）映射
 
-新增 `RectMarkSchema` + `PlotMark.Rect`，并入 `MarkSchema` union。rect 与 interval **共享同一条「算 cell → `projectCell` → 装配 Node」路径**，差别只在 cell 构造：interval 的 secondary 是 `coordinate(baseline)..coordinate(value)`（连续区间），rect 的 primary / secondary 都是 band 带 `[center − bandwidth/2, center + bandwidth/2]`。v1 只实现 cartesian2D 的 cell 构造（`rectCell`），非 cartesian2D 对 rect fail-loud（与 ADR-052 一致）。
+新增 `RectMarkSchema` + `BuiltinPlotMark.Rect`，并入 `MarkSchema` union。rect 与 interval **共享同一条「算 cell → `projectCell` → 装配 Node」路径**，差别只在 cell 构造：interval 的 secondary 是 `coordinate(baseline)..coordinate(value)`（连续区间），rect 的 primary / secondary 都是 band 带 `[center − bandwidth/2, center + bandwidth/2]`。v1 只实现 cartesian2D 的 cell 构造（`rectCell`），非 cartesian2D 对 rect fail-loud（与 ADR-052 一致）。
 
 核心数据结构（字面形态即决策）：rect mark IR 的 `encoding` 携结构化通道 `x` / `y`（均须解析为 band scale）+ `color`（值通道）；缺 `color` 即纯网格、无值映射。
 

@@ -105,10 +105,11 @@ console.log(svg);
   defaultSourceFile="circle-ellipse-clip.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"IRCircleClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={13}>IRCircleClip</ApiSourceLink> / <ApiSourceLink label={"IREllipseClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={15}>IREllipseClip</ApiSourceLink> / <ApiSourceLink label={"CircleClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={6}>CircleClipSchema</ApiSourceLink> / <ApiSourceLink label={"EllipseClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={14}>EllipseClipSchema</ApiSourceLink>
 
-#### IRCircleClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `CircleClipDefinition`:
 
@@ -117,8 +118,6 @@ Inject `CircleClipDefinition`:
 | `kind`     | `'circle'` | Selects a circular clip       |
 | `cx`, `cy` | `number`   | Center coordinates            |
 | `r`        | `number`   | Positive radius in user units |
-
-#### IREllipseClip
 
 Inject `EllipseClipDefinition`:
 
@@ -129,17 +128,25 @@ Inject `EllipseClipDefinition`:
 | `rx`, `ry` | `number`    | Positive horizontal and vertical radii |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### CircleClipSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRCircleClip = ZodInfer<typeof CircleClipSchema>;
+
+export type IREllipseClip = ZodInfer<typeof EllipseClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="CircleClipSchema" />
-
-#### EllipseClipSchema
 
 <ZodSchema name="EllipseClipSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 The dashed bounds show the original content. Controls change the radius of the fixed circle on the left and ellipse on the right.
@@ -154,10 +161,11 @@ The dashed bounds show the original content. Controls change the radius of the f
   defaultSourceFile="polygon-clip.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"IRPolygonClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={17}>IRPolygonClip</ApiSourceLink> / <ApiSourceLink label={"PolygonClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={23}>PolygonClipSchema</ApiSourceLink>
 
-#### IRPolygonClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `PolygonClipDefinition`:
 
@@ -167,13 +175,21 @@ Inject `PolygonClipDefinition`:
 | `points` | `Array<[number, number]>` | At least three ordered vertices |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### PolygonClipSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPolygonClip = ZodInfer<typeof PolygonClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="PolygonClipSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 The demo fixes `kind` to `polygon`; its three point controls directly change `points`.
@@ -184,10 +200,11 @@ The demo fixes `kind` to `polygon`; its three point controls directly change `po
 
 <ComponentPreview files={['path-clip', 'path-clip.preview.tsx']} size="md" defaultSourceFile="path-clip.preview.tsx" />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"IRPathClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={19}>IRPathClip</ApiSourceLink> / <ApiSourceLink label={"PathClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={29}>PathClipSchema</ApiSourceLink>
 
-#### IRPathClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-path) for command authoring.
 
@@ -198,13 +215,21 @@ Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-p
 | `fillRule?` | `'nonzero' \| 'evenodd'` | Fill rule; defaults to `nonzero` |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### PathClipSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRPathClip = ZodInfer<typeof PathClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="PathClipSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 The demo keeps its command structure and starts with `evenodd`; controls change coordinates and `fillRule`.
@@ -219,10 +244,11 @@ The demo keeps its command structure and starts with `evenodd`; controls change 
   defaultSourceFile="compound-clip.preview.tsx"
 />
 
-<DocTabs defaultValue="api">
-<DocTab value="api" label="API reference">
+#### <ApiSourceLink label={"IRCompoundClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={21}>IRCompoundClip</ApiSourceLink> / <ApiSourceLink label={"CompoundClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={36}>CompoundClipSchema</ApiSourceLink>
 
-#### IRCompoundClip
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 Inject `CompoundClipDefinition` and the Definitions of its children. Nest `<Scope clip>` elements when you need geometric intersections.
 
@@ -233,13 +259,21 @@ Inject `CompoundClipDefinition` and the Definitions of its children. Nest `<Scop
 | `fillRule?` | `'nonzero' \| 'evenodd'` | Combined fill rule; defaults to `nonzero` |
 
 </DocTab>
-<DocTab value="schema" label="Schema reference">
 
-#### CompoundClipSchema
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRCompoundClip = ZodInfer<typeof CompoundClipSchema>;
+```
+
+</DocTab>
+
+<DocTab value="schema" label="Schema">
 
 <ZodSchema name="CompoundClipSchema" />
 
 </DocTab>
+
 </DocTabs>
 
 Both children remain circles and start with `evenodd` in the demo. Change their radius, distance, and `fillRule` to compare the combined region.

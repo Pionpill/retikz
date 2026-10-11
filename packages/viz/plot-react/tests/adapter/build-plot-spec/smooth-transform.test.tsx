@@ -20,13 +20,15 @@ describe('buildPlotIR smooth transform forwarding', () => {
             {
               operation: {
                 kind: 'smooth',
-                x: 'time',
-                y: 'value',
-                groupBy: ['series'],
-                method: { kind: 'linear' },
-                sampleCount: 64,
-                xAs: 'trendX',
-                yAs: 'trendY',
+                params: {
+                  x: 'time',
+                  y: 'value',
+                  groupBy: ['series'],
+                  method: { kind: 'linear' },
+                  sampleCount: 64,
+                  xAs: 'trendX',
+                  yAs: 'trendY',
+                },
               },
             },
           ]}

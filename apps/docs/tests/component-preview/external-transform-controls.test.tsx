@@ -4,7 +4,7 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
-import ExternalExecution from '../../src/modules/docs/contents/viz/data/transform/extensions/external-execution';
+import ExternalExecution from '../../src/modules/docs/contents/viz/data/transform/computation/external-execution';
 
 describe('Data external execution documentation', () => {
   beforeEach(() => {
@@ -17,18 +17,18 @@ describe('Data external execution documentation', () => {
     vi.restoreAllMocks();
   });
 
-  it('mode and factor controls compute actual Promise output without counter-driven reexecution', async () => {
+  it('mode and order controls preserve stable sorting without counter-driven reexecution', async () => {
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
 
-    const render = async (mode: 'builtin' | 'external' | 'hybrid', factor: number) => {
+    const render = async (mode: 'builtin' | 'external' | 'hybrid', order: 'ascending' | 'descending') => {
       await act(async () => {
         root.render(
           <PreviewControlStateContext.Provider
             value={{
-              canonicalValues: { mode: 'hybrid', factor: 2 },
-              values: { mode, factor },
+              canonicalValues: { mode: 'hybrid', order: 'ascending' },
+              values: { mode, order },
               setValue: () => undefined,
               applyValues: () => undefined,
               reset: () => undefined,
@@ -41,26 +41,24 @@ describe('Data external execution documentation', () => {
       });
     };
 
-    const points = () => [...container.querySelectorAll('ellipse')].map(point => point.outerHTML);
-    await render('builtin', 2);
-    const localPoints = points();
-
-    expect(localPoints.length).toBeGreaterThan(0);
+    const items = () =>
+      [...container.querySelectorAll('svg text')]
+        .map(node => node.textContent)
+        .filter(value => ['A', 'B', 'C', 'D'].includes(value));
+    await render('builtin', 'ascending');
+    expect(items()).toEqual(['B', 'C', 'D', 'A']);
     expect(container.querySelector('p')?.textContent).toContain('0');
 
-    await render('external', 2);
-
-    expect(points()).toEqual(localPoints);
+    await render('external', 'ascending');
+    expect(items()).toEqual(['B', 'C', 'D', 'A']);
     expect(container.querySelector('p')?.textContent).toContain('1');
 
-    await render('hybrid', 2);
-
-    expect(points()).toEqual(localPoints);
+    await render('hybrid', 'ascending');
+    expect(items()).toEqual(['B', 'C', 'D', 'A']);
     expect(container.querySelector('p')?.textContent).toContain('2');
 
-    await render('hybrid', 3);
-
-    expect(points()).not.toEqual(localPoints);
+    await render('hybrid', 'descending');
+    expect(items()).toEqual(['A', 'C', 'D', 'B']);
     expect(container.querySelector('p')?.textContent).toContain('3');
 
     act(() => root.unmount());

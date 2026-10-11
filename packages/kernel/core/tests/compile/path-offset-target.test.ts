@@ -185,7 +185,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
       expect(ey).toBeCloseTo(20);
     });
 
-    it('custom PathKind 重解析复用单次 binding，且 pending Path 之间隔离缓存', () => {
+    it('custom BuiltinPathKind 重解析复用单次 binding，且 pending Path 之间隔离缓存', () => {
       let parseCount = 0;
       const countedBoundary = defineBoundary({
         name: 'counted',

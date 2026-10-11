@@ -1,6 +1,13 @@
+import { defineThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { compileTable, TableLayoutManifestSchema, TableSchema } from '../../src';
+import {
+  compileTable,
+  defineTableThemeStyle,
+  mergeTableDefaults,
+  TableLayoutManifestSchema,
+  TableSchema,
+} from '../../src';
 
 const baseManual = {
   namespace: 'table',
@@ -184,5 +191,109 @@ describe('Table Source defaults', () => {
     expect(serialized).not.toContain('cell.content.color');
     expect(serialized).toContain('$spec/appearanceDefaults');
     expect(serialized).toContain('$spec/visualDefaults');
+  });
+});
+
+describe('Cell padding defaults', () => {
+  const options = {
+    theme: { style: 'padding', mode: 'light' },
+    lower: {
+      tableThemeStyles: [
+        defineTableThemeStyle({
+          name: 'padding',
+          resolve: () => ({ defaults: { cellLayoutDefaults: { body: { padding: 4 }, columnHeader: { padding: 6 } } } }),
+        }),
+      ],
+    },
+    compile: { padding: 0, themeStyles: [defineThemeStyle({ name: 'padding', resolve: () => ({}) })] },
+  } as const;
+
+  it('preserves sparse JSON padding defaults and rejects invalid padding and unrelated fields', () => {
+    const source = {
+      ...baseManual,
+      cellLayoutDefaults: { body: { padding: 0 }, columnHeader: { padding: { left: 4 } } },
+    };
+    expect(parseTable(source)).toEqual(source);
+    for (const body of [{ padding: -1 }, { padding: { left: -1 } }, { wrap: true }]) {
+      expect(TableSchema.safeParse({ ...baseManual, cellLayoutDefaults: { body } }).success).toBe(false);
+    }
+  });
+
+  it('applies theme padding to detail Cells, preserves explicit zero and records resolved defaults', () => {
+    const source = parseTable({
+      namespace: 'table',
+      type: 'table',
+      data: { reference: 'rows' },
+      layout: { columnSize: { kind: 'fixed', value: 40 }, rowSize: { kind: 'fixed', value: 30 } },
+      structure: {
+        kind: 'detail',
+        columns: [
+          { id: 'a', field: 'a' },
+          { id: 'b', field: 'b', headerLayout: { padding: 0 }, bodyLayout: { padding: 0 } },
+        ],
+      },
+    });
+    const result = compileTable(source, { rows: [{ a: 1, b: 2 }] }, options);
+    expect(result.manifest.cells.map(cell => cell.contentBox)).toEqual([
+      { x: 6, y: 6, width: 28, height: 18 },
+      { x: 40, y: 0, width: 40, height: 30 },
+      { x: 4, y: 34, width: 32, height: 22 },
+      { x: 40, y: 30, width: 40, height: 30 },
+    ]);
+    expect(TableLayoutManifestSchema.parse(result.manifest).style.defaults.cellLayoutDefaults).toEqual({
+      body: { padding: 4 },
+      columnHeader: { padding: 6 },
+    });
+    expect(JSON.stringify(source)).not.toContain('cellLayoutDefaults');
+  });
+
+  it('lets Source override tableDefaults and Cell override Source without changing other regions', () => {
+    const result = compileTable(
+      parseTable({
+        ...baseManual,
+        tableDefaults: { cellLayoutDefaults: { body: { padding: 8 }, columnHeader: { padding: 2 } } },
+        cellLayoutDefaults: { body: { padding: 3 } },
+        structure: {
+          kind: 'manual',
+          rows: [['H'], ['x'], [{ value: 'y', layout: { padding: 0 } }]],
+          rowKinds: ['columnHeader', 'body', 'body'],
+        },
+      }),
+      {},
+      options,
+    );
+    expect(result.manifest.cells.map(cell => cell.contentBox.x)).toEqual([2, 3, 0]);
+    expect(result.manifest.style.layers).toContainEqual({
+      kind: 'source',
+      path: '$spec/cellLayoutDefaults',
+      defaults: { cellLayoutDefaults: { body: { padding: 3 } } },
+    });
+  });
+
+  it('replaces spacing objects as units and clears inherited padding with null', () => {
+    const current = { cellLayoutDefaults: { body: { padding: { left: 9, right: 8 } } } };
+    expect(
+      mergeTableDefaults(current, { cellLayoutDefaults: { body: { padding: { top: 2 } } } }).cellLayoutDefaults,
+    ).toEqual({ body: { padding: { top: 2 } } });
+    for (const cellLayoutDefaults of [null, { body: null }, { body: { padding: null } }]) {
+      const result = compileTable(parseTable({ ...baseManual, tableDefaults: { cellLayoutDefaults } }), {}, options);
+      expect(result.manifest.cells[1].contentBox.x).toBe(0);
+    }
+  });
+
+  it('includes theme padding in auto track contributions without creating Cells', () => {
+    const source = parseTable({
+      ...baseManual,
+      structure: { kind: 'manual', rows: [['x']] },
+      layout: { columnSize: { kind: 'auto' }, rowSize: { kind: 'auto' } },
+    });
+    const plain = compileTable(source, {}, { compile: { padding: 0 } });
+    const padded = compileTable(source, {}, options);
+    expect(padded.manifest.cells[0].box.width - plain.manifest.cells[0].box.width).toBeCloseTo(8);
+    expect(padded.manifest.cells[0].box.height - plain.manifest.cells[0].box.height).toBeCloseTo(8);
+    expect(
+      compileTable(parseTable({ ...baseManual, structure: { kind: 'manual', rows: [[null]] } }), {}, options).manifest
+        .cells,
+    ).toEqual([]);
   });
 });

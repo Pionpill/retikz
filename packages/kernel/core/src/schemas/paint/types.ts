@@ -1,6 +1,5 @@
 import type { infer as ZodInfer } from 'zod';
 
-import type { PatternShape } from './constants';
 import type {
   GradientStopSchema,
   PaintSchema,
@@ -24,11 +23,9 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 /** Pattern 相邻线条的稀疏周期样式 */
 export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchema>;
 
-export type BuiltinPatternName = PatternShape;
-
 /**
  * pattern motif 名：开放字符串
- * @description 内置 `BuiltinPatternName`，或经 `CompileOptions.patterns` 注册的扩展 motif 名；
+ * @description 内置 `BuiltinPatternShape`，或经 `CompileOptions.patterns` 注册的扩展 motif 名；
  *   `& {}` 让 IDE 仍对内置 3 名自动补全，同时接受任意非空字符串
  */
 export type PatternShapeName = ZodInfer<typeof PatternShapeNameSchema>;

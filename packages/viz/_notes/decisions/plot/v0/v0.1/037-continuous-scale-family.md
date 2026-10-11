@@ -1,6 +1,6 @@
 ---
 description: 连续 scale 家族——log / pow / sqrt 连续 scale + L1 baseline 限制；背景：1. 跨数量级：人口、收入、计数、地震能量等跨多个 10 倍区间的数据，线性轴把小值压成一团，需 log 轴
-keywords: 'scale、log、pow、sqrt、baseline、size、PlotScale.Sqrt、trans'
+keywords: 'scale、log、pow、sqrt、baseline、size、BuiltinPlotScale.Sqrt、trans'
 ---
 
 # ADR-037：连续 scale 家族——log / pow / sqrt 连续 scale + L1 baseline 限制
@@ -16,17 +16,17 @@ keywords: 'scale、log、pow、sqrt、baseline、size、PlotScale.Sqrt、trans'
 
 同类库共识：**Vega-Lite** 连续 scale = linear/log/pow/sqrt/symlog；**Observable Plot** 同（`r` 通道默认 sqrt）；**ggplot2** 有 `scale_*_log10` / `scale_*_sqrt` / `trans`。连续 scale 家族是图形语法的基础能力。
 
-把 sqrt 放在本 ADR（而非 size ADR 内部自造一份）是依赖重排：**sqrt 作为公开 `PlotScale.Sqrt` 单一真源**，size 通道复用之，消除「size 先内部 sqrt、后又公开 Sqrt」的重复实现。
+把 sqrt 放在本 ADR（而非 size ADR 内部自造一份）是依赖重排：**sqrt 作为公开 `BuiltinPlotScale.Sqrt` 单一真源**，size 通道复用之，消除「size 先内部 sqrt、后又公开 Sqrt」的重复实现。
 
 **baseline 冲突**：`interval`（柱）/ `area`（面积）的 `baseline=0` 是结构语义——lowering 把 baseline 0 注入位置 scale 的 domain（`lower/expand.ts`）、area baseline 默认 0（`ir/mark.ts:135`）。而 `log(0) = -∞`、`pow`（exponent<1）在 0 处不可导，所以**非线性连续 scale 与 bar/area 天然冲突**。本轮按 **L1** 处理：限制非线性连续 scale 只作用 point/line，bar/area 撞上即 fail-loud。
 
-## 决策：`PlotScale` 新增 log / pow / sqrt 三个连续变体（公开 scale 家族），非线性连续 scale 仅作用 point/line（L1），bar/area 用之即 fail-loud
+## 决策：`BuiltinPlotScale` 新增 log / pow / sqrt 三个连续变体（公开 scale 家族），非线性连续 scale 仅作用 point/line（L1），bar/area 用之即 fail-loud
 
 新增三个 scale 类型，schema 沿 `LinearScale` 风格（`domain` / `range` / `nice` / `clamp`），各加自身参数；lowering 经现有 d3-scale（`scaleLog` / `scalePow` / `scaleSqrt`）求值与出 tick。**不**新增 `size` / `radius` scale type——size 是通道（[ADR-038](./038-channel-scale-resolver-size.md)），默认派生到此处的 `sqrt`。
 
 ```ts
-// ir/scale.ts —— PlotScale 追加成员（沿 DrawWay 风格，裸 'log' 同样可用）
-export const PlotScale = {
+// ir/scale.ts —— BuiltinPlotScale 追加成员（沿 DrawWay 风格，裸 'log' 同样可用）
+export const BuiltinPlotScale = {
   Linear: 'linear',
   Band: 'band',
   Point: 'point',
@@ -41,20 +41,20 @@ export const PlotScale = {
 } as const;
 
 // LogScaleSchema：在 LinearScale 字段基础上加 base
-//   type: z.literal(PlotScale.Log) / name / domain?[num,num] / range?[num,num] / base?(default 10) / nice? / clamp?
+//   type: z.literal(BuiltinPlotScale.Log) / name / domain?[num,num] / range?[num,num] / base?(default 10) / nice? / clamp?
 //   domain refine：两端均 > 0（含 0 或负值 → fail-loud；不接受负单侧，见错误路径）。推断 domain 时也只取正值范围。
 // PowScaleSchema：加 exponent
-//   type: z.literal(PlotScale.Pow) / name / domain? / range? / exponent?(default 2) / nice? / clamp?
+//   type: z.literal(BuiltinPlotScale.Pow) / name / domain? / range? / exponent?(default 2) / nice? / clamp?
 //   负值规则：整数 exponent 允许负 domain（幂 well-defined）；非整数 exponent + domain 含负值 → fail-loud（避免 d3 sign-preserving 的反直觉行为）
 // SqrtScaleSchema：无额外参数（等价 pow exponent 0.5，独立暴露）
-//   type: z.literal(PlotScale.Sqrt) / name / domain? / range? / nice? / clamp?
+//   type: z.literal(BuiltinPlotScale.Sqrt) / name / domain? / range? / nice? / clamp?
 //   domain refine：两端均 ≥ 0（负值 → fail-loud）
 // ScaleSchema 追加三者进 discriminatedUnion('type', [...])
 ```
 
 理由：
 
-1. **sqrt 单一真源**：size 通道与显式 sqrt 轴共用一个 `PlotScale.Sqrt`，不重复实现、IR 可序列化、对 LLM 暴露裸 `'sqrt'`。
+1. **sqrt 单一真源**：size 通道与显式 sqrt 轴共用一个 `BuiltinPlotScale.Sqrt`，不重复实现、IR 可序列化、对 LLM 暴露裸 `'sqrt'`。
 2. **L1 最薄且 fail-loud**：bar/area 的 baseline 0 是结构语义，不是改个数能绕过；与其默默产 NaN/-∞，不如清晰报错，后续真有 log 柱需求再做 L2（显式正 baseline）。
 3. **沿 LinearScale 风格 + d3-scale**：复用已有 scale lowering 路径（alpha.2 起 d3-scale），新增成本集中在 schema + 选型分支。
 
