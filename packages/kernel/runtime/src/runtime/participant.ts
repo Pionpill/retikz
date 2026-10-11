@@ -6,16 +6,19 @@ import { getRuntimeDiagnosticMessage, RuntimeTraceDiagnosticCodes } from '../dia
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type {
   RuntimeCommitParticipantToken,
-  RuntimeParticipantContext,
   RuntimeParticipantCandidateView,
+  RuntimeParticipantContext,
 } from '../participant';
 import type { RuntimeCommitParticipantExecutor } from '../participant/internal';
-import type { RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
+import { getRuntimeCommitParticipantExecutor, isRuntimeCommitParticipant } from '../participant/internal';
+import type { RuntimeSourceRegistry } from '../registry';
+import type { RuntimeRevision, RuntimeSourceDefinition, RuntimeSourceToken } from '../source';
 import type { PerformanceTraceDiagnostic } from '../trace';
 import { createRuntimeTraceReporter } from '../trace';
 import { observeRuntimeTraceReporterDiagnostics } from '../trace/internal';
 import type { RuntimeSnapshot } from '../transaction';
-import type { RuntimeComputationState, RuntimeSourceState, RuntimePreparedParticipantState } from './state';
+import { createRuntimeContractError } from './error';
+import type { RuntimeComputationState, RuntimePreparedParticipantState, RuntimeSourceState } from './state';
 import type { RuntimeOptions } from './types';
 
 /** 创建当前 participant candidate 读取产生的依赖错误 */
@@ -250,4 +253,115 @@ export const prepareRuntimeParticipant = (
   } finally {
     diagnostics.push(...invocation.takeDiagnostics());
   }
+};
+
+/** 断言 participant 的依赖无重复且均属于当前注册表 */
+const assertRuntimeParticipantDependencies = (
+  participant: RuntimeCommitParticipantToken,
+  sources: RuntimeSourceRegistry,
+  computations: RuntimeOptions['computations'],
+): void => {
+  const sourceDependencies = new Set<RuntimeSourceToken>();
+
+  for (const source of participant.sources) {
+    if (sourceDependencies.has(source) || sources.find(source.key) !== source) {
+      throw createRuntimeContractError(
+        RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+        'runtime-create',
+        source,
+        participant.key,
+      );
+    }
+
+    sourceDependencies.add(source);
+  }
+
+  const computationDependencies = new Set<RuntimeComputationToken>();
+
+  for (const computation of participant.computations) {
+    if (computationDependencies.has(computation)) {
+      throw createRuntimeContractError(
+        RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+        'runtime-create',
+        computation,
+        participant.key,
+      );
+    }
+
+    try {
+      if (computations.find(computation.id) !== computation) {
+        throw new RetikzRuntimeError({
+          code: RetikzRuntimeErrorCode.InternalInvariant,
+          message: 'participant Computation dependency is not registered',
+          phase: 'participant-dependency',
+          cause: computation,
+        });
+      }
+    } catch {
+      throw createRuntimeContractError(
+        RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+        'runtime-create',
+        computation,
+        participant.key,
+      );
+    }
+
+    computationDependencies.add(computation);
+  }
+};
+
+/** 校验 participant 身份与依赖，并按 key 收集参与者及其执行器 */
+export const collectRuntimeParticipants = (
+  participantsInput: NonNullable<RuntimeOptions['participants']>,
+  sources: RuntimeSourceRegistry,
+  computations: RuntimeOptions['computations'],
+): Readonly<{
+  /** 按 key 排序并冻结的参与者集合 */
+  participants: ReadonlyArray<RuntimeCommitParticipantToken>;
+  /** 与参与者对应的生命周期执行器 */
+  participantExecutors: ReadonlyMap<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>;
+}> => {
+  const participantExecutors = new Map<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>();
+  const participantKeys = new Set<string>();
+  const participants: Array<RuntimeCommitParticipantToken> = [];
+
+  for (const participantCandidate of participantsInput) {
+    if (!isRuntimeCommitParticipant(participantCandidate)) {
+      throw createRuntimeContractError(
+        RetikzRuntimeErrorCode.ParticipantTokenInvalid,
+        'runtime-create',
+        participantCandidate,
+      );
+    }
+
+    const participant = participantCandidate;
+    if (participantKeys.has(participant.key)) {
+      throw createRuntimeContractError(
+        RetikzRuntimeErrorCode.ParticipantDuplicate,
+        'runtime-create',
+        participant,
+        participant.key,
+      );
+    }
+
+    participantKeys.add(participant.key);
+    assertRuntimeParticipantDependencies(participant, sources, computations);
+
+    const executor = getRuntimeCommitParticipantExecutor(participant);
+    if (executor === undefined) {
+      throw createRuntimeContractError(
+        RetikzRuntimeErrorCode.ParticipantTokenInvalid,
+        'runtime-create',
+        participant,
+        participant.key,
+      );
+    }
+
+    participants.push(participant);
+    participantExecutors.set(participant, executor);
+  }
+
+  participants.sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
+  Object.freeze(participants);
+  return { participants, participantExecutors };
 };
