@@ -1,8 +1,8 @@
 import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
 
-import { RetikzDataError } from '../error';
-import type { IRRegressionMethod } from '../schemas';
+import { RetikzDataError } from '../../error';
+import type { IRRegressionMethod } from '../../schemas';
 
 /** 有限数值观测 */
 export type RegressionPair = Readonly<{

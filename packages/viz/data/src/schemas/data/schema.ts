@@ -14,15 +14,12 @@ import {
 
 import { BuiltinDataFieldFormat, DataFieldType, BuiltinFieldOrderMode } from './constants';
 
-/** 校验内置或自定义的字段值解析格式名称 */
-export const FieldFormatSchema = createOpenStringSchema(BuiltinDataFieldFormat).describe(
-  'Field value-parsing format name; built-in or custom.',
-);
-
 /** 各测量类型共享的字段名称与解析格式 */
 const FieldDefinitionBaseSchema = strictObject({
   name: NonBlankStringSchema.describe('Field name or dotted path'),
-  format: FieldFormatSchema.optional().describe('Value-parsing format; omitted means default coercion'),
+  format: createOpenStringSchema(BuiltinDataFieldFormat)
+    .optional()
+    .describe('Value-parsing format; omitted means default coercion'),
 });
 
 /** 分类字段的顺序声明；省略时按数据出现顺序 */

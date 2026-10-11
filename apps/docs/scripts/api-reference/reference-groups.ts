@@ -1544,7 +1544,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         en: 'Configuration and validation',
       },
       members: [],
-      schemas: ['DataReferenceSchema', 'DataModelSchema', 'FieldDefinitionSchema', 'FieldFormatSchema'],
+      schemas: ['DataReferenceSchema', 'DataModelSchema', 'FieldDefinitionSchema'],
     },
   ],
   'viz/data/transform': [

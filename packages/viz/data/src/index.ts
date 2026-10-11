@@ -198,7 +198,6 @@ export {
   EndpointProjectionSchema,
   ExternalTransformSchema,
   FieldDefinitionSchema,
-  FieldFormatSchema,
   JitterAxis,
   JitterParamsSchema,
   JitterTransformSchema,

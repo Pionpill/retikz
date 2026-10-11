@@ -6,7 +6,7 @@ import type { IRRegressionMethod, IRDataSmoothTransform } from '../../schemas';
 import { BuiltinRegressionMethod } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
-import { resolveRegression } from '../regression';
+import { resolveRegression } from '../operators';
 import { computeTransformValue, runTransformComputation } from './computation';
 import type { TransformComputation } from './computation';
 import { groupRowsByFields, linearSamplesOf } from './shared';

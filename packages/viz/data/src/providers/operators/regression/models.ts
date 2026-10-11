@@ -1,8 +1,8 @@
 import { isFiniteNumber } from '@retikz/math';
 
-import type { RegressionPair, RegressionModel } from '../../contract';
-import { RetikzDataError } from '../../error';
-import type { IRRegressionMethod } from '../../schemas';
+import type { RegressionPair, RegressionModel } from '../../../contract';
+import { RetikzDataError } from '../../../error';
+import type { IRRegressionMethod } from '../../../schemas';
 
 type LinearCoefficients = Readonly<{
   intercept: number;

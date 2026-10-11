@@ -1,17 +1,22 @@
 import { createReadonlyMap } from '@retikz/foundation';
 
-import { defineTransformImplementation } from '../../contract';
-import type { AnySynchronousTransformImplementation } from '../../contract';
-import type { AnyTransformDefinition, DataTransformOutputDescriptor } from '../../contract';
 import {
+  defineTransformImplementation,
   DataTransformBindingClass,
   DataTransformFieldEffect,
   DataTransformPhase,
   defineTransform,
   extractTransformKind,
 } from '../../contract';
-import type { AnyTransformImplementation, TransformSemanticContext } from '../../contract';
-import type { RegressionModel, RegressionPair } from '../../contract';
+import type {
+  AnySynchronousTransformImplementation,
+  AnyTransformDefinition,
+  DataTransformOutputDescriptor,
+  AnyTransformImplementation,
+  TransformSemanticContext,
+  RegressionModel,
+  RegressionPair,
+} from '../../contract';
 import { RetikzDataError } from '../../error';
 import type { IRDataBinTransform } from '../../schemas';
 import {
@@ -30,15 +35,15 @@ import {
   SmoothParamsSchema,
   StackParamsSchema,
 } from '../../schemas';
-import { resolveRegressionDependency } from '../regression';
-import { freezeDefinitions, resolveImplementationRegistry } from '../shared';
 import {
+  resolveRegressionDependency,
   reducerInputFields,
   reducerOutputDescriptors,
   selectorInputFields,
   resolveReducerDependency,
   resolveSelectorDependency,
-} from '../statistics';
+} from '../operators';
+import { freezeDefinitions, resolveImplementationRegistry } from '../shared';
 import { runTransformComputationAsync } from './computation';
 import { applyDensity, densityInputFields } from './density';
 import {
@@ -51,8 +56,12 @@ import {
   binOutputFields,
   relationEndpointOutputField,
   validateReducerMetrics,
+  computeAnnotate,
+  computeBin,
+  computeRelate,
+  computeSelect,
+  computeSummarize,
 } from './group';
-import { computeAnnotate, computeBin, computeRelate, computeSelect, computeSummarize } from './group';
 import type { GroupComputation } from './group';
 import {
   applySort,
@@ -67,8 +76,7 @@ import {
   DEFAULT_JITTER_Y_FIELD,
   DEFAULT_START_FIELD,
 } from './row';
-import { applySmooth, smoothInputFields } from './smooth';
-import { computeSmooth } from './smooth';
+import { applySmooth, smoothInputFields, computeSmooth } from './smooth';
 
 /** 异步驱动复用同一组算法与 Definition；不按返回值探测或重跑计算 */
 export const createAsyncBuiltinTransformImplementations = (

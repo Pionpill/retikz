@@ -1,8 +1,7 @@
 export * from './data';
 export * from './format';
 export * from './order';
-export * from './regression';
-export * from './statistics';
+export * from './operators';
 export {
   BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND,
   BUILTIN_TRANSFORM_IMPLEMENTATIONS,

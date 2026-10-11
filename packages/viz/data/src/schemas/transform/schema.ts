@@ -1,4 +1,5 @@
 import {
+  createOpenStringSchema,
   NonNegativeNumberSchema,
   PositiveIntegerSchema,
   PositiveNumberSchema,
@@ -20,23 +21,25 @@ import {
   union,
 } from 'zod';
 
-import { RegressionMethodSchema } from '../regression';
+import {
+  RegressionMethodSchema,
+  DataSortOrder,
+  RowSelectorTie,
+  reducerOutputFieldsOf,
+  ReducerMetricsSchema,
+  BuiltinSelectorOperationSchemas,
+  SelectorOperationSchema,
+} from '../operators';
 import {
   DensityBandwidthKind,
   JitterAxis,
   NormalizeBasis,
   PairMeasureOperationKind,
   StackOffset,
-  DataSortOrder,
   BuiltinDataTransform,
   RESERVED_TRANSFORM_KINDS,
-  RowSelectorTie,
 } from './constants';
 import { createTransformSchema } from './factory';
-import { DataTransformKindSchema } from './kind';
-import { reducerOutputFieldsOf } from './output-fields';
-import { ReducerMetricsSchema } from './reducer';
-import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './selector';
 
 /** 校验分组字段列表，按字段顺序逐层分组，每层保留首次出现顺序；省略或空列表表示所有行属于同一组 */
 export const GroupBySchema = array(NonBlankStringSchema)
@@ -514,9 +517,11 @@ export const BuiltinTransformSchema = discriminatedUnion('kind', [
 
 /** 校验带 JSON 参数的自定义数据变换操作 */
 export const ExternalTransformSchema = strictObject({
-  kind: DataTransformKindSchema.refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
-    message: 'external transform kind must not collide with a built-in or removed transform kind',
-  }).describe('Discriminator: custom transform kind'),
+  kind: createOpenStringSchema(BuiltinDataTransform)
+    .refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
+      message: 'external transform kind must not collide with a built-in or removed transform kind',
+    })
+    .describe('Discriminator: custom transform kind'),
   params: record(string(), JsonValueSchema).describe('JSON object containing custom transform parameters'),
 }).describe('Custom transform operation with JSON parameters');
 

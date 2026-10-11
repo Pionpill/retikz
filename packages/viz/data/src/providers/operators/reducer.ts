@@ -1,12 +1,10 @@
-import { defineStatisticsReducerImplementation } from '../../contract';
-import type { AnySynchronousStatisticsReducerImplementation } from '../../contract';
-import type { AnyStatisticsReducerDefinition } from '../../contract';
-import { defineStatisticsReducer } from '../../contract';
+import { defineStatisticsReducerImplementation, defineStatisticsReducer } from '../../contract';
+import type { AnySynchronousStatisticsReducerImplementation, AnyStatisticsReducerDefinition } from '../../contract';
 import { BuiltinReducerOperationSchemas, DataFieldType } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { freezeDefinitions } from '../shared';
-import { finiteFieldValuesOf } from '../transform';
 import {
+  finiteFieldValuesOf,
   finiteExtentOf,
   meanOf,
   medianOf,
@@ -15,7 +13,7 @@ import {
   quantileOfSorted,
   spreadFactorOf,
   valuesWithin,
-} from './helpers';
+} from './statistics';
 
 /** count reducer definition：统计组内行数，不读取源字段 */
 const countReducerDefinition = defineStatisticsReducer({

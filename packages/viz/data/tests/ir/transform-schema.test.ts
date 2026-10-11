@@ -23,7 +23,7 @@ import {
   BuiltinReducerOperationSchemas,
   ExternalReducerOperationSchema,
   ExternalSelectorOperationSchema,
-} from '../../src/schemas/transform';
+} from '../../src/schemas/operators';
 
 const closedObjectSchemaCases: Array<{
   name: string;

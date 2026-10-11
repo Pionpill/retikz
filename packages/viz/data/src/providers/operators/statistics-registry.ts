@@ -17,13 +17,8 @@ import { RetikzDataError } from '../../error';
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { resolveImplementationRegistry } from '../shared';
-import { BUILTIN_STATISTICS_REDUCERS, BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS } from './reducers';
-import { BUILTIN_ROW_SELECTORS, BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS } from './selectors';
-
-export { BUILTIN_STATISTICS_REDUCERS } from './reducers';
-export { BUILTIN_ROW_SELECTORS } from './selectors';
-export { BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS } from './reducers';
-export { BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS } from './selectors';
+import { BUILTIN_STATISTICS_REDUCERS, BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS } from './reducer';
+import { BUILTIN_ROW_SELECTORS, BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS } from './selector';
 
 /**
  * 注册独立统计计算，不以 kind 猜测语义等价

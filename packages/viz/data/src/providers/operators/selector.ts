@@ -1,12 +1,10 @@
-import { defineRowSelectorImplementation } from '../../contract';
-import type { AnySynchronousRowSelectorImplementation } from '../../contract';
-import type { AnyRowSelectorDefinition } from '../../contract';
-import { defineRowSelector } from '../../contract';
+import { defineRowSelectorImplementation, defineRowSelector } from '../../contract';
+import type { AnySynchronousRowSelectorImplementation, AnyRowSelectorDefinition } from '../../contract';
 import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
 import { freezeDefinitions } from '../shared';
-import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';
+import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './statistics';
 
 /** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略 */
 const selectTopBottomRows = (

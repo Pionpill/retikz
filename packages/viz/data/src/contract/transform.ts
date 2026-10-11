@@ -8,13 +8,14 @@ import { createTransformSchema } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataTransformDependency, DataTransformModel } from './execution';
 import type { DataLineageRecorder } from './lineage';
-import type { AnyRegressionDefinition, AnySynchronousRegressionImplementation } from './regression';
 import type {
+  AnyRegressionDefinition,
+  AnySynchronousRegressionImplementation,
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
   AnySynchronousStatisticsReducerImplementation,
   AnySynchronousRowSelectorImplementation,
-} from './statistics';
+} from './operators';
 
 /** transform的闭合调度阶段 */
 export const DataTransformPhase = {

@@ -29,7 +29,7 @@ Semantic definitions and implementations are registered separately. Dispatch mat
 <SourceLinks
   sources={[
     { label: 'Grouped hosts and computation dispatch', path: 'packages/viz/data/src/providers/transform/group.ts' },
-    { label: 'Registration and dispatch', path: 'packages/viz/data/src/providers/statistics/registry.ts' },
+    { label: 'Registration and dispatch', path: 'packages/viz/data/src/providers/operators/statistics-registry.ts' },
     { label: 'Grouping boundaries', path: 'packages/viz/data/src/providers/transform/shared.ts' },
   ]}
 />
@@ -46,7 +46,7 @@ A selector may return zero, one, or multiple selections. Tie handling belongs to
 
 <SourceLinks
   sources={[
-    { label: 'Selector implementations', path: 'packages/viz/data/src/providers/statistics/selectors.ts' },
+    { label: 'Selector implementations', path: 'packages/viz/data/src/providers/operators/selector.ts' },
     { label: 'Selection-to-row assembly', path: 'packages/viz/data/src/providers/transform/group.ts' },
   ]}
 />
@@ -68,7 +68,7 @@ One row per group comes from the summary host. Another host can broadcast the sa
     { label: 'Collision checks and assembly', path: 'packages/viz/data/src/providers/transform/group.ts' },
     {
       label: 'Reducer definitions and implementations',
-      path: 'packages/viz/data/src/providers/statistics/reducers.ts',
+      path: 'packages/viz/data/src/providers/operators/reducer.ts',
     },
   ]}
 />
@@ -95,8 +95,11 @@ The diagram follows fitting and sampling through source entry points. Each group
       label: 'Observation extraction, grouping and sampling',
       path: 'packages/viz/data/src/providers/transform/smooth.ts',
     },
-    { label: 'Method parsing and prediction checks', path: 'packages/viz/data/src/providers/regression/registry.ts' },
-    { label: 'Model and prediction contracts', path: 'packages/viz/data/src/contract/regression.ts' },
+    {
+      label: 'Method parsing and prediction checks',
+      path: 'packages/viz/data/src/providers/operators/regression/registry.ts',
+    },
+    { label: 'Model and prediction contracts', path: 'packages/viz/data/src/contract/operators/regression.ts' },
   ]}
 />
 

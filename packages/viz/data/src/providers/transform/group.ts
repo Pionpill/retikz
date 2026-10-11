@@ -16,10 +16,10 @@ import type {
 import { BuiltinReducerOperationKind } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
-import { applyReducerOperation, applySelectorOperation, reducerOutputFields } from '../statistics';
+import { applyReducerOperation, applySelectorOperation, reducerOutputFields, finiteFieldValuesOf } from '../operators';
 import { computeTransformValue, runTransformComputation } from './computation';
 import type { TransformComputation } from './computation';
-import { groupRowsByFields, finiteFieldValuesOf } from './shared';
+import { groupRowsByFields } from './shared';
 
 /** 分组算法共享的计算调度，语义与实际同步/异步实现分离 */
 export type GroupComputation = Readonly<{

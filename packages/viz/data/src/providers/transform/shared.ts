@@ -1,5 +1,3 @@
-import { isFiniteNumber } from '@retikz/math';
-
 import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
 
@@ -52,18 +50,6 @@ export const groupRowsByFields = (
 
   appendGroups(rows, 0);
   return groups;
-};
-
-/** 读取指定字段的有限数值序列，非数值、NaN 和无穷值会被跳过 */
-export const finiteFieldValuesOf = (rows: Array<ExternalRow>, field: string): Array<number> => {
-  const values: Array<number> = [];
-
-  for (const row of rows) {
-    const value = resolveFieldPath(row, field);
-    if (isFiniteNumber(value)) values.push(value);
-  }
-
-  return values;
 };
 
 /** 在闭区间内生成包含两端点的等距采样位置 */

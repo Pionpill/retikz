@@ -1,12 +1,6 @@
 import type { infer as ZodInfer } from 'zod';
 
 import type {
-  DataScalarReducerOperationSchema,
-  QuantileBandReducerOperationSchema,
-  ReducerMetricsSchema,
-  ReducerOperationSchema,
-} from './reducer';
-import type {
   BinTransformSchema,
   DensityBandwidthSchema,
   DensityTransformSchema,
@@ -26,31 +20,9 @@ import type {
   SummarizeTransformSchema,
   TransformSchema,
 } from './schema';
-import type { OrderBySchema, OutsideQuantileBandSelectorOperationSchema, SelectorOperationSchema } from './selector';
 
 /** 排序变换（稳定排序，保行数） */
 export type IRDataSortTransform = ZodInfer<typeof SortTransformSchema>;
-
-/** reducer operation（统计规约子算子） */
-export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
-
-/** compact aggregate Source parse态候选；运行时仍需Definition确认单scalar capability */
-export type IRDataScalarReducerOperation = ZodInfer<typeof DataScalarReducerOperationSchema>;
-
-/** reducer metrics 列表 */
-export type IRDataReducerMetrics = ZodInfer<typeof ReducerMetricsSchema>;
-
-/** quantile-band reducer operation（参数化分位区间规约） */
-export type IRDataQuantileBandReducerOperation = ZodInfer<typeof QuantileBandReducerOperationSchema>;
-
-/** row selector operation（代表行选择子算子） */
-export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
-
-/** outside-quantile-band selector operation（分位区间外原始行选择） */
-export type IRDataOutsideQuantileBandSelectorOperation = ZodInfer<typeof OutsideQuantileBandSelectorOperationSchema>;
-
-/** selector 排序规则（代表行选择前的稳定排序规则） */
-export type IRDataOrderBy = ZodInfer<typeof OrderBySchema>;
 
 /** 汇总变换（分组统计，改行数） */
 export type IRDataSummarizeTransform = ZodInfer<typeof SummarizeTransformSchema>;

@@ -1,14 +1,129 @@
+import type { ValueOf } from '@retikz/foundation';
 import {
+  createOpenStringSchema,
   JsonValueSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
 } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
 import { array, discriminatedUnion, literal, looseObject, strictObject, union } from 'zod';
 
-import { BuiltinReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
-import { ReducerOperationKindSchema } from './kind';
-import { reducerOutputFieldsOf } from './output-fields';
+/** 内置统计 reducer operation kind 关键字 */
+export const BuiltinReducerOperationKind = {
+  /** 统计组内行数 */
+  Count: 'count',
+  /** 对数值字段求和 */
+  Sum: 'sum',
+  /** 对数值字段求算术平均值 */
+  Mean: 'mean',
+  /** 对数值字段求中位数 */
+  Median: 'median',
+  /** 对数值字段求最小值 */
+  Min: 'min',
+  /** 对数值字段求最大值 */
+  Max: 'max',
+  /** 对数值字段求最小值和最大值区间 */
+  Extent: 'extent',
+  /** 对数值字段求指定分位数 */
+  Quantile: 'quantile',
+  /** 对数值字段求分位区间 */
+  QuantileBand: 'quantile-band',
+} as const;
+
+/** 读取 numeric field 的内置统计 reducer operation kind 子集 */
+export const BuiltinFieldReducerOperationKind = {
+  /** 对数值字段求和 */
+  Sum: BuiltinReducerOperationKind.Sum,
+  /** 对数值字段求算术平均值 */
+  Mean: BuiltinReducerOperationKind.Mean,
+  /** 对数值字段求中位数 */
+  Median: BuiltinReducerOperationKind.Median,
+  /** 对数值字段求最小值 */
+  Min: BuiltinReducerOperationKind.Min,
+  /** 对数值字段求最大值 */
+  Max: BuiltinReducerOperationKind.Max,
+  /** 对数值字段求最小值和最大值区间 */
+  Extent: BuiltinReducerOperationKind.Extent,
+} as const;
+
+/** 统计 reducer operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
+export const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(
+  Object.values(BuiltinReducerOperationKind),
+);
+
+/** 内置统计 reducer operation kind 取值 */
+export type BuiltinReducerOperationKind = ValueOf<typeof BuiltinReducerOperationKind>;
+
+/** 读取 numeric field 的内置统计 reducer operation kind 取值 */
+export type BuiltinFieldReducerOperationKind = ValueOf<typeof BuiltinFieldReducerOperationKind>;
+
+/** reducer 输出字段及其在 operation 内的 schema path */
+type ReducerOutputField = {
+  /** 输出字段名 */
+  field: string;
+  /** 字段名在 reducer operation 内的路径 */
+  path: Array<string | number>;
+};
+
+/** 把 unknown 值收窄为可读取字段的普通对象 */
+const recordOf = (value: unknown): Record<string, unknown> | undefined =>
+  value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
+
+/** 列出 reducer operation 静态声明的输出字段及其 schema path */
+export const reducerOutputFieldsOf = (operation: unknown): Array<ReducerOutputField> => {
+  const record = recordOf(operation);
+  if (record === undefined) return [];
+  if (record.kind === BuiltinReducerOperationKind.Extent) {
+    const outputs = recordOf(record.as);
+    if (outputs === undefined) return [];
+
+    const fields: Array<ReducerOutputField> = [];
+    for (const key of ['min', 'max'] as const) {
+      const field = outputs[key];
+      if (typeof field === 'string') fields.push({ field, path: ['as', key] });
+    }
+
+    return fields;
+  }
+
+  if (record.kind !== BuiltinReducerOperationKind.QuantileBand) {
+    return typeof record.as === 'string' ? [{ field: record.as, path: ['as'] }] : [];
+  }
+
+  const outputs = recordOf(record.outputs);
+  if (outputs === undefined) return [];
+
+  const fields: Array<ReducerOutputField> = [];
+
+  for (const key of ['lower', 'upper'] as const) {
+    const field = outputs[key];
+    if (typeof field === 'string') fields.push({ field, path: ['outputs', key] });
+  }
+
+  if (Array.isArray(outputs.points)) {
+    outputs.points.forEach((point, pointIndex) => {
+      const field = recordOf(point)?.as;
+      if (typeof field === 'string') fields.push({ field, path: ['outputs', 'points', pointIndex, 'as'] });
+    });
+  }
+
+  for (const key of [
+    'spread',
+    'lowerFence',
+    'upperFence',
+    'whiskerMin',
+    'whiskerMax',
+    'min',
+    'max',
+    'count',
+  ] as const) {
+    const field = outputs[key];
+    if (typeof field === 'string') fields.push({ field, path: ['outputs', key] });
+  }
+
+  return fields;
+};
 
 /** count reducer operation schema；只输出组内行数，不读取字段 */
 const CountReducerOperationSchema = strictObject({
@@ -147,9 +262,11 @@ export const BuiltinReducerOperationSchemas = Object.freeze({
 
 /** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
 const ExternalReducerOperationObjectSchema = looseObject({
-  kind: ReducerOperationKindSchema.refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
-    message: 'external reducer kind must not collide with a built-in reducer kind',
-  }).describe('Discriminator: custom reducer kind'),
+  kind: createOpenStringSchema(BuiltinReducerOperationKind)
+    .refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
+      message: 'external reducer kind must not collide with a built-in reducer kind',
+    })
+    .describe('Discriminator: custom reducer kind'),
 });
 
 /** 校验带 JSON 配置的自定义聚合归约操作 */
@@ -208,3 +325,15 @@ export const ReducerMetricsSchema = array(ReducerOperationSchema)
     }
   })
   .describe('Reducer metrics with unique output fields');
+
+/** reducer operation（统计规约子算子） */
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+
+/** compact aggregate Source parse态候选；运行时仍需Definition确认单scalar capability */
+export type IRDataScalarReducerOperation = ZodInfer<typeof DataScalarReducerOperationSchema>;
+
+/** reducer metrics 列表 */
+export type IRDataReducerMetrics = ZodInfer<typeof ReducerMetricsSchema>;
+
+/** quantile-band reducer operation（参数化分位区间规约） */
+export type IRDataQuantileBandReducerOperation = ZodInfer<typeof QuantileBandReducerOperationSchema>;

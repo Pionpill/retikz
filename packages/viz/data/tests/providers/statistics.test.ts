@@ -22,8 +22,8 @@ import {
   applySelectorOperation,
   reducerOutputDescriptors,
   reducerOutputFields,
-} from '../../src/providers/statistics';
-import { BuiltinReducerOperationSchemas, BuiltinSelectorOperationSchemas } from '../../src/schemas/transform';
+} from '../../src/providers/operators';
+import { BuiltinReducerOperationSchemas, BuiltinSelectorOperationSchemas } from '../../src/schemas/operators';
 
 describe('statistics provider schema boundaries', () => {
   it('uses the schema owner instances for every built-in definition', () => {

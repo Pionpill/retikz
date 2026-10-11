@@ -1,15 +1,9 @@
 import type { infer as ZodInfer } from 'zod';
 
-import type {
-  DataModelSchema,
-  DataReferenceSchema,
-  FieldDefinitionSchema,
-  FieldFormatSchema,
-  ScalarValueSchema,
-} from './schema';
+import type { DataModelSchema, DataReferenceSchema, FieldDefinitionSchema, ScalarValueSchema } from './schema';
 
 /** 字段解析格式名：内置关键字或自定义注册名，运行时由 format registry 解析为 parser */
-export type FieldFormat = ZodInfer<typeof FieldFormatSchema>;
+export type FieldFormat = NonNullable<IRDataFieldDefinition['format']>;
 
 /** 字段声明：逻辑字段名、可选测量类型、可选解析格式和可选分类顺序 */
 export type IRDataFieldDefinition = ZodInfer<typeof FieldDefinitionSchema>;

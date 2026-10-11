@@ -19,7 +19,7 @@ import {
   reducerInputFields,
   reducerOutputFields,
   selectorInputFields,
-} from '../../src/providers/statistics';
+} from '../../src/providers/operators';
 
 describe('statistics provider runtime', () => {
   it('computes scalar reducers and extent endpoints from finite field values', () => {

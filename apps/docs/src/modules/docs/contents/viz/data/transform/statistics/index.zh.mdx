@@ -29,7 +29,7 @@ description: 理解 selector、reducer 和 regression 如何返回字段、记�
 <SourceLinks
   sources={[
     { label: '分组宿主与计算调度', path: 'packages/viz/data/src/providers/transform/group.ts' },
-    { label: '子算子注册与调度', path: 'packages/viz/data/src/providers/statistics/registry.ts' },
+    { label: '子算子注册与调度', path: 'packages/viz/data/src/providers/operators/statistics-registry.ts' },
     { label: '分组边界', path: 'packages/viz/data/src/providers/transform/shared.ts' },
   ]}
 />
@@ -46,7 +46,7 @@ A 组选择 a2，B 组选择 b2。selector 返回的选择记录包含 `row`，�
 
 <SourceLinks
   sources={[
-    { label: 'Selector 实现与选择记录', path: 'packages/viz/data/src/providers/statistics/selectors.ts' },
+    { label: 'Selector 实现与选择记录', path: 'packages/viz/data/src/providers/operators/selector.ts' },
     { label: '选择结果组织为输出行', path: 'packages/viz/data/src/providers/transform/group.ts' },
   ]}
 />
@@ -66,7 +66,7 @@ reducer 的返回值不是完整的数据表，也不一定只是一个数。多
 <SourceLinks
   sources={[
     { label: '字段冲突检查与汇总组装', path: 'packages/viz/data/src/providers/transform/group.ts' },
-    { label: 'Reducer 定义及实现', path: 'packages/viz/data/src/providers/statistics/reducers.ts' },
+    { label: 'Reducer 定义及实现', path: 'packages/viz/data/src/providers/operators/reducer.ts' },
   ]}
 />
 
@@ -89,8 +89,8 @@ reducer 的返回值不是完整的数据表，也不一定只是一个数。多
 <SourceLinks
   sources={[
     { label: '提取观测、分组与采样', path: 'packages/viz/data/src/providers/transform/smooth.ts' },
-    { label: '方法解析与预测结果校验', path: 'packages/viz/data/src/providers/regression/registry.ts' },
-    { label: '拟合模型与预测契约', path: 'packages/viz/data/src/contract/regression.ts' },
+    { label: '方法解析与预测结果校验', path: 'packages/viz/data/src/providers/operators/regression/registry.ts' },
+    { label: '拟合模型与预测契约', path: 'packages/viz/data/src/contract/operators/regression.ts' },
   ]}
 />
 

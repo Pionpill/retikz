@@ -8,12 +8,15 @@ import type {
 } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataLineageOptions, DataLineageRun } from './lineage';
-import type { AnyRegressionDefinition } from './regression';
-import type { AnyRegressionImplementation } from './regression';
-import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
-import type { AnyStatisticsReducerImplementation, AnyRowSelectorImplementation } from './statistics';
-import type { AnyTransformDefinition } from './transform';
-import type { AnyTransformImplementation } from './transform';
+import type {
+  AnyRegressionDefinition,
+  AnyRegressionImplementation,
+  AnyRowSelectorDefinition,
+  AnyStatisticsReducerDefinition,
+  AnyStatisticsReducerImplementation,
+  AnyRowSelectorImplementation,
+} from './operators';
+import type { AnyTransformDefinition, AnyTransformImplementation } from './transform';
 
 /** 规范逻辑字段模型；不重复执行源格式解析 */
 export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;

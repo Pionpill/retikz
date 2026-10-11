@@ -1,10 +1,12 @@
-import { defineRegressionImplementation } from '../../contract';
-import type { AnySynchronousRegressionImplementation } from '../../contract';
-import { defineRegression } from '../../contract';
-import type { AnyRegressionDefinition, RegressionPair } from '../../contract';
-import { RetikzDataError } from '../../error';
-import { BuiltinRegressionMethodSchemas } from '../../schemas';
-import type { IRRegressionMethod } from '../../schemas';
+import { defineRegressionImplementation, defineRegression } from '../../../contract';
+import type {
+  AnySynchronousRegressionImplementation,
+  AnyRegressionDefinition,
+  RegressionPair,
+} from '../../../contract';
+import { RetikzDataError } from '../../../error';
+import { BuiltinRegressionMethodSchemas } from '../../../schemas';
+import type { IRRegressionMethod } from '../../../schemas';
 import { assertPositiveDomain, fitPolynomial, linearModel } from './models';
 
 /** 正自变量方法共用的预测域约束 */

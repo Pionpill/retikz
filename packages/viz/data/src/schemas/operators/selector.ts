@@ -1,4 +1,6 @@
+import type { ValueOf } from '@retikz/foundation';
 import {
+  createOpenStringSchema,
   JsonValueSchema,
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
@@ -6,15 +8,93 @@ import {
   PositiveIntegerSchema,
   NormalizedFractionSchema,
 } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
 import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, strictObject, union } from 'zod';
 
-import {
-  DataSortOrder,
-  RESERVED_SELECTOR_OPERATION_KINDS,
-  RowSelectorTie,
-  BuiltinSelectorOperationKind,
-} from './constants';
-import { SelectorOperationKindSchema } from './kind';
+/** data 排序方向关键字 */
+export const DataSortOrder = {
+  /** 按字段值升序排序 */
+  Ascending: 'ascending',
+  /** 按字段值降序排序 */
+  Descending: 'descending',
+} as const;
+
+/** 内置 row selector operation kind 关键字 */
+export const BuiltinSelectorOperationKind = {
+  /** 选择排序字段最小的行 */
+  Min: 'min',
+  /** 选择排序字段最大的行 */
+  Max: 'max',
+  /** 选择当前顺序或显式排序后的第一行 */
+  First: 'first',
+  /** 选择当前顺序或显式排序后的最后一行 */
+  Last: 'last',
+  /** 选择排序字段最高名次的行 */
+  Top: 'top',
+  /** 选择排序字段最低名次的行 */
+  Bottom: 'bottom',
+  /** 选择排序后的第 n 行 */
+  Nth: 'nth',
+  /** 选择落在分位区间之外的原始行 */
+  OutsideQuantileBand: 'outside-quantile-band',
+} as const;
+
+/** 按数值字段取极值的 row selector operation kind 子集 */
+export const BuiltinMinMaxSelectorOperationKind = {
+  /** 选择排序字段最小的行 */
+  Min: BuiltinSelectorOperationKind.Min,
+  /** 选择排序字段最大的行 */
+  Max: BuiltinSelectorOperationKind.Max,
+} as const;
+
+/** 按现有顺序或显式排序取行的 row selector operation kind 子集 */
+export const BuiltinFirstLastSelectorOperationKind = {
+  /** 选择当前顺序或显式排序后的第一行 */
+  First: BuiltinSelectorOperationKind.First,
+  /** 选择当前顺序或显式排序后的最后一行 */
+  Last: BuiltinSelectorOperationKind.Last,
+} as const;
+
+/** 按排序名次取行的 row selector operation kind 子集 */
+export const BuiltinTopBottomSelectorOperationKind = {
+  /** 选择排序字段最高名次的行 */
+  Top: BuiltinSelectorOperationKind.Top,
+  /** 选择排序字段最低名次的行 */
+  Bottom: BuiltinSelectorOperationKind.Bottom,
+} as const;
+
+/** row selector 平局处理策略 */
+export const RowSelectorTie = {
+  /** 平局时只保留第一行 */
+  First: 'first',
+  /** 平局时只保留最后一行 */
+  Last: 'last',
+  /** 平局时保留所有命中的行 */
+  All: 'all',
+} as const;
+
+/** row selector operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
+export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(
+  Object.values(BuiltinSelectorOperationKind),
+);
+
+/** data 排序方向取值 */
+export type DataSortOrder = ValueOf<typeof DataSortOrder>;
+
+/** 内置 row selector operation kind 取值 */
+export type BuiltinSelectorOperationKind = ValueOf<typeof BuiltinSelectorOperationKind>;
+
+/** 按数值字段取极值的 row selector operation kind 取值 */
+export type BuiltinMinMaxSelectorOperationKind = ValueOf<typeof BuiltinMinMaxSelectorOperationKind>;
+
+/** 按现有顺序或显式排序取行的 row selector operation kind 取值 */
+export type BuiltinFirstLastSelectorOperationKind = ValueOf<typeof BuiltinFirstLastSelectorOperationKind>;
+
+/** 按排序名次取行的 row selector operation kind 取值 */
+export type BuiltinTopBottomSelectorOperationKind = ValueOf<typeof BuiltinTopBottomSelectorOperationKind>;
+
+/** row selector 平局处理策略值 */
+export type RowSelectorTie = ValueOf<typeof RowSelectorTie>;
 
 /** row selector 排序规则 schema；用于 first / last / nth 等代表行选择 */
 export const OrderBySchema = strictObject({
@@ -92,9 +172,11 @@ export const BuiltinSelectorOperationSchemas = Object.freeze({
 
 /** 外部 row selector operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
 const ExternalSelectorOperationObjectSchema = looseObject({
-  kind: SelectorOperationKindSchema.refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
-    message: 'external selector kind must not collide with a built-in selector kind',
-  }).describe('Discriminator: custom selector kind'),
+  kind: createOpenStringSchema(BuiltinSelectorOperationKind)
+    .refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
+      message: 'external selector kind must not collide with a built-in selector kind',
+    })
+    .describe('Discriminator: custom selector kind'),
 });
 
 /** 校验带 JSON 配置的自定义数据选择操作 */
@@ -119,3 +201,12 @@ export const SelectorOperationSchema = union([
   BuiltinSelectorOperationSchema,
   ExternalSelectorOperationSchema,
 ]).describe('Built-in or custom row selector operation');
+
+/** row selector operation（代表行选择子算子） */
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
+
+/** outside-quantile-band selector operation（分位区间外原始行选择） */
+export type IRDataOutsideQuantileBandSelectorOperation = ZodInfer<typeof OutsideQuantileBandSelectorOperationSchema>;
+
+/** selector 排序规则（代表行选择前的稳定排序规则） */
+export type IRDataOrderBy = ZodInfer<typeof OrderBySchema>;

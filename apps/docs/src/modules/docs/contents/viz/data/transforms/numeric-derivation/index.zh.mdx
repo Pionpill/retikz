@@ -11,7 +11,7 @@ description: 保留数据行，派生堆叠边界、组内占比、单行区间�
 
 堆叠的 Schema 为 `StackTransformSchema`，参数如下：
 
-#### <ApiSourceLink label={"IRDataStackTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={74}>IRDataStackTransform</ApiSourceLink> / <ApiSourceLink label={"StackTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={185}>StackTransformSchema</ApiSourceLink> / <ApiSourceLink label={"StackParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={165}>StackParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataStackTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={46}>IRDataStackTransform</ApiSourceLink> / <ApiSourceLink label={"StackTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={188}>StackTransformSchema</ApiSourceLink> / <ApiSourceLink label={"StackParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={168}>StackParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -82,7 +82,7 @@ export type IRDataStackTransform = ZodInfer<typeof StackTransformSchema>;
 
 `normalize` 将每行数值除以所在组的总和，得到组内占比；`fraction` 输出 0～1，`percent` 输出 0～100。它保留行数与原行序。省略 `as` 会覆盖输入字段，提供 `as` 则写入新字段。有限负值会报错，缺失或非有限数值按 0 计算，组总和为 0 时输出 0。归一化的 Schema 为 `NormalizeTransformSchema`，参数如下：
 
-#### <ApiSourceLink label={"IRDataNormalizeTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={80}>IRDataNormalizeTransform</ApiSourceLink> / <ApiSourceLink label={"NormalizeTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={321}>NormalizeTransformSchema</ApiSourceLink> / <ApiSourceLink label={"NormalizeParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={300}>NormalizeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataNormalizeTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={52}>IRDataNormalizeTransform</ApiSourceLink> / <ApiSourceLink label={"NormalizeTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={324}>NormalizeTransformSchema</ApiSourceLink> / <ApiSourceLink label={"NormalizeParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={303}>NormalizeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -154,7 +154,7 @@ export type IRDataNormalizeTransform = ZodInfer<typeof NormalizeTransformSchema>
 
 `derive-interval` 逐行为一个数值建立基线区间，也可以直接从两个端点字段读取区间。它保留行数、原字段与原行序，不累计其它记录。`startFrom` 与 `endFrom` 同时提供时优先使用两字段模式；否则需要 `from`。非有限端点回退到基线，不会自动交换大小颠倒的端点。派生区间的 Schema 为 `DeriveIntervalTransformSchema`，参数如下：
 
-#### <ApiSourceLink label={"IRDataDeriveIntervalTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={83}>IRDataDeriveIntervalTransform</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={347}>DeriveIntervalTransformSchema</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={327}>DeriveIntervalParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataDeriveIntervalTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={55}>IRDataDeriveIntervalTransform</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={350}>DeriveIntervalTransformSchema</ApiSourceLink> / <ApiSourceLink label={"DeriveIntervalParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={330}>DeriveIntervalParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -225,7 +225,7 @@ export type IRDataDeriveIntervalTransform = ZodInfer<typeof DeriveIntervalTransf
 
 `jitter` 给连续数值字段添加确定性的伪随机偏移，常用于分散重叠观测。偏移在数据单位中计算，范围为 `[-amount, amount]`，不是像素距离。相同输入行序、方向、种子与幅度产生相同结果；非有限数值保留原值。它保持行数与行序，直接改写指定字段。数值扰动的 Schema 为 `JitterTransformSchema`，参数如下：
 
-#### <ApiSourceLink label={"IRDataJitterTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={95}>IRDataJitterTransform</ApiSourceLink> / <ApiSourceLink label={"JitterTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={379}>JitterTransformSchema</ApiSourceLink> / <ApiSourceLink label={"JitterParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={353}>JitterParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataJitterTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={67}>IRDataJitterTransform</ApiSourceLink> / <ApiSourceLink label={"JitterTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={382}>JitterTransformSchema</ApiSourceLink> / <ApiSourceLink label={"JitterParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={356}>JitterParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

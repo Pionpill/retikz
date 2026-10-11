@@ -10,13 +10,13 @@ import type {
 import { extractRegressionKind, extractStatisticOperation, extractTransformKind } from '../../contract';
 import { RetikzDataError } from '../../error';
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../schemas';
-import { BUILTIN_REGRESSION_IMPLEMENTATIONS } from '../regression';
 import {
+  BUILTIN_REGRESSION_IMPLEMENTATIONS,
   BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS,
   BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerRegistry,
-} from '../statistics';
+} from '../operators';
 import { BUILTIN_TRANSFORM_IMPLEMENTATIONS, createAsyncBuiltinTransformImplementations } from '../transform';
 
 /** 独立计算的注册键；计算前不调用用户回调 */

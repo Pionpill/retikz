@@ -1,3 +1,3 @@
 export * from './data';
-export * from './regression';
+export * from './operators';
 export * from './transform';

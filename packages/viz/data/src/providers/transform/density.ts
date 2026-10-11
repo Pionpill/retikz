@@ -5,7 +5,8 @@ import { RetikzDataError } from '../../error';
 import type { IRDataDensityTransform } from '../../schemas';
 import { DensityBandwidthKind } from '../../schemas';
 import type { ExternalRow } from '../../shared';
-import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from './shared';
+import { finiteFieldValuesOf } from '../operators';
+import { groupRowsByFields, linearSamplesOf } from './shared';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
 

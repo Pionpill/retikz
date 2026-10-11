@@ -162,3 +162,15 @@ export const rankedByNumericField = (
       return directed === 0 ? left.index - right.index : directed;
     })
     .map(entry => entry.row);
+
+/** 读取指定字段的有限数值序列，非数值、NaN 和无穷值会被跳过 */
+export const finiteFieldValuesOf = (rows: Array<ExternalRow>, field: string): Array<number> => {
+  const values: Array<number> = [];
+
+  for (const row of rows) {
+    const value = resolveFieldPath(row, field);
+    if (isFiniteNumber(value)) values.push(value);
+  }
+
+  return values;
+};

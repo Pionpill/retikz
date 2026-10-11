@@ -3,12 +3,12 @@ import type {
   RegressionResolution,
   AnyRegressionImplementation,
   AnySynchronousRegressionImplementation,
-} from '../../contract';
-import { extractRegressionKind } from '../../contract';
-import type { DataTransformDependency } from '../../contract';
-import { RetikzDataError } from '../../error';
-import type { IRRegressionMethod } from '../../schemas';
-import { resolveImplementationRegistry } from '../shared';
+  DataTransformDependency,
+} from '../../../contract';
+import { extractRegressionKind } from '../../../contract';
+import { RetikzDataError } from '../../../error';
+import type { IRRegressionMethod } from '../../../schemas';
+import { resolveImplementationRegistry } from '../../shared';
 import { BUILTIN_REGRESSIONS, BUILTIN_REGRESSION_IMPLEMENTATIONS } from './definitions';
 
 /**
