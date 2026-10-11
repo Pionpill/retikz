@@ -39,7 +39,7 @@ const operations: Array<IRDataTransform> = [
   },
   { kind: BuiltinDataTransform.Stack, x: 'region', y: 'total', groupBy: 'product' },
 ];
-const rows = applyTransforms(sourceRows, operations);
+const rows = applyTransforms(sourceRows, operations).rows;
 ```
 
 `IRDataTransform` 包含全部内置 operation 和经 runtime Definition 验证的扩展配置。各具体类型由 Data schema 派生，使用 `IRDataXxxTransform` 命名。Plot 属性与 adapter 直接引用 Data 类型，不转发旧 Plot 数据变换公共面。

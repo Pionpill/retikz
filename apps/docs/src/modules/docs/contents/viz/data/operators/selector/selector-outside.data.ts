@@ -34,4 +34,4 @@ export const selectorOutsideRowsOf = (values: SelectorOutsideValues): Array<Exte
 
 /** 执行选择变换，返回原始记录与排名字段 */
 export const selectorOutsideResultOf = (values: SelectorOutsideValues): Array<ExternalRow> =>
-  applyTransforms(selectorOutsideRowsOf(values), [selectorOutsideOperationOf(values)]);
+  applyTransforms(selectorOutsideRowsOf(values), [selectorOutsideOperationOf(values)]).rows;

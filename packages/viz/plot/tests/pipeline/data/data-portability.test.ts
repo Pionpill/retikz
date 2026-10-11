@@ -190,7 +190,7 @@ describe('coerce-before-transform 关键回归', () => {
     );
     const stacked = applyTransforms(normalized, [{ kind: 'stack', params: { x: 'm', y: 'v' } }], {
       registry: resolveTransformRegistry(),
-    });
+    }).rows;
 
     expect(stacked[1]).toMatchObject({ y0: 3, y1: 8 });
   });

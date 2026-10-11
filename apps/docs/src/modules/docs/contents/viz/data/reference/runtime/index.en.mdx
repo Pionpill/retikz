@@ -58,14 +58,14 @@ Semantic registries merge built-in and custom Definitions, rejecting duplicate k
 
 ## Transforms and lineage
 
-`applyTransforms(rows, operations?, options?)` executes operations in declaration order and returns rows only; options carry the registry, separate synchronous implementations and context. Use the executor for Promise or external computation. `applyTransformsWithLineage(rows, operations?, options?)` first tags input rows with Symbol provenance that JSON serialization ignores, then returns:
+`applyTransforms(rows, operations?, options?)` executes operations in declaration order and returns `{ rows, lineage? }`. Options carry the registry, synchronous implementations and context. `provenance: true` assigns sources to unmarked inputs; `lineage: true` uses default event options, an object customizes them, and false or omission disables recording without assigning sources. Existing sources are retained. For a view, use `applyTransformsToDataView`, which returns `{ dataView, lineage? }`. Use the executor for Promise or external computation.
 
 | Field     | Type                 | Meaning                                                                                        |
 | --------- | -------------------- | ---------------------------------------------------------------------------------------------- |
 | `rows`    | `Array<ExternalRow>` | Transformed caller-input rows; canonical semantics are preserved when the input was normalized |
-| `lineage` | `DataLineageRun`     | Retained structured events; a sink disables duplicate retention by default                     |
+| `lineage` | `DataLineageRun?`    | Retained structured events; a sink disables duplicate retention by default                     |
 
-`DataLineageOptions` records lightweight source and transform-step summaries by default. `rowSamples` and `calculationDetails` require an explicit `maxRows` and field allowlist; complete source indexes require an explicit `sourceIdentity: { mode: 'full' }`. These are diagnostic outputs and never mutate Data IR.
+When enabled, `DataLineageOptions` records lightweight source and transform-step summaries by default. `rowSamples` and `calculationDetails` require an explicit `maxRows` and field allowlist; complete source indexes require an explicit `sourceIdentity: { mode: 'full' }`. These are diagnostic outputs and never mutate Data IR.
 
 <SourceLinks
   sources={[
@@ -100,8 +100,8 @@ Semantic registries merge built-in and custom Definitions, rejecting duplicate k
     {
       label: 'Transform execution and lineage entry points',
       path: 'packages/viz/data/src/pipeline/transform.ts',
-      startLine: 244,
-      endLine: 297,
+      startLine: 211,
+      endLine: 247,
     },
     {
       label: 'Lineage options and event contracts',
@@ -121,5 +121,5 @@ Semantic registries merge built-in and custom Definitions, rejecting duplicate k
 ## Related
 
 - [Contract](/viz/data/reference/contract): JSON-safe schemas consumed by the runtime
-- [Data Provenance](/viz/data/provenance/data): usage scenarios and visual explanations for provenance and lineage
+- [Data Provenance](/viz/data/provenance): usage scenarios and visual explanations for provenance and lineage
 - [Data Transform Extensions](/viz/data/transform/extensions): custom transforms, selectors, and reducers

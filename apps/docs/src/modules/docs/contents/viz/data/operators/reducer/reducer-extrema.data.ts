@@ -20,4 +20,4 @@ export const reducerExtremaRowsOf = (values: ReducerExtremaValues): Array<Extern
 
 /** 执行本节规约，返回真实汇总行 */
 export const reducerExtremaResultOf = (values: ReducerExtremaValues): Array<ExternalRow> =>
-  applyTransforms(reducerExtremaRowsOf(values), [reducerExtremaOperationOf(values)]);
+  applyTransforms(reducerExtremaRowsOf(values), [reducerExtremaOperationOf(values)]).rows;

@@ -23,4 +23,4 @@ export const reducerCountRows: Array<ExternalRow> = [
 
 /** 执行计数变换，返回每组或全部订单的行数 */
 export const reducerCountResultOf = (values: ReducerCountValues): Array<ExternalRow> =>
-  applyTransforms(reducerCountRows, [reducerCountOperationOf(values)]);
+  applyTransforms(reducerCountRows, [reducerCountOperationOf(values)]).rows;

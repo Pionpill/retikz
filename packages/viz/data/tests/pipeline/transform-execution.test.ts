@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import type { DataTransformImplementationProvider, DataTransformModel, DataTransformStageInput } from '../../src';
 import {
   createDataTransformExecutor,
+  createDataLineageRecorder,
+  applyTransformsToDataView,
+  createDataView,
   DataTransformDeclarationSchema,
   executeDataTransforms,
   resolveDataTransforms,
@@ -29,6 +32,93 @@ const model: DataTransformModel = [{ name: 'value', type: 'continuous' }];
 const input = (values: Array<number>): DataTransformStageInput<never> => ({
   kind: 'result',
   result: { rows: values.map(value => ({ value })), model },
+});
+
+it.each([true, false])('passes resolved lineage=%s requirements to an external provider', async enabled => {
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
+  const executor = createDataTransformExecutor({
+    dataExecution: { mode: 'external', external: 'engine' },
+    externalProviders: [
+      {
+        name: 'engine',
+        provider: {
+          resolve: (stage, context) => {
+            expect(context.requirements.lineage).toEqual(enabled ? {} : undefined);
+            return {
+              kind: 'supported',
+              implementation: {
+                definition: stage.definition,
+                execute: current => {
+                  if (current.kind !== 'result') throw new Error('expected result input');
+                  const rows = [...current.result.rows].sort((left, right) => Number(left.value) - Number(right.value));
+                  const lineage =
+                    context.requirements.lineage === undefined
+                      ? undefined
+                      : createDataLineageRecorder(context.requirements.lineage);
+                  lineage?.recordTransformStep({
+                    operationIndex: context.operationIndex,
+                    operation: stage.operation,
+                    inputRows: current.result.rows,
+                    outputRows: rows,
+                    inputFields: ['value'],
+                    outputFields: [],
+                  });
+                  return { rows, model, ...(lineage === undefined ? {} : { lineage: { events: lineage.events } }) };
+                },
+              },
+            };
+          },
+        },
+      },
+    ],
+  });
+  const result = await executeDataTransforms(input([2, 1]), resolution, executor, { lineage: enabled });
+  expect(result.rows).toEqual([{ value: 1 }, { value: 2 }]);
+  if (enabled) {
+    expect(result.lineage?.events.map(event => event.kind)).toEqual(['source', 'transformStep']);
+    expect(result.lineage?.events[0]).toMatchObject({ sourceIdentity: { count: 0, indices: [] } });
+  } else expect(result.lineage).toBeUndefined();
+});
+
+it.each([true, false])('uses lineage=%s for local result inputs and empty plans', async enabled => {
+  for (const declarations of [[], [{ operation: { kind: 'sort', params: { field: 'value' } } }]]) {
+    const result = await executeDataTransforms(
+      input([2, 1]),
+      resolveDataTransforms(declarations, model),
+      createDataTransformExecutor(),
+      { lineage: enabled },
+    );
+    expect(result.rows.map(row => row.value)).toEqual(declarations.length === 0 ? [2, 1] : [1, 2]);
+    if (enabled)
+      expect(result.lineage?.events.map(event => event.kind)).toEqual(
+        declarations.length === 0 ? ['source'] : ['source', 'transformStep'],
+      );
+    else expect(result.lineage).toBeUndefined();
+  }
+});
+
+it.each([true, false])('uses lineage=%s for materialized source inputs and empty plans', async enabled => {
+  const source = { name: 'warehouse' };
+  const executor = createDataTransformExecutor<typeof source>({
+    materializeSource: (_source, _model, context) => {
+      expect(context.requirements.lineage).toEqual(enabled ? {} : undefined);
+      return { rows: [{ value: 2 }, { value: 1 }], model };
+    },
+  });
+  for (const declarations of [[], [{ operation: { kind: 'sort', params: { field: 'value' } } }]]) {
+    const result = await executeDataTransforms(
+      { kind: 'source', source, model },
+      resolveDataTransforms(declarations, model),
+      executor,
+      { lineage: enabled },
+    );
+    expect(result.rows.map(row => row.value)).toEqual(declarations.length === 0 ? [2, 1] : [1, 2]);
+    if (enabled)
+      expect(result.lineage?.events.map(event => event.kind)).toEqual(
+        declarations.length === 0 ? ['source'] : ['source', 'transformStep'],
+      );
+    else expect(result.lineage).toBeUndefined();
+  }
 });
 
 it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through empty local %s results', async mode => {
@@ -659,7 +749,7 @@ it('wraps empty-plan materializer errors and stops local computation after mater
   expect(read).toBe(0);
 });
 
-it('retains the upstream history supplied by an explicitly materialized source', async () => {
+it.each([undefined, false])('retains materialized upstream history when lineage is %s', async lineageOption => {
   const source = { name: 'warehouse' };
   const lineage = { events: [{ kind: 'source' as const, rowCount: 2 }] };
   const executor = createDataTransformExecutor<typeof source>({
@@ -673,6 +763,7 @@ it('retains the upstream history supplied by an explicitly materialized source',
     { kind: 'source', source, model },
     resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model),
     executor,
+    { lineage: lineageOption },
   );
 
   expect(result.rows).toEqual([{ value: 1 }, { value: 2 }]);
@@ -719,4 +810,73 @@ it('does not treat lineage summaries as row-level provenance evidence', async ()
   );
 
   expect(result.lineage).toEqual(lineage);
+});
+
+it('executes hierarchical sort and bin with async custom metrics and bucket-local provenance', async () => {
+  const rows = tagSourceIndex([
+    { team: 'B', item: 'x', value: 10 },
+    { team: 'A', item: 'x', value: 2 },
+    { team: 'B', item: 'y', value: 1 },
+    { team: 'B', item: 'x', value: 0 },
+  ]);
+  const view = createDataView(rows, [
+    { name: 'team', type: 'categorical' },
+    { name: 'item', type: 'categorical' },
+    { name: 'value', type: 'continuous' },
+  ]);
+  const metric = defineStatisticsReducer({
+    schema: strictObject({ kind: literal('bucket-size') }),
+    outputs: () => [{ field: 'size', type: 'continuous' }],
+  });
+  const registry = resolveStatisticsReducerRegistry([metric]);
+  const sync = defineStatisticsReducerImplementation({
+    definition: metric,
+    reduce: members => ({ size: members.length }),
+  });
+  const calls: Array<Array<number>> = [];
+  const asynchronous = defineStatisticsReducerImplementation({
+    definition: metric,
+    reduce: async members => {
+      await Promise.resolve();
+      calls.push(members.map(row => Number(row.value)));
+      return { size: members.length };
+    },
+  });
+  const declarations: Parameters<typeof resolveDataTransforms>[0] = [
+    { operation: { kind: 'sort', params: { field: 'value', groupBy: ['team', 'item'] } } },
+    {
+      operation: {
+        kind: 'bin',
+        params: {
+          field: 'value',
+          groupBy: ['team', 'item'],
+          extent: [0, 10],
+          count: 2,
+          metrics: [{ kind: 'bucket-size' }],
+        },
+      },
+    },
+  ];
+  const expected = applyTransformsToDataView(
+    view,
+    declarations.map(declaration => declaration.operation),
+    { context: { statisticsReducerRegistry: registry }, statisticsReducerImplementations: [sync] },
+  ).dataView;
+  const actual = await executeDataTransforms(
+    { kind: 'result', result: { rows, model: view.model } },
+    resolveDataTransforms(declarations, view.model, { statisticsReducerRegistry: registry }),
+    createDataTransformExecutor({ statisticsReducerImplementations: [asynchronous] }),
+  );
+  expect(actual.rows).toEqual(expected.rows);
+  expect(actual.model).toEqual(expected.model);
+  expect(actual.rows.map(row => [row.team, row.item])).toEqual([
+    ['B', 'x'],
+    ['B', 'x'],
+    ['B', 'y'],
+    ['B', 'y'],
+    ['A', 'x'],
+    ['A', 'x'],
+  ]);
+  expect(actual.rows.map(readSourceIndices)).toEqual([[3], [0], [2], undefined, [1], undefined]);
+  expect(calls).toEqual([[0], [10], [1], [], [2], []]);
 });

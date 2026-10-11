@@ -57,7 +57,7 @@ describe('resolved data view transforms', () => {
         registry: resolveTransformRegistry([copyField]),
         transformImplementations: [copyFieldImplementation],
       },
-    );
+    ).dataView;
 
     expect(result.rows).toEqual([{ source: 2, stale: 'old', copy: 2 }]);
     expect(result.model).toEqual([
@@ -84,7 +84,7 @@ describe('resolved data view transforms', () => {
     const result = applyTransformsToDataView(sourceView(), [{ kind: 'replace-rows', params: { as: 'value' } }], {
       registry: resolveTransformRegistry([replaceRows]),
       transformImplementations: [replaceRowsImplementation],
-    });
+    }).dataView;
 
     expect(result.rows).toEqual([{ value: 7 }]);
     expect(result.model).toEqual([{ name: 'value', type: DataFieldType.Continuous }]);
@@ -108,11 +108,12 @@ describe('resolved data view transforms', () => {
       },
     });
 
-    expect(() =>
-      applyTransformsToDataView(sourceView(), [{ kind: 'invalid-output', params: { as: 'value' } }], {
-        registry: resolveTransformRegistry([invalidOutput]),
-        transformImplementations: [invalidOutputImplementation],
-      }),
+    expect(
+      () =>
+        applyTransformsToDataView(sourceView(), [{ kind: 'invalid-output', params: { as: 'value' } }], {
+          registry: resolveTransformRegistry([invalidOutput]),
+          transformImplementations: [invalidOutputImplementation],
+        }).dataView,
     ).toThrow('data: output references unknown field "missing"');
     expect(applyCalls).toBe(0);
   });
@@ -134,7 +135,7 @@ describe('resolved data view transforms', () => {
     const result = applyTransformsToDataView(sourceView(), [{ kind: 'untyped-replace', params: {} }], {
       registry: resolveTransformRegistry([untypedReplace]),
       transformImplementations: [untypedReplaceImplementation],
-    });
+    }).dataView;
 
     expect(result.rows).toEqual([{ derived: 1 }]);
     expect(result.model).toEqual([{ name: 'derived', type: 'continuous' }]);
@@ -160,7 +161,7 @@ describe('resolved data view transforms', () => {
           metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
         },
       },
-    ]);
+    ]).dataView;
 
     expect(result.rows).toEqual([{ month: 'Jan', totalRevenue: 5 }]);
     expect(result.model).toEqual([

@@ -186,7 +186,7 @@ describe('transform registry (contract)', () => {
     const rows = applyTransforms([{ x: 2, y: 5 }], [{ kind: 'double', params: { field: 'x', as: 'x2' } }], {
       registry,
       transformImplementations: [doubleDefinitionImplementation],
-    });
+    }).rows;
 
     expect(rows).toEqual([{ x: 2, y: 5, x2: 4 }]);
   });
@@ -237,7 +237,7 @@ describe('transform registry (contract)', () => {
       ]),
       [{ kind: 'group-sum', params: { groupBy: 'group', field: 'value', as: 'total' } }],
       { registry, transformImplementations: [groupSumDefinitionImplementation] },
-    );
+    ).rows;
 
     expect(rows).toEqual([
       expect.objectContaining({ group: 'A', total: 5 }),
@@ -256,7 +256,7 @@ describe('transform registry (contract)', () => {
         { kind: 'sort', params: { field: 'x2', order: 'descending' } },
       ],
       { registry, transformImplementations: [doubleDefinitionImplementation] },
-    );
+    ).rows;
 
     expect(rows.map(row => row.x2)).toEqual([4, 2]);
   });

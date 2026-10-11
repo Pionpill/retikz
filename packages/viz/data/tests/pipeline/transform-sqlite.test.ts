@@ -115,7 +115,7 @@ it('hands SQLite aggregation results through builtin sorting into a second SQLit
     );
     const result = await executeDataTransforms({ kind: 'result', result: { rows, model } }, resolution, executor);
 
-    expect(result.rows).toEqual(applyTransforms(rows, operations));
+    expect(result.rows).toEqual(applyTransforms(rows, operations).rows);
     expect(result.rows).toEqual([{ grandTotal: 9 }]);
     expect(executed).toEqual(['sqlite', 'sqlite']);
     expect(result.model).toEqual([{ name: 'grandTotal', type: 'continuous' }]);

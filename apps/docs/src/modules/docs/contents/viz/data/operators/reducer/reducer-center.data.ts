@@ -19,4 +19,4 @@ export const reducerCenterRowsOf = (values: ReducerCenterValues): Array<External
 
 /** 执行本节规约，返回真实汇总行 */
 export const reducerCenterResultOf = (values: ReducerCenterValues): Array<ExternalRow> =>
-  applyTransforms(reducerCenterRowsOf(values), [reducerCenterOperationOf(values)]);
+  applyTransforms(reducerCenterRowsOf(values), [reducerCenterOperationOf(values)]).rows;

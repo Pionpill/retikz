@@ -93,10 +93,10 @@ it('preserves group type evidence while leaving custom non-scalar output untyped
   expect(view.model.find(field => field.name === 'payload')).toBeUndefined();
   expect(view.model).toEqual(resolution.stages[0].outputModel);
 
-  const sorted = applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'group' } }]);
+  const sorted = applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'group' } }]).dataView;
 
   expect(sorted.model).toEqual(resolution.stages[0].outputModel);
-  expect(() => applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'payload' } }])).toThrow(
+  expect(() => applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'payload' } }]).dataView).toThrow(
     /missing input field/,
   );
 });
@@ -113,8 +113,8 @@ it('retains unknown field existence across empty transformed scopes', () => {
       },
     ],
     valuesOptions,
-  );
-  const mark = applyTransformsToDataView(root, [{ kind: 'sort', params: { field: 'range' } }]);
+  ).dataView;
+  const mark = applyTransformsToDataView(root, [{ kind: 'sort', params: { field: 'range' } }]).dataView;
 
   expect(mark.rows).toEqual([]);
   expect(mark.model.find(field => field.name === 'range')).toEqual({ name: 'range' });
@@ -143,19 +143,19 @@ it('keeps both extent endpoints continuous through grouped summaries and downstr
     { name: 'low', type: 'continuous' },
     { name: 'high', type: 'continuous' },
   ];
-  const view = applyTransformsToDataView(input, [operation]);
+  const view = applyTransformsToDataView(input, [operation]).dataView;
   expect(view.model).toEqual(expectedModel);
   expect(view.rows).toEqual([
     { group: 'A', low: 1, high: 4 },
     { group: 'B', low: 2, high: 2 },
   ]);
-  const sorted = applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'high' } }]);
+  const sorted = applyTransformsToDataView(view, [{ kind: 'sort', params: { field: 'high' } }]).dataView;
   expect(sorted.rows).toEqual([
     { group: 'B', low: 2, high: 2 },
     { group: 'A', low: 1, high: 4 },
   ]);
 
-  const empty = applyTransformsToDataView(createDataView([], model), [operation]);
+  const empty = applyTransformsToDataView(createDataView([], model), [operation]).dataView;
   expect(empty.rows).toEqual([]);
   expect(empty.model).toEqual(expectedModel);
 

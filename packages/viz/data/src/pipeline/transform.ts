@@ -6,7 +6,6 @@ import type {
   AnySynchronousRegressionImplementation,
   DataLineageOptions,
   DataLineageRun,
-  DataLineageRecorder,
   DataView,
   FieldCollector,
   TransformContext,
@@ -20,7 +19,7 @@ import {
   resolveRowSelectorImplementationRegistry,
   resolveRegressionImplementationRegistry,
 } from '../providers';
-import { createDataView, ingestDataTransformResult } from '../resolve';
+import { createDataView, ingestDataTransformResult, resolveDataLineageOptions } from '../resolve';
 import { parseDataTransformDeclarations, resolveParsedDataTransforms } from '../resolve/transform';
 import type { ParsedDataTransformDeclaration } from '../resolve/transform';
 import type { IRDataTransform } from '../schemas';
@@ -37,6 +36,16 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 
 /** 同步便捷入口的明确计算能力，不能注册 Promise 回调 */
 export type ApplyTransformsOptions = Readonly<{
+  /**
+   * 为尚无来源的输入建立零基索引，默认关闭；已有来源始终保留
+   * @default false
+   */
+  provenance?: boolean;
+  /**
+   * true 使用默认事件配置，对象自定义配置；false 或省略时不记录，不隐式建立行来源
+   * @default false
+   */
+  lineage?: boolean | DataLineageOptions;
   /** 本次唯一的语义 registry */
   registry?: ReadonlyMap<string, AnyTransformDefinition>;
   /** 显式同步 transform 实现 */
@@ -49,6 +58,22 @@ export type ApplyTransformsOptions = Readonly<{
   regressionImplementations?: ReadonlyArray<AnySynchronousRegressionImplementation>;
   /** 来源、统计语义与当前计算上下文 */
   context?: Partial<TransformContext>;
+}>;
+
+/** 同步行变换结果；来源保存在行上，事件单独返回 */
+export type ApplyTransformsResult = Readonly<{
+  /** 完成变换后的数据行 */
+  rows: Array<ExternalRow>;
+  /** 显式启用事件记录时的本次运行 */
+  lineage?: DataLineageRun;
+}>;
+
+/** 同步视图变换结果 */
+export type ApplyTransformsToDataViewResult = Readonly<{
+  /** 完成变换后的完整视图 */
+  dataView: DataView;
+  /** 显式启用事件记录时的本次运行 */
+  lineage?: DataLineageRun;
 }>;
 
 /** 无 metadata 的同步行输入只从实际规范 scalar 获取证据 */
@@ -89,9 +114,8 @@ const applyToView = (
   view: DataView,
   operations: Array<IRDataTransform>,
   options: ApplyTransformsOptions,
-  lineage?: DataLineageRecorder & DataLineageRun,
   parsedDeclarations?: ReadonlyArray<ParsedDataTransformDeclaration>,
-): { dataView: DataView; lineage?: DataLineageRun } => {
+): ApplyTransformsToDataViewResult => {
   const registry = options.registry ?? resolveTransformRegistry();
   const context = createSyncContext(registry, options);
   const inputModel = view.model;
@@ -126,8 +150,10 @@ const applyToView = (
     return implementation;
   });
 
-  if (lineage !== undefined) context.lineage = lineage;
-  let rows = lineage === undefined ? view.rows : tagSourceIndex(view.rows);
+  const lineageOptions = resolveDataLineageOptions(options.lineage);
+  const lineage = lineageOptions === undefined ? undefined : createDataLineageRecorder(lineageOptions);
+  context.lineage = lineage;
+  let rows = options.provenance === true ? tagSourceIndex(view.rows) : view.rows;
   lineage?.recordSource(rows);
 
   for (const [operationIndex, stage] of resolution.stages.entries()) {
@@ -179,30 +205,33 @@ const applyToView = (
  * 按声明顺序同步推进规范 DataView
  * @param view 已规范化的输入数据视图
  * @param operations 按顺序执行的变换操作；省略时为空列表
- * @param options 语义注册表与同步计算实现；省略时使用内置计算
- * @returns 计算后的完整数据视图
+ * @param options 语义注册表、同步计算实现与可选来源/事件记录
+ * @returns 完整数据视图及可选执行事件
  * @throws {RetikzDataError} 语义解析、计算或结果校验失败
  */
 export const applyTransformsToDataView = (
   view: DataView,
   operations: Array<IRDataTransform> = [],
   options: ApplyTransformsOptions = {},
-): DataView => (operations.length === 0 ? view : applyToView(view, operations, options).dataView);
+): ApplyTransformsToDataViewResult =>
+  operations.length === 0 && options.provenance !== true && !options.lineage
+    ? { dataView: view }
+    : applyToView(view, operations, options);
 
 /**
  * 同步行数据便捷入口；全计划预检后只执行一次
  * @param rows 已规范化的输入行数组
  * @param operations 按顺序执行的变换操作；省略时为空列表
- * @param options 语义注册表与同步计算实现；省略时使用内置计算
- * @returns 计算后的行数组
+ * @param options 语义注册表、同步计算实现与可选来源/事件记录
+ * @returns 行数组及可选执行事件
  * @throws {RetikzDataError} 语义解析、计算或结果校验失败
  */
 export const applyTransforms = (
   rows: Array<ExternalRow>,
   operations: Array<IRDataTransform> = [],
   options: ApplyTransformsOptions = {},
-): Array<ExternalRow> => {
-  if (operations.length === 0) return rows;
+): ApplyTransformsResult => {
+  if (operations.length === 0 && options.provenance !== true && !options.lineage) return { rows };
 
   const parsed = parseDataTransformDeclarations(
     operations.map(operation => ({ operation })),
@@ -210,7 +239,8 @@ export const applyTransforms = (
   );
   const fields = collectRowInputFields(parsed, options);
 
-  return applyToView(describeRows(rows, fields), operations, options, undefined, parsed).dataView.rows;
+  const result = applyToView(describeRows(rows, fields), operations, options, parsed);
+  return { rows: result.dataView.rows, ...(result.lineage === undefined ? {} : { lineage: result.lineage }) };
 };
 
 /** 裸行调用以显式字段引用提供未知类型的模型槽位 */
@@ -261,74 +291,4 @@ export const collectTransformFields = (
     )
       derivedOutputs.add(descriptor.field);
   }
-};
-
-/** 同步来源执行选项 */
-export type ApplyTransformsWithLineageOptions = ApplyTransformsOptions &
-  Readonly<{
-    /** 控制变换事件记录的启用方式、预算与接收器 */
-    lineage?: DataLineageOptions;
-  }>;
-
-/** 同步行执行的事件记录 */
-export type ApplyTransformsWithLineageResult = Readonly<{
-  /** 完成变换后的数据行 */
-  rows: Array<ExternalRow>;
-  /** 本次变换执行产生的事件记录 */
-  lineage: DataLineageRun;
-}>;
-
-/** 同步完整视图与事件记录 */
-export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
-  /** 完成变换后的数据视图 */
-  dataView: DataView;
-  /** 本次变换执行产生的事件记录 */
-  lineage: DataLineageRun;
-}>;
-
-/**
- * 一次同步执行并返回实际来源事件
- * @param view 已规范化的输入数据视图
- * @param operations 按顺序执行的变换操作；省略时为空列表
- * @param options 语义注册表与同步计算实现；省略时使用内置计算
- * @returns 计算后的完整数据视图与执行事件
- * @throws {RetikzDataError} 语义解析、计算或结果校验失败
- */
-export const applyTransformsToDataViewWithLineage = (
-  view: DataView,
-  operations: Array<IRDataTransform> = [],
-  options: ApplyTransformsWithLineageOptions = {},
-): ApplyTransformsToDataViewWithLineageResult => {
-  const lineage = createDataLineageRecorder(options.lineage ?? {});
-  const result = applyToView(view, operations, options, lineage);
-  return { dataView: result.dataView, lineage };
-};
-
-/**
- * 行数据同步来源便捷入口
- * @param rows 已规范化的输入行数组
- * @param operations 按顺序执行的变换操作；省略时为空列表
- * @param options 语义注册表与同步计算实现；省略时使用内置计算
- * @returns 计算后的行数组与执行事件
- * @throws {RetikzDataError} 语义解析、计算或结果校验失败
- */
-export const applyTransformsWithLineage = (
-  rows: Array<ExternalRow>,
-  operations: Array<IRDataTransform> = [],
-  options: ApplyTransformsWithLineageOptions = {},
-): ApplyTransformsWithLineageResult => {
-  const parsed = parseDataTransformDeclarations(
-    operations.map(operation => ({ operation })),
-    options.registry ?? resolveTransformRegistry(),
-  );
-  const lineage = createDataLineageRecorder(options.lineage ?? {});
-  const result = applyToView(
-    describeRows(rows, collectRowInputFields(parsed, options)),
-    operations,
-    options,
-    lineage,
-    parsed,
-  );
-
-  return { rows: result.dataView.rows, lineage };
 };

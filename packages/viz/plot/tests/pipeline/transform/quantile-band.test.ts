@@ -207,7 +207,7 @@ describe('quantile-band statistics behavior (contract)', () => {
           ],
         },
       },
-    ]);
+    ]).rows;
 
     expect(out).toEqual([
       expect.objectContaining({
@@ -259,7 +259,7 @@ describe('quantile-band statistics behavior (contract)', () => {
           ],
         },
       },
-    ]);
+    ]).rows;
 
     expect(out[0]).toMatchObject({ group: 'A', p10: 0.8, p50: 4, p90: 7.2, p80Spread: 6.4 });
   });
@@ -282,7 +282,7 @@ describe('quantile-band statistics behavior (contract)', () => {
           ],
         },
       },
-    ]);
+    ]).rows;
 
     expect(out[0]).toMatchObject({ group: 'A', low: 2, high: 6, whiskerMin: 0, whiskerMax: 8 });
   });
@@ -318,7 +318,7 @@ describe('quantile-band statistics behavior (contract)', () => {
           },
         },
       ],
-    );
+    ).rows;
 
     expect(out[0]).toMatchObject({ group: 'A', low: 5, high: 5, mid: 5, min: 5, max: 5, count: 1 });
     expect(out[1]).toMatchObject({ group: 'B', count: 0 });
@@ -342,7 +342,7 @@ describe('quantile-band statistics behavior (contract)', () => {
           rankAs: 'rank',
         },
       },
-    ]);
+    ]).rows;
 
     expect(out.map(row => [row.group, row.value, row.rank])).toEqual([
       ['A', 0, 1],
@@ -376,7 +376,7 @@ describe('quantile-band statistics behavior (contract)', () => {
           },
         },
       ],
-    );
+    ).rows;
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', value: 100 })]);
   });

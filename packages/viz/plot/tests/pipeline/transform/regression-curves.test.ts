@@ -111,47 +111,49 @@ it('rejects invalid intermediate predictions', () => {
   });
   const registry = resolveRegressionRegistry([brokenDefinition]);
 
-  expect(() =>
-    applyTransforms(
-      [
-        { x: 1, y: 1 },
-        { x: 3, y: 3 },
-      ],
-      [
+  expect(
+    () =>
+      applyTransforms(
+        [
+          { x: 1, y: 1 },
+          { x: 3, y: 3 },
+        ],
+        [
+          {
+            kind: 'smooth',
+            params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
+          },
+        ],
         {
-          kind: 'smooth',
-          params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            regressionRegistry: registry,
+            regressionImplementationRegistry: resolveRegressionImplementationRegistry(registry, [brokenImplementation]),
+          },
         },
-      ],
-      {
-        context: {
-          ...DEFAULT_TRANSFORM_CONTEXT,
-          regressionRegistry: registry,
-          regressionImplementationRegistry: resolveRegressionImplementationRegistry(registry, [brokenImplementation]),
-        },
-      },
-    ),
+      ).rows,
   ).toThrow(/non-finite/);
 });
 
 it('rejects a degenerate inferred extent even when a custom fitter accepts the observations', () => {
-  expect(() =>
-    applyTransforms(
-      [
-        { x: 1, y: 1 },
-        { x: 1, y: 2 },
-      ],
-      [{ kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } } }],
-      {
-        context: {
-          ...DEFAULT_TRANSFORM_CONTEXT,
-          regressionRegistry: resolveRegressionRegistry([definition]),
-          regressionImplementationRegistry: resolveRegressionImplementationRegistry(
-            resolveRegressionRegistry([definition]),
-            [implementation],
-          ),
+  expect(
+    () =>
+      applyTransforms(
+        [
+          { x: 1, y: 1 },
+          { x: 1, y: 2 },
+        ],
+        [{ kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } } }],
+        {
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            regressionRegistry: resolveRegressionRegistry([definition]),
+            regressionImplementationRegistry: resolveRegressionImplementationRegistry(
+              resolveRegressionRegistry([definition]),
+              [implementation],
+            ),
+          },
         },
-      },
-    ),
+      ).rows,
   ).toThrow(/extent/);
 });

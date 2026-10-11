@@ -33,7 +33,7 @@ export const previewSource = {
               '',
               `const operation = ${operationCode} satisfies IRDataTransform;`,
               '',
-              'export const result = applyTransforms(rows, [operation]);',
+              'export const { rows: result } = applyTransforms(rows, [operation]);',
             ].join('\n'),
           },
         ],

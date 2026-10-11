@@ -15,7 +15,7 @@ const applyTransforms = (
   rows: Array<ExternalRow>,
   operations?: Parameters<typeof applyDataTransforms>[1],
   options?: Parameters<typeof applyDataTransforms>[2],
-): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
+): Array<ExternalRow> => applyDataTransforms(rows, operations, options).rows;
 
 const densityOperation = (operation: unknown) => TransformSchema.parse(operation);
 

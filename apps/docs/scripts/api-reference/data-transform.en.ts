@@ -1,4 +1,19 @@
 const translations: Partial<Record<string, string>> = {
+  'true 使用默认事件配置，对象自定义配置；false 或省略时不记录，不隐式建立行来源':
+    'true uses default event options, an object customizes them, and false or omission disables recording without implicitly assigning row sources',
+  'true 使用默认事件配置，对象自定义配置；false 或省略时不追加记录':
+    'true uses default event options, an object customizes them, and false or omission disables new recording',
+  '为尚无来源的输入建立零基索引，默认关闭；已有来源始终保留':
+    'Creates zero-based indices for inputs without provenance; disabled by default, and existing provenance is always retained',
+  '同步行变换结果；来源保存在行上，事件单独返回':
+    'Synchronous row transform result; provenance stays on rows and events are returned separately',
+  显式启用事件记录时的本次运行: 'The current run when event recording is explicitly enabled',
+  同步视图变换结果: 'Synchronous data-view transform result',
+  完成变换后的完整视图: 'The complete transformed data view',
+  '语义注册表、同步计算实现与可选来源/事件记录':
+    'Semantic registries, synchronous implementations, and optional provenance or event recording',
+  行数组及可选执行事件: 'Rows and optional execution events',
+  完整数据视图及可选执行事件: 'Complete data view and optional execution events',
   'registry 擦除不同方法的参数泛型；调用前必须精确解析':
     'Erases method-specific parameter generics in the registry; parse exact parameters before calling',
   '精确参数 schema': 'Exact parameter schema',

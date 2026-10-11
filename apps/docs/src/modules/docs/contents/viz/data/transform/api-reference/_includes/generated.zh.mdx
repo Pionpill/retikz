@@ -499,7 +499,7 @@ export type AnyTransformImplementation = Readonly<{
 ### ApplyTransformsOptions
 
 <p>
-  <ApiSourceLink label={'ApplyTransformsOptions'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={39}>
+  <ApiSourceLink label={'ApplyTransformsOptions'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={38}>
     同步便捷入口的明确计算能力，不能注册 Promise 回调
   </ApiSourceLink>
 </p>
@@ -510,14 +510,16 @@ export type AnyTransformImplementation = Readonly<{
 
 <ApiTable>
 
-| 成员                                         | 类型                                                           | 默认值 | 说明                           |
-| -------------------------------------------- | -------------------------------------------------------------- | ------ | ------------------------------ |
-| `readonly context?`                          | `Partial<TransformContext>`                                    | —      | 来源、统计语义与当前计算上下文 |
-| `readonly registry?`                         | `ReadonlyMap<string, AnyTransformDefinition>`                  | —      | 本次唯一的语义 registry        |
-| `readonly regressionImplementations?`        | `ReadonlyArray<AnySynchronousRegressionImplementation>`        | —      | 显式同步拟合实现               |
-| `readonly rowSelectorImplementations?`       | `ReadonlyArray<AnySynchronousRowSelectorImplementation>`       | —      | 显式同步选择实现               |
-| `readonly statisticsReducerImplementations?` | `ReadonlyArray<AnySynchronousStatisticsReducerImplementation>` | —      | 显式同步统计实现               |
-| `readonly transformImplementations?`         | `ReadonlyArray<AnySynchronousTransformImplementation>`         | —      | 显式同步 transform 实现        |
+| 成员                                         | 类型                                                           | 默认值  | 说明                                                                          |
+| -------------------------------------------- | -------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------- |
+| `readonly context?`                          | `Partial<TransformContext>`                                    | —       | 来源、统计语义与当前计算上下文                                                |
+| `readonly lineage?`                          | `boolean \| DataLineageOptions`                                | `false` | true 使用默认事件配置，对象自定义配置；false 或省略时不记录，不隐式建立行来源 |
+| `readonly provenance?`                       | `boolean`                                                      | `false` | 为尚无来源的输入建立零基索引，默认关闭；已有来源始终保留                      |
+| `readonly registry?`                         | `ReadonlyMap<string, AnyTransformDefinition>`                  | —       | 本次唯一的语义 registry                                                       |
+| `readonly regressionImplementations?`        | `ReadonlyArray<AnySynchronousRegressionImplementation>`        | —       | 显式同步拟合实现                                                              |
+| `readonly rowSelectorImplementations?`       | `ReadonlyArray<AnySynchronousRowSelectorImplementation>`       | —       | 显式同步选择实现                                                              |
+| `readonly statisticsReducerImplementations?` | `ReadonlyArray<AnySynchronousStatisticsReducerImplementation>` | —       | 显式同步统计实现                                                              |
+| `readonly transformImplementations?`         | `ReadonlyArray<AnySynchronousTransformImplementation>`         | —       | 显式同步 transform 实现                                                       |
 
 </ApiTable>
 
@@ -527,6 +529,8 @@ export type AnyTransformImplementation = Readonly<{
 
 ```ts
 export type ApplyTransformsOptions = Readonly<{
+  provenance?: boolean;
+  lineage?: boolean | DataLineageOptions;
   registry?: ReadonlyMap<string, AnyTransformDefinition>;
   transformImplementations?: ReadonlyArray<AnySynchronousTransformImplementation>;
   statisticsReducerImplementations?: ReadonlyArray<AnySynchronousStatisticsReducerImplementation>;
@@ -540,15 +544,11 @@ export type ApplyTransformsOptions = Readonly<{
 
 </DocTabs>
 
-### ApplyTransformsToDataViewWithLineageResult
+### ApplyTransformsResult
 
 <p>
-  <ApiSourceLink
-    label={'ApplyTransformsToDataViewWithLineageResult'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={282}
-  >
-    同步完整视图与事件记录
+  <ApiSourceLink label={'ApplyTransformsResult'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={64}>
+    同步行变换结果；来源保存在行上，事件单独返回
   </ApiSourceLink>
 </p>
 
@@ -558,10 +558,10 @@ export type ApplyTransformsOptions = Readonly<{
 
 <ApiTable>
 
-| 成员                | 类型             | 默认值 | 说明                       |
-| ------------------- | ---------------- | ------ | -------------------------- |
-| `readonly dataView` | `DataView`       | —      | 完成变换后的数据视图       |
-| `readonly lineage`  | `DataLineageRun` | —      | 本次变换执行产生的事件记录 |
+| 成员                | 类型                 | 默认值 | 说明                         |
+| ------------------- | -------------------- | ------ | ---------------------------- |
+| `readonly lineage?` | `DataLineageRun`     | —      | 显式启用事件记录时的本次运行 |
+| `readonly rows`     | `Array<ExternalRow>` | —      | 完成变换后的数据行           |
 
 </ApiTable>
 
@@ -570,9 +570,9 @@ export type ApplyTransformsOptions = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
-  dataView: DataView;
-  lineage: DataLineageRun;
+export type ApplyTransformsResult = Readonly<{
+  rows: Array<ExternalRow>;
+  lineage?: DataLineageRun;
 }>;
 ```
 
@@ -580,15 +580,15 @@ export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
 
 </DocTabs>
 
-### ApplyTransformsWithLineageOptions
+### ApplyTransformsToDataViewResult
 
 <p>
   <ApiSourceLink
-    label={'ApplyTransformsWithLineageOptions'}
+    label={'ApplyTransformsToDataViewResult'}
     path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={267}
+    startLine={72}
   >
-    同步来源执行选项
+    同步视图变换结果
   </ApiSourceLink>
 </p>
 
@@ -598,15 +598,10 @@ export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
 
 <ApiTable>
 
-| 成员                                         | 类型                                                           | 默认值 | 说明                                     |
-| -------------------------------------------- | -------------------------------------------------------------- | ------ | ---------------------------------------- |
-| `readonly context?`                          | `Partial<TransformContext>`                                    | —      | 来源、统计语义与当前计算上下文           |
-| `readonly lineage?`                          | `DataLineageOptions`                                           | —      | 控制变换事件记录的启用方式、预算与接收器 |
-| `readonly registry?`                         | `ReadonlyMap<string, AnyTransformDefinition>`                  | —      | 本次唯一的语义 registry                  |
-| `readonly regressionImplementations?`        | `ReadonlyArray<AnySynchronousRegressionImplementation>`        | —      | 显式同步拟合实现                         |
-| `readonly rowSelectorImplementations?`       | `ReadonlyArray<AnySynchronousRowSelectorImplementation>`       | —      | 显式同步选择实现                         |
-| `readonly statisticsReducerImplementations?` | `ReadonlyArray<AnySynchronousStatisticsReducerImplementation>` | —      | 显式同步统计实现                         |
-| `readonly transformImplementations?`         | `ReadonlyArray<AnySynchronousTransformImplementation>`         | —      | 显式同步 transform 实现                  |
+| 成员                | 类型             | 默认值 | 说明                         |
+| ------------------- | ---------------- | ------ | ---------------------------- |
+| `readonly dataView` | `DataView`       | —      | 完成变换后的完整视图         |
+| `readonly lineage?` | `DataLineageRun` | —      | 显式启用事件记录时的本次运行 |
 
 </ApiTable>
 
@@ -615,49 +610,9 @@ export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type ApplyTransformsWithLineageOptions = ApplyTransformsOptions &
-  Readonly<{
-    lineage?: DataLineageOptions;
-  }>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### ApplyTransformsWithLineageResult
-
-<p>
-  <ApiSourceLink
-    label={'ApplyTransformsWithLineageResult'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={274}
-  >
-    同步行执行的事件记录
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable>
-
-| 成员               | 类型                 | 默认值 | 说明                       |
-| ------------------ | -------------------- | ------ | -------------------------- |
-| `readonly lineage` | `DataLineageRun`     | —      | 本次变换执行产生的事件记录 |
-| `readonly rows`    | `Array<ExternalRow>` | —      | 完成变换后的数据行         |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type ApplyTransformsWithLineageResult = Readonly<{
-  rows: Array<ExternalRow>;
-  lineage: DataLineageRun;
+export type ApplyTransformsToDataViewResult = Readonly<{
+  dataView: DataView;
+  lineage?: DataLineageRun;
 }>;
 ```
 
@@ -668,7 +623,7 @@ export type ApplyTransformsWithLineageResult = Readonly<{
 ### DataInputBinding
 
 <p>
-  <ApiSourceLink label={'DataInputBinding'} path={'packages/viz/data/src/contract/execution.ts'} startLine={283}>
+  <ApiSourceLink label={'DataInputBinding'} path={'packages/viz/data/src/contract/execution.ts'} startLine={286}>
     宿主数据引用的真实 runtime 输入
   </ApiSourceLink>
 </p>
@@ -742,7 +697,7 @@ export type DataInputBinding<TSource> =
 ### DataInputBindings
 
 <p>
-  <ApiSourceLink label={'DataInputBindings'} path={'packages/viz/data/src/contract/execution.ts'} startLine={307}>
+  <ApiSourceLink label={'DataInputBindings'} path={'packages/viz/data/src/contract/execution.ts'} startLine={310}>
     引擎句柄、行数据和函数均不进入 JSON IR
   </ApiSourceLink>
 </p>
@@ -892,7 +847,7 @@ export type DataTransformDiagnostic = Readonly<{
 ### DataTransformExecution
 
 <p>
-  <ApiSourceLink label={'DataTransformExecution'} path={'packages/viz/data/src/contract/execution.ts'} startLine={243}>
+  <ApiSourceLink label={'DataTransformExecution'} path={'packages/viz/data/src/contract/execution.ts'} startLine={246}>
     一个真实输入的单次执行权
   </ApiSourceLink>
 </p>
@@ -929,7 +884,7 @@ export type DataTransformExecution = Readonly<{
   <ApiSourceLink
     label={'DataTransformExecutionOptions'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={218}
+    startLine={221}
   >
     有作用域的执行器默认值与本地/外部计算实现
   </ApiSourceLink>
@@ -1024,7 +979,7 @@ export type DataTransformExecutionRequirements = Readonly<{
 ### DataTransformExecutor
 
 <p>
-  <ApiSourceLink label={'DataTransformExecutor'} path={'packages/viz/data/src/contract/execution.ts'} startLine={270}>
+  <ApiSourceLink label={'DataTransformExecutor'} path={'packages/viz/data/src/contract/execution.ts'} startLine={273}>
     模型预检与实际计算绑定分离的执行器
   </ApiSourceLink>
 </p>
@@ -1066,7 +1021,7 @@ export type DataTransformExecutor<TSource> = Readonly<{
   <ApiSourceLink
     label={'DataTransformImplementationProvider'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={190}
+    startLine={193}
   >
     按模型及真实源能力匹配，不计算或搬运行数据
   </ApiSourceLink>
@@ -1294,7 +1249,7 @@ export type DataTransformOutputModel =
   <ApiSourceLink
     label={'DataTransformPreparation'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={252}
+    startLine={255}
   >
     本请求固定的模型计划，可绑定尚未生成的不同分区
   </ApiSourceLink>
@@ -1354,7 +1309,7 @@ export type DataTransformPreparation<TSource> =
   <ApiSourceLink
     label={'DataTransformProviderRegistration'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={207}
+    startLine={210}
   >
     具名外部入口；注册本身不启用外部模式
   </ApiSourceLink>
@@ -1407,12 +1362,12 @@ export type DataTransformProviderRegistration<TSource> = Readonly<{
 
 <ApiTable>
 
-| 成员                      | 类型                 | 默认值 | 说明                     |
-| ------------------------- | -------------------- | ------ | ------------------------ |
-| `readonly dataExecution?` | `IRDataExecution`    | —      | 宿主根执行配置           |
-| `readonly lineage?`       | `DataLineageOptions` | —      | 事件记录要求             |
-| `readonly provenance?`    | `boolean`            | —      | 请求保留本次输入真实来源 |
-| `readonly signal?`        | `AbortSignal`        | —      | 请求取消信号             |
+| 成员                      | 类型                            | 默认值  | 说明                                                            |
+| ------------------------- | ------------------------------- | ------- | --------------------------------------------------------------- |
+| `readonly dataExecution?` | `IRDataExecution`               | —       | 宿主根执行配置                                                  |
+| `readonly lineage?`       | `boolean \| DataLineageOptions` | `false` | true 使用默认事件配置，对象自定义配置；false 或省略时不追加记录 |
+| `readonly provenance?`    | `boolean`                       | —       | 请求保留本次输入真实来源                                        |
+| `readonly signal?`        | `AbortSignal`                   | —       | 请求取消信号                                                    |
 
 </ApiTable>
 
@@ -1424,7 +1379,7 @@ export type DataTransformProviderRegistration<TSource> = Readonly<{
 export type DataTransformRequestOptions = Readonly<{
   dataExecution?: IRDataExecution;
   provenance?: boolean;
-  lineage?: DataLineageOptions;
+  lineage?: boolean | DataLineageOptions;
   signal?: AbortSignal;
 }>;
 ```
@@ -1635,7 +1590,7 @@ export type DataTransformStage = Readonly<{
   <ApiSourceLink
     label={'DataTransformStageImplementation'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={161}
+    startLine={164}
   >
     引用相同语义 Definition 的阶段计算入口
   </ApiSourceLink>
@@ -1734,7 +1689,7 @@ export type DataTransformStageInput<TSource> =
   <ApiSourceLink
     label={'DataTransformStageSupport'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={172}
+    startLine={175}
   >
     支持声明与能力查询异常分离
   </ApiSourceLink>
@@ -2676,7 +2631,7 @@ export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
   <ApiSourceLink
     label={'DEFAULT_TRANSFORM_CONTEXT'}
     path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={32}
+    startLine={31}
   >
     内置来源 helper；计算与语义上下文独立
   </ApiSourceLink>
@@ -2693,7 +2648,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 ### applyTransforms
 
 <p>
-  <ApiSourceLink label={'applyTransforms'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={200}>
+  <ApiSourceLink label={'applyTransforms'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={229}>
     同步行数据便捷入口；全计划预检后只执行一次
   </ApiSourceLink>
 </p>
@@ -2704,13 +2659,13 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称          | 类型 / 签名              | 说明                                         |
-| ------ | ------------- | ------------------------ | -------------------------------------------- |
-| 参数   | `rows`        | `Array<ExternalRow>`     | 已规范化的输入行数组                         |
-|        | `operations?` | `Array<IRDataTransform>` | 按顺序执行的变换操作；省略时为空列表         |
-|        | `options?`    | `ApplyTransformsOptions` | 语义注册表与同步计算实现；省略时使用内置计算 |
-| 返回值 | —             | `Array<ExternalRow>`     | 计算后的行数组                               |
-| 错误   | —             | —                        | 语义解析、计算或结果校验失败                 |
+| 类别   | 名称          | 类型 / 签名              | 说明                                        |
+| ------ | ------------- | ------------------------ | ------------------------------------------- |
+| 参数   | `rows`        | `Array<ExternalRow>`     | 已规范化的输入行数组                        |
+|        | `operations?` | `Array<IRDataTransform>` | 按顺序执行的变换操作；省略时为空列表        |
+|        | `options?`    | `ApplyTransformsOptions` | 语义注册表、同步计算实现与可选来源/事件记录 |
+| 返回值 | —             | `ApplyTransformsResult`  | 行数组及可选执行事件                        |
+| 错误   | —             | —                        | 语义解析、计算或结果校验失败                |
 
 </ApiTable>
 
@@ -2723,7 +2678,7 @@ export declare const applyTransforms: (
   rows: Array<ExternalRow>,
   operations?: Array<IRDataTransform>,
   options?: ApplyTransformsOptions,
-) => Array<ExternalRow>;
+) => ApplyTransformsResult;
 ```
 
 </DocTab>
@@ -2736,7 +2691,7 @@ export declare const applyTransforms: (
   <ApiSourceLink
     label={'applyTransformsToDataView'}
     path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={186}
+    startLine={212}
   >
     按声明顺序同步推进规范 DataView
   </ApiSourceLink>
@@ -2748,13 +2703,13 @@ export declare const applyTransforms: (
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称          | 类型 / 签名              | 说明                                         |
-| ------ | ------------- | ------------------------ | -------------------------------------------- |
-| 参数   | `view`        | `DataView`               | 已规范化的输入数据视图                       |
-|        | `operations?` | `Array<IRDataTransform>` | 按顺序执行的变换操作；省略时为空列表         |
-|        | `options?`    | `ApplyTransformsOptions` | 语义注册表与同步计算实现；省略时使用内置计算 |
-| 返回值 | —             | `DataView`               | 计算后的完整数据视图                         |
-| 错误   | —             | —                        | 语义解析、计算或结果校验失败                 |
+| 类别   | 名称          | 类型 / 签名                       | 说明                                        |
+| ------ | ------------- | --------------------------------- | ------------------------------------------- |
+| 参数   | `view`        | `DataView`                        | 已规范化的输入数据视图                      |
+|        | `operations?` | `Array<IRDataTransform>`          | 按顺序执行的变换操作；省略时为空列表        |
+|        | `options?`    | `ApplyTransformsOptions`          | 语义注册表、同步计算实现与可选来源/事件记录 |
+| 返回值 | —             | `ApplyTransformsToDataViewResult` | 完整数据视图及可选执行事件                  |
+| 错误   | —             | —                                 | 语义解析、计算或结果校验失败                |
 
 </ApiTable>
 
@@ -2767,95 +2722,7 @@ export declare const applyTransformsToDataView: (
   view: DataView,
   operations?: Array<IRDataTransform>,
   options?: ApplyTransformsOptions,
-) => DataView;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### applyTransformsToDataViewWithLineage
-
-<p>
-  <ApiSourceLink
-    label={'applyTransformsToDataViewWithLineage'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={297}
-  >
-    一次同步执行并返回实际来源事件
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable variant="parameters">
-
-| 类别   | 名称          | 类型 / 签名                                  | 说明                                         |
-| ------ | ------------- | -------------------------------------------- | -------------------------------------------- |
-| 参数   | `view`        | `DataView`                                   | 已规范化的输入数据视图                       |
-|        | `operations?` | `Array<IRDataTransform>`                     | 按顺序执行的变换操作；省略时为空列表         |
-|        | `options?`    | `ApplyTransformsWithLineageOptions`          | 语义注册表与同步计算实现；省略时使用内置计算 |
-| 返回值 | —             | `ApplyTransformsToDataViewWithLineageResult` | 计算后的完整数据视图与执行事件               |
-| 错误   | —             | —                                            | 语义解析、计算或结果校验失败                 |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export declare const applyTransformsToDataViewWithLineage: (
-  view: DataView,
-  operations?: Array<IRDataTransform>,
-  options?: ApplyTransformsWithLineageOptions,
-) => ApplyTransformsToDataViewWithLineageResult;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### applyTransformsWithLineage
-
-<p>
-  <ApiSourceLink
-    label={'applyTransformsWithLineage'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={315}
-  >
-    行数据同步来源便捷入口
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable variant="parameters">
-
-| 类别   | 名称          | 类型 / 签名                         | 说明                                         |
-| ------ | ------------- | ----------------------------------- | -------------------------------------------- |
-| 参数   | `rows`        | `Array<ExternalRow>`                | 已规范化的输入行数组                         |
-|        | `operations?` | `Array<IRDataTransform>`            | 按顺序执行的变换操作；省略时为空列表         |
-|        | `options?`    | `ApplyTransformsWithLineageOptions` | 语义注册表与同步计算实现；省略时使用内置计算 |
-| 返回值 | —             | `ApplyTransformsWithLineageResult`  | 计算后的行数组与执行事件                     |
-| 错误   | —             | —                                   | 语义解析、计算或结果校验失败                 |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export declare const applyTransformsWithLineage: (
-  rows: Array<ExternalRow>,
-  operations?: Array<IRDataTransform>,
-  options?: ApplyTransformsWithLineageOptions,
-) => ApplyTransformsWithLineageResult;
+) => ApplyTransformsToDataViewResult;
 ```
 
 </DocTab>
@@ -2865,7 +2732,7 @@ export declare const applyTransformsWithLineage: (
 ### collectTransformFields
 
 <p>
-  <ApiSourceLink label={'collectTransformFields'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={240}>
+  <ApiSourceLink label={'collectTransformFields'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={270}>
     从唯一语义模型投影派生字段，供宿主 strict 引用检查
   </ApiSourceLink>
 </p>
@@ -2912,7 +2779,7 @@ export declare const collectTransformFields: (
   <ApiSourceLink
     label={'createDataTransformExecutor'}
     path={'packages/viz/data/src/pipeline/execution.ts'}
-    startLine={62}
+    startLine={63}
   >
     创建有作用域的执行策略；所有支持检查完成后才绑定并计算
   </ApiSourceLink>
@@ -3324,7 +3191,7 @@ export declare const defineTransformImplementation: <
   <ApiSourceLink
     label={'describeDataTransformInput'}
     path={'packages/viz/data/src/pipeline/execution.ts'}
-    startLine={45}
+    startLine={46}
   >
     将实际输入投影为无行数据的能力描述
   </ApiSourceLink>
@@ -3361,7 +3228,7 @@ export declare const describeDataTransformInput: <TSource>(
 ### executeDataTransforms
 
 <p>
-  <ApiSourceLink label={'executeDataTransforms'} path={'packages/viz/data/src/pipeline/execution.ts'} startLine={389}>
+  <ApiSourceLink label={'executeDataTransforms'} path={'packages/viz/data/src/pipeline/execution.ts'} startLine={391}>
     统一异步入口；准备不支持时不计算，绑定后的执行只消费一次
   </ApiSourceLink>
 </p>
@@ -3987,7 +3854,7 @@ export declare const resolveStatisticsReducerRegistry: (
   <ApiSourceLink
     label={'resolveTransformImplementationRegistry'}
     path={'packages/viz/data/src/providers/transform/definitions.ts'}
-    startLine={567}
+    startLine={578}
   >
     独立计算 registry；内置和自定义引用同一语义身份
   </ApiSourceLink>
@@ -4032,7 +3899,7 @@ export declare const resolveTransformImplementationRegistry: <
   <ApiSourceLink
     label={'resolveTransformRegistry'}
     path={'packages/viz/data/src/providers/transform/definitions.ts'}
-    startLine={525}
+    startLine={536}
   >
     解析 transform registry
   </ApiSourceLink>

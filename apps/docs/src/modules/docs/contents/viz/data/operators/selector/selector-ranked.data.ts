@@ -25,4 +25,4 @@ export const selectorRankedRowsOf = (_values: SelectorRankedValues): Array<Exter
 
 /** 执行选择变换，返回原始记录与排名字段 */
 export const selectorRankedResultOf = (values: SelectorRankedValues): Array<ExternalRow> =>
-  applyTransforms(selectorRankedRowsOf(values), [selectorRankedOperationOf(values)]);
+  applyTransforms(selectorRankedRowsOf(values), [selectorRankedOperationOf(values)]).rows;

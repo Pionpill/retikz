@@ -8,7 +8,7 @@ import {
   defineRowSelectorImplementation,
   resolveStatisticsReducerImplementationRegistry,
   resolveRowSelectorImplementationRegistry,
-  applyTransforms as applyDataTransforms,
+  applyTransforms,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
   defineStatisticsReducer,
@@ -18,12 +18,6 @@ import {
   readSourceIndices,
   tagSourceIndex,
 } from '../../src';
-
-const applyTransforms = (
-  rows: Array<ExternalRow>,
-  operations?: Parameters<typeof applyDataTransforms>[1],
-  options?: Parameters<typeof applyDataTransforms>[2],
-): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
 
 const ORDERS: Array<ExternalRow> = [
   { region: 'N', product: 'A', revenue: 3 },
@@ -46,7 +40,7 @@ describe('statistical transform algebra (contract)', () => {
           ],
         },
       },
-    ]);
+    ]).rows;
 
     expect(out).toEqual([
       { region: 'N', avgRevenue: 4, medianRevenue: 4, orders: 2 },
@@ -65,7 +59,7 @@ describe('statistical transform algebra (contract)', () => {
           ],
         },
       },
-    ]);
+    ]).rows;
 
     expect(out).toEqual([expect.objectContaining({ orders: 4, totalRevenue: 14 })]);
     expect(readSourceIndices(out[0])).toEqual([0, 1, 2, 3]);
@@ -80,7 +74,7 @@ describe('statistical transform algebra (contract)', () => {
           selector: { kind: 'max', by: 'revenue', tie: 'first' },
         },
       },
-    ]);
+    ]).rows;
 
     expect(out).toEqual([
       expect.objectContaining({ region: 'N', product: 'B', revenue: 5 }),
@@ -100,7 +94,7 @@ describe('statistical transform algebra (contract)', () => {
           rankAs: 'rank',
         },
       },
-    ]);
+    ]).rows;
 
     expect(out.map(row => [row.region, row.revenue, row.rank])).toEqual([
       ['N', 5, 1],
@@ -119,7 +113,7 @@ describe('statistical transform algebra (contract)', () => {
           metrics: [{ kind: 'mean', field: 'revenue', as: 'regionMean' }],
         },
       },
-    ]);
+    ]).rows;
 
     expect(out.length).toBe(ORDERS.length);
     expect(out.map(row => [row.region, row.revenue, row.regionMean])).toEqual([
@@ -139,7 +133,7 @@ describe('statistical transform algebra (contract)', () => {
           selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'regionMax' }],
         },
       },
-    ]);
+    ]).rows;
 
     expect(out.length).toBe(ORDERS.length);
     expect(out.map(row => [row.region, row.revenue, row.regionMax])).toEqual([
@@ -170,7 +164,7 @@ describe('statistical transform algebra (contract)', () => {
           },
         },
       ],
-    );
+    ).rows;
 
     expect(out).toEqual([
       expect.objectContaining({
@@ -218,7 +212,7 @@ describe('statistical transform algebra (contract)', () => {
           },
         },
       ],
-    );
+    ).rows;
 
     expect(out.map(row => [row.binStart, row.binEnd, row.binCount, row.binMean])).toEqual([
       [1, 6, 2, 15],
@@ -274,7 +268,7 @@ describe('statistical transform algebra (contract)', () => {
           ),
         },
       },
-    );
+    ).rows;
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', weightedValue: 17.5 })]);
   });
@@ -326,7 +320,7 @@ describe('statistical transform algebra (contract)', () => {
           ),
         },
       },
-    );
+    ).rows;
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', value: 9, rank: 1 })]);
   });

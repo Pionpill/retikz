@@ -21,6 +21,7 @@ import {
   assertDataTransformModel,
   assertDataTransformResult,
   resolveDataExecution,
+  resolveDataLineageOptions,
   resolveDataTransformOutputModel,
 } from '../resolve';
 import { createDataLineageRecorder, importDataLineageEvents } from './lineage';
@@ -85,9 +86,10 @@ export const createDataTransformExecutor = <TSource = never>(
     prepare: async (descriptor, resolution, request = {}): Promise<DataTransformPreparation<TSource>> => {
       assertActive(request.signal);
       assertDataTransformModel(resolution.inputModel, descriptor.model);
+      const lineageOptions = resolveDataLineageOptions(request.lineage);
       const requirements = {
         preserveProvenance: request.provenance === true,
-        ...(request.lineage === undefined ? {} : { lineage: request.lineage }),
+        ...(lineageOptions === undefined ? {} : { lineage: lineageOptions }),
       };
       const selected: Array<DataTransformStageImplementation<TSource>> = [];
       const localStages = new Set<number>();
@@ -206,9 +208,9 @@ export const createDataTransformExecutor = <TSource = never>(
                   result,
                 );
                 const lineage =
-                  request.lineage === undefined
+                  lineageOptions === undefined
                     ? undefined
-                    : createDataLineageRecorder({ ...request.lineage, sink: undefined, retainEvents: true });
+                    : createDataLineageRecorder({ ...lineageOptions, sink: undefined, retainEvents: true });
                 const context: TransformContext = { ...DEFAULT_TRANSFORM_CONTEXT, lineage };
                 if (current.kind === 'source') lineage?.recordSource(result.rows);
                 const rows = await local(context).apply(result.rows, stage.operation as never, context);
@@ -286,10 +288,10 @@ export const createDataTransformExecutor = <TSource = never>(
               return (async () => {
                 let current = input;
                 const events = input.kind === 'result' ? [...(input.result.lineage?.events ?? [])] : [];
-                if (request.lineage !== undefined && input.kind === 'result') {
-                  const source = createDataLineageRecorder({ ...request.lineage, sink: undefined, retainEvents: true });
+                if (lineageOptions !== undefined && input.kind === 'result') {
+                  const source = createDataLineageRecorder({ ...lineageOptions, sink: undefined, retainEvents: true });
                   source.recordSource(input.result.rows);
-                  events.push(...importDataLineageEvents(source.events, request.lineage));
+                  events.push(...importDataLineageEvents(source.events, lineageOptions));
                 }
 
                 for (const [operationIndex, implementation] of selected.entries()) {
@@ -327,11 +329,11 @@ export const createDataTransformExecutor = <TSource = never>(
 
                   const added = returnedEvents.slice(prefix).filter(event => !previousEvents.includes(event));
                   const recorded =
-                    request.lineage === undefined
+                    lineageOptions === undefined
                       ? current.kind === 'source' && localStages.has(operationIndex)
                         ? added
                         : []
-                      : importDataLineageEvents(added, request.lineage, operationIndex);
+                      : importDataLineageEvents(added, lineageOptions, operationIndex);
                   events.push(...recorded);
                   current = {
                     kind: 'result',
@@ -342,18 +344,18 @@ export const createDataTransformExecutor = <TSource = never>(
                 if (current.kind === 'source') {
                   const materialized = await materialize(current);
                   events.push(
-                    ...(request.lineage === undefined
+                    ...(lineageOptions === undefined
                       ? (materialized.lineage?.events ?? [])
-                      : importDataLineageEvents(materialized.lineage?.events ?? [], request.lineage)),
+                      : importDataLineageEvents(materialized.lineage?.events ?? [], lineageOptions)),
                   );
-                  if (request.lineage !== undefined) {
+                  if (lineageOptions !== undefined) {
                     const source = createDataLineageRecorder({
-                      ...request.lineage,
+                      ...lineageOptions,
                       sink: undefined,
                       retainEvents: true,
                     });
                     source.recordSource(materialized.rows);
-                    events.push(...importDataLineageEvents(source.events, request.lineage));
+                    events.push(...importDataLineageEvents(source.events, lineageOptions));
                   }
 
                   current = { kind: 'result', result: materialized };
@@ -365,7 +367,7 @@ export const createDataTransformExecutor = <TSource = never>(
 
                 return {
                   ...result,
-                  ...(events.length === 0 && request.lineage === undefined ? {} : { lineage: { events } }),
+                  ...(events.length === 0 && lineageOptions === undefined ? {} : { lineage: { events } }),
                 };
               })();
             },

@@ -43,4 +43,4 @@ export const reducerBandRowsOf = (values: ReducerBandValues): Array<ExternalRow>
 
 /** 执行本节规约，返回真实汇总行 */
 export const reducerBandResultOf = (values: ReducerBandValues): Array<ExternalRow> =>
-  applyTransforms(reducerBandRowsOf(values), [reducerBandOperationOf(values)]);
+  applyTransforms(reducerBandRowsOf(values), [reducerBandOperationOf(values)]).rows;

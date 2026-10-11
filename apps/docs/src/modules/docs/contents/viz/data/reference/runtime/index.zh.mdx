@@ -58,14 +58,14 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 
 ## Transform 与 lineage
 
-`applyTransforms(rows, operations?, options?)` 按声明顺序执行 operation，只返回 rows；options 提供 registry、独立同步实现与 context。Promise 或外接模式使用执行器。`applyTransformsWithLineage(rows, operations?, options?)` 会先给输入行添加不可序列化到 JSON 的 Symbol 来源标记，再返回：
+`applyTransforms(rows, operations?, options?)` 按声明顺序执行 operation，返回 `{ rows, lineage? }`。options 提供 registry、同步实现与 context；`provenance: true` 为未标记输入建立来源，`lineage: true` 使用默认事件配置，对象自定义配置；省略或 `false` 不记录事件。已有来源始终保留，事件记录不隐式建立来源。已有视图使用 `applyTransformsToDataView`，返回 `{ dataView, lineage? }`。Promise 或外接模式使用执行器。
 
 | 字段      | 类型                 | 说明                                                       |
 | --------- | -------------------- | ---------------------------------------------------------- |
 | `rows`    | `Array<ExternalRow>` | 变换后的调用方输入 rows；上游已规范化时保持 canonical 语义 |
-| `lineage` | `DataLineageRun`     | 本次运行保留的结构化事件；使用 sink 时默认不重复留存事件   |
+| `lineage` | `DataLineageRun?`    | 本次运行保留的结构化事件；使用 sink 时默认不重复留存事件   |
 
-`DataLineageOptions` 默认只记录轻量 source 与 transform-step 摘要。`rowSamples` 和 `calculationDetails` 必须显式给出 `maxRows` 与字段白名单；完整来源索引也必须通过 `sourceIdentity: { mode: 'full' }` 显式开启。它们是诊断能力，不会回写 Data IR。
+启用后，`DataLineageOptions` 默认只记录轻量 source 与 transform-step 摘要。`rowSamples` 和 `calculationDetails` 必须显式给出 `maxRows` 与字段白名单；完整来源索引也必须通过 `sourceIdentity: { mode: 'full' }` 显式开启。它们是诊断能力，不会回写 Data IR。
 
 <SourceLinks
   sources={[
@@ -100,8 +100,8 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
     {
       label: 'transform 执行与 lineage 入口',
       path: 'packages/viz/data/src/pipeline/transform.ts',
-      startLine: 244,
-      endLine: 297,
+      startLine: 211,
+      endLine: 247,
     },
     {
       label: 'lineage 选项与事件契约',
@@ -121,5 +121,5 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 ## 相关
 
 - [契约](/viz/data/reference/contract)：运行时消费的 JSON-safe schema
-- [Data 来源追溯](/viz/data/provenance/data)：provenance 与 lineage 的使用场景和可视化解释
+- [Data 来源追溯](/viz/data/provenance)：provenance 与 lineage 的使用场景和可视化解释
 - [数据变换扩展](/viz/data/transform/extensions)：自定义 transform、selector 与 reducer

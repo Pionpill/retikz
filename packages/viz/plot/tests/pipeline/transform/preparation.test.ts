@@ -1,6 +1,6 @@
 import { compileToScene, createCompositeInputBindings } from '@retikz/core';
 import type { IRScene } from '@retikz/core';
-import { applyTransformsWithLineage, createDataTransformExecutor, readSourceIndex, tagSourceIndex } from '@retikz/data';
+import { applyTransforms, createDataTransformExecutor, readSourceIndex, tagSourceIndex } from '@retikz/data';
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
@@ -70,7 +70,8 @@ describe('Plot whole-scope data preparation', () => {
     const upstreamRows = tagSourceIndex(
       Array.from({ length: 7 }, (_, index) => ({ value: index + 1, group: 'a' })),
     ).slice(5);
-    const lineage = applyTransformsWithLineage(rows).lineage;
+    const lineage = applyTransforms(rows, [], { provenance: true, lineage: {} }).lineage;
+    expect(lineage).toBeDefined();
     const spec = specOf();
     spec.dataExecution = { mode: 'builtin' };
     spec.transform = [];
@@ -87,7 +88,7 @@ describe('Plot whole-scope data preparation', () => {
 
     expect(prepared.root.rows.map(readSourceIndex)).toEqual([0, 1]);
     expect(upstreamRows.map(readSourceIndex)).toEqual([5, 6]);
-    expect(prepared.root.lineage?.events).toEqual(lineage.events);
+    expect(prepared.root.lineage?.events).toEqual(lineage?.events);
   });
 
   it('preflights root and mark templates before computing actual root and facet inputs', async () => {

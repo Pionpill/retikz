@@ -422,7 +422,7 @@ const trend = applyTransforms(
     context: { regressionRegistry: resolveRegressionRegistry([throughOrigin]) },
     regressionImplementations: [throughOriginImplementation],
   },
-);
+).rows;
 ```
 
 Plot 通过 `regressionDefinitions` 和 `regressionImplementations` 接收相同注册项，完整绘制见 demo 源码。方法名称和参数可存入 JSON；带函数的预测模型只用于运行时。预测必须返回有限值，失败会终止当前变换。Promise 实现需使用异步执行入口，不能交给 `applyTransforms`。

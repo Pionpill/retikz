@@ -25,4 +25,4 @@ export const selectorEndsRowsOf = (_values: SelectorEndsValues): Array<ExternalR
 
 /** 执行选择变换，返回原始记录与排名字段 */
 export const selectorEndsResultOf = (values: SelectorEndsValues): Array<ExternalRow> =>
-  applyTransforms(selectorEndsRowsOf(values), [selectorEndsOperationOf(values)]);
+  applyTransforms(selectorEndsRowsOf(values), [selectorEndsOperationOf(values)]).rows;

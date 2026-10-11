@@ -422,7 +422,7 @@ const trend = applyTransforms(
     context: { regressionRegistry: resolveRegressionRegistry([throughOrigin]) },
     regressionImplementations: [throughOriginImplementation],
   },
-);
+).rows;
 ```
 
 Plot accepts the same registrations through `regressionDefinitions` and `regressionImplementations`; see the demo source for rendering. Method names and parameters can be stored in JSON, while prediction functions exist only at runtime. Predictions must be finite; failures stop the current transform. Promise implementations require an asynchronous execution entry and cannot be passed to `applyTransforms`.

@@ -499,7 +499,7 @@ export type AnyTransformImplementation = Readonly<{
 ### ApplyTransformsOptions
 
 <p>
-  <ApiSourceLink label={'ApplyTransformsOptions'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={39}>
+  <ApiSourceLink label={'ApplyTransformsOptions'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={38}>
     Explicit synchronous implementations; Promise callbacks cannot be registered
   </ApiSourceLink>
 </p>
@@ -510,14 +510,16 @@ export type AnyTransformImplementation = Readonly<{
 
 <ApiTable>
 
-| Member                                       | Type                                                           | Default | Description                                                                |
-| -------------------------------------------- | -------------------------------------------------------------- | ------- | -------------------------------------------------------------------------- |
-| `readonly context?`                          | `Partial<TransformContext>`                                    | —       | Provenance helpers, computation definitions, and current execution context |
-| `readonly registry?`                         | `ReadonlyMap<string, AnyTransformDefinition>`                  | —       | The unique Definition registry for this request                            |
-| `readonly regressionImplementations?`        | `ReadonlyArray<AnySynchronousRegressionImplementation>`        | —       | Explicit synchronous regression implementations                            |
-| `readonly rowSelectorImplementations?`       | `ReadonlyArray<AnySynchronousRowSelectorImplementation>`       | —       | Explicit synchronous selector implementations                              |
-| `readonly statisticsReducerImplementations?` | `ReadonlyArray<AnySynchronousStatisticsReducerImplementation>` | —       | Explicit synchronous reducer implementations                               |
-| `readonly transformImplementations?`         | `ReadonlyArray<AnySynchronousTransformImplementation>`         | —       | Explicit synchronous transform implementations                             |
+| Member                                       | Type                                                           | Default | Description                                                                                                                                   |
+| -------------------------------------------- | -------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly context?`                          | `Partial<TransformContext>`                                    | —       | Provenance helpers, computation definitions, and current execution context                                                                    |
+| `readonly lineage?`                          | `boolean \| DataLineageOptions`                                | `false` | true uses default event options, an object customizes them, and false or omission disables recording without implicitly assigning row sources |
+| `readonly provenance?`                       | `boolean`                                                      | `false` | Creates zero-based indices for inputs without provenance; disabled by default, and existing provenance is always retained                     |
+| `readonly registry?`                         | `ReadonlyMap<string, AnyTransformDefinition>`                  | —       | The unique Definition registry for this request                                                                                               |
+| `readonly regressionImplementations?`        | `ReadonlyArray<AnySynchronousRegressionImplementation>`        | —       | Explicit synchronous regression implementations                                                                                               |
+| `readonly rowSelectorImplementations?`       | `ReadonlyArray<AnySynchronousRowSelectorImplementation>`       | —       | Explicit synchronous selector implementations                                                                                                 |
+| `readonly statisticsReducerImplementations?` | `ReadonlyArray<AnySynchronousStatisticsReducerImplementation>` | —       | Explicit synchronous reducer implementations                                                                                                  |
+| `readonly transformImplementations?`         | `ReadonlyArray<AnySynchronousTransformImplementation>`         | —       | Explicit synchronous transform implementations                                                                                                |
 
 </ApiTable>
 
@@ -527,6 +529,8 @@ export type AnyTransformImplementation = Readonly<{
 
 ```ts
 export type ApplyTransformsOptions = Readonly<{
+  provenance?: boolean;
+  lineage?: boolean | DataLineageOptions;
   registry?: ReadonlyMap<string, AnyTransformDefinition>;
   transformImplementations?: ReadonlyArray<AnySynchronousTransformImplementation>;
   statisticsReducerImplementations?: ReadonlyArray<AnySynchronousStatisticsReducerImplementation>;
@@ -540,15 +544,11 @@ export type ApplyTransformsOptions = Readonly<{
 
 </DocTabs>
 
-### ApplyTransformsToDataViewWithLineageResult
+### ApplyTransformsResult
 
 <p>
-  <ApiSourceLink
-    label={'ApplyTransformsToDataViewWithLineageResult'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={282}
-  >
-    Synchronous data-view result and execution events
+  <ApiSourceLink label={'ApplyTransformsResult'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={64}>
+    Synchronous row transform result; provenance stays on rows and events are returned separately
   </ApiSourceLink>
 </p>
 
@@ -558,10 +558,10 @@ export type ApplyTransformsOptions = Readonly<{
 
 <ApiTable>
 
-| Member              | Type             | Default | Description                                         |
-| ------------------- | ---------------- | ------- | --------------------------------------------------- |
-| `readonly dataView` | `DataView`       | —       | The transformed data view                           |
-| `readonly lineage`  | `DataLineageRun` | —       | Execution events produced by this transform request |
+| Member              | Type                 | Default | Description                                                |
+| ------------------- | -------------------- | ------- | ---------------------------------------------------------- |
+| `readonly lineage?` | `DataLineageRun`     | —       | The current run when event recording is explicitly enabled |
+| `readonly rows`     | `Array<ExternalRow>` | —       | The transformed rows                                       |
 
 </ApiTable>
 
@@ -570,9 +570,9 @@ export type ApplyTransformsOptions = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
-  dataView: DataView;
-  lineage: DataLineageRun;
+export type ApplyTransformsResult = Readonly<{
+  rows: Array<ExternalRow>;
+  lineage?: DataLineageRun;
 }>;
 ```
 
@@ -580,15 +580,15 @@ export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
 
 </DocTabs>
 
-### ApplyTransformsWithLineageOptions
+### ApplyTransformsToDataViewResult
 
 <p>
   <ApiSourceLink
-    label={'ApplyTransformsWithLineageOptions'}
+    label={'ApplyTransformsToDataViewResult'}
     path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={267}
+    startLine={72}
   >
-    Synchronous execution options with lineage
+    Synchronous data-view transform result
   </ApiSourceLink>
 </p>
 
@@ -598,15 +598,10 @@ export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
 
 <ApiTable>
 
-| Member                                       | Type                                                           | Default | Description                                                                |
-| -------------------------------------------- | -------------------------------------------------------------- | ------- | -------------------------------------------------------------------------- |
-| `readonly context?`                          | `Partial<TransformContext>`                                    | —       | Provenance helpers, computation definitions, and current execution context |
-| `readonly lineage?`                          | `DataLineageOptions`                                           | —       | Controls transform-event recording, budgets, and the event sink            |
-| `readonly registry?`                         | `ReadonlyMap<string, AnyTransformDefinition>`                  | —       | The unique Definition registry for this request                            |
-| `readonly regressionImplementations?`        | `ReadonlyArray<AnySynchronousRegressionImplementation>`        | —       | Explicit synchronous regression implementations                            |
-| `readonly rowSelectorImplementations?`       | `ReadonlyArray<AnySynchronousRowSelectorImplementation>`       | —       | Explicit synchronous selector implementations                              |
-| `readonly statisticsReducerImplementations?` | `ReadonlyArray<AnySynchronousStatisticsReducerImplementation>` | —       | Explicit synchronous reducer implementations                               |
-| `readonly transformImplementations?`         | `ReadonlyArray<AnySynchronousTransformImplementation>`         | —       | Explicit synchronous transform implementations                             |
+| Member              | Type             | Default | Description                                                |
+| ------------------- | ---------------- | ------- | ---------------------------------------------------------- |
+| `readonly dataView` | `DataView`       | —       | The complete transformed data view                         |
+| `readonly lineage?` | `DataLineageRun` | —       | The current run when event recording is explicitly enabled |
 
 </ApiTable>
 
@@ -615,49 +610,9 @@ export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ApplyTransformsWithLineageOptions = ApplyTransformsOptions &
-  Readonly<{
-    lineage?: DataLineageOptions;
-  }>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### ApplyTransformsWithLineageResult
-
-<p>
-  <ApiSourceLink
-    label={'ApplyTransformsWithLineageResult'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={274}
-  >
-    Synchronous row result and execution events
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member             | Type                 | Default | Description                                         |
-| ------------------ | -------------------- | ------- | --------------------------------------------------- |
-| `readonly lineage` | `DataLineageRun`     | —       | Execution events produced by this transform request |
-| `readonly rows`    | `Array<ExternalRow>` | —       | The transformed rows                                |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type ApplyTransformsWithLineageResult = Readonly<{
-  rows: Array<ExternalRow>;
-  lineage: DataLineageRun;
+export type ApplyTransformsToDataViewResult = Readonly<{
+  dataView: DataView;
+  lineage?: DataLineageRun;
 }>;
 ```
 
@@ -668,7 +623,7 @@ export type ApplyTransformsWithLineageResult = Readonly<{
 ### DataInputBinding
 
 <p>
-  <ApiSourceLink label={'DataInputBinding'} path={'packages/viz/data/src/contract/execution.ts'} startLine={283}>
+  <ApiSourceLink label={'DataInputBinding'} path={'packages/viz/data/src/contract/execution.ts'} startLine={286}>
     Actual runtime input for a host data reference
   </ApiSourceLink>
 </p>
@@ -742,7 +697,7 @@ export type DataInputBinding<TSource> =
 ### DataInputBindings
 
 <p>
-  <ApiSourceLink label={'DataInputBindings'} path={'packages/viz/data/src/contract/execution.ts'} startLine={307}>
+  <ApiSourceLink label={'DataInputBindings'} path={'packages/viz/data/src/contract/execution.ts'} startLine={310}>
     Engine handles, rows, and functions stay outside JSON IR
   </ApiSourceLink>
 </p>
@@ -892,7 +847,7 @@ export type DataTransformDiagnostic = Readonly<{
 ### DataTransformExecution
 
 <p>
-  <ApiSourceLink label={'DataTransformExecution'} path={'packages/viz/data/src/contract/execution.ts'} startLine={243}>
+  <ApiSourceLink label={'DataTransformExecution'} path={'packages/viz/data/src/contract/execution.ts'} startLine={246}>
     Single-use execution bound to an actual input
   </ApiSourceLink>
 </p>
@@ -929,7 +884,7 @@ export type DataTransformExecution = Readonly<{
   <ApiSourceLink
     label={'DataTransformExecutionOptions'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={218}
+    startLine={221}
   >
     Scoped executor defaults and local or external implementations
   </ApiSourceLink>
@@ -1024,7 +979,7 @@ export type DataTransformExecutionRequirements = Readonly<{
 ### DataTransformExecutor
 
 <p>
-  <ApiSourceLink label={'DataTransformExecutor'} path={'packages/viz/data/src/contract/execution.ts'} startLine={270}>
+  <ApiSourceLink label={'DataTransformExecutor'} path={'packages/viz/data/src/contract/execution.ts'} startLine={273}>
     Executor separating model preparation from binding actual inputs
   </ApiSourceLink>
 </p>
@@ -1066,7 +1021,7 @@ export type DataTransformExecutor<TSource> = Readonly<{
   <ApiSourceLink
     label={'DataTransformImplementationProvider'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={190}
+    startLine={193}
   >
     Matches field models and source capabilities without computing or transferring rows
   </ApiSourceLink>
@@ -1294,7 +1249,7 @@ export type DataTransformOutputModel =
   <ApiSourceLink
     label={'DataTransformPreparation'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={252}
+    startLine={255}
   >
     Fixed model plan that can bind partitions whose rows are not yet available
   </ApiSourceLink>
@@ -1354,7 +1309,7 @@ export type DataTransformPreparation<TSource> =
   <ApiSourceLink
     label={'DataTransformProviderRegistration'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={207}
+    startLine={210}
   >
     Named external provider; registration alone does not enable external mode
   </ApiSourceLink>
@@ -1407,12 +1362,12 @@ export type DataTransformProviderRegistration<TSource> = Readonly<{
 
 <ApiTable>
 
-| Member                    | Type                 | Default | Description                                        |
-| ------------------------- | -------------------- | ------- | -------------------------------------------------- |
-| `readonly dataExecution?` | `IRDataExecution`    | —       | Host-level execution configuration                 |
-| `readonly lineage?`       | `DataLineageOptions` | —       | Execution-event recording requirements             |
-| `readonly provenance?`    | `boolean`            | —       | Requests preservation of existing input provenance |
-| `readonly signal?`        | `AbortSignal`        | —       | Request cancellation signal                        |
+| Member                    | Type                            | Default | Description                                                                                              |
+| ------------------------- | ------------------------------- | ------- | -------------------------------------------------------------------------------------------------------- |
+| `readonly dataExecution?` | `IRDataExecution`               | —       | Host-level execution configuration                                                                       |
+| `readonly lineage?`       | `boolean \| DataLineageOptions` | `false` | true uses default event options, an object customizes them, and false or omission disables new recording |
+| `readonly provenance?`    | `boolean`                       | —       | Requests preservation of existing input provenance                                                       |
+| `readonly signal?`        | `AbortSignal`                   | —       | Request cancellation signal                                                                              |
 
 </ApiTable>
 
@@ -1424,7 +1379,7 @@ export type DataTransformProviderRegistration<TSource> = Readonly<{
 export type DataTransformRequestOptions = Readonly<{
   dataExecution?: IRDataExecution;
   provenance?: boolean;
-  lineage?: DataLineageOptions;
+  lineage?: boolean | DataLineageOptions;
   signal?: AbortSignal;
 }>;
 ```
@@ -1635,7 +1590,7 @@ export type DataTransformStage = Readonly<{
   <ApiSourceLink
     label={'DataTransformStageImplementation'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={161}
+    startLine={164}
   >
     Stage implementation referencing the identical Definition
   </ApiSourceLink>
@@ -1734,7 +1689,7 @@ export type DataTransformStageInput<TSource> =
   <ApiSourceLink
     label={'DataTransformStageSupport'}
     path={'packages/viz/data/src/contract/execution.ts'}
-    startLine={172}
+    startLine={175}
   >
     Separates unsupported declarations from capability-query exceptions
   </ApiSourceLink>
@@ -2674,7 +2629,7 @@ export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
   <ApiSourceLink
     label={'DEFAULT_TRANSFORM_CONTEXT'}
     path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={32}
+    startLine={31}
   >
     Built-in provenance helpers, separate from computation and semantic contexts
   </ApiSourceLink>
@@ -2691,7 +2646,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 ### applyTransforms
 
 <p>
-  <ApiSourceLink label={'applyTransforms'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={200}>
+  <ApiSourceLink label={'applyTransforms'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={229}>
     Synchronous row entry that prepares the whole plan before a single execution
   </ApiSourceLink>
 </p>
@@ -2702,13 +2657,13 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 
 <ApiTable variant="parameters">
 
-| Category   | Name          | Type / signature         | Description                                                                              |
-| ---------- | ------------- | ------------------------ | ---------------------------------------------------------------------------------------- |
-| Parameters | `rows`        | `Array<ExternalRow>`     | Normalized input rows                                                                    |
-|            | `operations?` | `Array<IRDataTransform>` | Transform operations in execution order; omitted means an empty list                     |
-|            | `options?`    | `ApplyTransformsOptions` | Definition registries and synchronous implementations; omitted uses built-in computation |
-| Returns    | —             | `Array<ExternalRow>`     | Computed rows                                                                            |
-| Throws     | —             | —                        | Semantic resolution, computation, or result validation fails                             |
+| Category   | Name          | Type / signature         | Description                                                                                  |
+| ---------- | ------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| Parameters | `rows`        | `Array<ExternalRow>`     | Normalized input rows                                                                        |
+|            | `operations?` | `Array<IRDataTransform>` | Transform operations in execution order; omitted means an empty list                         |
+|            | `options?`    | `ApplyTransformsOptions` | Semantic registries, synchronous implementations, and optional provenance or event recording |
+| Returns    | —             | `ApplyTransformsResult`  | Rows and optional execution events                                                           |
+| Throws     | —             | —                        | Semantic resolution, computation, or result validation fails                                 |
 
 </ApiTable>
 
@@ -2721,7 +2676,7 @@ export declare const applyTransforms: (
   rows: Array<ExternalRow>,
   operations?: Array<IRDataTransform>,
   options?: ApplyTransformsOptions,
-) => Array<ExternalRow>;
+) => ApplyTransformsResult;
 ```
 
 </DocTab>
@@ -2734,7 +2689,7 @@ export declare const applyTransforms: (
   <ApiSourceLink
     label={'applyTransformsToDataView'}
     path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={186}
+    startLine={212}
   >
     Advances a normalized DataView synchronously in declaration order
   </ApiSourceLink>
@@ -2746,13 +2701,13 @@ export declare const applyTransforms: (
 
 <ApiTable variant="parameters">
 
-| Category   | Name          | Type / signature         | Description                                                                              |
-| ---------- | ------------- | ------------------------ | ---------------------------------------------------------------------------------------- |
-| Parameters | `view`        | `DataView`               | Normalized input data view                                                               |
-|            | `operations?` | `Array<IRDataTransform>` | Transform operations in execution order; omitted means an empty list                     |
-|            | `options?`    | `ApplyTransformsOptions` | Definition registries and synchronous implementations; omitted uses built-in computation |
-| Returns    | —             | `DataView`               | Computed complete data view                                                              |
-| Throws     | —             | —                        | Semantic resolution, computation, or result validation fails                             |
+| Category   | Name          | Type / signature                  | Description                                                                                  |
+| ---------- | ------------- | --------------------------------- | -------------------------------------------------------------------------------------------- |
+| Parameters | `view`        | `DataView`                        | Normalized input data view                                                                   |
+|            | `operations?` | `Array<IRDataTransform>`          | Transform operations in execution order; omitted means an empty list                         |
+|            | `options?`    | `ApplyTransformsOptions`          | Semantic registries, synchronous implementations, and optional provenance or event recording |
+| Returns    | —             | `ApplyTransformsToDataViewResult` | Complete data view and optional execution events                                             |
+| Throws     | —             | —                                 | Semantic resolution, computation, or result validation fails                                 |
 
 </ApiTable>
 
@@ -2765,95 +2720,7 @@ export declare const applyTransformsToDataView: (
   view: DataView,
   operations?: Array<IRDataTransform>,
   options?: ApplyTransformsOptions,
-) => DataView;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### applyTransformsToDataViewWithLineage
-
-<p>
-  <ApiSourceLink
-    label={'applyTransformsToDataViewWithLineage'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={297}
-  >
-    Runs synchronously and returns execution events
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable variant="parameters">
-
-| Category   | Name          | Type / signature                             | Description                                                                              |
-| ---------- | ------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Parameters | `view`        | `DataView`                                   | Normalized input data view                                                               |
-|            | `operations?` | `Array<IRDataTransform>`                     | Transform operations in execution order; omitted means an empty list                     |
-|            | `options?`    | `ApplyTransformsWithLineageOptions`          | Definition registries and synchronous implementations; omitted uses built-in computation |
-| Returns    | —             | `ApplyTransformsToDataViewWithLineageResult` | Computed complete data view and execution events                                         |
-| Throws     | —             | —                                            | Semantic resolution, computation, or result validation fails                             |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export declare const applyTransformsToDataViewWithLineage: (
-  view: DataView,
-  operations?: Array<IRDataTransform>,
-  options?: ApplyTransformsWithLineageOptions,
-) => ApplyTransformsToDataViewWithLineageResult;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### applyTransformsWithLineage
-
-<p>
-  <ApiSourceLink
-    label={'applyTransformsWithLineage'}
-    path={'packages/viz/data/src/pipeline/transform.ts'}
-    startLine={315}
-  >
-    Synchronous row entry with lineage
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable variant="parameters">
-
-| Category   | Name          | Type / signature                    | Description                                                                              |
-| ---------- | ------------- | ----------------------------------- | ---------------------------------------------------------------------------------------- |
-| Parameters | `rows`        | `Array<ExternalRow>`                | Normalized input rows                                                                    |
-|            | `operations?` | `Array<IRDataTransform>`            | Transform operations in execution order; omitted means an empty list                     |
-|            | `options?`    | `ApplyTransformsWithLineageOptions` | Definition registries and synchronous implementations; omitted uses built-in computation |
-| Returns    | —             | `ApplyTransformsWithLineageResult`  | Computed rows and execution events                                                       |
-| Throws     | —             | —                                   | Semantic resolution, computation, or result validation fails                             |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export declare const applyTransformsWithLineage: (
-  rows: Array<ExternalRow>,
-  operations?: Array<IRDataTransform>,
-  options?: ApplyTransformsWithLineageOptions,
-) => ApplyTransformsWithLineageResult;
+) => ApplyTransformsToDataViewResult;
 ```
 
 </DocTab>
@@ -2863,7 +2730,7 @@ export declare const applyTransformsWithLineage: (
 ### collectTransformFields
 
 <p>
-  <ApiSourceLink label={'collectTransformFields'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={240}>
+  <ApiSourceLink label={'collectTransformFields'} path={'packages/viz/data/src/pipeline/transform.ts'} startLine={270}>
     Projects derived fields from the semantic model for strict host reference checks
   </ApiSourceLink>
 </p>
@@ -2910,7 +2777,7 @@ export declare const collectTransformFields: (
   <ApiSourceLink
     label={'createDataTransformExecutor'}
     path={'packages/viz/data/src/pipeline/execution.ts'}
-    startLine={62}
+    startLine={63}
   >
     Creates a scoped executor that prepares all support checks before binding and computation
   </ApiSourceLink>
@@ -3322,7 +3189,7 @@ export declare const defineTransformImplementation: <
   <ApiSourceLink
     label={'describeDataTransformInput'}
     path={'packages/viz/data/src/pipeline/execution.ts'}
-    startLine={45}
+    startLine={46}
   >
     Projects actual inputs into row-free capability descriptors
   </ApiSourceLink>
@@ -3359,7 +3226,7 @@ export declare const describeDataTransformInput: <TSource>(
 ### executeDataTransforms
 
 <p>
-  <ApiSourceLink label={'executeDataTransforms'} path={'packages/viz/data/src/pipeline/execution.ts'} startLine={389}>
+  <ApiSourceLink label={'executeDataTransforms'} path={'packages/viz/data/src/pipeline/execution.ts'} startLine={391}>
     Asynchronous entry that does not compute unsupported plans and executes each binding only once
   </ApiSourceLink>
 </p>
@@ -3985,7 +3852,7 @@ export declare const resolveStatisticsReducerRegistry: (
   <ApiSourceLink
     label={'resolveTransformImplementationRegistry'}
     path={'packages/viz/data/src/providers/transform/definitions.ts'}
-    startLine={567}
+    startLine={578}
   >
     Independent implementation registry sharing Definition identities across built-ins and custom implementations
   </ApiSourceLink>
@@ -4030,7 +3897,7 @@ export declare const resolveTransformImplementationRegistry: <
   <ApiSourceLink
     label={'resolveTransformRegistry'}
     path={'packages/viz/data/src/providers/transform/definitions.ts'}
-    startLine={525}
+    startLine={536}
   >
     Resolves the transform Definition registry
   </ApiSourceLink>

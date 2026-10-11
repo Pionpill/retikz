@@ -182,7 +182,7 @@ An external implementation returns `{ rows, model, lineage? }`. The `rows` conta
 
 Return the complete `model` even when there are no output rows, preserving field information and categorical order. External results may also supply field types that were unknown during preflight. Subsequent local stages that preserve those fields or inherit them through `{ from: field }` continue to use the types established by the result. This also applies to empty results and does not change the local or external implementations selected during preflight.
 
-Optional `lineage` records execution events. It describes the execution process without providing provenance markers for individual rows.
+`lineage: true` records execution events with default options. Supply an object to customize recording scope, or omit it or pass `false` to disable new recording. Events describe the execution process; `provenance` controls row sources independently. See [Data provenance](/viz/data/provenance) for the full configuration.
 
 The executor stops the request if computation throws, a Promise rejects, result validation fails or the request is cancelled. Hybrid mode does not switch to a local implementation at this point; see “Execution modes” above for when local implementations are selected.
 

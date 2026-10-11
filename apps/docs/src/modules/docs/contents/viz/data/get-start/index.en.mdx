@@ -46,7 +46,7 @@ const transforms: Array<IRDataTransform> = [
   },
 ];
 
-const summary = applyTransforms(canonicalRows, transforms);
+const summary = applyTransforms(canonicalRows, transforms).rows;
 console.log(summary);
 // [{ region: 'north', total: 20, rows: 2 }, { region: 'south', total: 5, rows: 1 }]
 ```

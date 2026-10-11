@@ -3,19 +3,13 @@ import { object } from 'zod';
 
 import type { ExternalRow } from '../../src';
 import {
-  applyTransforms as applyDataTransforms,
+  applyTransforms,
   defineTransform,
   readSourceIndices,
   tagSourceIndex,
   resolveTransformRegistry,
   TransformSchema,
 } from '../../src';
-
-const applyTransforms = (
-  rows: Array<ExternalRow>,
-  operations?: Parameters<typeof applyDataTransforms>[1],
-  options?: Parameters<typeof applyDataTransforms>[2],
-): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
 
 const smoothOperation = (operation: unknown) => TransformSchema.parse(operation);
 
@@ -107,7 +101,7 @@ describe('smooth transform behavior (contract)', () => {
           yAs: 'trendY',
         },
       }),
-    ]);
+    ]).rows;
 
     expect(out.map(row => row.trendX)).toEqual([0, 1, 2, 3, 4]);
     expect(out.map(row => row.trendY)).toEqual([1, 3, 5, 7, 9]);
@@ -130,7 +124,7 @@ describe('smooth transform behavior (contract)', () => {
           yAs: 'trendY',
         },
       }),
-    ]);
+    ]).rows;
     const polynomialDegreeTwo = applyTransforms(quadraticRows, [
       smoothOperation({
         kind: 'smooth',
@@ -144,7 +138,7 @@ describe('smooth transform behavior (contract)', () => {
           yAs: 'trendY',
         },
       }),
-    ]);
+    ]).rows;
     const polynomialDefault = applyTransforms(cubicRows, [
       smoothOperation({
         kind: 'smooth',
@@ -158,7 +152,7 @@ describe('smooth transform behavior (contract)', () => {
           yAs: 'trendY',
         },
       }),
-    ]);
+    ]).rows;
 
     expect(quadratic.map(row => row.trendX)).toEqual([-2, -1, 0, 1, 2]);
     expect(polynomialDegreeTwo.map(row => row.trendX)).toEqual([-2, -1, 0, 1, 2]);
@@ -189,7 +183,7 @@ describe('smooth transform behavior (contract)', () => {
           },
         }),
       ],
-    );
+    ).rows;
     const exponential = applyTransforms(
       [0, 2, 4].map(x => ({ x, y: 2 * Math.exp(0.5 * x) })),
       [
@@ -206,7 +200,7 @@ describe('smooth transform behavior (contract)', () => {
           },
         }),
       ],
-    );
+    ).rows;
     const power = applyTransforms(
       [1, 2, 4].map(x => ({ x, y: 3 * x ** 2 })),
       [
@@ -223,7 +217,7 @@ describe('smooth transform behavior (contract)', () => {
           },
         }),
       ],
-    );
+    ).rows;
 
     expect(logarithmic.map(row => row.trendX)).toEqual([1, Math.exp(3)]);
     expect(exponential.map(row => row.trendX)).toEqual([0, 2, 4]);
@@ -245,7 +239,7 @@ describe('smooth transform behavior (contract)', () => {
           yAs: 'trendY',
         },
       }),
-    ]);
+    ]).rows;
 
     expect(out).toHaveLength(64);
     expect(out[0].trendX).toBe(0);
@@ -271,7 +265,7 @@ describe('smooth transform behavior (contract)', () => {
           yAs: 'trendY',
         },
       }),
-    ]);
+    ]).rows;
 
     expect(out).toHaveLength(6);
     expect(out.filter(row => row.series === 'A').map(row => row.trendY)).toEqual([1, 3, 5]);
@@ -295,7 +289,7 @@ describe('smooth transform behavior (contract)', () => {
         { time: 2, value: 5 },
       ],
       [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', sampleCount: 2, xAs: 'x', yAs: 'y' } })],
-    );
+    ).rows;
 
     expect(out).toEqual([
       { x: 0, y: 1 },
@@ -304,20 +298,22 @@ describe('smooth transform behavior (contract)', () => {
   });
 
   it('fails loud for too few finite pairs and vertical x variance', () => {
-    expect(() =>
-      applyTransforms(
-        [{ time: 1, value: 2 }],
-        [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', xAs: 'x', yAs: 'y' } })],
-      ),
+    expect(
+      () =>
+        applyTransforms(
+          [{ time: 1, value: 2 }],
+          [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', xAs: 'x', yAs: 'y' } })],
+        ).rows,
     ).toThrow(/finite|two/i);
-    expect(() =>
-      applyTransforms(
-        [
-          { time: 1, value: 2 },
-          { time: 1, value: 4 },
-        ],
-        [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', xAs: 'x', yAs: 'y' } })],
-      ),
+    expect(
+      () =>
+        applyTransforms(
+          [
+            { time: 1, value: 2 },
+            { time: 1, value: 4 },
+          ],
+          [smoothOperation({ kind: 'smooth', params: { x: 'time', y: 'value', xAs: 'x', yAs: 'y' } })],
+        ).rows,
     ).toThrow(/variance|vertical|x/i);
   });
 
@@ -327,57 +323,60 @@ describe('smooth transform behavior (contract)', () => {
   ])('fails loud when %s has fewer than degree plus one pairs', (_name, method, sampleSize) => {
     const insufficientRows = Array.from({ length: sampleSize }, (_, x) => ({ x, y: x ** 2 }));
 
-    expect(() =>
-      applyTransforms(insufficientRows, [
-        smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' } }),
-      ]),
+    expect(
+      () =>
+        applyTransforms(insufficientRows, [
+          smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' } }),
+        ]).rows,
     ).toThrow(/pairs|samples|degree|order/i);
   });
 
   it('fails loud for rank-deficient polynomial input', () => {
-    expect(() =>
-      applyTransforms(
-        [
-          { x: 0, y: 1 },
-          { x: 1, y: 2 },
-          { x: 1, y: 3 },
-          { x: 2, y: 5 },
-        ],
-        [
-          smoothOperation({
-            kind: 'smooth',
-            params: {
-              x: 'x',
-              y: 'y',
-              method: { kind: 'polynomial', order: 3 },
-              xAs: 'trendX',
-              yAs: 'trendY',
-            },
-          }),
-        ],
-      ),
+    expect(
+      () =>
+        applyTransforms(
+          [
+            { x: 0, y: 1 },
+            { x: 1, y: 2 },
+            { x: 1, y: 3 },
+            { x: 2, y: 5 },
+          ],
+          [
+            smoothOperation({
+              kind: 'smooth',
+              params: {
+                x: 'x',
+                y: 'y',
+                method: { kind: 'polynomial', order: 3 },
+                xAs: 'trendX',
+                yAs: 'trendY',
+              },
+            }),
+          ],
+        ).rows,
     ).toThrow(/rank|distinct|polynomial/i);
   });
 
   it('fails loud for a near-rank-deficient sixth-degree polynomial', () => {
     const clusteredX = [0, 1e-12, 2e-12, 3e-12, 4e-12, 5e-12, 1];
 
-    expect(() =>
-      applyTransforms(
-        clusteredX.map(x => ({ x, y: 1 + x })),
-        [
-          smoothOperation({
-            kind: 'smooth',
-            params: {
-              x: 'x',
-              y: 'y',
-              method: { kind: 'polynomial', order: 6 },
-              xAs: 'trendX',
-              yAs: 'trendY',
-            },
-          }),
-        ],
-      ),
+    expect(
+      () =>
+        applyTransforms(
+          clusteredX.map(x => ({ x, y: 1 + x })),
+          [
+            smoothOperation({
+              kind: 'smooth',
+              params: {
+                x: 'x',
+                y: 'y',
+                method: { kind: 'polynomial', order: 6 },
+                xAs: 'trendX',
+                yAs: 'trendY',
+              },
+            }),
+          ],
+        ).rows,
     ).toThrow(/rank|polynomial/i);
   });
 
@@ -415,10 +414,11 @@ describe('smooth transform behavior (contract)', () => {
       ],
     ],
   ])('fails loud for %s', (_name, method, invalidRows) => {
-    expect(() =>
-      applyTransforms(invalidRows, [
-        smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' } }),
-      ]),
+    expect(
+      () =>
+        applyTransforms(invalidRows, [
+          smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', method, xAs: 'trendX', yAs: 'trendY' } }),
+        ]).rows,
     ).toThrow(/positive|domain|logarithmic|exponential|power/i);
   });
 
@@ -440,81 +440,85 @@ describe('smooth transform behavior (contract)', () => {
       ],
     ],
   ])('fails loud when %s sampling extent includes non-positive x', (_name, method, validRows) => {
-    expect(() =>
-      applyTransforms(validRows, [
-        smoothOperation({
-          kind: 'smooth',
-          params: {
-            x: 'x',
-            y: 'y',
-            method,
-            extent: [0, 2],
-            xAs: 'trendX',
-            yAs: 'trendY',
-          },
-        }),
-      ]),
+    expect(
+      () =>
+        applyTransforms(validRows, [
+          smoothOperation({
+            kind: 'smooth',
+            params: {
+              x: 'x',
+              y: 'y',
+              method,
+              extent: [0, 2],
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
+          }),
+        ]).rows,
     ).toThrow(/extent|positive|domain/i);
   });
 
   it('fails loud for non-finite coefficients and predictions', () => {
-    expect(() =>
-      applyTransforms(
-        [
-          { x: -1e308, y: -1e308 },
-          { x: 1e308, y: 1e308 },
-        ],
-        [smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'trendX', yAs: 'trendY' } })],
-      ),
+    expect(
+      () =>
+        applyTransforms(
+          [
+            { x: -1e308, y: -1e308 },
+            { x: 1e308, y: 1e308 },
+          ],
+          [smoothOperation({ kind: 'smooth', params: { x: 'x', y: 'y', xAs: 'trendX', yAs: 'trendY' } })],
+        ).rows,
     ).toThrow(/finite|coefficient|variance/i);
 
-    expect(() =>
-      applyTransforms(
-        [
-          { x: 0, y: 1 },
-          { x: 1, y: Math.E },
-        ],
-        [
-          smoothOperation({
-            kind: 'smooth',
-            params: {
-              x: 'x',
-              y: 'y',
-              method: { kind: 'exponential' },
-              extent: [0, 1000],
-              sampleCount: 2,
-              xAs: 'trendX',
-              yAs: 'trendY',
-            },
-          }),
-        ],
-      ),
+    expect(
+      () =>
+        applyTransforms(
+          [
+            { x: 0, y: 1 },
+            { x: 1, y: Math.E },
+          ],
+          [
+            smoothOperation({
+              kind: 'smooth',
+              params: {
+                x: 'x',
+                y: 'y',
+                method: { kind: 'exponential' },
+                extent: [0, 1000],
+                sampleCount: 2,
+                xAs: 'trendX',
+                yAs: 'trendY',
+              },
+            }),
+          ],
+        ).rows,
     ).toThrow(/finite|prediction|exponential/i);
   });
 
   it('aborts the whole grouped transform and identifies the invalid group', () => {
-    expect(() =>
-      applyTransforms(
-        [
-          { series: 'A', x: 1, y: 2 },
-          { series: 'A', x: 2, y: 3 },
-          { series: 'B', x: 0, y: 1 },
-          { series: 'B', x: 2, y: 3 },
-        ],
-        [
-          smoothOperation({
-            kind: 'smooth',
-            params: {
-              x: 'x',
-              y: 'y',
-              groupBy: ['series'],
-              method: { kind: 'logarithmic' },
-              xAs: 'trendX',
-              yAs: 'trendY',
-            },
-          }),
-        ],
-      ),
+    expect(
+      () =>
+        applyTransforms(
+          [
+            { series: 'A', x: 1, y: 2 },
+            { series: 'A', x: 2, y: 3 },
+            { series: 'B', x: 0, y: 1 },
+            { series: 'B', x: 2, y: 3 },
+          ],
+          [
+            smoothOperation({
+              kind: 'smooth',
+              params: {
+                x: 'x',
+                y: 'y',
+                groupBy: ['series'],
+                method: { kind: 'logarithmic' },
+                xAs: 'trendX',
+                yAs: 'trendY',
+              },
+            }),
+          ],
+        ).rows,
     ).toThrow(/logarithmic.*series.*B/i);
   });
 
@@ -532,7 +536,7 @@ describe('smooth transform behavior (contract)', () => {
           yAs: 'trendY',
         },
       }),
-    ]);
+    ]).rows;
 
     expect(readSourceIndices(out[0])).toEqual([0, 1, 2]);
     expect(readSourceIndices(out[2])).toEqual([3, 4, 5]);

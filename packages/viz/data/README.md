@@ -48,7 +48,7 @@ const transforms: Array<IRDataTransform> = [
   },
 ];
 
-const summary = applyTransforms(canonicalRows, transforms);
+const summary = applyTransforms(canonicalRows, transforms).rows;
 // [{ region: 'north', total: 20, rows: 2 }, { region: 'south', total: 5, rows: 1 }]
 ```
 
@@ -60,7 +60,7 @@ The model and transform operations are serializable. `rows`, custom parser funct
 | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Data contracts   | `DataReferenceSchema`, `DataModelSchema`, `DataFieldType`, and schema-derived `IRDataXxx` types                      |
 | Field processing | `resolveFieldTypes`, `collectFormatFields`, `applyFieldResolver`, `normalizeRows`, `validateBoundData`               |
-| Data transforms  | `applyTransforms`, `applyTransformsWithLineage`, `TransformSchema`                                                   |
+| Data transforms  | `applyTransforms`, `applyTransformsToDataView`, `TransformSchema`                                                    |
 | Statistics       | reducer and selector schemas, `applyReducerOperation`, `applySelectorOperation`                                      |
 | Extensions       | `defineFieldFormat`, `defineStatisticsReducer`, `defineRowSelector`, `defineTransform`, and their registry resolvers |
 

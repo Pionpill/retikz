@@ -18,7 +18,7 @@ export type TransformTableComparisonProps = {
 /** Table 仅显示 Data 执行结果，不参与统计计算 */
 export const TransformTableComparison: FC<TransformTableComparisonProps> = props => {
   const { operations, before, after } = props;
-  const result = applyTransforms(mechanismRows, operations);
+  const result = applyTransforms(mechanismRows, operations).rows;
   const layout = {
     columnSize: { kind: 'fixed' as const, value: 72 },
     rowSize: { kind: 'fixed' as const, value: 28 },

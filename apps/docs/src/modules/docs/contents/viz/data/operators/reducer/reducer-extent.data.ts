@@ -19,4 +19,4 @@ export const reducerExtentRowsOf = (values: ReducerExtentValues): Array<External
 
 /** 执行本节规约，返回真实汇总行 */
 export const reducerExtentResultOf = (values: ReducerExtentValues): Array<ExternalRow> =>
-  applyTransforms(reducerExtentRowsOf(values), [reducerExtentOperationOf(values)]);
+  applyTransforms(reducerExtentRowsOf(values), [reducerExtentOperationOf(values)]).rows;

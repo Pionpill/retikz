@@ -105,8 +105,6 @@ export {
   SOURCE_INDICES,
   applyTransforms,
   applyTransformsToDataView,
-  applyTransformsToDataViewWithLineage,
-  applyTransformsWithLineage,
   collectTransformFields,
   createDataLineageRecorder,
   createDataTransformExecutor,
@@ -117,12 +115,7 @@ export {
   tagSourceIndex,
 } from './pipeline';
 
-export type {
-  ApplyTransformsOptions,
-  ApplyTransformsToDataViewWithLineageResult,
-  ApplyTransformsWithLineageOptions,
-  ApplyTransformsWithLineageResult,
-} from './pipeline';
+export type { ApplyTransformsOptions, ApplyTransformsToDataViewResult, ApplyTransformsResult } from './pipeline';
 
 export {
   BUILTIN_FIELD_ORDERS,

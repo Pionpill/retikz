@@ -54,7 +54,7 @@ describe('transform parameter contract', () => {
       applyTransforms([{ value: 3 }], [{ kind: 'multiply', params: {} }], {
         registry: resolveTransformRegistry([definition]),
         transformImplementations: [implementation],
-      }),
+      }).rows,
     ).toEqual([{ value: 6 }]);
   });
 });

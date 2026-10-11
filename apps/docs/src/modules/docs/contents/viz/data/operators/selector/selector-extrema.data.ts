@@ -31,4 +31,4 @@ export const selectorExtremaRowsOf = (values: SelectorExtremaValues): Array<Exte
 
 /** 执行选择变换，返回原始记录与排名字段 */
 export const selectorExtremaResultOf = (values: SelectorExtremaValues): Array<ExternalRow> =>
-  applyTransforms(selectorExtremaRowsOf(values), [selectorExtremaOperationOf(values)]);
+  applyTransforms(selectorExtremaRowsOf(values), [selectorExtremaOperationOf(values)]).rows;

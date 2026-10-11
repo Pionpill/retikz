@@ -182,7 +182,7 @@ describe('Viz Data model controls', () => {
 
   it('pins the Plot provenance bar examples to the value-axis baseline', () => {
     const demoSource = readFileSync(
-      resolve('src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.preview.tsx'),
+      resolve('src/modules/docs/contents/viz/plot/provenance/plot-lineage.preview.tsx'),
       'utf8',
     );
 
@@ -193,7 +193,7 @@ describe('Viz Data model controls', () => {
 
     for (const locale of ['zh', 'en']) {
       const source = readFileSync(
-        resolve(`src/modules/docs/contents/viz/data/provenance/plot/index.${locale}.mdx`),
+        resolve(`src/modules/docs/contents/viz/plot/provenance/index.${locale}.mdx`),
         'utf8',
       );
 

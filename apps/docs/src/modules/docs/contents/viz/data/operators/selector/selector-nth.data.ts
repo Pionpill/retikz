@@ -24,4 +24,4 @@ export const selectorNthRowsOf = (_values: SelectorNthValues): Array<ExternalRow
 
 /** 执行选择变换，返回原始记录与排名字段 */
 export const selectorNthResultOf = (values: SelectorNthValues): Array<ExternalRow> =>
-  applyTransforms(selectorNthRowsOf(values), [selectorNthOperationOf(values)]);
+  applyTransforms(selectorNthRowsOf(values), [selectorNthOperationOf(values)]).rows;

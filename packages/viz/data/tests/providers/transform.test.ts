@@ -50,13 +50,13 @@ describe('data transform runtime', () => {
   });
 
   it('executes stable sorting and cumulative intervals through the default data registry', () => {
-    const sorted = applyTransforms([{ m: 3 }, { m: 1 }, { m: 2 }], [{ kind: 'sort', params: { field: 'm' } }]);
+    const sorted = applyTransforms([{ m: 3 }, { m: 1 }, { m: 2 }], [{ kind: 'sort', params: { field: 'm' } }]).rows;
 
     expect(sorted.map(row => row.m)).toEqual([1, 2, 3]);
 
     const stacked = applyTransforms(SALES, [
       { kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } },
-    ]);
+    ]).rows;
 
     expect(stacked.map(row => [row.y0, row.y1])).toEqual([
       [0, 3],
@@ -89,7 +89,7 @@ describe('data transform runtime', () => {
         registry: resolveTransformRegistry([doubleRevenue]),
         transformImplementations: [doubleRevenueImplementation],
       },
-    );
+    ).rows;
 
     expect(out).toEqual([{ revenue: 3, doubleRevenue: 6 }]);
   });
@@ -101,7 +101,7 @@ describe('data transform runtime', () => {
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
 
-    expect(() => applyTransforms([{ value: 1 }], [{ kind: 'missing', params: { value: 1 } }])).toThrow(
+    expect(() => applyTransforms([{ value: 1 }], [{ kind: 'missing', params: { value: 1 } }]).rows).toThrow(
       /not registered/,
     );
     expect(() => resolveTransformRegistry([custom, custom])).toThrow(/duplicate transform registration/);
@@ -116,7 +116,7 @@ describe('data transform runtime', () => {
           metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
         },
       },
-    ]);
+    ]).rows;
 
     expect(readSourceIndices(out[0])).toEqual([0, 1]);
     expect(readSourceIndices(out[1])).toEqual([2, 3]);
@@ -161,7 +161,7 @@ describe('data transform runtime', () => {
           ),
         },
       },
-    );
+    ).rows;
 
     expect(out).toEqual([
       expect.objectContaining({ month: 'Jan', revenueRange: 2 }),
@@ -207,39 +207,41 @@ describe('data transform runtime', () => {
       },
     });
 
-    expect(() =>
-      applyTransforms(
-        [{ group: 'A', value: 1 }],
-        [{ kind: 'summarize', params: { groupBy: ['group'], metrics: [{ kind: 'group-writer' }] } }],
-        {
-          context: {
-            ...DEFAULT_TRANSFORM_CONTEXT,
-            statisticsReducerRegistry: resolveStatisticsReducerRegistry([groupWriter]),
-            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
-              resolveStatisticsReducerRegistry([groupWriter]),
-              [groupWriterImplementation],
-            ),
+    expect(
+      () =>
+        applyTransforms(
+          [{ group: 'A', value: 1 }],
+          [{ kind: 'summarize', params: { groupBy: ['group'], metrics: [{ kind: 'group-writer' }] } }],
+          {
+            context: {
+              ...DEFAULT_TRANSFORM_CONTEXT,
+              statisticsReducerRegistry: resolveStatisticsReducerRegistry([groupWriter]),
+              statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+                resolveStatisticsReducerRegistry([groupWriter]),
+                [groupWriterImplementation],
+              ),
+            },
           },
-        },
-      ),
+        ).rows,
     ).toThrow('data: reducer output field "group" must not collide with a groupBy field');
     expect(groupWriterCalls).toBe(0);
 
-    expect(() =>
-      applyTransforms(
-        [{ value: 1 }],
-        [{ kind: 'summarize', params: { metrics: [{ kind: 'first-stat' }, { kind: 'second-stat' }] } }],
-        {
-          context: {
-            ...DEFAULT_TRANSFORM_CONTEXT,
-            statisticsReducerRegistry: resolveStatisticsReducerRegistry([firstStat, secondStat]),
-            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
-              resolveStatisticsReducerRegistry([firstStat, secondStat]),
-              [firstStatImplementation, secondStatImplementation],
-            ),
+    expect(
+      () =>
+        applyTransforms(
+          [{ value: 1 }],
+          [{ kind: 'summarize', params: { metrics: [{ kind: 'first-stat' }, { kind: 'second-stat' }] } }],
+          {
+            context: {
+              ...DEFAULT_TRANSFORM_CONTEXT,
+              statisticsReducerRegistry: resolveStatisticsReducerRegistry([firstStat, secondStat]),
+              statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+                resolveStatisticsReducerRegistry([firstStat, secondStat]),
+                [firstStatImplementation, secondStatImplementation],
+              ),
+            },
           },
-        },
-      ),
+        ).rows,
     ).toThrow('data: duplicate reducer output field "stat"');
     expect(firstStatCalls).toBe(0);
     expect(secondStatCalls).toBe(0);
@@ -259,29 +261,30 @@ describe('data transform runtime', () => {
       },
     });
 
-    expect(() =>
-      applyTransforms(
-        [{ value: 1 }],
-        [
+    expect(
+      () =>
+        applyTransforms(
+          [{ value: 1 }],
+          [
+            {
+              kind: 'annotate',
+              params: {
+                metrics: [{ kind: 'stat-writer' }],
+                selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'stat' }],
+              },
+            },
+          ],
           {
-            kind: 'annotate',
-            params: {
-              metrics: [{ kind: 'stat-writer' }],
-              selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'stat' }],
+            context: {
+              ...DEFAULT_TRANSFORM_CONTEXT,
+              statisticsReducerRegistry: resolveStatisticsReducerRegistry([statWriter]),
+              statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+                resolveStatisticsReducerRegistry([statWriter]),
+                [statWriterImplementation],
+              ),
             },
           },
-        ],
-        {
-          context: {
-            ...DEFAULT_TRANSFORM_CONTEXT,
-            statisticsReducerRegistry: resolveStatisticsReducerRegistry([statWriter]),
-            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
-              resolveStatisticsReducerRegistry([statWriter]),
-              [statWriterImplementation],
-            ),
-          },
-        },
-      ),
+        ).rows,
     ).toThrow('data: reducer output field "stat" must not collide with an annotate selector output field');
     expect(statWriterCalls).toBe(0);
   });
@@ -318,7 +321,7 @@ describe('data transform runtime', () => {
             ),
           },
         },
-      ),
+      ).rows,
     ).toEqual([
       { value: 1, mean: 1.5, peak: 2 },
       { value: 2, mean: 1.5, peak: 2 },
@@ -334,19 +337,19 @@ describe('data transform runtime', () => {
     ];
 
     expect(
-      applyTransforms(rows, [{ kind: 'select', params: { selector: { kind: 'top', by: 'score', n: 2 } } }]).map(
+      applyTransforms(rows, [{ kind: 'select', params: { selector: { kind: 'top', by: 'score', n: 2 } } }]).rows.map(
         row => row.id,
       ),
     ).toEqual(['A', 'B']);
     expect(
       applyTransforms(rows, [
         { kind: 'select', params: { selector: { kind: 'top', by: 'score', n: 2, tie: 'last' } } },
-      ]).map(row => row.id),
+      ]).rows.map(row => row.id),
     ).toEqual(['A', 'C']);
     expect(
       applyTransforms(rows, [
         { kind: 'select', params: { selector: { kind: 'top', by: 'score', n: 2, tie: 'all' } } },
-      ]).map(row => row.id),
+      ]).rows.map(row => row.id),
     ).toEqual(['A', 'B', 'C']);
 
     const bottomRows: Array<ExternalRow> = [
@@ -359,17 +362,17 @@ describe('data transform runtime', () => {
     expect(
       applyTransforms(bottomRows, [
         { kind: 'select', params: { selector: { kind: 'bottom', by: 'score', n: 2 } } },
-      ]).map(row => row.id),
+      ]).rows.map(row => row.id),
     ).toEqual(['A', 'B']);
     expect(
       applyTransforms(bottomRows, [
         { kind: 'select', params: { selector: { kind: 'bottom', by: 'score', n: 2, tie: 'last' } } },
-      ]).map(row => row.id),
+      ]).rows.map(row => row.id),
     ).toEqual(['A', 'C']);
     expect(
       applyTransforms(bottomRows, [
         { kind: 'select', params: { selector: { kind: 'bottom', by: 'score', n: 2, tie: 'all' } } },
-      ]).map(row => row.id),
+      ]).rows.map(row => row.id),
     ).toEqual(['A', 'B', 'C']);
   });
 
@@ -390,7 +393,7 @@ describe('data transform runtime', () => {
             selector: { kind: 'first', orderBy: [{ field: 'value', order: 'descending' }] },
           },
         },
-      ])[0]?.id,
+      ]).rows[0]?.id,
     ).toBe('two');
     expect(
       applyTransforms(rows, [
@@ -400,7 +403,7 @@ describe('data transform runtime', () => {
             selector: { kind: 'nth', orderBy: [{ field: 'value', order: 'descending' }], index: 1 },
           },
         },
-      ])[0]?.id,
+      ]).rows[0]?.id,
     ).toBe('one');
     expect(
       applyTransforms(rows, [
@@ -410,7 +413,7 @@ describe('data transform runtime', () => {
             selector: { kind: 'last', orderBy: [{ field: 'value', order: 'descending' }] },
           },
         },
-      ])[0]?.id,
+      ]).rows[0]?.id,
     ).toBe('missing-null');
     expect(
       applyTransforms(rows, [
@@ -420,7 +423,7 @@ describe('data transform runtime', () => {
             selector: { kind: 'first', orderBy: [{ field: 'value', order: 'ascending' }] },
           },
         },
-      ])[0]?.id,
+      ]).rows[0]?.id,
     ).toBe('one');
     expect(
       applyTransforms(rows, [
@@ -430,7 +433,7 @@ describe('data transform runtime', () => {
             selector: { kind: 'last', orderBy: [{ field: 'value', order: 'ascending' }] },
           },
         },
-      ])[0]?.id,
+      ]).rows[0]?.id,
     ).toBe('missing-null');
   });
 
@@ -443,7 +446,7 @@ describe('data transform runtime', () => {
       { id: 'missing-null', value: null },
     ];
 
-    expect(applyTransforms(rows, [{ kind: 'sort', params: { field: 'value' } }]).map(row => row.id)).toEqual([
+    expect(applyTransforms(rows, [{ kind: 'sort', params: { field: 'value' } }]).rows.map(row => row.id)).toEqual([
       'one',
       'two',
       'missing-undefined',
@@ -451,7 +454,9 @@ describe('data transform runtime', () => {
       'missing-null',
     ]);
     expect(
-      applyTransforms(rows, [{ kind: 'sort', params: { field: 'value', order: 'descending' } }]).map(row => row.id),
+      applyTransforms(rows, [{ kind: 'sort', params: { field: 'value', order: 'descending' } }]).rows.map(
+        row => row.id,
+      ),
     ).toEqual(['two', 'one', 'missing-undefined', 'invalid-nan', 'missing-null']);
   });
 });

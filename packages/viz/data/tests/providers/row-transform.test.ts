@@ -18,7 +18,7 @@ const applyTransforms = (
   rows: Array<ExternalRow>,
   operations?: Parameters<typeof applyDataTransforms>[1],
   options?: Parameters<typeof applyDataTransforms>[2],
-): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
+): Array<ExternalRow> => applyDataTransforms(rows, operations, options).rows;
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },
@@ -38,7 +38,7 @@ describe('applyTransforms (contract)', () => {
       baseView,
       [{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }],
       { registry: TRANSFORM_REGISTRY },
-    );
+    ).dataView;
 
     expect(stacked.model).toEqual([
       { name: 'month', type: DataFieldType.Categorical },
@@ -50,7 +50,7 @@ describe('applyTransforms (contract)', () => {
 
     const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', params: { field: 'revenue' } }], {
       registry: TRANSFORM_REGISTRY,
-    });
+    }).dataView;
 
     expect(binned.model).toEqual([
       { name: 'revenue', type: DataFieldType.Continuous },

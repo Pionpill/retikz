@@ -71,7 +71,7 @@ describe('data built-in operations through the package root', () => {
   ])('executes $operation.kind without a host definition', ({ operation, rows, expected }) => {
     const parsed = TransformSchema.parse(JSON.parse(JSON.stringify(operation)));
 
-    expect(applyTransforms(rows, [parsed])).toEqual(expected);
+    expect(applyTransforms(rows, [parsed]).rows).toEqual(expected);
   });
 
   it('executes density with numeric output and a declared sampling extent', () => {
@@ -86,7 +86,7 @@ describe('data built-in operations through the package root', () => {
         densityAs: 'density',
       },
     });
-    const rows = applyTransforms([{ value: 0 }, { value: 2 }], [operation]);
+    const rows = applyTransforms([{ value: 0 }, { value: 2 }], [operation]).rows;
 
     expect(rows.map(row => row.sample)).toEqual([0, 2]);
     expect(rows[0].density).toBeCloseTo(0.226466623, 8);
@@ -111,7 +111,7 @@ describe('data built-in operations through the package root', () => {
   });
 
   it('reports invalid numeric transform input as a data error', () => {
-    expect(() => applyTransforms([{ value: -1 }], [{ kind: 'normalize', params: { field: 'value' } }])).toThrow(
+    expect(() => applyTransforms([{ value: -1 }], [{ kind: 'normalize', params: { field: 'value' } }]).rows).toThrow(
       RetikzDataError,
     );
   });
