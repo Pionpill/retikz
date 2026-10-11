@@ -8,6 +8,7 @@ import {
   createDataView,
   DataFieldType,
   readSourceIndices,
+  readSourceIndex,
   tagSourceIndex,
   resolveTransformRegistry,
 } from '../../src';
@@ -792,5 +793,139 @@ describe('applyJitter (contract)', () => {
 
     // 非有限值保持原值（不产 NaN）
     expect(out[0].dose).toBe('NA');
+  });
+});
+
+describe('grouped row transforms', () => {
+  it('select and summarize output complete parent groups before the next parent', () => {
+    const rows = tagSourceIndex([
+      { team: 'A', item: 'phone', value: 10 },
+      { team: 'B', item: 'phone', value: 60 },
+      { team: 'A', item: 'book', value: 30 },
+      { team: 'B', item: 'book', value: 5 },
+      { team: 'A', item: 'phone', value: 40 },
+      { team: 'B', item: 'phone', value: 20 },
+      { team: 'A', item: 'book', value: 30 },
+      { team: 'B', item: 'book', value: 35 },
+    ]);
+    const selected = applyTransforms(rows, [
+      {
+        kind: 'select',
+        params: { groupBy: ['team', 'item'], selector: { kind: 'max', by: 'value', tie: 'all' } },
+      },
+    ]);
+    expect(selected.map(readSourceIndex)).toEqual([4, 2, 6, 1, 7]);
+    const summarized = applyTransforms(rows, [
+      {
+        kind: 'summarize',
+        params: { groupBy: ['team', 'item'], metrics: [{ kind: 'count', as: 'count' }] },
+      },
+    ]);
+    expect(summarized.map(row => [row.team, row.item, row.count])).toEqual([
+      ['A', 'phone', 2],
+      ['A', 'book', 2],
+      ['B', 'phone', 2],
+      ['B', 'book', 2],
+    ]);
+    expect(summarized.map(readSourceIndices)).toEqual([
+      [0, 4],
+      [2, 6],
+      [1, 5],
+      [3, 7],
+    ]);
+  });
+  it.each(['ascending', 'descending'] as const)('sorts hierarchical groups stably in field order: %s', order => {
+    const rows = tagSourceIndex([
+      { team: 'Z', item: 'x', value: 2, record: 'r1' },
+      { team: 'A', item: 'x', value: 9, record: 'r2' },
+      { team: 'Z', item: 'y', value: 1, record: 'r3' },
+      { team: 'Z', item: 'x', value: 1, record: 'r4' },
+      { team: 'Z', item: 'x', value: 2, record: 'r5' },
+      { team: 'A', item: 'x', value: 3, record: 'r6' },
+    ]);
+    const original = [...rows];
+    const output = applyTransforms(rows, [
+      { kind: 'sort', params: { field: 'value', groupBy: ['team', 'item'], order } },
+    ]);
+    const indices = order === 'ascending' ? [3, 0, 4, 2, 5, 1] : [0, 4, 3, 2, 1, 5];
+    expect(output).toEqual(indices.map(index => rows[index]));
+    expect(output.map(readSourceIndex)).toEqual(indices);
+    expect(rows).toEqual(original);
+  });
+  it('empty grouping preserves global sort and bin behavior', () => {
+    const rows = [{ value: 3 }, { value: 1 }, { value: 2 }];
+    for (const kind of ['sort', 'bin'] as const)
+      expect(applyTransforms(rows, [{ kind, params: { field: 'value', groupBy: [] } }])).toEqual(
+        applyTransforms(rows, [{ kind, params: { field: 'value' } }]),
+      );
+  });
+  it('bins composite groups with independent domains and retained model types', () => {
+    const view = createDataView(
+      [
+        { team: 'B', item: 'x', value: 10 },
+        { team: 'A', item: 'x', value: 100 },
+        { team: 'B', item: 'y', value: 30 },
+        { team: 'B', item: 'x', value: 20 },
+        { team: 'A', item: 'x', value: 200 },
+        { team: 'B', item: 'y', value: 50 },
+      ],
+      [
+        { name: 'team', type: 'categorical' },
+        { name: 'item', type: 'categorical' },
+        { name: 'value', type: 'continuous' },
+      ],
+    );
+    const output = applyTransformsToDataView(view, [
+      { kind: 'bin', params: { field: 'value', groupBy: ['team', 'item'], count: 2, nice: false } },
+    ]).dataView;
+    expect(output.rows.map(row => [row.team, row.item, row.binStart, row.binEnd, row.binCount])).toEqual([
+      ['B', 'x', 10, 15, 1],
+      ['B', 'x', 15, 20, 1],
+      ['B', 'y', 30, 40, 1],
+      ['B', 'y', 40, 50, 1],
+      ['A', 'x', 100, 150, 1],
+      ['A', 'x', 150, 200, 1],
+    ]);
+    expect(output.model).toEqual([
+      ...view.model,
+      { name: 'binStart', type: 'continuous' },
+      { name: 'binEnd', type: 'continuous' },
+      { name: 'binCount', type: 'continuous' },
+    ]);
+  });
+  it('shared extent keeps empty bins and bucket-local source evidence', () => {
+    const rows = tagSourceIndex([
+      { team: 'B', value: 0 },
+      { team: 'A', value: 10 },
+      { team: 'B', value: 10 },
+      { team: 'A', value: 3 },
+    ]);
+    const output = applyTransforms(rows, [
+      { kind: 'bin', params: { field: 'value', groupBy: ['team'], extent: [0, 10], step: 2 } },
+    ]);
+    expect(output.map(row => [row.team, row.binStart, row.binCount])).toEqual([
+      ['B', 0, 1],
+      ['B', 2, 0],
+      ['B', 4, 0],
+      ['B', 6, 0],
+      ['B', 8, 1],
+      ['A', 0, 0],
+      ['A', 2, 1],
+      ['A', 4, 0],
+      ['A', 6, 0],
+      ['A', 8, 1],
+    ]);
+    expect(output.map(readSourceIndices)).toEqual([
+      [0],
+      undefined,
+      undefined,
+      undefined,
+      [2],
+      undefined,
+      [3],
+      undefined,
+      undefined,
+      [1],
+    ]);
   });
 });

@@ -1,9 +1,4 @@
-import {
-  compareRowsByFieldPath,
-  BuiltinDataTransform,
-  resolveTransformRegistry,
-  SortTransformSchema,
-} from '@retikz/data';
+import { applyTransforms, BuiltinDataTransform, resolveTransformRegistry, SortTransformSchema } from '@retikz/data';
 import type { DataTransformImplementationProvider } from '@retikz/data';
 
 const sortDefinition = resolveTransformRegistry().get(BuiltinDataTransform.Sort);
@@ -26,9 +21,7 @@ export const createSortProvider = (onComplete: () => void): DataTransformImpleme
           await Promise.resolve();
           if (input.kind !== 'result') throw new Error('Expected canonical rows');
           const result = {
-            rows: [...input.result.rows].sort((a, b) =>
-              compareRowsByFieldPath(a, b, operation.params.field, operation.params.order),
-            ),
+            rows: applyTransforms(input.result.rows, [operation]).rows,
             model: input.result.model,
           };
           onComplete();

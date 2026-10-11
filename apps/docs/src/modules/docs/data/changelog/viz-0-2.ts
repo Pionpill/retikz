@@ -15,6 +15,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：排序与分桶计算分组', en: 'Unreleased: grouped sorting and binning' },
+          content: {
+            zh: 'sort 与 bin 支持可选 params.groupBy，多个字段组成计算分组。sort 在组内稳定排序，组按字段层级及每层首次出现顺序输出；bin 各组独立分桶并保留组字段与类型，显式 extent 让所有组共用范围，来源证据仅包含实际桶成员。未指定分组时行为保持。行组织文档提供全局、team、item 和组合分组控件。',
+            en: 'sort and bin accept optional params.groupBy with composite field keys. sort is stable within each group and emits groups in field hierarchy with first-seen keys at each level. bin computes independent bins, retains group fields and types, shares explicit extents across groups, and tracks only actual bucket members. Ungrouped behavior is unchanged. Row organization demos expose global, team, item, and composite grouping.',
+          },
+        },
+        {
           label: {
             zh: '待发布：BREAKING 统一 transform 参数',
             en: 'Unreleased: BREAKING unified transform parameters',

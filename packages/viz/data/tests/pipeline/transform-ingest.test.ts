@@ -164,3 +164,35 @@ it('keeps both extent endpoints continuous through grouped summaries and downstr
     ingestDataTransformResult(resolution, { rows: [{ group: 'A', low: [1, 4], high: 4 }], model: view.model }),
   ).toThrow(/value/);
 });
+
+it.each(['sort', 'bin'] as const)('preflights missing %s group fields before computation', kind => {
+  expect(() =>
+    resolveDataTransforms(
+      [{ operation: { kind, params: { field: 'value', groupBy: ['missing'] } } }],
+      [{ name: 'value', type: 'continuous' }],
+    ),
+  ).toThrow(/missing input field/);
+});
+it('rejects custom bin metric outputs colliding with group keys before execution', () => {
+  const metric = defineStatisticsReducer({
+    schema: strictObject({ kind: literal('group-output') }),
+    outputs: () => [{ field: 'group', type: 'categorical' }],
+  });
+  expect(() =>
+    resolveDataTransforms(
+      [
+        {
+          operation: {
+            kind: 'bin',
+            params: { field: 'value', groupBy: ['group'], metrics: [{ kind: 'group-output' }] },
+          },
+        },
+      ],
+      [
+        { name: 'group', type: 'categorical' },
+        { name: 'value', type: 'continuous' },
+      ],
+      { statisticsReducerRegistry: resolveStatisticsReducerRegistry([metric]) },
+    ),
+  ).toThrow(/groupBy/);
+});

@@ -38,21 +38,26 @@ import { reducerOutputFieldsOf } from './output-fields';
 import { ReducerMetricsSchema } from './reducer';
 import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './selector';
 
-/** 校验按单字段及指定方向排序的数据变换 */
+/** 校验分组字段列表，按字段顺序逐层分组，每层保留首次出现顺序；省略或空列表表示所有行属于同一组 */
+export const GroupBySchema = array(NonBlankStringSchema)
+  .optional()
+  .describe(
+    'Group key fields in hierarchy order; each level retains first-seen order; omitted or empty means one group',
+  );
+
+/** 校验各组内按单字段及指定方向稳定排序的数据变换 */
 export const SortParamsSchema = strictObject({
+  groupBy: GroupBySchema,
   field: NonBlankStringSchema.describe('Sort field'),
   order: zodEnum(DataSortOrder).optional().describe('Sort direction; default ascending'),
-}).describe('Sort rows by one field');
+}).describe(
+  'Stably sort rows within each group by one field; groups follow field hierarchy and first-seen order at each level',
+);
 
 /** SortTransformSchema 的完整变换操作契约 */
 export const SortTransformSchema = createTransformSchema(BuiltinDataTransform.Sort, SortParamsSchema).describe(
   'SortTransform operation',
 );
-
-/** 校验分组字段列表，省略或空列表表示所有行属于同一组 */
-export const GroupBySchema = array(NonBlankStringSchema)
-  .optional()
-  .describe('Group key fields; omitted or empty means one group');
 
 /** 校验将分组数据归约为指标行的操作，指标输出字段不得覆盖分组字段 */
 export const SummarizeParamsSchema = strictObject({
@@ -181,8 +186,9 @@ export const StackTransformSchema = createTransformSchema(BuiltinDataTransform.S
   'StackTransform operation',
 );
 
-/** 连续字段分桶并生成桶边界与统计结果的变换配置 */
+/** 按组独立分桶并保留组键、桶中点、边界与统计结果的变换配置 */
 export const BinParamsSchema = strictObject({
+  groupBy: GroupBySchema,
   field: NonBlankStringSchema.describe(
     'Continuous source field to bin; its value range is the binning domain unless extent is set',
   ),
@@ -200,7 +206,9 @@ export const BinParamsSchema = strictObject({
     ),
   extent: tuple([number(), number()])
     .optional()
-    .describe('Override binning domain [min, max]; default = observed min/max of field'),
+    .describe(
+      'Override binning domain [min, max] for every group; default = observed min/max of field within each group',
+    ),
   nice: boolean()
     .optional()
     .describe('Round bin boundaries to human-friendly values (count strategy only); default true'),
@@ -209,9 +217,36 @@ export const BinParamsSchema = strictObject({
   metrics: ReducerMetricsSchema.optional().describe(
     'Per-bin reducer metrics using shared reducer operations; default count as "binCount"',
   ),
-}).describe(
-  'Bin transform: partition a continuous field into intervals, emitting one row per bin with [start, end] edges and reducer metrics',
-);
+})
+  .superRefine((params, ctx) => {
+    const groupFields = new Set(params.groupBy ?? []);
+    for (const [path, field] of [
+      ['field', params.field],
+      ['startField', params.startField ?? 'binStart'],
+      ['endField', params.endField ?? 'binEnd'],
+    ]) {
+      if (groupFields.has(field))
+        ctx.addIssue({
+          code: 'custom',
+          path: [path],
+          message: `bin output field "${field}" must not collide with a groupBy field`,
+        });
+    }
+    const metrics = params.metrics ?? [{ kind: 'count' as const, as: 'binCount' }];
+    metrics.forEach((metric, metricIndex) => {
+      for (const { field, path } of reducerOutputFieldsOf(metric)) {
+        if (groupFields.has(field))
+          ctx.addIssue({
+            code: 'custom',
+            path: ['metrics', metricIndex, ...path],
+            message: `reducer output field "${field}" must not collide with a groupBy field`,
+          });
+      }
+    });
+  })
+  .describe(
+    'Bin a continuous field independently within each group, emitting group keys, midpoint, edges and reducer metrics for every bin',
+  );
 
 /** BinTransformSchema 的完整变换操作契约 */
 export const BinTransformSchema = createTransformSchema(BuiltinDataTransform.Bin, BinParamsSchema).describe(

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveRegression, ExternalTransformSchema, TransformSchema } from '../../src';
+import {
+  resolveRegression,
+  ExternalTransformSchema,
+  TransformSchema,
+  SortTransformSchema,
+  BinTransformSchema,
+} from '../../src';
 import { BuiltinTransformSchema } from '../../src/schemas/transform';
 
 describe('TransformSchema sort / stack', () => {
@@ -640,5 +646,42 @@ describe('SmoothTransformSchema', () => {
     ['linear method options', { kind: 'linear', order: 2 }],
   ])('smooth_rejects_invalid_method_variant: %s', (_name, method) => {
     expect(() => resolveRegression(method)).toThrow();
+  });
+});
+
+describe('transform grouping schema', () => {
+  it.each(['sort', 'bin'])('round-trips %s grouping without materializing defaults', kind => {
+    for (const groupBy of [[], ['team', 'item']]) {
+      const operation = { kind, params: { field: 'value', groupBy } };
+      expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
+    }
+  });
+  it.each(['sort', 'bin'])('rejects invalid %s grouping at the parameter path', kind => {
+    for (const groupBy of ['team', [' ']]) {
+      const schema = kind === 'sort' ? SortTransformSchema : BinTransformSchema;
+      const result = schema.safeParse({ kind, params: { field: 'value', groupBy } });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues.some(issue => issue.path.includes('groupBy'))).toBe(true);
+    }
+  });
+  it.each(['value', 'binStart', 'binEnd', 'binCount'])('rejects bin output collision with group %s', field => {
+    expect(() => TransformSchema.parse({ kind: 'bin', params: { field: 'value', groupBy: [field] } })).toThrow(
+      /groupBy/,
+    );
+  });
+  it('rejects named boundary and multi-output reducer collisions', () => {
+    expect(() =>
+      TransformSchema.parse({ kind: 'bin', params: { field: 'value', groupBy: ['team'], startField: 'team' } }),
+    ).toThrow(/groupBy/);
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'bin',
+        params: {
+          field: 'value',
+          groupBy: ['team'],
+          metrics: [{ kind: 'extent', field: 'value', as: { min: 'team', max: 'hi' } }],
+        },
+      }),
+    ).toThrow(/groupBy/);
   });
 });

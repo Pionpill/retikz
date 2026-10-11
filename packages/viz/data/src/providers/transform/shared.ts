@@ -17,30 +17,41 @@ export type TransformRowGroup = {
 const groupKeyOf = (row: ExternalRow, fields: ReadonlyArray<string>): string =>
   JSON.stringify(fields.map(field => resolveFieldPath(row, field) ?? null));
 
-/** 按字段路径对行分组，并保持分组首次出现顺序 */
+/** 按字段列表逐层分组，每层保留父组内键值首次出现顺序，组内成员保持输入顺序 */
 export const groupRowsByFields = (
   rows: Array<ExternalRow>,
   fields: ReadonlyArray<string> = [],
 ): Array<TransformRowGroup> => {
   if (fields.length === 0) return [{ key: '__all__', rows, values: {} }];
 
-  const groups = new Map<string, TransformRowGroup>();
+  const groups: Array<TransformRowGroup> = [];
 
-  for (const row of rows) {
-    const key = groupKeyOf(row, fields);
-    const found = groups.get(key);
-    if (found !== undefined) {
-      found.rows.push(row);
-      continue;
+  /** 按当前字段拆分父组，并按插入顺序展开下一层 */
+  const appendGroups = (members: Array<ExternalRow>, fieldIndex: number): void => {
+    if (fieldIndex === fields.length) {
+      const row = members[0];
+      const values: ExternalRow = {};
+
+      for (const field of fields) values[field] = resolveFieldPath(row, field);
+      groups.push({ key: groupKeyOf(row, fields), rows: members, values });
+      return;
     }
 
-    const values: ExternalRow = {};
+    const partitions = new Map<string, Array<ExternalRow>>();
+    const field = fields[fieldIndex];
 
-    for (const field of fields) values[field] = resolveFieldPath(row, field);
-    groups.set(key, { key, rows: [row], values });
-  }
+    for (const row of members) {
+      const key = JSON.stringify([resolveFieldPath(row, field) ?? null]);
+      const partition = partitions.get(key);
+      if (partition !== undefined) partition.push(row);
+      else partitions.set(key, [row]);
+    }
 
-  return [...groups.values()];
+    for (const partition of partitions.values()) appendGroups(partition, fieldIndex + 1);
+  };
+
+  appendGroups(rows, 0);
+  return groups;
 };
 
 /** 读取指定字段的有限数值序列，非数值、NaN 和无穷值会被跳过 */

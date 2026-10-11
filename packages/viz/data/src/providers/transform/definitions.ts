@@ -116,11 +116,11 @@ export const createAsyncBuiltinTransformImplementations = (
   }),
 ];
 
-/** 内置 sort transform definition；读取排序字段并稳定重排输入行 */
+/** 内置 sort transform definition；读取排序与分组字段，组内稳定重排输入行 */
 const sortTransformDefinition = defineTransform({
   kind: 'sort',
   paramsSchema: SortParamsSchema,
-  inputFields: operation => [operation.params.field],
+  inputFields: operation => [operation.params.field, ...(operation.params.groupBy ?? [])],
   outputModel: () => ({ kind: 'preserve', outputs: [] }),
   schedule: {
     phase: DataTransformPhase.RowOrder,
@@ -278,6 +278,7 @@ const binOutputModel = (operation: IRDataBinTransform, context: TransformSemanti
   );
   const output = binOutputFields(operation);
   const fields: Array<DataTransformOutputDescriptor> = [
+    ...(operation.params.groupBy ?? []).map(field => ({ field, type: { from: field } as const })),
     { field: operation.params.field, type: { from: operation.params.field } },
     { field: output.startField, type: DataFieldType.Continuous },
     { field: output.endField, type: DataFieldType.Continuous },
@@ -290,10 +291,20 @@ const binOutputModel = (operation: IRDataBinTransform, context: TransformSemanti
 const binTransformDefinition = defineTransform({
   kind: 'bin',
   paramsSchema: BinParamsSchema,
+  validate: (operation, context) => {
+    const groupFields = new Set(operation.params.groupBy ?? []);
+    for (const metric of binMetricOperations(operation)) {
+      for (const { field } of reducerOutputDescriptors(metric, context.statisticsReducerRegistry)) {
+        if (groupFields.has(field))
+          throw new RetikzDataError(`data: reducer output field "${field}" must not collide with a groupBy field`);
+      }
+    }
+  },
   dependencies: (operation, context) =>
     binMetricOperations(operation).map(metric => resolveReducerDependency(metric, context.statisticsReducerRegistry)),
   inputFields: (operation, context) => [
     operation.params.field,
+    ...(operation.params.groupBy ?? []),
     ...binMetricOperations(operation).flatMap(metric => reducerInputFields(metric, context.statisticsReducerRegistry)),
   ],
   outputModel: binOutputModel,

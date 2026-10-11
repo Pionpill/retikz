@@ -11,10 +11,13 @@ import type {
 import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '../data';
+import { groupRowsByFields } from './shared';
 
-/** sort transform 实现：按字段升 / 降序稳定排序，等键保持原序 */
+/** sort transform 实现：组按字段层级及每层首次出现顺序输出，组内稳定排序，等键保持原序 */
 export const applySort = (rows: Array<ExternalRow>, operation: IRDataSortTransform): Array<ExternalRow> => {
-  return [...rows].sort((a, b) => compareRowsByFieldPath(a, b, operation.params.field, operation.params.order));
+  return groupRowsByFields(rows, operation.params.groupBy).flatMap(group =>
+    [...group.rows].sort((a, b) => compareRowsByFieldPath(a, b, operation.params.field, operation.params.order)),
+  );
 };
 
 /** 默认堆叠下界 / 上界输出字段名 */

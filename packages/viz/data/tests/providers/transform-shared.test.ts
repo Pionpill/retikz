@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '../../src/providers/transform';
 
 describe('transform shared helpers', () => {
-  it('groups rows by field values while preserving first-seen group order and key values', () => {
+  it('groups hierarchically in field order while preserving first-seen keys at each level', () => {
     const rows: Array<ExternalRow> = [
       { region: 'north', series: 'A', value: 1 },
       { region: 'south', series: 'A', value: 2 },
@@ -16,10 +16,33 @@ describe('transform shared helpers', () => {
 
     expect(groups.map(group => group.values)).toEqual([
       { region: 'north', series: 'A' },
-      { region: 'south', series: 'A' },
       { region: 'north', series: 'B' },
+      { region: 'south', series: 'A' },
     ]);
-    expect(groups.map(group => group.rows.map(row => row.value))).toEqual([[1, 3], [2], [4]]);
+    expect(groups.map(group => group.rows.map(row => row.value))).toEqual([[1, 3], [4], [2]]);
+    expect(groups.map(group => group.key)).toEqual(['["north","A"]', '["north","B"]', '["south","A"]']);
+    expect(groupRowsByFields(rows, ['series', 'region']).map(group => group.rows.map(row => row.value))).toEqual([
+      [1, 3],
+      [2],
+      [4],
+    ]);
+    expect(rows.map(row => row.value)).toEqual([1, 2, 3, 4]);
+    expect(groups[0].rows[0]).toBe(rows[0]);
+  });
+
+  it('keeps nested missing and null keys together at every level without merging numeric and string keys', () => {
+    const rows: Array<ExternalRow> = [
+      { team: { name: 'Z' }, item: null, category: 1, value: 1 },
+      { team: { name: 'A' }, item: 'x', category: 1, value: 2 },
+      { team: { name: 'Z' }, item: 'x', category: 1, value: 3 },
+      { team: { name: 'Z' }, category: '1', value: 4 },
+      { team: { name: 'Z' }, category: 1, value: 5 },
+    ];
+    const groups = groupRowsByFields(rows, ['team.name', 'item', 'category']);
+    expect(groups.map(group => group.rows.map(row => row.value))).toEqual([[1, 5], [4], [3], [2]]);
+    expect(groups[0].values).toEqual({ 'team.name': 'Z', item: null, category: 1 });
+    expect(groups[1].values).toEqual({ 'team.name': 'Z', item: undefined, category: '1' });
+    expect(groupRowsByFields([], ['team.name', 'item'])).toEqual([]);
   });
 
   it('returns a single global group when fields are omitted', () => {

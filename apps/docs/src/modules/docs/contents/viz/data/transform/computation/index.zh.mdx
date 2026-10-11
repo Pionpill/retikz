@@ -47,15 +47,10 @@ description: 理解本地与外接计算如何匹配同一变换语义，并通�
 
 <DocStep title="取得内置 sort 定义">
 
-这里接入的是内置排序的另一种计算实现。先取得它的 Definition 身份，并导入参数 schema 和比较函数，使外接实现遵守同一套排序语义。
+这里接入的是内置排序的另一种计算实现。先取得它的 Definition 身份，并导入参数 schema 和公开变换入口，使外接实现遵守同一套排序语义。
 
 ```ts
-import {
-  compareRowsByFieldPath,
-  BuiltinDataTransform,
-  resolveTransformRegistry,
-  SortTransformSchema,
-} from '@retikz/data';
+import { applyTransforms, BuiltinDataTransform, resolveTransformRegistry, SortTransformSchema } from '@retikz/data';
 import type { DataTransformImplementationProvider } from '@retikz/data';
 
 const sortDefinition = resolveTransformRegistry().get(BuiltinDataTransform.Sort);
@@ -67,7 +62,7 @@ const sortDefinition = resolveTransformRegistry().get(BuiltinDataTransform.Sort)
 
 对照下面代码中的 `provider` 对象：执行器在预检时调用其 `resolve(stage, context)` 方法，检查 Definition 和输入描述，此时不读取或排序行数据。支持时，`resolve` 返回包含 `implementation.execute` 的结果；执行器随后调用这个 `execute(input)` 方法，传入实际行数据并取得计算结果的 Promise。
 
-这里仍在当前线程排序，`Promise.resolve()` 只演示异步返回，不代表远程调用或后台线程。接入真实计算服务时，将计算调用放在 `execute` 内，并把结果转换为规范的 `{ rows, model }`。本例复制行数组后排序，保留原字段模型。
+这里仍在当前线程排序，`Promise.resolve()` 只演示异步返回，不代表远程调用或后台线程。接入真实计算服务时，将计算调用放在 `execute` 内，并把结果转换为规范的 `{ rows, model }`。本例复用 Data 排序及 groupBy 语义，保留原字段模型。
 
 ```ts
 const provider: DataTransformImplementationProvider<never> = {
@@ -88,9 +83,7 @@ const provider: DataTransformImplementationProvider<never> = {
           if (input.kind !== 'result') throw new Error('Expected canonical rows');
           await Promise.resolve();
           return {
-            rows: [...input.result.rows].sort((a, b) =>
-              compareRowsByFieldPath(a, b, operation.params.field, operation.params.order),
-            ),
+            rows: applyTransforms(input.result.rows, [operation]).rows,
             model: input.result.model,
           };
         },

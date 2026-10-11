@@ -35,8 +35,10 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 
 <ZodSchema
   name="SortTransformSchema"
-  description="按一个字段稳定重排行。"
+  description="各组内按一个字段稳定重排行，组按字段层级及每层首次出现顺序输出。"
   descriptions={{
+    'params.groupBy':
+      '计算分组字段；省略或空数组表示全部行属于一组。按字段列表顺序逐层分组，每层保留父组内键值首次出现顺序。',
     kind: '排序 transform 判别值。',
     'params.field': '排序字段。',
     'params.order': '排序方向；默认升序。',
@@ -101,14 +103,16 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
 
 <ZodSchema
   name="BinTransformSchema"
-  description="把连续字段划分为区间，每个 bin 输出一行边界与聚合指标。"
+  description="各组内独立分箱，每个 bin 输出分组字段、桶中点、边界与聚合指标；分组字段不得与输出字段冲突。"
   descriptions={{
+    'params.groupBy':
+      '计算分组字段；省略或空数组表示全部行属于一组。按字段列表顺序逐层分组，每层保留父组内键值首次出现顺序。',
     kind: '分箱变换判别值。',
     'params.field': '要分箱的连续字段。',
     'params.count': '目标 bin 数；与 step / thresholds 互斥，默认 10。',
     'params.step': '数据单位中的固定 bin 宽度；与 count / thresholds 互斥。',
     'params.thresholds': '显式内部边界；K 个阈值形成 K+1 个 bin。',
-    'params.extent': '覆盖分箱 domain 的 [min, max]；省略时使用观测范围。',
+    'params.extent': '覆盖分箱 domain 的 [min, max]；省略时使用各组观测范围，指定后所有组共用此范围。',
     'params.nice': '仅 count 策略中把边界取整为易读数值，默认 true。',
     'params.startField': '每个 bin 下边界输出字段，默认 binStart。',
     'params.endField': '每个 bin 上边界输出字段，默认 binEnd。',

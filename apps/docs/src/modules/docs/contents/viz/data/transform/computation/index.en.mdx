@@ -47,15 +47,10 @@ The following steps build the integration in order. Demo controls and the counte
 
 <DocStep title="Obtain the built-in sort definition">
 
-This supplies another implementation of built-in sorting. Obtain its Definition identity and import the parameter schema and comparison function so the implementation follows the same sorting semantics.
+This supplies another implementation of built-in sorting. Obtain its Definition identity and import the parameter schema and public transform entry point so the implementation follows the same sorting semantics.
 
 ```ts
-import {
-  compareRowsByFieldPath,
-  BuiltinDataTransform,
-  resolveTransformRegistry,
-  SortTransformSchema,
-} from '@retikz/data';
+import { applyTransforms, BuiltinDataTransform, resolveTransformRegistry, SortTransformSchema } from '@retikz/data';
 import type { DataTransformImplementationProvider } from '@retikz/data';
 
 const sortDefinition = resolveTransformRegistry().get(BuiltinDataTransform.Sort);
@@ -67,7 +62,7 @@ const sortDefinition = resolveTransformRegistry().get(BuiltinDataTransform.Sort)
 
 Look at the `provider` object in the code below: during preflight, the executor calls its `resolve(stage, context)` method to check the Definition and input descriptor, without reading or sorting rows. When supported, `resolve` returns a result containing `implementation.execute`. The executor later calls this `execute(input)` method with actual rows and receives a Promise for the computed result.
 
-Sorting still runs on the current thread here. `Promise.resolve()` demonstrates asynchronous return, not a remote call or a worker. To connect a real computation service, call it inside `execute` and convert its output to canonical `{ rows, model }`. This example sorts a copy of the row array and preserves the field model.
+Sorting still runs on the current thread here. `Promise.resolve()` demonstrates asynchronous return, not a remote call or a worker. To connect a real computation service, call it inside `execute` and convert its output to canonical `{ rows, model }`. This example reuses Data sorting, including groupBy semantics, and preserves the field model.
 
 ```ts
 const provider: DataTransformImplementationProvider<never> = {
@@ -88,9 +83,7 @@ const provider: DataTransformImplementationProvider<never> = {
           if (input.kind !== 'result') throw new Error('Expected canonical rows');
           await Promise.resolve();
           return {
-            rows: [...input.result.rows].sort((a, b) =>
-              compareRowsByFieldPath(a, b, operation.params.field, operation.params.order),
-            ),
+            rows: applyTransforms(input.result.rows, [operation]).rows,
             model: input.result.model,
           };
         },

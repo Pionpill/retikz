@@ -320,7 +320,7 @@ function* computeBinMetrics(
 }
 
 /**
- * bin：连续 field 分箱，输出每箱一行，包含空箱
+ * bin：每组独立对连续 field 分箱，保留组键并输出每箱一行，包含空箱
  * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；metrics 缺省输出 binCount
  */
 export function* computeBin(
@@ -333,41 +333,44 @@ export function* computeBin(
 
   const { startField, endField } = binOutputFields(operation);
   const metrics = binMetricOperations(operation);
-  const observed = finiteFieldValuesOf(rows, operation.params.field);
-  const edges = binEdges(operation, observed);
-  const binCount = edges.length - 1;
-  const buckets: Array<Array<ExternalRow>> = Array.from({ length: binCount }, () => []);
-
-  for (const row of rows) {
-    const value = resolveFieldPath(row, operation.params.field);
-    if (!isFiniteNumber(value)) continue;
-
-    let index = -1;
-
-    for (let i = 0; i < binCount; i++) {
-      const lo = edges[i];
-      const hi = edges[i + 1];
-      if (value >= lo && (value < hi || (i === binCount - 1 && value <= hi))) {
-        index = i;
-        break;
-      }
-    }
-
-    if (index >= 0) buckets[index].push(row);
-  }
-
   const output: Array<ExternalRow> = [];
 
-  for (const [i, members] of buckets.entries()) {
-    const start = edges[i];
-    const end = edges[i + 1];
-    const out: ExternalRow = {
-      [startField]: start,
-      [endField]: end,
-      [operation.params.field]: (start + end) / 2,
-      ...(yield* computeBinMetrics(members, metrics, computation)),
-    };
-    output.push(context.groupProvenance(out, members));
+  for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
+    const observed = finiteFieldValuesOf(group.rows, operation.params.field);
+    const edges = binEdges(operation, observed);
+    const binCount = edges.length - 1;
+    const buckets: Array<Array<ExternalRow>> = Array.from({ length: binCount }, () => []);
+
+    for (const row of group.rows) {
+      const value = resolveFieldPath(row, operation.params.field);
+      if (!isFiniteNumber(value)) continue;
+
+      let index = -1;
+
+      for (let i = 0; i < binCount; i++) {
+        const lo = edges[i];
+        const hi = edges[i + 1];
+        if (value >= lo && (value < hi || (i === binCount - 1 && value <= hi))) {
+          index = i;
+          break;
+        }
+      }
+
+      if (index >= 0) buckets[index].push(row);
+    }
+
+    for (const [i, members] of buckets.entries()) {
+      const start = edges[i];
+      const end = edges[i + 1];
+      const out: ExternalRow = {
+        ...group.values,
+        [startField]: start,
+        [endField]: end,
+        [operation.params.field]: (start + end) / 2,
+        ...(yield* computeBinMetrics(members, metrics, computation)),
+      };
+      output.push(context.groupProvenance(out, members));
+    }
   }
 
   return output;
