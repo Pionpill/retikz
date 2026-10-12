@@ -1,3 +1,5 @@
+import type { IRGraphicStyle } from '@retikz/core';
+import { mergeGraphicStyle } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 import { BuiltinPlotMark, PointMarkSchema } from '@retikz/plot';
@@ -18,6 +20,27 @@ export const markValueOf = (encodings: JsonObject, properties: JsonObject, name:
   return undefined;
 };
 
+/** 将常量 opacity 成员与 overall 字段映射下沉到 Plot */
+export const markOpacityOf = (encodings: JsonObject, properties: JsonObject): JsonObject | undefined => {
+  const opacity = properties.opacity as IRGraphicStyle['opacity'];
+  const factors = typeof opacity === 'number' ? { overall: opacity } : opacity;
+  const result: JsonObject = {};
+  for (const name of ['overall', 'fill', 'stroke'] as const) {
+    if (factors?.[name] !== undefined) result[name] = { kind: 'constant', value: factors[name] };
+  }
+  const overall = markValueOf(encodings, {}, 'opacity');
+  if (overall !== undefined) result.overall = overall;
+  return Object.keys(result).length === 0 ? undefined : result;
+};
+
+/** 保留非样式 slot 的覆盖规则，同时逐成员继承 opacity */
+export const mergeMarkProperties = <T extends { opacity?: IRGraphicStyle['opacity'] }>(
+  ...properties: Array<T | undefined>
+): T => ({
+  ...Object.assign({}, ...properties),
+  ...mergeGraphicStyle(...properties.map(value => ({ opacity: value?.opacity }))),
+});
+
 const copyConstantProperty = (target: JsonObject, properties: JsonObject, name: string): void => {
   if (Object.hasOwn(properties, name)) target[name] = { kind: 'constant', value: properties[name] };
 };
@@ -33,8 +56,6 @@ const pointConstantPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
   'fill',
   'stroke',
   'strokeWidth',
-  'fillOpacity',
-  'strokeOpacity',
   'rotate',
   'minimumSize',
   'zIndex',
@@ -87,9 +108,13 @@ export const resolvePointMark = (
   if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;
 
   for (const name of pointVisualSlots) {
+    if (name === 'opacity') continue;
     const value = markValueOf(encodings, properties, name);
     if (value !== undefined) mark[name] = value;
   }
+
+  const opacity = markOpacityOf(encodings, properties);
+  if (opacity !== undefined) mark.opacity = opacity;
 
   for (const name of pointConstantPropertySlots) copyConstantProperty(mark, properties, name);
 
@@ -112,10 +137,16 @@ export const markSlotsOf = (
   const explicitProperties = objectOf(context.source, 'properties');
   const encodings = { ...context.inherited.encodings };
 
-  for (const name of Object.keys(explicitProperties)) delete encodings[name];
+  for (const name of Object.keys(explicitProperties)) {
+    if (name === 'opacity') {
+      const opacity = explicitProperties.opacity as IRGraphicStyle['opacity'];
+      if (typeof opacity !== 'number' && opacity?.overall === undefined) continue;
+    }
+    delete encodings[name];
+  }
 
   return {
     encodings: { ...encodings, ...explicitEncodings },
-    properties: { ...context.inherited.properties, ...explicitProperties },
+    properties: mergeMarkProperties(context.inherited.properties, explicitProperties),
   };
 };

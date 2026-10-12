@@ -53,8 +53,8 @@ export const renderFramePlaygroundPreview = (values: FramePlaygroundPreviewValue
         <FrameTitle
           style={{
             fill: 'dodgerblue',
-            fillOpacity: values.titleFillOpacity,
             font: { size: values.titleFontSize, weight: values.titleFontWeight },
+            opacity: { fill: values.titleFillOpacity },
           }}
           layout={{ padding: values.titlePadding }}
         >

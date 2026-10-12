@@ -152,7 +152,7 @@ describe('Flow Theme cascade', () => {
     expect(resolved.layout).toMatchObject({ nodeGap: 12, rankGap: 24 });
     expect(group.layout).toEqual({ nodeGap: 20 });
     expect(entity.style).toMatchObject({
-      opacity: 0,
+      opacity: { overall: 0 },
       dashed: false,
       fill: 'transparent',
       font: { weight: 700 },

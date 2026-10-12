@@ -5,7 +5,7 @@ import { PathMarkSchema, BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
-import { requiredFieldOf, resolvePointMark } from '../shared';
+import { markOpacityOf, mergeMarkProperties, requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
 import { RegressionChartMarkSchema, RegressionTrendCurveSchema } from './schema';
@@ -42,11 +42,11 @@ const regressionPropertiesOf = (
   const explicit = source.properties ?? {};
   const properties: IRRegressionChartProperties = { ...inherited, ...explicit };
   if (inherited.point !== undefined || explicit.point !== undefined) {
-    properties.point = { ...(inherited.point ?? {}), ...(explicit.point ?? {}) };
+    properties.point = mergeMarkProperties(inherited.point, explicit.point);
   }
 
   if (inherited.trend !== undefined || explicit.trend !== undefined) {
-    properties.trend = { ...(inherited.trend ?? {}), ...(explicit.trend ?? {}) };
+    properties.trend = mergeMarkProperties(inherited.trend, explicit.trend);
   }
 
   return properties;
@@ -56,20 +56,12 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): Json
   const trend = properties.trend ?? {};
   const result: JsonObject = {};
 
-  for (const name of [
-    'strokeWidth',
-    'strokeOpacity',
-    'opacity',
-    'lineCap',
-    'lineJoin',
-    'zIndex',
-    'dashPattern',
-    'shadow',
-    'blendMode',
-  ] as const) {
+  for (const name of ['strokeWidth', 'lineCap', 'lineJoin', 'zIndex', 'dashPattern', 'shadow', 'blendMode'] as const) {
     if (trend[name] !== undefined) result[name] = { kind: 'constant', value: trend[name] };
   }
 
+  const opacity = markOpacityOf({}, trend);
+  if (opacity !== undefined) result.opacity = opacity;
   return result;
 };
 
@@ -136,7 +128,7 @@ export const resolveRegressionMarkGroup = (
         {
           ...properties,
           ...extra,
-          trend: { ...properties.trend, ...extra.trend },
+          trend: mergeMarkProperties(properties.trend, extra.trend),
         },
         extra.trend?.stroke !== undefined,
       ),

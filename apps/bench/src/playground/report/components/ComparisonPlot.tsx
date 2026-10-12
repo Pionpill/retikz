@@ -29,7 +29,7 @@ export const ComparisonPlot: FC<ComparisonPlotProps> = props => {
       renderer="svg"
       style={{ width: '100%', height: '100%', color: 'var(--muted-foreground)' }}
     >
-      <IntervalMark x="policy" y="median" color="policy" fillOpacity={0.9} />
+      <IntervalMark x="policy" y="median" color="policy" opacity={{ fill: 0.9 }} />
       <BuiltinPlotScale
         dimension="x"
         type="band"

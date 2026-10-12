@@ -340,7 +340,7 @@ These are the members used to combine the features on this page. See the [API re
       kind: 'property',
       type: "InputFlowDiagram['flowDefaults']",
       description:
-        'Sets sparse defaults; instance fields take precedence. This page uses:\n- `entity.style`: `{ color?: string; fillOpacity?: number; strokeWidth?: number }` to change every Entity’s color, fill opacity, and stroke width\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; strokeOpacity?: number }` to change every Relation’s stroke color, width, and opacity\nOther fragments include `layout` and `group`; see the Schema reference for all fields.',
+        'Sets sparse defaults; instance fields take precedence. This page uses:\n- `entity.style`: `{ color?: string; opacity?: { fill?: number }; strokeWidth?: number }` to change every Entity’s color, fill opacity, and stroke width\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; opacity?: { stroke?: number } }` to change every Relation’s stroke color, width, and opacity\nOther fragments include `layout` and `group`; see the Schema reference for all fields.',
     },
   ]}
 />

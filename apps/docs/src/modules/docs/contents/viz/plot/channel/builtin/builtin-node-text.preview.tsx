@@ -52,11 +52,17 @@ export const BuiltinNodeTextPreview = (values: BuiltinNodeTextPreviewValues) => 
       rotate={values.rotate}
       minimumSize={values.minimumSize}
       scale={values.scale}
-      label={values.showLabel ? 'tag' : undefined}
-      labelPosition={values.labelPosition}
-      labelDistance={values.labelDistance}
-      labelPin={values.labelPin}
-      labelTextColor={values.labelTextColor}
+      label={
+        values.showLabel
+          ? {
+              field: 'tag',
+              position: values.labelPosition,
+              distance: values.labelDistance,
+              pin: values.labelPin,
+              textColor: values.labelTextColor,
+            }
+          : undefined
+      }
       shadow={values.shadow}
       blendMode={values.blendMode}
     />

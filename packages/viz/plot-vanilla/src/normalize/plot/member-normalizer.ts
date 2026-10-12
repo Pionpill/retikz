@@ -5,7 +5,6 @@ import type {
   IRPlotPointFillStyle,
   IRPlotPointNonnegativeNumberStyle,
   IRPlotPointNumberStyle,
-  IRPlotPointOpacityStyle,
   IRPlotPointSizeStyle,
   IRPlotPointZIndexStyle,
   IRPlotTextChannel,
@@ -41,6 +40,7 @@ import {
   recordMarkColor,
   recordResolveLabel,
 } from './mark-normalizers';
+import { opacityStyleOf } from './style-sugar';
 import type { StyleSugarContext } from './style-sugar';
 import {
   boxSpacingStyleOf,
@@ -161,7 +161,7 @@ export const applyDeclaration = (
 
     const colorEnc = colorChannel(color, series);
     const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-    const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
+    const opacityStyle = opacityStyleOf(opacity, styleContext);
     const lineCapStyle = enumStyleOf(lineCap, 'lineCap', new Set(['butt', 'round', 'square']), styleContext);
     const lineJoinStyle = enumStyleOf(lineJoin, 'lineJoin', new Set(['miter', 'round', 'bevel']), styleContext);
     const roundedCornersStyle = numberStyleOf<IRPlotPointNonnegativeNumberStyle>(
@@ -215,8 +215,7 @@ export const applyDeclaration = (
       fill,
       stroke,
       strokeWidth,
-      fillOpacity,
-      strokeOpacity,
+
       rotate,
       padding,
       minimumSize,
@@ -249,9 +248,8 @@ export const applyDeclaration = (
     const fillStyle = paintStyleOf<IRPlotPointFillStyle>(fill, 'fill', styleContext);
     const strokeStyle = strokeStyleOf(stroke, styleContext);
     const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-    const fillOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-    const strokeOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(strokeOpacity, 'strokeOpacity', styleContext);
-    const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
+
+    const opacityStyle = opacityStyleOf(opacity, styleContext);
     const rotateStyle = numberStyleOf<IRPlotPointNumberStyle>(rotate, 'rotate', styleContext);
     const paddingStyle = boxSpacingStyleOf(padding, 'padding', styleContext);
     const minimumSizeStyle = nodeBoxSizeStyleOf(minimumSize, 'minimumSize', styleContext);
@@ -285,8 +283,7 @@ export const applyDeclaration = (
       ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
       ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
       ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
-      ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
-      ...(strokeOpacityStyle !== undefined ? { strokeOpacity: strokeOpacityStyle } : {}),
+
       ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
       ...(rotateStyle !== undefined ? { rotate: rotateStyle } : {}),
       ...(paddingStyle !== undefined ? { padding: paddingStyle } : {}),
@@ -339,7 +336,7 @@ export const applyDeclaration = (
       fill,
       stroke,
       strokeWidth,
-      fillOpacity,
+
       opacity,
       padAngle,
       pull,
@@ -366,8 +363,8 @@ export const applyDeclaration = (
     const fillStyle = paintStyleOf<IRPlotPointFillStyle>(fill, 'fill', styleContext);
     const strokeStyle = strokeStyleOf(stroke, styleContext);
     const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-    const fillOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-    const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
+
+    const opacityStyle = opacityStyleOf(opacity, styleContext);
     const pullStyle = intervalPullStyleOf(pull);
     const effectiveFacetId = facetId ?? context.facetId;
     const effectiveTrackId = trackId ?? context.trackId;
@@ -376,7 +373,7 @@ export const applyDeclaration = (
       ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
       ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
       ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
-      ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+
       ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
       ...(padAngle !== undefined ? { padAngle } : {}),
       ...(pullStyle !== undefined ? { pull: pullStyle } : {}),

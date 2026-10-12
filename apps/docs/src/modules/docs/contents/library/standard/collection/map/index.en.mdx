@@ -158,7 +158,7 @@ Empty value cells retain shared and role styles, dimensions, and padding. Use en
 
 Style precedence is **structural defaults → overall style → style.key / style.value → cell style**. Keys and values can have distinct appearances.
 
-Font fields merge individually. `fillOpacity` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
+Font fields merge individually. `opacity.fill` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
 
 <ComponentPreview
   files={['map-styles', 'map-styles.preview.tsx']}

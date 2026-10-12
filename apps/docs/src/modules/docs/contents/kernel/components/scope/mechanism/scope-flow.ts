@@ -7,7 +7,7 @@ export const scopeFlowDefaults = {
     padding: 18,
     cornerRadius: 4,
     background: { fill: 'none' },
-    border: { stroke: 'gray', strokeOpacity: 0.35 },
+    border: { stroke: 'gray', opacity: { stroke: 0.35 } },
     caption: { title: { font: { size: 12 }, textColor: 'gray' } },
   },
   relation: { labelFont: { size: 12 }, labelTextForeground: 'gray' },

@@ -27,7 +27,7 @@ import { Surface } from '@retikz/standard-react/presentation';
 
 export const Example = () => (
   <Layout>
-    <Surface padding={16} border={{ stroke: 'currentColor', strokeOpacity: 0.65 }}>
+    <Surface padding={16} border={{ stroke: 'currentColor', opacity: { stroke: 0.65 } }}>
       <Node position={[0, 0]} text="A" />
     </Surface>
   </Layout>
@@ -50,7 +50,7 @@ const ir: IRScene = {
       namespace: 'standard',
       type: 'surface',
       padding: 16,
-      border: { stroke: 'currentColor', strokeOpacity: 0.65 },
+      border: { stroke: 'currentColor', opacity: { stroke: 0.65 } },
       child: { type: 'node', position: [0, 0], text: 'A' },
     },
   ],
@@ -69,7 +69,7 @@ const input = scene({
   children: [
     surface({
       padding: 16,
-      border: { stroke: 'currentColor', strokeOpacity: 0.65 },
+      border: { stroke: 'currentColor', opacity: { stroke: 0.65 } },
       child: surfaceChild(node({ position: [0, 0], text: 'A' })),
     }),
   ],
@@ -94,7 +94,7 @@ const ir: IRScene = {
       namespace: 'standard',
       type: 'surface',
       padding: 16,
-      border: { stroke: 'currentColor', strokeOpacity: 0.65 },
+      border: { stroke: 'currentColor', opacity: { stroke: 0.65 } },
       child: { type: 'node', position: [0, 0], text: 'A' },
     },
   ],

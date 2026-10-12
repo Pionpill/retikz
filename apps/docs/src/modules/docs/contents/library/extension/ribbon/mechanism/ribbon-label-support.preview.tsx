@@ -92,7 +92,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
           end: { cap, label: { ...label, text: 'B' } },
         }}
         label={{ text: 'M', placement: 'inside', sloped: true }}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.22, stroke: 'dodgerblue', strokeWidth: 2 }}
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, opacity: { fill: 0.22 } }}
       >
         <Step kind="move" to={[-120, 0]} />
         <Step to={[120, 0]} />

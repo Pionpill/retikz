@@ -120,7 +120,7 @@ export const createPreviewControlContract = (lang: Lang) =>
       'Path.style.dashOffset',
       'Path.style.lineCap',
       'Path.style.lineJoin',
-      'Path.style.strokeOpacity',
+      'Path.style.opacity.stroke',
     ],
   }) satisfies PreviewControlContract;
 

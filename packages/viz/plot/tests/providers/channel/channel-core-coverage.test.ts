@@ -80,18 +80,20 @@ describe('channel core coverage (contract)', () => {
         {
           type: 'point',
           strokeWidth: { kind: 'constant', value: 2 },
-          opacity: { kind: 'constant', value: 0.7 },
-          fillOpacity: { kind: 'constant', value: 0.5 },
-          strokeOpacity: { kind: 'constant', value: 0.4 },
           zIndex: { kind: 'constant', value: 3 },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          opacity: {
+            overall: { kind: 'constant', value: 0.7 },
+            fill: { kind: 'constant', value: 0.5 },
+            stroke: { kind: 'constant', value: 0.4 },
+          },
         },
       ],
     });
 
     expect(firstLayer(spec, { d: [{ x: 0, y: 0 }] })).toMatchObject({
       zIndex: 0,
-      style: { strokeWidth: 2, opacity: 0.7, fillOpacity: 0.5, strokeOpacity: 0.4 },
+      style: { strokeWidth: 2, opacity: { overall: 0.7, fill: 0.5, stroke: 0.4 } },
     });
 
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0 }] }));
@@ -117,9 +119,9 @@ describe('channel core coverage (contract)', () => {
           roundedCorners: { kind: 'constant', value: 4 },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
           strokeWidth: { kind: 'constant', value: 3 },
-          opacity: { kind: 'constant', value: 0.6 },
           lineCap: { kind: 'constant', value: 'round' },
           lineJoin: { kind: 'constant', value: 'bevel' },
+          opacity: { overall: { kind: 'constant', value: 0.6 } },
         },
       ],
     });
@@ -134,7 +136,7 @@ describe('channel core coverage (contract)', () => {
 
     expect(path).toMatchObject({
       roundedCorners: 4,
-      style: { strokeWidth: 3, opacity: 0.6, lineCap: 'round', lineJoin: 'bevel' },
+      style: { strokeWidth: 3, opacity: { overall: 0.6 }, lineCap: 'round', lineJoin: 'bevel' },
     });
   });
 
@@ -152,9 +154,8 @@ describe('channel core coverage (contract)', () => {
         {
           type: 'interval',
           strokeWidth: { kind: 'field', value: 'weight' },
-          fillOpacity: { kind: 'field', value: 'alpha' },
-          opacity: { kind: 'constant', value: 0.9 },
           encoding: { x: { field: 'cat' }, y: { field: 'value' } },
+          opacity: { fill: { kind: 'field', value: 'alpha' }, overall: { kind: 'constant', value: 0.9 } },
         },
       ],
     });
@@ -169,11 +170,11 @@ describe('channel core coverage (contract)', () => {
 
     expect(nodes[0].style?.strokeWidth).toBeCloseTo(0.5, 6);
     expect(nodes[1].style?.strokeWidth).toBeCloseTo(4, 6);
-    expect(nodes[0].style?.fillOpacity).toBeCloseTo(0.2, 6);
-    expect(nodes[1].style?.fillOpacity).toBeCloseTo(1, 6);
+    expect(typeof nodes[0].style?.opacity === 'object' ? nodes[0].style.opacity.fill : undefined).toBeCloseTo(0.2, 6);
+    expect(typeof nodes[1].style?.opacity === 'object' ? nodes[1].style.opacity.fill : undefined).toBeCloseTo(1, 6);
     expect(
       (firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }] }).defaults!.node as IRNode).style?.opacity,
-    ).toBe(0.9);
+    ).toEqual({ overall: 0.9 });
   });
 
   it('datum_label_style_fields_deliver_to_core_node_label', () => {
@@ -386,11 +387,11 @@ describe('channel core coverage (contract)', () => {
           scale: { kind: 'constant', value: { x: 1.2, y: 0.8 } },
           thickness: { kind: 'constant', value: 'thick' },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
-          strokeOpacity: { kind: 'constant', value: 0.45 },
           fillRule: { kind: 'constant', value: 'evenodd' },
           dashPattern: { kind: 'constant', value: [4, 2] },
           shadow: { kind: 'constant', value: { preset: 'md', offsetX: 1, offsetY: 2 } },
           blendMode: { kind: 'constant', value: 'screen' },
+          opacity: { stroke: { kind: 'constant', value: 0.45 } },
         },
       ],
     });
@@ -408,12 +409,12 @@ describe('channel core coverage (contract)', () => {
       rotate: 15,
       scale: { x: 1.2, y: 0.8 },
       style: {
-        strokeOpacity: 0.45,
         fillRule: 'evenodd',
         strokeWidth: 2,
         dashPattern: [4, 2],
         shadow: { preset: 'md', offsetX: 1, offsetY: 2 },
         blendMode: 'screen',
+        opacity: { stroke: 0.45 },
       },
     });
     expect(path.marks).toBeUndefined();

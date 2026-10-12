@@ -254,14 +254,16 @@ describe('lowerPlots (contract)', () => {
           fill: { kind: 'constant', value: '#f8fafc' },
           stroke: { kind: 'constant', value: '#0f172a' },
           strokeWidth: { kind: 'constant', value: 1.5 },
-          fillOpacity: { kind: 'constant', value: 0.7 },
-          strokeOpacity: { kind: 'constant', value: 0.9 },
-          opacity: { kind: 'constant', value: 0.8 },
           rotate: { kind: 'constant', value: 45 },
           padding: { kind: 'constant', value: 2 },
           minimumSize: { kind: 'constant', value: { default: 14, width: 16, height: 12 } },
           zIndex: { kind: 'constant', value: 3 },
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          opacity: {
+            fill: { kind: 'constant', value: 0.7 },
+            stroke: { kind: 'constant', value: 0.9 },
+            overall: { kind: 'constant', value: 0.8 },
+          },
         },
       ],
     });
@@ -274,9 +276,7 @@ describe('lowerPlots (contract)', () => {
         fill: '#f8fafc',
         stroke: '#0f172a',
         strokeWidth: 1.5,
-        fillOpacity: 0.7,
-        strokeOpacity: 0.9,
-        opacity: 0.8,
+        opacity: { fill: 0.7, stroke: 0.9, overall: 0.8 },
       },
       layout: { padding: 2, minimumSize: { default: 14, width: 16, height: 12 } },
     });
@@ -340,7 +340,7 @@ describe('lowerPlots (contract)', () => {
 
     expect(grids.map(scope => scope.meta?.dimension)).toEqual(['x', 'y']);
     expect(grids.every(scope => (scope.children[0] as IRPath).style?.stroke === '#ffffff')).toBe(true);
-    expect(grids.every(scope => (scope.children[0] as IRPath).style?.strokeOpacity === 0.15)).toBe(true);
+    for (const scope of grids) expect((scope.children[0] as IRPath).style?.opacity).toEqual({ stroke: 0.15 });
   });
 
   it.each([

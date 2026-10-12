@@ -36,14 +36,14 @@ export type RectPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: IRGraphicStyle['fillOpacity'];
+  fillOpacity?: number;
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
+  strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
@@ -59,7 +59,7 @@ export type RectPrim = {
    * 整体透明度 0~1
    * @default 1
    */
-  opacity?: IRGraphicStyle['opacity'];
+  opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: ResolvedDropShadow;
   /**

@@ -60,11 +60,11 @@ Style channels control the visible appearance of a mark. Color, opacity, size, a
 
 Overall opacity affects both fill and stroke, fill opacity only fades the interior, and stroke opacity only fades the outline.
 
-| Channel         | Channel Value                                                           | Meaning         | Delivery / guide                                                                           |
-| --------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
-| `opacity`       | Field: `opacity = "field"`<br />Constant: `opacity = {0.45}`            | Overall opacity | `IRScope.opacity`, `IRNode.opacity`, or `IRPath.opacity`; field values support ramp legend |
-| `fillOpacity`   | Field: `fillOpacity = "field"`<br />Constant: `fillOpacity = {0.7}`     | Fill opacity    | scope / node / path fill opacity                                                           |
-| `strokeOpacity` | Field: `strokeOpacity = "field"`<br />Constant: `strokeOpacity = {0.7}` | Stroke opacity  | scope / node / path stroke opacity                                                         |
+| Channel          | Channel Value                                                                         | Meaning         | Delivery / guide                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
+| `opacity`        | Field: `opacity = "field"`<br />Constant: `opacity = {0.45}`                          | Overall opacity | `IRScope.opacity`, `IRNode.opacity`, or `IRPath.opacity`; field values support ramp legend |
+| `opacity.fill`   | Field: `opacity = {{ fill: "field" }}`<br />Constant: `opacity = {{ fill: 0.7 }}`     | Fill opacity    | scope / node / path fill opacity                                                           |
+| `opacity.stroke` | Field: `opacity = {{ stroke: "field" }}`<br />Constant: `opacity = {{ stroke: 0.7 }}` | Stroke opacity  | scope / node / path stroke opacity                                                         |
 
 ### Size
 
@@ -115,12 +115,12 @@ Node geometry channels directly control a node's size constraints, spacing, corn
 
 ### Node labels
 
-`label` does not replace node content. It adds an outside label to the node for each data point. `labelPosition`, `labelDistance`, and `labelPin` control placement and the leader line.
+`label` does not replace node content. It adds an outside label to the node for each data point. `label.position`, `label.distance`, and `label.pin` control placement and the leader line.
 
-| Channel                                           | Channel Value                                                           | Meaning          | Delivery               |
-| ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | ---------------------- |
-| `label`                                           | Field: `label = "field"`                                                | Datum host label | core node `label`      |
-| `labelPosition` / `labelDistance`<br />`labelPin` | Constant: `labelPosition = "top"`<br />Constant: `labelDistance = {16}` | Label layout     | core node label fields |
+| Channel                                              | Channel Value                                                                                                       | Meaning          | Delivery               |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------- |
+| `label`                                              | Field: `label = "field"`                                                                                            | Datum host label | core node `label`      |
+| `label.position` / `label.distance`<br />`label.pin` | Constant: `label = {{ field: "name", position: "top" }}`<br />Constant: `label = {{ field: "name", distance: 16 }}` | Label layout     | core node label fields |
 
 ### Effects
 

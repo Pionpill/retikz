@@ -318,14 +318,7 @@ export const markerNode = (position: IRPosition, color: string, size = 6): IRChi
   position,
   shape: 'circle',
   layout: { minimumSize: size, padding: 0 },
-  style: {
-    fill: color,
-    stroke: color,
-    fillOpacity: 1,
-    strokeOpacity: 1,
-    strokeWidth: 1,
-    opacity: 1,
-  },
+  style: { fill: color, stroke: color, strokeWidth: 1, opacity: { fill: 1, stroke: 1, overall: 1 } },
 });
 
 /** 生成明确无填充的辅助路径样式 */

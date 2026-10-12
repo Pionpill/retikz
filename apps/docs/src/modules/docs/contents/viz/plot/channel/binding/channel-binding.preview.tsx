@@ -34,8 +34,7 @@ export const ChannelBindingPreview = (values: ChannelBindingPreviewValues) => (
       color={values.colorSource === 'field' ? 'region' : { kind: 'constant', value: '#2563eb' }}
       size={values.sizeSource === 'field' ? 'population' : 12}
       shape={values.shapeSource === 'field' ? 'region' : { kind: 'constant', value: BuiltinShape.Circle }}
-      label={values.showLabel ? 'abbr' : undefined}
-      labelPosition="top"
+      label={values.showLabel ? { field: 'abbr', position: 'top' } : undefined}
     />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

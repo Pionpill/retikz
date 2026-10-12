@@ -129,11 +129,8 @@ describe('PathDefaultSchema（every path 默认）', () => {
         style: {
           color: 'crimson',
           fill: '#fee2e2',
-          fillOpacity: 0.4,
           stroke: 'red',
           strokeWidth: 2,
-          strokeOpacity: 0.7,
-          opacity: 0.8,
           shadow: 'sm',
           blendMode: 'multiply',
           dashPattern: [4, 2],
@@ -141,6 +138,7 @@ describe('PathDefaultSchema（every path 默认）', () => {
           lineCap: 'round',
           lineJoin: 'bevel',
           fillRule: 'evenodd',
+          opacity: { fill: 0.4, stroke: 0.7, overall: 0.8 },
         },
       }).success,
     ).toBe(true);
@@ -282,9 +280,7 @@ describe('ScopeSchema 级联 graphic state', () => {
           stroke: 'red',
           fill: 'yellow',
           strokeWidth: 2,
-          opacity: 0.5,
-          fillOpacity: 0.4,
-          strokeOpacity: 0.3,
+          opacity: { overall: 0.5, fill: 0.4, stroke: 0.3 },
         },
       }).success,
     ).toBe(true);

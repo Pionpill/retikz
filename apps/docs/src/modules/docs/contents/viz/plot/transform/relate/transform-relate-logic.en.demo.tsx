@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="rows"
       position={[-330, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Detail rows</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="group"
       position={[-195, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Group by groupBy</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="source"
       position={[-25, -42]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Select source</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
       id="target"
       position={[-25, 42]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Select target</Text>
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       id="config"
       position={[155, 78]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Projection and measures</Text>
@@ -68,7 +68,7 @@ const Demo: FC = () => (
       id="project"
       position={[155, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Join and derive fields</Text>
@@ -80,7 +80,7 @@ const Demo: FC = () => (
       id="output"
       position={[325, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Emit relation row</Text>

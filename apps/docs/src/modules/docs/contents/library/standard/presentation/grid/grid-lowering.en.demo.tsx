@@ -12,7 +12,7 @@ const Demo: FC = () => (
         { text: 'bounds · line · position', fill: 'gray', font: { size: 12 } },
       ]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -23,7 +23,7 @@ const Demo: FC = () => (
         { text: 'sort corners · local center', fill: 'gray', font: { size: 12 } },
       ]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -34,7 +34,7 @@ const Demo: FC = () => (
         { text: 'x / y values and indices', fill: 'gray', font: { size: 12 } },
       ]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -45,7 +45,7 @@ const Demo: FC = () => (
         { text: 'line · major · border', fill: 'gray', font: { size: 12 } },
       ]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -56,7 +56,7 @@ const Demo: FC = () => (
         { text: 'Core resolves center position', fill: 'gray', font: { size: 12 } },
       ]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
 

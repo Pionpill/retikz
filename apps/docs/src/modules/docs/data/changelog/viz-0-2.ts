@@ -106,6 +106,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 渐进式视觉属性', en: 'Unreleased: BREAKING progressive visual properties' },
+          content: {
+            zh: "opacity 支持简单值或 overall/fill/stroke 分组，各成员独立绑定字段、常量和比例尺。标签使用 label: 'name' 或 { field/value, position, distance, ... }，支持数组；删除平级 label 配置。Source 标签继续使用 content 分组，Core 标签字符串仍是文字。",
+            en: "opacity accepts a simple value or an overall/fill/stroke group with independent field, constant, and scale bindings. Use label: 'name' or { field/value, position, distance, ... }, including arrays; flat label options are removed. Source labels retain content grouping, and Core label strings remain literal text.",
+          },
+        },
+        {
           label: { zh: '待发布：入口文档', en: 'Unreleased: Entry documentation' },
           content: {
             zh: '新增简介与快速开始，将更新日志移至入口区，补充图形语法侧栏分区与面向使用者的总纲。',

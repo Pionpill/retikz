@@ -23,6 +23,7 @@ import type {
 } from '../../../contract';
 import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotMarkOpacityStyle } from '../../../schemas';
 import type {
   IRPlot,
   IRPlotLinearScale,
@@ -72,7 +73,16 @@ const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
   'value' in value;
 
 const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): MarkStyleValue<T> | undefined => {
-  const value = (mark as Record<string, unknown>)[channel];
+  const source = mark as Record<string, unknown>;
+  const opacity = source.opacity as IRPlotMarkOpacityStyle | undefined;
+  const value =
+    channel === 'opacity'
+      ? opacity?.overall
+      : channel === 'fillOpacity'
+        ? opacity?.fill
+        : channel === 'strokeOpacity'
+          ? opacity?.stroke
+          : source[channel];
   return isMarkStyleValue<T>(value) ? value : undefined;
 };
 
@@ -382,7 +392,13 @@ const numericNodeChannels: {
         { range: [OPACITY_MIN, 1], clamp: true },
       ),
     deliver: (node, value) => {
-      node.style = { ...node.style, opacity: value };
+      node.style = {
+        ...node.style,
+        opacity: {
+          ...(typeof node.style?.opacity === 'number' ? { overall: node.style.opacity } : node.style?.opacity),
+          overall: value,
+        },
+      };
     },
   }),
   fillOpacity: defineNodeChannel<number>({
@@ -398,7 +414,13 @@ const numericNodeChannels: {
         { range: [0.2, 1], clamp: true },
       ),
     deliver: (node, value) => {
-      node.style = { ...node.style, fillOpacity: value };
+      node.style = {
+        ...node.style,
+        opacity: {
+          ...(typeof node.style?.opacity === 'number' ? { overall: node.style.opacity } : node.style?.opacity),
+          fill: value,
+        },
+      };
     },
   }),
   strokeOpacity: defineNodeChannel<number>({
@@ -414,7 +436,13 @@ const numericNodeChannels: {
         { range: [0.2, 1], clamp: true },
       ),
     deliver: (node, value) => {
-      node.style = { ...node.style, strokeOpacity: value };
+      node.style = {
+        ...node.style,
+        opacity: {
+          ...(typeof node.style?.opacity === 'number' ? { overall: node.style.opacity } : node.style?.opacity),
+          stroke: value,
+        },
+      };
     },
   }),
   rotate: defineNodeChannel<number>({

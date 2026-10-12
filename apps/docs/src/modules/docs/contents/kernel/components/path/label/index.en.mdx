@@ -146,7 +146,7 @@ With the upper-left and lower-right nodes fixed, switch the connection route, `s
 
 When `interrupt` is omitted, only that unfilled built-in Stroke + centered combination gets an automatic gap. `interrupt: false` forces a continuous stroke; `interrupt: true` can also gap a non-centered label. The gap extends by `4` user units beyond each side of the label's visual bounds by default; use `gap` to override it, and `gap: 0` for no extra clearance.
 
-Any effective `fill` — including `style.fill: 'transparent'`, or setting fill and then `style.fillOpacity: 0` — disables the automatic gap, and `interrupt: true` then reports an error. Any explicit boolean on Ribbon, a custom Path kind, or another non-built-in Stroke host also reports an error. The gap does not move labels, marks, dash phase, or endpoint arrows, and does not avoid label / arrow or mark collisions.
+Any effective `fill` — including `style.fill: 'transparent'`, or setting fill and then `style.opacity.fill: 0` — disables the automatic gap, and `interrupt: true` then reports an error. Any explicit boolean on Ribbon, a custom Path kind, or another non-built-in Stroke host also reports an error. The gap does not move labels, marks, dash phase, or endpoint arrows, and does not avoid label / arrow or mark collisions.
 
 Sampling a curve at a parameter, inverting distance, and taking a shape-preserving slice belong to the [`@retikz/math` curve-segment algorithms](/kernel/packages/math/algorithms#curve-slicing). They operate on plain geometry only; Core still decides label interruption, gap clearance, and Path output.
 

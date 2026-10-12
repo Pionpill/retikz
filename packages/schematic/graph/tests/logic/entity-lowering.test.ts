@@ -79,9 +79,7 @@ describe('Entity lowering', () => {
         fill: 0.12,
         stroke: 1,
         strokeWidth: 1,
-        fillOpacity: 1,
-        strokeOpacity: 1,
-        opacity: 1,
+        opacity: { fill: 1, stroke: 1, overall: 1 },
       },
     });
   });

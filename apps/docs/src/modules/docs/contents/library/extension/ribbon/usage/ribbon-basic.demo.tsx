@@ -12,7 +12,7 @@ const Demo: FC = () => (
           width: { kind: 'taper', start: 44, end: 18, interpolation: 'smooth' },
         } satisfies IRRibbonPathOptions
       }
-      style={{ fill: '#5dade2', fillOpacity: 0.84 }}
+      style={{ fill: '#5dade2', opacity: { fill: 0.84 } }}
     >
       <Step kind="move" to={[-220, 0]} />
       <Step to={[220, 0]} />

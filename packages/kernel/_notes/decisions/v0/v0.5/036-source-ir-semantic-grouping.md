@@ -132,7 +132,7 @@ type IRScope = {
 
 上述类型表示公开字段关系；持久化类型仍由各自 schema 派生。`IRNodeDefault` 与 `IRPathDefault` 复用元素的命名分组，只包含明确允许继承的视觉、布局与几何字段。`defaults.label` 与 `defaults.arrow` 保留既有小型契约，不增加单独的 `style` 包装，也不扩大默认值覆盖面。
 
-Node、Path 的 `style` 字段集合各有边界；Scope `style` 只包含既有可级联的 `color`、`stroke`、`fill`、`strokeWidth`、`opacity`、`fillOpacity` 与 `strokeOpacity`，不因同名而接受完整 Node / Path 样式。
+Node、Path 的 `style` 字段集合各有边界；Scope `style` 只包含既有可级联的 `color`、`stroke`、`fill`、`strokeWidth`、`opacity`（数值或 overall/fill/stroke 分组，见 [ADR-051](./051-progressive-visual-properties.md)），不因同名而接受完整 Node / Path 样式。
 
 React `Layout` 同时是 Scene host，现有 `style` 表示宿主 CSS，不能改写为 Core graphic style。它通过一个明确的隐式根 Scope 输入承载分组后的级联值：
 

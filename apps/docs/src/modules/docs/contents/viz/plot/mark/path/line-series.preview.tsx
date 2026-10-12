@@ -26,9 +26,7 @@ export const LineSeriesPreview = (values: LineSeriesPreviewValues) => {
         series={grouping === 'series' ? 'city' : undefined}
         color={grouping === 'color' ? 'city' : undefined}
         label={
-          grouped && values.showLabels
-            ? { content: { field: 'city' }, position: 'near-end', side: 'top', distance: 6 }
-            : undefined
+          grouped && values.showLabels ? { field: 'city', position: 'near-end', side: 'top', distance: 6 } : undefined
         }
         closed={coordinate === 'polar2D' && values.closed}
       />

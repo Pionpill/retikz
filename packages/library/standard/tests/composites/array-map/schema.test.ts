@@ -111,13 +111,13 @@ describe('Array / Map Source contracts', () => {
     const source = {
       namespace: 'standard',
       type: 'map',
-      style: { fillOpacity: 0 },
+      style: { opacity: { fill: 0 } },
       entries: [{ key: { content }, value: { content, style: { fill: 'none' } } }],
     };
     const parsed = MapSchema.parse(JSON.parse(JSON.stringify(source)));
 
     expect(parsed.entries?.[0].key).not.toHaveProperty('style');
-    expect(parsed.style?.fillOpacity).toBe(0);
+    expect(parsed.style?.opacity).toEqual({ fill: 0 });
     expect(parsed.entries?.[0].value).toMatchObject({ style: { fill: 'none' } });
   });
 
@@ -181,7 +181,7 @@ it('preserves JSON text cells including empty text and requires both Map roles',
 });
 
 it('preserves sparse grouped Map role overrides through JSON parsing', () => {
-  const style = { fillOpacity: 0, key: { fill: 'blue' }, value: { fill: 'none' } };
+  const style = { opacity: { fill: 0 }, key: { fill: 'blue' }, value: { fill: 'none' } };
   const layout = { width: 80, key: { width: 'auto' }, value: { height: 0 } };
   const parsed = MapSchema.parse(
     JSON.parse(

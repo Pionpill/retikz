@@ -56,9 +56,9 @@ export const renderArcSectorPlaygroundPreview = (values: ArcSectorPlaygroundPrev
         close={values.arcClose}
         style={{
           fill: values.fill,
-          fillOpacity: values.arcClose === 'open' ? 0 : 0.55,
           stroke: values.stroke,
           strokeWidth: 2.5,
+          opacity: { fill: values.arcClose === 'open' ? 0 : 0.55 },
         }}
       />
       <Sector
@@ -67,7 +67,7 @@ export const renderArcSectorPlaygroundPreview = (values: ArcSectorPlaygroundPrev
         innerRadius={innerRadius}
         startAngle={values.startAngle}
         endAngle={values.endAngle}
-        style={{ fill: values.fill, fillOpacity: 0.72, stroke: values.stroke, strokeWidth: 2.5 }}
+        style={{ fill: values.fill, stroke: values.stroke, strokeWidth: 2.5, opacity: { fill: 0.72 } }}
       />
     </Layout>
   );

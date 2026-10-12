@@ -29,7 +29,7 @@ export const renderPolygonPlaygroundPreview = (values: PolygonPlaygroundPreviewV
         radius={values.radius}
         sides={values.sides}
         rotate={values.rotate}
-        style={{ fill: values.fill, fillOpacity: 0.65, stroke: values.stroke, strokeWidth: values.strokeWidth }}
+        style={{ fill: values.fill, stroke: values.stroke, strokeWidth: values.strokeWidth, opacity: { fill: 0.65 } }}
       />
     </Layout>
   );

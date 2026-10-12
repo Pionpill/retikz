@@ -26,10 +26,9 @@ export const RelationBubblePreview = (values: RelationBubblePreviewValues) => {
         size="value"
         color="segment"
         anchorId={{ prefix: 'bubble', field: 'id' }}
-        label="label"
-        labelPosition={values.nodeLabelPosition}
-        labelTextColor="currentColor"
-        fillOpacity={values.nodeOpacity}
+        label={{ field: 'label', position: values.nodeLabelPosition, textColor: 'currentColor' }}
+
+        opacity={{ fill: values.nodeOpacity }}
         stroke="#0f172a"
         strokeWidth={0.8}
       />

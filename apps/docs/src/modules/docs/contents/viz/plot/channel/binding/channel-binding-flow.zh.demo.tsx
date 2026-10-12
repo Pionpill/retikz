@@ -11,7 +11,7 @@ const Demo: FC = () => (
       id="input"
       position={[-225, -80]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 100, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>字符串 prop</Text>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
       id="field-candidate"
       position={[-90, -80]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 110, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>① 字段命中？</Text>
@@ -37,7 +37,7 @@ const Demo: FC = () => (
       id="field-path"
       position={[58, -80]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 125, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>字段 → 逐行值</Text>
@@ -50,7 +50,7 @@ const Demo: FC = () => (
       id="constant-candidate"
       position={[-90, 30]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 110, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>② 合法常量？</Text>
@@ -63,7 +63,7 @@ const Demo: FC = () => (
       id="constant-path"
       position={[58, 30]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 125, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>常量 → 固定值</Text>
@@ -76,7 +76,7 @@ const Demo: FC = () => (
       id="warning"
       position={[-90, 140]}
       cornerRadius={4}
-      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.05 }}
+      style={{ stroke: 'red', fill: 'red', opacity: { fill: 0.05 } }}
       layout={{ minimumSize: { width: 110, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>③ 警告并跳过</Text>
@@ -89,7 +89,7 @@ const Demo: FC = () => (
       id="channel-consumer"
       position={[213, -25]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 125, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>通道消费</Text>

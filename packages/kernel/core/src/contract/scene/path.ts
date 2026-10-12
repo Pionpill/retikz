@@ -161,7 +161,7 @@ export type PathPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: IRGraphicStyle['fillOpacity'];
+  fillOpacity?: number;
   /**
    * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
    * @default 'nonzero'
@@ -173,7 +173,7 @@ export type PathPrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
+  strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
@@ -198,7 +198,7 @@ export type PathPrim = {
    * 整体透明度 0~1
    * @default 1
    */
-  opacity?: IRGraphicStyle['opacity'];
+  opacity?: number;
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
   shadow?: ResolvedDropShadow;
   /**

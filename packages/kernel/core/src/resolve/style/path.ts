@@ -4,6 +4,7 @@ import type { IRGeometryLabel, IRPathBase, IRPathDefault, IRPathStyle, IRStep } 
 import { resolvePathMarks } from './arrow';
 import { cutsStyleChannel } from './frame';
 import { resolveEffectiveLabelDefault, resolveGeometryLabel } from './label';
+import { mergeGraphicStyle } from './opacity';
 import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
 
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
@@ -46,13 +47,10 @@ export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<Styl
 
     const { style: pathStyle, ...geometry } = frame.pathDefault ?? {};
     defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
-    style = {
-      ...style,
-      ...mergeProperties<IRPathStyle>([frame.cascade, pathStyle], { shouldOverride: value => value !== undefined }),
-    };
+    style = mergeGraphicStyle<IRPathStyle>(style, frame.cascade, pathStyle);
   }
 
-  style = { ...style, ...mergeProperties([path.style ?? {}], { shouldOverride: value => value !== undefined }) };
+  style = mergeGraphicStyle(style, path.style);
   const masterColor = style.color;
   const effective: IRPathBase = {
     ...defaults,

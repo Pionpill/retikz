@@ -38,6 +38,25 @@ const pathPrims = (ir: IRScene): Array<PathPrim> =>
   );
 
 describe('Drawable shared style resolution', () => {
+  it('稀疏透明度逐项继承，整体简写不清除填充与描边', () => {
+    const primitives = pathPrims(
+      scene([
+        {
+          type: 'scope',
+          style: { opacity: { fill: 0.5, stroke: 0.8 } },
+          children: [
+            linePath({ style: { opacity: 0.5 } }),
+            linePath({ style: { opacity: { overall: 0, fill: 0, stroke: 1 } } }),
+            linePath({ style: { opacity: {} } }),
+          ],
+        },
+      ]),
+    );
+    expect(primitives[0]).toMatchObject({ opacity: 0.5, fillOpacity: 0.5, strokeOpacity: 0.8 });
+    expect(primitives[1]).toMatchObject({ opacity: 0, fillOpacity: 0, strokeOpacity: 1 });
+    expect(primitives[2]).toMatchObject({ fillOpacity: 0.5, strokeOpacity: 0.8 });
+  });
+
   it('drawable-shared-path-default-stroke-full：stroke path 消费 pathDefault 的适用字段', () => {
     const compiled = compileToScene(
       scene([

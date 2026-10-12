@@ -49,15 +49,15 @@ export const renderArrayStylesPreview = (values: ArrayStylesPreviewValues) => (
       }}
       style={{
         fill: values.fill,
-        fillOpacity: 0.25,
         stroke: values.stroke,
         strokeWidth: values.strokeWidth,
         cornerRadius: values.cornerRadius,
         font: { size: values.fontSize },
+        opacity: { fill: 0.25 },
       }}
       items={['A', 'B1', 'C'].map(content => ({
         content,
-        ...(content === 'B1' && values.override ? { style: { fill: '#2563eb', fillOpacity: 0.4 } } : {}),
+        ...(content === 'B1' && values.override ? { style: { fill: '#2563eb', opacity: { fill: 0.4 } } } : {}),
       }))}
     />
   </Layout>

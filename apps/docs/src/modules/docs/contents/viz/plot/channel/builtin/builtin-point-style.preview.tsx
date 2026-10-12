@@ -49,9 +49,8 @@ export const BuiltinPointStylePreview = (values: BuiltinPointStylePreviewValues)
               : undefined
         }
         strokeWidth={values.strokeWidth}
-        opacity={values.opacity}
-        fillOpacity={values.fillOpacity}
-        strokeOpacity={values.strokeOpacity}
+        opacity={{ overall: values.opacity, fill: values.fillOpacity, stroke: values.strokeOpacity }}
+
         size={values.size}
         shape={{ kind: 'constant', value: values.shape }}
       />

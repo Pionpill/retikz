@@ -212,7 +212,7 @@ Properties style observations and paths separately and control how gaps are disp
 <ConnectedScatterProperties
   colorMode="series"
   point={{ size: 4, opacity: 1 }}
-  path={{ curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 }}
+  path={{ curve: 'linear', connectNulls: false, opacity: { stroke: 1 }, strokeWidth: 2 }}
 />
 ```
 
@@ -223,7 +223,7 @@ Properties style observations and paths separately and control how gaps are disp
 properties: {
   colorMode: 'series',
   point: { size: 4, opacity: 1 },
-  path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+  path: { curve: 'linear', connectNulls: false, opacity: { stroke: 1 }, strokeWidth: 2 },
 },
 ```
 
@@ -235,7 +235,7 @@ recipe: {
   properties: {
     colorMode: 'series',
     point: { size: 4, opacity: 1 },
-    path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+    path: { curve: 'linear', connectNulls: false, opacity: { stroke: 1 }, strokeWidth: 2 },
   },
 },
 ```
@@ -252,7 +252,7 @@ Dense trajectories contain both observations and connecting lines. Configure tho
 
 South Africa 2005 is intentionally missing in this example. Bridging changes the line only; it does not create an observation.
 
-`colorMode="mark"` gives each series point and path adjacent palette colors, with a matching two-color legend. The default `series` keeps their colors shared. `muted` uses the same series colors with 60% path opacity and unchanged points. An explicit `path.strokeOpacity` takes precedence.
+`colorMode="mark"` gives each series point and path adjacent palette colors, with a matching two-color legend. The default `series` keeps their colors shared. `muted` uses the same series colors with 60% path opacity and unchanged points. An explicit `path.opacity.stroke` takes precedence.
 
 <ComponentPreview
   hideCode
@@ -278,7 +278,7 @@ Each mark contains both paths and observations; append and replace operations af
 <ConnectedScatterMark
   override
   properties={{
-    point: { fillOpacity: 0.1, strokeWidth: 2 },
+    point: { opacity: { fill: 0.1 }, strokeWidth: 2 },
     path: { dashPattern: [6, 4] },
   }}
 />
@@ -293,7 +293,7 @@ marks: [
     kind: 'connected-scatter',
     override: true,
     properties: {
-      point: { fillOpacity: 0.1, strokeWidth: 2 },
+      point: { opacity: { fill: 0.1 }, strokeWidth: 2 },
       path: { dashPattern: [6, 4] },
     },
   },
@@ -310,7 +310,7 @@ recipe: {
       kind: 'connected-scatter',
       override: true,
       properties: {
-        point: { fillOpacity: 0.1, strokeWidth: 2 },
+        point: { opacity: { fill: 0.1 }, strokeWidth: 2 },
         path: { dashPattern: [6, 4] },
       },
     },
@@ -396,7 +396,7 @@ Chart resolves one connected-scatter mark to an open Plot Path and a Plot Point 
 | ---------- | ------------------------ | ------------------------------------- | ------------------------------------------------------------ |
 | Encodings  | `order`, `series`        | `order`, `series`                     | Writes order and group fields to Path to connect each series |
 | Properties | `point`, `path`          | `Point` appearance, `Path` appearance | Applies member appearance; passes `connectNulls` to Path     |
-|            | `colorMode`              | `color`, `stroke`, `strokeOpacity`    | Shares series colors, separates them, or mutes the path      |
+|            | `colorMode`              | `color`, `stroke`, `opacity.stroke`   | Shares series colors, separates them, or mutes the path      |
 | Mark       | `IRConnectedScatterMark` | `IRPlotPathMark`, `IRPlotPointMark`   | Produces an open Path and Point group from one Chart mark    |
 
 <SourceLinks

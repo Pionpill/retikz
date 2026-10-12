@@ -83,9 +83,9 @@ export const GraphEntityDefaultsStyleSchema = EntitySchema.shape.style
     textColor: true,
     fill: true,
     stroke: true,
-    fillOpacity: true,
+
     strokeWidth: true,
-    strokeOpacity: true,
+
     opacity: true,
     shadow: true,
     blendMode: true,
@@ -121,7 +121,7 @@ export const GraphRelationDefaultsStyleSchema = RelationSchema.shape.style
     color: true,
     stroke: true,
     strokeWidth: true,
-    strokeOpacity: true,
+
     opacity: true,
     shadow: true,
     blendMode: true,

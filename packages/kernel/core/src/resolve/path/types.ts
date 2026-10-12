@@ -21,6 +21,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
+import type { GraphicOpacityResolution } from '../style';
 import type { StyleResolveFrame } from '../style';
 import type { ResolvedLabelTextBlock } from '../text';
 
@@ -137,15 +138,16 @@ export type CanonicalStep = CompleteCanonicalStep<ResolvedStepSource>;
 /** 内置路径输出器消费的完整静态路径形态 */
 export type CanonicalPath = Omit<
   Omit<ResolvedPathSource, 'style'> & NonNullable<ResolvedPathSource['style']>,
-  'children' | 'label' | 'shadow'
-> & {
-  /** 完整路径步骤 */
-  children?: Array<CanonicalStep>;
-  /** 统一为数组的宿主标签 */
-  label?: Array<CanonicalGeometryLabel>;
-  /** 已展开预设与静态默认值的投影 */
-  shadow?: ResolvedDropShadow;
-};
+  'children' | 'label' | 'shadow' | 'opacity'
+> &
+  GraphicOpacityResolution & {
+    /** 完整路径步骤 */
+    children?: Array<CanonicalStep>;
+    /** 统一为数组的宿主标签 */
+    label?: Array<CanonicalGeometryLabel>;
+    /** 已展开预设与静态默认值的投影 */
+    shadow?: ResolvedDropShadow;
+  };
 
 /** path kind provider 在 resolving 阶段绑定后的定义与 kindOptions */
 export type PathKindResolution = Readonly<{

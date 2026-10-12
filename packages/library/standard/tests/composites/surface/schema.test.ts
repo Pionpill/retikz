@@ -87,8 +87,8 @@ describe('SurfaceSchema', () => {
     const parsed = SurfaceSchema.parse(
       surface({
         ...fullScopeProps,
-        background: { fill: '#f8fafc', fillOpacity: 0.75 },
-        border: { stroke: '#0f172a', strokeWidth: 2, strokeOpacity: 0.5 },
+        background: { fill: '#f8fafc', opacity: { fill: 0.75 } },
+        border: { stroke: '#0f172a', strokeWidth: 2, opacity: { stroke: 0.5 } },
         cornerRadius: 8,
         overflow: 'clip',
       }),
@@ -96,8 +96,8 @@ describe('SurfaceSchema', () => {
 
     expect(parsed).toMatchObject({
       ...fullScopeProps,
-      background: { fill: '#f8fafc', fillOpacity: 0.75 },
-      border: { stroke: '#0f172a', strokeWidth: 2, strokeOpacity: 0.5 },
+      background: { fill: '#f8fafc', opacity: { fill: 0.75 } },
+      border: { stroke: '#0f172a', strokeWidth: 2, opacity: { stroke: 0.5 } },
       cornerRadius: 8,
       overflow: 'clip',
     });
@@ -108,8 +108,8 @@ describe('SurfaceSchema', () => {
       surface({ padding: -1 }),
       surface({ cornerRadius: -1 }),
       surface({ overflow: 'scroll' }),
-      surface({ background: { fillOpacity: 0.5 } }),
-      surface({ background: { fill: '#fff', fillOpacity: 2 } }),
+      surface({ background: { opacity: { fill: 0.5 } } }),
+      surface({ background: { fill: '#fff', opacity: { fill: 2 } } }),
       surface({ border: { stroke: '#000', zIndex: 1 } }),
       surface({ border: { unsupported: true } }),
       surface({ unsupported: true }),

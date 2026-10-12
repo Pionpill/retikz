@@ -14,7 +14,7 @@ const Demo: FC = () => (
       ]}
       position={[-350, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 13 }, opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 126, height: 48 }, lineHeight: 15 }}
     />
 
@@ -28,7 +28,7 @@ const Demo: FC = () => (
         ]}
         position={[-185, 0]}
         cornerRadius={4}
-        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 13 }, opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 154, height: 48 }, lineHeight: 15 }}
       />
       <Node
@@ -39,7 +39,7 @@ const Demo: FC = () => (
         ]}
         position={[-8, 0]}
         cornerRadius={4}
-        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 13 }, opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 154, height: 48 }, lineHeight: 15 }}
       />
     </LogicFigureFrame>
@@ -52,7 +52,7 @@ const Demo: FC = () => (
       ]}
       position={[165, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13 }, opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 136, height: 48 }, lineHeight: 15 }}
     />
 
@@ -64,7 +64,7 @@ const Demo: FC = () => (
       ]}
       position={[333, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 13 }, opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 160, height: 48 }, lineHeight: 15 }}
     />
 

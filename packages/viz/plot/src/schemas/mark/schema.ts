@@ -521,6 +521,15 @@ export const PathScaleStyleSchema = markValueSchema(
   'path scale style value',
 );
 
+/** 校验整体、填充与描边各自的字段或常量绑定 */
+export const MarkOpacityStyleSchema = strictObject({
+  overall: PointOpacityStyleSchema.optional().describe(
+    'Overall opacity binding, multiplied by fill and stroke factors.',
+  ),
+  fill: PointOpacityStyleSchema.optional().describe('Independent fill opacity binding.'),
+  stroke: PointOpacityStyleSchema.optional().describe('Independent stroke opacity binding.'),
+}).describe('Sparse independent opacity channel bindings.');
+
 /** 校验各关系路径种类共用的图元视觉样式 */
 export const RelationPrimitiveStyleSchema = strictObject({
   color: PointColorStyleSchema.optional().describe(
@@ -529,21 +538,13 @@ export const RelationPrimitiveStyleSchema = strictObject({
   fill: PointFillStyleSchema.optional().describe(
     'Shared relation fill paint: field-bound datum channel or constant CSS color / IRPaint',
   ),
-  fillOpacity: PointOpacityStyleSchema.optional().describe(
-    'Shared relation fill opacity: field-bound datum channel or constant opacity 0..1',
-  ),
   stroke: PointStrokeStyleSchema.optional().describe(
     'Shared relation stroke paint: field-bound datum channel or constant CSS color / IRPaint',
   ),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Shared relation stroke width: field-bound datum channel or constant non-negative value',
   ),
-  strokeOpacity: PointOpacityStyleSchema.optional().describe(
-    'Shared relation stroke opacity: field-bound datum channel or constant opacity 0..1',
-  ),
-  opacity: PointOpacityStyleSchema.optional().describe(
-    'Shared relation whole opacity: field-bound datum channel or constant opacity 0..1',
-  ),
+  opacity: MarkOpacityStyleSchema.optional(),
   shadow: ShadowStyleSchema.optional().describe(
     'Shared relation shadow: field-bound datum channel or constant preset / object',
   ),
@@ -636,9 +637,6 @@ const corePathStyle = {
   stroke: PointStrokeStyleSchema.optional().describe(
     'Core Path stroke paint: field-bound datum channel or constant CSS color / IRPaint',
   ),
-  strokeOpacity: PointOpacityStyleSchema.optional().describe(
-    'Core Path strokeOpacity: field-bound datum channel or constant opacity 0..1',
-  ),
   zIndex: PointZIndexStyleSchema.optional().describe('Core Path zIndex: field-bound datum channel or constant integer'),
   rotate: PointNumberStyleSchema.optional().describe('Core Path rotate: field-bound datum channel or constant angle'),
   scale: PathScaleStyleSchema.optional().describe(
@@ -688,15 +686,7 @@ export const PointMarkSchema = strictObject({
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Glyph stroke width: field-bound datum channel or constant core Node stroke width',
   ),
-  fillOpacity: PointOpacityStyleSchema.optional().describe(
-    'Glyph fill opacity: field-bound datum channel or constant opacity 0..1',
-  ),
-  strokeOpacity: PointOpacityStyleSchema.optional().describe(
-    'Glyph stroke opacity: field-bound datum channel or constant opacity 0..1',
-  ),
-  opacity: PointOpacityStyleSchema.optional().describe(
-    'Glyph whole-node opacity: field-bound datum channel or constant opacity 0..1',
-  ),
+  opacity: MarkOpacityStyleSchema.optional(),
   rotate: PointNumberStyleSchema.optional().describe(
     'Glyph rotation in degrees: field-bound datum channel or constant angle',
   ),
@@ -739,8 +729,6 @@ export const RelationEndpointGlyphSchema = strictObject({
     fill: true,
     stroke: true,
     strokeWidth: true,
-    fillOpacity: true,
-    strokeOpacity: true,
     opacity: true,
     rotate: true,
     minimumSize: true,
@@ -748,7 +736,8 @@ export const RelationEndpointGlyphSchema = strictObject({
 })
   .superRefine((glyph, ctx) => {
     for (const [name, value] of Object.entries(glyph)) {
-      if (value.kind !== MarkValueKind.Constant) {
+      const bindings = name === 'opacity' ? Object.values(value) : [value];
+      if (bindings.some(binding => binding.kind !== MarkValueKind.Constant)) {
         ctx.addIssue({
           code: 'custom',
           path: [name],
@@ -805,9 +794,7 @@ export const PathMarkSchema = object({
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Path stroke width: field-bound datum channel or constant core Path stroke width',
   ),
-  opacity: PointOpacityStyleSchema.optional().describe(
-    'Path whole opacity: field-bound datum channel or constant opacity 0..1',
-  ),
+  opacity: MarkOpacityStyleSchema.optional(),
   lineCap: PathLineCapStyleSchema.optional().describe(
     'Path stroke endpoint style: field-bound datum channel or constant core Path lineCap',
   ),
@@ -911,12 +898,7 @@ export const IntervalMarkSchema = object({
   stroke: PointStrokeStyleSchema.optional().describe(
     'Interval cell stroke paint: field-bound datum channel or constant CSS color / IRPaint',
   ),
-  opacity: PointOpacityStyleSchema.optional().describe(
-    'Interval cell whole opacity: field-bound datum channel or constant opacity 0..1',
-  ),
-  fillOpacity: PointOpacityStyleSchema.optional().describe(
-    'Interval cell fill opacity: field-bound datum channel or constant opacity 0..1',
-  ),
+  opacity: MarkOpacityStyleSchema.optional(),
   padAngle: NonNegativeNumberSchema.optional().describe(
     'Angular gap in degrees applied to polar cells; each cell shrinks by half this angle on both sides before sector or chord-contour projection. Cartesian cells ignore it',
   ),
@@ -966,12 +948,7 @@ export const ReferenceMarkSchema = strictObject({
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Reference line stroke width: field-bound datum channel or constant core Path stroke width',
   ),
-  opacity: PointOpacityStyleSchema.optional().describe(
-    'Reference mark whole opacity: field-bound datum channel or constant opacity 0..1',
-  ),
-  fillOpacity: PointOpacityStyleSchema.optional().describe(
-    'Reference band fill opacity: field-bound datum channel or constant opacity 0..1',
-  ),
+  opacity: MarkOpacityStyleSchema.optional(),
   label: union([MarkNodeLabelListSchema, MarkGeometryLabelListSchema])
     .optional()
     .describe(

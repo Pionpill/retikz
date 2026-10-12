@@ -99,11 +99,11 @@ describe('Array / Map appearance and identity', () => {
         type: 'map',
         style: {
           fill: 'red',
-          fillOpacity: 0.2,
           font: { family: 'monospace' },
           key: { fill: 'blue', font: { size: 16 } },
+          opacity: { fill: 0.2 },
         },
-        entries: [{ key: { content }, value: { content, style: { fill: 'green', fillOpacity: 0 } } }],
+        entries: [{ key: { content }, value: { content, style: { fill: 'green', opacity: { fill: 0 } } } }],
       },
     ]);
     const primitives = flat(result.scene.primitives);

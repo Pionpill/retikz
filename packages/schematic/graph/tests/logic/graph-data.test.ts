@@ -60,7 +60,7 @@ const graph = {
     entity,
     { namespace: 'graph', type: 'entity', id: 'database', role: 'resource', position: [160, 30] },
     relation,
-    { type: 'scope', children: [{ type: 'node', position: [0, 0], text: 'Legend' }] },
+    { type: 'scope', position: [0, 0], children: [{ type: 'node', position: [0, 0], text: 'Legend' }] },
   ],
   meta: { source: 'architecture-catalog' },
   style: { fill: 'lightblue', opacity: 0.8 },
@@ -136,11 +136,9 @@ describe('Graph Source data assembly', () => {
         dashPattern: [6, 2],
         dashOffset: -1,
         textColor: '#0f172a',
-        fillOpacity: 0.8,
-        strokeOpacity: 0.7,
-        opacity: 0.9,
         shadow: 'sm',
         blendMode: 'multiply',
+        opacity: { fill: 0.8, stroke: 0.7, overall: 0.9 },
       },
     } as const;
 
@@ -168,14 +166,13 @@ describe('Graph Source data assembly', () => {
         color: '#334155',
         stroke: '#475569',
         strokeWidth: 2,
-        strokeOpacity: 0.7,
-        opacity: 0.9,
         shadow: 'sm',
         blendMode: 'multiply',
         dashPattern: [6, 2],
         dashOffset: -1,
         lineCap: 'round',
         lineJoin: 'bevel',
+        opacity: { stroke: 0.7, overall: 0.9 },
       },
       rotate: 10,
       scale: { x: 1.2, y: 0.8 },
@@ -262,7 +259,8 @@ describe('Graph Source data assembly', () => {
     expect(parsed).toEqual({
       namespace: 'graph',
       type: 'graph',
-      children: [{ type: 'scope', children: [entity, relation] }],
+      position: [0, 0],
+      children: [{ type: 'scope', position: [0, 0], children: [entity, relation] }],
     });
   });
 });

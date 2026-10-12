@@ -248,7 +248,7 @@ const plotAreaBorderNode = (
       fill: 'none',
       stroke: border.stroke ?? 'currentColor',
       strokeWidth: border.strokeWidth ?? 1,
-      strokeOpacity: border.drawOpacity ?? 1,
+      opacity: { stroke: border.drawOpacity ?? 1 },
     },
     layout: { minimumSize: geometry.minimumSize, padding: 0 },
   };
@@ -769,7 +769,7 @@ export const lowerPlotWithDataArtifact = (
   const dataArtifact: PlotDataArtifact = {
     rootDataView,
     rootMarkDataViews,
-    ...(rootTransformResult !== undefined ? { rootLineage: rootTransformResult.lineage } : {}),
+    rootLineage: rootTransformResult.lineage,
     ...(lineageOptions !== undefined
       ? { markLineages: rootMarkResults.map(result => result.lineage ?? { events: [] }) }
       : {}),

@@ -39,7 +39,7 @@ export const InspectorDefinitionFlow: FC<InspectorDefinitionFlowProps> = props =
             id="definition"
             caption={{ title: { text: i18n.definition, textColor: 'gray', font: { size: 12, weight: 'normal' } } }}
             border={{ stroke: 'lightgray', dashPattern: [4, 3] }}
-            background={{ fill: 'lightgray', fillOpacity: 0.04 }}
+            background={{ fill: 'lightgray', opacity: { fill: 0.04 } }}
             padding={10}
             cornerRadius={4}
           >

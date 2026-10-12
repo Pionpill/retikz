@@ -12,7 +12,7 @@ const Demo: FC = () => (
         id="spec"
         position={[-280, 0]}
         cornerRadius={4}
-        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       >
         IRTable
       </Node>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
         id="structure"
         position={[-175, 0]}
         cornerRadius={4}
-        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+        style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
       >
         Structure
       </Node>
@@ -28,7 +28,7 @@ const Demo: FC = () => (
         id="semantic"
         position={[-55, 0]}
         cornerRadius={4}
-        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+        style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
       >
         Semantic model
       </Node>
@@ -36,7 +36,7 @@ const Demo: FC = () => (
         id="presentation"
         position={[75, 0]}
         cornerRadius={4}
-        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+        style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
       >
         Presentation
       </Node>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
         id="layout"
         position={[180, 0]}
         cornerRadius={4}
-        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+        style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
       >
         Layout
       </Node>
@@ -53,7 +53,7 @@ const Demo: FC = () => (
       id="core"
       position={[305, -24]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
     >
       Scene
     </Node>
@@ -61,7 +61,7 @@ const Demo: FC = () => (
       id="manifest"
       position={[305, 24]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
     >
       Manifest
     </Node>

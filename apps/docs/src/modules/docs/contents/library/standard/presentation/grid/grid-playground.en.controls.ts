@@ -108,7 +108,7 @@ export const gridPlaygroundEnControls = definePreviewControls({
         {
           kind: 'range',
           id: 'lineOpacity',
-          label: 'line.style.strokeOpacity',
+          label: 'line.style.opacity.stroke',
           defaultValue: 1,
           min: 0.1,
           max: 1,

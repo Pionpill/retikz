@@ -333,7 +333,7 @@ export type IRGroupCaption = ZodInfer<typeof GroupCaptionSchema>;
 | `font?`         | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —      | 字体配置           |
 | `lineHeight?`   | `number`                                                                                                                                                                              | —      | 行高               |
 | `maxTextWidth?` | `number`                                                                                                                                                                              | —      | 换行的最大文字宽度 |
-| `opacity?`      | `number`                                                                                                                                                                              | —      | 不透明度           |
+| `opacity?`      | `number \| { overall?: number \| undefined; fill?: number \| undefined; stroke?: number \| undefined; }`                                                                              | —      | 不透明度           |
 | `text`          | `ZodInfer<typeof GroupCaptionTextSchema.shape["text"]>`                                                                                                                               | —      | 必填文字内容       |
 | `textColor?`    | `string \| number`                                                                                                                                                                    | —      | 文字颜色覆盖       |
 

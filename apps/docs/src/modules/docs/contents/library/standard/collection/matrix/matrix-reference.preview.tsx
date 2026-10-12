@@ -19,7 +19,7 @@ export const renderMatrixPreview = (values: MatrixPreviewValues) => {
         ]}
         layout={{ width: 65, height: 36, gap: 6, overflow: values.overflow }}
         label={{ text: values.label, position: 'top' }}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.14, stroke: 'dodgerblue' }}
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.14 } }}
       />
       <Draw way={[[410, 100], `m-${values.row}-${values.column}.right`]} arrow="->" style={{ stroke: 'dodgerblue' }} />
     </Layout>

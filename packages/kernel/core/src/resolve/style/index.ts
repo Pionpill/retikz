@@ -4,6 +4,7 @@ export * from './drawable';
 export * from './frame';
 export * from './label';
 export * from './node';
+export * from './opacity';
 export * from './path';
-export * from './types';
 export * from './scope-frame';
+export * from './types';

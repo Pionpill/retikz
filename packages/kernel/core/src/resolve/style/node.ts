@@ -2,6 +2,7 @@ import { mergeProperties } from '@retikz/foundation';
 
 import type { IRNode, IRNodeDefault, IRNodeLayout, IRNodeStyle } from '../../schemas';
 import { cutsStyleChannel } from './frame';
+import { mergeGraphicStyle } from './opacity';
 import type { StyleResolveFrame } from './types';
 
 /** 按各字段的原有覆盖粒度解析节点分组，复合叶子保持整体覆盖 */
@@ -19,14 +20,11 @@ export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<Sty
 
     const { style: nodeStyle, layout: nodeLayout, ...geometry } = frame.nodeDefault ?? {};
     defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
-    style = {
-      ...style,
-      ...mergeProperties<IRNodeStyle>([frame.cascade, nodeStyle], { shouldOverride: value => value !== undefined }),
-    };
+    style = mergeGraphicStyle<IRNodeStyle>(style, frame.cascade, nodeStyle);
     layout = { ...layout, ...mergeProperties([nodeLayout ?? {}], { shouldOverride: value => value !== undefined }) };
   }
 
-  style = { ...style, ...mergeProperties([node.style ?? {}], { shouldOverride: value => value !== undefined }) };
+  style = mergeGraphicStyle(style, node.style);
   layout = { ...layout, ...mergeProperties([node.layout ?? {}], { shouldOverride: value => value !== undefined }) };
   if (style.color !== undefined) {
     style.stroke ??= style.color;

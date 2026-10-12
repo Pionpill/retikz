@@ -44,7 +44,7 @@ const ScopeEnvelopeComparison: FC<ScopeEnvelopeComparisonProps> = props => {
                 key={x}
                 position={[x, 0]}
                 layout={{ minimumSize: { width: 24, height: 28 }, padding: 0 }}
-                style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+                style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12 }, opacity: { fill: 0.08 } }}
               >
                 {child === 0 ? 'A' : 'B'}
               </Node>

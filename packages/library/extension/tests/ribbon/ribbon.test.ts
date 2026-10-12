@@ -759,11 +759,9 @@ describe('compile ribbon', () => {
         ribbon({
           style: {
             fill: '#60a5fa',
-            fillOpacity: 0.4,
             stroke: '#172033',
             strokeWidth: 2,
-            strokeOpacity: 0.7,
-            opacity: 0.5,
+            opacity: { fill: 0.4, stroke: 0.7, overall: 0.5 },
           },
         }),
       ]),

@@ -35,7 +35,7 @@ export const BlockCustomPreview = (values: BlockCustomPreviewValues, lang: Lang 
           <Node
             position={[0, 0]}
             shape="circle"
-            style={{ fill: ACCENT, fillOpacity: 0.1, stroke: 'none', textColor: ACCENT }}
+            style={{ fill: ACCENT, stroke: 'none', textColor: ACCENT, opacity: { fill: 0.1 } }}
             layout={{ minimumSize: 24, padding: 4 }}
           >
             U
@@ -47,7 +47,7 @@ export const BlockCustomPreview = (values: BlockCustomPreviewValues, lang: Lang 
           <Node
             position={[0, 0]}
             cornerRadius={4}
-            style={{ fill: ACCENT, fillOpacity: 0.1, stroke: 'none', textColor: ACCENT, font: { size: 'sm' } }}
+            style={{ fill: ACCENT, stroke: 'none', textColor: ACCENT, font: { size: 'sm' }, opacity: { fill: 0.1 } }}
             layout={{ padding: { x: 6, y: 2 } }}
           >
             public

@@ -23,15 +23,15 @@ export const renderFlowThemePreview = (
       entity: {
         style: {
           color: values.entityColor,
-          fillOpacity: values.entityFillOpacity,
           strokeWidth: values.entityStrokeWidth,
+          opacity: { fill: values.entityFillOpacity },
         },
       },
       relation: {
         style: {
           stroke: values.relationStroke,
           strokeWidth: values.relationStrokeWidth,
-          strokeOpacity: values.relationStrokeOpacity,
+          opacity: { stroke: values.relationStrokeOpacity },
         },
       },
     }}

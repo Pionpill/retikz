@@ -459,6 +459,7 @@ describe('Graph Source and child authoring', () => {
   it('keeps graphDefaults and graphRules identical to Direct and Vanilla Source IR', () => {
     const input = {
       id: 'parity',
+      position: [0, 0],
       graphDefaults: {
         entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
         relation: { style: { stroke: '#222222' } },
@@ -528,9 +529,7 @@ describe('Graph Source and child authoring', () => {
             stroke: '#334155',
             fill: '#e2e8f0',
             strokeWidth: 2,
-            opacity: 0.8,
-            fillOpacity: 0.7,
-            strokeOpacity: 0.9,
+            opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
           },
           defaults: {
             node: {
@@ -575,9 +574,7 @@ describe('Graph Source and child authoring', () => {
           stroke: '#334155',
           fill: '#e2e8f0',
           strokeWidth: 2,
-          opacity: 0.8,
-          fillOpacity: 0.7,
-          strokeOpacity: 0.9,
+          opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
         },
         defaults: {
           node: {

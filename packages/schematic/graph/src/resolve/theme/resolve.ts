@@ -1,3 +1,4 @@
+import { mergeGraphicStyle } from '@retikz/core';
 import type { ResolvedTheme } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import { mergeProperties } from '@retikz/foundation';
@@ -48,11 +49,11 @@ const mergeEntityDefaults = (
 ): IRGraphEntityDefaults | undefined => {
   if (current === undefined && override === undefined) return undefined;
 
-  const style = mergeFields(definedEntityStyle(current?.style), definedEntityStyle(override?.style));
+  const style = mergeGraphicStyle(definedEntityStyle(current?.style), definedEntityStyle(override?.style));
   const layout = mergeFields<IRGraphEntityDefaultsLayout>(current?.layout, override?.layout);
 
   return {
-    ...(style === undefined ? {} : { style }),
+    ...(Object.keys(style).length === 0 ? {} : { style }),
     ...(layout === undefined ? {} : { layout }),
   };
 };
@@ -64,7 +65,7 @@ const mergeRelationDefaults = (
 ): IRGraphRelationDefaults | undefined => {
   if (current === undefined && override === undefined) return undefined;
 
-  const style = mergeFields<IRGraphRelationDefaultsStyle>(current?.style, override?.style);
+  const style = mergeGraphicStyle<IRGraphRelationDefaultsStyle>(current?.style, override?.style);
   const sourceMarker = mergeFields(current?.sourceMarker, override?.sourceMarker);
   const targetMarker = mergeFields(current?.targetMarker, override?.targetMarker);
   const labelFont = mergeFields(current?.labelFont, override?.labelFont);
@@ -74,7 +75,7 @@ const mergeRelationDefaults = (
   return {
     ...(labelTextForeground === undefined ? {} : { labelTextForeground }),
     ...(labelOpacity === undefined ? {} : { labelOpacity }),
-    ...(style === undefined ? {} : { style }),
+    ...(Object.keys(style).length === 0 ? {} : { style }),
     ...(sourceMarker === undefined ? {} : { sourceMarker }),
     ...(targetMarker === undefined ? {} : { targetMarker }),
     ...(labelFont === undefined ? {} : { labelFont }),

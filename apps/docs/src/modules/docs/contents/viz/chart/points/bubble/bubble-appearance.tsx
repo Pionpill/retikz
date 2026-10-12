@@ -11,7 +11,7 @@ const controlledPreview = defineControlledPreview(contract, (values, dimensions)
   renderBubbleAppearancePreview(
     {
       coordinateSystem: values.coordinateSystem,
-      fillOpacity: values.fillOpacity,
+      opacity: { fill: values.fillOpacity },
       stroke: values.stroke,
       strokeWidth: values.strokeWidth,
       shape: values.shape,

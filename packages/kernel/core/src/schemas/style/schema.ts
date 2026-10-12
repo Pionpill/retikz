@@ -28,17 +28,15 @@ export const GraphicElementOpacitySchema = strictObject({
   opacity: OpacitySchema.optional().describe('Whole-element opacity applied to primary geometry.'),
 }).describe('Whole-element opacity for primary geometry.');
 
-/** 校验填充颜色及仅影响填充区域的不透明度 */
+/** 校验填充颜色 */
 export const GraphicFillSchema = strictObject({
   fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: contextual color or IRPaint.'),
-  fillOpacity: OpacitySchema.optional().describe('Fill-only opacity for filled regions.'),
-}).describe('Fill paint and fill-only opacity for primary geometry.');
+}).describe('Fill paint for primary geometry.');
 
-/** 校验描边颜色及仅影响轮廓的不透明度 */
+/** 校验描边颜色 */
 export const GraphicStrokeSchema = strictObject({
   stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: contextual color or IRPaint.'),
-  strokeOpacity: OpacitySchema.optional().describe('Stroke-only opacity for outlines.'),
-}).describe('Stroke paint and stroke-only opacity for primary geometry.');
+}).describe('Stroke paint for primary geometry.');
 
 /** 校验主体几何共享的主色、填充与描边字段 */
 export const GraphicPaintSchema = strictObject({
@@ -47,12 +45,20 @@ export const GraphicPaintSchema = strictObject({
   stroke: GraphicStrokeSchema.shape.stroke,
 }).describe('Graphic paint fields shared by primary geometry.');
 
-/** 校验整体、填充与描边各自的不透明度字段 */
+/** 校验可独立继承的整体、填充与描边不透明度 */
+export const GraphicOpacityValueSchema = union([
+  OpacitySchema,
+  strictObject({
+    overall: OpacitySchema.optional().describe('Overall opacity, multiplied by fill and stroke opacity.'),
+    fill: OpacitySchema.optional().describe('Fill opacity factor, independent of the overall factor.'),
+    stroke: OpacitySchema.optional().describe('Stroke opacity factor, independent of the overall factor.'),
+  }),
+]).describe('A scalar overall opacity or sparse overall, fill and stroke factors; omitted factors inherit.');
+
+/** 校验主体几何的渐进式透明度字段 */
 export const GraphicOpacitySchema = strictObject({
-  ...GraphicElementOpacitySchema.shape,
-  fillOpacity: GraphicFillSchema.shape.fillOpacity,
-  strokeOpacity: GraphicStrokeSchema.shape.strokeOpacity,
-}).describe('Graphic opacity fields shared by primary geometry.');
+  opacity: GraphicOpacityValueSchema.optional(),
+}).describe('Graphic opacity: scalar overall value or independent overall, fill and stroke factors.');
 
 /** 校验主体几何的投影与混合模式 */
 export const GraphicEffectsSchema = strictObject({
@@ -73,7 +79,7 @@ export const GraphicStyleSchema = strictObject({
   ...GraphicColorSchema.shape,
   ...GraphicFillSchema.shape,
   ...GraphicStrokeSchema.shape,
-  ...GraphicElementOpacitySchema.shape,
+  ...GraphicOpacitySchema.shape,
   strokeWidth: StrokeStyleSchema.shape.strokeWidth,
   ...GraphicEffectsSchema.shape,
 }).describe('Graphic style fields for primary node / drawable geometry.');
@@ -83,6 +89,6 @@ export const CascadingGraphicStyleSchema = strictObject({
   ...GraphicColorSchema.shape,
   ...GraphicFillSchema.shape,
   ...GraphicStrokeSchema.shape,
-  ...GraphicElementOpacitySchema.shape,
+  ...GraphicOpacitySchema.shape,
   strokeWidth: StrokeStyleSchema.shape.strokeWidth,
 }).describe('Cascading graphic style fields shared by node and path-like elements.');

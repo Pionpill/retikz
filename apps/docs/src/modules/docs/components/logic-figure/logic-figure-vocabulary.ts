@@ -135,7 +135,7 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
           },
         },
         columnHeader: {
-          background: { fill: 'lightgray', fillOpacity: 0.3 },
+          background: { fill: 'lightgray', opacity: { fill: 0.3 } },
           content: {
             defaults: {
               node: { style: { font: { size: 12, weight: 'bold' } } },
@@ -212,8 +212,8 @@ export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
           stroke: 'gray',
           strokeWidth: 1,
           fill: 'lightgray',
-          fillOpacity: 0.16,
           textColor: theme.mode === ThemeMode.Light ? '#18181b' : '#fafafa',
+          opacity: { fill: 0.16 },
         },
       },
       {

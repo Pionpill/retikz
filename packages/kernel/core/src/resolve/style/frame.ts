@@ -9,8 +9,6 @@ export const createStyleResolveFrame = (scope: IRScope): StyleResolveFrame => {
   if (scope.style?.fill !== undefined) cascade.fill = scope.style.fill;
   if (scope.style?.strokeWidth !== undefined) cascade.strokeWidth = scope.style.strokeWidth;
   if (scope.style?.opacity !== undefined) cascade.opacity = scope.style.opacity;
-  if (scope.style?.fillOpacity !== undefined) cascade.fillOpacity = scope.style.fillOpacity;
-  if (scope.style?.strokeOpacity !== undefined) cascade.strokeOpacity = scope.style.strokeOpacity;
   const frame: StyleResolveFrame = { cascade };
   if (scope.defaults?.node) frame.nodeDefault = scope.defaults.node;
   if (scope.defaults?.path) frame.pathDefault = scope.defaults.path;

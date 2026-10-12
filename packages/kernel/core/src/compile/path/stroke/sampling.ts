@@ -2,7 +2,7 @@ import type { CurveSegmentSample } from '@retikz/math';
 
 import type { PathCommand, ScenePrimitive } from '../../../contract';
 import type { CanonicalGeometryLabel, CanonicalStep } from '../../../resolve';
-import type { IRPathBase, IRPosition } from '../../../schemas';
+import type { IRPosition } from '../../../schemas';
 import type { LowerTex, TextMeasurer } from '../../text';
 import { emitLabelPrimitive } from '../host';
 import { sampleStrokePathGeometry, sampleStrokeStepGeometry, sampleStrokeStepParameterGeometry } from './interruption';
@@ -108,7 +108,7 @@ export type CreateStrokeSamplingCollectorInput = {
   /** 坐标取整函数 */
   round: (value: number) => number;
   /** path 级 opacity，传递给 label host */
-  hostOpacity: NonNullable<IRPathBase['style']>['opacity'];
+  hostOpacity: number | undefined;
   /** preset/rem 字号解析根字号 */
   rootFontSize?: number;
   /** 可选 TeX 降级能力 */

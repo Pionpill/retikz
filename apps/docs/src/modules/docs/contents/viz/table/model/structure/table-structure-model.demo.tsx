@@ -7,7 +7,7 @@ const structureInput = (id: string, y: number, title: string, detail: string) =>
     id={id}
     position={[-220, y]}
     cornerRadius={4}
-    style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+    style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
     layout={{ minimumSize: { width: 116, height: 42 }, align: 'middle', lineHeight: 14 }}
   >
     <Text font={{ size: 13, weight: 'bold' }}>{title}</Text>
@@ -28,7 +28,7 @@ const Demo: FC = () => (
       id="registry"
       position={[-45, 0]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+      style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
       layout={{ minimumSize: { width: 128, height: 50 }, align: 'middle', lineHeight: 15 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Structure registry</Text>
@@ -41,7 +41,7 @@ const Demo: FC = () => (
       id="semantic"
       position={[155, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 158, height: 58 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>SemanticTableModel</Text>

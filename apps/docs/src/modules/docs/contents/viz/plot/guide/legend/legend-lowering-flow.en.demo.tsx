@@ -10,7 +10,7 @@ const Demo: FC = () => (
       id="legend-guide"
       position={[-275, -50]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 170, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Legend guide</Text>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
       id="descriptors"
       position={[-275, 50]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 170, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Channel descriptors</Text>
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       id="legend-resolver"
       position={[-80, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Resolve legend</Text>
@@ -48,7 +48,7 @@ const Demo: FC = () => (
       id="theme-style"
       position={[-80, 95]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 180, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Theme + style</Text>
@@ -63,7 +63,7 @@ const Demo: FC = () => (
         id="swatch-form"
         position={[120, -65]}
         cornerRadius={4}
-        style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+        style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
         layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Swatches</Text>
@@ -75,7 +75,7 @@ const Demo: FC = () => (
         id="ramp-form"
         position={[120, 0]}
         cornerRadius={4}
-        style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+        style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
         layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Ramp</Text>
@@ -87,7 +87,7 @@ const Demo: FC = () => (
         id="symbol-form"
         position={[120, 65]}
         cornerRadius={4}
-        style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+        style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
         layout={{ minimumSize: { width: 160, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Symbol entries</Text>
@@ -101,7 +101,7 @@ const Demo: FC = () => (
       id="legend-scope"
       position={[330, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 180, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Legend scope</Text>

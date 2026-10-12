@@ -11,7 +11,7 @@ const Demo: FC = () => (
       id="binding"
       position={[-145, -105]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 118, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>IRPlot binding</Text>
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       id="builtin"
       position={[0, -105]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 118, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Built-in channels</Text>
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       id="custom"
       position={[145, -105]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 118, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Custom channels</Text>
@@ -47,7 +47,7 @@ const Demo: FC = () => (
       id="registry"
       position={[72, -25]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 132, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Channel registry</Text>
@@ -59,7 +59,7 @@ const Demo: FC = () => (
       id="resolver"
       position={[72, 55]}
       cornerRadius={4}
-      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', opacity: { fill: 0.07 } }}
       layout={{ minimumSize: { width: 132, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Resolve binding</Text>
@@ -71,7 +71,7 @@ const Demo: FC = () => (
       id="position"
       position={[-145, 55]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 148, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Coordinate projection</Text>
@@ -83,7 +83,7 @@ const Demo: FC = () => (
       id="delivery"
       position={[0, 145]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 118, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Visible properties</Text>
@@ -95,7 +95,7 @@ const Demo: FC = () => (
       id="descriptor"
       position={[145, 145]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 138, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Legend information</Text>

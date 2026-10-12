@@ -8,7 +8,7 @@ import {
   ShadowPreset,
   ShapeNameSchema,
   StrokeDashPatternSchema,
-  OpacitySchema,
+  GraphicOpacityValueSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
@@ -28,9 +28,7 @@ export const RangedDotPointPropertiesSchema = strictObject({
   fill: union([CssColorSchema, PaintSchema]).optional(),
   stroke: union([CssColorSchema, PaintSchema]).optional(),
   strokeWidth: StrokeWidthSchema.optional(),
-  fillOpacity: OpacitySchema.optional(),
-  strokeOpacity: OpacitySchema.optional(),
-  opacity: OpacitySchema.optional(),
+  opacity: GraphicOpacityValueSchema.optional(),
   rotate: number().optional(),
   minimumSize: NonNegativeNumberSchema.optional(),
 }).describe('Ranged Dot endpoint constant Point appearance');
@@ -39,8 +37,7 @@ export const RangedDotPointPropertiesSchema = strictObject({
 export const RangedDotRangePropertiesSchema = strictObject({
   stroke: union([CssColorSchema, PaintSchema]).optional(),
   strokeWidth: StrokeWidthSchema.optional(),
-  strokeOpacity: OpacitySchema.optional(),
-  opacity: OpacitySchema.optional(),
+  opacity: GraphicOpacityValueSchema.optional(),
   lineCap: PathLineCapSchema.optional(),
   lineJoin: PathLineJoinSchema.optional(),
   dashPattern: StrokeDashPatternSchema.optional(),

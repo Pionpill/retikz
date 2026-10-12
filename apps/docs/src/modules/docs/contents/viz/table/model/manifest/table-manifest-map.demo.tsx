@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="semantic"
       position={[-220, -46]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 142, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Semantic model</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="layout"
       position={[-220, 46]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 142, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Resolved layout</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="transaction"
       position={[0, 0]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+      style={{ stroke: 'gray', fill: 'lightgray', opacity: { fill: 0.16 } }}
       layout={{ minimumSize: { width: 132, height: 52 }, align: 'middle', lineHeight: 15 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Table transaction</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
       id="scene"
       position={[220, -46]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 136, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Scene</Text>
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       id="manifest"
       position={[220, 46]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 136, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Manifest</Text>

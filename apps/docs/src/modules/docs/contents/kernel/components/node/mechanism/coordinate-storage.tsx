@@ -45,7 +45,7 @@ const CoordinateStorage: FC<CoordinateStorageProps> = props => {
         text="[40, 20]"
         cornerRadius={8}
         label={{ text: t.result, position: 'bottom', textColor: 'gray', font: { size: 12 } }}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'dodgerblue', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.14 } }}
       />
       <Draw
         way={[

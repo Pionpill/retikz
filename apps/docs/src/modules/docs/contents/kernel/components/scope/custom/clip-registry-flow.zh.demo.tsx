@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="operations"
       position={[-360, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
     >
       Clip Definitions
     </Node>
@@ -16,7 +16,7 @@ const Demo: FC = () => (
       id="clip-registry"
       position={[-175, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
     >
       Clip Registry
     </Node>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
       id="resolve"
       position={[20, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
     >
       schema + resolve
     </Node>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="lower"
       position={[225, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
     >
       shapeSchema + lower
     </Node>
@@ -40,7 +40,7 @@ const Demo: FC = () => (
       id="path"
       position={[395, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', opacity: { fill: 0.08 } }}
     >
       SceneClipPath
     </Node>

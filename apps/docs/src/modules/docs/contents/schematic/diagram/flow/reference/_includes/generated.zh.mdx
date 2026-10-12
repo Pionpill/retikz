@@ -130,7 +130,10 @@ export declare const FlowEntity: {
       style?:
         | {
             color?: string | undefined;
-            opacity?: number | undefined;
+            opacity?:
+              | number
+              | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
+              | undefined;
             dashed?: boolean | undefined;
             dotted?: boolean | undefined;
             dashPattern?: Array<number> | undefined;
@@ -214,7 +217,6 @@ export declare const FlowEntity: {
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
-            fillOpacity?: number | undefined;
             stroke?:
               | string
               | number
@@ -294,7 +296,6 @@ export declare const FlowEntity: {
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
-            strokeOpacity?: number | undefined;
             strokeWidth?: number | undefined;
             shadow?:
               | 'none'
@@ -954,8 +955,10 @@ export declare const FlowRelation: {
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
-            strokeOpacity?: number | undefined;
-            opacity?: number | undefined;
+            opacity?:
+              | number
+              | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
+              | undefined;
             color?: string | undefined;
           }
         | undefined;

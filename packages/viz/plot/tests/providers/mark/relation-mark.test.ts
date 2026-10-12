@@ -971,8 +971,8 @@ describe('RelationMark and anchorId lowering', () => {
           target: { project: { x: 'targetX', y: 'targetY' } },
           style: {
             fill: { kind: 'field', value: 'fill' },
-            fillOpacity: { kind: 'constant', value: 0.55 },
             stroke: { kind: 'constant', value: 'none' },
+            opacity: { fill: { kind: 'constant', value: 0.55 } },
           },
           ribbon: {
             width: { kind: 'field', value: 'width' },
@@ -1000,7 +1000,7 @@ describe('RelationMark and anchorId lowering', () => {
         width: { kind: 'taper', start: 12, end: 8, interpolation: 'smooth' },
         align: 'center',
       },
-      style: { fill: '#38bdf8', fillOpacity: 0.55, stroke: 'none' },
+      style: { fill: '#38bdf8', stroke: 'none', opacity: { fill: 0.55 } },
     });
   });
 

@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="lower-options"
       position={[-185, -50]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 145, height: 64 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Provenance</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="lower"
       position={[0, -50]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 140, height: 64 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Core lowering</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="scene"
       position={[185, -50]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 150, height: 64 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Scene metadata</Text>
@@ -45,7 +45,7 @@ const Demo: FC = () => (
       id="lineage-options"
       position={[-185, 50]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 145, height: 64 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Runtime lineage</Text>
@@ -57,7 +57,7 @@ const Demo: FC = () => (
       id="record"
       position={[0, 50]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 140, height: 64 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Semantic summary</Text>
@@ -69,7 +69,7 @@ const Demo: FC = () => (
       id="artifact"
       position={[185, 50]}
       cornerRadius={4}
-      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', opacity: { fill: 0.07 } }}
       layout={{ minimumSize: { width: 150, height: 64 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>PlotLineageRun</Text>

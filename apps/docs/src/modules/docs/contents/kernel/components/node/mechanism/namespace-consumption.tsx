@@ -101,7 +101,7 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
         position={[585, 285]}
         cornerRadius={8}
         text="[70, 0]"
-        style={{ fill: 'dodgerblue', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'dodgerblue', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.14 } }}
       />
       <Draw
         way={[

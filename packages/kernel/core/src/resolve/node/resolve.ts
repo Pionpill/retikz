@@ -14,6 +14,7 @@ import type {
 } from '../../schemas';
 import { NodeSchema } from '../../schemas';
 import { resolvePaint } from '../resource';
+import { resolveGraphicOpacity } from '../style';
 import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
 import { resolveDashPattern, resolveDropShadow } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
@@ -159,8 +160,8 @@ const expandNodeLabels = (
 /** 将 Node 的持久化紧凑字段展开为布局可直接消费的完整形态 */
 const canonicalizeNode = (node: ResolvedNodeSource): CanonicalNode => {
   const { style, layout, ...structure } = node;
-  const { dashed, dotted, ...visual } = style ?? {};
-  const source = { ...structure, ...visual, ...layout };
+  const { dashed, dotted, opacity, ...visual } = style ?? {};
+  const source = { ...structure, ...visual, ...resolveGraphicOpacity(opacity), ...layout };
 
   return {
     ...source,

@@ -129,7 +129,8 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
     width,
     height,
   } = placed;
-  const { fill, fillOpacity, cornerRadius, font, textColor, opacity, color, ...border } = cell.style;
+  const { fill, cornerRadius, font, textColor, opacity, color, ...borderStyle } = cell.style;
+  const border = { ...borderStyle, ...(opacity.stroke === undefined ? {} : { opacity: { stroke: opacity.stroke } }) };
   void font;
   void textColor;
   const radius = Math.min(cornerRadius, width / 2, height / 2);
@@ -140,10 +141,16 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
   return context.scope(
     {
       transforms: [{ kind: 'translate', x, y }],
-      style: { ...(color === undefined ? {} : { color }), ...(opacity === undefined ? {} : { opacity }) },
+      style: {
+        ...(color === undefined ? {} : { color }),
+        ...(opacity.overall === undefined ? {} : { opacity: opacity.overall }),
+      },
     },
     [
-      surfaceBoundaryPath(width, height, radius, { zIndex: -1, style: { fill, fillOpacity, stroke: 'none' } }),
+      surfaceBoundaryPath(width, height, radius, {
+        zIndex: -1,
+        style: { fill, stroke: 'none', opacity: { fill: opacity.fill } },
+      }),
       ...(result === undefined
         ? []
         : [

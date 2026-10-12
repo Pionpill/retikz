@@ -10,11 +10,9 @@ describe('Table Cell appearance schema', () => {
         style: {
           color: '#9a4d00',
           fill: 'currentColor',
-          fillOpacity: 0.5,
           stroke: '#7c2d12',
           strokeWidth: 2,
-          strokeOpacity: 0.8,
-          opacity: 0.9,
+          opacity: { fill: 0.5, stroke: 0.8, overall: 0.9 },
         },
         defaults: {
           node: {

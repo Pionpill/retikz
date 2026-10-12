@@ -22,21 +22,21 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
         position={[90, 77]}
         text={t.builtinSource}
         cornerRadius={4}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.12, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'dodgerblue', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.12 } }}
       />
       <Node
         id="custom-role-source"
         position={[90, 111]}
         text={t.customRole}
         cornerRadius={4}
-        style={{ fill: 'darkorange', fillOpacity: 0.12, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'darkorange', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.12 } }}
       />
       <Node
         id="custom-kind-source"
         position={[90, 142]}
         text={t.customKind}
         cornerRadius={4}
-        style={{ fill: 'darkorange', fillOpacity: 0.12, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'darkorange', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.12 } }}
       />
       <Map
         id="definition-options"
@@ -53,12 +53,20 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
               layout={{ height: 32, padding: 0, key: { width: 76 }, value: { width: 205 } }}
               entries={[
                 {
-                  key: { id: 'activity-key', content: 'activity', style: { fill: 'dodgerblue', fillOpacity: 0.32 } },
-                  value: { content: t.activityDefinition, style: { fill: 'dodgerblue', fillOpacity: 0.12 } },
+                  key: {
+                    id: 'activity-key',
+                    content: 'activity',
+                    style: { fill: 'dodgerblue', opacity: { fill: 0.32 } },
+                  },
+                  value: { content: t.activityDefinition, style: { fill: 'dodgerblue', opacity: { fill: 0.12 } } },
                 },
                 {
-                  key: { id: 'service-key', content: 'service', style: { fill: 'darkorange', fillOpacity: 0.32 } },
-                  value: { content: t.serviceDefinition, style: { fill: 'darkorange', fillOpacity: 0.12 } },
+                  key: {
+                    id: 'service-key',
+                    content: 'service',
+                    style: { fill: 'darkorange', opacity: { fill: 0.32 } },
+                  },
+                  value: { content: t.serviceDefinition, style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
                 },
               ]}
             />
@@ -79,9 +87,9 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
                         key: {
                           id: 'gateway-key',
                           content: 'service.gateway',
-                          style: { fill: 'darkorange', fillOpacity: 0.32 },
+                          style: { fill: 'darkorange', opacity: { fill: 0.32 } },
                         },
-                        value: { content: t.gatewayDefinition, style: { fill: 'darkorange', fillOpacity: 0.12 } },
+                        value: { content: t.gatewayDefinition, style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
                       },
                     ]}
                   />
@@ -100,7 +108,7 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
         entries={[
           {
             key: { content: t.roleDefinition },
-            value: { content: 'ActivityRoleDefinition', style: { fill: 'dodgerblue', fillOpacity: 0.12 } },
+            value: { content: 'ActivityRoleDefinition', style: { fill: 'dodgerblue', opacity: { fill: 0.12 } } },
           },
           { key: { content: t.kindDefinition }, value: { content: t.noKind } },
         ]}
@@ -114,11 +122,11 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
         entries={[
           {
             key: { content: t.roleDefinition },
-            value: { content: 'serviceRole', style: { fill: 'darkorange', fillOpacity: 0.12 } },
+            value: { content: 'serviceRole', style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
           },
           {
             key: { content: t.kindDefinition },
-            value: { content: 'gatewayKind', style: { fill: 'darkorange', fillOpacity: 0.12 } },
+            value: { content: 'gatewayKind', style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
           },
         ]}
       />
@@ -127,7 +135,7 @@ const EntityDefinitionLookup: FC<EntityDefinitionLookupProps> = props => {
         position={[582, 320]}
         text={t.customNode}
         cornerRadius={4}
-        style={{ fill: 'darkorange', fillOpacity: 0.12, stroke: 'none', font: { size: 12 } }}
+        style={{ fill: 'darkorange', stroke: 'none', font: { size: 12 }, opacity: { fill: 0.12 } }}
       />
       <Node
         id="scene"

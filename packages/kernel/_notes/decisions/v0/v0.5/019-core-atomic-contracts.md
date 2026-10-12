@@ -31,7 +31,7 @@ Core 在不改变现有完整 Path 语义的前提下，提供可独立复用的
 通用 style 按以下稳定语义组织：
 
 - `GraphicPaintSchema`：`color`、`fill`、`stroke`
-- `GraphicOpacitySchema`：`opacity`、`fillOpacity`、`strokeOpacity`
+- `GraphicOpacitySchema`：`opacity`（数值或 overall/fill/stroke 分组，见 [ADR-051](./051-progressive-visual-properties.md)）
 - `GraphicEffectsSchema`：`shadow`、`blendMode`
 - `StrokeStyleSchema`：`strokeWidth`、`dashPattern`、`dashOffset`
 
@@ -77,9 +77,7 @@ type IRGraphicPaint = {
 };
 
 type IRGraphicOpacity = {
-  opacity?: Opacity;
-  fillOpacity?: Opacity;
-  strokeOpacity?: Opacity;
+  opacity?: Opacity | { overall?: Opacity; fill?: Opacity; stroke?: Opacity };
 };
 
 type IRGraphicEffects = {

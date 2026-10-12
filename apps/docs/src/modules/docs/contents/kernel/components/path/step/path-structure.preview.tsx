@@ -15,7 +15,7 @@ export const PathStructurePreview = (values: PathStructurePreviewValues) => {
           stroke: values.structure === 'fill' ? values.fill : 'currentColor',
           strokeWidth: 2,
           ...(values.structure === 'fill' ? { fill: values.fill } : {}),
-          fillOpacity: 0.35,
+          opacity: { fill: 0.35 },
         }}
       >
         <Step kind="move" to={[-160, -55]} />

@@ -18,10 +18,9 @@ describe('independent visual contracts', () => {
     expect(GraphicColorSchema.safeParse({ opacity: 0.5 }).success).toBe(false);
     expect(GraphicElementOpacitySchema.parse({ opacity: 0 })).toEqual({ opacity: 0 });
     expect(GraphicElementOpacitySchema.safeParse({ opacity: 1.1 }).success).toBe(false);
-    expect(GraphicFillSchema.parse({ fill: 0.5, fillOpacity: 0 })).toEqual({ fill: 0.5, fillOpacity: 0 });
-    expect(GraphicStrokeSchema.parse({ stroke: 'none', strokeOpacity: 1 })).toEqual({
+    expect(GraphicFillSchema.parse({ fill: 0.5 })).toEqual({ fill: 0.5 });
+    expect(GraphicStrokeSchema.parse({ stroke: 'none' })).toEqual({
       stroke: 'none',
-      strokeOpacity: 1,
     });
     expect(GraphicStrokeSchema.safeParse({ fill: 'red' }).success).toBe(false);
     expect(GraphicFillSchema.safeParse({ stroke: 'red' }).success).toBe(false);

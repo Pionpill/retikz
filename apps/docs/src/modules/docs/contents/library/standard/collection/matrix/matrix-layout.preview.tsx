@@ -28,7 +28,7 @@ export const renderMatrixPreview = (values: MatrixPreviewValues) => {
           row: values.row === 'none' ? false : { position: values.row, labels: ['r₁', 'r₂'] },
           column: values.column === 'none' ? false : { position: values.column, start: 1 },
         }}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.14, stroke: 'dodgerblue' }}
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.14 } }}
       />
     </Layout>
   );

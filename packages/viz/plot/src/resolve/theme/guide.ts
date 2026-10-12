@@ -13,10 +13,7 @@ import { resolvePlotAxisDefaults } from './token-rule';
 import type { EffectiveLegendGuideTokens, EffectivePlotGuideTheme, EffectivePlotPalette } from './types';
 
 type GuidePathStyle = Partial<
-  Pick<
-    NonNullable<IRPath['style']>,
-    'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'
-  >
+  Pick<NonNullable<IRPath['style']>, 'stroke' | 'strokeWidth' | 'opacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
 > & {
   drawOpacity?: number;
 };

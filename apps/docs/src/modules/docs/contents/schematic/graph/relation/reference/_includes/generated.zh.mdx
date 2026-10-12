@@ -738,7 +738,7 @@ export type IRGraphRelation = ZodInfer<typeof RelationSchema>;
     'style.color': '字符串主色',
     'style.stroke': '描边颜色、主色权重或画笔',
     'style.strokeWidth': '描边宽度',
-    'style.strokeOpacity': '描边不透明度',
+    'style.opacity.stroke': '描边不透明度',
     'style.opacity': '整体不透明度',
     'style.shadow': '投影预设或配置',
     'style.blendMode': '混合模式',
@@ -872,7 +872,7 @@ export type IRGraphRelationRouteStep = ZodInfer<typeof GraphRelationRouteStepSch
 
 <DocTab value="schema" label="Schema">
 
-复用 Core StepSchema 的位置与几何能力，但拒绝任何 step.label；关系标签统一放在 Relation.labels。RelationSchema 额外要求 route 至少包含两个 step。共享 Step 各变体见 [Path Schema 参考](/kernel/components/path/reference)。
+复用 Core StepSchema 的位置与几何能力，但拒绝任何 step.label；关系标签统一放在 Relation.labels。RelationSchema 额外要求 route 至少包含两个 step。共享 Step 各变体见 [Path API 参考](/kernel/components/path/reference)。
 
 </DocTab>
 

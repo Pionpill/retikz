@@ -40,7 +40,7 @@ const LayoutDisplayComparison: FC<LayoutDisplayComparisonProps> = props => {
           <Circle
             center={[50 * scale, 50 * scale]}
             radius={10 * scale}
-            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.12 }}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.12 } }}
           />
           <Draw
             way={[
@@ -50,7 +50,7 @@ const LayoutDisplayComparison: FC<LayoutDisplayComparisonProps> = props => {
               [140 * scale, 60 * scale],
               [140 * scale, 40 * scale],
             ]}
-            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.12 }}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.12 } }}
           />
           <Draw
             way={[

@@ -10,6 +10,7 @@ import { isFiniteNumber } from '@retikz/math';
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotMarkOpacityStyle } from '../../../schemas';
 import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 import { MarkValueKind, BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
@@ -33,7 +34,16 @@ const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
   'value' in value;
 
 const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): MarkStyleValue<T> | undefined => {
-  const value = (mark as Record<string, unknown>)[channel];
+  const source = mark as Record<string, unknown>;
+  const opacity = source.opacity as IRPlotMarkOpacityStyle | undefined;
+  const value =
+    channel === 'opacity'
+      ? opacity?.overall
+      : channel === 'fillOpacity'
+        ? opacity?.fill
+        : channel === 'strokeOpacity'
+          ? opacity?.stroke
+          : source[channel];
   return isMarkStyleValue<T>(value) ? value : undefined;
 };
 
@@ -163,7 +173,13 @@ const pathNumericChannels: {
         clamp: true,
       }),
     deliver: (path, value) => {
-      path.style = { ...path.style, opacity: value };
+      path.style = {
+        ...path.style,
+        opacity: {
+          ...(typeof path.style?.opacity === 'number' ? { overall: path.style.opacity } : path.style?.opacity),
+          overall: value,
+        },
+      };
     },
   }),
   fillOpacity: definePathChannel<number>({
@@ -175,7 +191,13 @@ const pathNumericChannels: {
         clamp: true,
       }),
     deliver: (path, value) => {
-      path.style = { ...path.style, fillOpacity: value };
+      path.style = {
+        ...path.style,
+        opacity: {
+          ...(typeof path.style?.opacity === 'number' ? { overall: path.style.opacity } : path.style?.opacity),
+          fill: value,
+        },
+      };
     },
   }),
   roundedCorners: definePathChannel<number>({
@@ -233,7 +255,13 @@ const directPathChannels = {
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     opacityNumber,
     (path, value) => {
-      path.style = { ...path.style, strokeOpacity: value };
+      path.style = {
+        ...path.style,
+        opacity: {
+          ...(typeof path.style?.opacity === 'number' ? { overall: path.style.opacity } : path.style?.opacity),
+          stroke: value,
+        },
+      };
     },
   ),
   zIndex: defineSimplePathChannel<number>(
