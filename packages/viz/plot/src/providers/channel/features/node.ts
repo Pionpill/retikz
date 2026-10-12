@@ -141,7 +141,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
   defineNodeChannel<T>({
     channel,
     output,
-    resolve: ctx => mark =>
+    resolve: (ctx, mark) =>
       makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.model, {
         channelName: channel,
         parse,
@@ -154,80 +154,77 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
  * @description field 变体若给 scale 或默认 range，则过 linear scale；否则直接使用字段原始有限数。
  *   非 continuous 字段（temporal / categorical）fail-loud；constant 变体由 nodeDefault / node 本身处理，不在这里产 resolver
  */
-export const makeNumericNodeResolver = (
+export const resolveNumericNodeChannel = (
   node: IRPlot,
   rows: Array<ExternalRow>,
   model: DataTransformModel,
-  pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,
+  channel: MarkStyleValue<number> | undefined,
   channelName: string,
   options: NumericNodeResolverOptions = {},
-): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
+): ChannelResolution<number> | undefined => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  return (mark: IRPlotMarkOperation): ChannelResolution<number> | undefined => {
-    const channel = pick(mark);
-    if (!channel) return undefined;
+  if (!channel) return undefined;
 
-    const source = makeMarkValueResolver<number>(channel, model, {
-      channelName,
-      expectedFieldType: DataFieldType.Continuous,
-      parse: value => (isFiniteNumber(value) ? value : undefined),
-      constants: 'skip',
-    });
-    if (!source) return undefined;
+  const source = makeMarkValueResolver<number>(channel, model, {
+    channelName,
+    expectedFieldType: DataFieldType.Continuous,
+    parse: value => (isFiniteNumber(value) ? value : undefined),
+    constants: 'skip',
+  });
+  if (!source) return undefined;
 
-    const field = source.field;
-    if (field === undefined) return undefined;
+  const field = source.field;
+  if (field === undefined) return undefined;
 
-    const fieldType = source.fieldType;
-    const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
-    const scaleName = channel.kind === MarkValueKind.Field ? channel.scale : undefined;
-    let scale: ((value: number) => number) | undefined;
-    if (scaleName !== undefined || options.range !== undefined) {
-      let def: IRPlotLinearScale = {
-        type: BuiltinPlotScale.Linear,
-        name: scaleName ?? `__${channelName}_${field}`,
-        ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
-        ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
-      };
-      if (scaleName !== undefined) {
-        const found = scaleByName.get(scaleName);
-        if (!found)
-          throw new RetikzPlotError(`lowerPlots: ${channelName} node channel references unknown scale "${scaleName}"`);
-        if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Linear)
-          throw new RetikzPlotError(
-            `lowerPlots: ${channelName} node channel scale "${scaleName}" must be a linear scale`,
-          );
+  const fieldType = source.fieldType;
+  const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
+  const scaleName = channel.kind === MarkValueKind.Field ? channel.scale : undefined;
+  let scale: ((value: number) => number) | undefined;
+  if (scaleName !== undefined || options.range !== undefined) {
+    let def: IRPlotLinearScale = {
+      type: BuiltinPlotScale.Linear,
+      name: scaleName ?? `__${channelName}_${field}`,
+      ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
+      ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
+    };
+    if (scaleName !== undefined) {
+      const found = scaleByName.get(scaleName);
+      if (!found)
+        throw new RetikzPlotError(`lowerPlots: ${channelName} node channel references unknown scale "${scaleName}"`);
+      if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Linear)
+        throw new RetikzPlotError(
+          `lowerPlots: ${channelName} node channel scale "${scaleName}" must be a linear scale`,
+        );
 
-        def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
-      }
-
-      scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
+      def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
     }
 
-    const domain: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
-    const descriptor =
-      channelName === 'opacity' && options.range !== undefined
-        ? {
-            channel: 'opacity' as const,
-            scaleType: BuiltinPlotScale.Linear,
-            domain,
-            range: [options.range[0], options.range[1]],
-            field,
-            fieldType,
-          }
-        : undefined;
+    scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
+  }
 
-    return {
-      resolver: row => {
-        const value = source.resolver(row);
-        if (value === undefined) return undefined;
+  const domain: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
+  const descriptor =
+    channelName === 'opacity' && options.range !== undefined
+      ? {
+          channel: 'opacity' as const,
+          scaleType: BuiltinPlotScale.Linear,
+          domain,
+          range: [options.range[0], options.range[1]],
+          field,
+          fieldType,
+        }
+      : undefined;
 
-        const next = scale ? scale(value) : value;
+  return {
+    resolver: row => {
+      const value = source.resolver(row);
+      if (value === undefined) return undefined;
 
-        return options.integer ? Math.trunc(next) : next;
-      },
-      descriptor,
-    };
+      const next = scale ? scale(value) : value;
+
+      return options.integer ? Math.trunc(next) : next;
+    },
+    descriptor,
   };
 };
 
@@ -239,91 +236,90 @@ export const makeNumericNodeResolver = (
  */
 export const resolveSizeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
-): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
+  mark: IRPlotMarkOperation,
+): ChannelResolution<number> | undefined => {
   const { node, rows, model } = ctx;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
 
-  return (mark: IRPlotMarkOperation): ChannelResolution<number> | undefined => {
-    const channel = pickStyleChannel<number>(mark, 'size');
-    if (!channel) return undefined;
-    if (channel.kind === 'constant') {
-      const radius = channel.value;
-      return { resolver: () => radius };
-    }
+  const channel = pickStyleChannel<number>(mark, 'size');
+  if (!channel) return undefined;
+  if (channel.kind === 'constant') {
+    const radius = channel.value;
+    return { resolver: () => radius };
+  }
 
-    const field = channel.value;
-    const declaredFieldType = model.find(definition => definition.name === field)?.type;
-    const hasUsableObservation = rows.some(row => {
+  const field = channel.value;
+  const declaredFieldType = model.find(definition => definition.name === field)?.type;
+  const hasUsableObservation = rows.some(row => {
+    const value = resolveFieldPath(row, field);
+    return typeof value === 'number' ? isFiniteNumber(value) : value !== undefined && value !== null;
+  });
+  const effectiveFieldType =
+    declaredFieldType !== undefined
+      ? declaredFieldType
+      : hasUsableObservation
+        ? inferFieldType(rows, field)
+        : undefined;
+  if (effectiveFieldType !== undefined && effectiveFieldType !== DataFieldType.Continuous) {
+    throw new RetikzPlotError(
+      `lowerPlots: size channel field "${field}" is ${effectiveFieldType}; size requires a continuous field`,
+    );
+  }
+
+  const scaleName = channel.scale ?? `__size_${field}`;
+  const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
+  if (numeric.some(value => value < 0)) {
+    throw new RetikzPlotError(
+      `lowerPlots: size channel field "${field}" has negative values; size requires non-negative magnitudes`,
+    );
+  }
+
+  const positives = numeric.filter(value => value > 0);
+  const maxPositive = positives.length === 0 ? 0 : Math.max(...positives);
+  let def: IRPlotSqrtScale = {
+    type: BuiltinPlotScale.Sqrt,
+    name: scaleName,
+    domain: [0, maxPositive],
+    range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
+  };
+  let hasAuthoredDomain = false;
+  if (channel.scale !== undefined) {
+    const found = scaleByName.get(channel.scale);
+    if (!found) throw new RetikzPlotError(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
+    if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Sqrt)
+      throw new RetikzPlotError(
+        `lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`,
+      );
+
+    hasAuthoredDomain = found.domain !== undefined;
+    def = {
+      ...found,
+      domain: found.domain ?? [0, maxPositive],
+      range: found.range ?? [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
+    };
+  }
+
+  const resolvedScale = resolveSqrtScale(def, numeric, [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]);
+  const domain = resolvedScale.domain();
+  const resolvedRange = resolvedScale.range();
+  const usesDerivedMinimum = !hasAuthoredDomain && positives.length === 0;
+  const range = usesDerivedMinimum ? [resolvedRange[0], resolvedRange[0]] : resolvedRange;
+  const scale = usesDerivedMinimum ? (): number => range[0] : resolvedScale;
+
+  return {
+    resolver: row => {
       const value = resolveFieldPath(row, field);
-      return typeof value === 'number' ? isFiniteNumber(value) : value !== undefined && value !== null;
-    });
-    const effectiveFieldType =
-      declaredFieldType !== undefined
-        ? declaredFieldType
-        : hasUsableObservation
-          ? inferFieldType(rows, field)
-          : undefined;
-    if (effectiveFieldType !== undefined && effectiveFieldType !== DataFieldType.Continuous) {
-      throw new RetikzPlotError(
-        `lowerPlots: size channel field "${field}" is ${effectiveFieldType}; size requires a continuous field`,
-      );
-    }
-
-    const scaleName = channel.scale ?? `__size_${field}`;
-    const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
-    if (numeric.some(value => value < 0)) {
-      throw new RetikzPlotError(
-        `lowerPlots: size channel field "${field}" has negative values; size requires non-negative magnitudes`,
-      );
-    }
-
-    const positives = numeric.filter(value => value > 0);
-    const maxPositive = positives.length === 0 ? 0 : Math.max(...positives);
-    let def: IRPlotSqrtScale = {
-      type: BuiltinPlotScale.Sqrt,
-      name: scaleName,
-      domain: [0, maxPositive],
-      range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
-    };
-    let hasAuthoredDomain = false;
-    if (channel.scale !== undefined) {
-      const found = scaleByName.get(channel.scale);
-      if (!found) throw new RetikzPlotError(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
-      if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Sqrt)
-        throw new RetikzPlotError(
-          `lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`,
-        );
-
-      hasAuthoredDomain = found.domain !== undefined;
-      def = {
-        ...found,
-        domain: found.domain ?? [0, maxPositive],
-        range: found.range ?? [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
-      };
-    }
-
-    const resolvedScale = resolveSqrtScale(def, numeric, [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]);
-    const domain = resolvedScale.domain();
-    const resolvedRange = resolvedScale.range();
-    const usesDerivedMinimum = !hasAuthoredDomain && positives.length === 0;
-    const range = usesDerivedMinimum ? [resolvedRange[0], resolvedRange[0]] : resolvedRange;
-    const scale = usesDerivedMinimum ? (): number => range[0] : resolvedScale;
-
-    return {
-      resolver: row => {
-        const value = resolveFieldPath(row, field);
-        return isFiniteNumber(value) && value >= 0 ? scale(value) : undefined;
-      },
-      descriptor: {
-        channel: 'size',
-        scaleType: BuiltinPlotScale.Sqrt,
-        domain: [...domain],
-        range: [...range],
-        field,
-        fieldType: effectiveFieldType,
-        scaleName,
-      },
-    };
+      return isFiniteNumber(value) && value >= 0 ? scale(value) : undefined;
+    },
+    descriptor: {
+      channel: 'size',
+      scaleType: BuiltinPlotScale.Sqrt,
+      domain: [...domain],
+      range: [...range],
+      field,
+      fieldType: effectiveFieldType,
+      scaleName,
+    },
   };
 };
 
@@ -334,39 +330,38 @@ export const resolveSizeChannel = (
  */
 export const resolveShapeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
-): ((mark: IRPlotMarkOperation) => ChannelResolution<JsonValue> | undefined) => {
+  mark: IRPlotMarkOperation,
+): ChannelResolution<JsonValue> | undefined => {
   const { rows, model } = ctx;
-  return (mark: IRPlotMarkOperation): ChannelResolution<JsonValue> | undefined => {
-    const channel = pickStyleChannel<IRShapeValue>(mark, 'shape');
-    if (!channel) return undefined;
-    if (channel.kind === 'constant') {
-      const shape = channel.value;
-      if (typeof shape !== 'string' && !ShapeRefSchema.safeParse(shape).success) return undefined;
-      return { resolver: () => shape };
-    }
+  const channel = pickStyleChannel<IRShapeValue>(mark, 'shape');
+  if (!channel) return undefined;
+  if (channel.kind === 'constant') {
+    const shape = channel.value;
+    if (typeof shape !== 'string' && !ShapeRefSchema.safeParse(shape).success) return undefined;
+    return { resolver: () => shape };
+  }
 
-    const field = channel.value;
-    const fieldType = model.find(definition => definition.name === field)?.type;
-    if (fieldType !== undefined && fieldType !== DataFieldType.Categorical) {
-      throw new RetikzPlotError(
-        `lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`,
-      );
-    }
+  const field = channel.value;
+  const fieldType = model.find(definition => definition.name === field)?.type;
+  if (fieldType !== undefined && fieldType !== DataFieldType.Categorical) {
+    throw new RetikzPlotError(
+      `lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`,
+    );
+  }
 
-    const values = rows.map(row => resolveFieldPath(row, field));
-    const domain = inferCategoryDomain(values);
-    const palette = ctx.palette?.shape ?? PLOT_SHAPE_PALETTE;
-    const shapes = domain.map((_, index) => structuredClone(palette[index % palette.length]));
-    const shapeByCategory = new Map(domain.map((category, index) => [category, shapes[index]] as const));
+  const values = rows.map(row => resolveFieldPath(row, field));
+  const domain = inferCategoryDomain(values);
+  const palette = ctx.palette?.shape ?? PLOT_SHAPE_PALETTE;
+  const shapes = domain.map((_, index) => structuredClone(palette[index % palette.length]));
+  const shapeByCategory = new Map(domain.map((category, index) => [category, shapes[index]] as const));
 
-    return {
-      resolver: row => {
-        const value = resolveFieldPath(row, field);
-        return typeof value === 'string' || typeof value === 'number' ? shapeByCategory.get(value) : undefined;
-      },
-      // shape legend：每类别一形状 swatch，domain = 类别序、range = 对应形状名
-      descriptor: { channel: 'shape', scaleType: BuiltinPlotScale.Ordinal, domain, range: shapes, field, fieldType },
-    };
+  return {
+    resolver: row => {
+      const value = resolveFieldPath(row, field);
+      return typeof value === 'string' || typeof value === 'number' ? shapeByCategory.get(value) : undefined;
+    },
+    // shape legend：每类别一形状 swatch，domain = 类别序、range = 对应形状名
+    descriptor: { channel: 'shape', scaleType: BuiltinPlotScale.Ordinal, domain, range: shapes, field, fieldType },
   };
 };
 
@@ -382,15 +377,11 @@ const numericNodeChannels: {
     channel: 'opacity',
     output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     legend: 'ramp',
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.model,
-        mark => pickStyleChannel<number>(mark, 'opacity'),
-        'opacity',
-        { range: [OPACITY_MIN, 1], clamp: true },
-      ),
+    resolve: (ctx, mark) =>
+      resolveNumericNodeChannel(ctx.node, ctx.rows, ctx.model, pickStyleChannel<number>(mark, 'opacity'), 'opacity', {
+        range: [OPACITY_MIN, 1],
+        clamp: true,
+      }),
     deliver: (node, value) => {
       node.style = {
         ...node.style,
@@ -404,12 +395,12 @@ const numericNodeChannels: {
   fillOpacity: defineNodeChannel<number>({
     channel: 'fillOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
-    resolve: ctx =>
-      makeNumericNodeResolver(
+    resolve: (ctx, mark) =>
+      resolveNumericNodeChannel(
         ctx.node,
         ctx.rows,
         ctx.model,
-        mark => pickStyleChannel<number>(mark, 'fillOpacity'),
+        pickStyleChannel<number>(mark, 'fillOpacity'),
         'fillOpacity',
         { range: [0.2, 1], clamp: true },
       ),
@@ -426,12 +417,12 @@ const numericNodeChannels: {
   strokeOpacity: defineNodeChannel<number>({
     channel: 'strokeOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
-    resolve: ctx =>
-      makeNumericNodeResolver(
+    resolve: (ctx, mark) =>
+      resolveNumericNodeChannel(
         ctx.node,
         ctx.rows,
         ctx.model,
-        mark => pickStyleChannel<number>(mark, 'strokeOpacity'),
+        pickStyleChannel<number>(mark, 'strokeOpacity'),
         'strokeOpacity',
         { range: [0.2, 1], clamp: true },
       ),
@@ -448,14 +439,8 @@ const numericNodeChannels: {
   rotate: defineNodeChannel<number>({
     channel: 'rotate',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.model,
-        mark => pickStyleChannel<number>(mark, 'rotate'),
-        'rotate',
-      ),
+    resolve: (ctx, mark) =>
+      resolveNumericNodeChannel(ctx.node, ctx.rows, ctx.model, pickStyleChannel<number>(mark, 'rotate'), 'rotate'),
     deliver: (node, value) => {
       node.rotate = value;
     },
@@ -463,15 +448,10 @@ const numericNodeChannels: {
   zIndex: defineNodeChannel<number>({
     channel: 'zIndex',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericNodeResolver(
-        ctx.node,
-        ctx.rows,
-        ctx.model,
-        mark => pickStyleChannel<number>(mark, 'zIndex'),
-        'zIndex',
-        { integer: true },
-      ),
+    resolve: (ctx, mark) =>
+      resolveNumericNodeChannel(ctx.node, ctx.rows, ctx.model, pickStyleChannel<number>(mark, 'zIndex'), 'zIndex', {
+        integer: true,
+      }),
     deliver: (node, value) => {
       node.zIndex = value;
     },
@@ -479,12 +459,12 @@ const numericNodeChannels: {
   strokeWidth: defineNodeChannel<number>({
     channel: 'strokeWidth',
     output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
-    resolve: ctx =>
-      makeNumericNodeResolver(
+    resolve: (ctx, mark) =>
+      resolveNumericNodeChannel(
         ctx.node,
         ctx.rows,
         ctx.model,
-        mark => pickStyleChannel<number>(mark, 'strokeWidth'),
+        pickStyleChannel<number>(mark, 'strokeWidth'),
         'strokeWidth',
         { range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
       ),
@@ -640,7 +620,7 @@ const directNodeChannels = {
 const textColorNodeChannel: NodeChannelDefinition<string> = defineNodeChannel<string>({
   channel: 'textColor',
   output: { outputKind: 'color' },
-  resolve: ctx => mark =>
+  resolve: (ctx, mark) =>
     makeMarkValueResolver<string>(pickStyleChannel<string>(mark, 'textColor'), ctx.model, {
       channelName: 'textColor',
       parse: value => (typeof value === 'string' ? value : undefined),

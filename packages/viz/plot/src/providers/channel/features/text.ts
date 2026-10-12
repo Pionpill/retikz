@@ -32,7 +32,7 @@ export const createBuiltinTextChannels = (options: BuiltinTextChannelOptions = {
   label: {
     channel: 'label',
     kind: ChannelDefinitionKind.Mark,
-    resolve: ctx => mark => {
+    resolve: (ctx, mark) => {
       const content = labelContentChannel(mark);
       const id = (mark as { id?: string }).id;
       const runtime = id !== undefined ? options.resolveLabel?.[id] : undefined;

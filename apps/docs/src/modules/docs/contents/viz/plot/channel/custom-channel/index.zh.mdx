@@ -62,7 +62,7 @@ export const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.3, 1], clamp: true },
   legend: 'ramp',
-  resolve: ctx => mark => {
+  resolve: (ctx, mark) => {
     const binding = extensionChannelsOf(mark).intensity;
     if (binding === undefined) return undefined;
     if (binding.value !== undefined) {
@@ -201,7 +201,7 @@ encoding: {
       kind: 'type',
       type: 'NodeChannelDefinition<T extends ChannelValue = ChannelValue>',
       description:
-        '本例的定义类型。resolve 接收数据上下文并返回图元解析函数，产出逐行 resolver 和可选 descriptor；deliver 接收节点、解析值与交付上下文。legend 支持 swatch、ramp、size、symbol，本例用 ramp 展示连续透明度。',
+        '本例的定义类型。resolve 同时接收数据上下文与当前图元，产出逐行 resolver 和可选 descriptor；deliver 接收节点、解析值与交付上下文。legend 支持 swatch、ramp、size、symbol，本例用 ramp 展示连续透明度。',
     },
     {
       name: 'channelDefinitions',

@@ -41,7 +41,7 @@ const numericScopeChannel = (
     channel,
     output,
     ...(legend !== undefined ? { legend } : {}),
-    resolve: () => mark => {
+    resolve: (_ctx, mark) => {
       const value = pickConstantStyleChannel<number>(mark, channel);
       return value === undefined ? undefined : { value };
     },

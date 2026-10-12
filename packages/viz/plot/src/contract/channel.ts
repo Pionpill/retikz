@@ -322,10 +322,8 @@ export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefi
 export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
   typeof ChannelDefinitionKind.Mark
 > & {
-  /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor） */
-  resolve: (
-    ctx: ChannelDefinitionResolveContext,
-  ) => (mark: IRPlotMarkOperation) => MarkChannelResolution<T> | undefined;
+  /** 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined */
+  resolve: (ctx: ChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => MarkChannelResolution<T> | undefined;
 };
 
 /**
@@ -340,10 +338,8 @@ export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
   output: ChannelOutputSpace;
   /** legend 形态（size→梯度气泡 / opacity→ramp / shape→symbol）；无 legend 的通道省略 */
   legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-  /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor） */
-  resolve: (
-    ctx: NodeChannelDefinitionResolveContext,
-  ) => (mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
+  /** 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined */
+  resolve: (ctx: NodeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
   /**
    * 把逐行解析值落到 core IRNode 的既有属性
    * @description 不写 position / 几何；新渲染能力应先下沉到 core
@@ -364,10 +360,11 @@ export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = Base
   output: ChannelOutputSpace;
   /** legend 形态；无 legend 的通道省略 */
   legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-  /** 建逐 mark 解析器（整层共享值 + 可选 legend descriptor） */
+  /** 结合数据上下文与图元绑定，返回整层共享值及可选图例描述；无绑定时返回 undefined */
   resolve: (
     ctx: ScopeChannelDefinitionResolveContext,
-  ) => (mark: IRPlotMarkOperation) => ScopeChannelResolution<T> | undefined;
+    mark: IRPlotMarkOperation,
+  ) => ScopeChannelResolution<T> | undefined;
   /** 把解析值落到 core IRScope 的既有属性或 every-X 默认 */
   deliver: (scope: IRScope, value: T, context: ScopeChannelDeliveryContext) => void;
 };
@@ -385,10 +382,8 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
   output: ChannelOutputSpace;
   /** legend 形态（opacity→ramp / strokeWidth→size）；无 legend 的通道省略 */
   legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-  /** 建逐 mark 解析器（行→通道值 + 可选 legend descriptor） */
-  resolve: (
-    ctx: PathChannelDefinitionResolveContext,
-  ) => (mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
+  /** 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined */
+  resolve: (ctx: PathChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
   /** 把逐行解析值落到 core IRPath 的既有属性 */
   deliver: (path: IRPath, value: T, context: PathChannelDeliveryContext) => void;
 };
@@ -443,10 +438,11 @@ export type AnyChannelDefinition =
       channel: string;
       /** 决定通道由 mark 消费还是交付给 Node、Scope 或 Path */
       kind: typeof ChannelDefinitionKind.Mark;
-      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
+      /** 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined */
       resolve: (
         ctx: ChannelDefinitionResolveContext,
-      ) => (mark: IRPlotMarkOperation) => MarkChannelResolution<ChannelValue> | undefined;
+        mark: IRPlotMarkOperation,
+      ) => MarkChannelResolution<ChannelValue> | undefined;
     }
   | {
       /** 在通道注册表中唯一的名称 */
@@ -457,10 +453,11 @@ export type AnyChannelDefinition =
       output: ChannelOutputSpace;
       /** 该通道用于图例展示的视觉形式 */
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
+      /** 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined */
       resolve: (
         ctx: NodeChannelDefinitionResolveContext,
-      ) => (mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> | undefined;
+        mark: IRPlotMarkOperation,
+      ) => ChannelResolution<ChannelValue> | undefined;
       /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (node: IRNode, value: never, context: NodeChannelDeliveryContext) => void;
     }
@@ -473,10 +470,11 @@ export type AnyChannelDefinition =
       output: ChannelOutputSpace;
       /** 该通道用于图例展示的视觉形式 */
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
+      /** 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined */
       resolve: (
         ctx: ScopeChannelDefinitionResolveContext,
-      ) => (mark: IRPlotMarkOperation) => ScopeChannelResolution<ChannelValue> | undefined;
+        mark: IRPlotMarkOperation,
+      ) => ScopeChannelResolution<ChannelValue> | undefined;
       /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (scope: IRScope, value: never, context: ScopeChannelDeliveryContext) => void;
     }
@@ -489,10 +487,11 @@ export type AnyChannelDefinition =
       output: ChannelOutputSpace;
       /** 该通道用于图例展示的视觉形式 */
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
-      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
+      /** 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined */
       resolve: (
         ctx: PathChannelDefinitionResolveContext,
-      ) => (mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> | undefined;
+        mark: IRPlotMarkOperation,
+      ) => ChannelResolution<ChannelValue> | undefined;
       /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (path: IRPath, value: never, context: PathChannelDeliveryContext) => void;
     };

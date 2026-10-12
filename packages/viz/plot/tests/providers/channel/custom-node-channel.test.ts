@@ -22,7 +22,7 @@ const intensityChannel = defineNodeChannel<number>({
   channel: 'intensity',
   output: { outputKind: 'number', range: [0.3, 1] },
   legend: 'ramp',
-  resolve: ctx => mark => {
+  resolve: (ctx, mark) => {
     const binding = extensionChannelsOf(mark).intensity;
     if (binding?.field === undefined) return undefined;
 
@@ -58,7 +58,7 @@ const categoryColorChannel = defineNodeChannel<string>({
   channel: 'categoryColor',
   output: { outputKind: 'color' },
   legend: 'swatch',
-  resolve: ctx => mark => {
+  resolve: (ctx, mark) => {
     const binding = extensionChannelsOf(mark).categoryColor;
     if (binding?.field === undefined) return undefined;
 
@@ -89,7 +89,7 @@ const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
   channel: 'symbolCode',
   output: { outputKind: 'symbol', palette: ['circle', 'diamond'] },
   legend: 'symbol',
-  resolve: ctx => mark => {
+  resolve: (ctx, mark) => {
     const binding = extensionChannelsOf(mark).symbolCode;
     if (binding?.field === undefined) return undefined;
 
@@ -120,7 +120,7 @@ const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
 const scopeTintChannel = defineScopeChannel<string>({
   channel: 'scopeTint',
   output: { outputKind: 'color' },
-  resolve: () => mark => {
+  resolve: (_ctx, mark) => {
     const binding = extensionChannelsOf(mark).scopeTint;
     if (binding?.value === undefined) return undefined;
     return { value: String(binding.value) };
@@ -136,7 +136,7 @@ const scopeTintChannel = defineScopeChannel<string>({
 const lineWeightChannel = definePathChannel<number>({
   channel: 'lineWeight',
   output: { outputKind: 'number', range: [1, 6] },
-  resolve: () => mark => {
+  resolve: (_ctx, mark) => {
     const binding = extensionChannelsOf(mark).lineWeight;
     if (binding?.field === undefined) return undefined;
 
@@ -275,7 +275,7 @@ describe('custom node channel registry', () => {
     const bad = defineNodeChannel<number>({
       channel: 'size',
       output: { outputKind: 'number', range: [1, 2] },
-      resolve: () => () => undefined,
+      resolve: () => undefined,
       deliver: () => {},
     });
 
@@ -288,7 +288,7 @@ describe('custom node channel registry', () => {
       channel: 'glow',
       kind: ChannelDefinitionKind.Node,
       output: { outputKind: 'number' as const, range: [0, 1] as const },
-      resolve: () => () => undefined,
+      resolve: () => undefined,
     } as unknown as AnyChannelDefinition;
 
     expect(() => lowerPlot(scatterSpec(), { d: rows }, opts([bad]))).toThrow(/must provide deliver/);
@@ -305,7 +305,7 @@ describe('custom node channel registry', () => {
     const bad = defineNodeChannel<number>({
       channel: '',
       output: { outputKind: 'number', range: [0, 1] },
-      resolve: () => () => undefined,
+      resolve: () => undefined,
       deliver: () => {},
     });
 
@@ -474,7 +474,7 @@ describe('custom node channel registry', () => {
       channel: 'invalidSymbol',
       output: { outputKind: 'number', range: [1, 2] },
       legend: 'symbol',
-      resolve: ctx => mark => {
+      resolve: (ctx, mark) => {
         const binding = extensionChannelsOf(mark).invalidSymbol;
         if (binding?.field === undefined) return undefined;
 

@@ -34,7 +34,7 @@ const extensionChannelsOf = (mark: {
 const lineWeightChannel = definePathChannel<number>({
   channel: 'lineWeight',
   output: { outputKind: 'number', range: [1, 6] },
-  resolve: () => mark => {
+  resolve: (_ctx, mark) => {
     const binding = extensionChannelsOf(mark).lineWeight;
     if (binding?.field === undefined) return undefined;
 
