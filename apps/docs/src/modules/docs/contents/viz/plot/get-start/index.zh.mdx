@@ -1,0 +1,121 @@
+---
+title: 快速开始
+description: 在 React 或 TypeScript 项目中安装 Plot，用四行数据绘制第一张带坐标轴的折线图。
+---
+
+准备一个能够安装 npm 包的 TypeScript 项目；React 接入还需要支持 TSX。下面两种写法使用同样的四行数据，绘制时间与测量值之间的关系。
+
+## 安装与使用
+
+按项目选择 React 或 Vanilla。`time`、`value` 是数据中的字段名，分别决定折线上各位置的横坐标和纵坐标。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/plot-react react react-dom" />
+
+从 `@retikz/plot-react` 导入 `Plot`、`PathMark` 和 `PlotAxis`。`Plot` 接收数据与绘图区尺寸，子组件声明折线和坐标轴：
+
+```text
+Plot
+├── PathMark
+├── PlotAxis
+└── PlotAxis
+```
+
+在 HTML 中准备 `<div id="plot"></div>`，将以下代码放入 TSX 入口。已有 React 应用可以直接在组件中返回 `<Plot>...</Plot>`，无需再次创建 React root。
+
+```tsx
+import { Plot, PlotAxis, PathMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const measurements = [
+  { time: 1, value: 12 },
+  { time: 2, value: 18 },
+  { time: 3, value: 15 },
+  { time: 4, value: 24 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={measurements} width={400} height={220}>
+    <PathMark x="time" y="value" order="time" />
+    <PlotAxis dimension="x" title="时间" />
+    <PlotAxis dimension="y" title="测量值" />
+  </Plot>,
+);
+```
+
+这里 `x="time"`、`y="value"` 是字段绑定。`order="time"` 按时间连接各次测量。Plot 根据数据建立默认位置比例尺；两个 `PlotAxis` 分别绘制横轴和纵轴。
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/plot-vanilla" />
+
+从 `@retikz/plot-vanilla` 导入 `plot` 和 `renderPlot`。`plot()` 创建图形描述，`renderPlot()` 接收描述与数据集并返回 SVG 字符串。
+
+在 HTML 中准备 `<div id="plot"></div>`，将以下代码放入 TypeScript 入口：
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const measurements = [
+  { time: 1, value: 12 },
+  { time: 2, value: 18 },
+  { time: 3, value: 15 },
+  { time: 4, value: 24 },
+];
+
+const spec = plot({
+  data: { reference: 'measurements' },
+  scales: [
+    { type: 'linear', name: 'x' },
+    { type: 'linear', name: 'y' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'path',
+      order: 'time',
+      encoding: { x: { field: 'time' }, y: { field: 'value' } },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x', title: '时间' },
+    { type: 'axis', dimension: 'y', title: '测量值' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { measurements }, { width: 400, height: 220 });
+```
+
+`data.reference` 的值要与传给 `renderPlot()` 的数据集名称一致。`scales` 定义两个线性比例尺，`coordinate` 将它们用于二维直角坐标系；`marks` 描述折线的字段绑定，`order` 指定按时间连接，`guides` 描述坐标轴。数据行与配置分开传入，可以在复用图形描述时替换数据。
+
+</DocTab>
+</DocTabs>
+
+## 最小结果
+
+运行后应看到一条连接四次测量的折线和两条带标题的坐标轴。时间从 1 增至 4，测量值依次为 12、18、15、24；折线先上升，再下降，最后升至最高值。
+
+<ComponentPreview
+  files={['first-plot', 'first-plot.preview.tsx', 'first-plot.data.ts']}
+  responsive
+  defaultSourceFile="first-plot.preview.tsx"
+  size="lg"
+  hideCode
+/>
+
+预览展示相同数据与映射。React 的 `width`、`height` 设置绘图区尺寸，最终图形还包含坐标轴和标签；Vanilla 的 `renderPlot()` 选项同时设置绘图区与 SVG 输出尺寸，因此两种入口的最终外框大小可能不同。
+
+接入自己的数据时，替换 `measurements`，并将 `time`、`value` 改成真实字段名。这个例子使用数值字段；分类字段的排列方式见[比例尺](/viz/plot/scale)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '图元', description: '选择其他绘制形式，或叠加多种图元。', url: '/viz/plot/mark' },
+    { title: '通道', description: '继续将字段映射到颜色、尺寸等视觉属性。', url: '/viz/plot/channel' },
+    { title: '辅助', description: '配置坐标轴与图例，让图形更容易阅读。', url: '/viz/plot/guide' },
+  ]}
+/>

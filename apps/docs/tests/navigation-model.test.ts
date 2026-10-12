@@ -82,12 +82,21 @@ describe('layout utils', () => {
     expect(points?.children?.find(child => child.value === 'scatter')?.Icon).toBe(points?.Icon);
   });
 
-  it('Plot 末尾注册 API 参考与更新日志路由', () => {
+  it('Plot 顶部提供入门与日志入口，专题按图形语法分组', () => {
     const plotPaths = flattenLeaves('viz', vizSection)
       .map(node => node.path)
       .filter(path => path.startsWith('/viz/plot/'));
 
-    expect(plotPaths.slice(-13)).toEqual([
+    expect(plotPaths.slice(0, 4)).toEqual([
+      '/viz/plot/introduction',
+      '/viz/plot/get-start',
+      '/viz/plot/changelog/v0-2',
+      '/viz/plot/changelog/v0-1',
+    ]);
+    const plot = vizSection.find(section => section.id === 'plot');
+    expect(plot?.pages.slice(0, 3).every(page => page.sidebarGroup === undefined)).toBe(true);
+    expect(plot?.pages.slice(3).every(page => page.sidebarGroup === 'viz.plotGrammar')).toBe(true);
+    expect(plotPaths.slice(-11)).toEqual([
       '/viz/plot/reference/plot',
       '/viz/plot/reference/encoding',
       '/viz/plot/reference/transform',
@@ -99,8 +108,6 @@ describe('layout utils', () => {
       '/viz/plot/reference/layer',
       '/viz/plot/reference/theme',
       '/viz/plot/reference/runtime',
-      '/viz/plot/changelog/v0-2',
-      '/viz/plot/changelog/v0-1',
     ]);
   });
 

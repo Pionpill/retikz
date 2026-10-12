@@ -1,0 +1,129 @@
+---
+title: Quick start
+description: Install Plot in a React or TypeScript project and draw your first line chart with axes from four data rows.
+---
+
+Start with a TypeScript project that can install npm packages. The React version also needs TSX support. Both examples below use the same four rows to plot time against a measured value.
+
+## Installation and usage
+
+Choose React or Vanilla for your project. `time` and `value` are data field names that determine the horizontal and vertical positions along the line.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/plot-react react react-dom" />
+
+Import `Plot`, `PathMark`, and `PlotAxis` from `@retikz/plot-react`. `Plot` receives the data and drawing-area dimensions; its children declare the line and axes:
+
+```text
+Plot
+├── PathMark
+├── PlotAxis
+└── PlotAxis
+```
+
+Add `<div id="plot"></div>` to your HTML and put this code in a TSX entry file. In an existing React application, return `<Plot>...</Plot>` from a component without creating another React root.
+
+```tsx
+import { Plot, PlotAxis, PathMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const measurements = [
+  { time: 1, value: 12 },
+  { time: 2, value: 18 },
+  { time: 3, value: 15 },
+  { time: 4, value: 24 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={measurements} width={400} height={220}>
+    <PathMark x="time" y="value" order="time" />
+    <PlotAxis dimension="x" title="Time" />
+    <PlotAxis dimension="y" title="Reading" />
+  </Plot>,
+);
+```
+
+Here, `x="time"` and `y="value"` bind data fields. `order="time"` connects the measurements in time order. Plot builds default position scales from the data. The two `PlotAxis` components draw the horizontal and vertical axes.
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/plot-vanilla" />
+
+Import `plot` and `renderPlot` from `@retikz/plot-vanilla`. `plot()` creates a graphic description; `renderPlot()` accepts that description and the datasets and returns an SVG string.
+
+Add `<div id="plot"></div>` to your HTML and put this code in a TypeScript entry file:
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const measurements = [
+  { time: 1, value: 12 },
+  { time: 2, value: 18 },
+  { time: 3, value: 15 },
+  { time: 4, value: 24 },
+];
+
+const spec = plot({
+  data: { reference: 'measurements' },
+  scales: [
+    { type: 'linear', name: 'x' },
+    { type: 'linear', name: 'y' },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'path',
+      order: 'time',
+      encoding: { x: { field: 'time' }, y: { field: 'value' } },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x', title: 'Time' },
+    { type: 'axis', dimension: 'y', title: 'Reading' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { measurements }, { width: 400, height: 220 });
+```
+
+The value of `data.reference` must match the dataset name passed to `renderPlot()`. `scales` defines two linear scales, and `coordinate` assigns them to a two-dimensional Cartesian coordinate system. `marks` describes the line field bindings and `order` connects measurements in time order; `guides` describes the axes. Supplying data separately lets you reuse the graphic description with different rows.
+
+</DocTab>
+</DocTabs>
+
+## The first result
+
+You should see a line connecting four measurements and two titled axes. Time runs from 1 to 4, with readings of 12, 18, 15, and 24. The line rises, falls, then rises to its highest value.
+
+<ComponentPreview
+  files={['first-plot', 'first-plot.preview.tsx', 'first-plot.data.ts']}
+  responsive
+  defaultSourceFile="first-plot.preview.tsx"
+  size="lg"
+  hideCode
+/>
+
+The preview shows the same data and mappings. React's `width` and `height` set the drawing area; the complete graphic also includes axes and labels. Vanilla's `renderPlot()` options set both the drawing area and SVG output dimensions, so the final outer dimensions can differ between the two APIs.
+
+To use your own data, replace `measurements` and change `time` and `value` to your field names. This example uses numeric fields; see [Scales](/viz/plot/scale) for categorical ordering.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Marks', description: 'Choose other drawing forms or layer several marks.', url: '/viz/plot/mark' },
+    {
+      title: 'Channels',
+      description: 'Map fields to color, size, and other visual properties.',
+      url: '/viz/plot/channel',
+    },
+    {
+      title: 'Guides',
+      description: 'Configure axes and legends to help readers interpret a graphic.',
+      url: '/viz/plot/guide',
+    },
+  ]}
+/>

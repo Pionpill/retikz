@@ -1,0 +1,52 @@
+---
+title: Introduction
+description: Map data fields to position, color, and size, then combine points, lines, intervals, and axes into your own data graphics.
+---
+
+Plot is a grammar of graphics. You supply data, choose points, lines, or intervals to represent records, and specify how fields determine position, color, or size. Plot renders these declarations into a graphic. It suits tasks where you want to compose layers and control their mappings yourself.
+
+## From data to a graphic
+
+The example below shows four measurements. Each record has a `time` and a `value`. Horizontal position represents time, vertical position represents the reading, and a line connects the four records in time order to show how the reading changes. Axes label the values so readers can interpret the graphic.
+
+<ComponentPreview
+  files={[
+    '/viz/plot/get-start/first-plot',
+    '/viz/plot/get-start/first-plot.preview.tsx',
+    '/viz/plot/get-start/first-plot.data.ts',
+  ]}
+  responsive
+  defaultSourceFile="first-plot.preview.tsx"
+  size="lg"
+  hideCode
+/>
+
+Describing this graphic involves three choices: which data to use, which fields determine position, and which shapes represent records. Plot calls visual properties such as position and color “channels,” and drawing forms such as points and lines “marks.” Scales convert data ranges into positions or styles; the coordinate system determines how those positions are arranged.
+
+## When to use Plot
+
+Start with Plot when you need to layer different marks, configure scales separately, or use different coordinate systems. Channels, marks, scales, and guides can be configured independently and combined in one graphic. React components and Vanilla configuration objects express the same choices.
+
+| Your task                                                            | Starting point                                                                      |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Combine points, lines, and intervals while controlling data mappings | Plot                                                                                |
+| Render a specific chart type through whole-chart configuration       | [Chart](/viz/chart/introduction), after checking that it supports the type you need |
+| Clean, derive, or aggregate data before drawing                      | [Data](/viz/data/introduction), then pass the result to Plot                        |
+| Present data in rows, columns, and cells                             | [Table](/viz/table)                                                                 |
+
+## Choosing an API
+
+React projects use `Plot` and mark components from `@retikz/plot-react`. Plain TypeScript projects use `plot()` and `renderPlot()` from `@retikz/plot-vanilla` to produce an SVG string. Both approaches start with your own data.
+
+To save a graphic's configuration, use Plot IR, a serializable JSON description of the graphic. Data rows are supplied separately at runtime, and the configuration refers to datasets by name. You can draw your first graphic without learning this format first.
+
+See [Quick start](/viz/plot/get-start) for installation and the complete code for this example.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Marks', description: 'Choose points, paths, intervals, and other drawing forms.', url: '/viz/plot/mark' },
+    { title: 'Channels', description: 'Map fields to position, color, and size.', url: '/viz/plot/channel' },
+  ]}
+/>

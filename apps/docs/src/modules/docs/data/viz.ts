@@ -445,8 +445,35 @@ export const vizSection: Array<Section> = [
     document: true,
     pages: [
       {
+        id: 'introduction',
+        label: 'viz.plotIntroduction',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'plot.introduction', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'get-start',
+        label: 'viz.plotGetStart',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'plot.get-start', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [
+          { id: 'v0-2', label: 'viz.changelogV02' },
+          { id: 'v0-1', label: 'viz.changelogV01' },
+        ],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'plot.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
+      {
         id: 'channel',
         label: 'viz.grammarChannel',
+        sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'binding', label: 'viz.grammarChannelBinding', difficulty: DocDifficulty.Advanced },
           { id: 'builtin', label: 'viz.grammarChannelBuiltin', difficulty: DocDifficulty.Advanced },
@@ -461,6 +488,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'transform',
         label: 'viz.grammarTransform',
+        sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'row', label: 'viz.grammarTransformRow', difficulty: DocDifficulty.Advanced },
           { id: 'annotation', label: 'viz.grammarTransformAnnotation', difficulty: DocDifficulty.Advanced },
@@ -478,6 +506,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'mark',
         label: 'viz.grammarMark',
+        sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'point', label: 'viz.compPointMark', difficulty: DocDifficulty.Beginner },
           { id: 'path', label: 'viz.compPathMark', difficulty: DocDifficulty.Beginner },
@@ -501,6 +530,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'scale',
         label: 'viz.grammarScale',
+        sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'position', label: 'viz.grammarScalePosition', difficulty: DocDifficulty.Advanced },
           { id: 'color', label: 'viz.grammarScaleColor', difficulty: DocDifficulty.Advanced },
@@ -515,6 +545,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'coordinate',
         label: 'viz.grammarCoordinate',
+        sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: '2d', label: 'viz.grammarCoordinate2d', difficulty: DocDifficulty.Beginner },
           { id: '1d', label: 'viz.grammarCoordinate1d', difficulty: DocDifficulty.Advanced },
@@ -530,6 +561,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'guide',
         label: 'viz.grammarGuide',
+        sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'axis', label: 'viz.compAxis', difficulty: DocDifficulty.Beginner },
           { id: 'legend', label: 'viz.compLegend', difficulty: DocDifficulty.Beginner },
@@ -538,12 +570,14 @@ export const vizSection: Array<Section> = [
       {
         id: 'provenance',
         label: 'viz.plotProvenance',
+        sidebarGroup: 'viz.plotGrammar',
         difficulty: DocDifficulty.Beginner,
         meta: { pageType: 'guide', audience: 'user', capability: 'plot.lineage', sourceOfTruth: 'runtime' },
       },
       {
         id: 'reference',
         label: 'viz.plotReference',
+        sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'plot', label: 'viz.plotReferenceContractPlot' },
           { id: 'encoding', label: 'viz.plotReferenceContractEncoding' },
@@ -562,20 +596,6 @@ export const vizSection: Array<Section> = [
           audience: 'integrator',
           capability: 'plot.contract',
           sourceOfTruth: 'schema',
-        },
-      },
-      {
-        id: 'changelog',
-        label: 'viz.changelog',
-        children: [
-          { id: 'v0-2', label: 'viz.changelogV02' },
-          { id: 'v0-1', label: 'viz.changelogV01' },
-        ],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'plot.release',
-          sourceOfTruth: 'changelog',
         },
       },
     ],
