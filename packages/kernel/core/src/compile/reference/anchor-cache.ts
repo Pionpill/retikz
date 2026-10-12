@@ -10,7 +10,8 @@ type AnchorLayout = NodeLayout | NodeReferenceView;
 
 import { boundaryKey } from '../../resolve';
 import { isAnchor } from '../../shared';
-import { anchorOf, angleBoundaryOf } from '../node';
+import { anchorOf, angleBoundaryOf, nodeReferenceViewOf } from '../node';
+import type { NodeGeometryState } from '../node';
 import { snapshotProviderPosition } from '../scene-primitive';
 
 /** 单个 NodeLayout 生命周期内的 anchor 坐标缓存 */
@@ -28,16 +29,18 @@ const computeAnchor = (
   anchorName: string,
   boundary: IRBoundary | undefined,
   boundaryResolution?: BoundaryReferenceResolution,
+  state?: NodeGeometryState,
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
-    return positionToIR(angleBoundaryOf(layout, Number(anchorName), boundary, true, boundaryResolution));
+    return positionToIR(angleBoundaryOf(layout, Number(anchorName), boundary, true, boundaryResolution, state));
   }
 
-  return positionToIR(anchorOf(layout, anchorName, boundary, isAnchor(anchorName), boundaryResolution));
+  return positionToIR(anchorOf(layout, anchorName, boundary, isAnchor(anchorName), boundaryResolution, state));
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
-const computeEdgePoint = (layout: AnchorLayout, side: Side, fraction: number): IRPosition => {
+const computeEdgePoint = (input: AnchorLayout, side: Side, fraction: number): IRPosition => {
+  const layout = 'node' in input ? nodeReferenceViewOf(input) : input;
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
     throw new RetikzCoreError(
@@ -53,7 +56,7 @@ const computeEdgePoint = (layout: AnchorLayout, side: Side, fraction: number): I
     );
   }
 
-  const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams ?? {});
+  const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams);
 
   return positionToIR(snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw));
 };
@@ -67,9 +70,10 @@ export const resolveAnchorRefUncached = (
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryReferenceResolution,
+  state?: NodeGeometryState,
 ): IRPosition => {
-  if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary, boundaryResolution);
-  if (typeof anchor === 'string') return computeAnchor(layout, anchor, boundary, boundaryResolution);
+  if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary, boundaryResolution, state);
+  if (typeof anchor === 'string') return computeAnchor(layout, anchor, boundary, boundaryResolution, state);
   return computeEdgePoint(layout, anchor.side, anchor.fraction);
 };
 
@@ -79,6 +83,7 @@ export const resolveAnchor = (
   anchorName: string,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryReferenceResolution,
+  state?: NodeGeometryState,
 ): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
@@ -90,7 +95,7 @@ export const resolveAnchor = (
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
 
-  const result = computeAnchor(layout, anchorName, boundary, boundaryResolution);
+  const result = computeAnchor(layout, anchorName, boundary, boundaryResolution, state);
   layoutCache.set(key, result);
 
   return result;
@@ -120,8 +125,9 @@ export const resolveAnchorRef = (
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryReferenceResolution,
+  state?: NodeGeometryState,
 ): IRPosition => {
-  if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary, boundaryResolution);
-  if (typeof anchor === 'string') return resolveAnchor(layout, anchor, boundary, boundaryResolution);
+  if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary, boundaryResolution, state);
+  if (typeof anchor === 'string') return resolveAnchor(layout, anchor, boundary, boundaryResolution, state);
   return resolveEdgePoint(layout, anchor.side, anchor.fraction);
 };

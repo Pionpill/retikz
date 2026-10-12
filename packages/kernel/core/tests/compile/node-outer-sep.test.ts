@@ -12,23 +12,21 @@ import { line, move } from '../helpers/path-command-factory';
 
 /** 最简 rectangle NodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
 const mkLayout = (margin: number, rotate = 0): NodeLayout => ({
-  shapeName: 'rectangle',
-  shapeDef: BUILTIN_SHAPES.rectangle,
-  rect: { x: 0, y: 0, width: 40, height: 30, rotate },
-  contentCenter: [0, 0],
-  rotateDeg: (rotate * 180) / Math.PI,
-  margin: boxInsets(margin),
-  textWidth: 0,
-  textHeight: 0,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-  boundaryResolution: {
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  geometry: {
+    rect: { x: 0, y: 0, width: 40, height: 30, rotate },
+    contentCenter: [0, 0],
+    margin: boxInsets(margin),
+    contentSize: { width: 0, height: 0 },
+  },
+  boundary: {
     name: BUILTIN_SHAPES.rectangle.name,
     definition: BUILTIN_SHAPES.rectangle,
     params: {},
     isShape: true,
   },
+  irPath: 'synthetic.test',
+  node: {},
 });
 
 const hypot = (p: readonly [number, number]): number => Math.hypot(p[0], p[1]);
@@ -59,7 +57,7 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
 
   it('asymmetric-angle-margin：数字 anchor 从外扩后的连接面中心沿指定角度求交', () => {
     const layout = mkLayout(0);
-    layout.margin = { top: 0, right: 10, bottom: 0, left: 0 };
+    layout.geometry.margin = { top: 0, right: 10, bottom: 0, left: 0 };
 
     expect(resolveAnchor(layout, '0')).toEqual([30, 0]);
     expect(resolveAnchor(layout, '180')[0]).toBeCloseTo(-20);

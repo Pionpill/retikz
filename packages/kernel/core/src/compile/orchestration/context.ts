@@ -25,6 +25,8 @@ import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import type { IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
+import { createNodeGeometryContext } from '../node';
+import type { NodeGeometryContext } from '../node';
 import { createClipRegistry, createPaintRegistry, DEFAULT_MAX_CLIP_DEPTH } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
@@ -39,6 +41,8 @@ import type { CompileObservationRuntime } from './observation';
  * @description compileToScene 入口把选项、内置 provider、自定义 provider、资源表和 rounding 规则集中解析到这里；
  */
 export type CompileContext = {
+  /** 本次编译的节点几何缓存与诊断状态 */
+  nodeGeometry: NodeGeometryContext;
   /** 与本次 Source 配对的实例运行时输入 */
   runtimeInputs: CompositeRuntimeInputScope;
   /** canonical 输入 IR；composite 分支在 traversal 中保留 occurrence provenance 后处理 */
@@ -140,6 +144,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const themeStyles = resolveThemeStyleRegistry(options.themeStyles);
 
   return {
+    nodeGeometry: createNodeGeometryContext(),
     runtimeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
     loweredIr: ir,
     theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', themeStyles),

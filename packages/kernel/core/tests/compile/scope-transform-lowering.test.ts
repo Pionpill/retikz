@@ -17,24 +17,21 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
 
   for (const [id, [x, y]] of entries) {
     const layout: NodeLayout = {
-      id,
-      shapeName: 'rectangle',
-      shapeDef: BUILTIN_SHAPES.rectangle,
-      rect: { x, y, width: 0, height: 0, rotate: 0 },
-      contentCenter: [x, y],
-      rotateDeg: 0,
-      margin: boxInsets(0),
-      textWidth: 0,
-      textHeight: 0,
-      align: 'middle',
-      lineHeight: 0,
-      fontSize: 0,
-      boundaryResolution: {
+      node: { id },
+      shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+      geometry: {
+        rect: { x, y, width: 0, height: 0, rotate: 0 },
+        contentCenter: [x, y],
+        margin: boxInsets(0),
+        contentSize: { width: 0, height: 0 },
+      },
+      boundary: {
         name: BUILTIN_SHAPES.rectangle.name,
         definition: BUILTIN_SHAPES.rectangle,
         params: {},
         isShape: true,
       },
+      irPath: 'synthetic.test',
     };
     stack.register(id, layout);
   }
@@ -43,24 +40,21 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
 };
 
 const layoutForProjection = (): NodeLayout => ({
-  id: 'A',
-  shapeName: 'rectangle',
-  shapeDef: BUILTIN_SHAPES.rectangle,
-  rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
-  contentCenter: [10, 20],
-  rotateDeg: 0,
-  margin: boxInsets(2),
-  textWidth: 30,
-  textHeight: 40,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-  boundaryResolution: {
+  node: { id: 'A' },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  geometry: {
+    rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
+    contentCenter: [10, 20],
+    margin: boxInsets(2),
+    contentSize: { width: 30, height: 40 },
+  },
+  boundary: {
     name: BUILTIN_SHAPES.rectangle.name,
     definition: BUILTIN_SHAPES.rectangle,
     params: {},
     isShape: true,
   },
+  irPath: 'synthetic.test',
 });
 
 type LowerOptions = Omit<Parameters<typeof lowerScopeTransforms>[1], 'positionContext'> &
@@ -181,8 +175,8 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
         if (!aLayout || !bLayout) return null;
 
         return [
-          aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
-          aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
+          aLayout.geometry.rect.x + (bLayout.geometry.rect.x - aLayout.geometry.rect.x) * between.fraction,
+          aLayout.geometry.rect.y + (bLayout.geometry.rect.y - aLayout.geometry.rect.y) * between.fraction,
         ];
       },
     });
@@ -284,18 +278,18 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
   it('projectLayoutToGlobal 在负 scale 下保持 rect 尺寸为正数', () => {
     const layout = projectLayoutToGlobal(layoutForProjection(), [{ kind: 'scale', x: -2, y: 3 }]);
 
-    expect(layout.rect.x).toBeCloseTo(-20, 6);
-    expect(layout.rect.y).toBeCloseTo(60, 6);
-    expect(layout.rect.width).toBe(60);
-    expect(layout.rect.height).toBe(120);
-    expect(layout.margin).toEqual({ top: 6, right: 4, bottom: 6, left: 4 });
+    expect(layout.geometry.rect.x).toBeCloseTo(-20, 6);
+    expect(layout.geometry.rect.y).toBeCloseTo(60, 6);
+    expect(layout.geometry.rect.width).toBe(60);
+    expect(layout.geometry.rect.height).toBe(120);
+    expect(layout.geometry.margin).toEqual({ top: 6, right: 4, bottom: 6, left: 4 });
   });
 
   it('projectLayoutToGlobal 应同步 rect.rotate 与 rotateDeg', () => {
     const layout = projectLayoutToGlobal(layoutForProjection(), [{ kind: 'rotate', degrees: 45 }]);
 
-    expect(layout.rect.rotate).toBeCloseTo(Math.PI / 4, 6);
-    expect(layout.rotateDeg).toBeCloseTo(45, 6);
+    expect(layout.geometry.rect.rotate).toBeCloseTo(Math.PI / 4, 6);
+    expect(((layout.geometry.rect.rotate ?? 0) * 180) / Math.PI).toBeCloseTo(45, 6);
   });
 });
 
@@ -322,8 +316,8 @@ describe('lowerScopeTransforms 链复合', () => {
         if (!aLayout || !bLayout) return null;
 
         return [
-          aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
-          aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
+          aLayout.geometry.rect.x + (bLayout.geometry.rect.x - aLayout.geometry.rect.x) * between.fraction,
+          aLayout.geometry.rect.y + (bLayout.geometry.rect.y - aLayout.geometry.rect.y) * between.fraction,
         ];
       },
     });

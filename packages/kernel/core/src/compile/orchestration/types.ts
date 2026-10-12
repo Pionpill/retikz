@@ -287,6 +287,7 @@ export type TraversalState = {
 /** child 遍历期间使用的 compile 依赖 */
 export type TraversalContext = Pick<
   CompileContext,
+  | 'nodeGeometry'
   | 'measureText'
   | 'lowerTex'
   | 'onWarn'

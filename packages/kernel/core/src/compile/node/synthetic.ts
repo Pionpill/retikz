@@ -105,10 +105,11 @@ const resolveSyntheticLayout = (
 
   return {
     ...layout,
-    textWidth: input.rect.width,
-    textHeight: input.rect.height,
-    lineHeight: 0,
-    fontSize: 0,
+    geometry: {
+      ...layout.geometry,
+      contentSize: { ...layout.geometry.contentSize, width: input.rect.width, height: input.rect.height },
+    },
+    text: undefined,
   };
 };
 

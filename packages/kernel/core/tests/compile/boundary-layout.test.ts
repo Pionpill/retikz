@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { NamespaceStack } from '../../src/compile/namespace';
-import { boundaryPointOf, layoutNode } from '../../src/compile/node';
+import { boundaryPointOf, createNodeGeometryContext, layoutNode, nodeReferenceViewOf } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../src/compile/reference';
+import { projectLayoutToGlobal } from '../../src/compile/transform';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveShapeRegistry } from '../../src/providers/shape';
@@ -36,12 +37,47 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
 };
 
 describe('NodeLayout boundary / shapes', () => {
+  it('连接面消费上下文在布局投影和引用视图间共享缓存，并区分几何位置', () => {
+    const shapes = new Map(resolveShapeRegistry());
+    const rectangle = shapes.get('rectangle')!;
+    const envelope = vi.fn(() => ({ halfWidth: 30, halfHeight: 30 }));
+    shapes.set('rectangle', { ...rectangle, connectionEnvelope: envelope });
+    const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
+    const context = createNodeGeometryContext();
+    const projected = projectLayoutToGlobal(layout, []);
+    const reference = nodeReferenceViewOf(projected, context);
+    const first = boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
+    expect(boundaryPointOf(reference, [100, 0], 'circle', undefined, undefined, context.get(reference))).toEqual(first);
+    expect(envelope).toHaveBeenCalledTimes(1);
+
+    const moved = projectLayoutToGlobal(layout, [{ kind: 'translate', x: 10, y: 0 }]);
+    expect(boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved))[0]).toBe(first[0] + 10);
+    expect(envelope).toHaveBeenCalledTimes(2);
+  });
+
+  it('同一节点变换后的 tight fallback 警告只发一次，不同编译上下文独立', () => {
+    const shapes = new Map(resolveShapeRegistry());
+    shapes.set('rectangle', { ...shapes.get('rectangle')!, connectionEnvelope: undefined });
+    const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
+    const warn = vi.fn();
+    const context = createNodeGeometryContext();
+    context.get(layout).warn = warn;
+    const moved = projectLayoutToGlobal(layout, [{ kind: 'translate', x: 10, y: 0 }]);
+    boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
+    boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved));
+    expect(warn).toHaveBeenCalledTimes(1);
+
+    const another = createNodeGeometryContext();
+    another.get(layout).warn = warn;
+    boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, another.get(layout));
+    expect(warn).toHaveBeenCalledTimes(2);
+  });
   it('未指定 boundary 时 layout.boundary 为 undefined，shapes 指向传入注册表', () => {
     const shapes = resolveShapeRegistry();
     const layout = layoutOf({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0] }, shapes);
 
-    expect(layout.boundary).toBeUndefined();
-    expect(layout.shapeDef).toBe(shapes.get('rectangle'));
+    expect(layout.node.boundary).toBeUndefined();
+    expect(layout.shape.definition).toBe(shapes.get('rectangle'));
   });
 
   it('IR node.boundary = "circle" 时 layout.boundary 携带该值', () => {
@@ -51,21 +87,21 @@ describe('NodeLayout boundary / shapes', () => {
       shapes,
     );
 
-    expect(layout.boundary).toBe('circle');
-    expect(layout.shapeDef).toBe(shapes.get('rectangle'));
+    expect(layout.node.boundary).toBe('circle');
+    expect(layout.shape.definition).toBe(shapes.get('rectangle'));
   });
 
   it('不传 shapes 时 layout 使用 builtin rectangle definition', () => {
     const layout = layoutOf({ type: 'node', id: 'a', position: [0, 0] });
 
-    expect(layout.shapeDef.name).toBe('rectangle');
+    expect(layout.shape.definition.name).toBe('rectangle');
   });
 
   it('传入自定义注册表时 layout 使用该表的 rectangle definition', () => {
     const customShapes = resolveShapeRegistry();
     const layout = layoutOf({ type: 'node', id: 'a', position: [0, 0] }, customShapes);
 
-    expect(layout.shapeDef).toBe(customShapes.get('rectangle'));
+    expect(layout.shape.definition).toBe(customShapes.get('rectangle'));
   });
 
   it('resolved default boundary drives anchors and clipping without a layout resolver', () => {
@@ -78,9 +114,9 @@ describe('NodeLayout boundary / shapes', () => {
       layout: { minimumSize: { width: 40, height: 20 } },
     });
     const toward = [100, 0] as [number, number];
-    const clipped = boundaryPointOf(layout, toward, layout.boundary);
+    const clipped = boundaryPointOf(layout, toward, layout.node.boundary);
 
-    expect(clipped[0]).toBeGreaterThan(layout.rect.x + layout.rect.width / 2);
-    expect(resolveAnchor(layout, 'right', layout.boundary)).toEqual(clipped);
+    expect(clipped[0]).toBeGreaterThan(layout.geometry.rect.x + layout.geometry.rect.width / 2);
+    expect(resolveAnchor(layout, 'right', layout.node.boundary)).toEqual(clipped);
   });
 });

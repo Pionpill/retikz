@@ -230,6 +230,7 @@ export const compileChildrenToPrimitives = (
       lowerTex: context.lowerTex,
       onWarn: dispatchWarning,
       round: context.round,
+      nodeGeometry: context.nodeGeometry,
       nodeDistance: context.nodeDistance,
       labelDistance: context.labelDistance,
       rootFontSize: context.rootFontSize,
@@ -275,6 +276,7 @@ export const compileChildrenToPrimitives = (
   /** 从当前 traversal 状态投影 resolver 所需的窄位置上下文 */
   const positionContextOf = (scopeChain: ReadonlyArray<Transform>): PositionTargetResolveContext =>
     createPositionResolveContext({
+      geometryContext: runtime.context.nodeGeometry,
       namespaceStack: runtime.state.namespaceStack,
       nodeDistance: runtime.context.nodeDistance,
       scopeChain,
@@ -450,7 +452,7 @@ export const compileChildrenToPrimitives = (
     const { path, irPath, scopeChain } = pendingPath;
     const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
       runtime.context.onWarn({ code, message, path: node?.irPath ?? irPath });
-    const targetView = pathTargetViewOf(resolution.targets, targetWarn);
+    const targetView = pathTargetViewOf(resolution.targets, targetWarn, runtime.context.nodeGeometry);
     const { name: kind, definition } = resolution.kind;
     const observationOwner = Object.freeze({ kind: 'path' as const, name: kind });
     const ownerOutput = createOwnerOutputPublisher(
@@ -503,7 +505,7 @@ export const compileChildrenToPrimitives = (
           ...(emittedResolution.paint.stroke === undefined && strokeColor !== undefined ? { stroke: strokeColor } : {}),
         },
       };
-      const emittedTargetView = pathTargetViewOf(strokeResolution.targets, targetWarn);
+      const emittedTargetView = pathTargetViewOf(strokeResolution.targets, targetWarn, runtime.context.nodeGeometry);
       const emitted = emitPathPrimitive(strokeResolution, {
         targetView: emittedTargetView,
         round: runtime.context.round,
@@ -540,7 +542,7 @@ export const compileChildrenToPrimitives = (
         irPath,
       });
       const emitted = emitPathPrimitive(emittedResolution, {
-        targetView: pathTargetViewOf(emittedResolution.targets, targetWarn),
+        targetView: pathTargetViewOf(emittedResolution.targets, targetWarn, runtime.context.nodeGeometry),
         round: runtime.context.round,
         measureText: runtime.context.measureText,
         options: emitOptions,
@@ -795,6 +797,7 @@ export const compileChildrenToPrimitives = (
       { ...resolvedNode, node: canonicalNode },
       {
         measureText: runtime.context.measureText,
+        geometryContext: runtime.context.nodeGeometry,
         positionContext: positionContextOf(scopeChain),
         rootFontSize: runtime.context.rootFontSize,
         scopeChain,
@@ -813,7 +816,7 @@ export const compileChildrenToPrimitives = (
       occurrence ?? { sourcePath: nodeIrPath, expansionPath: [] },
       frame,
       NodeOwnerOutputSchema,
-      () => projectNodeOwnerOutput(layout, runtime.context.round),
+      () => projectNodeOwnerOutput(layout, runtime.context.round, runtime.context.nodeGeometry),
     );
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
@@ -851,7 +854,7 @@ export const compileChildrenToPrimitives = (
       rectOps.anchor(outerRect, Anchor.BottomLeft),
       rectOps.anchor(outerRect, Anchor.BottomRight),
     ];
-    frame.boundsSink.push({ points: nodeBoundsPoints, shadow: layout.shadow });
+    frame.boundsSink.push({ points: nodeBoundsPoints, shadow: layout.node.shadow });
     frame.boundsSink.push({ points: labelExtentPoints(layout) });
     pushAllocation(frame.allocationSink, nodeBoundsPoints, frame.allocationBoundary);
     const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.round);
@@ -1016,8 +1019,8 @@ export const compileChildrenToPrimitives = (
       return parentChain.length === 0 ? transformedParent : applyTransformChain(transformedParent, parentChain);
     };
 
-    const [x, y] = projectAcrossParent([layout.rect.x, layout.rect.y]);
-    const [contentX, contentY] = projectAcrossParent(layout.contentCenter);
+    const [x, y] = projectAcrossParent([layout.geometry.rect.x, layout.geometry.rect.y]);
+    const [contentX, contentY] = projectAcrossParent(layout.geometry.contentCenter);
     let rotateDegrees = 0;
     let scaleX = 1;
     let scaleY = 1;
@@ -1030,21 +1033,20 @@ export const compileChildrenToPrimitives = (
       }
     }
 
-    layout.rect = {
-      ...layout.rect,
+    layout.geometry.rect = {
+      ...layout.geometry.rect,
       x,
       y,
-      rotate: (layout.rect.rotate ?? 0) + (rotateDegrees * Math.PI) / 180,
-      width: layout.rect.width * Math.abs(scaleX),
-      height: layout.rect.height * Math.abs(scaleY),
+      rotate: (layout.geometry.rect.rotate ?? 0) + (rotateDegrees * Math.PI) / 180,
+      width: layout.geometry.rect.width * Math.abs(scaleX),
+      height: layout.geometry.rect.height * Math.abs(scaleY),
     };
-    layout.contentCenter = [contentX, contentY];
-    layout.rotateDeg += rotateDegrees;
-    layout.margin = {
-      top: layout.margin.top * Math.abs(scaleY),
-      right: layout.margin.right * Math.abs(scaleX),
-      bottom: layout.margin.bottom * Math.abs(scaleY),
-      left: layout.margin.left * Math.abs(scaleX),
+    layout.geometry.contentCenter = [contentX, contentY];
+    layout.geometry.margin = {
+      top: layout.geometry.margin.top * Math.abs(scaleY),
+      right: layout.geometry.margin.right * Math.abs(scaleX),
+      bottom: layout.geometry.margin.bottom * Math.abs(scaleY),
+      left: layout.geometry.margin.left * Math.abs(scaleX),
     };
   };
 
@@ -1331,15 +1333,15 @@ export const compileChildrenToPrimitives = (
         const { padding, fill, stroke, ...style } = appearance;
         const frameLayout: NodeLayout = {
           ...intrinsicLayout,
-          ...style,
-          id: undefined,
-          rect: {
-            ...intrinsicLayout.rect,
-            width: intrinsicLayout.rect.width + 2 * padding,
-            height: intrinsicLayout.rect.height + 2 * padding,
+          node: { ...intrinsicLayout.node, ...style, id: undefined, fill, stroke },
+          geometry: {
+            ...intrinsicLayout.geometry,
+            rect: {
+              ...intrinsicLayout.geometry.rect,
+              width: intrinsicLayout.geometry.rect.width + 2 * padding,
+              height: intrinsicLayout.geometry.rect.height + 2 * padding,
+            },
           },
-          fill,
-          stroke,
         };
         framePrimitives = emitNodePrimitives(frameLayout, context.round, context.paint.register).map(primitive => ({
           ...primitive,
@@ -1373,7 +1375,7 @@ export const compileChildrenToPrimitives = (
               ? null
               : {
                   shape: child.boundingShape === ScopeBoundingShape.Circle ? 'circle' : 'rectangle',
-                  rect: intrinsicLayout.rect,
+                  rect: intrinsicLayout.geometry.rect,
                 },
         }),
       );
@@ -2503,6 +2505,7 @@ export const compileChildrenToPrimitives = (
           );
           const targetNamespace = queryNamespace ?? probe.namespaceStack;
           const positionContext = createPositionResolveContext({
+            geometryContext: runtime.context.nodeGeometry,
             namespaceStack: targetNamespace,
             nodeDistance: context.nodeDistance,
             scopeChain: queryChain,
