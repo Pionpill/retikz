@@ -141,6 +141,7 @@
     "pkgRenderCanvas": "Canvas",
     "pkgHydration": "水合",
     "pkgCoreCompilation": "编译流程",
+    "pkgCoreResolution": "配置解析",
     "pkgOverview": "概览",
     "pkgFoundationUtilities": "通用工具",
     "pkgFoundationTypesSchemas": "类型与契约",

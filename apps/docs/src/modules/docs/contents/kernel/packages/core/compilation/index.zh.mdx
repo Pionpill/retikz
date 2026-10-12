@@ -166,12 +166,12 @@ export type CanonicalNode = Omit<
 <DocTab value="node-resolution" label="NodeResolution">
 
 ```ts
-export type NodeResolution = {
+export type NodeResolution = Readonly<{
   irPath: string;
   node: CanonicalNode;
   shape: ShapeResolution;
   boundary: BoundaryReferenceResolution;
-};
+}>;
 ```
 
 </DocTab>

@@ -141,6 +141,7 @@
     "pkgRenderCanvas": "render · Canvas",
     "pkgHydration": "render · Hydration",
     "pkgCoreCompilation": "Compilation Flow",
+    "pkgCoreResolution": "Configuration resolution",
     "pkgOverview": "Overview",
     "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",

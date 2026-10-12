@@ -7,9 +7,10 @@ description: 浏览 @retikz/core 的 IR、Definition、编译与 Scene 语义
 
 ## 职责一览
 
-| 文档     | 职责                          | 适合何时查阅                       |
-| -------- | ----------------------------- | ---------------------------------- |
-| 编译流程 | 从完整 IR 到 Scene 的编译过程 | 理解节点布局、路径回填与结果汇总时 |
+| 文档     | 职责                           | 适合何时查阅                           |
+| -------- | ------------------------------ | -------------------------------------- |
+| 编译流程 | 从完整 IR 到 Scene 的编译过程  | 理解节点布局、路径回填与结果汇总时     |
+| 配置解析 | 从稀疏声明到布局输入的解析过程 | 查阅属性继承、颜色与 Definition 绑定时 |
 
 ## 章节内容
 
@@ -19,6 +20,11 @@ description: 浏览 @retikz/core 的 IR、Definition、编译与 Scene 语义
       title: '编译流程',
       description: '追踪一次完整编译的输入、布局与输出',
       url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: '配置解析',
+      description: '理解样式覆盖、主题颜色与能力绑定',
+      url: '/kernel/packages/core/resolution',
     },
   ]}
 />
