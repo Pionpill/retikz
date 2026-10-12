@@ -19,11 +19,8 @@ import {
   SummarizeTransformSchema,
   TransformSchema,
 } from '../../src';
-import {
-  BuiltinReducerOperationSchemas,
-  ExternalReducerOperationSchema,
-  ExternalSelectorOperationSchema,
-} from '../../src/schemas/operators';
+import { BuiltinReducerOperationSchemas, ExternalReducerOperationSchema } from '../../src/operators/reducer';
+import { ExternalSelectorOperationSchema } from '../../src/operators/selector';
 
 const closedObjectSchemaCases: Array<{
   name: string;

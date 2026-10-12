@@ -11,7 +11,7 @@ description: 使用内置 reducer 计算行数、总和、集中趋势、极值�
 
 `count` 统计组内行数，不读取数值字段，数值缺失的行也会计入。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.count</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.count</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -62,7 +62,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `sum` 将指定字段的有限数值相加，返回总和；缺失值和非有限数值不参与计算。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.sum</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.sum</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -120,7 +120,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `mean` 计算有限数值的算术平均数；`median` 排序后取中间值，偶数个值时取中间两个数的均值。两者都跳过缺失值和非有限数值。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.mean</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.median</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.mean</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.median</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -190,7 +190,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `min` 和 `max` 返回指定字段的有限数值极值。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.max</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.max</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -272,7 +272,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `extent` 同时计算指定字段的有限数值最小值与最大值，分别写入两个连续型字段。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.extent</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.extent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -333,7 +333,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `quantile` 输出指定概率位置的分位点。有限数值排序后，位置为 $h=(m-1)p$，其中 $m$ 是参与计算的数值个数；位置落在两个数之间时线性插值，结果可以不是输入中的某个值。`p=0` 和 `p=1` 分别得到最小值和最大值。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.quantile</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.quantile</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -395,7 +395,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 令上下分位点为 $L$、$U$，区间宽度为 $S=U-L$。`minMax` 须线取观测最小值与最大值；`spread` 先构造围栏 $[L-fS,U+fS]$，再从围栏内的实际观测取须线端点。围栏与须线是不同结果。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"IRDataQuantileBandReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={339}>IRDataQuantileBandReducerOperation</ApiSourceLink> / <ApiSourceLink label={"QuantileBandReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={236}>QuantileBandReducerOperationSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandOutputsSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={186}>QuantileBandOutputsSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandPointOutputSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={169}>QuantileBandPointOutputSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandWhiskerSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={175}>QuantileBandWhiskerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataQuantileBandReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={339}>IRDataQuantileBandReducerOperation</ApiSourceLink> / <ApiSourceLink label={"QuantileBandReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={236}>QuantileBandReducerOperationSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandOutputsSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={186}>QuantileBandOutputsSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandPointOutputSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={169}>QuantileBandPointOutputSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandWhiskerSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={175}>QuantileBandWhiskerSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

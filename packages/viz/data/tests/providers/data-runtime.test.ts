@@ -13,7 +13,7 @@ import {
   resolveFieldTypes,
   validateBoundData,
 } from '../../src';
-import { coerceCategory, coerceNumber } from '../../src/providers/data';
+import { coerceCategory, coerceNumber } from '../../src/model';
 
 describe('data provider runtime boundaries', () => {
   it('coerces only finite decimal values into continuous numbers', () => {

@@ -2,7 +2,7 @@
 
 **Row provenance**
 
-#### <ApiSourceLink label={"SOURCE_INDEX"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={7}>SOURCE_INDEX</ApiSourceLink>
+#### <ApiSourceLink label={"SOURCE_INDEX"} path={"packages/viz/data/src/provenance/source.ts"} startLine={7}>SOURCE_INDEX</ApiSourceLink>
 
 Marks each input row with `row[SOURCE_INDEX]=i`; the Symbol key is ignored by JSON.stringify and string-path lookup
 
@@ -10,7 +10,7 @@ Marks each input row with `row[SOURCE_INDEX]=i`; the Symbol key is ignored by JS
 export const SOURCE_INDEX = Symbol('retikz.data.sourceIndex');
 ```
 
-#### <ApiSourceLink label={"SOURCE_INDICES"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={23}>SOURCE_INDICES</ApiSourceLink>
+#### <ApiSourceLink label={"SOURCE_INDICES"} path={"packages/viz/data/src/provenance/source.ts"} startLine={23}>SOURCE_INDICES</ApiSourceLink>
 
 Aggregation and binning outputs can represent multiple source rows, so provenance records their source indices
 
@@ -18,7 +18,7 @@ Aggregation and binning outputs can represent multiple source rows, so provenanc
 export const SOURCE_INDICES = Symbol('retikz.data.sourceIndices');
 ```
 
-#### <ApiSourceLink label={"tagSourceIndex"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={68}>tagSourceIndex</ApiSourceLink>
+#### <ApiSourceLink label={"tagSourceIndex"} path={"packages/viz/data/src/provenance/source.ts"} startLine={68}>tagSourceIndex</ApiSourceLink>
 
 Preserves existing row or group provenance; only unmarked rows use their current array index. Object spread preserves enumerable symbol properties, while resolveFieldPath and JSON ignore them
 
@@ -47,7 +47,7 @@ export declare const tagSourceIndex: (rows: Array<ExternalRow>) => Array<Externa
 
 </DocTabs>
 
-#### <ApiSourceLink label={"readSourceIndex"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={14}>readSourceIndex</ApiSourceLink>
+#### <ApiSourceLink label={"readSourceIndex"} path={"packages/viz/data/src/provenance/source.ts"} startLine={14}>readSourceIndex</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -74,7 +74,7 @@ export declare const readSourceIndex: (row: ExternalRow) => number | undefined;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"readSourceIndices"} path={"packages/viz/data/src/pipeline/provenance.ts"} startLine={30}>readSourceIndices</ApiSourceLink>
+#### <ApiSourceLink label={"readSourceIndices"} path={"packages/viz/data/src/provenance/source.ts"} startLine={30}>readSourceIndices</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -103,7 +103,7 @@ export declare const readSourceIndices: (row: ExternalRow) => Array<number> | un
 
 **Recording options**
 
-#### <ApiSourceLink label={"DataLineageOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={40}>DataLineageOptions</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageOptions"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={42}>DataLineageOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -147,7 +147,7 @@ export type DataLineageOptions = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataSourceIdentityMode"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={7}>DataSourceIdentityMode</ApiSourceLink>
+#### <ApiSourceLink label={"DataSourceIdentityMode"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={9}>DataSourceIdentityMode</ApiSourceLink>
 
 ```ts
 export const DataSourceIdentityMode = {
@@ -158,7 +158,7 @@ export const DataSourceIdentityMode = {
 export type DataSourceIdentityMode = ValueOf<typeof DataSourceIdentityMode>;
 ```
 
-#### <ApiSourceLink label={"DataSourceIdentityOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={18}>DataSourceIdentityOptions</ApiSourceLink>
+#### <ApiSourceLink label={"DataSourceIdentityOptions"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={20}>DataSourceIdentityOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -188,7 +188,7 @@ export type DataSourceIdentityOptions = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataValueSampleOptions"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={32}>DataValueSampleOptions</ApiSourceLink>
+#### <ApiSourceLink label={"DataValueSampleOptions"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={34}>DataValueSampleOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -220,7 +220,7 @@ export type DataValueSampleOptions = {
 
 **Events and results**
 
-#### <ApiSourceLink label={"DataSourceIdentity"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={86}>DataSourceIdentity</ApiSourceLink>
+#### <ApiSourceLink label={"DataSourceIdentity"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={88}>DataSourceIdentity</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -254,7 +254,7 @@ export type DataSourceIdentity = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={198}>DataLineageEvent</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageEvent"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={200}>DataLineageEvent</ApiSourceLink>
 
 <DocTabs defaultValue="source">
 
@@ -378,7 +378,7 @@ export type DataLineageEvent =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageSourceEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={98}>DataLineageSourceEvent</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageSourceEvent"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={100}>DataLineageSourceEvent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -410,7 +410,7 @@ export type DataLineageSourceEvent = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageTransformStepEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={108}>DataLineageTransformStepEvent</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageTransformStepEvent"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={110}>DataLineageTransformStepEvent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -454,7 +454,7 @@ export type DataLineageTransformStepEvent = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageFieldFlowEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={130}>DataLineageFieldFlowEvent</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageFieldFlowEvent"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={132}>DataLineageFieldFlowEvent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -490,7 +490,7 @@ export type DataLineageFieldFlowEvent = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageReducerEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={144}>DataLineageReducerEvent</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageReducerEvent"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={146}>DataLineageReducerEvent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -532,7 +532,7 @@ export type DataLineageReducerEvent = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageSelectorEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={164}>DataLineageSelectorEvent</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageSelectorEvent"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={166}>DataLineageSelectorEvent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -574,7 +574,7 @@ export type DataLineageSelectorEvent = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageSampleEvent"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={184}>DataLineageSampleEvent</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageSampleEvent"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={186}>DataLineageSampleEvent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -610,7 +610,7 @@ export type DataLineageSampleEvent = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageSink"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={211}>DataLineageSink</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageSink"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={213}>DataLineageSink</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -637,7 +637,7 @@ export type DataLineageSink = (event: DataLineageEvent) => void;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataLineageRun"} path={"packages/viz/data/src/contract/lineage.ts"} startLine={266}>DataLineageRun</ApiSourceLink>
+#### <ApiSourceLink label={"DataLineageRun"} path={"packages/viz/data/src/provenance/contract.ts"} startLine={268}>DataLineageRun</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

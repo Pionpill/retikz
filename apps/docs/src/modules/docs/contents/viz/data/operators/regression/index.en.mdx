@@ -13,7 +13,7 @@ To use fitting through the [`smooth` host](/viz/data/transform/statistics), plac
 
 `linear` fits the line $y=a+bx$ by least squares. It describes relationships with an approximately constant rate of change. It requires at least two valid observations with varying $x$. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Linear"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Linear</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Linear"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Linear</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -53,7 +53,7 @@ Built-in `linear` parameter schema
 
 `quadratic` fits $y=a+bx+cx^2$ by least squares. It can describe curvature or a single turning point. It requires at least three distinct $x$ values. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Quadratic"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Quadratic</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Quadratic"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Quadratic</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -93,7 +93,7 @@ Built-in `quadratic` parameter schema
 
 `polynomial` fits $y=a_0+a_1x+\cdots+a_dx^d$ by least squares. `order` sets the degree $d$; the observations determine the coefficients. A degree-$d$ fit requires at least $d+1$ distinct $x$ values. Higher degrees can increase fluctuations between observations or outside their range and are not necessarily a better choice. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Polynomial"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Polynomial</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Polynomial"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Polynomial</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -134,7 +134,7 @@ Built-in `polynomial` parameter schema
 
 `logarithmic` fits $y=a+b\ln x$, which can describe a gradually slowing change. It applies linear least squares after taking the logarithm of $x$ and predicts $y$ in the original space. It requires at least two valid observations with varying $x$. Observed and predicted $x$ values must be positive. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Logarithmic"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Logarithmic</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Logarithmic"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Logarithmic</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -174,7 +174,7 @@ Built-in `logarithmic` parameter schema
 
 `exponential` fits $y=ae^{bx}$, which can describe proportional growth or decay. It applies linear least squares to the logarithm of $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$ and positive observed $y$. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Exponential"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Exponential</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Exponential"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Exponential</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -214,7 +214,7 @@ Built-in `exponential` parameter schema
 
 `power` fits $y=ax^b$ to describe power-law relationships. It applies linear least squares after taking the logarithm of both $x$ and $y$, then converts predictions back to the original space. It minimizes error in logarithmic space. It requires at least two valid observations with varying $x$, positive observed $x$ and $y$, and positive prediction positions. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Power"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Power</ApiSourceLink>
+#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Power"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Power</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

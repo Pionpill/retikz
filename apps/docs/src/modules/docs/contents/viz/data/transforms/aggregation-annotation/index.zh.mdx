@@ -9,7 +9,7 @@ description: 每组汇总为一行，或把统计与选择结果回填到原始�
 
 `summarize` 按组执行一个或多个归约算子，每组输出一行，只保留组键与指标字段，原有明细字段不会自动保留。多个分组字段按列表顺序逐层展开，每层保留键首次出现的顺序。各指标输出字段必须互不重复，并且不得覆盖分组字段。汇总的 Schema 为 `SummarizeTransformSchema`，参数如下：
 
-#### <ApiSourceLink label={"IRDataSummarizeTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={28}>IRDataSummarizeTransform</ApiSourceLink> / <ApiSourceLink label={"SummarizeTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={87}>SummarizeTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SummarizeParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={66}>SummarizeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataSummarizeTransform"} path={"packages/viz/data/src/transform/types.ts"} startLine={28}>IRDataSummarizeTransform</ApiSourceLink> / <ApiSourceLink label={"SummarizeTransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={82}>SummarizeTransformSchema</ApiSourceLink> / <ApiSourceLink label={"SummarizeParamsSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={61}>SummarizeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -79,7 +79,7 @@ export type IRDataSummarizeTransform = ZodInfer<typeof SummarizeTransformSchema>
 
 单行选择支持 min/max、first/last、top/bottom 和 nth；min/max 的并列策略仅允许 first/last，top/bottom 的 n 固定为 1。选择器带有 `by` 时写入选中行的该字段值，否则写入选择排名；未选中记录时不写入该标注字段。标注的 Schema 为 `AnnotateTransformSchema`，参数如下：
 
-#### <ApiSourceLink label={"IRDataAnnotateTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={37}>IRDataAnnotateTransform</ApiSourceLink> / <ApiSourceLink label={"IRDataAnnotateSelector"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={34}>IRDataAnnotateSelector</ApiSourceLink> / <ApiSourceLink label={"AnnotateTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={162}>AnnotateTransformSchema</ApiSourceLink> / <ApiSourceLink label={"AnnotateParamsSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={131}>AnnotateParamsSchema</ApiSourceLink> / <ApiSourceLink label={"AnnotateSelectorSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={125}>AnnotateSelectorSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataAnnotateTransform"} path={"packages/viz/data/src/transform/types.ts"} startLine={37}>IRDataAnnotateTransform</ApiSourceLink> / <ApiSourceLink label={"IRDataAnnotateSelector"} path={"packages/viz/data/src/transform/types.ts"} startLine={34}>IRDataAnnotateSelector</ApiSourceLink> / <ApiSourceLink label={"AnnotateTransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={157}>AnnotateTransformSchema</ApiSourceLink> / <ApiSourceLink label={"AnnotateParamsSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={126}>AnnotateParamsSchema</ApiSourceLink> / <ApiSourceLink label={"AnnotateSelectorSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={120}>AnnotateSelectorSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

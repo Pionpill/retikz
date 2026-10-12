@@ -4,20 +4,20 @@ import { literal, object } from 'zod';
 
 import type { DataLineageEvent, DataLineageRun, ExternalRow } from '../../src';
 import {
-  defineTransformImplementation,
-  defineStatisticsReducerImplementation,
-  resolveStatisticsReducerImplementationRegistry,
   applyTransforms,
   defineStatisticsReducer,
+  defineStatisticsReducerImplementation,
   defineTransform,
+  defineTransformImplementation,
   readSourceIndex,
   readSourceIndices,
+  resolveStatisticsReducerImplementationRegistry,
   resolveStatisticsReducerRegistry,
   resolveTransformRegistry,
   SOURCE_INDICES,
   tagSourceIndex,
 } from '../../src';
-import { withGroupProvenance } from '../../src/pipeline';
+import { withGroupProvenance } from '../../src/provenance';
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },

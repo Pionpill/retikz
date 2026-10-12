@@ -2,7 +2,7 @@
 
 ## 变换声明
 
-#### <ApiSourceLink label={"IRDataTransform"} path={"packages/viz/data/src/schemas/transform/types.ts"} startLine={43}>IRDataTransform</ApiSourceLink> / <ApiSourceLink label={"TransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={529}>TransformSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataTransform"} path={"packages/viz/data/src/transform/types.ts"} startLine={43}>IRDataTransform</ApiSourceLink> / <ApiSourceLink label={"TransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={524}>TransformSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -31,7 +31,7 @@ export type IRDataTransform = ZodInfer<typeof TransformSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRDataTransformDeclaration"} path={"packages/viz/data/src/schemas/transform/execution.ts"} startLine={21}>IRDataTransformDeclaration</ApiSourceLink> / <ApiSourceLink label={"DataTransformDeclarationSchema"} path={"packages/viz/data/src/schemas/transform/execution.ts"} startLine={14}>DataTransformDeclarationSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataTransformDeclaration"} path={"packages/viz/data/src/transform/declaration.ts"} startLine={21}>IRDataTransformDeclaration</ApiSourceLink> / <ApiSourceLink label={"DataTransformDeclarationSchema"} path={"packages/viz/data/src/transform/declaration.ts"} startLine={14}>DataTransformDeclarationSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -71,7 +71,7 @@ export type IRDataTransformDeclaration = ZodInfer<typeof DataTransformDeclaratio
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ExternalTransformSchema"} path={"packages/viz/data/src/schemas/transform/schema.ts"} startLine={519}>ExternalTransformSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ExternalTransformSchema"} path={"packages/viz/data/src/transform/schema.ts"} startLine={514}>ExternalTransformSchema</ApiSourceLink>
 
 这里检查 JSON 形态。注册的 Definition 还会用自己的 paramsSchema 校验精确参数。
 
@@ -86,7 +86,7 @@ export type IRDataTransformDeclaration = ZodInfer<typeof DataTransformDeclaratio
 
 ## 变换定义与实现
 
-#### <ApiSourceLink label={"TransformDefinition"} path={"packages/viz/data/src/contract/transform.ts"} startLine={147}>TransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"TransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={146}>TransformDefinition</ApiSourceLink>
 
 definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, params }` 形态的 IRDataTransform
 
@@ -127,7 +127,7 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformDefinitionInput"} path={"packages/viz/data/src/contract/transform.ts"} startLine={167}>TransformDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"TransformDefinitionInput"} path={"packages/viz/data/src/transform/contract.ts"} startLine={166}>TransformDefinitionInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -173,7 +173,7 @@ export type TransformDefinitionInput<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyTransformDefinition"} path={"packages/viz/data/src/contract/transform.ts"} startLine={198}>AnyTransformDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={197}>AnyTransformDefinition</ApiSourceLink>
 
 registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄
 
@@ -215,7 +215,7 @@ export type AnyTransformDefinition = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformSemanticContext"} path={"packages/viz/data/src/contract/transform.ts"} startLine={131}>TransformSemanticContext</ApiSourceLink>
+#### <ApiSourceLink label={"TransformSemanticContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={130}>TransformSemanticContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -249,7 +249,7 @@ export type TransformSemanticContext = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformImplementation"} path={"packages/viz/data/src/contract/transform.ts"} startLine={219}>TransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"TransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={218}>TransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -284,7 +284,7 @@ export type TransformImplementation<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyTransformImplementation"} path={"packages/viz/data/src/contract/transform.ts"} startLine={244}>AnyTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={243}>AnyTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -318,7 +318,7 @@ export type AnyTransformImplementation = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousTransformImplementation"} path={"packages/viz/data/src/contract/transform.ts"} startLine={256}>AnySynchronousTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={255}>AnySynchronousTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -348,7 +348,7 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformContext"} path={"packages/viz/data/src/contract/transform.ts"} startLine={105}>TransformContext</ApiSourceLink>
+#### <ApiSourceLink label={"TransformContext"} path={"packages/viz/data/src/transform/contract.ts"} startLine={104}>TransformContext</ApiSourceLink>
 
 自定义 transform 用它读取 / 写入数据来源标记：保行数 transform 通常透传行对象即可保留 sourceIndex；
 改行数 transform 若输出行代表一组源行，必须用 groupProvenance 给输出行挂 sourceIndices，避免 locator / datum meta 丢失组级来源；
@@ -400,7 +400,7 @@ export type TransformContext = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DEFAULT_TRANSFORM_CONTEXT"} path={"packages/viz/data/src/pipeline/transform.ts"} startLine={31}>DEFAULT_TRANSFORM_CONTEXT</ApiSourceLink>
+#### <ApiSourceLink label={"DEFAULT_TRANSFORM_CONTEXT"} path={"packages/viz/data/src/execution/apply.ts"} startLine={37}>DEFAULT_TRANSFORM_CONTEXT</ApiSourceLink>
 
 ```ts
 export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.freeze({
@@ -410,7 +410,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 });
 ```
 
-#### <ApiSourceLink label={"defineTransform"} path={"packages/viz/data/src/contract/transform.ts"} startLine={184}>defineTransform</ApiSourceLink>
+#### <ApiSourceLink label={"defineTransform"} path={"packages/viz/data/src/transform/contract.ts"} startLine={183}>defineTransform</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -468,7 +468,7 @@ export declare const defineTransform: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineTransformImplementation"} path={"packages/viz/data/src/contract/transform.ts"} startLine={236}>defineTransformImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineTransformImplementation"} path={"packages/viz/data/src/transform/contract.ts"} startLine={235}>defineTransformImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -502,7 +502,7 @@ export declare const defineTransformImplementation: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"extractTransformKind"} path={"packages/viz/data/src/contract/transform.ts"} startLine={269}>extractTransformKind</ApiSourceLink>
+#### <ApiSourceLink label={"extractTransformKind"} path={"packages/viz/data/src/transform/contract.ts"} startLine={268}>extractTransformKind</ApiSourceLink>
 
 definition schema 必须是包含 `kind: z.literal('<transform-kind>')` 的 ZodObject；该 literal 值就是 registry 唯一键
 
@@ -532,7 +532,7 @@ export declare const extractTransformKind: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/providers/transform/definitions.ts"} startLine={544}>resolveTransformRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={538}>resolveTransformRegistry</ApiSourceLink>
 
 内置 transform 总是先注册；用户自定义 definition 不能覆盖内置 kind，也不能彼此重复
 
@@ -564,7 +564,7 @@ export declare const resolveTransformRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/providers/transform/definitions.ts"} startLine={586}>resolveTransformImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={580}>resolveTransformImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -601,7 +601,7 @@ export declare const resolveTransformImplementationRegistry: <
 
 ## 行选择
 
-#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/schemas/operators/selector.ts"} startLine={206}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/schemas/operators/selector.ts"} startLine={200}>SelectorOperationSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/operators/selector/schema.ts"} startLine={191}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/operators/selector/schema.ts"} startLine={185}>SelectorOperationSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -638,7 +638,7 @@ export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RowSelection"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={7}>RowSelection</ApiSourceLink>
+#### <ApiSourceLink label={"RowSelection"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={7}>RowSelection</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -668,7 +668,7 @@ export type RowSelection = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RowSelectorDefinition"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={20}>RowSelectorDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"RowSelectorDefinition"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={20}>RowSelectorDefinition</ApiSourceLink>
 
 自定义 selector 供 `select` 与明确声明支持它的宿主 transform（如 Plot `relate`）复用；Data `annotate` 只接受内置单行 selector 子集。定义对象不进入 JSON IR
 
@@ -705,7 +705,7 @@ export type RowSelectorDefinition<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRowSelectorDefinition"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={50}>AnyRowSelectorDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRowSelectorDefinition"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={50}>AnyRowSelectorDefinition</ApiSourceLink>
 
 registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄
 
@@ -737,7 +737,7 @@ export type AnyRowSelectorDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RowSelectorImplementation"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={63}>RowSelectorImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"RowSelectorImplementation"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={63}>RowSelectorImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -775,7 +775,7 @@ export type RowSelectorImplementation<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRowSelectorImplementation"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={93}>AnyRowSelectorImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRowSelectorImplementation"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={93}>AnyRowSelectorImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -805,7 +805,7 @@ export type AnyRowSelectorImplementation = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousRowSelectorImplementation"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={101}>AnySynchronousRowSelectorImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousRowSelectorImplementation"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={101}>AnySynchronousRowSelectorImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -835,7 +835,7 @@ export type AnySynchronousRowSelectorImplementation = Omit<AnyRowSelectorImpleme
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRowSelector"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={39}>defineRowSelector</ApiSourceLink>
+#### <ApiSourceLink label={"defineRowSelector"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={39}>defineRowSelector</ApiSourceLink>
 
 保留 schema 与输入字段声明之间的泛型关联；内置与自定义 selector 都经同一 registry 入口解析
 
@@ -873,7 +873,7 @@ export declare const defineRowSelector: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRowSelectorImplementation"} path={"packages/viz/data/src/contract/operators/selector.ts"} startLine={84}>defineRowSelectorImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineRowSelectorImplementation"} path={"packages/viz/data/src/operators/selector/contract.ts"} startLine={84}>defineRowSelectorImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -909,7 +909,7 @@ export declare const defineRowSelectorImplementation: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRowSelectorRegistry"} path={"packages/viz/data/src/providers/operators/statistics-registry.ts"} startLine={99}>resolveRowSelectorRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRowSelectorRegistry"} path={"packages/viz/data/src/operators/selector/registry.ts"} startLine={48}>resolveRowSelectorRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -939,7 +939,7 @@ export declare const resolveRowSelectorRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRowSelectorImplementationRegistry"} path={"packages/viz/data/src/providers/operators/statistics-registry.ts"} startLine={51}>resolveRowSelectorImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRowSelectorImplementationRegistry"} path={"packages/viz/data/src/operators/selector/registry.ts"} startLine={25}>resolveRowSelectorImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -976,7 +976,7 @@ export declare const resolveRowSelectorImplementationRegistry: <
 
 ## 统计归约
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -1011,7 +1011,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRDataReducerMetrics"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={336}>IRDataReducerMetrics</ApiSourceLink> / <ApiSourceLink label={"ReducerMetricsSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={308}>ReducerMetricsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerMetrics"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={336}>IRDataReducerMetrics</ApiSourceLink> / <ApiSourceLink label={"ReducerMetricsSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={308}>ReducerMetricsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -1031,7 +1031,7 @@ export type IRDataReducerMetrics = ZodInfer<typeof ReducerMetricsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"StatisticsReducerDefinition"} path={"packages/viz/data/src/contract/operators/reducer.ts"} startLine={13}>StatisticsReducerDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"StatisticsReducerDefinition"} path={"packages/viz/data/src/operators/reducer/contract.ts"} startLine={13}>StatisticsReducerDefinition</ApiSourceLink>
 
 定义对象只存在于运行时，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 IRDataReducerOperation
 
@@ -1070,7 +1070,7 @@ export type StatisticsReducerDefinition<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyStatisticsReducerDefinition"} path={"packages/viz/data/src/contract/operators/reducer.ts"} startLine={45}>AnyStatisticsReducerDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyStatisticsReducerDefinition"} path={"packages/viz/data/src/operators/reducer/contract.ts"} startLine={45}>AnyStatisticsReducerDefinition</ApiSourceLink>
 
 registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄
 
@@ -1104,7 +1104,7 @@ export type AnyStatisticsReducerDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"StatisticsReducerImplementation"} path={"packages/viz/data/src/contract/operators/reducer.ts"} startLine={60}>StatisticsReducerImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"StatisticsReducerImplementation"} path={"packages/viz/data/src/operators/reducer/contract.ts"} startLine={60}>StatisticsReducerImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1141,7 +1141,7 @@ export type StatisticsReducerImplementation<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyStatisticsReducerImplementation"} path={"packages/viz/data/src/contract/operators/reducer.ts"} startLine={88}>AnyStatisticsReducerImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyStatisticsReducerImplementation"} path={"packages/viz/data/src/operators/reducer/contract.ts"} startLine={88}>AnyStatisticsReducerImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1171,7 +1171,7 @@ export type AnyStatisticsReducerImplementation = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousStatisticsReducerImplementation"} path={"packages/viz/data/src/contract/operators/reducer.ts"} startLine={96}>AnySynchronousStatisticsReducerImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousStatisticsReducerImplementation"} path={"packages/viz/data/src/operators/reducer/contract.ts"} startLine={96}>AnySynchronousStatisticsReducerImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1201,7 +1201,7 @@ export type AnySynchronousStatisticsReducerImplementation = Omit<AnyStatisticsRe
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineStatisticsReducer"} path={"packages/viz/data/src/contract/operators/reducer.ts"} startLine={34}>defineStatisticsReducer</ApiSourceLink>
+#### <ApiSourceLink label={"defineStatisticsReducer"} path={"packages/viz/data/src/operators/reducer/contract.ts"} startLine={34}>defineStatisticsReducer</ApiSourceLink>
 
 保留 schema、输入字段与完整输出声明之间的泛型关联；内置与自定义 reducer 都经同一 registry 入口解析
 
@@ -1239,7 +1239,7 @@ export declare const defineStatisticsReducer: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineStatisticsReducerImplementation"} path={"packages/viz/data/src/contract/operators/reducer.ts"} startLine={79}>defineStatisticsReducerImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineStatisticsReducerImplementation"} path={"packages/viz/data/src/operators/reducer/contract.ts"} startLine={79}>defineStatisticsReducerImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1275,7 +1275,7 @@ export declare const defineStatisticsReducerImplementation: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"extractStatisticOperation"} path={"packages/viz/data/src/contract/operators/registry.ts"} startLine={13}>extractStatisticOperation</ApiSourceLink>
+#### <ApiSourceLink label={"extractStatisticOperation"} path={"packages/viz/data/src/operators/registry.ts"} startLine={13}>extractStatisticOperation</ApiSourceLink>
 
 reducer 与 row selector 都以 `kind` 作为 registry discriminator；schema 必须把它声明成非空字面量
 
@@ -1305,7 +1305,7 @@ export declare const extractStatisticOperation: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveStatisticsReducerRegistry"} path={"packages/viz/data/src/providers/operators/statistics-registry.ts"} startLine={79}>resolveStatisticsReducerRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveStatisticsReducerRegistry"} path={"packages/viz/data/src/operators/reducer/registry.ts"} startLine={47}>resolveStatisticsReducerRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1335,7 +1335,7 @@ export declare const resolveStatisticsReducerRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveStatisticsReducerImplementationRegistry"} path={"packages/viz/data/src/providers/operators/statistics-registry.ts"} startLine={31}>resolveStatisticsReducerImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveStatisticsReducerImplementationRegistry"} path={"packages/viz/data/src/operators/reducer/registry.ts"} startLine={24}>resolveStatisticsReducerImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1372,7 +1372,7 @@ export declare const resolveStatisticsReducerImplementationRegistry: <
 
 ## 回归拟合
 
-#### <ApiSourceLink label={"IRRegressionMethod"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={41}>IRRegressionMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionMethodSchema"} path={"packages/viz/data/src/schemas/operators/regression.ts"} startLine={22}>RegressionMethodSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRRegressionMethod"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={41}>IRRegressionMethod</ApiSourceLink> / <ApiSourceLink label={"RegressionMethodSchema"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={22}>RegressionMethodSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1413,7 +1413,7 @@ export type IRRegressionMethod = input<typeof RegressionMethodSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionPair"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={8}>RegressionPair</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionPair"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={8}>RegressionPair</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1443,7 +1443,7 @@ export type RegressionPair = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionModel"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={16}>RegressionModel</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionModel"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={16}>RegressionModel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1471,7 +1471,7 @@ export type RegressionModel = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionResolution"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={118}>RegressionResolution</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionResolution"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={118}>RegressionResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1501,7 +1501,7 @@ export type RegressionResolution = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionDefinition"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={26}>RegressionDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={26}>RegressionDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1533,7 +1533,7 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRegressionDefinition"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={45}>AnyRegressionDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRegressionDefinition"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={45}>AnyRegressionDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1563,7 +1563,7 @@ export type AnyRegressionDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RegressionImplementation"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={58}>RegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"RegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={58}>RegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1600,7 +1600,7 @@ export type RegressionImplementation<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnyRegressionImplementation"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={86}>AnyRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnyRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={86}>AnyRegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1630,7 +1630,7 @@ export type AnyRegressionImplementation = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnySynchronousRegressionImplementation"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={94}>AnySynchronousRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"AnySynchronousRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={94}>AnySynchronousRegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1660,7 +1660,7 @@ export type AnySynchronousRegressionImplementation = Omit<AnyRegressionImplement
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRegression"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={40}>defineRegression</ApiSourceLink>
+#### <ApiSourceLink label={"defineRegression"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={40}>defineRegression</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1691,7 +1691,7 @@ export declare const defineRegression: <TSource extends IRRegressionMethod, TOpe
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRegressionImplementation"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={77}>defineRegressionImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"defineRegressionImplementation"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={77}>defineRegressionImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1727,7 +1727,7 @@ export declare const defineRegressionImplementation: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"extractRegressionKind"} path={"packages/viz/data/src/contract/operators/regression.ts"} startLine={106}>extractRegressionKind</ApiSourceLink>
+#### <ApiSourceLink label={"extractRegressionKind"} path={"packages/viz/data/src/operators/regression/contract.ts"} startLine={106}>extractRegressionKind</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1755,7 +1755,7 @@ export declare const extractRegressionKind: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegression"} path={"packages/viz/data/src/providers/operators/regression/registry.ts"} startLine={87}>resolveRegression</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegression"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={87}>resolveRegression</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1789,7 +1789,7 @@ export declare const resolveRegression: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegressionRegistry"} path={"packages/viz/data/src/providers/operators/regression/registry.ts"} startLine={51}>resolveRegressionRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegressionRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={51}>resolveRegressionRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1819,7 +1819,7 @@ export declare const resolveRegressionRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveRegressionImplementationRegistry"} path={"packages/viz/data/src/providers/operators/regression/registry.ts"} startLine={22}>resolveRegressionImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveRegressionImplementationRegistry"} path={"packages/viz/data/src/operators/regression/registry.ts"} startLine={22}>resolveRegressionImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1856,13 +1856,13 @@ export declare const resolveRegressionImplementationRegistry: <
 
 ## 字段模型与阶段解析
 
-#### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/contract/execution.ts"} startLine={22}>DataTransformModel</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformModel"} path={"packages/viz/data/src/model/contract.ts"} startLine={52}>DataTransformModel</ApiSourceLink>
 
 ```ts
 export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;
 ```
 
-#### <ApiSourceLink label={"DataTransformInputDescriptor"} path={"packages/viz/data/src/contract/execution.ts"} startLine={124}>DataTransformInputDescriptor</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformInputDescriptor"} path={"packages/viz/data/src/execution/contract.ts"} startLine={51}>DataTransformInputDescriptor</ApiSourceLink>
 
 **公共属性**
 
@@ -1923,7 +1923,7 @@ export type DataTransformInputDescriptor<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformOutputDescriptor"} path={"packages/viz/data/src/contract/transform.ts"} startLine={72}>DataTransformOutputDescriptor</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformOutputDescriptor"} path={"packages/viz/data/src/transform/contract.ts"} startLine={71}>DataTransformOutputDescriptor</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1957,7 +1957,7 @@ export type DataTransformOutputDescriptor = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformOutputModel"} path={"packages/viz/data/src/contract/transform.ts"} startLine={85}>DataTransformOutputModel</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformOutputModel"} path={"packages/viz/data/src/transform/contract.ts"} startLine={84}>DataTransformOutputModel</ApiSourceLink>
 
 <DocTabs defaultValue="preserve">
 
@@ -2005,7 +2005,7 @@ export type DataTransformOutputModel =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformFieldEffect"} path={"packages/viz/data/src/contract/transform.ts"} startLine={49}>DataTransformFieldEffect</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformFieldEffect"} path={"packages/viz/data/src/transform/contract.ts"} startLine={48}>DataTransformFieldEffect</ApiSourceLink>
 
 ```ts
 export const DataTransformFieldEffect = {
@@ -2017,7 +2017,7 @@ export const DataTransformFieldEffect = {
 export type DataTransformFieldEffect = ValueOf<typeof DataTransformFieldEffect>;
 ```
 
-#### <ApiSourceLink label={"DataTransformBindingClass"} path={"packages/viz/data/src/contract/transform.ts"} startLine={38}>DataTransformBindingClass</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformBindingClass"} path={"packages/viz/data/src/transform/contract.ts"} startLine={37}>DataTransformBindingClass</ApiSourceLink>
 
 ```ts
 export const DataTransformBindingClass = {
@@ -2028,7 +2028,7 @@ export const DataTransformBindingClass = {
 export type DataTransformBindingClass = ValueOf<typeof DataTransformBindingClass>;
 ```
 
-#### <ApiSourceLink label={"DataTransformPhase"} path={"packages/viz/data/src/contract/transform.ts"} startLine={21}>DataTransformPhase</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformPhase"} path={"packages/viz/data/src/transform/contract.ts"} startLine={20}>DataTransformPhase</ApiSourceLink>
 
 ```ts
 export const DataTransformPhase = {
@@ -2042,7 +2042,7 @@ export const DataTransformPhase = {
 export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
 ```
 
-#### <ApiSourceLink label={"DataTransformDependency"} path={"packages/viz/data/src/contract/execution.ts"} startLine={30}>DataTransformDependency</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformDependency"} path={"packages/viz/data/src/transform/plan.ts"} startLine={10}>DataTransformDependency</ApiSourceLink>
 
 <DocTabs defaultValue="reducer">
 
@@ -2113,7 +2113,7 @@ export type DataTransformDependency =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformStage"} path={"packages/viz/data/src/contract/execution.ts"} startLine={57}>DataTransformStage</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformStage"} path={"packages/viz/data/src/transform/plan.ts"} startLine={37}>DataTransformStage</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2149,7 +2149,7 @@ export type DataTransformStage = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformResolution"} path={"packages/viz/data/src/contract/execution.ts"} startLine={71}>DataTransformResolution</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformResolution"} path={"packages/viz/data/src/transform/plan.ts"} startLine={51}>DataTransformResolution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2179,7 +2179,7 @@ export type DataTransformResolution = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformResolveOptions"} path={"packages/viz/data/src/resolve/transform/resolve.ts"} startLine={48}>DataTransformResolveOptions</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformResolveOptions"} path={"packages/viz/data/src/transform/parse.ts"} startLine={41}>DataTransformResolveOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2211,7 +2211,7 @@ export type DataTransformResolveOptions = Omit<TransformSemanticContext, 'model'
 
 </DocTabs>
 
-#### <ApiSourceLink label={"collectTransformFields"} path={"packages/viz/data/src/pipeline/transform.ts"} startLine={270}>collectTransformFields</ApiSourceLink>
+#### <ApiSourceLink label={"collectTransformFields"} path={"packages/viz/data/src/transform/fields.ts"} startLine={16}>collectTransformFields</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2249,7 +2249,7 @@ export declare const collectTransformFields: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"describeDataTransformInput"} path={"packages/viz/data/src/pipeline/execution.ts"} startLine={46}>describeDataTransformInput</ApiSourceLink>
+#### <ApiSourceLink label={"describeDataTransformInput"} path={"packages/viz/data/src/execution/executor.ts"} startLine={27}>describeDataTransformInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2279,7 +2279,7 @@ export declare const describeDataTransformInput: <TSource>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveDataTransforms"} path={"packages/viz/data/src/resolve/transform/resolve.ts"} startLine={147}>resolveDataTransforms</ApiSourceLink>
+#### <ApiSourceLink label={"resolveDataTransforms"} path={"packages/viz/data/src/parse.ts"} startLine={13}>resolveDataTransforms</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2313,7 +2313,7 @@ export declare const resolveDataTransforms: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveDataTransformOutputModel"} path={"packages/viz/data/src/resolve/transform/resolve.ts"} startLine={61}>resolveDataTransformOutputModel</ApiSourceLink>
+#### <ApiSourceLink label={"resolveDataTransformOutputModel"} path={"packages/viz/data/src/transform/parse.ts"} startLine={54}>resolveDataTransformOutputModel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2347,7 +2347,7 @@ export declare const resolveDataTransformOutputModel: (
 
 ## 执行与调度
 
-#### <ApiSourceLink label={"IRDataExecution"} path={"packages/viz/data/src/schemas/transform/execution.ts"} startLine={19}>IRDataExecution</ApiSourceLink> / <ApiSourceLink label={"DataExecutionSchema"} path={"packages/viz/data/src/schemas/transform/execution.ts"} startLine={8}>DataExecutionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataExecution"} path={"packages/viz/data/src/transform/declaration.ts"} startLine={19}>IRDataExecution</ApiSourceLink> / <ApiSourceLink label={"DataExecutionSchema"} path={"packages/viz/data/src/transform/declaration.ts"} startLine={8}>DataExecutionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2389,7 +2389,7 @@ export type IRDataExecution = ZodInfer<typeof DataExecutionSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataInputBinding"} path={"packages/viz/data/src/contract/execution.ts"} startLine={289}>DataInputBinding</ApiSourceLink>
+#### <ApiSourceLink label={"DataInputBinding"} path={"packages/viz/data/src/execution/contract.ts"} startLine={216}>DataInputBinding</ApiSourceLink>
 
 <DocTabs defaultValue="rows">
 
@@ -2457,7 +2457,7 @@ export type DataInputBinding<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataInputBindings"} path={"packages/viz/data/src/contract/execution.ts"} startLine={313}>DataInputBindings</ApiSourceLink>
+#### <ApiSourceLink label={"DataInputBindings"} path={"packages/viz/data/src/execution/contract.ts"} startLine={240}>DataInputBindings</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2484,7 +2484,7 @@ export type DataInputBindings<TSource> = Readonly<Record<string, DataInputBindin
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformStageInput"} path={"packages/viz/data/src/contract/execution.ts"} startLine={104}>DataTransformStageInput</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformStageInput"} path={"packages/viz/data/src/execution/contract.ts"} startLine={31}>DataTransformStageInput</ApiSourceLink>
 
 <DocTabs defaultValue="source">
 
@@ -2536,7 +2536,7 @@ export type DataTransformStageInput<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformExecutionRequirements"} path={"packages/viz/data/src/contract/execution.ts"} startLine={141}>DataTransformExecutionRequirements</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformExecutionRequirements"} path={"packages/viz/data/src/execution/contract.ts"} startLine={68}>DataTransformExecutionRequirements</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2566,7 +2566,7 @@ export type DataTransformExecutionRequirements = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformStageSupport"} path={"packages/viz/data/src/contract/execution.ts"} startLine={178}>DataTransformStageSupport</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformStageSupport"} path={"packages/viz/data/src/execution/contract.ts"} startLine={105}>DataTransformStageSupport</ApiSourceLink>
 
 <DocTabs defaultValue="supported">
 
@@ -2616,7 +2616,7 @@ export type DataTransformStageSupport<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformStageImplementation"} path={"packages/viz/data/src/contract/execution.ts"} startLine={167}>DataTransformStageImplementation</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformStageImplementation"} path={"packages/viz/data/src/execution/contract.ts"} startLine={94}>DataTransformStageImplementation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2647,7 +2647,7 @@ export type DataTransformStageImplementation<TSource> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformImplementationProvider"} path={"packages/viz/data/src/contract/execution.ts"} startLine={196}>DataTransformImplementationProvider</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformImplementationProvider"} path={"packages/viz/data/src/execution/contract.ts"} startLine={123}>DataTransformImplementationProvider</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2684,7 +2684,7 @@ export type DataTransformImplementationProvider<TSource> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformProviderRegistration"} path={"packages/viz/data/src/contract/execution.ts"} startLine={213}>DataTransformProviderRegistration</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformProviderRegistration"} path={"packages/viz/data/src/execution/contract.ts"} startLine={140}>DataTransformProviderRegistration</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2715,7 +2715,7 @@ export type DataTransformProviderRegistration<TSource> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformRequestOptions"} path={"packages/viz/data/src/contract/execution.ts"} startLine={149}>DataTransformRequestOptions</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformRequestOptions"} path={"packages/viz/data/src/execution/contract.ts"} startLine={76}>DataTransformRequestOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2749,7 +2749,7 @@ export type DataTransformRequestOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformExecutionOptions"} path={"packages/viz/data/src/contract/execution.ts"} startLine={224}>DataTransformExecutionOptions</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformExecutionOptions"} path={"packages/viz/data/src/execution/contract.ts"} startLine={151}>DataTransformExecutionOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2797,7 +2797,7 @@ export type DataTransformExecutionOptions<TSource> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformPreparation"} path={"packages/viz/data/src/contract/execution.ts"} startLine={258}>DataTransformPreparation</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformPreparation"} path={"packages/viz/data/src/execution/contract.ts"} startLine={185}>DataTransformPreparation</ApiSourceLink>
 
 <DocTabs defaultValue="ready">
 
@@ -2847,7 +2847,7 @@ export type DataTransformPreparation<TSource> =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformSchedule"} path={"packages/viz/data/src/contract/transform.ts"} startLine={62}>DataTransformSchedule</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformSchedule"} path={"packages/viz/data/src/transform/contract.ts"} startLine={61}>DataTransformSchedule</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2879,7 +2879,7 @@ export type DataTransformSchedule = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformExecution"} path={"packages/viz/data/src/contract/execution.ts"} startLine={249}>DataTransformExecution</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformExecution"} path={"packages/viz/data/src/execution/contract.ts"} startLine={176}>DataTransformExecution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2907,7 +2907,7 @@ export type DataTransformExecution = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformExecutor"} path={"packages/viz/data/src/contract/execution.ts"} startLine={276}>DataTransformExecutor</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformExecutor"} path={"packages/viz/data/src/execution/contract.ts"} startLine={203}>DataTransformExecutor</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2940,7 +2940,7 @@ export type DataTransformExecutor<TSource> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformResult"} path={"packages/viz/data/src/contract/execution.ts"} startLine={79}>DataTransformResult</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformResult"} path={"packages/viz/data/src/model/contract.ts"} startLine={60}>DataTransformResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2972,7 +2972,7 @@ export type DataTransformResult = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformDiagnostic"} path={"packages/viz/data/src/contract/execution.ts"} startLine={89}>DataTransformDiagnostic</ApiSourceLink>
+#### <ApiSourceLink label={"DataTransformDiagnostic"} path={"packages/viz/data/src/execution/contract.ts"} startLine={16}>DataTransformDiagnostic</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3006,7 +3006,7 @@ export type DataTransformDiagnostic = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveDataExecution"} path={"packages/viz/data/src/resolve/transform/resolve.ts"} startLine={165}>resolveDataExecution</ApiSourceLink>
+#### <ApiSourceLink label={"resolveDataExecution"} path={"packages/viz/data/src/execution/policy.ts"} startLine={10}>resolveDataExecution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3039,7 +3039,7 @@ export declare const resolveDataExecution: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createDataTransformExecutor"} path={"packages/viz/data/src/pipeline/execution.ts"} startLine={63}>createDataTransformExecutor</ApiSourceLink>
+#### <ApiSourceLink label={"createDataTransformExecutor"} path={"packages/viz/data/src/execution/executor.ts"} startLine={182}>createDataTransformExecutor</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3070,7 +3070,7 @@ export declare const createDataTransformExecutor: <TSource = never>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"executeDataTransforms"} path={"packages/viz/data/src/pipeline/execution.ts"} startLine={391}>executeDataTransforms</ApiSourceLink>
+#### <ApiSourceLink label={"executeDataTransforms"} path={"packages/viz/data/src/execution/executor.ts"} startLine={196}>executeDataTransforms</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3107,7 +3107,7 @@ export declare const executeDataTransforms: <TSource>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ingestDataTransformResult"} path={"packages/viz/data/src/resolve/transform/ingest.ts"} startLine={51}>ingestDataTransformResult</ApiSourceLink>
+#### <ApiSourceLink label={"ingestDataTransformResult"} path={"packages/viz/data/src/execution/result.ts"} startLine={53}>ingestDataTransformResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3141,7 +3141,7 @@ export declare const ingestDataTransformResult: (
 
 ## 同步调用
 
-#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/pipeline/transform.ts"} startLine={229}>applyTransforms</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/execution/apply.ts"} startLine={235}>applyTransforms</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3175,7 +3175,7 @@ export declare const applyTransforms: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ApplyTransformsOptions"} path={"packages/viz/data/src/pipeline/transform.ts"} startLine={38}>ApplyTransformsOptions</ApiSourceLink>
+#### <ApiSourceLink label={"ApplyTransformsOptions"} path={"packages/viz/data/src/execution/apply.ts"} startLine={44}>ApplyTransformsOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3217,7 +3217,7 @@ export type ApplyTransformsOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ApplyTransformsResult"} path={"packages/viz/data/src/pipeline/transform.ts"} startLine={64}>ApplyTransformsResult</ApiSourceLink>
+#### <ApiSourceLink label={"ApplyTransformsResult"} path={"packages/viz/data/src/execution/apply.ts"} startLine={70}>ApplyTransformsResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3247,7 +3247,7 @@ export type ApplyTransformsResult = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/pipeline/transform.ts"} startLine={212}>applyTransformsToDataView</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/execution/apply.ts"} startLine={218}>applyTransformsToDataView</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3281,7 +3281,7 @@ export declare const applyTransformsToDataView: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ApplyTransformsToDataViewResult"} path={"packages/viz/data/src/pipeline/transform.ts"} startLine={72}>ApplyTransformsToDataViewResult</ApiSourceLink>
+#### <ApiSourceLink label={"ApplyTransformsToDataViewResult"} path={"packages/viz/data/src/execution/apply.ts"} startLine={78}>ApplyTransformsToDataViewResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

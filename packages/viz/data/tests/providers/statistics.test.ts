@@ -2,28 +2,28 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import {
-  defineStatisticsReducerImplementation,
-  defineRowSelectorImplementation,
-  resolveRowSelectorImplementationRegistry,
+  BuiltinReducerOperationKind,
+  BuiltinSelectorOperationKind,
   DataFieldType,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
+  defineRowSelectorImplementation,
   defineStatisticsReducer,
-  BuiltinReducerOperationKind,
+  defineStatisticsReducerImplementation,
   ReducerOperationSchema,
+  resolveRowSelectorImplementationRegistry,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerImplementationRegistry,
   resolveStatisticsReducerRegistry,
-  BuiltinSelectorOperationKind,
   SelectorOperationSchema,
 } from '../../src';
 import {
   applyReducerOperation,
-  applySelectorOperation,
+  BuiltinReducerOperationSchemas,
   reducerOutputDescriptors,
   reducerOutputFields,
-} from '../../src/providers/operators';
-import { BuiltinReducerOperationSchemas, BuiltinSelectorOperationSchemas } from '../../src/schemas/operators';
+} from '../../src/operators/reducer';
+import { applySelectorOperation, BuiltinSelectorOperationSchemas } from '../../src/operators/selector';
 
 describe('statistics provider schema boundaries', () => {
   it('uses the schema owner instances for every built-in definition', () => {

@@ -11,7 +11,7 @@ There are nine built-in reducers, grouped below by related behavior. The demos c
 
 `count` counts rows in a group without reading a numeric field, including rows with missing numeric values. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.count</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.count</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -55,7 +55,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `sum` adds the finite numbers in the specified field and returns their total. Missing and nonfinite values do not contribute. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.sum</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.sum</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -105,7 +105,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `mean` computes the arithmetic mean of finite numbers. `median` sorts them and takes the middle value, averaging the two middle values for an even count. Both skip missing and nonfinite values. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.mean</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.median</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.mean</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.median</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -159,7 +159,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `min` and `max` return the finite numeric extrema of the specified field. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.max</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.min</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.max</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -226,7 +226,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `extent` computes the finite numeric minimum and maximum of the specified field and writes them to two continuous fields. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.extent</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.extent</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -277,7 +277,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 `quantile` returns the quantile at a specified probability. After sorting the finite numbers, the position is $h=(m-1)p$, where $m$ is the number of participating values. Positions between two values use linear interpolation, so the result need not be an input value. `p=0` and `p=1` return the minimum and maximum. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={291}>ReducerOperationSchema.quantile</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema.quantile</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -330,7 +330,7 @@ export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 For lower and upper quantiles $L$ and $U$, the interval width is $S=U-L$. `minMax` whiskers use the observed minimum and maximum. `spread` constructs fences $[L-fS,U+fS]$, then takes whisker endpoints from actual observations inside those fences. Fences and whiskers are separate results. Switch between the tabs below to inspect the parameters and schema constraints.
 
-#### <ApiSourceLink label={"IRDataQuantileBandReducerOperation"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={339}>IRDataQuantileBandReducerOperation</ApiSourceLink> / <ApiSourceLink label={"QuantileBandReducerOperationSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={236}>QuantileBandReducerOperationSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandOutputsSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={186}>QuantileBandOutputsSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandPointOutputSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={169}>QuantileBandPointOutputSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandWhiskerSchema"} path={"packages/viz/data/src/schemas/operators/reducer.ts"} startLine={175}>QuantileBandWhiskerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataQuantileBandReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={339}>IRDataQuantileBandReducerOperation</ApiSourceLink> / <ApiSourceLink label={"QuantileBandReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={236}>QuantileBandReducerOperationSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandOutputsSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={186}>QuantileBandOutputsSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandPointOutputSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={169}>QuantileBandPointOutputSchema</ApiSourceLink> / <ApiSourceLink label={"QuantileBandWhiskerSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={175}>QuantileBandWhiskerSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
