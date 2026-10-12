@@ -480,7 +480,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'custom-channel',
             label: 'viz.grammarChannelCustom',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('plot.channel.extensions'),
           },
         ],
