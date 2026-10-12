@@ -37,6 +37,37 @@ const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> =
   });
 
 describe('resolveNode', () => {
+  it('节点填充绑定图案实现与默认尺寸，描边保留纯色且不修改源配置', () => {
+    const source = node({ style: { fill: { kind: 'pattern', shape: 'dots' }, stroke: 'red' } });
+    const result = resolve(source).node;
+
+    expect(result.fill).toMatchObject({
+      kind: 'paint',
+      spec: { kind: 'pattern', shape: 'dots' },
+      pattern: { name: 'dots', size: 8, definition: { emit: expect.any(Function) } },
+    });
+    expect(result.stroke).toBe('red');
+    expect(source.style?.fill).toEqual({ kind: 'pattern', shape: 'dots' });
+  });
+
+  it('节点描边保留渐变配置，未设置的填充保持缺省', () => {
+    const source = node({
+      style: {
+        stroke: {
+          kind: 'linearGradient',
+          stops: [
+            { offset: 0, color: 'red' },
+            { offset: 1, color: 'blue' },
+          ],
+        },
+      },
+    });
+    const result = resolve(source).node;
+
+    expect(result.fill).toBeUndefined();
+    expect(result.stroke).toEqual({ kind: 'paint', spec: source.style?.stroke });
+  });
+
   it('在 Core 解析阶段补齐局部原点且不修改 Source', () => {
     const source: IRNode = { type: 'node' };
 

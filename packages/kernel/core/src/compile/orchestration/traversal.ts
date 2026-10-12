@@ -1338,8 +1338,8 @@ export const compileChildrenToPrimitives = (
             width: intrinsicLayout.rect.width + 2 * padding,
             height: intrinsicLayout.rect.height + 2 * padding,
           },
-          fillResolution: fill,
-          strokeResolution: stroke,
+          fill,
+          stroke,
         };
         framePrimitives = emitNodePrimitives(frameLayout, context.round, context.paint.register).map(primitive => ({
           ...primitive,

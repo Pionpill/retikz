@@ -61,11 +61,9 @@ export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaseline
 
 /** 从 NodeLayout 收敛 shape emit 所需的视觉样式 */
 const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
-  fill: resolvePaint(layout.fillResolution ?? (typeof layout.fill === 'string' ? layout.fill : undefined)),
+  fill: resolvePaint(layout.fill),
   fillOpacity: layout.fillOpacity,
-  stroke:
-    resolvePaint(layout.strokeResolution ?? (typeof layout.stroke === 'string' ? layout.stroke : undefined)) ??
-    'currentColor',
+  stroke: resolvePaint(layout.stroke) ?? 'currentColor',
   strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth,
   dashPattern: layout.dashPattern,

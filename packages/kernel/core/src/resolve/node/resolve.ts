@@ -156,8 +156,10 @@ const expandNodeLabels = (
       ? label.map(item => expandNodeLabel(item, labelDefault, labelDistance))
       : [expandNodeLabel(label, labelDefault, labelDistance)];
 
-/** 将 Node 的持久化紧凑字段展开为布局可直接消费的完整形态 */
-const canonicalizeNode = (node: ResolvedNodeSource): CanonicalNode => {
+/** 展开 Node 的紧凑字段与默认值，paint 随后绑定到具体能力 */
+const expandNodeFields = (
+  node: ResolvedNodeSource,
+): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<ResolvedNodeSource['style']>, 'fill' | 'stroke'> => {
   const { style, layout, ...structure } = node;
   const { dashed, dotted, ...visual } = style ?? {};
   const source = { ...structure, ...visual, ...layout };
@@ -380,7 +382,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     context,
     labelWasArray,
   );
-  const node = canonicalizeNode(dependentColorsResolved);
+  const node = expandNodeFields(dependentColorsResolved);
   if (node.width !== undefined && node.width < node.minimumSize.width) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
@@ -412,10 +414,5 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     round: context.round,
     irPath: context.irPath,
   });
-  const paint = {
-    ...(fill === undefined ? {} : { fill }),
-    ...(stroke === undefined ? {} : { stroke }),
-  };
-
-  return { irPath: context.irPath, node, shape, boundary, paint };
+  return { irPath: context.irPath, node: { ...node, fill, stroke }, shape, boundary };
 };

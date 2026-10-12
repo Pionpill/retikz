@@ -4,7 +4,7 @@ import type { BoundsInsets, Position } from '@retikz/math';
 import type { ConnectionEnvelopeKind, PathCommand, ShapeDefinition, TextLine } from '../../contract';
 import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import type { PaintResolutionInput } from '../../resolve/resource';
-import type { BlendMode, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
+import type { BlendMode, IRAnimationTrack, IRBoundary, IRFont, ResolvedDropShadow } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { CompileWarningCode } from '../constants';
 import type { LaidLine, LowerTex, TextFont, TextMeasurer } from '../text';
@@ -130,24 +130,20 @@ export type NodeLayout = {
    */
   fontStyle?: 'normal' | 'italic' | 'oblique';
   /**
-   * 节点背景填充
+   * 已解析的节点背景填充
    * @default 'transparent'
    */
-  fill?: string | IRPaint;
-  /** 已由 resolve/resource 解析的 fill */
-  fillResolution?: PaintResolutionInput;
+  fill?: PaintResolutionInput;
   /**
    * 填充透明度 0~1
    * @default 1
    */
   fillOpacity?: number;
   /**
-   * 节点边框 paint
+   * 已解析的节点边框 paint
    * @default 'currentColor'
    */
-  stroke?: string | IRPaint;
-  /** 已由 resolve/resource 解析的 stroke */
-  strokeResolution?: PaintResolutionInput;
+  stroke?: PaintResolutionInput;
   /**
    * 描边透明度
    * @default 1
