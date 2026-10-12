@@ -27,7 +27,7 @@ Kernel Source IR 只在字段形成长期稳定关注点时增加一级分组，
 - `theme`：可继承的视觉环境选择器，保持稀疏的 `style` / `mode` 契约
 - `defaults`：容器向后代提供的具名默认值通道及其继承屏障
 
-`presentation`、`encoding` 与 `routing` 由拥有对应事实的领域定义；Kernel 不创建无语义的包装对象。这里的 `style` 命名约束作用于 Node、Path 与 Scope 的实例覆盖入口，不借此次分组改写其它 owner 的 Theme、selector rules 或既有 `appearance` 契约。Core `theme` 继续选择视觉环境，`defaults` 继续提供后代默认值，两者不合并为整棵 Source 的稀疏副本。
+`presentation`、`encoding` 与 `routing` 由拥有对应事实的领域定义；Kernel 不创建无语义的包装对象。这里的 `style` 命名约束作用于 Node、Path 的实例覆盖入口；Scope 不提供整组 style，不借此次分组改写其它 owner 的 Theme、selector rules 或既有 `appearance` 契约。Core `theme` 继续选择视觉环境，`defaults` 继续提供后代默认值，两者不合并为整棵 Source 的稀疏副本。
 
 分组不是封装所有字段的通用 `config`。下列内容继续位于对象根层：
 
@@ -97,7 +97,7 @@ type IRPath = {
 
 通用 Path host 保持 `children` 可选；是否需要步骤、如何解释 `kindOptions` 由所选 Path kind 的完整 subject 契约决定。内置 Stroke 仍要求步骤，不把它的约束提升为所有自定义 kind 的共同约束。
 
-Scope 把当前级联视觉覆盖收进 `style`，把后代默认通道收进 `defaults`；Theme、命名空间、变换、放置、裁剪、包络与 children 继续表达独立容器事实：
+Scope 把共享级联视觉默认值收进 `defaults.style`，与后代专属默认通道统一由 `defaults` 承载；Theme、命名空间、变换、放置、裁剪、包络与 children 继续表达独立容器事实：
 
 ```ts
 type IRNodeDefault = Pick<IRNode, 'shape' | 'boundary' | 'cornerRadius' | 'rotate' | 'scale' | 'style' | 'layout'>;
@@ -105,6 +105,7 @@ type IRNodeDefault = Pick<IRNode, 'shape' | 'boundary' | 'cornerRadius' | 'rotat
 type IRPathDefault = Pick<IRPath, 'style' | 'roundedCorners' | 'rotate' | 'scale'>;
 
 type IRScopeDefaults = {
+  style?: IRCascadingGraphicStyle;
   node?: IRNodeDefault;
   path?: IRPathDefault;
   label?: IRLabelDefault;
@@ -116,7 +117,6 @@ type IRScope = {
   type: 'scope';
   id?: string;
   theme?: IRTheme;
-  style?: IRCascadingGraphicStyle;
   defaults?: IRScopeDefaults;
   localNamespace?: boolean;
   transforms?: Array<IRTransform>;
@@ -132,13 +132,13 @@ type IRScope = {
 
 上述类型表示公开字段关系；持久化类型仍由各自 schema 派生。`IRNodeDefault` 与 `IRPathDefault` 复用元素的命名分组，只包含明确允许继承的视觉、布局与几何字段。`defaults.label` 与 `defaults.arrow` 保留既有小型契约，不增加单独的 `style` 包装，也不扩大默认值覆盖面。
 
-Node、Path 的 `style` 字段集合各有边界；Scope `style` 只包含既有可级联的 `color`、`stroke`、`fill`、`strokeWidth`、`opacity`、`fillOpacity` 与 `strokeOpacity`，不因同名而接受完整 Node / Path 样式。
+Node、Path 的 `style` 字段集合各有边界；Scope `defaults.style` 只包含既有可级联的 `color`、`stroke`、`fill`、`strokeWidth`、`opacity`、`fillOpacity` 与 `strokeOpacity`，不因同名而接受完整 Node / Path 样式。
 
 React `Layout` 同时是 Scene host，现有 `style` 表示宿主 CSS，不能改写为 Core graphic style。它通过一个明确的隐式根 Scope 输入承载分组后的级联值：
 
 ```ts
 type LayoutProps = {
-  rootScope?: Pick<InputScope, 'style' | 'defaults'>;
+  rootScope?: Pick<InputScope, 'defaults'>;
   style?: CSSProperties;
   // existing host and compile props
 };
@@ -146,7 +146,7 @@ type LayoutProps = {
 
 `rootScope` 是 React JSX authoring 的便利入口，直接复用 Vanilla `InputScope` 的字段，不新增框架私有的 Input 模型。Vanilla 使用等价的显式 Scope；完整 Direct IR 自行表达该 Scope，不增加 `Scene.rootScope`。`Layout` 同时提供完整 `ir` 与有效 `rootScope` 覆盖时，沿用完整 IR 优先、忽略 authoring 覆盖并在开发环境提示的行为。宿主 CSS `style` 继续独立生效。
 
-React `Graph` 是显式语义容器，其 `style` 与 `defaults` 直接采用 Graph Source 的绘图契约，standalone 与 embedded 行为一致。移除原 `Graph.style` 的宿主 CSS 语义，不增加 `Graph.rootScope` 或其它平行覆盖入口；宿主 CSS 由外层 DOM 或 `Layout.style` 承担。Graph 自身仍下沉为一个 Scope，不因分组增加容器或改变 identity。
+React `Graph` 是显式语义容器，其 `defaults` 直接采用 Graph Source 的后代默认值契约，standalone 与 embedded 行为一致。移除原 `Graph.style` 的宿主 CSS 语义，不增加 `Graph.rootScope` 或其它平行覆盖入口；宿主 CSS 由外层 DOM 或 `Layout.style` 承担。Graph 自身仍下沉为一个 Scope，不因分组增加容器或改变 identity。
 
 没有覆盖时不因 `rootScope` 包装产生新的 Scope 或 identity 层级：省略、空对象、只有空的分组或默认通道，以及只有 optional `undefined` 的覆盖都等价于没有提供；单独的 `reset: false` 或空 reset 通道数组也不建立隐式 Scope。已经显式声明的 Source Scope 保持其结构，不作空容器删除。font 等既有复合叶子是否产生覆盖仍遵循原契约，不递归清除空对象。
 
@@ -154,7 +154,7 @@ Scene 根保持现有字段集合。新 `style`、`layout`、`defaults` 分组�
 
 ## 继承与覆盖
 
-分组是字段命名空间，不是新的覆盖单元。对 Node / Path，沿 Scope 层级先应用当前通道的继承屏障，再应用该层通用 `style` 与对应的 `defaults.node` / `defaults.path`，最后应用元素自己的字段。只定义 `style.fill` 不覆盖已经继承的 `style.stroke`；定义 `layout.padding` 不清除其它布局字段。缺失和 optional `undefined` 不覆盖父级值，`0`、`false` 与其它合法显式值继续按原字段语义处理。
+分组是字段命名空间，不是新的覆盖单元。对 Node / Path，沿 Scope 层级先应用当前通道的继承屏障，再应用该层通用 `defaults.style` 与对应的 `defaults.node` / `defaults.path`，最后应用元素自己的字段。只定义 `style.fill` 不覆盖已经继承的 `style.stroke`；定义 `layout.padding` 不清除其它布局字段。缺失和 optional `undefined` 不覆盖父级值，`0`、`false` 与其它合法显式值继续按原字段语义处理。
 
 新增分组内部按原字段独立决议，既有复合叶子保持原有覆盖粒度：Node 的 `font` 在 Node 默认通道与实例之间仍作为整体覆盖；label 实例字体与有效 label 默认字体继续逐字段补全。paint、shadow、spacing、scale、数组和判别联合不改为通用递归合并，主色派生、透明度与装饰默认值规则也不改变。
 
@@ -170,9 +170,9 @@ Scene 根保持现有字段集合。新 `style`、`layout`、`defaults` 分组�
 - 兼容性 / breaking：Node、Path、Scope 及其默认通道的持久化 JSON、公开 Source 类型、直接派生的消费契约和 authoring 字段是 breaking change。迁移字段的旧入口直接删除，不保留兼容模式
 - Path 扩展：Path kind definition 的完整 subject schema、`PathKindCompileContext.path` 与 `emitStroke` 输入同步采用分组 Source；`path` 保持源简写可见，`appearance` 保持已解析的宿主外观。内置与自定义共享同一 registry、校验与 dispatch，不能仅为内置 kind 保留旧字段处理
 - Vanilla 等价性：Vanilla 仍是 authoring Input 到 Core Source IR 的唯一 normalize owner；schema-backed 视觉、布局与默认值输入映射到同名分组，既有 sugar 只能生成该 Source，不能恢复扁平持久化形态
-- React 等价性：React 把 JSX、children、事件与宿主字段映射到 Vanilla Input；Node、Path 与 Scope 语义组件复用同一分组契约。`Layout.style` 继续表示宿主 CSS，隐式根 Scope 的覆盖统一进入 `rootScope: { style?, defaults? }`；旧的扁平 Scope style / every-X props 直接删除。宿主字段不进入 Core Source
+- React 等价性：React 把 JSX、children、事件与宿主字段映射到 Vanilla Input；Node、Path 与 Scope 语义组件复用同一分组契约。`Layout.style` 继续表示宿主 CSS，隐式根 Scope 的覆盖统一进入 `rootScope: { defaults? }`；旧的扁平 Scope style / every-X props 直接删除。宿主字段不进入 Core Source
 - 跨包约束：直接组合 Core 字段的公开契约、Core Source producer 与 lowering 必须同步适配，并保留原 owner 的禁用字段与角色边界；不能因复用整组而开放原本禁止的字段。领域自己拥有的 IR 分组、Theme 稀疏同构与 selector rules 重设计另由对应 owner 决策，不借此次 Core 消费适配重塑领域能力
 
 ## 实现结果
 
-Kernel、Library、Schematic、Viz 与应用侧 Source 消费方统一采用上述分组。Graph 的 style 已统一为绘图覆盖；Layout 的 CSS 与隐式根 Scope 保持独立入口。分组不改变 Scene、identity 与既有继承语义，旧扁平入口不再接受。领域 Theme 与 selector rules 的进一步设计由各 owner 独立决定。
+Kernel、Library、Schematic、Viz 与应用侧 Source 消费方统一采用上述分组。Graph 继承的共享绘图默认值使用 defaults.style；Layout 的 CSS 与隐式根 Scope 保持独立入口。分组不改变 Scene、identity 与既有继承语义，旧扁平入口不再接受。领域 Theme 与 selector rules 的进一步设计由各 owner 独立决定。

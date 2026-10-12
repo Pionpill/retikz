@@ -15,8 +15,8 @@ const appearanceDefaults = {
   body: {
     background: { fill: 0.08 },
     content: {
-      style: { color: '#1e3a8a' },
       defaults: {
+        style: { color: '#1e3a8a' },
         node: { style: { font: { family: 'serif', weight: 400 } } },
         label: { font: { family: 'serif', weight: 400 } },
       },
@@ -25,8 +25,8 @@ const appearanceDefaults = {
   columnHeader: {
     background: { fill: 0.12 },
     content: {
-      style: { color: '#7c2d12' },
       defaults: {
+        style: { color: '#7c2d12' },
         node: { style: { font: { family: 'serif', weight: 500 } } },
         label: { font: { family: 'serif', weight: 500 } },
       },
@@ -49,7 +49,7 @@ const ScoreTable: FC<ScoreTableProps> = props => {
           selector: { fields: ['score'], value: { kind: 'compare', operator: 'lt', value: 0 } },
           appearance: {
             content: {
-              style: { color: 'crimson' },
+              defaults: { style: { color: 'crimson' } },
             },
           },
         },

@@ -151,7 +151,7 @@ describe('buildPreviewIR', () => {
   it('preserves rootScope styles and defaults in Source IR and Vanilla output', () => {
     const preview = buildPreviewIR(() => (
       <Layout
-        rootScope={{ style: { stroke: '#123456', strokeWidth: 3 }, defaults: { node: { layout: { padding: 12 } } } }}
+        rootScope={{ defaults: { style: { stroke: '#123456', strokeWidth: 3 }, node: { layout: { padding: 12 } } } }}
       >
         <Node id="A" position={[0, 0]}>
           a
@@ -167,8 +167,8 @@ describe('buildPreviewIR', () => {
       expect(scene.children).toHaveLength(1);
       expect(scene.children[0]).toMatchObject({
         type: 'scope',
-        style: { stroke: '#123456', strokeWidth: 3 },
-        defaults: { node: { layout: { padding: 12 } } },
+
+        defaults: { style: { stroke: '#123456', strokeWidth: 3 }, node: { layout: { padding: 12 } } },
         children: [{ type: 'node', id: 'A' }, { type: 'node', id: 'B' }, { type: 'path' }],
       });
     }
@@ -181,7 +181,7 @@ describe('buildPreviewIR', () => {
     expect(vanilla.svg).toContain('stroke="#123456"');
   });
 
-  it.each<LayoutProps['rootScope']>([undefined, {}, { style: {} }, { defaults: { reset: false } }])(
+  it.each<LayoutProps['rootScope']>([undefined, {}, { defaults: { style: {} } }, { defaults: { reset: false } }])(
     'does not add a Scope for ineffective rootScope %j or host props',
     rootScope => {
       const preview = buildPreviewIR(() => (
@@ -197,7 +197,7 @@ describe('buildPreviewIR', () => {
 
   it('keeps complete IR unchanged when rootScope is supplied', () => {
     const ir = { type: 'scene' as const, version: 1 as const, children: [] };
-    const preview = buildPreviewIR(() => <Layout ir={ir} rootScope={{ style: { stroke: 'red' } }} />);
+    const preview = buildPreviewIR(() => <Layout ir={ir} rootScope={{ defaults: { style: { stroke: 'red' } } }} />);
 
     expect(preview.sourceIr).toBe(ir);
     expect(preview.ir).toBe(ir);

@@ -129,15 +129,15 @@ lines 的 `lineStyleCycle` 按相邻线条循环：`period` 为 2–512 的整�
 
 ## 组件对接
 
-| 组件        | 接入方式                                                           |
-| ----------- | ------------------------------------------------------------------ |
-| Scope       | `style.fill / stroke`、`defaults.node/path.style` 或 `frame.style` |
-| Node        | `style.fill / stroke`                                              |
-| Path / Draw | `style.fill / stroke`                                              |
+| 组件        | 接入方式                                                                    |
+| ----------- | --------------------------------------------------------------------------- |
+| Scope       | `defaults.style.fill / stroke`、`defaults.node/path.style` 或 `frame.style` |
+| Node        | `defaults.style.fill / stroke`                                              |
+| Path / Draw | `defaults.style.fill / stroke`                                              |
 
 ### Scope 的传递与覆盖
 
-Scope 的 `style.fill` 和 `style.stroke` 可传递给 Node 与 Path；只影响一类图元时使用 `defaults.node.style` 或 `defaults.path.style`。下图中左侧 Node 和闭合 Path 继承线条图案，右侧 Node 用点状图案覆盖继承值。`fill: 'none'` 关闭填充，`frame.style` 则只装饰整组包络，不会传递给子图元。
+Scope 的 `defaults.style.fill` 和 `defaults.style.stroke` 可传递给 Node 与 Path；只影响一类图元时使用 `defaults.node.style` 或 `defaults.path.style`。下图中左侧 Node 和闭合 Path 继承线条图案，右侧 Node 用点状图案覆盖继承值。`fill: 'none'` 关闭填充，`frame.style` 则只装饰整组包络，不会传递给子图元。
 
 <ComponentPreview files="pattern-integration" size="sm" />
 

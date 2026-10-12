@@ -16,4 +16,6 @@ Source IR 需要收敛同类字段时使用下列固定一级属性名；只有�
 
 `appearance` 只命名 resolve、manifest、inspection 等已确定的视觉结果；可持久化 Source 中的作者视觉覆盖统一使用 `style`。同一对象不得并存同义的 `style` / `appearance`、`layout` / `routing` 或其它别名分组。
 
-领域显式默认使用复数 `xxxDefaults`，规则使用 owner 的独立规则入口（如 `graphRules`）；裸 `defaults` 保留既有 Core 通道。不得用 `xxxTheme`、`xxxDefault` 或 `xxxDefaultStyle` 命名同义默认入口；Theme definition 的生成值与作者 defaults 复用 Source 片段，但保留各自来源和优先级。
+`style` 只配置所属实例自身的外观，不向子元素或后代提供默认样式；容器的共享子元素样式必须进入默认配置通道，子元素自身仍用 `style` 覆盖。按语义作用对象判断，不按最终生成了几个图元判断；容器背景、外框和整体合成效果属于自身外观。
+
+领域子元素默认配置使用复数 `xxxDefaults`，规则使用 owner 的独立规则入口（如 `graphRules`）；裸 `defaults` 保留 Core 的后代默认配置通道。不得用 `xxxTheme`、`xxxDefault` 或 `xxxDefaultStyle` 命名同义默认入口；Theme definition 的生成值与作者 defaults 复用 Source 片段，但保留各自来源和优先级。

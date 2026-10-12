@@ -70,7 +70,6 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 | `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | 内容溢出行为，外围标签不受此项裁剪                     |
 | `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | 内容与外框内边距，编译时默认 10                        |
 | `position?`          | `GroupInputEmbedProps["position"]`                                                                                                                                                                                 | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐             |
-| `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —       | 后代的级联视觉覆盖                                     |
 | `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | 子树的稀疏主题覆盖                                     |
 | `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —       | 局部变换，数组最后一项先作用于局部点                   |
 | `zIndex?`            | `number`                                                                                                                                                                                                           | —       | 容器整体在同级中的绘制顺序                             |
@@ -378,7 +377,6 @@ export type IRGroupCaptionText = ZodInfer<typeof GroupCaptionTextSchema>;
     namespace: '命名空间，固定为 graph',
     type: '记录判别字段，固定为 group',
     frame: '固有包络装饰，不参与布局',
-    style: '后代的级联视觉覆盖',
     theme: '子树的稀疏主题覆盖',
     id: '可选引用 id，注册到父命名空间',
     localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',

@@ -13,17 +13,17 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 <ComponentPreview files="layout-root-scope" size="md" type="illustration" hideCode />
 
-两边的 A 都继承蓝色，B 都保留橙色。**defaults** 为未显式配置的后代图元提供默认值，不会强制改写节点属性；`rootScope.style` 则提供 `fill / stroke / opacity` 等通用绘图样式。图中的蓝色使用 `dodgerblue`，橙色使用 `darkorange`，均以低透明度填充，便于同时看清节点文字。
+两边的 A 都继承蓝色，B 都保留橙色。**defaults** 为未显式配置的后代图元提供默认值，不会强制改写节点属性；`rootScope.defaults.style` 则提供 `fill / stroke / opacity` 等通用绘图样式。图中的蓝色使用 `dodgerblue`，橙色使用 `darkorange`，均以低透明度填充，便于同时看清节点文字。
 
-实现上，`wrapRootScope` 先挑出有效的 `style / defaults`，有覆盖时才创建普通 Scope，再把原 children 放进去。图的左侧复用了这个包装函数，右侧直接声明 Scope，因此两种写法最终沿用同一套继承规则。
+实现上，`wrapRootScope` 先挑出有效的 `defaults`，有覆盖时才创建普通 Scope，再把原 children 放进去。图的左侧复用了这个包装函数，右侧直接声明 Scope，因此两种写法最终沿用同一套继承规则。
 
 包装与否取决于是否存在有效覆盖，而不是有没有传入 `rootScope` 这个对象：
 
-- **无有效覆盖**：不传、传 `{}`，或只传 `style: {}`、`defaults: {}` 等空覆盖时，直接使用原 children，不增加合成 Scope。
+- **无有效覆盖**：不传、传 `{}`，或只传 `defaults: { style: {} }`、`defaults: {}` 等空覆盖时，直接使用原 children，不增加合成 Scope。
 - **有有效覆盖**：有实际样式、默认值或有效的 `defaults.reset` 时，包装一层普通 Scope，沿用既有继承规则。`reset` 为 `true` 或非空通道列表时表示切断相应的外层样式继承；`false` 或空列表本身不触发包装。
 - **直接传入 ir**：使用 IR 已描述的完整子图，忽略同时传入的 children 和 `rootScope`。要改变其中的作用域，应修改 IR 本身；宿主 CSS `style` 仍然生效。
 
-**这层合成 Scope 不是局部命名空间。** `rootScope` 只接收 `style / defaults`；需要 `localNamespace` 时，应在子图中显式使用 Scope，命名与引用机制见 [Scope 用法](/kernel/components/scope/usage)。
+**这层合成 Scope 不是局部命名空间。** `rootScope` 只接收 `defaults`；需要 `localNamespace` 时，应在子图中显式使用 Scope，命名与引用机制见 [Scope 用法](/kernel/components/scope/usage)。
 
 <SourceLinks
   sources={[
@@ -161,11 +161,11 @@ Layout 只设置 `{ mode: 'light' }` 时，仍能保留外层选择的 `clean` �
 
 合并主题和设置绘图样式是两个问题。**Composite** 是接收高层描述、再展开为基础图元的组合能力，可以消费主题生成自己的图元样式。`theme`、`rootScope` 和宿主 `style` 分别作用于以下位置，不构成同一个配置对象的三层优先级：
 
-| 配置                         | 作用位置                       | 用来决定什么               |
-| ---------------------------- | ------------------------------ | -------------------------- |
-| `theme`                      | 输入场景及消费主题的 Composite | 主题风格与明暗模式         |
-| `rootScope.style / defaults` | JSX 子图的根作用域             | 绘图样式与图元默认值       |
-| `style`                      | SVG / Canvas 宿主              | 页面 CSS，如背景与最大宽度 |
+| 配置                 | 作用位置                       | 用来决定什么               |
+| -------------------- | ------------------------------ | -------------------------- |
+| `theme`              | 输入场景及消费主题的 Composite | 主题风格与明暗模式         |
+| `rootScope.defaults` | JSX 子图的根作用域             | 绘图样式与图元默认值       |
+| `style`              | SVG / Canvas 宿主              | 页面 CSS，如背景与最大宽度 |
 
 Layout 把主题写入输入场景，供后续处理读取；它不会把主题风格直接转换成每个普通 Node 的填充色。确定普通 Node 的填充色用节点属性或 `rootScope`；限制整幅图在页面上的最大宽度用宿主 `style={{ maxWidth: '100%' }}`。
 

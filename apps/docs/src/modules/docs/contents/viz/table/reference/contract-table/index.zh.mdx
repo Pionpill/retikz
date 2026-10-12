@@ -192,7 +192,7 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
 
 ### TableCellRuleSchema
 
-Cell 的 `appearance.content.style` 设置内容级联颜色与透明度；`appearance.content.defaults` 设置 `node`、`path`、`label`、`arrow` 默认值和 `reset` 继承屏障。Node 默认值进一步使用 `style` / `layout`，Path 默认值使用 `style`；Label 与 Arrow 的叶子结构保持不变。各字段独立覆盖，空分组不清除继承值，`0` 与 `false` 保留。
+Cell 的 `appearance.content.defaults.style` 设置内容级联颜色与透明度；`appearance.content.defaults` 设置 `node`、`path`、`label`、`arrow` 默认值和 `reset` 继承屏障。Node 默认值进一步使用 `style` / `layout`，Path 默认值使用 `style`；Label 与 Arrow 的叶子结构保持不变。各字段独立覆盖，空分组不清除继承值，`0` 与 `false` 保留。
 
 <ZodSchema
   name="TableCellRuleSchema"
@@ -206,7 +206,7 @@ Cell 的 `appearance.content.style` 设置内容级联颜色与透明度；`appe
     'appearance.background.fill': '填充匹配 Cell box 的 paint。',
     'appearance.background.fillOpacity': 'Cell 背景 fill opacity；省略时按 1。',
     'appearance.content': '应用于匹配 Cell 内容的 Core Scope 样式与默认值。',
-    'appearance.content.style': '按字段覆盖内容级联颜色、描边与透明度。',
+    'appearance.content.defaults.style': '按字段覆盖内容级联颜色、描边与透明度。',
     'appearance.content.defaults': '内容后代的默认值通道与继承屏障。',
     'appearance.content.defaults.node': 'Node 默认值，视觉属性位于 style，尺寸与文本排布位于 layout。',
     'appearance.content.defaults.path': 'Path 默认值，视觉属性位于 style。',
@@ -259,7 +259,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   description="已有 Table Cell 的背景、内容与物理边稀疏默认值。"
   descriptions={{
     background: '已有 Cell box 的稀疏背景默认值。',
-    content: '已有 Cell 内容的 Core Scope style 与 defaults。',
+    content: '已有 Cell 内容的 Core Scope defaults。',
     borders: '已有 Cell 四侧的稀疏 border candidates。',
   }}
 />

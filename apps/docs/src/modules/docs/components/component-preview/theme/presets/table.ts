@@ -15,8 +15,8 @@ const styles = {
       appearanceDefaults: {
         body: {
           content: {
-            style: { color: '#111111' },
             defaults: {
+              style: { color: '#111111' },
               node: { style: { font: { family: 'serif', weight: 400 } } },
               label: { font: { family: 'serif', weight: 400 } },
             },
@@ -24,8 +24,8 @@ const styles = {
         },
         columnHeader: {
           content: {
-            style: { color: '#111111' },
             defaults: {
+              style: { color: '#111111' },
               node: { style: { font: { family: 'serif', weight: 600 } } },
               label: { font: { family: 'serif', weight: 600 } },
             },
@@ -41,8 +41,8 @@ const styles = {
         body: {
           background: { fill: '#111111' },
           content: {
-            style: { color: '#f5f5f5' },
             defaults: {
+              style: { color: '#f5f5f5' },
               node: { style: { font: { family: 'serif', weight: 400 } } },
               label: { font: { family: 'serif', weight: 400 } },
             },
@@ -51,8 +51,8 @@ const styles = {
         columnHeader: {
           background: { fill: '#111111' },
           content: {
-            style: { color: '#f5f5f5' },
             defaults: {
+              style: { color: '#f5f5f5' },
               node: { style: { font: { family: 'serif', weight: 600 } } },
               label: { font: { family: 'serif', weight: 600 } },
             },
@@ -69,11 +69,11 @@ const styles = {
       appearanceDefaults: {
         body: {
           background: { fill: '#e5ecf6' },
-          content: { style: { color: '#2a3f5f' } },
+          content: { defaults: { style: { color: '#2a3f5f' } } },
         },
         columnHeader: {
           background: { fill: '#d7e3f4' },
-          content: { style: { color: '#2a3f5f' }, defaults: { node: { style: { font: { weight: 600 } } } } },
+          content: { defaults: { style: { color: '#2a3f5f' }, node: { style: { font: { weight: 600 } } } } },
           borders: { bottom: line('#ffffff', 1) },
         },
       },
@@ -89,11 +89,11 @@ const styles = {
       appearanceDefaults: {
         body: {
           background: { fill: '#111827' },
-          content: { style: { color: '#f0f6fc' } },
+          content: { defaults: { style: { color: '#f0f6fc' } } },
         },
         columnHeader: {
           background: { fill: '#1f2937' },
-          content: { style: { color: '#f0f6fc' }, defaults: { node: { style: { font: { weight: 600 } } } } },
+          content: { defaults: { style: { color: '#f0f6fc' }, node: { style: { font: { weight: 600 } } } } },
           borders: { bottom: line('#475569', 1) },
         },
       },
@@ -108,15 +108,15 @@ const styles = {
   clean: {
     light: {
       appearanceDefaults: {
-        body: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
-        columnHeader: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+        body: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
+        columnHeader: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
       },
       layout: { borders: { horizontal: { kind: 'none' } } },
     },
     dark: {
       appearanceDefaults: {
-        body: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
-        columnHeader: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+        body: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
+        columnHeader: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
       },
       layout: { borders: { horizontal: { kind: 'none' } } },
     },
