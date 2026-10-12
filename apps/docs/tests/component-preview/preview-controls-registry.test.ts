@@ -41,7 +41,7 @@ import {
   irToVanillaCode,
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/usage/node-geometry.controls';
-import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
+import { textRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-text.data';
 import { controlModules, demoModules, demoSources, localSourceFiles } from './load-preview-registry';
 
 /** Source views include the authoring wrapper and its shared preview implementation */
@@ -1446,13 +1446,7 @@ describe('preview controls registry', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
 
     for (const language of ['zh', 'en'] as const) {
-      const definition = resolvePreviewControls(
-        controlModules[
-          language === 'zh'
-            ? buildControlsKey(segments, 'builtin-node-text')
-            : buildLangControlsKey(segments, 'builtin-node-text', 'en')
-        ],
-      );
+      const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node')], language);
 
       expect(definition?.presentation, language).toBe('panel');
 
@@ -1500,9 +1494,9 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('内置节点 playground 的文本默认形成宽度不同的多行，使文字对齐可见', () => {
+  it('内置文字 playground 的文本默认形成宽度不同的多行，使文字对齐可见', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
-    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-text')]);
 
     expect(definition?.presentation).toBe('panel');
 
@@ -1511,7 +1505,7 @@ describe('preview controls registry', () => {
     const defaults = Object.fromEntries(
       getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
     );
-    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+    const compiled = compileBuiltinText(textRows[0].word, {
       align: defaults.align as 'start' | 'middle' | 'end',
       fontSize: defaults.fontSize as number,
       lineHeight: defaults.lineHeight as number,
@@ -1523,9 +1517,9 @@ describe('preview controls registry', () => {
     expect(lineLengths.size).toBeGreaterThan(1);
   });
 
-  it('内置节点 playground 的默认行高不会让多行文字重叠', () => {
+  it('内置文字 playground 的默认行高不会让多行文字重叠', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
-    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-text')]);
 
     expect(definition?.presentation).toBe('panel');
 
@@ -1534,7 +1528,7 @@ describe('preview controls registry', () => {
     const defaults = Object.fromEntries(
       getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
     );
-    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+    const compiled = compileBuiltinText(textRows[0].word, {
       align: defaults.align as 'start' | 'middle' | 'end',
       fontSize: defaults.fontSize as number,
       lineHeight: defaults.lineHeight as number,
@@ -1547,9 +1541,9 @@ describe('preview controls registry', () => {
     );
   });
 
-  it('内置节点 playground 的文字宽度范围会改变实际折行数', () => {
+  it('内置文字 playground 的文字宽度范围会改变实际折行数', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
-    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-text')]);
 
     expect(definition?.presentation).toBe('panel');
 
@@ -1580,11 +1574,11 @@ describe('preview controls registry', () => {
       fontSize: fontSize.defaultValue,
       lineHeight: lineHeight.defaultValue,
     };
-    const narrow = compileBuiltinText(nodeTextRows[0].word, {
+    const narrow = compileBuiltinText(textRows[0].word, {
       ...common,
       maxTextWidth: maxTextWidth.min,
     });
-    const wide = compileBuiltinText(nodeTextRows[0].word, {
+    const wide = compileBuiltinText(textRows[0].word, {
       ...common,
       maxTextWidth: maxTextWidth.max,
     });

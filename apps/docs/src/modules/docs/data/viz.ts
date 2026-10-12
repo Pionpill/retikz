@@ -475,8 +475,8 @@ export const vizSection: Array<Section> = [
         label: 'viz.grammarChannel',
         sidebarGroup: 'viz.plotGrammar',
         children: [
-          { id: 'binding', label: 'viz.grammarChannelBinding', difficulty: DocDifficulty.Advanced },
-          { id: 'builtin', label: 'viz.grammarChannelBuiltin', difficulty: DocDifficulty.Advanced },
+          { id: 'binding', label: 'viz.grammarChannelBinding', difficulty: DocDifficulty.Beginner },
+          { id: 'builtin', label: 'viz.grammarChannelBuiltin', difficulty: DocDifficulty.Beginner },
           {
             id: 'custom-channel',
             label: 'viz.grammarChannelCustom',

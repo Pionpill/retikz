@@ -1,174 +1,289 @@
-﻿---
+---
 title: 内置通道
-description: 按视觉目标查询 plot 内置通道，以及字段、固定值和图例的支持情况。
+description: 选择 Plot 内置的位置、颜色、大小、形状和文本通道，并通过交互示例调整节点与路径的视觉结果。
 ---
 
-内置通道把数据映射为位置、样式、文本和路径等视觉结果。在 React DSL 中，直接通过 mark props 声明通道，例如 `<PointMark x="gdp" color="region" />`；先按下面的视觉目标选择通道，再到对应小节查看取值方式、视觉结果和图例支持。
+学会[通道绑定](/viz/plot/channel/binding)后，本页帮助你选择合适的内置通道：用位置比较数值，用颜色和形状区分类别，用大小表达数量，再为图形补充文字和路径样式。
 
-各表先列使用方式和可见含义，最后一列再给内部属性落点；第一次阅读可以跳过落点。
-
-表格同时列出字段与字符串常量时，内置扁平样式 prop 会先匹配当前数据字段，未命中才尝试合法常量；同名冲突、显式写法和适用边界见[通道绑定的字段与常量](/viz/plot/channel/binding#字段与常量)。
-
-| 类型     | 通道                                                                                                    | 说明                             |
-| -------- | ------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| 位置     | `x` / `y` / `z`                                                                                         | 字段决定坐标角色                 |
-| 样式     | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`                             | 颜色、透明度、大小和形状         |
-| 节点几何 | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                                                | 节点尺寸、间距和变换             |
-| 文本     | `text` / `label`                                                                                        | 节点内文字和节点外标签           |
-| 路径     | `strokeWidth` / `thickness` / `lineCap` / `lineJoin`<br />`roundedCorners` / `fillRule` / `dashPattern` | 路径描边、端点、连接、填充和虚线 |
-| 效果     | `shadow` / `blendMode`                                                                                  | 阴影和混合模式                   |
-| 其他     | `zIndex` / `order` / `series`                                                                           | 绘制顺序、排序和系列拆分         |
+下面的属性表以示例图元为范围，不表示所有图元支持同一组属性。标签布局、路径排序和系列分组会影响最终图形，但需要与视觉通道分别理解。
 
 ## 位置
 
-位置通道声明数据行里的哪些字段参与坐标投影。`x` / `y` / `z` 不等于固定屏幕方向；坐标系会重新解释它们，例如 `cartesian2D` 把 `x` / `y` 当水平 / 垂直，`polar2D` 把它们当角度 / 半径。
+位置通道选出参与坐标计算的字段。在本例的二维直角坐标系中，x 是横向位置，y 是纵向位置；切换字段即可改变比较关系。
+
+| 属性 | 取值   | 作用与约束                                                     |
+| ---- | ------ | -------------------------------------------------------------- |
+| `x`  | 字段名 | 第一个位置角色；本例表示横坐标。                               |
+| `y`  | 字段名 | 第二个位置角色；本例表示纵坐标。                               |
+| `z`  | 字段名 | 供自定义坐标系消费的第三位置角色；本例的内置二维坐标系不使用。 |
+
+<ComponentAlert
+  type="tip"
+  title="极坐标沿用位置通道"
+  description="Plot 的位置通道只有 x、y、z，没有额外的极坐标别名通道。在二维极坐标中，x 表示角向，y 表示径向；coordinate.angle 和 coordinate.radius 用于绑定相应比例尺，不是新的通道名。"
+/>
+
+选择“订单量与销量”预设，再分别切换横轴和纵轴字段。数据行保持不变，点的位置由新字段重新计算。
 
 <ComponentPreview
   files={['builtin-position', 'builtin-position.preview.tsx', 'builtin-position.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="本试验场固定使用笛卡尔坐标，仅切换 x / y 绑定；数据与图表尺寸保持不变。"
   defaultSourceFile="builtin-position.preview.tsx"
+  caption="同一批记录的位置随所选字段变化。"
 />
 
-| 通道 | 通道值              | 含义         | 落点                 |
-| ---- | ------------------- | ------------ | -------------------- |
-| `x`  | 字段：`x = "field"` | 第一位置角色 | 坐标系的第一位置角色 |
-| `y`  | 字段：`y = "field"` | 第二位置角色 | 坐标系的第二位置角色 |
-| `z`  | 字段：`z = "field"` | 第三位置角色 | 坐标系的第三位置角色 |
+点图元的位置 props 接受字段名；固定阈值位置见参考图元。
 
-## 样式
+## 视觉编码
 
-样式通道控制图元的可见外观。颜色、透明度、大小和形状都属于样式；在面板中切换作用通道并调整数值，可以直接比较它们在同一组点上的差异。
+颜色用于区分类别，大小用于比较数量，形状为分类提供另一种辨识方式。固定样式适合统一外观，字段绑定让样式随记录变化。
+
+| 属性             | 取值                   | 作用与约束                                                  |
+| ---------------- | ---------------------- | ----------------------------------------------------------- |
+| `color`          | 字段名或显式颜色常量   | 主颜色；具体影响的视觉属性由图元决定。                      |
+| `fill`           | 字段名或颜色、填充对象 | 控制内部填充。                                              |
+| `stroke`         | 字段名或颜色、描边对象 | 控制外轮廓的描边颜色。                                      |
+| `opacity`        | 字段名、0–1 或分组对象 | 简写设置整体不透明度，对象可细调各成员。                    |
+| `opacity.fill`   | 字段名或 0–1           | 只改变填充透明度。                                          |
+| `opacity.stroke` | 字段名或 0–1           | 只改变描边透明度。                                          |
+| `size`           | 数值字段或非负半径     | 字段默认映射为平方根半径；数字常量是最终点半径。            |
+| `shape`          | 分类字段或显式形状常量 | 字段按类别分配形状；示例常量为 circle、rectangle、diamond。 |
+| `strokeWidth`    | 数值字段或非负数字     | 控制描边宽度，与描边颜色分别设置。                          |
+
+<ComponentAlert
+  type="tip"
+  title="透明度相乘"
+  description="opacity.overall、opacity.fill 和 opacity.stroke 的值表示不透明度：0 为完全透明，1 为完全不透明。整体不透明度与填充或描边不透明度相乘。例如 opacity: { overall: 0.5, fill: 0.5 } 时，填充的有效不透明度为 0.5 × 0.5 = 0.25，即 25% 不透明、75% 透明；描边同理使用 overall × stroke。这里假设颜色自身完全不透明，且没有父级透明度叠加。"
+/>
+
+通常只需设置 `opacity: 0.5`；需要分别控制时，使用 `opacity: { overall: 0.5, fill: 0.5, stroke: 1 }`。各成员都可绑定字段或使用常量；省略的成员继续继承已有配置，没有继承值时为 1。数字简写只设置 overall。
+
+切换颜色作用通道，再调整透明度、半径与形状，比较同一组点的变化。这个试验场使用常量；字段驱动的颜色和大小可在通道绑定页对照。
 
 <ComponentPreview
   files={['builtin-point-style', 'builtin-point-style.preview.tsx', 'builtin-point-style.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="作用通道决定颜色写入 color、fill 还是 stroke；其余控件保持主体与数据不变。"
   defaultSourceFile="builtin-point-style.preview.tsx"
+  caption="常量样式同时作用于所有点；填充和描边可以分别调整。"
 />
 
-### 颜色
+区分填充与描边时，先选 fill 或 stroke。字段驱动的 color、size、shape 和 opacity 可配合相应图例；固定值不表达数据映射，示例不为它们添加图例。更大的点需要更充足的坐标域留白。
 
-| 通道        | 通道值                                                     | 含义       | 落点 / 图例                                                   |
-| ----------- | ---------------------------------------------------------- | ---------- | ------------------------------------------------------------- |
-| `color`     | 字段：`color = "field"`<br />常量：`color = "red"`         | 主语义颜色 | mark 选择 fill / stroke / text color；字段值支持 color legend |
-| `fill`      | 字段：`fill = "field"`<br />常量：`fill = "red"`           | 填充颜色   | 图元填充；节点类图元写入 node `fill`                          |
-| `stroke`    | 字段：`stroke = "field"`<br />常量：`stroke = "red"`       | 描边颜色   | 图元描边；路径类图元写入 path `stroke`                        |
-| `textColor` | 字段：`textColor = "field"`<br />常量：`textColor = "red"` | 文本颜色   | core node `textColor`                                         |
+## 图元样式
 
-### 透明度
+确定数据的位置与视觉编码后，可以进一步调整节点的外观、标签的排版和路径的线条样式。以下按图元的组成部分分别说明。
 
-整体透明度会同时影响填充和描边；填充透明度只弱化内部；描边透明度只弱化外框。
+<ComponentAlert
+  type="tip"
+  title="了解底层图元（选读）"
+  description={
+    <>
+      Plot 图元最终会转换为 Kernel 的节点或路径等基础图元。感兴趣可以阅读{' '}
+      <a href="/kernel/components" className="font-medium underline underline-offset-4">
+        Kernel 文档
+      </a>
+      ，了解底层绘图能力；无需预先了解 Kernel，也可以继续阅读本页。
+    </>
+  }
+/>
 
-| 通道             | 通道值                                                                           | 含义       | 落点 / 图例                                                                     |
-| ---------------- | -------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------- |
-| `opacity`        | 字段：`opacity = "field"`<br />常量：`opacity = {0.45}`                          | 整体透明度 | `IRScope.opacity`、`IRNode.opacity` 或 `IRPath.opacity`；字段值支持 ramp legend |
-| `opacity.fill`   | 字段：`opacity = {{ fill: "field" }}`<br />常量：`opacity = {{ fill: 0.7 }}`     | 填充透明度 | scope / node / path fill opacity                                                |
-| `opacity.stroke` | 字段：`opacity = {{ stroke: "field" }}`<br />常量：`opacity = {{ stroke: 0.7 }}` | 描边透明度 | scope / node / path stroke opacity                                              |
+### 节点
 
-### 大小
+节点样式控制形状的尺寸、圆角、旋转、缩放和阴影。本例不设置 text，观察重点是节点本身的外观。
 
-`size` 通道适合表达数量大小。字段值默认走平方根比例尺，让图形面积更接近数据差异。
+| 属性           | 取值                                   | 作用与约束                                           |
+| -------------- | -------------------------------------- | ---------------------------------------------------- |
+| `minimumSize`  | 非负数字或尺寸对象                     | 节点最小尺寸约束；使用 size 时，数据点的 size 优先。 |
+| `padding`      | 数字或间距对象                         | 节点内边距。                                         |
+| `cornerRadius` | 非负数字                               | 矩形圆角半径。                                       |
+| `rotate`       | 数字                                   | 节点旋转角度。                                       |
+| `scale`        | 数字或轴向缩放对象                     | 缩放节点外观，不改变位置字段绑定。                   |
+| `shadow`       | 本例 none、sm、md、lg、xl              | 阴影预设；none 关闭阴影，其余预设呈现不同投影。      |
+| `blendMode`    | 本例 normal、multiply、screen、overlay | 重叠区域的颜色合成模式，效果取决于背景和重叠。       |
 
-| 通道   | 通道值                                         | 含义       | 落点 / 图例                                              |
-| ------ | ---------------------------------------------- | ---------- | -------------------------------------------------------- |
-| `size` | 字段：`size = "field"`<br />常量：`size = {8}` | 点符号大小 | node `minimumSize`；字段值默认平方根比例尺，支持大小图例 |
-
-### 形状
-
-`shape` 通道适合表达分类。分类字段会映射到内置点符号形状，并可以生成符号图例。
-
-| 通道    | 通道值                                                | 含义       | 落点 / 图例                      |
-| ------- | ----------------------------------------------------- | ---------- | -------------------------------- |
-| `shape` | 字段：`shape = "field"`<br />常量：`shape = "circle"` | 点符号形状 | node `shape`；字段值支持符号图例 |
-
-## 节点、文本与效果
-
-这一组通道都作用在图元生成的节点上。面板固定同一组文本节点，让尺寸、排版、外侧标签和效果可以连续调整，而不再拆成四张静态图。
+调整最小尺寸与圆角，再尝试旋转、缩放和阴影，观察三个矩形节点的变化。
 
 <ComponentPreview
-  files={['builtin-node-text', 'builtin-node-text.preview.tsx', 'builtin-node-text.data.ts']}
-  size="lg"
-  caption="下排矩形展示节点几何、label 与效果；上排文字展示 textColor 和排版，两个主体的位置保持固定。"
-  defaultSourceFile="builtin-node-text.preview.tsx"
+  files={['builtin-node', 'builtin-node.preview.tsx', 'builtin-node.data.ts']}
+  responsive
+  mode="showcase"
+  size="md"
+  defaultSourceFile="builtin-node.preview.tsx"
+  caption="灰色虚线网格位于节点后方，用于观察混合模式；数据位置与取景保持固定。"
 />
 
-### 节点几何
+### 文字
 
-节点几何通道直接控制节点自身的尺寸约束、内外间距、圆角和旋转，不负责颜色或大小这类数据映射。
+设置 text 后，PointMark 以字段文字显示数据点。本例单独展示文字颜色、字体、对齐与换行；这些文字不是图元外侧的 label 标签。
 
-| 通道                 | 通道值                                                                              | 含义          | 落点                       |
-| -------------------- | ----------------------------------------------------------------------------------- | ------------- | -------------------------- |
-| `minimumSize`        | 字段：`minimumSize = "field"`<br />常量：`minimumSize = {54}`                       | node 尺寸约束 | core node size fields      |
-| `padding` / `margin` | 字段：`padding = "field"`<br />常量：`padding = {8}` / `padding = {{ x: 8, y: 4 }}` | node 内外间距 | core node spacing fields   |
-| `cornerRadius`       | 字段：`cornerRadius = "field"`<br />常量：`cornerRadius = {8}`                      | 矩形圆角      | core node `cornerRadius`   |
-| `rotate` / `scale`   | 字段：`rotate = "field"`<br />常量：`rotate = {18}`                                 | node 变换提示 | core node transform fields |
+| 属性           | 取值                        | 作用与约束                 |
+| -------------- | --------------------------- | -------------------------- |
+| `text`         | 字段名                      | 将点图元主体改为字段文字。 |
+| `textColor`    | 字段名或显式颜色常量        | 节点内文字颜色。           |
+| `align`        | start、middle、end          | 节点内文字的水平对齐方式。 |
+| `font`         | 字体对象，如 `{ size: 14 }` | 字体大小、字重等设置。     |
+| `lineHeight`   | 正数                        | 文本行高。                 |
+| `maxTextWidth` | 正数                        | 文本最大宽度，影响换行。   |
 
-### 节点内文本
+缩小最大文字宽度观察换行，再调整字号、行高与对齐方式。
 
-`text` 会让点图元显示字段中的文字。`textColor`、`align`、`lineHeight`、`maxTextWidth`、`font` 控制文字的排版和颜色。
+<ComponentPreview
+  files={['builtin-text', 'builtin-text.preview.tsx', 'builtin-text.data.ts']}
+  responsive
+  mode="showcase"
+  size="sm"
+  defaultSourceFile="builtin-text.preview.tsx"
+  caption="本例只显示字段文字，不叠加另一组形状图元。"
+/>
 
-| 通道                                                | 通道值                                                                                             | 含义                         | 落点                                |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------- |
-| `text`                                              | 字段：`text = "field"`                                                                             | 文本类 point mark 的可见文字 | mark assembly 后写入 core node text |
-| `align` / `lineHeight`<br />`maxTextWidth` / `font` | 字段：`maxTextWidth = "field"`<br />常量：`maxTextWidth = {54}`<br />常量：`font = {{ size: 13 }}` | 文本排版                     | core node text layout fields        |
+### 标签
 
-### 节点 label
+label 在图元旁附加说明文字，保留节点主体的形状。它适合给数据点标注名称或数值；节点内文字仍由 text 设置。
 
-`label` 不替代节点内容，而是给每个数据点对应的节点添加外侧标签。`label.position`、`label.distance`、`label.pin` 决定标签的位置和引线。
+| 属性              | 取值                          | 作用与约束                             |
+| ----------------- | ----------------------------- | -------------------------------------- |
+| `label`           | 字段名、详细对象或数组        | 为图元添加外侧标签；省略时不生成标签。 |
+| `label.position`  | 本例 top、right、bottom、left | 标签相对节点的位置配置。               |
+| `label.distance`  | 数字                          | 标签与节点的距离配置。                 |
+| `label.pin`       | 布尔值                        | 是否显示标签引线。                     |
+| `label.textColor` | 颜色                          | 标签文字颜色配置。                     |
 
-| 通道                                                 | 通道值                                                                                                      | 含义           | 落点                   |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------- | ---------------------- |
-| `label`                                              | 字段：`label = "field"`                                                                                     | 数据点外侧标签 | core node `label`      |
-| `label.position` / `label.distance`<br />`label.pin` | 常量：`label = {{ field: "name", position: "top" }}`<br />常量：`label = {{ field: "name", distance: 16 }}` | label 布局     | core node label fields |
+常见标签只需 `label: 'name'`，为每条记录显示 name 字段。需要细调时写成 `label: { field: 'name', position: 'top', distance: 12, pin: true }`；固定文字使用 value 替代 field，多条标签使用数组。
 
-### 效果
+示例使用 tag 字段标注三个节点。切换标签位置、调整距离或关闭引线，观察标签变化；节点主体和数据位置保持不变。
 
-效果通道是共享视觉提示。`shadow` 改变节点投影，`blendMode` 在图形重叠时改变颜色合成；`boundary` 属于高级边界覆盖，保留在表格中查询。
+<ComponentPreview
+  files={['builtin-label', 'builtin-label.preview.tsx', 'builtin-label.data.ts']}
+  responsive
+  mode="showcase"
+  size="sm"
+  defaultSourceFile="builtin-label.preview.tsx"
+  caption="本例显式设置标签位置、距离与引线；关闭标签后保留节点主体。"
+/>
 
-| 通道        | 通道值                                                                   | 含义           | 落点                       |
-| ----------- | ------------------------------------------------------------------------ | -------------- | -------------------------- |
-| `shadow`    | 字段：`shadow = "field"`<br />常量：`shadow = "xl"`                      | 阴影预设或对象 | core node/path `shadow`    |
-| `blendMode` | 字段：`blendMode = "field"`<br />常量：`blendMode = "multiply"`          | 混合模式       | core node/path `blendMode` |
-| `boundary`  | 字段：`boundary = "field"`<br />常量：`boundary = {{ shape: "circle" }}` | node 边界覆盖  | core node `boundary`       |
+### 路径
 
-## 路径
+路径样式控制线条的颜色、宽度、虚线、端点与折点。先选择希望改变的线条特征，再调整对应属性。
 
-路径通道作用在生成路径的图元上，例如折线、关系线、区域边界和参考线。端点箭头不是通道；需要箭头时，在对应路径配置中写 `marks`。
+| 属性             | 取值                 | 作用与约束                                        |
+| ---------------- | -------------------- | ------------------------------------------------- |
+| `stroke`         | 字段名或显式颜色常量 | 线条颜色。                                        |
+| `strokeWidth`    | 数值字段或非负数字   | 线条宽度。                                        |
+| `opacity`        | 字段名或 0–1         | 整条路径的透明度。                                |
+| `dashPattern`    | 数字数组             | 交替指定线段与间隔长度；本例用 [7, 4] 和 [1, 4]。 |
+| `lineCap`        | butt、round、square  | 分别为平头、圆头、向外延伸的方头。                |
+| `lineJoin`       | miter、round、bevel  | 分别为尖角、圆角、斜角连接。                      |
+| `roundedCorners` | 非负数字             | 对路径折点做几何圆角。                            |
+
+先把路径圆角设为 0，对比三种连接方式；再增加圆角半径。切换虚线与点线时，可同时观察端点样式的影响。
 
 <ComponentPreview
   files={['builtin-path-style', 'builtin-path-style.preview.tsx', 'builtin-path-style.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="路径圆角为 0 时可以比较尖角、圆角与斜角连接；提高路径圆角后，折点会改为几何圆角，连接样式随之隐藏。"
   defaultSourceFile="builtin-path-style.preview.tsx"
+  caption="几何圆角启用后隐藏连接样式控件。"
 />
 
-### 路径样式
+几何圆角已替换折点时，lineJoin 的差异不再明显，因此本例隐藏该控件。thickness 提供语义线宽预设，dashed 和 dotted 是虚线简写；fillRule 影响闭合路径填充，这些完整配置见图元参考。端点箭头通过对应路径配置的 marks 声明。
 
-| 通道                                   | 通道值                                                             | 含义             | 落点 / 图例                                                  |
-| -------------------------------------- | ------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------ |
-| `strokeWidth`                          | 字段：`strokeWidth = "field"`<br />常量：`strokeWidth = {4}`       | 描边宽度         | scope / node / path `strokeWidth`；字段值默认范围 `[0.5, 4]` |
-| `thickness`                            | 字段：`thickness = "field"`<br />常量：`thickness = "thick"`       | 语义线宽预设     | 转换为 core path `strokeWidth`                               |
-| `roundedCorners`                       | 字段：`roundedCorners = "field"`<br />常量：`roundedCorners = {8}` | path 圆角提示    | core path `roundedCorners`                                   |
-| `fillRule`                             | 字段：`fillRule = "field"`<br />常量：`fillRule = "evenodd"`       | 闭合路径填充规则 | core path `fillRule`                                         |
-| `lineCap`<br />`lineJoin`              | 字段：`lineCap = "field"`<br />常量：`lineCap = "round"`           | 线端和连接样式   | core path line fields                                        |
-| `dashPattern` / `dashed`<br />`dotted` | 字段：`dashPattern = "field"`<br />常量：`dashPattern = {[7, 4]}`  | 描边虚线样式     | core node/path dash fields                                   |
+## 排序与分组
 
-## 其他
+绘制顺序、连接顺序和系列分组解决不同问题：zIndex 决定重叠时谁在上方，order 决定路径按哪个字段排列记录，series 将记录拆成多个系列。
 
-其他通道不直接描述颜色、位置或路径形状，而是控制绘制顺序、数据排序和系列拆分。
+| 属性     | 取值         | 作用与约束                                       |
+| -------- | ------------ | ------------------------------------------------ |
+| `zIndex` | 字段名或数字 | 同一绘制层内控制数据点的前后关系；较大的值在上。 |
+| `order`  | 字段名       | 路径按该字段排序后连接；省略时使用输入顺序。     |
+| `series` | 字段名       | 按字段拆分系列，各系列分别生成路径。             |
+
+输入行刻意打乱。开关排序可比较输入顺序与 step 顺序；开关分组可比较一条路径与两条系列路径。A、B 在 step=2 处重叠，调整 B 的绘制层级观察遮挡变化。
 
 <ComponentPreview
   files={['builtin-other', 'builtin-other.preview.tsx', 'builtin-other.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="输入行被刻意打乱：series 拆成两条线，order 再按 step 恢复连接顺序；A、B 在 step=2 的点重叠，zIndex 决定哪个系列显示在上方。"
   defaultSourceFile="builtin-other.preview.tsx"
+  caption="step=2 处的两点重叠，用于比较绘制顺序。"
 />
 
-| 通道     | 通道值                                             | 含义             | 落点                         |
-| -------- | -------------------------------------------------- | ---------------- | ---------------------------- |
-| `zIndex` | 字段：`zIndex = "field"`<br />常量：`zIndex = {1}` | 绘制顺序提示     | scope / node / path `zIndex` |
-| `order`  | 字段：`order = "field"`                            | 路径的连接顺序   | 图元读取字段后排序数据行     |
-| `series` | 字段：`series = "field"`                           | 多系列拆分或分组 | 图元读取字段后拆分图形       |
+order 和 series 位于图元配置顶层，不在 encoding 中。它们组织图元消费的数据，不是颜色或位置这类视觉编码。zIndex 只调整绘制次序，不改变路径连接或数据排序。
 
-`order` 和 `series` 不属于 `encoding` 对象，但它们仍然是字段驱动的通道入口。用户在 React DSL 里同样把它们写成 mark props。
+<ComponentAlert
+  type="tip"
+  title="与数据层 transform 的区别"
+  description="数据层 transform 先处理数据：sort 调整输出行的顺序，groupBy 划定当前操作的分组范围，可用于组内排序、汇总、筛选或回填计算结果。图元的 order 和 series 在数据处理后决定如何连线、拆成几条路径，不做聚合，也不改变上游数据。transform 分组不会自动生成多条路径，仍需用 series 指定系列；已排序的数据可以省略 order，再设置 order 则会在构建路径时重新排序。"
+/>
+
+## 错误与限制
+
+- **先确认图元支持范围。** 点、路径和参考图元的属性形态并不完全相同；不要直接把一个图元的配置复制到另一个图元。
+- **字符串先匹配字段。** React 内置样式简写可能将颜色名或形状名识别为同名字段。固定颜色使用 `{ kind: 'constant', value: '#2563eb' }`；位置与字段查找规则见[通道绑定](/viz/plot/channel/binding#错误与限制)。
+- **区分数据映射与直接值。** 点的 size 字段默认经过平方根比例尺，常量 size 是半径；shape 字段应为分类类型。透明度范围为 0–1，半径和描边宽度不能为负。
+- **明确颜色的作用位置。** 需要独立控制填充和描边时，用 fill 和 stroke。textColor 控制节点文字，label.textColor 控制外侧标签。
+- **给大尺寸与标签留空间。** domainPadding 扩展位置比例尺的数据域；较大的半径、旋转或标签可能还需要更多留白，超出画面时先检查尺寸与坐标域。
+
+## 相关属性
+
+以下集中列出本页常用成员；其余完整输入形态见[图元参考](/viz/plot/reference/mark)与[通道参考](/viz/plot/reference/encoding)。
+
+<ComponentProps
+  items={[
+    { name: 'PointMark.x', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定横坐标。' },
+    { name: 'PointMark.y', kind: 'property', type: 'string', description: '位置字段；二维直角坐标下决定纵坐标。' },
+    {
+      name: 'PointMark.color',
+      kind: 'property',
+      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
+      description:
+        '字段名简写或显式绑定。字段形式读取 value 指定的字段，可用 scale 引用比例尺；常量形式使用固定 CSS 颜色。',
+    },
+    {
+      name: 'PointMark.size',
+      kind: 'property',
+      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
+      description: '字段映射点半径，非负数字直接指定半径；显式绑定中的 scale 可引用命名比例尺。',
+    },
+    {
+      name: 'PointMark.text',
+      kind: 'property',
+      type: 'string',
+      description: '节点内显示的文字字段；会改变点图元的显示形式。',
+    },
+    {
+      name: 'PointMark.label',
+      kind: 'property',
+      type: 'InputPlotNodeLabel | Array<InputPlotNodeLabel>',
+      description: '字段名或包含 field/value、位置和样式的对象；支持数组，省略时不生成标签。',
+    },
+    {
+      name: 'PathMark.order',
+      kind: 'property',
+      type: 'string',
+      description: '连接前按指定字段排序；不放在 encoding 中。',
+    },
+    {
+      name: 'PathMark.series',
+      kind: 'property',
+      type: 'string',
+      description: '按指定字段拆分路径系列；不放在 encoding 中。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '自定义通道', description: '为项目注册新的视觉通道。', url: '/viz/plot/channel/custom-channel' },
+    { title: '比例尺', description: '调整映射范围、颜色与坐标域留白。', url: '/viz/plot/scale' },
+    { title: '坐标系', description: '了解位置角色在不同坐标系中的解释。', url: '/viz/plot/coordinate' },
+    { title: '图例', description: '为字段驱动的样式添加阅读线索。', url: '/viz/plot/guide/legend' },
+  ]}
+/>

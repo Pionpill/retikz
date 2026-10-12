@@ -1,5 +1,5 @@
 import { DataFieldType } from '@retikz/data';
-import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { positionRows } from './builtin-position.data';
 
@@ -10,8 +10,16 @@ export type BuiltinPositionPreviewValues = {
 };
 
 /** 绘制示例图形 */
-export const BuiltinPositionPreview = (values: BuiltinPositionPreviewValues) => (
+export const BuiltinPositionPreview = (
+  values: BuiltinPositionPreviewValues,
+  dimensions?: { width: number; height: number },
+) => (
   <Plot
+    style={
+      dimensions
+        ? { width: 'auto', height: 'auto', maxWidth: dimensions.width, maxHeight: dimensions.height }
+        : undefined
+    }
     data={positionRows}
     model={[
       { name: 'month', type: DataFieldType.Categorical },
@@ -24,6 +32,12 @@ export const BuiltinPositionPreview = (values: BuiltinPositionPreviewValues) => 
     width={400}
     height={260}
   >
+    {values.xField !== 'month' ? (
+      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    ) : null}
+    {values.yField !== 'month' ? (
+      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    ) : null}
     <PointMark x={values.xField} y={values.yField} size={8} fill="#2563eb" />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

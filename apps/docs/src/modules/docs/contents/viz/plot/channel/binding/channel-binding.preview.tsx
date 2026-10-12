@@ -1,6 +1,6 @@
 import { BuiltinShape } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
-import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { cities } from './channel-binding.data';
 
@@ -28,6 +28,8 @@ export const ChannelBindingPreview = (values: ChannelBindingPreviewValues) => (
     width={480}
     height={320}
   >
+    <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.3 }} />
     <PointMark
       x={values.xField}
       y={values.yField}

@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { pointStyleRows } from './builtin-point-style.data';
 
@@ -15,13 +15,21 @@ export type BuiltinPointStylePreviewValues = {
 };
 
 /** 绘制示例图形 */
-export const BuiltinPointStylePreview = (values: BuiltinPointStylePreviewValues) => {
+export const BuiltinPointStylePreview = (
+  values: BuiltinPointStylePreviewValues,
+  dimensions?: { width: number; height: number },
+) => {
   const usesColor = values.paintChannel === 'color';
   const usesFill = values.paintChannel === 'fill';
   const usesStroke = values.paintChannel === 'stroke';
 
   return (
     <Plot
+      style={
+        dimensions
+          ? { width: 'auto', height: 'auto', maxWidth: dimensions.width, maxHeight: dimensions.height }
+          : undefined
+      }
       data={pointStyleRows}
       model={[
         { name: 'x', type: 'continuous' },
@@ -30,6 +38,8 @@ export const BuiltinPointStylePreview = (values: BuiltinPointStylePreviewValues)
       width={440}
       height={280}
     >
+      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PointMark
         x="x"
         y="y"
