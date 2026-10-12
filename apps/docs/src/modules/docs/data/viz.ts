@@ -483,6 +483,17 @@ export const vizSection: Array<Section> = [
             difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('plot.channel.extensions'),
           },
+          {
+            id: 'mechanism',
+            label: 'viz.grammarChannelMechanism',
+            difficulty: DocDifficulty.Internals,
+            meta: {
+              pageType: 'architecture',
+              audience: 'maintainer',
+              capability: 'plot.channel.mechanism',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       {

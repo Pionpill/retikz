@@ -364,6 +364,7 @@
     "grammarChannelBinding": "Channel Binding",
     "grammarChannelBuiltin": "Built-In Channels",
     "grammarChannelCustom": "Custom Channels",
+    "grammarChannelMechanism": "Implementation",
     "grammarTransform": "Transforms",
     "grammarTransformRow": "Derive & Jitter",
     "grammarTransformAnnotation": "Stacking & Shares",

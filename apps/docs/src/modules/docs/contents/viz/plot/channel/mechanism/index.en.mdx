@@ -1,0 +1,282 @@
+---
+title: Implementation
+description: Trace Plot channels from field bindings and definition registration through mark resolution, property delivery, and legend generation.
+---
+
+Start with [Channel Binding](/viz/plot/channel/binding) and [Built-in Channels](/viz/plot/channel/builtin). This page follows the common `size` channel through Plot lowering: how `amount` becomes point size, and how the same mapping supports a size legend. Lowering expands Plot marks into drawable primitives. The discussion ends at primitive properties and legend generation, before backend rendering.
+
+## Overall flow
+
+Three objects participate:
+
+- **Binding**: where a value comes from, such as the size field binding `{ kind: 'field', value: 'amount' }`; it lives in Plot IR.
+- **Definition**: a runtime object that explains how to resolve and use values; Plot supplies the built-in `size` definition.
+- **Resolution**: value functions, delivery entries, and optional legend descriptors prepared for a mark and its data.
+
+The diagram shows two consumers of a non-position channel. The blue branch writes properties; the orange branch describes what the values mean.
+
+<ComponentPreview files="channel-overview" hideCode type="flow" size="sm" />
+
+Suppose `amount` contains `[0, 25, 100]`, with no explicit scale. `size` uses domain `[0, 100]` and radius range `[2, 20]`. Its square-root mapping gives $r = 2 + \sqrt{25 / 100} \times (20 - 2) = 11$. The point with value 25 uses radius 11. The size legend uses the same mapping range without reading back the generated node.
+
+## Registration and lookup
+
+Plot lowering creates a channel registry containing built-in definitions for color, size, shape, and other properties. The `size` definition has kind node: its resolver is `resolveSizeChannel`, its legend form is `size`, and its delivery function converts radius to a node layout property. Definition functions stay in the runtime, outside IR.
+
+The registry keeps a name index and a complete definition list because legends and marks answer different questions.
+
+A legend configured with `channel: 'size'` already knows which channel it describes. It looks up size by name and reads `legend: 'size'` to choose differently sized symbols. Values and radius ranges come from the descriptor produced during resolution; the legend does not need to execute node delivery functions.
+
+A point can bind size, shape, and opacity at the same time, requiring several definitions. The current implementation traverses the complete list, filters by the kinds supported by the mark, and lets each definition read its own binding. Definitions without a binding produce no result; applicable definitions produce separate delivery entries for size, shape, opacity, and other properties.
+
+`opacity` illustrates why a built-in name can have different kinds. Users express the same property, but points write it to nodes and lines write it to paths. The built-in implementation therefore keeps two definitions with the same name:
+
+| Definition       | Consumer   | Delivery target              |
+| ---------------- | ---------- | ---------------------------- |
+| `opacity / node` | Point mark | Node `style.opacity.overall` |
+| `opacity / path` | Path mark  | Path `style.opacity.overall` |
+
+Point marks select the node definition, while path marks select the path definition; both are not applied to the same point. Both definitions declare `legend: 'ramp'`, so legends can read the form by name without knowing whether the data becomes points or lines. The name index keeps the first definition for that lookup; the complete list preserves both so one delivery target does not overwrite the other. This arrangement applies to built-ins; custom channels still cannot duplicate a name.
+
+<ComponentPreview
+  files="channel-registry"
+  hideCode
+  type="illustration"
+  size="lg"
+  caption="Top: lookup by channel name. Bottom: select delivery kinds. Both opacity entries remain in the full list."
+/>
+
+Once registration is complete, mark resolution traverses applicable definitions. The `size` definition reads the mark's named property, not `encoding.channels.size`; putting a built-in name in the extension binding area fails.
+
+<ComponentAlert
+  type="tip"
+  title="Custom channels share this pipeline"
+  description="Host-supplied channelDefinitions are merged after built-in definitions. Custom names must be nonempty, cannot override built-in names, and cannot be registered twice. Unregistered extension bindings fail. Resolution and delivery use the same pipeline as built-ins; see Custom Channels for authoring details."
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Create the runtime channel context',
+      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
+      startLine: 540,
+      endLine: 558,
+    },
+    {
+      label: 'Name index, full list, and conflict checks',
+      path: 'packages/viz/plot/src/providers/channel/registry.ts',
+      startLine: 59,
+      endLine: 103,
+    },
+    {
+      label: 'Validate extension binding names',
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 50,
+      endLine: 67,
+    },
+    {
+      label: 'Node opacity definition and delivery',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+      startLine: 376,
+      endLine: 394,
+    },
+    {
+      label: 'Path opacity definition and delivery',
+      path: 'packages/viz/plot/src/providers/channel/features/path.ts',
+      startLine: 163,
+      endLine: 181,
+    },
+  ]}
+/>
+
+## Binding resolution
+
+Each mark receives its own data view: `rows` contains its current data and `model` describes the fields. The resolution context also provides scale, category-order, and color-scheme resolution. Channels use these inputs to prepare a mapping without modifying the data.
+
+A definition receives the data context and current mark together through `resolve(context, mark)`. It reads the binding and prepares the mapping, or returns `undefined` when there is no applicable binding.
+
+For `size`, resolution determines the field, domain, and square-root scale, then returns `resolver(row)`. Each point uses that function to read its row value and calculate a radius. These are two distinct tasks: preparing a mapping for the current mark, then applying it to each row. The per-row calculation does not need to prepare the scale again.
+
+`resolveSizeChannel` reads the mark's `size` binding. Field mode requires continuous, non-negative data. Without an explicit scale, it creates a square-root scale with domain `[0, largest positive value]` and range `[2, 20]`; an explicitly referenced scale must also be a sqrt scale. Constant mode returns the supplied radius directly, bypassing scales.
+
+Field mode returns both a per-row resolver and a legend descriptor containing the field, scale name, domain, and range. When no domain is authored and the data has no positive values, the mapping stays at the lower range bound. Missing or non-finite row values produce `undefined`; negative values or a non-continuous field cause an error.
+
+| Object being traced | Current contents                           | Consumer        |
+| ------------------- | ------------------------------------------ | --------------- |
+| Input binding       | `size: { kind: 'field', value: 'amount' }` | Size definition |
+| Value function      | `amount = 25 → radius = 11`                | Node delivery   |
+| Mapping descriptor  | `domain: [0, 100]`, `range: [2, 20]`       | Size legend     |
+| Node property       | `layout.minimumSize: 11 × √2`              | Circle layout   |
+
+Resolution is not a global cache. Legend collection, layout measurement, and final mark generation may all invoke resolution logic. A resolver must not depend on running only once or modify its input data during evaluation.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Context and resolution by channel kind',
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 32,
+      endLine: 145,
+    },
+    {
+      label: 'Field and constant branches in size',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+      startLine: 231,
+      endLine: 323,
+    },
+    {
+      label: 'Layout measurement also resolves channels',
+      path: 'packages/viz/plot/src/resolve/scale/mark-domain.ts',
+      startLine: 210,
+      endLine: 233,
+    },
+  ]}
+/>
+
+## Consumption and delivery
+
+A mark definition declares supported channel kinds through `channelKinds`. Point marks consume `mark / scope / node`; path marks consume `mark / scope / path`. Resolution filters definitions by this set before invoking them, so a channel need not check every mark name. If the set is omitted, this stage does not filter by kind; consumption still depends on the mark implementation.
+
+| Kind    | Resolution output            | Use                                                                   |
+| ------- | ---------------------------- | --------------------------------------------------------------------- |
+| `mark`  | `values` and `defaults`      | The mark interprets them, such as color for point fill or line stroke |
+| `node`  | Per-row resolver and deliver | Write a row's value to a newly created node                           |
+| `path`  | Resolver and deliver         | The mark selects a row and writes properties to a generated path      |
+| `scope` | Shared value and deliver     | Write layer properties or defaults after a Scope layer is generated   |
+
+The point mark evaluates each drawable row, then calls `deliver(node, value, context)`. For a default circular point, the `size` delivery function converts radius 11 to `layout.minimumSize = 11 × √2` for the underlying circle layout. It does not write the radius directly as width or height. With no extra padding, minimumSize, or scale overrides, the final circle radius is 11.
+
+Size delivery applies only to `pointGlyph`; text nodes do not use this branch. A row result of `undefined` skips that delivery. The point mark also checks for an undefined size and skips the point.
+
+Paths need not correspond one-to-one with data rows. A line path can contain multiple rows; its implementation uses the first row of each path segment to evaluate path-level channels. This does not assign a separate opacity to every vertex. Scope delivery runs after mark lowering returns a Scope, rather than once per row.
+
+<ComponentAlert
+  type="tip"
+  title="Primitives handle rendering"
+  description="Channel delivery uses existing Kernel node, path, and scope properties. Plot maps data to those properties; the drawing foundation handles subsequent geometry resolution and SVG / Canvas rendering."
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Channel kinds supported by built-in marks',
+      path: 'packages/viz/plot/src/providers/mark/shared/common.ts',
+      startLine: 474,
+      endLine: 480,
+    },
+    {
+      label: 'Convert size radius to node layout',
+      path: 'packages/viz/plot/src/providers/channel/features/node.ts',
+      startLine: 634,
+      endLine: 642,
+    },
+    {
+      label: 'Per-row evaluation and point delivery',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
+      startLine: 85,
+      endLine: 138,
+    },
+    {
+      label: 'Path segments use their first row',
+      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
+      startLine: 656,
+      endLine: 675,
+    },
+    {
+      label: 'Scope delivery after layer generation',
+      path: 'packages/viz/plot/src/providers/mark/registry.ts',
+      startLine: 67,
+      endLine: 102,
+    },
+  ]}
+/>
+
+## Positions and legends
+
+Positions need scale inference and coordinate projection, so they have a separate entry point. `resolveCoordinateFrame` reads roles from the coordinate definition, creates position-binding readers, collects data for each role, and resolves scales to provide projection. Marks use projected positions before applying visual-property channels.
+
+Plot position encodings use `x / y / z`. Polar coordinates change how these roles are interpreted without introducing `angle / radius` aliases. The `size` channel controls size and does not participate in position-role projection.
+
+Legends follow another path. `collectChannelDescriptors` collects descriptors using each mark's data view, and `buildLegendLayers` selects a mapping by channel and optional scale name. For `size`, the descriptor carries the square-root scale's domain and radius range. The legend uses them to generate differently sized symbols instead of inferring data from node dimensions. When a channel has multiple distinct mappings, the legend's `scale` selects one. Duplicate descriptors for the same size scale must also agree.
+
+A field-bound `size` returns a descriptor and can produce a size legend. A constant returns only a fixed radius, with no descriptor or data range for a legend. Explicitly requesting a size legend without a descriptor fails during lowering.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Create position readers from coordinate roles',
+      path: 'packages/viz/plot/src/providers/channel/features/position.ts',
+    },
+    {
+      label: 'Role validation and coordinate-frame resolution',
+      path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
+      startLine: 293,
+      endLine: 312,
+    },
+    {
+      label: 'Descriptor collection and scale disambiguation',
+      path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
+      startLine: 29,
+      endLine: 149,
+    },
+    {
+      label: 'Build layers from descriptors and legend forms',
+      path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
+      startLine: 397,
+      endLine: 510,
+    },
+  ]}
+/>
+
+## Complete implementation flow
+
+The diagram connects the stages to searchable implementation names. Arrows indicate data dependencies: legend collection calls channel resolution itself rather than reusing the same resolution object as final node generation.
+
+<ComponentPreview files="channel-pipeline" hideCode type="flow" size="sm" />
+
+Start with `resolveChannelRegistry` to see definitions combined, then follow `resolveMarkChannels` to see results dispatched by kind. Read node delivery in `lowerPoint`, followed by the legend branch in `collectChannelDescriptors` and `buildLegendLayers`. For positions, start separately at `resolveCoordinateFrame`; reading the entire Plot lowering function is not a prerequisite.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Channel dispatch entry point',
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 50,
+      endLine: 145,
+    },
+    {
+      label: 'Node creation and property delivery',
+      path: 'packages/viz/plot/src/providers/mark/features/point.ts',
+      startLine: 60,
+      endLine: 165,
+    },
+    {
+      label: 'Legend consumption entry point',
+      path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
+      startLine: 397,
+      endLine: 430,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Channel binding',
+      description: 'Review field and constant input forms.',
+      url: '/viz/plot/channel/binding',
+    },
+    {
+      title: 'Custom channels',
+      description: 'Define and inject a working channel.',
+      url: '/viz/plot/channel/custom-channel',
+    },
+    {
+      title: 'Custom marks',
+      description: 'Learn how marks declare and consume channels.',
+      url: '/viz/plot/mark/custom-mark',
+    },
+  ]}
+/>
