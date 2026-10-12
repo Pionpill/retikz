@@ -140,6 +140,7 @@
     "pkgRenderSvg": "render · SVG",
     "pkgRenderCanvas": "render · Canvas",
     "pkgHydration": "render · Hydration",
+    "pkgCoreCompilation": "Compilation Flow",
     "pkgOverview": "Overview",
     "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",

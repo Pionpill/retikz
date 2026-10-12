@@ -595,7 +595,14 @@ export const kernelSection: Array<Section> = [
         id: 'core',
         label: 'kernel.pkgCore',
         sidebarGroup: 'kernel.pkgGroupCore',
-        children: [{ id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals }],
+        children: [
+          {
+            id: 'compilation',
+            label: 'kernel.pkgCoreCompilation',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+        ],
       },
       {
         id: 'tex',

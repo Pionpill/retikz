@@ -1,0 +1,511 @@
+﻿---
+title: 编译流程
+description: 沿一次完整编译追踪 IR、节点布局和延迟路径，理解 Core 怎样汇总 Scene、资源与附属产物。
+---
+
+本页从 Core 接收完整 IR 开始，追踪一次同步编译，直到返回可交给渲染器的 Scene。React / Vanilla 怎样产生 IR、渲染器怎样绘制，以及后续更新怎样复用结果，分别属于这条主线的上游、下游和另一轮执行。
+
+## 输入与案例
+
+IR 是可保存的图形声明，例如“在这里放一个节点”“连接 A 和 B”。Scene 则记录已经确定几何和样式的图元，例如矩形、文字和路径指令。`compileToScene` 负责完成这次转换，并返回包含 Scene 的编译结果。下面是省略泛型细节后的公开签名：
+
+```ts
+compileToScene(ir: IRScene, options?: CompileOptions): CompileResult
+```
+
+| 输入 / 输出             | 本页追踪的含义                                   |
+| ----------------------- | ------------------------------------------------ |
+| `ir`                    | 完整、符合 Core 契约的图形声明                   |
+| `options`               | 本次使用的测量能力、扩展定义和输出设置；可以省略 |
+| `result.scene`          | 已布局的图元、画布范围与绘制资源                 |
+| `result.artifacts`      | 复合组件产物及显式请求的节点布局数据             |
+| `result.spatialHandles` | 本次编译收集的具名空间区域索引                   |
+
+`compileToScene` 接收已类型化的 IR；它不会在入口对整棵树调用 `SceneSchema.parse`。来自 JSON 等外部输入的数据应先经过 schema 入口校验。编译过程中仍会检查需要 Definition 或布局上下文才能判断的约束。
+
+贯穿案例有两个宽 60、高 40 的矩形节点，中心分别位于 `[0, 0]` 和 `[180, 0]`，连线声明刻意放在节点前面。节点文字只用 A、B，保证本例的最小尺寸足以容纳正文。
+
+<ComponentPreview files={['compilation-example', 'compilation-example.data']} size="xs" hideCode type="illustration" />
+
+下面是这个案例的 Core 输入。`minimumSize` 限制节点外框，`padding` 和 `margin` 分别是内间距与连接边界外侧间距；设为零后，本例的连线直接落在矩形边上。
+
+```ts
+import { compileToScene, type IRScene } from '@retikz/core';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'line', to: { id: 'B' } },
+      ],
+    },
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+    {
+      type: 'node',
+      id: 'B',
+      position: [180, 0],
+      text: 'B',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+  ],
+};
+
+const result = compileToScene(ir, { padding: 10 });
+```
+
+图中只展示最终几何效果。接下来跟踪同一条路径怎样从 `{ id: 'A' }`、`{ id: 'B' }` 变成 `[30, 0]` 到 `[150, 0]` 的线段。
+
+<SourceLinks
+  sources={[
+    { label: '同步入口与返回值', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'CompileOptions / CompileResult', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: '外部场景校验', path: 'packages/kernel/core/src/schemas/scene/schema.ts' },
+  ]}
+/>
+
+## 整体流程
+
+第一次遇到 Path 时，A 和 B 还没有布局结果。Core 先记住这条路径，继续处理节点；节点的中心和连接边界确定后，再计算路径端点，最后汇总画布范围。
+
+<ComponentPreview files="compilation-overview" size="sm" hideCode type="flow" />
+
+图中表示根层的一次完整编译。Scope 会在递归处理中完成自己的布局与路径回填，所以“遍历与布局”和“回填延迟路径”也会出现在局部分组内部。各元素按需要解析并生成图元，整棵树不必先变成一份统一的 Canonical Scene。
+
+<SourceLinks sources={[{ label: '完整编译的编排顺序', path: 'packages/kernel/core/src/compile/compile.ts' }]} />
+
+## 编译上下文
+
+进入编译前，Core 需要知道怎样量文字、按什么规则解析形状，以及把共享的绘制资源放在哪里。这里涉及两个概念：
+
+- Definition：一种形状、路径或复合组件的具体能力定义。
+- registry：本次编译按名称查找 Definition 的注册表。
+
+`createCompileContext` 把内置能力与调用方注入的定义整理到相应注册表，解析根主题，并准备测量函数、输出精度、资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
+
+内置定义与 CompileOptions 中的外部定义按能力注册到 context 对应的 registry，供编译时按名称查找和调用，而生成的 paint / clip 资源由上下文的 `paint`、`clip` 收集并写入 Scene 的资源表。
+
+本例没有额外定义，因此使用内置矩形和路径能力。上下文中的 `loweredIr` 在此处仍指向传入的 IR，复合组件会在后续遍历遇到时处理。
+
+遍历还会建立本轮执行状态，包括已生成的图元、累计边界和命名空间。命名空间按 id 保存可查询的布局结果，使路径能由 A、B 找到对应几何。这些状态属于本次完整编译，不负责跨调用保留更新结果。
+
+<SourceLinks
+  sources={[
+    { label: '依赖与资源上下文', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '内置与外部定义的注册', path: 'packages/kernel/core/src/providers/registry/registry.ts' },
+    { label: '遍历状态与命名查询', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## 节点解析
+
+`compileChildrenToPrimitives` 按 `children` 的声明顺序分派子项。本例先把 Path 放入待处理列表，再处理 A、B。一个节点的内部过程可以用三个结果理解：
+
+- CanonicalNode：合并有效样式、补齐缺省值并解析填充与描边后的节点，`fill` / `stroke` 直接携带 paint 解析结果。
+- NodeResolution：CanonicalNode 加上已经选定的形状与连接边界，供布局使用。
+- NodeLayout：测量并定位后的节点结果，按节点属性、形状、连接面、几何、正文排版和标签分组。
+
+以下为这三个内部类型的源码定义，省略注释，不展开它们引用的其他类型。
+
+<DocTabs defaultValue="canonical-node">
+
+<DocTab value="canonical-node" label="CanonicalNode">
+
+```ts
+export type CanonicalNode = Omit<
+  Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
+  | 'padding'
+  | 'position'
+  | 'margin'
+  | 'minimumSize'
+  | 'scale'
+  | 'text'
+  | 'label'
+  | 'align'
+  | 'rotate'
+  | 'dashed'
+  | 'dotted'
+  | 'dashPattern'
+  | 'shadow'
+  | 'fill'
+  | 'stroke'
+> & {
+  fill?: PaintResolutionInput;
+  stroke?: PaintResolutionInput;
+  position: NonNullable<IRNode['position']>;
+  padding: BoundsInsets;
+  margin: BoundsInsets;
+  minimumSize: {
+    width: number;
+    height: number;
+  };
+  scale: {
+    x: number;
+    y: number;
+  };
+  text?: Array<ResolvedTextLine>;
+  label?: Array<CanonicalNodeLabel>;
+  align: NodeTextAlign;
+  rotate: number;
+  dashPattern?: StrokeDashPattern;
+  shadow?: ResolvedDropShadow;
+};
+```
+
+</DocTab>
+
+<DocTab value="node-resolution" label="NodeResolution">
+
+```ts
+export type NodeResolution = {
+  irPath: string;
+  node: CanonicalNode;
+  shape: ShapeResolution;
+  boundary: BoundaryReferenceResolution;
+};
+```
+
+</DocTab>
+
+<DocTab value="node-layout" label="NodeLayout">
+
+```ts
+export type NodeLayout = {
+  irPath: string;
+  node: NodeLayoutProperties;
+  shape: NodeResolution['shape'];
+  boundary: NodeResolution['boundary'];
+  geometry: NodeLayoutGeometry;
+  text?: NodeTextLayout;
+  labels?: Array<NodeLabelLayout>;
+};
+
+export type NodeLayoutGeometry = {
+  rect: Rect;
+  margin: BoundsInsets;
+  contentCenter: Position;
+  contentSize: { width: number; height: number };
+};
+
+export type NodeLayoutProperties = Pick<
+  CanonicalNode,
+  | 'id'
+  | 'fill'
+  | 'fillOpacity'
+  | 'stroke'
+  | 'strokeOpacity'
+  | 'strokeWidth'
+  | 'dashPattern'
+  | 'dashOffset'
+  | 'cornerRadius'
+  | 'textColor'
+  | 'opacity'
+  | 'shadow'
+  | 'blendMode'
+  | 'boundary'
+  | 'meta'
+  | 'animations'
+>;
+
+export type NodeTextLayout = {
+  font: TextFont;
+  align: 'start' | 'middle' | 'end';
+  lineHeight: number;
+  baselineOffsets?: Array<number>;
+} & (
+  | { kind: 'plain'; lines: Array<TextLine> }
+  | { kind: 'inline'; lines: Array<{ laid: LaidLine; baselineOffset: number }> }
+);
+```
+
+</DocTab>
+
+</DocTabs>
+
+`resolveNode` 先确定有效配置和能力绑定，`layoutNode` 再消费度量与位置上下文，确定正文排版、节点尺寸及位置。`emitNodePrimitives` 根据布局生成矩形和文字等 Scene 图元。解析处理配置含义，布局处理几何，生成阶段把确定的结果写成渲染器可消费的结构。
+
+<ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
+
+本例中，A 的外框中心为 `[0, 0]`、尺寸为 `60 × 40`；B 的中心为 `[180, 0]`，尺寸相同。Core 把布局登记到命名空间，同时生成两个具名 Group，各自包含矩形与文字。因此，一个 IR Node 可以对应多个绘制图元。
+
+| 同一个 A   | 字段摘录或几何结果                                  |
+| ---------- | --------------------------------------------------- |
+| Source IR  | `position: [0, 0]`，`text: 'A'`，最小尺寸 `60 × 40` |
+| 节点布局   | 外框中心 `[0, 0]`，宽 60、高 40                     |
+| Scene 矩形 | 左上角 `[-30, -20]`，宽 60、高 40                   |
+
+布局外框用中心表示位置，Scene 矩形使用左上角。数值不同来自表示方式的转换，节点没有发生移动。
+
+<SourceLinks
+  sources={[
+    { label: 'resolveNode：有效配置与能力绑定', path: 'packages/kernel/core/src/resolve/node/resolve.ts' },
+    { label: '节点布局', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: '节点图元生成', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+  ]}
+/>
+
+## 路径解析
+
+节点布局先完成，依赖节点的路径随后解析。遍历按子项声明顺序推进：
+
+1. 遇到 Node，立即解析配置、测量定位、注册布局并生成节点图元。
+2. 遇到 Path，先记录待处理任务并插入占位，暂不解析节点引用和生成路径图元。
+3. 到当前容器的收尾阶段，再查询已注册的节点布局，解析并生成待处理路径。
+
+这个顺序以当前容器为范围：Scope 会递归处理子项，在自身收尾时处理内部待处理路径；根层则在根子项遍历完成后处理根层路径。因此，并非整棵树的所有 Node 都处理完，才开始处理任何 Path。
+
+路径可能引用稍后才出现的节点。`queuePathChild` 会同时保存两样东西：待处理路径记录，以及插入当前图元数组的占位项。记录保留路径输入、样式与坐标环境，还持有占位项及其所属数组的引用。
+
+下图逐行展示本例的数组状态。Group A、Group B 分别包含对应节点的矩形和文字；槽位内的文字是结构摘要。
+
+<ComponentPreview files="compilation-slots" size="xl" hideCode type="illustration" />
+
+A、B 登记完成后，`flushPendingPathEmissions` 查询目标布局，解析路径并生成图元。只指定节点 id 时，本例会按连接边界裁剪端点，所以 A 的右边界 `[30, 0]` 和 B 的左边界 `[150, 0]` 成为可见线段的起止点。
+
+随后，Core 在原数组中找到占位项，用实际 PathPrim 替换它。虽然路径比节点晚计算，它仍位于数组第 0 项。回填完成后再按 `zIndex` 稳定排序；相同 `zIndex` 保持声明顺序。所有占位必须在返回 Scene 前消失。
+
+本例的最终路径字段摘录如下：
+
+```ts
+{
+  type: 'path',
+  commands: [
+    { kind: 'move', to: [30, 0] },
+    { kind: 'line', to: [150, 0] },
+  ],
+}
+```
+
+这种等待发生在对应分组的收尾阶段。它支持本例同组 Path 对后续节点的引用，但节点自己的相对定位在布局时就需要目标，不能由此推断所有位置表达都支持前向引用。
+
+<SourceLinks
+  sources={[
+    { label: '路径入队与回填', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '占位与稳定排序', path: 'packages/kernel/core/src/compile/orchestration/primitive.ts' },
+    { label: '绘制顺序与失败路径的功能测试', path: 'packages/kernel/core/tests/compile/z-order.test.ts' },
+  ]}
+/>
+
+## 作用域处理
+
+遇到 Scope 时，父级遍历先进入它的子树。Core 为子项准备样式、主题、变换链和独立的结果容器，再按声明顺序处理 `children`：Node 立即布局，Path 先排队，嵌套 Scope 则递归执行同一流程。
+
+下面按进入、递归处理与返回的顺序展示 Scope 的编译过程；嵌套 Scope 会完整执行同一流程，再返回父级继续遍历：
+
+<ComponentPreview files="compilation-scope" size="md" hideCode type="flow" />
+
+例如 S 的子项依次是 Node A、Scope T、Node B：先处理 A，再进入 T，等 T 的子项、布局和待处理路径都完成后，返回 S 继续处理 B。S 的所有子项完成后，才确定 S 的包络和最终定位、更新可查询布局、处理 S 的待处理路径，最后向父级交付 Group。
+
+每层 Scope 都有自己的子遍历上下文，但默认共享当前命名帧。假设外层已注册节点 A，Scope 内又声明节点 A 和 B，两种模式的区别如下：
+
+| 操作          | `localNamespace: false`（默认）         | `localNamespace: true`                             |
+| ------------- | --------------------------------------- | -------------------------------------------------- |
+| 进入 Scope    | 复用当前命名帧                          | 压入一个新的局部命名帧                             |
+| 注册内部 A、B | 写入当前帧；同帧 A 被覆盖并发出重名警告 | 写入局部帧；内部 A 遮蔽外层 A                      |
+| 组内查找名称  | 从当前帧向外查找                        | 优先查局部帧，未命中再向外查找                     |
+| 返回父级后    | 内部 A、B 仍可按名称查到                | 局部帧已弹出；再次查 A 得到外层 A，内部 B 不再可查 |
+
+组内待处理路径在局部帧弹出前解析，因此仍能引用内部节点。出栈只移除这层名称的可见性，已经生成的图元仍保留在 Scene 中。Scope 自身若有 id，会在入栈前登记到父命名帧，并在收尾时更新为最终布局，所以外部仍能通过该 id 引用整个分组。
+
+Scene 输出可以保留局部几何和 Group 变换。命名查询使用所需的坐标投影，并不要求最终输出把每个点都展开为世界坐标。
+
+复合项通过注册的 Definition 接入编译编排，产出的基础 IR 继续走上述处理流程，详见[复合组件实现原理](/kernel/components/composite/mechanism)。
+
+<SourceLinks
+  sources={[
+    { label: 'Scope 的递归遍历与收尾', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '命名帧的注册、查找与出栈', path: 'packages/kernel/core/src/compile/namespace.ts' },
+  ]}
+/>
+
+## 汇总编译结果
+
+子项编译完成后，`compileCoreSnapshot` 收集有序图元、paint 与 clip 资源，以及可用于根场景的动画配置。画布范围分两种情况：指定 `viewBox` 时直接使用该范围；否则根据累计布局边界加上 `padding` 计算。
+
+本例的内容范围从 `[-30, -20]` 到 `[210, 20]`。四周增加 10 后，`result.scene.layout` 为：
+
+```ts
+{ x: -40, y: -30, width: 260, height: 60 }
+```
+
+这一步决定最终画布范围，不会再次移动 A、B。输出中的 `primitives` 依次为路径、Group A、Group B；本例没有渐变或裁剪资源，因此不产生 `resources` 字段。
+
+Scene 之外，编译结果还携带 `artifacts` 与 `spatialHandles`。前者保存复合组件产物或按需输出的节点布局；后者保存具名空间区域。它们与同次编译的 Scene 对应，渲染器无需据此重新执行节点布局。普通 `compileToScene` 不建立 observer 会话；显式观测入口会在同一完整编译过程中派发最终观测结果。
+
+| 属性             | 类型                                                             | 作用                                                                                                                                   |
+| ---------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `scene`          | `Scene`                                                          | 保存已布局、按绘制顺序排列的图元，以及画布边界、可选资源和根时间轴动画，交给渲染器绘制。                                               |
+| `artifacts`      | `ReadonlyArray<TCompositeArtifact \| NodeLayoutCompileArtifact>` | 保存复合组件返回的领域产物，以及显式请求的节点布局结果，供调用方读取和后续处理。未产生产物时为空数组。                                 |
+| `spatialHandles` | `SpatialHandleIndex`                                             | 保存复合组件声明的具名空间区域，包含所属组件、世界坐标边界、角色和标签等信息，供调用方查询与定位。没有空间区域时，`entries` 为空数组。 |
+
+以下为返回结果及主要字段的类型源码，省略注释；引用的其他类型不再展开。
+
+<DocTabs defaultValue="compile-result">
+
+<DocTab value="compile-result" label="CompileResult">
+
+```ts
+export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
+  scene: Scene;
+  artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
+  spatialHandles: SpatialHandleIndex;
+}>;
+```
+
+</DocTab>
+
+<DocTab value="scene" label="Scene">
+
+```ts
+export type Scene = {
+  primitives: Array<ScenePrimitive>;
+  layout: BoundsRect;
+  resources?: Array<SceneResource>;
+  animations?: Array<IRAnimationTrack>;
+};
+
+export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+```
+
+</DocTab>
+
+<DocTab value="artifacts" label="artifacts">
+
+```ts
+export type CompositeCompileArtifact<
+  TNamespace extends string = string,
+  TType extends string = string,
+  TValue extends JsonValue = JsonValue,
+> = Readonly<{
+  kind: 'composite';
+  namespace: TNamespace;
+  type: TType;
+  occurrence: CompileOccurrenceLocator;
+  value: TValue;
+}>;
+
+export type NodeLayoutCompileArtifact = Readonly<{
+  kind: 'nodeLayout';
+  occurrence: CompileOccurrenceLocator;
+  value: CompiledNodeLayout;
+}>;
+
+export type CompiledNodeLayout = {
+  kind: 'node';
+  id?: string;
+  content: {
+    center: [number, number];
+    size: {
+      width: number;
+      height: number;
+    };
+    bounds: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+  };
+  rect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotate: number;
+  };
+  text: {
+    hasInlineTex: boolean;
+    lineCount: number;
+  };
+};
+```
+
+</DocTab>
+
+<DocTab value="spatial-handles" label="spatialHandles">
+
+```ts
+export type SpatialHandleIndex = Readonly<{
+  entries: ReadonlyArray<QualifiedSpatialHandle>;
+}>;
+
+export type QualifiedSpatialHandle = Readonly<{
+  ownerPath: ReadonlyArray<SpatialHandleOwner>;
+  id: string;
+  aliasIds?: ReadonlyArray<string>;
+  role: string;
+  geometry: Readonly<{
+    kind: 'rect';
+    bounds: Readonly<BoundsRect>;
+  }>;
+  tags: ReadonlyArray<string>;
+  payload?: Readonly<JsonObject>;
+  finalOccurrence: CompileOccurrenceLocator;
+  originOccurrence: CompileOccurrenceLocator;
+}>;
+
+export type SpatialHandleOwner = Readonly<{
+  namespace: string;
+  type: string;
+  instanceId?: string;
+  occurrence: CompileOccurrenceLocator;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+警告与致命错误也有不同结果：可恢复情况按对应能力的规则降级，例如路径目标不存在时可发出警告并移除该路径占位；完整编译成功后，同步入口才派发收集的警告。致命错误会终止调用，不返回半成品 Scene。
+
+<SourceLinks
+  sources={[
+    { label: 'Scene 汇总与警告派发', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '编译结果与产物类型', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: '空间索引类型', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
+    { label: '自动画布范围', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
+    { label: 'Scene 的渲染中立契约', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
+  ]}
+/>
+
+## 完整实现流程
+
+下面用实际成员名对照前面的阶段。同步入口 `compileToScene` 调用 `compileCoreSnapshot`；图中路径回填和排序位于遍历内部，最后回到外层汇总 `CompileResult`。
+
+<ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
+
+阅读源码时，先在 `compileCoreSnapshot` 看清上下文、遍历与汇总的调用关系，再进入 `compileChildrenToPrimitives`：从末尾的根层 `compileChildren` 调用出发，回查 `compileChild` 的分派，沿 Node 的 resolve、layout、emit 三步读下去，最后追踪 Path 的入队与回填。Scope 和 Composite 是这条主线上的递归分支，可以在理解本例后继续深入。
+
+<SourceLinks
+  sources={[
+    { label: '从同步入口进入完整编译', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '子项分派、递归与收尾', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Node 实现原理',
+      description: '深入正文测量、节点尺寸与连接边界',
+      url: '/kernel/components/node/mechanism',
+    },
+    { title: 'Path 实现原理', description: '深入游标、路径段与端点处理', url: '/kernel/components/path/mechanism' },
+    {
+      title: '复合组件实现原理',
+      description: '了解子布局试算与结果重放',
+      url: '/kernel/components/composite/mechanism',
+    },
+  ]}
+/>

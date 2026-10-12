@@ -140,6 +140,7 @@
     "pkgRenderSvg": "SVG",
     "pkgRenderCanvas": "Canvas",
     "pkgHydration": "水合",
+    "pkgCoreCompilation": "编译流程",
     "pkgOverview": "概览",
     "pkgFoundationUtilities": "通用工具",
     "pkgFoundationTypesSchemas": "类型与契约",
