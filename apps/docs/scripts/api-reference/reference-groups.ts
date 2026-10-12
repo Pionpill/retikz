@@ -9,6 +9,76 @@ export type ReferenceGroup = {
 
 /** 显式分组清单，生成时拒绝成员遗漏、未知或重复 */
 export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<ReferenceGroup>>>> = {
+  'viz/plot/channel': [
+    {
+      title: { zh: '通道定义', en: 'Channel definitions' },
+      members: [
+        'ChannelDefinitionKind',
+        'defineChannel',
+        'defineNodeChannel',
+        'definePathChannel',
+        'defineScopeChannel',
+        'PositionChannelDefinition',
+        'MarkChannelDefinition',
+        'NodeChannelDefinition',
+        'PathChannelDefinition',
+        'ScopeChannelDefinition',
+        'ChannelDefinition',
+        'AnyChannelDefinition',
+        'ChannelOutputSpace',
+      ],
+    },
+    {
+      title: { zh: '解析上下文与结果', en: 'Resolution context and results' },
+      members: [
+        'ChannelDefinitionResolveContext',
+        'NodeChannelDefinitionResolveContext',
+        'PathChannelDefinitionResolveContext',
+        'ScopeChannelDefinitionResolveContext',
+        'ChannelPaletteContext',
+        'ChannelValue',
+        'ChannelValueResolver',
+        'ChannelBindingResolver',
+        'ResolveLabel',
+        'ChannelResolution',
+        'MarkChannelResolution',
+        'ScopeChannelResolution',
+        'ScaleDescriptor',
+        'MarkChannels',
+      ],
+    },
+    {
+      title: { zh: '属性交付', en: 'Property delivery' },
+      members: [
+        'NodeChannelDeliveryContext',
+        'PathChannelDeliveryContext',
+        'ScopeChannelDeliveryContext',
+        'NodeChannelDelivery',
+        'PathChannelDelivery',
+        'ScopeChannelDelivery',
+      ],
+    },
+    {
+      title: { zh: '共享默认值', en: 'Shared defaults' },
+      members: ['SIZE_MAX_RADIUS'],
+    },
+    {
+      title: { zh: '定义构造', en: 'Definition factories' },
+      members: ['ColorChannelDefinitionOptions', 'PlotPaint', 'makeColorChannelDefinition'],
+    },
+    {
+      title: { zh: '字段与取值', en: 'Fields and values' },
+      members: [
+        'FieldChannel',
+        'FieldCollector',
+        'channelValue',
+        'labelOf',
+        'MarkValueResolverOptions',
+        'MarkValueResolution',
+        'makeMarkValueResolver',
+      ],
+    },
+  ],
   'viz/data/provenance': [
     {
       title: { zh: '行来源', en: 'Row provenance' },

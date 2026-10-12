@@ -42,6 +42,8 @@ const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec:
 /**
  * 创建 color-like mark 通道（color / fill / stroke）
  * @description 常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale
+ * @param options 通道名称、绑定读取函数与常量 paint 策略
+ * @returns 使用颜色比例尺解析字段的 mark 通道定义；创建时不解析数据
  */
 export const makeColorChannelDefinition = (
   options: ColorChannelDefinitionOptions,
@@ -159,7 +161,10 @@ const markValueChannel = (value: unknown): IRPlotChannel | undefined => {
 const encodingChannel = (mark: IRPlotMarkOperation, channel: string): IRPlotChannel | undefined =>
   (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding?.[channel];
 
-/** 创建内置 paint channel definitions */
+/**
+ * 创建内置 paint channel definitions
+ * @returns 新建的 color、fill、stroke 通道定义集合
+ */
 export const createBuiltinPaintChannels = (): BuiltinPaintChannels => ({
   color: makeColorChannelDefinition({
     channel: 'color',

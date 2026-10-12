@@ -365,6 +365,7 @@
     "grammarChannelBuiltin": "Built-In Channels",
     "grammarChannelCustom": "Custom Channels",
     "grammarChannelMechanism": "Implementation",
+    "grammarChannelReference": "API Reference",
     "grammarTransform": "Transforms",
     "grammarTransformRow": "Derive & Jitter",
     "grammarTransformAnnotation": "Stacking & Shares",

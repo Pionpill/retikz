@@ -14,6 +14,33 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/plot#ChannelDefinition': [
+    { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },
+    { value: 'mark', field: 'kind', type: '"mark"', label: { zh: '图元', en: 'Mark' } },
+    { value: 'node', field: 'kind', type: '"node"', label: { zh: '节点', en: 'Node' } },
+    { value: 'path', field: 'kind', type: '"path"', label: { zh: '路径', en: 'Path' } },
+    { value: 'scope', field: 'kind', type: '"scope"', label: { zh: '作用域', en: 'Scope' } },
+  ],
+  '@retikz/plot#AnyChannelDefinition': [
+    { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },
+    { value: 'mark', field: 'kind', type: 'typeof ChannelDefinitionKind.Mark', label: { zh: '图元', en: 'Mark' } },
+    { value: 'node', field: 'kind', type: 'typeof ChannelDefinitionKind.Node', label: { zh: '节点', en: 'Node' } },
+    { value: 'path', field: 'kind', type: 'typeof ChannelDefinitionKind.Path', label: { zh: '路径', en: 'Path' } },
+    { value: 'scope', field: 'kind', type: 'typeof ChannelDefinitionKind.Scope', label: { zh: '作用域', en: 'Scope' } },
+  ],
+  '@retikz/plot#ChannelOutputSpace': [
+    { value: 'color', field: 'outputKind', type: "'color'", label: { zh: '颜色', en: 'color' } },
+    { value: 'number', field: 'outputKind', type: "'number'", label: { zh: '数值', en: 'number' } },
+    { value: 'symbol', field: 'outputKind', type: "'symbol'", label: { zh: '符号', en: 'symbol' } },
+    { value: 'boolean', field: 'outputKind', type: "'boolean'", label: { zh: '布尔值', en: 'boolean' } },
+    { value: 'array', field: 'outputKind', type: "'array'", label: { zh: '数组', en: 'array' } },
+    { value: 'object', field: 'outputKind', type: "'object'", label: { zh: '对象', en: 'object' } },
+    { value: 'json', field: 'outputKind', type: "'json'", label: { zh: 'JSON', en: 'json' } },
+  ],
+  '@retikz/plot#FieldChannel': [
+    { value: 'binding', field: 'value', required: false, label: { zh: '编码绑定', en: 'Encoding binding' } },
+    { value: 'style', field: 'kind', required: true, label: { zh: '样式取值', en: 'Style value' } },
+  ],
   '@retikz/data#DataLineageEvent': [
     { value: 'source', field: 'kind', type: "'source'", label: { zh: '输入来源', en: 'Source' } },
     { value: 'transformStep', field: 'kind', type: "'transformStep'", label: { zh: '变换阶段', en: 'Transform step' } },

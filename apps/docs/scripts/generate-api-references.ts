@@ -17,6 +17,7 @@ import { writeLayoutComponentApiReferences } from './api-reference/layout-compon
 import { writeManualReferences } from './api-reference/manual-reference';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
+import { writePlotChannelApiReferenceMdx } from './api-reference/plot-channel';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
 import { writeRuntimeApiReferenceMdx } from './api-reference/runtime';
@@ -107,3 +108,5 @@ await writeDataTransformApiReferenceMdx(
 writeManualReferences(path.resolve(docsRoot, 'src/modules/docs/contents'));
 await writeDataProvenanceApiReferenceMdx();
 writeContextualReferences(path.resolve(docsRoot, 'src/modules/docs/contents'));
+
+await writePlotChannelApiReferenceMdx();

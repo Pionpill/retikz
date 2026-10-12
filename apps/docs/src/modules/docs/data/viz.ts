@@ -494,6 +494,7 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+          { id: 'reference', label: 'viz.grammarChannelReference' },
         ],
       },
       {

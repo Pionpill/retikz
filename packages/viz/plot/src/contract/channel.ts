@@ -35,10 +35,16 @@ export type ChannelValue = JsonValue;
 /**
  * 逐行通道值解析器；返回 undefined 表示该行不应用该通道
  * @template T 通道解析、传递或整层共享的视觉值类型
+ * @param row 当前图元使用的数据行
+ * @returns 该行的视觉值；undefined 表示该行不应用此通道
  */
 export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: ExternalRow) => T | undefined;
 
-/** 运行时 label 解析逃生舱，不进 IR */
+/**
+ * 从当前数据行生成标签文本的运行时回调，不写入 IR
+ * @param row 当前图元使用的数据行
+ * @returns 该行的标签文本
+ */
 export type ResolveLabel = (row: ExternalRow) => string;
 
 /**
@@ -235,7 +241,7 @@ export type ChannelOutputSpace =
       outputKind: 'json';
     };
 
-/** 通道解析上下文：spec + 规整后的数据行 + 字段类型表 */
+/** 通道解析上下文：当前 Plot、有效数据行与完整字段模型 */
 export type ChannelDefinitionResolveContext = {
   /** 当前通道所属的完整 Plot 源描述 */
   node: IRPlot;
@@ -293,17 +299,21 @@ export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
   descriptor?: ScaleDescriptor;
 };
 
-/** 读取某 mark 上某通道绑定的统一入口 */
+/**
+ * 从当前图元读取通道绑定
+ * @param mark 当前待解析的图元
+ * @returns 通道绑定；未绑定时返回 undefined
+ */
 export type ChannelBindingResolver = (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
 
 /**
  * 通道 definition 的公共基座
  * @template TKind 决定通道消费方式的类型判别值
  */
-export type BaseChannelDefinition<TKind extends ChannelDefinitionKind> = {
+type BaseChannelDefinition<TKind extends ChannelDefinitionKind> = {
   /** 通道注册键 */
   channel: string;
-  /** 通道类型：position / mark / node / path */
+  /** 通道类型：position / mark / scope / node / path */
   kind: TKind;
 };
 
@@ -401,7 +411,8 @@ export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
 
 /**
  * 定义一个通道（统一入口）；具体 kind 决定解析后进入 position / mark / scope / node / path 哪条消费路径
- * @remarks 当前 helper 只做 `ChannelDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook
+ * @param def 包含种类判别、绑定读取或解析回调的通道定义
+ * @returns 原样返回传入的定义对象，不执行注册或解析
  * @template T 原样返回的具体通道定义类型
  */
 export const defineChannel = <T extends ChannelDefinition>(def: T): T => def;
@@ -409,6 +420,8 @@ export const defineChannel = <T extends ChannelDefinition>(def: T): T => def;
 /**
  * 定义一个 Scope 通道（保留 resolve / deliver 的输出强类型）
  * @template T 通道解析、传递或整层共享的视觉值类型
+ * @param def 通道定义；kind 可省略，返回时固定为对应种类
+ * @returns 补充种类判别后的新定义对象；回调保持原引用
  */
 export const defineScopeChannel = <T extends ChannelValue>(
   def: WithOptionalProperties<ScopeChannelDefinition<T>, 'kind'>,
@@ -417,6 +430,8 @@ export const defineScopeChannel = <T extends ChannelValue>(
 /**
  * 定义一个 Node 通道（对齐 defineScale / defineCoordinate / defineTransform；保留 resolve / deliver 的输出强类型）
  * @template T 通道解析、传递或整层共享的视觉值类型
+ * @param def 通道定义；kind 可省略，返回时固定为对应种类
+ * @returns 补充种类判别后的新定义对象；回调保持原引用
  */
 export const defineNodeChannel = <T extends ChannelValue>(
   def: WithOptionalProperties<NodeChannelDefinition<T>, 'kind'>,
@@ -425,6 +440,8 @@ export const defineNodeChannel = <T extends ChannelValue>(
 /**
  * 定义一个 Path 通道（对齐 defineNodeChannel；保留 resolve / deliver 的输出强类型）
  * @template T 通道解析、传递或整层共享的视觉值类型
+ * @param def 通道定义；kind 可省略，返回时固定为对应种类
+ * @returns 补充种类判别后的新定义对象；回调保持原引用
  */
 export const definePathChannel = <T extends ChannelValue>(
   def: WithOptionalProperties<PathChannelDefinition<T>, 'kind'>,
