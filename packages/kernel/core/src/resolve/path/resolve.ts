@@ -186,7 +186,12 @@ const canonicalizeSteps = (
   canAutomaticallyInterrupt: boolean,
 ): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
 
-const canonicalizePath = (path: ResolvedPathSource, canAutomaticallyInterrupt: boolean): CanonicalPath => {
+/** 展开路径静态字段，fill / stroke 保留待绑定的 paint 输入 */
+const canonicalizePath = (
+  path: ResolvedPathSource,
+  canAutomaticallyInterrupt: boolean,
+): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
+  Pick<NonNullable<ResolvedPathSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
   return {
     ...source,
@@ -560,10 +565,9 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const providerColorsResolved = resolvePathContextualColors(kind.path, context, irPath, labelMasterColor);
   const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt);
   const targets = new Map<string, TargetResolution>();
-  const scopeChain = context.scopeChain ?? [];
   const canonicalSteps =
     canonicalPath.children === undefined ? undefined : resolveSteps(canonicalPath.children, context, targets, irPath);
-  const resolvedPath: CanonicalPath = {
+  const resolvedPath: ReturnType<typeof canonicalizePath> = {
     ...canonicalPath,
     ...(canonicalSteps === undefined ? {} : { children: canonicalSteps }),
   };
@@ -576,19 +580,9 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const stroke = resolvePaint(resolvedPath.stroke, paintContext);
 
   return {
-    path: resolvedPath,
+    irPath,
+    path: { ...resolvedPath, fill, stroke, strokeWidth: resolvedPath.strokeWidth ?? 1 },
     targets,
-    scopeChain,
     kind,
-    paint: {
-      ...(fill === undefined ? {} : { fill }),
-      ...(stroke === undefined ? {} : { stroke }),
-    },
-    style: {
-      strokeWidth: resolvedPath.strokeWidth ?? 1,
-      strokeRequested: resolvedPath.stroke !== undefined || resolvedPath.strokeWidth !== undefined,
-      strokeFillDefault: 'none',
-      strokeDefault: 'currentColor',
-    },
   };
 };

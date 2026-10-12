@@ -449,7 +449,8 @@ export const compileChildrenToPrimitives = (
     resolution: PathResolution,
     targetResolver: PathTargetResolver,
   ): PathKindCompileResult | null => {
-    const { path, irPath, scopeChain } = pendingPath;
+    const { path, scopeChain } = pendingPath;
+    const { irPath } = resolution;
     const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
       runtime.context.onWarn({ code, message, path: node?.irPath ?? irPath });
     const targetView = pathTargetViewOf(resolution.targets, targetWarn, runtime.context.nodeGeometry);
@@ -463,7 +464,6 @@ export const compileChildrenToPrimitives = (
 
     const emitOptions = {
       onWarn: runtime.context.onWarn,
-      irPath,
       scopeChain,
       resolvePaint: runtime.context.paint.register,
       targetView,
@@ -488,7 +488,16 @@ export const compileChildrenToPrimitives = (
 
     const emitStroke = (nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
       const source = nextPath ?? path;
-      const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
+      const sourceResolution = resolutionOf(source);
+      const strokeColor = sourceResolution.path.color;
+      const strokeSource = {
+        ...sourceResolution,
+        path: {
+          ...sourceResolution.path,
+          ...(sourceResolution.path.stroke === undefined && strokeColor !== undefined ? { stroke: strokeColor } : {}),
+        },
+      };
+      const strokeResolution = resolveStrokePathProviders(strokeSource, {
         mode: pendingPath.theme.mode,
         pathKinds: runtime.context.pathKinds,
         pathGenerators: runtime.context.pathGenerators,
@@ -497,14 +506,6 @@ export const compileChildrenToPrimitives = (
         round: runtime.context.round,
         irPath,
       });
-      const strokeColor = emittedResolution.path.color;
-      const strokeResolution = {
-        ...emittedResolution,
-        paint: {
-          ...emittedResolution.paint,
-          ...(emittedResolution.paint.stroke === undefined && strokeColor !== undefined ? { stroke: strokeColor } : {}),
-        },
-      };
       const emittedTargetView = pathTargetViewOf(strokeResolution.targets, targetWarn, runtime.context.nodeGeometry);
       const emitted = emitPathPrimitive(strokeResolution, {
         targetView: emittedTargetView,
@@ -569,15 +570,15 @@ export const compileChildrenToPrimitives = (
     };
 
     const resolvedFill =
-      resolution.paint.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.paint.fill);
+      resolution.path.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.path.fill);
     const resolvedStroke =
-      resolution.paint.stroke === undefined ? undefined : emitOptions.resolvePaint(resolution.paint.stroke);
+      resolution.path.stroke === undefined ? undefined : emitOptions.resolvePaint(resolution.path.stroke);
     const appearance: ResolvedPathKindAppearance = Object.freeze({
       ...(resolution.path.color === undefined ? {} : { color: resolution.path.color }),
       ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
       ...(resolvedStroke === undefined ? {} : { stroke: resolvedStroke }),
       ...(resolution.path.fillRule === undefined ? {} : { fillRule: resolution.path.fillRule }),
-      strokeWidth: resolution.style.strokeWidth,
+      strokeWidth: resolution.path.strokeWidth,
       ...(resolution.path.dashPattern === undefined ? {} : { dashPattern: resolution.path.dashPattern }),
       ...(resolution.path.dashOffset === undefined ? {} : { dashOffset: resolution.path.dashOffset }),
       ...(resolution.path.lineCap === undefined ? {} : { strokeLinecap: resolution.path.lineCap }),

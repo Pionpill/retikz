@@ -1,7 +1,7 @@
 import type { GroupPrim, ScenePrimitive } from '../../../contract';
-import type { CanonicalPath, PathStyleResolution } from '../../../resolve';
+import type { CanonicalPath } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import type { PaintInput, PaintResolver } from '../../resource';
+import type { PaintResolver } from '../../resource';
 import type { PathPrimitiveEmitResult } from '../types';
 import type { PathBaseProps } from './split';
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
@@ -16,15 +16,6 @@ export type PathBasePropsWithStrokeWidth = PathBaseProps & {
 export type EmitPathBasePropsContext = {
   /** IRPaint 物化器 */
   resolvePaint: PaintResolver;
-  /** resolve 阶段已绑定的 paint */
-  paint?: Readonly<{
-    /** 解析后的路径填充输入 */
-    fill?: PaintInput;
-    /** 解析后的路径描边输入 */
-    stroke?: PaintInput;
-  }>;
-  /** resolve 阶段已确定的 path 静态样式默认值 */
-  style: PathStyleResolution;
 };
 
 /** 将已解析 path 样式物化为 PathPrim 公共属性 */
@@ -32,11 +23,11 @@ export const emitPathBaseProps = (
   path: CanonicalPath,
   context: EmitPathBasePropsContext,
 ): PathBasePropsWithStrokeWidth => {
-  const { resolvePaint, style } = context;
+  const { resolvePaint } = context;
   return {
-    stroke: resolvePaint(context.paint?.stroke) ?? style.strokeDefault,
-    strokeWidth: style.strokeWidth,
-    fill: resolvePaint(context.paint?.fill) ?? style.strokeFillDefault,
+    stroke: resolvePaint(path.stroke) ?? 'currentColor',
+    strokeWidth: path.strokeWidth,
+    fill: resolvePaint(path.fill) ?? 'none',
     fillRule: path.fillRule,
     dashPattern: path.dashPattern,
     dashOffset: path.dashOffset,

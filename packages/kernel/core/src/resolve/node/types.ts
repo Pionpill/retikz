@@ -191,7 +191,7 @@ export type BoundaryReferenceResolver = (
 ) => BoundaryReferenceResolution;
 
 /** 已解析的 Node 输入、shape 与默认连接面 */
-export type NodeResolution = {
+export type NodeResolution = Readonly<{
   /** 当前节点的 IR 路径，用于布局与 provider 诊断 */
   irPath: string;
   /** 样式级联、静态默认值、auto-contrast 与 paint 解析完成后的节点 */
@@ -200,7 +200,7 @@ export type NodeResolution = {
   shape: ShapeResolution;
   /** 节点默认连接面引用 */
   boundary: BoundaryReferenceResolution;
-};
+}>;
 
 /** Node resolve 阶段需要的样式、provider 与诊断上下文 */
 export type NodeResolveContext = {

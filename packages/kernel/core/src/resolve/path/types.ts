@@ -134,11 +134,17 @@ type CompleteCanonicalStep<TStep extends ResolvedStepSource> = TStep extends {
 /** 展开折线、平滑路径与标签静态默认值后的路径步骤 */
 export type CanonicalStep = CompleteCanonicalStep<ResolvedStepSource>;
 
-/** 内置路径输出器消费的完整静态路径形态 */
+/** 已展开静态字段并完成 paint 解析的内部路径形态 */
 export type CanonicalPath = Omit<
   Omit<ResolvedPathSource, 'style'> & NonNullable<ResolvedPathSource['style']>,
-  'children' | 'label' | 'shadow'
+  'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth'
 > & {
+  /** 已补齐缺省值的描边宽度 */
+  strokeWidth: number;
+  /** 已解析的路径填充输入 */
+  fill?: PaintResolutionInput;
+  /** 已解析的路径描边输入 */
+  stroke?: PaintResolutionInput;
   /** 完整路径步骤 */
   children?: Array<CanonicalStep>;
   /** 统一为数组的宿主标签 */
@@ -287,37 +293,16 @@ export type TargetResolution = Readonly<{
   boundaryResolution?: BoundaryReferenceResolution;
 }>;
 
-/** path 静态样式默认值与显式描边请求状态 */
-export type PathStyleResolution = Readonly<{
-  /** 最终描边宽度，缺省输入已解析为 1 */
-  strokeWidth: number;
-  /** 用户或级联样式是否显式请求描边字段 */
-  strokeRequested: boolean;
-  /** stroke emitter 未提供 fill 时的默认值 */
-  strokeFillDefault: 'none';
-  /** emitter 未提供 stroke 时的默认值 */
-  strokeDefault: 'currentColor';
-}>;
-
 /** Path Source IR 经样式、静态默认值与 target 绑定后的基础结果 */
 export type PathResolution = Readonly<{
+  /** 当前路径的 IR 来源，用于 provider 与输出诊断 */
+  irPath: string;
   /** 唯一的 canonical path owner，compile/lower/emit 均从此字段读取路径数据 */
   path: CanonicalPath;
   /** 按步骤 locator 保存的 target 绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
-  /** 解析时的 scope chain 快照 */
-  scopeChain: ReadonlyArray<Transform>;
   /** 已绑定的 path kind provider 与 options */
   kind: PathKindResolution;
-  /** 已完成 paint provider selection 和 pattern style shaping */
-  paint: Readonly<{
-    /** 路径填充的已解析绘制输入 */
-    fill?: PaintResolutionInput;
-    /** 路径描边的已解析绘制输入 */
-    stroke?: PaintResolutionInput;
-  }>;
-  /** 已完成 path kind 相关静态样式默认值解析 */
-  style: PathStyleResolution;
 }>;
 
 /** stroke emitter 消费的、已绑定 secondary provider 的 path resolution */
