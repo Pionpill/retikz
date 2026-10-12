@@ -79,7 +79,10 @@ describe('Table Cell plan lineage contract', () => {
       });
     };
 
-    addLeaves('/content/style', Object.keys(TableCellContentStyleSchema.shape.style.unwrap().shape));
+    addLeaves(
+      '/content/defaults/style',
+      Object.keys(TableCellContentStyleSchema.shape.defaults.unwrap().shape.style.unwrap().shape),
+    );
     expected.add('/content/defaults/reset');
 
     for (const [channel, schema] of Object.entries({ node: NodeDefaultSchema, path: PathDefaultSchema })) {

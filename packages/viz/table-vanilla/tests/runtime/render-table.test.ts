@@ -24,8 +24,8 @@ const cleanTableTheme = defineTableThemeStyle({
   resolve: () => ({
     defaults: {
       appearanceDefaults: {
-        body: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
-        columnHeader: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+        body: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
+        columnHeader: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
       },
       layout: { borders: { horizontal: { kind: 'none' } } },
     },
@@ -146,7 +146,9 @@ describe('renderTable', () => {
 
     expect(baseline.manifest).toMatchObject({
       style: { themeMode: 'light' },
-      cells: [{ appearance: { background: { fill: '#ffffff' }, content: { style: { color: '#18181b' } } } }],
+      cells: [
+        { appearance: { background: { fill: '#ffffff' }, content: { defaults: { style: { color: '#18181b' } } } } },
+      ],
     });
     expect(clean.manifest).toMatchObject({
       style: { style: 'clean', themeMode: 'light' },
@@ -154,7 +156,7 @@ describe('renderTable', () => {
         {
           appearance: {
             background: { fill: 'none' },
-            content: { style: { color: 'currentColor' } },
+            content: { defaults: { style: { color: 'currentColor' } } },
           },
         },
       ],

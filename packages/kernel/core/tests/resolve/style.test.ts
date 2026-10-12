@@ -39,7 +39,7 @@ describe('resolve style frame', () => {
   it('propagates a scope master color to node and path channels', () => {
     const frame = createStyleResolveFrame(
       styleScope({
-        style: { color: 'red' },
+        defaults: { style: { color: 'red' } },
       }),
     );
     const node = NodeSchema.parse({ type: 'node', position: [0, 0] });

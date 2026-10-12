@@ -50,7 +50,7 @@ describe('Table Vanilla adapter', () => {
           selector: { cellIds: ['cell.r0.c0'] },
           appearance: {
             content: {
-              style: { color: '#b91c1c' },
+              defaults: { style: { color: '#b91c1c' } },
             },
           },
         },
@@ -64,7 +64,7 @@ describe('Table Vanilla adapter', () => {
           legend: false,
         },
       ],
-      appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
+      appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
     });
 
     const lowered = TableSchema.parse(

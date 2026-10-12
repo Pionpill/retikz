@@ -5,11 +5,11 @@ export const CLEAN_TABLE_DEFAULTS = {
   appearanceDefaults: {
     body: {
       background: { fill: 'none' },
-      content: { style: { color: 'currentColor' } },
+      content: { defaults: { style: { color: 'currentColor' } } },
     },
     columnHeader: {
       background: { fill: 'none' },
-      content: { style: { color: 'currentColor' } },
+      content: { defaults: { style: { color: 'currentColor' } } },
       borders: { bottom: { kind: 'none' } },
     },
   },

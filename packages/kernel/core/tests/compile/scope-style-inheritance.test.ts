@@ -95,7 +95,7 @@ describe('Happy: 主色级联 / 四通道', () => {
               ],
             },
           ],
-          style: { color: 'blue' },
+          defaults: { style: { color: 'blue' } },
         },
       ],
     };
@@ -218,7 +218,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
         {
           type: 'scope',
           children: [{ type: 'node', position: [0, 0], text: 'x' }],
-          style: { color: 'white' },
+          defaults: { style: { color: 'white' } },
         },
       ],
     };
@@ -278,7 +278,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
               style: { stroke: 'none' },
             },
           ],
-          style: { color: 'white' },
+          defaults: { style: { color: 'white' } },
         },
       ],
     };
@@ -298,10 +298,10 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             {
               type: 'scope',
               children: [{ type: 'node', position: [0, 0], text: 'x' }],
-              style: { color: 'blue' },
+              defaults: { style: { color: 'blue' } },
             },
           ],
-          style: { color: 'red' },
+          defaults: { style: { color: 'red' } },
         },
       ],
     };
@@ -317,8 +317,9 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         {
           type: 'scope',
           children: [{ type: 'node', position: [0, 0] }],
-          style: { stroke: 'red' },
+
           defaults: {
+            style: { stroke: 'red' },
             node: {
               style: { stroke: 'green' },
             },
@@ -341,11 +342,11 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             {
               type: 'scope',
               children: [{ type: 'node', position: [0, 0], text: 'x' }],
-              style: { color: 'white' },
-              defaults: { reset: true },
+
+              defaults: { style: { color: 'white' }, reset: true },
             },
           ],
-          style: { color: 'red' },
+          defaults: { style: { color: 'red' } },
         },
       ],
     };
@@ -430,10 +431,10 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
             {
               type: 'scope',
               children: [{ type: 'node', position: [0, 0], text: 'x' }],
-              style: { opacity: 0.5 },
+              defaults: { style: { opacity: 0.5 } },
             },
           ],
-          style: { opacity: 0.5 },
+          defaults: { style: { opacity: 0.5 } },
         },
       ],
     };
@@ -450,7 +451,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
           type: 'scope',
           transforms: [{ kind: 'scale', x: 2 }],
           children: [{ type: 'node', position: [0, 0] }],
-          style: { strokeWidth: 3 },
+          defaults: { style: { strokeWidth: 3 } },
         },
       ],
     };
@@ -467,7 +468,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
           type: 'scope',
           localNamespace: true,
           children: [{ type: 'node', position: [0, 0], text: 'x' }],
-          style: { color: 'red' },
+          defaults: { style: { color: 'red' } },
         },
       ],
     };

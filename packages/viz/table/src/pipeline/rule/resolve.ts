@@ -230,9 +230,15 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
   } else {
     plan.appearance = TableCellAppearanceSchema.parse({
       ...plan.appearance,
-      content: { ...plan.appearance.content, style: { ...plan.appearance.content?.style, color } },
+      content: {
+        ...plan.appearance.content,
+        defaults: {
+          ...plan.appearance.content?.defaults,
+          style: { ...plan.appearance.content?.defaults?.style, color },
+        },
+      },
     });
-    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/style/color': source };
+    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/defaults/style/color': source };
   }
 
   plan.trace.encodingIds ??= [];

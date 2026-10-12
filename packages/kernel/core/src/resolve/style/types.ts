@@ -1,7 +1,7 @@
-import type { IRLabelDefault, IRScope, IRScopeDefaults } from '../../schemas';
+import type { IRLabelDefault, IRScopeDefaults } from '../../schemas';
 
 /** scope 级联 graphic state */
-export type CascadeState = NonNullable<IRScope['style']>;
+export type CascadeState = NonNullable<IRScopeDefaults['style']>;
 
 /** 单层 scope 样式解析 frame */
 export type StyleResolveFrame = {

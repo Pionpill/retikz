@@ -76,8 +76,8 @@ afterEach(() => {
 describe('rootScope 的空覆盖与命名空间边界', () => {
   const noops: Array<ScopeStyleProps> = [
     {},
-    { style: {} },
-    { style: { fill: undefined } },
+    { defaults: { style: {} } },
+    { defaults: { style: { fill: undefined } } },
     { defaults: {} },
     { defaults: { node: { style: {}, layout: {} }, path: { style: {} }, label: {}, arrow: {} } },
     { defaults: { node: { style: { fill: undefined } }, reset: false } },
@@ -102,7 +102,7 @@ describe('rootScope 的空覆盖与命名空间边界', () => {
 
   it('宿主 CSS 与绘图覆盖独立', () => {
     const markup = renderToStaticMarkup(
-      <Layout style={{ backgroundColor: 'yellow' }} rootScope={{ style: { fill: 'red' } }}>
+      <Layout style={{ backgroundColor: 'yellow' }} rootScope={{ defaults: { style: { fill: 'red' } } }}>
         <Node position={[0, 0]} />
       </Layout>,
     );
@@ -156,7 +156,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
   it('layout_color_cascades：color="blue" → node 边/填充 + path stroke 全蓝', () => {
     const prims = layoutPrims(
       {
-        style: { color: 'blue' },
+        defaults: { style: { color: 'blue' } },
       },
       twoNodesAndDraw(),
     );
@@ -168,7 +168,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
 
     // 端到端：真实 <Layout> 组件渲染也应把主色透出到 SVG
     const svg = renderToStaticMarkup(
-      <Layout rootScope={{ style: { color: 'blue' } }}>
+      <Layout rootScope={{ defaults: { style: { color: 'blue' } } }}>
         <Node id="A" position={[0, 0]}>
           A
         </Node>
@@ -231,7 +231,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
   it('layout_style_prop_empty_children：带样式 prop 但 children 为空 → 合成空 scope 合法、不报错', () => {
     const ir = layoutIR(
       {
-        style: { stroke: 'red' },
+        defaults: { style: { stroke: 'red' } },
       },
       undefined,
     );
@@ -240,7 +240,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
     expect(scope).toMatchObject({
       type: 'scope',
       children: [],
-      style: { stroke: 'red' },
+      defaults: { style: { stroke: 'red' } },
     });
     expect(() => compileToScene(ir).scene).not.toThrow();
   });
@@ -266,21 +266,21 @@ describe('边界：无样式 / 空 children / 单通道', () => {
     // 但标量 falsy-defined 值（strokeWidth=0）是有意义样式 → 仍包 scope
     const zeroWidth = layoutIR(
       {
-        style: { strokeWidth: 0 },
+        defaults: { style: { strokeWidth: 0 } },
       },
       children,
     );
 
     expect(zeroWidth.children[0]).toMatchObject({
       type: 'scope',
-      style: { strokeWidth: 0 },
+      defaults: { style: { strokeWidth: 0 } },
     });
   });
 
   it('layout_single_style_channel：只设 stroke → 合成 scope 只进 stroke 通道，其余不出现', () => {
     const ir = layoutIR(
       {
-        style: { stroke: 'red' },
+        defaults: { style: { stroke: 'red' } },
       },
       <Node id="A" position={[0, 0]}>
         A
@@ -290,7 +290,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
 
     expect(scope).toMatchObject({
       type: 'scope',
-      style: { stroke: 'red' },
+      defaults: { style: { stroke: 'red' } },
     });
     expect(scope).not.toHaveProperty('color');
     expect(scope).not.toHaveProperty('fill');
@@ -315,8 +315,8 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
       <Layout
         ir={ir}
         rootScope={{
-          style: { stroke: 'red' },
           defaults: {
+            style: { stroke: 'red' },
             node: {
               style: { fill: 'lime' },
             },
@@ -427,7 +427,7 @@ describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障'
   it('layout_color_with_inner_resetstyle：内层 Scope resetStyle 切断 Layout color 继承', () => {
     const prims = layoutPrims(
       {
-        style: { color: 'red' },
+        defaults: { style: { color: 'red' } },
       },
       <Scope defaults={{ reset: true }}>
         <Node id="A" position={[0, 0]}>
@@ -461,8 +461,8 @@ describe('等价性：合成根 scope 与手写根 <Scope> 同 IR', () => {
     );
     const synthetic = layoutIR(
       {
-        style: { stroke: 'currentColor' },
         defaults: {
+          style: { stroke: 'currentColor' },
           node: {
             style: { fill: 'none' },
           },
@@ -472,8 +472,8 @@ describe('等价性：合成根 scope 与手写根 <Scope> 同 IR', () => {
     );
     const manual = normalizeReactInput(
       <Scope
-        style={{ stroke: 'currentColor' }}
         defaults={{
+          style: { stroke: 'currentColor' },
           node: {
             style: { fill: 'none' },
           },

@@ -6,7 +6,7 @@ const validDefaults = {
   appearanceDefaults: {
     body: {
       background: { fill: 0.2, fillOpacity: 0.5 },
-      content: { style: { color: '#334155' } },
+      content: { defaults: { style: { color: '#334155' } } },
     },
     columnHeader: {
       background: { fill: '#f8fafc' },

@@ -35,7 +35,7 @@ export const MapSkeletonSchema = strictObject({
 const MapBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('map').describe('Composite type for the map presentation.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
+  ...ScopePropsSchema.shape,
   skeleton: MapSkeletonSchema.optional().describe(
     'Schematic structure without real data; excludes other content inputs.',
   ),

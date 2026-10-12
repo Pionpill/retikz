@@ -34,8 +34,8 @@ const cleanTableTheme = defineTableThemeStyle({
   resolve: () => ({
     defaults: {
       appearanceDefaults: {
-        body: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
-        columnHeader: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+        body: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
+        columnHeader: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
       },
       layout: { borders: { horizontal: { kind: 'none' } } },
     },

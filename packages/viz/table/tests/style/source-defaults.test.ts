@@ -24,13 +24,16 @@ const sparseDefaults = {
     body: {
       background: { fill: '#f8fafc', fillOpacity: 0.75 },
       content: {
-        style: { color: '#0f172a' },
-        defaults: { node: { style: { font: { family: 'serif' } } }, label: { font: { weight: 500 } } },
+        defaults: {
+          style: { color: '#0f172a' },
+          node: { style: { font: { family: 'serif' } } },
+          label: { font: { weight: 500 } },
+        },
       },
     },
     columnHeader: {
       background: { fill: '#e2e8f0' },
-      content: { style: { color: '#111827' }, defaults: { node: { style: { font: { weight: 700 } } } } },
+      content: { defaults: { style: { color: '#111827' }, node: { style: { font: { weight: 700 } } } } },
       borders: { bottom: { kind: 'line', stroke: '#94a3b8', width: 1 } },
     },
   },
@@ -104,7 +107,10 @@ describe('Table Source defaults', () => {
       id: 'cascade',
       ...sparseDefaults,
       appearanceDefaults: {
-        body: { background: { fill: '#bfdbfe', fillOpacity: 0 }, content: { style: { color: '#1d4ed8' } } },
+        body: {
+          background: { fill: '#bfdbfe', fillOpacity: 0 },
+          content: { defaults: { style: { color: '#1d4ed8' } } },
+        },
         columnHeader: sparseDefaults.appearanceDefaults.columnHeader,
       },
       layout: {
@@ -175,7 +181,9 @@ describe('Table Source defaults', () => {
       ],
     });
 
-    expect(result.manifest.cells.find(cell => cell.rowIndex === 1)?.appearance.content?.style?.color).toBe('#2563eb');
+    expect(result.manifest.cells.find(cell => cell.rowIndex === 1)?.appearance.content?.defaults?.style?.color).toBe(
+      '#2563eb',
+    );
     expect(result.manifest.cells.find(cell => cell.rowIndex === 3)?.appearance.background?.fill).toBe(
       'rgb(17, 17, 17)',
     );

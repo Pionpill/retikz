@@ -15,7 +15,10 @@ describe('GridSchema', () => {
   it('keeps factory and persisted source sparse while resolving default-dependent limits', () => {
     const source = createGrid({ bounds: { start: [0, 0], end: [120, 80] }, line: { major: { every: 2 } }, border: {} });
 
-    expect(resolveGrid(GridSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual(resolveGrid(source));
+    expect(resolveGrid(GridSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual({
+      ...resolveGrid(source),
+      position: [0, 0],
+    });
     expect(source.line).toEqual({ major: { every: 2 } });
     expect(resolveGrid(source)).toMatchObject({
       line: { vertical: { spacing: 10, origin: 0, includeBoundary: false, major: { offset: 0 } } },

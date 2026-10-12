@@ -135,7 +135,7 @@ describe('Legend schema and factory', () => {
         ],
       },
     });
-    expect(resolveLegend(roundTripped)).toEqual(resolveLegend(parsed));
+    expect(resolveLegend(roundTripped)).toEqual({ ...resolveLegend(parsed), position: [0, 0] });
   });
 
   it('persists explicit content alignment through JSON and rejects unsupported values at the root field', () => {
@@ -228,7 +228,7 @@ describe('Legend schema and factory', () => {
       transforms: [{ kind: 'translate', x: 4, y: 5 }],
       meta: { source: 'test' },
       content: { kind: LegendContentKind.Items, items: [] },
-      style: { stroke: '#334155' },
+      defaults: { style: { stroke: '#334155' } },
     });
 
     expect(scoped).toMatchObject({
@@ -237,7 +237,7 @@ describe('Legend schema and factory', () => {
       zIndex: 2,
       transforms: [{ kind: 'translate', x: 4, y: 5 }],
       meta: { source: 'test' },
-      style: { stroke: '#334155' },
+      defaults: { style: { stroke: '#334155' } },
     });
 
     expectIssuePath({ ...base, title: 'Legend' }, 'title');

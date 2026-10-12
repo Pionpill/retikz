@@ -38,7 +38,7 @@ export const ArrayLayoutSchema = ArrayCellLayoutSchema.extend({
 const ArrayBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('array').describe('Composite type for the array presentation.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
+  ...ScopePropsSchema.shape,
   skeleton: ArraySkeletonSchema.optional().describe(
     'Schematic structure without real data; excludes other content inputs.',
   ),

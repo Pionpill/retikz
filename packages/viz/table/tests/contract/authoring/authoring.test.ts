@@ -61,7 +61,7 @@ describe('Table plain authoring', () => {
         selector: { fields: ['score'] },
         appearance: {
           content: {
-            style: { color: '#b91c1c' },
+            defaults: { style: { color: '#b91c1c' } },
           },
         },
       },
@@ -75,7 +75,9 @@ describe('Table plain authoring', () => {
         legend: false,
       },
     ];
-    const tableDefaults = { appearanceDefaults: { body: { content: { style: { color: '#27272a' } } } } } as const;
+    const tableDefaults = {
+      appearanceDefaults: { body: { content: { defaults: { style: { color: '#27272a' } } } } },
+    } as const;
     const input: DetailTableInput = {
       dataRef: 'scores',
       columns: [{ id: 'score', field: 'score', formatter }],

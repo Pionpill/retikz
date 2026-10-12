@@ -82,8 +82,11 @@ export const measureCell = (
           context,
           {
             type: 'scope',
-            ...(color === undefined ? {} : { style: { color } }),
-            defaults: { node: { style: textStyle }, label: textStyle },
+            defaults: {
+              ...(color === undefined ? {} : { style: { color } }),
+              node: { style: textStyle },
+              label: textStyle,
+            },
             children: [cell.content],
           },
           occurrence,
@@ -140,7 +143,7 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
   return context.scope(
     {
       transforms: [{ kind: 'translate', x, y }],
-      style: { ...(color === undefined ? {} : { color }), ...(opacity === undefined ? {} : { opacity }) },
+      defaults: { style: { ...(color === undefined ? {} : { color }), ...(opacity === undefined ? {} : { opacity }) } },
     },
     [
       surfaceBoundaryPath(width, height, radius, { zIndex: -1, style: { fill, fillOpacity, stroke: 'none' } }),

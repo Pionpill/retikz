@@ -21,16 +21,16 @@ export const fullScopeProps = {
       ],
     },
   ],
-  style: {
-    color: '#0f172a',
-    stroke: '#334155',
-    fill: '#f8fafc',
-    strokeWidth: 2,
-    opacity: 0.9,
-    fillOpacity: 0.4,
-    strokeOpacity: 0.8,
-  },
   defaults: {
+    style: {
+      color: '#0f172a',
+      stroke: '#334155',
+      fill: '#f8fafc',
+      strokeWidth: 2,
+      opacity: 0.9,
+      fillOpacity: 0.4,
+      strokeOpacity: 0.8,
+    },
     node: {
       style: { fill: '#e2e8f0' },
       layout: { padding: 2 },

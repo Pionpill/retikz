@@ -40,7 +40,7 @@ describe('Table Source defaults resolution', () => {
       appearanceDefaults: {
         body: {
           background: { fill: '#f8fafc' },
-          content: { style: { color: '#123456' } },
+          content: { defaults: { style: { color: '#123456' } } },
         },
       },
       visualDefaults: { categorical },
@@ -49,9 +49,9 @@ describe('Table Source defaults resolution', () => {
 
     expect(resolved.appearanceDefaults?.body).toMatchObject({
       background: { fill: '#f8fafc' },
-      content: { style: { color: '#123456' } },
+      content: { defaults: { style: { color: '#123456' } } },
     });
-    expect(resolved.appearanceDefaults?.columnHeader?.content?.style?.color).toBe('#71717a');
+    expect(resolved.appearanceDefaults?.columnHeader?.content?.defaults?.style?.color).toBe('#71717a');
     expect(resolved.visualDefaults?.categorical).toEqual(['pink', 'purple']);
 
     categorical[0] = 'mutated';
@@ -65,8 +65,10 @@ describe('Table Source defaults resolution', () => {
         body: {
           background: { fill: '#ffffff', fillOpacity: 0.5 },
           content: {
-            style: { color: '#111111' },
-            defaults: { node: { layout: { padding: 2 }, style: { font: { family: 'serif', weight: 500 } } } },
+            defaults: {
+              style: { color: '#111111' },
+              node: { layout: { padding: 2 }, style: { font: { family: 'serif', weight: 500 } } },
+            },
           },
         },
       },
@@ -78,8 +80,7 @@ describe('Table Source defaults resolution', () => {
         body: {
           background: { fill: null, fillOpacity: 0 },
           content: {
-            style: { color: null },
-            defaults: { node: { layout: { padding: 4 }, style: { font: { weight: null } } } },
+            defaults: { style: { color: null }, node: { layout: { padding: 4 }, style: { font: { weight: null } } } },
           },
         },
       },
@@ -120,7 +121,9 @@ describe('Table Source defaults resolution', () => {
       resolve: theme => ({
         defaults: {
           appearanceDefaults: {
-            body: { content: { style: { color: theme.mode === ThemeMode.Light ? '#123456' : '#abcdef' } } },
+            body: {
+              content: { defaults: { style: { color: theme.mode === ThemeMode.Light ? '#123456' : '#abcdef' } } },
+            },
           },
           visualDefaults: { sequential: ['orange', 'purple'] },
         },
@@ -134,7 +137,7 @@ describe('Table Source defaults resolution', () => {
 
     const resolved = resolveTableThemeDefaults(theme, [brand]);
 
-    expect(resolved.defaults.appearanceDefaults?.body?.content?.style?.color).toBe('#123456');
+    expect(resolved.defaults.appearanceDefaults?.body?.content?.defaults?.style?.color).toBe('#123456');
     expect(resolved.defaults.appearanceDefaults?.body?.background?.fill).toBe('#ffffff');
     expect(resolved.defaults.visualDefaults?.categorical).toEqual(['red']);
     expect(resolved.defaults.visualDefaults?.sequential).toEqual(['orange', 'purple']);

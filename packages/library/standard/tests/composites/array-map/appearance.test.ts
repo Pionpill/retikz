@@ -27,6 +27,21 @@ const compile = (children: Array<IRChild>) =>
   );
 
 describe('Array / Map appearance and identity', () => {
+  it('resolves numeric content paint against the cell master color before replay', () => {
+    const result = compile([
+      {
+        namespace: 'standard',
+        type: 'array',
+        style: { color: '#336699' },
+        items: [{ content: { ...content, style: { fill: 0.2, stroke: 'none' } } }],
+      },
+    ]);
+
+    expect(flat(result.scene.primitives).filter(node => node.type === 'rect')).toEqual(
+      expect.arrayContaining([expect.objectContaining({ fill: '#d6e0eb' })]),
+    );
+  });
+
   it('overrides index text style without changing cell text and merges font fields', () => {
     const result = compile([
       {

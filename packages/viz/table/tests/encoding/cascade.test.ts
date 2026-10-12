@@ -70,8 +70,8 @@ describe('Table visual encoding cascade', () => {
         range: ['#123456'],
       },
     ]);
-    expect(result.cells[0].appearance.content?.style?.color).toBe('#123456');
-    expect(result.cells[1].appearance.content?.style?.color).toBe('#18181b');
+    expect(result.cells[0].appearance.content?.defaults?.style?.color).toBe('#123456');
+    expect(result.cells[1].appearance.content?.defaults?.style?.color).toBe('#18181b');
     expect(result.cells[3].trace).not.toHaveProperty('encodingIds');
   });
 
@@ -105,7 +105,7 @@ describe('Table visual encoding cascade', () => {
     expect(result.cells[0]).toMatchObject({
       appearance: {
         background: { fill: 'green' },
-        content: { style: { color: '#18181b' } },
+        content: { defaults: { style: { color: '#18181b' } } },
       },
       trace: {
         encodingIds: ['first', 'second'],

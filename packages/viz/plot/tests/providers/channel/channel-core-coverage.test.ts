@@ -91,7 +91,7 @@ describe('channel core coverage (contract)', () => {
 
     expect(firstLayer(spec, { d: [{ x: 0, y: 0 }] })).toMatchObject({
       zIndex: 0,
-      style: { strokeWidth: 2, opacity: 0.7, fillOpacity: 0.5, strokeOpacity: 0.4 },
+      defaults: { style: { strokeWidth: 2, opacity: 0.7, fillOpacity: 0.5, strokeOpacity: 0.4 } },
     });
 
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0 }] }));

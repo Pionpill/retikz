@@ -62,8 +62,9 @@ describe('Core contextual color compile', () => {
               style: { color: '#336699' },
             },
           ],
-          style: { color: '#ff0000' },
+
           defaults: {
+            style: { color: '#ff0000' },
             node: {
               style: { fill: 0.2, stroke: 0.8 },
             },

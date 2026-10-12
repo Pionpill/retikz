@@ -165,8 +165,9 @@ describe('resolveNode', () => {
     const frame = createStyleResolveFrame({
       type: 'scope',
       children: [],
-      style: { color: 'red' },
+
       defaults: {
+        style: { color: 'red' },
         label: {
           textColor: 'blue',
           opacity: 0.5,

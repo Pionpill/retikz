@@ -44,14 +44,14 @@ export const BUILTIN_SCOPE_CHANNELS = {
     'strokeWidth',
     { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
     (scope, value) => {
-      scope.style = { ...scope.style, strokeWidth: value };
+      scope.defaults = { ...scope.defaults, style: { ...scope.defaults?.style, strokeWidth: value } };
     },
   ),
   opacity: numericScopeChannel(
     'opacity',
     { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     (scope, value) => {
-      scope.style = { ...scope.style, opacity: value };
+      scope.defaults = { ...scope.defaults, style: { ...scope.defaults?.style, opacity: value } };
     },
     'ramp',
   ),
@@ -59,14 +59,14 @@ export const BUILTIN_SCOPE_CHANNELS = {
     'fillOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     (scope, value) => {
-      scope.style = { ...scope.style, fillOpacity: value };
+      scope.defaults = { ...scope.defaults, style: { ...scope.defaults?.style, fillOpacity: value } };
     },
   ),
   strokeOpacity: numericScopeChannel(
     'strokeOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     (scope, value) => {
-      scope.style = { ...scope.style, strokeOpacity: value };
+      scope.defaults = { ...scope.defaults, style: { ...scope.defaults?.style, strokeOpacity: value } };
     },
   ),
 };

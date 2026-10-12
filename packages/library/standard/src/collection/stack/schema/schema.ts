@@ -29,7 +29,7 @@ export const StackSkeletonSchema = LinearCellSkeletonSchema;
 const StackBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard collection namespace.'),
   type: literal('stack').describe('Static stack discriminator.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
+  ...ScopePropsSchema.shape,
   style: CellStyleSchema.optional(),
   layout: StackLayoutSchema.optional().describe('Cell sizing, direction and spacing.'),
   label: NodeSchema.shape.label,

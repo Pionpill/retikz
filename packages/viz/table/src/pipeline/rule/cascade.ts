@@ -67,21 +67,21 @@ export const cascadeTableCellAppearance = (
 
   if (patch.content !== undefined) {
     const content = structuredClone(next.content ?? {}) as Record<string, unknown>;
-    if (patch.content.style !== undefined) {
-      const style = { ...next.content?.style };
-      CONTENT_ATOMIC_FIELDS.forEach(field => {
-        const value = patch.content?.style?.[field];
-        if (value === undefined) return;
-
-        Object.assign(style, { [field]: structuredClone(value) });
-        setTrace(trace, `/content/style/${field}`, source);
-      });
-      content.style = style;
-    }
-
     if (patch.content.defaults !== undefined) {
       const defaults = structuredClone(next.content?.defaults ?? {}) as Record<string, unknown>;
       const defaultPatches = patch.content.defaults;
+      if (patch.content.defaults.style !== undefined) {
+        const style = { ...next.content?.defaults?.style };
+        CONTENT_ATOMIC_FIELDS.forEach(field => {
+          const value = patch.content?.defaults?.style?.[field];
+          if (value === undefined) return;
+
+          Object.assign(style, { [field]: structuredClone(value) });
+          setTrace(trace, `/content/defaults/style/${field}`, source);
+        });
+        defaults.style = style;
+      }
+
       if (defaultPatches.reset !== undefined) {
         defaults.reset = structuredClone(defaultPatches.reset);
         setTrace(trace, '/content/defaults/reset', source);

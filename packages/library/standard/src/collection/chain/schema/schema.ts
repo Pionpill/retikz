@@ -102,7 +102,7 @@ export const ChainSkeletonSchema = union([
 const ChainBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard collection namespace.'),
   type: literal('chain').describe('Series-parallel chain discriminator.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
+  ...ScopePropsSchema.shape,
   style: CellStyleSchema.optional().describe('Shared cell visual style.'),
   layout: ChainLayoutSchema.optional().describe('Chain direction, branch placement, spacing, and cell dimensions.'),
   connection: ChainConnectionSchema.optional().describe('Connection routing and path presentation.'),

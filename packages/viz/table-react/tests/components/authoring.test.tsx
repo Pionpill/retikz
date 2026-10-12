@@ -245,7 +245,7 @@ describe('Table React composition root integration', () => {
       id: 'sparse-defaults-parity',
       cellLayoutDefaults: { body: { padding: 3 }, columnHeader: { padding: 4 } },
       rows: [[1]],
-      tableDefaults: { appearanceDefaults: { body: { content: { style: { color: '#111111' } } } } },
+      tableDefaults: { appearanceDefaults: { body: { content: { defaults: { style: { color: '#111111' } } } } } },
       appearanceDefaults: { body: { background: { fill: '#f8fafc', fillOpacity: 0 } } },
       layout: { borders: { horizontal: { kind: 'line' as const, stroke: '#cbd5e1', width: 1 } } },
       visualDefaults: { categorical: ['#2563eb'], sequential: ['#eff6ff', '#1d4ed8'] as [string, string] },
@@ -374,7 +374,7 @@ describe('Table React composition root integration', () => {
       encodings,
       theme: { style: 'academic', mode: 'dark' },
       themeStyles,
-      appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
+      appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
       cellLayoutDefaults: { body: { padding: 0 } },
       children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
@@ -408,7 +408,7 @@ describe('Table React composition root integration', () => {
         meta: { source: 'root-props-test' },
         rules,
         encodings,
-        appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
+        appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
         cellLayoutDefaults: { body: { padding: 0 } },
       },
     });
@@ -478,7 +478,12 @@ describe('Table React composition root integration', () => {
   it('preserves every ManualTable root authoring field in rows and marker modes', () => {
     const root = {
       id: 'manual-root-fields',
-      rules: [{ selector: { locations: ['body' as const] }, appearance: { content: { style: { color: '#b91c1c' } } } }],
+      rules: [
+        {
+          selector: { locations: ['body' as const] },
+          appearance: { content: { defaults: { style: { color: '#b91c1c' } } } },
+        },
+      ],
       encodings: [
         {
           id: 'score-color',
@@ -488,7 +493,7 @@ describe('Table React composition root integration', () => {
           legend: false as const,
         },
       ],
-      appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
+      appearanceDefaults: { body: { content: { defaults: { style: { color: '#fafafa' } } } } },
       cellLayoutDefaults: { body: { padding: 0 } },
     };
     const propsRuntime = resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {

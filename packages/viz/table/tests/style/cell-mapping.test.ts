@@ -32,7 +32,7 @@ describe('Source defaults Cell mapping', () => {
               body: {
                 content: { defaults: { node: { style: { font: { family: 'monospace', weight: 400 } } } } },
               },
-              columnHeader: { content: { style: { color: '#123456' } } },
+              columnHeader: { content: { defaults: { style: { color: '#123456' } } } },
             },
           },
         }),
@@ -44,8 +44,8 @@ describe('Source defaults Cell mapping', () => {
       appearance: {
         background: { fill: '#ffffff', fillOpacity: 1 },
         content: {
-          style: { color: '#123456' },
           defaults: {
+            style: { color: '#123456' },
             node: { style: { font: { family: 'sans-serif', weight: 500 } } },
             label: { font: { family: 'sans-serif', weight: 500 } },
           },
@@ -54,15 +54,15 @@ describe('Source defaults Cell mapping', () => {
       },
       trace: {
         appearance: {
-          '/content/style/color': { kind: 'defaults', path: '$style/mapping/light' },
+          '/content/defaults/style/color': { kind: 'defaults', path: '$style/mapping/light' },
         },
       },
     });
     expect(result.cells[1]).toMatchObject({
       appearance: {
         content: {
-          style: { color: '#18181b' },
           defaults: {
+            style: { color: '#18181b' },
             node: { style: { font: { family: 'monospace', weight: 400 } } },
             label: { font: { family: 'sans-serif', weight: 400 } },
           },

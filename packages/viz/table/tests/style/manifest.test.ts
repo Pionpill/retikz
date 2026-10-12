@@ -10,7 +10,7 @@ describe('Table style and encoding manifest seed', () => {
         type: 'table',
         id: 'styled',
         tableDefaults: {
-          appearanceDefaults: { body: { content: { style: { color: '#123456' } } } },
+          appearanceDefaults: { body: { content: { defaults: { style: { color: '#123456' } } } } },
         },
         structure: { kind: 'manual', rows: [[1]] },
         encodings: [
@@ -30,14 +30,14 @@ describe('Table style and encoding manifest seed', () => {
     expect(result.manifest.style).toMatchObject({
       themeMode: 'light',
       defaults: {
-        appearanceDefaults: { body: { content: { style: { color: '#123456' } } } },
+        appearanceDefaults: { body: { content: { defaults: { style: { color: '#123456' } } } } },
       },
       layers: [
         { kind: 'neutral', path: '$default/light' },
         {
           kind: 'source',
           path: '$spec/tableDefaults',
-          defaults: { appearanceDefaults: { body: { content: { style: { color: '#123456' } } } } },
+          defaults: { appearanceDefaults: { body: { content: { defaults: { style: { color: '#123456' } } } } } },
         },
       ],
     });

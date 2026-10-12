@@ -396,15 +396,15 @@ describe('lowerPlots (contract)', () => {
       style: { color: '#336699', fill: 0.2 },
     });
     expect(gridLayer).toMatchObject({
-      style: { color: '#336699' },
+      defaults: { style: { color: '#336699' } },
     });
     expect(axisLayer).toMatchObject({
-      style: { color: '#336699' },
+      defaults: { style: { color: '#336699' } },
     });
     expect(legendLayer).toMatchObject({
-      style: { color: '#336699' },
+      defaults: { style: { color: '#336699' } },
     });
-    expect(markLayer.style?.color).toBeUndefined();
+    expect(markLayer.defaults?.style?.color).toBeUndefined();
 
     const scene = compileToScene(
       { version: 1, type: 'scene', theme: { mode }, children: [spec] },

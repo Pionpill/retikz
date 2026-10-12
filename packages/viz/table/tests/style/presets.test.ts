@@ -20,10 +20,10 @@ describe('default Table Source defaults', () => {
       appearanceDefaults: {
         body: {
           background: { fill: '#ffffff', fillOpacity: 1 },
-          content: { style: { color: '#18181b' } },
+          content: { defaults: { style: { color: '#18181b' } } },
         },
         columnHeader: {
-          content: { style: { color: '#71717a' } },
+          content: { defaults: { style: { color: '#71717a' } } },
           borders: { bottom: { kind: 'line', stroke: '#e4e4e7', width: 1 } },
         },
       },

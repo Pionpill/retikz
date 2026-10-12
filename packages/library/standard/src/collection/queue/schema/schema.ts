@@ -28,7 +28,7 @@ export const QueueSkeletonSchema = LinearCellSkeletonSchema;
 const QueueBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard collection namespace.'),
   type: literal('queue').describe('Static queue discriminator.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
+  ...ScopePropsSchema.shape,
   style: CellStyleSchema.optional(),
   layout: QueueLayoutSchema.optional().describe('Cell sizing, direction and spacing.'),
   label: NodeSchema.shape.label,

@@ -50,7 +50,7 @@ export const MatrixSkeletonSchema = union([
 const MatrixBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard composite namespace.'),
   type: literal('matrix').describe('Rectangular cell presentation.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
+  ...ScopePropsSchema.shape,
   style: CellStyleSchema.optional(),
   layout: MatrixLayoutSchema.optional().describe('Cell dimensions, padding, overflow, and row or column gaps.'),
   label: NodeSchema.shape.label,

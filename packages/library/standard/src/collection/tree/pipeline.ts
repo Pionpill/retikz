@@ -53,7 +53,6 @@ export const compileTree = (source: IRTree, context: LayoutCompositeCompileConte
       {
         child: {
           type: 'scope',
-          ...(scope.style === undefined ? {} : { style: scope.style }),
           ...(scope.theme === undefined ? {} : { theme: scope.theme }),
           ...(scope.defaults === undefined ? {} : { defaults: scope.defaults }),
           children: [item === null ? emptyNode : { ...item.node, id: targetId }],

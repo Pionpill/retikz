@@ -1,4 +1,4 @@
-﻿import type { ValueOf } from '@retikz/foundation';
+import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { IRComposite } from '../composite';
@@ -54,7 +54,7 @@ export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 /**
  * Scope IR 类型——手写而非 z.infer 派生
  * @description ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
- *   Scope 通过 style 提供级联视觉值，通过 defaults 提供四个默认通道与 reset 继承屏障
+ *   Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供四个专属通道与 reset 继承屏障
  */
 export type IRScope = IRScopeProps & {
   /** 固定为 scope 的容器判别字段 */

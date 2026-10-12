@@ -29,8 +29,11 @@ describe('分组 Source 解析与编译', () => {
       ScopeSchema.parse({
         type: 'scope',
         children: [],
-        style: { stroke: 'blue' },
-        defaults: { node: { style: { font: { family: 'serif', size: 20 } }, layout: { minimumSize: 30 } } },
+
+        defaults: {
+          style: { stroke: 'blue' },
+          node: { style: { font: { family: 'serif', size: 20 } }, layout: { minimumSize: 30 } },
+        },
       }),
     );
     const node = NodeSchema.parse({
@@ -54,8 +57,8 @@ describe('分组 Source 解析与编译', () => {
       children: [
         {
           type: 'scope',
-          style: { fill: 'red', stroke: 'blue' },
-          defaults: { reset: false },
+
+          defaults: { style: { fill: 'red', stroke: 'blue' }, reset: false },
           children: [
             {
               type: 'node',
@@ -72,7 +75,9 @@ describe('分组 Source 解析与编译', () => {
 
     expect(compileToScene(SceneSchema.parse(JSON.parse(JSON.stringify(source)))).scene).toEqual(output);
 
-    const frame = createStyleResolveFrame(ScopeSchema.parse({ type: 'scope', children: [], style: { fill: 'red' } }));
+    const frame = createStyleResolveFrame(
+      ScopeSchema.parse({ type: 'scope', children: [], defaults: { style: { fill: 'red' } } }),
+    );
 
     expect(
       resolveEffectiveNodeStyle(NodeSchema.parse({ type: 'node', position: [0, 0], style: {}, layout: {} }), [frame]),

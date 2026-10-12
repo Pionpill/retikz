@@ -12,8 +12,8 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
       body: {
         background: { fill: '#ffffff', fillOpacity: 1 },
         content: {
-          style: { color: '#18181b' },
           defaults: {
+            style: { color: '#18181b' },
             node: { style: { font: { family: 'sans-serif', weight: 400 } } },
             label: { font: { family: 'sans-serif', weight: 400 } },
           },
@@ -22,8 +22,8 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
       columnHeader: {
         background: { fill: '#ffffff', fillOpacity: 1 },
         content: {
-          style: { color: '#71717a' },
           defaults: {
+            style: { color: '#71717a' },
             node: { style: { font: { family: 'sans-serif', weight: 500 } } },
             label: { font: { family: 'sans-serif', weight: 500 } },
           },
@@ -39,8 +39,8 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
       body: {
         background: { fill: '#09090b', fillOpacity: 1 },
         content: {
-          style: { color: '#fafafa' },
           defaults: {
+            style: { color: '#fafafa' },
             node: { style: { font: { family: 'sans-serif', weight: 400 } } },
             label: { font: { family: 'sans-serif', weight: 400 } },
           },
@@ -49,8 +49,8 @@ const presets: Readonly<Record<ThemeMode, IRTableDefaults>> = deepFreeze({
       columnHeader: {
         background: { fill: '#09090b', fillOpacity: 1 },
         content: {
-          style: { color: '#a1a1aa' },
           defaults: {
+            style: { color: '#a1a1aa' },
             node: { style: { font: { family: 'sans-serif', weight: 500 } } },
             label: { font: { family: 'sans-serif', weight: 500 } },
           },

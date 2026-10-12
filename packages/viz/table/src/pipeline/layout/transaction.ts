@@ -504,13 +504,13 @@ export const resolvePresentedTableTransaction = (
   const tableDefaults = input.tableDefaults ?? resolveTableDefaults(manifestTheme, undefined, undefined);
   const manifestStyle = tableDefaults.style;
   const cellContentMasterColor = (index: number): string =>
-    presented.cells[index].appearance.content?.style?.color ??
+    presented.cells[index].appearance.content?.defaults?.style?.color ??
     (semantic.cells[index].location === TableCellLocation.ColumnHeader
-      ? tableDefaults.defaults.appearanceDefaults?.columnHeader?.content?.style?.color
-      : tableDefaults.defaults.appearanceDefaults?.body?.content?.style?.color) ??
+      ? tableDefaults.defaults.appearanceDefaults?.columnHeader?.content?.defaults?.style?.color
+      : tableDefaults.defaults.appearanceDefaults?.body?.content?.defaults?.style?.color) ??
     'currentColor';
   const tableContentMasterColor =
-    tableDefaults.defaults.appearanceDefaults?.body?.content?.style?.color ?? 'currentColor';
+    tableDefaults.defaults.appearanceDefaults?.body?.content?.defaults?.style?.color ?? 'currentColor';
 
   const intrinsic = presented.cells.map((cell, index) => {
     const semanticCell = semantic.cells[index];

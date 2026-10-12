@@ -130,10 +130,10 @@ describe('Table layout-aware lowering', () => {
         structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
         tableDefaults: {
           appearanceDefaults: {
-            body: { background: { fill: 0.2 }, content: { style: { color: '#336699' } } },
+            body: { background: { fill: 0.2 }, content: { defaults: { style: { color: '#336699' } } } },
             columnHeader: {
               background: { fill: 0.4 },
-              content: { style: { color: '#993333' } },
+              content: { defaults: { style: { color: '#993333' } } },
               borders: { bottom: { kind: 'line', stroke: 0.6, width: 2 } },
             },
           },
@@ -147,11 +147,11 @@ describe('Table layout-aware lowering', () => {
 
       expect(result.manifest.cells[0].appearance).toMatchObject({
         background: { fill: 0.4 },
-        content: { style: { color: '#993333' } },
+        content: { defaults: { style: { color: '#993333' } } },
       });
       expect(result.manifest.cells[1].appearance).toMatchObject({
         background: { fill: 0.2 },
-        content: { style: { color: '#336699' } },
+        content: { defaults: { style: { color: '#336699' } } },
       });
       expect(headerWinner).toMatchObject({
         kind: 'line',
