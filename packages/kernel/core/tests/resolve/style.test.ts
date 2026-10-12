@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  createStyleResolveFrame,
+  resolveScopeDefaults,
   cutsStyleChannel,
   resolveDashPattern,
   resolveDropShadow,
@@ -27,7 +27,62 @@ const pathOf = (properties: Partial<IRPathBase> = {}): IRPathBase =>
     ...properties,
   });
 
-describe('resolve style frame', () => {
+describe('Scope effective defaults', () => {
+  it('按层合并共同样式与通道样式，实例主色在继承完成后展开', () => {
+    const parent = resolveScopeDefaults(
+      styleScope({
+        defaults: {
+          style: { color: 'red' },
+          node: { style: { stroke: 'blue', opacity: 0.8 } },
+          path: { style: { stroke: 'blue' } },
+        },
+      }),
+    );
+    const child = resolveScopeDefaults(
+      styleScope({
+        defaults: {
+          style: { stroke: 'green', opacity: 0 },
+          node: { style: { stroke: undefined } },
+        },
+      }),
+      parent,
+    );
+    const node = resolveEffectiveNodeStyle({ type: 'node', position: [0, 0], style: { color: 'gold' } }, child);
+    expect(node.style).toMatchObject({ stroke: 'green', opacity: 0, fill: 'gold', textColor: 'gold' });
+    expect(resolveEffectivePath(pathOf(), child).style?.stroke).toBe('green');
+    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style).toMatchObject({
+      stroke: 'blue',
+      opacity: 0.8,
+      fill: 'red',
+    });
+  });
+
+  it('子层 reset 和元素箭头主色不污染兄弟使用的配置', () => {
+    const parent = resolveScopeDefaults(
+      styleScope({
+        defaults: {
+          style: { color: 'red' },
+          node: { style: { fill: 'blue' } },
+          arrow: { color: 'purple', end: { color: 'green', scale: 2 } },
+          label: { textColor: 'orange' },
+        },
+      }),
+    );
+    const child = resolveScopeDefaults(styleScope({ defaults: { reset: ['node', 'arrow'], arrow: {} } }), parent);
+    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
+    expect(child.scopeColor).toBe('red');
+    expect(child.label).toEqual({ textColor: 'orange' });
+    expect(child.arrow).toEqual({});
+    const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
+    expect(resolveEffectivePath(pathOf({ style: { color: 'gold' }, marks }), parent).marks?.[0]?.mark).toMatchObject({
+      color: 'gold',
+      scale: 2,
+    });
+    expect(resolveEffectivePath(pathOf({ marks }), parent).marks?.[0]?.mark).toMatchObject({ color: 'red', scale: 2 });
+    expect(parent.arrow).toEqual({ color: 'purple', end: { color: 'green', scale: 2 } });
+    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
+  });
+
   it('cuts only the channels named by resetStyle', () => {
     expect(cutsStyleChannel(['node'], 'node')).toBe(true);
     expect(cutsStyleChannel(['node'], 'path')).toBe(false);
@@ -37,29 +92,29 @@ describe('resolve style frame', () => {
   });
 
   it('propagates a scope master color to node and path channels', () => {
-    const frame = createStyleResolveFrame(
+    const frame = resolveScopeDefaults(
       styleScope({
         defaults: { style: { color: 'red' } },
       }),
     );
     const node = NodeSchema.parse({ type: 'node', position: [0, 0] });
 
-    expect(resolveEffectiveNodeStyle(node, [frame])).toMatchObject({
+    expect(resolveEffectiveNodeStyle(node, frame)).toMatchObject({
       style: { fill: 'red', stroke: 'red', textColor: 'red' },
     });
-    expect(resolveEffectivePath(pathOf(), [frame])).toMatchObject({
+    expect(resolveEffectivePath(pathOf(), frame)).toMatchObject({
       style: { color: 'red' },
     });
   });
 
   it('applies label font fields by per-field priority', () => {
-    const frame = createStyleResolveFrame(
+    const frame = resolveScopeDefaults(
       styleScope({
         defaults: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
       }),
     );
     const label = GeometryLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
-    const resolved = resolveEffectivePath(pathOf({ label }), [frame]);
+    const resolved = resolveEffectivePath(pathOf({ label }), frame);
 
     expect(resolved.label).toMatchObject({
       font: { family: 'label', size: 10, weight: 'bold' },
@@ -67,7 +122,7 @@ describe('resolve style frame', () => {
   });
 
   it('applies arrow start and end overrides after shared defaults', () => {
-    const frame = createStyleResolveFrame(
+    const frame = resolveScopeDefaults(
       styleScope({
         defaults: {
           arrow: {
@@ -86,7 +141,7 @@ describe('resolve style frame', () => {
           { pos: 1, mark: { kind: 'arrow', scale: 3 } },
         ],
       }),
-      [frame],
+      frame,
     );
 
     expect(resolved.marks?.[0]?.mark).toMatchObject({ shape: 'triangle', scale: 2 });

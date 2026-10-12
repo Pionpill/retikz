@@ -1,10 +1,9 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRGeometryLabel, IRPathBase, IRPathDefault, IRPathStyle, IRStep } from '../../schemas';
+import type { IRGeometryLabel, IRPathBase, IRStep } from '../../schemas';
 import { resolvePathMarks } from './arrow';
-import { cutsStyleChannel } from './frame';
-import { resolveEffectiveLabelDefault, resolveGeometryLabel } from './label';
-import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
+import { resolveGeometryLabel } from './label';
+import type { EffectiveLabelDefault, EffectiveScopeDefaults } from './types';
 
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
 const resolveStepLabels = (
@@ -34,35 +33,22 @@ const resolveGeometryLabelField = (
 };
 
 /** 解析 path 的最终样式 */
-export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<StyleResolveFrame>): IRPathBase => {
-  let defaults: IRPathDefault = {};
-  let style: IRPathStyle = {};
-
-  for (const frame of stack) {
-    if (cutsStyleChannel(frame.resetStyle, 'path')) {
-      defaults = {};
-      style = {};
-    }
-
-    const { style: pathStyle, ...geometry } = frame.pathDefault ?? {};
-    defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
-    style = {
-      ...style,
-      ...mergeProperties<IRPathStyle>([frame.cascade, pathStyle], { shouldOverride: value => value !== undefined }),
-    };
-  }
-
-  style = { ...style, ...mergeProperties([path.style ?? {}], { shouldOverride: value => value !== undefined }) };
+export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveScopeDefaults): IRPathBase => {
+  const defaults = scopeDefaults.path;
+  const style = {
+    ...defaults?.style,
+    ...mergeProperties([path.style ?? {}], { shouldOverride: value => value !== undefined }),
+  };
   const masterColor = style.color;
   const effective: IRPathBase = {
-    ...defaults,
+    ...defaults?.geometry,
     ...mergeProperties([path], { shouldOverride: value => value !== undefined }),
     type: path.type,
     style,
   };
 
-  const labelDefault = resolveEffectiveLabelDefault(stack);
-  effective.marks = resolvePathMarks(path.marks, stack, masterColor);
+  const labelDefault = scopeDefaults.label ?? {};
+  effective.marks = resolvePathMarks(path.marks, scopeDefaults, masterColor);
   if (path.children !== undefined) {
     effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
   } else {

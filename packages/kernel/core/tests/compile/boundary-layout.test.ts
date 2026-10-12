@@ -19,7 +19,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveShapeRegistry()) => {
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(source, {
-    styleFrames: [],
+    scopeDefaults: {},
     mode: 'light',
     shapes,
     boundaries,

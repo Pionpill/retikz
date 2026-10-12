@@ -7,8 +7,8 @@ import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveShapeRegistry } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
-import type { StyleResolveFrame } from '../../src/resolve/style';
-import { createStyleResolveFrame } from '../../src/resolve/style';
+import type { EffectiveScopeDefaults } from '../../src/resolve/style';
+import { resolveScopeDefaults } from '../../src/resolve/style';
 import type { IRNode, IRScene } from '../../src/schemas';
 
 const node = (overrides: Partial<IRNode> = {}): IRNode => ({
@@ -23,9 +23,9 @@ const sceneWith = (child: IRNode): IRScene => ({
   children: [child],
 });
 
-const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> = []) =>
+const resolve = (source: IRNode, scopeDefaults: EffectiveScopeDefaults = {}) =>
   resolveNode(source, {
-    styleFrames,
+    scopeDefaults,
     mode: 'light',
     shapes: resolveShapeRegistry(),
     boundaries: resolveBoundaryRegistry(),
@@ -162,7 +162,7 @@ describe('resolveNode', () => {
   });
 
   it('materializes effective label defaults into every canonical label', () => {
-    const frame = createStyleResolveFrame({
+    const frame = resolveScopeDefaults({
       type: 'scope',
       children: [],
 
@@ -175,7 +175,7 @@ describe('resolveNode', () => {
         },
       },
     });
-    const resolved = resolve(node({ label: { text: 'x', font: { size: 10 } } }), [frame]).node;
+    const resolved = resolve(node({ label: { text: 'x', font: { size: 10 } } }), frame).node;
 
     expect(resolved.label).toEqual([
       {

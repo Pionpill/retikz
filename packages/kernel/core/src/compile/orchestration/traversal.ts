@@ -45,7 +45,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolver, PathResolution, PathTargetResolver, TargetResolution } from '../../resolve';
 import {
   bindComposite,
-  createStyleResolveFrame,
+  resolveScopeDefaults,
   resolveBoundaryReference,
   resolveComposite,
   resolveNode,
@@ -55,7 +55,6 @@ import {
   resolveTheme,
   resolveGeometryLabel,
   resolveGeometryLabelColors,
-  resolveEffectiveLabelDefault,
 } from '../../resolve';
 import {
   createCompositeContractError,
@@ -173,21 +172,9 @@ import type {
 } from './types';
 import { optionalVisualBoundsOfPrimitives, visualBoundsOfPrimitives } from './visual-bounds';
 
-/** 只保留会改变 Scope 样式级联结果的 frame，避免空 Scope frame 触发 replay 重编译 */
-const replayStyleFingerprint = (styleStack: TraversalFrame['styleStack']): string => {
-  const effectiveFrames = styleStack.filter(frame => {
-    const reset = frame.resetStyle;
-    return (
-      Object.keys(frame.cascade).length > 0 ||
-      frame.nodeDefault !== undefined ||
-      frame.pathDefault !== undefined ||
-      frame.labelDefault !== undefined ||
-      frame.arrowDefault !== undefined ||
-      (reset !== undefined && reset !== false && (!Array.isArray(reset) || reset.length > 0))
-    );
-  });
-  return JSON.stringify(effectiveFrames);
-};
+/** 按有效默认配置判断 replay 是否需要重新物化 */
+const replayStyleFingerprint = (scopeDefaults: TraversalFrame['scopeDefaults']): string =>
+  JSON.stringify(scopeDefaults);
 
 /** 对 resolved Theme 做 compile-local 稳定比较 */
 const replayThemeFingerprint = (theme: TraversalFrame['theme']): string => JSON.stringify(theme);
@@ -415,7 +402,7 @@ export const compileChildrenToPrimitives = (
       value,
       observerKeys: output.keys,
       theme: frame.theme,
-      styleStack: [...frame.styleStack],
+      scopeDefaults: frame.scopeDefaults,
     });
   };
 
@@ -474,7 +461,7 @@ export const compileChildrenToPrimitives = (
       nextPath === path
         ? resolution
         : resolvePathValue(nextPath, {
-            styleStack: pendingPath.styleStack,
+            scopeDefaults: pendingPath.scopeDefaults,
             mode: pendingPath.theme.mode,
             scopeChain,
             targetResolver,
@@ -607,7 +594,7 @@ export const compileChildrenToPrimitives = (
       });
     const emitBoundaryLabels = (input: ReadonlyArray<PathKindBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
       input.map(request => {
-        const labelDefault = resolveEffectiveLabelDefault(pendingPath.styleStack);
+        const labelDefault = pendingPath.scopeDefaults.label ?? {};
         const styled = resolveGeometryLabelColors(
           resolveGeometryLabel(request.label, labelDefault, resolution.path.color),
           labelDefault.color ?? resolution.path.color,
@@ -684,7 +671,7 @@ export const compileChildrenToPrimitives = (
         value,
         observerKeys: ownerOutput.keys,
         theme: pendingPath.theme,
-        styleStack: [...pendingPath.styleStack],
+        scopeDefaults: pendingPath.scopeDefaults,
       });
     }
 
@@ -715,7 +702,7 @@ export const compileChildrenToPrimitives = (
         try {
           const targetResolver = createPathTargetResolver();
           const resolution = resolvePathValue(pendingPath.path, {
-            styleStack: pendingPath.styleStack,
+            scopeDefaults: pendingPath.scopeDefaults,
             mode: pendingPath.theme.mode,
             scopeChain: pendingPath.scopeChain,
             targetResolver,
@@ -769,13 +756,13 @@ export const compileChildrenToPrimitives = (
     occurrence?: CompileOccurrenceLocator,
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
-    const { scopeChain, primitiveSink, locatorPrefix, layoutSink, styleStack } = frame;
+    const { scopeChain, primitiveSink, locatorPrefix, layoutSink, scopeDefaults } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
     const warn = (code: CompileWarningCode, message: string): void =>
       runtime.context.onWarn({ code, message, path: nodeIrPath });
 
     const resolvedNode = resolveNode(child, {
-      styleFrames: styleStack,
+      scopeDefaults,
       mode: frame.theme.mode,
       shapes: runtime.context.shapes,
       boundaries: runtime.context.boundaries,
@@ -909,7 +896,7 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
-    const { scopeChain, primitiveSink, locatorPrefix, pathSink, styleStack } = frame;
+    const { scopeChain, primitiveSink, locatorPrefix, pathSink, scopeDefaults } = frame;
     const pathIrPath = `${locatorPrefix}children[${index}].path`;
     const placeholder = makePathPlaceholder();
     primitiveSink.push(placeholder);
@@ -932,7 +919,7 @@ export const compileChildrenToPrimitives = (
       occurrence,
       observationSink: frame.compileObservationSink,
       theme: frame.theme,
-      styleStack: [...styleStack],
+      scopeDefaults,
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
       zIndex: child.zIndex,
     };
@@ -1250,7 +1237,7 @@ export const compileChildrenToPrimitives = (
     compileNested?: (scopeFrame: TraversalFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
     preResolvedClipShape?: ClipShape,
   ): void => {
-    const { locatorPrefix, styleStack } = frame;
+    const { locatorPrefix, scopeDefaults } = frame;
     const scopeOccurrence = generatedOccurrence ?? {
       sourcePath: `${locatorPrefix}children[${index}].scope`,
       expansionPath: [],
@@ -1303,7 +1290,7 @@ export const compileChildrenToPrimitives = (
         locatorPrefix: `${locatorPrefix}children[${index}].scope.`,
         layoutSink: scopeLayouts,
         pathSink: scopePendingPaths,
-        styleStack: [...styleStack, createStyleResolveFrame(child)],
+        scopeDefaults: resolveScopeDefaults(child, scopeDefaults),
         theme,
         publicationSink: scopePublications,
         boundsSink: scopeBounds,
@@ -1325,7 +1312,7 @@ export const compileChildrenToPrimitives = (
 
       const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts);
       if (child.frame !== undefined && scopeLayouts.length > 0) {
-        const appearance = resolveScopeFrame(child.frame, scopeFrame.styleStack, {
+        const appearance = resolveScopeFrame(child.frame, scopeFrame.scopeDefaults, {
           mode: theme.mode,
           patterns: context.patterns,
           round: context.round,
@@ -1519,7 +1506,7 @@ export const compileChildrenToPrimitives = (
       ...frame,
       ancestors: scopeAncestors,
       theme,
-      styleStack: [...styleStack, createStyleResolveFrame(child)],
+      scopeDefaults: resolveScopeDefaults(child, scopeDefaults),
       scopeChain: [...frame.scopeChain, ...scopeTransforms],
     });
   };
@@ -1682,11 +1669,11 @@ export const compileChildrenToPrimitives = (
     const { wrapperClipShape } = prepared;
     const transaction =
       prepared.transaction.materialize !== undefined &&
-      (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.styleStack) ||
+      (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.scopeDefaults) ||
         prepared.transaction.themeFingerprint !== replayThemeFingerprint(frame.theme))
         ? prepared.transaction.materialize({
             scopeChain: frame.scopeChain,
-            styleStack: frame.styleStack,
+            scopeDefaults: frame.scopeDefaults,
             theme: frame.theme,
           })
         : prepared.transaction;
@@ -2356,7 +2343,7 @@ export const compileChildrenToPrimitives = (
       clonedProposal: LayoutProposal,
       probeOccurrence: CompileOccurrenceLocator,
       probeScopeChain: ReadonlyArray<Transform>,
-      probeStyleStack: TraversalFrame['styleStack'],
+      probeScopeDefaults: TraversalFrame['scopeDefaults'],
       probeTheme: TraversalFrame['theme'],
       scopeChainApplied = false,
       probeInputs?: CompositeRuntimeInputScope,
@@ -2419,7 +2406,7 @@ export const compileChildrenToPrimitives = (
         ancestors: childAncestors,
         namespaceStack,
         scopeChain: probeScopeChain,
-        styleStack: probeStyleStack,
+        scopeDefaults: probeScopeDefaults,
         theme: probeTheme,
         occurrence: probeOccurrence,
         compositeDepth: compositeDepth + 1,
@@ -2470,7 +2457,7 @@ export const compileChildrenToPrimitives = (
         artifacts: laid.artifacts,
         compileObservations: laid.compileObservations,
         spatialHandles: laid.spatialHandles,
-        styleFingerprint: replayStyleFingerprint(probeStyleStack),
+        styleFingerprint: replayStyleFingerprint(probeScopeDefaults),
         themeFingerprint: replayThemeFingerprint(probeTheme),
         ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
       };
@@ -2494,7 +2481,7 @@ export const compileChildrenToPrimitives = (
             NaturalLayoutProposal,
             occurrence,
             frame.scopeChain,
-            frame.styleStack,
+            frame.scopeDefaults,
             theme,
             false,
             undefined,
@@ -2610,7 +2597,7 @@ export const compileChildrenToPrimitives = (
               clonedProposal,
               probeOccurrence,
               frame.scopeChain,
-              frame.styleStack,
+              frame.scopeDefaults,
               theme,
               false,
               probeInputs,
@@ -2618,7 +2605,7 @@ export const compileChildrenToPrimitives = (
             const { layoutResult, transaction } = probed;
             transaction.materialize = ({
               scopeChain,
-              styleStack,
+              scopeDefaults,
               theme: replayTheme,
             }: CompositeReplayMaterializeContext) =>
               probeLayoutChild(
@@ -2626,7 +2613,7 @@ export const compileChildrenToPrimitives = (
                 clonedProposal,
                 probeOccurrence,
                 scopeChain,
-                styleStack,
+                scopeDefaults,
                 replayTheme,
                 true,
                 probeInputs,
@@ -2768,7 +2755,7 @@ export const compileChildrenToPrimitives = (
         value: compositeArtifact.value,
         observerKeys,
         theme: frame.theme,
-        styleStack: [...frame.styleStack],
+        scopeDefaults: frame.scopeDefaults,
       });
     }
 
@@ -2938,7 +2925,7 @@ export const compileChildrenToPrimitives = (
       locatorPrefix: '',
       layoutSink: rootLayouts,
       pathSink: rootPendingPaths,
-      styleStack: options.styleStack ?? [],
+      scopeDefaults: options.scopeDefaults ?? {},
       theme: options.theme ?? context.theme,
       publicationSink: [],
       boundsSink: rootBounds,

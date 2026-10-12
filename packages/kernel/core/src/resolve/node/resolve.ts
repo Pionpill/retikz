@@ -14,8 +14,8 @@ import type {
 } from '../../schemas';
 import { NodeSchema } from '../../schemas';
 import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
-import { resolveDashPattern, resolveDropShadow } from '../style';
+import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
+import type { EffectiveLabelDefault } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
@@ -108,7 +108,7 @@ type PrimaryColorResolvedMaterializedNode = Omit<PrimaryColorResolvedNode, 'labe
 /** 按有效 labelDefault 补齐一个标签，并保留显式字段优先级 */
 const expandNodeLabel = (
   label: IRNodeLabel,
-  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDefault: EffectiveLabelDefault,
   labelDistance: number,
 ): MaterializedNodeLabel => {
   const normalized: MaterializedNodeLabel = {
@@ -147,7 +147,7 @@ const expandNodeLabel = (
 /** 展开单标签与标签数组为等价数组写法 */
 const expandNodeLabels = (
   label: IRNode['label'],
-  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDefault: EffectiveLabelDefault,
   labelDistance: number,
 ): Array<MaterializedNodeLabel> | undefined =>
   label === undefined
@@ -330,7 +330,7 @@ const resolveNodeLabelColors = (
 /** 在 auto-contrast 后确定正文、label run 与 pin 的派生颜色 */
 const resolveNodeDependentColors = (
   node: PrimaryColorResolvedMaterializedNode,
-  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDefault: EffectiveLabelDefault,
   context: NodeColorContext,
   labelWasArray: boolean,
 ): ResolvedNodeSource => {
@@ -367,8 +367,8 @@ const resolveNodeDependentColors = (
 
 /** 解析 Node 的样式、静态默认值、provider 与布局前 canonical 形态 */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
-  const effectiveNode = resolveEffectiveNodeStyle(source, context.styleFrames);
-  const effectiveLabelDefault = resolveEffectiveLabelDefault(context.styleFrames);
+  const effectiveNode = resolveEffectiveNodeStyle(source, context.scopeDefaults);
+  const effectiveLabelDefault = context.scopeDefaults.label ?? {};
   const labelWasArray = Array.isArray(effectiveNode.label);
   const labelsMaterialized: MaterializedNodeSource = {
     ...effectiveNode,

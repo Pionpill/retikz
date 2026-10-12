@@ -21,7 +21,7 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 const layoutSquare = (node: IRNode) => {
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(node, {
-    styleFrames: [],
+    scopeDefaults: {},
     mode: 'light',
     shapes: BUILTIN_SHAPES,
     boundaries,

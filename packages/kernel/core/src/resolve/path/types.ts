@@ -21,7 +21,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
-import type { StyleResolveFrame } from '../style';
+import type { EffectiveScopeDefaults } from '../style';
 import type { ResolvedLabelTextBlock } from '../text';
 
 /** 已把文字与 run 派生颜色确定为字符串的路径几何标签 */
@@ -259,8 +259,8 @@ export type PathTargetView = Readonly<{
 export type PathResolveContext = Readonly<{
   /** 当前 scope 的累计变换 */
   scopeChain?: ReadonlyArray<Transform>;
-  /** 当前样式级联栈 */
-  styleStack?: ReadonlyArray<StyleResolveFrame>;
+  /** 当前 Scope 的有效默认配置 */
+  scopeDefaults?: EffectiveScopeDefaults;
   /** 当前 path 所在位置的 Theme 明暗模式 */
   mode: ThemeMode;
   /** target/reference 解析能力 */

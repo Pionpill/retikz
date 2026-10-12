@@ -88,7 +88,7 @@ const resolveSyntheticLayout = (
   const boundaries = context.boundaries ?? BUILTIN_BOUNDARIES;
   const node = syntheticNode(input, shape, shapeParams);
   const resolution = resolveNode(node, {
-    styleFrames: [],
+    scopeDefaults: {},
     mode: ThemeMode.Light,
     shapes,
     boundaries,

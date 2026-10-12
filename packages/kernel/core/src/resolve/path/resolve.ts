@@ -26,7 +26,7 @@ import {
   isRelativeTargetLike,
 } from '../../shared';
 import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectivePath } from '../style';
+import { resolveContextualColor, resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 import { resolvePathKind } from './provider';
@@ -553,9 +553,9 @@ const resolveSteps = (
 
 /** 合并路径级联样式，解析路径种类、目标与绘制样式，产出编译消费的确定化路径 */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
-  const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
+  const styled = context.scopeDefaults === undefined ? path : resolveEffectivePath(path, context.scopeDefaults);
   const irPath = context.irPath ?? 'path';
-  const labelDefault = resolveEffectiveLabelDefault(context.styleStack ?? []);
+  const labelDefault = context.scopeDefaults?.label ?? {};
   const labelMasterColor = labelDefault.color ?? styled.style?.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
   const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);

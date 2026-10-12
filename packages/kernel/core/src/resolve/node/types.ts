@@ -20,7 +20,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolutionInput } from '../resource';
-import type { StyleResolveFrame } from '../style';
+import type { EffectiveScopeDefaults } from '../style';
 import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 
 /** 已把派生颜色确定为字符串的 Node label pin */
@@ -204,8 +204,8 @@ export type NodeResolution = Readonly<{
 
 /** Node resolve 阶段需要的样式、provider 与诊断上下文 */
 export type NodeResolveContext = {
-  /** 当前节点所在 scope 的样式 frame */
-  styleFrames: ReadonlyArray<StyleResolveFrame>;
+  /** 当前节点所在 scope 的有效默认配置 */
+  scopeDefaults: EffectiveScopeDefaults;
   /** 当前节点所在位置的 Theme 明暗模式 */
   mode: ThemeMode;
   /** shape provider 注册表 */
