@@ -1,0 +1,1672 @@
+{/* Generated reference. Do not edit manually. */}
+
+## 通道定义
+
+#### <ApiSourceLink label={"ChannelDefinitionKind"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={55}>ChannelDefinitionKind</ApiSourceLink>
+
+按最终消费面分类：position 由坐标系 role 消费，mark 由 mark lowering 按图元语义消费，
+scope / node / path 直接落到 core IRScope / IRNode / IRPath
+
+```ts
+export const ChannelDefinitionKind = {
+  Position: 'position',
+  Mark: 'mark',
+  Scope: 'scope',
+  Node: 'node',
+  Path: 'path',
+} as const;
+
+export type ChannelDefinitionKind = ValueOf<typeof ChannelDefinitionKind>;
+```
+
+#### <ApiSourceLink label={"defineChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={418}>defineChannel</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名                 | 说明                                       |
+| ------ | ----- | --------------------------- | ------------------------------------------ |
+| 泛型   | `T`   | `extends ChannelDefinition` | 原样返回的具体通道定义类型                 |
+| 参数   | `def` | `T`                         | 包含种类判别、绑定读取或解析回调的通道定义 |
+| 返回值 | —     | `T`                         | 原样返回传入的定义对象，不执行注册或解析   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const defineChannel: <T extends ChannelDefinition>(def: T) => T;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"defineNodeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={436}>defineNodeChannel</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名                                                | 说明                                        |
+| ------ | ----- | ---------------------------------------------------------- | ------------------------------------------- |
+| 泛型   | `T`   | `extends ChannelValue`                                     | 通道解析、传递或整层共享的视觉值类型        |
+| 参数   | `def` | `WithOptionalProperties<NodeChannelDefinition<T>, 'kind'>` | 通道定义；kind 可省略，返回时固定为对应种类 |
+| 返回值 | —     | `NodeChannelDefinition<T>`                                 | 补充种类判别后的新定义对象；回调保持原引用  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const defineNodeChannel: <T extends ChannelValue>(
+  def: WithOptionalProperties<NodeChannelDefinition<T>, 'kind'>,
+) => NodeChannelDefinition<T>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"definePathChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={446}>definePathChannel</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名                                                | 说明                                        |
+| ------ | ----- | ---------------------------------------------------------- | ------------------------------------------- |
+| 泛型   | `T`   | `extends ChannelValue`                                     | 通道解析、传递或整层共享的视觉值类型        |
+| 参数   | `def` | `WithOptionalProperties<PathChannelDefinition<T>, 'kind'>` | 通道定义；kind 可省略，返回时固定为对应种类 |
+| 返回值 | —     | `PathChannelDefinition<T>`                                 | 补充种类判别后的新定义对象；回调保持原引用  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const definePathChannel: <T extends ChannelValue>(
+  def: WithOptionalProperties<PathChannelDefinition<T>, 'kind'>,
+) => PathChannelDefinition<T>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"defineScopeChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={426}>defineScopeChannel</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名                                                 | 说明                                        |
+| ------ | ----- | ----------------------------------------------------------- | ------------------------------------------- |
+| 泛型   | `T`   | `extends ChannelValue`                                      | 通道解析、传递或整层共享的视觉值类型        |
+| 参数   | `def` | `WithOptionalProperties<ScopeChannelDefinition<T>, 'kind'>` | 通道定义；kind 可省略，返回时固定为对应种类 |
+| 返回值 | —     | `ScopeChannelDefinition<T>`                                 | 补充种类判别后的新定义对象；回调保持原引用  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const defineScopeChannel: <T extends ChannelValue>(
+  def: WithOptionalProperties<ScopeChannelDefinition<T>, 'kind'>,
+) => ScopeChannelDefinition<T>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PositionChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={321}>PositionChannelDefinition</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员      | 类型                     | 默认值 | 说明                                            |
+| --------- | ------------------------ | ------ | ----------------------------------------------- |
+| `channel` | `string`                 | —      | 通道注册键                                      |
+| `kind`    | `"position"`             | —      | 通道类型：position / mark / scope / node / path |
+| `pick`    | `ChannelBindingResolver` | —      | 从 mark 上读取该位置角色的 channel 绑定         |
+| `role`    | `DimensionRole`          | —      | 坐标系 role 名                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefinitionKind.Position> & {
+  role: DimensionRole;
+  pick: ChannelBindingResolver;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"MarkChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={332}>MarkChannelDefinition</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                                                                                         | 默认值 | 说明                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------ |
+| `T` (泛型) | `extends ChannelValue = ChannelValue`                                                                        | —      | 通道解析、传递或整层共享的视觉值类型                                           |
+| `channel`  | `string`                                                                                                     | —      | 通道注册键                                                                     |
+| `kind`     | `"mark"`                                                                                                     | —      | 通道类型：position / mark / scope / node / path                                |
+| `resolve`  | `(ctx: ChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => MarkChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Mark
+> & {
+  resolve: (ctx: ChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => MarkChannelResolution<T> | undefined;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"NodeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={344}>NodeChannelDefinition</ApiSourceLink>
+
+解析通道值后直接落到 core IRNode 既有属性。`size`、`shape`、`opacity` 这类点图元属性属于这一类
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                                                                                         | 默认值 | 说明                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------- |
+| `T` (泛型) | `extends ChannelValue = ChannelValue`                                                                        | —      | 通道解析、传递或整层共享的视觉值类型                                                         |
+| `channel`  | `string`                                                                                                     | —      | 通道注册键                                                                                   |
+| `deliver`  | `(node: IRNode, value: T, context: NodeChannelDeliveryContext) => void`                                      | —      | 把逐行解析值落到 core IRNode 的既有属性<br />不写 position / 几何；新渲染能力应先下沉到 core |
+| `kind`     | `"node"`                                                                                                     | —      | 通道类型：position / mark / scope / node / path                                              |
+| `legend?`  | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                   | —      | legend 形态（size→梯度气泡 / opacity→ramp / shape→symbol）；无 legend 的通道省略             |
+| `output`   | `ChannelOutputSpace`                                                                                         | —      | 输出空间 + 默认范围 / 调色板                                                                 |
+| `resolve`  | `(ctx: NodeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Node
+> & {
+  output: ChannelOutputSpace;
+  legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+  resolve: (ctx: NodeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
+  deliver: (node: IRNode, value: T, context: NodeChannelDeliveryContext) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PathChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={388}>PathChannelDefinition</ApiSourceLink>
+
+用于一一落到 core IRPath 既有标量属性的通道，例如 strokeWidth / opacity 这类路径级属性。
+`color` 这种不同 mark 会映射到 node fill、path stroke 或 path fill 的通道应保持为 MarkChannelDefinition
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                                                                                         | 默认值 | 说明                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------ |
+| `T` (泛型) | `extends ChannelValue = ChannelValue`                                                                        | —      | 通道解析、传递或整层共享的视觉值类型                                           |
+| `channel`  | `string`                                                                                                     | —      | 通道注册键                                                                     |
+| `deliver`  | `(path: IRPath, value: T, context: PathChannelDeliveryContext) => void`                                      | —      | 把逐行解析值落到 core IRPath 的既有属性                                        |
+| `kind`     | `"path"`                                                                                                     | —      | 通道类型：position / mark / scope / node / path                                |
+| `legend?`  | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                   | —      | legend 形态（opacity→ramp / strokeWidth→size）；无 legend 的通道省略           |
+| `output`   | `ChannelOutputSpace`                                                                                         | —      | 输出空间 + 默认范围 / 调色板                                                   |
+| `resolve`  | `(ctx: PathChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Path
+> & {
+  output: ChannelOutputSpace;
+  legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+  resolve: (ctx: PathChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
+  deliver: (path: IRPath, value: T, context: PathChannelDeliveryContext) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScopeChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={366}>ScopeChannelDefinition</ApiSourceLink>
+
+用于一一落到 core IRScope 既有属性，或写入 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`。
+它表达“这一层共享默认值”；逐 datum 的属性应使用 NodeChannelDefinition / PathChannelDefinition
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                                                                                               | 默认值 | 说明                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------ |
+| `T` (泛型) | `extends ChannelValue = ChannelValue`                                                                              | —      | 通道解析、传递或整层共享的视觉值类型                                           |
+| `channel`  | `string`                                                                                                           | —      | 通道注册键                                                                     |
+| `deliver`  | `(scope: IRScope, value: T, context: ScopeChannelDeliveryContext) => void`                                         | —      | 把解析值落到 core IRScope 的既有属性或 every-X 默认                            |
+| `kind`     | `"scope"`                                                                                                          | —      | 通道类型：position / mark / scope / node / path                                |
+| `legend?`  | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                         | —      | legend 形态；无 legend 的通道省略                                              |
+| `output`   | `ChannelOutputSpace`                                                                                               | —      | 输出空间 + 默认范围 / 调色板                                                   |
+| `resolve`  | `(ctx: ScopeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ScopeChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回整层共享值及可选图例描述；无绑定时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
+  typeof ChannelDefinitionKind.Scope
+> & {
+  output: ChannelOutputSpace;
+  legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+  resolve: (
+    ctx: ScopeChannelDefinitionResolveContext,
+    mark: IRPlotMarkOperation,
+  ) => ScopeChannelResolution<T> | undefined;
+  deliver: (scope: IRScope, value: T, context: ScopeChannelDeliveryContext) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={405}>ChannelDefinition</ApiSourceLink>
+
+**公共属性**
+
+<ApiTable>
+
+| 成员       | 类型                                  | 默认值 | 说明                                 |
+| ---------- | ------------------------------------- | ------ | ------------------------------------ |
+| `T` (泛型) | `extends ChannelValue = ChannelValue` | —      | 通道解析、传递或整层共享的视觉值类型 |
+| `channel`  | `string`                              | —      | 通道注册键                           |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="position">
+
+<DocTab value="position" label="属性 · 位置">
+
+<ApiTable>
+
+| 成员   | 类型                     | 默认值 | 说明                                            |
+| ------ | ------------------------ | ------ | ----------------------------------------------- |
+| `kind` | `"position"`             | —      | 通道类型：position / mark / scope / node / path |
+| `pick` | `ChannelBindingResolver` | —      | 从 mark 上读取该位置角色的 channel 绑定         |
+| `role` | `DimensionRole`          | —      | 坐标系 role 名                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="mark" label="属性 · 图元">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                         | 默认值 | 说明                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------ |
+| `kind`    | `"mark"`                                                                                                     | —      | 通道类型：position / mark / scope / node / path                                |
+| `resolve` | `(ctx: ChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => MarkChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="scope" label="属性 · 作用域">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                               | 默认值 | 说明                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------ |
+| `deliver` | `(scope: IRScope, value: T, context: ScopeChannelDeliveryContext) => void`                                         | —      | 把解析值落到 core IRScope 的既有属性或 every-X 默认                            |
+| `kind`    | `"scope"`                                                                                                          | —      | 通道类型：position / mark / scope / node / path                                |
+| `legend?` | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                         | —      | legend 形态；无 legend 的通道省略                                              |
+| `output`  | `ChannelOutputSpace`                                                                                               | —      | 输出空间 + 默认范围 / 调色板                                                   |
+| `resolve` | `(ctx: ScopeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ScopeChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回整层共享值及可选图例描述；无绑定时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="node" label="属性 · 节点">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                         | 默认值 | 说明                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------- |
+| `deliver` | `(node: IRNode, value: T, context: NodeChannelDeliveryContext) => void`                                      | —      | 把逐行解析值落到 core IRNode 的既有属性<br />不写 position / 几何；新渲染能力应先下沉到 core |
+| `kind`    | `"node"`                                                                                                     | —      | 通道类型：position / mark / scope / node / path                                              |
+| `legend?` | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                   | —      | legend 形态（size→梯度气泡 / opacity→ramp / shape→symbol）；无 legend 的通道省略             |
+| `output`  | `ChannelOutputSpace`                                                                                         | —      | 输出空间 + 默认范围 / 调色板                                                                 |
+| `resolve` | `(ctx: NodeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="path" label="属性 · 路径">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                         | 默认值 | 说明                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------ |
+| `deliver` | `(path: IRPath, value: T, context: PathChannelDeliveryContext) => void`                                      | —      | 把逐行解析值落到 core IRPath 的既有属性                                        |
+| `kind`    | `"path"`                                                                                                     | —      | 通道类型：position / mark / scope / node / path                                |
+| `legend?` | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                   | —      | legend 形态（opacity→ramp / strokeWidth→size）；无 legend 的通道省略           |
+| `output`  | `ChannelOutputSpace`                                                                                         | —      | 输出空间 + 默认范围 / 调色板                                                   |
+| `resolve` | `(ctx: PathChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<T> \| undefined` | —      | 结合数据上下文与图元绑定，返回逐行解析器及可选图例描述；无绑定时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
+  | PositionChannelDefinition
+  | MarkChannelDefinition<T>
+  | ScopeChannelDefinition<T>
+  | NodeChannelDefinition<T>
+  | PathChannelDefinition<T>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"AnyChannelDefinition"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={451}>AnyChannelDefinition</ApiSourceLink>
+
+<DocTabs defaultValue="position">
+
+<DocTab value="position" label="属性 · 位置">
+
+<ApiTable>
+
+| 成员      | 类型                     | 默认值 | 说明                                            |
+| --------- | ------------------------ | ------ | ----------------------------------------------- |
+| `channel` | `string`                 | —      | 通道注册键                                      |
+| `kind`    | `"position"`             | —      | 通道类型：position / mark / scope / node / path |
+| `pick`    | `ChannelBindingResolver` | —      | 从 mark 上读取该位置角色的 channel 绑定         |
+| `role`    | `DimensionRole`          | —      | 坐标系 role 名                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="mark" label="属性 · 图元">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                    | 默认值 | 说明                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `channel` | `string`                                                                                                                | —      | 在通道注册表中唯一的名称                                   |
+| `kind`    | `typeof ChannelDefinitionKind.Mark`                                                                                     | —      | 决定通道由 mark 消费还是交付给 Node、Scope 或 Path         |
+| `resolve` | `(ctx: ChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => MarkChannelResolution<ChannelValue> \| undefined` | —      | 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="node" label="属性 · 节点">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                    | 默认值 | 说明                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `channel` | `string`                                                                                                                | —      | 在通道注册表中唯一的名称                                   |
+| `deliver` | `(node: IRNode, value: never, context: NodeChannelDeliveryContext) => void`                                             | —      | 把已解析的视觉值写入对应 Core 宿主的已有属性               |
+| `kind`    | `typeof ChannelDefinitionKind.Node`                                                                                     | —      | 决定通道由 mark 消费还是交付给 Node、Scope 或 Path         |
+| `legend?` | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                              | —      | 该通道用于图例展示的视觉形式                               |
+| `output`  | `ChannelOutputSpace`                                                                                                    | —      | 视觉值的输出种类与数值范围或符号候选                       |
+| `resolve` | `(ctx: NodeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> \| undefined` | —      | 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="scope" label="属性 · 作用域">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                          | 默认值 | 说明                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `channel` | `string`                                                                                                                      | —      | 在通道注册表中唯一的名称                                   |
+| `deliver` | `(scope: IRScope, value: never, context: ScopeChannelDeliveryContext) => void`                                                | —      | 把已解析的视觉值写入对应 Core 宿主的已有属性               |
+| `kind`    | `typeof ChannelDefinitionKind.Scope`                                                                                          | —      | 决定通道由 mark 消费还是交付给 Node、Scope 或 Path         |
+| `legend?` | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                                    | —      | 该通道用于图例展示的视觉形式                               |
+| `output`  | `ChannelOutputSpace`                                                                                                          | —      | 视觉值的输出种类与数值范围或符号候选                       |
+| `resolve` | `(ctx: ScopeChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ScopeChannelResolution<ChannelValue> \| undefined` | —      | 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="path" label="属性 · 路径">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                                                    | 默认值 | 说明                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `channel` | `string`                                                                                                                | —      | 在通道注册表中唯一的名称                                   |
+| `deliver` | `(path: IRPath, value: never, context: PathChannelDeliveryContext) => void`                                             | —      | 把已解析的视觉值写入对应 Core 宿主的已有属性               |
+| `kind`    | `typeof ChannelDefinitionKind.Path`                                                                                     | —      | 决定通道由 mark 消费还是交付给 Node、Scope 或 Path         |
+| `legend?` | `'swatch' \| 'ramp' \| 'size' \| 'symbol'`                                                                              | —      | 该通道用于图例展示的视觉形式                               |
+| `output`  | `ChannelOutputSpace`                                                                                                    | —      | 视觉值的输出种类与数值范围或符号候选                       |
+| `resolve` | `(ctx: PathChannelDefinitionResolveContext, mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> \| undefined` | —      | 结合数据上下文与图元绑定解析通道；无绑定时可返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type AnyChannelDefinition =
+  | PositionChannelDefinition
+  | {
+      channel: string;
+      kind: typeof ChannelDefinitionKind.Mark;
+      resolve: (
+        ctx: ChannelDefinitionResolveContext,
+        mark: IRPlotMarkOperation,
+      ) => MarkChannelResolution<ChannelValue> | undefined;
+    }
+  | {
+      channel: string;
+      kind: typeof ChannelDefinitionKind.Node;
+      output: ChannelOutputSpace;
+      legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+      resolve: (
+        ctx: NodeChannelDefinitionResolveContext,
+        mark: IRPlotMarkOperation,
+      ) => ChannelResolution<ChannelValue> | undefined;
+      deliver: (node: IRNode, value: never, context: NodeChannelDeliveryContext) => void;
+    }
+  | {
+      channel: string;
+      kind: typeof ChannelDefinitionKind.Scope;
+      output: ChannelOutputSpace;
+      legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+      resolve: (
+        ctx: ScopeChannelDefinitionResolveContext,
+        mark: IRPlotMarkOperation,
+      ) => ScopeChannelResolution<ChannelValue> | undefined;
+      deliver: (scope: IRScope, value: never, context: ScopeChannelDeliveryContext) => void;
+    }
+  | {
+      channel: string;
+      kind: typeof ChannelDefinitionKind.Path;
+      output: ChannelOutputSpace;
+      legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+      resolve: (
+        ctx: PathChannelDefinitionResolveContext,
+        mark: IRPlotMarkOperation,
+      ) => ChannelResolution<ChannelValue> | undefined;
+      deliver: (path: IRPath, value: never, context: PathChannelDeliveryContext) => void;
+    };
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ChannelOutputSpace"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={208}>ChannelOutputSpace</ApiSourceLink>
+
+用判别 union 描述 range / palette，避免 number 通道配 symbol 调色板这类非法组合
+
+<DocTabs defaultValue="color">
+
+<DocTab value="color" label="属性 · 颜色">
+
+<ApiTable>
+
+| 成员         | 类型      | 默认值 | 说明                                   |
+| ------------ | --------- | ------ | -------------------------------------- |
+| `outputKind` | `'color'` | —      | 区分颜色、数值、符号及其他 JSON 视觉值 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="number" label="属性 · 数值">
+
+<ApiTable>
+
+| 成员         | 类型                                               | 默认值 | 说明                                   |
+| ------------ | -------------------------------------------------- | ------ | -------------------------------------- |
+| `clamp?`     | `boolean`                                          | —      | 是否把连续映射结果限制在输出区间内     |
+| `outputKind` | `'number'`                                         | —      | 区分颜色、数值、符号及其他 JSON 视觉值 |
+| `range`      | `readonly [`<br />`number,`<br />`number`<br />`]` | —      | 数值通道缺省的输出区间                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="symbol" label="属性 · 符号">
+
+<ApiTable>
+
+| 成员         | 类型                          | 默认值 | 说明                                   |
+| ------------ | ----------------------------- | ------ | -------------------------------------- |
+| `outputKind` | `'symbol'`                    | —      | 区分颜色、数值、符号及其他 JSON 视觉值 |
+| `palette`    | `ReadonlyArray<IRShapeValue>` | —      | 符号通道可选用的形状序列               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="boolean" label="属性 · 布尔值">
+
+<ApiTable>
+
+| 成员         | 类型        | 默认值 | 说明                                   |
+| ------------ | ----------- | ------ | -------------------------------------- |
+| `outputKind` | `'boolean'` | —      | 区分颜色、数值、符号及其他 JSON 视觉值 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="array" label="属性 · 数组">
+
+<ApiTable>
+
+| 成员         | 类型      | 默认值 | 说明                                   |
+| ------------ | --------- | ------ | -------------------------------------- |
+| `outputKind` | `'array'` | —      | 区分颜色、数值、符号及其他 JSON 视觉值 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="object" label="属性 · 对象">
+
+<ApiTable>
+
+| 成员         | 类型       | 默认值 | 说明                                   |
+| ------------ | ---------- | ------ | -------------------------------------- |
+| `outputKind` | `'object'` | —      | 区分颜色、数值、符号及其他 JSON 视觉值 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="json" label="属性 · JSON">
+
+<ApiTable>
+
+| 成员         | 类型     | 默认值 | 说明                                   |
+| ------------ | -------- | ------ | -------------------------------------- |
+| `outputKind` | `'json'` | —      | 区分颜色、数值、符号及其他 JSON 视觉值 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ChannelOutputSpace =
+  | {
+      outputKind: 'color';
+    }
+  | {
+      outputKind: 'number';
+      range: readonly [number, number];
+      clamp?: boolean;
+    }
+  | {
+      outputKind: 'symbol';
+      palette: ReadonlyArray<IRShapeValue>;
+    }
+  | {
+      outputKind: 'boolean';
+    }
+  | {
+      outputKind: 'array';
+    }
+  | {
+      outputKind: 'object';
+    }
+  | {
+      outputKind: 'json';
+    };
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 解析上下文与结果
+
+#### <ApiSourceLink label={"ChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={245}>ChannelDefinitionResolveContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                    | 类型                                                                                                                       | 默认值 | 说明                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `model`                 | `DataTransformModel`                                                                                                       | —      | 当前数据的完整字段模型；未定类型字段仍保留                                |
+| `node`                  | `IRPlot`                                                                                                                   | —      | 当前通道所属的完整 Plot 源描述                                            |
+| `palette?`              | `ChannelPaletteContext`                                                                                                    | —      | 当前主题提供的分类与连续颜色上下文                                        |
+| `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —      | 按 IR data.model 的 order 计算分类 domain；由 resolve 层注入              |
+| `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —      | 解析 channel scale；由 resolve 层注入，provider 不直接依赖 scale resolver |
+| `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —      | 按注册名称取得从归一化位置到颜色的插值函数                                |
+| `rows`                  | `Array<ExternalRow>`                                                                                                       | —      | 当前解析作用域内的有效数据行                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ChannelDefinitionResolveContext = {
+  node: IRPlot;
+  rows: Array<ExternalRow>;
+  model: DataTransformModel;
+  resolveChannelScale: (
+    operation: IRPlotScaleOperation,
+    values: Array<unknown>,
+    context: ChannelScaleResolveContext,
+  ) => ChannelScaleResolution;
+  resolveCategoryDomain: (
+    values: Array<unknown>,
+    order?: NonNullable<IRDataFieldDefinition['order']>,
+  ) => Array<string | number>;
+  resolveColorScheme: (name: string) => (t: number) => string;
+  palette?: ChannelPaletteContext;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"NodeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={270}>NodeChannelDefinitionResolveContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                    | 类型                                                                                                                       | 默认值 | 说明                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `model`                 | `DataTransformModel`                                                                                                       | —      | 当前数据的完整字段模型；未定类型字段仍保留                                |
+| `node`                  | `IRPlot`                                                                                                                   | —      | 当前通道所属的完整 Plot 源描述                                            |
+| `palette?`              | `ChannelPaletteContext`                                                                                                    | —      | 当前主题提供的分类与连续颜色上下文                                        |
+| `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —      | 按 IR data.model 的 order 计算分类 domain；由 resolve 层注入              |
+| `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —      | 解析 channel scale；由 resolve 层注入，provider 不直接依赖 scale resolver |
+| `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —      | 按注册名称取得从归一化位置到颜色的插值函数                                |
+| `rows`                  | `Array<ExternalRow>`                                                                                                       | —      | 当前解析作用域内的有效数据行                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type NodeChannelDefinitionResolveContext = ChannelDefinitionResolveContext;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PathChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={273}>PathChannelDefinitionResolveContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                    | 类型                                                                                                                       | 默认值 | 说明                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `model`                 | `DataTransformModel`                                                                                                       | —      | 当前数据的完整字段模型；未定类型字段仍保留                                |
+| `node`                  | `IRPlot`                                                                                                                   | —      | 当前通道所属的完整 Plot 源描述                                            |
+| `palette?`              | `ChannelPaletteContext`                                                                                                    | —      | 当前主题提供的分类与连续颜色上下文                                        |
+| `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —      | 按 IR data.model 的 order 计算分类 domain；由 resolve 层注入              |
+| `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —      | 解析 channel scale；由 resolve 层注入，provider 不直接依赖 scale resolver |
+| `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —      | 按注册名称取得从归一化位置到颜色的插值函数                                |
+| `rows`                  | `Array<ExternalRow>`                                                                                                       | —      | 当前解析作用域内的有效数据行                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type PathChannelDefinitionResolveContext = ChannelDefinitionResolveContext;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScopeChannelDefinitionResolveContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={276}>ScopeChannelDefinitionResolveContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                    | 类型                                                                                                                       | 默认值 | 说明                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `model`                 | `DataTransformModel`                                                                                                       | —      | 当前数据的完整字段模型；未定类型字段仍保留                                |
+| `node`                  | `IRPlot`                                                                                                                   | —      | 当前通道所属的完整 Plot 源描述                                            |
+| `palette?`              | `ChannelPaletteContext`                                                                                                    | —      | 当前主题提供的分类与连续颜色上下文                                        |
+| `resolveCategoryDomain` | `(values: Array<unknown>, order?: NonNullable<IRDataFieldDefinition['order']>) => Array<string \| number>`                 | —      | 按 IR data.model 的 order 计算分类 domain；由 resolve 层注入              |
+| `resolveChannelScale`   | `(operation: IRPlotScaleOperation, values: Array<unknown>, context: ChannelScaleResolveContext) => ChannelScaleResolution` | —      | 解析 channel scale；由 resolve 层注入，provider 不直接依赖 scale resolver |
+| `resolveColorScheme`    | `(name: string) => (t: number) => string`                                                                                  | —      | 按注册名称取得从归一化位置到颜色的插值函数                                |
+| `rows`                  | `Array<ExternalRow>`                                                                                                       | —      | 当前解析作用域内的有效数据行                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScopeChannelDefinitionResolveContext = ChannelDefinitionResolveContext;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ChannelPaletteContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={16}>ChannelPaletteContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                          | 默认值 | 说明                                   |
+| ------------- | ----------------------------- | ------ | -------------------------------------- |
+| `categorical` | `ReadonlyArray<string>`       | —      | 分类 scale 默认颜色                    |
+| `diverging`   | `string`                      | —      | 发散色阶默认 scheme                    |
+| `sequential`  | `string`                      | —      | 连续单向色阶默认 scheme                |
+| `series`      | `ReadonlyArray<string>`       | —      | 无 color 编码的 mark / series 默认颜色 |
+| `shape`       | `ReadonlyArray<IRShapeValue>` | —      | 分类 shape 通道默认形状                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ChannelPaletteContext = {
+  categorical: ReadonlyArray<string>;
+  series: ReadonlyArray<string>;
+  sequential: string;
+  diverging: string;
+  shape: ReadonlyArray<IRShapeValue>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ChannelValue"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={33}>ChannelValue</ApiSourceLink>
+
+通道 definition 只产运行时值，不进入 IRPlot / core IR；对象值若需要支持，必须先明确 JSON 契约与落点
+
+```ts
+export type ChannelValue = JsonValue;
+```
+
+#### <ApiSourceLink label={"ChannelValueResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={41}>ChannelValueResolver</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名                           | 说明                                         |
+| ------ | ----- | ------------------------------------- | -------------------------------------------- |
+| 泛型   | `T`   | `extends ChannelValue = ChannelValue` | 通道解析、传递或整层共享的视觉值类型         |
+| 参数   | `row` | `ExternalRow`                         | 当前图元使用的数据行                         |
+| 返回值 | —     | `T \| undefined`                      | 该行的视觉值；undefined 表示该行不应用此通道 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: ExternalRow) => T | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ChannelBindingResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={307}>ChannelBindingResolver</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称   | 类型 / 签名                  | 说明                             |
+| ------ | ------ | ---------------------------- | -------------------------------- |
+| 参数   | `mark` | `IRPlotMarkOperation`        | 当前待解析的图元                 |
+| 返回值 | —      | `IRPlotChannel \| undefined` | 通道绑定；未绑定时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ChannelBindingResolver = (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ResolveLabel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={48}>ResolveLabel</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名   | 说明                 |
+| ------ | ----- | ------------- | -------------------- |
+| 参数   | `row` | `ExternalRow` | 当前图元使用的数据行 |
+| 返回值 | —     | `string`      | 该行的标签文本       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ResolveLabel = (row: ExternalRow) => string;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={197}>ChannelResolution</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                                   | 默认值 | 说明                                             |
+| ------------- | -------------------------------------- | ------ | ------------------------------------------------ |
+| `T` (泛型)    | `—`                                    | —      | 通道解析、传递或整层共享的视觉值类型             |
+| `descriptor?` | `ScaleDescriptor`                      | —      | scale descriptor；常量 value 编码通常不入 legend |
+| `resolver`    | `(row: ExternalRow) => T \| undefined` | —      | 逐行通道值解析器                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ChannelResolution<T> = {
+  resolver: (row: ExternalRow) => T | undefined;
+  descriptor?: ScaleDescriptor;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"MarkChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={282}>MarkChannelResolution</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员            | 类型                                  | 默认值 | 说明                                                           |
+| --------------- | ------------------------------------- | ------ | -------------------------------------------------------------- |
+| `T` (泛型)      | `extends ChannelValue = ChannelValue` | —      | 通道解析、传递或整层共享的视觉值类型                           |
+| `defaultValue?` | `ChannelValue`                        | —      | 默认值，供 mark 在无字段编码时上提到 nodeDefault / pathDefault |
+| `descriptor?`   | `ScaleDescriptor`                     | —      | 可选 legend descriptor                                         |
+| `resolver`      | `ChannelValueResolver<T>`             | —      | 逐行通道值解析器                                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type MarkChannelResolution<T extends ChannelValue = ChannelValue> = {
+  resolver: ChannelValueResolver<T>;
+  defaultValue?: ChannelValue;
+  descriptor?: ScaleDescriptor;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScopeChannelResolution"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={295}>ScopeChannelResolution</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                                  | 默认值 | 说明                                 |
+| ------------- | ------------------------------------- | ------ | ------------------------------------ |
+| `T` (泛型)    | `extends ChannelValue = ChannelValue` | —      | 通道解析、传递或整层共享的视觉值类型 |
+| `descriptor?` | `ScaleDescriptor`                     | —      | 可选 legend descriptor               |
+| `value`       | `T`                                   | —      | 整层共享的通道值                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
+  value: T;
+  descriptor?: ScaleDescriptor;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleDescriptor"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={172}>ScaleDescriptor</ApiSourceLink>
+
+lowering 内部类型，不进 IR。resolver 与 legend 共读同一 descriptor，保证图例与实绘同源
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员            | 类型                               | 默认值 | 说明                                                            |
+| --------------- | ---------------------------------- | ------ | --------------------------------------------------------------- |
+| `channel`       | `LegendChannelValue`               | —      | 描述的非位置通道（color / size / opacity / shape / 自定义通道） |
+| `colorScale?`   | `ChannelScaleResolution`           | —      | color scale 的 legend 解析结果；仅 color-like mark 通道需要     |
+| `defaultColor?` | `string`                           | —      | 未绑定分类颜色时，mark 使用的有效默认颜色                       |
+| `domain`        | `ReadonlyArray<IRDataScalarValue>` | —      | 域：连续 = [min, max]、分类 = 类别序、离散化 = 边界 / 类别      |
+| `field?`        | `string`                           | —      | 绑定字段名；常量通道无字段                                      |
+| `fieldType?`    | `DataFieldType`                    | —      | 绑定字段类型；常量 / 类型未知时省略                             |
+| `range`         | `ReadonlyArray<JsonValue>`         | —      | 值域：色串 / 半径 / 不透明度 / shape 名                         |
+| `scaleName?`    | `string`                           | —      | 绑定 scale 名；legend.scale 据此在同通道多 scale 时消歧         |
+| `scaleType`     | `string`                           | —      | 绑定 scale 的 type 串                                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScaleDescriptor = {
+  channel: LegendChannelValue;
+  scaleType: string;
+  domain: ReadonlyArray<IRDataScalarValue>;
+  range: ReadonlyArray<JsonValue>;
+  defaultColor?: string;
+  field?: string;
+  fieldType?: DataFieldType;
+  scaleName?: string;
+  colorScale?: ChannelScaleResolution;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"MarkChannels"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={133}>MarkChannels</ApiSourceLink>
+
+`values` 存放按名字索引的求值器（如 color / label 这种 mark 需要特殊消费的通道）；
+`defaults` 存放同名默认值；`scopeDeliveries` / `nodeDeliveries` / `pathDeliveries`
+存放直接落到 core IRScope / IRNode / IRPath 的通道交付项
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员               | 类型                                             | 默认值 | 说明                                     |
+| ------------------ | ------------------------------------------------ | ------ | ---------------------------------------- |
+| `defaults?`        | `Readonly<Record<string, ChannelValue>>`         | —      | 未应用逐行编码时由 mark 消费的通道默认值 |
+| `descriptors?`     | `ReadonlyArray<ScaleDescriptor>`                 | —      | 与实际通道映射同源的图例尺度描述         |
+| `nodeDeliveries?`  | `ReadonlyArray<NodeChannelDelivery>`             | —      | 应用于各 Node 图元的逐行通道交付项       |
+| `pathDeliveries?`  | `ReadonlyArray<PathChannelDelivery>`             | —      | 应用于各 Path 图元的逐行通道交付项       |
+| `scopeDeliveries?` | `ReadonlyArray<ScopeChannelDelivery>`            | —      | 应用于整层 Scope 的共享通道交付项        |
+| `values?`          | `Readonly<Record<string, ChannelValueResolver>>` | —      | 按通道名称索引的逐行视觉值解析函数       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type MarkChannels = {
+  values?: Readonly<Record<string, ChannelValueResolver>>;
+  defaults?: Readonly<Record<string, ChannelValue>>;
+  scopeDeliveries?: ReadonlyArray<ScopeChannelDelivery>;
+  nodeDeliveries?: ReadonlyArray<NodeChannelDelivery>;
+  pathDeliveries?: ReadonlyArray<PathChannelDelivery>;
+  descriptors?: ReadonlyArray<ScaleDescriptor>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 属性交付
+
+#### <ApiSourceLink label={"NodeChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={72}>NodeChannelDeliveryContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                    | 默认值 | 说明                                                         |
+| ---------- | --------------------------------------- | ------ | ------------------------------------------------------------ |
+| `mark`     | `IRPlotMarkOperation`                   | —      | 正在下沉的 mark                                              |
+| `nodeKind` | `'pointGlyph' \| 'pointText' \| 'cell'` | —      | point mark 的具体 node 形态；文本点和 glyph 点的可写样式不同 |
+| `row`      | `ExternalRow`                           | —      | 当前数据行                                                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type NodeChannelDeliveryContext = {
+  mark: IRPlotMarkOperation;
+  row: ExternalRow;
+  nodeKind: 'pointGlyph' | 'pointText' | 'cell';
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PathChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={92}>PathChannelDeliveryContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员   | 类型                  | 默认值 | 说明                                          |
+| ------ | --------------------- | ------ | --------------------------------------------- |
+| `mark` | `IRPlotMarkOperation` | —      | 正在下沉的 mark                               |
+| `row`  | `ExternalRow`         | —      | 当前数据行；series / 聚合 path 暂以代表行传入 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type PathChannelDeliveryContext = {
+  mark: IRPlotMarkOperation;
+  row: ExternalRow;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScopeChannelDeliveryContext"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={110}>ScopeChannelDeliveryContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员   | 类型                         | 默认值 | 说明                   |
+| ------ | ---------------------------- | ------ | ---------------------- |
+| `mark` | `IRPlotMarkOperation`        | —      | 正在下沉的 mark        |
+| `rows` | `ReadonlyArray<ExternalRow>` | —      | 当前 mark 使用的数据行 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScopeChannelDeliveryContext = {
+  mark: IRPlotMarkOperation;
+  rows: ReadonlyArray<ExternalRow>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"NodeChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={82}>NodeChannelDelivery</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                                                               | 默认值 | 说明                                                  |
+| ---------- | ---------------------------------------------------------------------------------- | ------ | ----------------------------------------------------- |
+| `channel`  | `string`                                                                           | —      | 通道名（诊断 / 调试用；不参与 IR）                    |
+| `deliver`  | `(node: IRNode, value: ChannelValue, context: NodeChannelDeliveryContext) => void` | —      | 把解析值落到 core IRNode 的既有属性                   |
+| `resolver` | `ChannelValueResolver`                                                             | —      | 逐行通道值解析器；undefined = 该行不应用、node 用默认 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type NodeChannelDelivery = {
+  channel: string;
+  resolver: ChannelValueResolver;
+  deliver: (node: IRNode, value: ChannelValue, context: NodeChannelDeliveryContext) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PathChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={100}>PathChannelDelivery</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                                                               | 默认值 | 说明                                                  |
+| ---------- | ---------------------------------------------------------------------------------- | ------ | ----------------------------------------------------- |
+| `channel`  | `string`                                                                           | —      | 通道名（诊断 / 调试用；不参与 IR）                    |
+| `deliver`  | `(path: IRPath, value: ChannelValue, context: PathChannelDeliveryContext) => void` | —      | 把解析值落到 core IRPath 的既有属性                   |
+| `resolver` | `ChannelValueResolver`                                                             | —      | 逐行通道值解析器；undefined = 该行不应用、path 用默认 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type PathChannelDelivery = {
+  channel: string;
+  resolver: ChannelValueResolver;
+  deliver: (path: IRPath, value: ChannelValue, context: PathChannelDeliveryContext) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScopeChannelDelivery"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={118}>ScopeChannelDelivery</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员      | 类型                                                                                  | 默认值 | 说明                                                |
+| --------- | ------------------------------------------------------------------------------------- | ------ | --------------------------------------------------- |
+| `channel` | `string`                                                                              | —      | 通道名（诊断 / 调试用；不参与 IR）                  |
+| `deliver` | `(scope: IRScope, value: ChannelValue, context: ScopeChannelDeliveryContext) => void` | —      | 把解析值落到 core IRScope 的级联属性或 every-X 默认 |
+| `value`   | `ChannelValue`                                                                        | —      | 已解析的整层通道值                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScopeChannelDelivery = {
+  channel: string;
+  value: ChannelValue;
+  deliver: (scope: IRScope, value: ChannelValue, context: ScopeChannelDeliveryContext) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 共享默认值
+
+#### <ApiSourceLink label={"SIZE_MAX_RADIUS"} path={"packages/viz/plot/src/providers/channel/features/node.ts"} startLine={52}>SIZE_MAX_RADIUS</ApiSourceLink>
+
+```ts
+export const SIZE_MAX_RADIUS = 20;
+```
+
+## 定义构造
+
+#### <ApiSourceLink label={"ColorChannelDefinitionOptions"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={15}>ColorChannelDefinitionOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员             | 类型                                                        | 默认值  | 说明                                      |
+| ---------------- | ----------------------------------------------------------- | ------- | ----------------------------------------- |
+| `channel`        | `string`                                                    | —       | 创建的颜色类通道名称                      |
+| `constantPaint?` | `boolean`                                                   | `false` | 是否允许常量分支使用颜色以外的 paint 输入 |
+| `pick`           | `(mark: IRPlotMarkOperation) => IRPlotChannel \| undefined` | —       | 从 mark 中读取该通道的绑定                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ColorChannelDefinitionOptions = {
+  channel: string;
+  pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
+  constantPaint?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"PlotPaint"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={28}>PlotPaint</ApiSourceLink>
+
+```ts
+export type PlotPaint = string | IRPaint;
+```
+
+#### <ApiSourceLink label={"makeColorChannelDefinition"} path={"packages/viz/plot/src/providers/channel/features/paint.ts"} startLine={48}>makeColorChannelDefinition</ApiSourceLink>
+
+常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                        | 说明                                                     |
+| ------ | --------- | ---------------------------------- | -------------------------------------------------------- |
+| 参数   | `options` | `ColorChannelDefinitionOptions`    | 通道名称、绑定读取函数与常量 paint 策略                  |
+| 返回值 | —         | `MarkChannelDefinition<PlotPaint>` | 使用颜色比例尺解析字段的 mark 通道定义；创建时不解析数据 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const makeColorChannelDefinition: (
+  options: ColorChannelDefinitionOptions,
+) => MarkChannelDefinition<PlotPaint>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 字段与取值
+
+#### <ApiSourceLink label={"FieldChannel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={149}>FieldChannel</ApiSourceLink>
+
+<DocTabs defaultValue="binding">
+
+<DocTab value="binding" label="属性 · 编码绑定">
+
+<ApiTable>
+
+| 成员     | 类型                                                                                                     | 默认值 | 说明                                                                    |
+| -------- | -------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------- |
+| `field?` | `string`                                                                                                 | —      | 从外部数据行读取标量值的字段路径，例如 month 或 user.age；与 value 互斥 |
+| `scale?` | `string`                                                                                                 | —      | 驱动通道的比例尺名称；位置通道由坐标系提供比例尺，通常省略              |
+| `value?` | `null \| string \| number \| false \| true \| ReadonlyArray<JsonValue> \| { [key: string]: JsonValue; }` | —      | —                                                                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="style" label="属性 · 样式取值">
+
+<ApiTable>
+
+| 成员    | 类型                    | 默认值 | 说明                                   |
+| ------- | ----------------------- | ------ | -------------------------------------- |
+| `kind`  | `'field' \| 'constant'` | —      | 区分数据字段引用与不依赖数据的常量     |
+| `value` | `unknown`               | —      | 字段名称或常量值，由 kind 决定解释方式 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FieldChannel =
+  | IRPlotChannel
+  | {
+      kind: 'field' | 'constant';
+      value: unknown;
+    };
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"FieldCollector"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={159}>FieldCollector</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员         | 类型                                              | 默认值 | 说明                                                      |
+| ------------ | ------------------------------------------------- | ------ | --------------------------------------------------------- |
+| `addChannel` | `(channel?: FieldChannel) => void`                | —      | 加入普通 channel 或 mark 样式字段引用；常量值不引用数据源 |
+| `addField`   | `(field?: string) => void`                        | —      | 加入一个字段名；undefined 表示该位置没有字段引用          |
+| `addFields`  | `(...fields: Array<string \| undefined>) => void` | —      | 一次加入多个字段名；undefined 会被跳过                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FieldCollector = {
+  addField: (field?: string) => void;
+  addFields: (...fields: Array<string | undefined>) => void;
+  addChannel: (channel?: FieldChannel) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={17}>channelValue</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                  | 说明                                         |
+| ------ | --------- | ---------------------------- | -------------------------------------------- |
+| 参数   | `channel` | `IRPlotChannel \| undefined` | 字段或常量绑定；省略表示未绑定               |
+|        | `row`     | `ExternalRow`                | 当前图元使用的数据行                         |
+| 返回值 | —         | `unknown`                    | 常量或字段值；绑定或字段缺失时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const channelValue: (channel: IRPlotChannel | undefined, row: ExternalRow) => unknown;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={53}>labelOf</ApiSourceLink>
+
+resolveLabel 最高优先；其次 field 解析值；再次 value 常量
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称            | 类型 / 签名                                              | 说明                                                     |
+| ------ | --------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| 参数   | `content`       | `IRPlotTextChannel \| IRPlotMarkLabelContent`            | 字段或常量文本内容及可选展示格式                         |
+|        | `row`           | `ExternalRow`                                            | 当前图元使用的数据行                                     |
+|        | `fieldType?`    | `DataFieldType`                                          | 字段类型；temporal 使用 UTC 时间格式，其余使用数值格式   |
+|        | `resolveLabel?` | `ResolveLabel`                                           | 优先于声明内容的运行时标签回调；省略时读取 content       |
+| 返回值 | —               | `IRPlotMarkLabelContent['value'] \| string \| undefined` | 格式化文本或常量内容；字段为空或没有内容时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const labelOf: (
+  content: IRPlotTextChannel | IRPlotMarkLabelContent,
+  row: ExternalRow,
+  fieldType?: DataFieldType,
+  resolveLabel?: ResolveLabel,
+) => IRPlotMarkLabelContent['value'] | string | undefined;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"MarkValueResolverOptions"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={29}>MarkValueResolverOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                 | 类型                                 | 默认值      | 说明                                                                  |
+| -------------------- | ------------------------------------ | ----------- | --------------------------------------------------------------------- |
+| `T` (泛型)           | `—`                                  | —           | 原始字段解析成功时返回的视觉值类型                                    |
+| `channelName`        | `string`                             | —           | 用于错误信息的属性 / 通道名                                           |
+| `constants?`         | `'resolve' \| 'skip'`                | `'resolve'` | 常量变体是否也产出 resolver；需要把常量收敛进默认属性时可显式跳过     |
+| `expectedFieldType?` | `DataFieldType`                      | —           | 字段变体允许的字段类型；省略表示不做类型限制                          |
+| `parse`              | `(value: unknown) => T \| undefined` | —           | 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type MarkValueResolverOptions<T> = {
+  channelName: string;
+  expectedFieldType?: DataFieldType;
+  parse: (value: unknown) => T | undefined;
+  constants?: 'resolve' | 'skip';
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"MarkValueResolution"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={18}>MarkValueResolution</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                                   | 默认值 | 说明                                             |
+| ------------- | -------------------------------------- | ------ | ------------------------------------------------ |
+| `T` (泛型)    | `—`                                    | —      | 逐行解析后交给 mark 的视觉值类型                 |
+| `descriptor?` | `ScaleDescriptor`                      | —      | scale descriptor；常量 value 编码通常不入 legend |
+| `field?`      | `string`                               | —      | 绑定的数据字段名；常量值没有字段名               |
+| `fieldType?`  | `DataFieldType`                        | —      | 绑定字段的解析类型；常量值或未知字段类型时省略   |
+| `resolver`    | `(row: ExternalRow) => T \| undefined` | —      | 逐行通道值解析器                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type MarkValueResolution<T> = ChannelResolution<T> & {
+  field?: string;
+  fieldType?: DataFieldType;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"makeMarkValueResolver"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={52}>makeMarkValueResolver</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                           | 说明                                                     |
+| ------ | --------- | ------------------------------------- | -------------------------------------------------------- |
+| 泛型   | `T`       | —                                     | 常量或字段解析器产出的视觉值类型                         |
+| 参数   | `value`   | `MarkStyleValue<T> \| undefined`      | 字段或常量样式值；省略时不产生解析结果                   |
+|        | `model`   | `DataTransformModel`                  | 当前数据的完整字段模型                                   |
+|        | `options` | `MarkValueResolverOptions<T>`         | 字段类型限制、值解析与常量处理策略                       |
+| 返回值 | —         | `MarkValueResolution<T> \| undefined` | 逐行解析器与字段元数据；未绑定或跳过常量时返回 undefined |
+| 错误   | —         | —                                     | 已知字段类型与 expectedFieldType 不一致                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const makeMarkValueResolver: <T>(
+  value: MarkStyleValue<T> | undefined,
+  model: DataTransformModel,
+  options: MarkValueResolverOptions<T>,
+) => MarkValueResolution<T> | undefined;
+```
+
+</DocTab>
+
+</DocTabs>

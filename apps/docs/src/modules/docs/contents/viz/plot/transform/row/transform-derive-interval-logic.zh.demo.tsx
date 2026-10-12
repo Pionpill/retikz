@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="explicit-mode"
       position={[-300, -45]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>① 显式区间</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="baseline-mode"
       position={[-300, 85]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>② 基线到值</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="resolve-mode"
       position={[-100, 35]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>解析有效模式</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
       id="error"
       position={[-100, -55]}
       cornerRadius={4}
-      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.06 }}
+      style={{ stroke: 'red', fill: 'red', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>配置不完整</Text>
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       id="rows"
       position={[100, -55]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>输入行</Text>
@@ -68,7 +68,7 @@ const Demo: FC = () => (
       id="derive"
       position={[100, 35]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>逐行派生区间</Text>
@@ -80,7 +80,7 @@ const Demo: FC = () => (
       id="output"
       position={[300, 35]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>写入区间字段</Text>

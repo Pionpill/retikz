@@ -19,7 +19,7 @@ const ReplayFigure: FC<ReplayFigureProps> = props => {
       text="Bbbb"
       shape="rectangle"
       layout={{ minimumSize: { width: 80, height: 36 }, padding: 0, margin: 0 }}
-      style={{ fill: 'darkorange', fillOpacity: 0.4, stroke: 'none', font: { size: 14 } }}
+      style={{ fill: 'darkorange', stroke: 'none', font: { size: 14 }, opacity: { fill: 0.4 } }}
     />
   );
   return (

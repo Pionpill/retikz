@@ -155,7 +155,7 @@ describe('Diagram Foundation resolve', () => {
         headingMainGap: 0,
         drawingLegendGap: 0,
         padding: 0,
-        background: { fill: 'transparent', fillOpacity: 0 },
+        background: { fill: 'transparent', opacity: { fill: 0 } },
         cornerRadius: 0,
         overflow: 'visible',
       }),
@@ -168,7 +168,7 @@ describe('Diagram Foundation resolve', () => {
       headingMainGap: 0,
       drawingLegendGap: 0,
       padding: { top: 0, right: 0, bottom: 0, left: 0 },
-      background: { fill: 'transparent', fillOpacity: 0 },
+      background: { fill: 'transparent', opacity: { fill: 0 } },
       cornerRadius: 0,
       overflow: 'visible',
     });

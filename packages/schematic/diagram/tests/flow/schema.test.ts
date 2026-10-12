@@ -99,7 +99,7 @@ const completeFlow = {
     layout: { nodeGap: 16, rankGap: 32 },
     entity: { style: { fill: '#ffffff', opacity: 0.95 }, layout: { minimumSize: 48, margin: 4 } },
     group: { padding: 12 },
-    relation: { style: { strokeWidth: 2, strokeOpacity: 0.8 } },
+    relation: { style: { strokeWidth: 2, opacity: { stroke: 0.8 } } },
   },
 } as const;
 

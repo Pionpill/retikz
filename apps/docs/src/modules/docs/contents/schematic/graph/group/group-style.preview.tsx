@@ -38,8 +38,13 @@ export const GroupStylePreview = (values: GroupStylePreviewValues, lang: Lang) =
         id="group-style"
         padding={padding}
         cornerRadius={cornerRadius}
-        background={{ fill: backgroundColor, fillOpacity: backgroundOpacity }}
-        border={{ stroke: borderColor, strokeWidth: borderWidth, strokeOpacity: borderOpacity, ...borderLineStyle }}
+        background={{ fill: backgroundColor, opacity: { fill: backgroundOpacity } }}
+        border={{
+          stroke: borderColor,
+          strokeWidth: borderWidth,
+          ...borderLineStyle,
+          opacity: { stroke: borderOpacity },
+        }}
         caption={{
           title: { text: groupStyleI18n[lang].title },
           description: { text: groupStyleI18n[lang].description },

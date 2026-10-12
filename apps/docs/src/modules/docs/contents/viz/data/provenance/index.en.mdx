@@ -149,85 +149,11 @@ apply: (rows, operation, context) => [
 
 This is the computation callback of a transform Implementation; see [Extension mechanisms](/viz/data/transform/extensions) for definition and registration. Stage records read field declarations from the Definition, so custom computations must declare fields accurately and preserve sources. An output position is not an original index. A result without a unique source must not claim single-row provenance.
 
-## Related props
+## API Reference
 
-These are the entries and options used here. See [API reference](/viz/data/transform/reference) for complete signatures.
+This section documents public row provenance, recording options, and event results. For `applyTransforms`, `applyTransformsToDataView`, and their input and output options, see the [data transform API reference](/viz/data/transform/reference).
 
-<ComponentProps
-  items={[
-    {
-      name: 'applyTransforms',
-      kind: 'function',
-      type: '(rows: Array<ExternalRow>, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsResult',
-      description: 'Synchronously returns { rows, lineage? }; options independently enable sources and events.',
-    },
-    {
-      name: 'applyTransformsToDataView',
-      kind: 'function',
-      type: '(view: DataView, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsToDataViewResult',
-      description: 'Returns { dataView, lineage? } for an existing normalized view.',
-    },
-    {
-      name: 'ApplyTransformsOptions.provenance',
-      kind: 'property',
-      type: 'boolean',
-      defaultValue: 'false',
-      description: 'Assigns sources to unmarked inputs without enabling events; existing sources are retained.',
-    },
-    {
-      name: 'ApplyTransformsOptions.lineage',
-      kind: 'property',
-      type: 'boolean | DataLineageOptions',
-      defaultValue: 'false',
-      description:
-        'true uses default event options, an object customizes them, and false or omission disables recording. Row sources are not assigned implicitly.',
-    },
-    {
-      name: 'tagSourceIndex',
-      kind: 'function',
-      type: '(rows: Array<ExternalRow>) => Array<ExternalRow>',
-      description: 'Copies rows and tags unmarked inputs; preserves existing single-row or group sources.',
-    },
-    {
-      name: 'readSourceIndex',
-      kind: 'function',
-      type: '(row: ExternalRow) => number | undefined',
-      description: 'Reads a single-row source, or undefined when absent.',
-    },
-    {
-      name: 'readSourceIndices',
-      kind: 'function',
-      type: '(row: ExternalRow) => Array<number> | undefined',
-      description: 'Reads group sources, or undefined when absent.',
-    },
-    {
-      name: 'DataLineageOptions.sourceIdentity',
-      kind: 'property',
-      type: 'boolean | { mode?: "summary" | "full"; maxIndices?: number }',
-      defaultValue: '{ mode: "summary", maxIndices: 20 }',
-      description: 'false omits event source summaries; summary retains a prefix, full retains all indices.',
-    },
-    {
-      name: 'DataLineageOptions.rowSamples',
-      kind: 'property',
-      type: 'false | { maxRows: number; fields: Array<string> }',
-      defaultValue: 'false',
-      description: 'Samples transform inputs and outputs with a positive row limit and nonempty field whitelist.',
-    },
-    {
-      name: 'DataLineageOptions.sink',
-      kind: 'property',
-      type: '(event: DataLineageEvent) => void',
-      description: 'Receives events individually; disables returned event retention by default.',
-    },
-    {
-      name: 'DataLineageOptions.retainEvents',
-      kind: 'property',
-      type: 'boolean',
-      description: 'Defaults to false with sink; true keeps the array too. Events always remain without sink.',
-    },
-  ]}
-/>
+{/* @include viz/data/provenance/generated */}
 
 ## Further reading
 
@@ -250,7 +176,7 @@ These are the entries and options used here. See [API reference](/viz/data/trans
     },
     {
       title: 'API reference',
-      description: 'Look up source, lineage and execution types.',
+      description: 'Look up transform execution entry points and their input and output contracts.',
       url: '/viz/data/transform/reference',
     },
   ]}

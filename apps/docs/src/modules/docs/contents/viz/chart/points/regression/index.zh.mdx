@@ -194,7 +194,7 @@ Iris 数据包含 150 条鸢尾花观测。横轴为萼片长度，纵轴为花�
   method={{ kind: 'linear' }}
   sampleCount={64}
   point={{ size: 4, opacity: 0.55 }}
-  trend={{ stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 }}
+  trend={{ stroke: '#e11d48', strokeWidth: 2, opacity: { stroke: 0.9 } }}
 />
 ```
 
@@ -206,7 +206,7 @@ properties: {
   method: { kind: 'linear' },
   sampleCount: 64,
   point: { size: 4, opacity: 0.55 },
-  trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+  trend: { stroke: '#e11d48', strokeWidth: 2, opacity: { stroke: 0.9 } },
 },
 ```
 
@@ -219,7 +219,7 @@ recipe: {
     method: { kind: 'linear' },
     sampleCount: 64,
     point: { size: 4, opacity: 0.55 },
-    trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+    trend: { stroke: '#e11d48', strokeWidth: 2, opacity: { stroke: 0.9 } },
   },
 },
 ```

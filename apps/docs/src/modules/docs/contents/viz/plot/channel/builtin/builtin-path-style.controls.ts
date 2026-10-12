@@ -103,6 +103,7 @@ export const previewControlContract = {
     lineJoin: PathLineJoin.Round,
     roundedCorners: 0,
   },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     {
       id: 'smooth',

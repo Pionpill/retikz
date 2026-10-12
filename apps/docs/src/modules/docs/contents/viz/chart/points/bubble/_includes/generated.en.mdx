@@ -54,24 +54,24 @@ export type IRBubbleChartEncodings = ZodInfer<typeof BubbleChartEncodingsSchema>
 
 Corresponds to `BubbleProperties`, Vanilla `properties` and IR `recipe.properties`.
 
-| Category       | Property        | Type                                                     | Description                                                                                                                  |
-| -------------- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Shape          | `shape`         | `string`                                                 | Registered shape name                                                                                                        |
-| Color and fill | `color`         | `string`                                                 | Sets the primary color                                                                                                       |
-|                | `fill`          | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                                                 |
-| Stroke         | `stroke`        | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                                               |
-|                | `strokeWidth`   | `number`                                                 | Stroke width; must be nonnegative; default 1                                                                                 |
-|                | `dashed`        | `boolean`                                                | Enables a dashed stroke                                                                                                      |
-|                | `dotted`        | `boolean`                                                | Enables a dotted stroke                                                                                                      |
-|                | `dashPattern`   | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                                            |
-| Opacity        | `opacity`       | `number`                                                 | Overall opacity, from 0 to 1                                                                                                 |
-|                | `fillOpacity`   | `number`                                                 | Fill opacity, from 0 to 1; default 0.7                                                                                       |
-|                | `strokeOpacity` | `number`                                                 | Stroke opacity, from 0 to 1                                                                                                  |
-| Transform      | `rotate`        | `number`                                                 | Rotation angle                                                                                                               |
-|                | `dx`            | `number`                                                 | Horizontal offset                                                                                                            |
-|                | `dy`            | `number`                                                 | Vertical offset                                                                                                              |
-| Padding        | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy, default point-aware; the object form uses kind for the strategy and clearance for edge clearance |
-|                | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                                     |
+| Category       | Property         | Type                                                     | Description                                                                                                                  |
+| -------------- | ---------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Shape          | `shape`          | `string`                                                 | Registered shape name                                                                                                        |
+| Color and fill | `color`          | `string`                                                 | Sets the primary color                                                                                                       |
+|                | `fill`           | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                                                 |
+| Stroke         | `stroke`         | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                                               |
+|                | `strokeWidth`    | `number`                                                 | Stroke width; must be nonnegative; default 1                                                                                 |
+|                | `dashed`         | `boolean`                                                | Enables a dashed stroke                                                                                                      |
+|                | `dotted`         | `boolean`                                                | Enables a dotted stroke                                                                                                      |
+|                | `dashPattern`    | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                                            |
+| Opacity        | `opacity`        | `number`                                                 | Overall opacity, from 0 to 1                                                                                                 |
+|                | `opacity.fill`   | `number`                                                 | Fill opacity, from 0 to 1; default 0.7                                                                                       |
+|                | `opacity.stroke` | `number`                                                 | Stroke opacity, from 0 to 1                                                                                                  |
+| Transform      | `rotate`         | `number`                                                 | Rotation angle                                                                                                               |
+|                | `dx`             | `number`                                                 | Horizontal offset                                                                                                            |
+|                | `dy`             | `number`                                                 | Vertical offset                                                                                                              |
+| Padding        | `autoPadding`    | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy, default point-aware; the object form uses kind for the strategy and clearance for edge clearance |
+|                | `domainPadding`  | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                                     |
 
 See the [properties schema](#bubbleproperties--irbubblechartproperties--bubblechartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
 

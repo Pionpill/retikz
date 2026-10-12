@@ -1,4 +1,4 @@
-import { ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
+import { GraphicElementOpacitySchema, ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
 import { SurfaceSchema } from '@retikz/standard/presentation';
@@ -15,7 +15,7 @@ const BlockTextObjectSchema = strictObject({
   maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth.describe('Maximum text width before wrapping.'),
   textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Local text color override.'),
   font: NodeSchema.shape.style.unwrap().shape.font.describe('Local font configuration.'),
-  opacity: NodeSchema.shape.style.unwrap().shape.opacity.describe('Text opacity.'),
+  opacity: GraphicElementOpacitySchema.shape.opacity.describe('Text opacity.'),
 });
 
 /** 校验块结构文本的字符串简写或兼容 Core 的文本字段 */

@@ -12,7 +12,7 @@ const Demo: FC = () => (
         id="compile"
         position={[0, -145]}
         cornerRadius={4}
-        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Tier 2 compile</Text>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
         id="contribution"
         position={[0, -70]}
         cornerRadius={4}
-        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>minimum / natural probe</Text>
@@ -36,7 +36,7 @@ const Demo: FC = () => (
         id="solve"
         position={[0, 5]}
         cornerRadius={4}
-        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>父 solver 求解</Text>
@@ -48,7 +48,7 @@ const Demo: FC = () => (
         id="allocation"
         position={[0, 80]}
         cornerRadius={4}
-        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>range / exact probe</Text>
@@ -60,7 +60,7 @@ const Demo: FC = () => (
         id="commit"
         position={[0, 155]}
         cornerRadius={4}
-        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
         layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>选择 replay 或 raise</Text>

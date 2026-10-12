@@ -103,7 +103,7 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
         cornerRadius={8}
         position={[505, 80]}
         text={t.result}
-        style={{ fill: 'gray', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'gray', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.14 } }}
       />
       <Draw way={['after-query.right', [665, 80], '|-', 'after-a.right']} arrow="->" />
       <Node

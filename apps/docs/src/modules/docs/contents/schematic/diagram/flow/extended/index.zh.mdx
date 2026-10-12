@@ -336,7 +336,7 @@ Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group �
       kind: 'property',
       type: "InputFlowDiagram['flowDefaults']",
       description:
-        '集中配置稀疏默认值，实例字段优先。本页的外观示例使用：\n- `entity.style`: `{ color?: string; fillOpacity?: number; strokeWidth?: number }`，改变所有 Entity 的颜色、填充透明度和描边宽度\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; strokeOpacity?: number }`，改变所有 Relation 的描边颜色、宽度和透明度\n还可设置 `layout`、`group` 等片段；完整字段见 Schema 参考。',
+        '集中配置稀疏默认值，实例字段优先。本页的外观示例使用：\n- `entity.style`: `{ color?: string; opacity?: { fill?: number }; strokeWidth?: number }`，改变所有 Entity 的颜色、填充透明度和描边宽度\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; opacity?: { stroke?: number } }`，改变所有 Relation 的描边颜色、宽度和透明度\n还可设置 `layout`、`group` 等片段；完整字段见 Schema 参考。',
     },
   ]}
 />

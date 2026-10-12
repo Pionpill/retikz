@@ -248,7 +248,7 @@ const plotAreaBorderNode = (
       fill: 'none',
       stroke: border.stroke ?? 'currentColor',
       strokeWidth: border.strokeWidth ?? 1,
-      strokeOpacity: border.drawOpacity ?? 1,
+      opacity: { stroke: border.drawOpacity ?? 1 },
     },
     layout: { minimumSize: geometry.minimumSize, padding: 0 },
   };

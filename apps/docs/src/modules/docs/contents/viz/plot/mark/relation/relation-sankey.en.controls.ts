@@ -97,7 +97,7 @@ export const previewControlContract = {
     'RelationMark.ribbon',
     'RelationMark.style',
     'IntervalMark.strokeWidth',
-    'IntervalMark.labelPosition',
-    'IntervalMark.labelDistance',
+    'IntervalMark.label.position',
+    'IntervalMark.label.distance',
   ],
 } satisfies PreviewControlContract;

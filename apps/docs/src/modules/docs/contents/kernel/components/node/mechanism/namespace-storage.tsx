@@ -64,10 +64,10 @@ const NamespaceStorage: FC<NamespaceStorageProps> = props => {
         text={['a: rect(40, 0, 60, 32)', t.source]}
         style={{
           fill: 'dodgerblue',
-          fillOpacity: 0.14,
           stroke: 'none',
           textColor: 'currentColor',
           font: { size: 13 },
+          opacity: { fill: 0.14 },
         }}
       />
       <Node

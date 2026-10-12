@@ -108,7 +108,7 @@ describe('Array / Map adapter parity', () => {
   it('retains nested providers, styles and sparse IR equally across React and Vanilla', () => {
     const input = createInputScene(
       <Map
-        style={{ fill: 'red', key: { fill: 'green' }, value: { fillOpacity: 0.3 } }}
+        style={{ fill: 'red', key: { fill: 'green' }, value: { opacity: { fill: 0.3 } } }}
         layout={{ padding: 0, key: { width: 60 }, value: { height: 40 } }}
       >
         <MapEntry>
@@ -130,7 +130,7 @@ describe('Array / Map adapter parity', () => {
       scene({
         children: [
           map({
-            style: { fill: 'red', key: { fill: 'green' }, value: { fillOpacity: 0.3 } },
+            style: { fill: 'red', key: { fill: 'green' }, value: { opacity: { fill: 0.3 } } },
             layout: { padding: 0, key: { width: 60 }, value: { height: 40 } },
             entries: [
               {
@@ -145,7 +145,7 @@ describe('Array / Map adapter parity', () => {
     );
 
     expect(react.ir.children[0]).toMatchObject({
-      style: { key: { fill: 'green' }, value: { fillOpacity: 0.3 } },
+      style: { key: { fill: 'green' }, value: { opacity: { fill: 0.3 } } },
       layout: { key: { width: 60 }, value: { height: 40 } },
     });
     expect(react.ir).toEqual(vanilla.ir);
@@ -190,7 +190,7 @@ describe('Array / Map adapter parity', () => {
   it('preserves array data and marker styles, order, fragments and empty lists', () => {
     const data = createInputScene(
       <Array
-        items={[{ content: 'A' }, { content: 'B', id: 'b', style: { fillOpacity: 0 }, layout: { padding: 0 } }]}
+        items={[{ content: 'A' }, { content: 'B', id: 'b', style: { opacity: { fill: 0 } }, layout: { padding: 0 } }]}
       />,
     );
     const markers = createInputScene(
@@ -198,7 +198,7 @@ describe('Array / Map adapter parity', () => {
         <>
           <ArrayItem text="A" />
           {false}
-          <ArrayItem text="B" id="b" style={{ fillOpacity: 0 }} layout={{ padding: 0 }} />
+          <ArrayItem text="B" id="b" style={{ opacity: { fill: 0 } }} layout={{ padding: 0 }} />
         </>
       </Array>,
     );

@@ -88,8 +88,8 @@ describe('stat-geom composition surface (contract)', () => {
             x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
             y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
           },
-          fillOpacity: { kind: 'constant', value: 0.28 },
           encoding: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
+          opacity: { fill: { kind: 'constant', value: 0.28 } },
         },
         {
           type: 'reference',

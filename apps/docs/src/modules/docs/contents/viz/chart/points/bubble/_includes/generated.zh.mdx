@@ -69,24 +69,24 @@ export type IRBubbleChartEncodings = ZodInfer<typeof BubbleChartEncodingsSchema>
 
 对应 `BubbleProperties`、Vanilla `properties` 和 IR `recipe.properties`。
 
-| 分类       | 属性            | 类型                                                     | 说明                                                                               |
-| ---------- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| 形状       | `shape`         | `string`                                                 | 已注册的形状名                                                                     |
-| 颜色与填充 | `color`         | `string`                                                 | 设置主色                                                                           |
-|            | `fill`          | `string`、`JsonObject`                                   | 设置填充颜色、画笔                                                                 |
-| 描边       | `stroke`        | `string`、`JsonObject`                                   | 设置描边颜色、画笔                                                                 |
-|            | `strokeWidth`   | `number`                                                 | 描边宽度，必须大于或等于 0；默认 1                                                 |
-|            | `dashed`        | `boolean`                                                | 启用虚线描边                                                                       |
-|            | `dotted`        | `boolean`                                                | 启用点线描边                                                                       |
-|            | `dashPattern`   | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                                                 |
-| 透明度     | `opacity`       | `number`                                                 | 整体透明度，范围 0–1                                                               |
-|            | `fillOpacity`   | `number`                                                 | 填充透明度，范围 0–1；默认 0.7                                                     |
-|            | `strokeOpacity` | `number`                                                 | 描边透明度，范围 0–1                                                               |
-| 变换       | `rotate`        | `number`                                                 | 旋转角度                                                                           |
-|            | `dx`            | `number`                                                 | 水平偏移                                                                           |
-|            | `dy`            | `number`                                                 | 垂直偏移                                                                           |
-| 留白       | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略，默认 point-aware；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
-|            | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                     |
+| 分类       | 属性             | 类型                                                     | 说明                                                                               |
+| ---------- | ---------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 形状       | `shape`          | `string`                                                 | 已注册的形状名                                                                     |
+| 颜色与填充 | `color`          | `string`                                                 | 设置主色                                                                           |
+|            | `fill`           | `string`、`JsonObject`                                   | 设置填充颜色、画笔                                                                 |
+| 描边       | `stroke`         | `string`、`JsonObject`                                   | 设置描边颜色、画笔                                                                 |
+|            | `strokeWidth`    | `number`                                                 | 描边宽度，必须大于或等于 0；默认 1                                                 |
+|            | `dashed`         | `boolean`                                                | 启用虚线描边                                                                       |
+|            | `dotted`         | `boolean`                                                | 启用点线描边                                                                       |
+|            | `dashPattern`    | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                                                 |
+| 透明度     | `opacity`        | `number`                                                 | 整体透明度，范围 0–1                                                               |
+|            | `opacity.fill`   | `number`                                                 | 填充透明度，范围 0–1；默认 0.7                                                     |
+|            | `opacity.stroke` | `number`                                                 | 描边透明度，范围 0–1                                                               |
+| 变换       | `rotate`         | `number`                                                 | 旋转角度                                                                           |
+|            | `dx`             | `number`                                                 | 水平偏移                                                                           |
+|            | `dy`             | `number`                                                 | 垂直偏移                                                                           |
+| 留白       | `autoPadding`    | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略，默认 point-aware；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+|            | `domainPadding`  | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                     |
 
 完整属性结构见 [属性 Schema](#bubbleproperties--irbubblechartproperties--bubblechartpropertiesschema)；公共外观配置不在这里展开。
 
@@ -113,8 +113,8 @@ export type IRBubbleChartProperties = ZodInfer<typeof BubbleChartPropertiesSchem
     fill: '填充颜色或画笔',
     stroke: '描边颜色或画笔',
     strokeWidth: '描边宽度',
-    fillOpacity: '填充不透明度，0 到 1',
-    strokeOpacity: '描边不透明度，0 到 1',
+    'opacity.fill': '填充不透明度，0 到 1',
+    'opacity.stroke': '描边不透明度，0 到 1',
     opacity: '整体不透明度，0 到 1',
     rotate: '旋转角度',
     minimumSize: '最小尺寸',

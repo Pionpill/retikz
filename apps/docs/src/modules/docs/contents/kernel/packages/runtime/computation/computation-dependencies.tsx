@@ -21,7 +21,7 @@ const ComputationDependencies: FC<ComputationDependenciesProps> = props => {
         text={text.distance}
         cornerRadius={4}
         layout={{ padding: 10 }}
-        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.1 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.1 } }}
       />
       <Node
         id="dependency-label"
@@ -29,7 +29,7 @@ const ComputationDependencies: FC<ComputationDependenciesProps> = props => {
         text={text.label}
         cornerRadius={4}
         layout={{ padding: 10 }}
-        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.1 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.1 } }}
       />
       <Draw way={['dependency-position', 'dependency-distance']} arrow="->" />
       <Draw way={['dependency-distance', 'dependency-label']} arrow="->" />

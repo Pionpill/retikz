@@ -3,6 +3,7 @@ import { parseStaticCssColor } from '@retikz/foundation';
 
 import type { IRLine, IRNode, IRNodeLabel } from '../../schemas';
 import { NodeTextColor } from '../../schemas';
+import { resolveGraphicOpacity } from '../style';
 import type { EffectiveLabelDefault } from '../style';
 import type { PrimaryColorResolvedNode } from './types';
 
@@ -112,7 +113,7 @@ export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
     };
   }
 
-  const effectiveAlpha = parsedFill.a * (node.style.fillOpacity ?? 1);
+  const effectiveAlpha = parsedFill.a * (resolveGraphicOpacity(node.style.opacity).fillOpacity ?? 1);
   if (effectiveAlpha !== 1) {
     return {
       ...node,

@@ -65,7 +65,7 @@ export const renderRibbonGeometryPreview = (values: RibbonGeometryPreviewValues)
       <Path
         kind="ribbon"
         kindOptions={ribbonOf(resolvedValues)}
-        style={{ fill: '#38bdf8', fillOpacity: 0.75, stroke: '#075985', strokeWidth: 1 }}
+        style={{ fill: '#38bdf8', stroke: '#075985', strokeWidth: 1, opacity: { fill: 0.75 } }}
       >
         <Step kind="move" to={[-210, 30]} />
         <Step kind="curve" control={[0, -115]} to={[210, 30]} />

@@ -176,6 +176,6 @@ export const previewControlContract = {
     'PathMark.strokeWidth',
     'PointMark.size',
     'IntervalMark.padAngle',
-    'IntervalMark.fillOpacity',
+    'IntervalMark.opacity.fill',
   ],
 } satisfies PreviewControlContract;

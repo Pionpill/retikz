@@ -36,10 +36,10 @@ const BoundaryGuide: FC<BoundaryGuideProps> = props => {
       style={{
         fill: 'none',
         stroke: '#94a3b8',
-        strokeOpacity: 0.75,
         strokeWidth: 1,
         dashPattern: [6, 4],
         textColor: 'transparent',
+        opacity: { stroke: 0.75 },
       }}
       layout={{ padding: { x: 14, y: 10 }, minimumSize: { width: 72, height: 48 } }}
     >

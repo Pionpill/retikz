@@ -39,7 +39,7 @@ const MeasurementFigure: FC<MeasurementFigureProps> = props => {
               text={sample.name}
               shape="rectangle"
               layout={{ minimumSize: { width: sample.width, height: sample.height }, padding: 0, margin: 0 }}
-              style={{ fill: sample.color, fillOpacity: 0.4, stroke: 'none', font: { size: 14 } }}
+              style={{ fill: sample.color, stroke: 'none', font: { size: 14 }, opacity: { fill: 0.4 } }}
             />
           </ArrayItem>
         </Array>
@@ -51,7 +51,7 @@ const MeasurementFigure: FC<MeasurementFigureProps> = props => {
           text={sample.name}
           shape="rectangle"
           layout={{ minimumSize: { width: sample.width, height: sample.height }, padding: 0, margin: 0 }}
-          style={{ fill: sample.color, fillOpacity: 0.4, stroke: 'none', font: { size: 14 } }}
+          style={{ fill: sample.color, stroke: 'none', font: { size: 14 }, opacity: { fill: 0.4 } }}
           label={{ text: `${sample.width} × ${sample.height}`, position: 'bottom', font: { size: 12 }, opacity: 0.8 }}
         />
       ))}
@@ -77,7 +77,7 @@ const MeasurementFigure: FC<MeasurementFigureProps> = props => {
             text="Bbbb"
             shape="rectangle"
             layout={{ minimumSize: { width: 80, height: 36 }, padding: 0, margin: 0 }}
-            style={{ fill: 'darkorange', fillOpacity: 0.4, stroke: 'none', font: { size: 14 } }}
+            style={{ fill: 'darkorange', stroke: 'none', font: { size: 14 }, opacity: { fill: 0.4 } }}
           />
         </ArrayItem>
       </Array>

@@ -19,8 +19,33 @@ The diagram starts with an already resolved transform plan. Preparation determin
 For example, built-in `sort` orders records by `value`. Local and external implementations must use the same comparison rules, preserve the field model, and retain the original order of equal keys.
 
 <SourceLinks
-  sources={[{ label: 'Stage, provider and executor contracts', path: 'packages/viz/data/src/contract/execution.ts' }]}
+  sources={[
+    { label: 'Transform stages and resolution plan', path: 'packages/viz/data/src/transform/plan.ts' },
+    { label: 'Provider and executor contracts', path: 'packages/viz/data/src/execution/contract.ts' },
+  ]}
 />
+
+## Forming the transform chain
+
+Data provides transform semantics and computation. Its executor receives a transform chain with an established order. When you declare a `transform` array directly, Data processes it in declaration order; consumers of the result only need its rows and field model.
+
+A consumer assembling a transform chain from separate declarations can read the optional `schedule` on each Definition to arrange phases and check applicability under its own rules. Data exposes three markers through this contract:
+
+| Field          | Meaning                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------- |
+| `phase`        | The operation's phase, such as field derivation, row ordering or field adjustment                               |
+| `bindingClass` | The allowed binding category: `field` for a field binding, or `order` for an ordering requirement               |
+| `fieldEffect`  | Whether the operation preserves and extends fields, replaces the row and field structure, or only reorders rows |
+
+For example, a consumer collecting normalization and jitter declarations can form a `normalize → jitter` chain under a rule that field derivation precedes field adjustment. The consumer determines phase order, ordering within a phase and allowed binding categories. `schedule` itself does not sort or add operations.
+
+The diagram reads left to right: the consumer checks multiple transforms as one chain using their scheduling metadata and input/output contracts. Validation passes when there is no conflict and throws otherwise. The operations on the left belong to the same chain; they do not indicate parallel execution:
+
+<ComponentPreview files="computation-chain" hideCode type="flow" size="sm" />
+
+Consumers can use `inputFields` and `outputModel` to check dependencies in advance, such as a later operation reading a field removed by an earlier one, and throw when their assembly rules are violated. Data remains responsible for validating parameters, field semantics and execution results. The Provider preflight described below checks support for the whole chain; actual input is bound and stages execute sequentially only after preparation succeeds.
+
+For example, `sort` declares `row-order`, `order` and `reorder`, indicating that it only changes row order. A consumer can use these markers to decide whether it fits a declaration position. The Data executor does not use them to reorder explicit transform chains, and `schedule` does not record provenance events.
 
 ## External computation
 
@@ -166,7 +191,7 @@ Every mode completes whole-chain preflight before computation starts. The hybrid
 Priority increases from executor defaults to Plot / Chart / Table root settings to individual declarations. `mode` and `external` inherit independently. Registering a provider does not change the mode. Exceptions, rejections, cancellation and invalid results never trigger hybrid recomputation.
 
 <SourceLinks
-  sources={[{ label: 'Execution modes and stage selection', path: 'packages/viz/data/src/pipeline/execution.ts' }]}
+  sources={[{ label: 'Execution modes and stage selection', path: 'packages/viz/data/src/execution/executor.ts' }]}
 />
 
 ## Results and failures
@@ -183,8 +208,8 @@ Cancellation requests reach the external implementation through `signal`. The ad
 
 <SourceLinks
   sources={[
-    { label: 'Canonical result validation', path: 'packages/viz/data/src/resolve/transform/ingest.ts' },
-    { label: 'Cancellation and execution errors', path: 'packages/viz/data/src/pipeline/execution.ts' },
+    { label: 'Canonical result validation', path: 'packages/viz/data/src/execution/result.ts' },
+    { label: 'Cancellation and execution errors', path: 'packages/viz/data/src/execution/run.ts' },
   ]}
 />
 
@@ -216,7 +241,7 @@ You can pass raw data directly or use `dataBindings` to supply inputs by data re
 Source format / parser / field map settings apply only to inputs that require source parsing. They cannot be used with canonical results or native sources.
 
 <SourceLinks
-  sources={[{ label: 'Input binding and execution requests', path: 'packages/viz/data/src/contract/execution.ts' }]}
+  sources={[{ label: 'Input binding and execution requests', path: 'packages/viz/data/src/execution/contract.ts' }]}
 />
 
 ## Implementation walkthrough
@@ -225,11 +250,30 @@ Follow these source entry points: resolve declarations, prepare and bind actual 
 
 <ComponentPreview files="computation-execution" hideCode type="flow" size="md" />
 
-Start at `resolveDataTransforms`, then follow `prepare`, `bind` and `execute` in `createDataTransformExecutor` for stage selection and result propagation.
+Start at `resolveDataTransforms`, then follow `prepare`, `bind` and `execute` for stage selection and result propagation. The internal implementation manages state across three lifetimes:
+
+| Internal implementation | Lifetime and responsibility                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TransformExecutor`     | Created by `createDataTransformExecutor` and reusable across requests; owns registrations and matches stage implementations through `prepare`.                                                               |
+| `PreparedTransformPlan` | Each preflight uses a separate plan. Once ready, it can `bind` multiple inputs matching its descriptor without selecting stage implementations again.                                                        |
+| `TransformExecution`    | Each binding creates a separate instance for that input's computation and lineage records. The first `execute` call consumes its execution right, including while awaiting or after failure or cancellation. |
+
+For example, one plan can bind two partitions and execute them independently. They reuse the selected implementations while keeping separate computation cursors and lineage records. Cancellation belongs to the request that prepared the plan: separate requests remain independent, while bindings of the same plan respond to the same request signal.
+
+These classes are internal. Callers continue to use `createDataTransformExecutor` and its returned `prepare → bind → execute` interfaces.
+
+<SourceLinks
+  sources={[
+    { label: 'Semantic resolution entry', path: 'packages/viz/data/src/parse.ts' },
+    { label: 'Executor and preflight', path: 'packages/viz/data/src/execution/executor.ts' },
+    { label: 'Prepared plan and binding', path: 'packages/viz/data/src/execution/prepared-plan.ts' },
+    { label: 'Single execution and result propagation', path: 'packages/viz/data/src/execution/run.ts' },
+  ]}
+/>
 
 ## Related props
 
-See the [Data API reference](/viz/data/model/reference) for complete types.
+See the [Transform API reference](/viz/data/transform/reference) for complete types.
 
 <ComponentProps
   items={[

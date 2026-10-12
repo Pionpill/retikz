@@ -33,13 +33,21 @@ export type MarkValueResolverOptions<T> = {
   expectedFieldType?: DataFieldType;
   /** 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性 */
   parse: (value: unknown) => T | undefined;
-  /** 常量变体是否也产出 resolver；默认产出，需要把常量收敛进默认 core 属性时可显式跳过 */
+  /**
+   * 常量变体是否也产出 resolver；需要把常量收敛进默认属性时可显式跳过
+   * @default 'resolve'
+   */
   constants?: 'resolve' | 'skip';
 };
 
 /**
  * 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用
  * @template T 常量或字段解析器产出的视觉值类型
+ * @param value 字段或常量样式值；省略时不产生解析结果
+ * @param model 当前数据的完整字段模型
+ * @param options 字段类型限制、值解析与常量处理策略
+ * @returns 逐行解析器与字段元数据；未绑定或跳过常量时返回 undefined
+ * @throws {RetikzPlotError} 已知字段类型与 expectedFieldType 不一致
  */
 export const makeMarkValueResolver = <T>(
   value: MarkStyleValue<T> | undefined,

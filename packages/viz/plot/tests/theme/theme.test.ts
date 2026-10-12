@@ -166,7 +166,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(borderIndex).toBeLessThan(content.children.length - 1);
     expect(border).toMatchObject({
       shape: 'rectangle',
-      style: { fill: 'none', stroke: '#334155', strokeWidth: 1.5, strokeOpacity: 0.8 },
+      style: { fill: 'none', stroke: '#334155', strokeWidth: 1.5, opacity: { stroke: 0.8 } },
     });
     expect(border.position).toEqual(carrier.position);
     expect(border.layout?.minimumSize).toEqual(carrier.layout?.minimumSize);
@@ -349,7 +349,9 @@ describe('Plot Source defaults and guide lowering', () => {
         },
       }),
     );
-    const gridPath = pathsOf(root).find(path => path.style?.strokeOpacity === 0.4);
+    const gridPath = pathsOf(root).find(
+      path => (typeof path.style?.opacity === 'object' ? path.style.opacity.stroke : undefined) === 0.4,
+    );
 
     expect(gridPath?.style?.stroke).toBe('#ef4444');
     expect(gridPath?.style?.dashPattern).toEqual([4, 2]);

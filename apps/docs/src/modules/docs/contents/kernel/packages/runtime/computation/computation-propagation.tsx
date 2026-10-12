@@ -32,7 +32,7 @@ const ComputationPropagation: FC<ComputationPropagationProps> = props => {
           key={state}
           position={[index * 200 + 90, 0]}
           text={text[state]}
-          style={{ stroke: colors[state], fill: colors[state], fillOpacity: 0.12, font: { size: 12 } }}
+          style={{ stroke: colors[state], fill: colors[state], font: { size: 12 }, opacity: { fill: 0.12 } }}
           cornerRadius={4}
           layout={{ padding: 6 }}
         />
@@ -57,7 +57,7 @@ const ComputationPropagation: FC<ComputationPropagationProps> = props => {
           text={node.text}
           shape="circle"
           layout={{ minimumSize: { width: 36, height: 36 } }}
-          style={{ stroke: colors[node.state], fill: colors[node.state], fillOpacity: 0.15, font: { size: 14 } }}
+          style={{ stroke: colors[node.state], fill: colors[node.state], font: { size: 14 }, opacity: { fill: 0.15 } }}
         />
       ))}
       {[

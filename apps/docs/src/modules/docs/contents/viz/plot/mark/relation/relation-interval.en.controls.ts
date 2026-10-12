@@ -159,6 +159,6 @@ export const previewControlContract = {
     'RelationMark.style',
     'RelationMark.path',
     'RelationMark.path.label.placement',
-    'IntervalMark.labelPosition',
+    'IntervalMark.label.position',
   ],
 } satisfies PreviewControlContract;

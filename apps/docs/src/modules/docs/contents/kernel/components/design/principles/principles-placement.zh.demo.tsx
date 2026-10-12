@@ -49,7 +49,7 @@ const Demo: FC = () => (
           id={`${id}-signal`}
           position={[-160, y]}
           cornerRadius={4}
-          style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
+          style={{ stroke: 'dimgray', fill: 'lightgray', font: { size: 13 }, opacity: { fill: 0.16 } }}
           layout={{ minimumSize: { width: 220, height: 34 } }}
         >
           {signal}
@@ -62,7 +62,7 @@ const Demo: FC = () => (
             { text: owner, font: { size: 14, weight: 'bold' } },
             { text: anchor, fill: 'gray', font: { size: 12 } },
           ]}
-          style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+          style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13 }, opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 260, height: 38 } }}
         />
         <Draw way={[`${id}-signal`, `${id}-owner`]} arrow="->" />

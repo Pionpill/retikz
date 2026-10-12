@@ -7,6 +7,7 @@ import type { PaintResolveContext } from '../resource';
 import { resolveContextualColor } from './contextual-color';
 import type { ContextualColorResolveContext } from './contextual-color';
 import { resolveDropShadow } from './drawable';
+import { resolveGraphicOpacity } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
 
 /** 仅共享有效颜色上下文，解析独立外框外观 */
@@ -40,9 +41,7 @@ export const resolveScopeFrame = (
     fill: paint(style.fill, 'fill'),
     stroke: paint(style.stroke, 'stroke'),
     strokeWidth: style.strokeWidth,
-    opacity: style.opacity,
-    fillOpacity: style.fillOpacity,
-    strokeOpacity: style.strokeOpacity,
+    ...resolveGraphicOpacity(style.opacity),
     shadow: resolveDropShadow(style.shadow),
     blendMode: style.blendMode,
   };

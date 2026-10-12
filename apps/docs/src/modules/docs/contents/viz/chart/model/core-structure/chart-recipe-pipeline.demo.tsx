@@ -18,7 +18,7 @@ const Demo: FC = () => (
       id="source"
       position={[-285, 0]}
       {...nodeStyle}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Chart Source</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -29,7 +29,7 @@ const Demo: FC = () => (
       id="recipe"
       position={[-95, 0]}
       {...nodeStyle}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Type Recipe</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -40,7 +40,7 @@ const Demo: FC = () => (
       id="merge"
       position={[95, 0]}
       {...nodeStyle}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Plot Merge</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -51,7 +51,7 @@ const Demo: FC = () => (
       id="plot"
       position={[285, 0]}
       {...nodeStyle}
-      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', opacity: { fill: 0.08 } }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>IRPlot</Text>
       <Text fill="gray" font={{ size: 12 }}>

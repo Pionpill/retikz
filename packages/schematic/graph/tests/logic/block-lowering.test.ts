@@ -84,7 +84,7 @@ describe('Block-family layout-aware lowering', () => {
       resolve: () => ({
         defaults: {
           block: {
-            background: { fill: '#dbeafe', fillOpacity: 0.7 },
+            background: { fill: '#dbeafe', opacity: { fill: 0.7 } },
             border: { stroke: '#1d4ed8', strokeWidth: 3 },
             cornerRadius: 7,
           },
@@ -127,7 +127,7 @@ describe('Block-family layout-aware lowering', () => {
         defaults: {
           block: {
             background: { fill: '#ecfccb' },
-            border: { stroke: '#3f6212', strokeWidth: 4, strokeOpacity: 0.25, dashPattern: [3, 1] },
+            border: { stroke: '#3f6212', strokeWidth: 4, dashPattern: [3, 1], opacity: { stroke: 0.25 } },
             cornerRadius: 9,
           },
         },
@@ -499,8 +499,8 @@ describe('Block-family layout-aware lowering', () => {
     const source = Graph.createBlock({
       gap: 0,
       padding: 0,
-      background: { fill: 'none', fillOpacity: 0 },
-      border: { stroke: 'none', strokeWidth: 0, strokeOpacity: 0 },
+      background: { fill: 'none', opacity: { fill: 0 } },
+      border: { stroke: 'none', strokeWidth: 0, opacity: { stroke: 0 } },
       cornerRadius: 0,
       children: [textNode('one'), textNode('two')],
     });

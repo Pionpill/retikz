@@ -1,4 +1,12 @@
-import type { PreviewControlSection } from '../types';
+import type {
+  PreviewControlSection,
+  PreviewControlContract,
+  PreviewControlState,
+  PreviewControlPreset,
+  PreviewControlValue,
+  PreviewControlValues,
+  PreviewSelectControlField,
+} from '../types';
 
 /** 属性面板内部使用的带来源索引分组 */
 export type PreviewControlColumnSection = PreviewControlSection & {
@@ -150,4 +158,51 @@ export const layoutPreviewControlSections = (
   });
 
   return rightSections.length > 0 ? [leftSections, rightSections] : [leftSections];
+};
+
+const CUSTOM_PRESET_ID = '__preview-custom-preset__';
+
+/** 比较 scalar 与 point control 值 */
+const previewControlValueEquals = (left: PreviewControlValue | undefined, right: PreviewControlValue | undefined) => {
+  if (!Array.isArray(left) || !Array.isArray(right)) return left === right;
+  return left.every((value, index) => value === right[index]);
+};
+
+/** 判断实时 controls 是否完整匹配 preset 的 resolved values */
+const matchesPreviewControlPreset = (
+  values: Readonly<PreviewControlValues>,
+  canonicalValues: Readonly<PreviewControlValues>,
+  preset: PreviewControlPreset,
+): boolean => {
+  if (preset.applyMode === 'merge-current') {
+    return Object.entries(preset.values).every(([key, value]) => previewControlValueEquals(values[key], value));
+  }
+
+  const expected = { ...canonicalValues, ...preset.values };
+  const keys = new Set([...Object.keys(values), ...Object.keys(expected)]);
+
+  return Array.from(keys).every(key => previewControlValueEquals(values[key], expected[key]));
+};
+
+/** 根据当前控件值生成预设下拉选项，手动修改后显示自定义状态 */
+export const resolvePreviewPresetField = (
+  contract: PreviewControlContract | undefined,
+  state: PreviewControlState,
+): PreviewSelectControlField | undefined => {
+  const presets = contract?.presets ?? [];
+  const selector = contract?.presetSelector;
+  if (!selector || presets.length === 0) return undefined;
+  const activeId =
+    presets.find(preset => matchesPreviewControlPreset(state.values, state.canonicalValues, preset))?.id ??
+    CUSTOM_PRESET_ID;
+  return {
+    kind: 'select',
+    id: CUSTOM_PRESET_ID,
+    label: selector.label,
+    defaultValue: activeId,
+    options: [
+      ...(activeId === CUSTOM_PRESET_ID ? [{ value: CUSTOM_PRESET_ID, label: selector.customLabel }] : []),
+      ...presets.map(preset => ({ value: preset.id, label: preset.label })),
+    ],
+  };
 };

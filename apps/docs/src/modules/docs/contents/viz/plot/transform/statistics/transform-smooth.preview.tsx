@@ -21,7 +21,7 @@ export const TransformSmoothPreview = (values: TransformSmoothPreviewValues, lan
     <Plot data={trendSamples} width={440} height={260}>
       <BuiltinPlotScale dimension="x" type="linear" domain={[-1, 5]} />
       <BuiltinPlotScale dimension="y" type="linear" domain={[0, 10]} />
-      <PointMark color="series" fillOpacity={0.72} x="time" y="value" />
+      <PointMark color="series" opacity={{ fill: 0.72 }} x="time" y="value" />
       <PathMark
         color="series"
         order="trendX"

@@ -28,8 +28,7 @@ export const PathStylePreview = (values: PathStylePreviewValues) => {
           dashOffset: values.dashOffset,
           lineCap: values.lineCap,
           lineJoin: values.lineJoin,
-          opacity: values.opacity,
-          strokeOpacity: values.strokeOpacity,
+          opacity: { overall: values.opacity, stroke: values.strokeOpacity },
         }}
       >
         <Step kind="move" to={[-175, 0]} />

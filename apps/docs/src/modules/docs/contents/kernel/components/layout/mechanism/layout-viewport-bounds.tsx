@@ -36,9 +36,12 @@ const LayoutViewportBounds: FC<LayoutViewportBoundsProps> = props => {
       <Circle
         center={project([30, 40])}
         radius={30}
-        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.12 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.12 } }}
       />
-      <Draw way={rectangle(80, 50, 20, 20)} style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.12 }} />
+      <Draw
+        way={rectangle(80, 50, 20, 20)}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.12 } }}
+      />
       {[
         [30, 40],
         [90, 60],

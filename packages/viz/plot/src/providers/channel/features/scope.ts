@@ -1,5 +1,6 @@
 import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
 import { defineScopeChannel } from '../../../contract';
+import type { IRPlotMarkOpacityStyle } from '../../../schemas';
 import type { IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 import { MarkValueKind } from '../../../schemas';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
@@ -16,7 +17,16 @@ const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
   'value' in value;
 
 const pickConstantStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): T | undefined => {
-  const value = (mark as Record<string, unknown>)[channel];
+  const source = mark as Record<string, unknown>;
+  const opacity = source.opacity as IRPlotMarkOpacityStyle | undefined;
+  const value =
+    channel === 'opacity'
+      ? opacity?.overall
+      : channel === 'fillOpacity'
+        ? opacity?.fill
+        : channel === 'strokeOpacity'
+          ? opacity?.stroke
+          : source[channel];
   if (!isMarkStyleValue<T>(value) || value.kind !== MarkValueKind.Constant) return undefined;
   return value.value;
 };
@@ -31,7 +41,7 @@ const numericScopeChannel = (
     channel,
     output,
     ...(legend !== undefined ? { legend } : {}),
-    resolve: () => mark => {
+    resolve: (_ctx, mark) => {
       const value = pickConstantStyleChannel<number>(mark, channel);
       return value === undefined ? undefined : { value };
     },
@@ -51,7 +61,18 @@ export const BUILTIN_SCOPE_CHANNELS = {
     'opacity',
     { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     (scope, value) => {
-      scope.defaults = { ...scope.defaults, style: { ...scope.defaults?.style, opacity: value } };
+      scope.defaults = {
+        ...scope.defaults,
+        style: {
+          ...scope.defaults?.style,
+          opacity: {
+            ...(typeof scope.defaults?.style?.opacity === 'number'
+              ? { overall: scope.defaults.style.opacity }
+              : scope.defaults?.style?.opacity),
+            overall: value,
+          },
+        },
+      };
     },
     'ramp',
   ),
@@ -59,14 +80,36 @@ export const BUILTIN_SCOPE_CHANNELS = {
     'fillOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     (scope, value) => {
-      scope.defaults = { ...scope.defaults, style: { ...scope.defaults?.style, fillOpacity: value } };
+      scope.defaults = {
+        ...scope.defaults,
+        style: {
+          ...scope.defaults?.style,
+          opacity: {
+            ...(typeof scope.defaults?.style?.opacity === 'number'
+              ? { overall: scope.defaults.style.opacity }
+              : scope.defaults?.style?.opacity),
+            fill: value,
+          },
+        },
+      };
     },
   ),
   strokeOpacity: numericScopeChannel(
     'strokeOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     (scope, value) => {
-      scope.defaults = { ...scope.defaults, style: { ...scope.defaults?.style, strokeOpacity: value } };
+      scope.defaults = {
+        ...scope.defaults,
+        style: {
+          ...scope.defaults?.style,
+          opacity: {
+            ...(typeof scope.defaults?.style?.opacity === 'number'
+              ? { overall: scope.defaults.style.opacity }
+              : scope.defaults?.style?.opacity),
+            stroke: value,
+          },
+        },
+      };
     },
   ),
 };

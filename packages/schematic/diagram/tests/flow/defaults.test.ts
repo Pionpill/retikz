@@ -253,8 +253,9 @@ describe('Flow defaults and formal Source fragments', () => {
 
     const parsed = Flow.FlowDiagramSchema.parse(source);
 
-    expect(parsed).toEqual(source);
-    expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
+    const expected = { ...source, position: [0, 0] };
+    expect(parsed).toEqual(expected);
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(expected);
   });
 
   it('rejects legacy and misplaced fields with their real schema paths and keys', () => {

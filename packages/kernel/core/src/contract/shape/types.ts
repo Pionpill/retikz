@@ -7,10 +7,11 @@ import type { Anchor, Rect, Side } from '../../shared';
 import type { PaintValue, PathCommand, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段 */
-type ResolvedShapeStyleFields = Pick<
-  IRGraphicStyle,
-  'fillOpacity' | 'strokeWidth' | 'strokeOpacity' | 'opacity' | 'blendMode'
->;
+type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'strokeWidth' | 'blendMode'> & {
+  opacity?: number;
+  fillOpacity?: number;
+  strokeOpacity?: number;
+};
 
 /** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名 */
 export type ShapeAnchorName = Anchor | (string & {});

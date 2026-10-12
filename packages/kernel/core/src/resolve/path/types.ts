@@ -21,7 +21,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
-import type { EffectiveScopeDefaults } from '../style';
+import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
 import type { ResolvedLabelTextBlock } from '../text';
 
 /** 已把文字与 run 派生颜色确定为字符串的路径几何标签 */
@@ -137,21 +137,22 @@ export type CanonicalStep = CompleteCanonicalStep<ResolvedStepSource>;
 /** 已展开静态字段并完成 paint 解析的内部路径形态 */
 export type CanonicalPath = Omit<
   Omit<ResolvedPathSource, 'style'> & NonNullable<ResolvedPathSource['style']>,
-  'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth'
-> & {
-  /** 已补齐缺省值的描边宽度 */
-  strokeWidth: number;
-  /** 已解析的路径填充输入 */
-  fill?: PaintResolutionInput;
-  /** 已解析的路径描边输入 */
-  stroke?: PaintResolutionInput;
-  /** 完整路径步骤 */
-  children?: Array<CanonicalStep>;
-  /** 统一为数组的宿主标签 */
-  label?: Array<CanonicalGeometryLabel>;
-  /** 已展开预设与静态默认值的投影 */
-  shadow?: ResolvedDropShadow;
-};
+  'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
+> &
+  GraphicOpacityResolution & {
+    /** 已补齐缺省值的描边宽度 */
+    strokeWidth: number;
+    /** 已解析的路径填充输入 */
+    fill?: PaintResolutionInput;
+    /** 已解析的路径描边输入 */
+    stroke?: PaintResolutionInput;
+    /** 完整路径步骤 */
+    children?: Array<CanonicalStep>;
+    /** 统一为数组的宿主标签 */
+    label?: Array<CanonicalGeometryLabel>;
+    /** 已展开预设与静态默认值的投影 */
+    shadow?: ResolvedDropShadow;
+  };
 
 /** path kind provider 在 resolving 阶段绑定后的定义与 kindOptions */
 export type PathKindResolution = Readonly<{

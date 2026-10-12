@@ -39,7 +39,7 @@ const ChartPresentationResolution: FC<ChartPresentationResolutionProps> = props 
         items={[
           'title',
           'subtitle',
-          { content: 'plot', style: { fill: 'dodgerblue', fillOpacity: 0.14 } },
+          { content: 'plot', style: { fill: 'dodgerblue', opacity: { fill: 0.14 } } },
           'note',
           'source',
         ]}

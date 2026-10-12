@@ -459,6 +459,7 @@ describe('Graph Source and child authoring', () => {
   it('keeps graphDefaults and graphRules identical to Direct and Vanilla Source IR', () => {
     const input = {
       id: 'parity',
+      position: [0, 0],
       graphDefaults: {
         entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
         relation: { style: { stroke: '#222222' } },
@@ -523,16 +524,14 @@ describe('Graph Source and child authoring', () => {
           boundingShape: 'circle',
           meta: { source: 'architecture-catalog' },
           animations: [],
-          style: {
-            color: '#0f172a',
-            stroke: '#334155',
-            fill: '#e2e8f0',
-            strokeWidth: 2,
-            opacity: 0.8,
-            fillOpacity: 0.7,
-            strokeOpacity: 0.9,
-          },
           defaults: {
+            style: {
+              color: '#0f172a',
+              stroke: '#334155',
+              fill: '#e2e8f0',
+              strokeWidth: 2,
+              opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
+            },
             node: {
               style: { fill: 'white' },
             },
@@ -570,16 +569,14 @@ describe('Graph Source and child authoring', () => {
         meta: { source: 'architecture-catalog' },
         animations: [],
         children: [{ type: 'node', id: 'child', position: [0, 0] }],
-        style: {
-          color: '#0f172a',
-          stroke: '#334155',
-          fill: '#e2e8f0',
-          strokeWidth: 2,
-          opacity: 0.8,
-          fillOpacity: 0.7,
-          strokeOpacity: 0.9,
-        },
         defaults: {
+          style: {
+            color: '#0f172a',
+            stroke: '#334155',
+            fill: '#e2e8f0',
+            strokeWidth: 2,
+            opacity: { overall: 0.8, fill: 0.7, stroke: 0.9 },
+          },
           node: {
             style: { fill: 'white' },
           },
@@ -669,9 +666,9 @@ describe('Graph standalone and embedded host classification', () => {
     expect(markup.match(/<svg/g)).toHaveLength(1);
   });
 
-  it('standalone Graph 将 style 级联到绘图内容', () => {
+  it('standalone Graph 将 defaults.style 级联到绘图内容', () => {
     const markup = renderToStaticMarkup(
-      createElement(Graph, { style: { fill: '#123456' } }, createElement(Node, { position: [0, 0] })),
+      createElement(Graph, { defaults: { style: { fill: '#123456' } } }, createElement(Node, { position: [0, 0] })),
     );
 
     expect(markup).toContain('fill="#123456"');
@@ -687,7 +684,7 @@ describe('Graph standalone and embedded host classification', () => {
       height: undefined,
       viewBox: undefined,
       className: undefined,
-      style: { fill: '#123456' },
+      defaults: { style: { fill: '#123456' } },
       renderer: undefined,
       animate: undefined,
       snapshotAt: undefined,

@@ -30,7 +30,10 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
         layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
         style={{ font: { size: 12 } }}
         entries={[
-          { key: { content: 'color' }, value: { content: color, style: { fill: 'darkorange', fillOpacity: 0.12 } } },
+          {
+            key: { content: 'color' },
+            value: { content: color, style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
+          },
         ]}
       />
       <Map

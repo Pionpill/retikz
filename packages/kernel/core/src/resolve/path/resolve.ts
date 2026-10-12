@@ -26,6 +26,7 @@ import {
   isRelativeTargetLike,
 } from '../../shared';
 import { resolvePaint } from '../resource';
+import { resolveGraphicOpacity } from '../style';
 import { resolveContextualColor, resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
@@ -193,9 +194,11 @@ const canonicalizePath = (
 ): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<ResolvedPathSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
+  const { opacity, ...visual } = style ?? {};
   return {
     ...source,
-    ...style,
+    ...visual,
+    ...resolveGraphicOpacity(opacity),
     children: canonicalizeSteps(path.children, canAutomaticallyInterrupt),
     label:
       path.label === undefined

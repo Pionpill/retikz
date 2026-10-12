@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
-import CustomChannelDemo from '../../src/modules/docs/contents/viz/plot/channel/custom-channel/custom-channel.demo';
+import CustomChannelDemo from '../../src/modules/docs/contents/viz/plot/channel/custom-channel/custom-channel';
 import CustomCoordinateDemo from '../../src/modules/docs/contents/viz/plot/coordinate/custom-coordinate/coordinate-custom-bridge.demo';
 import CustomMarkDemo from '../../src/modules/docs/contents/viz/plot/mark/custom-mark/mark-custom.demo';
 import CustomScaleDemo from '../../src/modules/docs/contents/viz/plot/scale/custom-scale/scale-custom.demo';

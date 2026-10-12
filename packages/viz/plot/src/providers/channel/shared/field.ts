@@ -8,7 +8,12 @@ import { utcFormat as d3UtcFormat } from 'd3-time-format';
 import type { FieldCollector, ResolveLabel } from '../../../contract';
 import type { IRPlotChannel, IRPlotMarkLabelContent, IRPlotTextChannel } from '../../../schemas';
 
-/** 取通道值：value 常量优先，否则 field 路径解析 */
+/**
+ * 取通道值：value 常量优先，否则 field 路径解析
+ * @param channel 字段或常量绑定；省略表示未绑定
+ * @param row 当前图元使用的数据行
+ * @returns 常量或字段值；绑定或字段缺失时返回 undefined
+ */
 export const channelValue = (channel: IRPlotChannel | undefined, row: ExternalRow): unknown => {
   if (!channel) return undefined;
   if (channel.value !== undefined) return channel.value;
@@ -39,6 +44,11 @@ const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: Da
 /**
  * text 内容通道某行解析为标签串
  * @description resolveLabel 最高优先；其次 field 解析值；再次 value 常量
+ * @param content 字段或常量文本内容及可选展示格式
+ * @param row 当前图元使用的数据行
+ * @param fieldType 字段类型；temporal 使用 UTC 时间格式，其余使用数值格式
+ * @param resolveLabel 优先于声明内容的运行时标签回调；省略时读取 content
+ * @returns 格式化文本或常量内容；字段为空或没有内容时返回 undefined
  */
 export const labelOf = (
   content: IRPlotTextChannel | IRPlotMarkLabelContent,
@@ -61,7 +71,11 @@ export const labelOf = (
   return undefined;
 };
 
-/** 创建 plot 字段收集器，支持 channel 结构并把所有写入落到传入 Set */
+/**
+ * 创建 plot 字段收集器，支持 channel 结构并把所有写入落到传入 Set
+ * @param fields 接收字段名的可变集合；收集操作直接写入此集合
+ * @returns 共享传入集合的字段收集器，常量绑定不会加入字段
+ */
 export const createFieldCollector = (fields: Set<string>): FieldCollector => ({
   addField: field => {
     if (field !== undefined) fields.add(field);

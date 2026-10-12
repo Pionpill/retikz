@@ -12,8 +12,6 @@ describe('data public API', () => {
 
   it.each([
     'coerceNumber',
-    'isBuiltinFieldFormat',
-    'BUILTIN_FIELD_FORMATS',
     'importDataLineageEvents',
     'withGroupProvenance',
     'createTransformSchema',
@@ -21,7 +19,6 @@ describe('data public API', () => {
     'BuiltinFieldReducerOperationKind',
     'BuiltinReducerOperationSchemas',
     'BuiltinRegressionMethodSchemas',
-    'DataTransformKindSchema',
     'applyDensity',
     'binMetricOperations',
     'groupRowsByFields',

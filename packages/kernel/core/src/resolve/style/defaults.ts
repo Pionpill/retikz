@@ -2,6 +2,7 @@ import { mergeProperties } from '@retikz/foundation';
 
 import type { IRScope, IRScopeDefaults, StyleChannel } from '../../schemas';
 import { mergeArrowDefaults } from './arrow';
+import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
 
 /** 判断当前层是否切断指定默认配置通道 */
@@ -26,7 +27,7 @@ export const resolveScopeDefaults = (scope: IRScope, parent: EffectiveScopeDefau
     const { style: nodeStyle, layout, ...geometry } = defaults.node ?? {};
     node = {
       geometry: { ...node?.geometry, ...mergeProperties([geometry], { shouldOverride }) },
-      style: { ...node?.style, ...mergeProperties([style, nodeStyle], { shouldOverride }) },
+      style: mergeGraphicStyle(node?.style, style, nodeStyle),
       layout: { ...node?.layout, ...mergeProperties([layout], { shouldOverride }) },
     };
   }
@@ -35,7 +36,7 @@ export const resolveScopeDefaults = (scope: IRScope, parent: EffectiveScopeDefau
     const { style: pathStyle, ...geometry } = defaults.path ?? {};
     path = {
       geometry: { ...path?.geometry, ...mergeProperties([geometry], { shouldOverride }) },
-      style: { ...path?.style, ...mergeProperties([style, pathStyle], { shouldOverride }) },
+      style: mergeGraphicStyle(path?.style, style, pathStyle),
     };
   }
 

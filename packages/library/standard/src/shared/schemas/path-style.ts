@@ -1,7 +1,7 @@
 import {
   DrawableInstanceSchema,
   GraphicColorSchema,
-  GraphicElementOpacitySchema,
+  GraphicOpacitySchema,
   GraphicFillSchema,
   GraphicStrokeSchema,
   PathFillSchema,
@@ -12,7 +12,7 @@ import { strictObject } from 'zod';
 /** Standard composite 复用的闭合 Path 描边样式 */
 export const StandardPathStrokeStyleSchema = strictObject({
   ...GraphicColorSchema.shape,
-  ...GraphicElementOpacitySchema.shape,
+  ...GraphicOpacitySchema.shape,
   ...GraphicStrokeSchema.shape,
   ...PathStrokeSchema.shape,
   zIndex: DrawableInstanceSchema.shape.zIndex,

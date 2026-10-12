@@ -14,7 +14,7 @@ const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.ca
   return renderBubbleMarksPreview({
     dimensions,
     coordinateSystem: values.coordinateSystem === 'polar2D' ? 'polar2D' : 'cartesian2D',
-    fillOpacity: values.fillOpacity,
+    opacity: { fill: values.fillOpacity },
     strokeWidth: values.strokeWidth,
   });
 };

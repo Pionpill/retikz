@@ -52,7 +52,7 @@ const StyleOverview: FC<StyleOverviewProps> = props => {
         position={[170, 14]}
         shape="circle"
         layout={{ minimumSize: 76 }}
-        style={{ fill: '#0ea5e9', fillOpacity: 0.8, stroke: 'none', blendMode: 'multiply' }}
+        style={{ fill: '#0ea5e9', stroke: 'none', blendMode: 'multiply', opacity: { fill: 0.8 } }}
       />
     </Layout>
   );

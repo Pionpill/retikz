@@ -35,7 +35,7 @@ export const renderRibbonLabelPreview = (values: RibbonLabelPreviewValues, lang:
           textColor: 'currentColor',
           font: { size: 14, weight: 'bold' },
         }}
-        style={{ fill: '#38bdf8', fillOpacity: 0.62 }}
+        style={{ fill: '#38bdf8', opacity: { fill: 0.62 } }}
       >
         <Step kind="move" to={[-210, -48]} />
         <Step kind="cubic" control1={[-80, -100]} control2={[80, 38]} to={[210, 16]} />

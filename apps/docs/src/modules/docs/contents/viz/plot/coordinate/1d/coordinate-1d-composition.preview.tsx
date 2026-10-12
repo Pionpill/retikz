@@ -51,15 +51,22 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
         stroke="#ffffff"
         strokeWidth={1.5}
         size={values.sourcePointSize}
-        label={values.sourceLabelVisible ? 'thingLabel' : undefined}
-        labelPosition="top"
-        labelDistance={values.sourceLabelDistance}
-        labelTextColor="#475569"
-        labelFont={{
-          size: values.sourceLabelSize,
-          weight: 'bold',
-        }}
-        labelRotate={values.sourceLabelRotate}
+        label={
+          values.sourceLabelVisible
+            ? {
+                field: 'thingLabel',
+                position: 'top',
+                distance: values.sourceLabelDistance,
+                textColor: '#475569',
+                font: {
+                  size: values.sourceLabelSize,
+                  weight: 'bold',
+                },
+                rotate: values.sourceLabelRotate,
+              }
+            : undefined
+        }
+
         zIndex={2}
       />
       <PointMark
@@ -94,15 +101,17 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
         target={{ anchorId: { prefix: 'practice', field: 'practiceId' } }}
         style={{
           color: { kind: 'field', value: 'relationColor' },
-          opacity: {
-            kind: 'constant',
-            value: values.relationOpacity,
-          },
           strokeWidth: {
             kind: 'constant',
             value: values.relationStrokeWidth,
           },
           zIndex: { kind: 'constant', value: 1 },
+          opacity: {
+            overall: {
+              kind: 'constant',
+              value: values.relationOpacity,
+            },
+          },
         }}
         path={{ routing }}
       />

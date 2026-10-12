@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="data"
       position={[-230, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 116, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data 来源</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="plot"
       position={[-70, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ minimumSize: { width: 160, height: 76 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Plot 语义</Text>
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       id="run"
       position={[100, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', opacity: { fill: 0.07 } }}
       layout={{ minimumSize: { width: 145, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>PlotLineageRun</Text>
@@ -47,7 +47,7 @@ const Demo: FC = () => (
       id="tools"
       position={[240, 0]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ minimumSize: { width: 92, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>宿主工具</Text>

@@ -77,8 +77,8 @@ describe('buildPlotIR 装配', () => {
 
     expect(spec.marks[0]).toEqual({
       type: 'point',
-      opacity: { kind: 'field', value: 'density' },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      opacity: { overall: { kind: 'field', value: 'density' } },
     });
   });
 
@@ -155,9 +155,8 @@ describe('buildPlotIR 装配', () => {
         fill="#f8fafc"
         stroke="#0f172a"
         strokeWidth={1.5}
-        fillOpacity={0.7}
-        strokeOpacity={0.9}
-        opacity={0.8}
+        opacity={{ fill: 0.7, stroke: 0.9, overall: 0.8 }}
+
         rotate={45}
         padding={2}
         minimumSize={{ default: 14, width: 16, height: 12 }}
@@ -171,14 +170,16 @@ describe('buildPlotIR 装配', () => {
       fill: { kind: 'constant', value: '#f8fafc' },
       stroke: { kind: 'constant', value: '#0f172a' },
       strokeWidth: { kind: 'constant', value: 1.5 },
-      fillOpacity: { kind: 'constant', value: 0.7 },
-      strokeOpacity: { kind: 'constant', value: 0.9 },
-      opacity: { kind: 'constant', value: 0.8 },
       rotate: { kind: 'constant', value: 45 },
       padding: { kind: 'constant', value: 2 },
       minimumSize: { kind: 'constant', value: { default: 14, width: 16, height: 12 } },
       zIndex: { kind: 'constant', value: 3 },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      opacity: {
+        fill: { kind: 'constant', value: 0.7 },
+        stroke: { kind: 'constant', value: 0.9 },
+        overall: { kind: 'constant', value: 0.8 },
+      },
     });
   });
 
@@ -200,18 +201,18 @@ describe('buildPlotIR 装配', () => {
     expect(spec.marks[0]).toEqual({
       type: 'path',
       strokeWidth: { kind: 'constant', value: 3 },
-      opacity: { kind: 'constant', value: 0.6 },
       lineCap: { kind: 'constant', value: 'round' },
       lineJoin: { kind: 'constant', value: 'bevel' },
       roundedCorners: { kind: 'constant', value: 4 },
       marks: [{ pos: 1, mark: { kind: 'arrow' } }],
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      opacity: { overall: { kind: 'constant', value: 0.6 } },
     });
   });
 
   it('interval core node style props pass through to mark IR', () => {
     const spec = buildPlotIR(
-      <IntervalMark x="month" y="revenue" strokeWidth="weight" fillOpacity={0.5} opacity={0.9} />,
+      <IntervalMark x="month" y="revenue" strokeWidth="weight" opacity={{ fill: 0.5, overall: 0.9 }} />,
       '__plot',
       { dataFieldNames: new Set(['weight']) },
     );
@@ -219,8 +220,7 @@ describe('buildPlotIR 装配', () => {
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       strokeWidth: { kind: 'field', value: 'weight' },
-      fillOpacity: { kind: 'constant', value: 0.5 },
-      opacity: { kind: 'constant', value: 0.9 },
+      opacity: { fill: { kind: 'constant', value: 0.5 }, overall: { kind: 'constant', value: 0.9 } },
     });
   });
 
@@ -256,7 +256,7 @@ describe('buildPlotIR 装配', () => {
         <RelationMark
           source={{ anchorId: { prefix: 'pt', field: 'from' } }}
           target={{ anchorId: { prefix: 'pt', field: 'to' } }}
-          label={{ content: { field: 'label' }, position: 'midway' }}
+          label={{ field: 'label', position: 'midway' }}
           path={{ options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } }}
           color="kind"
         />
@@ -299,7 +299,7 @@ describe('buildPlotIR 装配', () => {
         transform={transform}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
         target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
-        label={{ content: { field: 'deltaLabel' }, position: 0.5 }}
+        label={{ field: 'deltaLabel', position: 0.5 }}
         path={{ routing }}
       />,
       '__plot',
@@ -322,7 +322,7 @@ describe('buildPlotIR 装配', () => {
         kind="ribbon"
         source={{ project: { x: 'sourceX', y: 'sourceY' } }}
         target={{ project: { x: 'targetX', y: 'targetY' } }}
-        style={{ fill: { kind: 'field', value: 'fill' }, opacity: { kind: 'constant', value: 0.8 } }}
+        style={{ fill: { kind: 'field', value: 'fill' }, opacity: { overall: { kind: 'constant', value: 0.8 } } }}
         ribbon={{
           width: { kind: 'field', value: 'width' },
           endWidth: { kind: 'constant', value: 4 },
@@ -337,7 +337,7 @@ describe('buildPlotIR 装配', () => {
       kind: 'ribbon',
       source: { project: { x: 'sourceX', y: 'sourceY' } },
       target: { project: { x: 'targetX', y: 'targetY' } },
-      style: { fill: { kind: 'field', value: 'fill' }, opacity: { kind: 'constant', value: 0.8 } },
+      style: { fill: { kind: 'field', value: 'fill' }, opacity: { overall: { kind: 'constant', value: 0.8 } } },
       ribbon: {
         width: { kind: 'field', value: 'width' },
         endWidth: { kind: 'constant', value: 4 },

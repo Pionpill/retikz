@@ -66,7 +66,7 @@ const makeBareIntensityChannel = (delivered: { value?: number }) =>
   defineNodeChannel<number>({
     channel: 'bareIntensity',
     output: { outputKind: 'number', range: [0, 1] },
-    resolve: () => mark => {
+    resolve: (_ctx, mark) => {
       const binding = (mark as { encoding?: { channels?: Record<string, { value?: unknown }> } }).encoding?.channels
         ?.bareIntensity;
       const value = binding?.value;

@@ -41,7 +41,7 @@ import {
   irToVanillaCode,
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/usage/node-geometry.controls';
-import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
+import { textRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-text.data';
 import { controlModules, demoModules, demoSources, localSourceFiles } from './load-preview-registry';
 
 /** Source views include the authoring wrapper and its shared preview implementation */
@@ -1446,13 +1446,7 @@ describe('preview controls registry', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
 
     for (const language of ['zh', 'en'] as const) {
-      const definition = resolvePreviewControls(
-        controlModules[
-          language === 'zh'
-            ? buildControlsKey(segments, 'builtin-node-text')
-            : buildLangControlsKey(segments, 'builtin-node-text', 'en')
-        ],
-      );
+      const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node')], language);
 
       expect(definition?.presentation, language).toBe('panel');
 
@@ -1500,9 +1494,9 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('内置节点 playground 的文本默认形成宽度不同的多行，使文字对齐可见', () => {
+  it('内置文字 playground 的文本默认形成宽度不同的多行，使文字对齐可见', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
-    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-text')]);
 
     expect(definition?.presentation).toBe('panel');
 
@@ -1511,7 +1505,7 @@ describe('preview controls registry', () => {
     const defaults = Object.fromEntries(
       getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
     );
-    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+    const compiled = compileBuiltinText(textRows[0].word, {
       align: defaults.align as 'start' | 'middle' | 'end',
       fontSize: defaults.fontSize as number,
       lineHeight: defaults.lineHeight as number,
@@ -1523,9 +1517,9 @@ describe('preview controls registry', () => {
     expect(lineLengths.size).toBeGreaterThan(1);
   });
 
-  it('内置节点 playground 的默认行高不会让多行文字重叠', () => {
+  it('内置文字 playground 的默认行高不会让多行文字重叠', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
-    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-text')]);
 
     expect(definition?.presentation).toBe('panel');
 
@@ -1534,7 +1528,7 @@ describe('preview controls registry', () => {
     const defaults = Object.fromEntries(
       getPreviewControlFields(definition).map(field => [field.id, field.defaultValue]),
     );
-    const compiled = compileBuiltinText(nodeTextRows[0].word, {
+    const compiled = compileBuiltinText(textRows[0].word, {
       align: defaults.align as 'start' | 'middle' | 'end',
       fontSize: defaults.fontSize as number,
       lineHeight: defaults.lineHeight as number,
@@ -1547,9 +1541,9 @@ describe('preview controls registry', () => {
     );
   });
 
-  it('内置节点 playground 的文字宽度范围会改变实际折行数', () => {
+  it('内置文字 playground 的文字宽度范围会改变实际折行数', () => {
     const segments = ['viz', 'plot', 'channel', 'builtin'];
-    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-node-text')]);
+    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'builtin-text')]);
 
     expect(definition?.presentation).toBe('panel');
 
@@ -1580,11 +1574,11 @@ describe('preview controls registry', () => {
       fontSize: fontSize.defaultValue,
       lineHeight: lineHeight.defaultValue,
     };
-    const narrow = compileBuiltinText(nodeTextRows[0].word, {
+    const narrow = compileBuiltinText(textRows[0].word, {
       ...common,
       maxTextWidth: maxTextWidth.min,
     });
-    const wide = compileBuiltinText(nodeTextRows[0].word, {
+    const wide = compileBuiltinText(textRows[0].word, {
       ...common,
       maxTextWidth: maxTextWidth.max,
     });
@@ -2091,13 +2085,13 @@ describe('preview controls registry', () => {
 
     if (!zhContract || !enContract) return;
 
-    expect(zhContract.canonicalValues.placementEnabled).toBe(false);
-    expect(enContract.canonicalValues.placementEnabled).toBe(false);
+    expect(zhContract.canonicalValues.positionEnabled).toBe(false);
+    expect(enContract.canonicalValues.positionEnabled).toBe(false);
     expect(
-      getPreviewControlFields(zhContract.controls).find(field => field.id === 'placementEnabled')?.defaultValue,
+      getPreviewControlFields(zhContract.controls).find(field => field.id === 'positionEnabled')?.defaultValue,
     ).toBe(false);
     expect(
-      getPreviewControlFields(enContract.controls).find(field => field.id === 'placementEnabled')?.defaultValue,
+      getPreviewControlFields(enContract.controls).find(field => field.id === 'positionEnabled')?.defaultValue,
     ).toBe(false);
     expect(getPreviewControlFields(zhContract.controls).find(field => field.id === 'selfAnchor')?.label).toBe(
       '自身锚点',
@@ -2118,7 +2112,7 @@ describe('preview controls registry', () => {
 
     const visibleFieldIds = (
       definition: typeof zhDefinition,
-      values: { operation: string; placementEnabled: boolean; selfAnchor?: string; pivot?: string },
+      values: { operation: string; positionEnabled: boolean; selfAnchor?: string; pivot?: string },
     ) =>
       definition?.presentation === 'panel'
         ? resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
@@ -2137,33 +2131,35 @@ describe('preview controls registry', () => {
     ];
 
     for (const operation of operations) {
-      expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: true })).toContain('selfAnchor');
-      expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: false })).not.toContain('selfAnchor');
+      expect(visibleFieldIds(zhDefinition, { operation, positionEnabled: true })).toContain('selfAnchor');
+      expect(visibleFieldIds(zhDefinition, { operation, positionEnabled: false })).not.toContain('selfAnchor');
     }
 
     expect(
-      visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: true, selfAnchor: 'center' }),
-    ).toEqual(['operation', 'placementEnabled', 'placementTarget', 'selfAnchor', 'translateX', 'translateY']);
+      visibleFieldIds(zhDefinition, { operation: 'translate', positionEnabled: true, selfAnchor: 'center' }),
+    ).toEqual(['operation', 'positionEnabled', 'positionTarget', 'selfAnchor', 'translateX', 'translateY']);
     expect(
-      visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: true, selfAnchor: 'explicit' }),
+      visibleFieldIds(zhDefinition, { operation: 'translate', positionEnabled: true, selfAnchor: 'explicit' }),
     ).toEqual([
       'operation',
-      'placementEnabled',
-      'placementTarget',
+      'positionEnabled',
+      'positionTarget',
       'selfAnchor',
       'selfPoint',
       'translateX',
       'translateY',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'translateX',
       'translateY',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'polar-translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'polar-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'referent',
       'polarAngle',
       'distance',
@@ -2171,47 +2167,52 @@ describe('preview controls registry', () => {
     expect(
       visibleFieldIds(zhDefinition, {
         operation: 'polar-translate',
-        placementEnabled: true,
+        positionEnabled: true,
         selfAnchor: 'center',
       }),
-    ).toEqual(['operation', 'placementEnabled', 'placementTarget', 'selfAnchor', 'polarAngle', 'distance']);
-    expect(visibleFieldIds(zhDefinition, { operation: 'at-translate', placementEnabled: false })).toEqual([
+    ).toEqual(['operation', 'positionEnabled', 'positionTarget', 'selfAnchor', 'polarAngle', 'distance']);
+    expect(visibleFieldIds(zhDefinition, { operation: 'at-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'referent',
       'distance',
       'direction',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'offset-translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'offset-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'referent',
       'offsetX',
       'offsetY',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'between-translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'between-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'fraction',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', placementEnabled: false, pivot: 'origin' })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', positionEnabled: false, pivot: 'origin' })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'rotateDegrees',
       'pivot',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', placementEnabled: true, pivot: 'explicit' })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', positionEnabled: true, pivot: 'explicit' })).toEqual([
       'operation',
-      'placementEnabled',
-      'placementTarget',
+      'positionEnabled',
+      'positionTarget',
       'selfAnchor',
       'rotateDegrees',
       'pivot',
       'pivotPoint',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'scale', placementEnabled: false, pivot: 'center' })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'scale', positionEnabled: false, pivot: 'center' })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'scaleX',
       'scaleY',
       'pivot',

@@ -25,15 +25,15 @@ export const TableCellAppearanceTracePath = {
   /** Cell 内容填充 */
   ContentFill: '/content/defaults/style/fill',
   /** Cell 内容填充不透明度 */
-  ContentFillOpacity: '/content/defaults/style/fillOpacity',
+  ContentFillOpacity: '/content/defaults/style/opacity/fill',
   /** Cell 内容描边 */
   ContentStroke: '/content/defaults/style/stroke',
   /** Cell 内容描边宽度 */
   ContentStrokeWidth: '/content/defaults/style/strokeWidth',
   /** Cell 内容描边不透明度 */
-  ContentStrokeOpacity: '/content/defaults/style/strokeOpacity',
+  ContentStrokeOpacity: '/content/defaults/style/opacity/stroke',
   /** Cell 内容整体不透明度 */
-  ContentOpacity: '/content/defaults/style/opacity',
+  ContentOpacity: '/content/defaults/style/opacity/overall',
   /** Cell 内容样式重置配置 */
   ContentResetStyle: '/content/defaults/reset',
   /** Node 默认主颜色 */
@@ -41,15 +41,15 @@ export const TableCellAppearanceTracePath = {
   /** Node 默认填充 */
   ContentNodeDefaultFill: '/content/defaults/node/style/fill',
   /** Node 默认填充不透明度 */
-  ContentNodeDefaultFillOpacity: '/content/defaults/node/style/fillOpacity',
+  ContentNodeDefaultFillOpacity: '/content/defaults/node/style/opacity/fill',
   /** Node 默认描边 */
   ContentNodeDefaultStroke: '/content/defaults/node/style/stroke',
   /** Node 默认描边宽度 */
   ContentNodeDefaultStrokeWidth: '/content/defaults/node/style/strokeWidth',
   /** Node 默认描边不透明度 */
-  ContentNodeDefaultStrokeOpacity: '/content/defaults/node/style/strokeOpacity',
+  ContentNodeDefaultStrokeOpacity: '/content/defaults/node/style/opacity/stroke',
   /** Node 默认整体不透明度 */
-  ContentNodeDefaultOpacity: '/content/defaults/node/style/opacity',
+  ContentNodeDefaultOpacity: '/content/defaults/node/style/opacity/overall',
   /** Node 默认阴影 */
   ContentNodeDefaultShadow: '/content/defaults/node/style/shadow',
   /** Node 默认混合模式 */
@@ -101,15 +101,15 @@ export const TableCellAppearanceTracePath = {
   /** Path 默认填充 */
   ContentPathDefaultFill: '/content/defaults/path/style/fill',
   /** Path 默认填充不透明度 */
-  ContentPathDefaultFillOpacity: '/content/defaults/path/style/fillOpacity',
+  ContentPathDefaultFillOpacity: '/content/defaults/path/style/opacity/fill',
   /** Path 默认描边 */
   ContentPathDefaultStroke: '/content/defaults/path/style/stroke',
   /** Path 默认描边宽度 */
   ContentPathDefaultStrokeWidth: '/content/defaults/path/style/strokeWidth',
   /** Path 默认描边不透明度 */
-  ContentPathDefaultStrokeOpacity: '/content/defaults/path/style/strokeOpacity',
+  ContentPathDefaultStrokeOpacity: '/content/defaults/path/style/opacity/stroke',
   /** Path 默认整体不透明度 */
-  ContentPathDefaultOpacity: '/content/defaults/path/style/opacity',
+  ContentPathDefaultOpacity: '/content/defaults/path/style/opacity/overall',
   /** Path 默认阴影 */
   ContentPathDefaultShadow: '/content/defaults/path/style/shadow',
   /** Path 默认混合模式 */

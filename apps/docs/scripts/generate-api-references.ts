@@ -4,6 +4,7 @@ import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeBranchApiReferenceMdx } from './api-reference/branch';
 import { writeContextualReferences } from './api-reference/contextual-reference';
 import { writeDataModelApiReferenceMdx } from './api-reference/data-model';
+import { writeDataProvenanceApiReferenceMdx } from './api-reference/data-provenance';
 import { writeDataTransformApiReferenceMdx } from './api-reference/data-transform';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
@@ -16,6 +17,7 @@ import { writeLayoutComponentApiReferences } from './api-reference/layout-compon
 import { writeManualReferences } from './api-reference/manual-reference';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
+import { writePlotChannelApiReferenceMdx } from './api-reference/plot-channel';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
 import { writeRuntimeApiReferenceMdx } from './api-reference/runtime';
@@ -104,4 +106,7 @@ await writeDataTransformApiReferenceMdx(
 );
 
 writeManualReferences(path.resolve(docsRoot, 'src/modules/docs/contents'));
+await writeDataProvenanceApiReferenceMdx();
 writeContextualReferences(path.resolve(docsRoot, 'src/modules/docs/contents'));
+
+await writePlotChannelApiReferenceMdx();

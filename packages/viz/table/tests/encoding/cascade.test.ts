@@ -4,6 +4,7 @@ import { strictObject } from 'zod';
 import { defineCellVisualScale, resolveTableThemeDefaults } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
+import { cascadeTableCellAppearance } from '../../src/pipeline/rule/cascade';
 
 const tableDefaults = resolveTableThemeDefaults();
 
@@ -133,5 +134,30 @@ describe('Table visual encoding cascade', () => {
     expect(result.legendDescriptors).toEqual([]);
     expect(result.cells[0].trace).not.toHaveProperty('encodingIds');
     expect(result.cells[0].appearance.background?.fill).toBe('#ffffff');
+  });
+});
+
+it('content opacity inherits by member and records each winner', () => {
+  const first = cascadeTableCellAppearance(
+    {},
+    {},
+    {
+      content: { defaults: { style: { opacity: { fill: 0.4, stroke: 0.8 } } } },
+    },
+    { kind: 'defaults', path: '/defaults/content' },
+  );
+  const second = cascadeTableCellAppearance(
+    first.appearance,
+    first.trace,
+    {
+      content: { defaults: { style: { opacity: 0.5 } } },
+    },
+    { kind: 'structure' },
+  );
+  expect(second.appearance.content?.defaults?.style?.opacity).toEqual({ fill: 0.4, stroke: 0.8, overall: 0.5 });
+  expect(second.trace).toMatchObject({
+    '/content/defaults/style/opacity/fill': { kind: 'defaults', path: '/defaults/content' },
+    '/content/defaults/style/opacity/stroke': { kind: 'defaults', path: '/defaults/content' },
+    '/content/defaults/style/opacity/overall': { kind: 'structure' },
   });
 });

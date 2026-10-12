@@ -2,7 +2,7 @@ import { BuiltinRegressionMethod } from '@retikz/data';
 
 import type { Lang } from '@/i18n';
 
-import { regressionControlContractOf } from './regression-demo.controls';
+import { regressionControlContractOf } from './regression-contract';
 
 /** 按文档语言装配quadratic的固定方法控件 */
 export const createPreviewControlContract = (lang: Lang = 'zh') =>

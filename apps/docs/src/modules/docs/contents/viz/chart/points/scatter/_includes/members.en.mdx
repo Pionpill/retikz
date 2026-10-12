@@ -24,22 +24,22 @@ Mapping objects may reference scales, aggregate, or transform data as supported 
 
 Use `ScatterProperties` in React, `properties` in the Vanilla API, and `recipe.properties` in direct IR. Properties set constant appearance; data-driven values belong in encodings.
 
-| Category       | Property        | Type                                                     | Description                                                                                             |
-| -------------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Shape and size | `size`          | `number`                                                 | Uniform point radius; must be nonnegative                                                               |
-|                | `shape`         | `string`                                                 | Registered shape name                                                                                   |
-| Color and fill | `color`         | `string`                                                 | Sets the primary color                                                                                  |
-|                | `fill`          | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                            |
-| Stroke         | `stroke`        | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                          |
-|                | `strokeWidth`   | `number`                                                 | Stroke width; must be nonnegative                                                                       |
-|                | `dashed`        | `boolean`                                                | Enables a dashed stroke                                                                                 |
-|                | `dotted`        | `boolean`                                                | Enables a dotted stroke                                                                                 |
-|                | `dashPattern`   | `Array<number>`                                          | Custom dash sequence; at least one nonnegative entry                                                    |
-| Opacity        | `opacity`       | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
-|                | `fillOpacity`   | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
-|                | `strokeOpacity` | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
-| Padding        | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
-|                | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
+| Category       | Property         | Type                                                     | Description                                                                                             |
+| -------------- | ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Shape and size | `size`           | `number`                                                 | Uniform point radius; must be nonnegative                                                               |
+|                | `shape`          | `string`                                                 | Registered shape name                                                                                   |
+| Color and fill | `color`          | `string`                                                 | Sets the primary color                                                                                  |
+|                | `fill`           | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                            |
+| Stroke         | `stroke`         | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                          |
+|                | `strokeWidth`    | `number`                                                 | Stroke width; must be nonnegative                                                                       |
+|                | `dashed`         | `boolean`                                                | Enables a dashed stroke                                                                                 |
+|                | `dotted`         | `boolean`                                                | Enables a dotted stroke                                                                                 |
+|                | `dashPattern`    | `Array<number>`                                          | Custom dash sequence; at least one nonnegative entry                                                    |
+| Opacity        | `opacity`        | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
+|                | `opacity.fill`   | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
+|                | `opacity.stroke` | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
+| Padding        | `autoPadding`    | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+|                | `domainPadding`  | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
 
 Shared font, label, transform, and shadow options are not explained individually here; see the [properties schema](#scatterproperties--irscatterchartproperties--scatterchartpropertiesschema) for all fields. See [shared point-chart padding](/viz/chart/points#automatic-edge-padding) for padding behavior and limitations.
 

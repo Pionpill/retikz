@@ -49,7 +49,7 @@ const PointAutoPadding: FC<PointAutoPaddingProps> = props => {
                   scale: { operation: { type: 'sqrt', name: 'radius', domain: [4, 32], range: [4, 32] } },
                 },
               },
-              properties: { autoPadding, fillOpacity: 0.6 },
+              properties: { autoPadding, opacity: { fill: 0.6 } },
             }}
           />
         </div>

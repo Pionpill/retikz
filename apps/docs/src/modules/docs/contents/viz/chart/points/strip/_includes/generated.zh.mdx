@@ -76,8 +76,8 @@ export type IRStripChartEncodings = ZodInfer<typeof StripChartEncodingsSchema>;
 |            | `dotted`              | `boolean`                                                | 启用点线描边                                                     |
 |            | `dashPattern`         | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                               |
 | 透明度     | `opacity`             | `number`                                                 | 整体透明度，范围 0–1                                             |
-|            | `fillOpacity`         | `number`                                                 | 填充透明度，范围 0–1                                             |
-|            | `strokeOpacity`       | `number`                                                 | 描边透明度，范围 0–1                                             |
+|            | `opacity.fill`        | `number`                                                 | 填充透明度，范围 0–1                                             |
+|            | `opacity.stroke`      | `number`                                                 | 描边透明度，范围 0–1                                             |
 | 散布       | `jitter.span`         | `IRStripChartJitter['span']`                             | 总散布宽度；数字使用角色输出单位，ratio 使用刻度间距的 0–1 比例  |
 |            | `jitter.distribution` | `IRStripChartJitter['distribution']`                     | 均匀、截断正态分布；sigma 大于 0，相对散布半宽                   |
 |            | `jitter.seed`         | `number`                                                 | 相同有序数据与配置下稳定复现散布；省略为 0                       |
@@ -110,8 +110,8 @@ export type IRStripChartProperties = ZodInfer<typeof StripChartPropertiesSchema>
     fill: '填充颜色或画笔',
     stroke: '描边颜色或画笔',
     strokeWidth: '描边宽度',
-    fillOpacity: '填充不透明度，0 到 1',
-    strokeOpacity: '描边不透明度，0 到 1',
+    'opacity.fill': '填充不透明度，0 到 1',
+    'opacity.stroke': '描边不透明度，0 到 1',
     opacity: '整体不透明度，0 到 1',
     rotate: '旋转角度',
     minimumSize: '最小尺寸',

@@ -146,7 +146,7 @@ Path 则直接把同一个对象传给目标 `<Step>` 的 `label`：
 
 省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。断口默认从标签视觉边界向两侧各额外留出 `4` user units；用 `gap` 覆盖该值，`gap: 0` 表示不加额外留白。
 
-任意有效 `fill`（包括 `style.fill: 'transparent'`，以及设置 fill 后再令 `style.fillOpacity: 0`）都会关闭自动断线，且 `interrupt: true` 会明确报错。Ribbon、custom Path kind 与其它非内置 Stroke Path 上的任意显式布尔值同样明确报错。断口不移动标签、marks、dash 或端点箭头，也不处理标签与箭头 / mark 的碰撞。
+任意有效 `fill`（包括 `style.fill: 'transparent'`，以及设置 fill 后再令 `style.opacity.fill: 0`）都会关闭自动断线，且 `interrupt: true` 会明确报错。Ribbon、custom Path kind 与其它非内置 Stroke Path 上的任意显式布尔值同样明确报错。断口不移动标签、marks、dash 或端点箭头，也不处理标签与箭头 / mark 的碰撞。
 
 曲线在参数处取点、按距离反解参数和保形裁切是 [`@retikz/math` 的曲线段算法](/kernel/packages/math/algorithms#曲线切片)。它只处理 纯几何数据；标签是否断线、断口间距和 Path 输出仍由 Core 决定。
 

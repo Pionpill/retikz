@@ -8,17 +8,20 @@ import { BuiltinPointStylePreview } from './builtin-point-style.preview';
 /** 注册回退使用的点样式 controls */
 export const previewControls = builtinPointStyleControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values =>
-  BuiltinPointStylePreview({
-    paintChannel: values.paintChannel,
-    paint: values.paint,
-    strokeWidth: values.strokeWidth,
-    opacity: values.opacity,
-    fillOpacity: values.fillOpacity,
-    strokeOpacity: values.strokeOpacity,
-    size: values.size,
-    shape: values.shape,
-  }),
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) =>
+  BuiltinPointStylePreview(
+    {
+      paintChannel: values.paintChannel,
+      paint: values.paint,
+      strokeWidth: values.strokeWidth,
+      opacity: values.opacity,
+      fillOpacity: values.fillOpacity,
+      strokeOpacity: values.strokeOpacity,
+      size: values.size,
+      shape: values.shape,
+    },
+    dimensions,
+  ),
 );
 
 /** canonical 状态派生的稳定源码配置 */

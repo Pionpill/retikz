@@ -1568,9 +1568,6 @@ importers:
 
   packages/viz/data:
     dependencies:
-      '@retikz/core':
-        specifier: workspace:^
-        version: link:../../kernel/core
       '@retikz/foundation':
         specifier: workspace:^
         version: link:../../kernel/foundation

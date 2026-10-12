@@ -162,9 +162,9 @@ const FlowEntityStyleFieldsSchema = EntitySchema.shape.style.unwrap().pick({
   textColor: true,
   fill: true,
   stroke: true,
-  fillOpacity: true,
+
   strokeWidth: true,
-  strokeOpacity: true,
+
   opacity: true,
   shadow: true,
   blendMode: true,

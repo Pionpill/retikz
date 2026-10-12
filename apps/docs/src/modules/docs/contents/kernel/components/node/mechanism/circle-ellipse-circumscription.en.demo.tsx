@@ -15,7 +15,7 @@ const Demo: FC = () => (
     <Ellipse
       center={[-170, -10]}
       radius={{ x: 73.54, y: 33.94 }}
-      style={{ stroke: 'dodgerblue', strokeWidth: 1.5, fill: 'dodgerblue', fillOpacity: 0.06 }}
+      style={{ stroke: 'dodgerblue', strokeWidth: 1.5, fill: 'dodgerblue', opacity: { fill: 0.06 } }}
     />
     <Rectangle
       center={[-170, -10]}
@@ -44,7 +44,7 @@ const Demo: FC = () => (
     <Circle
       center={[170, -10]}
       radius={57.27}
-      style={{ stroke: 'darkorange', strokeWidth: 1.5, fill: 'darkorange', fillOpacity: 0.06 }}
+      style={{ stroke: 'darkorange', strokeWidth: 1.5, fill: 'darkorange', opacity: { fill: 0.06 } }}
     />
     <Rectangle
       center={[170, -10]}

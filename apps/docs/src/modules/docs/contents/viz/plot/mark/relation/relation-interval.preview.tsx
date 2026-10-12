@@ -47,11 +47,13 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
           color="phase"
           stroke="#ffffff"
           strokeWidth={0.8}
-          label="label"
-          labelPosition={values[RELATION_INTERVAL_CONTROL_IDS.barLabelPosition]}
-          labelDistance={4}
-          labelTextColor={values[RELATION_INTERVAL_CONTROL_IDS.barLabelColor]}
-          labelFont={{ size: 10, weight: 'bold' }}
+          label={{
+            field: 'label',
+            position: values[RELATION_INTERVAL_CONTROL_IDS.barLabelPosition],
+            distance: 4,
+            textColor: values[RELATION_INTERVAL_CONTROL_IDS.barLabelColor],
+            font: { size: 10, weight: 'bold' },
+          }}
         />
         <RelationMark
           transform={[{ operation: relationDecreaseOperation }]}

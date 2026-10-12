@@ -10,7 +10,7 @@ import { layoutRootScopeI18n } from './layout-root-scope.i18n';
 export type LayoutRootScopeProps = Readonly<{ lang?: Lang }>;
 
 const defaults = {
-  node: { style: { fill: 'dodgerblue', fillOpacity: 0.12, stroke: 'gray' } },
+  node: { style: { fill: 'dodgerblue', stroke: 'gray', opacity: { fill: 0.12 } } },
 } satisfies ScopeProps['defaults'];
 
 const LayoutRootScope: FC<LayoutRootScopeProps> = props => {

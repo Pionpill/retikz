@@ -24,10 +24,7 @@ export const IntervalSectorPreview = (values: IntervalSectorPreviewValues) => {
         pull="pull"
         stroke="#ffffff"
         strokeWidth={1.5}
-        label={label}
-        labelPosition="right"
-        labelDistance={8}
-        labelFont={{ size: 10, weight: 'bold' }}
+        label={{ field: label, position: 'right', distance: 8, font: { size: 10, weight: 'bold' } }}
       />
     </Plot>
   );

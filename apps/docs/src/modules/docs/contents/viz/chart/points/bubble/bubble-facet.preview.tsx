@@ -11,12 +11,12 @@ export type BubbleFacetPreviewOptions = {
   dimensions?: { width: number; height: number };
   header: boolean;
   panelGap: number;
-  fillOpacity: number;
+  opacity: { fill: number };
 };
 
 /** 按大洲分面比较收入、寿命和人口规模 */
 export const renderBubbleFacetPreview = (options: BubbleFacetPreviewOptions) => {
-  const { lang, dimensions, header, panelGap, fillOpacity } = options;
+  const { lang, dimensions, header, panelGap, opacity } = options;
   const text = bubbleFacetI18n[lang];
   const bounds = dimensions ?? { width: 720, height: 568 };
 
@@ -34,7 +34,7 @@ export const renderBubbleFacetPreview = (options: BubbleFacetPreviewOptions) => 
           row: 'continent',
           facet: { header: { row: header }, spacing: { panelGap } },
         },
-        properties: { fillOpacity },
+        properties: { opacity },
       }}
     />
   );
