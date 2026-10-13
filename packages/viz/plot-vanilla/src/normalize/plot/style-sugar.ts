@@ -1,4 +1,5 @@
 import type { IRAxisScale, IRBoxSize, IRPaint } from '@retikz/core';
+import type { IRPlotMarkOpacityStyle, IRPlotPointOpacityStyle } from '@retikz/plot';
 import type {
   IRPlotChannel,
   IRPlotEncoding,
@@ -15,6 +16,7 @@ import type {
 import type { MarkValueKind } from '@retikz/plot';
 
 import type { PlotAuthoringContext } from './contracts';
+import type { InputPlotOpacity } from './input-marks';
 import type {
   InputPlotCoreNodeChannels,
   InputPlotCorePathChannels,
@@ -378,7 +380,6 @@ export const pathStylePropsOf = (
 
   put('fill', paintStyleOf<IRPlotPointFillStyle>(props.fill, 'fill', context));
   put('stroke', paintStyleOf<IRPlotPointStrokeStyle>(props.stroke, 'stroke', context));
-  put('strokeOpacity', numberStyleOf(props.strokeOpacity, 'strokeOpacity', context));
   put('zIndex', numberStyleOf(props.zIndex, 'zIndex', context));
   put('rotate', numberStyleOf(props.rotate, 'rotate', context));
   put('scale', jsonStyleOf(props.scale, 'scale', context));
@@ -441,4 +442,20 @@ export const shapeStyleOf = (
   if (context.fieldNames.has(value)) return { kind: 'field', value };
 
   return { kind: 'constant', value };
+};
+
+/** 把透明度单值或详细输入组装为逐项绑定 */
+export const opacityStyleOf = (
+  input: InputPlotOpacity | undefined,
+  context: StyleSugarContext,
+): IRPlotMarkOpacityStyle | undefined => {
+  if (input === undefined) return undefined;
+  const factors =
+    typeof input === 'number' || typeof input === 'string' || 'kind' in input ? { overall: input } : input;
+  const result: IRPlotMarkOpacityStyle = {};
+  for (const key of ['overall', 'fill', 'stroke'] as const) {
+    const binding = numberStyleOf<IRPlotPointOpacityStyle>(factors[key], `opacity.${key}`, context);
+    if (binding !== undefined) result[key] = binding;
+  }
+  return result;
 };

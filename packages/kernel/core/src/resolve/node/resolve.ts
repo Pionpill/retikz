@@ -14,8 +14,9 @@ import type {
 } from '../../schemas';
 import { NodeSchema } from '../../schemas';
 import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
-import { resolveDashPattern, resolveDropShadow } from '../style';
+import { resolveGraphicOpacity } from '../style';
+import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
+import type { EffectiveLabelDefault } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
@@ -108,7 +109,7 @@ type PrimaryColorResolvedMaterializedNode = Omit<PrimaryColorResolvedNode, 'labe
 /** 按有效 labelDefault 补齐一个标签，并保留显式字段优先级 */
 const expandNodeLabel = (
   label: IRNodeLabel,
-  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDefault: EffectiveLabelDefault,
   labelDistance: number,
 ): MaterializedNodeLabel => {
   const normalized: MaterializedNodeLabel = {
@@ -147,7 +148,7 @@ const expandNodeLabel = (
 /** 展开单标签与标签数组为等价数组写法 */
 const expandNodeLabels = (
   label: IRNode['label'],
-  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDefault: EffectiveLabelDefault,
   labelDistance: number,
 ): Array<MaterializedNodeLabel> | undefined =>
   label === undefined
@@ -156,11 +157,13 @@ const expandNodeLabels = (
       ? label.map(item => expandNodeLabel(item, labelDefault, labelDistance))
       : [expandNodeLabel(label, labelDefault, labelDistance)];
 
-/** 将 Node 的持久化紧凑字段展开为布局可直接消费的完整形态 */
-const canonicalizeNode = (node: ResolvedNodeSource): CanonicalNode => {
+/** 展开 Node 的紧凑字段与默认值，paint 随后绑定到具体能力 */
+const expandNodeFields = (
+  node: ResolvedNodeSource,
+): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<ResolvedNodeSource['style']>, 'fill' | 'stroke'> => {
   const { style, layout, ...structure } = node;
-  const { dashed, dotted, ...visual } = style ?? {};
-  const source = { ...structure, ...visual, ...layout };
+  const { dashed, dotted, opacity, ...visual } = style ?? {};
+  const source = { ...structure, ...visual, ...resolveGraphicOpacity(opacity), ...layout };
 
   return {
     ...source,
@@ -328,7 +331,7 @@ const resolveNodeLabelColors = (
 /** 在 auto-contrast 后确定正文、label run 与 pin 的派生颜色 */
 const resolveNodeDependentColors = (
   node: PrimaryColorResolvedMaterializedNode,
-  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDefault: EffectiveLabelDefault,
   context: NodeColorContext,
   labelWasArray: boolean,
 ): ResolvedNodeSource => {
@@ -365,8 +368,8 @@ const resolveNodeDependentColors = (
 
 /** 解析 Node 的样式、静态默认值、provider 与布局前 canonical 形态 */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
-  const effectiveNode = resolveEffectiveNodeStyle(source, context.styleFrames);
-  const effectiveLabelDefault = resolveEffectiveLabelDefault(context.styleFrames);
+  const effectiveNode = resolveEffectiveNodeStyle(source, context.scopeDefaults);
+  const effectiveLabelDefault = context.scopeDefaults.label ?? {};
   const labelWasArray = Array.isArray(effectiveNode.label);
   const labelsMaterialized: MaterializedNodeSource = {
     ...effectiveNode,
@@ -380,7 +383,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     context,
     labelWasArray,
   );
-  const node = canonicalizeNode(dependentColorsResolved);
+  const node = expandNodeFields(dependentColorsResolved);
   if (node.width !== undefined && node.width < node.minimumSize.width) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
@@ -412,10 +415,5 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     round: context.round,
     irPath: context.irPath,
   });
-  const paint = {
-    ...(fill === undefined ? {} : { fill }),
-    ...(stroke === undefined ? {} : { stroke }),
-  };
-
-  return { irPath: context.irPath, node, shape, boundary, paint };
+  return { irPath: context.irPath, node: { ...node, fill, stroke }, shape, boundary };
 };

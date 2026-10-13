@@ -626,8 +626,8 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
       marks: [
         {
           type: 'point',
-          opacity: { kind: 'field', value: 'o' },
           encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+          opacity: { overall: { kind: 'field', value: 'o' } },
         },
       ],
       guides: [{ type: 'legend', channel: 'opacity' }],
@@ -643,9 +643,13 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
     expect(legend).toBeDefined();
 
     for (const swatch of swatchNodesOf(legend)) {
-      if (swatch.style?.fillOpacity !== undefined) {
-        expect(swatch.style.fillOpacity).toBeGreaterThanOrEqual(0);
-        expect(swatch.style.fillOpacity).toBeLessThanOrEqual(1);
+      if ((typeof swatch.style?.opacity === 'object' ? swatch.style.opacity.fill : undefined) !== undefined) {
+        expect(
+          typeof swatch.style?.opacity === 'object' ? swatch.style.opacity.fill : undefined,
+        ).toBeGreaterThanOrEqual(0);
+        expect(typeof swatch.style?.opacity === 'object' ? swatch.style.opacity.fill : undefined).toBeLessThanOrEqual(
+          1,
+        );
       }
     }
   });

@@ -27,8 +27,8 @@ export const renderTreePreview = (values: TreePreviewValues) => {
               }
         }
         layout={{ direction: values.direction, levelGap: Number(values.gap) }}
-        {...(values.styled ? { node: { style: { stroke: 'dodgerblue', strokeWidth: 2 } } } : {})}
-        connection={{
+        {...(values.styled ? { defaultNode: { style: { stroke: 'dodgerblue', strokeWidth: 2 } } } : {})}
+        defaultConnection={{
           path: {
             marks: values.arrows ? [{ pos: 1, mark: { kind: 'arrow' } }] : [],
             ...(values.styled ? { style: { stroke: 'darkorange', dashPattern: [4, 3] } } : {}),

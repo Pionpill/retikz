@@ -31,24 +31,21 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 computeScopeBoundingBox 单元测试 */
 const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
-  id: 'test',
-  shapeName: 'rectangle',
-  shapeDef: BUILTIN_SHAPES.rectangle,
-  rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
-  contentCenter: [cx, cy],
-  rotateDeg: 0,
-  margin: boxInsets(0),
-  textWidth: w,
-  textHeight: h,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-  boundaryResolution: {
+  node: { id: 'test' },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  geometry: {
+    rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
+    contentCenter: [cx, cy],
+    margin: boxInsets(0),
+    contentSize: { width: w, height: h },
+  },
+  boundary: {
     name: BUILTIN_SHAPES.rectangle.name,
     definition: BUILTIN_SHAPES.rectangle,
     params: {},
     isShape: true,
   },
+  irPath: 'synthetic.test',
 });
 
 describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', () => {
@@ -81,16 +78,16 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
   it('createScopeRectangleLayout(bbox=null, fallback) → 0×0 占位 layout 落在 fallback 点', () => {
     const layout = createScopeRectangleLayout({ id: 'g', bbox: null, fallbackOrigin: [50, 50] });
 
-    expect(layout.id).toBe('g');
-    expect(layout.shapeName).toBe('rectangle');
-    expect(layout.shapeDef).toBe(BUILTIN_SHAPES.rectangle);
-    expect(layout.rect.x).toBe(50);
-    expect(layout.rect.y).toBe(50);
-    expect(layout.rect.width).toBe(0);
-    expect(layout.rect.height).toBe(0);
-    expect(layout.rect.rotate).toBe(0);
-    expect(layout.margin).toEqual(boxInsets(0));
-    expect(layout.fontSize).toBe(0);
+    expect(layout.node.id).toBe('g');
+    expect(layout.shape.name).toBe('rectangle');
+    expect(layout.shape.definition).toBe(BUILTIN_SHAPES.rectangle);
+    expect(layout.geometry.rect.x).toBe(50);
+    expect(layout.geometry.rect.y).toBe(50);
+    expect(layout.geometry.rect.width).toBe(0);
+    expect(layout.geometry.rect.height).toBe(0);
+    expect(layout.geometry.rect.rotate).toBe(0);
+    expect(layout.geometry.margin).toEqual(boxInsets(0));
+    expect(layout.text).toBeUndefined();
   });
 
   it('createScopeRectangleLayout(bbox=有效) → rect 字段反映 bbox', () => {
@@ -100,12 +97,12 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
       fallbackOrigin: [0, 0],
     });
 
-    expect(layout.rect.x).toBe(100);
-    expect(layout.rect.y).toBe(50);
-    expect(layout.rect.width).toBe(80);
-    expect(layout.rect.height).toBe(60);
-    expect(layout.textWidth).toBe(80);
-    expect(layout.textHeight).toBe(60);
+    expect(layout.geometry.rect.x).toBe(100);
+    expect(layout.geometry.rect.y).toBe(50);
+    expect(layout.geometry.rect.width).toBe(80);
+    expect(layout.geometry.rect.height).toBe(60);
+    expect(layout.geometry.contentSize.width).toBe(80);
+    expect(layout.geometry.contentSize.height).toBe(60);
   });
 });
 

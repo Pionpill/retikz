@@ -36,7 +36,7 @@ const Demo: FC<PipelineProps> = props => {
         }),
       }}
       frame={{ legendPosition: 'bottom', legendAlign: 'center' }}
-      flowDefaults={{ entity: { style: { fill: 'none', stroke: 'none' } } }}
+      defaultFlow={{ entity: { style: { fill: 'none', stroke: 'none' } } }}
       layout={{ direction: 'right' }}
       routing={{ kind: 'straight' }}
     >

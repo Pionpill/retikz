@@ -123,7 +123,7 @@ const renderFlowNode = (node: FlowNode) => (
     id={node.id}
     position={node.position}
     cornerRadius={4}
-    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    style={{ stroke: node.color, fill: node.color, opacity: { fill: 0.08 } }}
     layout={{
       minimumSize: { width: node.width, height: node.height ?? 44 },
       align: 'middle',

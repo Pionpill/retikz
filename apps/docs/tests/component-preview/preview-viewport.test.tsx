@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, expect, it, vi } from 'vitest';
 
+import { PreviewErrorBoundary } from '../../src/modules/docs/components/component-preview/PreviewErrorBoundary';
 import { PreviewViewport } from '../../src/modules/docs/components/component-preview/PreviewViewport';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -39,7 +40,7 @@ it('屏幕外不挂载示例，接近视口后挂载并保留交互状态', () =
   const root = createRoot(container);
   act(() =>
     root.render(
-      <PreviewViewport size="xl">
+      <PreviewViewport name="counter" size="xl">
         <Counter />
       </PreviewViewport>,
     ),
@@ -72,7 +73,7 @@ it('不支持可见性观察时仍展示示例', () => {
   const root = createRoot(container);
   act(() =>
     root.render(
-      <PreviewViewport size="md">
+      <PreviewViewport name="demo" size="md">
         <span>Demo</span>
       </PreviewViewport>,
     ),
@@ -81,4 +82,32 @@ it('不支持可见性观察时仍展示示例', () => {
   expect(container.textContent).toBe('Demo');
 
   act(() => root.unmount());
+});
+
+it('单个预览失败保留错误详情且不卸载相邻示例', () => {
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  const Broken = (): never => {
+    throw new Error('demo compile failed');
+  };
+  const container = document.createElement('div');
+  const root = createRoot(container);
+  try {
+    act(() =>
+      root.render(
+        <>
+          <PreviewErrorBoundary>
+            <Broken />
+          </PreviewErrorBoundary>
+          <PreviewErrorBoundary>
+            <svg aria-label="healthy demo" />
+          </PreviewErrorBoundary>
+        </>,
+      ),
+    );
+    expect(container.querySelector('[data-demo-error]')?.textContent).toContain('demo compile failed');
+    expect(container.querySelector('svg')?.getAttribute('aria-label')).toBe('healthy demo');
+  } finally {
+    act(() => root.unmount());
+    spy.mockRestore();
+  }
 });

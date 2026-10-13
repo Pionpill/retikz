@@ -58,7 +58,7 @@ export const CoordinateCompositionTracksPolarPreview = (values: CoordinateCompos
             padAngle={values.sectorPadAngle}
             stroke="#ffffff"
             strokeWidth={1}
-            fillOpacity={values.sectorOpacity}
+            opacity={{ fill: values.sectorOpacity }}
           />
         </PlotTrack>
       </PlotScaffold>

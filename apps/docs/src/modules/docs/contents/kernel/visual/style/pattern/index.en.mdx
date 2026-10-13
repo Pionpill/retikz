@@ -129,15 +129,15 @@ Dash selection follows `dashPattern` → `dashed` → `dotted`. Compare motif se
 
 ## Component integration
 
-| Component   | Entry                                                               |
-| ----------- | ------------------------------------------------------------------- |
-| Scope       | `style.fill / stroke`, `defaults.node/path.style`, or `frame.style` |
-| Node        | `style.fill / stroke`                                               |
-| Path / Draw | `style.fill / stroke`                                               |
+| Component   | Entry                                                                        |
+| ----------- | ---------------------------------------------------------------------------- |
+| Scope       | `defaults.style.fill / stroke`, `defaults.node/path.style`, or `frame.style` |
+| Node        | `defaults.style.fill / stroke`                                               |
+| Path / Draw | `defaults.style.fill / stroke`                                               |
 
 ### Scope propagation and overrides
 
-Scope `style.fill` and `style.stroke` cascade to Node and Path. Use `defaults.node.style` or `defaults.path.style` for one kind only. In the demo, the left Node and closed Path inherit a line pattern, while the right Node overrides it with dots. `fill: 'none'` disables fill; `frame.style` decorates the enclosing frame and does not cascade.
+Scope `defaults.style.fill` and `defaults.style.stroke` cascade to Node and Path. Use `defaults.node.style` or `defaults.path.style` for one kind only. In the demo, the left Node and closed Path inherit a line pattern, while the right Node overrides it with dots. `fill: 'none'` disables fill; `frame.style` decorates the enclosing frame and does not cascade.
 
 <ComponentPreview files="pattern-integration" size="sm" />
 

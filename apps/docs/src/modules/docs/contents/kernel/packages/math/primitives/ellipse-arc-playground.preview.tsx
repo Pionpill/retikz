@@ -69,13 +69,13 @@ export const EllipseArcPlaygroundPreview = (values: EllipseArcPlaygroundPreviewV
         center={centerOfBounds(ellipseBounds)}
         width={ellipseBoundsRect.width}
         height={ellipseBoundsRect.height}
-        style={{ stroke: 'gray', strokeOpacity: 0.8, dashPattern: [4, 4], fill: 'none' }}
+        style={{ stroke: 'gray', dashPattern: [4, 4], fill: 'none', opacity: { stroke: 0.8 } }}
       />
       <Rectangle
         center={centerOfBounds(arcBounds)}
         width={arcBoundsRect.width}
         height={arcBoundsRect.height}
-        style={{ stroke: 'gray', strokeOpacity: 0.8, dashPattern: [4, 4], fill: 'none' }}
+        style={{ stroke: 'gray', dashPattern: [4, 4], fill: 'none', opacity: { stroke: 0.8 } }}
       />
       <Circle center={ELLIPSE_CENTER} radius={3} style={{ fill: 'darkorange', stroke: 'none' }} />
       <Circle center={ARC_CENTER} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />

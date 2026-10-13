@@ -18,16 +18,16 @@ data、items、skeleton 与 ArrayItem children 内容入口互斥；全部省略
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
 | `cellIdMode?`     | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | 直属格身份：explicit 仅显式 id，string 使用 items 字符串，index 由 Array id 与零基下标生成     |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaultCell?`    | `IRArray['defaultCell']`                                                                 | —            | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRArray['defaults']`                                                                    | —            | 后代默认值通道及继承屏障                                                                       |
 | `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
 | `index?`          | `IRArray['index']`                                                                       | `false`      | false 隐藏索引；true 或对象启用索引带                                                          |
 | `label?`          | `IRArray['label']`                                                                       | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRArray['layout']`                                                                      | —            | Array 单元格分配与排列                                                                         |
+| `layout?`         | `{ direction?: "row" \| "column" \| undefined; gap?: number \| undefined; }`             | —            | Array 单元格分配与排列                                                                         |
 | `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
 | `position?`       | `IRScopePosition`                                                                        | —            | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
-| `style?`          | `IRCell['style']`                                                                        | —            | 供各格继承的集合视觉样式，格内显式字段可覆盖对应值                                             |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRArray['transforms']`                                                                  | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
 | `zIndex?`         | `number`                                                                                 | —            | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
@@ -220,16 +220,16 @@ items、data 与 skeleton 三选一；dataExpand 仅用于 data 入口。其余�
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
 | `cellIdMode?`     | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | 直属格身份：explicit 仅显式 id，string 使用 items 字符串，index 由 Array id 与零基下标生成     |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaultCell?`    | `IRArray['defaultCell']`                                                                 | —            | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRArray['defaults']`                                                                    | —            | 后代默认值通道及继承屏障                                                                       |
 | `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
 | `index?`          | `IRArray['index']`                                                                       | `false`      | false 隐藏索引；true 或对象启用索引带                                                          |
 | `label?`          | `IRArray['label']`                                                                       | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRArray['layout']`                                                                      | —            | Array 单元格分配与排列                                                                         |
+| `layout?`         | `{ direction?: "row" \| "column" \| undefined; gap?: number \| undefined; }`             | —            | Array 单元格分配与排列                                                                         |
 | `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
 | `position?`       | `IRScopePosition`                                                                        | —            | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
-| `style?`          | `IRCell['style']`                                                                        | —            | 供各格继承的集合视觉样式，格内显式字段可覆盖对应值                                             |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRArray['transforms']`                                                                  | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
 | `zIndex?`         | `number`                                                                                 | —            | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
@@ -327,7 +327,7 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
 
 **持久化配置**
 
-#### <ApiSourceLink label={"IRArray"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={21}>IRArray</ApiSourceLink>
+#### <ApiSourceLink label={"IRArray"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={20}>IRArray</ApiSourceLink>
 
 **公共属性**
 
@@ -339,17 +339,17 @@ export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputA
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —            | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
 | `cellIdMode?`     | `input<typeof ArraySchema>['cellIdMode']`                                                | `'explicit'` | 直属格身份：explicit 仅显式 id，string 使用 items 字符串，index 由 Array id 与零基下标生成     |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaultCell?`    | `IRArray["defaultCell"]`                                                                 | —            | 共享单元格默认配置                                                                             |
 | `defaults?`       | `IRScopeProps['defaults']`                                                               | —            | 后代默认值通道及继承屏障                                                                       |
 | `frame?`          | `IRScopeFrame`                                                                           | —            | 可省略默认值的包络装饰                                                                         |
 | `id?`             | `string`                                                                                 | —            | 可选引用 id；始终注册到父级命名空间                                                            |
 | `index?`          | `IRArray["index"]`                                                                       | `false`      | false 隐藏索引；true 或对象启用索引带                                                          |
 | `label?`          | `IRArray["label"]`                                                                       | —            | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRArray["layout"]`                                                                      | —            | Array 单元格分配与排列                                                                         |
+| `layout?`         | `{ direction?: "row" \| "column" \| undefined; gap?: number \| undefined; }`             | —            | Array 单元格分配与排列                                                                         |
 | `localNamespace?` | `false \| true`                                                                          | —            | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
 | `meta?`           | `Record<string, JsonValue>`                                                              | —            | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
 | `namespace`       | `"standard"`                                                                             | —            | 命名空间，固定为 standard                                                                      |
 | `position?`       | `IRScopePosition`                                                                        | —            | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
-| `style?`          | `IRCell['style']`                                                                        | —            | 供各格继承的集合视觉样式，格内显式字段可覆盖对应值                                             |
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRScopeProps['transforms']`                                                             | —            | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
 | `type`            | `"array"`                                                                                | —            | 组件类型判别字段                                                                               |
@@ -413,8 +413,7 @@ export type IRArray = Omit<
   input<typeof ArraySchema>,
   keyof IRScopeProps | 'items' | 'data' | 'cellIdMode' | 'dataExpand' | 'skeleton'
 > &
-  Omit<IRScopeProps, 'style'> & {
-    style?: IRCell['style'];
+  IRScopeProps & {
     cellIdMode?: input<typeof ArraySchema>['cellIdMode'];
   } & (
     | {
@@ -442,7 +441,7 @@ export type IRArray = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRArrayCell"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={15}>IRArrayCell</ApiSourceLink>
+#### <ApiSourceLink label={"IRArrayCell"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={14}>IRArrayCell</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -473,7 +472,7 @@ export type IRArrayCell = Omit<input<typeof ArrayCellSchema>, 'content'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRArrayIndexOptions"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={9}>IRArrayIndexOptions</ApiSourceLink>
+#### <ApiSourceLink label={"IRArrayIndexOptions"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={8}>IRArrayIndexOptions</ApiSourceLink>
 
 **公共属性**
 
@@ -526,7 +525,7 @@ export type IRArrayIndexOptions = input<typeof ArrayIndexOptionsSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRArrayIndexStyle"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={12}>IRArrayIndexStyle</ApiSourceLink>
+#### <ApiSourceLink label={"IRArrayIndexStyle"} path={"packages/library/standard/src/collection/array/schema/types.ts"} startLine={11}>IRArrayIndexStyle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -555,7 +554,7 @@ export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={66}>ArraySchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={71}>ArraySchema</ApiSourceLink>
 
 <ZodSchema name="ArraySchema" description="一维内容的单元格展示，支持显式单元格、JSON 数组或示意骨架" expandNested />
 

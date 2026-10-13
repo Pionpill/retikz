@@ -241,7 +241,7 @@ export type LayoutExtensions = Readonly<{
 /** React Layout 的公开属性 */
 export type LayoutProps = {
   /** JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效 */
-  rootScope?: Pick<InputScope, 'style' | 'defaults'>;
+  rootScope?: Pick<InputScope, 'defaults'>;
   /** 直接传入持久化 Source IR，与 children 二选一 */
   ir?: IRScene;
   /** 写入 Scene 根并由后代 Composite 继承的 Theme */

@@ -29,7 +29,7 @@ Declare drawings through children or pass a complete scene through ir; ir takes 
 |            | `ir?`                  | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                                                            |
 | Layout     | `nodeDistance?`        | `number`                                              | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
 | Style      | `fontSize?`            | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
-|            | `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
+|            | `rootScope?`           | `Pick<InputScope, 'defaults'>`                        | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
 |            | `theme?`               | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
 | Rendering  | `className?`           | `string`                                              | —                             | Host className                                                                                                                                                                           |
 |            | `height?`              | `number \| string`                                    | `computeDisplaySize`          | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
@@ -64,7 +64,7 @@ Declare drawings through children or pass a complete scene through ir; ir takes 
 export declare const Layout: FC<LayoutProps>;
 
 export type LayoutProps = {
-  rootScope?: Pick<InputScope, 'style' | 'defaults'>;
+  rootScope?: Pick<InputScope, 'defaults'>;
   ir?: IRScene;
   theme?: IRScene['theme'];
   children?: ReactNode;

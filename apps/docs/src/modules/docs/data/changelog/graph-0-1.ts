@@ -33,8 +33,8 @@ const graphMilestones: Array<SubVersion> = [
       {
         label: { zh: '容器继承 Graph Theme', en: 'Containers inherit Graph Theme' },
         content: {
-          zh: 'Graph Theme style 统一提供 Entity、Relation、Group 与 Block 默认。`graphDefaults` 按 Source 的 `style`、`layout` 与 Surface 根字段为后代提供显式默认，`graphRules` 独立保存有序条件规则；容器自身外壳只消费进入位置的 Theme 与祖先默认，实例字段最终优先。',
-          en: 'Graph Theme styles provide defaults for Entity, Relation, Group, and Block. `graphDefaults` follows Source `style`, `layout`, and root Surface fields for descendants, while `graphRules` holds ordered conditional rules separately. A container shell uses its incoming Theme and ancestor defaults, with explicit instance fields taking final priority.',
+          zh: 'Graph Theme style 统一提供 Entity、Relation、Group 与 Block 默认。`defaultGraph` 按 Source 的 `style`、`layout` 与 Surface 根字段为后代提供显式默认，`graphRules` 独立保存有序条件规则；容器自身外壳只消费进入位置的 Theme 与祖先默认，实例字段最终优先。',
+          en: 'Graph Theme styles provide defaults for Entity, Relation, Group, and Block. `defaultGraph` follows Source `style`, `layout`, and root Surface fields for descendants, while `graphRules` holds ordered conditional rules separately. A container shell uses its incoming Theme and ancestor defaults, with explicit instance fields taking final priority.',
         },
       },
       {
@@ -43,8 +43,8 @@ const graphMilestones: Array<SubVersion> = [
           en: 'BREAKING: Explicit defaults are separate from Theme sources',
         },
         content: {
-          zh: '将 `graphTheme` 迁移为独立的 `graphDefaults` / `graphRules`；Definition 返回 `{ defaults?, rules? }`，删除 `tokens` 与规则 `appearance` 包装。生成值与作者默认复用同一稀疏 Source 片段。空片段和 optional `undefined` 不覆盖，合法零值保留；Node font 整体替换，Relation labelFont 按字段补全。切换 Core Theme 或 reset 不清除作者层；不提供旧入口兼容。',
-          en: 'Replace `graphTheme` with separate `graphDefaults` and `graphRules`. Definitions return `{ defaults?, rules? }`; `tokens` and rule `appearance` wrappers are removed. Generated and authored defaults reuse the same sparse Source fragments. Empty fragments and optional `undefined` do not override values, while valid zero values remain effective. Node fonts replace as a whole and Relation labelFont fields merge. Core Theme changes and reset preserve author layers; legacy entries have no compatibility aliases.',
+          zh: '将 `graphTheme` 迁移为独立的 `defaultGraph` / `graphRules`；Definition 返回 `{ defaults?, rules? }`，删除 `tokens` 与规则 `appearance` 包装。生成值与作者默认复用同一稀疏 Source 片段。空片段和 optional `undefined` 不覆盖，合法零值保留；Node font 整体替换，Relation labelFont 按字段补全。切换 Core Theme 或 reset 不清除作者层；不提供旧入口兼容。',
+          en: 'Replace `graphTheme` with separate `defaultGraph` and `graphRules`. Definitions return `{ defaults?, rules? }`; `tokens` and rule `appearance` wrappers are removed. Generated and authored defaults reuse the same sparse Source fragments. Empty fragments and optional `undefined` do not override values, while valid zero values remain effective. Node fonts replace as a whole and Relation labelFont fields merge. Core Theme changes and reset preserve author layers; legacy entries have no compatibility aliases.',
         },
       },
       {

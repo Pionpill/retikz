@@ -4,7 +4,7 @@ import { BuiltinPlotMark, RelationMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
-import { requiredFieldOf } from '../shared';
+import { markOpacityOf, mergeMarkProperties, requiredFieldOf } from '../shared';
 import type {
   IRRangedDotChartProperties,
   IRRangedDotMark,
@@ -16,32 +16,24 @@ import { RangedDotChartMarkSchema } from './schema';
 const endpointGlyphOf = (properties: IRRangedDotPointProperties): JsonObject => {
   const glyph: JsonObject = {};
 
-  for (const name of [
-    'color',
-    'size',
-    'shape',
-    'fill',
-    'stroke',
-    'strokeWidth',
-    'fillOpacity',
-    'strokeOpacity',
-    'opacity',
-    'rotate',
-    'minimumSize',
-  ] as const) {
+  for (const name of ['color', 'size', 'shape', 'fill', 'stroke', 'strokeWidth', 'rotate', 'minimumSize'] as const) {
     if (properties[name] !== undefined) glyph[name] = { kind: 'constant', value: properties[name] };
   }
 
+  const opacity = markOpacityOf({}, properties);
+  if (opacity !== undefined) glyph.opacity = opacity;
   return glyph;
 };
 
 const rangeStyleOf = (properties: IRRangedDotRangeProperties): JsonObject => {
   const style: JsonObject = {};
 
-  for (const name of ['stroke', 'strokeWidth', 'strokeOpacity', 'opacity', 'shadow', 'blendMode'] as const) {
+  for (const name of ['stroke', 'strokeWidth', 'shadow', 'blendMode'] as const) {
     if (properties[name] !== undefined) style[name] = { kind: 'constant', value: properties[name] };
   }
 
+  const opacity = markOpacityOf({}, properties);
+  if (opacity !== undefined) style.opacity = opacity;
   return style;
 };
 
@@ -78,8 +70,8 @@ export const resolveRangedDotMark = (
   const start = requiredFieldOf(encodings, 'start', ['recipe', 'encodings', 'start']);
   const end = requiredFieldOf(encodings, 'end', ['recipe', 'encodings', 'end']);
   const sharedPoint = properties.point ?? {};
-  const source = endpointGlyphOf({ ...sharedPoint, ...(properties.startPoint ?? {}) });
-  const target = endpointGlyphOf({ ...sharedPoint, ...(properties.endPoint ?? {}) });
+  const source = endpointGlyphOf(mergeMarkProperties(sharedPoint, properties.startPoint));
+  const target = endpointGlyphOf(mergeMarkProperties(sharedPoint, properties.endPoint));
   const range = properties.range ?? {};
   const color = fieldMappingOf(encodings.color, '__chart.ranged-dot.scale.color');
   const style = rangeStyleOf(range);
@@ -104,16 +96,16 @@ const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDo
     ...inherited,
     ...explicit,
     ...(inherited.point !== undefined || explicit.point !== undefined
-      ? { point: { ...(inherited.point ?? {}), ...(explicit.point ?? {}) } }
+      ? { point: mergeMarkProperties(inherited.point, explicit.point) }
       : {}),
     ...(inherited.startPoint !== undefined || explicit.startPoint !== undefined
-      ? { startPoint: { ...(inherited.startPoint ?? {}), ...(explicit.startPoint ?? {}) } }
+      ? { startPoint: mergeMarkProperties(inherited.startPoint, explicit.startPoint) }
       : {}),
     ...(inherited.endPoint !== undefined || explicit.endPoint !== undefined
-      ? { endPoint: { ...(inherited.endPoint ?? {}), ...(explicit.endPoint ?? {}) } }
+      ? { endPoint: mergeMarkProperties(inherited.endPoint, explicit.endPoint) }
       : {}),
     ...(inherited.range !== undefined || explicit.range !== undefined
-      ? { range: { ...(inherited.range ?? {}), ...(explicit.range ?? {}) } }
+      ? { range: mergeMarkProperties(inherited.range, explicit.range) }
       : {}),
   };
 };

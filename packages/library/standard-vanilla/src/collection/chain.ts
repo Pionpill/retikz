@@ -21,23 +21,23 @@ export type InputChainItem =
       /** 标识单个链式单元，与并行分支区分 */
       kind: 'cell';
     })
-  | (Omit<IRChainParallel, 'branches' | 'connection'> & {
+  | (Omit<IRChainParallel, 'branches' | 'defaultConnection'> & {
       /** 当前并行部分的有序分支 */
       branches: Array<{
         /** 当前分支中按顺序连接的递归链项 */
         items: Array<InputChainItem>;
       }>;
       /** 当前并行部分的连接线覆盖 */
-      connection?: InputChainConnection;
+      defaultConnection?: InputChainConnection;
     });
 
 /** 三种输入共用同一结构与连接契约 */
 export type InputChain = Omit<
   IRChain,
-  'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand' | 'connection'
+  'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand' | 'defaultConnection'
 > & {
   /** 链整体的连接线默认配置 */
-  connection?: InputChainConnection;
+  defaultConnection?: InputChainConnection;
 } & (
     | {
         /** 显式串行项与并行分支，与数据和骨架入口互斥 */
@@ -64,11 +64,11 @@ export type InputChain = Omit<
   );
 
 /** 复用路径归一化，只保留呈现字段和显式空 marks */
-const normalizeConnection = (connection: InputChainConnection): IRChainConnection => {
-  if (connection.path === undefined) return connection;
+const normalizeConnection = (defaultConnection: InputChainConnection): IRChainConnection => {
+  if (defaultConnection.path === undefined) return defaultConnection;
 
   const { type, children, ...path } = normalizePath({
-    ...connection.path,
+    ...defaultConnection.path,
     way: [
       [0, 0],
       [1, 0],
@@ -76,16 +76,23 @@ const normalizeConnection = (connection: InputChainConnection): IRChainConnectio
   });
   void type;
   void children;
-  const explicit = connection.path.arrow !== undefined || connection.path.marks !== undefined;
+  const explicit = defaultConnection.path.arrow !== undefined || defaultConnection.path.marks !== undefined;
 
-  return { ...connection, path: { ...path, ...(explicit ? { marks: path.marks ?? [] } : {}) } };
+  return { ...defaultConnection, path: { ...path, ...(explicit ? { marks: path.marks ?? [] } : {}) } };
 };
 
 /** 递归收集内容，通过 Kernel 归一化一次并保留依赖 */
 export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = {
   kind: StandardChainEmbedKind,
   lower: (props, context) => {
-    const { connection, items: sourceItems, data: sourceData, skeleton: sourceSkeleton, dataExpand, ...input } = props;
+    const {
+      defaultConnection,
+      items: sourceItems,
+      data: sourceData,
+      skeleton: sourceSkeleton,
+      dataExpand,
+      ...input
+    } = props;
     void sourceItems;
     void sourceData;
     void sourceSkeleton;
@@ -93,7 +100,7 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
       namespace: 'standard',
       type: 'chain',
       ...input,
-      ...(connection === undefined ? {} : { connection: normalizeConnection(connection) }),
+      ...(defaultConnection === undefined ? {} : { defaultConnection: normalizeConnection(defaultConnection) }),
     } as const;
     if (props.items === undefined)
       return {
@@ -138,11 +145,11 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
 
         if (item.kind === 'cell') return { kind: 'cell', ...normalized.cells[cursor++] };
 
-        const { connection: blockConnection, ...block } = item;
+        const { defaultConnection: blockConnection, ...block } = item;
 
         return {
           ...block,
-          ...(blockConnection === undefined ? {} : { connection: normalizeConnection(blockConnection) }),
+          ...(blockConnection === undefined ? {} : { defaultConnection: normalizeConnection(blockConnection) }),
           branches: item.branches.map(branch => ({ items: rebuild(branch.items) })),
         };
       });

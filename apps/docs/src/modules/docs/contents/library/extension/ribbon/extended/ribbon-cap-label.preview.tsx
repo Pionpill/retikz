@@ -40,7 +40,7 @@ export const renderRibbonCapLabelPreview = (values: RibbonCapLabelPreviewValues)
           end: { cap, label: { ...label, text: 'B' } },
           sampling: { kind: 'fixed', samples: 64 },
         }}
-        style={{ fill: '#60a5fa', fillOpacity: 0.75, stroke: '#2563eb', strokeWidth: 1 }}
+        style={{ fill: '#60a5fa', stroke: '#2563eb', strokeWidth: 1, opacity: { fill: 0.75 } }}
       >
         <Step kind="move" to={[-190, 20]} />
         <Step kind="curve" control={[0, -115]} to={[190, 20]} />

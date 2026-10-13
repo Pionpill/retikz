@@ -12,7 +12,7 @@ export type ChartThemeDefinition = Readonly<{
   /** Chart shell 的稀疏 Source-shaped 默认片段 */
   defaults?: IRChartDefaults;
   /** 原样转交 Plot owner 的稀疏 Source-shaped 默认片段 */
-  plotDefaults?: IRPlotDefaults;
+  defaultPlot?: IRPlotDefaults;
 }>;
 
 /** 定义一个 JSON-safe Chart named theme */
@@ -23,7 +23,7 @@ export type ChartThemeResolution = Readonly<{
   /** 生成的完整 Chart shell 默认片段 */
   defaults: IRChartDefaults;
   /** 转交 Plot owner 的稀疏默认片段 */
-  plotDefaults?: IRPlotDefaults;
+  defaultPlot?: IRPlotDefaults;
   /** Core 主题解析得到的显示模式 */
   mode: ResolvedTheme['mode'];
 }>;

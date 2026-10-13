@@ -24,7 +24,7 @@ export const renderScatterWorldCupShotsPreview = (options: ScatterWorldCupShotsP
     <ScatterChart
       layout={layout}
       plotExtension={{
-        plotDefaults: {
+        defaultPlot: {
           plotArea: {
             fill: {
               kind: 'image',

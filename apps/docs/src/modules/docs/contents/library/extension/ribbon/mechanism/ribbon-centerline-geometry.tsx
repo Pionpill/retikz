@@ -46,7 +46,7 @@ const RibbonCenterlineGeometry: FC<RibbonCenterlineGeometryProps> = props => {
             <Path
               kind="ribbon"
               kindOptions={{ width: { kind: 'fixed', value: 24 }, sampling: { kind: 'fixed', samples: 7 } }}
-              style={{ fill: 'dodgerblue', fillOpacity: 0.12 }}
+              style={{ fill: 'dodgerblue', opacity: { fill: 0.12 } }}
             >
               <Step kind="move" to={geometry.from} />
               <Step kind="cubic" control1={geometry.control1} control2={geometry.control2} to={geometry.to} />

@@ -234,7 +234,7 @@ describe('Presented Table layout transaction', () => {
           {
             type: 'scope',
             children: [{ namespace: 'fixture', type: 'presented-table-transaction' }],
-            style: { stroke: '#f97316', strokeWidth: 12 },
+            defaults: { style: { stroke: '#f97316', strokeWidth: 12 } },
           },
         ],
       },

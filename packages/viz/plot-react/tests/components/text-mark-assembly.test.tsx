@@ -1,26 +1,17 @@
 import { PlotSchema } from '@retikz/plot';
-import { resolveLabelOf } from '@retikz/plot-vanilla';
+import { normalizePlotIR, resolveLabelOf } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../src/adapter';
 import { IntervalMark, PointMark } from '../../src/components/marks';
 
-/**
- * ADR-04（alpha.11）：plot-react 装配契约。
- * priority-1：位置 mark 的扁平 label* props → IR mark.label（MarkLabelSchema），resolveLabel 收进旁路、不落 IR；
- * priority-2：<PointMark text> 扁平 props → IR point mark（type:'point'、encoding.text、x/y/color、dx/dy 落顶层）
- */
-
-describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
-  it('react-mark-label-assembly：IntervalMark label* → interval mark.label，与手写 IR 等价', () => {
+describe('宿主标签简写与详细配置', () => {
+  it('详细字段标签与手写 IR 等价', () => {
     const spec = buildPlotIR(
       <IntervalMark
         x="month"
         y="revenue"
-        label="revenue"
-        labelPosition="top"
-        labelDistance={6}
-        labelDisplayFormat=",.0f"
+        label={{ field: 'revenue', position: 'top', distance: 6, displayFormat: ',.0f' }}
       />,
       '__plot',
     );
@@ -35,8 +26,8 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('labelPin → label.pin=true', () => {
-    const spec = buildPlotIR(<PointMark x="px" y="py" label="lbl" labelPin />, '__plot');
+  it('标签引线保留显式开关', () => {
+    const spec = buildPlotIR(<PointMark x="px" y="py" label={{ field: 'lbl', pin: true }} />, '__plot');
     const mark = spec.marks[0] as { label?: { pin?: boolean } };
 
     expect(mark.label?.pin).toBe(true);
@@ -47,13 +38,15 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
       <IntervalMark
         x="month"
         y="revenue"
-        label="revenue"
-        labelTextColor="#334155"
-        labelOpacity={0.75}
-        labelFont={{ family: 'serif', size: 12, weight: 'bold' }}
-        labelRotate="tangent"
-        labelKeepUpright
-        labelPin={{ stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] }}
+        label={{
+          field: 'revenue',
+          textColor: '#334155',
+          opacity: 0.75,
+          font: { family: 'serif', size: 12, weight: 'bold' },
+          rotate: 'tangent',
+          keepUpright: true,
+          pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
+        }}
       />,
       '__plot',
     );
@@ -68,6 +61,17 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
       keepUpright: true,
       pin: { stroke: '#64748b', strokeWidth: 1.5, dashPattern: [2, 2] },
     });
+  });
+
+  it('字符串与常量标签数组保持内容与顺序，零间距和关闭引线不会丢失', () => {
+    const spec = buildPlotIR(
+      <PointMark x="px" y="py" label={['name', { value: 'fixed', distance: 0, pin: false }]} />,
+      '__plot',
+    );
+    expect(spec.marks[0]).toMatchObject({
+      label: [{ content: { field: 'name' } }, { content: { value: 'fixed' }, distance: 0, pin: false }],
+    });
+    expect(PlotSchema.safeParse(spec).success).toBe(true);
   });
 
   it('无 label prop → mark 无 label 字段', () => {
@@ -128,4 +132,29 @@ describe('priority-2 PointMark text 扁平 props → IR point mark', () => {
     expect(JSON.stringify(spec)).not.toContain('resolveLabel');
     expect(resolveLabelOf(spec)).toEqual({ t1: fn });
   });
+});
+
+it('React and Vanilla share progressive opacity and label normalization', () => {
+  const opacity = { overall: 0.5, fill: { kind: 'field' as const, value: 'alpha', scale: 'alpha-scale' }, stroke: 0 };
+  const label = { field: 'name', position: 'top' as const, distance: 0, pin: false };
+  const react = buildPlotIR(<PointMark x="x" y="y" opacity={opacity} label={label} />, '__plot');
+  const vanilla = normalizePlotIR(
+    {
+      declarations: [{ kind: 'point-mark', props: { x: 'x', y: 'y', opacity, label }, path: [0] }],
+      runtimeSources: [],
+    },
+    '__plot',
+  );
+  expect(react.marks).toEqual(vanilla.marks);
+  expect(react.marks[0]).toMatchObject({
+    opacity: {
+      overall: { kind: 'constant', value: 0.5 },
+      fill: { kind: 'field', value: 'alpha', scale: 'alpha-scale' },
+      stroke: { kind: 'constant', value: 0 },
+    },
+    label: { content: { field: 'name' }, distance: 0, pin: false },
+  });
+  const scalar = buildPlotIR(<PointMark x="x" y="y" opacity={0.5} />, '__plot');
+  const detailed = buildPlotIR(<PointMark x="x" y="y" opacity={{ overall: 0.5 }} />, '__plot');
+  expect(scalar.marks).toEqual(detailed.marks);
 });

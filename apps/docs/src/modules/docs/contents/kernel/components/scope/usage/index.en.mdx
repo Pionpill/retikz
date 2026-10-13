@@ -165,7 +165,7 @@ Call `view.dispose()` before removing the container to release mounted resources
 | Subtree context | `transforms`           | Transform the whole subfigure; does not place raw children                |
 |                 | `localNamespace`       | Isolate reusable child ids; `scope.id` stays in the parent                |
 |                 | `theme`                | Switch a local domain theme; Core primitives are not recolored            |
-|                 | `style` / `defaults`   | Share defaults; explicit element values win                               |
+|                 | `defaults`             | Share defaults; explicit element values win                               |
 |                 | `clip`                 | Limit the subtree's visible area; no renderer-specific semantics          |
 |                 | `zIndex`               | Move the group among parent-level content; child order stays unchanged    |
 
@@ -256,7 +256,7 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 Theme and style defaults are independent channels. `defaults.reset` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
 
-**Style defaults.** Scope also exposes `style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
+**Style defaults.** Scope also exposes `defaults.style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
 
 Style is a supporting responsibility and does not alter local coordinates, references, or clipping. Consult the [API reference](/kernel/components/scope/reference) for color, stroke, and opacity fields rather than creating extra Scopes for visual variants.
 

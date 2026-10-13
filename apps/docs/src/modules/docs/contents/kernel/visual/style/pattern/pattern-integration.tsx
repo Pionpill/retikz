@@ -15,7 +15,7 @@ const IntegrationDemo: FC<IntegrationDemoProps> = props => {
 
   return (
     <Layout viewBox={{ x: -65, y: -65, width: 330, height: 155 }}>
-      <Scope style={{ fill: { kind: 'pattern', shape: 'lines', color: 'dodgerblue', size: 8 } }}>
+      <Scope defaults={{ style: { fill: { kind: 'pattern', shape: 'lines', color: 'dodgerblue', size: 8 } } }}>
         <Node position={[0, 0]} layout={{ minimumSize: 75 }}>
           {text.inherited}
         </Node>

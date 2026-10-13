@@ -97,7 +97,7 @@ describe('plot', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      plotDefaults: {
+      defaultPlot: {
         plotArea: { fill: '#ffffff' },
         palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
         legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -120,7 +120,7 @@ describe('plot', () => {
       ],
     });
 
-    expect(spec.plotDefaults).toMatchObject({
+    expect(spec.defaultPlot).toMatchObject({
       plotArea: { fill: '#ffffff' },
       palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
       legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -135,16 +135,16 @@ describe('plot', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('透传 Plot plotDefaults', () => {
+  it('透传 Plot defaultPlot', () => {
     const spec = plot({
       data: { reference: 'sales' },
       scales: [],
       coordinate: { type: 'cartesian2D' },
-      plotDefaults: { palette: { series: ['#2563eb'] } },
+      defaultPlot: { palette: { series: ['#2563eb'] } },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
 
-    expect(spec.plotDefaults).toEqual({ palette: { series: ['#2563eb'] } });
+    expect(spec.defaultPlot).toEqual({ palette: { series: ['#2563eb'] } });
   });
 
   it('plain IRPlot 透传 Axis rules', () => {

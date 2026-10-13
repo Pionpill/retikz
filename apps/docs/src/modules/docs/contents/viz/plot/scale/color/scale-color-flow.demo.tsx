@@ -10,7 +10,7 @@ const Demo: FC = () => (
           id="desktop-field"
           position={[-300, -35]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 140, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>field contract</Text>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
           id="desktop-explicit"
           position={[-300, 35]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 140, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>IRPlotScale</Text>
@@ -34,7 +34,7 @@ const Demo: FC = () => (
           id="desktop-definition"
           position={[-90, 0]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 165, height: 56 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>scale definition</Text>
@@ -46,7 +46,7 @@ const Demo: FC = () => (
           id="desktop-resolved"
           position={[130, 0]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 175, height: 56 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>resolved color scale</Text>
@@ -58,7 +58,7 @@ const Demo: FC = () => (
           id="desktop-consumers"
           position={[330, 0]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 145, height: 56 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>mark + Legend</Text>
@@ -144,7 +144,7 @@ const Demo: FC = () => (
           id="mobile-field"
           position={[-100, -38]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 140, height: 30 }, align: 'middle', lineHeight: 12 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>field contract</Text>
@@ -156,7 +156,7 @@ const Demo: FC = () => (
           id="mobile-explicit"
           position={[100, -38]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 140, height: 30 }, align: 'middle', lineHeight: 12 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>IRPlotScale</Text>
@@ -168,7 +168,7 @@ const Demo: FC = () => (
           id="mobile-definition"
           position={[0, 0]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 150, height: 30 }, align: 'middle', lineHeight: 12 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>scale definition</Text>
@@ -180,7 +180,7 @@ const Demo: FC = () => (
           id="mobile-resolved"
           position={[-100, 38]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 150, height: 30 }, align: 'middle', lineHeight: 12 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>resolved scale</Text>
@@ -192,7 +192,7 @@ const Demo: FC = () => (
           id="mobile-consumers"
           position={[100, 38]}
           cornerRadius={4}
-          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+          style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
           layout={{ minimumSize: { width: 140, height: 30 }, align: 'middle', lineHeight: 12 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>mark + Legend</Text>

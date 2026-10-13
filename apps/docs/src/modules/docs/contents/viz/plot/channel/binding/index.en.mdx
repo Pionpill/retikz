@@ -3,51 +3,206 @@ title: Channel Binding
 description: Channel binding explains how fields or fixed values control visual results such as position, color, size, shape, and text.
 ---
 
-The data model says what fields are. Data processing says how real data gets in. Channel binding says **where fields are used**. In React there is no separate `<Encoding>` component; channels are usually written directly as mark props.
+A dataset can produce many different graphics because the data itself does not specify how each field should appear. Channels connect **data to visual properties** in the grammar of graphics. Position, color, size, shape, and text are ways a graphic can carry information; a channel binding assigns a field or fixed value to one of those properties.
+
+For example, a row might describe a region's GDP, life expectancy, and population. After choosing a point to represent the row, you can bind GDP to `x`, life expectancy to `y`, and population to `size`. Readers can then compare the data through point positions and sizes instead of reading every number. One field can also drive several channels, such as using both color and shape to distinguish regions.
+
+Channels work alongside the other parts of the grammar:
+
+| Part                                | Responsibility                                                      | In this example                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Data                                | Supplies records and field values                                   | Each row contains GDP, life expectancy, population, and region                      |
+| [Marks](/viz/plot/mark)             | Choose the drawing form used to represent records                   | Represent each record with a point                                                  |
+| [Scales](/viz/plot/scale)           | Convert data values into drawable position values, colors, or sizes | Convert population counts into suitable point radii                                 |
+| [Coordinates](/viz/plot/coordinate) | Interpret position channels and project them onto the drawing       | Interpret `x` and `y` as horizontal and vertical positions in Cartesian coordinates |
+
+Thus, binding `population` to `size` declares that population controls size. The scale determines the actual size, and the mark determines the drawing form. Changing bindings lets the same data and marks express different comparisons.
+
+## Using this topic
+
+Complete installation in [Quick start](/viz/plot/get-start). This example binds position, color, and size using three illustrative rows. The result is three points with different positions, colors, or sizes. Both position scales use `domainPadding` to leave room around boundary points.
+
+<ComponentPreview files="channel-binding-entry" responsive hideCode size="lg" />
+
+Prepare `<div id="plot"></div>` in HTML and choose one entry point. React + JSX uses mark props; the other three forms use explicit configuration.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+Import components from `@retikz/plot-react` and declare field bindings on `PointMark`.
 
 ```tsx
-<PointMark x="gdp" y="life" color="region" size="population" />
-<PointMark x="gdp" y="life" text="abbr" />
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PointMark x="gdp" y="life" color="region" size="population" />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
 ```
 
-Those props are the user-facing channel entry points: `x` is a position channel, `color` is a paint channel, and `size` is a style channel. One mark can use several channels at once to turn a row into position, appearance, and text.
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-## Fields And Constants
-
-In the React DSL, strings usually mean field names:
+Import the configuration type from `@retikz/plot` and pass the IR to the React `Plot` through `spec`.
 
 ```tsx
-<PointMark x="gdp" y="life" color="region" />
+import { Plot } from '@retikz/plot-react';
+import type { IRPlot } from '@retikz/plot';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      color: { kind: 'field', value: 'region' },
+      size: { kind: 'field', value: 'population' },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
 ```
 
-Some channels also accept constants. `ReferenceMark` is the clearest example:
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-```tsx
-<ReferenceMark y={80} color="crimson" />
+Import `plot` from `@retikz/plot-vanilla` to create the configuration, then render SVG with `renderPlot`.
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      color: { kind: 'field', value: 'region' },
+      size: { kind: 'field', value: 'population' },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
 ```
 
-For a **built-in flat style prop** that accepts either a field name or a string constant, the React DSL removes the ambiguity in this order:
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-1. Match the string against field names from the current dataset and data model. A match becomes a field binding.
-2. Only after a field miss, check whether the string is a valid constant for that prop, such as a CSS color or a built-in shape name.
-3. If neither rule accepts the string, the builder warns and skips the prop.
+Declare an `IRPlot` directly and render it with `renderPlot` and named datasets.
 
-If the data contains a field named `crimson`, `color="crimson"` therefore reads that field instead of using the crimson color constant. Use an explicit constant to avoid a name collision:
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
 
-```tsx
-<PointMark color={{ kind: 'constant', value: 'crimson' }} />
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      color: { kind: 'field', value: 'region' },
+      size: { kind: 'field', value: 'population' },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
 ```
 
-This decision happens while the React DSL builds `IRPlot`. It does not mean that a missing value in one row falls back to a constant. In Plot IR, a channel still chooses exactly one: read a field from every row or always use the same fixed value.
+</DocTab>
+</DocTabs>
 
-Strings on position props still mean fields directly. Strings in the custom `channels` bag also mean fields directly, while constants use an explicit `{ kind: 'constant', value }` binding. The complete build-time decision and runtime value path appears under “How It Works”.
+The explicit `data.reference` must match the dataset name `rows`. All four entries express the same bindings. React dimensions specify the drawing area; Vanilla render options also specify SVG output dimensions, so outer bounds may differ.
 
-## Binding Playground
+## Fields and constants
+
+Channels have two binding forms: a **field channel** reads a named field from each data row, while a **constant channel** uses a fixed value from the configuration. Choose between them based on whether the visual property should vary with the data.
+
+| Form             | Value source and effect                                                                                                   | When to use it                                                                                  | Binding syntax                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Field channel    | Reads a field from each row, then applies the channel and scale rules; records can have different positions or styles     | Compare values by position, distinguish categories by color, or express quantities through size | Position: `{ field: 'gdp' }`; point color: `{ kind: 'field', value: 'region' }`  |
+| Constant channel | Always reads the same configured value without reading a data field; the corresponding position or style stays consistent | Draw a fixed threshold line or give every point the same color                                  | Position: `{ value: 80 }`; point color: `{ kind: 'constant', value: 'crimson' }` |
+
+The table shows explicit Vanilla / IR bindings. The entry tabs above provide complete mark configurations and React shorthand. Constant positions still pass through scales and coordinates: binding a reference line’s `y` to `80` means the data value 80, not 80 pixels from the top of the canvas. Each mark accepts only the channels and binding forms it supports.
+
+| Property | Example                                   | Effect and constraint                                                           |
+| -------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
+| `x`      | `"gdp"`                                   | Field for horizontal point position                                             |
+| `y`      | `"life"`                                  | Field for vertical point position                                               |
+| `color`  | `"region"` or an explicit constant        | Color by category or use one color                                              |
+| `size`   | `"population"` or `12`                    | Map numeric values to radii or use a fixed radius; negative values are rejected |
+| `shape`  | `"region"` or an explicit circle constant | Assign shapes by category; the field must be categorical                        |
+| `label`  | `"abbr"`                                  | Add field-based labels to points                                                |
 
 Use the panel to switch the `x` / `y` fields and change color, size, or shape from field-driven values to constants. The chart structure stays fixed, so each action isolates the effect of the selected binding.
 
 <ComponentPreview
   files={['channel-binding', 'channel-binding.preview.tsx', 'channel-binding.data.ts']}
+  mode="showcase"
   size="lg"
   caption="Position channels move data through the coordinate system; style channels can read fields or use fixed values."
   defaultSourceFile="channel-binding.preview.tsx"
@@ -55,33 +210,75 @@ Use the panel to switch the `x` / `y` fields and change color, size, or shape fr
 
 One row can bind to several channels at once: `gdp` and `life` determine position, `region` determines color and shape, `population` determines point radius, and `abbr` supplies labels. When a style switches to a constant, that data field no longer participates in the corresponding visual calculation.
 
-`Axis` uses position channels to display coordinate ticks. This playground only mounts color and size legends, so switching either channel to a constant removes its `Legend`. The full API can also add legends for field-driven opacity and shape channels.
+`PlotAxis` uses position channels to display coordinate ticks. This playground only mounts color and size legends, so switching either channel to a constant removes its `PlotLegend`. The full API can also add legends for field-driven opacity and shape channels.
 
-## Scale And Coordinate
+## Errors and limitations
 
-Channels only say “which value to read”. Scales map values into drawing space or visual attributes. Coordinates interpret the roles of positional channels. For example, the same `x="quarter"` and `y="value"` means horizontal category + vertical value under `cartesian2D`, but angular category + radial value under `polar2D`.
+- **Strings match fields first.** React built-in flat style props such as `color` first match a field in the current dataset or model, then try a valid constant. If neither accepts the string, the prop is skipped with a warning. This is not a fallback for missing values in individual rows.
+- **Make fixed styles unambiguous.** If a `crimson` field exists, `color="crimson"` reads it. Use `color={{ kind: 'constant', value: 'crimson' }}` for one fixed color. Explicit IR uses `color: { kind: 'constant', value: 'crimson' }`.
+- **Position and style objects differ.** IR position bindings live in `encoding` and use `{ field }` or `{ value }`. Point color and size live on the mark and use `{ kind, value }`. A constant reference line uses `encoding: { y: { value: 80 }, color: { value: 'crimson' } }`; its React equivalent is `<ReferenceMark y={80} color="crimson" />` (import it from `@retikz/plot-react`).
+- **Exact field keys take precedence.** If both a direct `"metrics.gdp"` property and nested `metrics.gdp` exist, the direct property wins. Dotted traversal only applies when the complete key is absent. Ensure bound fields contain valid values.
+- **Each mark defines supported channels.** Numeric positions accepted by reference lines cannot be used directly as `PointMark` `x` / `y` props, which require field names. Strings in custom `channels` also mean fields; constants use explicit `{ kind: 'constant', value }`.
+- **Scales provide padding.** `domainPadding` expands the data domain. Larger points or labels may require more padding; channel binding does not automatically prevent overflow.
 
-Continue with [Built-In Channels](/viz/plot/channel/builtin) to see how style channels land on core element attributes, [Scales](/viz/plot/scale) to see how field types derive scales, or [Coordinates](/viz/plot/coordinate) to see how position channels are reinterpreted.
+## Related props
 
-## How It Works
+These are the point binding props used in the entry example. See the [mark reference](/viz/plot/reference/mark) and [encoding reference](/viz/plot/reference/encoding) for complete contracts.
 
-React mark props become serializable channel configuration while `IRPlot` is built. A field is represented internally as `{ field: 'gdp' }`, while a constant becomes `{ value: 80 }`.
+<ComponentProps
+  items={[
+    {
+      name: 'PointMark.x',
+      kind: 'property',
+      type: 'string',
+      description: 'Horizontal position field; needed by this page’s 2D Cartesian example.',
+    },
+    {
+      name: 'PointMark.y',
+      kind: 'property',
+      type: 'string',
+      description: 'Vertical position field; needed by this page’s 2D Cartesian example.',
+    },
+    {
+      name: 'PointMark.color',
+      kind: 'property',
+      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
+      description:
+        "Strings match fields first. Explicit fields use `{ kind: 'field', value: string, scale?: string }`; constants use `{ kind: 'constant', value: string }`.",
+    },
+    {
+      name: 'PointMark.size',
+      kind: 'property',
+      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
+      description:
+        "Strings read numeric fields; numbers specify a fixed radius. Explicit forms are `{ kind: 'field', value: string, scale?: string }` or `{ kind: 'constant', value: number }`; negative values are rejected.",
+    },
+  ]}
+/>
 
-The figure connects **build-time selection** for a built-in flat style prop with **runtime value resolution**. Its numbers are candidate priorities: a string first matches a field name and only after a miss tries a valid constant. If neither accepts it, the builder warns and skips the prop rather than processing a data row.
+## Further reading
 
-<ComponentPreview files="channel-binding-flow" hideCode size="lg" />
-
-Once Plot IR records the binding type, it does not fall back again: a field binding resolves one value per canonical row, while a constant binding reads its own `value` directly. Both paths hand the resolved value to a mark that supports the channel.
-
-Field lookup follows the data model rule: first check whether the complete field name is a direct property on the row, then fall back to `.` traversal. Data preparation applies `fieldMap`, `format`, and `resolveField` before writing normalized results under logical field names; the prepared result is called a canonical row.
-
-Each mark reads only the channels it supports. `PathMark` can use `x` / `y` / `order` / `series` / `color` / `strokeWidth` to produce lines, while `PointMark` reads position and node style. A channel says which value to read and which visual result it controls; it does not store the rendered result.
-
-| Form                           | Internal Meaning                                                                  |
-| ------------------------------ | --------------------------------------------------------------------------------- |
-| `<PointMark x="gdp" />`        | `x` is a field channel that reads `gdp` from the canonical row                    |
-| `<PointMark color="region" />` | `color` is a field channel, and its field type derives the color scale            |
-| `<ReferenceMark y={80} />`     | `y` is a constant channel and does not read data rows                             |
-| `<PathMark order="month" />`   | `order` is not inside the `encoding` object, but still reads a field to sort rows |
-
-A channel only answers "which value to read"; scales map that value into drawing space or visual attributes, and coordinates interpret positional channel roles.
+<LinkedSections
+  items={[
+    {
+      title: 'Built-in channels',
+      description: 'See the visual properties supported by each channel.',
+      url: '/viz/plot/channel/builtin',
+    },
+    {
+      title: 'Custom channels',
+      description: 'Define and register project-specific channels.',
+      url: '/viz/plot/channel/custom-channel',
+    },
+    {
+      title: 'Scales',
+      description: 'Control mappings from data to position, color, and size.',
+      url: '/viz/plot/scale',
+    },
+    {
+      title: 'Coordinates',
+      description: 'Interpret position channels in different coordinate systems.',
+      url: '/viz/plot/coordinate',
+    },
+  ]}
+/>

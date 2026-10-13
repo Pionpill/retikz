@@ -1843,11 +1843,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'DataReference',
     url: '/viz/data/model/reference#irdatareference--datareferenceschema',
   },
-  FieldFormatSchema: {
-    schema: DataIR.FieldFormatSchema,
-    label: 'FieldFormat',
-    url: '/viz/data/model/reference#fieldformat--fieldformatschema',
-  },
   DataModelSchema: {
     schema: DataIR.DataModelSchema,
     label: 'DataModel',

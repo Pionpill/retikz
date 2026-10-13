@@ -9,7 +9,7 @@ const Demo: FC = () => (
       position={[-360, 0]}
       text={['InputScene', 'framework-neutral']}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -17,7 +17,7 @@ const Demo: FC = () => (
       position={[-215, 0]}
       text={['Vanilla normalize', 'normalizeScene']}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12, weight: 'bold' } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12, weight: 'bold' }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       position={[-65, 0]}
       text={['Core IR', 'JSON contract']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       position={[75, 0]}
       text={['Core compiler', 'compileToScene']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -41,7 +41,7 @@ const Demo: FC = () => (
       position={[220, 0]}
       text={['Scene', 'backend-neutral']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -49,7 +49,7 @@ const Demo: FC = () => (
       position={[365, 0]}
       text={['SVG / Canvas', 'DOM or string']}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'gray', fill: 'gray', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
 

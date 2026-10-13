@@ -2,7 +2,7 @@ import type { Transform } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRPosition } from '../schemas';
 import type { Rect } from '../shared/geometry';
-import { DEG_TO_RAD, RAD_TO_DEG } from '../shared/geometry';
+import { DEG_TO_RAD } from '../shared/geometry';
 import type { NodeLayout } from './node';
 
 /** 将局部点按 transform chain 投影到全局坐标 */
@@ -76,7 +76,7 @@ export const isTransformChainInvertible = (chain: ReadonlyArray<Transform>): boo
 
 /** 将 NodeLayout 投影到全局坐标系 */
 export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<Transform>): NodeLayout => {
-  const [gx, gy] = applyTransformChain([layout.rect.x, layout.rect.y], chain);
+  const [gx, gy] = applyTransformChain([layout.geometry.rect.x, layout.geometry.rect.y], chain);
   let rotateAccumRad = 0;
   let scaleX = 1;
   let scaleY = 1;
@@ -91,23 +91,25 @@ export const projectLayoutToGlobal = (layout: NodeLayout, chain: ReadonlyArray<T
   }
 
   const globalRect: Rect = {
-    ...layout.rect,
+    ...layout.geometry.rect,
     x: gx,
     y: gy,
-    rotate: (layout.rect.rotate ?? 0) + rotateAccumRad,
-    width: layout.rect.width * Math.abs(scaleX),
-    height: layout.rect.height * Math.abs(scaleY),
+    rotate: (layout.geometry.rect.rotate ?? 0) + rotateAccumRad,
+    width: layout.geometry.rect.width * Math.abs(scaleX),
+    height: layout.geometry.rect.height * Math.abs(scaleY),
   };
 
   return {
     ...layout,
-    rect: globalRect,
-    rotateDeg: layout.rotateDeg + rotateAccumRad * RAD_TO_DEG,
-    margin: {
-      top: layout.margin.top * Math.abs(scaleY),
-      right: layout.margin.right * Math.abs(scaleX),
-      bottom: layout.margin.bottom * Math.abs(scaleY),
-      left: layout.margin.left * Math.abs(scaleX),
+    geometry: {
+      ...layout.geometry,
+      rect: globalRect,
+      margin: {
+        top: layout.geometry.margin.top * Math.abs(scaleY),
+        right: layout.geometry.margin.right * Math.abs(scaleX),
+        bottom: layout.geometry.margin.bottom * Math.abs(scaleY),
+        left: layout.geometry.margin.left * Math.abs(scaleX),
+      },
     },
   };
 };

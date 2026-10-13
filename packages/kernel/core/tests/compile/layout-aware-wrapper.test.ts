@@ -296,8 +296,9 @@ describe('layout-aware composite runtime wrapper tree', () => {
               boundingShape: 'circle',
               meta: { role: 'all' },
               animations: [fade],
-              style: { fill: 'red' },
+
               defaults: {
+                style: { fill: 'red' },
                 node: {
                   style: { fill: 'white' },
                 },
@@ -339,8 +340,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
           children: [
             context.scope(
               {
-                style: { color: 'red' },
                 defaults: {
+                  style: { color: 'red' },
                   node: {
                     shape: 'circle',
                     style: { fill: 'white' },
@@ -360,7 +361,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         {
           type: 'scope',
           children: [{ namespace: 'test', type: 'styledReplay' }],
-          style: { color: 'blue' },
+          defaults: { style: { color: 'blue' } },
         },
       ]),
       { composites: [definition], padding: 0 },
@@ -395,7 +396,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           children: [
             context.scope(
               {
-                style: { fill: 'purple' },
+                defaults: { style: { fill: 'purple' } },
               },
               [context.replay(laid)],
             ),

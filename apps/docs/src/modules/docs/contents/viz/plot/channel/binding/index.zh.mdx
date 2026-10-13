@@ -3,51 +3,206 @@ title: 通道绑定
 description: 通道绑定说明如何用字段或固定值控制位置、颜色、大小、形状和文本等视觉结果。
 ---
 
-数据模型说明字段是什么、真实数据怎么接进来；通道绑定说明字段**用在哪里**。在 React 写法里没有单独的 `<Encoding>` 组件，通道通常直接写在 mark props 上。
+一份数据可以画成很多种图，因为数据本身没有规定每个字段该怎样呈现。通道是图形语法中连接**数据与视觉属性**的环节：位置、颜色、大小、形状和文字都是图形可以承载信息的方式，通道绑定则指定每一种方式使用哪个字段或固定值。
+
+例如，一行数据记录了某个地区的 GDP、预期寿命和人口。选择用点表示这条记录后，可以把 GDP 绑定到 `x`、预期寿命绑定到 `y`、人口绑定到 `size`。读者便能通过点的位置和大小比较这些数据，而不必逐行读取数字。同一个字段也可以用于多个通道，例如同时用颜色和形状区分地区。
+
+在图形语法中，通道与其他部分各有分工：
+
+| 部分                           | 负责什么                                       | 在这个例子中                                   |
+| ------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
+| 数据                           | 提供记录与字段值                               | 每行包含 GDP、预期寿命、人口和地区             |
+| [图元](/viz/plot/mark)         | 决定用什么绘制形式表达记录                     | 用点呈现每条记录                               |
+| [比例尺](/viz/plot/scale)      | 把数据值转换为位置数值、颜色或大小等可绘制的值 | 把人口数转换为合适的点半径                     |
+| [坐标系](/viz/plot/coordinate) | 解释位置通道并投影到画面                       | 在直角坐标系中将 `x`、`y` 解释为横向与纵向位置 |
+
+因此，将 `population` 绑定到 `size` 声明的是“用人口控制大小”；具体画多大由比例尺决定，最终以什么形状呈现由图元决定。改变绑定，就能让相同数据、相同图元表达不同的比较关系。
+
+## 接入方式
+
+先完成[快速开始](/viz/plot/get-start)中的安装。本例用三行示意数据同时绑定位置、颜色和大小，结果是三个位置、颜色或大小不同的点。两条位置比例尺设置 `domainPadding`，为边缘的点留出空间。
+
+<ComponentPreview files="channel-binding-entry" responsive hideCode size="lg" />
+
+在 HTML 中准备 `<div id="plot"></div>`，选择一种入口运行。React + JSX 将绑定写在图元 props 上；另外三种写法使用显式配置。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+从 `@retikz/plot-react` 导入组件，用 `PointMark` 的 props 声明字段绑定。
 
 ```tsx
-<PointMark x="gdp" y="life" color="region" size="population" />
-<PointMark x="gdp" y="life" text="abbr" />
+import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+createRoot(document.getElementById('plot')!).render(
+  <Plot data={rows} width={360} height={220}>
+    <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.15, upper: 0.15 }} />
+    <PointMark x="gdp" y="life" color="region" size="population" />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" />
+  </Plot>,
+);
 ```
 
-这些 props 就是通道的使用入口：`x` 是位置通道，`color` 是颜色通道，`size` 是样式通道。一个图元可以同时使用多个通道，把同一行数据转成位置、外观和文字。
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+从 `@retikz/plot` 导入配置类型，将完整 IR 传给 React `Plot` 的 `spec`。
+
+```tsx
+import { Plot } from '@retikz/plot-react';
+import type { IRPlot } from '@retikz/plot';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      color: { kind: 'field', value: 'region' },
+      size: { kind: 'field', value: 'population' },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+createRoot(document.getElementById('plot')!).render(<Plot spec={spec} data={{ rows }} width={360} height={220} />);
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+从 `@retikz/plot-vanilla` 导入 `plot` 创建配置，再用 `renderPlot` 输出 SVG。
+
+```ts
+import { plot, renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec = plot({
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      color: { kind: 'field', value: 'region' },
+      size: { kind: 'field', value: 'population' },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+});
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+直接声明 `IRPlot`，交给 `renderPlot` 和命名数据集渲染。
+
+```ts
+import type { IRPlot } from '@retikz/plot';
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const rows = [
+  { gdp: 400, life: 76, region: 'A', population: 8 },
+  { gdp: 900, life: 81, region: 'B', population: 16 },
+  { gdp: 1600, life: 84, region: 'A', population: 28 },
+];
+
+const spec: IRPlot = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { reference: 'rows' },
+  scales: [
+    { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+    { type: 'linear', name: 'y', domainPadding: { kind: 'ratio', lower: 0.15, upper: 0.15 } },
+  ],
+  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'point',
+      encoding: { x: { field: 'gdp' }, y: { field: 'life' } },
+      color: { kind: 'field', value: 'region' },
+      size: { kind: 'field', value: 'population' },
+    },
+  ],
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y' },
+  ],
+};
+
+document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width: 360, height: 220 });
+```
+
+</DocTab>
+</DocTabs>
+
+显式配置的 `data.reference` 必须与数据集名称 `rows` 一致。四种入口表达相同绑定；React 的尺寸指定绘图区，Vanilla 渲染选项还指定 SVG 输出尺寸，因此外框尺寸可能不同。
 
 ## 字段与常量
 
-React DSL 里字符串通常表示字段名：
+通道有两种绑定形式：**字段通道**从每行数据中读取指定字段，**常量通道**直接使用配置中的固定值。选择哪一种，取决于这个视觉属性是否需要随数据变化。
 
-```tsx
-<PointMark x="gdp" y="life" color="region" />
-```
+| 形式     | 取值方式与效果                                                                 | 何时使用                                       | 绑定写法                                                                |
+| -------- | ------------------------------------------------------------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------- |
+| 字段通道 | 逐行读取字段，再按通道与比例尺规则生成视觉结果；不同记录可以有不同的位置或样式 | 用位置比较数值、用颜色区分类别、用大小表达数量 | 位置：`{ field: 'gdp' }`；点颜色：`{ kind: 'field', value: 'region' }`  |
+| 常量通道 | 始终读取同一个配置值，不从数据行取值；对应位置或样式保持一致                   | 绘制固定阈值参考线，或为所有点指定统一颜色     | 位置：`{ value: 80 }`；点颜色：`{ kind: 'constant', value: 'crimson' }` |
 
-少数通道也接受常量。最典型的是 `ReferenceMark`：
+表中展示 Vanilla / IR 的显式绑定形式，完整图元配置及 React 简写见上方接入页签。常量位置仍由比例尺和坐标系转换：例如参考线的 `y` 绑定为 `80`，表示数据值 80，而不是距画布顶部 80 像素。每种图元只接受其支持的通道和绑定形式。
 
-```tsx
-<ReferenceMark y={80} color="crimson" />
-```
-
-对于既能接收字段名、又能接收字符串常量的**内置扁平样式 prop**，React DSL 按下面的优先级消除歧义：
-
-1. 先在当前数据集与数据模型中匹配同名字段；命中后生成字段绑定。
-2. 只有字段未命中时，才检查这个字符串是不是该 prop 接受的合法常量，例如 CSS 颜色或内置形状名。
-3. 两种规则都不接受时，构建器会给出警告并跳过这个 prop。
-
-因此，如果数据中存在名为 `crimson` 的字段，`color="crimson"` 会优先读取该字段，而不是使用深红色常量。需要避开同名歧义时，可以显式声明常量：
-
-```tsx
-<PointMark color={{ kind: 'constant', value: 'crimson' }} />
-```
-
-这套判定只发生在 React DSL 构建 `IRPlot` 时，不表示某一行缺少字段值后会回退到常量。进入 Plot IR 后，一个通道仍然只能二选一：要么读取每行数据中的字段，要么始终使用同一个固定值。
-
-位置通道的字符串仍直接表示字段；自定义 `channels` 中的字符串也直接表示字段，常量需要显式写成 `{ kind: 'constant', value }`。完整的构建期判定与运行期取值链路见后文“技术原理”。
-
-## 绑定试验场
+| 属性    | 示例取值                  | 作用与约束                                   |
+| ------- | ------------------------- | -------------------------------------------- |
+| `x`     | `"gdp"`                   | 点的横向位置字段                             |
+| `y`     | `"life"`                  | 点的纵向位置字段                             |
+| `color` | `"region"` 或显式常量     | 按类别分色，或统一颜色                       |
+| `size`  | `"population"` 或 `12`    | 按数值映射点半径，或使用固定半径；不接受负值 |
+| `shape` | `"region"` 或显式圆形常量 | 按类别分配形状，字段必须为分类类型           |
+| `label` | `"abbr"`                  | 为点添加字段文字标注                         |
 
 在面板中切换 `x` / `y` 字段，并把颜色、大小或形状从字段驱动改成固定值。图形结构保持不变，因此每次操作只展示当前通道绑定带来的差异。
 
 <ComponentPreview
   files={['channel-binding', 'channel-binding.preview.tsx', 'channel-binding.data.ts']}
+  mode="showcase"
   size="lg"
   caption="位置通道改变数据在坐标系中的落点；样式通道可以读取字段，也可以使用固定值。"
   defaultSourceFile="channel-binding.preview.tsx"
@@ -55,33 +210,59 @@ React DSL 里字符串通常表示字段名：
 
 同一行数据可以同时绑定到多个通道：`gdp` 与 `life` 决定位置，`region` 决定颜色和形状，`population` 决定点半径，`abbr` 决定文字标注。切成固定值后，数据行不再参与对应样式的计算。
 
-`Axis` 根据位置通道显示坐标刻度。本试验场只挂载了颜色和大小图例，因此相应通道改成固定值后，对应 `Legend` 会消失；完整能力还支持为字段驱动的透明度和形状通道添加图例。
+`PlotAxis` 根据位置通道显示坐标刻度。本试验场只挂载了颜色和大小图例，因此相应通道改成固定值后，对应 `PlotLegend` 会消失；完整能力还支持为字段驱动的透明度和形状通道添加图例。
 
-## 比例尺与坐标系
+## 错误与限制
 
-通道只负责“取哪个值”。比例尺负责把值映射到绘图空间或视觉属性；坐标系负责解释位置通道的角色。例如同样的 `x="quarter"`、`y="value"`，在 `cartesian2D` 下是横向分类 + 纵向数值，在 `polar2D` 下会变成角向分类 + 径向数值。
+- **字符串先匹配字段。** React 的内置扁平样式 prop（如 `color`）先匹配当前数据集和模型中的同名字段，再尝试合法常量；两者都不接受时会警告并跳过该 prop。这不是逐行缺值时的回退规则。
+- **固定样式要消除歧义。** 数据中存在 `crimson` 字段时，`color="crimson"` 会读字段。统一深红色应写 `color={{ kind: 'constant', value: 'crimson' }}`。显式 IR 则写 `color: { kind: 'constant', value: 'crimson' }`。
+- **位置与样式的对象形式不同。** IR 的位置放在 `encoding` 中，使用 `{ field }` 或 `{ value }`；点的颜色与大小在图元顶层，使用 `{ kind, value }`。例如参考线常量为 `encoding: { y: { value: 80 }, color: { value: 'crimson' } }`，React 对应 `<ReferenceMark y={80} color="crimson" />`（需从 `@retikz/plot-react` 导入）。
+- **字段名按完整键优先。** 若同时存在直接属性 `"metrics.gdp"` 和嵌套对象 `metrics.gdp`，优先读取直接属性；没有完整键时才按点号逐层查找。请确保绑定字段在数据中有有效值。
+- **通道支持范围由图元决定。** 不要将参考线支持的数值位置直接套到 `PointMark` 的 `x` / `y` props；这里要求字段名。自定义 `channels` 中的字符串也是字段名，常量使用显式 `{ kind: 'constant', value }`。
+- **留白由比例尺负责。** `domainPadding` 扩展数据域；点半径或标签尺寸增加后需要相应调整留白，通道绑定本身不会自动防止溢出。
 
-继续阅读[内置通道](/viz/plot/channel/builtin)可以看到样式通道如何落到 core 元素属性；阅读[比例尺](/viz/plot/scale)可以看到字段类型如何派生 scale；阅读[坐标系](/viz/plot/coordinate)可以看到位置通道如何被不同坐标系重解释。
+## 相关属性
 
-## 技术原理
+这里收录接入示例中的点绑定属性；完整契约见[图元参考](/viz/plot/reference/mark)与[通道参考](/viz/plot/reference/encoding)。
 
-React 图元属性会在构建 `IRPlot` 时转成可序列化的通道配置。字段在内部表示为 `{ field: 'gdp' }`，常量表示为 `{ value: 80 }`。
+<ComponentProps
+  items={[
+    {
+      name: 'PointMark.x',
+      kind: 'property',
+      type: 'string',
+      description: '横向位置字段；本页二维直角坐标例子需要此字段。',
+    },
+    {
+      name: 'PointMark.y',
+      kind: 'property',
+      type: 'string',
+      description: '纵向位置字段；本页二维直角坐标例子需要此字段。',
+    },
+    {
+      name: 'PointMark.color',
+      kind: 'property',
+      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
+      description:
+        "字符串先匹配字段。显式字段形态为 `{ kind: 'field', value: string, scale?: string }`；常量为 `{ kind: 'constant', value: string }`。",
+    },
+    {
+      name: 'PointMark.size',
+      kind: 'property',
+      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
+      description:
+        "字符串读取数值字段，数字指定固定半径。显式形态为 `{ kind: 'field', value: string, scale?: string }` 或 `{ kind: 'constant', value: number }`；不接受负值。",
+    },
+  ]}
+/>
 
-下图把内置扁平样式 prop 的**构建期判定**和通道的**运行期取值**串在一起。编号表示候选优先级：字符串先匹配字段名，只有未命中时才检查合法常量；两者都不接受时警告并跳过，而不是继续处理数据行。
+## 延伸阅读
 
-<ComponentPreview files="channel-binding-flow" hideCode size="lg" />
-
-绑定类型一旦写入 Plot IR 就不再回退：字段绑定从 canonical row 解析逐行值，常量绑定直接读取自身的 `value`。两条路径最终都把已解析值交给支持该通道的图元。
-
-字段名解析遵循和数据模型相同的规则：先检查整段字段名是不是数据行上的直接属性，再按 `.` 逐层查找。数据准备阶段会先应用 `fieldMap`、`format` 和 `resolveField`，再把规范化结果写回逻辑字段名；这些准备完成的数据行称为 canonical row。
-
-不同图元只读取自己支持的通道。`PathMark` 可以使用 `x` / `y` / `order` / `series` / `color` / `strokeWidth` 生成折线；`PointMark` 则读取位置与节点样式。通道只描述“读哪个值”和“它控制什么视觉结果”，不会直接保存渲染结果。
-
-| 写法                           | 内部含义                                                       |
-| ------------------------------ | -------------------------------------------------------------- |
-| `<PointMark x="gdp" />`        | `x` 是字段通道，读取 canonical 行里的 `gdp`                    |
-| `<PointMark color="region" />` | `color` 是字段通道，会按字段类型派生颜色比例尺                 |
-| `<ReferenceMark y={80} />`     | `y` 是常量通道，不读取数据行                                   |
-| `<PathMark order="month" />`   | `order` 不在 `encoding` 对象里，但仍按字段读取，用于数据行排序 |
-
-通道只回答“读哪个值”；至于值怎么映射成绘图空间、位置通道怎么被坐标系解释，交给比例尺和坐标系。
+<LinkedSections
+  items={[
+    { title: '内置通道', description: '查看各通道支持的视觉属性。', url: '/viz/plot/channel/builtin' },
+    { title: '自定义通道', description: '定义并注册项目自己的视觉通道。', url: '/viz/plot/channel/custom-channel' },
+    { title: '比例尺', description: '控制数据值到位置、颜色和大小的映射。', url: '/viz/plot/scale' },
+    { title: '坐标系', description: '了解位置通道在不同坐标系中的含义。', url: '/viz/plot/coordinate' },
+  ]}
+/>

@@ -45,5 +45,5 @@ export const scaleOrdinalControls = definePreviewControls({
 export const previewControlContract = {
   controls: scaleOrdinalControls,
   canonicalValues: { palette: 'default', showLegend: true },
-  relatedApis: ['Plot.plotDefaults', 'PlotLegend.channel'],
+  relatedApis: ['Plot.defaultPlot', 'PlotLegend.channel'],
 } satisfies PreviewControlContract;

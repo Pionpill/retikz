@@ -81,7 +81,7 @@ const render = (properties: Record<string, unknown> = {}, series = true, extras:
   const all = descendants(
     materialize(
       lowerPlotWithLineage(
-        { ...plot, plotDefaults: { ...plot.plotDefaults, palette: { categorical: palette, series: palette } } },
+        { ...plot, defaultPlot: { ...plot.defaultPlot, palette: { categorical: palette, series: palette } } },
         { rows },
         { width: 480, height: 320 },
       ).children,
@@ -182,22 +182,38 @@ it.each([true, false])('muted keeps point appearance and lowers path opacity wit
   expect(muted.points).toEqual(baseline.points);
   expect(muted.paths.length).toBeGreaterThan(0);
   expect(muted.paths.map(path => path.style?.stroke)).toEqual(baseline.paths.map(path => path.style?.stroke));
-  expect(muted.paths.every(path => path.style?.strokeOpacity === 0.6)).toBe(true);
+  expect(
+    muted.paths.every(
+      path => (typeof path.style?.opacity === 'object' ? path.style.opacity.stroke : undefined) === 0.6,
+    ),
+  ).toBe(true);
 });
 it.each([0, 0.35, 1])('explicit path opacity %s wins over muted default', strokeOpacity => {
-  const result = render({ colorMode: 'muted', path: { strokeOpacity } });
+  const result = render({ colorMode: 'muted', path: { opacity: { stroke: strokeOpacity } } });
 
   expect(result.paths).toHaveLength(4);
-  expect(result.paths.every(path => path.style?.strokeOpacity === strokeOpacity)).toBe(true);
+  expect(
+    result.paths.every(
+      path => (typeof path.style?.opacity === 'object' ? path.style.opacity.stroke : undefined) === strokeOpacity,
+    ),
+  ).toBe(true);
 });
 it('authored mark inherits muted opacity and can override it', () => {
   const inherited = render({ colorMode: 'muted' }, true, { marks: [{ kind: 'connected-scatter', override: true }] });
 
-  expect(inherited.paths.every(path => path.style?.strokeOpacity === 0.6)).toBe(true);
+  expect(
+    inherited.paths.every(
+      path => (typeof path.style?.opacity === 'object' ? path.style.opacity.stroke : undefined) === 0.6,
+    ),
+  ).toBe(true);
 
   const explicit = render({ colorMode: 'muted' }, true, {
-    marks: [{ kind: 'connected-scatter', override: true, properties: { path: { strokeOpacity: 0.9 } } }],
+    marks: [{ kind: 'connected-scatter', override: true, properties: { path: { opacity: { stroke: 0.9 } } } }],
   });
 
-  expect(explicit.paths.every(path => path.style?.strokeOpacity === 0.9)).toBe(true);
+  expect(
+    explicit.paths.every(
+      path => (typeof path.style?.opacity === 'object' ? path.style.opacity.stroke : undefined) === 0.9,
+    ),
+  ).toBe(true);
 });

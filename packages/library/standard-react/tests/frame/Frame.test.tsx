@@ -29,7 +29,7 @@ describe('<Frame>', () => {
         id="root"
         meta={{ source: 'react' }}
         border={{ style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 }}
-        style={{ stroke: '#0f172a' }}
+        defaults={{ style: { stroke: '#0f172a' } }}
       >
         <Node position={[0, 0]} />
       </Frame>,
@@ -37,7 +37,7 @@ describe('<Frame>', () => {
 
     expect(result.ir.children[0]).toMatchObject({
       id: 'root',
-      style: { stroke: '#0f172a' },
+      defaults: { style: { stroke: '#0f172a' } },
       meta: { source: 'react' },
       border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 },
     });

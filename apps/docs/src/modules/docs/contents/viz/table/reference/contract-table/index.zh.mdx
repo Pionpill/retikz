@@ -9,21 +9,21 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
 
 `IRTable` 是 `IRDetailTable | IRManualTable | IRCustomTable` 的聚合类型。三个变体共享 `namespace + type`，再分别约束 `data` 与 `structure`。
 
-| 字段                  | 类型                                | 默认值     | 描述                                                         |
-| --------------------- | ----------------------------------- | ---------- | ------------------------------------------------------------ |
-| `namespace`           | `'table'`                           | —          | Tier 2 composite 命名空间                                    |
-| `type`                | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                                         |
-| `id?`                 | `string`                            | —          | 可选稳定 id                                                  |
-| `appearanceDefaults?` | `IRTableAppearanceDefaults`         | `{}`       | 已存在 body / columnHeader Cell 的稀疏外观默认值             |
-| `cellLayoutDefaults?` | `IRTableCellLayoutDefaults`         | `{}`       | 按 body / columnHeader 提供 padding 默认值，单元格显式值优先 |
-| `layout?`             | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border                                |
-| `meta?`               | `JsonObject`                        | —          | lowering 原样保留的 JSON-safe 元数据                         |
-| `rules?`              | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖                                   |
-| `encodings?`          | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道                                 |
-| `visualDefaults?`     | `IRTableVisualDefaults`             | `{}`       | 已存在 visual encoding 的颜色范围默认值                      |
-| `tableDefaults?`      | `IRTableDefaults`                   | `{}`       | 稀疏默认片段，优先级低于同级显式 Source 字段                 |
-| `data?`               | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选                        |
-| `structure`           | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure                           |
+| 字段                 | 类型                                | 默认值     | 描述                                                         |
+| -------------------- | ----------------------------------- | ---------- | ------------------------------------------------------------ |
+| `namespace`          | `'table'`                           | —          | Tier 2 composite 命名空间                                    |
+| `type`               | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                                         |
+| `id?`                | `string`                            | —          | 可选稳定 id                                                  |
+| `defaultAppearance?` | `IRTableAppearanceDefaults`         | `{}`       | 已存在 body / columnHeader Cell 的稀疏外观默认值             |
+| `defaultCellLayout?` | `IRTableCellLayoutDefaults`         | `{}`       | 按 body / columnHeader 提供 padding 默认值，单元格显式值优先 |
+| `layout?`            | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border                                |
+| `meta?`              | `JsonObject`                        | —          | lowering 原样保留的 JSON-safe 元数据                         |
+| `rules?`             | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖                                   |
+| `encodings?`         | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道                                 |
+| `defaultVisual?`     | `IRTableVisualDefaults`             | `{}`       | 已存在 visual encoding 的颜色范围默认值                      |
+| `defaultTable?`      | `IRTableDefaults`                   | `{}`       | 稀疏默认片段，优先级低于同级显式 Source 字段                 |
+| `data?`              | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选                        |
+| `structure`          | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure                           |
 
 ### TableSchema
 
@@ -46,10 +46,10 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    appearanceDefaults: '已存在 body / columnHeader Cell 的稀疏外观默认值。',
-    cellLayoutDefaults: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
-    visualDefaults: '已存在 visual encoding 的颜色范围默认值。',
-    tableDefaults: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
+    defaultAppearance: '已存在 body / columnHeader Cell 的稀疏外观默认值。',
+    defaultCellLayout: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
+    defaultVisual: '已存在 visual encoding 的颜色范围默认值。',
+    defaultTable: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     transform: 'manual Table 不接受数据变换。',
     dataExecution: 'manual Table 不接受数据执行配置。',
@@ -73,10 +73,10 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    appearanceDefaults: '已存在 body / columnHeader Cell 的稀疏外观默认值。',
-    cellLayoutDefaults: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
-    visualDefaults: '已存在 visual encoding 的颜色范围默认值。',
-    tableDefaults: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
+    defaultAppearance: '已存在 body / columnHeader Cell 的稀疏外观默认值。',
+    defaultCellLayout: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
+    defaultVisual: '已存在 visual encoding 的颜色范围默认值。',
+    defaultTable: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     transform: '有序数据变换声明，要求绑定 dataset。',
     dataExecution: '本 Table 的稀疏执行配置，要求绑定 dataset。',
@@ -192,7 +192,7 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table default
 
 ### TableCellRuleSchema
 
-Cell 的 `appearance.content.style` 设置内容级联颜色与透明度；`appearance.content.defaults` 设置 `node`、`path`、`label`、`arrow` 默认值和 `reset` 继承屏障。Node 默认值进一步使用 `style` / `layout`，Path 默认值使用 `style`；Label 与 Arrow 的叶子结构保持不变。各字段独立覆盖，空分组不清除继承值，`0` 与 `false` 保留。
+Cell 的 `appearance.content.defaults.style` 设置内容级联颜色与透明度；`appearance.content.defaults` 设置 `node`、`path`、`label`、`arrow` 默认值和 `reset` 继承屏障。Node 默认值进一步使用 `style` / `layout`，Path 默认值使用 `style`；Label 与 Arrow 的叶子结构保持不变。各字段独立覆盖，空分组不清除继承值，`0` 与 `false` 保留。
 
 <ZodSchema
   name="TableCellRuleSchema"
@@ -206,7 +206,7 @@ Cell 的 `appearance.content.style` 设置内容级联颜色与透明度；`appe
     'appearance.background.fill': '填充匹配 Cell box 的 paint。',
     'appearance.background.fillOpacity': 'Cell 背景 fill opacity；省略时按 1。',
     'appearance.content': '应用于匹配 Cell 内容的 Core Scope 样式与默认值。',
-    'appearance.content.style': '按字段覆盖内容级联颜色、描边与透明度。',
+    'appearance.content.defaults.style': '按字段覆盖内容级联颜色、描边与透明度。',
     'appearance.content.defaults': '内容后代的默认值通道与继承屏障。',
     'appearance.content.defaults.node': 'Node 默认值，视觉属性位于 style，尺寸与文本排布位于 layout。',
     'appearance.content.defaults.path': 'Path 默认值，视觉属性位于 style。',
@@ -235,9 +235,9 @@ Cell 的 `appearance.content.style` 设置内容级联颜色与透明度；`appe
 
 ## Table Source defaults
 
-Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 按 mode 建立 owner-local 默认 baseline，再合并同名 `TableThemeStyleDefinition` 返回的 `{ defaults?: IRTableDefaults }`。Source 的 `tableDefaults`、`appearanceDefaults`、`visualDefaults` 与显式 `layout.borders` 按顺序覆盖前面的 defaults；Cell 的局部配置、visual encoding 与有序 rules 再完成最终计划。
+Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 按 mode 建立 owner-local 默认 baseline，再合并同名 `TableThemeStyleDefinition` 返回的 `{ defaults?: IRTableDefaults }`。Source 的 `defaultTable`、`defaultAppearance`、`defaultVisual` 与显式 `layout.borders` 按顺序覆盖前面的 defaults；Cell 的局部配置、visual encoding 与有序 rules 再完成最终计划。
 
-`appearanceDefaults`、`visualDefaults` 与 `tableDefaults` 都是稀疏对象，只能为已经存在的 Cell、border 或 visual encoding 提供默认值，不会创建 Cell、rule、border、encoding 或 Legend。`layout.borders.outer` 是按物理方向组织的稀疏对象，可分别设置 `top`、`right`、`bottom`、`left`。
+`defaultAppearance`、`defaultVisual` 与 `defaultTable` 都是稀疏对象，只能为已经存在的 Cell、border 或 visual encoding 提供默认值，不会创建 Cell、rule、border、encoding 或 Legend。`layout.borders.outer` 是按物理方向组织的稀疏对象，可分别设置 `top`、`right`、`bottom`、`left`。
 
 发布包不预注册命名的 Core 或 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeStyles` 注入 Core definition，并通过 `lower.tableThemeStyles` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
 
@@ -259,7 +259,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   description="已有 Table Cell 的背景、内容与物理边稀疏默认值。"
   descriptions={{
     background: '已有 Cell box 的稀疏背景默认值。',
-    content: '已有 Cell 内容的 Core Scope style 与 defaults。',
+    content: '已有 Cell 内容的 Core Scope defaults。',
     borders: '已有 Cell 四侧的稀疏 border candidates。',
   }}
 />
@@ -302,10 +302,10 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   name="TableDefaultsSchema"
   description="限制在已有外观、border 与 visual scale 字段内的稀疏 Table defaults 聚合片段。"
   descriptions={{
-    appearanceDefaults: '已有 body / columnHeader Cells 的外观默认值。',
-    cellLayoutDefaults: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
+    defaultAppearance: '已有 body / columnHeader Cells 的外观默认值。',
+    defaultCellLayout: '按 body / columnHeader 提供 padding 默认值；单元格显式值优先。',
     layout: '仅包含 border 的 layout 默认值。',
-    visualDefaults: '已有 visual encodings 的颜色范围默认值。',
+    defaultVisual: '已有 visual encodings 的颜色范围默认值。',
   }}
 />
 

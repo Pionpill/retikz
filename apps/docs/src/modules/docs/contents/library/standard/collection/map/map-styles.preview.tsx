@@ -12,8 +12,6 @@ export type MapStylesPreviewValues = {
 export const renderMapStylesPreview = (values: MapStylesPreviewValues) => (
   <Layout viewBox={{ x: -10, y: -10, width: 280, height: 112 }}>
     <Map
-      layout={{ gap: 4, height: 36, key: { width: values.keyWidth }, value: { width: values.valueWidth } }}
-      style={{ font: { size: 14 }, key: { fill: 'dodgerblue' } }}
       entries={[
         {
           key: 'id',
@@ -24,6 +22,13 @@ export const renderMapStylesPreview = (values: MapStylesPreviewValues) => (
         },
         { key: 'state', value: 'ready' },
       ]}
+      layout={{ gap: 4 }}
+      defaultCell={{
+        style: { font: { size: 14 } },
+        layout: { height: 36 },
+        key: { style: { fill: 'dodgerblue' }, layout: { width: values.keyWidth } },
+        value: { layout: { width: values.valueWidth } },
+      }}
     />
   </Layout>
 );

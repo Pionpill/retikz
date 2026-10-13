@@ -90,16 +90,16 @@ export const renderEllipsePlaygroundPreview = (values: EllipsePlaygroundPreviewV
         center={[0, 0]}
         width={inputBox.width}
         height={inputBox.height}
-        style={{ stroke: 'lightgray', strokeOpacity: 0.5, dashPattern: [1, 4], lineCap: 'round' }}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round', opacity: { stroke: 0.5 } }}
       />
       <Ellipse
         {...ellipsePropsOf(values)}
         style={{
           ...ellipsePropsOf(values).style,
           fill: values.fill,
-          fillOpacity: values.segment && values.closed === 'open' ? 0 : 0.45,
           stroke: values.stroke,
           strokeWidth: 2.5,
+          opacity: { fill: values.segment && values.closed === 'open' ? 0 : 0.45 },
         }}
       />
     </Layout>

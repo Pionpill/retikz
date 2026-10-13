@@ -26,7 +26,7 @@ const InputsFigure: FC<InputsFigureProps> = props => {
           position={[0, i * 85]}
           label={{ text: item.title, position: 'top', font: { size: 12 }, opacity: 0.8 }}
           entries={[{ key: item.key, value: item.value }]}
-          style={{ font: { size: 14 } }}
+          defaultCell={{ style: { font: { size: 14 } } }}
         />
       ))}
       <Map
@@ -36,10 +36,10 @@ const InputsFigure: FC<InputsFigureProps> = props => {
         entries={[
           { key: 'content.type', value: 'node' },
           { key: 'content.text', value: '1' },
-          { key: 'layout.padding', value: '8 / 8 / 8 / 8' },
-          { key: 'layout.overflow', value: 'visible' },
+          { key: 'defaultCell.layout.padding', value: '8 / 8 / 8 / 8' },
+          { key: 'defaultCell.layout.overflow', value: 'visible' },
         ]}
-        style={{ font: { size: 14 } }}
+        defaultCell={{ style: { font: { size: 14 } } }}
       />
       {['data', 'items', 'skeleton'].map(id => (
         <Draw key={id} way={[`${id}.right`, { via: '-|-' }, 'resolved.left']} arrow="->" />

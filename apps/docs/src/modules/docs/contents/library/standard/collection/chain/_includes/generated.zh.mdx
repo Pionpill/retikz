@@ -10,24 +10,24 @@ Source 保留作者选择的输入形式；工厂不展开骨架、不填充默�
 
 <ApiTable>
 
-| 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `animations?`     | `InputChain['animations']`                                                               | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-| `connection?`     | `InputChainConnection`                                                                   | —      | 链整体的连接线默认配置                                                                         |
-| `defaults?`       | `InputChain['defaults']`                                                                 | —      | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
-| `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
-| `label?`          | `InputChain['label']`                                                                    | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `InputChain['layout']`                                                                   | —      | 尺寸和结构排布；并行块仅覆盖结构字段                                                           |
-| `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
-| `style?`          | `InputChain['style']`                                                                    | —      | 集合 单元格的稀疏外观覆盖                                                                      |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `InputChain['transforms']`                                                               | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
-| `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+| 成员                 | 类型                                                                                                                                                                                                                                                                                                | 默认值 | 说明                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `animations?`        | `InputChain['animations']`                                                                                                                                                                                                                                                                          | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                                                                                                           | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                                                                                                            | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaultCell?`       | `InputChain['defaultCell']`                                                                                                                                                                                                                                                                         | —      | 共享单元格默认配置                                                                             |
+| `defaultConnection?` | `InputChainConnection`                                                                                                                                                                                                                                                                              | —      | 链整体的连接线默认配置                                                                         |
+| `defaults?`          | `InputChain['defaults']`                                                                                                                                                                                                                                                                            | —      | 后代默认值通道及继承屏障                                                                       |
+| `frame?`             | `IRScopeFrame`                                                                                                                                                                                                                                                                                      | —      | 可省略默认值的包络装饰                                                                         |
+| `id?`                | `string`                                                                                                                                                                                                                                                                                            | —      | 可选引用 id；始终注册到父级命名空间                                                            |
+| `label?`             | `InputChain['label']`                                                                                                                                                                                                                                                                               | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
+| `layout?`            | `{ direction?: "right" \| "down" \| undefined; gap?: number \| undefined; branchGap?: number \| undefined; branchAlign?: "center" \| "start" \| "end" \| { branch: number; } \| undefined; spacing?: "independent" \| "steps" \| undefined; justify?: "center" \| "start" \| "end" \| undefined; }` | —      | 尺寸和结构排布；并行块仅覆盖结构字段                                                           |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                                                                                                     | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                                                                                                         | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `position?`          | `IRScopePosition`                                                                                                                                                                                                                                                                                   | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                                                                                                           | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `transforms?`        | `InputChain['transforms']`                                                                                                                                                                                                                                                                          | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `zIndex?`            | `number`                                                                                                                                                                                                                                                                                            | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 
 </ApiTable>
 
@@ -207,11 +207,11 @@ export type ChainCellProps = CellMarkerProps;
 
 <ApiTable>
 
-| 成员          | 类型                        | 默认值 | 说明     |
-| ------------- | --------------------------- | ------ | -------- |
-| `children?`   | `ReactNode`                 | —      | 支路声明 |
-| `connection?` | `InputChainConnection`      | —      | 连接覆盖 |
-| `layout?`     | `IRChainParallel['layout']` | —      | 排布覆盖 |
+| 成员                 | 类型                        | 默认值 | 说明     |
+| -------------------- | --------------------------- | ------ | -------- |
+| `children?`          | `ReactNode`                 | —      | 支路声明 |
+| `defaultConnection?` | `InputChainConnection`      | —      | 连接覆盖 |
+| `layout?`            | `IRChainParallel['layout']` | —      | 排布覆盖 |
 
 </ApiTable>
 
@@ -224,7 +224,7 @@ export declare const ChainParallel: FC<ChainParallelProps>;
 
 export type ChainParallelProps = {
   layout?: IRChainParallel['layout'];
-  connection?: InputChainConnection;
+  defaultConnection?: InputChainConnection;
   children?: ReactNode;
 };
 ```
@@ -265,30 +265,30 @@ export type ChainBranchProps = {
 
 **直接调用**
 
-#### <ApiSourceLink label={"chain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={159}>chain</ApiSourceLink> / <ApiSourceLink label={"InputChain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={35}>InputChain</ApiSourceLink>
+#### <ApiSourceLink label={"chain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={166}>chain</ApiSourceLink> / <ApiSourceLink label={"InputChain"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={35}>InputChain</ApiSourceLink>
 
 **公共属性**
 
 <ApiTable>
 
-| 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `animations?`     | `IRChain['animations']`                                                                  | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-| `connection?`     | `InputChainConnection`                                                                   | —      | 链整体的连接线默认配置                                                                         |
-| `defaults?`       | `IRChain['defaults']`                                                                    | —      | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
-| `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
-| `label?`          | `IRChain['label']`                                                                       | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRChain['layout']`                                                                      | —      | 尺寸和结构排布；并行块仅覆盖结构字段                                                           |
-| `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
-| `style?`          | `IRChain['style']`                                                                       | —      | 集合 单元格的稀疏外观覆盖                                                                      |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `IRChain['transforms']`                                                                  | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
-| `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+| 成员                 | 类型                                                                                                                                                                                                                                                                                                | 默认值 | 说明                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRChain['animations']`                                                                                                                                                                                                                                                                             | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                                                                                                           | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                                                                                                            | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaultCell?`       | `IRChain['defaultCell']`                                                                                                                                                                                                                                                                            | —      | 共享单元格默认配置                                                                             |
+| `defaultConnection?` | `InputChainConnection`                                                                                                                                                                                                                                                                              | —      | 链整体的连接线默认配置                                                                         |
+| `defaults?`          | `IRChain['defaults']`                                                                                                                                                                                                                                                                               | —      | 后代默认值通道及继承屏障                                                                       |
+| `frame?`             | `IRScopeFrame`                                                                                                                                                                                                                                                                                      | —      | 可省略默认值的包络装饰                                                                         |
+| `id?`                | `string`                                                                                                                                                                                                                                                                                            | —      | 可选引用 id；始终注册到父级命名空间                                                            |
+| `label?`             | `IRChain['label']`                                                                                                                                                                                                                                                                                  | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
+| `layout?`            | `{ direction?: "right" \| "down" \| undefined; gap?: number \| undefined; branchGap?: number \| undefined; branchAlign?: "center" \| "start" \| "end" \| { branch: number; } \| undefined; spacing?: "independent" \| "steps" \| undefined; justify?: "center" \| "start" \| "end" \| undefined; }` | —      | 尺寸和结构排布；并行块仅覆盖结构字段                                                           |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                                                                                                     | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                                                                                                         | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `position?`          | `IRScopePosition`                                                                                                                                                                                                                                                                                   | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                                                                                                           | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `transforms?`        | `IRChain['transforms']`                                                                                                                                                                                                                                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `zIndex?`            | `number`                                                                                                                                                                                                                                                                                            | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 
 </ApiTable>
 
@@ -348,9 +348,9 @@ export declare const chain: (input: InputChain) => InputEmbed<InputChain>;
 
 export type InputChain = Omit<
   IRChain,
-  'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand' | 'connection'
+  'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand' | 'defaultConnection'
 > & {
-  connection?: InputChainConnection;
+  defaultConnection?: InputChainConnection;
 } & (
     | {
         items: Array<InputChainItem>;
@@ -391,26 +391,26 @@ export declare const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputC
 
 <ApiTable>
 
-| 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `animations?`     | `IRScopeProps['animations']`                                                             | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-| `connection?`     | `IRChain["connection"]`                                                                  | —      | 自动生成连接的局部呈现覆盖                                                                     |
-| `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
-| `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
-| `label?`          | `IRChain["label"]`                                                                       | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRChain["layout"]`                                                                      | —      | 尺寸和结构排布；并行块仅覆盖结构字段                                                           |
-| `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `namespace`       | `"standard"`                                                                             | —      | Standard 复合组件命名空间                                                                      |
-| `position?`       | `IRScopePosition`                                                                        | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
-| `style?`          | `IRChain["style"]`                                                                       | —      | 集合 单元格的稀疏外观覆盖                                                                      |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
-| `type`            | `"chain"`                                                                                | —      | 串并联内容呈现类型                                                                             |
-| `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+| 成员                 | 类型                                                                                                                                                                                                                                                                                                | 默认值 | 说明                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRScopeProps['animations']`                                                                                                                                                                                                                                                                        | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                                                                                                           | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                                                                                                            | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaultCell?`       | `IRChain["defaultCell"]`                                                                                                                                                                                                                                                                            | —      | 共享单元格默认配置                                                                             |
+| `defaultConnection?` | `IRChain["defaultConnection"]`                                                                                                                                                                                                                                                                      | —      | 自动生成连接的局部呈现覆盖                                                                     |
+| `defaults?`          | `IRScopeProps['defaults']`                                                                                                                                                                                                                                                                          | —      | 后代默认值通道及继承屏障                                                                       |
+| `frame?`             | `IRScopeFrame`                                                                                                                                                                                                                                                                                      | —      | 可省略默认值的包络装饰                                                                         |
+| `id?`                | `string`                                                                                                                                                                                                                                                                                            | —      | 可选引用 id；始终注册到父级命名空间                                                            |
+| `label?`             | `IRChain["label"]`                                                                                                                                                                                                                                                                                  | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
+| `layout?`            | `{ direction?: "right" \| "down" \| undefined; gap?: number \| undefined; branchGap?: number \| undefined; branchAlign?: "center" \| "start" \| "end" \| { branch: number; } \| undefined; spacing?: "independent" \| "steps" \| undefined; justify?: "center" \| "start" \| "end" \| undefined; }` | —      | 尺寸和结构排布；并行块仅覆盖结构字段                                                           |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                                                                                                     | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                                                                                                         | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `namespace`          | `"standard"`                                                                                                                                                                                                                                                                                        | —      | Standard 复合组件命名空间                                                                      |
+| `position?`          | `IRScopePosition`                                                                                                                                                                                                                                                                                   | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                   |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                                                                                                           | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `transforms?`        | `IRScopeProps['transforms']`                                                                                                                                                                                                                                                                        | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `type`               | `"chain"`                                                                                                                                                                                                                                                                                           | —      | 串并联内容呈现类型                                                                             |
+| `zIndex?`            | `number`                                                                                                                                                                                                                                                                                            | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 
 </ApiTable>
 
@@ -466,8 +466,8 @@ export declare const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputC
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type IRChain = Omit<input<typeof ChainSchema>, Exclude<keyof IRScopeProps, 'style'> | 'items'> &
-  Omit<IRScopeProps, 'style'> &
+export type IRChain = Omit<input<typeof ChainSchema>, keyof IRScopeProps | 'items'> &
+  IRScopeProps &
   (
     | {
         items: Array<IRChainItem>;

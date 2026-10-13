@@ -9,8 +9,8 @@ const spec = PlotSchema.parse({
   type: 'plot',
   data: { reference: 'points' },
   scales: [
-    { type: 'linear', name: 'x' },
-    { type: 'linear', name: 'y' },
+    { type: 'linear', name: 'x', domainPadding: 16 },
+    { type: 'linear', name: 'y', domainPadding: 16 },
   ],
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
   marks: [

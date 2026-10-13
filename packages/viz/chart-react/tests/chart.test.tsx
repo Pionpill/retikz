@@ -718,7 +718,7 @@ describe('Typed Point Chart React declarations', () => {
           method={{ kind: 'polynomial', order: 3 }}
           sampleCount={16}
           point={{ size: 5, opacity: 0.6 }}
-          trend={{ strokeWidth: 2, strokeOpacity: 0.8 }}
+          trend={{ strokeWidth: 2, opacity: { stroke: 0.8 } }}
         />
         <>{marks}</>
       </>,
@@ -732,7 +732,7 @@ describe('Typed Point Chart React declarations', () => {
           method: { kind: 'polynomial', order: 3 },
           sampleCount: 16,
           point: { size: 5, opacity: 0.6 },
-          trend: { strokeWidth: 2, strokeOpacity: 0.8 },
+          trend: { strokeWidth: 2, opacity: { stroke: 0.8 } },
         },
         marks: [
           {

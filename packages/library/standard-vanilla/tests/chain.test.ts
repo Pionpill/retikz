@@ -47,7 +47,7 @@ it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
 });
 it('箭头简写由 Kernel 转换，none 和空 marks 都保留空数组', () => {
   for (const path of [{ arrow: 'none' as const }, { marks: [] }]) {
-    const result = normalizeScene(scene({ children: [chain({ items: ['a', 'b'], connection: { path } })] }), {
+    const result = normalizeScene(scene({ children: [chain({ items: ['a', 'b'], defaultConnection: { path } })] }), {
       adapters: StandardInputEmbedAdapters,
     });
 

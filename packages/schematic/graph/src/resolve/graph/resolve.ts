@@ -49,13 +49,13 @@ const isBlockRow = (child: IRChild): child is IRBlockRow => isGraphComposite(chi
 
 const isScope = (child: IRChild): child is IRScope => !('namespace' in child) && child.type === 'scope';
 
-type GraphContextSource = Pick<IRBlock | IRGraph | IRGroup, 'graphDefaults' | 'graphRules'>;
+type GraphContextSource = Pick<IRBlock | IRGraph | IRGroup, 'defaultGraph' | 'graphRules'>;
 
 const graphContext = (source: GraphContextSource, inherited: GraphProjectionContext): GraphProjectionContext => {
-  if (source.graphDefaults === undefined && source.graphRules === undefined) return inherited;
+  if (source.defaultGraph === undefined && source.graphRules === undefined) return inherited;
 
   const layer: GraphAuthorLayer = {
-    ...(source.graphDefaults === undefined ? {} : { defaults: source.graphDefaults }),
+    ...(source.defaultGraph === undefined ? {} : { defaults: source.defaultGraph }),
     ...(source.graphRules === undefined ? {} : { rules: source.graphRules }),
   };
 

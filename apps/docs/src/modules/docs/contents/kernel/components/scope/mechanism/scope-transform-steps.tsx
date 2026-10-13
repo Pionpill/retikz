@@ -58,14 +58,14 @@ const ScopeTransformSteps: FC<ScopeTransformStepsProps> = props => {
             <Node
               position={[-14, 0]}
               shape="circle"
-              style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 10 } }}
+              style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 10 }, opacity: { fill: 0.08 } }}
               layout={{ minimumSize: { width: 18, height: 18 }, padding: 2 }}
             >
               A
             </Node>
             <Node
               position={[14, 0]}
-              style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 10 } }}
+              style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 10 }, opacity: { fill: 0.08 } }}
               layout={{ minimumSize: { width: 18, height: 18 }, padding: 2 }}
             >
               B

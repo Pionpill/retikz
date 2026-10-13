@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
 
 import { otherRows } from './builtin-other.data';
 
@@ -10,7 +10,10 @@ export type BuiltinOtherPreviewValues = {
 };
 
 /** 绘制示例图形 */
-export const BuiltinOtherPreview = (values: BuiltinOtherPreviewValues) => {
+export const BuiltinOtherPreview = (
+  values: BuiltinOtherPreviewValues,
+  dimensions?: { width: number; height: number },
+) => {
   const rows = otherRows.map(row => ({
     ...row,
     fill: row.series === 'B' ? '#f97316' : '#2563eb',
@@ -19,6 +22,11 @@ export const BuiltinOtherPreview = (values: BuiltinOtherPreviewValues) => {
 
   return (
     <Plot
+      style={
+        dimensions
+          ? { width: 'auto', height: 'auto', maxWidth: dimensions.width, maxHeight: dimensions.height }
+          : undefined
+      }
       data={rows}
       model={[
         { name: 'step', type: 'continuous' },
@@ -30,6 +38,8 @@ export const BuiltinOtherPreview = (values: BuiltinOtherPreviewValues) => {
       width={380}
       height={240}
     >
+      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PointMark x="step" y="value" fill="fill" size={18} zIndex="zIndex" />
       <PathMark
         x="step"

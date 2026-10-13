@@ -590,7 +590,6 @@ const hasDefinedFields = (fields: object | undefined): boolean =>
 /** 仅检查新增命名空间，已有 font、paint 等复合叶子保持自身语义 */
 export const pickScopeStyle = (scope: ScopeStyleProps): Partial<ScopeStyleProps> => {
   const picked = pickDefined(scope, SCOPE_STYLE_FIELDS);
-  if (!hasDefinedFields(picked.style)) delete picked.style;
   const defaults = picked.defaults;
   if (defaults !== undefined) {
     const { style: nodeStyle, layout: nodeLayout, ...nodeGeometry } = defaults.node ?? {};
@@ -599,9 +598,16 @@ export const pickScopeStyle = (scope: ScopeStyleProps): Partial<ScopeStyleProps>
     const hasReset = reset === true || (Array.isArray(reset) && reset.length > 0);
     const hasDefaults =
       hasReset ||
-      [nodeStyle, nodeLayout, nodeGeometry, pathStyle, pathGeometry, defaults.label, defaults.arrow].some(
-        hasDefinedFields,
-      );
+      [
+        defaults.style,
+        nodeStyle,
+        nodeLayout,
+        nodeGeometry,
+        pathStyle,
+        pathGeometry,
+        defaults.label,
+        defaults.arrow,
+      ].some(hasDefinedFields);
     if (!hasDefaults) delete picked.defaults;
   }
 

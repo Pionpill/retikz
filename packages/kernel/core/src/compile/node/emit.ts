@@ -1,12 +1,11 @@
-import type { JsonObject } from '@retikz/foundation';
-
-import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive } from '../../contract';
+import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive, TextLine } from '../../contract';
 import {
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import { RAD_TO_DEG } from '../../shared/geometry';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
 import { validateMarkerPrimitives } from '../resource';
@@ -15,9 +14,6 @@ import { toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
 import type { NodeLabelLayout, NodeLayout } from './types';
-
-/** 空 shape params */
-const EMPTY_SHAPE_PARAMS: JsonObject = {};
 
 type Round = (n: number) => number;
 
@@ -30,26 +26,28 @@ type NodeBaselineYs = Readonly<{
 
 /** 计算 Node 正文实际 emit 与 observation 共用的每条物理行 alphabetic baseline y */
 export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaselineYs => {
-  const lineCount = layout.inlineBlock?.lines.length ?? layout.lines?.length ?? 0;
+  const text = layout.text;
+  if (text === undefined) return { emitted: [], observed: [] };
+  const lineCount = text.lines.length;
   if (lineCount === 0) return { emitted: [], observed: [] };
 
-  const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
-  if (layout.inlineBlock !== undefined) {
-    const emitted = layout.inlineBlock.lines.map(line => blockTop + line.baselineOffset);
+  const blockTop = layout.geometry.contentCenter[1] - layout.geometry.contentSize.height / 2;
+  if (text.kind === 'inline') {
+    const emitted = text.lines.map(line => blockTop + line.baselineOffset);
     return { emitted, observed: emitted.map(round) };
   }
 
-  const emittedLineHeight = round(layout.lineHeight);
-  const baselineOffsets = layout.textBaselineOffsets;
+  const emittedLineHeight = round(text.lineHeight);
+  const baselineOffsets = text.baselineOffsets;
   const firstBaseline =
     baselineOffsets !== undefined && baselineOffsets.length === lineCount
       ? blockTop + baselineOffsets[0]
       : toAlphabeticBaselineY({
-          y: layout.contentCenter[1],
+          y: layout.geometry.contentCenter[1],
           baseline: 'middle',
           lineCount,
           lineHeight: emittedLineHeight,
-          fontSize: layout.fontSize,
+          fontSize: text.font.size,
         });
   const observedFirstBaseline = round(firstBaseline);
 
@@ -61,19 +59,17 @@ export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaseline
 
 /** 从 NodeLayout 收敛 shape emit 所需的视觉样式 */
 const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
-  fill: resolvePaint(layout.fillResolution ?? (typeof layout.fill === 'string' ? layout.fill : undefined)),
-  fillOpacity: layout.fillOpacity,
-  stroke:
-    resolvePaint(layout.strokeResolution ?? (typeof layout.stroke === 'string' ? layout.stroke : undefined)) ??
-    'currentColor',
-  strokeOpacity: layout.strokeOpacity,
-  strokeWidth: layout.strokeWidth,
-  dashPattern: layout.dashPattern,
-  dashOffset: layout.dashOffset,
-  cornerRadius: layout.cornerRadius,
-  opacity: layout.opacity,
-  shadow: layout.shadow,
-  blendMode: layout.blendMode,
+  fill: resolvePaint(layout.node.fill),
+  fillOpacity: layout.node.fillOpacity,
+  stroke: resolvePaint(layout.node.stroke) ?? 'currentColor',
+  strokeOpacity: layout.node.strokeOpacity,
+  strokeWidth: layout.node.strokeWidth,
+  dashPattern: layout.node.dashPattern,
+  dashOffset: layout.node.dashOffset,
+  cornerRadius: layout.node.cornerRadius,
+  opacity: layout.node.opacity,
+  shadow: layout.node.shadow,
+  blendMode: layout.node.blendMode,
 });
 
 /** 发出节点 shape 主体图元 */
@@ -82,78 +78,72 @@ const emitNodeShapePrimitives = (
   round: Round,
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
-  const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
+  const axisAlignedRect: Rect = { ...layout.geometry.rect, rotate: 0 };
   let emitted: unknown;
 
   try {
-    emitted = layout.shapeDef.emit(
+    emitted = layout.shape.definition.emit(
       axisAlignedRect,
       toShapeStyle(layout, resolvePaint),
       round,
-      layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+      layout.shape.params,
     );
   } catch (thrown) {
     if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 
-    throw createLayoutProbeRecoverableError(`Shape '${layout.shapeName}' emit failed: ${safeThrownDetail(thrown)}`, {
+    throw createLayoutProbeRecoverableError(`Shape '${layout.shape.name}' emit failed: ${safeThrownDetail(thrown)}`, {
       cause: thrown,
-      providerKey: `shape:${layout.shapeName}`,
+      providerKey: `shape:${layout.shape.name}`,
     });
   }
 
-  return validateScenePrimitives(`Shape '${layout.shapeName}'`, emitted, validateMarkerPrimitives);
+  return validateScenePrimitives(`Shape '${layout.shape.name}'`, emitted, validateMarkerPrimitives);
 };
 
 /** 发出节点正文图元 */
 const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<ScenePrimitive> => {
-  if (layout.inlineBlock) {
+  const text = layout.text;
+  if (text === undefined) return [];
+  if (text.kind === 'inline') {
     const baselineYs = nodeBaselineYsOf(layout, round).emitted;
-    const halfBlockW = layout.textWidth / 2;
+    const halfBlockW = layout.geometry.contentSize.width / 2;
 
-    return layout.inlineBlock.lines.flatMap(({ laid }, index) => {
+    return text.lines.flatMap(({ laid }, index) => {
       const originX =
-        layout.align === 'start'
-          ? layout.contentCenter[0] - halfBlockW
-          : layout.align === 'end'
-            ? layout.contentCenter[0] + halfBlockW - laid.width
-            : layout.contentCenter[0] - laid.width / 2;
+        text.align === 'start'
+          ? layout.geometry.contentCenter[0] - halfBlockW
+          : text.align === 'end'
+            ? layout.geometry.contentCenter[0] + halfBlockW - laid.width
+            : layout.geometry.contentCenter[0] - laid.width / 2;
       return laid.emit(originX, baselineYs[index], round);
     });
   }
 
-  if (layout.lines === undefined) {
-    return [];
-  }
-
-  const halfBlockW = layout.textWidth / 2;
-  const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
-  const lineHeight = round(layout.lineHeight);
+  const halfBlockW = layout.geometry.contentSize.width / 2;
+  const xOffset = text.align === 'start' ? -halfBlockW : text.align === 'end' ? halfBlockW : 0;
+  const lineHeight = round(text.lineHeight);
   const baselineYs = nodeBaselineYsOf(layout, round).emitted;
 
   /** 用现有 grouped TextPrim 合同发出 authoritative physical-line baselines */
-  const textPrimitive = (
-    lines: NonNullable<NodeLayout['lines']>,
-    baselineY: number,
-    measuredHeight: number,
-  ): ScenePrimitive => ({
+  const textPrimitive = (lines: Array<TextLine>, baselineY: number, measuredHeight: number): ScenePrimitive => ({
     type: 'text',
-    x: round(layout.contentCenter[0] + xOffset),
+    x: round(layout.geometry.contentCenter[0] + xOffset),
     y: round(baselineY),
     lines,
-    fontSize: layout.fontSize,
-    fontFamily: layout.fontFamily,
-    fontWeight: layout.fontWeight,
-    fontStyle: layout.fontStyle,
-    align: layout.align,
+    fontSize: text.font.size,
+    fontFamily: text.font.family,
+    fontWeight: text.font.weight,
+    fontStyle: text.font.style,
+    align: text.align,
     baseline: 'alphabetic',
     lineHeight,
-    fill: layout.textColor ?? 'currentColor',
-    opacity: layout.opacity,
-    measuredWidth: round(layout.textWidth),
+    fill: layout.node.textColor ?? 'currentColor',
+    opacity: layout.node.opacity,
+    measuredWidth: round(layout.geometry.contentSize.width),
     measuredHeight: round(measuredHeight),
   });
 
-  return [textPrimitive(layout.lines, baselineYs[0], layout.textHeight)];
+  return [textPrimitive(text.lines, baselineYs[0], layout.geometry.contentSize.height)];
 };
 
 /** 发出 label pin 引线图元 */
@@ -186,7 +176,7 @@ const emitNodeLabelPinPrimitive = (
     strokeWidth: style?.strokeWidth ?? 1,
     dashPattern: style?.dashPattern,
     dashOffset: style?.dashOffset,
-    opacity: label.opacity ?? layout.opacity,
+    opacity: label.opacity ?? layout.node.opacity,
   };
 };
 
@@ -221,7 +211,7 @@ const emitNodeLabelContentPrimitive = (
     baseline: 'alphabetic',
     lineHeight: labelLineHeight,
     fill: label.textColor ?? 'currentColor',
-    opacity: label.opacity ?? layout.opacity,
+    opacity: label.opacity ?? layout.node.opacity,
     measuredWidth: round(label.measuredWidth),
     measuredHeight: round(label.measuredHeight),
   };
@@ -252,32 +242,32 @@ const emitNodeLabelPrimitives = (layout: NodeLayout, label: NodeLabelLayout, rou
 
 /** 把节点标识和元数据写到纯几何节点的 shape 图元 */
 const stampNodeShapePrimitives = (layout: NodeLayout, primitives: Array<ScenePrimitive>): void => {
-  if (layout.id !== undefined) {
-    for (const prim of primitives) prim.id = layout.id;
+  if (layout.node.id !== undefined) {
+    for (const prim of primitives) prim.id = layout.node.id;
   }
 
-  if (layout.meta !== undefined) {
-    for (const prim of primitives) prim.meta = layout.meta;
+  if (layout.node.meta !== undefined) {
+    for (const prim of primitives) prim.meta = layout.node.meta;
   }
 
-  if (layout.animations !== undefined) {
-    for (const prim of primitives) prim.animations = layout.animations;
+  if (layout.node.animations !== undefined) {
+    for (const prim of primitives) prim.animations = layout.node.animations;
   }
 };
 
 /** 包装带文本或旋转的节点 group */
 const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimitive>, round: Round): GroupPrim => {
   const group: GroupPrim = { type: 'group', children };
-  if (layout.id !== undefined) group.id = layout.id;
-  if (layout.meta !== undefined) group.meta = layout.meta;
-  if (layout.animations !== undefined) group.animations = layout.animations;
-  if (layout.rotateDeg !== 0) {
+  if (layout.node.id !== undefined) group.id = layout.node.id;
+  if (layout.node.meta !== undefined) group.meta = layout.node.meta;
+  if (layout.node.animations !== undefined) group.animations = layout.node.animations;
+  if ((layout.geometry.rect.rotate ?? 0) !== 0) {
     group.transforms = [
       {
         kind: 'rotate',
-        degrees: round(layout.rotateDeg),
-        cx: round(layout.rect.x),
-        cy: round(layout.rect.y),
+        degrees: round((layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG),
+        cx: round(layout.geometry.rect.x),
+        cy: round(layout.geometry.rect.y),
       },
     ];
   }
@@ -301,7 +291,7 @@ export const emitNodePrimitives = (
     ...(layout.labels?.flatMap(label => emitNodeLabelPrimitives(layout, label, round)) ?? []),
   ];
 
-  const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined || layout.inlineBlock !== undefined;
+  const needsGroup = (layout.geometry.rect.rotate ?? 0) !== 0 || layout.text !== undefined;
   if (!needsGroup) {
     stampNodeShapePrimitives(layout, shapePrimitives);
     return inner;

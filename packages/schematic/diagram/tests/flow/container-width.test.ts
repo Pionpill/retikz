@@ -200,7 +200,7 @@ describe('Flow 容器宽度边界', () => {
     expect(() =>
       compile({
         ...input,
-        flowDefaults: { entity: { layout: { width: 180 } } },
+        defaultFlow: { entity: { layout: { width: 180 } } },
         layouts: input.layouts.map(row => (row.id === 'r2' ? { ...row, gap: 80 } : row)),
       }),
     ).toThrow('Positive free width requires a non-fixed Entity');

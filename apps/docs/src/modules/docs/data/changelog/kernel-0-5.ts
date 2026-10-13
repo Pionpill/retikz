@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 渐进式视觉属性', en: 'Unreleased: BREAKING progressive visual properties' },
+          content: {
+            zh: '图形透明度支持 opacity: number 或 { overall, fill, stroke }，数值只设置 overall。各成员独立继承，overall 与 fill/stroke 相乘；删除图形样式的平级 fillOpacity、strokeOpacity。纯文字、渐变色标等独立标量保持原契约。',
+            en: 'Graphic opacity accepts a number or { overall, fill, stroke }; a number sets only overall. Factors inherit independently, and overall multiplies fill/stroke. Flat graphic fillOpacity and strokeOpacity fields are removed. Text-only and gradient-stop scalar contracts remain unchanged.',
+          },
+        },
+        {
           label: { zh: '可组合绘图契约', en: 'Composable drawing contracts' },
           content: {
             zh: 'Core 根入口公开主色、整体透明度、填充、描边、端点转角、文字呈现与布局、路径变换片段及推导类型。上层可以正向组合所需字段，既有 Node、Path、默认继承与 JSON 输入形态保持不变。',

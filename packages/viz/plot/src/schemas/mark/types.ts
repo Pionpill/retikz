@@ -2,6 +2,7 @@ import type { IRBoxSpacing } from '@retikz/core';
 import type { infer as ZodInfer } from 'zod';
 
 import { BUILTIN_MARK_TYPES } from './constants';
+import type { MarkOpacityStyleSchema } from './schema';
 import type {
   AnchorIdSchema,
   BlendModeStyleSchema,
@@ -204,3 +205,6 @@ export type IRPlotMarkOperation = ZodInfer<typeof MarkOperationSchema>;
 
 /** mark operation 是否内置；把放宽后的 union 收窄回精确内置 Mark，供 lowering 内置专属几何分支门控 */
 export const isBuiltinMark = (mark: IRPlotMarkOperation): mark is IRPlotMark => BUILTIN_MARK_TYPES.has(mark.type);
+
+/** 分组后的透明度通道绑定 */
+export type IRPlotMarkOpacityStyle = ZodInfer<typeof MarkOpacityStyleSchema>;

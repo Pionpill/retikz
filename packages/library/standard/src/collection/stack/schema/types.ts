@@ -11,9 +11,9 @@ export type IRStackSkeleton = input<typeof StackSkeletonSchema>;
 /** 栈底到栈顶的稀疏 Source，三种输入互斥 */
 export type IRStack = Omit<
   input<typeof StackSchema>,
-  Exclude<keyof IRScopeProps, 'style'> | 'items' | 'data' | 'skeleton' | 'dataExpand'
+  keyof IRScopeProps | 'items' | 'data' | 'skeleton' | 'dataExpand'
 > &
-  Omit<IRScopeProps, 'style'> &
+  IRScopeProps &
   (
     | {
         /** 显式单格，最后一项为栈顶 */ items: Array<string | IRCell>;

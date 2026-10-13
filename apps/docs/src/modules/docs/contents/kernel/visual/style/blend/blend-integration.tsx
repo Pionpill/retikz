@@ -18,8 +18,8 @@ const IntegrationDemo: FC<IntegrationDemoProps> = props => {
       <Node position={[200, 0]} layout={{ minimumSize: 90 }} style={{ fill: 'dodgerblue', stroke: 'none' }} />
       <Scope
         defaults={{
-          node: { style: { blendMode: 'multiply', fill: 'dodgerblue', fillOpacity: 0.65 } },
-          path: { style: { blendMode: 'multiply', fill: 'darkorange', fillOpacity: 0.65 } },
+          node: { style: { blendMode: 'multiply', fill: 'dodgerblue', opacity: { fill: 0.65 } } },
+          path: { style: { blendMode: 'multiply', fill: 'darkorange', opacity: { fill: 0.65 } } },
         }}
       >
         <Node position={[0, 0]} layout={{ minimumSize: 75 }}>

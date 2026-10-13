@@ -21,8 +21,8 @@ describe('Graph Scope lowering', () => {
         { namespace: 'graph', type: 'entity', id: 'first', role: 'activity', position: [0, 0] },
         { type: 'node', id: 'plain', position: [50, 0] },
       ],
-      style: { fill: 'lightblue' },
       defaults: {
+        style: { fill: 'lightblue' },
         node: {
           style: { dashed: true },
         },
@@ -57,8 +57,9 @@ describe('Graph Scope lowering', () => {
         },
         { type: 'node', id: 'plain', position: [50, 0] },
       ],
-      style: { fill: 'lightblue' },
+
       defaults: {
+        style: { fill: 'lightblue' },
         node: {
           style: { dashed: true },
         },

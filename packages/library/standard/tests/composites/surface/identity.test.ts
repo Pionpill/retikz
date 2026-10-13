@@ -50,7 +50,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       id: 'surface-root',
       child: node,
       padding: 2,
-      background: { fill: '#f8fafc', fillOpacity: 0.75 },
+      background: { fill: '#f8fafc', opacity: { fill: 0.75 } },
       border: { stroke: '#0f172a', strokeWidth: 4 },
       cornerRadius: 99,
     });

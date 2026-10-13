@@ -1,0 +1,31 @@
+/** 路径配置解析图的双语文案 */
+export const resolutionPathI18n = {
+  zh: {
+    merge: '合并 Path、Label、Arrow 配置',
+    kind: '类型校验前后各解析一次颜色',
+    canonical: '展开步骤与标签默认值',
+    paint: '目标处理之后解析绘制配置',
+    result: '交给路径类型的编译链',
+    providers: 'Stroke 输出链按需绑定',
+    effective: 'strokeWidth: 3',
+    bound: "name: 'stroke' · Definition",
+    path: "stroke: '#90a0b0'",
+    resolved: 'CanonicalPath.fill / stroke',
+    extras: '来源路径与目标绑定',
+    stroke: '附加 generators / arrows',
+  },
+  en: {
+    merge: 'Merge Path, Label, Arrow settings',
+    kind: 'Colors resolve before and after',
+    canonical: 'Expand step and label defaults',
+    paint: 'Resolve paint after target handling',
+    result: 'Pass to the path compilation chain',
+    providers: 'Bind for Stroke emission',
+    effective: 'strokeWidth: 3',
+    bound: "name: 'stroke' · Definition",
+    path: "stroke: '#90a0b0'",
+    resolved: 'CanonicalPath.fill / stroke',
+    extras: 'Source path and target bindings',
+    stroke: 'Adds generators / arrows',
+  },
+};

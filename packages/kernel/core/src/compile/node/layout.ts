@@ -22,6 +22,8 @@ import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '
 import type { TextMeasurer } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
 import { layoutNodeContent } from './content/layout';
+import { createNodeGeometryContext } from './geometry-context';
+import type { NodeGeometryContext } from './geometry-context';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 import type { NodeLayout, TexLoweringContext } from './types';
 
@@ -59,6 +61,7 @@ const placeAnchorPositionedLayout = (
   provisional: NodeLayout,
   positionContext: PositionTargetResolveContext,
   scopeChain: ReadonlyArray<Transform>,
+  geometryContext: NodeGeometryContext,
 ): NodeLayout => {
   if (node.id === position.target.id || node.aliasIds?.includes(position.target.id)) {
     throw new RetikzCoreError(
@@ -90,22 +93,31 @@ const placeAnchorPositionedLayout = (
     );
   }
 
-  const projected =
-    scopeChain.length === 0
-      ? { ...provisional, rect: { ...provisional.rect } }
-      : projectLayoutToGlobal(provisional, scopeChain);
-  const selfPoint = resolveAnchorRefUncached(projected, position.selfAnchor ?? CenterAnchor.Center, node.boundary);
+  const projected = scopeChain.length === 0 ? provisional : projectLayoutToGlobal(provisional, scopeChain);
+  const selfPoint = resolveAnchorRefUncached(
+    projected,
+    position.selfAnchor ?? CenterAnchor.Center,
+    node.boundary,
+    undefined,
+    geometryContext.get(provisional),
+  );
   const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
-  const deltaLocal = localDeltaOf(deltaGlobal, [projected.rect.x, projected.rect.y], scopeChain);
+  const deltaLocal = localDeltaOf(deltaGlobal, [projected.geometry.rect.x, projected.geometry.rect.y], scopeChain);
 
   return {
     ...provisional,
-    rect: {
-      ...provisional.rect,
-      x: provisional.rect.x + deltaLocal[0],
-      y: provisional.rect.y + deltaLocal[1],
+    geometry: {
+      ...provisional.geometry,
+      rect: {
+        ...provisional.geometry.rect,
+        x: provisional.geometry.rect.x + deltaLocal[0],
+        y: provisional.geometry.rect.y + deltaLocal[1],
+      },
+      contentCenter: [
+        provisional.geometry.contentCenter[0] + deltaLocal[0],
+        provisional.geometry.contentCenter[1] + deltaLocal[1],
+      ],
     },
-    contentCenter: [provisional.contentCenter[0] + deltaLocal[0], provisional.contentCenter[1] + deltaLocal[1]],
   };
 };
 
@@ -113,6 +125,8 @@ const placeAnchorPositionedLayout = (
 export type LayoutNodeContext = {
   /** 文本测量函数 */
   measureText: TextMeasurer;
+  /** 当前编译共享的连接面缓存与诊断状态 */
+  geometryContext?: NodeGeometryContext;
   /** Position/Target Source IR 确定化上下文 */
   positionContext: PositionTargetResolveContext;
   /** preset 与 rem 字号解析的根字号 */
@@ -138,13 +152,14 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     texLowering,
     warn,
     allocationWidthProposal,
+    geometryContext = createNodeGeometryContext(),
   } = context;
 
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const { x: sx, y: sy } = node.scale;
   const fontScale = Math.min(sx, sy);
-  const { name: shapeName, definition: shapeDef, params: shapeParams } = shapeResolution;
+  const { definition: shapeDef, params: shapeParams } = shapeResolution;
 
   const baseFont = resolveFont(node.font, {
     rootFontSize,
@@ -360,62 +375,66 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   });
 
   const provisional: NodeLayout = {
-    irPath: resolution.irPath,
-    id: node.id,
-    shapeName,
-    shapeDef,
-    shapeParams,
-    rect: {
-      // x, y 是外接 AABB 几何中心。
-      x: rectCenterX,
-      y: rectCenterY,
-      width: 2 * boundsHalfW,
-      height: 2 * boundsHalfH,
-      // geometry 用弧度。
-      rotate: rotateDeg * DEG_TO_RAD,
+    node: {
+      id: node.id,
+      fill: node.fill,
+      fillOpacity: node.fillOpacity,
+      stroke: node.stroke,
+      strokeOpacity: node.strokeOpacity,
+      strokeWidth: node.strokeWidth,
+      dashPattern: node.dashPattern,
+      dashOffset: node.dashOffset,
+      cornerRadius: node.cornerRadius,
+      textColor: node.textColor,
+      opacity: node.opacity,
+      shadow: node.shadow,
+      blendMode: node.blendMode,
+      boundary: node.boundary,
+      meta: node.meta,
+      animations: node.animations,
     },
-    contentCenter,
-    rotateDeg,
-    margin,
-    lines,
-    inlineBlock,
-    textWidth,
-    textHeight,
-    textBaselineOffsets,
-    align,
-    lineHeight,
-    fontSize,
-    fontFamily,
-    fontWeight,
-    fontStyle,
-    fill: node.fill,
-    fillResolution: resolution.paint.fill,
-    fillOpacity: node.fillOpacity,
-    stroke: node.stroke,
-    strokeResolution: resolution.paint.stroke,
-    strokeOpacity: node.strokeOpacity,
-    strokeWidth: node.strokeWidth,
-    dashPattern: node.dashPattern,
-    dashOffset: node.dashOffset,
-    cornerRadius: node.cornerRadius,
-    textColor: node.textColor,
-    opacity: node.opacity,
-    shadow: node.shadow,
-    blendMode: node.blendMode,
-    boundary: node.boundary,
-    boundaryResolution,
-    meta: node.meta,
-    animations: node.animations,
-    connectionEnvelopeCache: new Map(),
-    connectionEnvelopeWarnings: new Set(),
-    warn,
+    shape: shapeResolution,
+    geometry: {
+      rect: {
+        // x, y 是外接 AABB 几何中心。
+        x: rectCenterX,
+        y: rectCenterY,
+        width: 2 * boundsHalfW,
+        height: 2 * boundsHalfH,
+        // geometry 用弧度。
+        rotate: rotateDeg * DEG_TO_RAD,
+      },
+      contentCenter,
+      margin,
+      contentSize: { width: textWidth, height: textHeight },
+    },
+    text:
+      inlineBlock !== undefined
+        ? {
+            kind: 'inline',
+            lines: inlineBlock.lines,
+            align,
+            lineHeight,
+            baselineOffsets: textBaselineOffsets,
+            font: { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle },
+          }
+        : lines === undefined
+          ? undefined
+          : {
+              kind: 'plain',
+              lines,
+              align,
+              lineHeight,
+              baselineOffsets: textBaselineOffsets,
+              font: { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle },
+            },
+    boundary: boundaryResolution,
+    irPath: resolution.irPath,
   };
-  const resolved: NodeLayout = {
-    ...provisional,
-    labels: layoutNodeLabels(provisional, measuredLabels),
-  };
+  geometryContext.get(provisional).warn = warn;
+  const resolved: NodeLayout = { ...provisional, labels: layoutNodeLabels(provisional, measuredLabels) };
 
   return anchorPosition
-    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, positionContext, scopeChain)
+    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, positionContext, scopeChain, geometryContext)
     : resolved;
 };

@@ -1,3 +1,4 @@
+import { compileToScene } from '@retikz/core';
 import type { Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -41,10 +42,38 @@ describe('TeX lowered PathPrim renderer parity', () => {
     const context = createSpyCanvasContext();
     drawScene(context as unknown as CanvasRenderingContext2D, scene);
 
-    expect(context.calls.find(call => call.name === 'fill')).toMatchObject({ fillStyle: 'crimson' });
+    expect(context.calls.find(call => call.name === 'fill')).toMatchObject({ fillStyle: 'crimson', globalAlpha: 0.3 });
     expect(context.calls.find(call => call.name === 'stroke')).toMatchObject({
       strokeStyle: 'royalblue',
       lineWidth: 2,
+      globalAlpha: 0.2,
     });
   });
+});
+
+it('compiled grouped opacity reaches both SVG attributes and Canvas alpha', () => {
+  const compiled = compileToScene({
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'path',
+        style: { fill: 'crimson', stroke: 'royalblue', opacity: { overall: 0.5, fill: 0.5, stroke: 0.8 } },
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [20, 0] },
+          { type: 'step', kind: 'line', to: [10, 20] },
+          { type: 'step', kind: 'cycle' },
+        ],
+      },
+    ],
+  }).scene;
+  const svg = renderToSvgString(compiled, { idPrefix: 'opacity' });
+  expect(svg).toContain('opacity="0.5"');
+  expect(svg).toContain('fill-opacity="0.5"');
+  expect(svg).toContain('stroke-opacity="0.8"');
+  const context = createSpyCanvasContext();
+  drawScene(context as unknown as CanvasRenderingContext2D, compiled);
+  expect(context.calls.find(call => call.name === 'fill')?.globalAlpha).toBe(0.25);
+  expect(context.calls.find(call => call.name === 'stroke')?.globalAlpha).toBe(0.4);
 });

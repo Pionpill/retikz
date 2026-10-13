@@ -62,7 +62,7 @@ describe('docs-owned theme presets', () => {
 
         const sourceOverride = resolvePlotTheme(
           { style: definition.name, mode, colors },
-          { plotDefaults: { plotArea: { border: false } } },
+          { defaultPlot: { plotArea: { border: false } } },
           [definition],
         );
 
@@ -139,7 +139,7 @@ describe('docs-owned theme presets', () => {
 
     const academicDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Academic), [academic]).defaults;
 
-    expect(academicDefaults.appearanceDefaults?.body?.content?.defaults?.node?.style?.font?.family).toBe('serif');
+    expect(academicDefaults.defaultAppearance?.body?.content?.defaults?.node?.style?.font?.family).toBe('serif');
     expect(academicDefaults.layout?.borders?.outer?.top).toEqual({
       kind: 'line',
       stroke: mode === ThemeMode.Light ? '#111111' : '#f5f5f5',
@@ -148,16 +148,16 @@ describe('docs-owned theme presets', () => {
 
     const vibrantDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Vibrant), [vibrant]).defaults;
 
-    expect(vibrantDefaults.appearanceDefaults?.body?.background?.fill).toBe(
+    expect(vibrantDefaults.defaultAppearance?.body?.background?.fill).toBe(
       mode === ThemeMode.Light ? '#e5ecf6' : '#111827',
     );
     expect(vibrantDefaults.layout?.borders?.horizontal).toMatchObject({ kind: 'line', width: 1 });
 
     const cleanDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Clean), [clean]).defaults;
 
-    expect(cleanDefaults.appearanceDefaults?.body?.background?.fill).toBe('none');
+    expect(cleanDefaults.defaultAppearance?.body?.background?.fill).toBe('none');
     expect(cleanDefaults.layout?.borders?.horizontal).toEqual({ kind: 'none' });
-    expect(cleanDefaults.visualDefaults?.sequential).toEqual(
+    expect(cleanDefaults.defaultVisual?.sequential).toEqual(
       mode === ThemeMode.Light ? ['#eff6ff', '#1d4ed8'] : ['#172554', '#60a5fa'],
     );
   });

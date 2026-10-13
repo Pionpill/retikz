@@ -59,7 +59,7 @@ export const compileObservedFragment = (
 
   try {
     const compiled = compileChildrenToPrimitives(values, sandbox, {
-      styleStack: entry.styleStack,
+      scopeDefaults: entry.scopeDefaults,
       theme: entry.theme,
       generated: true,
     });

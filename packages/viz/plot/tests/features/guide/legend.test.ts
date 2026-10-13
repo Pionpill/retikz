@@ -321,7 +321,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     const pentagon = { type: 'polygon', params: { sides: 5, rotate: -90 } } as const;
     const spec = PlotSchema.parse({
       ...shapeLegendSpec(),
-      plotDefaults: { palette: { shape: [pentagon, 'cross', 'circle'] } },
+      defaultPlot: { palette: { shape: [pentagon, 'cross', 'circle'] } },
     });
     const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
 
@@ -500,7 +500,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('theme_legend_symbol_size_is_overridden_by_local_style', () => {
     const themed = PlotSchema.parse({
       ...sizeLegendSpec({ style: { symbolSize: 10 } }),
-      plotDefaults: { legend: { symbolSize: 18 } },
+      defaultPlot: { legend: { symbolSize: 18 } },
     });
     const outer = expandOf(themed, { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
@@ -1007,7 +1007,7 @@ it('applies ordinal index steps to the effective theme palette', () => {
   spec.scales = spec.scales.map(scale =>
     scale.type === 'ordinal' ? { ...scale, rangeIndex: { step: 2, offset: 1 } } : scale,
   );
-  spec.plotDefaults = { palette: { categorical: ['#111111', '#222222', '#333333'] } };
+  spec.defaultPlot = { palette: { categorical: ['#111111', '#222222', '#333333'] } };
   const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
 
   expect(swatchNodesOf(legend!).map(node => node.style?.fill)).toEqual(['#222222', '#111111', '#333333']);

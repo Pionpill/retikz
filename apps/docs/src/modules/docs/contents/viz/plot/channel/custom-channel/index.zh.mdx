@@ -3,14 +3,34 @@ title: 自定义通道
 description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性，并通过 channelDefinitions 注入 Plot 的统一通道注册表。
 ---
 
-自定义通道负责把数据值交付到已有的 Core `Scope`、`Node` 或 `Path` 属性。例如，`intensity` 可以把 `score` 映射为节点透明度。它扩展的是**数据到视觉属性的交付路径**，不是新的渲染能力。
+在学会[字段与常量绑定](/viz/plot/channel/binding)后，可以定义自己的通道名和取值规则。本页用 `intensity` 将 `score` 映射为点的透明度：分数越高，点越不透明；切换为常量后，所有点使用同一透明度。
 
 ## 适用边界
 
 - 需要新的 `encoding.channels.<name>`，并希望它参与字段 / 常量绑定、逐行求值和图例描述时，定义自定义通道。
 - 只改变“值 → 坐标”或“值 → 颜色”规则时，使用[自定义比例尺](/viz/plot/scale/custom-scale)；大小、透明度等其它视觉属性仍由对应通道负责求值和交付。
-- Core 还没有目标视觉属性时，应先补 Core 能力；channel definition 不应绕开 Core 建立平行渲染语义。
 - 字段准备、聚合或筛选属于[数据扩展](/viz/data/model/extensions)，不放进通道 resolver。
+
+<ComponentAlert
+  type="tip"
+  title="优先使用内置通道"
+  description="Plot 已提供较为完备的内置通道，并会持续优化。常规绘图需求优先使用内置通道；自定义通道通常用于自身业务需求或高层封装。"
+/>
+
+## 最小结果
+
+下面的 `intensity` 通道把字段值映射到 `[0.3, 1]`，也接受直接表示透明度的数值常量。用面板切换字段与常量绑定；definition、数据和宿主注入都可以从源码切换器中查看：
+
+<ComponentPreview
+  files={['custom-channel', 'custom-channel.preview.tsx', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
+  mode="showcase"
+  responsive
+  size="lg"
+  caption="字段绑定会保留各行 score 的强弱差异；常量绑定会让所有点使用同一透明度。"
+  defaultSourceFile="custom-channel.preview.tsx"
+/>
+
+示例为两个位置比例尺设置了 `domainPadding: 16`，给边缘点留出空间。字段模式会生成透明度图例；常量模式不表达数据范围，因此不显示该图例。
 
 ## 定义能力
 
@@ -24,65 +44,128 @@ description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性
 | `resolve` | 读取字段或常量绑定，自行完成映射与 clamp，并返回逐行 resolver 和可选 descriptor |
 | `deliver` | 把解析后的值写入既有 Core 属性                                                  |
 
-下面的 `intensity` 通道把字段值映射到 `[0.3, 1]`，也接受直接表示透明度的数值常量。用面板切换字段与常量绑定；definition、数据和宿主注入都可以从源码切换器中查看：
+本例选择 `defineNodeChannel`，因为透明度需要逐点交付。下面是完整定义，由 React 和 Vanilla 宿主共用：
 
-<ComponentPreview
-  files={['custom-channel', 'custom-channel.preview.tsx', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
-  size="lg"
-  caption="字段绑定会保留各行 score 的强弱差异；常量绑定会让所有点使用同一透明度。"
-  defaultSourceFile="custom-channel.preview.tsx"
+```ts
+import { defineNodeChannel } from '@retikz/plot';
+
+type ExtensionChannelBinding = { field?: string; value?: unknown };
+
+const extensionChannelsOf = (mark: {
+  encoding?: { channels?: Partial<Record<string, ExtensionChannelBinding>> };
+}): Partial<Record<string, ExtensionChannelBinding>> => mark.encoding?.channels ?? {};
+
+const clampIntensity = (value: number): number => Math.min(1, Math.max(0.3, value));
+
+/** 自定义 intensity 通道：字段值自行映射到 opacity，常量值自行截断后直接交付 */
+export const intensityChannel = defineNodeChannel<number>({
+  channel: 'intensity',
+  output: { outputKind: 'number', range: [0.3, 1], clamp: true },
+  legend: 'ramp',
+  resolve: (ctx, mark) => {
+    const binding = extensionChannelsOf(mark).intensity;
+    if (binding === undefined) return undefined;
+    if (binding.value !== undefined) {
+      if (typeof binding.value !== 'number' || !Number.isFinite(binding.value)) {
+        throw new Error('lowerPlots: intensity constant must be a finite number');
+      }
+
+      const value = clampIntensity(binding.value);
+
+      return { resolver: () => value };
+    }
+
+    if (binding.field === undefined) return undefined;
+
+    const field = binding.field;
+    const values = ctx.rows.map(row => Number(row[field])).filter(Number.isFinite);
+    if (values.length === 0) return undefined;
+
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    const map = (value: number): number => clampIntensity(0.3 + (hi === lo ? 0.5 : (value - lo) / (hi - lo)) * 0.7);
+
+    return {
+      resolver: row => {
+        const value = Number(row[field]);
+        return Number.isFinite(value) ? map(value) : undefined;
+      },
+      descriptor: {
+        channel: 'intensity',
+        scaleType: 'linear',
+        domain: [lo, hi],
+        range: [0.3, 1],
+        field,
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
+      },
+    };
+  },
+  deliver: (node, value) => {
+    node.style = { ...node.style, opacity: value };
+  },
+});
+```
+
+`resolve` 先读取当前图元的 `intensity` 绑定：字段模式用数据的最小值、最大值映射到 `[0.3, 1]`，常量模式直接把数值限制到这个范围。返回的 `resolver` 给出每行的透明度；字段模式还返回 `descriptor`，供图例读取数据范围和视觉范围。`output.range` 和 `output.clamp` 只声明元数据，实际映射与截断由这段定义完成。
+
+最后，`deliver` 将解析后的透明度写入节点的 `style.opacity`。
+
+<ComponentAlert
+  type="tip"
+  title="交付目标与执行机制（选读）"
+  description="自定义通道写入已有的 Kernel 节点、路径或作用域属性，不新增渲染能力。Plot 将内置与自定义定义放入同一个注册表，由图元声明自己消费的通道种类，再依次解析和交付。通道不需要判断 mark.type；只需选择对应的 define helper。不了解内部执行过程，也可以继续按下面的方式注入和使用。"
 />
 
-## 注入宿主
+## 注入与使用
 
-通过 `<Plot channelDefinitions={[intensityChannel]}>` 注入 definition；Vanilla 源码使用 `renderPlot` options 注入同一 definition。
+React 和 Vanilla 共用前面的 definition，选择与你的项目一致的宿主即可。完整示例在预览的 React / Vanilla 源码视图中；下面只列注入位置的差异。
 
-React DSL 的字符串值表示字段名。类型化 authoring 的常量使用 `{ kind: 'constant', value }`；已经归一化的 raw IR binding 使用 `{ value }` 表示同一个常量，前一种写法会由 authoring normalizer 转为后一种：
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+在 `Plot` 上注入 definition，在子图元的 `channels` 中按注册名引用：
+
+```tsx
+<Plot data={customChannelPoints} channelDefinitions={[intensityChannel]}>
+  <PointMark x="x" y="y" channels={{ intensity: 'score' }} />
+</Plot>
+```
+
+React DSL 的字符串值表示字段名，常量使用 `{ kind: 'constant', value }`：
 
 ```tsx
 <PointMark channels={{ intensity: 'score' }} />
 <PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
 ```
 
-它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。只要传入的是 `IRPlot`，raw IR 形式就可以直接使用：
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+在 `renderPlot` 的第三个参数中注入。这里的 `spec` 是预览 Vanilla 源码中的 Plot 配置，已经通过 `encoding.channels.intensity` 绑定 score：
 
 ```ts
-const rawChannelBinding: IRPlotChannel = { value: 0.65 };
+const svg = renderPlot(
+  spec,
+  { points: customChannelPoints },
+  {
+    channelDefinitions: [intensityChannel],
+  },
+);
 ```
 
+Vanilla 示例直接使用 Plot IR：字段绑定写为 `{ field }`，常量绑定写为 `{ value }`：
+
+```ts
+import type { IRPlotChannel } from '@retikz/plot';
+
+const fieldBinding: IRPlotChannel = { field: 'score' };
+const constantBinding: IRPlotChannel = { value: 0.65 };
+```
+
+</DocTab>
+</DocTabs>
+
 definition 始终留在运行时，不进入 Plot IR。
-
-## 执行机制
-
-1. 宿主把内置与自定义 definitions 合并到同一个 channel registry，并拒绝内置名冲突或重复注册。
-2. lowering 校验绑定的通道已经注册，再调用 definition 的 `resolve` 读取绑定和数据行。
-3. mark definition 用 `channelKinds` 声明自己消费哪些交付面。
-4. lowering 调用 scope / node / path definition 的 `deliver`，把 resolver 结果写入 Core IR。
-
-channel definition 不应检查 `mark.type`。它只负责解析和交付；某个 mark 是否消费 node、path 或 scope 通道，由 mark definition 决定，因此自定义 mark 也能复用同一条通道路径。
-
-<SourceLinks
-  sources={[
-    {
-      label: 'ChannelDefinition 与 define helper 契约',
-      path: 'packages/viz/plot/src/contract/channel.ts',
-      startLine: 299,
-      endLine: 439,
-    },
-    {
-      label: '内置与自定义通道合并到统一注册表',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 69,
-      endLine: 102,
-    },
-    {
-      label: '通道 lookup、resolve 与交付分派',
-      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
-      startLine: 42,
-      endLine: 145,
-    },
-  ]}
-/>
 
 ## 错误与限制
 
@@ -100,28 +183,52 @@ encoding: {
 }
 ```
 
-## API 参考
+## 相关属性
 
-公开导出：
+以下只列本例需要的入口；绑定结构与运行时选项分别见[编码参考](/viz/plot/reference/encoding)与[运行时参考](/viz/plot/reference/runtime)。
 
-| 从 `@retikz/plot` 导入            | 用途                                                                                    |
-| --------------------------------- | --------------------------------------------------------------------------------------- |
-| `defineScopeChannel`              | 定义交付到 Core Scope 的通道                                                            |
-| `defineNodeChannel`               | 定义交付到 Core Node 的通道                                                             |
-| `definePathChannel`               | 定义交付到 Core Path 的通道                                                             |
-| `defineChannel`                   | 定义需要显式 kind 与交付契约的通用通道                                                  |
-| `ChannelDefinition`               | 查询 channel、output、resolve 与 deliver 的完整契约                                     |
-| `ChannelDefinitionResolveContext` | 查询 rows、字段类型和 scale registry 等公共解析上下文；Node / Scope / Path 提供同构别名 |
+<ComponentProps
+  items={[
+    {
+      name: 'defineNodeChannel',
+      kind: 'function',
+      type: "<T extends ChannelValue>(definition: WithOptionalProperties<NodeChannelDefinition<T>, 'kind'>) => NodeChannelDefinition<T>",
+      description:
+        '定义逐节点通道。definition 包含唯一 channel、输出元数据 output、可选 legend，以及 resolve 和 deliver；kind 可省略，由 helper 填入 node。',
+    },
+    {
+      name: 'NodeChannelDefinition',
+      kind: 'type',
+      type: 'NodeChannelDefinition<T extends ChannelValue = ChannelValue>',
+      description:
+        '本例的定义类型。resolve 同时接收数据上下文与当前图元，产出逐行 resolver 和可选 descriptor；deliver 接收节点、解析值与交付上下文。legend 支持 swatch、ramp、size、symbol，本例用 ramp 展示连续透明度。',
+    },
+    {
+      name: 'channelDefinitions',
+      kind: 'property',
+      type: 'Array<AnyChannelDefinition>',
+      description:
+        'React 在 Plot props 中注入，Vanilla 在 renderPlot options 中注入。数组元素为通道定义对象：包含 channel、kind 及对应种类的解析与交付函数；属于运行时配置，不进入 IR。',
+    },
+    {
+      name: 'PointMark.channels',
+      kind: 'property',
+      type: 'Record<string, InputPlotExtensionChannel>',
+      description:
+        "按已注册名称绑定值。本例使用字段字符串 'score' 或显式常量 { kind: 'constant', value: 0.65 }；归一化 IR 分别保存 { field: 'score' } 和 { value: 0.65 }，不能同时提供 field 与 value。",
+    },
+  ]}
+/>
 
-宿主注入：
+## 延伸阅读
 
-| 宿主                                   | 公开契约            | 注入字段                                    |
-| -------------------------------------- | ------------------- | ------------------------------------------- |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `channelDefinitions`                        |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.channelDefinitions` |
-
-## 相关
-
-- [通道绑定](/viz/plot/channel/binding) —— 字段与常量绑定如何进入 Plot IR
-- [内置通道](/viz/plot/channel/builtin) —— 内置 definition 的交付面
-- [自定义图元](/viz/plot/mark/custom-mark) —— mark 如何声明和消费 channel kind
+<LinkedSections
+  items={[
+    { title: '实现原理', description: '追踪通道注册、解析、属性交付与图例生成。', url: '/viz/plot/channel/mechanism' },
+    { title: '编码参考', description: '查看字段、常量和扩展通道绑定结构。', url: '/viz/plot/reference/encoding' },
+    { title: '运行时参考', description: '查看宿主注入与编译选项。', url: '/viz/plot/reference/runtime' },
+    { title: '自定义图元', description: '让新的图元消费通道种类。', url: '/viz/plot/mark/custom-mark' },
+    { title: '自定义比例尺', description: '扩展位置或颜色的映射规则。', url: '/viz/plot/scale/custom-scale' },
+    { title: 'API 参考', description: '查询通道定义、注册与解析交付的公开契约', url: '/viz/plot/channel/reference' },
+  ]}
+/>

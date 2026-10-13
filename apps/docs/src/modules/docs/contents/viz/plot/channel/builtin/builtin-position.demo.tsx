@@ -8,11 +8,14 @@ import { BuiltinPositionPreview } from './builtin-position.preview';
 /** 注册回退使用的内置位置通道 controls */
 export const previewControls = builtinPositionControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values =>
-  BuiltinPositionPreview({
-    xField: values.xField,
-    yField: values.yField,
-  }),
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) =>
+  BuiltinPositionPreview(
+    {
+      xField: values.xField,
+      yField: values.yField,
+    },
+    dimensions,
+  ),
 );
 
 /** canonical 状态派生的稳定源码配置 */

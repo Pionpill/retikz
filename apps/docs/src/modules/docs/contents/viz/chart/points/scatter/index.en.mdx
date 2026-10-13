@@ -374,16 +374,16 @@ The example reuses World Bank 2022 economy data and splits `incomeGroup` into HI
 
 When fields contain positions on a playing field, a scatter chart can become an event distribution map. Alongside position and category mappings, this example combines point appearance, axis visibility, and a plot-area background. In IR, `encodings`, `properties`, and `guides` belong to `recipe`, while `plotExtension` belongs to the chart root. Property names in the table are relative to their group.
 
-| Group           | Prop                         | Type                         | Description                                                    |
-| --------------- | ---------------------------- | ---------------------------- | -------------------------------------------------------------- |
-| `encodings`     | `x`, `y`                     | Field name or mapping object | Bind shot-origin coordinates through `recipe.encodings`        |
-|                 | `color`                      | Field name or mapping object | Bind `outcome` to distinguish shot results                     |
-| `properties`    | `size`                       | `number`                     | Adjust the radius to distinguish nearby events                 |
-|                 | `shape`                      | Shape name string            | Set a uniform shape for shot locations                         |
-|                 | `stroke`                     | Color string or paint object | Optionally outline points to separate them from the background |
-|                 | `opacity`                    | `number`                     | Adjust transparency to reveal overlapping locations            |
-| `guides`        | `axis`                       | `boolean`                    | Set to `false` here to hide default axes                       |
-| `plotExtension` | `plotDefaults.plotArea.fill` | Paint object                 | Configure a pitch image with `kind: 'image'` and `href`        |
+| Group           | Prop                        | Type                         | Description                                                    |
+| --------------- | --------------------------- | ---------------------------- | -------------------------------------------------------------- |
+| `encodings`     | `x`, `y`                    | Field name or mapping object | Bind shot-origin coordinates through `recipe.encodings`        |
+|                 | `color`                     | Field name or mapping object | Bind `outcome` to distinguish shot results                     |
+| `properties`    | `size`                      | `number`                     | Adjust the radius to distinguish nearby events                 |
+|                 | `shape`                     | Shape name string            | Set a uniform shape for shot locations                         |
+|                 | `stroke`                    | Color string or paint object | Optionally outline points to separate them from the background |
+|                 | `opacity`                   | `number`                     | Adjust transparency to reveal overlapping locations            |
+| `guides`        | `axis`                      | `boolean`                    | Set to `false` here to hide default axes                       |
+| `plotExtension` | `defaultPlot.plotArea.fill` | Paint object                 | Configure a pitch image with `kind: 'image'` and `href`        |
 
 This example uses StatsBomb shot data from the 2022 World Cup. Each point locates the origin of a Messi shot, and color identifies its outcome. Bind `x` and `y` to position fields and add the pitch background to view shot concentrations against a spatial reference. Use the controls below to adjust size, shape, stroke, and opacity and compare readability over the background. Read the axes as spatial positions, not a correlation between statistical measures. When replacing the data or background, check that coordinate ranges, directions, and proportions agree.
 

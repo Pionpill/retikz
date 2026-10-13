@@ -42,80 +42,78 @@ const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec:
 /**
  * 创建 color-like mark 通道（color / fill / stroke）
  * @description 常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale
+ * @param options 通道名称、绑定读取函数与常量 paint 策略
+ * @returns 使用颜色比例尺解析字段的 mark 通道定义；创建时不解析数据
  */
 export const makeColorChannelDefinition = (
   options: ColorChannelDefinitionOptions,
 ): MarkChannelDefinition<PlotPaint> => ({
   channel: options.channel,
   kind: ChannelDefinitionKind.Mark,
-  resolve: ctx => {
+  resolve: (ctx, mark) => {
     const scaleByName = new Map(ctx.node.scales.map(scale => [scale.name, scale] as const));
-    return (mark: IRPlotMarkOperation) => {
-      const channel = options.pick(mark);
-      if (!channel) return undefined;
-      if (channel.value !== undefined) {
-        const constant = parsePaintConstant(options.channel, channel.value, options.constantPaint ?? false);
-        return { resolver: () => constant, defaultValue: constant };
-      }
+    const channel = options.pick(mark);
+    if (!channel) return undefined;
+    if (channel.value !== undefined) {
+      const constant = parsePaintConstant(options.channel, channel.value, options.constantPaint ?? false);
+      return { resolver: () => constant, defaultValue: constant };
+    }
 
-      if (channel.field === undefined) return undefined;
+    if (channel.field === undefined) return undefined;
 
-      const field = channel.field;
-      const definition = ctx.model.find(candidate => candidate.name === field);
-      const colorFieldType = definition?.type;
-      if (
-        (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
-        channel.scale === undefined
-      ) {
-        throw new RetikzPlotError(
-          `lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`,
-        );
-      }
-
-      let scaleOperation: IRPlotScaleOperation;
-      if (channel.scale !== undefined) {
-        const found = scaleByName.get(channel.scale);
-        if (!found)
-          throw new RetikzPlotError(
-            `lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`,
-          );
-
-        scaleOperation = found;
-      } else {
-        scaleOperation = { type: BuiltinPlotScale.Ordinal, name: `__${options.channel}_${field}` };
-      }
-
-      const rawValues = ctx.rows.map(row => resolveFieldPath(row, field));
-      if (
-        isBuiltinScaleOperation(scaleOperation) &&
-        scaleOperation.type === BuiltinPlotScale.Ordinal &&
-        scaleOperation.domain === undefined
-      ) {
-        const order = definition?.order;
-        if (order !== undefined && order !== BuiltinFieldOrderMode.Appearance) {
-          scaleOperation = { ...scaleOperation, domain: ctx.resolveCategoryDomain(rawValues, order) };
-        }
-      }
-
-      const resolution = ctx.resolveChannelScale(
-        scaleOperation,
-        rawValues,
-        colorResolveContext(colorFieldType, ctx.resolveColorScheme, ctx.palette),
+    const field = channel.field;
+    const definition = ctx.model.find(candidate => candidate.name === field);
+    const colorFieldType = definition?.type;
+    if (
+      (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
+      channel.scale === undefined
+    ) {
+      throw new RetikzPlotError(
+        `lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`,
       );
+    }
 
-      return {
-        resolver: row => resolution.of(resolveFieldPath(row, field)),
-        descriptor: {
-          channel: options.channel,
-          scaleType: resolution.scaleType,
-          domain: resolution.domain,
-          range: resolution.range,
-          field,
-          fieldType: colorFieldType,
-          scaleName: scaleOperation.name,
-          colorScale: resolution,
-        },
-      };
+    let scaleOperation: IRPlotScaleOperation;
+    if (channel.scale !== undefined) {
+      const found = scaleByName.get(channel.scale);
+      if (!found)
+        throw new RetikzPlotError(`lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`);
+
+      scaleOperation = found;
+    } else {
+      scaleOperation = { type: BuiltinPlotScale.Ordinal, name: `__${options.channel}_${field}` };
+    }
+
+    const rawValues = ctx.rows.map(row => resolveFieldPath(row, field));
+    if (
+      isBuiltinScaleOperation(scaleOperation) &&
+      scaleOperation.type === BuiltinPlotScale.Ordinal &&
+      scaleOperation.domain === undefined
+    ) {
+      const order = definition?.order;
+      if (order !== undefined && order !== BuiltinFieldOrderMode.Appearance) {
+        scaleOperation = { ...scaleOperation, domain: ctx.resolveCategoryDomain(rawValues, order) };
+      }
+    }
+
+    const resolution = ctx.resolveChannelScale(
+      scaleOperation,
+      rawValues,
+      colorResolveContext(colorFieldType, ctx.resolveColorScheme, ctx.palette),
+    );
+
+    return {
+      resolver: row => resolution.of(resolveFieldPath(row, field)),
+      descriptor: {
+        channel: options.channel,
+        scaleType: resolution.scaleType,
+        domain: resolution.domain,
+        range: resolution.range,
+        field,
+        fieldType: colorFieldType,
+        scaleName: scaleOperation.name,
+        colorScale: resolution,
+      },
     };
   },
 });
@@ -163,7 +161,10 @@ const markValueChannel = (value: unknown): IRPlotChannel | undefined => {
 const encodingChannel = (mark: IRPlotMarkOperation, channel: string): IRPlotChannel | undefined =>
   (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding?.[channel];
 
-/** 创建内置 paint channel definitions */
+/**
+ * 创建内置 paint channel definitions
+ * @returns 新建的 color、fill、stroke 通道定义集合
+ */
 export const createBuiltinPaintChannels = (): BuiltinPaintChannels => ({
   color: makeColorChannelDefinition({
     channel: 'color',

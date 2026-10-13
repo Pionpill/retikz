@@ -52,7 +52,7 @@ Flow Source 由下列成员组成。React 组件负责声明这些成员，运�
 | `overlap` | 默认 `allow`；`separate` 自动分开连接落点，不保证箭头图形不重叠或路径不交叉                    |
 | `anchor`  | 最后才使用的精确约束，如 `{ side: 'left', fraction: 0.4 }`；与 `side` 互斥，自动分配不会移动它 |
 
-全图默认可通过 `flowDefaults.relation.source.overlap` 和 `flowDefaults.relation.target.overlap` 设置；字符串端点同样继承默认，局部 `allow` 可以覆盖 `separate`。指定 `anchor` 后，自动位置会避开需要分离的固定落点；两个固定落点冲突时会报错。没有端点约束时，保留原有自然边界连接。
+全图默认可通过 `defaultFlow.relation.source.overlap` 和 `defaultFlow.relation.target.overlap` 设置；字符串端点同样继承默认，局部 `allow` 可以覆盖 `separate`。指定 `anchor` 后，自动位置会避开需要分离的固定落点；两个固定落点冲突时会报错。没有端点约束时，保留原有自然边界连接。
 
 自动侧边比例要求底层形状支持 Core 的比例锚点。矩形可用；当前 gateway 菱形底层为 polygon，尚不支持该查询，会明确报错，可使用其已支持的命名或角度 anchor。
 

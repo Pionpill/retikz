@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="props"
       position={[-215, 0]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 13 }, opacity: { fill: 0.08 } }}
     >
       Arc / Sector props
     </Node>
@@ -16,7 +16,7 @@ const Demo: FC = () => (
       id="select"
       position={[-65, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13, weight: 'bold' } }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', font: { size: 13, weight: 'bold' }, opacity: { fill: 0.16 } }}
     >
       {'Resolve angles\nselect topology'}
     </Node>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
       id="open"
       position={[150, -75]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12 }, opacity: { fill: 0.08 } }}
     >
       {'Open Arc\nmove → arc'}
     </Node>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="closed"
       position={[150, 0]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12 }, opacity: { fill: 0.08 } }}
     >
       {'Closed Arc / solid Sector\nmove → circlePath | ellipsePath'}
     </Node>
@@ -40,7 +40,7 @@ const Demo: FC = () => (
       id="hollow"
       position={[150, 75]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12 }, opacity: { fill: 0.08 } }}
     >
       {'Hollow Sector\nouter arc → line → reverse inner arc → line'}
     </Node>

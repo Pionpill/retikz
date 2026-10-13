@@ -156,9 +156,11 @@ keys 的长度决定行数，键以原始纯文本显示，值格无内容；保
 
 ### 样式与尺寸
 
-样式优先级为 **结构默认 → 整体 style → style.key / style.value → 单格 style**；可以分别设置键和值的外观。
+`defaultCell` 统一配置单格的 `style` 和 `layout` 默认值。根级 `layout` 只负责方向、间距等集合排列；单格通过自己的 `style`、`layout` 覆盖默认配置。
 
-字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
+样式优先级为 **结构默认 → defaultCell.style → defaultCell.key.style / defaultCell.value.style → 单格 style**；可以分别设置键和值的外观。
+
+字体按字段合并；`opacity.fill` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
 
 <ComponentPreview
   files={['map-styles', 'map-styles.preview.tsx']}
@@ -167,9 +169,9 @@ keys 的长度决定行数，键以原始纯文本显示，值格无内容；保
   caption="调整两列宽度，再关闭首格覆盖，比较整体、角色与单格的优先级。"
 />
 
-`layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零；省略或 `'auto'` 时自适应。单格同名字段优先，显式 `'auto'` 可以解除继承的固定尺寸。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
+`defaultCell.layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零；省略或 `'auto'` 时自适应。单格同名字段优先，显式 `'auto'` 可以解除继承的固定尺寸。`defaultCell.layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
 
-布局优先级为 **整体 layout → layout.key / layout.value → 单格 layout**。两列分别按本列最大需求确定宽度，每行按较高单元格确定高度。固定尺寸不会被拉伸，较小单元格从轨道起点对齐，因此同列边框宽度或同行边框高度可以不同。`layout.gap` 支持数字或 `{ row, column }`。
+布局优先级为 **defaultCell.layout → defaultCell.key.layout / defaultCell.value.layout → 单格 layout**。两列分别按本列最大需求确定宽度，每行按较高单元格确定高度。固定尺寸不会被拉伸，较小单元格从轨道起点对齐，因此同列边框宽度或同行边框高度可以不同。`layout.gap` 支持数字或 `{ row, column }`。
 
 ### 容器标签
 
@@ -231,7 +233,7 @@ Map
 
 对象键按原始文字显示，字符串值按带引号和转义的 JSON 字面量显示，因此 `"null"` 与 `null` 不会混淆。数字、布尔值和 null 原样显示；嵌套空对象、空数组显示为 `{}`、`[]`，空根结构的自然尺寸为零。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 Map 的 `entries`。
 
-数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。要连线或逐格定制，改用显式单元格，在其中嵌套带 `data` 的组件。整体 style / layout 只控制当前层，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
+数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。要连线或逐格定制，改用显式单元格，在其中嵌套带 `data` 的组件。defaultCell.style / defaultCell.layout 只控制当前层，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
 
 React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ArrayDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
 
@@ -239,7 +241,7 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 
 为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。未设 id 的格不会按数组下标自动获得身份。
 
-自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `defaultCell.layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
 
 <ComponentPreview
   files={['map-overflow', 'map-overflow.preview.tsx']}

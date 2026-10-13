@@ -187,7 +187,7 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
         closure: { kind: 'baseline', baseline: 0 },
         ...(options.fillOpacity == null
           ? {}
-          : { fillOpacity: { kind: 'constant' as const, value: options.fillOpacity } }),
+          : { opacity: { fill: { kind: 'constant' as const, value: options.fillOpacity } } }),
         encoding: {
           x: { field: 'densityX' },
           y: { field: 'density' },
@@ -353,8 +353,8 @@ export const createBoxplotComposition = (
         y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
       },
       fill: { kind: 'constant', value: '#93c5fd' },
-      fillOpacity: { kind: 'constant', value: 0.32 },
       encoding: { x: { field: 'boxX' }, y: { field: 'boxHigh' } },
+      opacity: { fill: { kind: 'constant', value: 0.32 } },
     },
     {
       type: 'reference',

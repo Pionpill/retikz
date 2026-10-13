@@ -14,10 +14,10 @@ const isLabelBoundaryPosition = (
 ): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
 
 const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
-  if (layout.shapeName !== 'rectangle') {
+  if (layout.shape.name !== 'rectangle') {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Node label boundary position requires a box-like boundary; shape '${layout.shapeName}' is not supported.`,
+      `Node label boundary position requires a box-like boundary; shape '${layout.shape.name}' is not supported.`,
     );
   }
 };
@@ -25,15 +25,15 @@ const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
 const labelBoundaryPoint = (layout: NodeLayout, position: CanonicalNodeLabelBoundaryPosition): Position => {
   ensureBoxLikeLabelBoundary(layout);
   const fraction = position.fraction;
-  const left = layout.rect.x - layout.rect.width / 2;
-  const right = layout.rect.x + layout.rect.width / 2;
-  const top = layout.rect.y - layout.rect.height / 2;
-  const bottom = layout.rect.y + layout.rect.height / 2;
-  if (position.boundary === 'top') return [left + layout.rect.width * fraction, top];
-  if (position.boundary === 'right') return [right, top + layout.rect.height * fraction];
-  if (position.boundary === 'bottom') return [left + layout.rect.width * fraction, bottom];
+  const left = layout.geometry.rect.x - layout.geometry.rect.width / 2;
+  const right = layout.geometry.rect.x + layout.geometry.rect.width / 2;
+  const top = layout.geometry.rect.y - layout.geometry.rect.height / 2;
+  const bottom = layout.geometry.rect.y + layout.geometry.rect.height / 2;
+  if (position.boundary === 'top') return [left + layout.geometry.rect.width * fraction, top];
+  if (position.boundary === 'right') return [right, top + layout.geometry.rect.height * fraction];
+  if (position.boundary === 'bottom') return [left + layout.geometry.rect.width * fraction, bottom];
 
-  return [left, top + layout.rect.height * fraction];
+  return [left, top + layout.geometry.rect.height * fraction];
 };
 
 const labelBoundaryDirection = (position: CanonicalNodeLabelBoundaryPosition): Position => {
@@ -74,9 +74,12 @@ const labelTangentVector = (position: MeasuredNodeLabel['position']): Position =
 
 /** label 在 node 边界上的附着点 */
 export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLabel, 'position'>): Position => {
-  if (label.position === 'center') return [layout.rect.x, layout.rect.y];
+  if (label.position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
-  const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
+  const aaLayout: NodeLayout = {
+    ...layout,
+    geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
+  };
   if (isLabelBoundaryPosition(label.position)) {
     return labelBoundaryPoint(aaLayout, label.position);
   }
@@ -90,7 +93,7 @@ export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLab
 
 /** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
 export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
-  return [layout.rect.x + label.centerOffset[0], layout.rect.y + label.centerOffset[1]];
+  return [layout.geometry.rect.x + label.centerOffset[0], layout.geometry.rect.y + label.centerOffset[1]];
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点 */
@@ -173,7 +176,7 @@ export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNode
   return {
     ...label,
     rotateDeg: placed.rotateDeg,
-    centerOffset: [placed.center[0] - layout.rect.x, placed.center[1] - layout.rect.y],
+    centerOffset: [placed.center[0] - layout.geometry.rect.x, placed.center[1] - layout.geometry.rect.y],
   };
 };
 
@@ -184,9 +187,9 @@ export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNode
 export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
 
-  const cx = layout.rect.x;
-  const cy = layout.rect.y;
-  const rad = layout.rotateDeg * DEG_TO_RAD;
+  const cx = layout.geometry.rect.x;
+  const cy = layout.geometry.rect.y;
+  const rad = layout.geometry.rect.rotate ?? 0;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
   const pts: Array<Position> = [];
@@ -208,7 +211,7 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
     for (const [offsetX, offsetY] of cornerOffsets) {
       const px = lx + offsetX * labelCos - offsetY * labelSin;
       const py = ly + offsetX * labelSin + offsetY * labelCos;
-      if (layout.rotateDeg === 0) {
+      if ((layout.geometry.rect.rotate ?? 0) === 0) {
         pts.push([px, py]);
       } else {
         const dx = px - cx;

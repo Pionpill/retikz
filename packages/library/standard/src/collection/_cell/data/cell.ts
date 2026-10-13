@@ -26,7 +26,7 @@ export const createDataCell = (
               type: 'array',
               data: value,
               dataExpand,
-              ...(inheritContentWidth ? { layout: { width: 'content' as const } } : {}),
+              ...(inheritContentWidth ? { defaultCell: { layout: { width: 'content' as const } } } : {}),
             },
     };
 

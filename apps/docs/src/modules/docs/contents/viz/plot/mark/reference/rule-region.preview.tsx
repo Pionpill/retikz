@@ -30,7 +30,7 @@ export const RuleRegionPreview = (values: RuleRegionPreviewValues) => (
       y={values.yStart}
       yTo={values.yEnd}
       color="#bfdbfe"
-      fillOpacity={0.55}
+      opacity={{ fill: 0.55 }}
     />
     <PointMark x="x" y="y" />
     <PlotAxis dimension="x" />

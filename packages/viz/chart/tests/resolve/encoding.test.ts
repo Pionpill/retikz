@@ -291,7 +291,7 @@ describe('Scatter Chart encoding resolution', () => {
     expect(result.plot.marks[0]).toMatchObject({
       color: { kind: 'field', value: 'group', scale: 'groupColorScale' },
       size: { kind: 'field', value: 'weight', scale: 'weightSizeScale' },
-      opacity: { kind: 'field', value: 'confidence', scale: 'confidenceOpacityScale' },
+      opacity: { overall: { kind: 'field', value: 'confidence', scale: 'confidenceOpacityScale' } },
     });
   });
 

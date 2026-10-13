@@ -92,7 +92,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### Scope 的默认值
 
-`Scope.style` 不接受 `shadow`；它只通过两类 defaults 向后代主几何传递默认值。下图中 Node 与闭合 Path 都继承 Scope 的投影，右侧 Node 以 `none` 显式关闭它。
+`Scope.defaults.style` 不接受 `shadow`；它只通过两类 defaults 向后代主几何传递默认值。下图中 Node 与闭合 Path 都继承 Scope 的投影，右侧 Node 以 `none` 显式关闭它。
 
 <ComponentPreview files="shadow-integration" size="sm" />
 

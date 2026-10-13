@@ -12,6 +12,8 @@
 | 仅 skill / 发现入口                                | frontmatter、引用、旧入口残留、场景分流；不要求旧页面迁移                          |
 | 移动或修改脚本                                     | 路径解析、node --check、已有相关测试；脚本行为改变时实际运行对应场景               |
 
+移动或重命名 docs registry 的 glob 匹配文件后，相关 Vitest 验证加 `--fsModuleCache=false`，避免复用旧 glob 结果；`--no-cache` 不会关闭该模块缓存。
+
 机械文档完整性检查：
 
 ```bash

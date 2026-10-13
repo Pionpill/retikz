@@ -57,6 +57,7 @@ export const previewControlContract = {
     xField: 'month',
     yField: 'sales',
   },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     {
       id: 'sales-by-month',

@@ -94,7 +94,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     assertChannelDelivery(definition);
     if (channelKinds !== undefined && !channelKinds.has(definition.kind)) continue;
     if (definition.kind === ChannelDefinitionKind.Mark) {
-      const resolution = definition.resolve(definitionContext)(mark);
+      const resolution = definition.resolve(definitionContext, mark);
       if (!resolution) continue;
 
       values[definition.channel] = resolution.resolver;
@@ -104,7 +104,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     }
 
     if (definition.kind === ChannelDefinitionKind.Scope) {
-      const resolution = definition.resolve(definitionContext)(mark);
+      const resolution = definition.resolve(definitionContext, mark);
       if (!resolution) continue;
 
       scopeDeliveries.push({
@@ -117,7 +117,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
     }
 
     if (definition.kind === ChannelDefinitionKind.Path) {
-      const resolution = definition.resolve(definitionContext)(mark);
+      const resolution = definition.resolve(definitionContext, mark);
       if (!resolution) continue;
 
       pathDeliveries.push({
@@ -131,7 +131,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
 
     if (definition.kind !== ChannelDefinitionKind.Node) continue;
 
-    const resolution = definition.resolve(definitionContext)(mark);
+    const resolution = definition.resolve(definitionContext, mark);
     if (!resolution) continue;
 
     nodeDeliveries.push({

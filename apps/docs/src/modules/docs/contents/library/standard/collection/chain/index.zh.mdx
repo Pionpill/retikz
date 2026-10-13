@@ -61,9 +61,9 @@ items、data、skeleton 三选一。items 的字符串原样显示，显式单�
 
 骨架的三个形式互斥。
 
-**分支骨架**使用 `skeleton.items` 描述串行与分叉结构，只含符号，不携带图形、id 或局部样式。需要这些配置时，显式分叉用 `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`，可配置局部 layout 与 connection。
+**分支骨架**使用 `skeleton.items` 描述串行与分叉结构，只含符号，不携带图形、id 或局部样式。需要这些配置时，显式分叉用 `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`，可配置局部 layout 与 defaultConnection。
 
-嵌套集合默认不增加外层 Cell 背景和 padding，普通文本仍保留浅灰背景与默认内边距。JSON 自动展开与手动嵌套行为一致；显式设置的 style.fill、layout.padding（含继承配置）仍然优先。
+嵌套集合默认不增加外层 Cell 背景和 padding，普通文本仍保留浅灰背景与默认内边距。JSON 自动展开与手动嵌套行为一致；显式设置的 style.fill、defaultCell.layout.padding（含继承配置）仍然优先。
 
 <ComponentPreview
   files={['chain-inputs', 'chain-inputs.preview.tsx']}
@@ -114,7 +114,7 @@ ChainCell 的 text 与唯一图形 children 互斥，都省略表示空单元。
 
 ### 连接、标签与引用
 
-`connection.route` 默认 `auto`：在分流、汇合处按分支包围盒预留通道，横向用 `-|-`，纵向用 `|-|`；短支路也沿公共通道汇合。普通串行项直接连接。具体折线由 Core Path 生成。
+`defaultConnection.route` 默认 `auto`：在分流、汇合处按分支包围盒预留通道，横向用 `-|-`，纵向用 `|-|`；短支路也沿公共通道汇合。普通串行项直接连接。具体折线由 Core Path 生成。
 
 | route      | 连接方式               |
 | ---------- | ---------------------- |
@@ -125,7 +125,7 @@ ChainCell 的 text 与唯一图形 children 互斥，都省略表示空单元。
 | `-\|-`     | 横—纵—横               |
 | `\|-\|`    | 纵—横—纵               |
 
-连接引用整个单元，不固定左右或上下锚点；路径根据出入方向在单元边界处裁切。显式路由的横纵方向以绘图坐标为准，不随 Chain 排列方向交换，也不自动避让其它内容。三段折线使用 `connection.fraction` 指定中段在两单元中心之间的位置，范围为 0–1，缺省为 0.5；`fraction` 只能与显式 `-|-` 或 `|-|` 一起提供，其它路由或省略路由时均不允许携带。局部仅覆盖样式时继承原路由；指定相同路由时可继承或覆盖比例，切换路由时使用新路由自己的参数与默认值。`auto` 的通道位置由布局计算。
+连接引用整个单元，不固定左右或上下锚点；路径根据出入方向在单元边界处裁切。显式路由的横纵方向以绘图坐标为准，不随 Chain 排列方向交换，也不自动避让其它内容。三段折线使用 `defaultConnection.fraction` 指定中段在两单元中心之间的位置，范围为 0–1，缺省为 0.5；`fraction` 只能与显式 `-|-` 或 `|-|` 一起提供，其它路由或省略路由时均不允许携带。局部仅覆盖样式时继承原路由；指定相同路由时可继承或覆盖比例，切换路由时使用新路由自己的参数与默认值。`auto` 的通道位置由布局计算。
 
 <ComponentPreview
   files={['chain-connection', 'chain-connection.preview.tsx']}
@@ -133,7 +133,7 @@ ChainCell 的 text 与唯一图形 children 互斥，都省略表示空单元。
   size="md"
 />
 
-示例将连接设为蓝色。React／Vanilla 的 connection.path.arrow 支持 none、单向或双向箭头，通过现有路径归一化转换成 Source marks；IR 用 marks，空数组关闭默认末端箭头。路径标签字段是 label。path 配置不能改写路径的身份、类型或步骤。
+示例将连接设为蓝色。React／Vanilla 的 defaultConnection.path.arrow 支持 none、单向或双向箭头，通过现有路径归一化转换成 Source marks；IR 用 marks，空数组关闭默认末端箭头。路径标签字段是 label。path 配置不能改写路径的身份、类型或步骤。
 
 显式 cell id 可用于外部路径引用：React／Vanilla 使用 `target.right`，Source IR 使用 `{ id: 'target', anchor: 'right' }`，指向单元实际边框，而非内部内容或整条支路。根 label 附着在整个 Chain 上；分支配置逐字段继承，显式 marks 数组替换继承的标记列表。
 

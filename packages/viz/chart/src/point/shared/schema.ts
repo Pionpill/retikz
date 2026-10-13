@@ -1,7 +1,7 @@
 import {
   BoxSpacingSchema,
   CssColorSchema,
-  OpacitySchema,
+  GraphicOpacityValueSchema,
   StrokeWidthSchema,
   StrokeDashPatternSchema,
 } from '@retikz/core';
@@ -107,9 +107,7 @@ export const PointPropertiesSchema = strictObject({
   fill: union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point fill paint'),
   stroke: union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point stroke paint'),
   strokeWidth: StrokeWidthSchema.optional().describe('Constant point stroke width'),
-  fillOpacity: OpacitySchema.optional().describe('Constant point fill opacity'),
-  strokeOpacity: OpacitySchema.optional().describe('Constant point stroke opacity'),
-  opacity: OpacitySchema.optional().describe('Constant point opacity'),
+  opacity: GraphicOpacityValueSchema.optional().describe('Constant point opacity'),
   rotate: number().optional().describe('Constant point rotation'),
   minimumSize: union([NonNegativeNumberSchema, JsonObjectSchema]).optional(),
   zIndex: number().int().optional().describe('Constant point drawing order'),

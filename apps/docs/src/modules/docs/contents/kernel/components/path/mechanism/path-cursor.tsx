@@ -25,16 +25,13 @@ const PathCursor: FC<PathCursorProps> = props => {
           { kind: 'line', to: [120, 60] },
           { kind: 'cycle' },
         ]}
-        style={{ font: { size: 13 } }}
-        layout={{ width: 126 }}
         index
+        defaultCell={{ style: { font: { size: 13 } }, layout: { width: 126 } }}
       />
       {t.states.map((title, index) => (
         <Scope key={title} localNamespace position={[index * 225, 180]}>
           <Map
             label={{ text: title, opacity: 0.8, font: { size: 12 } }}
-            layout={{ height: 32, key: { width: 110 }, value: { width: 100 } }}
-            style={{ font: { size: 13 } }}
             entries={[
               {
                 key: { content: t.position },
@@ -42,6 +39,12 @@ const PathCursor: FC<PathCursorProps> = props => {
               },
               { key: { content: t.start }, value: { content: index === 0 ? 'A [0, 0]' : 'C [0, 60]' } },
             ]}
+            defaultCell={{
+              style: { font: { size: 13 } },
+              layout: { height: 32 },
+              key: { layout: { width: 110 } },
+              value: { layout: { width: 100 } },
+            }}
           />
           <Scope position={[40, 110]}>
             <Draw

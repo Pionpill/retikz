@@ -8,7 +8,7 @@ export type NormalizeTableStructureOptions = Readonly<{
   /** 根 Table 外部数据引用 */
   data?: IRDataReference;
   /** 在 Cell padding 物化前应用的已解析区域默认值 */
-  cellLayoutDefaults?: IRTableCellLayoutDefaults | null;
+  defaultCellLayout?: IRTableCellLayoutDefaults | null;
   /** 宿主注入的外部 datasets */
   datasets?: ExternalDatasets;
   /** 本次准备的规范结果，不再次解析源数据 */

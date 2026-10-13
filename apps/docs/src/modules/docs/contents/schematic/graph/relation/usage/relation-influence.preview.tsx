@@ -36,7 +36,7 @@ export const RelationInfluencePreview = (values: RelationInfluencePreviewValues,
   return (
     <Graph
       viewBox={{ x: 0, y: 0, width: 420, height: 180 }}
-      {...(color === 'currentColor' ? {} : { graphDefaults: { relation: relationDefaults } })}
+      {...(color === 'currentColor' ? {} : { defaultGraph: { relation: relationDefaults } })}
     >
       <Entity id="source" role="concept" position={[80, 90]}>
         {relationInfluenceI18n[lang].source}

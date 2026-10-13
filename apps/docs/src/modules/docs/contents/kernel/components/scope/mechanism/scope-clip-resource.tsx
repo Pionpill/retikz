@@ -19,7 +19,7 @@ const ScopeClipResource: FC<ScopeClipResourceProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={scopeFlowDefaults}
+      defaultFlow={scopeFlowDefaults}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout id="clip-stages" kind="linear" direction="right" gap={58} align="start">

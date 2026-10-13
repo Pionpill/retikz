@@ -6,7 +6,7 @@ import {
   DrawableInstanceSchema,
   PathTransformSchema,
   GraphicColorSchema,
-  GraphicElementOpacitySchema,
+  GraphicOpacitySchema,
   GraphicStrokeSchema,
   GraphicEffectsSchema,
   PathStrokeSchema,
@@ -98,7 +98,7 @@ export const RelationSchema = strictObject({
   ...PathTransformSchema.shape,
   style: strictObject({
     ...GraphicColorSchema.shape,
-    ...GraphicElementOpacitySchema.shape,
+    ...GraphicOpacitySchema.shape,
     ...GraphicStrokeSchema.shape,
     ...GraphicEffectsSchema.shape,
     ...PathStrokeSchema.shape,

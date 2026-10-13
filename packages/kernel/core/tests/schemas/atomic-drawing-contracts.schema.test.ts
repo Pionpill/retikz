@@ -35,13 +35,13 @@ describe('Core atomic drawing contracts', () => {
   });
 
   it('parses graphic opacity and effects with their existing bounds', () => {
-    expect(GraphicOpacitySchema.parse({ opacity: 0, fillOpacity: 0.5, strokeOpacity: 1 })).toEqual({
-      opacity: 0,
-      fillOpacity: 0.5,
-      strokeOpacity: 1,
+    expect(GraphicOpacitySchema.parse({ opacity: { overall: 0, fill: 0.5, stroke: 1 } })).toEqual({
+      opacity: { overall: 0, fill: 0.5, stroke: 1 },
     });
-    expect(GraphicOpacitySchema.safeParse({ opacity: -0.1 }).success).toBe(false);
-    expect(GraphicOpacitySchema.safeParse({ strokeOpacity: 1.1 }).success).toBe(false);
+    expect(GraphicOpacitySchema.safeParse({ opacity: { overall: -0.1 } }).success).toBe(false);
+    expect(GraphicOpacitySchema.safeParse({ opacity: { stroke: 1.1 } }).success).toBe(false);
+    expect(GraphicOpacitySchema.safeParse({ fillOpacity: 0.5 }).success).toBe(false);
+    expect(GraphicOpacitySchema.parse({ opacity: 0 })).toEqual({ opacity: 0 });
     expect(GraphicEffectsSchema.parse({ shadow: 'sm', blendMode: 'multiply' })).toEqual({
       shadow: 'sm',
       blendMode: 'multiply',

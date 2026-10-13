@@ -36,8 +36,8 @@ const rulesOf = (): Array<IRTableCellRule> => [
     appearance: {
       background: { fill: '#ff0000', fillOpacity: 0.5 },
       content: {
-        style: { color: '#880000' },
         defaults: {
+          style: { color: '#880000' },
           node: {
             style: { font: { family: 'serif', weight: 400 } },
             layout: { padding: 2 },
@@ -93,8 +93,8 @@ describe('resolved Table Cell plans', () => {
       appearance: {
         background: { fill: '#0000ff' },
         content: {
-          style: { color: '#880000' },
           defaults: {
+            style: { color: '#880000' },
             reset: ['node'],
             node: {
               style: { font: { family: 'serif', weight: 700 } },
@@ -118,7 +118,7 @@ describe('resolved Table Cell plans', () => {
         matchedRuleIndices: [0, 1],
         appearance: {
           '/background/fill': { kind: 'rootRule', ruleIndex: 1 },
-          '/content/style/color': { kind: 'rootRule', ruleIndex: 0 },
+          '/content/defaults/style/color': { kind: 'rootRule', ruleIndex: 0 },
           '/content/defaults/reset': { kind: 'rootRule', ruleIndex: 1 },
           '/content/defaults/node/style/font/family': { kind: 'rootRule', ruleIndex: 0 },
           '/content/defaults/node/style/font/weight': { kind: 'rootRule', ruleIndex: 1 },
@@ -138,12 +138,12 @@ describe('resolved Table Cell plans', () => {
   it('does not create a winner trace for an explicitly undefined atomic appearance field', () => {
     const rule = TableCellRuleSchema.parse({
       selector: { cellIds: ['value'] },
-      appearance: { content: { style: { fill: undefined } } },
+      appearance: { content: { defaults: { style: { fill: undefined } } } },
     });
     const value = resolvePlans(modelOf(), [rule])[0];
 
     expect(value.appearance.content).not.toHaveProperty('fill');
-    expect(value.trace.appearance).not.toHaveProperty('/content/style/fill');
+    expect(value.trace.appearance).not.toHaveProperty('/content/defaults/style/fill');
   });
 
   it('treats an explicitly undefined structured appearance field as omitted', () => {

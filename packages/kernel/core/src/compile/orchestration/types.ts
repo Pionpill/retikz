@@ -21,7 +21,7 @@ import type {
   Transform,
 } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
-import type { StyleResolveFrame } from '../../resolve';
+import type { EffectiveScopeDefaults } from '../../resolve';
 import type { IRChild, IRPathBase, IRPosition, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
@@ -65,8 +65,8 @@ export type PendingPathEmission = {
   observerKeys?: ReadonlyArray<string>;
   /** Path occurrence 捕获的有效 Theme */
   theme: ResolvedTheme;
-  /** Path occurrence 捕获的完整样式栈 */
-  styleStack: ReadonlyArray<StyleResolveFrame>;
+  /** Path occurrence 捕获的有效默认配置 */
+  scopeDefaults: EffectiveScopeDefaults;
   /** 产生 path primitive 的语义 owner */
   semanticOwner?: RuntimeSemanticOwner;
   /** 编译期排序用 zIndex，不写入 Scene primitive */
@@ -101,8 +101,8 @@ export type TraversalResult = {
 
 /** layout-aware child probe 保存的全部可提交贡献 */
 export type CompositeReplayMaterializeContext = Readonly<{
-  /** replay child 在最终 authored Scope 中继承的样式栈 */
-  styleStack: ReadonlyArray<StyleResolveFrame>;
+  /** replay child 在最终 authored Scope 中继承的有效默认配置 */
+  scopeDefaults: EffectiveScopeDefaults;
   /** replay child 在最终 authored Scope 中继承的 Theme */
   theme: ResolvedTheme;
   /** replay child 所处 Scope 的 preliminary transform chain */
@@ -242,8 +242,8 @@ export type TraversalCompileOptions = {
   namespaceStack?: NamespaceStack;
   /** probe 继承的当前 scope chain */
   scopeChain?: ReadonlyArray<Transform>;
-  /** probe 继承的样式栈 */
-  styleStack?: ReadonlyArray<StyleResolveFrame>;
+  /** probe 继承的有效默认配置 */
+  scopeDefaults?: EffectiveScopeDefaults;
   /** 隔离 traversal 继承的完整 Theme */
   theme?: ResolvedTheme;
   /** 当前 child 根 occurrence；省略时按 canonical IR path 分配 */
@@ -287,6 +287,7 @@ export type TraversalState = {
 /** child 遍历期间使用的 compile 依赖 */
 export type TraversalContext = Pick<
   CompileContext,
+  | 'nodeGeometry'
   | 'measureText'
   | 'lowerTex'
   | 'onWarn'
@@ -340,8 +341,8 @@ export type TraversalFrame = {
   layoutSink: Array<NodeLayout>;
   /** 当前层延迟 emit 的 path 任务 */
   pathSink: Array<PendingPathEmission>;
-  /** 当前层样式继承栈 */
-  styleStack: ReadonlyArray<StyleResolveFrame>;
+  /** 当前层共享的有效默认配置 */
+  scopeDefaults: EffectiveScopeDefaults;
   /** 当前层后代读取的完整 Theme */
   theme: ResolvedTheme;
   /** 当前层及后代注册的全局 layout 对象，供 Scope 收尾时原位升级到最终几何 */
@@ -501,6 +502,6 @@ export type PendingCompileObservation = {
   observerKeys: ReadonlyArray<string>;
   /** owner occurrence 捕获的有效 Theme */
   theme: ResolvedTheme;
-  /** owner occurrence 捕获的完整样式栈 */
-  styleStack: ReadonlyArray<StyleResolveFrame>;
+  /** owner occurrence 捕获的有效默认配置 */
+  scopeDefaults: EffectiveScopeDefaults;
 };

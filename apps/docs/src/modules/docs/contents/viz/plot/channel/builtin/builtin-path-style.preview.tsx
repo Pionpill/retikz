@@ -1,5 +1,5 @@
 import { DataFieldType } from '@retikz/data';
-import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, BuiltinPlotScale } from '@retikz/plot-react';
 
 import { pathStyleRows } from './builtin-path-style.data';
 
@@ -15,11 +15,19 @@ export type BuiltinPathStylePreviewValues = {
 };
 
 /** 绘制示例图形 */
-export const BuiltinPathStylePreview = (values: BuiltinPathStylePreviewValues) => {
+export const BuiltinPathStylePreview = (
+  values: BuiltinPathStylePreviewValues,
+  dimensions?: { width: number; height: number },
+) => {
   const dashPattern = values.dashMode === 'dashed' ? [7, 4] : values.dashMode === 'dotted' ? [1, 4] : undefined;
 
   return (
     <Plot
+      style={
+        dimensions
+          ? { width: 'auto', height: 'auto', maxWidth: dimensions.width, maxHeight: dimensions.height }
+          : undefined
+      }
       data={pathStyleRows}
       model={[
         { name: 'step', type: DataFieldType.Continuous },
@@ -28,6 +36,8 @@ export const BuiltinPathStylePreview = (values: BuiltinPathStylePreviewValues) =
       width={440}
       height={280}
     >
+      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PathMark
         x="step"
         y="value"

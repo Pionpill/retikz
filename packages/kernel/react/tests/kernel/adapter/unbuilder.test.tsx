@@ -730,7 +730,7 @@ describe('convertIRToReactNode', () => {
               { type: 'step', kind: 'line', to: [10, 10] },
               { type: 'step', kind: 'cycle' },
             ],
-            style: { fill: 'red', opacity: 0.8, fillOpacity: 0.4, strokeOpacity: 0.6 },
+            style: { fill: 'red', opacity: { overall: 0.8, fill: 0.4, stroke: 0.6 } },
           },
         ],
       };
@@ -1082,8 +1082,9 @@ describe('convertIRToReactNode', () => {
                 style: { color: 'crimson' },
               },
             ],
-            style: { color: 'blue', stroke: 'red', strokeWidth: 2, opacity: 0.8 },
+
             defaults: {
+              style: { color: 'blue', stroke: 'red', strokeWidth: 2, opacity: 0.8 },
               node: {
                 shape: 'circle',
                 style: { fill: 'lightblue', textColor: NodeTextColor.Contrast, font: { size: 12 } },
@@ -1383,7 +1384,7 @@ describe('convertIRToReactNode', () => {
           type: 'scope',
           id: 'group',
           children: [{ namespace: 'demo', type: 'path' }],
-          style: { color: '#abcdef' },
+          defaults: { style: { color: '#abcdef' } },
         },
       ],
     };

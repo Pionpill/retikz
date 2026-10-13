@@ -39,7 +39,7 @@ Definitions let the system check the chain before computation. Implementations p
 
 Model resolution does not calculate statistics. Row processing starts only after the semantics and implementations of the entire chain pass preflight.
 
-<SourceLinks sources={[{ label: 'Synchronous entry point', path: 'packages/viz/data/src/pipeline/transform.ts' }]} />
+<SourceLinks sources={[{ label: 'Synchronous entry point', path: 'packages/viz/data/src/execution/apply.ts' }]} />
 
 ## Declaration parsing
 
@@ -58,7 +58,10 @@ An unregistered `kind` fails definition lookup. An empty `field` or an `order` s
 However, parsing `field: 'total'` only establishes that the field name is valid, not that the input contains it. The preceding summary produces this field, so the next phase must use the field model to check whether it is available.
 
 <SourceLinks
-  sources={[{ label: 'Declaration and stage resolution', path: 'packages/viz/data/src/resolve/transform/resolve.ts' }]}
+  sources={[
+    { label: 'Transform-chain resolution entry', path: 'packages/viz/data/src/parse.ts' },
+    { label: 'Declaration and stage resolution', path: 'packages/viz/data/src/transform/parse.ts' },
+  ]}
 />
 
 ## Field-model propagation
@@ -81,8 +84,8 @@ This stage produces the expected field model for each step, which execution and 
 
 <SourceLinks
   sources={[
-    { label: 'Models and dependencies', path: 'packages/viz/data/src/resolve/transform/resolve.ts' },
-    { label: 'Built-in semantic definitions', path: 'packages/viz/data/src/providers/transform/definitions.ts' },
+    { label: 'Models and dependencies', path: 'packages/viz/data/src/transform/parse.ts' },
+    { label: 'Built-in semantic definitions', path: 'packages/viz/data/src/transform/definitions.ts' },
   ]}
 />
 
@@ -100,8 +103,10 @@ Native sources and asynchronous computations prepare through an executor: `prepa
 
 <SourceLinks
   sources={[
-    { label: 'Synchronous preflight', path: 'packages/viz/data/src/pipeline/transform.ts' },
-    { label: 'prepare, bind, and execute', path: 'packages/viz/data/src/pipeline/execution.ts' },
+    { label: 'Synchronous preflight', path: 'packages/viz/data/src/execution/apply.ts' },
+    { label: 'prepare: stage preflight', path: 'packages/viz/data/src/execution/executor.ts' },
+    { label: 'bind: attach input', path: 'packages/viz/data/src/execution/prepared-plan.ts' },
+    { label: 'execute: run once', path: 'packages/viz/data/src/execution/run.ts' },
   ]}
 />
 
@@ -119,8 +124,8 @@ A computation error or validation failure stops subsequent stages. Computation h
 
 <SourceLinks
   sources={[
-    { label: 'Result ingestion and validation', path: 'packages/viz/data/src/resolve/transform/ingest.ts' },
-    { label: 'Stage error boundary', path: 'packages/viz/data/src/pipeline/transform.ts' },
+    { label: 'Result ingestion and validation', path: 'packages/viz/data/src/execution/result.ts' },
+    { label: 'Stage error boundary', path: 'packages/viz/data/src/execution/apply.ts' },
   ]}
 />
 
@@ -134,7 +139,7 @@ Start with `applyTransforms` to see input becoming a DataView, follow `resolvePa
 
 ## Related props
 
-The following public members relate to this page. See the [Data API reference](/viz/data/model/reference) for the full API and the [API Reference](/viz/data/transform/reference) for declarations.
+The following public members relate to this page. See the [Transform API reference](/viz/data/transform/reference) for complete interfaces and declarations.
 
 <ComponentProps
   items={[

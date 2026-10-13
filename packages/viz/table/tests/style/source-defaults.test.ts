@@ -20,17 +20,20 @@ const baseManual = {
 } as const;
 
 const sparseDefaults = {
-  appearanceDefaults: {
+  defaultAppearance: {
     body: {
       background: { fill: '#f8fafc', fillOpacity: 0.75 },
       content: {
-        style: { color: '#0f172a' },
-        defaults: { node: { style: { font: { family: 'serif' } } }, label: { font: { weight: 500 } } },
+        defaults: {
+          style: { color: '#0f172a' },
+          node: { style: { font: { family: 'serif' } } },
+          label: { font: { weight: 500 } },
+        },
       },
     },
     columnHeader: {
       background: { fill: '#e2e8f0' },
-      content: { style: { color: '#111827' }, defaults: { node: { style: { font: { weight: 700 } } } } },
+      content: { defaults: { style: { color: '#111827' }, node: { style: { font: { weight: 700 } } } } },
       borders: { bottom: { kind: 'line', stroke: '#94a3b8', width: 1 } },
     },
   },
@@ -46,14 +49,14 @@ const sparseDefaults = {
       vertical: { kind: 'none' },
     },
   },
-  visualDefaults: {
+  defaultVisual: {
     categorical: ['#2563eb', '#f97316'],
     sequential: ['#eff6ff', '#1d4ed8'],
   },
-  tableDefaults: {
-    appearanceDefaults: { body: { background: { fill: '#fee2e2' } } },
+  defaultTable: {
+    defaultAppearance: { body: { background: { fill: '#fee2e2' } } },
     layout: { borders: { outer: { top: { kind: 'line', stroke: '#dc2626', width: 1 } } } },
-    visualDefaults: { categorical: ['#16a34a', '#ca8a04'], sequential: ['#f0fdf4', '#166534'] },
+    defaultVisual: { categorical: ['#16a34a', '#ca8a04'], sequential: ['#f0fdf4', '#166534'] },
   },
 } as const;
 
@@ -84,7 +87,7 @@ describe('Table Source defaults', () => {
 
     expect(singleOuter.success).toBe(false);
 
-    for (const tableDefaults of [
+    for (const defaultTable of [
       { data: { reference: 'rows' } },
       { id: 'forbidden' },
       { structure: { kind: 'manual', rows: [['x']] } },
@@ -92,9 +95,9 @@ describe('Table Source defaults', () => {
       { encodings: [] },
       { layout: { columnSize: { kind: 'fixed', value: 10 } } },
       { layout: { columnGap: 4 } },
-      { appearanceDefaults: { body: { content: { children: [] } } } },
+      { defaultAppearance: { body: { content: { children: [] } } } },
     ]) {
-      expect(TableSchema.safeParse({ ...baseManual, tableDefaults }).success).toBe(false);
+      expect(TableSchema.safeParse({ ...baseManual, defaultTable }).success).toBe(false);
     }
   });
 
@@ -103,9 +106,12 @@ describe('Table Source defaults', () => {
       ...baseManual,
       id: 'cascade',
       ...sparseDefaults,
-      appearanceDefaults: {
-        body: { background: { fill: '#bfdbfe', fillOpacity: 0 }, content: { style: { color: '#1d4ed8' } } },
-        columnHeader: sparseDefaults.appearanceDefaults.columnHeader,
+      defaultAppearance: {
+        body: {
+          background: { fill: '#bfdbfe', fillOpacity: 0 },
+          content: { defaults: { style: { color: '#1d4ed8' } } },
+        },
+        columnHeader: sparseDefaults.defaultAppearance.columnHeader,
       },
       layout: {
         borders: {
@@ -127,7 +133,7 @@ describe('Table Source defaults', () => {
     const empty = compileSource({
       ...baseManual,
       structure: { kind: 'manual', rows: [[null, null]], rowKinds: ['body'] },
-      tableDefaults: sparseDefaults.tableDefaults,
+      defaultTable: sparseDefaults.defaultTable,
     });
 
     expect(empty.manifest.cells).toEqual([]);
@@ -139,7 +145,7 @@ describe('Table Source defaults', () => {
   it('allows cleared visual defaults when no encoding consumes them', () => {
     const result = compileSource({
       ...baseManual,
-      visualDefaults: { categorical: null, sequential: null },
+      defaultVisual: { categorical: null, sequential: null },
     });
 
     expect(result.manifest.encodings).toEqual([]);
@@ -155,8 +161,8 @@ describe('Table Source defaults', () => {
         rows: [['Header'], ['a'], ['b'], [0], [10]],
         rowKinds: ['columnHeader', 'body', 'body', 'body', 'body'],
       },
-      appearanceDefaults: sparseDefaults.appearanceDefaults,
-      visualDefaults: sparseDefaults.visualDefaults,
+      defaultAppearance: sparseDefaults.defaultAppearance,
+      defaultVisual: sparseDefaults.defaultVisual,
       encodings: [
         {
           id: 'categorical',
@@ -175,7 +181,9 @@ describe('Table Source defaults', () => {
       ],
     });
 
-    expect(result.manifest.cells.find(cell => cell.rowIndex === 1)?.appearance.content?.style?.color).toBe('#2563eb');
+    expect(result.manifest.cells.find(cell => cell.rowIndex === 1)?.appearance.content?.defaults?.style?.color).toBe(
+      '#2563eb',
+    );
     expect(result.manifest.cells.find(cell => cell.rowIndex === 3)?.appearance.background?.fill).toBe(
       'rgb(17, 17, 17)',
     );
@@ -189,8 +197,8 @@ describe('Table Source defaults', () => {
 
     expect(serialized).not.toContain('tableThemeTokens');
     expect(serialized).not.toContain('cell.content.color');
-    expect(serialized).toContain('$spec/appearanceDefaults');
-    expect(serialized).toContain('$spec/visualDefaults');
+    expect(serialized).toContain('$spec/defaultAppearance');
+    expect(serialized).toContain('$spec/defaultVisual');
   });
 });
 
@@ -201,7 +209,7 @@ describe('Cell padding defaults', () => {
       tableThemeStyles: [
         defineTableThemeStyle({
           name: 'padding',
-          resolve: () => ({ defaults: { cellLayoutDefaults: { body: { padding: 4 }, columnHeader: { padding: 6 } } } }),
+          resolve: () => ({ defaults: { defaultCellLayout: { body: { padding: 4 }, columnHeader: { padding: 6 } } } }),
         }),
       ],
     },
@@ -211,11 +219,11 @@ describe('Cell padding defaults', () => {
   it('preserves sparse JSON padding defaults and rejects invalid padding and unrelated fields', () => {
     const source = {
       ...baseManual,
-      cellLayoutDefaults: { body: { padding: 0 }, columnHeader: { padding: { left: 4 } } },
+      defaultCellLayout: { body: { padding: 0 }, columnHeader: { padding: { left: 4 } } },
     };
     expect(parseTable(source)).toEqual(source);
     for (const body of [{ padding: -1 }, { padding: { left: -1 } }, { wrap: true }]) {
-      expect(TableSchema.safeParse({ ...baseManual, cellLayoutDefaults: { body } }).success).toBe(false);
+      expect(TableSchema.safeParse({ ...baseManual, defaultCellLayout: { body } }).success).toBe(false);
     }
   });
 
@@ -240,19 +248,19 @@ describe('Cell padding defaults', () => {
       { x: 4, y: 34, width: 32, height: 22 },
       { x: 40, y: 30, width: 40, height: 30 },
     ]);
-    expect(TableLayoutManifestSchema.parse(result.manifest).style.defaults.cellLayoutDefaults).toEqual({
+    expect(TableLayoutManifestSchema.parse(result.manifest).style.defaults.defaultCellLayout).toEqual({
       body: { padding: 4 },
       columnHeader: { padding: 6 },
     });
-    expect(JSON.stringify(source)).not.toContain('cellLayoutDefaults');
+    expect(JSON.stringify(source)).not.toContain('defaultCellLayout');
   });
 
-  it('lets Source override tableDefaults and Cell override Source without changing other regions', () => {
+  it('lets Source override defaultTable and Cell override Source without changing other regions', () => {
     const result = compileTable(
       parseTable({
         ...baseManual,
-        tableDefaults: { cellLayoutDefaults: { body: { padding: 8 }, columnHeader: { padding: 2 } } },
-        cellLayoutDefaults: { body: { padding: 3 } },
+        defaultTable: { defaultCellLayout: { body: { padding: 8 }, columnHeader: { padding: 2 } } },
+        defaultCellLayout: { body: { padding: 3 } },
         structure: {
           kind: 'manual',
           rows: [['H'], ['x'], [{ value: 'y', layout: { padding: 0 } }]],
@@ -265,18 +273,18 @@ describe('Cell padding defaults', () => {
     expect(result.manifest.cells.map(cell => cell.contentBox.x)).toEqual([2, 3, 0]);
     expect(result.manifest.style.layers).toContainEqual({
       kind: 'source',
-      path: '$spec/cellLayoutDefaults',
-      defaults: { cellLayoutDefaults: { body: { padding: 3 } } },
+      path: '$spec/defaultCellLayout',
+      defaults: { defaultCellLayout: { body: { padding: 3 } } },
     });
   });
 
   it('replaces spacing objects as units and clears inherited padding with null', () => {
-    const current = { cellLayoutDefaults: { body: { padding: { left: 9, right: 8 } } } };
+    const current = { defaultCellLayout: { body: { padding: { left: 9, right: 8 } } } };
     expect(
-      mergeTableDefaults(current, { cellLayoutDefaults: { body: { padding: { top: 2 } } } }).cellLayoutDefaults,
+      mergeTableDefaults(current, { defaultCellLayout: { body: { padding: { top: 2 } } } }).defaultCellLayout,
     ).toEqual({ body: { padding: { top: 2 } } });
-    for (const cellLayoutDefaults of [null, { body: null }, { body: { padding: null } }]) {
-      const result = compileTable(parseTable({ ...baseManual, tableDefaults: { cellLayoutDefaults } }), {}, options);
+    for (const defaultCellLayout of [null, { body: null }, { body: { padding: null } }]) {
+      const result = compileTable(parseTable({ ...baseManual, defaultTable: { defaultCellLayout } }), {}, options);
       expect(result.manifest.cells[1].contentBox.x).toBe(0);
     }
   });

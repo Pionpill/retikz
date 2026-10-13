@@ -10,6 +10,7 @@ import { cn } from '@/lib';
 import { PreviewControlFieldInput, resolveVisiblePreviewControlSections } from '../controls';
 import type { PreviewControlsDefinition, PreviewControlState, PreviewControlContract } from '../types';
 import { PreviewTableControl } from './PreviewTableControl';
+import { resolvePreviewPresetField } from './utils';
 
 /** 展示模式下常显的业务控件栏 */
 export type PreviewControlBarProps = {
@@ -28,6 +29,8 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
 
   if (!definition) return null;
 
+  const presetField = resolvePreviewPresetField(controlContract, controlState);
+
   const sections = resolveVisiblePreviewControlSections(
     definition.presentation === 'panel' ? definition.sections : [{ controls: definition.controls }],
     controlState.values,
@@ -36,21 +39,43 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
   return (
     <TooltipProvider delayDuration={250}>
       <div data-slot="preview-control-bar" className="flex flex-wrap items-center gap-2 py-3">
-        {controlContract?.presets?.map(preset => (
-          <Button
-            key={preset.id}
-            size="sm"
-            variant="ghost"
-            className="h-8 rounded-md bg-muted px-2.5 text-xs"
-            onClick={() =>
-              controlState.applyValues(
-                preset.applyMode === 'merge-current' ? { ...controlState.values, ...preset.values } : preset.values,
-              )
-            }
+        {presetField ? (
+          <div
+            data-slot="preview-preset-selector"
+            className="flex min-h-8 max-w-full items-center gap-2 rounded-md bg-muted px-2.5 py-0.5 text-xs"
           >
-            {preset.label}
-          </Button>
-        ))}
+            <span className="shrink-0">{presetField.label}</span>
+            <PreviewControlFieldInput
+              field={presetField}
+              compact
+              value={presetField.defaultValue}
+              onValueChange={value => {
+                const preset = controlContract?.presets?.find(candidate => candidate.id === value);
+                if (preset) {
+                  controlState.applyValues(
+                    preset.applyMode === 'merge-current' ? { ...controlState.values, ...preset.values } : preset.values,
+                  );
+                }
+              }}
+            />
+          </div>
+        ) : (
+          controlContract?.presets?.map(preset => (
+            <Button
+              key={preset.id}
+              size="sm"
+              variant="ghost"
+              className="h-8 rounded-md bg-muted px-2.5 text-xs"
+              onClick={() =>
+                controlState.applyValues(
+                  preset.applyMode === 'merge-current' ? { ...controlState.values, ...preset.values } : preset.values,
+                )
+              }
+            >
+              {preset.label}
+            </Button>
+          ))
+        )}
         {sections
           .flatMap(section => section.controls)
           .map(field =>

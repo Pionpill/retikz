@@ -130,13 +130,13 @@ describe('layout-aware composite constraints and bounds', () => {
           style: {
             fill: '#f00',
             stroke: '#000',
-            strokeOpacity: 0,
             shadow: {
               offsetX: 10,
               offsetY: -8,
               blur: 2,
               color: '#000',
             },
+            opacity: { stroke: 0 },
           },
           layout: { minimumSize: { width: 20, height: 10 }, padding: 0, margin: 5 },
         },
@@ -176,7 +176,7 @@ describe('layout-aware composite constraints and bounds', () => {
           type: 'node',
           position: [0, 0],
           text: '',
-          style: { fillOpacity: 0, strokeOpacity: 0 },
+          style: { opacity: { fill: 0, stroke: 0 } },
           layout: { padding: 0, margin: 0 },
         },
       }),
@@ -210,7 +210,7 @@ describe('layout-aware composite constraints and bounds', () => {
               {
                 type: 'node',
                 position: [10, 20],
-                style: { fill: '#f00', strokeOpacity: 0 },
+                style: { fill: '#f00', opacity: { stroke: 0 } },
                 layout: { minimumSize: 10, padding: 0, margin: 0 },
               },
             ],

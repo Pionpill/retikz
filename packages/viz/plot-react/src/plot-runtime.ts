@@ -152,7 +152,7 @@ const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
 /** 将 React spec 入口的显式展示覆盖装配到 Plot Source IR */
 const applyPlotPropsToSpec = <TSource>(
   spec: IRPlot,
-  props: Pick<PlotProps<TSource>, 'width' | 'height' | 'plotDefaults' | 'plotRules' | 'dataExecution'>,
+  props: Pick<PlotProps<TSource>, 'width' | 'height' | 'defaultPlot' | 'plotRules' | 'dataExecution'>,
 ): IRPlot => {
   if (spec.dataExecution !== undefined && props.dataExecution !== undefined)
     throw new RetikzPlotReactError('Plot dataExecution is declared in both spec and root props');
@@ -162,7 +162,7 @@ const applyPlotPropsToSpec = <TSource>(
   if (
     width === undefined &&
     height === undefined &&
-    props.plotDefaults === undefined &&
+    props.defaultPlot === undefined &&
     props.plotRules === undefined &&
     props.dataExecution === undefined
   ) {
@@ -173,7 +173,7 @@ const applyPlotPropsToSpec = <TSource>(
     ...spec,
     ...(width === undefined ? {} : { width }),
     ...(height === undefined ? {} : { height }),
-    ...(props.plotDefaults === undefined ? {} : { plotDefaults: props.plotDefaults }),
+    ...(props.defaultPlot === undefined ? {} : { defaultPlot: props.defaultPlot }),
     ...(props.plotRules === undefined ? {} : { plotRules: props.plotRules }),
     ...(props.dataExecution === undefined ? {} : { dataExecution: props.dataExecution }),
   };
@@ -216,7 +216,7 @@ export const resolvePlotAuthoring = <TSource = never>(
       composition: props.composition,
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
-      plotDefaults: props.plotDefaults,
+      defaultPlot: props.defaultPlot,
       plotRules: props.plotRules,
       transforms: props.dataTransforms,
       dataExecution: props.dataExecution,

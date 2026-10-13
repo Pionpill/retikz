@@ -46,7 +46,7 @@ const PointPaddingFigure: FC<PointPaddingFigureProps> = props => {
                 position={[left + inset + x * (240 - 2 * inset), 70 + inset + y * (120 - 2 * inset)]}
                 shape="circle"
                 layout={{ minimumSize: radius * 2, padding: 0 }}
-                style={{ fill: 'dodgerblue', fillOpacity: 0.25, stroke: 'dodgerblue' }}
+                style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.25 } }}
               />
             ))}
             <Node

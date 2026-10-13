@@ -168,10 +168,10 @@ const detailTableOf = (props: DetailTableProps<unknown>): InputDetailTable => {
       ...(props.meta === undefined ? {} : { meta: props.meta }),
       ...(props.rules === undefined ? {} : { rules: props.rules }),
       ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-      ...(props.cellLayoutDefaults === undefined ? {} : { cellLayoutDefaults: props.cellLayoutDefaults }),
-      ...(props.appearanceDefaults === undefined ? {} : { appearanceDefaults: props.appearanceDefaults }),
-      ...(props.visualDefaults === undefined ? {} : { visualDefaults: props.visualDefaults }),
-      ...(props.tableDefaults === undefined ? {} : { tableDefaults: props.tableDefaults }),
+      ...(props.defaultCellLayout === undefined ? {} : { defaultCellLayout: props.defaultCellLayout }),
+      ...(props.defaultAppearance === undefined ? {} : { defaultAppearance: props.defaultAppearance }),
+      ...(props.defaultVisual === undefined ? {} : { defaultVisual: props.defaultVisual }),
+      ...(props.defaultTable === undefined ? {} : { defaultTable: props.defaultTable }),
     },
   };
 };
@@ -188,10 +188,10 @@ const manualTableOf = (props: ManualTableProps): InputManualTable => {
       ...(props.meta === undefined ? {} : { meta: props.meta }),
       ...(props.rules === undefined ? {} : { rules: props.rules }),
       ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-      ...(props.cellLayoutDefaults === undefined ? {} : { cellLayoutDefaults: props.cellLayoutDefaults }),
-      ...(props.appearanceDefaults === undefined ? {} : { appearanceDefaults: props.appearanceDefaults }),
-      ...(props.visualDefaults === undefined ? {} : { visualDefaults: props.visualDefaults }),
-      ...(props.tableDefaults === undefined ? {} : { tableDefaults: props.tableDefaults }),
+      ...(props.defaultCellLayout === undefined ? {} : { defaultCellLayout: props.defaultCellLayout }),
+      ...(props.defaultAppearance === undefined ? {} : { defaultAppearance: props.defaultAppearance }),
+      ...(props.defaultVisual === undefined ? {} : { defaultVisual: props.defaultVisual }),
+      ...(props.defaultTable === undefined ? {} : { defaultTable: props.defaultTable }),
     },
   };
 };

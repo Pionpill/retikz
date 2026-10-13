@@ -3,6 +3,7 @@ import { boundsOf, boundsToRect } from '@retikz/math';
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
 import { LayoutAlignmentGuideDimension, BuiltinLayoutAlignmentGuideName } from '../../contract';
 import type { IRPosition } from '../../schemas';
+import { RAD_TO_DEG } from '../../shared/geometry';
 import { applyTransformChain, projectLayoutToGlobal } from '../transform';
 import type { CompiledNodeLayout } from '../types';
 import type { NodeLayout } from './types';
@@ -14,14 +15,20 @@ export const alignmentGuidesOfNode = (
   layout: NodeLayout,
   round: (value: number) => number,
 ): Array<LayoutAlignmentGuide> | undefined => {
-  const offsets = layout.textBaselineOffsets;
-  if (offsets === undefined || offsets.length === 0 || !isEffectiveIdentityRotation(layout.rotateDeg)) {
+  const text = layout.text;
+  const offsets = text?.baselineOffsets;
+  if (
+    text === undefined ||
+    offsets === undefined ||
+    offsets.length === 0 ||
+    !isEffectiveIdentityRotation((layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG)
+  ) {
     return undefined;
   }
 
-  const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
+  const blockTop = layout.geometry.contentCenter[1] - layout.geometry.contentSize.height / 2;
   const firstBaseline = round(blockTop + offsets[0]);
-  if (layout.inlineBlock !== undefined) {
+  if (text.kind === 'inline') {
     return [
       {
         name: BuiltinLayoutAlignmentGuideName.FirstBaseline,
@@ -36,7 +43,7 @@ export const alignmentGuidesOfNode = (
     ];
   }
 
-  const emittedLineHeight = round(layout.lineHeight);
+  const emittedLineHeight = round(text.lineHeight);
 
   return [
     {
@@ -53,9 +60,9 @@ export const alignmentGuidesOfNode = (
 };
 
 const contentCorners = (layout: NodeLayout): Array<IRPosition> => {
-  const [cx, cy] = layout.contentCenter;
-  const halfW = layout.textWidth / 2;
-  const halfH = layout.textHeight / 2;
+  const [cx, cy] = layout.geometry.contentCenter;
+  const halfW = layout.geometry.contentSize.width / 2;
+  const halfH = layout.geometry.contentSize.height / 2;
 
   return [
     [cx - halfW, cy - halfH],
@@ -66,15 +73,15 @@ const contentCorners = (layout: NodeLayout): Array<IRPosition> => {
 };
 
 const nodeTransformChain = (layout: NodeLayout, scopeChain: ReadonlyArray<Transform>): ReadonlyArray<Transform> =>
-  layout.rotateDeg === 0
+  (layout.geometry.rect.rotate ?? 0) === 0
     ? scopeChain
     : [
         ...scopeChain,
         {
           kind: 'rotate',
-          degrees: layout.rotateDeg,
-          cx: layout.rect.x,
-          cy: layout.rect.y,
+          degrees: (layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG,
+          cx: layout.geometry.rect.x,
+          cy: layout.geometry.rect.y,
         },
       ];
 
@@ -87,7 +94,7 @@ const contentBounds = (
   );
   const bounds = boundsOf(projected);
   if (bounds === undefined) {
-    return { x: layout.contentCenter[0], y: layout.contentCenter[1], width: 0, height: 0 };
+    return { x: layout.geometry.contentCenter[0], y: layout.geometry.contentCenter[1], width: 0, height: 0 };
   }
 
   return boundsToRect(bounds);
@@ -101,25 +108,25 @@ export const computeCompiledNodeLayout = (
   const globalLayout = scopeChain.length === 0 ? layout : projectLayoutToGlobal(layout, scopeChain);
   return {
     kind: 'node',
-    ...(layout.id === undefined ? {} : { id: layout.id }),
+    ...(layout.node.id === undefined ? {} : { id: layout.node.id }),
     content: {
-      center: applyTransformChain(layout.contentCenter, nodeTransformChain(layout, scopeChain)),
+      center: applyTransformChain(layout.geometry.contentCenter, nodeTransformChain(layout, scopeChain)),
       size: {
-        width: layout.textWidth,
-        height: layout.textHeight,
+        width: layout.geometry.contentSize.width,
+        height: layout.geometry.contentSize.height,
       },
       bounds: contentBounds(layout, scopeChain),
     },
     rect: {
-      x: globalLayout.rect.x,
-      y: globalLayout.rect.y,
-      width: globalLayout.rect.width,
-      height: globalLayout.rect.height,
-      rotate: globalLayout.rect.rotate ?? 0,
+      x: globalLayout.geometry.rect.x,
+      y: globalLayout.geometry.rect.y,
+      width: globalLayout.geometry.rect.width,
+      height: globalLayout.geometry.rect.height,
+      rotate: globalLayout.geometry.rect.rotate ?? 0,
     },
     text: {
-      hasInlineTex: globalLayout.inlineBlock?.lines.some(({ laid }) => !laid.isPlain) ?? false,
-      lineCount: globalLayout.inlineBlock?.lines.length ?? globalLayout.lines?.length ?? 0,
+      hasInlineTex: globalLayout.text?.kind === 'inline' && globalLayout.text.lines.some(({ laid }) => !laid.isPlain),
+      lineCount: globalLayout.text?.lines.length ?? 0,
     },
   };
 };

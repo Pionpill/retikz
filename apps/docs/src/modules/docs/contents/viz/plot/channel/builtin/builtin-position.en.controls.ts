@@ -57,6 +57,7 @@ export const previewControlContract = {
     xField: 'month',
     yField: 'sales',
   },
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   presets: [
     {
       id: 'sales-by-month',

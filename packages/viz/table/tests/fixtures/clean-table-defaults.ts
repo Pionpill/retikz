@@ -2,14 +2,14 @@ import type { IRTableDefaults } from '../../src';
 
 /** 与旧 Clean 外观等价、用于布局测试的 Source defaults fixture */
 export const CLEAN_TABLE_DEFAULTS = {
-  appearanceDefaults: {
+  defaultAppearance: {
     body: {
       background: { fill: 'none' },
-      content: { style: { color: 'currentColor' } },
+      content: { defaults: { style: { color: 'currentColor' } } },
     },
     columnHeader: {
       background: { fill: 'none' },
-      content: { style: { color: 'currentColor' } },
+      content: { defaults: { style: { color: 'currentColor' } } },
       borders: { bottom: { kind: 'none' } },
     },
   },

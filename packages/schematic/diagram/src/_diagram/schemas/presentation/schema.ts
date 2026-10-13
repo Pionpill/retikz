@@ -1,4 +1,4 @@
-import { NodeSchema, TextBlockSchema } from '@retikz/core';
+import { GraphicElementOpacitySchema, NodeSchema, TextBlockSchema } from '@retikz/core';
 import { LegendSchema } from '@retikz/standard/presentation';
 import { strictObject } from 'zod';
 
@@ -6,7 +6,7 @@ import { strictObject } from 'zod';
 export const DiagramPresentationTextStyleSchema = strictObject({
   textColor: NodeSchema.shape.style.unwrap().shape.textColor,
   font: NodeSchema.shape.style.unwrap().shape.font,
-  opacity: NodeSchema.shape.style.unwrap().shape.opacity,
+  opacity: GraphicElementOpacitySchema.shape.opacity,
 }).describe('Block-level style overrides for one Diagram presentation text region.');
 
 /** Diagram Presentation 文本区域的块级布局覆盖 */

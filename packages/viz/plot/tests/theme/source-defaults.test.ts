@@ -36,9 +36,9 @@ const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<Sce
   );
 
 describe('Plot Source defaults and rules', () => {
-  it('accepts Source-shaped plotDefaults and ordered plotRules with JSON-safe round-trip', () => {
+  it('accepts Source-shaped defaultPlot and ordered plotRules with JSON-safe round-trip', () => {
     const source = basePlot({
-      plotDefaults: {
+      defaultPlot: {
         plotArea: { fill: '#f8fafc', border: { stroke: '#334155', strokeWidth: 1.5, drawOpacity: 0.8 } },
         typography: { font: { family: 'Source Serif 4', size: 14 }, textColor: '#334155' },
         axis: {
@@ -71,12 +71,12 @@ describe('Plot Source defaults and rules', () => {
 
   it('rejects invalid plot area border fields', () => {
     for (const border of [{ strokeWidth: -1 }, { drawOpacity: 2 }, { unknown: true }]) {
-      const result = PlotSchema.safeParse(basePlot({ plotDefaults: { plotArea: { border } } }));
+      const result = PlotSchema.safeParse(basePlot({ defaultPlot: { plotArea: { border } } }));
 
       expect(result.success).toBe(false);
 
       if (!result.success)
-        expect(result.error.issues.some(issue => issue.path.join('.').startsWith('plotDefaults.plotArea.border'))).toBe(
+        expect(result.error.issues.some(issue => issue.path.join('.').startsWith('defaultPlot.plotArea.border'))).toBe(
           true,
         );
     }
@@ -108,7 +108,7 @@ describe('Plot Source defaults and rules', () => {
     const baseline = compilePlot(basePlot());
     const themed = compilePlot(
       basePlot({
-        plotDefaults: {
+        defaultPlot: {
           axis: { line: false, ticks: { mark: false }, tickLabels: false, title: false, grid: false },
           legend: { swatchSize: 24 },
         },
@@ -127,7 +127,7 @@ describe('Plot Source defaults and rules', () => {
   });
 
   it('rejects sector palettes while retaining the interval polar geometry contract', () => {
-    const result = PlotSchema.safeParse(basePlot({ plotDefaults: { palette: { sector: ['#ef4444', '#3b82f6'] } } }));
+    const result = PlotSchema.safeParse(basePlot({ defaultPlot: { palette: { sector: ['#ef4444', '#3b82f6'] } } }));
 
     expect(result.success).toBe(false);
 
@@ -136,7 +136,7 @@ describe('Plot Source defaults and rules', () => {
         expect.arrayContaining([
           expect.objectContaining({
             code: 'unrecognized_keys',
-            path: ['plotDefaults', 'palette'],
+            path: ['defaultPlot', 'palette'],
             keys: expect.arrayContaining(['sector']),
           }),
         ]),
@@ -144,7 +144,7 @@ describe('Plot Source defaults and rules', () => {
     }
 
     const resolution = resolvePlotTheme(DEFAULT_RESOLVED_THEME, {
-      plotDefaults: { palette: { categorical: ['#2563eb'] } },
+      defaultPlot: { palette: { categorical: ['#2563eb'] } },
     });
 
     expect(JSON.stringify(resolution)).toContain('#2563eb');

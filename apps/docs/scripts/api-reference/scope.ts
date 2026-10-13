@@ -13,17 +13,17 @@ export const scopeSchemaLocalizations = {
   ScopeSchema: {
     descriptions: {
       frame: '位于子图下方的固有包络装饰，不参与布局或命中',
-      style: '当前实例的视觉覆盖，按字段继承与覆盖',
+      'defaults.style': '后代共享视觉默认值，逐字段继承与覆盖',
       defaults: '后代默认值通道及继承屏障',
       type: '判别字段，标记此子节点为 scope',
       theme: '当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
-      'style.color': '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
-      'style.fill': '作用域级默认填充；CSS color 字符串或 IRPaint',
-      'style.fillOpacity': '作用域级默认填充不透明度 0..1',
-      'style.stroke': '作用域级默认描边；CSS color 字符串或 IRPaint',
-      'style.strokeWidth': '作用域级默认描边宽度（用户单位）',
-      'style.strokeOpacity': '作用域级默认描边不透明度 0..1',
-      'style.opacity': '作用域级默认整体不透明度 0..1',
+      'defaults.style.color': '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
+      'defaults.style.fill': '作用域级默认填充；CSS color 字符串或 IRPaint',
+      'defaults.style.opacity.fill': '作用域级默认填充不透明度 0..1',
+      'defaults.style.stroke': '作用域级默认描边；CSS color 字符串或 IRPaint',
+      'defaults.style.strokeWidth': '作用域级默认描边宽度（用户单位）',
+      'defaults.style.opacity.stroke': '作用域级默认描边不透明度 0..1',
+      'defaults.style.opacity': '作用域级默认整体不透明度 0..1',
       id: '可选引用 id；始终注册到父级命名空间',
       localNamespace: '为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级',
       transforms: '依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析',
@@ -53,6 +53,7 @@ export const scopeSchemaLocalizations = {
   },
   ScopeDefaultsSchema: {
     descriptions: {
+      style: '后代共享视觉默认值，逐字段继承与覆盖',
       node: '节点默认样式，与其他通道独立',
       path: '路径类图元默认样式；箭头使用独立 arrow 通道',
       label: '节点标签与步骤标签的默认文字样式',

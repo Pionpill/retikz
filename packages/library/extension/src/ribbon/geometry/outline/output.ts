@@ -17,15 +17,15 @@ export const styledPrimitiveFromOutline = (
     commands: outline.commands,
     fill: appearance.fill ?? appearance.color ?? 'currentColor',
     fillRule: appearance.fillRule,
-    fillOpacity: ribbon.style?.fillOpacity,
-    opacity: ribbon.style?.opacity,
+    fillOpacity: appearance.fillOpacity,
+    opacity: appearance.opacity,
     shadow: appearance.shadow,
     blendMode: appearance.blendMode,
   };
   if (strokeRequested) {
     primitive.stroke = appearance.stroke ?? 'currentColor';
     primitive.strokeWidth = appearance.strokeWidth;
-    primitive.strokeOpacity = ribbon.style?.strokeOpacity;
+    primitive.strokeOpacity = appearance.strokeOpacity;
     primitive.dashPattern = appearance.dashPattern;
     primitive.dashOffset = appearance.dashOffset;
     primitive.strokeLinecap = appearance.strokeLinecap;

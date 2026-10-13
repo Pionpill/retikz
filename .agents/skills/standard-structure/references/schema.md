@@ -24,6 +24,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 ## 文件分层
 
+先按能力归属组织，再按职责拆文件。目录仅聚合彼此独立的子域时，各子域的常量、schema 与派生类型放在各自模块，不集中到父目录的 `constants.ts` / `types.ts`；例如 reducer、selector、regression 各自持有声明。下表适用于单个能力确需拆文件的情况，不是固定文件模板；只有真实共享且语义稳定的声明才提取到共同 owner。
+
 | 文件                                | 职责                                                          |
 | ----------------------------------- | ------------------------------------------------------------- |
 | `schemas/<capability>/constants.ts` | 本 schema 私有 const object enum、关键字常量                  |
@@ -51,7 +53,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - 根对象保留 discriminator、identity、主要领域事实和结构入口。`position`、`shape`、`coordinate`、`data`、`children`、显式 `route` 等高频核心语义不得只为减少一级属性数而下沉。
 - 分组保持浅层，通常不超过两至三层有意义对象；小型 leaf schema 继续扁平。只有子字段仍形成稳定、可复用且不会增加选择歧义的独立概念时才继续拆分。
 - 分组对象必须由命名 schema/type 承载并作为单一真源复用；不得同时保留扁平字段、兼容 alias、平行持久化 schema 或只供 LLM 的第二套 Source 表示。
-- 领域 `xxxDefaults` 按目标类型组织稀疏 Source 片段；Theme definition 生成默认时复用同一字段路径、值域与覆盖粒度，条件规则独立。点路径只用于诊断或 inspection，不建立平行 token / xxxTheme 输入。
+- 领域 `defaultXxx` 按目标类型组织稀疏 Source 片段；Theme definition 生成默认时复用同一字段路径、值域与覆盖粒度，条件规则独立。点路径只用于诊断或 inspection，不建立平行 token / xxxTheme 输入。
 - 一级属性数量只作审计信号，不设机械上限；是否分组只由长期语义边界、字段共变关系与复用契约决定。
 
 ## 对象字段顺序

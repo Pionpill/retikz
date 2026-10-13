@@ -212,7 +212,7 @@ recipe: {
 <ConnectedScatterProperties
   colorMode="series"
   point={{ size: 4, opacity: 1 }}
-  path={{ curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 }}
+  path={{ curve: 'linear', connectNulls: false, opacity: { stroke: 1 }, strokeWidth: 2 }}
 />
 ```
 
@@ -223,7 +223,7 @@ recipe: {
 properties: {
   colorMode: 'series',
   point: { size: 4, opacity: 1 },
-  path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+  path: { curve: 'linear', connectNulls: false, opacity: { stroke: 1 }, strokeWidth: 2 },
 },
 ```
 
@@ -235,7 +235,7 @@ recipe: {
   properties: {
     colorMode: 'series',
     point: { size: 4, opacity: 1 },
-    path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+    path: { curve: 'linear', connectNulls: false, opacity: { stroke: 1 }, strokeWidth: 2 },
   },
 },
 ```
@@ -252,7 +252,7 @@ recipe: {
 
 南非 2005 年寿命值被人为置空用于演示。桥接只改变线，缺失观测不会变成一个有效点。
 
-`colorMode="mark"` 让同一序列的点和线使用相邻的两种色板颜色，图例同步显示这两种颜色；默认 `series` 保持点线同色。`muted` 同样按序列同色，将连线默认透明度设为 60%，点的外观不变；显式 `path.strokeOpacity` 优先。
+`colorMode="mark"` 让同一序列的点和线使用相邻的两种色板颜色，图例同步显示这两种颜色；默认 `series` 保持点线同色。`muted` 同样按序列同色，将连线默认透明度设为 60%，点的外观不变；显式 `path.opacity.stroke` 优先。
 
 <ComponentPreview
   hideCode
@@ -278,7 +278,7 @@ recipe: {
 <ConnectedScatterMark
   override
   properties={{
-    point: { fillOpacity: 0.1, strokeWidth: 2 },
+    point: { opacity: { fill: 0.1 }, strokeWidth: 2 },
     path: { dashPattern: [6, 4] },
   }}
 />
@@ -293,7 +293,7 @@ marks: [
     kind: 'connected-scatter',
     override: true,
     properties: {
-      point: { fillOpacity: 0.1, strokeWidth: 2 },
+      point: { opacity: { fill: 0.1 }, strokeWidth: 2 },
       path: { dashPattern: [6, 4] },
     },
   },
@@ -310,7 +310,7 @@ recipe: {
       kind: 'connected-scatter',
       override: true,
       properties: {
-        point: { fillOpacity: 0.1, strokeWidth: 2 },
+        point: { opacity: { fill: 0.1 }, strokeWidth: 2 },
         path: { dashPattern: [6, 4] },
       },
     },
@@ -390,7 +390,7 @@ Chart 将一个连接散点图元解析为一条开放的 Plot Path 和一组 Pl
 | ---- | ------------------------ | ----------------------------------- | -------------------------------------------------------- |
 | 映射 | `order`、`series`        | `order`、`series`                   | 将排序字段与分组字段写入 Path，依次连接各序列的点        |
 | 属性 | `point`、`path`          | `Point` 外观、`Path` 外观           | 分别应用观测点与连接路径的外观；`connectNulls` 传给 Path |
-|      | `colorMode`              | `color`、`stroke`、`strokeOpacity`  | 决定点线共享序列色、分开取色或减弱路径透明度             |
+|      | `colorMode`              | `color`、`stroke`、`opacity.stroke` | 决定点线共享序列色、分开取色或减弱路径透明度             |
 | 图元 | `IRConnectedScatterMark` | `IRPlotPathMark`、`IRPlotPointMark` | 一个 Chart 图元产生一组开放 Path 与 Point                |
 
 <SourceLinks

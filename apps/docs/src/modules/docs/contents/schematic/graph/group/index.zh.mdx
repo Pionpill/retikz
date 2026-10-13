@@ -219,7 +219,7 @@ Group 的样式调整集中在外框的背景、边框、线型、圆角和内�
 
 - caption 至少提供 title / description 之一；文本使用 `{ text: ... }` 对象。labels 一旦提供必须非空。
 - Group 不负责避障、标签碰撞或自动连接。id 必须满足当前命名空间唯一性。
-- graphDefaults / graphRules 影响可见后代，不改变当前外框、caption 或边界标签。当前外框用 background / border 设置。
+- defaultGraph / graphRules 影响可见后代，不改变当前外框、caption 或边界标签。当前外框用 background / border 设置。
 - overflow 只约束 Surface 内容；外围标签仍参与最终视觉边界，不能据此假定标签已被裁剪。
 
 ## 实现原理
@@ -235,7 +235,7 @@ Group 的样式调整集中在外框的背景、边框、线型、圆角和内�
 - `children` 直接使用 Core `IRChild`，可以放 Entity、Relation、Group、Node、Path、Scope、Layout、Plot 或其它已注册 composite
 - `defaults.node`、`defaults.path`、`defaults.label`、Core `theme`、transform、placement、clip 与 namespace 都保持 Scope 语义
 - 命名 Graph Theme 会为 Group 根外框提供 `background`、`border` 与 `cornerRadius` 基线；Source 显式字段最终优先，并对对应 Theme 对象执行完整顶层字段替换，不在 `border` 或 `background` 内部深合并
-- `graphDefaults` 影响可见后代 Entity / Relation 与后代 Group / Block 外框；`graphRules` 只匹配后代 Entity / Relation。两者不影响当前 Group 自身外框、caption、boundary labels 或普通 Core children
+- `defaultGraph` 影响可见后代 Entity / Relation 与后代 Group / Block 外框；`graphRules` 只匹配后代 Entity / Relation。两者不影响当前 Group 自身外框、caption、boundary labels 或普通 Core children
 - 切换内容的 `theme` 或设置 Core `defaults.reset` 不清除作者默认值与规则；当前外框使用传入的主题与祖先默认值
 - Group 不自动堆栈 children，不做 routing、避障或 label collision；需要普通排版时，在 children 中显式放入 FlexLayout、GridLayout 或 OverlayLayout
 - Group 的显式 `id` 对应外框包络，可以继续通过 Core `IRNodeTarget` 被 Relation 引用

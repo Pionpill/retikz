@@ -89,11 +89,11 @@ describe('shape channel 类别映射', () => {
     ).not.toThrow();
   });
 
-  it('plotDefaults_shape_palette_preserves_structured_refs', () => {
+  it('defaultPlot_shape_palette_preserves_structured_refs', () => {
     const custom = [{ type: 'polygon', params: { sides: 5, rotate: -90 } }, 'cross'] satisfies Array<IRShapeValue>;
     const spec = PlotSchema.parse({
       ...pointSpec({ kind: 'field', value: 'g' }),
-      plotDefaults: { palette: { shape: custom } },
+      defaultPlot: { palette: { shape: custom } },
     });
     const data = [
       { x: 0, y: 0, g: 'A' },

@@ -37,7 +37,7 @@ describe('Core contextual color compile', () => {
           {
             type: 'node',
             position: [0, 0],
-            style: { color: '#336699', fill: 0.2, stroke: 0.8, fillOpacity: 0.4, strokeOpacity: 0.6 },
+            style: { color: '#336699', fill: 0.2, stroke: 0.8, opacity: { fill: 0.4, stroke: 0.6 } },
           },
         ],
         mode,
@@ -62,8 +62,9 @@ describe('Core contextual color compile', () => {
               style: { color: '#336699' },
             },
           ],
-          style: { color: '#ff0000' },
+
           defaults: {
+            style: { color: '#ff0000' },
             node: {
               style: { fill: 0.2, stroke: 0.8 },
             },

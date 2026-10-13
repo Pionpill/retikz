@@ -74,7 +74,7 @@ describe('Table React manifest observation', () => {
     const spec = createManualTableIR({
       id: 'encoded',
       rows: [[1]],
-      visualDefaults: { categorical: ['#123456'] },
+      defaultVisual: { categorical: ['#123456'] },
       encodings: [
         {
           id: 'palette',
@@ -250,8 +250,8 @@ describe('Table React manifest observation', () => {
               bottom: expect.objectContaining({ kind: 'line', stroke: '#2563eb', width: 2 }),
             }),
             content: expect.objectContaining({
-              style: expect.objectContaining({ color: '#18181b' }),
               defaults: expect.objectContaining({
+                style: expect.objectContaining({ color: '#18181b' }),
                 node: expect.objectContaining({
                   style: expect.objectContaining({
                     font: expect.objectContaining({ family: 'sans-serif', weight: 400 }),

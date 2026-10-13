@@ -64,7 +64,7 @@ describe('JSON data presentation', () => {
         cellIdMode: 'index',
         data: [{ a: [1] }, [2, { b: 3 }]],
         dataExpand,
-        layout: { width },
+        defaultCell: { layout: { width } },
       };
       const before = JSON.stringify(source);
       const result = compile(source);
@@ -170,8 +170,12 @@ describe('JSON data presentation', () => {
 
   it('matches explicit nested structures including enumeration order and local-only layout overrides', () => {
     const options = {
-      layout: { gap: 7, value: { width: 40, height: 20 } },
-      style: { key: { fill: 'blue' }, font: { size: 17 } },
+      layout: { gap: 7 },
+      defaultCell: {
+        style: { font: { size: 17 } },
+        key: { style: { fill: 'blue' } },
+        value: { layout: { width: 40, height: 20 } },
+      },
     };
     const data = { z: [1, { id: 'a' }], '2': false, '1': null };
     const actual = compile({ namespace: 'standard', type: 'map', ...options, data });
@@ -207,16 +211,23 @@ describe('JSON data presentation', () => {
     const actual = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       data: [['A', 'longer']],
+      defaultCell: { layout: { width: 'content' } },
     });
     const expected = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       items: [
-        { content: { namespace: 'standard', type: 'array', layout: { width: 'content' }, data: ['A', 'longer'] } },
+        {
+          content: {
+            namespace: 'standard',
+            type: 'array',
+            data: ['A', 'longer'],
+            defaultCell: { layout: { width: 'content' } },
+          },
+        },
       ],
+      defaultCell: { layout: { width: 'content' } },
     });
 
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
@@ -226,13 +237,12 @@ describe('JSON data presentation', () => {
     const actual = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       data: [{ values: ['A', 'longer'] }],
+      defaultCell: { layout: { width: 'content' } },
     });
     const expected = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       items: [
         {
           content: {
@@ -245,8 +255,8 @@ describe('JSON data presentation', () => {
                   content: {
                     namespace: 'standard',
                     type: 'array',
-                    layout: { width: 'content' },
                     data: ['A', 'longer'],
+                    defaultCell: { layout: { width: 'content' } },
                   },
                 },
               },
@@ -254,6 +264,7 @@ describe('JSON data presentation', () => {
           },
         },
       ],
+      defaultCell: { layout: { width: 'content' } },
     });
 
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
@@ -263,32 +274,32 @@ describe('JSON data presentation', () => {
     const actual = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       data: [[['A', 'longer']]],
+      defaultCell: { layout: { width: 'content' } },
     });
     const expected = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       items: [
         {
           content: {
             namespace: 'standard',
             type: 'array',
-            layout: { width: 'content' },
             items: [
               {
                 content: {
                   namespace: 'standard',
                   type: 'array',
-                  layout: { width: 'content' },
                   data: ['A', 'longer'],
+                  defaultCell: { layout: { width: 'content' } },
                 },
               },
             ],
+            defaultCell: { layout: { width: 'content' } },
           },
         },
       ],
+      defaultCell: { layout: { width: 'content' } },
     });
 
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
@@ -299,24 +310,29 @@ describe('JSON data presentation', () => {
     const authored = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       items: [{ content: nested }],
+      defaultCell: { layout: { width: 'content' } },
     });
     const authoredWithAuto = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
-      items: [{ content: { ...nested, layout: { width: 'auto' } } }],
+      items: [{ content: { ...nested, defaultCell: { layout: { width: 'auto' } } } }],
+      defaultCell: { layout: { width: 'content' } },
     });
 
     expect(authored.scene.primitives).toEqual(authoredWithAuto.scene.primitives);
 
-    const fixed = compile({ namespace: 'standard', type: 'array', layout: { width: 180 }, data: [['A', 'longer']] });
+    const fixed = compile({
+      namespace: 'standard',
+      type: 'array',
+      data: [['A', 'longer']],
+      defaultCell: { layout: { width: 180 } },
+    });
     const fixedWithAuto = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 180 },
-      items: [{ content: { ...nested, layout: { width: 'auto' } } }],
+      items: [{ content: { ...nested, defaultCell: { layout: { width: 'auto' } } } }],
+      defaultCell: { layout: { width: 180 } },
     });
 
     expect(fixed.scene.primitives).toEqual(fixedWithAuto.scene.primitives);

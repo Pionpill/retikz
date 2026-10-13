@@ -75,7 +75,7 @@ describe('Node 颜色 / 不透明度', () => {
         {
           type: 'node',
           position: [0, 0],
-          style: { fill: '#fef3c7', fillOpacity: 0.4 },
+          style: { fill: '#fef3c7', opacity: { fill: 0.4 } },
         },
       ],
     };
@@ -90,7 +90,7 @@ describe('Node 颜色 / 不透明度', () => {
           type: 'node',
           shape: 'circle',
           position: [0, 0],
-          style: { fill: '#fef3c7', fillOpacity: 0.4 },
+          style: { fill: '#fef3c7', opacity: { fill: 0.4 } },
         },
       ],
     };
@@ -105,7 +105,7 @@ describe('Node 颜色 / 不透明度', () => {
           type: 'node',
           shape: 'diamond',
           position: [0, 0],
-          style: { fill: '#fef3c7', fillOpacity: 0.4 },
+          style: { fill: '#fef3c7', opacity: { fill: 0.4 } },
         },
       ],
     };
@@ -121,7 +121,7 @@ describe('Node 颜色 / 不透明度', () => {
         {
           type: 'node',
           position: [0, 0],
-          style: { strokeOpacity: 0.3 },
+          style: { opacity: { stroke: 0.3 } },
         },
       ],
     };
