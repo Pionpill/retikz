@@ -12,6 +12,7 @@ import { useDemoLocationContext } from './context';
 import { mergePreviewControlSlots, resolveBuiltinControlSlots } from './controls';
 import { usePreviewResources } from './hooks';
 import { buildConfiguredControlSlots } from './preview-panel';
+import { PreviewErrorBoundary } from './PreviewErrorBoundary';
 import { PreviewViewport } from './PreviewViewport';
 import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
@@ -70,8 +71,10 @@ export type ComponentPreviewProps = {
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { size = props.mode === 'showcase' ? 'xl' : 'md', previewClassName } = props;
   return (
-    <PreviewViewport size={size} className={previewClassName}>
-      <LoadedComponentPreview {...props} />
+    <PreviewViewport name={normalizeComponentPreviewFiles(props.files).name} size={size} className={previewClassName}>
+      <PreviewErrorBoundary key={normalizeComponentPreviewFiles(props.files).name}>
+        <LoadedComponentPreview {...props} />
+      </PreviewErrorBoundary>
     </PreviewViewport>
   );
 };
@@ -205,7 +208,7 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   if (resourcesState.status === 'missing') {
     return (
       <div className="my-6">
-        <div className="rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
+        <div data-demo-error className="rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
           Demo <code className="rounded bg-muted px-1">{name}</code> not found at{' '}
           <code className="rounded bg-muted px-1">{resourcesState.key}</code>
         </div>
@@ -237,7 +240,7 @@ const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
 
   if (resourcesState.status === 'error') {
     return (
-      <div className="my-6 rounded-md border border-destructive/40 px-4 py-3 text-sm text-destructive">
+      <div data-demo-error className="my-6 rounded-md border border-destructive/40 px-4 py-3 text-sm text-destructive">
         Failed to load demo <code>{name}</code> at <code>{resourcesState.key}</code>: {resourcesState.message}
       </div>
     );
