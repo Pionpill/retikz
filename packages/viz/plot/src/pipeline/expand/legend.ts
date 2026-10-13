@@ -3,6 +3,7 @@ import type { IRShapeValue } from '@retikz/core';
 import { categoricalColorAt } from '@retikz/core';
 import { createDataView, DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
+import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
 import { RetikzPlotError } from '../../error';
@@ -16,7 +17,7 @@ import type { EffectivePlotGuideTheme } from '../../resolve/theme';
 import { resolveLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlot, IRPlotLegendGuide, IRPlotScaleOperation, LegendChannelValue } from '../../schemas';
 import { LegendSymbolFit, PlotLayerZIndex, BuiltinPlotScale } from '../../schemas';
-import type { LegendReserve, Rect } from '../../shared';
+import type { PlotLabelMeasure } from '../../shared';
 import type { LegendEntry, LowerLegendOptions } from '../guide';
 import { lowerLegend } from '../guide';
 import type { MarkDataView } from './types';
@@ -229,7 +230,7 @@ type LegendLoweringBase = {
   position: 'right' | 'left' | 'top' | 'bottom';
   orient: 'vertical' | 'horizontal';
   fontSize: number;
-  band: Rect;
+  band: BoundsRect;
   id: string;
   zIndex: number;
   style: LowerLegendOptions['style'];
@@ -320,8 +321,8 @@ const LEGEND_CONTENT_GAP = 24;
  * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
  * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量
  */
-export const legendReserveOf = (legendGuides: Array<IRPlotLegendGuide>): LegendReserve => {
-  const reserve: { right: number; left: number; top: number; bottom: number } = {
+export const legendReserveOf = (legendGuides: Array<IRPlotLegendGuide>): Partial<BoundsInsets> => {
+  const reserve: BoundsInsets = {
     right: 0,
     left: 0,
     top: 0,
@@ -343,10 +344,10 @@ export const reserveLegendBands = (
   legendGuides: Array<IRPlotLegendGuide>,
   width: number,
   height: number,
-  plotArea: Rect,
-): Array<Rect> => {
+  plotArea: BoundsRect,
+): Array<BoundsRect> => {
   const perSideOffset = new Map<string, number>();
-  return legendGuides.map((guide): Rect => {
+  return legendGuides.map((guide): BoundsRect => {
     const position = guide.position ?? 'right';
     const offset = perSideOffset.get(position) ?? 0;
     perSideOffset.set(position, offset + LEGEND_BAND_EXTENT);
@@ -399,10 +400,11 @@ export const buildLegendLayers = (
   channelDescriptors: ReadonlyArray<ScaleDescriptor>,
   legendGuides: Array<IRPlotLegendGuide>,
   fontSize: number,
-  bands: Array<Rect>,
+  bands: Array<BoundsRect>,
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
   resolvedTheme: EffectivePlotGuideTheme,
+  measure?: PlotLabelMeasure,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {
@@ -470,7 +472,7 @@ export const buildLegendLayers = (
         }));
       }
 
-      return lowerLegend(options);
+      return lowerLegend(options, measure);
     }
 
     if (guide.symbols !== undefined)
@@ -513,7 +515,7 @@ export const buildLegendLayers = (
         color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
       }));
 
-      return lowerLegend({ ...base, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);
     }
 
     if (legendForm === 'size') {
@@ -544,7 +546,7 @@ export const buildLegendLayers = (
             : radiusScale(tick.value)) * style.symbolScale,
       }));
 
-      return lowerLegend({ ...base, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);
     }
 
     if (legendForm === 'ramp') {
@@ -575,13 +577,16 @@ export const buildLegendLayers = (
           : stops;
       const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
 
-      return lowerLegend({
-        ...base,
-        form: 'ramp',
-        title,
-        entries: [],
-        ramp: { stops: normalizedStops, ticks },
-      });
+      return lowerLegend(
+        {
+          ...base,
+          form: 'ramp',
+          title,
+          entries: [],
+          ramp: { stops: normalizedStops, ticks },
+        },
+        measure,
+      );
     }
 
     if (channelOutput?.outputKind === 'color') {
@@ -589,7 +594,7 @@ export const buildLegendLayers = (
         label: showLabels ? String(category) : '',
         color: String(descriptor.range[index]),
       }));
-      return lowerLegend({ ...base, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);
     }
 
     if (channelOutput?.outputKind !== 'number') {
@@ -608,6 +613,6 @@ export const buildLegendLayers = (
       return { label: showLabels ? tick.label : '', opacity: oMin + (oMax - oMin) * Math.max(0, Math.min(1, t)) };
     });
 
-    return lowerLegend({ ...base, form: 'swatch', title, entries });
+    return lowerLegend({ ...base, form: 'swatch', title, entries }, measure);
   });
 };

@@ -235,7 +235,8 @@ describe('lowerGuide (contract)', () => {
 
     expect(title.layout?.align).toBe('end');
     expect((title.position as [number, number])[0]).toBe(434);
-    expect((title.position as [number, number])[1]).toBe(298.5);
+    // 11px 字号的 Core 默认行高为 13.2，标签和标题均按实际行高占位
+    expect((title.position as [number, number])[1]).toBe(301.8);
   });
 
   it('axis_title_at_end_places_y_title_near_visual_top', () => {
@@ -339,16 +340,18 @@ describe('lowerGuide (contract)', () => {
     const top = nodeByText(axisLayer as IRScope, 'Top');
 
     expect(right.layout?.align).toBe('start');
-    expect(right.position).toEqual([325, 200]);
+    expect(right.position).toEqual([323.75, 200]);
     expect(diagonal.layout?.align).toBe('start');
-    expect((diagonal.position as [number, number])[0]).toBeCloseTo(328.927858, 6);
-    expect((diagonal.position as [number, number])[1]).toBeCloseTo(274.436533, 6);
+    // Core 默认宽度为 14 × 10 × 0.55，行高为 12；矩形沿径向投影后与刻度间距相切
+    const diagonalRadius = 110 + (Math.cos(Math.PI / 6) * 77) / 2 + (Math.sin(Math.PI / 6) * 12) / 2;
+    expect((diagonal.position as [number, number])[0]).toBeCloseTo(200 + Math.cos(Math.PI / 6) * diagonalRadius, 6);
+    expect((diagonal.position as [number, number])[1]).toBeCloseTo(200 + Math.sin(Math.PI / 6) * diagonalRadius, 6);
     expect(bottom.layout?.align).toBe('middle');
-    expect(bottom.position).toEqual([200, 315]);
+    expect(bottom.position).toEqual([200, 316]);
     expect(left.layout?.align).toBe('end');
-    expect(left.position).toEqual([78, 200]);
+    expect(left.position).toEqual([79, 200]);
     expect(top.layout?.align).toBe('middle');
-    expect(top.position).toEqual([200, 85]);
+    expect(top.position).toEqual([200, 84]);
   });
 
   it('polar_angular_tick_label_center_moves_continuously_across_a_cardinal_angle', () => {

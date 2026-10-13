@@ -1,5 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import type { Position } from '@retikz/math';
+import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
@@ -28,8 +28,8 @@ import {
   BuiltinPlotCoordinate,
   BuiltinPlotScale,
 } from '../../../schemas';
-import type { Margins, Rect } from '../../../shared';
-import { computePlotArea, estimateLabelWidth } from '../../../shared';
+import type { PlotLabelMeasure } from '../../../shared';
+import { computePlotArea, measurePlotText, guideTextSourceProps } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Cartesian2D }>;
@@ -40,7 +40,7 @@ const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 /** tick label 视觉外延反馈到 plotArea 的最大收敛轮数 */
 const MAX_GUIDE_LAYOUT_PASSES = 3;
 
-/** guide 文本节点在 Plot allocation 坐标中的估算边界 */
+/** guide 文本节点在 Plot allocation 坐标中的测量边界 */
 type TextNodeBounds = {
   minX: number;
   minY: number;
@@ -62,8 +62,12 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
     .join('\n');
 };
 
-/** 估算已经完成旋转与端点对齐的 guide 文本节点视觉边界 */
-const textNodeBoundsOf = (node: IRNode, fallbackFontSize: number): TextNodeBounds | undefined => {
+/** 测量已经完成旋转与端点对齐的 guide 文本节点视觉边界 */
+const textNodeBoundsOf = (
+  node: IRNode,
+  fallbackFontSize: number,
+  measure: PlotLabelMeasure,
+): TextNodeBounds | undefined => {
   if (node.text === undefined || !Array.isArray(node.position)) return undefined;
 
   const [x, y] = node.position;
@@ -71,11 +75,7 @@ const textNodeBoundsOf = (node: IRNode, fallbackFontSize: number): TextNodeBound
 
   const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : fallbackFontSize;
-  const width = Math.min(
-    estimateLabelWidth(textBlockMeasureText(node.text), fontSize),
-    node.layout?.maxTextWidth ?? Infinity,
-  );
-  const height = typeof node.layout?.lineHeight === 'number' ? node.layout.lineHeight : fontSize;
+  const { width, height } = measure(node, fontSize);
   const localMinX = node.layout?.align === 'start' ? 0 : node.layout?.align === 'end' ? -width : -width / 2;
   const localMaxX = node.layout?.align === 'start' ? width : node.layout?.align === 'end' ? 0 : width / 2;
   const localMinY = -height / 2;
@@ -119,14 +119,15 @@ const guideOverflowOf = (
   width: number,
   height: number,
   fontSize: number,
-): Margins => {
+  measure: PlotLabelMeasure,
+): BoundsInsets => {
   const bounds = guides.flatMap((guide, guideIndex) =>
     guide.axisLayer === null
       ? []
       : collectAxisTextNodes(guide.axisLayer)
           .filter(node => tickLabelsByGuide[guideIndex]?.has(textBlockMeasureText(node.text)) === true)
           .flatMap(node => {
-            const nodeBounds = textNodeBoundsOf(node, fontSize);
+            const nodeBounds = textNodeBoundsOf(node, fontSize, measure);
             return nodeBounds === undefined ? [] : [nodeBounds];
           }),
   );
@@ -141,7 +142,7 @@ const guideOverflowOf = (
 };
 
 /** 合并 composition/decorations 与 guide 反馈的额外留白 */
-const addMarginReserve = (base: Partial<Margins> | undefined, extra: Margins): Margins => ({
+const addMarginReserve = (base: Partial<BoundsInsets> | undefined, extra: BoundsInsets): BoundsInsets => ({
   top: (base?.top ?? 0) + extra.top,
   right: (base?.right ?? 0) + extra.right,
   bottom: (base?.bottom ?? 0) + extra.bottom,
@@ -350,9 +351,9 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
       : undefined;
 
-    let plotArea: Rect = { x: 0, y: 0, width: ctx.width, height: ctx.height };
+    let plotArea: BoundsRect = { x: 0, y: 0, width: ctx.width, height: ctx.height };
     let lowered: Array<LoweredGuide> = [];
-    let guideReserve: Margins = { top: 0, right: 0, bottom: 0, left: 0 };
+    let guideReserve: BoundsInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 
     for (let pass = 0; pass < MAX_GUIDE_LAYOUT_PASSES; pass += 1) {
       const computed = computePlotArea(
@@ -367,6 +368,9 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
         },
         {
           fontSize: ctx.fontSize,
+          textMeasurer: ctx.textMeasurer,
+          xLabelNode: { type: 'node', ...guideTextSourceProps(xAxis?.tickLabels || {}) },
+          yLabelNode: { type: 'node', ...guideTextSourceProps(yAxis?.tickLabels || {}) },
           reserve: addMarginReserve(ctx.layoutReserve, guideReserve),
           margin: ctx.margin,
         },
@@ -389,7 +393,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
 
       const [xRangeStart, xRangeEnd] = xScale.range();
       const [yRangeStart, yRangeEnd] = yScale.range();
-      const guideFrame: Rect = {
+      const guideFrame: BoundsRect = {
         x: Math.min(xRangeStart, xRangeEnd),
         y: Math.min(yRangeStart, yRangeEnd),
         width: Math.abs(xRangeEnd - xRangeStart),
@@ -413,7 +417,14 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
           ? new Set<string>()
           : new Set(guide.dimension === 'x' ? visibleXTicks?.labels : visibleYTicks?.labels),
       );
-      const overflow = guideOverflowOf(lowered, tickLabelsByGuide, ctx.width, ctx.height, ctx.fontSize);
+      const overflow = guideOverflowOf(
+        lowered,
+        tickLabelsByGuide,
+        ctx.width,
+        ctx.height,
+        ctx.fontSize,
+        ctx.textMeasurer ?? measurePlotText,
+      );
       if (Object.values(overflow).every(value => value <= 1e-6)) break;
       guideReserve = addMarginReserve(guideReserve, overflow);
     }

@@ -44,6 +44,8 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 
 掌握轴的基本职责后，再在笛卡尔坐标系中集中调整完整配置。连续轴场景覆盖 `ticks.interval`、`ticks.density`、`ticks.mark` 以及独立的主 / 次网格来源；分类轴场景用于观察 `tickLabels.layout` 的旋转、隐藏和边界处理。
 
+标签留白与避让使用 Core 的文字布局结果，字体、字重、换行和行高会参与测量。通过 `CompileOptions.measureText` 注入的宿主测量器同时服务 Plot 布局和最终文字绘制；未注入时沿用 Core 的默认测量。极坐标角向标签的半径预留、图例条目的文字间距也复用这条测量路径。
+
 切到原点场景时，两条轴通过 `placement.kind="origin"` 穿过另一维的 0。这个摆放不会扩展 domain；`crossing` 控制交点标签，`line.arrow` 与 `ticks.endpoint` 分别控制端点箭头和附近刻度避让。
 
 <ComponentPreview

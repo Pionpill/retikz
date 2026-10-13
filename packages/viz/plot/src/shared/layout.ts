@@ -1,4 +1,9 @@
+import type { IRNode } from '@retikz/core';
+import type { BoundsInsets, BoundsRect } from '@retikz/math';
+
 import { RetikzPlotError } from '../error';
+import type { PlotLabelMeasure } from './text';
+import { measurePlotText } from './text';
 
 /** 默认整图宽度（user units），用于 lowering 与 locator 缺省尺寸 */
 export const DEFAULT_PLOT_WIDTH = 480;
@@ -6,11 +11,8 @@ export const DEFAULT_PLOT_WIDTH = 480;
 /** 默认整图高度（user units），用于 lowering 与 locator 缺省尺寸 */
 export const DEFAULT_PLOT_HEIGHT = 300;
 
-/** label 字号（估算占位 + 实绘 label 共用），无显式 fontSize 时的默认值 */
+/** label 字号（测量与实绘共用），无显式 fontSize 时的默认值 */
 export const DEFAULT_FONT_SIZE = 11;
-
-/** 数字字宽经验系数（字宽约等于 0.6em），用于无 measureText 时估算 label 像素宽 */
-export const CHAR_WIDTH_FACTOR = 0.6;
 
 /** 默认刻度线长（user units）；axis 与 guide 复用 */
 export const DEFAULT_AXIS_TICK_LENGTH = 6;
@@ -18,82 +20,49 @@ export const DEFAULT_AXIS_TICK_LENGTH = 6;
 /** 默认刻度线到 label 的间距（user units）；axis 与 guide 共用 */
 export const DEFAULT_AXIS_LABEL_GAP = 4;
 
-/** 矩形区域（绘图区 plot area 用） */
-export type Rect = {
-  /** 左上角 x（user units） */
-  x: number;
-  /** 左上角 y（user units） */
-  y: number;
-  /** 宽（user units） */
-  width: number;
-  /** 高（user units） */
-  height: number;
-};
-
-/** 四边留白（整图边缘到 plot area 的距离） */
-export type Margins = {
-  /** 顶部留白 */
-  top: number;
-  /** 右侧留白 */
-  right: number;
-  /** 底部留白 */
-  bottom: number;
-  /** 左侧留白 */
-  left: number;
-};
-
-/** 四边 legend 预留带宽（user units）：legend 占某边时该边在 axis margin 之外再让出的带宽 */
-export type LegendReserve = {
-  /** 右侧预留带宽 */
-  right?: number;
-  /** 左侧预留带宽 */
-  left?: number;
-  /** 顶部预留带高 */
-  top?: number;
-  /** 底部预留带高 */
-  bottom?: number;
-};
-
-/**
- * 估算一段文字的像素宽
- * @description plot lowering 在 core compile 前运行、无 measureText，按字符数 * 字号 * 经验系数估算。
- *   作为 margin 估算与 guide label 偏移的单一来源，避免多处各算一份
- */
-export const estimateLabelWidth = (text: string, fontSize: number): number =>
-  text.length * fontSize * CHAR_WIDTH_FACTOR;
-
-/** computePlotArea 输入：哪些维度有 axis + 其刻度标签（估算占位用）+ legend 各边预留 */
+/** computePlotArea 输入：哪些维度有 axis + 其刻度标签（测量占位用）+ legend 各边预留 */
 export type PlotAreaLayoutContext = {
   /** x 维度是否有坐标轴（决定是否留 bottom margin） */
   hasXAxis: boolean;
   /** y 维度是否有坐标轴（决定是否留 left margin） */
   hasYAxis: boolean;
-  /** x 轴刻度标签（估算最右 label 半宽防溢出） */
+  /** x 轴刻度标签（测量最右 label 半宽防溢出） */
   xLabels: ReadonlyArray<string>;
-  /** y 轴刻度标签（估算最宽 label 定 left margin） */
+  /** y 轴刻度标签（测量最宽 label 定 left margin） */
   yLabels: ReadonlyArray<string>;
   /** legend 各边预留带宽（在 axis margin 之外叠加；缺省无 legend 占位） */
-  legendReserve?: LegendReserve;
+  legendReserve?: Partial<BoundsInsets>;
 };
 
 /** computePlotArea 选项：字号 + 用户覆盖 margin */
 export type PlotAreaOptions = {
-  /** label 字号（估算 + 实绘共用），默认 DEFAULT_FONT_SIZE */
+  /** 当前 Core 编译环境的文字测量 */
+  textMeasurer?: PlotLabelMeasure;
+  /** 与绘制共用的横轴标签配置 */
+  xLabelNode?: IRNode;
+  /** 与绘制共用的纵轴标签配置 */
+  yLabelNode?: IRNode;
+  /** label 字号（测量 + 实绘共用），默认 DEFAULT_FONT_SIZE */
   fontSize?: number;
   /** layout / decoration 额外预留，只叠加到自动 margin；显式 margin 仍逐边覆盖 */
-  reserve?: Partial<Margins>;
-  /** 逐边覆盖估算的 margin */
-  margin?: Partial<Margins>;
+  reserve?: Partial<BoundsInsets>;
+  /** 逐边覆盖测量的 margin */
+  margin?: Partial<BoundsInsets>;
 };
 
-/** 一组 label 中最宽的估算像素宽（空集 0） */
-const maxLabelWidth = (labels: ReadonlyArray<string>, fontSize: number): number =>
-  labels.length === 0 ? 0 : Math.max(...labels.map(label => estimateLabelWidth(label, fontSize)));
+/** 一组 label 中最宽的测量像素宽（空集 0） */
+const maxLabelWidth = (
+  labels: ReadonlyArray<string>,
+  fontSize: number,
+  measure: PlotLabelMeasure,
+  node?: IRNode,
+): number =>
+  labels.length === 0 ? 0 : Math.max(...labels.map(text => measure({ type: 'node', ...node, text }, fontSize).width));
 
 /**
- * 由整图尺寸 + axis 占位估算 plot area（d3 margin convention）
+ * 由整图尺寸 + axis 占位测量 plot area（d3 margin convention）
  * @description margin 仅在对应维度有 axis 时才留；无 axis → 全 0 → plot area = 整图。
- *   用户 options.margin 逐边覆盖估算。估算用 fontSize × 字符数，不精确但对数字轴足够（用户可 margin 覆盖）。
+ *   自动留白使用 Core 文字测量结果，用户 options.margin 可逐边覆盖。
  *   margin 之和 ≥ 尺寸（plot area 非正）→ 抛清晰错误，不静默出退化坏图
  */
 export const computePlotArea = (
@@ -101,30 +70,41 @@ export const computePlotArea = (
   height: number,
   context: PlotAreaLayoutContext,
   options: PlotAreaOptions = {},
-): { plotArea: Rect; margins: Margins } => {
+): { plotArea: BoundsRect; margins: BoundsInsets } => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
+  const measure = options.textMeasurer ?? measurePlotText;
+  const xLabelHeight = Math.max(
+    0,
+    ...context.xLabels.map(text => measure({ type: 'node', ...options.xLabelNode, text }, fontSize).height),
+  );
+  const yLabelHeight = Math.max(
+    0,
+    ...context.yLabels.map(text => measure({ type: 'node', ...options.yLabelNode, text }, fontSize).height),
+  );
   const reserve = context.legendReserve ?? {};
   const layoutReserve = options.reserve ?? {};
 
   // legend 预留叠加在 axis margin 之外：legend 占某边 → 该边 margin += 预留带宽，plotArea 在该边收窄
-  const auto: Margins = {
-    top: (context.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0) + (layoutReserve.top ?? 0),
+  const auto: BoundsInsets = {
+    top: (context.hasYAxis ? yLabelHeight * 0.5 : 0) + (reserve.top ?? 0) + (layoutReserve.top ?? 0),
     right:
-      (context.hasXAxis ? maxLabelWidth(context.xLabels.slice(-1), fontSize) * 0.5 : 0) +
+      (context.hasXAxis ? maxLabelWidth(context.xLabels.slice(-1), fontSize, measure, options.xLabelNode) * 0.5 : 0) +
       (reserve.right ?? 0) +
       (layoutReserve.right ?? 0),
     bottom:
-      (context.hasXAxis ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + fontSize : 0) +
+      (context.hasXAxis ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + xLabelHeight : 0) +
       (reserve.bottom ?? 0) +
       (layoutReserve.bottom ?? 0),
     left:
       (context.hasYAxis
-        ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + maxLabelWidth(context.yLabels, fontSize)
+        ? DEFAULT_AXIS_TICK_LENGTH +
+          DEFAULT_AXIS_LABEL_GAP +
+          maxLabelWidth(context.yLabels, fontSize, measure, options.yLabelNode)
         : 0) +
       (reserve.left ?? 0) +
       (layoutReserve.left ?? 0),
   };
-  const margins: Margins = { ...auto, ...options.margin };
+  const margins: BoundsInsets = { ...auto, ...options.margin };
 
   // 用户 margin 可能传入 NaN / 负值——会一路污染出坏坐标，逐边校验有限非负（与 width/height 入口校验同思路）
   for (const side of ['top', 'right', 'bottom', 'left'] as const) {
@@ -134,7 +114,7 @@ export const computePlotArea = (
     }
   }
 
-  const plotArea: Rect = {
+  const plotArea: BoundsRect = {
     x: margins.left,
     y: margins.top,
     width: width - margins.left - margins.right,
@@ -155,6 +135,8 @@ export type PolarAngularLabel = {
   angle: number;
   /** 标签文本 */
   text: string;
+  /** 标签字体与换行配置 */
+  node?: IRNode;
 };
 
 /** 极坐标角向标签的屏幕空间布局结果 */
@@ -188,6 +170,7 @@ export const layoutPolarAngularLabel = (
   label: PolarAngularLabel,
   fontSize: number,
   radialOffset = DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP,
+  measure: PlotLabelMeasure = measurePlotText,
 ): PolarAngularLabelLayout => {
   const radians = (label.angle * Math.PI) / 180;
   const horizontal = Math.cos(radians);
@@ -196,8 +179,8 @@ export const layoutPolarAngularLabel = (
   const verticalSign = polarDirectionSign(vertical);
   const projectedHorizontal = horizontalSign === 0 ? 0 : horizontal;
   const projectedVertical = verticalSign === 0 ? 0 : vertical;
-  const width = estimateLabelWidth(label.text, fontSize);
-  const support = polarLabelRadialSupport(projectedHorizontal, projectedVertical, width, fontSize);
+  const { width, height } = measure({ type: 'node', ...label.node, text: label.text }, fontSize);
+  const support = polarLabelRadialSupport(projectedHorizontal, projectedVertical, width, height);
   const labelRadius = outerRadius + radialOffset + support;
 
   return {
@@ -233,9 +216,10 @@ export const computePolarCoordinate = (
   options: PlotAreaOptions = {},
 ): PolarLayout => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
-  const explicit: Partial<Margins> = options.margin ?? {};
+  const measure = options.textMeasurer ?? measurePlotText;
+  const explicit: Partial<BoundsInsets> = options.margin ?? {};
   const layoutReserve = options.reserve ?? {};
-  const margins: Margins = {
+  const margins: BoundsInsets = {
     top: explicit.top ?? layoutReserve.top ?? 0,
     right: explicit.right ?? layoutReserve.right ?? 0,
     bottom: explicit.bottom ?? layoutReserve.bottom ?? 0,
@@ -269,8 +253,11 @@ export const computePolarCoordinate = (
     const verticalSign = polarDirectionSign(vertical);
     const projectedHorizontal = horizontalSign === 0 ? 0 : horizontal;
     const projectedVertical = verticalSign === 0 ? 0 : vertical;
-    const labelWidth = estimateLabelWidth(label.text, fontSize);
-    const support = polarLabelRadialSupport(projectedHorizontal, projectedVertical, labelWidth, fontSize);
+    const { width: labelWidth, height: labelHeight } = measure(
+      { type: 'node', ...label.node, text: label.text },
+      fontSize,
+    );
+    const support = polarLabelRadialSupport(projectedHorizontal, projectedVertical, labelWidth, labelHeight);
 
     if (horizontalSign === 0) {
       if (center[0] - labelWidth / 2 < minX || center[0] + labelWidth / 2 > maxX) outerRadius = 0;
@@ -283,12 +270,12 @@ export const computePolarCoordinate = (
     }
 
     if (verticalSign === 0) {
-      if (center[1] - fontSize / 2 < minY || center[1] + fontSize / 2 > maxY) outerRadius = 0;
+      if (center[1] - labelHeight / 2 < minY || center[1] + labelHeight / 2 > maxY) outerRadius = 0;
     } else {
       const verticalLimit =
         verticalSign > 0
-          ? (maxY - center[1] - fontSize / 2) / vertical - radialOffset - support
-          : (center[1] - minY - fontSize / 2) / -vertical - radialOffset - support;
+          ? (maxY - center[1] - labelHeight / 2) / vertical - radialOffset - support
+          : (center[1] - minY - labelHeight / 2) / -vertical - radialOffset - support;
       outerRadius = Math.min(outerRadius, verticalLimit);
     }
   }

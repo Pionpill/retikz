@@ -7,7 +7,7 @@ import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotLayerZIndex, PlotSchema } from '../../src/schemas';
-import { DEFAULT_FONT_SIZE, estimateLabelWidth } from '../../src/shared';
+import { DEFAULT_FONT_SIZE, measurePlotText } from '../../src/shared';
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -81,7 +81,7 @@ const textNodeVisualBottom = (node: IRNode): number => {
   const position = node.position as [number, number];
   const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : DEFAULT_FONT_SIZE;
-  const width = estimateLabelWidth(String(node.text), fontSize);
+  const width = measurePlotText({ type: 'node', text: String(node.text) }, fontSize).width;
   const height = typeof node.layout?.lineHeight === 'number' ? node.layout.lineHeight : fontSize;
   const radians = (Math.abs(node.rotate ?? 0) * Math.PI) / 180;
   const rotatedHeight = width * Math.abs(Math.sin(radians)) + height * Math.abs(Math.cos(radians));

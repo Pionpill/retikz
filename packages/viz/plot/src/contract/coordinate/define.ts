@@ -1,6 +1,6 @@
 import type { IRScope } from '@retikz/core';
 import type { ExternalRow, IRDataScalarValue } from '@retikz/data';
-import type { Position } from '@retikz/math';
+import type { BoundsInsets, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 import type {
@@ -9,7 +9,7 @@ import type {
   IRPlotMarkOperation,
   IRPlotScaleOperation,
 } from '../../schemas';
-import type { LegendReserve, Margins } from '../../shared';
+import type { PlotLabelMeasure } from '../../shared';
 import type { CoordinateDomainPaddingCapability } from '../domain-padding';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';
@@ -68,6 +68,8 @@ export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinate
  */
 
 export type CoordinateDefinitionResolveContext = {
+  /** 当前 Core 编译环境的标签测量 */
+  textMeasurer?: PlotLabelMeasure;
   /** 画布宽度 */
   width: number;
   /** 画布高度 */
@@ -77,11 +79,11 @@ export type CoordinateDefinitionResolveContext = {
   /** guide title / composition label 固定间距 */
   labelGap?: number;
   /** 用户传入的边距覆盖；自定义坐标系可选择是否消费 */
-  margin?: Partial<Margins>;
+  margin?: Partial<BoundsInsets>;
   /** plot layout / decoration 触发的自动预留；内置坐标系把它叠加到自动 plotArea 边距 */
-  layoutReserve?: Partial<Margins>;
+  layoutReserve?: Partial<BoundsInsets>;
   /** legend 预留区域；内置坐标系用它收窄 plotArea，自定义坐标系 v1 通常保持满画布 */
-  legendReserve: LegendReserve;
+  legendReserve: Partial<BoundsInsets>;
   /** overlay scope 共享的目标 plotArea；给定时坐标系仍独立训练 scale，但使用该矩形作为 range */
   plotAreaOverride?: CoordinatePlotArea;
   /** 指定 role 的最终 range；用于 scaffold track 把局部 role 映射进 track band */

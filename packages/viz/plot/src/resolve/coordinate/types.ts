@@ -1,5 +1,6 @@
 import type { IRScope } from '@retikz/core';
 import type { DataTransformModel, DataView, FieldOrderDefinition, ExternalRow, IRDataScalarValue } from '@retikz/data';
+import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
@@ -13,7 +14,7 @@ import type {
   TickSet,
 } from '../../contract';
 import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotMarkOperation } from '../../schemas';
-import type { LegendReserve, Margins, Rect } from '../../shared';
+import type { PlotLabelMeasure } from '../../shared';
 import type { MarkPaddingContext } from '../scale';
 
 /** 单个图元及其当前可见数据行的 lowering 视图 */
@@ -39,6 +40,8 @@ export type CoordinateAxisLowerer = (
  * @description source IR 通过 resolveCoordinateFrame 的首个参数传入；context 只携带数据、registry、布局输入与 pipeline 注入的下沉回调
  */
 export type CoordinateResolveContext = {
+  /** 当前 Core 编译环境的标签测量 */
+  textMeasurer?: PlotLabelMeasure;
   /** 当前请求的分类顺序定义 */
   fieldOrderRegistry?: ReadonlyMap<string, FieldOrderDefinition>;
   /** 当前 lowering 共享的逐点留白求解状态 */
@@ -62,13 +65,13 @@ export type CoordinateResolveContext = {
   /** guide title / composition label 固定间距 */
   labelGap?: number;
   /** 用户传入的边距覆盖 */
-  margin?: Partial<Margins>;
+  margin?: Partial<BoundsInsets>;
   /** layout / decoration 触发的自动预留 */
-  layoutReserve?: Partial<Margins>;
+  layoutReserve?: Partial<BoundsInsets>;
   /** legend 预留区域，由 pipeline 在 layout 协调阶段计算 */
-  legendReserve?: LegendReserve;
+  legendReserve?: Partial<BoundsInsets>;
   /** overlay scope 共享的目标 plotArea */
-  plotAreaOverride?: Rect;
+  plotAreaOverride?: BoundsRect;
   /** 指定 role 的最终 range */
   roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
   /** provenance 上下文 */
@@ -108,5 +111,5 @@ export type CoordinateFrameResolution = {
   /** 轴层 */
   axisLayers: Array<IRScope>;
   /** 已扣除 decoration 预留的绘图区 */
-  plotArea: Rect;
+  plotArea: BoundsRect;
 };

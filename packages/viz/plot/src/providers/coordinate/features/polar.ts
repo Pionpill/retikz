@@ -22,7 +22,7 @@ import {
   Polar2DSchema,
   PolarInterpolation,
 } from '../../../schemas';
-import { computePolarCoordinate } from '../../../shared';
+import { computePolarCoordinate, guideTextSourceProps } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof BuiltinPlotCoordinate.Polar2D }>;
@@ -731,10 +731,13 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       {
         angularLabels:
           angularAxis && angularAxis.tickLabels !== false
-            ? polarAngularLayoutLabelsOf(angleScale, layoutAngularTicks)
+            ? polarAngularLayoutLabelsOf(angleScale, layoutAngularTicks).map(label => ({
+                ...label,
+                node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
+              }))
             : [],
       },
-      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
+      { fontSize: ctx.fontSize, textMeasurer: ctx.textMeasurer, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
 
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
@@ -838,10 +841,13 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
       {
         angularLabels:
           angularAxis && angularAxis.tickLabels !== false
-            ? polarAngularLayoutLabelsOf(angleScale, visibleAngularTicks)
+            ? polarAngularLayoutLabelsOf(angleScale, visibleAngularTicks).map(label => ({
+                ...label,
+                node: { type: 'node' as const, ...guideTextSourceProps(angularAxis.tickLabels || {}) },
+              }))
             : [],
       },
-      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
+      { fontSize: ctx.fontSize, textMeasurer: ctx.textMeasurer, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
 
     const radius = radiusFraction * layout.outerRadius;
