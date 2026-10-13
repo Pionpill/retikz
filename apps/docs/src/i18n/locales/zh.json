@@ -144,6 +144,7 @@
     "pkgCoreResolution": "配置解析",
     "pkgCoreCoordinates": "坐标解析",
     "pkgCoreNodeCompilation": "节点编译",
+    "pkgCorePathCompilation": "路径编译",
     "pkgOverview": "概览",
     "pkgFoundationUtilities": "通用工具",
     "pkgFoundationTypesSchemas": "类型与契约",
