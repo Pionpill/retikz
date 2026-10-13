@@ -7,11 +7,12 @@ description: Browse @retikz/core IR, Definitions, compilation, and Scene semanti
 
 ## Responsibilities
 
-| Document                 | Responsibility                                      | Reach for it when                                                  |
-| ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------ |
-| Compilation Flow         | Full compilation from IR to Scene                   | Understanding node layout, deferred paths, and result assembly     |
-| Configuration resolution | From sparse declarations to layout input            | Understanding inheritance, colors, and Definition binding          |
-| Coordinate resolution    | From position expressions to local and world points | Understanding references, anchors, namespaces, and Scope placement |
+| Document                 | Responsibility                                      | Reach for it when                                                           |
+| ------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------- |
+| Compilation Flow         | Full compilation from IR to Scene                   | Understanding node layout, deferred paths, and result assembly              |
+| Configuration resolution | From sparse declarations to layout input            | Understanding inheritance, colors, and Definition binding                   |
+| Coordinate resolution    | From position expressions to local and world points | Understanding references, anchors, namespaces, and Scope placement          |
+| Node Layout              | From text metrics to shape and text layout          | Understanding node dimensions, baselines, labels, and connection boundaries |
 
 ## Contents
 
@@ -31,6 +32,11 @@ description: Browse @retikz/core IR, Definitions, compilation, and Scene semanti
       title: 'Coordinate resolution',
       description: 'Follow reference lookup, coordinate transforms, and final Scope placement',
       url: '/kernel/packages/core/coordinates',
+    },
+    {
+      title: 'Node Layout',
+      description: 'Follow text measurement, shape sizing, baselines, and connection boundaries',
+      url: '/kernel/packages/core/node-layout',
     },
   ]}
 />

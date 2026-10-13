@@ -143,6 +143,7 @@
     "pkgCoreCompilation": "编译流程",
     "pkgCoreResolution": "配置解析",
     "pkgCoreCoordinates": "坐标解析",
+    "pkgCoreNodeLayout": "节点布局",
     "pkgOverview": "概览",
     "pkgFoundationUtilities": "通用工具",
     "pkgFoundationTypesSchemas": "类型与契约",
