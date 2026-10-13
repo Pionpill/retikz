@@ -19,7 +19,7 @@ const ScopeTransformResolution: FC<ScopeTransformResolutionProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={scopeFlowDefaults}
+      defaultFlow={scopeFlowDefaults}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout id="transform-stages" kind="linear" direction="right" gap={64} align="start">

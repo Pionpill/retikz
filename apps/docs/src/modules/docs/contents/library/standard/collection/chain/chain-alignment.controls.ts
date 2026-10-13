@@ -72,7 +72,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { direction: 'right', align: 'center', spacing: 'steps', justify: 'start', upperSteps: '2' },
-    relatedApis: ['Chain.layout', 'Chain.connection'],
+    relatedApis: ['Chain.layout', 'Chain.defaultConnection'],
   } satisfies PreviewControlContract;
 };
 

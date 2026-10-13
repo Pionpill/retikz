@@ -3,11 +3,10 @@ import type {
   IRPlotEncoding,
   IRPlotMarkGeometryLabelList,
   IRPlotMarkNodeLabel,
+  IRPlotMarkGeometryLabel,
   IRPlotMarkNodeLabelList,
   IRPlotPointColorStyle,
-  IRPlotPointOpacityStyle,
   IRPlotRelationPathGeometry,
-  IRPlotTextChannel,
 } from '@retikz/plot';
 import { BuiltinPlotMark } from '@retikz/plot';
 
@@ -15,18 +14,15 @@ import { RetikzPlotVanillaError } from '../../error';
 import type { NormalizationState } from './contracts';
 import type {
   InputPlotDatumLabel,
+  InputPlotNodeLabel,
+  InputPlotGeometryLabel,
   InputPlotPathMark,
   InputPlotReferenceMark,
   InputPlotRelationMark,
 } from './input-marks';
+import { opacityStyleOf } from './style-sugar';
 import type { StyleSugarContext } from './style-sugar';
-import {
-  extensionChannelEncoding,
-  nodeStylePropsOf,
-  numberStyleOf,
-  pathStylePropsOf,
-  strokeWidthStyleOf,
-} from './style-sugar';
+import { extensionChannelEncoding, nodeStylePropsOf, pathStylePropsOf, strokeWidthStyleOf } from './style-sugar';
 
 const AUTO_COLOR = '__color';
 
@@ -49,43 +45,41 @@ export const recordMarkColor = (into: Collected, color: IRPlotPointColorStyle | 
   into.colorFields.push(color.value);
 };
 
-/**
- * 把位置 mark 的扁平 label props 装成宿主 datum label
- * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
- *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）
- */
-export const buildMarkLabel = (props: InputPlotDatumLabel): IRPlotMarkNodeLabel | undefined => {
-  const {
-    label,
-    labelDisplayFormat,
-    labelPosition,
-    labelDistance,
-    labelPin,
-    labelTextColor,
-    labelOpacity,
-    labelFont,
-    labelRotate,
-    labelKeepUpright,
-  } = props;
-  if (label === undefined) return undefined;
-
-  const content: IRPlotTextChannel = {
-    field: label,
-    ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}),
-  };
-
+/** 把节点标签的简单或详细输入组装为唯一 Source 结构 */
+const normalizeMarkNodeLabel = (input: InputPlotNodeLabel): IRPlotMarkNodeLabel => {
+  if (typeof input === 'string') return { content: { field: input } };
+  const { field, value, displayFormat, ...layout } = input;
   return {
-    content,
-    ...(labelPosition !== undefined ? { position: labelPosition } : {}),
-    ...(labelDistance !== undefined ? { distance: labelDistance } : {}),
-    ...(labelTextColor !== undefined ? { textColor: labelTextColor } : {}),
-    ...(labelOpacity !== undefined ? { opacity: labelOpacity } : {}),
-    ...(labelFont !== undefined ? { font: labelFont } : {}),
-    ...(labelRotate !== undefined ? { rotate: labelRotate } : {}),
-    ...(labelKeepUpright !== undefined ? { keepUpright: labelKeepUpright } : {}),
-    ...(labelPin !== undefined && labelPin !== false ? { pin: labelPin } : {}),
+    ...layout,
+    content: {
+      ...(field === undefined ? {} : { field }),
+      ...(value === undefined ? {} : { value }),
+      ...(displayFormat === undefined ? {} : { displayFormat }),
+    },
   };
 };
+
+/** 把几何标签的简单或详细输入组装为唯一 Source 结构 */
+const normalizeMarkGeometryLabel = (input: InputPlotGeometryLabel): IRPlotMarkGeometryLabel => {
+  if (typeof input === 'string') return { content: { field: input } };
+  const { field, value, displayFormat, ...layout } = input;
+  return {
+    ...layout,
+    content: {
+      ...(field === undefined ? {} : { field }),
+      ...(value === undefined ? {} : { value }),
+      ...(displayFormat === undefined ? {} : { displayFormat }),
+    },
+  };
+};
+
+/** 组装节点宿主的单个或有序多个标签 */
+export const buildMarkLabel = ({ label }: InputPlotDatumLabel): IRPlotMarkNodeLabelList | undefined =>
+  label === undefined
+    ? undefined
+    : Array.isArray(label)
+      ? label.map(normalizeMarkNodeLabel)
+      : normalizeMarkNodeLabel(label);
 
 /** 收集某 mark 的运行时 resolveLabel；仅在配置 mark id 时按 id 注册，且不会进入 IR */
 export const recordResolveLabel = (
@@ -106,7 +100,8 @@ export const recordResolveLabel = (
 /** 把几何标签输入规范化为几何标签列表 */
 export const canonicalGeometryLabel = (
   label: NonNullable<InputPlotPathMark['label'] | InputPlotRelationMark['label']>,
-): IRPlotMarkGeometryLabelList => label;
+): IRPlotMarkGeometryLabelList =>
+  Array.isArray(label) ? label.map(normalizeMarkGeometryLabel) : normalizeMarkGeometryLabel(label);
 
 /** 按 reference mark 宿主形态规范化标签列表 */
 export const canonicalReferenceLabel = (
@@ -114,8 +109,12 @@ export const canonicalReferenceLabel = (
   usesNodeHost: boolean,
 ): IRPlotMarkNodeLabelList | IRPlotMarkGeometryLabelList => {
   const entries = Array.isArray(label) ? label : [label];
-  const hasNodeOnlyField = entries.some(entry => 'keepUpright' in entry || 'pin' in entry || 'rotate' in entry);
-  const hasGeometryOnlyField = entries.some(entry => 'side' in entry || 'sloped' in entry);
+  const hasNodeOnlyField = entries.some(
+    entry => typeof entry !== 'string' && ('keepUpright' in entry || 'pin' in entry || 'rotate' in entry),
+  );
+  const hasGeometryOnlyField = entries.some(
+    entry => typeof entry !== 'string' && ('side' in entry || 'sloped' in entry),
+  );
   if (usesNodeHost && hasGeometryOnlyField) {
     throw new RetikzPlotVanillaError('buildPlotIR: reference band / region expects node label fields');
   }
@@ -124,7 +123,15 @@ export const canonicalReferenceLabel = (
     throw new RetikzPlotVanillaError('buildPlotIR: reference line expects geometry label fields');
   }
 
-  return label;
+  // Reference 的宿主由几何配置决定，Source schema 继续校验对应 position 值域
+  if (usesNodeHost) {
+    return Array.isArray(label)
+      ? label.map(entry => normalizeMarkNodeLabel(entry as InputPlotNodeLabel))
+      : normalizeMarkNodeLabel(label as InputPlotNodeLabel);
+  }
+  return Array.isArray(label)
+    ? label.map(entry => normalizeMarkGeometryLabel(entry as InputPlotGeometryLabel))
+    : normalizeMarkGeometryLabel(label as InputPlotGeometryLabel);
 };
 
 /** 规范化 relation mark 的路径几何 */
@@ -170,7 +177,7 @@ export const collectReference = (
     layer,
     channels,
     strokeWidth,
-    fillOpacity,
+
     opacity,
   } = props;
 
@@ -236,8 +243,8 @@ export const collectReference = (
     ...(yTo !== undefined ? { yTo } : {}),
   };
   const strokeWidthStyle = strokeWidthStyleOf(strokeWidth, styleContext);
-  const fillOpacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(fillOpacity, 'fillOpacity', styleContext);
-  const opacityStyle = numberStyleOf<IRPlotPointOpacityStyle>(opacity, 'opacity', styleContext);
+
+  const opacityStyle = opacityStyleOf(opacity, styleContext);
   const referenceNodeStyleProps = {
     align: props.align,
     lineHeight: props.lineHeight,
@@ -264,7 +271,7 @@ export const collectReference = (
     ...(extentField !== undefined ? { extentField } : {}),
     ...(extentToField !== undefined ? { extentToField } : {}),
     ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
-    ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
+
     ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
     ...(label !== undefined
       ? { label: canonicalReferenceLabel(label, region || xTo !== undefined || yTo !== undefined) }

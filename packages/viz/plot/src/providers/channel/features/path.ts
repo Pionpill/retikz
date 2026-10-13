@@ -10,6 +10,7 @@ import { isFiniteNumber } from '@retikz/math';
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotMarkOpacityStyle } from '../../../schemas';
 import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 import { MarkValueKind, BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
@@ -33,7 +34,16 @@ const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
   'value' in value;
 
 const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): MarkStyleValue<T> | undefined => {
-  const value = (mark as Record<string, unknown>)[channel];
+  const source = mark as Record<string, unknown>;
+  const opacity = source.opacity as IRPlotMarkOpacityStyle | undefined;
+  const value =
+    channel === 'opacity'
+      ? opacity?.overall
+      : channel === 'fillOpacity'
+        ? opacity?.fill
+        : channel === 'strokeOpacity'
+          ? opacity?.stroke
+          : source[channel];
   return isMarkStyleValue<T>(value) ? value : undefined;
 };
 
@@ -61,7 +71,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
   definePathChannel<T>({
     channel,
     output,
-    resolve: ctx => mark =>
+    resolve: (ctx, mark) =>
       makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.model, {
         channelName: channel,
         parse,
@@ -69,60 +79,57 @@ const defineSimplePathChannel = <T extends JsonValue>(
     deliver,
   });
 
-const makeNumericPathResolver = (
+const resolveNumericPathChannel = (
   node: IRPlot,
   rows: Array<ExternalRow>,
   model: DataTransformModel,
-  pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,
+  channel: MarkStyleValue<number> | undefined,
   channelName: string,
   options: NumericPathResolverOptions = {},
-): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
+): ChannelResolution<number> | undefined => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  return mark => {
-    const channel = pick(mark);
-    if (!channel) return undefined;
+  if (!channel) return undefined;
 
-    const source = makeMarkValueResolver<number>(channel, model, {
-      channelName,
-      expectedFieldType: DataFieldType.Continuous,
-      parse: value => (isFiniteNumber(value) ? value : undefined),
-    });
-    if (!source) return undefined;
-    if (source.field === undefined) return source;
+  const source = makeMarkValueResolver<number>(channel, model, {
+    channelName,
+    expectedFieldType: DataFieldType.Continuous,
+    parse: value => (isFiniteNumber(value) ? value : undefined),
+  });
+  if (!source) return undefined;
+  if (source.field === undefined) return source;
 
-    const numeric = rows.map(row => resolveFieldPath(row, source.field as string)).filter(isFiniteNumber);
-    const scaleName = channel.kind === MarkValueKind.Field ? channel.scale : undefined;
-    let scale: ((value: number) => number) | undefined;
-    if (scaleName !== undefined || options.range !== undefined) {
-      let def: IRPlotLinearScale = {
-        type: BuiltinPlotScale.Linear,
-        name: scaleName ?? `__path_${channelName}_${source.field}`,
-        ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
-        ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
-      };
-      if (scaleName !== undefined) {
-        const found = scaleByName.get(scaleName);
-        if (!found)
-          throw new RetikzPlotError(`lowerPlots: ${channelName} path channel references unknown scale "${scaleName}"`);
-        if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Linear)
-          throw new RetikzPlotError(
-            `lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`,
-          );
+  const numeric = rows.map(row => resolveFieldPath(row, source.field as string)).filter(isFiniteNumber);
+  const scaleName = channel.kind === MarkValueKind.Field ? channel.scale : undefined;
+  let scale: ((value: number) => number) | undefined;
+  if (scaleName !== undefined || options.range !== undefined) {
+    let def: IRPlotLinearScale = {
+      type: BuiltinPlotScale.Linear,
+      name: scaleName ?? `__path_${channelName}_${source.field}`,
+      ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
+      ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
+    };
+    if (scaleName !== undefined) {
+      const found = scaleByName.get(scaleName);
+      if (!found)
+        throw new RetikzPlotError(`lowerPlots: ${channelName} path channel references unknown scale "${scaleName}"`);
+      if (!isBuiltinScaleOperation(found) || found.type !== BuiltinPlotScale.Linear)
+        throw new RetikzPlotError(
+          `lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`,
+        );
 
-        def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
-      }
-
-      scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
+      def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
     }
 
-    return {
-      resolver: row => {
-        const value = source.resolver(row);
-        if (value === undefined) return undefined;
-        return scale ? scale(value) : value;
-      },
-      descriptor: source.descriptor,
-    };
+    scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
+  }
+
+  return {
+    resolver: row => {
+      const value = source.resolver(row);
+      if (value === undefined) return undefined;
+      return scale ? scale(value) : value;
+    },
+    descriptor: source.descriptor,
   };
 };
 
@@ -144,8 +151,8 @@ const pathNumericChannels: {
   strokeWidth: definePathChannel<number>({
     channel: 'strokeWidth',
     output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
-    resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.model, pickPathStrokeWidth, 'strokeWidth', {
+    resolve: (ctx, mark) =>
+      resolveNumericPathChannel(ctx.node, ctx.rows, ctx.model, pickPathStrokeWidth(mark), 'strokeWidth', {
         range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
         clamp: true,
       }),
@@ -157,36 +164,48 @@ const pathNumericChannels: {
     channel: 'opacity',
     output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     legend: 'ramp',
-    resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.model, pickPathOpacity, 'opacity', {
+    resolve: (ctx, mark) =>
+      resolveNumericPathChannel(ctx.node, ctx.rows, ctx.model, pickPathOpacity(mark), 'opacity', {
         range: [OPACITY_MIN, 1],
         clamp: true,
       }),
     deliver: (path, value) => {
-      path.style = { ...path.style, opacity: value };
+      path.style = {
+        ...path.style,
+        opacity: {
+          ...(typeof path.style?.opacity === 'number' ? { overall: path.style.opacity } : path.style?.opacity),
+          overall: value,
+        },
+      };
     },
   }),
   fillOpacity: definePathChannel<number>({
     channel: 'fillOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
-    resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.model, pickPathFillOpacity, 'fillOpacity', {
+    resolve: (ctx, mark) =>
+      resolveNumericPathChannel(ctx.node, ctx.rows, ctx.model, pickPathFillOpacity(mark), 'fillOpacity', {
         range: [0.2, 1],
         clamp: true,
       }),
     deliver: (path, value) => {
-      path.style = { ...path.style, fillOpacity: value };
+      path.style = {
+        ...path.style,
+        opacity: {
+          ...(typeof path.style?.opacity === 'number' ? { overall: path.style.opacity } : path.style?.opacity),
+          fill: value,
+        },
+      };
     },
   }),
   roundedCorners: definePathChannel<number>({
     channel: 'roundedCorners',
     output: { outputKind: 'number', range: [0, 0] },
-    resolve: ctx =>
-      makeNumericPathResolver(
+    resolve: (ctx, mark) =>
+      resolveNumericPathChannel(
         ctx.node,
         ctx.rows,
         ctx.model,
-        mark => pickStyleChannel<number>(mark, 'roundedCorners'),
+        pickStyleChannel<number>(mark, 'roundedCorners'),
         'roundedCorners',
       ),
     deliver: (path, value) => {
@@ -233,7 +252,13 @@ const directPathChannels = {
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     opacityNumber,
     (path, value) => {
-      path.style = { ...path.style, strokeOpacity: value };
+      path.style = {
+        ...path.style,
+        opacity: {
+          ...(typeof path.style?.opacity === 'number' ? { overall: path.style.opacity } : path.style?.opacity),
+          stroke: value,
+        },
+      };
     },
   ),
   zIndex: defineSimplePathChannel<number>(
@@ -314,7 +339,7 @@ export const BUILTIN_PATH_CHANNELS = {
   lineCap: definePathChannel<'butt' | 'round' | 'square'>({
     channel: 'lineCap',
     output: { outputKind: 'symbol', palette: [...lineCapValues] },
-    resolve: ctx => mark => {
+    resolve: (ctx, mark) => {
       return makeMarkValueResolver<'butt' | 'round' | 'square'>(
         pickStyleChannel<'butt' | 'round' | 'square'>(mark, 'lineCap'),
         ctx.model,
@@ -332,7 +357,7 @@ export const BUILTIN_PATH_CHANNELS = {
   lineJoin: definePathChannel<'miter' | 'round' | 'bevel'>({
     channel: 'lineJoin',
     output: { outputKind: 'symbol', palette: [...lineJoinValues] },
-    resolve: ctx => mark => {
+    resolve: (ctx, mark) => {
       return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(
         pickStyleChannel<'miter' | 'round' | 'bevel'>(mark, 'lineJoin'),
         ctx.model,

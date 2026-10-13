@@ -15,7 +15,7 @@ export const renderTreeConnectionsPreview = (values: TreeConnectionsPreviewValue
     <Tree
       root={{ content: 'A', children: ['B', { id: 'selected', content: 'C' }] }}
       layout={{ levelGap: 56, siblingGap: 72 }}
-      connection={{
+      defaultConnection={{
         ...(values.route === '-|-' || values.route === '|-|'
           ? { route: values.route, fraction: values.fraction }
           : { route: values.route }),

@@ -5,6 +5,8 @@ import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTa
 import { FoldStepVia } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { point } from '../../shared/geometry';
+import { createNodeGeometryContext } from '../node';
+import type { NodeGeometryContext } from '../node';
 import { boundaryPointOf, clipNodePolyline } from '../node';
 import { resolveAnchorRef } from '../reference';
 import { applyTransformChain, inverseTransformChain } from '../transform';
@@ -130,6 +132,7 @@ export const targetKeyOf = (target: IRTarget): string => {
 export const pathTargetViewOf = (
   targets: ReadonlyMap<string, TargetResolution>,
   warn?: (code: string, message: string, node?: NodeReferenceView) => void,
+  geometryContext: NodeGeometryContext = createNodeGeometryContext(),
 ): PathTargetView => {
   const byTarget = new Map<string, TargetResolution>();
 
@@ -160,6 +163,7 @@ export const pathTargetViewOf = (
         target.boundary ?? node.boundary,
         binding.boundaryResolution,
         warn === undefined ? undefined : (code, message) => warn(code, message, node),
+        geometryContext.get(node),
       );
       return clipped.map(position => inverseTransformChain(position, scopeChain));
     },
@@ -178,8 +182,9 @@ export const pathTargetViewOf = (
               boundary,
               binding.boundaryResolution,
               warn === undefined ? undefined : (code, message) => warn(code, message, node),
+              geometryContext.get(node),
             )
-          : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution);
+          : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution, geometryContext.get(node));
       const global = addOffset(base, target.offset);
 
       return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);

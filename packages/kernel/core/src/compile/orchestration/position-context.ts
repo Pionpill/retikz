@@ -5,22 +5,10 @@ import type { PositionReferenceView, PositionTargetResolveContext } from '../../
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
-import type { NodeLayout } from '../node';
+import { nodeReferenceViewOf } from '../node';
+import type { NodeGeometryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
 import { applyTransformChain, inverseTransformChain } from '../transform';
-
-/** 将已完成 layout 的节点投影为 resolver 可消费的纯引用视图 */
-export const nodeReferenceViewOf = (node: NodeLayout): NodeReferenceView => ({
-  id: node.id,
-  shapeName: node.shapeName,
-  shapeDef: node.shapeDef,
-  shapeParams: { ...(node.shapeParams ?? {}) },
-  rect: { ...node.rect },
-  margin: { ...node.margin },
-  boundary: node.boundary,
-  boundaryResolution: node.boundaryResolution,
-  irPath: node.irPath,
-});
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
 const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryReferenceResolution => ({
@@ -52,6 +40,8 @@ const targetBoundaryResolutionOf = (
 export type CreatePositionResolveContextInput = Readonly<{
   /** 当前命名空间 */
   namespaceStack: NamespaceStack;
+  /** 与节点布局及路径裁剪共享的几何消费状态 */
+  geometryContext?: NodeGeometryContext;
   /** 相对定位默认距离 */
   nodeDistance: number;
   /** 当前 Scope 累积 transform */
@@ -71,7 +61,9 @@ export const createPositionResolveContext = (
 
   const lookupReference = (id: string): PositionReferenceView | undefined => {
     const entry = namespaceStack.lookupEntry(id);
-    return entry === undefined ? undefined : { state: entry.state, node: nodeReferenceViewOf(entry.layout) };
+    return entry === undefined
+      ? undefined
+      : { state: entry.state, node: nodeReferenceViewOf(entry.layout, input.geometryContext) };
   };
 
   const toLocal = (world: IRPosition): IRPosition =>
@@ -88,7 +80,13 @@ export const createPositionResolveContext = (
   ): IRPosition => {
     const node = reference.node;
     if (target.anchor === undefined) return [node.rect.x, node.rect.y];
-    return resolveAnchorRef(node, target.anchor, target.boundary ?? node.boundary, boundaryResolution);
+    return resolveAnchorRef(
+      node,
+      target.anchor,
+      target.boundary ?? node.boundary,
+      boundaryResolution,
+      input.geometryContext?.get(node),
+    );
   };
 
   const resolveBetweenWorld = (between: IRBetweenPosition): IRPosition | null =>

@@ -24,7 +24,6 @@ const base = { namespace: 'standard', type: 'chain' } as const;
 it('奇数空轨道留在末端，JSON 数据不猜测分支结构', () => {
   const result = compile({
     ...base,
-    layout: { width: 20, height: 10, gap: 10, justify: 'center' },
     items: [
       'A',
       {
@@ -36,6 +35,8 @@ it('奇数空轨道留在末端，JSON 数据不猜测分支结构', () => {
       },
       'E',
     ],
+    layout: { gap: 10, justify: 'center' },
+    defaultCell: { layout: { width: 20, height: 10 } },
   });
   const first = resolveSpatialHandle(result.spatialHandles, { id: 'cell:first' }).geometry.bounds;
   const short = resolveSpatialHandle(result.spatialHandles, { id: 'cell:short' }).geometry.bounds;
@@ -58,8 +59,8 @@ it('外部路径连接显式单元边框，局部命名空间隔离同名内容'
         createChain({
           ...base,
           items: [{ kind: 'cell', id: 'target' }],
-          layout: { width: 20, height: 10 },
           transforms: [{ kind: 'translate', x: 7, y: 11 }],
+          defaultCell: { layout: { width: 20, height: 10 } },
         }),
         {
           type: 'path',
@@ -92,7 +93,6 @@ it('外部路径连接显式单元边框，局部命名空间隔离同名内容'
 it('共享轨道采用实际相邻项的间距需求，允许嵌套块缩小局部间距', () => {
   const result = compile({
     ...base,
-    layout: { width: 20, height: 10, gap: 24 },
     items: [
       'Root',
       {
@@ -114,6 +114,8 @@ it('共享轨道采用实际相邻项的间距需求，允许嵌套块缩小局�
       },
       'End',
     ],
+    layout: { gap: 24 },
+    defaultCell: { layout: { width: 20, height: 10 } },
   });
   const last = resolveSpatialHandle(result.spatialHandles, { id: 'cell:last' }).geometry.bounds;
   const after = resolveSpatialHandle(result.spatialHandles, { id: 'cell:after' }).geometry.bounds;
@@ -150,7 +152,8 @@ it('父约束不足时失败，充足空间不拉伸单元或间距', () => {
                 { kind: 'cell', id: 'a' },
                 { kind: 'cell', id: 'b' },
               ],
-              layout: { width: 20, height: 10, gap: 10 },
+              layout: { gap: 10 },
+              defaultCell: { layout: { width: 20, height: 10 } },
             }),
           },
         ],
@@ -171,7 +174,6 @@ it('父约束不足时失败，充足空间不拉伸单元或间距', () => {
 it('不等尺寸步骤保持中心对齐且嵌套块不摊平成全局轨道', () => {
   const result = compile({
     ...base,
-    layout: { width: 20, height: 10, gap: 10, branchGap: 10 },
     items: [
       'A',
       {
@@ -189,6 +191,8 @@ it('不等尺寸步骤保持中心对齐且嵌套块不摊平成全局轨道', (
       },
       'H',
     ],
+    layout: { gap: 10, branchGap: 10 },
+    defaultCell: { layout: { width: 20, height: 10 } },
   });
   const wide = resolveSpatialHandle(result.spatialHandles, { id: 'cell:wide' }).geometry.bounds;
   const small = resolveSpatialHandle(result.spatialHandles, { id: 'cell:small' }).geometry.bounds;
@@ -209,8 +213,7 @@ const connections = (result: ReturnType<typeof compile>) =>
 it('正交通道在完整分支之外，纵向与横向互为转置', () => {
   const source = {
     ...base,
-    layout: { width: 20, height: 20, gap: 10, branchGap: 10 },
-    connection: { path: { marks: [], meta: { chainConnection: true } } },
+    defaultConnection: { path: { marks: [], meta: { chainConnection: true } } },
     items: [
       { kind: 'cell' as const, id: 'a' },
       {
@@ -222,6 +225,8 @@ it('正交通道在完整分支之外，纵向与横向互为转置', () => {
       },
       { kind: 'cell' as const, id: 'e' },
     ],
+    layout: { gap: 10, branchGap: 10 },
+    defaultCell: { layout: { width: 20, height: 20 } },
   };
   const result = compile(source);
   const paths = connections(result);
@@ -252,12 +257,12 @@ it('正交通道在完整分支之外，纵向与横向互为转置', () => {
 it('局部连接覆盖保留样式字段并显式移除箭头', () => {
   const result = compile({
     ...base,
-    connection: { path: { meta: { chainConnection: true }, style: { stroke: 'blue', strokeWidth: 3 } } },
+    defaultConnection: { path: { meta: { chainConnection: true }, style: { stroke: 'blue', strokeWidth: 3 } } },
     items: [
       'A',
       {
         kind: 'parallel',
-        connection: { route: 'straight', path: { marks: [], style: { stroke: 'red' } } },
+        defaultConnection: { route: 'straight', path: { marks: [], style: { stroke: 'red' } } },
         branches: [{ items: ['B', 'C'] }, { items: ['D'] }],
       },
       'E',
@@ -290,9 +295,9 @@ it('空根保持零 allocation 与标签，单单元无连接，变换保留真�
   const single = compile({
     ...base,
     items: [{ kind: 'cell', id: 'only' }],
-    layout: { width: 30, height: 10 },
     transforms: [{ kind: 'rotate', degrees: 90 }],
-    connection: { path: { meta: { chainConnection: true } } },
+    defaultConnection: { path: { meta: { chainConnection: true } } },
+    defaultCell: { layout: { width: 30, height: 10 } },
   });
 
   expect(connections(single)).toHaveLength(0);
@@ -311,7 +316,6 @@ it('骨架三表示复用同一单元与连接语义', () => {
 it('分叉占共享步骤，汇合回主干且只注册真实单元', () => {
   const result = compile({
     ...base,
-    layout: { width: 20, height: 10, gap: 10, branchGap: 10 },
     items: [
       { kind: 'cell', id: 'a' },
       {
@@ -328,6 +332,8 @@ it('分叉占共享步骤，汇合回主干且只注册真实单元', () => {
       },
       { kind: 'cell', id: 'e' },
     ],
+    layout: { gap: 10, branchGap: 10 },
+    defaultCell: { layout: { width: 20, height: 10 } },
   });
   const cells = result.spatialHandles.entries.filter(e => e.role === 'chain-cell');
 
@@ -345,7 +351,6 @@ it('短分支对齐在独立与步骤布局下保持真实单元数量', () => {
     for (const justify of ['start', 'center', 'end'] as const) {
       const result = compile({
         ...base,
-        layout: { width: 20, height: 10, gap: 10, spacing, justify },
         items: [
           'A',
           {
@@ -354,6 +359,8 @@ it('短分支对齐在独立与步骤布局下保持真实单元数量', () => {
           },
           'E',
         ],
+        layout: { gap: 10, spacing, justify },
+        defaultCell: { layout: { width: 20, height: 10 } },
       });
       const find = (id: string) => result.spatialHandles.entries.find(e => e.id === `cell:${id}`)!.geometry.bounds;
 
@@ -364,7 +371,6 @@ it('主干和端部对齐以完整支路包围盒为准', () => {
   for (const branchAlign of ['start', 'center', 'end', { branch: 1 }] as const) {
     const result = compile({
       ...base,
-      layout: { width: 20, height: 10, branchGap: 10, branchAlign },
       items: [
         { kind: 'cell', id: 'a' },
         {
@@ -373,6 +379,8 @@ it('主干和端部对齐以完整支路包围盒为准', () => {
         },
         'E',
       ],
+      layout: { branchGap: 10, branchAlign },
+      defaultCell: { layout: { width: 20, height: 10 } },
     });
     const find = (id: string) => result.spatialHandles.entries.find(e => e.id === `cell:${id}`)!.geometry.bounds;
 
@@ -382,11 +390,12 @@ it('主干和端部对齐以完整支路包围盒为准', () => {
 it('纵向布局交换主轴但保留单元物理宽高', () => {
   const result = compile({
     ...base,
-    layout: { direction: 'down', width: 30, height: 10, gap: 12 },
     items: [
       { kind: 'cell', id: 'a' },
       { kind: 'cell', id: 'b' },
     ],
+    layout: { direction: 'down', gap: 12 },
+    defaultCell: { layout: { width: 30, height: 10 } },
   });
   const cells = result.spatialHandles.entries.filter(e => e.role === 'chain-cell').map(e => e.geometry.bounds);
 
@@ -396,7 +405,6 @@ it('纵向布局交换主轴但保留单元物理宽高', () => {
 it('嵌套并行块局部字段不重置继承的对齐', () => {
   const result = compile({
     ...base,
-    layout: { width: 20, height: 10, spacing: 'independent', justify: 'end' },
     items: [
       'A',
       {
@@ -406,6 +414,8 @@ it('嵌套并行块局部字段不重置继承的对齐', () => {
       },
       'E',
     ],
+    layout: { spacing: 'independent', justify: 'end' },
+    defaultCell: { layout: { width: 20, height: 10 } },
   });
   const find = (id: string) => result.spatialHandles.entries.find(e => e.id === `cell:${id}`)!.geometry.bounds;
 
@@ -472,9 +482,14 @@ it.each([
 ])('显式 $route 在 $direction 排列中保持物理方向并继承中段比例', ({ direction, route, points }) => {
   const result = compile({
     ...base,
-    layout: { direction, width: 20, height: 20, gap: 10, branchGap: 10 },
-    connection: { route, fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
-    items: ['A', { kind: 'parallel', connection: { route }, branches: [{ items: ['B', 'C'] }, { items: ['D'] }] }, 'E'],
+    defaultConnection: { route, fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
+    items: [
+      'A',
+      { kind: 'parallel', defaultConnection: { route }, branches: [{ items: ['B', 'C'] }, { items: ['D'] }] },
+      'E',
+    ],
+    layout: { direction, gap: 10, branchGap: 10 },
+    defaultCell: { layout: { width: 20, height: 20 } },
   });
   expect(connections(result)[0].commands).toEqual(
     points.map((to, index) => ({ kind: index === 0 ? 'move' : 'line', to })),
@@ -485,8 +500,7 @@ it('三段折线缺省使用中点，局部零比例覆盖继承值', () => {
   for (const fraction of [undefined, 0]) {
     const result = compile({
       ...base,
-      layout: { width: 20, height: 20, gap: 10, branchGap: 10 },
-      connection: {
+      defaultConnection: {
         route: '-|-',
         fraction: fraction === undefined ? undefined : 0.75,
         path: { marks: [], meta: { chainConnection: true } },
@@ -495,11 +509,13 @@ it('三段折线缺省使用中点，局部零比例覆盖继承值', () => {
         'A',
         {
           kind: 'parallel',
-          connection: { route: '-|-', fraction },
+          defaultConnection: { route: '-|-', fraction },
           branches: [{ items: ['B', 'C'] }, { items: ['D'] }],
         },
         'E',
       ],
+      layout: { gap: 10, branchGap: 10 },
+      defaultCell: { layout: { width: 20, height: 20 } },
     });
     const commands = connections(result)[0].commands;
     expect(commands).toContainEqual({ kind: 'line', to: [fraction === undefined ? 25 : 10, 10] });
@@ -511,8 +527,7 @@ it('嵌套不等宽分支平移后，连接仍贴合最终单元边界', () => {
   for (const direction of ['right', 'down'] as const) {
     const result = compile({
       ...base,
-      layout: { direction, width: 20, height: 20, gap: 10, branchGap: 10 },
-      connection: { path: { marks: [], meta: { chainConnection: true } } },
+      defaultConnection: { path: { marks: [], meta: { chainConnection: true } } },
       items: [
         { kind: 'cell', id: 'a' },
         {
@@ -533,6 +548,8 @@ it('嵌套不等宽分支平移后，连接仍贴合最终单元边界', () => {
         },
         { kind: 'cell', id: 'g' },
       ],
+      layout: { direction, gap: 10, branchGap: 10 },
+      defaultCell: { layout: { width: 20, height: 20 } },
     });
     const bounds = (id: string) => resolveSpatialHandle(result.spatialHandles, { id: `cell:${id}` }).geometry.bounds;
     const paths = connections(result);
@@ -566,17 +583,18 @@ it('样式覆盖继承原路由，切换路由不继承旧折转比例', () => {
   for (const route of [undefined, 'straight', '|-|'] as const) {
     const result = compile({
       ...base,
-      layout: { width: 20, height: 20, gap: 10, branchGap: 10 },
-      connection: { route: '-|-', fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
+      defaultConnection: { route: '-|-', fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
       items: [
         'A',
         {
           kind: 'parallel',
-          connection: { route, path: { style: { stroke: 'red' } } },
+          defaultConnection: { route, path: { style: { stroke: 'red' } } },
           branches: [{ items: ['B'] }, { items: ['C'] }],
         },
         'D',
       ],
+      layout: { gap: 10, branchGap: 10 },
+      defaultCell: { layout: { width: 20, height: 20 } },
     });
     const path = connections(result)[0];
     expect(path.stroke).toBe('red');
@@ -640,9 +658,10 @@ it.each([
 ])('两段 $route 在 $direction 排列中按路径方向连接整个单元边界', ({ direction, route, points }) => {
   const result = compile({
     ...base,
-    layout: { direction, width: 20, height: 20, gap: 10, branchGap: 10 },
-    connection: { route, path: { marks: [], meta: { chainConnection: true } } },
+    defaultConnection: { route, path: { marks: [], meta: { chainConnection: true } } },
     items: ['A', { kind: 'parallel', branches: [{ items: ['B'] }, { items: ['C'] }] }, 'D'],
+    layout: { direction, gap: 10, branchGap: 10 },
+    defaultCell: { layout: { width: 20, height: 20 } },
   });
   expect(connections(result)[0].commands).toEqual(
     points.map((to, index) => ({ kind: index === 0 ? 'move' : 'line', to })),

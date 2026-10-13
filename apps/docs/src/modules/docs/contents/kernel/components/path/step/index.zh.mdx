@@ -326,7 +326,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### 渐变描边
 
-渐变描边可沿线改变颜色，但不能自动给箭头取色；带箭头时还需单独指定箭头颜色。`stroke` 除纯色字符串外还接 `IRPaint`（渐变、图案或图像等填色资源）。线性 / 径向 / 锥形渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。面板可切换三种渐变：线性渐变调方向角，径向渐变调中心和半径，锥形渐变调中心和起始角；三者共用相同的三个色标。曲线展示描边效果，下方色板帮助观察完整的渐变分布。
+渐变描边可沿线改变颜色，但不能自动给箭头取色；带箭头时还需单独指定箭头颜色。`stroke` 除纯色字符串外还接 `IRPaint`（渐变、图案或图像等填色资源）。线性 / 径向 / 锥形渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`opacity.stroke` 等描边样式照常作用在这条线本身。面板可切换三种渐变：线性渐变调方向角，径向渐变调中心和半径，锥形渐变调中心和起始角；三者共用相同的三个色标。曲线展示描边效果，下方色板帮助观察完整的渐变分布。
 
 <ComponentPreview
   files={['path-stroke-paint', 'path-stroke-paint.preview.tsx']}

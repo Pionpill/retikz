@@ -81,7 +81,7 @@ export type PlotCommonProps<TSource = never> = PlotStandaloneProps &
 /** Plot-owned theme 输入 */
 export type PlotThemeProps = {
   /** Plot Source 的稀疏默认片段 */
-  plotDefaults?: IRPlot['plotDefaults'];
+  defaultPlot?: IRPlot['defaultPlot'];
   /** 按 Axis dimension 应用的有序 Plot Source 规则 */
   plotRules?: IRPlot['plotRules'];
 };

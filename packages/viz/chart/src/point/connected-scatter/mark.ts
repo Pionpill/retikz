@@ -4,7 +4,7 @@ import { PathMarkSchema, BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
-import { requiredFieldOf, resolvePointMark } from '../shared';
+import { markOpacityOf, mergeMarkProperties, requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import type { IRConnectedScatterChartProperties, IRConnectedScatterMark } from './schema';
 import { ConnectedScatterChartMarkSchema } from './schema';
@@ -26,22 +26,15 @@ const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): JsonOb
   const source = properties.path ?? {};
   const result: JsonObject = {};
 
-  for (const name of [
-    'strokeWidth',
-    'strokeOpacity',
-    'opacity',
-    'lineCap',
-    'lineJoin',
-    'dashPattern',
-    'shadow',
-    'blendMode',
-  ] as const) {
+  for (const name of ['strokeWidth', 'lineCap', 'lineJoin', 'dashPattern', 'shadow', 'blendMode'] as const) {
     if (source[name] !== undefined) result[name] = { kind: 'constant', value: source[name] };
   }
 
-  if (properties.colorMode === 'muted' && source.strokeOpacity === undefined) {
-    result.strokeOpacity = { kind: 'constant', value: 0.6 };
-  }
+  const opacity = markOpacityOf(
+    {},
+    mergeMarkProperties(properties.colorMode === 'muted' ? { opacity: { stroke: 0.6 } } : {}, source),
+  );
+  if (opacity !== undefined) result.opacity = opacity;
 
   if (source.connectNulls !== undefined) result.connectNulls = source.connectNulls;
   if (source.curve !== undefined) result.curve = source.curve;
@@ -107,10 +100,10 @@ const mergedPropertiesOf = (
     ...inherited,
     ...explicit,
     ...(inherited.point !== undefined || explicit.point !== undefined
-      ? { point: { ...(inherited.point ?? {}), ...(explicit.point ?? {}) } }
+      ? { point: mergeMarkProperties(inherited.point, explicit.point) }
       : {}),
     ...(inherited.path !== undefined || explicit.path !== undefined
-      ? { path: { ...(inherited.path ?? {}), ...(explicit.path ?? {}) } }
+      ? { path: mergeMarkProperties(inherited.path, explicit.path) }
       : {}),
   };
 };

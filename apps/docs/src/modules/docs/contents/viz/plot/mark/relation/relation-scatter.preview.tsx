@@ -33,9 +33,8 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
         y="y"
         anchorId={{ prefix: 'node', field: 'id' }}
         color="group"
-        label="label"
-        labelPosition={values.nodeLabelPosition}
-        labelTextColor="currentColor"
+        label={{ field: 'label', position: values.nodeLabelPosition, textColor: 'currentColor' }}
+
         fill="#f8fafc"
         stroke="#334155"
         strokeWidth={1}
@@ -47,9 +46,9 @@ export const RelationScatterPreview = (values: RelationScatterPreviewValues) => 
         target={{ anchorId: { prefix: 'node', field: 'target' } }}
         style={{
           color: { kind: 'constant', value: values.color },
-          opacity: { kind: 'constant', value: values.opacity },
           strokeWidth: { kind: 'constant', value: values.strokeWidth },
           zIndex: { kind: 'constant', value: 1 },
+          opacity: { overall: { kind: 'constant', value: values.opacity } },
         }}
         path={{
           label: {

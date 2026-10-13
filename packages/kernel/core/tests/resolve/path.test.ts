@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src';
 import type { IRPathBase, IRScene, IRStep } from '../../src/schemas';
-import { resolvePathWithBuiltinProviders } from './path-helper';
+import { resolvePathWithBuiltinProviders, resolveStrokePathWithBuiltinProviders } from './path-helper';
 
 const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
   type: 'path',
@@ -20,26 +20,22 @@ const sceneWith = (pathValue: IRPathBase): IRScene => ({
 });
 
 describe('resolvePath', () => {
-  it('resolves path style defaults before compile materialization', () => {
-    expect(resolvePathWithBuiltinProviders(path()).style).toEqual({
+  it('resolves effective width and Stroke paint defaults without changing explicit values', () => {
+    const resolved = resolvePathWithBuiltinProviders(path(), { irPath: 'children[2].path' });
+    expect(resolved.irPath).toBe('children[2].path');
+    expect(resolved.path.strokeWidth).toBe(1);
+    expect(resolveStrokePathWithBuiltinProviders(path()).path).toMatchObject({
       strokeWidth: 1,
-      strokeRequested: false,
-      strokeFillDefault: 'none',
-      strokeDefault: 'currentColor',
+      fill: 'none',
+      stroke: 'currentColor',
     });
-
     expect(
-      resolvePathWithBuiltinProviders(
+      resolveStrokePathWithBuiltinProviders(
         path({
-          style: { strokeWidth: 2 },
+          style: { strokeWidth: 2, fill: 'gold', stroke: 'none' },
         }),
-      ).style,
-    ).toEqual({
-      strokeWidth: 2,
-      strokeRequested: true,
-      strokeFillDefault: 'none',
-      strokeDefault: 'currentColor',
-    });
+      ).path,
+    ).toMatchObject({ strokeWidth: 2, fill: 'gold', stroke: 'none' });
   });
 
   it('expands bend and shape close defaults while preserving explicit values', () => {

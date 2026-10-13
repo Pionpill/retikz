@@ -36,7 +36,7 @@ import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from '.
  */
 export type TypedChartCommonProps<TSource extends IRChartSource, TNative = never> = ChartPanelProps &
   ChartThemeDefinitionsProps &
-  Pick<TSource, 'id' | 'background' | 'chartDefaults' | 'dataExecution'> &
+  Pick<TSource, 'id' | 'background' | 'defaultChart' | 'dataExecution'> &
   ChartDataRuntimeProps<TNative> &
   Readonly<{
     /** Core host Theme 环境 */
@@ -119,7 +119,7 @@ const plotExtensionOf = (
   if (fragment === undefined) return extension;
 
   const passive = {
-    ...(extension?.plotDefaults === undefined ? {} : { plotDefaults: extension.plotDefaults }),
+    ...(extension?.defaultPlot === undefined ? {} : { defaultPlot: extension.defaultPlot }),
     ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
     ...(extension?.meta === undefined ? {} : { meta: extension.meta }),
   };
@@ -203,7 +203,7 @@ export const createTypedChartInput = <
   const {
     id,
     background,
-    chartDefaults,
+    defaultChart,
     theme,
     rows: rootRows,
     data: rootData,
@@ -322,7 +322,7 @@ export const createTypedChartInput = <
     ...(effectiveCoordinate === undefined ? {} : { coordinate: effectiveCoordinate }),
     ...(id === undefined ? {} : { id }),
     ...(background === undefined ? {} : { background }),
-    ...(chartDefaults === undefined ? {} : { chartDefaults }),
+    ...(defaultChart === undefined ? {} : { defaultChart }),
     ...(theme === undefined ? {} : { theme }),
     ...(effectivePlotExtension === undefined ? {} : { plotExtension: effectivePlotExtension }),
     ...(panel === undefined ? {} : { panel }),

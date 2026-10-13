@@ -159,13 +159,13 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 全图默认值
 
-全图默认值通过包住所有图元的根 [Scope](/kernel/components/scope/usage) 设置，React、Vanilla 和 IR 都可以使用。Layout 为 JSX 提供了 `rootScope` 便捷属性，自动创建这层 Scope，并将 `style` 与 `defaults` 传给它；Vanilla 使用 `scope(...)`，IR 则在场景的 `children` 中声明 `type: 'scope'`，同样包住全部图元。
+全图默认值通过包住所有图元的根 [Scope](/kernel/components/scope/usage) 设置，React、Vanilla 和 IR 都可以使用。Layout 为 JSX 提供了 `rootScope` 便捷属性，自动创建这层 Scope，并将 `defaults` 传给它；Vanilla 使用 `scope(...)`，IR 则在场景的 `children` 中声明 `type: 'scope'`，同样包住全部图元。
 
-| 属性        | 类型                                      | 描述                                       |
-| ----------- | ----------------------------------------- | ------------------------------------------ |
-| `rootScope` | `Pick<InputScope, 'style' \| 'defaults'>` | 全图级联视觉覆盖、四个默认值通道与继承屏障 |
+| 属性        | 类型                           | 描述                                       |
+| ----------- | ------------------------------ | ------------------------------------------ |
+| `rootScope` | `Pick<InputScope, 'defaults'>` | 全图级联视觉覆盖、四个默认值通道与继承屏障 |
 
-下面三个 Node 和三条 Path（通过 Draw 声明）都没有局部样式。调整 `rootScope.style` 的描边与不透明度，观察所有图元一起变化；`rootScope.defaults.node` 的填充和内边距只作用于节点。示例的蓝色、线宽与内边距为演示设置，不是库的默认值。
+下面三个 Node 和三条 Path（通过 Draw 声明）都没有局部样式。调整 `rootScope.defaults.style` 的描边与不透明度，观察所有图元一起变化；`rootScope.defaults.node` 的填充和内边距只作用于节点。示例的蓝色、线宽与内边距为演示设置，不是库的默认值。
 
 <ComponentPreview
   files={['layout-defaults', 'layout-defaults.preview.tsx']}
@@ -178,7 +178,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 - **渲染后端**：默认输出 SVG，设置 `renderer="canvas"` 切换到 Canvas。动画播放与静态截帧见[动画](/kernel/visual/animation/usage)。
 - **输入优先级**：React 同时传入 `ir` 和 `children` 时采用 `ir`。
 - **全图默认值**：传入完整 `ir` 时，应在 IR 中声明根 Scope；Layout 不再应用 `rootScope`，存在有效配置时会在开发环境提示。
-- **样式作用范围**：`Layout.style` 设置宿主 CSS；图元样式使用 `rootScope.style`。
+- **样式作用范围**：`Layout.style` 设置宿主 CSS；图元样式使用 `rootScope.defaults.style`。
 
 ## 相关属性
 
@@ -200,7 +200,7 @@ const view = mount(document.getElementById('diagram')!, ir);
     {
       name: 'rootScope',
       kind: 'property',
-      type: "Pick<InputScope, 'style' | 'defaults'>",
+      type: "Pick<InputScope, 'defaults'>",
       description: 'JSX 子图的隐式根 Scope；为全图设置级联样式和各类图元的默认值。',
     },
     {

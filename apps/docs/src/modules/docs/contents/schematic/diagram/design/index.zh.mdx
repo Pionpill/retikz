@@ -57,13 +57,13 @@ Flow 负责测量、布局与路由，并将结果交给 Graph 绘制。它有�
 
 ## 默认样式不创造内容
 
-Theme 提供外观基线，`diagramDefaults` 提供作者的显式默认值，实例字段最后覆盖。命名主题通过 `theme.style` 选择同名 Definition，明暗模式由 `theme.mode` 指定；这些设置不代替内容与关系声明。
+Theme 提供外观基线，`defaultDiagram` 提供作者的显式默认值，实例字段最后覆盖。命名主题通过 `theme.style` 选择同名 Definition，明暗模式由 `theme.mode` 指定；这些设置不代替内容与关系声明。
 
-`diagramDefaults.presentation.title/description` 与正式说明区域路径一致，只包含 `style.textColor/font/opacity` 和 `layout.align/lineHeight/maxTextWidth`，不包含 `text`。设置标题默认字体不会创建一个标题；字体配置整体替换。
+`defaultDiagram.presentation.title/description` 与正式说明区域路径一致，只包含 `style.textColor/font/opacity` 和 `layout.align/lineHeight/maxTextWidth`，不包含 `text`。设置标题默认字体不会创建一个标题；字体配置整体替换。
 
-`diagramDefaults.frame` 提供 padding、三类间距、背景、边框与圆角，图例方位与 overflow 在正式 `frame` 中指定。Theme Definition 返回同样的稀疏结构，未设置的字段继续沿用基线。
+`defaultDiagram.frame` 提供 padding、三类间距、背景、边框与圆角，图例方位与 overflow 在正式 `frame` 中指定。Theme Definition 返回同样的稀疏结构，未设置的字段继续沿用基线。
 
-具体组件的默认值单独管理。例如 Flow 的 `flowDefaults` 设置对象和关系的表现默认值；布局方向与 routing 仍使用正式字段，不藏进主题。详细覆盖顺序见 Flow 基础用法。
+具体组件的默认值单独管理。例如 Flow 的 `defaultFlow` 设置对象和关系的表现默认值；布局方向与 routing 仍使用正式字段，不藏进主题。详细覆盖顺序见 Flow 基础用法。
 
 ## 延伸阅读
 

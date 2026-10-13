@@ -58,8 +58,9 @@ describe('Array / Map allocation', () => {
     const result = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { direction, width: 'content', height: 20, padding: 4, gap: 2 },
       items: [cell('a', 20, 10), cell('b', 40, 10)],
+      layout: { direction, gap: 2 },
+      defaultCell: { layout: { width: 'content', height: 20, padding: 4 } },
     });
     const bounds = result.scene.spatialHandles.entries
       .filter(entry => entry.role === 'array-cell')
@@ -85,12 +86,13 @@ describe('Array / Map allocation', () => {
     const result = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content', height: 20, padding: 0, gap: 2 },
       items: [
         cell('a', 20, 10),
         { ...cell('b', 40, 10), layout: { width: 'auto' } },
         { ...cell('c', 60, 10), layout: { width: 10 } },
       ],
+      layout: { gap: 2 },
+      defaultCell: { layout: { width: 'content', height: 20, padding: 0 } },
     });
 
     expect(
@@ -111,8 +113,9 @@ describe('Array / Map allocation', () => {
       id: 'values',
       cellIdMode: 'index',
       data: ['A', 'longer'],
-      layout: { width: 'content', padding: 4, gap: 2 },
       index: { position: 'after' },
+      layout: { gap: 2 },
+      defaultCell: { layout: { width: 'content', padding: 4 } },
     });
     const cells = result.scene.spatialHandles.entries
       .filter(entry => entry.role === 'array-cell')
@@ -127,8 +130,9 @@ describe('Array / Map allocation', () => {
     const result = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'auto', height: 20, padding: 0, gap: 2 },
       items: [{ ...cell('a', 20, 10), layout: { width: 'content' } }, cell('b', 40, 10)],
+      layout: { gap: 2 },
+      defaultCell: { layout: { width: 'auto', height: 20, padding: 0 } },
     });
 
     expect(
@@ -153,8 +157,9 @@ describe('Array / Map allocation', () => {
     const base = {
       namespace: 'standard',
       type: 'array',
-      layout: { direction, width: 40, height: 20, padding: 0, gap: 6 },
       items: [cell('a', 40, 20), cell('b', 40, 20)],
+      layout: { direction, gap: 6 },
+      defaultCell: { layout: { width: 40, height: 20, padding: 0 } },
     };
     const before = compile({ ...base, index: { position: 'before', style: { font: { size: 24 } } } });
     const after = compile({ ...base, index: { position: 'after', style: { font: { size: 24 } } } });
@@ -193,12 +198,13 @@ describe('Array / Map allocation', () => {
     const source = {
       namespace: 'standard',
       type: 'array',
-      layout: { direction, width: 30, height: 20, padding: 0 },
       items: [
         { ...cell('a', 80, 60), layout: { width: 8, height: 10 } },
         { ...cell('b', 40, 10), layout: { width: 'auto' } },
         cell('c', 70, 80),
       ],
+      layout: { direction },
+      defaultCell: { layout: { width: 30, height: 20, padding: 0 } },
     };
     const before = JSON.stringify(source);
     const result = compile(source);
@@ -226,11 +232,15 @@ describe('Array / Map allocation', () => {
     const result = compile({
       namespace: 'standard',
       type: 'map',
-      layout: { width: 30, height: 20, padding: 0, key: { width: 10 }, value: { width: 50, height: 25 } },
       entries: [
         { key: { ...cell('a', 80, 60), layout: { width: 5, height: 7 } }, value: cell('b', 80, 60) },
         { key: cell('c', 80, 60), value: { ...cell('d', 70, 60), layout: { width: 'auto', height: 9 } } },
       ],
+      defaultCell: {
+        layout: { width: 30, height: 20, padding: 0 },
+        key: { layout: { width: 10 } },
+        value: { layout: { width: 50, height: 25 } },
+      },
     });
 
     expect(
@@ -272,8 +282,9 @@ describe('Array / Map allocation', () => {
     const { observed } = compile({
       namespace: 'standard',
       type: 'array',
-      layout: { direction: 'column', gap: 0, padding: 0 },
       items: [cell('a', 20, 10), cell('b', 30, 20)],
+      layout: { direction: 'column', gap: 0 },
+      defaultCell: { layout: { padding: 0 } },
     });
 
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 30, height: 40 });
@@ -296,8 +307,12 @@ describe('Array / Map allocation', () => {
       ),
     ).toThrow();
     expect(
-      compile({ namespace: 'standard', type: 'array', layout: { width: 1, height: 0 }, items: [cell('a', 20, 10)] })
-        .observed.allocationBounds,
+      compile({
+        namespace: 'standard',
+        type: 'array',
+        items: [cell('a', 20, 10)],
+        defaultCell: { layout: { width: 1, height: 0 } },
+      }).observed.allocationBounds,
     ).toEqual({ x: 0, y: 0, width: 1, height: 0 });
   });
 
@@ -334,8 +349,8 @@ it('centers third-party content with a negative origin and preserves its own spa
     {
       namespace: 'standard',
       type: 'array',
-      layout: { width: 60, height: 50 },
       items: [{ id: 'cell', content: { namespace: 'cell-test', type: 'foreign' } }],
+      defaultCell: { layout: { width: 60, height: 50 } },
     },
     intrinsicLayoutProposal('natural'),
     [custom],
@@ -399,8 +414,8 @@ it('measures fixed-cell content naturally without repeated layout compilation', 
     {
       namespace: 'standard',
       type: 'array',
-      layout: { width: 10, height: 10 },
       items: Array.from({ length: 6 }, () => ({ content: { namespace: 'cell-test', type: 'measured' } })),
+      defaultCell: { layout: { width: 10, height: 10 } },
     },
     intrinsicLayoutProposal('natural'),
     [measured],

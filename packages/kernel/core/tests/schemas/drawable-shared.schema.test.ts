@@ -39,13 +39,11 @@ describe('Drawable shared schema', () => {
         style: {
           color: 'crimson',
           fill: '#fee2e2',
-          fillOpacity: 0.4,
           stroke: '#991b1b',
           strokeWidth: 2,
-          strokeOpacity: 0.7,
-          opacity: 0.8,
           shadow: 'md',
           blendMode: 'multiply',
+          opacity: { fill: 0.4, stroke: 0.7, overall: 0.8 },
         },
       }),
     );
@@ -70,13 +68,11 @@ describe('Drawable shared schema', () => {
         style: {
           color: 'teal',
           fill: '#ccfbf1',
-          fillOpacity: 0.5,
           stroke: '#0f766e',
           strokeWidth: 1.5,
-          strokeOpacity: 0.75,
-          opacity: 0.9,
           shadow: { offsetX: 1, offsetY: 2, blur: 3 },
           blendMode: 'screen',
+          opacity: { fill: 0.5, stroke: 0.75, overall: 0.9 },
         },
       }),
     );
@@ -139,9 +135,7 @@ describe('Drawable shared schema', () => {
       fill: '#e0f2fe',
       stroke: '#0369a1',
       strokeWidth: 2,
-      opacity: 0.8,
-      fillOpacity: 0.4,
-      strokeOpacity: 0.6,
+      opacity: { overall: 0.8, fill: 0.4, stroke: 0.6 },
       shadow: 'sm',
       blendMode: 'multiply',
     };

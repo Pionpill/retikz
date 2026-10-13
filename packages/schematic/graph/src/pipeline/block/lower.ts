@@ -16,7 +16,7 @@ export const blockScopeProps = (source: IRBlock): Omit<IRScope, 'type' | 'childr
   const {
     namespace: _namespace,
     type: _type,
-    graphDefaults: _graphDefaults,
+    defaultGraph: _defaultGraph,
     graphRules: _graphRules,
     children: _children,
     width: _width,
@@ -31,7 +31,7 @@ export const blockScopeProps = (source: IRBlock): Omit<IRScope, 'type' | 'childr
   } = source;
   void _namespace;
   void _type;
-  void _graphDefaults;
+  void _defaultGraph;
   void _graphRules;
   void _children;
   void _width;

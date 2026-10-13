@@ -16,7 +16,6 @@ export const renderQueuePreview = (values: QueuePreviewValues) => (
   <Layout>
     <Queue
       items={['A', 'B', 'C'].slice(0, Number(values.count))}
-      layout={{ direction: values.direction, width: 44, height: 32 }}
       border={values.border}
       padding={Number(values.padding)}
       arrow={{
@@ -34,6 +33,8 @@ export const renderQueuePreview = (values: QueuePreviewValues) => (
             ? { style: { stroke: 'darkorange', strokeWidth: 2 }, arrowDetail: { shape: 'normal' } }
             : true),
       }}
+      layout={{ direction: values.direction }}
+      defaultCell={{ layout: { width: 44, height: 32 } }}
     />
   </Layout>
 );

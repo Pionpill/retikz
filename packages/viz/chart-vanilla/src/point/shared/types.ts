@@ -44,7 +44,7 @@ export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never
     /** 图表表面的背景样式 */
     background?: TSource['background'];
     /** 沿用图表输入结构的稀疏默认值 */
-    chartDefaults?: TSource['chartDefaults'];
+    defaultChart?: TSource['defaultChart'];
     /** Core host Theme 环境 */
     theme?: IRScene['theme'];
     /** 当前编译边界可见的命名 Chart Theme Definition */

@@ -84,7 +84,7 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
 };
 
 /** 建单 point mark 的 cartesian spec，x/y linear + 给定连续色 scale，color 引用之 */
-const pointSpec = (colorScale: Record<string, unknown>, plotDefaults?: IRPlot['plotDefaults']): IRPlot =>
+const pointSpec = (colorScale: Record<string, unknown>, defaultPlot?: IRPlot['defaultPlot']): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -102,7 +102,7 @@ const pointSpec = (colorScale: Record<string, unknown>, plotDefaults?: IRPlot['p
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
       },
     ],
-    plotDefaults,
+    defaultPlot,
   });
 
 describe('连续色 · sequential 求值（contract）', () => {

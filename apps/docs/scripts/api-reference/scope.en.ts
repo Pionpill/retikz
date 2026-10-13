@@ -26,8 +26,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '保留配置与子图元引用的 Scope 输入，尚未归一化或编译':
     'Scope input retaining options and child references, before normalization or compilation',
   'Scope IR 类型——手写而非 z.infer 派生': 'Scope IR type, declared explicitly rather than inferred with z.infer',
-  'ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。\n  Scope 通过 style 提供级联视觉值，通过 defaults 提供四个默认通道与 reset 继承屏障':
-    'ChildSchema is populated lazily through z.lazy, so an explicit declaration preserves the recursive union of child types. Scope provides cascading visual values through style, and four default channels plus a reset barrier through defaults.',
+  'ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。\n  Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供四个专属通道与 reset 继承屏障':
+    'ChildSchema is populated lazily through z.lazy, so an explicit declaration preserves the recursive union of child types. Scope provides shared visual defaults through defaults.style, and four dedicated channels plus a reset barrier through defaults.',
   'Scope 外框的可省略默认值输入': 'Scope frame input with optional defaulted fields',
   'Scope 最终锚点对齐放置': 'Final anchor-aligned Scope placement',
   'Scope 除 `type` 与递归 `children` 外的完整 authored 属性集合':
@@ -94,6 +94,9 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Local transform list following SVG transform-list order; the last item acts on a local point first',
   '显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序':
     'Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order',
+  '后代共享视觉默认值，逐字段继承与覆盖': 'Shared descendant visual defaults, inherited and overridden per field',
+  'Scope 通过 defaults.style 提供级联视觉默认值，并在 defaults 中提供四个专属通道与 reset 继承屏障':
+    'Scope supplies cascading visual defaults through defaults.style, with four dedicated channels and the reset inheritance barrier in defaults',
   'Scope 的级联视觉覆盖与后代默认通道，Layout 通过 rootScope 承载':
     'Cascading visual overrides and child-default channels for Scope; Layout carries them through rootScope',
   '作用域级视觉覆盖；已声明字段按层级向后代 Composite 逐字段继承':

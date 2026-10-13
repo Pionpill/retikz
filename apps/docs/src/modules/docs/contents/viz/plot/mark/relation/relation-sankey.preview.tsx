@@ -24,8 +24,8 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
         target={{ project: { x: 'targetX', y: 'targetY' } }}
         style={{
           fill: { kind: 'field', value: 'flowFill' },
-          fillOpacity: { kind: 'constant', value: values.opacity },
           stroke: { kind: 'constant', value: 'none' },
+          opacity: { fill: { kind: 'constant', value: values.opacity } },
         }}
         ribbon={{
           width: { kind: 'field', value: 'width' },
@@ -40,11 +40,13 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
         fill="nodeFill"
         stroke="#ffffff"
         strokeWidth={values.nodeStrokeWidth}
-        label="nodeLabel"
-        labelPosition={values.nodeLabelPosition}
-        labelDistance={values.nodeLabelDistance}
-        labelTextColor="currentColor"
-        labelFont={{ size: 11, weight: 'bold' }}
+        label={{
+          field: 'nodeLabel',
+          position: values.nodeLabelPosition,
+          distance: values.nodeLabelDistance,
+          textColor: 'currentColor',
+          font: { size: 11, weight: 'bold' },
+        }}
       />
       <BuiltinPlotScale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />
       <BuiltinPlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />

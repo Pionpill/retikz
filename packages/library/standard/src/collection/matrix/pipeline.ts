@@ -13,13 +13,22 @@ import type { IRMatrix } from './schema';
 
 /** 共享行列轨道的矩形布局；测量一次后复用单格与索引 */
 export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
-  const { namespace: _namespace, type: _type, items, layout, index, style, label, ...scope } = resolveMatrix(node);
+  const {
+    namespace: _namespace,
+    type: _type,
+    items,
+    layout,
+    index,
+    defaultCell,
+    label,
+    ...scope
+  } = resolveMatrix(node);
   void _namespace;
   void _type;
   const rows = items.length,
     columns = items[0]?.length ?? 0;
   if (rows === 0 || columns === 0)
-    return compileCells([], { width: 0, height: 0, scope, decoration: { label, style } }, context);
+    return compileCells([], { width: 0, height: 0, scope, decoration: { label, style: defaultCell?.style } }, context);
 
   /** 每格只测量一次，以各列最大宽度、各行最大高度确定共享轨道，保留测量结果供后续放置复用 */
   const widths = Array<number>(columns).fill(0),
@@ -139,7 +148,13 @@ export const compileMatrix = (node: IRMatrix, context: LayoutCompositeCompileCon
   /** 合并单元格、索引及整体装饰，矩阵总尺寸包含两类索引各自预留的空间 */
   return compileCells(
     cells,
-    { width: gridWidth + strips.row, height: gridHeight + strips.column, scope, extra, decoration: { label, style } },
+    {
+      width: gridWidth + strips.row,
+      height: gridHeight + strips.column,
+      scope,
+      extra,
+      decoration: { label, style: defaultCell?.style },
+    },
     context,
   );
 };

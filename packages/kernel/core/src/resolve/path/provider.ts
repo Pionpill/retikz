@@ -208,15 +208,21 @@ export const resolveStrokePathProviders = (
   resolution: PathResolution,
   context: PathResolveContext,
 ): StrokePathResolution => {
-  const children = resolution.path.children;
+  const path = {
+    ...resolution.path,
+    fill: resolution.path.fill ?? 'none',
+    stroke: resolution.path.stroke ?? 'currentColor',
+  };
+  const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, generators: new Map(), arrows: new Map() };
+    return { ...resolution, path, generators: new Map(), arrows: new Map() };
   }
 
   return {
     ...resolution,
-    generators: resolvePathGenerators(children, context, context.irPath ?? 'path'),
+    path,
+    generators: resolvePathGenerators(children, context, resolution.irPath),
     arrows: resolveArrowMarks(resolution.path.marks, context),
   };
 };

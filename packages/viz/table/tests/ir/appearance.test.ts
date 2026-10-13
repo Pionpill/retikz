@@ -7,16 +7,14 @@ describe('Table Cell appearance schema', () => {
     const input = {
       background: { fill: '#fff4e5', fillOpacity: 0.75 },
       content: {
-        style: {
-          color: '#9a4d00',
-          fill: 'currentColor',
-          fillOpacity: 0.5,
-          stroke: '#7c2d12',
-          strokeWidth: 2,
-          strokeOpacity: 0.8,
-          opacity: 0.9,
-        },
         defaults: {
+          style: {
+            color: '#9a4d00',
+            fill: 'currentColor',
+            stroke: '#7c2d12',
+            strokeWidth: 2,
+            opacity: { fill: 0.5, stroke: 0.8, overall: 0.9 },
+          },
           node: {
             style: { textColor: '#9a4d00', font: { weight: 600 } },
           },
@@ -58,8 +56,8 @@ describe('Table Cell appearance schema', () => {
   it('uses the same closed content vocabulary as the public Core Scope style channels', () => {
     expect(
       TableCellContentStyleSchema.parse({
-        style: { color: 'currentColor', strokeWidth: 1.5 },
         defaults: {
+          style: { color: 'currentColor', strokeWidth: 1.5 },
           node: {
             style: { font: { family: 'serif', size: 12 } },
           },
@@ -67,8 +65,8 @@ describe('Table Cell appearance schema', () => {
         },
       }),
     ).toEqual({
-      style: { color: 'currentColor', strokeWidth: 1.5 },
       defaults: {
+        style: { color: 'currentColor', strokeWidth: 1.5 },
         node: {
           style: { font: { family: 'serif', size: 12 } },
         },
@@ -89,7 +87,7 @@ describe('Table Cell appearance schema', () => {
     });
     expect(() =>
       TableCellContentStyleSchema.parse({
-        style: { color: 0.8 },
+        defaults: { style: { color: 0.8 } },
       }),
     ).toThrow();
   });

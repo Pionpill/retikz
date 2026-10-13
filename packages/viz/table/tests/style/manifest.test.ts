@@ -9,8 +9,8 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'styled',
-        tableDefaults: {
-          appearanceDefaults: { body: { content: { style: { color: '#123456' } } } },
+        defaultTable: {
+          defaultAppearance: { body: { content: { defaults: { style: { color: '#123456' } } } } },
         },
         structure: { kind: 'manual', rows: [[1]] },
         encodings: [
@@ -30,14 +30,14 @@ describe('Table style and encoding manifest seed', () => {
     expect(result.manifest.style).toMatchObject({
       themeMode: 'light',
       defaults: {
-        appearanceDefaults: { body: { content: { style: { color: '#123456' } } } },
+        defaultAppearance: { body: { content: { defaults: { style: { color: '#123456' } } } } },
       },
       layers: [
         { kind: 'neutral', path: '$default/light' },
         {
           kind: 'source',
-          path: '$spec/tableDefaults',
-          defaults: { appearanceDefaults: { body: { content: { style: { color: '#123456' } } } } },
+          path: '$spec/defaultTable',
+          defaults: { defaultAppearance: { body: { content: { defaults: { style: { color: '#123456' } } } } } },
         },
       ],
     });
@@ -81,7 +81,7 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'provenance',
-        tableDefaults: {
+        defaultTable: {
           layout: {
             borders: {
               outer: {
@@ -140,7 +140,7 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'grid-provenance',
-        tableDefaults: { layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } } },
+        defaultTable: { layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } } },
         structure: { kind: 'manual', rows: [[1], [2]] },
       },
       {},
@@ -155,7 +155,7 @@ describe('Table style and encoding manifest seed', () => {
       throw new Error('expected horizontal Source defaults line winner');
     }
 
-    if (gridWinner.defaults.path !== '$spec/tableDefaults') {
+    if (gridWinner.defaults.path !== '$spec/defaultTable') {
       throw new Error('expected horizontal Source defaults path');
     }
 
@@ -168,8 +168,8 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'header-provenance',
-        tableDefaults: {
-          appearanceDefaults: {
+        defaultTable: {
+          defaultAppearance: {
             columnHeader: { borders: { bottom: { kind: 'line', stroke: '#ffffff', width: 1 } } },
           },
         },
@@ -180,7 +180,7 @@ describe('Table style and encoding manifest seed', () => {
       { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const wrongHeaderDefaults = structuredClone(headerResult.manifest);
-    const headerDefaultsLayer = wrongHeaderDefaults.style.layers.find(layer => layer.path === '$spec/tableDefaults');
+    const headerDefaultsLayer = wrongHeaderDefaults.style.layers.find(layer => layer.path === '$spec/defaultTable');
     if (headerDefaultsLayer === undefined) throw new Error('expected header Source defaults layer');
 
     Object.assign(headerDefaultsLayer, { path: '$style/forged/light' });
@@ -212,7 +212,7 @@ describe('Table style and encoding manifest seed', () => {
     const fakeWinner = fakeManifest.borders[0].atoms[0].winner;
     if (fakeWinner.kind !== 'line') throw new Error('expected explicit line winner');
 
-    Object.assign(fakeWinner, { defaults: { path: '$spec/tableDefaults' } });
+    Object.assign(fakeWinner, { defaults: { path: '$spec/defaultTable' } });
 
     expect(() => TableLayoutManifestSchema.parse(fakeManifest)).toThrow(/origin|line|defaults/i);
 
@@ -227,12 +227,12 @@ describe('Table style and encoding manifest seed', () => {
     expect(() => TableLayoutManifestSchema.parse(wrongTokenSource)).toThrow(/source|path/i);
 
     const wrongInheritedPath = structuredClone(result.manifest);
-    Object.assign(wrongInheritedPath.style.layers[0], { path: '$spec/tableDefaults' });
+    Object.assign(wrongInheritedPath.style.layers[0], { path: '$spec/defaultTable' });
 
     expect(() => TableLayoutManifestSchema.parse(wrongInheritedPath)).toThrow(/neutral|cascade|path/i);
 
     const wrongLocalPath = structuredClone(result.manifest);
-    const contentSource = wrongLocalPath.style.layers.find(entry => entry.path === '$spec/tableDefaults');
+    const contentSource = wrongLocalPath.style.layers.find(entry => entry.path === '$spec/defaultTable');
     if (contentSource === undefined) throw new Error('expected local Source defaults layer');
 
     Object.assign(contentSource, { path: '$spec/other-table-defaults' });

@@ -124,8 +124,8 @@ export const logicFigureTableThemeStyle = defineTableThemeStyle({
   name: logicFigureThemeName,
   resolve: () => ({
     defaults: {
-      cellLayoutDefaults: { body: { padding: 4 }, columnHeader: { padding: 4 } },
-      appearanceDefaults: {
+      defaultCellLayout: { body: { padding: 4 }, columnHeader: { padding: 4 } },
+      defaultAppearance: {
         body: {
           content: {
             defaults: {
@@ -212,8 +212,8 @@ export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
           stroke: 'gray',
           strokeWidth: 1,
           fill: 'lightgray',
-          fillOpacity: 0.16,
           textColor: theme.mode === ThemeMode.Light ? '#18181b' : '#fafafa',
+          opacity: { fill: 0.16 },
         },
       },
       {

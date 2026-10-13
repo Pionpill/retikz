@@ -1,45 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveEffectivePath } from '../../src/resolve/style/path';
+import { resolveEffectivePath, resolveScopeDefaults } from '../../src/resolve/style';
 import { resolvePathWithBuiltinProviders } from './path-helper';
 
 describe('path kind host style', () => {
   it.each([
-    ['cascade-only', { type: 'path' as const, kind: 'custom', children: [] }, [{ cascade: { color: 'gold' } }], 'gold'],
-    [
-      'pathDefault-only',
-      { type: 'path' as const, kind: 'custom', children: [] },
-      [
-        {
-          cascade: {},
-          pathDefault: {
-            style: { color: 'purple' },
-          },
-        },
-      ],
-      'purple',
-    ],
+    ['cascade-only', undefined, { style: { color: 'gold' } }, 'gold'],
+    ['pathDefault-only', undefined, { path: { style: { color: 'purple' } } }, 'purple'],
     [
       'instance override',
-      {
-        type: 'path' as const,
-        kind: 'custom',
-        children: [],
-        style: { color: 'teal' },
-      },
-      [
-        {
-          cascade: { color: 'gold' },
-          pathDefault: {
-            style: { color: 'purple' },
-          },
-        },
-      ],
+      { color: 'teal' },
+      { style: { color: 'gold' }, path: { style: { color: 'purple' } } },
       'teal',
     ],
-  ])('keeps %s color effective until the selected path kind consumes it', (_, path, stack, color) => {
-    const resolved = resolveEffectivePath(path, stack);
-
+  ])('keeps %s color effective until the selected path kind consumes it', (_, style, defaults, color) => {
+    const resolved = resolveEffectivePath(
+      { type: 'path', kind: 'custom', children: [], style },
+      resolveScopeDefaults({ type: 'scope', children: [], defaults }),
+    );
     expect(resolved.style?.color).toBe(color);
     expect(resolved.style?.stroke).toBeUndefined();
   });
@@ -56,14 +34,11 @@ describe('path kind host style', () => {
           ],
         },
         {
-          styleStack: [
-            {
-              cascade: {},
-              pathDefault: {
-                style: { fill: 'red' },
-              },
-            },
-          ],
+          scopeDefaults: resolveScopeDefaults({
+            type: 'scope',
+            children: [],
+            defaults: { path: { style: { fill: 'red' } } },
+          }),
         },
       ),
     ).toThrow(/label\.interrupt.*filled stroke path/i);

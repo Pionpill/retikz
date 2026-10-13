@@ -26,7 +26,8 @@ import {
   isRelativeTargetLike,
 } from '../../shared';
 import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectivePath } from '../style';
+import { resolveGraphicOpacity } from '../style';
+import { resolveContextualColor, resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 import { resolvePathKind } from './provider';
@@ -186,11 +187,18 @@ const canonicalizeSteps = (
   canAutomaticallyInterrupt: boolean,
 ): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
 
-const canonicalizePath = (path: ResolvedPathSource, canAutomaticallyInterrupt: boolean): CanonicalPath => {
+/** 展开路径静态字段，fill / stroke 保留待绑定的 paint 输入 */
+const canonicalizePath = (
+  path: ResolvedPathSource,
+  canAutomaticallyInterrupt: boolean,
+): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
+  Pick<NonNullable<ResolvedPathSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
+  const { opacity, ...visual } = style ?? {};
   return {
     ...source,
-    ...style,
+    ...visual,
+    ...resolveGraphicOpacity(opacity),
     children: canonicalizeSteps(path.children, canAutomaticallyInterrupt),
     label:
       path.label === undefined
@@ -548,9 +556,9 @@ const resolveSteps = (
 
 /** 合并路径级联样式，解析路径种类、目标与绘制样式，产出编译消费的确定化路径 */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
-  const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
+  const styled = context.scopeDefaults === undefined ? path : resolveEffectivePath(path, context.scopeDefaults);
   const irPath = context.irPath ?? 'path';
-  const labelDefault = resolveEffectiveLabelDefault(context.styleStack ?? []);
+  const labelDefault = context.scopeDefaults?.label ?? {};
   const labelMasterColor = labelDefault.color ?? styled.style?.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
   const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);
@@ -560,10 +568,9 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const providerColorsResolved = resolvePathContextualColors(kind.path, context, irPath, labelMasterColor);
   const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt);
   const targets = new Map<string, TargetResolution>();
-  const scopeChain = context.scopeChain ?? [];
   const canonicalSteps =
     canonicalPath.children === undefined ? undefined : resolveSteps(canonicalPath.children, context, targets, irPath);
-  const resolvedPath: CanonicalPath = {
+  const resolvedPath: ReturnType<typeof canonicalizePath> = {
     ...canonicalPath,
     ...(canonicalSteps === undefined ? {} : { children: canonicalSteps }),
   };
@@ -576,19 +583,9 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const stroke = resolvePaint(resolvedPath.stroke, paintContext);
 
   return {
-    path: resolvedPath,
+    irPath,
+    path: { ...resolvedPath, fill, stroke, strokeWidth: resolvedPath.strokeWidth ?? 1 },
     targets,
-    scopeChain,
     kind,
-    paint: {
-      ...(fill === undefined ? {} : { fill }),
-      ...(stroke === undefined ? {} : { stroke }),
-    },
-    style: {
-      strokeWidth: resolvedPath.strokeWidth ?? 1,
-      strokeRequested: resolvedPath.stroke !== undefined || resolvedPath.strokeWidth !== undefined,
-      strokeFillDefault: 'none',
-      strokeDefault: 'currentColor',
-    },
   };
 };

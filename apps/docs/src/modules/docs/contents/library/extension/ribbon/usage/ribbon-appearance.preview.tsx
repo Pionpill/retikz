@@ -45,10 +45,10 @@ export const renderRibbonAppearancePreview = (values: RibbonAppearancePreviewVal
         kindOptions={{ width: { kind: 'taper', start: 16, end: 44, interpolation: 'smooth' } }}
         style={{
           fill,
-          fillOpacity: values.fillOpacity,
           stroke: values.stroke,
           strokeWidth: values.strokeWidth,
           ...(values.shadow ? { shadow: { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' } } : {}),
+          opacity: { fill: values.fillOpacity },
         }}
       >
         <Step kind="move" to={[-210, 30]} />

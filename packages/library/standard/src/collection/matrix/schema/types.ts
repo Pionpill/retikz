@@ -9,9 +9,9 @@ export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
 /** 三种入口互斥的 Matrix Source；单元格内容沿用共享绘图契约 */
 export type IRMatrix = Omit<
   input<typeof MatrixSchema>,
-  Exclude<keyof IRScopeProps, 'style'> | 'items' | 'data' | 'skeleton' | 'dataExpand'
+  keyof IRScopeProps | 'items' | 'data' | 'skeleton' | 'dataExpand'
 > &
-  Omit<IRScopeProps, 'style'> &
+  IRScopeProps &
   (
     | {
         /** 显式二维单元格 */

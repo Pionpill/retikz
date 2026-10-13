@@ -8,6 +8,8 @@ import type { SizeKey } from './types';
 
 /** 预览进入视口前的占位与加载边界 */
 export type PreviewViewportProps = {
+  /** 加载前即可定位的 demo 名称 */
+  name: string;
   /** 与预览一致的高度档位 */
   size: SizeKey;
   /** 预览的高度覆盖 */
@@ -18,7 +20,7 @@ export type PreviewViewportProps = {
 
 /** 提前一个短滚动距离加载，离开视口后保留交互状态 */
 export const PreviewViewport: FC<PreviewViewportProps> = props => {
-  const { size, className, children } = props;
+  const { name, size, className, children } = props;
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(() => typeof IntersectionObserver === 'undefined');
   useEffect(() => {
@@ -38,7 +40,7 @@ export const PreviewViewport: FC<PreviewViewportProps> = props => {
   }, []);
 
   return (
-    <div ref={host} data-preview-viewport={ready ? 'ready' : 'pending'}>
+    <div ref={host} data-demo-name={name} data-preview-viewport={ready ? 'ready' : 'pending'}>
       {ready ? (
         children
       ) : (

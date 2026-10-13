@@ -23,8 +23,9 @@ export const applyTableCellContentStyle = (
   if (style === undefined || Object.keys(style).length === 0) return child;
   if (
     Object.keys(style).length === 1 &&
-    Object.keys(style.style ?? {}).length === 1 &&
-    style.style?.color === 'currentColor'
+    Object.keys(style.defaults ?? {}).length === 1 &&
+    Object.keys(style.defaults?.style ?? {}).length === 1 &&
+    style.defaults?.style?.color === 'currentColor'
   ) {
     return child;
   }

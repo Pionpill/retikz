@@ -107,7 +107,7 @@ const renderFlowNode = (node: FlowNode) => (
     id={node.id}
     position={node.position}
     cornerRadius={4}
-    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    style={{ stroke: node.color, fill: node.color, opacity: { fill: 0.08 } }}
     layout={{
       minimumSize: { width: node.width, height: node.height ?? 50 },
       align: 'middle',
@@ -133,7 +133,7 @@ const Demo: FC = () => (
             id="reference-core-path"
             position={[370, -65]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
             layout={{ minimumSize: { width: 130, height: 42 }, align: 'middle' }}
           >
             Core Path
@@ -142,7 +142,7 @@ const Demo: FC = () => (
             id="reference-core-node"
             position={[370, 65]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
             layout={{ minimumSize: { width: 130, height: 42 }, align: 'middle' }}
           >
             Core Node

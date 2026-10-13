@@ -405,8 +405,10 @@ describe('data execution policy and binding', () => {
     const first = ready.bind(input([1, 2]));
     const second = ready.bind(input([3, 4]));
 
-    expect((await first.execute()).rows).toEqual([{ value: 2 }, { value: 1 }]);
-    expect((await second.execute()).rows).toEqual([{ value: 4 }, { value: 3 }]);
+    const { execute } = first;
+    const [firstResult, secondResult] = await Promise.all([execute(), second.execute()]);
+    expect(firstResult.rows).toEqual([{ value: 2 }, { value: 1 }]);
+    expect(secondResult.rows).toEqual([{ value: 4 }, { value: 3 }]);
     expect(matched).toBe(1);
     expect(() => first.execute()).toThrow(/once|consumed/i);
   });
@@ -515,6 +517,89 @@ it('awaits local reducer, selector and regression dependencies before advancing'
     { x: 2, y: 4 },
   ]);
   expect(calls).toEqual(['reduce', 'select', 'fit']);
+});
+
+it('isolates asynchronous operator cursors and lineage across bindings of one plan', async () => {
+  const sum = defineStatisticsReducer({
+    schema: strictObject({ kind: literal('partition-sum') }),
+    inputFields: () => ['value'],
+    outputs: () => [{ field: 'total', type: 'continuous' }],
+  });
+  const count = defineStatisticsReducer({
+    schema: strictObject({ kind: literal('partition-count') }),
+    outputs: () => [{ field: 'size', type: 'continuous' }],
+  });
+  const executor = createDataTransformExecutor({
+    statisticsReducerImplementations: [
+      defineStatisticsReducerImplementation({
+        definition: sum,
+        reduce: async rows => {
+          await Promise.resolve();
+          return { total: rows.reduce((total, row) => total + Number(row.value), 0) };
+        },
+      }),
+      defineStatisticsReducerImplementation({
+        definition: count,
+        reduce: async rows => {
+          await Promise.resolve();
+          return { size: rows.length };
+        },
+      }),
+    ],
+  });
+  const resolution = resolveDataTransforms(
+    [
+      {
+        operation: { kind: 'annotate', params: { metrics: [{ kind: 'partition-sum' }, { kind: 'partition-count' }] } },
+      },
+    ],
+    model,
+    { statisticsReducerRegistry: resolveStatisticsReducerRegistry([sum, count]) },
+  );
+  const ready = await executor.prepare({ kind: 'result', model }, resolution, { lineage: { reducerOperations: true } });
+  if (ready.kind !== 'ready') throw new Error('expected supported plan');
+
+  const [first, second] = await Promise.all([
+    ready.bind(input([1, 2])).execute(),
+    ready.bind(input([10, 20, 30])).execute(),
+  ]);
+  expect(first.rows).toEqual([
+    { value: 1, total: 3, size: 2 },
+    { value: 2, total: 3, size: 2 },
+  ]);
+  expect(second.rows).toEqual([
+    { value: 10, total: 60, size: 3 },
+    { value: 20, total: 60, size: 3 },
+    { value: 30, total: 60, size: 3 },
+  ]);
+  expect(first.lineage?.events.filter(event => event.kind === 'reducerOperation')).toHaveLength(2);
+  expect(second.lineage?.events.filter(event => event.kind === 'reducerOperation')).toHaveLength(2);
+  expect(first.lineage?.events).not.toBe(second.lineage?.events);
+});
+
+it('isolates cancellation and lineage options between requests on one executor', async () => {
+  const executor = createDataTransformExecutor();
+  const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
+  const controller = new AbortController();
+  const { prepare } = executor;
+  const cancelled = await prepare({ kind: 'result', model }, resolution, { signal: controller.signal, lineage: true });
+  const tracked = await prepare({ kind: 'result', model }, resolution, { lineage: true });
+  const plain = await prepare({ kind: 'result', model }, resolution, { lineage: false });
+  if (cancelled.kind !== 'ready' || tracked.kind !== 'ready' || plain.kind !== 'ready')
+    throw new Error('expected supported plans');
+
+  const cancelledRun = cancelled.bind(input([3, 1]));
+  controller.abort('first request cancelled');
+  expect(() => cancelledRun.execute()).toThrow(/cancelled/);
+  expect(() => cancelledRun.execute()).toThrow(/consumed/);
+  const { bind } = tracked;
+  const [trackedResult, plainResult] = await Promise.all([
+    bind(input([4, 2])).execute(),
+    plain.bind(input([8, 6])).execute(),
+  ]);
+  expect(trackedResult.rows).toEqual([{ value: 2 }, { value: 4 }]);
+  expect(trackedResult.lineage?.events.length).toBeGreaterThan(0);
+  expect(plainResult).toEqual({ rows: [{ value: 6 }, { value: 8 }], model });
 });
 
 it('keeps builtin defaults even with registered external providers, and inherits fields independently', async () => {

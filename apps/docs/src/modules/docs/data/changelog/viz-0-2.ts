@@ -101,260 +101,58 @@ export const vizV02: Release = {
       stableDate: null,
       version: 'v0.2',
       description: {
-        zh: 'Plot v0.2 交付 owner-local Theme token contract：Plot 独立拥有 token、preset、解析、映射和 inspection，并消费 Core 解析后的 Theme。',
-        en: 'Plot v0.2 delivers an owner-local Theme token contract: Plot owns its tokens, presets, resolution, mapping, and inspection while consuming the resolved Core Theme.',
+        zh: '整理 Plot 文档入口，按图形语法组织阅读路径。',
+        en: 'Reorganizes the Plot docs entry points around the grammar of graphics.',
       },
       highlights: [
         {
-          label: {
-            zh: '待发布：异步数据准备与执行策略',
-            en: 'Unreleased: async data preparation and execution policies',
-          },
+          label: { zh: '待发布：BREAKING 渐进式视觉属性', en: 'Unreleased: BREAKING progressive visual properties' },
           content: {
-            zh: '根及单条声明支持稀疏 dataExecution，声明优先于根，根优先于执行器默认值。React 独立客户端自动准备，嵌入时使用外层 Layout async preparation；Vanilla 提供 renderPlotAsync。rows/result/source、执行器与 signal 留在运行时；准备结果在布局测量和同次产物中复用。',
-            en: 'Sparse dataExecution is supported at roots and declarations: declaration > root > executor defaults. Standalone React clients prepare automatically; embedded clients use outer Layout async preparation. Vanilla exposes renderPlotAsync. Runtime rows/result/source bindings, executors and signals stay outside IR; prepared results are reused by layout measurement and same-run artifacts.',
+            zh: "opacity 支持简单值或 overall/fill/stroke 分组，各成员独立绑定字段、常量和比例尺。标签使用 label: 'name' 或 { field/value, position, distance, ... }，支持数组；删除平级 label 配置。Source 标签继续使用 content 分组，Core 标签字符串仍是文字。",
+            en: "opacity accepts a simple value or an overall/fill/stroke group with independent field, constant, and scale bindings. Use label: 'name' or { field/value, position, distance, ... }, including arrays; flat label options are removed. Source labels retain content grouping, and Core label strings remain literal text.",
           },
         },
         {
-          label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
+          label: { zh: '待发布：入口文档', en: 'Unreleased: Entry documentation' },
           content: {
-            zh: 'domainPadding 新增 mark 引用分支，经 Mark / Scale / Coordinate Definition capability 在渲染前有界求解，共享比例尺联合满足面板约束；支持数值或 lower/upper clearance 预留外缘净空；无解或不支持的组合明确报错。',
-            en: 'domainPadding adds a mark-reference branch using Mark / Scale / Coordinate capabilities for bounded pre-render solving. Shared scales combine panel constraints; numeric or lower/upper clearance reserves space beyond mark extents, and infeasible or unsupported combinations produce errors.',
-          },
-        },
-        {
-          label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
-          content: {
-            zh: '42 个 `PlotThemeToken`、随 mode 变化的默认 light/dark preset、开放 style definition、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
-            en: 'Plot now owns 42 `PlotThemeToken` keys, its mode-aware default light/dark preset, open style definitions, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
-          },
-        },
-        {
-          label: { zh: '严格、可解释的主题输入', en: 'Strict, inspectable theme inputs' },
-          content: {
-            zh: '`plotThemeTokens` 是严格稀疏覆盖；Core shared categorical、inherited Plot namespace、`colors` 与原生 `plotTheme` 按固定 cascade 解析，显式 scale / guide / mark 配置最终优先。',
-            en: '`plotThemeTokens` is a strict sparse override. Core shared categorical colors, the inherited Plot namespace, `colors`, and native `plotTheme` resolve in a fixed cascade, with explicit scale, guide, and mark configuration winning last.',
+            zh: '新增简介与快速开始，将更新日志移至入口区，补充图形语法侧栏分区与面向使用者的总纲。',
+            en: 'Adds Introduction and Quick start, moves Changelog to the entry area, and adds a grammar sidebar group and user-facing overview.',
           },
         },
       ],
-      subVersions: [
-        {
-          version: 'alpha.1',
-          date: '2026-08-07',
-          summary: {
-            zh: '收回 Plot surface、guide 与 palette token 所有权，并把完整图表 presentation 统一交由 Chart。',
-            en: 'Moves surface, guide, and palette token ownership into Plot while assigning complete-chart presentation to Chart.',
-          },
-          items: [
-            {
-              label: { zh: 'Core Source 语义分组', en: 'Grouped Core Source fields' },
-              content: {
-                zh: 'Plot channel 与自定义 mark 输出统一使用 Core Node 的 style/layout、Path 的 style 与 Scope 的 defaults；Relation options 的 dashPattern、fillRule、lineCap、lineJoin 移入 options.style，marks 与几何参数保持原位置。Plot 自有 mark 通道和 Theme token 保持原语义。',
-                en: 'Plot channels and custom marks now emit Core Node style/layout, Path style, and Scope defaults groups. Relation options move dashPattern, fillRule, lineCap, and lineJoin into options.style; marks and geometry parameters retain their paths. Plot-owned mark channels and Theme tokens retain their semantics.',
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：domainPadding 默认改为 range 单位',
-                en: 'BREAKING: domainPadding now defaults to range units',
-              },
-              content: {
-                zh: '连续位置 scale 的 `domainPadding` 裸数字与省略 `kind` 的对象现在表示输出 range 单位；需要原 domain 跨度比例时改用 `{ kind: "ratio", lower?, upper? }`，且比例必须小于 `1`。linear、time、log、pow、sqrt、symlog 与 radial 都在各自变换空间中反算留白，并对过大的 range 请求或非法 domain fail-loud。',
-                en: 'Bare numbers and objects without `kind` now express `domainPadding` in output-range units on continuous position scales. Use `{ kind: "ratio", lower?, upper? }` for source-domain-span fractions, each below `1`. Linear, time, log, pow, sqrt, symlog, and radial scales invert range padding in their own transform space and fail loudly for oversized requests or invalid domains.',
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：polar2D 插值由坐标系统一决定',
-                en: 'BREAKING: polar2D interpolation is coordinate-owned',
-              },
-              content: {
-                zh: '`polar2D.interpolation` 支持 `polar | chord`；省略时连续角向 position scale 默认 `polar`，离散 scale 默认 `chord`。Guide、Path、Interval、Reference 与满足约束的默认 Relation path 继承坐标系模式，适用 Mark 可局部覆盖且不改变 Grid。自定义 position scale Definition 现在必须声明 `continuity`。',
-                en: '`polar2D.interpolation` accepts `polar | chord`; when omitted, a continuous angular position scale defaults to `polar` and a discrete scale to `chord`. Guides, Path, Interval, Reference, and eligible default Relation paths inherit the coordinate mode, while applicable Marks may override it without changing the Grid. Custom position-scale Definitions must now declare `continuity`.',
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：发布包主题改为 owner 默认 baseline',
-                en: 'BREAKING: published themes use owner default baselines',
-              },
-              content: {
-                zh: 'Core、Plot、Chart 与 Table 不再内置命名 style；省略 `style` 时各 owner 使用自己的默认基线。文档站通过各 owner 的公开 definition / registry 注入 `academic`、`vibrant`、`clean`，不增加跨 owner registry。应用自定义 style 继续为每个实际消费 owner 提供同名 definition。',
-                en: "Core, Plot, Chart, and Table no longer include named styles; omitting `style` selects each owner's default baseline. The docs site injects `academic`, `vibrant`, and `clean` through each owner's public definition and registry contracts without adding a cross-owner registry. Application-defined styles still provide same-named definitions for every consuming owner.",
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：PlotThemeToken 与 namespaced inputs',
-                en: 'BREAKING: PlotThemeToken and namespaced inputs',
-              },
-              content: {
-                zh: '`IRPlot.plotThemeTokens` 使用 `PlotThemeTokenOverridesSchema`，覆盖 surface、typography、Axis、Legend 与 palette；Plot token Definition 注册为 `plot` namespace。未知 key、错误原子与空 palette 在 owner schema 失败；optional 显式 `undefined` 由 Zod 保留，并在覆盖完整 token 时由最终 resolution fail-loud。',
-                en: '`IRPlot.plotThemeTokens` uses `PlotThemeTokenOverridesSchema` across surface, typography, axes, legends, and palettes. The Plot token Definition registers the `plot` namespace. Unknown keys, invalid atoms, and empty palettes fail in the owner schema; Zod preserves optional explicit `undefined`, and final resolution fails if it replaces a complete token.',
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：Source 与 Definition 只使用 owner schema',
-                en: 'BREAKING: Source and Definitions use owner schemas only',
-              },
-              content: {
-                zh: '开放 coordinate、mark、position adjustment 与 transform 由各自 Source schema 的 JSON catchall 直接校验；Definition dispatch 后只运行命中的精确 schema。Plot Theme 不再做 plain-container preflight 或清理已知 `undefined`，optional 值按 Zod 保留，完整 token resolution 继续校验最终必填值。',
-                en: 'Open coordinates, marks, position adjustments, and transforms are validated directly by each Source schema JSON catchall, and Definition dispatch runs only the matched exact schema. Plot Theme no longer performs plain-container preflights or cleans known `undefined`; Zod preserves optional values while complete-token resolution still validates every required final token.',
-              },
-            },
-            {
-              label: { zh: 'Guide 主色与上下文派生 token', en: 'Guide masters and contextual derived tokens' },
-              content: {
-                zh: '`plot.typography.foreground` 保持 string-only 主色；Plot area、Axis line/grid、tick/title 与 Legend 派生颜色可用 `[0, 1]` 权重，并在 lower 到 Core 后按最终主色与 Theme mode 确定化。数据 mark、palette、scheme 与 scale range 不继承 typography 主色。',
-                en: '`plot.typography.foreground` remains a string-only master. Plot-area, Axis line/grid, tick/title, and Legend derived colors may use `[0, 1]` weights resolved after lowering into Core from the final master and Theme mode. Data marks, palettes, schemes, and scale ranges do not inherit the typography master.',
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：绘图区主题收敛为 plotArea.fill',
-                en: 'BREAKING: plot-area theme moves to plotArea.fill',
-              },
-              content: {
-                zh: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` 改名为 `PlotAreaFill` / `plot.area.fill`；结构化字段从 `IRPlotTheme.background` 改为 `IRPlotTheme.plotArea.fill`。它只填充二维坐标中扣除 axis、legend 与布局预留后的有效绘图区，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明；一维坐标不生成绘图区。',
-                en: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` is renamed to `PlotAreaFill` / `plot.area.fill`, and the structured field moves from `IRPlotTheme.background` to `IRPlotTheme.plotArea.fill`. It fills only the effective two-dimensional plotting area after axis, legend, and layout reserves are removed, leaving axis-label regions, facet gaps, and the outer Chart canvas transparent; one-dimensional coordinates do not emit a Plot area.',
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：Axis grid 收敛为统一主题契约',
-                en: 'BREAKING: Axis grid moves to one theme contract',
-              },
-              content: {
-                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth`、`drawOpacity` 与 `includeDomain` 五个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。默认 baseline 与 Vibrant 默认开启 x/y grid，Clean 只开启 y grid，Academic 全部关闭；默认 baseline 的 x/y grid 还会覆盖 effective domain 端点。Axis guide 局部配置最终优先。一维坐标没有二维 Plot area，因此始终不输出 grid layer。',
-                en: 'Grid uses five flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, `drawOpacity`, and `includeDomain`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. The default baseline and Vibrant enable x/y grids, Clean enables y-grid only, and Academic disables grids; default-baseline x/y grids also include effective-domain endpoints. Local Axis guide configuration wins last. One-dimensional coordinates have no two-dimensional Plot area and therefore never emit a grid layer.',
-              },
-            },
-            {
-              label: {
-                zh: 'Axis 主网格可包含 effective domain 端点',
-                en: 'Axis major grids can include effective-domain endpoints',
-              },
-              content: {
-                zh: '`grid.includeDomain` 可在常规来源与密度解析后追加缺失的最终 scale domain 首尾位置，并按投影坐标去重；guide 局部默认关闭，不改变轴 tick，也不为次网格追加端点。`axis.grid.includeDomain` 将同一默认接入 Theme cascade，默认 baseline 的 x/y grid 默认开启，端点 token 本身不会创建 grid。',
-                en: '`grid.includeDomain` appends missing final scale-domain endpoints after normal source and density resolution and deduplicates by projected coordinate. Its guide-local default is disabled, and it changes neither axis ticks nor minor grids. `axis.grid.includeDomain` brings the same default into the Theme cascade: the default baseline enables it for x/y grids, while the endpoint token never creates a grid by itself.',
-              },
-            },
-            {
-              label: {
-                zh: 'Axis 标题可见性与间距进入主题 token',
-                en: 'Axis title visibility and spacing join theme tokens',
-              },
-              content: {
-                zh: '新增 `axis.title.enabled` 与 `axis.title.padding`。默认 baseline 与本站 Academic / Vibrant reference 默认显示已有 Axis title，Clean reference 默认隐藏；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 可重新开启。四种预览风格的 title padding 均为 `12`。',
-                en: "Adds `axis.title.enabled` and `axis.title.padding`. The default baseline and the site's Academic / Vibrant references show authored Axis titles by default, while the Clean reference hides them; global tokens, dimension rules, or structured `plotTheme.axis.title` can enable them again. Title padding remains `12` in all four preview styles.",
-              },
-            },
-            {
-              label: {
-                zh: 'Vibrant 绘图区表面',
-                en: 'Vibrant Plot-area surface',
-              },
-              content: {
-                zh: '本站 Vibrant reference preset 在 Light 下使用 `#E5ECF6`，在 Dark 下使用 `#111111`；默认 baseline 与本站其它 reference 继续保持透明绘图区。',
-                en: "The site's Vibrant reference preset uses `#E5ECF6` in Light mode and `#111111` in Dark mode; the default baseline and the site's other references keep transparent Plot areas.",
-              },
-            },
-            {
-              label: {
-                zh: 'BREAKING：Plot presentation 上移 Chart',
-                en: 'BREAKING: Plot presentation moves to Chart',
-              },
-              content: {
-                zh: '`IRPlot` 删除顶层 `layout` 与 `labels`，Plot theme 删除 `labelText` 和 `plot.label.*`；标题、说明、来源等完整图表内容改由 Chart presentation 通过 Standard 与唯一 Plot body 组合。Axis、Legend、Facet、datum、mark、reference 与 annotation 文本保持 Plot-owned。',
-                en: '`IRPlot` removes top-level `layout` and `labels`, while Plot theme removes `labelText` and `plot.label.*`. Complete-chart titles, notes, and sources now belong to Chart presentation, composed with the single Plot body through Standard. Axis, Legend, Facet, datum, mark, reference, and annotation text remain Plot-owned.',
-              },
-            },
-            {
-              label: { zh: 'Theme 继承与 scheme 消费统一', en: 'Unified Theme inheritance and scheme consumption' },
-              content: {
-                zh: 'Plot Composite 消费 Core effective Theme 选择领域 preset，再应用 local `plotThemeTokens`、`colors`、`plotTheme`。palette 中的 sequential/diverging scheme 与显式 scale 共用内置和 `options.colorSchemes` lookup，未注册名称在实际消费时抛错。',
-                en: 'Plot composites consume the effective Core Theme to select their domain preset before applying local `plotThemeTokens`, `colors`, and `plotTheme`. Sequential and diverging palette schemes share the built-in and `options.colorSchemes` lookup used by explicit scales, and unknown names fail when consumed.',
-              },
-            },
-            {
-              label: { zh: 'Chart 所有权边界调整', en: 'Chart ownership boundary adjusted' },
-              content: {
-                zh: 'Chart Theme 改为按 owner 分片：Source 的 `theme.tokens.chart` 只由 Chart shell 消费，`theme.tokens.plot` 交给 Plot，`theme.tokens.recipe` 由当前 chartType schema 校验并消费；运行时 Definition 仍通过各自 owner 接入同一 Core registry。',
-                en: 'Chart Theme is split by owner: Source `theme.tokens.chart` is consumed by the Chart shell, `theme.tokens.plot` by Plot, and `theme.tokens.recipe` is validated and consumed by the current chartType schema. Runtime Definitions still enter the shared Core registry through their respective owners.',
-              },
-            },
-            {
-              label: {
-                zh: 'Relation 支持投影端点图元',
-                en: 'Relation supports projected endpoint glyphs',
-              },
-              content: {
-                zh: 'Path Relation 可在投影后的 source / target 上输出 Point 视觉端点；connector 始终先绘制，两个端点随后绘制。任一必要坐标无效时，同一 datum 的 connector 与两个端点原子跳过，同时保留原 datum provenance 且不重复注册 datum id。',
-                en: 'Path relations can emit Point-style glyphs at projected source and target coordinates, drawing the connector before both endpoints. If any required coordinate is invalid, the connector and both endpoints for that datum are skipped atomically while preserving datum provenance without duplicate datum-id registration.',
-              },
-            },
-          ],
-        },
-      ],
+      subVersions: [],
     },
     {
       pkg: '@retikz/plot-react',
       stableDate: null,
       version: 'v0.2',
-      description: {
-        zh: 'Plot 的 React authoring 与 runtime 继续复用 canonical IRPlot，并新增等价的主题 token 转发面。',
-        en: 'React authoring and runtime continue to use the canonical IRPlot and add an equivalent theme-token forwarding surface.',
-      },
+      description: { zh: '补充 React 首次接入示例。', en: 'Adds a first-use example for React.' },
       highlights: [
         {
-          label: { zh: 'React PlotTheme parity', en: 'React PlotTheme parity' },
+          label: { zh: '待发布：React 快速开始', en: 'Unreleased: React quick start' },
           content: {
-            zh: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` 与 spec 输入生成同一 canonical IRPlot；standalone 与 embedded 都复用 Plot resolver，adapter 不维护 selector、preset 或 merge。',
-            en: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` and spec authoring produce the same canonical IRPlot; standalone and embedded paths reuse the Plot resolver without adapter-owned selectors, presets, or merging.',
+            zh: '通过 Plot、PathMark 与 PlotAxis 展示从安装、数据绑定到挂载图形的完整步骤。',
+            en: 'Shows installation, data binding, and mounting through Plot, PathMark, and PlotAxis.',
           },
         },
       ],
-      subVersions: [
-        {
-          version: 'alpha.1',
-          date: '2026-08-07',
-          summary: {
-            zh: 'React Plot 接入 Plot-owned `plotThemeTokens`，保持 standalone/embedded 主题一致，并删除 Plot-level `layout`、`TitleLabel` 与 `CaptionLabel` authoring。',
-            en: 'Connects React Plot to Plot-owned `plotThemeTokens`, keeps standalone and embedded themes aligned, and removes Plot-level `layout`, `TitleLabel`, and `CaptionLabel` authoring.',
-          },
-          items: [],
-        },
-      ],
+      subVersions: [],
     },
     {
       pkg: '@retikz/plot-vanilla',
       stableDate: null,
       version: 'v0.2',
-      description: {
-        zh: 'Plot 的 plain authoring、嵌入与 SSR 直接保留 canonical `plotThemeTokens`，并区分 host Core Theme 与 Plot owner 主题语义。',
-        en: 'Plain authoring, embedding, and SSR preserve canonical `plotThemeTokens` while keeping host Core Theme semantics distinct from Plot-owned theme inputs.',
-      },
+      description: { zh: '补充 Vanilla 首次接入示例。', en: 'Adds a first-use example for Vanilla.' },
       highlights: [
         {
-          label: { zh: 'Plain JSON parity', en: 'Plain JSON parity' },
+          label: { zh: '待发布：Vanilla 快速开始', en: 'Unreleased: Vanilla quick start' },
           content: {
-            zh: '`plot()` 保留 strict token map，并与 React、手写 JSON 和 shared lowering 得到等价结果。',
-            en: '`plot()` preserves the strict token map and stays equivalent to React, authored JSON, and the shared lowering path.',
+            zh: '通过 plot() 与 renderPlot() 展示显式比例尺、坐标系、图元和辅助配置，以及 SVG 输出。',
+            en: 'Shows explicit scales, coordinates, marks, guides, and SVG output with plot() and renderPlot().',
           },
         },
       ],
-      subVersions: [
-        {
-          version: 'alpha.1',
-          date: '2026-08-07',
-          summary: {
-            zh: 'Vanilla/SSR 通过共享 IRPlot 消费 namespaced token 主链，并同步拒绝已删除的 Plot-level `layout` 与 `labels`；`renderPlot(spec, data, { theme })` 的 `theme` 位于根 Scene。',
-            en: 'Vanilla and SSR consume the namespaced token pipeline through the shared IRPlot and reject the removed Plot-level `layout` and `labels`; `renderPlot(spec, data, { theme })` applies `theme` to the root Scene.',
-          },
-          items: [],
-        },
-      ],
+      subVersions: [],
     },
   ],
 };

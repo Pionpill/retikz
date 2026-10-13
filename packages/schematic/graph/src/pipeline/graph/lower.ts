@@ -9,14 +9,14 @@ export const graphScopeProps = (source: IRGraph): Omit<IRScope, 'type' | 'childr
   const {
     namespace: _namespace,
     type: _type,
-    graphDefaults: _graphDefaults,
+    defaultGraph: _defaultGraph,
     graphRules: _graphRules,
     children: _children,
     ...scope
   } = source;
   void _namespace;
   void _type;
-  void _graphDefaults;
+  void _defaultGraph;
   void _graphRules;
   void _children;
 

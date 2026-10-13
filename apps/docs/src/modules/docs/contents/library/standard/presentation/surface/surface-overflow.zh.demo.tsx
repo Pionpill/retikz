@@ -9,7 +9,7 @@ const Demo: FC = () => (
       id="visible-overflow"
       position={[-136, 0]}
       padding={6}
-      background={{ fill: 'currentColor', fillOpacity: 0.04 }}
+      background={{ fill: 'currentColor', opacity: { fill: 0.04 } }}
       border={{ stroke: 'gray' }}
       cornerRadius={14}
       overflow="visible"
@@ -28,7 +28,7 @@ const Demo: FC = () => (
       id="clipped-overflow"
       position={[24, 0]}
       padding={6}
-      background={{ fill: 'currentColor', fillOpacity: 0.04 }}
+      background={{ fill: 'currentColor', opacity: { fill: 0.04 } }}
       border={{ stroke: 'gray' }}
       cornerRadius={14}
       overflow="clip"

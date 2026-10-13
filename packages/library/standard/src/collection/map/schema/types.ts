@@ -6,10 +6,8 @@ import type { MapSchema } from './schema';
 
 /** 稀疏 Map Source，展示键允许重复 */
 export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
-  Omit<IRScopeProps, 'style'> & {
-    /** Map 集合的整体与键值角色样式输入 */
-    style?: input<typeof MapSchema>['style'];
-  } & (
+  IRScopeProps &
+  (
     | {
         /** 显式键值单元格 */ entries: Array<{
           /** 当前条目的键侧文本或单元格声明 */

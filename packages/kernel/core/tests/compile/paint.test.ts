@@ -179,7 +179,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
             { type: 'node', id: 'A', position: [0, 0], text: 'A' },
             { type: 'node', id: 'B', position: [60, 0], text: 'B' },
           ],
-          style: { fill: grad },
+          defaults: { style: { fill: grad } },
         },
       ],
     };
@@ -281,7 +281,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
               ],
             },
           ],
-          style: { stroke: grad },
+          defaults: { style: { stroke: grad } },
         },
       ],
     };

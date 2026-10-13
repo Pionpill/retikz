@@ -76,29 +76,31 @@ describe('node channel registry', () => {
     const size = registry.get('size');
     if (size?.kind !== ChannelDefinitionKind.Node) throw new Error('size should be a node channel');
 
-    const resolve = size.resolve({
-      node: {
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'd' },
-        scales: [],
-        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-        marks: [],
+    const resolution = size.resolve(
+      {
+        node: {
+          namespace: 'plot',
+          type: 'plot',
+          data: { reference: 'd' },
+          scales: [],
+          coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+          marks: [],
+        },
+        rows: [],
+        model: [],
+        resolveChannelScale: () => ({
+          of: () => undefined,
+          legendForm: 'swatch',
+          domain: [],
+          range: [],
+          scaleType: 'test',
+        }),
+        resolveCategoryDomain: values =>
+          values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
+        resolveColorScheme: () => () => '#000000',
       },
-      rows: [],
-      model: [],
-      resolveChannelScale: () => ({
-        of: () => undefined,
-        legendForm: 'swatch',
-        domain: [],
-        range: [],
-        scaleType: 'test',
-      }),
-      resolveCategoryDomain: values =>
-        values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
-      resolveColorScheme: () => () => '#000000',
-    });
-    const resolution = resolve({ type: 'point', size: { kind: 'constant', value: 7 }, encoding: {} });
+      { type: 'point', size: { kind: 'constant', value: 7 }, encoding: {} },
+    );
 
     expect(resolution?.resolver({})).toBe(7);
     expect(resolution?.descriptor).toBeUndefined();

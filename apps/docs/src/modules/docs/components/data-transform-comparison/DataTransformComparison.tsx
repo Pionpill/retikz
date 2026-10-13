@@ -53,7 +53,7 @@ const createHighlightRules = (
           selector: highlight,
           appearance: {
             background: { fill: color, fillOpacity: 0.12 },
-            content: { style: { color } },
+            content: { defaults: { style: { color } } },
           },
         },
       ];
@@ -87,7 +87,7 @@ export const DataTransformComparison: FC<DataTransformComparisonProps> = props =
         position={[0, 0]}
         layout={{ minimumSize: { width: 64, height: 30 }, padding: { left: 12, right: 12, top: 6, bottom: 6 } }}
         shape={{ type: 'rectangle', params: { cornerRadius: 6 } }}
-        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 12 } }}
+        style={{ stroke: 'gray', fill: 'lightgray', font: { size: 12 }, opacity: { fill: 0.16 } }}
       >
         {operation}
       </Node>

@@ -35,18 +35,16 @@ describe('Graph Scope and Theme compile semantics', () => {
       fill: 0.12,
       stroke: 1,
       strokeWidth: 1,
-      fillOpacity: 1,
-      strokeOpacity: 1,
-      opacity: 1,
+      opacity: { overall: 1, fill: 1, stroke: 1 },
     });
     expect(Graph.getDefaultGraphThemePreset(theme).defaults.group).toEqual({
-      background: { fill: 'lightgray', fillOpacity: 0.04 },
+      background: { fill: 'lightgray', opacity: { fill: 0.04 } },
       border: { stroke: 'lightgray', strokeWidth: 1, dashPattern: [4, 3] },
       cornerRadius: 4,
     });
     expect(Graph.getDefaultGraphThemePreset(theme).defaults.block).toEqual({
       background: { fill: 'none' },
-      border: { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 },
+      border: { stroke: 'currentColor', strokeWidth: 1, opacity: { stroke: 0.2 } },
       cornerRadius: 8,
     });
   });
@@ -292,7 +290,7 @@ describe('Graph Scope and Theme compile semantics', () => {
                 namespace: 'graph',
                 type: 'graph',
                 children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [0, 0], text: 'reset' }],
-                graphDefaults: { entity: { style: { fill: '#ef4444' } } },
+                defaultGraph: { entity: { style: { fill: '#ef4444' } } },
                 defaults: { reset: ['node'] },
               },
             ],
@@ -354,7 +352,7 @@ describe('Graph Scope and Theme compile semantics', () => {
       resolve: () => ({
         defaults: {
           group: { cornerRadius: 2 },
-          block: { background: { fill: '#f8fafc', fillOpacity: 0.75 } },
+          block: { background: { fill: '#f8fafc', opacity: { fill: 0.75 } } },
         },
       }),
     });
@@ -367,7 +365,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(resolved.defaults.group).toEqual({ ...defaults.defaults.group, cornerRadius: 2 });
     expect(resolved.defaults.block).toEqual({
       ...defaults.defaults.block,
-      background: { fill: '#f8fafc', fillOpacity: 0.75 },
+      background: { fill: '#f8fafc', opacity: { fill: 0.75 } },
     });
     expect(resolved.rules).toEqual(defaults.rules);
   });
@@ -551,4 +549,19 @@ describe('Graph Scope and Theme compile semantics', () => {
       });
     }
   });
+});
+
+it('Graph style layers inherit opacity factors independently', () => {
+  const merged = Graph.mergeGraphDefaults(
+    {
+      entity: { style: { opacity: { fill: 0.4, stroke: 0.8 } } },
+      relation: { style: { opacity: { stroke: 0.6 } } },
+    },
+    {
+      entity: { style: { opacity: 0.5 } },
+      relation: { style: { opacity: { overall: 0 } } },
+    },
+  );
+  expect(merged?.entity?.style?.opacity).toEqual({ overall: 0.5, fill: 0.4, stroke: 0.8 });
+  expect(merged?.relation?.style?.opacity).toEqual({ overall: 0, stroke: 0.6 });
 });

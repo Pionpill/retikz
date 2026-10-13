@@ -149,84 +149,11 @@ apply: (rows, operation, context) => [
 
 这是变换 Implementation 的计算回调，完整定义与注册见[扩展机制](/viz/data/transform/extensions)。框架从 Definition 读取字段声明，自定义计算需如实声明字段并负责保留来源。不要把输出位置当作原始索引，也不要为无法唯一回查的结果伪造单行来源。
 
-## 相关属性
+## API 参考
 
-以下列出本页使用的入口和选项；完整签名见 [API 参考](/viz/data/transform/reference)。
+本节收录行来源、记录配置和事件结果的公开契约。执行入口 `applyTransforms`、`applyTransformsToDataView` 及其输入输出选项见[数据变换 API 参考](/viz/data/transform/reference)。
 
-<ComponentProps
-  items={[
-    {
-      name: 'applyTransforms',
-      kind: 'function',
-      type: '(rows: Array<ExternalRow>, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsResult',
-      description: '同步返回 { rows, lineage? }，来源与事件由选项分别开启。',
-    },
-    {
-      name: 'applyTransformsToDataView',
-      kind: 'function',
-      type: '(view: DataView, operations?: Array<IRDataTransform>, options?: ApplyTransformsOptions) => ApplyTransformsToDataViewResult',
-      description: '已有规范化视图时返回 { dataView, lineage? }。',
-    },
-    {
-      name: 'ApplyTransformsOptions.provenance',
-      kind: 'property',
-      type: 'boolean',
-      defaultValue: 'false',
-      description: '为未标记输入建立行来源，不开启事件记录；已有来源始终保留。',
-    },
-    {
-      name: 'ApplyTransformsOptions.lineage',
-      kind: 'property',
-      type: 'boolean | DataLineageOptions',
-      defaultValue: 'false',
-      description: 'true 使用默认事件配置，对象自定义配置；false 或省略时不记录，不隐式建立行来源。',
-    },
-    {
-      name: 'tagSourceIndex',
-      kind: 'function',
-      type: '(rows: Array<ExternalRow>) => Array<ExternalRow>',
-      description: '复制输入行，仅为未标记行建立索引，保留已有单行或组级来源。',
-    },
-    {
-      name: 'readSourceIndex',
-      kind: 'function',
-      type: '(row: ExternalRow) => number | undefined',
-      description: '读取单行来源，不存在时返回 undefined。',
-    },
-    {
-      name: 'readSourceIndices',
-      kind: 'function',
-      type: '(row: ExternalRow) => Array<number> | undefined',
-      description: '读取组级来源，不存在时返回 undefined。',
-    },
-    {
-      name: 'DataLineageOptions.sourceIdentity',
-      kind: 'property',
-      type: 'boolean | { mode?: "summary" | "full"; maxIndices?: number }',
-      defaultValue: '{ mode: "summary", maxIndices: 20 }',
-      description: 'false 关闭事件来源摘要；summary 截取索引前缀，full 保留完整索引。',
-    },
-    {
-      name: 'DataLineageOptions.rowSamples',
-      kind: 'property',
-      type: 'false | { maxRows: number; fields: Array<string> }',
-      defaultValue: 'false',
-      description: '记录变换输入输出样本，行数须为正整数，字段白名单须非空。',
-    },
-    {
-      name: 'DataLineageOptions.sink',
-      kind: 'property',
-      type: '(event: DataLineageEvent) => void',
-      description: '逐条接收事件，默认不保留返回数组。',
-    },
-    {
-      name: 'DataLineageOptions.retainEvents',
-      kind: 'property',
-      type: 'boolean',
-      description: '有 sink 时默认 false，true 同时保留数组；无 sink 时始终保留。',
-    },
-  ]}
-/>
+{/* @include viz/data/provenance/generated */}
 
 ## 延伸阅读
 
@@ -237,7 +164,7 @@ apply: (rows, operation, context) => [
     { title: '扩展机制', description: '定义并注册自定义变换与计算实现。', url: '/viz/data/transform/extensions' },
     {
       title: 'API 参考',
-      description: '查询来源、链路选项和执行入口的完整类型。',
+      description: '查询数据变换执行入口及其输入输出契约。',
       url: '/viz/data/transform/reference',
     },
   ]}

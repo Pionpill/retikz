@@ -38,7 +38,7 @@ describe('LogicFigureFrame', () => {
     expect(frame).toMatchObject({
       namespace: 'graph',
       type: 'group',
-      background: { fill: 'lightgray', fillOpacity: 0.04 },
+      background: { fill: 'lightgray', opacity: { fill: 0.04 } },
       border: {
         stroke: 'lightgray',
         dashPattern: [4, 3],
@@ -65,7 +65,7 @@ describe('LogicFigureFrame', () => {
     const frame = readFrame(
       <LogicFigureFrame
         id="custom"
-        background={{ fill: 'darkorange', fillOpacity: 0.12 }}
+        background={{ fill: 'darkorange', opacity: { fill: 0.12 } }}
         border={{ stroke: 'darkorange', dashPattern: undefined }}
         cornerRadius={0}
         padding={{ x: 16, y: 8 }}
@@ -81,7 +81,7 @@ describe('LogicFigureFrame', () => {
     );
 
     expect(frame).toMatchObject({
-      background: { fill: 'darkorange', fillOpacity: 0.12 },
+      background: { fill: 'darkorange', opacity: { fill: 0.12 } },
       border: {
         stroke: 'darkorange',
       },

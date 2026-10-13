@@ -123,7 +123,7 @@ export const previewControlContract = {
     'BuiltinPlotScale.paddingInner',
     'BuiltinPlotScale.paddingOuter',
     'IntervalMark.cornerRadius',
-    'IntervalMark.fillOpacity',
+    'IntervalMark.opacity.fill',
     'IntervalMark.strokeWidth',
     'IntervalMark.label',
     'IntervalMark.shadow',

@@ -166,13 +166,15 @@ Choose count or labels. count is a nonnegative safe integer; labels determines t
   caption="This example fixes cells at 42 × 36. Switch inside content and outside indices independently. Two adjacent separators leave an empty cell."
 />
 
-Contentless cells retain backgrounds, borders, padding, and reference regions. Their content has zero natural size; default padding still occupies space. Set layout.width / height for explicit proportions, or use items / ArrayItem for per-cell styles, ids, or drawings. Omitted explicit content means no content; `content: ''` remains empty text.
+Contentless cells retain backgrounds, borders, padding, and reference regions. Their content has zero natural size; default padding still occupies space. Set defaultCell.layout.width / height for explicit proportions, or use items / ArrayItem for per-cell styles, ids, or drawings. Omitted explicit content means no content; `content: ''` remains empty text.
 
 ### Style and dimensions
 
-The overall `style` supplies shared appearance; each cell can override individual fields.
+`defaultCell` groups shared cell `style` and `layout` defaults. Root `layout` controls collection arrangement, such as direction and gaps; each cell overrides its own `style` and `layout`.
 
-Font fields merge individually. `fillOpacity` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
+`defaultCell.style` supplies the shared cell appearance; each cell can override individual fields.
+
+Font fields merge individually. `opacity.fill` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
 
 <ComponentPreview
   files={['array-styles', 'array-styles.preview.tsx']}
@@ -181,9 +183,9 @@ Font fields merge individually. `fillOpacity` affects only the background; `opac
   defaultSourceFile="array-styles.preview.tsx"
 />
 
-`layout.width` / `height` set cell border-box dimensions, including padding; zero is valid. Omit width or use `'auto'` to give auto-sized cells the largest effective width in the Array. Use `'content'` to size each cell to its own natural content width plus padding. Omitted or `'auto'` height still uses the largest cell height. Cell-level values take precedence, so a Array using `'content'` can give one cell a fixed width or `'auto'`. `layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
+`defaultCell.layout.width` / `height` set cell border-box dimensions, including padding; zero is valid. Omit width or use `'auto'` to give auto-sized cells the largest effective width in the Array. Use `'content'` to size each cell to its own natural content width plus padding. Omitted or `'auto'` height still uses the largest cell height. Cell-level values take precedence, so a Array using `'content'` can give one cell a fixed width or `'auto'`. `defaultCell.layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
 
-`layout.direction` defaults to `row`; use `column` for vertical ordering. Cells do not wrap. `auto` axes use the largest cell requirement, while fixed axes retain their specified dimensions. `style.cornerRadius` sets the corner radius of all cells; individual cell styles can override it.
+`layout.direction` defaults to `row`; use `column` for vertical ordering. Cells do not wrap. `auto` axes use the largest cell requirement, while fixed axes retain their specified dimensions. `defaultCell.style.cornerRadius` sets the corner radius of all cells; individual cell styles can override it.
 
 Omit `index` or set it to `false` to hide indices. Use `true` or `{}` to enable the defaults. The object form accepts:
 
@@ -248,7 +250,7 @@ Array
 | `['map']`                              | Map            | JSON text     |
 | `['array']`                            | JSON text      | Array         |
 
-Generated components recursively use the same selection. A structure displayed as text retains its entire subtree as compact JSON and stops expanding. Empty objects and arrays always appear as `{}` and `[]`. Selection order and duplicates do not affect the result. The example starts with arrays only; switch between the four modes. `layout.width: 'content'` sizes generated Array cells to their own content.
+Generated components recursively use the same selection. A structure displayed as text retains its entire subtree as compact JSON and stops expanding. Empty objects and arrays always appear as `{}` and `[]`. Selection order and duplicates do not affect the result. The example starts with arrays only; switch between the four modes. `defaultCell.layout.width: 'content'` sizes generated Array cells to their own content.
 
 <ComponentPreview
   files={['array-data', 'array-data.preview.tsx']}
@@ -269,7 +271,7 @@ Generated components recursively use the same selection. A structure displayed a
 
 An empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
 
-Data does not generate cell ids by default, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. Use explicit cells for per-cell customization. Overall style / layout affects the current level only, except that `layout.width: 'content'` in `data` mode passes through the automatically generated Array / Map data tree to descendant Arrays, sizing cells at each level to their own content. Hand-authored nested components do not inherit it. Font and text color inherit through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
+Data does not generate cell ids by default, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. Use explicit cells for per-cell customization. defaultCell.style / defaultCell.layout affects the current level only, except that `defaultCell.layout.width: 'content'` in `data` mode passes through the automatically generated Array / Map data tree to descendant Arrays, sizing cells at each level to their own content. Hand-authored nested components do not inherit it. Font and text color inherit through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
 
 React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ArrayDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
 
@@ -306,7 +308,7 @@ Identity indices always start at zero, independently of the displayed `index.sta
   }
 />
 
-Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
+Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `defaultCell.layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
 
 <ComponentPreview
   files="array-overflow"

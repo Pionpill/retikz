@@ -17,9 +17,8 @@ export const resolveMap = (source: IRMap): CanonicalMap => {
             key,
             value: createDataCell(value, expansion),
           }));
-  const { key: keyStyle, value: valueStyle, ...style } = source.style ?? {};
-  const { key: keyLayout, value: valueLayout, ...layout } = source.layout ?? {};
-  const gap = layout.gap ?? MapLayoutSchema.shape.gap.parse(undefined);
+  const { style, layout, key, value } = source.defaultCell ?? {};
+  const gap = source.layout?.gap ?? MapLayoutSchema.shape.gap.parse(undefined);
 
   return {
     ...input,
@@ -27,15 +26,15 @@ export const resolveMap = (source: IRMap): CanonicalMap => {
       key: resolveCell(entry.key, {
         overallStyle: style,
         overallLayout: layout,
-        roleStyle: keyStyle,
-        roleLayout: keyLayout,
+        roleStyle: key?.style,
+        roleLayout: key?.layout,
         isKey: true,
       }),
       value: resolveCell(entry.value, {
         overallStyle: style,
         overallLayout: layout,
-        roleStyle: valueStyle,
-        roleLayout: valueLayout,
+        roleStyle: value?.style,
+        roleLayout: value?.layout,
       }),
     })),
     layout: { ...source.layout, gap: typeof gap === 'number' ? { row: gap, column: gap } : gap },

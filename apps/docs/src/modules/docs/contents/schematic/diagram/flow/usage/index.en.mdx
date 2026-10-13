@@ -52,7 +52,7 @@ Each `separate` endpoint owns one position; automatic `allow` endpoints on the s
 | `overlap` | Defaults to `allow`; `separate` separates connection points, without guaranteeing non-overlapping arrow shapes or crossing-free routes    |
 | `anchor`  | Use last for an exact constraint, such as `{ side: 'left', fraction: 0.4 }`; mutually exclusive with `side` and never moved automatically |
 
-Set diagram defaults with `flowDefaults.relation.source.overlap` and `flowDefaults.relation.target.overlap`. String endpoints inherit these defaults; local `allow` overrides `separate`. Automatic positions avoid fixed anchors when separation is required; conflicting fixed anchors fail explicitly. Unconstrained endpoints retain natural boundary connections.
+Set diagram defaults with `defaultFlow.relation.source.overlap` and `defaultFlow.relation.target.overlap`. String endpoints inherit these defaults; local `allow` overrides `separate`. Automatic positions avoid fixed anchors when separation is required; conflicting fixed anchors fail explicitly. Unconstrained endpoints retain natural boundary connections.
 
 Automatic side fractions require Core side-anchor support from the underlying shape. Rectangles support it. The current gateway diamond uses polygon geometry, which does not support this query and fails explicitly; use a supported named or angular anchor instead.
 

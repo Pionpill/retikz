@@ -47,16 +47,18 @@ it('分支主干下标与路径结构字段受约束', () => {
       layout: { branchAlign: { branch: 2 } },
     }).success,
   ).toBe(false);
-  expect(ChainSchema.safeParse({ ...base, items: [], connection: { path: { children: [] } } }).success).toBe(false);
+  expect(ChainSchema.safeParse({ ...base, items: [], defaultConnection: { path: { children: [] } } }).success).toBe(
+    false,
+  );
 });
 
 it('三段路由与折转比例支持 JSON 往返并拒绝越界比例', () => {
   for (const route of ['-|-', '|-|']) {
-    const source = { ...base, items: [], connection: { route, fraction: 1 } };
+    const source = { ...base, items: [], defaultConnection: { route, fraction: 1 } };
     const parsed = ChainSchema.parse(source);
     expect(ChainSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
     for (const fraction of [-0.1, 1.1])
-      expect(ChainSchema.safeParse({ ...source, connection: { route, fraction } }).success).toBe(false);
+      expect(ChainSchema.safeParse({ ...source, defaultConnection: { route, fraction } }).success).toBe(false);
   }
 });
 
@@ -65,11 +67,15 @@ it('折转比例只属于显式三段路由，根与局部分支都拒绝错配�
     { fraction: 0.25 },
     ...['auto', 'straight', '|-', '-|'].map(route => ({ route, fraction: 0.25 })),
   ]) {
-    expect(ChainSchema.safeParse({ ...base, items: [], connection }).success).toBe(false);
+    expect(ChainSchema.safeParse({ ...base, items: [], defaultConnection: connection }).success).toBe(false);
     expect(
       ChainSchema.safeParse({
         ...base,
-        items: ['A', { kind: 'parallel', connection, branches: [{ items: ['B'] }, { items: ['C'] }] }, 'D'],
+        items: [
+          'A',
+          { kind: 'parallel', defaultConnection: connection, branches: [{ items: ['B'] }, { items: ['C'] }] },
+          'D',
+        ],
       }).success,
     ).toBe(false);
   }

@@ -207,8 +207,8 @@ const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
 };
 
 type MarkStyleValue =
-  | NonNullable<IRPlotRelationPrimitiveStyle[keyof IRPlotRelationPrimitiveStyle]>
-  | NonNullable<IRPlotRelationEndpointGlyph[keyof IRPlotRelationEndpointGlyph]>;
+  | NonNullable<IRPlotRelationPrimitiveStyle[Exclude<keyof IRPlotRelationPrimitiveStyle, 'opacity'>]>
+  | NonNullable<IRPlotRelationEndpointGlyph[Exclude<keyof IRPlotRelationEndpointGlyph, 'opacity'>]>;
 
 const resolveMarkValue = <T>(value: MarkStyleValue | undefined, row: ExternalRow): T | undefined => {
   if (value === undefined) return undefined;
@@ -248,7 +248,7 @@ const endpointGlyphNode = (
 
 const relationStyleValue = (
   style: IRPlotRelationPrimitiveStyle | undefined,
-  key: keyof IRPlotRelationPrimitiveStyle,
+  key: Exclude<keyof IRPlotRelationPrimitiveStyle, 'opacity'>,
   row: ExternalRow,
 ): unknown =>
   resolveMarkValue(
@@ -266,20 +266,19 @@ const relationPrimitiveStyle = (
   const color = relationStyleValue(mark.style, 'color', row) ?? colorOf?.(row) ?? defaultColor;
   if (color !== undefined) out.color = color;
 
-  for (const key of [
-    'fill',
-    'fillOpacity',
-    'stroke',
-    'strokeWidth',
-    'strokeOpacity',
-    'opacity',
-    'shadow',
-    'blendMode',
-  ] as const) {
+  for (const key of ['fill', 'stroke', 'strokeWidth', 'shadow', 'blendMode'] as const) {
     const value = relationStyleValue(mark.style, key, row);
     if (value !== undefined) out[key] = value;
   }
 
+  if (mark.style?.opacity !== undefined) {
+    const opacity: Record<string, number> = {};
+    for (const key of ['overall', 'fill', 'stroke'] as const) {
+      const value = resolveMarkValue<number>(mark.style.opacity[key], row);
+      if (value !== undefined) opacity[key] = value;
+    }
+    out.opacity = opacity;
+  }
   return out;
 };
 
@@ -767,7 +766,9 @@ const collectLabelFields = (label: IRPlotRelationStepLabel | undefined, fields: 
 };
 
 const collectRelationStyleFields = (style: IRPlotRelationPrimitiveStyle | undefined, fields: FieldCollector): void => {
-  for (const value of Object.values(style ?? {})) fields.addChannel(value);
+  const { opacity, ...visual } = style ?? {};
+  for (const value of Object.values(visual)) fields.addChannel(value);
+  for (const value of Object.values(opacity ?? {})) fields.addChannel(value);
 };
 
 /** 内置 relation mark definition */

@@ -38,7 +38,7 @@ const ChartSourceFieldsSchema = strictObject({
   id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
   background: SurfaceBackgroundSchema.optional().describe('Chart surface background'),
   presentation: ChartPresentationSchema.optional(),
-  chartDefaults: ChartDefaultsSchema.optional(),
+  defaultChart: ChartDefaultsSchema.optional(),
   data: PlotSchema.shape.data.describe('Unique external dataset reference'),
   dataExecution: PlotSchema.shape.dataExecution,
   layout: ChartLayoutSchema.optional(),

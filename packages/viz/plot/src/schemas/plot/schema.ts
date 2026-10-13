@@ -434,7 +434,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
   scales: array(ScaleOperationSchema).describe(
     'Named scale ops; built-ins are statically validated, custom types are validated at lowering against runtime scale definitions. Referenced by coordinate roles and non-positional channels by name',
   ),
-  plotDefaults: PlotDefaultsSchema.optional().describe(
+  defaultPlot: PlotDefaultsSchema.optional().describe(
     'Sparse Plot Source visual defaults for existing plot area, typography, axes, legends, and palettes',
   ),
   plotRules: PlotAxisRulesSchema.optional().describe(

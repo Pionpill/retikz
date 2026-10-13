@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { RuntimeCommitEvent } from '../../src/computation';
 import { defineRuntimeComputation, RuntimeComputationKind, RuntimeComputationPhase } from '../../src/computation';
+import { defineRuntimeCommitParticipant } from '../../src/participant';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
 import { createRuntime } from '../../src/runtime';
 import { defineRuntimeSource } from '../../src/source';
@@ -18,6 +19,63 @@ const defineCounterSource = () =>
   });
 
 describe('runtime runtime lifecycle', () => {
+  it('公开方法解构后仍操作同一实例，公开接口保持冻结', () => {
+    const source = defineCounterSource();
+    const sources = createRuntimeSourceRegistry([source]);
+    const computation = defineRuntimeComputation({
+      id: { owner: 'counter', key: 'double' },
+      sources: [source],
+      run: candidate => ({ kind: RuntimeComputationKind.Full, result: candidate.snapshot(source).value * 2 }),
+    });
+    const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
+    let committed = 0;
+    let disposeCount = 0;
+    const host = defineRuntimeCommitParticipant({
+      key: 'counter-host',
+      sources: [source],
+      revisionPolicy: 'affected',
+      prepare: candidate => {
+        const previous = committed;
+        const next = candidate.snapshot(source).value;
+        return {
+          commit: () => {
+            committed = next;
+          },
+          rollback: () => {
+            committed = previous;
+          },
+          dispose: () => undefined,
+        };
+      },
+      read: () => committed,
+      dispose: () => {
+        disposeCount += 1;
+      },
+    });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(source, 1)],
+      participants: [host],
+    });
+    const { revision, update, snapshot, result, participant, diagnostics, dispose } = runtime;
+
+    expect(Object.isFrozen(runtime)).toBe(true);
+    expect(snapshot(source).value).toBe(1);
+    expect(result(computation).value).toBe(2);
+    expect(participant(host)).toBe(1);
+    const updated = update({ baseRevision: revision(), sources: [createRuntimeSourceUpdate(source, 3)] });
+    expect(revision()).toBe(updated.revision);
+    expect(snapshot(source)).toEqual({ revision: updated.revision, value: 3 });
+    expect(result(computation)).toEqual({ revision: updated.revision, value: 6 });
+    expect(participant(host)).toBe(3);
+    expect(diagnostics()).toEqual([]);
+    dispose();
+    dispose();
+    expect(disposeCount).toBe(1);
+    expect(diagnostics()).toEqual([]);
+  });
+
   it('initial full 发布 revision 0，并在 incremental update 后原子推进 Snapshot', () => {
     const owner = defineCounterSource();
     const sources = createRuntimeSourceRegistry([owner]);

@@ -277,7 +277,7 @@ describe('ComponentPreview global theme', () => {
     ));
     const source = preview.sourceIr.children[0];
     expect(source).not.toHaveProperty('graphRules');
-    expect(source).not.toHaveProperty('flowDefaults');
+    expect(source).not.toHaveProperty('defaultFlow');
     expect(source).not.toHaveProperty('groups');
     expect(source).not.toHaveProperty('layouts');
     for (const mode of [ThemeMode.Light, ThemeMode.Dark]) {
@@ -286,7 +286,7 @@ describe('ComponentPreview global theme', () => {
       expect(output.svg).toContain('font-size="12"');
     }
     const override = buildPreviewIR(() => (
-      <PreviewFlowDiagram {...logicFigureGraphProps()} flowDefaults={{ entity: { style: { font: { size: 20 } } } }}>
+      <PreviewFlowDiagram {...logicFigureGraphProps()} defaultFlow={{ entity: { style: { font: { size: 20 } } } }}>
         <FlowEntity id="source" text="Source" />
       </PreviewFlowDiagram>
     ));

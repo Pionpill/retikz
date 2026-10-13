@@ -30,8 +30,6 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
         id="local-frame"
         position={[20, 56]}
         label={{ text: t.top, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 152 } }}
-        style={{ font: { size: 13 }, textColor: 'currentColor' }}
         entries={[
           {
             key: { id: 'inner-a-key', content: 'a', style: { fill: 'dodgerblue' } },
@@ -42,6 +40,12 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
             value: { id: 'inner-c', content: t.localLayout },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 }, textColor: 'currentColor' },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 152 } },
+        }}
       />
       <Node
         position={[143, 151]}
@@ -51,8 +55,6 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
       <Map
         position={[20, 237]}
         label={{ text: t.root, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 206 } }}
-        style={{ font: { size: 13 }, textColor: 'currentColor' }}
         entries={[
           {
             key: { id: 'outer-a-key', content: 'a' },
@@ -67,12 +69,16 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
             value: { id: 'outer-group', content: 'scope-placeholder' },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 }, textColor: 'currentColor' },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 206 } },
+        }}
       />
       <Map
         position={[370, 237]}
         label={{ text: t.root, opacity: 0.8, font: { size: 12 } }}
-        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 206 } }}
-        style={{ font: { size: 13 }, textColor: 'currentColor' }}
         entries={[
           {
             key: { id: 'after-a-key', content: 'a', style: { fill: 'dodgerblue' } },
@@ -87,6 +93,12 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
             value: { id: 'after-group', content: 'resolved' },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 }, textColor: 'currentColor' },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 206 } },
+        }}
       />
       <Draw
         way={[
@@ -103,7 +115,7 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
         cornerRadius={8}
         position={[505, 80]}
         text={t.result}
-        style={{ fill: 'gray', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
+        style={{ fill: 'gray', stroke: 'none', font: { size: 13 }, opacity: { fill: 0.14 } }}
       />
       <Draw way={['after-query.right', [665, 80], '|-', 'after-a.right']} arrow="->" />
       <Node

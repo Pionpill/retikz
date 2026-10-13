@@ -77,7 +77,7 @@ describe('Frame layout compile', () => {
       id: 'frame-root',
       border: { style: { stroke: '#0284c7', strokeWidth: 2, fill: '#e0f2fe' }, cornerRadius: 4 },
       children: [{ ...body, id: 'body' }],
-      style: { ...fullScopeProps.style, stroke: '#0f172a' },
+      defaults: { ...fullScopeProps.defaults, style: { ...fullScopeProps.defaults.style, stroke: '#0f172a' } },
     });
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'frame-root');
     const border = pathsOf(root?.children ?? [])[0];

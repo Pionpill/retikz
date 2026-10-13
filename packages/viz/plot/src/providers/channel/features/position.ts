@@ -19,7 +19,11 @@ const positionChannelDefinitionOf = (role: string): BuiltinPositionChannelDefini
   pickWithOptions: () => mark => markEncoding(mark)?.[role],
 });
 
-/** 把坐标系 roles 包成 position channel definitions，供校验、域收集和 scale 推导共用同一读取入口 */
+/**
+ * 把坐标系 roles 包成 position channel definitions，供校验、域收集和 scale 推导共用同一读取入口
+ * @param roles 坐标系声明的位置角色；同名角色在索引中保留最后一项
+ * @returns 按角色名称索引的位置通道定义
+ */
 export const createPositionChannelDefinitions = (
   roles: ReadonlyArray<string>,
 ): ReadonlyMap<string, BuiltinPositionChannelDefinition> => {

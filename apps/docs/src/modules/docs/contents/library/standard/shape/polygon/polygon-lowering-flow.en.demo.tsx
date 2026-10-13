@@ -9,20 +9,20 @@ const Demo: FC = () => (
       position={[-105, -80]}
       text={['center', '+ radius']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 14 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="side-input"
       position={[-105, 0]}
       text={['center', '+ sideLength']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 14 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="angle-input"
       position={[-105, 80]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 14 }, opacity: { fill: 0.08 } }}
     >
       sides + rotate
     </Node>
@@ -31,13 +31,13 @@ const Demo: FC = () => (
       position={[85, 0]}
       text={['regular', 'vertex ring']}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14, weight: 'bold' } }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', font: { size: 14, weight: 'bold' }, opacity: { fill: 0.16 } }}
     />
     <Node
       id="path"
       position={[85, 100]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 14 }, opacity: { fill: 0.08 } }}
     >
       closed Path
     </Node>

@@ -46,7 +46,7 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
   const lineStyle = {
     stroke: values.lineStroke,
     strokeWidth: values.lineStrokeWidth,
-    strokeOpacity: values.lineOpacity,
+    opacity: { stroke: values.lineOpacity },
     ...(values.lineDashed ? { dashPattern: [6, 4] } : {}),
   };
   const major = values.majorEnabled
@@ -56,8 +56,8 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
         style: {
           stroke: values.majorStroke,
           strokeWidth: values.majorStrokeWidth,
-          strokeOpacity: values.majorOpacity,
           ...(values.majorDashed ? { dashPattern: [6, 4] } : {}),
+          opacity: { stroke: values.majorOpacity },
         },
       }
     : undefined;
@@ -70,10 +70,9 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
         style: {
           stroke: values.borderStroke,
           strokeWidth: values.borderStrokeWidth,
-          strokeOpacity: values.borderOpacity,
           fill: values.borderFill,
-          fillOpacity: values.borderFillOpacity,
           ...(values.borderDashed ? { dashPattern: [6, 4] } : {}),
+          opacity: { stroke: values.borderOpacity, fill: values.borderFillOpacity },
         },
       }
     : undefined;

@@ -152,7 +152,7 @@ describe('Flow defaults and formal Source fragments', () => {
     compileFlow(
       {
         ...baseFlow,
-        flowDefaults: { layout: { nodeGap } },
+        defaultFlow: { layout: { nodeGap } },
         entities: [
           { id: 'a', text: 'A' },
           { id: 'b', text: 'B' },
@@ -179,7 +179,7 @@ describe('Flow defaults and formal Source fragments', () => {
     const source = GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
-      graphDefaults: { entity: { style: { color: '#123456' } } },
+      defaultGraph: { entity: { style: { color: '#123456' } } },
       graphRules: [{ type: 'entity', style: { fill: '#654321' } }],
       children: [flow],
     });
@@ -199,7 +199,7 @@ describe('Flow defaults and formal Source fragments', () => {
         },
         description: { text: 'Service graph', style: { opacity: 0 }, layout: { lineHeight: 14 } },
       },
-      diagramDefaults: {
+      defaultDiagram: {
         presentation: { title: { style: { font: { size: 22 } } } },
         frame: {
           padding: 0,
@@ -211,7 +211,7 @@ describe('Flow defaults and formal Source fragments', () => {
           cornerRadius: 0,
         },
       },
-      flowDefaults: {
+      defaultFlow: {
         layout: { nodeGap: 12, rankGap: 24 },
         entity: { style: { font: { size: 14 } }, layout: { maxTextWidth: 180 } },
         group: { padding: 12, caption: { title: { font: { size: 12 } } } },
@@ -253,8 +253,9 @@ describe('Flow defaults and formal Source fragments', () => {
 
     const parsed = Flow.FlowDiagramSchema.parse(source);
 
-    expect(parsed).toEqual(source);
-    expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
+    const expected = { ...source, position: [0, 0] };
+    expect(parsed).toEqual(expected);
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(expected);
   });
 
   it('rejects legacy and misplaced fields with their real schema paths and keys', () => {
@@ -334,7 +335,7 @@ describe('Flow defaults and formal Source fragments', () => {
 
     const defaults = Flow.FlowDiagramSchema.safeParse({
       ...baseFlow,
-      flowDefaults: { layout: { direction: 'right', routing: { kind: 'straight' } } },
+      defaultFlow: { layout: { direction: 'right', routing: { kind: 'straight' } } },
     });
 
     expect(defaults.success).toBe(false);
@@ -344,7 +345,7 @@ describe('Flow defaults and formal Source fragments', () => {
     expect(defaults.error.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          path: ['flowDefaults', 'layout'],
+          path: ['defaultFlow', 'layout'],
           keys: expect.arrayContaining(['direction', 'routing']),
         }),
       ]),
@@ -355,7 +356,7 @@ describe('Flow defaults and formal Source fragments', () => {
     const output = compileFlow({
       ...baseFlow,
       presentation: { title: { text: 'Pipeline' } },
-      diagramDefaults: { presentation: { title: { style: { font: { size: 22 } } } } },
+      defaultDiagram: { presentation: { title: { style: { font: { size: 22 } } } } },
     });
     const artifact = artifactOf(output);
     const title = textPrimitive(output.scene.primitives, 'Pipeline');
@@ -416,7 +417,7 @@ describe('Flow defaults and formal Source fragments', () => {
     const output = compileFlow({
       namespace: 'diagram',
       type: 'flow',
-      flowDefaults: {
+      defaultFlow: {
         entity: { style: { font: { family: 'EntityWholeFont', size: 16, weight: 700 } } },
         relation: { labelFont: { family: 'RelationLabelFont', size: 16, weight: 700 } },
       },
@@ -442,7 +443,7 @@ describe('Flow defaults and formal Source fragments', () => {
     const output = compileFlow({
       namespace: 'diagram',
       type: 'flow',
-      flowDefaults: { group: { caption: { title: { font: { family: 'CaptionFont', size: 19, weight: 700 } } } } },
+      defaultFlow: { group: { caption: { title: { font: { family: 'CaptionFont', size: 19, weight: 700 } } } } },
       entities: [{ id: 'node', text: 'Node' }],
       groups: [{ id: 'group', caption: { title: { text: 'Caption', font } }, children: ['node'] }],
       layouts: [],
@@ -470,7 +471,7 @@ describe('Flow defaults and formal Source fragments', () => {
       {
         namespace: 'diagram',
         type: 'flow',
-        flowDefaults: { layout: { nodeGap: 12, rankGap: 24 } },
+        defaultFlow: { layout: { nodeGap: 12, rankGap: 24 } },
         layout: { direction: 'right', nodeGap: 50, rankGap: 60 },
         entities: [{ id: 'node', text: 'Node' }],
         groups: [

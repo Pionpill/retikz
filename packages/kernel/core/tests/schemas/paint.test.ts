@@ -370,11 +370,11 @@ describe('stroke IRPaint schema', () => {
     const input = {
       type: 'scope',
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
-      style: { stroke: strokePaint },
+      defaults: { style: { stroke: strokePaint } },
     };
     const parsed = ScopeSchema.parse(JSON.parse(JSON.stringify(input)));
 
-    expect(parsed).toEqual(input);
+    expect(parsed).toEqual({ ...input, position: [0, 0] });
   });
 
   it('invalid-stroke-paint：非法 IRPaint stroke 被 schema 拒绝', () => {

@@ -8,16 +8,19 @@ import { BuiltinPathStylePreview } from './builtin-path-style.preview';
 /** 注册回退使用的路径样式 controls */
 export const previewControls = builtinPathStyleControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values =>
-  BuiltinPathStylePreview({
-    dashMode: values.dashMode,
-    stroke: values.stroke,
-    strokeWidth: values.strokeWidth,
-    opacity: values.opacity,
-    lineCap: values.lineCap,
-    lineJoin: values.lineJoin,
-    roundedCorners: values.roundedCorners,
-  }),
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) =>
+  BuiltinPathStylePreview(
+    {
+      dashMode: values.dashMode,
+      stroke: values.stroke,
+      strokeWidth: values.strokeWidth,
+      opacity: values.opacity,
+      lineCap: values.lineCap,
+      lineJoin: values.lineJoin,
+      roundedCorners: values.roundedCorners,
+    },
+    dimensions,
+  ),
 );
 
 /** canonical 状态派生的稳定源码配置 */

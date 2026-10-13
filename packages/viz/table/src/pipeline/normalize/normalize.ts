@@ -21,7 +21,7 @@ const errorMessageOf = (error: unknown): string => (error instanceof Error ? err
 
 const createSemanticTableModel = (
   output: TableStructureOutput,
-  cellLayoutDefaults: NormalizeTableStructureOptions['cellLayoutDefaults'],
+  defaultCellLayout: NormalizeTableStructureOptions['defaultCellLayout'],
 ): SemanticTableModel =>
   deepFreeze({
     rows: output.rows.map((row, index) => ({ ...row, index })),
@@ -40,10 +40,7 @@ const createSemanticTableModel = (
         columns: cell.span?.columns ?? 1,
       },
       layout: {
-        padding: resolveBoxSpacing(
-          cell.layout?.padding ?? cellLayoutDefaults?.[cell.location]?.padding ?? undefined,
-          0,
-        ),
+        padding: resolveBoxSpacing(cell.layout?.padding ?? defaultCellLayout?.[cell.location]?.padding ?? undefined, 0),
         horizontalAlign: cell.layout?.horizontalAlign ?? TableHorizontalAlignment.Center,
         verticalAlign: cell.layout?.verticalAlign ?? TableVerticalAlignment.Center,
         wrap: cell.layout?.wrap ?? false,
@@ -81,7 +78,7 @@ export const normalizeTableStructure = (
       context,
     );
 
-    return createSemanticTableModel(output, options.cellLayoutDefaults);
+    return createSemanticTableModel(output, options.defaultCellLayout);
   } catch (error) {
     throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
   }

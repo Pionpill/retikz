@@ -16,7 +16,6 @@ export const renderStackPreview = (values: StackPreviewValues) => (
   <Layout>
     <Stack
       items={['A', 'B', 'C']}
-      layout={{ direction: values.direction, reverseArrows: values.reverseArrows, width: 44, height: 32 }}
       border={values.border}
       padding={Number(values.padding)}
       arrow={{
@@ -34,6 +33,8 @@ export const renderStackPreview = (values: StackPreviewValues) => (
             ? { style: { stroke: 'darkorange', strokeWidth: 2 }, arrowDetail: { shape: 'normal' } }
             : true),
       }}
+      layout={{ direction: values.direction, reverseArrows: values.reverseArrows }}
+      defaultCell={{ layout: { width: 44, height: 32 } }}
     />
   </Layout>
 );

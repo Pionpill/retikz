@@ -122,7 +122,7 @@ describe('Flow Theme cascade', () => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',
-      flowDefaults: {
+      defaultFlow: {
         layout: { nodeGap: 12, rankGap: 24 },
         entity: { style: { fill: 'transparent', opacity: 0.7, font: { size: 16 } }, layout: { margin: 2 } },
       },
@@ -152,7 +152,7 @@ describe('Flow Theme cascade', () => {
     expect(resolved.layout).toMatchObject({ nodeGap: 12, rankGap: 24 });
     expect(group.layout).toEqual({ nodeGap: 20 });
     expect(entity.style).toMatchObject({
-      opacity: 0,
+      opacity: { overall: 0 },
       dashed: false,
       fill: 'transparent',
       font: { weight: 700 },

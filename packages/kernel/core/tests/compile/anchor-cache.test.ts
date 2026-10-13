@@ -22,25 +22,25 @@ const makeLayout = (
   const def =
     shape === 'circle' ? BUILTIN_SHAPES.ellipse : shape === 'diamond' ? BUILTIN_SHAPES.polygon : BUILTIN_SHAPES[shape];
   return {
-    shapeName: shape,
-    shapeDef: def,
-    shapeParams:
-      shape === 'circle' ? { circumscribe: 'equal' } : shape === 'diamond' ? { sides: 4, rotate: 0 } : undefined,
-    rect: { x: cx, y: cy, width, height, rotate },
-    contentCenter: [cx, cy],
-    rotateDeg: (rotate * 180) / Math.PI,
-    margin: boxInsets(0),
-    textWidth: 0,
-    textHeight: 0,
-    align: 'middle',
-    lineHeight: 0,
-    fontSize: 0,
-    boundaryResolution: {
+    shape: {
+      name: shape,
+      definition: def,
+      params: shape === 'circle' ? { circumscribe: 'equal' } : shape === 'diamond' ? { sides: 4, rotate: 0 } : {},
+    },
+    geometry: {
+      rect: { x: cx, y: cy, width, height, rotate },
+      contentCenter: [cx, cy],
+      margin: boxInsets(0),
+      contentSize: { width: 0, height: 0 },
+    },
+    boundary: {
       name: def.name,
       definition: def,
       params: shape === 'circle' ? { circumscribe: 'equal' } : shape === 'diamond' ? { sides: 4, rotate: 0 } : {},
       isShape: true,
     },
+    irPath: 'synthetic.test',
+    node: {},
   };
 };
 
@@ -210,18 +210,16 @@ describe('resolveEdgePoint 边上比例点', () => {
       *emit() {},
     });
     const layout: NodeLayout = {
-      shapeName: 'custom',
-      shapeDef: noEdge,
-      rect: { x: 0, y: 0, width: 20, height: 10, rotate: 0 },
-      contentCenter: [0, 0],
-      rotateDeg: 0,
-      margin: boxInsets(0),
-      textWidth: 0,
-      textHeight: 0,
-      align: 'middle',
-      lineHeight: 0,
-      fontSize: 0,
-      boundaryResolution: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },
+      shape: { name: 'custom', definition: noEdge, params: {} },
+      geometry: {
+        rect: { x: 0, y: 0, width: 20, height: 10, rotate: 0 },
+        contentCenter: [0, 0],
+        margin: boxInsets(0),
+        contentSize: { width: 0, height: 0 },
+      },
+      boundary: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },
+      irPath: 'synthetic.test',
+      node: {},
     };
 
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);

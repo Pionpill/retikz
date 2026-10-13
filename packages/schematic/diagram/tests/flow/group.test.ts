@@ -50,13 +50,12 @@ describe('Flow Group Graph surface', () => {
       caption,
       labels: [{ text: 'Boundary', position: 'bottom' }],
       frame: GroupSchema.shape.frame.unwrap().parse({}),
-      style: { opacity: 0.8 },
       theme: { mode: 'dark' },
-      defaults: { node: { style: { font: { size: 16 } } } },
+      defaults: { style: { opacity: 0.8 }, node: { style: { font: { size: 16 } } } },
       zIndex: 4,
       boundingShape: 'circle',
       meta: { owner: 'runtime' },
-      graphDefaults: { entity: { style: { textColor: 'red' } } },
+      defaultGraph: { entity: { style: { textColor: 'red' } } },
     });
     const parsed = Flow.FlowDiagramSchema.parse(source);
 
@@ -84,7 +83,7 @@ describe('Flow Group Graph surface', () => {
   it('merges both caption text defaults without creating absent text items', () => {
     const source = {
       ...flow({ caption: { description: { text: 'Detail', font: { weight: 700 } } } }),
-      flowDefaults: {
+      defaultFlow: {
         group: {
           caption: {
             side: 'bottom' as const,
@@ -123,7 +122,7 @@ describe('Flow Group Graph surface', () => {
       groups: [
         {
           id: 'outer',
-          graphDefaults: {
+          defaultGraph: {
             entity: { layout: { maxTextWidth: 45 } },
             group: { border: { stroke: 'red' } },
             relation: { style: { stroke: 'red' } },
@@ -203,7 +202,7 @@ describe('Flow Group Graph surface', () => {
       flow({
         meta: { owner: 'service' },
         clip: { kind: 'rect', x: 0, y: 0, width: 200, height: 100 },
-        style: { opacity: 0.8 },
+        defaults: { style: { opacity: 0.8 } },
         frame: GroupSchema.shape.frame.unwrap().parse({ padding: 5, style: { stroke: 'red' } }),
         animations: [],
       }),

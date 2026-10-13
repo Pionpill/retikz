@@ -32,7 +32,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { row: 0, column: 0, overflow: 'clip', label: 'M' },
-    relatedApis: ['Matrix.cellIdMode', 'Matrix.label', 'Matrix.layout.overflow'],
+    relatedApis: ['Matrix.cellIdMode', 'Matrix.label', 'Matrix.defaultCell.layout.overflow'],
   } satisfies PreviewControlContract;
 };
 

@@ -11,9 +11,9 @@ export type IRQueueSkeleton = input<typeof QueueSkeletonSchema>;
 /** 队首到队尾的稀疏 Source，三种输入互斥 */
 export type IRQueue = Omit<
   input<typeof QueueSchema>,
-  Exclude<keyof IRScopeProps, 'style'> | 'items' | 'data' | 'skeleton' | 'dataExpand'
+  keyof IRScopeProps | 'items' | 'data' | 'skeleton' | 'dataExpand'
 > &
-  Omit<IRScopeProps, 'style'> &
+  IRScopeProps &
   (
     | {
         /** 显式单格，最后一项为队尾 */ items: Array<string | IRCell>;

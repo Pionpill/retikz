@@ -72,9 +72,9 @@ layout.direction defaults to down and also accepts up, right, and left. Vertical
 
 Nodes at the same depth share a center line. Each parent is centered between its first and last direct child centers, including the centers of missing slots. Deeper descendants do not shift the parent merely by enlarging the subtree envelope. Tree measures text and shapes before arranging whole envelopes; it does not interleave branches to compact whitespace, avoid obstacles, or rotate nodes.
 
-node configures Core Node shape, style, and layout. Defaults are circle, no fill, a 1-pixel stroke, minimumSize 32, padding 2, and margin 0. The minimum is not a fixed size: longer text enlarges nodes. Per-item node settings in root affect only that node; descendants inherit the global node settings.
+defaultNode configures node shape, style, and layout. Defaults are circle, no fill, a 1-pixel stroke, minimumSize 32, padding 2, and margin 0. The minimum is not a fixed size: longer text enlarges nodes. Per-item node settings in root affect only that node; descendants inherit the defaultNode settings.
 
-connection configures parent-child edges; false hides them. A per-item connection configures that node's incoming edge, so it is invalid on the root node. A local object can reenable a globally disabled connection. path accepts nonstructural Core Path properties including style, marks, and label. marks replaces the entire inherited array; an empty array clears arrows.
+defaultConnection configures parent-child edge defaults; false hides them. A per-item connection configures that node's incoming edge, so it is invalid on the root node. A local object can reenable a globally disabled connection. path accepts nonstructural Core Path properties including style, marks, and label. marks replaces the entire inherited array; an empty array clears arrows.
 
 This example explicitly enables arrows and lets you adjust direction, missing slots, and styles.
 
@@ -100,7 +100,7 @@ Nodes are measured from their text and padding, and Tree uses the resulting outl
 
 ### Connection routes and node references
 
-connection.route accepts straight, `-|`, `|-`, `-|-`, and `|-|`. Three-segment folds accept fraction to position the middle segment; straight and two-segment routes do not. Routes target whole parent and child nodes. The first and last segment directions determine intersections with their actual outlines, rather than fixed anchors. Compose additional curves and annotations with external Draw elements.
+defaultConnection.route accepts straight, `-|`, `|-`, `-|-`, and `|-|`. Three-segment folds accept fraction to position the middle segment; straight and two-segment routes do not. Routes target whole parent and child nodes. The first and last segment directions determine intersections with their actual outlines, rather than fixed anchors. Compose additional curves and annotations with external Draw elements.
 
 <ComponentPreview
   files={['tree-connections', 'tree-connections.preview.tsx']}

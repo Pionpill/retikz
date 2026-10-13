@@ -19,8 +19,33 @@ description: 理解本地与外接计算如何匹配同一变换语义，并通�
 例如内置 `sort` 按 `value` 升序排列记录。本地与外接实现都必须遵守相同的比较规则，保持字段模型，并在排序键相等时保留原有顺序。
 
 <SourceLinks
-  sources={[{ label: '阶段、Provider 与执行器契约', path: 'packages/viz/data/src/contract/execution.ts' }]}
+  sources={[
+    { label: '变换阶段与解析计划', path: 'packages/viz/data/src/transform/plan.ts' },
+    { label: 'Provider 与执行器契约', path: 'packages/viz/data/src/execution/contract.ts' },
+  ]}
 />
+
+## 变换链的形成
+
+Data 提供变换的语义描述与计算能力，执行器接收的是已有顺序的变换链。直接声明 `transform` 数组时，Data 按声明顺序处理；接收结果的消费方只需使用结果行和字段模型。
+
+当消费方需要从分散的声明中组装变换链时，可以读取 Definition 上可选的 `schedule`，依据自己的规则安排阶段并检查操作是否适用。Data 通过这份契约提供三个标记：
+
+| 字段           | 表达的含义                                                 |
+| -------------- | ---------------------------------------------------------- |
+| `phase`        | 操作所属阶段，如字段派生、行排序或字段调整                 |
+| `bindingClass` | 允许的绑定类别：`field` 表达字段绑定，`order` 表达顺序要求 |
+| `fieldEffect`  | 操作保留并扩展字段、替换行与字段结构，还是只重排行         |
+
+例如，消费方收集到归一化和抖动两条声明，可以按“字段派生先于字段调整”的规则生成 `normalize → jitter` 链。阶段顺序、同阶段的先后规则以及允许哪些绑定类别，由消费方确定；`schedule` 本身不会执行排序或增加操作。
+
+下图从左到右展示消费方对多个变换的整链检查：结合各操作的调度标记与输入输出契约，无冲突则通过，存在冲突则抛错。左侧列出同一条链中的操作，不表示并行执行：
+
+<ComponentPreview files="computation-chain" hideCode type="flow" size="sm" />
+
+消费方可以结合 `inputFields`、`outputModel` 提前检查字段依赖，例如后续操作是否读取了前序操作已移除的字段；不符合其组链规则时抛错。Data 仍负责自身的参数、字段语义与执行结果校验。下文的 Provider 预检则检查整条链能否由指定计算入口完成，准备成功后才绑定实际输入并依次执行。
+
+以 `sort` 为例，它声明 `row-order`、`order`、`reorder`，表达只改变行顺序。消费方可以据此判断它是否适合某个声明位置。Data 执行器不会根据这些标记重排显式变换链；`schedule` 也不记录溯源事件。
 
 ## 外接计算
 
@@ -165,7 +190,7 @@ export const SortedTable: FC = () => (
 
 执行器默认配置 < Plot / Chart / Table 根配置 < 单条 declaration 配置，优先级从左到右升高。`mode` 与 `external` 分别继承；注册 provider 本身不切换模式。异常、拒绝、取消和非法结果均不触发 hybrid 补算。
 
-<SourceLinks sources={[{ label: '执行模式与阶段选择', path: 'packages/viz/data/src/pipeline/execution.ts' }]} />
+<SourceLinks sources={[{ label: '执行模式与阶段选择', path: 'packages/viz/data/src/execution/executor.ts' }]} />
 
 ## 结果与失败
 
@@ -181,8 +206,8 @@ export const SortedTable: FC = () => (
 
 <SourceLinks
   sources={[
-    { label: '规范结果校验', path: 'packages/viz/data/src/resolve/transform/ingest.ts' },
-    { label: '取消与执行错误边界', path: 'packages/viz/data/src/pipeline/execution.ts' },
+    { label: '规范结果校验', path: 'packages/viz/data/src/execution/result.ts' },
+    { label: '取消与执行错误边界', path: 'packages/viz/data/src/execution/run.ts' },
   ]}
 />
 
@@ -213,7 +238,7 @@ Layout 会先对其管理的全部输入完成预检，再执行计算，并将�
 
 源数据的 format / parser / field map 配置只适用于需要源解析的输入，不能用于规范结果或原生源。
 
-<SourceLinks sources={[{ label: '输入绑定与执行请求', path: 'packages/viz/data/src/contract/execution.ts' }]} />
+<SourceLinks sources={[{ label: '输入绑定与执行请求', path: 'packages/viz/data/src/execution/contract.ts' }]} />
 
 ## 完整实现流程
 
@@ -221,11 +246,30 @@ Layout 会先对其管理的全部输入完成预检，再执行计算，并将�
 
 <ComponentPreview files="computation-execution" hideCode type="flow" size="md" />
 
-从 `resolveDataTransforms` 读取语义解析入口，再沿 `createDataTransformExecutor` 的 `prepare`、`bind` 和 `execute` 查看各阶段选择及结果传递。
+从 `resolveDataTransforms` 读取语义解析入口，再沿 `prepare`、`bind` 和 `execute` 查看各阶段选择及结果传递。内部实现按三个生命周期管理状态：
+
+| 内部实现                | 生命周期与职责                                                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `TransformExecutor`     | 由 `createDataTransformExecutor` 创建，可复用于多个请求；管理注册环境，通过 `prepare` 匹配阶段实现。                    |
+| `PreparedTransformPlan` | 每次预检使用独立计划，准备成功后可通过 `bind` 绑定多个符合描述的输入，不重新选择阶段实现。                              |
+| `TransformExecution`    | 每次绑定产生独立实例，管理该输入的计算与溯源记录；首次调用 `execute` 即消费执行权，等待、失败或取消后也不能重试该实例。 |
+
+例如，同一计划可以分别绑定两个分区，并独立执行；它们复用已选定的实现，各自维护计算游标和溯源记录。取消信号属于准备计划对应的请求：不同请求彼此独立，同一计划的多个绑定则响应同一个请求信号。
+
+这些 class 是内部实现。调用方继续使用 `createDataTransformExecutor` 及其返回的 `prepare → bind → execute` 接口。
+
+<SourceLinks
+  sources={[
+    { label: '语义解析入口', path: 'packages/viz/data/src/parse.ts' },
+    { label: '执行器与预检', path: 'packages/viz/data/src/execution/executor.ts' },
+    { label: '准备计划与绑定', path: 'packages/viz/data/src/execution/prepared-plan.ts' },
+    { label: '单次执行与结果推进', path: 'packages/viz/data/src/execution/run.ts' },
+  ]}
+/>
 
 ## 相关属性
 
-完整类型见 [Data API 参考](/viz/data/model/reference)。
+完整类型见[变换 API 参考](/viz/data/transform/reference)。
 
 <ComponentProps
   items={[

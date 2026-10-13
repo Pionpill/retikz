@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 
-import type { IRRegressionMethod } from './schemas';
+import type { IRRegressionMethod } from './operators/regression';
 
 /** Data 包稳定错误码 */
 export const RetikzDataErrorCode = {

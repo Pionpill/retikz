@@ -33,9 +33,9 @@ const cleanTableTheme = defineTableThemeStyle({
   name: 'clean',
   resolve: () => ({
     defaults: {
-      appearanceDefaults: {
-        body: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
-        columnHeader: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+      defaultAppearance: {
+        body: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
+        columnHeader: { background: { fill: 'none' }, content: { defaults: { style: { color: 'currentColor' } } } },
       },
       layout: { borders: { horizontal: { kind: 'none' } } },
     },
@@ -125,7 +125,7 @@ describe('Table React components', () => {
     const spec = createManualTableIR({
       id: 'encoded',
       rows: [[1]],
-      visualDefaults: { categorical: ['#123456'] },
+      defaultVisual: { categorical: ['#123456'] },
       encodings: [
         {
           id: 'palette',

@@ -6,7 +6,7 @@ import type { GeometryKeyPoint, NodeOwnerOutput, PathCommand } from '../../contr
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import { PathCommandSchema } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import { DEG_TO_RAD } from '../../shared/geometry';
+import { DEG_TO_RAD, RAD_TO_DEG } from '../../shared/geometry';
 import {
   assertProviderOutputKeys,
   providerOutputArray,
@@ -17,17 +17,15 @@ import {
 } from '../scene-primitive';
 import { resolveBoundary } from './boundary';
 import { nodeBaselineYsOf } from './emit';
+import type { NodeGeometryContext } from './geometry-context';
 import type { NodeLayout } from './types';
-
-/** 空 provider 参数对象 */
-const EMPTY_PARAMS: JsonObject = {};
 
 type Round = (value: number) => number;
 
 /** 将局部坐标点按 Node emit 使用的自身旋转投影到 occurrence-local 坐标 */
 const rotateNodePoint = (layout: NodeLayout, point: Position, round: Round): Position => {
-  const rect = layout.rect;
-  const rotation = round(layout.rotateDeg) * DEG_TO_RAD;
+  const rect = layout.geometry.rect;
+  const rotation = round((layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG) * DEG_TO_RAD;
   const cos = Math.cos(rotation);
   const sin = Math.sin(rotation);
   const centerX = round(rect.x);
@@ -42,21 +40,25 @@ const rotateNodePoint = (layout: NodeLayout, point: Position, round: Round): Pos
 
 /** 取 Node rect 的最终圆整快照 */
 const snapshotNodeRect = (layout: NodeLayout, round: Round): Rect => ({
-  ...layout.rect,
-  x: round(layout.rect.x),
-  y: round(layout.rect.y),
-  width: round(layout.rect.width),
-  height: round(layout.rect.height),
-  ...(layout.rect.rotate === undefined ? {} : { rotate: round(layout.rotateDeg) * DEG_TO_RAD }),
+  ...layout.geometry.rect,
+  x: round(layout.geometry.rect.x),
+  y: round(layout.geometry.rect.y),
+  width: round(layout.geometry.rect.width),
+  height: round(layout.geometry.rect.height),
+  ...(layout.geometry.rect.rotate === undefined
+    ? {}
+    : { rotate: round((layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG) * DEG_TO_RAD }),
 });
 
 /** 构造与 Node emit 同源的观测几何矩形；保留原始位置与尺寸，仅采用最终输出的圆整旋转角 */
 const observationRectOf = (layout: NodeLayout, round: Round): Rect => ({
-  x: layout.rect.x,
-  y: layout.rect.y,
-  width: layout.rect.width,
-  height: layout.rect.height,
-  ...(layout.rect.rotate === undefined ? {} : { rotate: round(layout.rotateDeg) * DEG_TO_RAD }),
+  x: layout.geometry.rect.x,
+  y: layout.geometry.rect.y,
+  width: layout.geometry.rect.width,
+  height: layout.geometry.rect.height,
+  ...(layout.geometry.rect.rotate === undefined
+    ? {}
+    : { rotate: round((layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG) * DEG_TO_RAD }),
 });
 
 /** 圆整一个已解析 PathCommand，不改变命令种类与可选字段语义 */
@@ -179,26 +181,26 @@ const readKeyPoints = (
 
 /** 从 settled Node layout 投影 occurrence-local 正文内容盒与物理基线 */
 const contentOutputOf = (layout: NodeLayout, round: Round): NodeOwnerOutput['content'] => {
-  const hasContent = layout.lines !== undefined || layout.inlineBlock !== undefined;
+  const hasContent = layout.text !== undefined;
   if (!hasContent) return null;
 
-  const halfWidth = layout.textWidth / 2;
-  const top = layout.contentCenter[1] - layout.textHeight / 2;
+  const halfWidth = layout.geometry.contentSize.width / 2;
+  const top = layout.geometry.contentCenter[1] - layout.geometry.contentSize.height / 2;
   const localCorners: NonNullable<NodeOwnerOutput['content']>['corners'] = [
-    [layout.contentCenter[0] - halfWidth, top],
-    [layout.contentCenter[0] + halfWidth, top],
-    [layout.contentCenter[0] + halfWidth, top + layout.textHeight],
-    [layout.contentCenter[0] - halfWidth, top + layout.textHeight],
+    [layout.geometry.contentCenter[0] - halfWidth, top],
+    [layout.geometry.contentCenter[0] + halfWidth, top],
+    [layout.geometry.contentCenter[0] + halfWidth, top + layout.geometry.contentSize.height],
+    [layout.geometry.contentCenter[0] - halfWidth, top + layout.geometry.contentSize.height],
   ];
   const corners = localCorners.map(point => {
     const [x, y] = rotateNodePoint(layout, point, round);
     return [round(x), round(y)] as [number, number];
   }) as NonNullable<NodeOwnerOutput['content']>['corners'];
-  const halfBaselineWidth = layout.textWidth / 2;
+  const halfBaselineWidth = layout.geometry.contentSize.width / 2;
   const baselineYs = nodeBaselineYsOf(layout, round).observed;
   const baselines = baselineYs.map(baselineY => {
-    const from = rotateNodePoint(layout, [layout.contentCenter[0] - halfBaselineWidth, baselineY], round);
-    const to = rotateNodePoint(layout, [layout.contentCenter[0] + halfBaselineWidth, baselineY], round);
+    const from = rotateNodePoint(layout, [layout.geometry.contentCenter[0] - halfBaselineWidth, baselineY], round);
+    const to = rotateNodePoint(layout, [layout.geometry.contentCenter[0] + halfBaselineWidth, baselineY], round);
 
     return {
       from,
@@ -210,34 +212,45 @@ const contentOutputOf = (layout: NodeLayout, round: Round): NodeOwnerOutput['con
 };
 
 /** 从同次 settled NodeLayout 发布 Node owner output */
-export const projectNodeOwnerOutput = (layout: NodeLayout, round: Round): NodeOwnerOutput => {
-  const shapeParams = layout.shapeParams ?? EMPTY_PARAMS;
+export const projectNodeOwnerOutput = (
+  layout: NodeLayout,
+  round: Round,
+  context?: NodeGeometryContext,
+): NodeOwnerOutput => {
+  const state = context?.get(layout);
+  const shapeParams = layout.shape.params;
   const observationRect = observationRectOf(layout, round);
   const shapeOutline =
-    layout.shapeDef.outline === undefined
+    layout.shape.definition.outline === undefined
       ? null
-      : readClosedOutline(`Shape '${layout.shapeName}'`, layout.shapeDef.outline, observationRect, shapeParams).map(
-          command => roundPathCommand(command, round),
-        );
+      : readClosedOutline(
+          `Shape '${layout.shape.name}'`,
+          layout.shape.definition.outline,
+          observationRect,
+          shapeParams,
+        ).map(command => roundPathCommand(command, round));
   const shapeKeyPoints =
-    layout.shapeDef.keyPoints === undefined
+    layout.shape.definition.keyPoints === undefined
       ? null
-      : readKeyPoints(`Shape '${layout.shapeName}'`, layout.shapeDef.keyPoints, observationRect, shapeParams).map(
-          point => ({
-            name: point.name,
-            position: [round(point.position[0]), round(point.position[1])] as [number, number],
-          }),
-        );
+      : readKeyPoints(
+          `Shape '${layout.shape.name}'`,
+          layout.shape.definition.keyPoints,
+          observationRect,
+          shapeParams,
+        ).map(point => ({
+          name: point.name,
+          position: [round(point.position[0]), round(point.position[1])] as [number, number],
+        }));
 
-  const boundaryGeometry = resolveBoundary(layout.boundaryResolution, {
-    visualDef: layout.shapeDef,
+  const boundaryGeometry = resolveBoundary(layout.boundary, {
+    visualDef: layout.shape.definition,
     visualRect: observationRect,
     visualParams: shapeParams,
     irPath: layout.irPath,
     connectionEnvelopeCache:
-      layout.connectionEnvelopeCache === undefined ? undefined : new Map(layout.connectionEnvelopeCache),
+      state?.connectionEnvelopeCache === undefined ? undefined : new Map(state.connectionEnvelopeCache),
     connectionEnvelopeWarnings:
-      layout.connectionEnvelopeWarnings === undefined ? undefined : new Set(layout.connectionEnvelopeWarnings),
+      state?.connectionEnvelopeWarnings === undefined ? undefined : new Set(state.connectionEnvelopeWarnings),
   });
   const boundaryOutline =
     boundaryGeometry.def.outline === undefined
@@ -251,8 +264,8 @@ export const projectNodeOwnerOutput = (layout: NodeLayout, round: Round): NodeOw
 
   return {
     rect: snapshotNodeRect(layout, round),
-    shape: { name: layout.shapeName, outline: shapeOutline, keyPoints: shapeKeyPoints },
-    boundary: { name: layout.boundaryResolution.name, outline: boundaryOutline },
+    shape: { name: layout.shape.name, outline: shapeOutline, keyPoints: shapeKeyPoints },
+    boundary: { name: layout.boundary.name, outline: boundaryOutline },
     content: contentOutputOf(layout, round),
   };
 };

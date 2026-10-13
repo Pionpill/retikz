@@ -23,19 +23,19 @@ export const FlowThemePreview = (values: FlowThemePreviewValues, lang: Lang) => 
       viewBox={
         lang === 'zh' ? { x: -71, y: -82.5, width: 420, height: 240 } : { x: -11.25, y: -64, width: 420, height: 240 }
       }
-      flowDefaults={{
+      defaultFlow={{
         entity: {
           style: {
             color: values.entityColor,
-            fillOpacity: values.entityFillOpacity,
             strokeWidth: values.entityStrokeWidth,
+            opacity: { fill: values.entityFillOpacity },
           },
         },
         relation: {
           style: {
             stroke: values.relationStroke,
             strokeWidth: values.relationStrokeWidth,
-            strokeOpacity: values.relationStrokeOpacity,
+            opacity: { stroke: values.relationStrokeOpacity },
           },
         },
       }}

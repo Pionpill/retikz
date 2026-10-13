@@ -30,7 +30,7 @@ const sample = (id: string, color: string, height: number) => (
     position={[0, 0]}
     text=""
     cornerRadius={4}
-    style={{ stroke: color, fill: color, fillOpacity: 0.14 }}
+    style={{ stroke: color, fill: color, opacity: { fill: 0.14 } }}
     layout={{ minimumSize: { width: 28, height }, padding: 0 }}
   />
 );

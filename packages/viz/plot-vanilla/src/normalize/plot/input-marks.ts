@@ -43,7 +43,6 @@ import type {
   IRPlotPointFillStyle,
   IRPlotPointNonnegativeNumberStyle,
   IRPlotPointNumberStyle,
-  IRPlotPointOpacityStyle,
   IRPlotPointShapeStyle,
   IRPlotPointSizeStyle,
   IRPlotPointStrokeStyle,
@@ -76,6 +75,18 @@ type InputPlotMarkValue<T> =
  * @template T 该视觉属性允许的常量值类型
  */
 export type InputPlotMarkValueProp<T> = InputPlotFieldName | T | InputPlotMarkValue<T>;
+
+/** 透明度输入；单值设置整体值，详细对象逐项设置字段或常量 */
+export type InputPlotOpacity =
+  | InputPlotMarkValueProp<number>
+  | {
+      /** 整体不透明度，和填充、描边因子相乘 */
+      overall?: InputPlotMarkValueProp<number>;
+      /** 填充不透明度 */
+      fill?: InputPlotMarkValueProp<number>;
+      /** 描边不透明度 */
+      stroke?: InputPlotMarkValueProp<number>;
+    };
 
 /** 路径端点样式 */
 export type InputPlotLineCap = 'butt' | 'round' | 'square';
@@ -151,8 +162,6 @@ export type InputPlotCorePathChannels = {
   fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
   /** 路径描边；字符串优先按字段名解析 */
   stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
-  /** 描边透明度 */
-  strokeOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
   /** 路径绘制顺序提示 */
   zIndex?: InputPlotMarkValueProp<number> | IRPlotPointZIndexStyle;
   /** 路径旋转角度 */
@@ -174,16 +183,10 @@ export type InputPlotCorePathChannels = {
 };
 
 /** Plot Node 宿主标签的 framework-neutral authoring 输入 */
-export type InputPlotMarkNodeLabel = Omit<IRNodeLabel, 'text'> & {
-  /** 标签的常量、字段或格式化内容来源 */
-  content: IRPlotMarkLabelContent;
-};
+export type InputPlotMarkNodeLabel = Omit<IRNodeLabel, 'text'> & IRPlotMarkLabelContent;
 
 /** Plot geometry 宿主标签的 framework-neutral authoring 输入 */
-export type InputPlotMarkGeometryLabel = Omit<IRGeometryLabel, 'text'> & {
-  /** 几何标签的常量、字段或格式化内容来源 */
-  content: IRPlotMarkLabelContent;
-};
+export type InputPlotMarkGeometryLabel = Omit<IRGeometryLabel, 'text'> & IRPlotMarkLabelContent;
 
 /** Relation 路由步骤标签的 framework-neutral authoring 输入 */
 export type InputPlotRelationStepLabel = Omit<IRStepLabel, 'text'> & {
@@ -205,53 +208,19 @@ export type InputPlotRelationPathGeometry = Omit<IRPlotRelationPathGeometry, 'la
   route?: Array<InputPlotRelationRouteStep>;
 };
 
-/**
- * 宿主 datum label 扁平属性：给位置 mark（point / interval / path）添加最高优先级的 datum 标签
- * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelDisplayFormat 进 IR（d3-format / d3-time-format 串）；
- *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）
- */
+/** 节点宿主标签输入：字符串绑定字段，对象细调内容及布局 */
+export type InputPlotNodeLabel = InputPlotFieldName | InputPlotMarkNodeLabel;
+
+/** 几何宿主标签输入：字符串绑定字段，对象细调内容及路径位置 */
+export type InputPlotGeometryLabel = InputPlotFieldName | InputPlotMarkGeometryLabel;
+
+/** 节点宿主 mark 的标签和扩展通道 */
 export type InputPlotDatumLabel = {
-  /** 扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理 */
+  /** 扩展通道绑定，字符串值按字段名处理 */
   channels?: Record<string, InputPlotExtensionChannel>;
-  /** datum 标签内容字段名（→ IR label.content.field；优先级低于 resolveLabel、高于无）；缺省不挂标签 */
-  label?: InputPlotFieldName;
-  /** 标签格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 label 字段同用 */
-  labelDisplayFormat?: string;
-  /** 标签相对宿主 Node 边框方位；Web 名为 canonical，compass 写法作为输入别名 */
-  labelPosition?: InputPlotMarkNodeLabel['position'];
-  /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
-  labelDistance?: number;
-  /** 从宿主边框拉引线到标签（core leader）；缺省 false */
-  labelPin?:
-    | boolean
-    | {
-        /** 标签引线的描边颜色 */
-        stroke?: string;
-        /** 标签引线的描边宽度 */
-        strokeWidth?: number;
-        /** 标签引线交替绘制与留白的长度序列 */
-        dashPattern?: Array<number>;
-      };
-  /** 数据标签的文字颜色覆盖 */
-  labelTextColor?: string;
-  /** 数据标签的透明度覆盖 */
-  labelOpacity?: number;
-  /** 数据标签的字体属性覆盖 */
-  labelFont?: {
-    /** 文字使用的字体族 */
-    family?: string;
-    /** 文字字号，使用绘图坐标单位 */
-    size?: number;
-    /** 文字字重，支持 normal、bold 或数值 */
-    weight?: 'normal' | 'bold' | number;
-    /** 文字使用正常、斜体或倾斜样式 */
-    style?: 'normal' | 'italic' | 'oblique';
-  };
-  /** 标签的固定旋转角度或相对宿主边界的旋转方式；数值单位为度 */
-  labelRotate?: 'none' | 'radial' | 'tangent' | number;
-  /** 是否翻转朝下的标签，使文字保持正向可读 */
-  labelKeepUpright?: boolean;
-  /** 完全自定义标签逃生舱（运行时函数，不进 IR；最高优先，覆盖 label/labelDisplayFormat）；需配 mark id 经 options 注入 */
+  /** 单个或有序多个标签；字符串为字段名 */
+  label?: InputPlotNodeLabel | Array<InputPlotNodeLabel>;
+  /** 运行时文字回调，优先于标签内容；需配 mark id，不进入 IR */
   resolveLabel?: (row: ExternalRow) => string;
 };
 
@@ -274,13 +243,13 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多条线；缺省取 series。连续 / 时间字段报错 */
     color?: InputPlotFieldName;
     /** 按路径几何放置的单个或多个标签 */
-    label?: InputPlotMarkGeometryLabel | Array<InputPlotMarkGeometryLabel>;
+    label?: InputPlotGeometryLabel | Array<InputPlotGeometryLabel>;
     /** 按有效数据行生成标签文字的运行时回调，需配合 mark id 使用 */
     resolveLabel?: (row: ExternalRow) => string;
     /** 路径描边宽度的常量或数据映射 */
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
     /** 路径整体透明度的常量或数据映射 */
-    opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
+    opacity?: InputPlotOpacity;
     /** 路径端点形状的常量或字段映射 */
     lineCap?: InputPlotFieldName | InputPlotLineCap | InputPlotMarkValue<InputPlotLineCap>;
     /** 路径连接处形状的常量或字段映射 */
@@ -333,10 +302,6 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
     /** 描边宽度：字符串优先按数据字段解析，数字为常量糖；需要显式控制时用 `{ kind, value }` */
     strokeWidth?: InputPlotFieldName | number | IRPlotPointStrokeWidthStyle;
-    /** 填充透明度：字符串按字段解析，数字为常量糖 */
-    fillOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
-    /** 描边透明度：字符串按字段解析，数字为常量糖 */
-    strokeOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 旋转角度：字符串按字段解析，数字为常量糖 */
     rotate?: InputPlotMarkValueProp<number> | IRPlotPointNumberStyle;
     /** node padding：字符串按字段解析，数字或对象为常量糖 */
@@ -348,7 +313,7 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     /** 尺寸字段（数值）：→ size 通道，经 sqrt 半径 scale 映射成 glyph 半径（面积感知正确）；负值报错 */
     size?: InputPlotFieldName | number | IRPlotPointSizeStyle;
     /** 不透明度：字符串按字段解析，数字为常量糖 */
-    opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
+    opacity?: InputPlotOpacity;
     /** 形状字段（分类）：→ shape 通道，按类别映射到 Plot shape palette；连续/时间字段报错 */
     shape?: InputPlotFieldName | InputPlotNodeShapeChannelValue | IRPlotPointShapeStyle;
     /** 文本内容字段名：给定则该 point 下沉为无边框带文本的 Node（吸收旧 text mark），否则散点 glyph */
@@ -418,10 +383,8 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
     /** 区间描边宽度的常量或数据映射 */
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
-    /** 区间填充透明度的常量或数据映射 */
-    fillOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 区间整体透明度的常量或数据映射 */
-    opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
+    opacity?: InputPlotOpacity;
     /** 极坐标 cell 之间的角度间隔，先于 sector 或 chord contour 投影应用 */
     padAngle?: number;
     /** 极坐标 cell 沿中角方向的静态视觉偏移 */
@@ -444,7 +407,7 @@ export type InputPlotRelationMark = InputPlotMarkTransform &
     /** 关系终点引用 */
     target: IRPlotTargetRef;
     /** 关系几何上的标签 */
-    label?: InputPlotMarkGeometryLabel | Array<InputPlotMarkGeometryLabel>;
+    label?: InputPlotGeometryLabel | Array<InputPlotGeometryLabel>;
     /** 关系 primitive 的视觉样式 */
     style?: IRPlotRelationPrimitiveStyle;
     /** 路径关系的几何配置 */
@@ -458,10 +421,9 @@ export type InputPlotRelationMark = InputPlotMarkTransform &
   };
 
 type InputPlotReferenceMarkLabel =
-  | InputPlotMarkNodeLabel
-  | Array<InputPlotMarkNodeLabel>
-  | InputPlotMarkGeometryLabel
-  | Array<InputPlotMarkGeometryLabel>;
+  | InputPlotNodeLabel
+  | InputPlotGeometryLabel
+  | Array<InputPlotNodeLabel | InputPlotGeometryLabel>;
 
 /**
  * <ReferenceMark> props：参考标注图层（阈值线 / 容差带 / 参考区域）
@@ -495,10 +457,8 @@ export type InputPlotReferenceMark = InputPlotMarkTransform &
     label?: InputPlotReferenceMarkLabel;
     /** 参考图元描边宽度的常量或数据映射 */
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
-    /** 参考区域填充透明度的常量或数据映射 */
-    fillOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
     /** 参考图元整体透明度的常量或数据映射 */
-    opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
+    opacity?: InputPlotOpacity;
     /** 转发到 `encoding.channels` 的扩展通道绑定；字符串值按字段名处理 */
     channels?: Record<string, InputPlotExtensionChannel>;
     /** 可选 mark 句柄（预留 scope/anchor） */

@@ -48,7 +48,7 @@ export const renderRibbonNonlinearWidthPreview = (values: RibbonNonlinearWidthPr
           },
           sampling: { kind: 'fixed', samples: sampleCount },
         }}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.22, stroke: 'dodgerblue', strokeWidth: 2 }}
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, opacity: { fill: 0.22 } }}
       >
         <Step kind="move" to={[0, 0]} />
         <Step to={[360, 0]} />

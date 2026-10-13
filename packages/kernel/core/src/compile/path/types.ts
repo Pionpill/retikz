@@ -22,11 +22,6 @@ export type PathEmitOptions = {
    * 缺省时不发出警告
    */
   onWarn?: (warning: CompileWarningInput) => void;
-  /**
-   * 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`）
-   * @default 'path'
-   */
-  irPath?: string;
   /** 该 path 所属 scope 的累积 transform 链 */
   scopeChain?: ReadonlyArray<Transform>;
   /**

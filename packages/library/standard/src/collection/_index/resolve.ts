@@ -9,7 +9,7 @@ export type CanonicalCollectionIndex = false | output<typeof CollectionIndexOpti
 /** 合并集合文字样式与索引覆盖，再补全自动编号和位置默认值 */
 export const resolveCollectionIndex = (
   index: boolean | input<typeof CollectionIndexOptionsSchema> | undefined,
-  style: input<typeof CollectionIndexStyleSchema> | undefined,
+  style: Pick<input<typeof CollectionIndexStyleSchema>, 'textColor' | 'font'> | undefined,
 ): CanonicalCollectionIndex => {
   if (index === undefined || index === false) return false;
 

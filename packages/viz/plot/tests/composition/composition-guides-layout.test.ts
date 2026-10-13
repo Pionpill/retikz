@@ -382,7 +382,7 @@ describe('composition guides layout lowering', () => {
     const spec = {
       ...facetSpec,
       guides: facetSpec.guides.map(guide => ({ ...guide, grid: undefined })),
-      plotDefaults: {
+      defaultPlot: {
         axis: { grid: false },
       },
       plotRules: [

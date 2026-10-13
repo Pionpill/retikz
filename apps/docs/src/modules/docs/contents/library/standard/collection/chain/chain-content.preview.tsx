@@ -7,7 +7,7 @@ export type ChainPreviewValues = { width: number; overflow: 'clip' | 'visible'; 
 /** 由公开参数绘制链 */
 export const renderChainPreview = (values: ChainPreviewValues) => (
   <Layout>
-    <Chain layout={{ width: values.width, overflow: values.overflow }}>
+    <Chain defaultCell={{ layout: { width: values.width, overflow: values.overflow } }}>
       <ChainCell text="A" />
       <ChainParallel>
         <ChainBranch>

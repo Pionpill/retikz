@@ -21,7 +21,6 @@ export const renderArrayLabelsPreview = (values: ArrayLabelsPreviewValues) => (
   <Layout viewBox={{ x: -120, y: -120, width: 440, height: 280 }}>
     <Array
       items={['A', 'B', 'C']}
-      layout={{ width: 56, height: 40, gap: 6 }}
       label={{
         text: values.text,
         position:
@@ -35,6 +34,8 @@ export const renderArrayLabelsPreview = (values: ArrayLabelsPreviewValues) => (
         textColor: values.color,
         pin: values.pin ? { stroke: values.color, strokeWidth: 1 } : false,
       }}
+      layout={{ gap: 6 }}
+      defaultCell={{ layout: { width: 56, height: 40 } }}
     />
   </Layout>
 );

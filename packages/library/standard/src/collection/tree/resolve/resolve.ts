@@ -29,7 +29,7 @@ const resolveConnection = (
 
 /** 文字与对象配置统一到节点，保留空子槽与显式身份 */
 export const resolveTree = (source: IRTree): CanonicalTree => {
-  const { root, node, connection, layout, label, namespace, type, ...scope } = source;
+  const { root, defaultNode: node, defaultConnection: connection, layout, label, namespace, type, ...scope } = source;
   void namespace;
   void type;
   const makeNode = (item?: Exclude<IRTreeItem, string>): IRNode => ({

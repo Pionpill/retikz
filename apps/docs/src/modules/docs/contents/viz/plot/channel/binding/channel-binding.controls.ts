@@ -104,6 +104,7 @@ export const previewControlContract = {
     shapeSource: 'field',
     showLabel: true,
   },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     {
       id: 'fields',

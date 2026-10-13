@@ -8,12 +8,15 @@ import { BuiltinOtherPreview } from './builtin-other.preview';
 /** 注册回退使用的其他通道数据面板 */
 export const previewControls = builtinOtherControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values =>
-  BuiltinOtherPreview({
-    pointZIndex: values.pointZIndex,
-    orderEnabled: values.orderEnabled,
-    seriesEnabled: values.seriesEnabled,
-  }),
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) =>
+  BuiltinOtherPreview(
+    {
+      pointZIndex: values.pointZIndex,
+      orderEnabled: values.orderEnabled,
+      seriesEnabled: values.seriesEnabled,
+    },
+    dimensions,
+  ),
 );
 
 /** canonical 状态派生的稳定源码配置 */

@@ -68,9 +68,9 @@ items、data、skeleton 三选一。items 字符串原样显示，显式 Cell �
 
 ### 调整堆叠与边框
 
-layout.direction 支持 up、down、left、right，分别朝上、下、左、右堆叠，开放端跟随方向。改变方向不会改变输入顺序。layout.width／height 始终是单格物理宽高；主轴保留每格尺寸，交叉轴 auto 格填满最大需求，固定小格居中且不拉伸。
+layout.direction 支持 up、down、left、right，分别朝上、下、左、右堆叠，开放端跟随方向。改变方向不会改变输入顺序。defaultCell.layout.width／height 始终是单格物理宽高；主轴保留每格尺寸，交叉轴 auto 格填满最大需求，固定小格居中且不拉伸。
 
-layout.gap 默认 8，比嵌套 Array／Map 的默认间距 2 更大，便于区分外层元素。layout.padding 控制格内留白，根 padding 控制容器留白，默认均为 8。border 默认绘制三边轮廓，可以用 `border={{ style: { stroke: 'dodgerblue', dashPattern: [4, 3] } }}` 设置线型；false 只隐藏边框，padding 仍有效。根 frame 保留通用容器装饰语义，与开放边框独立。
+layout.gap 默认 8，比嵌套 Array／Map 的默认间距 2 更大，便于区分外层元素。defaultCell.layout.padding 控制格内留白，根 padding 控制容器留白，默认均为 8。border 默认绘制三边轮廓，可以用 `border={{ style: { stroke: 'dodgerblue', dashPattern: [4, 3] } }}` 设置线型；false 只隐藏边框，padding 仍有效。根 frame 保留通用容器装饰语义，与开放边框独立。
 
 arrow 默认 false，true 同时开启两根箭头；对象中的 input、output 独立配置，省略的一侧隐藏，显式设置 true 或外观对象后显示，均经过栈顶开放端。默认向上排列时，入栈是先横后纵的 `-|` 折线，出栈是先纵后横的 `|-` 折线；其他方向整体旋转。 两个字段分别接受 true、false 或外观对象；对象的 style 配置颜色、线宽和虚线，arrowDetail 配置箭头形状、大小和颜色。箭头不改变单格与容器布局，空集合隐藏箭头；label 仍用于整体文字标签。
 

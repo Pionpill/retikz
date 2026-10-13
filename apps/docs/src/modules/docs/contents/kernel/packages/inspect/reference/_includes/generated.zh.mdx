@@ -1040,7 +1040,7 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 |        | `readonly selection?`    | `InspectionSelection`                                 | —                             | 与 authored wrapper rules 合并的显式 selection                                                           |
 | 布局   | `nodeDistance?`          | `number`                                              | `24`                          | 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效                |
 | 样式   | `fontSize?`              | `number`                                              | `16`                          | 默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号      |
-|        | `rootScope?`             | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                       |
+|        | `rootScope?`             | `Pick<InputScope, 'defaults'>`                        | —                             | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                       |
 |        | `theme?`                 | `IRScene['theme']`                                    | —                             | 写入 Scene 根并由后代 Composite 继承的 Theme                                                             |
 | 渲染   | `className?`             | `string`                                              | —                             | 宿主 className                                                                                           |
 |        | `height?`                | `number \| string`                                    | `computeDisplaySize`          | SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版 |

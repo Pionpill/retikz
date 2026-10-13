@@ -11,7 +11,7 @@ Chart Source 中，与具体绘图结构直接相关的配置集中在 `recipe` 
   description="Chart 仍在开发，Plot 已支持但 recipe 尚未封装的能力可暂由 plotExtension 补充；后续会尽量通过 recipe 的通道、属性和 marks 覆盖常用需求。稳定使用时若仍必须依赖 plotExtension，更适合直接基于 Plot 封装所需图形类型。"
 />
 
-[通用结构](/viz/chart/model/general-structure)中的 `data`、`coordinate`、`presentation`、`layout`、`background` 和 `chartDefaults` 提供数据、坐标与整图呈现。替换这些字段不会更换 chartType 或 recipe 定义的图元组合，但仍可能改变数据点位置、坐标表现与最终外观。
+[通用结构](/viz/chart/model/general-structure)中的 `data`、`coordinate`、`presentation`、`layout`、`background` 和 `defaultChart` 提供数据、坐标与整图呈现。替换这些字段不会更换 chartType 或 recipe 定义的图元组合，但仍可能改变数据点位置、坐标表现与最终外观。
 
 根级 `type` 只标识图形家族，用于分组和选择家族入口；同组 chartType 可以复用局部逻辑，例如点图的自动边缘留白，但 `type` 本身不决定具体图形的解析。`recipe.chartType` 决定两件事：
 
@@ -63,7 +63,7 @@ encodings: { x: 'weight', y: 'efficiency', color: 'group' }
 
 `plotExtension` 位于 Chart Source 根级，但它的作用需要结合 recipe 理解：recipe 先生成该类型所需的 Plot 内容，作者再用 `plotExtension` 显式补充底层 Plot 片段。自动生成的 Plot 结果不会写回这个字段。
 
-它可提供 Plot 的 `transform`、`scales`、`composition`、`marks`、`guides`、`plotDefaults`、`plotRules` 与 `meta`。其中 `plotExtension.marks` 是独立的 Plot 图元，不继承 `recipe.encodings` 或 `recipe.properties`；它与 Chart marks 消费同一份最终 encoding data view。根级 `coordinate` 与 `plotExtension.composition` 不能同时出现。
+它可提供 Plot 的 `transform`、`scales`、`composition`、`marks`、`guides`、`defaultPlot`、`plotRules` 与 `meta`。其中 `plotExtension.marks` 是独立的 Plot 图元，不继承 `recipe.encodings` 或 `recipe.properties`；它与 Chart marks 消费同一份最终 encoding data view。根级 `coordinate` 与 `plotExtension.composition` 不能同时出现。
 
 常用图形配置优先由 recipe 的通道、属性与 marks 表达；需要完整控制底层图形语法时可直接使用 Plot。
 

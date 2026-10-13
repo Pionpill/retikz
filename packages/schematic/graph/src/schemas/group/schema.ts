@@ -1,4 +1,11 @@
-import { ChildSchema, NodeLabelSchema, NodeSchema, ScopePropsSchema, Side } from '@retikz/core';
+import {
+  GraphicElementOpacitySchema,
+  ChildSchema,
+  NodeLabelSchema,
+  NodeSchema,
+  ScopePropsSchema,
+  Side,
+} from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { SurfaceSchema } from '@retikz/standard/presentation';
 import { array, enum as zodEnum, literal, strictObject } from 'zod';
@@ -14,7 +21,7 @@ export const GroupCaptionTextSchema = strictObject({
   maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth.describe('Maximum text width before wrapping.'),
   textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Local text color override.'),
   font: NodeSchema.shape.style.unwrap().shape.font.describe('Local font configuration.'),
-  opacity: NodeSchema.shape.style.unwrap().shape.opacity.describe('Text opacity.'),
+  opacity: GraphicElementOpacitySchema.shape.opacity.describe('Text opacity.'),
 }).describe('A Group caption text item composed only from the Core Node text surface.');
 
 /** Group caption 的上下位置 */
@@ -48,7 +55,7 @@ export const GroupSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Group).describe('Group Source composite discriminator.'),
   ...ScopePropsSchema.shape,
-  graphDefaults: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
+  defaultGraph: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
   graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   caption: GroupCaptionSchema.optional().describe('Structured caption placed inside the shell.'),
   labels: array(NodeLabelSchema)

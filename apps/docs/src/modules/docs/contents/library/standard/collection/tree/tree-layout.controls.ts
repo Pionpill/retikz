@@ -53,7 +53,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       arrows: true,
       styled: false,
     },
-    relatedApis: ['Tree.root', 'Tree.layout', 'Tree.node', 'Tree.connection'],
+    relatedApis: ['Tree.root', 'Tree.layout', 'Tree.defaultNode', 'Tree.defaultConnection'],
   } satisfies PreviewControlContract;
 };
 export const previewControlContract = createPreviewControlContract('zh');

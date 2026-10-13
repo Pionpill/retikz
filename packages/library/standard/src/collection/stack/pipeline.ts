@@ -11,7 +11,7 @@ import type { IRStack } from './schema';
 
 /** 在输入序列上一次测量，再沿指定方向放置并下沉框与标签 */
 export const compileStack = (source: IRStack, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
-  const { namespace, type, items, layout, style, label, arrow, border, padding, ...scope } = resolveStack(source);
+  const { namespace, type, items, layout, defaultCell, label, arrow, border, padding, ...scope } = resolveStack(source);
   const input = typeof arrow === 'object' ? arrow.input : arrow;
   const output = typeof arrow === 'object' ? arrow.output : arrow;
   void namespace;
@@ -79,5 +79,9 @@ export const compileStack = (source: IRStack, context: LayoutCompositeCompileCon
         ]),
       );
   }
-  return compileCells(cells, { width, height, scope, extra, decoration: { label, style } }, context);
+  return compileCells(
+    cells,
+    { width, height, scope, extra, decoration: { label, style: defaultCell?.style } },
+    context,
+  );
 };

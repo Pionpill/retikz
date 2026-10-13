@@ -194,7 +194,7 @@ Properties select the fitting method and drawing samples, and style observations
   method={{ kind: 'linear' }}
   sampleCount={64}
   point={{ size: 4, opacity: 0.55 }}
-  trend={{ stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 }}
+  trend={{ stroke: '#e11d48', strokeWidth: 2, opacity: { stroke: 0.9 } }}
 />
 ```
 
@@ -206,7 +206,7 @@ properties: {
   method: { kind: 'linear' },
   sampleCount: 64,
   point: { size: 4, opacity: 0.55 },
-  trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+  trend: { stroke: '#e11d48', strokeWidth: 2, opacity: { stroke: 0.9 } },
 },
 ```
 
@@ -219,7 +219,7 @@ recipe: {
     method: { kind: 'linear' },
     sampleCount: 64,
     point: { size: 4, opacity: 0.55 },
-    trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+    trend: { stroke: '#e11d48', strokeWidth: 2, opacity: { stroke: 0.9 } },
   },
 },
 ```

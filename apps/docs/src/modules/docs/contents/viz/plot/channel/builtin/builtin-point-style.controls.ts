@@ -107,6 +107,7 @@ export const previewControlContract = {
     size: 13,
     shape: BuiltinShape.Circle,
   },
+  presetSelector: { label: '预设', customLabel: '自定义' },
   presets: [
     {
       id: 'semantic-color',
@@ -143,8 +144,8 @@ export const previewControlContract = {
     'PointMark.stroke',
     'PointMark.strokeWidth',
     'PointMark.opacity',
-    'PointMark.fillOpacity',
-    'PointMark.strokeOpacity',
+    'PointMark.opacity.fill',
+    'PointMark.opacity.stroke',
     'PointMark.size',
     'PointMark.shape',
   ],

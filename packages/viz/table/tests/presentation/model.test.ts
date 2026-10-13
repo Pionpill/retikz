@@ -89,7 +89,7 @@ describe('Presented Table model', () => {
         kind: 'value' as const,
         cellId: 'cell.r0.c0',
         presentation: { name: 'inspect' },
-        appearance: { background: { fill: '#fff4e5' }, content: { style: { color: '#9a4d00' } } },
+        appearance: { background: { fill: '#fff4e5' }, content: { defaults: { style: { color: '#9a4d00' } } } },
       },
       {
         kind: 'content' as const,

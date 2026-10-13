@@ -34,8 +34,8 @@ describe('Scope frame', () => {
   it('默认外框不继承填充、透明度或节点默认，且始终位于负 zIndex 内容下面', () => {
     const scope: IRScope = {
       type: 'scope',
-      style: { color: 'red', fill: 'green', opacity: 0.2 },
-      defaults: { node: { style: { shadow: 'lg' } } },
+
+      defaults: { style: { color: 'red', fill: 'green', opacity: 0.2 }, node: { style: { shadow: 'lg' } } },
       children: content,
     };
     const plain = compile(scope);
@@ -120,7 +120,7 @@ it('描边和阴影进入自动取景，clip 限制外框而显式 viewBox 不�
 it('显式 undefined 使用默认值，上下文数值颜色由有效 Scope 主色解析', () => {
   const scene = compile({
     type: 'scope',
-    style: { color: '#ff0000' },
+    defaults: { style: { color: '#ff0000' } },
     frame: { style: { fill: 1, stroke: undefined, strokeWidth: undefined } },
     children: content,
   });

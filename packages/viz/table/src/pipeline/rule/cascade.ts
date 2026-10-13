@@ -1,3 +1,6 @@
+import type { IRGraphicStyle } from '@retikz/core';
+import { mergeGraphicStyle } from '@retikz/core';
+
 import type { TableCellAppearanceTracePath, TableCellPlanSource } from '../../contract';
 import { TableCellAppearanceTracePathSchema } from '../../contract';
 import type { IRTableCellAppearance } from '../../schemas';
@@ -5,15 +8,7 @@ import { TableCellAppearanceSchema, TableCellContentStyleSchema } from '../../sc
 import { deepFreeze } from '../../shared';
 import type { TableCellAppearanceTrace } from './types';
 
-const CONTENT_ATOMIC_FIELDS = [
-  'color',
-  'fill',
-  'fillOpacity',
-  'stroke',
-  'strokeWidth',
-  'strokeOpacity',
-  'opacity',
-] as const;
+const CONTENT_ATOMIC_FIELDS = ['color', 'fill', 'stroke', 'strokeWidth'] as const;
 
 const DEFAULT_FIELDS = ['node', 'path', 'label', 'arrow'] as const;
 
@@ -48,6 +43,19 @@ export const cascadeTableCellAppearance = (
   const next = structuredClone(appearance);
   const trace: MutableAppearanceTrace = structuredClone(currentTrace);
 
+  const applyOpacity = (
+    destination: { opacity?: IRGraphicStyle['opacity'] },
+    value: IRGraphicStyle['opacity'],
+    prefix: string,
+  ): void => {
+    if (value === undefined) return;
+    destination.opacity = mergeGraphicStyle(destination, { opacity: value }).opacity;
+    const factors = typeof value === 'number' ? { overall: value } : value;
+    for (const name of ['overall', 'fill', 'stroke'] as const) {
+      if (factors[name] !== undefined) setTrace(trace, `${prefix}/opacity/${name}`, source);
+    }
+  };
+
   if (patch.background !== undefined) {
     const background = structuredClone(next.background ?? {}) as Record<string, unknown>;
     background.fill = structuredClone(patch.background.fill);
@@ -67,21 +75,22 @@ export const cascadeTableCellAppearance = (
 
   if (patch.content !== undefined) {
     const content = structuredClone(next.content ?? {}) as Record<string, unknown>;
-    if (patch.content.style !== undefined) {
-      const style = { ...next.content?.style };
-      CONTENT_ATOMIC_FIELDS.forEach(field => {
-        const value = patch.content?.style?.[field];
-        if (value === undefined) return;
-
-        Object.assign(style, { [field]: structuredClone(value) });
-        setTrace(trace, `/content/style/${field}`, source);
-      });
-      content.style = style;
-    }
-
     if (patch.content.defaults !== undefined) {
       const defaults = structuredClone(next.content?.defaults ?? {}) as Record<string, unknown>;
       const defaultPatches = patch.content.defaults;
+      if (patch.content.defaults.style !== undefined) {
+        const style = { ...next.content?.defaults?.style };
+        CONTENT_ATOMIC_FIELDS.forEach(field => {
+          const value = patch.content?.defaults?.style?.[field];
+          if (value === undefined) return;
+
+          Object.assign(style, { [field]: structuredClone(value) });
+          setTrace(trace, `/content/defaults/style/${field}`, source);
+        });
+        applyOpacity(style, patch.content.defaults.style.opacity, '/content/defaults/style');
+        defaults.style = style;
+      }
+
       if (defaultPatches.reset !== undefined) {
         defaults.reset = structuredClone(defaultPatches.reset);
         setTrace(trace, '/content/defaults/reset', source);
@@ -98,6 +107,10 @@ export const cascadeTableCellAppearance = (
             if (value === undefined) return;
 
             const fieldPath = `${prefix}/${field}`;
+            if (field === 'opacity' && (channel === 'node' || channel === 'path') && prefix.endsWith('/style')) {
+              applyOpacity(destination, value as IRGraphicStyle['opacity'], prefix);
+              return;
+            }
             if (field === 'font' && (channel === 'node' || channel === 'label')) {
               const font = structuredClone(destination.font ?? {}) as Record<string, unknown>;
               FONT_FIELDS.forEach(fontField => {

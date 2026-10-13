@@ -20,7 +20,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolutionInput } from '../resource';
-import type { StyleResolveFrame } from '../style';
+import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
 import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 
 /** 已把派生颜色确定为字符串的 Node label pin */
@@ -77,7 +77,7 @@ export type CanonicalNodeLabel = Omit<
   pin?: boolean | ResolvedNodeLabelPin;
 };
 
-/** 展开 Node 紧凑写法与静态默认值后的完整内部形态 */
+/** 展开 Node 紧凑写法、静态默认值并完成 paint 解析的内部形态 */
 export type CanonicalNode = Omit<
   Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
   | 'padding'
@@ -93,40 +93,48 @@ export type CanonicalNode = Omit<
   | 'dotted'
   | 'dashPattern'
   | 'shadow'
-> & {
-  /** 已补齐默认值的位置，非笛卡尔形态交由布局阶段定位 */
-  position: NonNullable<IRNode['position']>;
-  /** 完整内边距 */
-  padding: BoundsInsets;
-  /** 完整外边距 */
-  margin: BoundsInsets;
-  /** 完整最小尺寸 */
-  minimumSize: {
-    /** 节点边界的最小宽度 */
-    width: number;
-    /** 节点边界的最小高度 */
-    height: number;
+  | 'fill'
+  | 'stroke'
+  | 'opacity'
+> &
+  GraphicOpacityResolution & {
+    /** 已解析的节点填充 */
+    fill?: PaintResolutionInput;
+    /** 已解析的节点描边 */
+    stroke?: PaintResolutionInput;
+    /** 已补齐默认值的位置，非笛卡尔形态交由布局阶段定位 */
+    position: NonNullable<IRNode['position']>;
+    /** 完整内边距 */
+    padding: BoundsInsets;
+    /** 完整外边距 */
+    margin: BoundsInsets;
+    /** 完整最小尺寸 */
+    minimumSize: {
+      /** 节点边界的最小宽度 */
+      width: number;
+      /** 节点边界的最小高度 */
+      height: number;
+    };
+    /** 完整轴向缩放 */
+    scale: {
+      /** 水平方向缩放系数 */
+      x: number;
+      /** 垂直方向缩放系数 */
+      y: number;
+    };
+    /** 多行正文 */
+    text?: Array<ResolvedTextLine>;
+    /** 已按数组形态展开的附属标签 */
+    label?: Array<CanonicalNodeLabel>;
+    /** 正文对齐 */
+    align: NodeTextAlign;
+    /** 节点旋转角度 */
+    rotate: number;
+    /** 已解析的边框虚线样式 */
+    dashPattern?: StrokeDashPattern;
+    /** 已展开预设与静态默认值的投影 */
+    shadow?: ResolvedDropShadow;
   };
-  /** 完整轴向缩放 */
-  scale: {
-    /** 水平方向缩放系数 */
-    x: number;
-    /** 垂直方向缩放系数 */
-    y: number;
-  };
-  /** 多行正文 */
-  text?: Array<ResolvedTextLine>;
-  /** 已按数组形态展开的附属标签 */
-  label?: Array<CanonicalNodeLabel>;
-  /** 正文对齐 */
-  align: NodeTextAlign;
-  /** 节点旋转角度 */
-  rotate: number;
-  /** 已解析的边框虚线样式 */
-  dashPattern?: StrokeDashPattern;
-  /** 已展开预设与静态默认值的投影 */
-  shadow?: ResolvedDropShadow;
-};
 
 /** 已解析的节点 shape 定义与实例参数 */
 export type ShapeResolution = {
@@ -185,28 +193,21 @@ export type BoundaryReferenceResolver = (
 ) => BoundaryReferenceResolution;
 
 /** 已解析的 Node 输入、shape 与默认连接面 */
-export type NodeResolution = {
+export type NodeResolution = Readonly<{
   /** 当前节点的 IR 路径，用于布局与 provider 诊断 */
   irPath: string;
-  /** 样式级联、静态默认值与 auto-contrast 完成后的节点 */
+  /** 样式级联、静态默认值、auto-contrast 与 paint 解析完成后的节点 */
   node: CanonicalNode;
   /** 节点视觉 shape */
   shape: ShapeResolution;
   /** 节点默认连接面引用 */
   boundary: BoundaryReferenceResolution;
-  /** 已按有效 pattern registry 解析的节点 paint */
-  paint: Readonly<{
-    /** 节点填充的已解析绘制输入 */
-    fill?: PaintResolutionInput;
-    /** 节点描边的已解析绘制输入 */
-    stroke?: PaintResolutionInput;
-  }>;
-};
+}>;
 
 /** Node resolve 阶段需要的样式、provider 与诊断上下文 */
 export type NodeResolveContext = {
-  /** 当前节点所在 scope 的样式 frame */
-  styleFrames: ReadonlyArray<StyleResolveFrame>;
+  /** 当前节点所在 scope 的有效默认配置 */
+  scopeDefaults: EffectiveScopeDefaults;
   /** 当前节点所在位置的 Theme 明暗模式 */
   mode: ThemeMode;
   /** shape provider 注册表 */

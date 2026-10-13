@@ -19,7 +19,7 @@ export type BuildTableManifestContext = Readonly<{
   /** 当前有效 Core Theme 的 mode */
   themeMode: ThemeMode;
   /** 同次 resolved Table defaults */
-  tableDefaults: ResolvedTableDefaults;
+  defaultTable: ResolvedTableDefaults;
   /** 同次 presented model */
   presented: PresentedTableModel;
   /** 可选同次 resolved Cell plans */
@@ -108,8 +108,8 @@ export const buildTableLayoutManifest = (
     style: {
       ...(manifestContext.style === undefined ? {} : { style: manifestContext.style }),
       themeMode: manifestContext.themeMode,
-      defaults: structuredClone(manifestContext.tableDefaults.defaults),
-      layers: structuredClone(manifestContext.tableDefaults.layers),
+      defaults: structuredClone(manifestContext.defaultTable.defaults),
+      layers: structuredClone(manifestContext.defaultTable.layers),
     },
     encodings: [...(manifestContext.encodings ?? [])],
     legendDescriptors: [...manifestContext.legendDescriptors],

@@ -4,7 +4,7 @@
 
 Graph, Group, Entity, and Relation are independent public semantic composites:
 
-- Graph is an optional thin shell over the complete Core Scope surface, adding local `graphDefaults` and `graphRules`
+- Graph is an optional thin shell over the complete Core Scope surface, adding local `defaultGraph` and `graphRules`
 - Group is a nestable arbitrary-content boundary with a Standard Surface shell, structured caption, and Core Node boundary labels
 - Entity optionally stores identity together with Node semantics, text, and Core-compatible placement fields; without identity it lowers as drawable-only Core content
 - Relation stores Core NodeTarget endpoints, direction, relationship semantics, labels, and an optional route; without a route it lowers to a direct Core Path

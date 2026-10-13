@@ -335,9 +335,9 @@ describe('Point Chart recipe Definitions', () => {
       placement: { adjustments: [{ kind: 'jitter', span: 0, seed: 0 }] },
     });
     expect(result.plot.marks[1]).toMatchObject({
-      opacity: { kind: 'constant', value: 0.4 },
       size: { kind: 'constant', value: 7 },
       placement: { adjustments: [{ kind: 'jitter', span: { kind: 'ratio', value: 0.5 }, seed: 3 }] },
+      opacity: { overall: { kind: 'constant', value: 0.4 } },
     });
   });
 
@@ -1110,7 +1110,7 @@ describe('Point Chart recipe Definitions', () => {
     expect(marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
     expect(marks[2]).toMatchObject({
       strokeWidth: { value: 3 },
-      opacity: { value: 0.6 },
+      opacity: { overall: { value: 0.6 } },
       transform: [
         {
           operation: expect.objectContaining({
@@ -1121,7 +1121,7 @@ describe('Point Chart recipe Definitions', () => {
     });
     expect(marks[3]).toMatchObject({
       strokeWidth: { value: 3 },
-      opacity: { value: 0.9 },
+      opacity: { overall: { value: 0.9 } },
       transform: [
         {
           operation: expect.objectContaining({
@@ -1185,7 +1185,7 @@ describe('Point Chart recipe Definitions', () => {
       if (extraMethods?.length !== 0)
         expect(result.plot.marks[2]).toMatchObject({
           strokeWidth: { value: 2 },
-          opacity: { value: 0.8 },
+          opacity: { overall: { value: 0.8 } },
           transform: [
             {
               operation: expect.objectContaining({
@@ -1387,12 +1387,11 @@ describe('Point Chart recipe Definitions', () => {
     expect(result.plot.marks[0]).toMatchObject({
       encoding: { x: { field: 'x2' }, y: { field: 'y' } },
       size: { kind: 'constant', value: 5 },
-      opacity: { kind: 'constant', value: 0.4 },
       color: { kind: 'field', value: 'series', scale: '__chart.regression.scale.series' },
+      opacity: { overall: { kind: 'constant', value: 0.4 } },
     });
     expect(result.plot.marks[1]).toMatchObject({
       strokeWidth: { kind: 'constant', value: 4 },
-      opacity: { kind: 'constant', value: 0.6 },
       transform: [
         {
           operation: expect.objectContaining({
@@ -1406,14 +1405,15 @@ describe('Point Chart recipe Definitions', () => {
           }),
         },
       ],
+      opacity: { overall: { kind: 'constant', value: 0.6 } },
     });
     expect(result.plot.marks[2]).toMatchObject({
       size: { kind: 'constant', value: 3 },
-      opacity: { kind: 'constant', value: 0.4 },
+      opacity: { overall: { kind: 'constant', value: 0.4 } },
     });
     expect(result.plot.marks[3]).toMatchObject({
       strokeWidth: { kind: 'constant', value: 2 },
-      opacity: { kind: 'constant', value: 0.8 },
+      opacity: { overall: { kind: 'constant', value: 0.8 } },
     });
   });
 
@@ -1467,8 +1467,8 @@ describe('Point Chart recipe Definitions', () => {
             type: 'point',
             encoding: { x: { field: 'income' }, y: { field: 'lifeExpectancy' } },
             size: { kind: 'field', value: 'population' },
-            fillOpacity: { kind: 'constant', value: 0.7 },
             strokeWidth: { kind: 'constant', value: 1 },
+            opacity: { fill: { kind: 'constant', value: 0.7 } },
           }),
         ],
       }),
@@ -1546,13 +1546,13 @@ describe('Point Chart recipe Definitions', () => {
     expect(result.plot.marks).toHaveLength(2);
     expect(result.plot.marks[0]).toMatchObject({
       size: { kind: 'field', value: 'population' },
-      fillOpacity: { kind: 'constant', value: 0.7 },
       strokeWidth: { kind: 'constant', value: 1 },
+      opacity: { fill: { kind: 'constant', value: 0.7 } },
     });
     expect(result.plot.marks[1]).toMatchObject({
       size: { kind: 'field', value: 'population' },
-      fillOpacity: { kind: 'constant', value: 0.7 },
       strokeWidth: { kind: 'constant', value: 1 },
+      opacity: { fill: { kind: 'constant', value: 0.7 } },
     });
   });
 
@@ -1617,9 +1617,8 @@ describe('Point Chart marks', () => {
 
     expect(result.marks[0]).toMatchObject({
       size: { kind: 'field', value: 'population' },
-      opacity: { kind: 'constant', value: 0.5 },
-      fillOpacity: { kind: 'constant', value: 0.7 },
       strokeWidth: { kind: 'constant', value: 1 },
+      opacity: { overall: { kind: 'constant', value: 0.5 }, fill: { kind: 'constant', value: 0.7 } },
     });
   });
 
@@ -1628,7 +1627,7 @@ describe('Point Chart marks', () => {
       chartType: 'bubble',
       source: {
         kind: 'bubble',
-        properties: { fillOpacity: 0.9, stroke: '#0f172a', strokeWidth: 2 },
+        properties: { opacity: { fill: 0.9 }, stroke: '#0f172a', strokeWidth: 2 },
       },
       inherited: {
         encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
@@ -1637,9 +1636,9 @@ describe('Point Chart marks', () => {
     });
 
     expect(result.marks[0]).toMatchObject({
-      fillOpacity: { kind: 'constant', value: 0.9 },
       stroke: { kind: 'constant', value: '#0f172a' },
       strokeWidth: { kind: 'constant', value: 2 },
+      opacity: { fill: { kind: 'constant', value: 0.9 } },
     });
   });
 
@@ -1656,7 +1655,7 @@ describe('Point Chart marks', () => {
     expect(result.marks[0]).toMatchObject({
       type: 'point',
       encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-      opacity: { kind: 'constant', value: 0 },
+      opacity: { overall: { kind: 'constant', value: 0 } },
     });
   });
 
@@ -1674,9 +1673,7 @@ describe('Point Chart marks', () => {
       },
     });
 
-    expect(result.marks[0]).toMatchObject({
-      opacity: { kind: 'field', value: 'explicitOpacity' },
-    });
+    expect(result.marks[0]).toMatchObject({ opacity: { overall: { kind: 'field', value: 'explicitOpacity' } } });
   });
 });
 
@@ -1923,5 +1920,23 @@ describe('Regression hidden observations', () => {
       ]);
 
     expect(plotOf(true, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
+  });
+});
+
+it('a fill-only mark override preserves the inherited overall field', () => {
+  const result = ScatterMarkDefinition.resolve({
+    chartType: 'scatter',
+    source: { kind: 'scatter', properties: { opacity: { fill: 0 } } },
+    inherited: {
+      encodings: { x: 'amount', y: 'margin', opacity: 'alpha' },
+      properties: { opacity: { stroke: 0.8 } },
+    },
+  });
+  expect(result.marks[0]).toMatchObject({
+    opacity: {
+      overall: { kind: 'field', value: 'alpha' },
+      fill: { kind: 'constant', value: 0 },
+      stroke: { kind: 'constant', value: 0.8 },
+    },
   });
 });

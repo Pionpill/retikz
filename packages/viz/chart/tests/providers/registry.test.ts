@@ -78,13 +78,13 @@ describe('active Chart provider registry', () => {
     const base = defineChartTheme({
       name: 'base',
       defaults: { background: { fill: '#101010' }, layout: { gap: 4 } },
-      plotDefaults: { palette: { series: ['#111111'] } },
+      defaultPlot: { palette: { series: ['#111111'] } },
     });
     const clean = defineChartTheme({
       name: 'clean',
       base: 'base',
       defaults: { layout: { padding: 8 } },
-      plotDefaults: { palette: { categorical: ['#222222'] } },
+      defaultPlot: { palette: { categorical: ['#222222'] } },
     });
     const registry = resolveChartProviderRegistry([
       { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), themeDefinitions: [base, clean] },
@@ -93,10 +93,10 @@ describe('active Chart provider registry', () => {
       namespace: 'chart',
       type: 'point',
       data: { reference: 'rows' },
-      chartDefaults: { layout: { gap: 10 } },
+      defaultChart: { layout: { gap: 10 } },
       recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
       plotExtension: {
-        plotDefaults: { palette: { series: ['#999999'] } },
+        defaultPlot: { palette: { series: ['#999999'] } },
         plotRules: [{ select: { dimension: 'x' }, axis: { grid: false } }],
       },
     });
@@ -109,10 +109,10 @@ describe('active Chart provider registry', () => {
       background: { fill: '#101010' },
       layout: { padding: 8, gap: 10 },
     });
-    expect(resolution.theme.plotDefaults).toEqual({
+    expect(resolution.theme.defaultPlot).toEqual({
       palette: { series: ['#111111'], categorical: ['#222222'] },
     });
-    expect(resolution.plot.plotDefaults).toEqual({
+    expect(resolution.plot.defaultPlot).toEqual({
       palette: { series: ['#999999'], categorical: ['#222222'] },
     });
     expect(resolution.plot.plotRules).toEqual(source.plotExtension?.plotRules);

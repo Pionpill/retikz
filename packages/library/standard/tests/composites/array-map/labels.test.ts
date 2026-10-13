@@ -25,13 +25,15 @@ const sources: Array<IRArray | IRMap> = [
     namespace: 'standard',
     type: 'array',
     items: [{ id: 'cell', content: 'a' }],
-    layout: { width: 80, height: 40, gap: 0 },
+    layout: { gap: 0 },
+    defaultCell: { layout: { width: 80, height: 40 } },
   },
   {
     namespace: 'standard',
     type: 'map',
     entries: [{ key: { id: 'cell', content: 'a' }, value: 'b' }],
-    layout: { width: 40, height: 40, gap: 0 },
+    layout: { gap: 0 },
+    defaultCell: { layout: { width: 40, height: 40 } },
   },
 ];
 
@@ -114,7 +116,15 @@ describe('Array / Map container labels', () => {
     for (const source of sources) expect(labelsOf([{ ...source, label, defaults }])).toEqual(expected);
 
     for (const source of sources)
-      expect(labelsOf([{ ...source, label, style: { font: { size: 18 }, textColor: 'blue' } }])).toEqual(
+      expect(
+        labelsOf([
+          {
+            ...source,
+            label,
+            defaultCell: { ...source.defaultCell, style: { font: { size: 18 }, textColor: 'blue' } },
+          },
+        ]),
+      ).toEqual(
         labelsOf([
           {
             ...host(label),

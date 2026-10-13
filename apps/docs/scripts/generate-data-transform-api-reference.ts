@@ -1,7 +1,9 @@
 import path from 'node:path';
 
+import { writeDataProvenanceApiReferenceMdx } from './api-reference/data-provenance';
 import { writeDataTransformApiReferenceMdx } from './api-reference/data-transform';
 
 await writeDataTransformApiReferenceMdx(
   path.resolve(import.meta.dirname, '../src/modules/docs/contents/viz/data/transform/reference/_includes'),
 );
+await writeDataProvenanceApiReferenceMdx();

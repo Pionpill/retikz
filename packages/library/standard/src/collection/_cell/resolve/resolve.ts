@@ -1,4 +1,4 @@
-import { resolveBoxSpacing } from '@retikz/core';
+import { resolveBoxSpacing, mergeGraphicStyle, resolveGraphicOpacity } from '@retikz/core';
 
 import type { IRCellStyle } from '../schema';
 import {
@@ -12,14 +12,14 @@ import type { CanonicalCell, CellResolveContext, CellResolveSource } from './typ
 
 /** 只合并显式字段；字体子字段保留先前继承值 */
 const mergeStyle = (styles: Array<IRCellStyle | undefined>): IRCellStyle => {
-  const result: IRCellStyle = {};
+  const result: IRCellStyle = mergeGraphicStyle(...styles);
 
   for (const style of styles) {
     if (style === undefined) continue;
 
     for (const key of Object.keys(style) as Array<keyof IRCellStyle>) {
       const value = style[key];
-      if (value === undefined || key === 'font') continue;
+      if (value === undefined || key === 'font' || key === 'opacity') continue;
       Object.assign(result, { [key]: value });
     }
 
@@ -53,7 +53,7 @@ export const resolveCell = (source: string | CellResolveSource, context: CellRes
       content.type === 'stack' ||
       content.type === 'queue' ||
       content.type === 'tree');
-  const visualDefaults = nestedCollection ? NestedCollectionCellDefaultsSchema : CellDefaultsSchema;
+  const defaultVisual = nestedCollection ? NestedCollectionCellDefaultsSchema : CellDefaultsSchema;
   const layoutDefaults = nestedCollection ? NestedCollectionCellLayoutDefaultsSchema : CellLayoutDefaultsSchema;
   const style = mergeStyle([overallStyle, roleStyle, cell.style]);
   const width = cell.layout?.width ?? roleLayout?.width ?? overallLayout?.width;
@@ -74,11 +74,16 @@ export const resolveCell = (source: string | CellResolveSource, context: CellRes
         : cell.content,
     style: {
       ...style,
-      fill: style.fill ?? visualDefaults.shape.fill.parse(undefined),
-      fillOpacity:
-        style.fillOpacity ?? (isKey ? KeyCellDefaultsSchema : CellDefaultsSchema).shape.fillOpacity.parse(undefined),
+      fill: style.fill ?? defaultVisual.shape.fill.parse(undefined),
       stroke: style.stroke ?? CellDefaultsSchema.shape.stroke.parse(undefined),
       cornerRadius: style.cornerRadius ?? CellDefaultsSchema.shape.cornerRadius.parse(undefined),
+      opacity: {
+        ...(typeof style.opacity === 'number' ? { overall: style.opacity } : style.opacity),
+        fill:
+          resolveGraphicOpacity(style.opacity).fillOpacity ??
+          resolveGraphicOpacity((isKey ? KeyCellDefaultsSchema : CellDefaultsSchema).shape.opacity.parse(undefined))
+            .fillOpacity!,
+      },
     },
     layout: {
       ...(width === undefined ? {} : { width }),

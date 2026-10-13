@@ -51,7 +51,7 @@ export const resolveChain = (source: IRChain): CanonicalChain => {
         },
   );
 
-  const connection = resolveConnection(source.connection);
+  const connection = resolveConnection(source.defaultConnection);
   const visit = (
     items: Array<IRChainItem>,
     parentLayout: CanonicalChainLayout,
@@ -59,10 +59,16 @@ export const resolveChain = (source: IRChain): CanonicalChain => {
   ): Array<CanonicalChainItem> =>
     items.map(item => {
       if (typeof item === 'string' || item.kind === 'cell')
-        return { kind: 'cell', cell: resolveCell(item, { overallStyle: source.style, overallLayout: source.layout }) };
+        return {
+          kind: 'cell',
+          cell: resolveCell(item, {
+            overallStyle: source.defaultCell?.style,
+            overallLayout: source.defaultCell?.layout,
+          }),
+        };
 
       const nestedLayout = ChainParallelLayoutSchema.parse({ ...parentLayout, ...item.layout });
-      const nestedConnection = resolveConnection(item.connection, parentConnection);
+      const nestedConnection = resolveConnection(item.defaultConnection, parentConnection);
 
       return {
         kind: 'parallel',

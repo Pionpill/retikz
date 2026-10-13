@@ -1,131 +1,69 @@
 ---
 title: Plot
-description: An overview of Plot, from React props, Vanilla InputPlot, or Plot IR through one input path, external data, Core IR, Scene, and renderers.
+description: Combine data, marks, scales, and coordinates to build data graphics with a grammar of graphics.
 ---
 
-`@retikz/plot` is the chart-semantics layer in the Viz group. It uses serializable Plot IR to describe field bindings, scales, coordinates, marks, guides, and composition, then lowers those high-level semantics into Core IR that Kernel can compile.
+Plot draws data records as points, lines, or intervals. You choose which fields control position, color, and size, then add guides such as axes and legends. These docs follow the parts of the grammar. New users can start with [Introduction](/viz/plot/introduction) and [Quick start](/viz/plot/get-start).
 
-Plot does not own the data foundation or renderers. [Data](/viz/data/introduction) owns field models and general data processing, Kernel owns compilation, layout, and Scene, and SVG / Canvas renderers consume only Scene. React, Vanilla, handwritten specs, and AI-generated configurations therefore share one semantic contract and one lowering path.
+## Responsibilities at a glance
 
-## At a glance
+| Section       | Responsibility                                                                 | When to read                                              |
+| ------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Channels      | Bind fields or constants to position, color, size, and other visual properties | Choose how data appears in the graphic                    |
+| Transforms    | Process data into the results needed for plotting                              | Derive, aggregate, or calculate statistics before drawing |
+| Marks         | Draw records as points, paths, intervals, and other shapes                     | Choose or layer drawing forms                             |
+| Scales        | Convert data ranges into positions or styles                                   | Adjust numeric ranges, category order, and color mappings |
+| Coordinates   | Place positions on a plane, in polar coordinates, or in composed views         | Change the spatial representation                         |
+| Guides        | Explain mappings through axes and legends                                      | Help readers interpret values and categories              |
+| Plot Lineage  | Connect drawing results to data and processing steps                           | Explain why a particular mark appears                     |
+| API Reference | Collect field contracts and runtime entry points                               | Look up exact parameters and calls                        |
 
-<ComponentPreview files="plot-pipeline" size="sm" hideCode />
+## How a graphic fits together
 
-Solid arrows show the main path from authoring to rendered output. External datasets join only at `lowerPlots` and do not enter Plot IR. Lineage, locators, and diagnostics are observable side outputs of lowering and are not written back into the IR either.
+The line below comes from four measurement rows. The time field controls horizontal position and the reading controls vertical position. A path mark connects the measurements in time order, and two axes label the values.
 
-## From declaration to Scene
-
-1. **Build Plot IR**: `<Plot>` children, Vanilla `plot()`, and a complete `InputPlot` all produce the same JSON-safe `IRPlot`. `InputPlot` is the TypeScript authoring input owned by `@retikz/plot-vanilla`; React DSL is only a bridge, not a separate chart model.
-2. **Attach external data**: IR points to runtime datasets through `data.reference`. Data owns field parsing, general transforms, and provenance; dataset rows do not enter the IR.
-3. **Resolve chart semantics**: lowering applies data transforms, channel bindings, scales, and coordinate projection before mark and guide definitions produce lowerable results. Built-in and custom capabilities share the same registry, resolver, and consumer path.
-4. **Lower to Core IR**: `lowerPlots` is a Tier 2 composite definition that expands Plot nodes into Core IR such as `Scope`, `Node`, and `Path`. Lineage, locators, and diagnostics remain separate runtime results.
-5. **Compile and render**: Kernel compiles Core IR into a renderer-agnostic Scene, then an SVG or Canvas renderer emits output. Plot neither bypasses Scene nor implements a parallel renderer.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'React Plot collects props into Plot Vanilla embed input',
-      path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 175,
-      endLine: 193,
-    },
-    {
-      label: 'React children are collected and delegated to Plot Vanilla normalization',
-      path: 'packages/viz/plot-react/src/adapter/build-plot-spec.ts',
-      startLine: 10,
-      endLine: 16,
-    },
-    {
-      label: 'Plot Vanilla normalizes InputPlot into Plot Source IR',
-      path: 'packages/viz/plot-vanilla/src/normalize/plot/normalize.ts',
-      startLine: 20,
-      endLine: 43,
-    },
-    {
-      label: 'Unified Plot composite lowering entry',
-      path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 1539,
-      endLine: 1581,
-    },
-    {
-      label: 'Vanilla entry from Plot IR through Scene to SVG',
-      path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
-      startLine: 56,
-      endLine: 86,
-    },
+<ComponentPreview
+  files={[
+    '/viz/plot/get-start/first-plot',
+    '/viz/plot/get-start/first-plot.preview.tsx',
+    '/viz/plot/get-start/first-plot.data.ts',
   ]}
+  responsive
+  defaultSourceFile="first-plot.preview.tsx"
+  size="lg"
+  hideCode
 />
 
-## How the three packages split responsibility
+Channels choose the fields. Scales convert values into positions, the coordinate system arranges the two directions, and a path mark connects those positions into a line. Guides let readers recover data values from the picture. These parts work with the same data.
 
-| Package                | Owns                                                                          | Typical entries                                            |
-| ---------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `@retikz/plot`         | `IRPlot*` schema, definitions / registries, domain resolution, lowering       | `PlotSchema`, `lowerPlots`                                 |
-| `@retikz/plot-react`   | React `XxxProps` / children collection and React host wiring                  | `<Plot>`                                                   |
-| `@retikz/plot-vanilla` | `InputPlot*` types, normalization, InputEmbed wiring, SSR, DOM-free rendering | `plot()`, `normalizePlot()`, `embedPlot()`, `renderPlot()` |
+## Installation and usage
 
-All three packages share the IR and lowering source of truth in `@retikz/plot`. `@retikz/plot-vanilla` is the framework-neutral authoring owner: it owns the TypeScript-only `InputPlot*`, `PlotSource`, and `InputPlotEmbed` contracts and expands `facets`, `scaffolds`, and axis / topology bindings from `InputPlot` into `IRPlot`, without schema-parsing typed input again. Only `IRPlot*` values are persisted schema types; unknown external data must still enter IR through a Plot schema or parser.
+Use `@retikz/plot-react` in React projects or `@retikz/plot-vanilla` in plain TypeScript projects. Both can produce a graphic on their own. [Quick start](/viz/plot/get-start) includes the dependencies, imports, and mounting code. To save or validate JSON configurations, see the [Plot spec contract](/viz/plot/reference/plot) provided by `@retikz/plot`.
 
-React only collects JSX / props and dispatches Plot Vanilla; it owns no parallel Plot IR builder, schema parse, or lowering. If you already have a complete `IRPlot`, pass it directly to the runtime without wrapping it in another authoring helper.
+## Where to start
 
-## React hosting and embedding
+Choose a mark, then bind fields to its channels. When the default mapping does not fit your task, adjust scales, coordinates, and guides. Read about transforms when the data needs processing.
 
-`<Plot>` is already a complete standalone entry. Rendering it directly creates one internal `Layout`, so callers do not add another host. Inside an existing `<Layout>`, the same component degrades to one Plot Scope/composite: it shares the outer Scene, renderer, and effective Theme and does not create a nested SVG.
+If you already know which chart type you need and prefer whole-chart configuration, see [Chart](/viz/chart/introduction). [Data](/viz/data/introduction) provides reusable cleaning and statistics; [Table](/viz/table) presents data in cells.
 
-Plot `width` / `height` define plot-area geometry only. Standalone display dimensions follow the full content bounds, including axes, labels, and padding, without scaling. These dimensions and panel fields such as `position`, `transforms`, and `clip` remain valid embedded inputs. `className`, `style`, `renderer`, and Core `themeStyles` control only the standalone host and belong on the outer `<Layout>`; `lineage`, `hostLineageMetadata`, and `onLineage` depend on the standalone React lifecycle and must be omitted when embedded. An embedded Plot fails loudly when it owns any of those fields—even an explicit `undefined`. This keeps host or observer configuration from being ignored and does not generate an extra model id for an embedded Plot.
-
-## What Plot owns—and what it does not
-
-| Plot owns                                                   | Owned elsewhere                                                                                                  |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Plot IR, domain theme tokens, and graphic-grammar contracts | Field models, parsing, general transforms, and provenance belong to [Data](/viz/data/introduction)               |
-| Channels, scales, coordinates, marks, and guides            | Core IR, layout, reference resolution, and Scene compilation belong to [Kernel](/kernel/components/introduction) |
-| Composition and Plot-to-Core lowering                       | SVG / Canvas output belongs to renderers                                                                         |
-| Definitions, registries, resolvers, and diagnostics         | React / Vanilla lifecycles and host wiring belong to adapters                                                    |
-| Chart-oriented semantic mapping and theme lowering          | Row / column structure, Cell semantics, and table layout belong to [Table](/viz/table)                           |
-
-If a capability does not depend on chart field mapping—general data transforms, low-level geometry, or table Cells, for example—it should not enter Plot. Conversely, a new scale, coordinate, mark, or guide should first become a registerable Definition, then use the same path as built-ins.
-
-Plot also owns sparse defaults for its Plot area, guides, palettes, and existing axes. It consumes the Core effective Theme to select the same-named domain preset, then applies local `plotDefaults` and ordered `plotRules` through the same lowering path. Built-in and custom presets use the same `definePlotThemeStyle` / `plotThemeStyles` resolver. See the [theme contract](/viz/plot/reference/theme) for the Source-shaped fields and cascade.
-
-## Pages
+## Contents
 
 <LinkedSections
   items={[
-    {
-      title: 'Channels',
-      description: 'Bind fields or constants to position, color, size, text, and other visual roles.',
-      url: '/viz/plot/channel',
-    },
-    {
-      title: 'Transforms',
-      description: 'Derive, stack, summarize, analyze, or relate rows inside the plotting pipeline.',
-      url: '/viz/plot/transform',
-    },
-    {
-      title: 'Marks',
-      description: 'Instantiate projected data as points, paths, intervals, references, or relations.',
-      url: '/viz/plot/mark',
-    },
-    {
-      title: 'Scales',
-      description: 'Map data domains into positional or visual ranges.',
-      url: '/viz/plot/scale',
-    },
-    {
-      title: 'Coordinates',
-      description: 'Project scale results into Cartesian, polar, or composed views.',
-      url: '/viz/plot/coordinate',
-    },
-    {
-      title: 'Guides',
-      description: 'Explain scale and channel mappings through axes and legends.',
-      url: '/viz/plot/guide',
-    },
+    { title: 'Introduction', description: 'Decide whether Plot fits your task.', url: '/viz/plot/introduction' },
+    { title: 'Quick start', description: 'Install Plot and draw your first graphic.', url: '/viz/plot/get-start' },
+    { title: 'Changelog', description: 'Look up version changes.', url: '/viz/plot/changelog' },
+    { title: 'Channels', description: 'Bind fields to position, color, and size.', url: '/viz/plot/channel' },
+    { title: 'Transforms', description: 'Process and organize data while plotting.', url: '/viz/plot/transform' },
+    { title: 'Marks', description: 'Choose points, paths, intervals, and other marks.', url: '/viz/plot/mark' },
+    { title: 'Scales', description: 'Control how data ranges map to visual properties.', url: '/viz/plot/scale' },
+    { title: 'Coordinates', description: 'Choose Cartesian, polar, or composed views.', url: '/viz/plot/coordinate' },
+    { title: 'Guides', description: 'Configure axes and legends.', url: '/viz/plot/guide' },
     {
       title: 'Plot Lineage',
-      description: 'Enrich data provenance with mark, scale, and layout semantics.',
+      description: 'Trace marks to their data and plotting steps.',
       url: '/viz/plot/provenance',
     },
+    { title: 'API Reference', description: 'Look up fields and runtime APIs.', url: '/viz/plot/reference' },
   ]}
 />
