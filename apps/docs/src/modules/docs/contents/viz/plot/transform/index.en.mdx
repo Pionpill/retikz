@@ -160,7 +160,85 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width:
 
 ## Data scopes
 
-Root transforms run first, producing data shared by all marks. A mark-local transform then derives a result from that mark’s input view, replacing only the rows that mark sees. Final local results still participate in shared scale and legend inference.
+Transforms can be added in two places: at the **root**, on the Plot, to share processed data across all marks; or **locally**, on one mark’s `transform` property, to process only that mark’s data. Use a root transform to normalize data for the whole plot, or a local transform to jitter just one point layer.
+
+The examples below reuse `rows` from the authoring example and jitter `month` to show where each declaration goes.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+For a root transform, place `<PlotTransform>` directly under `<Plot>`, alongside the marks. For a local transform, pass the declaration array to the target mark’s `transform` prop.
+
+```text
+Plot
+├── PlotTransform
+├── PointMark
+└── PointMark
+```
+
+```tsx
+import type { IRDataJitterTransform } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+
+const operation: IRDataJitterTransform = {
+  kind: 'jitter',
+  params: { axis: 'x', xField: 'month', amount: 0.2, seed: 7 },
+};
+
+// Root: both point layers read the jittered month
+const rootExample = (
+  <Plot data={rows}>
+    <PlotTransform operation={operation} />
+    <PointMark x="month" y="value" fill="gray" />
+    <PointMark x="month" y="value" fill="dodgerblue" />
+  </Plot>
+);
+
+// Local: only the blue points read the jittered month
+const localExample = (
+  <Plot data={rows}>
+    <PointMark x="month" y="value" fill="gray" />
+    <PointMark x="month" y="value" fill="dodgerblue" transform={[{ operation }]} />
+  </Plot>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla / IR">
+
+Both `plot(...)` and direct IR declarations use the same placement: root transforms go on the Plot’s `transform`, and local transforms go on the target mark’s `transform`. These configuration fragments show the placement; set up data, scales, coordinates, and rendering as described in the authoring section.
+
+```ts
+import type { IRDataJitterTransform } from '@retikz/data';
+
+const operation: IRDataJitterTransform = {
+  kind: 'jitter',
+  params: { axis: 'x', xField: 'month', amount: 0.2, seed: 7 },
+};
+const transform = [{ operation }];
+
+// Root: put transform on the Plot configuration
+const rootConfig = {
+  transform,
+  marks: [
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+  ],
+};
+
+// Local: add transform only to the second mark
+const localConfig = {
+  marks: [
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+    { type: 'point', transform, encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+  ],
+};
+```
+
+</DocTab>
+</DocTabs>
+
+When both are present, root transforms run first, then local transforms continue from each mark’s input view. Local results replace only the rows that mark sees, but still contribute to shared scale and legend inference. The available declaration forms are:
 
 | Entry                               | Scope                                                                 |
 | ----------------------------------- | --------------------------------------------------------------------- |
@@ -179,12 +257,6 @@ The demo has two fixed layers: gray circles for A and blue diamonds for B. Switc
   defaultSourceFile="transform-scope.preview.tsx"
   caption="Root jitter affects both layers; local jitter affects only layer B."
 />
-
-## Declaration order and fields
-
-Operations execute in declaration order, and each reads the previous output. For example, when `normalize` precedes `stack`, stacking should read the resulting share field. Binning and sampling generate new rows and fields, so subsequent encodings cannot assume all original detail fields remain.
-
-Input fields must match the data model. Declared derived outputs need not be added to the input model in advance. Automatic transforms from React mark shortcuts follow explicit root transforms. See [Plot provenance](/viz/plot/provenance) to trace inputs, transform results, and marks.
 
 ## Custom transforms
 
@@ -220,35 +292,6 @@ renderPlot(
 
 </DocTab>
 </DocTabs>
-
-## Related props
-
-These entries cover Plot integration. See the [Plot transform contract](/viz/plot/reference/transform) for scopes and the [Data API reference](/viz/data/transform/reference) for declaration and extension types.
-
-<ComponentProps
-  items={[
-    {
-      name: 'PlotTransform.operation',
-      kind: 'property',
-      type: 'IRDataTransform',
-      required: true,
-      description:
-        'A Data-defined operation. This example uses `{ kind: "normalize", params: { field: "value", as: "share" } }`; other kinds use their own parameter schemas.',
-    },
-    {
-      name: 'Plot.dataTransforms',
-      kind: 'property',
-      type: 'Array<{ operation: IRDataTransform; dataExecution?: IRDataExecution }>',
-      description: 'Root declarations containing operation and optional dataExecution configuration.',
-    },
-    {
-      name: 'IRPlot.transform',
-      kind: 'property',
-      type: 'Array<{ operation: IRDataTransform; dataExecution?: IRDataExecution }>',
-      description: 'Shared data transforms in IR / Vanilla, executed in declaration order.',
-    },
-  ]}
-/>
 
 ## Contents
 

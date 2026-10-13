@@ -160,7 +160,85 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width:
 
 ## 数据作用域
 
-根级变换先执行，其结果供所有图元读取。图元局部变换随后从该图元的输入视图派生结果，只替换当前图元看到的行。局部变换的最终结果仍参与共享比例尺和图例推断。
+变换有两种添加位置：**根级**加在 Plot 上，供所有图元共享处理后的数据；**局部**加在某个图元的 `transform` 上，只处理这个图元的数据。例如，要统一归一化所有图元的数据，就使用根级变换；只想让一层点抖动，就使用局部变换。
+
+下面沿用接入示例的 `rows`，对 `month` 添加抖动，比较两种添加方式。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+根级将 `<PlotTransform>` 放在 `<Plot>` 的直接子级，与图元并列；局部将声明数组传给目标图元的 `transform`。
+
+```text
+Plot
+├── PlotTransform
+├── PointMark
+└── PointMark
+```
+
+```tsx
+import type { IRDataJitterTransform } from '@retikz/data';
+import { Plot, PlotTransform, PointMark } from '@retikz/plot-react';
+
+const operation: IRDataJitterTransform = {
+  kind: 'jitter',
+  params: { axis: 'x', xField: 'month', amount: 0.2, seed: 7 },
+};
+
+// 根级：两层点都读取抖动后的 month
+const rootExample = (
+  <Plot data={rows}>
+    <PlotTransform operation={operation} />
+    <PointMark x="month" y="value" fill="gray" />
+    <PointMark x="month" y="value" fill="dodgerblue" />
+  </Plot>
+);
+
+// 局部：只有蓝色点读取抖动后的 month
+const localExample = (
+  <Plot data={rows}>
+    <PointMark x="month" y="value" fill="gray" />
+    <PointMark x="month" y="value" fill="dodgerblue" transform={[{ operation }]} />
+  </Plot>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla / IR">
+
+`plot(...)` 与直接声明 IR 使用相同的配置位置：根级写在 Plot 的 `transform`，局部写在目标图元的 `transform`。下面是配置片段，展示声明应放在哪里；数据、比例尺、坐标系和渲染入口按前面的接入方式设置。
+
+```ts
+import type { IRDataJitterTransform } from '@retikz/data';
+
+const operation: IRDataJitterTransform = {
+  kind: 'jitter',
+  params: { axis: 'x', xField: 'month', amount: 0.2, seed: 7 },
+};
+const transform = [{ operation }];
+
+// 根级：将 transform 放在 Plot 配置中
+const rootConfig = {
+  transform,
+  marks: [
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+  ],
+};
+
+// 局部：只在第二个图元上添加 transform
+const localConfig = {
+  marks: [
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+    { type: 'point', transform, encoding: { x: { field: 'month' }, y: { field: 'value' } } },
+  ],
+};
+```
+
+</DocTab>
+</DocTabs>
+
+同时使用两种变换时，根级先执行，局部再从该图元的输入视图继续处理。局部结果只替换当前图元看到的行，但仍参与共享比例尺和图例推断。各入口的对应关系如下：
 
 | 入口                                | 作用域                                      |
 | ----------------------------------- | ------------------------------------------- |
@@ -179,12 +257,6 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { width:
   defaultSourceFile="transform-scope.preview.tsx"
   caption="根级扰动影响两层；局部扰动只影响图层 B。"
 />
-
-## 声明顺序与字段
-
-数组中的操作按声明顺序执行，下一步读取上一步的输出。例如先 `normalize` 再 `stack`，堆叠时应读取归一化生成的占比字段。分箱或采样会生成新的行与字段，后续编码不能继续假定原始明细字段都存在。
-
-输入字段需符合数据模型；变换声明的派生输出字段无需预先加入输入模型。React 图元快捷写法生成的自动变换会追加到显式根级变换之后。需要追踪输入、变换结果与图元时，见 [Plot 溯源](/viz/plot/provenance)。
 
 ## 自定义变换
 
@@ -220,35 +292,6 @@ renderPlot(
 
 </DocTab>
 </DocTabs>
-
-## 相关属性
-
-这里只列出 Plot 接入所需的入口，完整作用域契约见 [Plot 变换契约](/viz/plot/reference/transform)，声明与扩展类型见 [Data API 参考](/viz/data/transform/reference)。
-
-<ComponentProps
-  items={[
-    {
-      name: 'PlotTransform.operation',
-      kind: 'property',
-      type: 'IRDataTransform',
-      required: true,
-      description:
-        '由 Data 定义的操作。本例为 `{ kind: "normalize", params: { field: "value", as: "share" } }`；其它 kind 的 params 按对应 Schema 编写。',
-    },
-    {
-      name: 'Plot.dataTransforms',
-      kind: 'property',
-      type: 'Array<{ operation: IRDataTransform; dataExecution?: IRDataExecution }>',
-      description: '根级声明数组。每项包含 operation，可选 dataExecution 指定执行配置。',
-    },
-    {
-      name: 'IRPlot.transform',
-      kind: 'property',
-      type: 'Array<{ operation: IRDataTransform; dataExecution?: IRDataExecution }>',
-      description: 'IR / Vanilla 的共享数据变换，按声明顺序执行。',
-    },
-  ]}
-/>
 
 ## 章节内容
 
