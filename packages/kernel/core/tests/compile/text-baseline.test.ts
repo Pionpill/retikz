@@ -308,7 +308,7 @@ describe('Node layout alignment baselines', () => {
         type: 'node',
         position: [4, 10],
         text: ['A', 'B'],
-        style: { fillOpacity: 0, strokeOpacity: 0 },
+        style: { opacity: { fill: 0, stroke: 0 } },
         layout: { lineHeight: 20, padding: 0, margin: 0 },
       },
       text => ({
@@ -335,7 +335,7 @@ describe('Node layout alignment baselines', () => {
         type: 'node',
         position: [4, 10],
         text: ['A', 'B'],
-        style: { fillOpacity: 0, strokeOpacity: 0 },
+        style: { opacity: { fill: 0, stroke: 0 } },
         layout: { lineHeight: 20.26, padding: 0, margin: 0 },
       },
       text => ({

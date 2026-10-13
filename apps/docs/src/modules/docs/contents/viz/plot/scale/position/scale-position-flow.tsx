@@ -45,7 +45,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="desktop-inputs"
             position={[-285, 0]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 150, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.inputsTitle}</Text>
@@ -57,7 +57,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="desktop-scale"
             position={[-95, 0]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 150, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.scaleTitle}</Text>
@@ -69,7 +69,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="desktop-resolve"
             position={[100, 0]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 160, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.resolveTitle}</Text>
@@ -81,7 +81,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="desktop-outputs"
             position={[300, 0]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 160, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.outputsTitle}</Text>
@@ -150,7 +150,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="mobile-inputs"
             position={[-95, -30]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 130, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.inputsTitle}</Text>
@@ -162,7 +162,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="mobile-scale"
             position={[95, -30]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 130, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.scaleTitle}</Text>
@@ -174,7 +174,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="mobile-resolve"
             position={[95, 30]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 140, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.resolveTitle}</Text>
@@ -186,7 +186,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
             id="mobile-outputs"
             position={[-95, 30]}
             cornerRadius={4}
-            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.08 } }}
             layout={{ minimumSize: { width: 140, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.outputsTitle}</Text>

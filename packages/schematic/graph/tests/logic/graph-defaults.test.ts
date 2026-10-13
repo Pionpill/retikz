@@ -19,12 +19,12 @@ const fillsOf = (output: ReturnType<typeof compileGraph>): Array<unknown> =>
 describe('Graph defaults and rules Source fragments', () => {
   it.each([{}, { entity: { style: { font: {} }, layout: {} } }])(
     'keeps Core Node font defaults effective when Graph contributes no font values',
-    graphDefaults => {
+    defaultGraph => {
       const output = compileGraph({
         namespace: 'graph',
         type: 'graph',
         defaults: { node: { style: { font: { family: 'monospace', size: 31, weight: 700 } } } },
-        graphDefaults,
+        defaultGraph,
         children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [0, 0], text: 'Inherited' }],
       });
       const text = primitivesOf(output.scene.primitives).find(primitive => primitive.type === 'text');
@@ -48,7 +48,7 @@ describe('Graph defaults and rules Source fragments', () => {
       const source = Graph.GraphSchema.parse({
         namespace: 'graph',
         type: 'graph',
-        graphDefaults: {
+        defaultGraph: {
           entity: { style: { font: { family: 'serif', weight: 700 } } },
           relation: { labelFont: { family: 'serif', weight: 700 } },
         },
@@ -85,7 +85,7 @@ describe('Graph defaults and rules Source fragments', () => {
     const source = {
       namespace: 'graph',
       type: 'graph',
-      graphDefaults: {
+      defaultGraph: {
         entity: {
           style: { color: '#2563eb', font: { size: 14 } },
           layout: { align: 'middle', minimumSize: { width: 100 } },
@@ -100,8 +100,8 @@ describe('Graph defaults and rules Source fragments', () => {
 
     const parsed = Graph.GraphSchema.parse(source);
 
-    expect(parsed).toEqual(source);
-    expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
+    expect(parsed).toEqual({ ...source, position: [0, 0] });
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual({ ...source, position: [0, 0] });
   });
 
   it('accepts a Relation rule dash structure without opening marker structure', () => {
@@ -112,7 +112,7 @@ describe('Graph defaults and rules Source fragments', () => {
       children: [],
     };
 
-    expect(Graph.GraphSchema.parse(source)).toEqual(source);
+    expect(Graph.GraphSchema.parse(source)).toEqual({ ...source, position: [0, 0] });
     expect(
       Graph.GraphSchema.safeParse({
         ...source,
@@ -179,10 +179,10 @@ describe('Graph defaults and rules Source fragments', () => {
       source: {
         namespace: 'graph',
         type: 'graph',
-        graphDefaults: { entity: { style: { padding: 4 } } },
+        defaultGraph: { entity: { style: { padding: 4 } } },
         children: [],
       },
-      path: ['graphDefaults', 'entity', 'style'],
+      path: ['defaultGraph', 'entity', 'style'],
       key: 'padding',
     },
     {
@@ -190,10 +190,10 @@ describe('Graph defaults and rules Source fragments', () => {
       source: {
         namespace: 'graph',
         type: 'graph',
-        graphDefaults: { relation: { style: { fill: '#ffffff' } } },
+        defaultGraph: { relation: { style: { fill: '#ffffff' } } },
         children: [],
       },
-      path: ['graphDefaults', 'relation', 'style'],
+      path: ['defaultGraph', 'relation', 'style'],
       key: 'fill',
     },
     {
@@ -229,7 +229,7 @@ describe('Graph defaults and rules Source fragments', () => {
     const createSource = (entity: Record<string, unknown>) => ({
       namespace: 'graph',
       type: 'graph',
-      graphDefaults: { entity: { style: { fill: '#111111' } } },
+      defaultGraph: { entity: { style: { fill: '#111111' } } },
       graphRules: [{ type: 'entity', selector: { status: 'error' }, style: { fill: '#ff0000' } }],
       children: [
         {
@@ -266,7 +266,7 @@ describe('Graph defaults and rules Source fragments', () => {
     const output = compileGraph({
       namespace: 'graph',
       type: 'graph',
-      graphDefaults: {
+      defaultGraph: {
         group: { background: { fill: '#111111' } },
         block: { background: { fill: '#222222' } },
       },
@@ -275,14 +275,14 @@ describe('Graph defaults and rules Source fragments', () => {
           namespace: 'graph',
           type: 'group',
           id: 'outer-group',
-          graphDefaults: { group: { background: { fill: '#333333' } } },
+          defaultGraph: { group: { background: { fill: '#333333' } } },
           children: [{ namespace: 'graph', type: 'group', id: 'inner-group', children: [] }],
         },
         {
           namespace: 'graph',
           type: 'block',
           id: 'outer-block',
-          graphDefaults: { block: { background: { fill: '#444444' } } },
+          defaultGraph: { block: { background: { fill: '#444444' } } },
           children: [{ namespace: 'graph', type: 'block', id: 'inner-block', children: [] }],
         },
       ],
@@ -309,7 +309,7 @@ describe('Graph defaults and rules Source fragments', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
-      graphDefaults: { entity: { style: { fill: '#111111' } } },
+      defaultGraph: { entity: { style: { fill: '#111111' } } },
       graphRules: [],
       children: [opaque],
     });
@@ -323,7 +323,7 @@ describe('Graph defaults and rules Source fragments', () => {
     const source = {
       namespace: 'graph',
       type: 'graph',
-      graphDefaults: {
+      defaultGraph: {
         relation: {
           style: { stroke: '#123456', strokeWidth: 2 },
           targetMarker: { color: '#123456' },
@@ -342,7 +342,7 @@ describe('Graph defaults and rules Source fragments', () => {
       ],
     };
     const output = compileGraph(source);
-    const baseline = compileGraph({ ...source, graphDefaults: undefined });
+    const baseline = compileGraph({ ...source, defaultGraph: undefined });
     const paths = primitivesOf(output.scene.primitives).filter(primitive => primitive.type === 'path');
     const baselinePaths = primitivesOf(baseline.scene.primitives).filter(primitive => primitive.type === 'path');
 

@@ -56,7 +56,7 @@ Entity 的语义决定“如何解释对象”，而不是增加一套独立渲�
 
 ## 外观按层逐字段合并
 
-Graph 作者配置按层处理：每层先合并 `graphDefaults.entity`，再按声明顺序应用匹配的 entity 规则；随后合并实例显式 style/layout。当前主题也先提供默认值、再按顺序应用规则，最终由已经投影的 Source 外观覆盖。覆盖是逐字段合并，不是整块替换。
+Graph 作者配置按层处理：每层先合并 `defaultGraph.entity`，再按声明顺序应用匹配的 entity 规则；随后合并实例显式 style/layout。当前主题也先提供默认值、再按顺序应用规则，最终由已经投影的 Source 外观覆盖。覆盖是逐字段合并，不是整块替换。
 
 匹配主体包含 role、可选 kind、顶层 status 和已解析 predicate 参数。多个规则可以同时匹配；后面的规则仅覆盖自己提供的字段。自定义示例中，critical 规则只设置 strokeWidth，所以不会抹掉先前 status 参数规则算出的 color。
 

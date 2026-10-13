@@ -59,7 +59,7 @@ Built-in and custom Entities follow the same path: kind definitions do not deter
 
 ## Appearance is merged field by field across layers
 
-Graph author configuration is processed layer by layer: each layer merges graphDefaults.entity, then matching entity rules in declaration order, then explicit instance style/layout is merged. The current theme likewise contributes defaults and ordered rules, finally overridden by the projected Source appearance. Merging is field-wise rather than replacing the whole block.
+Graph author configuration is processed layer by layer: each layer merges defaultGraph.entity, then matching entity rules in declaration order, then explicit instance style/layout is merged. The current theme likewise contributes defaults and ordered rules, finally overridden by the projected Source appearance. Merging is field-wise rather than replacing the whole block.
 
 The matching subject contains role, optional kind, top-level status and parsed predicate parameters. Several rules may match; later rules override only fields they supply. In the custom example, the critical rule sets only strokeWidth, preserving color from the earlier status-parameter rule.
 

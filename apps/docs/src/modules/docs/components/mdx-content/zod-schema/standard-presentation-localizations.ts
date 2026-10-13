@@ -7,8 +7,7 @@ export const standardStrokeDescriptions = {
   dashOffset: '虚线起始偏移，单位为用户坐标单位；允许有限的正数或负数',
   lineCap: '线段端点形状；省略时为 butt，round 添加半圆端帽，square 向端点外延伸',
   lineJoin: '描边转角形状；省略时为 miter，round 使用圆角，bevel 将转角削平',
-  opacity: '作用于主几何整体的不透明度',
-  strokeOpacity: '仅作用于轮廓描边的不透明度',
+  opacity: '主几何不透明度，可分别设置 overall、fill 与 stroke',
   zIndex: '同级 IR 子节点的显式绘制层级，数值越大越靠上；省略时为 0，按源码顺序排列，同一父组内保持稳定排序',
 };
 
@@ -40,7 +39,7 @@ export const GridSchemaZhLocalization = {
     localNamespace: '为子节点与嵌套作用域启用局部命名空间',
     meta: '编译与渲染不解释的 JSON 元数据',
     position: '父坐标系中的原点位置或作用域变换后的锚点对齐',
-    style: '当前作用域的稀疏视觉覆盖',
+    'defaults.style': '向后代提供的共享图形样式默认值',
     theme: '后代复合组件的主题覆盖',
     transforms: '作用域局部变换',
     zIndex: '作用域整体在同级中的绘制次序',
@@ -50,7 +49,6 @@ export const GridSchemaZhLocalization = {
     'border.style': '边框路径样式',
     ...gridStrokeDescriptionsAt('border.style'),
     'border.style.fill': '主几何的填充画笔，可使用上下文颜色或 IRPaint',
-    'border.style.fillOpacity': '仅作用于填充区域的不透明度',
     'border.style.fillRule':
       '自交或嵌套子路径的填充规则；默认 nonzero 按方向累计绕数，evenodd 在每次穿越边界时切换填充状态，适合环形图形',
   },

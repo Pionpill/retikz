@@ -120,6 +120,8 @@ Retikz 本地 Web 服务统一使用 `7xxx`：Docs 使用 `71xx`，Bench 使用 
 
 每次提交 Docs 改动前，必须运行 `pnpm --filter @retikz/docs run check:static`。完成静态检查后，提示用户选择是否运行生产构建 `check:build` 和生产运行时巡检 `check:runtime`；两者仅在用户明确要求时执行。用户明确要求运行 `check:runtime` 时，包含其依赖的 `check:build`。
 
+demo 渲染巡检使用 `pnpm --filter @retikz/docs run check:demos`，运行前先执行 `check:build`；只在用户授权运行时检测时执行。默认串行检查中英文普通预览、画廊缩略图及响应式实例，可用 `--path` / `--lang` 限定范围；报告写入 ignored `notes/reports/`。页面加载通过不代表 demo 渲染通过，失败和未能进入检测的页面必须单独报告；默认巡检不覆盖全部 controls 组合。
+
 | 改动类型                                                          | 最小验证                                                  |
 | ----------------------------------------------------------------- | --------------------------------------------------------- |
 | 只改 MDX 正文、表格、说明文字、站内链接                           | `check:static` + `git diff --check` + 打开页面 / 关键链接 |

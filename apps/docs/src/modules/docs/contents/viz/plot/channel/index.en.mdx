@@ -7,16 +7,19 @@ A channel describes two things: where a value comes from and which visual result
 
 ## Responsibilities
 
-| Topic             | Problem it solves                                        | Reach for it when                                                        |
-| ----------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Channel binding   | How fields or fixed values are written on mark props     | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
-| Built-in channels | Which options control position, color, size, text, paths | You want to choose channels such as `color`, `size`, or `strokeWidth`    |
+| Topic                                               | Problem it solves                                        | Reach for it when                                                        |
+| --------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [Channel binding](/viz/plot/channel/binding)        | How fields or fixed values are written on mark props     | You want to confirm what `x="date"`, `color="region"`, or `y={80}` means |
+| [Built-in channels](/viz/plot/channel/builtin)      | Which options control position, color, size, text, paths | You want to choose channels such as `color`, `size`, or `strokeWidth`    |
+| [Custom channels](/viz/plot/channel/custom-channel) | How to define and register new channel rules             | You need a project-specific visual channel                               |
 
-## How It Works (Optional On A First Read)
+## How It Works
+
+<ComponentAlert type="tip" title="Reading tip" description="You can skip this section on a first read." />
 
 React mark props are assembled into `IRPlot`, a serializable drawing configuration. Position channels are interpreted by the coordinate system. Other channels use a shared channel registry to find their handling rules, then resolve into visible properties or legend information.
 
-<ComponentPreview files="channel-flow" size="lg" hideCode />
+<ComponentPreview files="channel-flow" size="lg" hideCode type="flow" />
 
 `IRPlot` stores field or constant bindings, not functions. Built-ins and custom channels injected through `channelDefinitions` share the same registration, resolution, and delivery path, so extending channels does not require another configuration format.
 
@@ -31,8 +34,8 @@ React mark props are assembled into `IRPlot`, a serializable drawing configurati
     {
       label: 'Built-in and custom channels merge into one registry',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 69,
-      endLine: 102,
+      startLine: 76,
+      endLine: 108,
     },
     {
       label: 'Bindings resolve and dispatch by channel type',
@@ -59,9 +62,10 @@ For a first read, start with how fields and constants bind, then look up built-i
       description: 'Look up channels for position, color, size, text, and paths',
       url: '/viz/plot/channel/builtin',
     },
+    {
+      title: 'API Reference',
+      description: 'Look up public definitions, registration, resolution, and delivery contracts',
+      url: '/viz/plot/channel/reference',
+    },
   ]}
 />
-
-To add a project-specific visual channel, continue to [Custom Channels](/viz/plot/channel/custom-channel).
-
-Channels decide which value to read; [Scales](/viz/plot/scale) decide how values map, and [Coordinates](/viz/plot/coordinate) decide how positional roles project.

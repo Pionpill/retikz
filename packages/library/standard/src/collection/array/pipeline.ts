@@ -18,7 +18,7 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
     namespace: _namespace,
     type: _type,
     items,
-    style,
+    defaultCell,
     layout,
     index: indexOptions,
     label,
@@ -27,7 +27,7 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
   void _namespace;
   void _type;
   if (items.length === 0)
-    return compileCells([], { width: 0, height: 0, scope, decoration: { label, style } }, context);
+    return compileCells([], { width: 0, height: 0, scope, decoration: { label, style: defaultCell?.style } }, context);
 
   const { direction, gap } = layout;
   const horizontal = direction === ArrayDirection.Row;
@@ -114,7 +114,7 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
       height: horizontal ? height + offset : cursor - gap,
       scope,
       extra,
-      decoration: { label, style },
+      decoration: { label, style: defaultCell?.style },
     },
     context,
   );

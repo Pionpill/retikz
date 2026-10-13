@@ -18,10 +18,10 @@ const TableBaseSchema = CompositeBaseSchema.extend({
   ),
   type: literal(TableComposite.Table).describe('Composite type for the top-level Table specification.'),
   id: NonBlankStringSchema.optional().describe('Optional stable Table id used by the lowered root Scope.'),
-  cellLayoutDefaults: TableCellLayoutDefaultsSchema.optional().describe(
+  defaultCellLayout: TableCellLayoutDefaultsSchema.optional().describe(
     'Padding defaults for existing body and column-header Cells; explicit Cell padding wins.',
   ),
-  appearanceDefaults: TableAppearanceDefaultsSchema.optional().describe(
+  defaultAppearance: TableAppearanceDefaultsSchema.optional().describe(
     'Sparse appearance defaults for existing body and column-header Cells.',
   ),
   layout: TableLayoutSchema.optional().describe(
@@ -32,10 +32,10 @@ const TableBaseSchema = CompositeBaseSchema.extend({
   encodings: array(TableCellVisualEncodingSchema)
     .optional()
     .describe('Ordered Table Cell visual encodings. Omission is runtime-equivalent to an empty array.'),
-  visualDefaults: TableVisualDefaultsSchema.optional().describe(
+  defaultVisual: TableVisualDefaultsSchema.optional().describe(
     'Sparse default ranges for existing Table builtin visual encodings.',
   ),
-  tableDefaults: TableDefaultsSchema.optional().describe(
+  defaultTable: TableDefaultsSchema.optional().describe(
     'Sparse Table defaults fragment restricted to appearance, Cell padding, border layout, and visual ranges.',
   ),
 });

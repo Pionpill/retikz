@@ -27,27 +27,42 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
         id="status-rule"
         position={[20, 75]}
         label={label(t.statusRule)}
-        layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
-        style={{ font: { size: 12 } }}
         entries={[
-          { key: { content: 'color' }, value: { content: color, style: { fill: 'darkorange', fillOpacity: 0.12 } } },
+          {
+            key: { content: 'color' },
+            value: { content: color, style: { fill: 'darkorange', opacity: { fill: 0.12 } } },
+          },
         ]}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 31, padding: 0 },
+          key: { layout: { width: 100 } },
+          value: { layout: { width: 115 } },
+        }}
       />
       <Map
         id="critical-rule"
         position={[275, 75]}
         label={label(t.criticalRule)}
-        layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
-        style={{ font: { size: 12 } }}
         entries={[{ key: { content: 'strokeWidth' }, value: { content: '3' } }]}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 31, padding: 0 },
+          key: { layout: { width: 100 } },
+          value: { layout: { width: 115 } },
+        }}
       />
       <Map
         id="projected-source"
         position={[530, 75]}
         label={label(t.projectedSource)}
-        layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
-        style={{ font: { size: 12 } }}
         entries={entries(color, '3')}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 31, padding: 0 },
+          key: { layout: { width: 100 } },
+          value: { layout: { width: 115 } },
+        }}
       />
 
       <Node position={[120, 185]} text={t.themeStage} style={{ fill: 'none', stroke: 'none', font: { size: 13 } }} />
@@ -55,25 +70,37 @@ const EntityAppearanceMerge: FC<EntityAppearanceMergeProps> = props => {
         id="theme-defaults"
         position={[20, 245]}
         label={label(t.themeDefaults)}
-        layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
-        style={{ font: { size: 12 } }}
         entries={entries(t.foreground, '1')}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 31, padding: 0 },
+          key: { layout: { width: 100 } },
+          value: { layout: { width: 115 } },
+        }}
       />
       <Map
         id="source-override"
         position={[275, 245]}
         label={label(t.sourceOverride)}
-        layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
-        style={{ font: { size: 12 } }}
         entries={entries(color, '3')}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 31, padding: 0 },
+          key: { layout: { width: 100 } },
+          value: { layout: { width: 115 } },
+        }}
       />
       <Map
         id="final-appearance"
         position={[530, 245]}
         label={label(t.finalAppearance)}
-        layout={{ height: 31, padding: 0, key: { width: 100 }, value: { width: 115 } }}
-        style={{ font: { size: 12 } }}
         entries={entries(color, '3')}
+        defaultCell={{
+          style: { font: { size: 12 } },
+          layout: { height: 31, padding: 0 },
+          key: { layout: { width: 100 } },
+          value: { layout: { width: 115 } },
+        }}
       />
       <Draw way={['status-rule.right', { horizontalTo: 'critical-rule.left' }]} arrow="->" />
       <Draw way={['critical-rule.right', { horizontalTo: 'projected-source.left' }]} arrow="->" />

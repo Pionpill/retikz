@@ -26,7 +26,7 @@ export const renderRibbonBoundaryPreview = (values: { lowerOffset: number }) => 
           },
         ],
       }}
-      style={{ fill: '#60a5fa', fillOpacity: 0.74, stroke: '#1d4ed8', strokeWidth: 1 }}
+      style={{ fill: '#60a5fa', stroke: '#1d4ed8', strokeWidth: 1, opacity: { fill: 0.74 } }}
     />
   </Layout>
 );

@@ -58,7 +58,7 @@ describe('Plot defaults resolver', () => {
     const result = plot.resolvePlotTheme(
       themeOf(style.name, ThemeMode.Light),
       {
-        plotDefaults: {
+        defaultPlot: {
           typography: { font: { family: 'monospace' } },
           palette: { series: ['#source-series'] },
         },

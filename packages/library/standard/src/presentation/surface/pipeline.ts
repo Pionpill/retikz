@@ -102,7 +102,7 @@ export const compileSurface = (
             zIndex: -1,
             style: {
               fill: surface.background.fill,
-              ...(surface.background.fillOpacity === undefined ? {} : { fillOpacity: surface.background.fillOpacity }),
+              ...(surface.background.opacity === undefined ? {} : { opacity: surface.background.opacity }),
               stroke: 'none',
             },
           }),

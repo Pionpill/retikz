@@ -17,10 +17,10 @@ export const compileChain = (source: IRChain, context: LayoutCompositeCompileCon
     skeleton: _skeleton,
     dataExpand: _expand,
     layout: _layout,
-    connection: _connection,
+    defaultConnection: _connection,
     namespace: _namespace,
     type: _type,
-    style,
+    defaultCell,
     label,
     ...scope
   } = source;
@@ -76,7 +76,7 @@ export const compileChain = (source: IRChain, context: LayoutCompositeCompileCon
       width: down ? block.height : block.width,
       height: down ? block.width : block.height,
       scope,
-      decoration: { style, label },
+      decoration: { style: defaultCell?.style, label },
       extra: [context.scope({ localNamespace: true, defaults: { reset: ['node'] } }, [...referenceNodes, ...paths])],
     },
     context,

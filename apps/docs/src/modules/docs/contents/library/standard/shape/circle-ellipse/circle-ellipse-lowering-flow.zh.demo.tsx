@@ -9,20 +9,20 @@ const Demo: FC = () => (
       position={[-275, -72]}
       text={['Circle / Ellipse', 'center + radius / diameter']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="literal-input"
       position={[-275, 72]}
       text={['字面量几何', 'from / corners / box']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="pass-target"
       position={[-75, -72]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', font: { size: 13 }, opacity: { fill: 0.16 } }}
     >
       保留 target 引用
     </Node>
@@ -31,20 +31,20 @@ const Demo: FC = () => (
       position={[-75, 72]}
       text={['计算中心与半径', '只接 [x, y]']}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', font: { size: 13 }, opacity: { fill: 0.16 } }}
     />
     <Node
       id="path-step"
       position={[145, 0]}
       text={['Path + Step', 'circlePath / ellipsePath']}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 13, weight: 'bold' }, opacity: { fill: 0.08 } }}
     />
     <Node
       id="angles"
       position={[145, 100]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 12 } }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', font: { size: 12 }, opacity: { fill: 0.16 } }}
     >
       angles + closed
     </Node>
@@ -53,7 +53,7 @@ const Demo: FC = () => (
       position={[310, 0]}
       text={['Path 几何', '轮廓 / 部分弧']}
       cornerRadius={4}
-      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08, font: { size: 13 } }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', font: { size: 13 }, opacity: { fill: 0.08 } }}
     />
 
     <Draw way={['target-input', 'pass-target']} arrow="->" style={{ stroke: 'gray' }} />

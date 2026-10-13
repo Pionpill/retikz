@@ -116,7 +116,8 @@ describe('示意骨架的布局、文字与身份', () => {
       ...listBase,
       id: 'vector',
       cellIdMode: 'index' as const,
-      layout: { direction, width: 40, height: 30, padding: 4 },
+      layout: { direction },
+      defaultCell: { layout: { width: 40, height: 30, padding: 4 } },
       index: { labels: ['i', '', 'j'], position: 'after' as const },
     };
 
@@ -138,8 +139,10 @@ describe('示意骨架的布局、文字与身份', () => {
   it('Map 保留有序重复键及空值，与显式结构等价且不推导身份', () => {
     const props = {
       ...mapBase,
-      layout: { key: { width: 40 }, value: { width: 60, height: 30 } },
-      style: { value: { fill: 'blue' } },
+      defaultCell: {
+        key: { layout: { width: 40 } },
+        value: { style: { fill: 'blue' }, layout: { width: 60, height: 30 } },
+      },
     };
     const actual = compile({ ...props, skeleton: { keys: ['k', '', 'k'] } });
     const explicit = compile({ ...props, entries: ['k', '', 'k'].map(key => ({ key, value: {} })) });
@@ -155,8 +158,7 @@ describe('示意骨架的布局、文字与身份', () => {
       const actual = compile({
         ...listBase,
         skeleton: { count: 1 },
-        layout: { padding },
-        style: { font: { size: 80 } },
+        defaultCell: { style: { font: { size: 80 } }, layout: { padding } },
       });
 
       expect(flat(actual.scene.primitives).some(node => node.type === 'text')).toBe(false);
@@ -191,7 +193,11 @@ describe('示意骨架的布局、文字与身份', () => {
   });
 
   it('格内符号与自动或显式格外标号独立，全部空标号不留空间', () => {
-    const base = { ...listBase, skeleton: { labels: ['x₁', '', 'x₁'] }, layout: { width: 40, height: 30 } };
+    const base = {
+      ...listBase,
+      skeleton: { labels: ['x₁', '', 'x₁'] },
+      defaultCell: { layout: { width: 40, height: 30 } },
+    };
     const texts = (index: IRArray['index']) =>
       flat(compile({ ...base, index }).scene.primitives).flatMap(node =>
         node.type === 'text' ? node.lines.map(line => line.text) : [],

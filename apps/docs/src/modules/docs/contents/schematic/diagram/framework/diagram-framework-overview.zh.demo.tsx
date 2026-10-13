@@ -49,7 +49,13 @@ const Demo: FC = () => (
                 id="drawing-core"
                 position={[0, 0]}
                 cornerRadius={4}
-                style={{ fill: 'lightgray', fillOpacity: 0.45, stroke: 'gray', strokeWidth: 1.5, dashPattern: [7, 5] }}
+                style={{
+                  fill: 'lightgray',
+                  stroke: 'gray',
+                  strokeWidth: 1.5,
+                  dashPattern: [7, 5],
+                  opacity: { fill: 0.45 },
+                }}
                 layout={{ minimumSize: { width: 350, height: 142 }, padding: { x: 18, y: 14 }, lineHeight: 19 }}
               >
                 <Text font={{ size: 14, weight: 'bold' }}>Drawing Core</Text>

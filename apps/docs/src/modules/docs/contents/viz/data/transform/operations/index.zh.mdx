@@ -39,7 +39,7 @@ Transform 的过程本质上是**数据内容的计算与转换**：接收输入
 
 模型解析不执行统计。只有整条链的语义与计算实现通过预检后，才开始处理数据行。
 
-<SourceLinks sources={[{ label: '同步变换入口', path: 'packages/viz/data/src/pipeline/transform.ts' }]} />
+<SourceLinks sources={[{ label: '同步变换入口', path: 'packages/viz/data/src/execution/apply.ts' }]} />
 
 ## 声明解析
 
@@ -57,7 +57,12 @@ Transform 的过程本质上是**数据内容的计算与转换**：接收输入
 
 但 `field: 'total'` 通过解析，只代表字段名的写法合法，不代表输入中已经存在 `total`。这个字段由前一步汇总产生，所以还需要下一阶段结合字段模型检查它是否可读。
 
-<SourceLinks sources={[{ label: '声明解析与阶段解析', path: 'packages/viz/data/src/resolve/transform/resolve.ts' }]} />
+<SourceLinks
+  sources={[
+    { label: '变换链解析入口', path: 'packages/viz/data/src/parse.ts' },
+    { label: '声明解析与阶段解析', path: 'packages/viz/data/src/transform/parse.ts' },
+  ]}
+/>
 
 ## 字段模型推进
 
@@ -79,8 +84,8 @@ Transform 的过程本质上是**数据内容的计算与转换**：接收输入
 
 <SourceLinks
   sources={[
-    { label: '模型推进与依赖解析', path: 'packages/viz/data/src/resolve/transform/resolve.ts' },
-    { label: '内置变换的语义定义', path: 'packages/viz/data/src/providers/transform/definitions.ts' },
+    { label: '模型推进与依赖解析', path: 'packages/viz/data/src/transform/parse.ts' },
+    { label: '内置变换的语义定义', path: 'packages/viz/data/src/transform/definitions.ts' },
   ]}
 />
 
@@ -98,8 +103,10 @@ Transform 的过程本质上是**数据内容的计算与转换**：接收输入
 
 <SourceLinks
   sources={[
-    { label: '同步实现预检', path: 'packages/viz/data/src/pipeline/transform.ts' },
-    { label: 'prepare、bind 与 execute', path: 'packages/viz/data/src/pipeline/execution.ts' },
+    { label: '同步实现预检', path: 'packages/viz/data/src/execution/apply.ts' },
+    { label: 'prepare：阶段预检', path: 'packages/viz/data/src/execution/executor.ts' },
+    { label: 'bind：绑定输入', path: 'packages/viz/data/src/execution/prepared-plan.ts' },
+    { label: 'execute：单次执行', path: 'packages/viz/data/src/execution/run.ts' },
   ]}
 />
 
@@ -117,8 +124,8 @@ Transform 的过程本质上是**数据内容的计算与转换**：接收输入
 
 <SourceLinks
   sources={[
-    { label: '结果接入与校验入口', path: 'packages/viz/data/src/resolve/transform/ingest.ts' },
-    { label: '阶段错误边界', path: 'packages/viz/data/src/pipeline/transform.ts' },
+    { label: '结果接入与校验入口', path: 'packages/viz/data/src/execution/result.ts' },
+    { label: '阶段错误边界', path: 'packages/viz/data/src/execution/apply.ts' },
   ]}
 />
 
@@ -132,7 +139,7 @@ Transform 的过程本质上是**数据内容的计算与转换**：接收输入
 
 ## 相关属性
 
-以下列出本页涉及的公开成员；完整 API 见 [Data API 参考](/viz/data/model/reference)，声明结构见 [API 参考](/viz/data/transform/reference)。
+以下列出本页涉及的公开成员；完整接口与声明结构见[变换 API 参考](/viz/data/transform/reference)。
 
 <ComponentProps
   items={[

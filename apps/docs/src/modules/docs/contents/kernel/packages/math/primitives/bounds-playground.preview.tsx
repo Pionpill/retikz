@@ -77,7 +77,7 @@ export const BoundsPlaygroundPreview = (values: BoundsPlaygroundPreviewValues) =
         center={center}
         width={rect.width}
         height={rect.height}
-        style={{ stroke: 'gray', strokeOpacity: 0.8, dashPattern: [4, 4], fill: 'none' }}
+        style={{ stroke: 'gray', dashPattern: [4, 4], fill: 'none', opacity: { stroke: 0.8 } }}
       />
       {points.map(point => (
         <Fragment key={point.label}>

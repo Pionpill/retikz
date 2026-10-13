@@ -29,7 +29,7 @@ describe('Plot typography cascade', () => {
     const resolution = resolvePlotTheme(
       theme,
       {
-        plotDefaults: {
+        defaultPlot: {
           typography: { textColor: '#source-global', font: { family: 'monospace', size: 14 } },
         },
       },

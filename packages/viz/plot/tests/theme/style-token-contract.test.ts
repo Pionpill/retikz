@@ -38,7 +38,7 @@ describe('Plot Source defaults and rules contract', () => {
   it('让 IRPlot 接受 Source-shaped defaults 与 ordered Axis rules', () => {
     const source = {
       ...baseSpec,
-      plotDefaults: {
+      defaultPlot: {
         plotArea: { fill: '#f8fafc' },
         typography: { font: { family: 'Source Serif 4', size: 14 }, textColor: '#334155' },
         axis: { line: { stroke: '#475569', strokeWidth: 0 }, ticks: { mark: false } },
@@ -76,14 +76,14 @@ describe('Plot Source defaults and rules contract', () => {
       }
     }
 
-    const sector = PlotSchema.safeParse({ ...baseSpec, plotDefaults: { palette: { sector: ['#ef4444'] } } });
+    const sector = PlotSchema.safeParse({ ...baseSpec, defaultPlot: { palette: { sector: ['#ef4444'] } } });
 
     expect(sector.success).toBe(false);
 
     if (!sector.success) {
       expect(sector.error.issues).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ path: ['plotDefaults', 'palette'], code: 'unrecognized_keys' }),
+          expect.objectContaining({ path: ['defaultPlot', 'palette'], code: 'unrecognized_keys' }),
         ]),
       );
     }

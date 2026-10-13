@@ -55,7 +55,7 @@ const source = sourceSchema.parse({
   type: 'point',
   data: { reference: 'rows' },
   presentation: { title: { text: 'Revenue' } },
-  chartDefaults: { presentation: { title: { style: { textColor: '#123456' }, layout: { align: 'middle' } } } },
+  defaultChart: { presentation: { title: { style: { textColor: '#123456' }, layout: { align: 'middle' } } } },
   recipe: { chartType: 'demo', encodings: { x: 'x', y: 'y' } },
 });
 
@@ -68,7 +68,7 @@ const resolve = (input = source) => {
         defineChartTheme({
           name: 'clean',
           defaults: { layout: { gap: 8 } },
-          plotDefaults: { palette: { series: ['#0f766e'] } },
+          defaultPlot: { palette: { series: ['#0f766e'] } },
         }),
       ],
     },
@@ -88,10 +88,10 @@ describe('Chart resolve', () => {
     expect(result.theme.defaults.layout?.gap).toBe(8);
     expect(result.presentation.surface.background).toEqual({ fill: '#FFFFFF' });
     expect(result.presentation.content).toMatchObject({ type: 'flexLayout' });
-    expect(result.plot.plotDefaults).toEqual({ palette: { series: ['#0f766e'] } });
+    expect(result.plot.defaultPlot).toEqual({ palette: { series: ['#0f766e'] } });
   });
 
-  it('uses explicit Source values after chartDefaults and preserves authored marks', () => {
+  it('uses explicit Source values after defaultChart and preserves authored marks', () => {
     const result = resolve(
       sourceSchema.parse({
         ...source,

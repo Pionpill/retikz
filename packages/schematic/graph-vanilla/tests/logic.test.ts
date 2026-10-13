@@ -285,8 +285,8 @@ describe('normalizeGraph', () => {
       boundingShape: 'circle',
       animations: [],
       meta: { source: 'architecture-catalog' },
-      style: { fill: 'lightblue', opacity: 0.8 },
       defaults: {
+        style: { fill: 'lightblue', opacity: { overall: 0.8 } },
         node: {
           style: { fill: 'white' },
         },
@@ -306,10 +306,10 @@ describe('normalizeGraph', () => {
     });
   });
 
-  it('keeps graphDefaults and graphRules identical to Direct Source IR', () => {
+  it('keeps defaultGraph and graphRules identical to Direct Source IR', () => {
     const input: InputGraph = {
       id: 'parity',
-      graphDefaults: {
+      defaultGraph: {
         entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
         relation: { style: { stroke: '#222222' } },
       },
@@ -326,7 +326,7 @@ describe('normalizeGraph', () => {
       ],
     };
 
-    expect(normalizeGraph(input)).toEqual(
+    expect(GraphSchema.parse(normalizeGraph(input))).toEqual(
       GraphSchema.parse({
         namespace: 'graph',
         type: 'graph',

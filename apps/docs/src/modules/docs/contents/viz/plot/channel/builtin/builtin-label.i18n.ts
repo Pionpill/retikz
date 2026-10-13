@@ -1,0 +1,43 @@
+import type { Lang } from '@/i18n';
+
+/** 标签试验场的可见文案 */
+export const builtinLabelI18n = {
+  zh: {
+    title: '标签',
+    data: '数据',
+    rows: '节点与标签数据',
+    label: '外侧标签',
+    show: '显示标签',
+    position: '标签位置',
+    distance: '标签距离',
+    pin: '显示引线',
+    color: '标签颜色',
+    top: '上',
+    right: '右',
+    bottom: '下',
+    left: '左',
+    preset: '预设',
+    custom: '自定义',
+    pinned: '上方引线',
+    beside: '右侧标注',
+  },
+  en: {
+    title: 'Labels',
+    data: 'Data',
+    rows: 'Node and label data',
+    label: 'External labels',
+    show: 'Show labels',
+    position: 'Label position',
+    distance: 'Label distance',
+    pin: 'Show pins',
+    color: 'Label color',
+    top: 'Top',
+    right: 'Right',
+    bottom: 'Bottom',
+    left: 'Left',
+    preset: 'Preset',
+    custom: 'Custom',
+    pinned: 'Pinned above',
+    beside: 'Beside nodes',
+  },
+} satisfies Record<Lang, Record<string, string>>;

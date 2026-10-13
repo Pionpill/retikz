@@ -85,8 +85,8 @@ const diagramMilestones: Array<SubVersion> = [
       {
         label: { zh: '统一主题与布局扩展', en: 'Unified theme and layout extensions' },
         content: {
-          zh: '同名 Theme Definition 生成 Source 同构的稀疏默认，作者通过 `diagramDefaults` / `flowDefaults` 覆盖，实例字段最终优先。内置 `layered` 与自定义同步 Layout Definition 经过同一 registry、catalog、capability preflight 和输出校验；同名 Graph Theme 提供 reference 外观，Flow 只物化自己的明确覆盖。',
-          en: 'Same-name Theme Definitions generate sparse defaults shaped like Source. Authors override them through `diagramDefaults` and `flowDefaults`, with instance fields taking final priority. Built-in `layered` and custom synchronous Layout Definitions share one registry, catalog, capability preflight, and output validation path. Graph Theme supplies reference appearance, while Flow materializes only its own explicit overrides.',
+          zh: '同名 Theme Definition 生成 Source 同构的稀疏默认，作者通过 `defaultDiagram` / `defaultFlow` 覆盖，实例字段最终优先。内置 `layered` 与自定义同步 Layout Definition 经过同一 registry、catalog、capability preflight 和输出校验；同名 Graph Theme 提供 reference 外观，Flow 只物化自己的明确覆盖。',
+          en: 'Same-name Theme Definitions generate sparse defaults shaped like Source. Authors override them through `defaultDiagram` and `defaultFlow`, with instance fields taking final priority. Built-in `layered` and custom synchronous Layout Definitions share one registry, catalog, capability preflight, and output validation path. Graph Theme supplies reference appearance, while Flow materializes only its own explicit overrides.',
         },
       },
       {

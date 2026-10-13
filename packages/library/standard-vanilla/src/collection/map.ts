@@ -7,7 +7,7 @@ import { StandardMapEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
 
-/** Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
+/** Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 defaultCell.key/value */
 export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   (
     | {

@@ -8,7 +8,7 @@ const Demo: FC = () => (
     <Surface
       id="provider-surface"
       padding={{ x: 22, y: 16 }}
-      background={{ fill: 'currentColor', fillOpacity: 0.04 }}
+      background={{ fill: 'currentColor', opacity: { fill: 0.04 } }}
       border={{ stroke: 'gray', strokeWidth: 1 }}
       cornerRadius={12}
     >
@@ -17,13 +17,13 @@ const Demo: FC = () => (
           id="provider"
           position={[-90, 0]}
           text="Provider"
-          style={{ fill: 'dodgerblue', fillOpacity: 0.12, stroke: 'dodgerblue' }}
+          style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.12 } }}
         />
         <Node
           id="definition"
           position={[90, 0]}
           text="Definition"
-          style={{ fill: 'dodgerblue', fillOpacity: 0.12, stroke: 'dodgerblue' }}
+          style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.12 } }}
         />
         <Draw way={['provider', 'definition']} arrow="->" style={{ stroke: 'gray' }} />
       </Scope>

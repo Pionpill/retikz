@@ -1,0 +1,158 @@
+import { isFiniteNumber } from '@retikz/math';
+
+import { resolveFieldPath } from '../model';
+import { DataSortOrder } from '../order';
+import type { ExternalRow } from '../shared';
+
+/** quantile-band spread whisker 的默认倍率 */
+const DEFAULT_QUANTILE_BAND_SPREAD_FACTOR = 1.5;
+
+/** 提取一组 rows 中某字段的有限数值，并保留原始行引用 */
+const finiteValueEntriesOf = (rows: Array<ExternalRow>, field: string): Array<{ row: ExternalRow; value: number }> => {
+  const entries: Array<{ row: ExternalRow; value: number }> = [];
+
+  for (const row of rows) {
+    const value = resolveFieldPath(row, field);
+    if (isFiniteNumber(value)) entries.push({ row, value });
+  }
+
+  return entries;
+};
+
+/** 计算中位数；空集合没有可定义统计量，返回 NaN invalid sentinel */
+export const medianOf = (values: Array<number>): number => {
+  if (values.length === 0) return NaN;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) return sorted[middle];
+
+  const lower = sorted[middle - 1];
+  const upper = sorted[middle];
+
+  return Math.sign(lower) === Math.sign(upper) ? lower + (upper - lower) / 2 : lower / 2 + upper / 2;
+};
+
+/** 计算有限数值平均数；直接求和溢出时按最大绝对值缩放 */
+export const meanOf = (values: Array<number>): number => {
+  if (values.length === 0) return NaN;
+
+  let sum = 0;
+
+  for (const value of values) sum += value;
+  if (Number.isFinite(sum)) return sum / values.length;
+
+  let scale = 0;
+
+  for (const value of values) scale = Math.max(scale, Math.abs(value));
+  let normalizedSum = 0;
+
+  for (const value of values) normalizedSum += value / scale;
+
+  return (normalizedSum / values.length) * scale;
+};
+
+/** 在已排序数值数组上按线性插值计算分位点 */
+export const quantileOfSorted = (sorted: Array<number>, p: number): number => {
+  if (sorted.length === 0) return NaN;
+  if (sorted.length === 1) return sorted[0];
+
+  const index = (sorted.length - 1) * p;
+  const lo = Math.floor(index);
+  const hi = Math.ceil(index);
+  if (lo === hi) return sorted[lo];
+
+  const weight = index - lo;
+
+  return sorted[lo] * (1 - weight) + sorted[hi] * weight;
+};
+
+/** 对未排序数值数组计算分位点 */
+export const quantileOf = (values: Array<number>, p: number): number =>
+  quantileOfSorted(
+    [...values].sort((a, b) => a - b),
+    p,
+  );
+
+/** 计算有限数值范围；空集合的端点返回 NaN invalid sentinel */
+export const finiteExtentOf = (values: Array<number>): { min: number; max: number; count: number } => {
+  if (values.length === 0) return { min: NaN, max: NaN, count: 0 };
+
+  let min = values[0];
+  let max = values[0];
+
+  for (let index = 1; index < values.length; index++) {
+    const value = values[index];
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+
+  return { min, max, count: values.length };
+};
+
+/** 解析 spread whisker 倍率；未传时使用 data 层默认倍率 */
+export const spreadFactorOf = (factor: number | undefined): number => factor ?? DEFAULT_QUANTILE_BAND_SPREAD_FACTOR;
+
+/** 计算参数化分位区间及其复用统计量 */
+export const quantileBandStatsOf = (
+  rows: Array<ExternalRow>,
+  field: string,
+  lowerP: number,
+  upperP: number,
+): {
+  entries: Array<{ row: ExternalRow; value: number }>;
+  sortedValues: Array<number>;
+  lower: number;
+  upper: number;
+  spread: number;
+  min: number;
+  max: number;
+  count: number;
+} => {
+  const entries = finiteValueEntriesOf(rows, field);
+  const sortedValues = entries.map(entry => entry.value).sort((a, b) => a - b);
+  const lower = quantileOfSorted(sortedValues, lowerP);
+  const upper = quantileOfSorted(sortedValues, upperP);
+  const extent = finiteExtentOf(sortedValues);
+
+  return {
+    entries,
+    sortedValues,
+    lower,
+    upper,
+    spread: upper - lower,
+    ...extent,
+  };
+};
+
+/** 过滤闭区间内的数值，用于 spread fence 内 whisker 端点计算 */
+export const valuesWithin = (values: Array<number>, lower: number, upper: number): Array<number> =>
+  values.filter(value => value >= lower && value <= upper);
+
+/** 按数值字段稳定排名，并自动剔除非有限数值行 */
+export const rankedByNumericField = (
+  rows: Array<ExternalRow>,
+  field: string,
+  direction: DataSortOrder,
+): Array<ExternalRow> =>
+  rows
+    .map((row, index) => ({ row, index, value: resolveFieldPath(row, field) }))
+    .filter((entry): entry is { row: ExternalRow; index: number; value: number } => isFiniteNumber(entry.value))
+    .sort((left, right) => {
+      const compared = left.value === right.value ? 0 : left.value < right.value ? -1 : 1;
+      const directed = direction === DataSortOrder.Ascending ? compared : -compared;
+      return directed === 0 ? left.index - right.index : directed;
+    })
+    .map(entry => entry.row);
+
+/** 读取指定字段的有限数值序列，非数值、NaN 和无穷值会被跳过 */
+export const finiteFieldValuesOf = (rows: Array<ExternalRow>, field: string): Array<number> => {
+  const values: Array<number> = [];
+
+  for (const row of rows) {
+    const value = resolveFieldPath(row, field);
+    if (isFiniteNumber(value)) values.push(value);
+  }
+
+  return values;
+};

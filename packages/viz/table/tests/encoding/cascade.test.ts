@@ -4,14 +4,15 @@ import { strictObject } from 'zod';
 import { defineCellVisualScale, resolveTableThemeDefaults } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
+import { cascadeTableCellAppearance } from '../../src/pipeline/rule/cascade';
 
-const tableDefaults = resolveTableThemeDefaults();
+const defaultTable = resolveTableThemeDefaults();
 
-const sequential = tableDefaults.defaults.visualDefaults?.sequential;
+const sequential = defaultTable.defaults.defaultVisual?.sequential;
 if (sequential === undefined || sequential === null)
   throw new Error('test fixture requires the default sequential palette');
 const scaleContext = {
-  categoricalColors: tableDefaults.defaults.visualDefaults?.categorical ?? [],
+  categoricalColors: defaultTable.defaults.defaultVisual?.categorical ?? [],
   sequentialColors: [sequential[0], sequential[1]] as const,
 };
 
@@ -43,7 +44,7 @@ describe('Table visual encoding cascade', () => {
       },
     });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       visualScaleDefinitions: [custom],
       encodings: [
@@ -78,7 +79,7 @@ describe('Table visual encoding cascade', () => {
   it('applies style, ordered owned channels, then ordered root rules', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[1]] });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       encodings: [
         {
@@ -117,7 +118,7 @@ describe('Table visual encoding cascade', () => {
   it('treats undefined resolution as no patch, trace, descriptor, or evaluator call', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       encodings: [
         {
@@ -133,5 +134,30 @@ describe('Table visual encoding cascade', () => {
     expect(result.legendDescriptors).toEqual([]);
     expect(result.cells[0].trace).not.toHaveProperty('encodingIds');
     expect(result.cells[0].appearance.background?.fill).toBe('#ffffff');
+  });
+});
+
+it('content opacity inherits by member and records each winner', () => {
+  const first = cascadeTableCellAppearance(
+    {},
+    {},
+    {
+      content: { defaults: { style: { opacity: { fill: 0.4, stroke: 0.8 } } } },
+    },
+    { kind: 'defaults', path: '/defaults/content' },
+  );
+  const second = cascadeTableCellAppearance(
+    first.appearance,
+    first.trace,
+    {
+      content: { defaults: { style: { opacity: 0.5 } } },
+    },
+    { kind: 'structure' },
+  );
+  expect(second.appearance.content?.defaults?.style?.opacity).toEqual({ fill: 0.4, stroke: 0.8, overall: 0.5 });
+  expect(second.trace).toMatchObject({
+    '/content/defaults/style/opacity/fill': { kind: 'defaults', path: '/defaults/content' },
+    '/content/defaults/style/opacity/stroke': { kind: 'defaults', path: '/defaults/content' },
+    '/content/defaults/style/opacity/overall': { kind: 'structure' },
   });
 });

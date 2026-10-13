@@ -38,7 +38,7 @@ export type CanonicalCell = Omit<CellResolveSource, 'content' | 'style' | 'layou
     /** 完成继承与默认值补全的单元格填充 */
     fill: NonNullable<NonNullable<IRCell['style']>['fill']>;
     /** 完成继承与默认值补全的填充不透明度 */
-    fillOpacity: number;
+    opacity: { overall?: number; fill: number; stroke?: number };
     /** 完成继承与默认值补全的边框绘制样式 */
     stroke: NonNullable<NonNullable<IRCell['style']>['stroke']>;
     /** 已确定的单元格圆角半径 */

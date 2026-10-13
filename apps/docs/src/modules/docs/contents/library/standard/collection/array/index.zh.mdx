@@ -166,13 +166,15 @@ import { Array, ArrayItem } from '@retikz/standard-react/collection';
   caption="示例固定单格为 42 × 36；切换格内内容与格外标号，观察两者独立变化。连续两个分隔符表示一个空格。"
 />
 
-无内容格仍保留背景、边框、内边距与引用区域；内容自然尺寸为零，默认 padding 仍会占空间。需要明确比例时设置 `layout.width` / `height`，需要逐格样式、id 或图形时改用 `items` 或 `ArrayItem`。显式单元格省略 content 表示无内容，`content: ''` 则仍是空文字。
+无内容格仍保留背景、边框、内边距与引用区域；内容自然尺寸为零，默认 padding 仍会占空间。需要明确比例时设置 `defaultCell.layout.width` / `height`，需要逐格样式、id 或图形时改用 `items` 或 `ArrayItem`。显式单元格省略 content 表示无内容，`content: ''` 则仍是空文字。
 
 ### 样式与尺寸
 
-整体 `style` 设置共同外观，单格 `style` 覆盖同名字段。
+`defaultCell` 统一配置单格的 `style` 和 `layout` 默认值。根级 `layout` 只负责方向、间距等集合排列；单格通过自己的 `style`、`layout` 覆盖默认配置。
 
-字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
+`defaultCell.style` 设置单格的共同外观，单格 `style` 覆盖同名字段。
+
+字体按字段合并；`opacity.fill` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
 
 <ComponentPreview
   files={['array-styles', 'array-styles.preview.tsx']}
@@ -181,9 +183,9 @@ import { Array, ArrayItem } from '@retikz/standard-react/collection';
   defaultSourceFile="array-styles.preview.tsx"
 />
 
-`layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零。宽度省略或设为 `'auto'` 时，所有自适应单格采用全组最大有效宽度；设为 `'content'` 时，每格按自身内容的自然宽度加内边距定宽。高度省略或设为 `'auto'` 时仍按全组最大高度。单格同名字段优先，因此可以在整体使用 `'content'`，再为某格指定固定宽度或 `'auto'`。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
+`defaultCell.layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零。宽度省略或设为 `'auto'` 时，所有自适应单格采用全组最大有效宽度；设为 `'content'` 时，每格按自身内容的自然宽度加内边距定宽。高度省略或设为 `'auto'` 时仍按全组最大高度。单格同名字段优先，因此可以在整体使用 `'content'`，再为某格指定固定宽度或 `'auto'`。`defaultCell.layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
 
-`layout.direction` 默认为 `row`，设为 `column` 即竖排，不自动换行。`auto` 轴取各格需求的最大值；固定轴保持指定尺寸。`style.cornerRadius` 统一设置各个单元格的圆角，单格样式可以覆盖它。
+`layout.direction` 默认为 `row`，设为 `column` 即竖排，不自动换行。`auto` 轴取各格需求的最大值；固定轴保持指定尺寸。`defaultCell.style.cornerRadius` 统一设置各个单元格的圆角，单格样式可以覆盖它。
 
 `index` 省略或为 `false` 时隐藏索引，设为 `true` 或 `{}` 时显示默认索引。对象形式可设置：
 
@@ -247,7 +249,7 @@ Array
 | `['map']`                           | Map       | JSON 文本 |
 | `['array']`                         | JSON 文本 | Array     |
 
-展开的子组件递归沿用同一选择；结构转为文本后，其整个子树都保留在紧凑 JSON 文本中，不再继续展开。空对象与空数组始终显示为 `{}` 和 `[]`。数组选项的顺序和重复项不影响结果。下例默认仅展开数组，可切换四种展示方式。 `layout.width: 'content'` 让自动生成的 Array 按各格内容定宽。
+展开的子组件递归沿用同一选择；结构转为文本后，其整个子树都保留在紧凑 JSON 文本中，不再继续展开。空对象与空数组始终显示为 `{}` 和 `[]`。数组选项的顺序和重复项不影响结果。下例默认仅展开数组，可切换四种展示方式。 `defaultCell.layout.width: 'content'` 让自动生成的 Array 按各格内容定宽。
 
 <ComponentPreview
   files={['array-data', 'array-data.preview.tsx']}
@@ -268,7 +270,7 @@ Array
 
 空根结构的自然尺寸为零。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 Map 的 `entries`。
 
-数据默认不生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。需要逐格定制时，使用显式单元格。整体 style / layout 只控制当前层，但 `data` 模式下的 `layout.width: 'content'` 会沿自动生成的 Array / Map 数据树传给后代 Array，让每层的单元格按自身内容定宽；手写嵌套组件不继承。字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
+数据默认不生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。需要逐格定制时，使用显式单元格。defaultCell.style / defaultCell.layout 只控制当前层，但 `data` 模式下的 `defaultCell.layout.width: 'content'` 会沿自动生成的 Array / Map 数据树传给后代 Array，让每层的单元格按自身内容定宽；手写嵌套组件不继承。字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
 
 React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ArrayDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
 
@@ -304,7 +306,7 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
   }
 />
 
-自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `defaultCell.layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
 
 <ComponentPreview
   files="array-overflow"

@@ -49,7 +49,7 @@ describe('Group layout-aware lowering', () => {
       resolve: () => ({
         defaults: {
           group: {
-            background: { fill: '#fed7aa', fillOpacity: 0.6 },
+            background: { fill: '#fed7aa', opacity: { fill: 0.6 } },
             border: { stroke: '#9a3412', strokeWidth: 3, dashPattern: [1, 2] },
             cornerRadius: 7,
           },
@@ -92,7 +92,7 @@ describe('Group layout-aware lowering', () => {
         defaults: {
           group: {
             background: { fill: '#fef3c7' },
-            border: { stroke: '#92400e', strokeWidth: 4, strokeOpacity: 0.3, dashPattern: [2, 2] },
+            border: { stroke: '#92400e', strokeWidth: 4, dashPattern: [2, 2], opacity: { stroke: 0.3 } },
             cornerRadius: 10,
           },
         },

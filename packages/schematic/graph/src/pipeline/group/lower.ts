@@ -32,7 +32,7 @@ export const groupScopeProps = (source: IRGroup): Omit<IRScope, 'type' | 'childr
   const {
     namespace: _namespace,
     type: _type,
-    graphDefaults: _graphDefaults,
+    defaultGraph: _defaultGraph,
     graphRules: _graphRules,
     caption: _caption,
     labels: _labels,
@@ -46,7 +46,7 @@ export const groupScopeProps = (source: IRGroup): Omit<IRScope, 'type' | 'childr
   } = source;
   void _namespace;
   void _type;
-  void _graphDefaults;
+  void _defaultGraph;
   void _graphRules;
   void _caption;
   void _labels;

@@ -9,7 +9,7 @@ const Demo: FC = () => (
       position={[-350, 0]}
       text={['Kernel / Sugar JSX', 'React children']}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -17,7 +17,7 @@ const Demo: FC = () => (
       position={[-175, 0]}
       text={['React collector', 'createInputScene']}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12, weight: 'bold' } }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12, weight: 'bold' }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       position={[0, 0]}
       text={['InputScene', 'typed authoring']}
       cornerRadius={4}
-      style={{ stroke: 'mediumseagreen', fill: 'mediumseagreen', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'mediumseagreen', fill: 'mediumseagreen', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       position={[185, 0]}
       text={['Vanilla processing', 'normalize + compile']}
       cornerRadius={4}
-      style={{ stroke: 'mediumseagreen', fill: 'mediumseagreen', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'mediumseagreen', fill: 'mediumseagreen', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
     <Node
@@ -41,7 +41,7 @@ const Demo: FC = () => (
       position={[370, 0]}
       text={['Scene', 'renderer-agnostic']}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 12 } }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', font: { size: 12 }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}
     />
 

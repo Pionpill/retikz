@@ -97,7 +97,7 @@ export const createPreviewControlContract = (lang: Lang) => {
     },
     relatedApis: [
       'Path.style.fill',
-      'Path.style.fillOpacity',
+      'Path.style.opacity.fill',
       'Path.style.stroke',
       'Path.style.strokeWidth',
       'Path.style.shadow',

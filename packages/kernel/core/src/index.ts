@@ -8,3 +8,7 @@ export { resolveGeometryLabelPlacement } from './resolve';
 export type { CanonicalGeometryLabelPlacement, GeometryLabelGeometryOptions } from './resolve';
 export * from './schemas';
 export * from './shared';
+
+// 仅公开跨包样式组合所需的解析能力，其他 resolving 类型保持内部
+export { mergeGraphicStyle, resolveGraphicOpacity } from './resolve';
+export type { GraphicOpacityResolution } from './resolve';

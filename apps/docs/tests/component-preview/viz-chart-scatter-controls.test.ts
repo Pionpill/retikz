@@ -223,7 +223,7 @@ describe('Viz Chart scatter controls', () => {
     for (const source of [worldCupZhPreviewSource, worldCupEnPreviewSource]) {
       expect(canonicalScatterProps(source)).toMatchObject({
         plotExtension: {
-          plotDefaults: {
+          defaultPlot: {
             plotArea: {
               fill: {
                 kind: 'image',
@@ -234,9 +234,9 @@ describe('Viz Chart scatter controls', () => {
         },
         recipe: { guides: { axis: false } },
       });
-      expect(canonicalScatterProps(source)).not.toHaveProperty(['plotExtension', 'plotDefaults', 'plotArea', 'fit']);
+      expect(canonicalScatterProps(source)).not.toHaveProperty(['plotExtension', 'defaultPlot', 'plotArea', 'fit']);
       expect(canonicalScatterProps(source)).not.toHaveProperty('recipe.guides.axisGridEnabled');
-      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension.plotDefaults.chart.canvas.fill');
+      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension.defaultPlot.chart.canvas.fill');
       expect(canonicalScatterPropertiesProps(source)).toMatchObject({
         size: 5,
         shape: 'circle',

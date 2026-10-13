@@ -19,7 +19,7 @@ const ArraySizingFigure: FC<ArraySizingFigureProps> = props => {
       text="A"
       shape="rectangle"
       layout={{ minimumSize: { width: 40, height: 24 }, padding: 0, margin: 0 }}
-      style={{ fill: 'dodgerblue', fillOpacity: 0.4, stroke: 'none', font: { size: 14 } }}
+      style={{ fill: 'dodgerblue', stroke: 'none', font: { size: 14 }, opacity: { fill: 0.4 } }}
     />
   );
   const b = (
@@ -28,17 +28,17 @@ const ArraySizingFigure: FC<ArraySizingFigureProps> = props => {
       text="Bbbb"
       shape="rectangle"
       layout={{ minimumSize: { width: 80, height: 36 }, padding: 0, margin: 0 }}
-      style={{ fill: 'darkorange', fillOpacity: 0.4, stroke: 'none', font: { size: 14 } }}
+      style={{ fill: 'darkorange', stroke: 'none', font: { size: 14 }, opacity: { fill: 0.4 } }}
     />
   );
   const label = { position: 'bottom' as const, font: { size: 12 }, opacity: 0.8 };
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node position={[45, -30]} text={t.before} style={{ fill: 'none', stroke: 'none', font: { size: 12 } }} />
-      <Array layout={{ padding: 8 }} label={{ ...label, text: '56 × 40' }}>
+      <Array label={{ ...label, text: '56 × 40' }} defaultCell={{ layout: { padding: 8 } }}>
         <ArrayItem>{a}</ArrayItem>
       </Array>
-      <Array position={[0, 85]} layout={{ padding: 8 }} label={{ ...label, text: '96 × 52' }}>
+      <Array position={[0, 85]} label={{ ...label, text: '96 × 52' }} defaultCell={{ layout: { padding: 8 } }}>
         <ArrayItem>{b}</ArrayItem>
       </Array>
       <Draw
@@ -47,8 +47,9 @@ const ArraySizingFigure: FC<ArraySizingFigureProps> = props => {
       />
       <Array
         position={[305, 39]}
-        layout={{ width: 'auto', height: 'auto', padding: 8, gap: 8 }}
         label={{ ...label, text: t.after }}
+        layout={{ gap: 8 }}
+        defaultCell={{ layout: { width: 'auto', height: 'auto', padding: 8 } }}
       >
         <ArrayItem>{a}</ArrayItem>
         <ArrayItem>{b}</ArrayItem>

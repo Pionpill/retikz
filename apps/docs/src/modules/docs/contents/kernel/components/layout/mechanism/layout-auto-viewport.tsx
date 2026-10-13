@@ -18,7 +18,7 @@ const LayoutAutoViewport: FC<LayoutAutoViewportProps> = props => {
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      flowDefaults={{ entity: { layout: { lineHeight: 16 } } }}
+      defaultFlow={{ entity: { layout: { lineHeight: 16 } } }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout kind="linear" id="layout-auto-viewport" direction="right">

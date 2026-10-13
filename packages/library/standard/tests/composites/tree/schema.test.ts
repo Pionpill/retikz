@@ -22,7 +22,7 @@ it('入口、内容、连接和身份错误在边界拒绝', () => {
     { root: { content: 3 } },
     { root: { connection: {} } },
     { root: { children: [{ id: 'a' }, { id: 'a' }] } },
-    { root: 'a', connection: { route: 'straight', fraction: 0.2 } },
+    { root: 'a', defaultConnection: { route: 'straight', fraction: 0.2 } },
     { root: 'a', layout: { levelGap: -1 } },
   ])
     expect(TreeSchema.safeParse({ ...base, ...input }).success).toBe(false);

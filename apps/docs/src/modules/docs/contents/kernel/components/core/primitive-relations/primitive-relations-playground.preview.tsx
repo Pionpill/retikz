@@ -58,7 +58,7 @@ export const PrimitiveRelationsPlaygroundPreview = (values: PrimitiveRelationsPl
           width={TARGET_HALF_WIDTH * 2}
           height={64}
           zIndex={1}
-          style={{ fill: 'none', stroke: '#64748b', strokeOpacity: 0.8, dashPattern: [4, 3] }}
+          style={{ fill: 'none', stroke: '#64748b', dashPattern: [4, 3], opacity: { stroke: 0.8 } }}
         />
       )}
       {values.boundaryOverride === 'circle' && (
@@ -66,7 +66,7 @@ export const PrimitiveRelationsPlaygroundPreview = (values: PrimitiveRelationsPl
           center={[0, 0]}
           radius={TARGET_HALF_WIDTH}
           zIndex={1}
-          style={{ fill: 'none', stroke: '#64748b', strokeOpacity: 0.8, dashPattern: [4, 3] }}
+          style={{ fill: 'none', stroke: '#64748b', dashPattern: [4, 3], opacity: { stroke: 0.8 } }}
         />
       )}
       <Node

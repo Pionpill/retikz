@@ -12,7 +12,7 @@ describe('Table Vanilla plain authoring', () => {
       columns: [{ id: 'name', field: 'name', header: 'Name' }],
     };
     const manualInput = {
-      visualDefaults: { categorical: ['#123456'] },
+      defaultVisual: { categorical: ['#123456'] },
       encodings: [
         {
           id: 'score',

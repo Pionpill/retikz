@@ -28,9 +28,7 @@ export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
         starPoints: values.starPoints,
         polygonSides: values.polygonSides,
       })}
-      label="label"
-      labelPosition="top"
-      labelDistance={8}
+      label={{ field: 'label', position: 'top', distance: 8 }}
     />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

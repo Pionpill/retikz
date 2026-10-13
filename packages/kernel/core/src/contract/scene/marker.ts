@@ -28,7 +28,7 @@ export type MarkerPathPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: IRGraphicStyle['fillOpacity'];
+  fillOpacity?: number;
   /**
    * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
    * @default 'nonzero'
@@ -40,7 +40,7 @@ export type MarkerPathPrim = {
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
+  strokeOpacity?: number;
   /** 描边宽度（marker 局部坐标） */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
@@ -85,14 +85,14 @@ export type MarkerEllipsePrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: IRGraphicStyle['fillOpacity'];
+  fillOpacity?: number;
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
   stroke?: MarkerFill;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
+  strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
@@ -122,14 +122,14 @@ export type MarkerRectPrim = {
    * 填充透明度 0~1
    * @default 1
    */
-  fillOpacity?: IRGraphicStyle['fillOpacity'];
+  fillOpacity?: number;
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
   stroke?: MarkerFill;
   /**
    * 描边透明度 0~1
    * @default 1
    */
-  strokeOpacity?: IRGraphicStyle['strokeOpacity'];
+  strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */

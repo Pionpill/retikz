@@ -1,4 +1,4 @@
-import { FontSchema, NodeDefaultSchema, PaintValueSchema, ScopeSchema } from '@retikz/core';
+import { OpacitySchema, FontSchema, NodeDefaultSchema, PaintValueSchema, ScopeSchema } from '@retikz/core';
 import { strictObject, union } from 'zod';
 
 import { TableCellBordersDefaultsSchema, TableCellBordersSchema } from '../border';
@@ -10,19 +10,14 @@ const requireAtLeastOneField = (label: string) => ({
 /** 校验在单元格边界内绘制的背景填充与透明度 */
 export const TableCellBackgroundSchema = strictObject({
   fill: PaintValueSchema.describe('Paint filling the Table Cell box.'),
-  fillOpacity: ScopeSchema.shape.defaults
-    .unwrap()
-    .shape.style.unwrap()
-    .shape.fillOpacity.describe('Cell background fill opacity. Omitted fields use 1 at runtime.'),
+  fillOpacity: OpacitySchema.optional().describe('Cell background fill opacity. Omitted fields use 1 at runtime.'),
 }).describe('Background painted inside a resolved Table Cell box.');
 
 /** 校验既有单元格的稀疏背景默认值，null 用于清除下层默认 */
 export const TableCellBackgroundDefaultsSchema = strictObject({
   fill: PaintValueSchema.nullable().optional().describe('Optional background paint; null removes lower defaults.'),
-  fillOpacity: ScopeSchema.shape.defaults
-    .unwrap()
-    .shape.style.unwrap()
-    .shape.fillOpacity.nullable()
+  fillOpacity: OpacitySchema.optional()
+    .nullable()
     .optional()
     .describe('Optional background fill opacity; null removes lower defaults.'),
 })
@@ -32,10 +27,8 @@ export const TableCellBackgroundDefaultsSchema = strictObject({
 const TableCellContentStyleDefaultsStyleSchema = strictObject({
   color: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.color.nullable().optional(),
   fill: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.fill.nullable().optional(),
-  fillOpacity: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.fillOpacity.nullable().optional(),
   stroke: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.stroke.nullable().optional(),
   strokeWidth: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.strokeWidth.nullable().optional(),
-  strokeOpacity: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.strokeOpacity.nullable().optional(),
   opacity: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.opacity.nullable().optional(),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell content style defaults'))

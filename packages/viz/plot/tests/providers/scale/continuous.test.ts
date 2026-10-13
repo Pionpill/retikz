@@ -318,42 +318,48 @@ describe('lowerPlots 笛卡尔折线回归', () => {
     expect(paths.map(path => path.style?.dashPattern)).toEqual([undefined, [6, 4], undefined]);
   });
 
-  it('connectNulls overrides bridge stroke without changing normal runs or extrapolating endpoints', () => {
-    const rows = [
-      { month: -1, revenue: null },
-      { month: 0, revenue: 10 },
-      { month: 1, revenue: 12 },
-      { month: 2, revenue: null },
-      { month: 3, revenue: null },
-      { month: 4, revenue: 9 },
-      { month: 5, revenue: 11 },
-      { month: 6, revenue: null },
-    ];
-    const paths = collectPaths(
-      firstLayer(
-        lineSpec({
-          strokeWidth: { kind: 'constant', value: 2 },
-          connectNulls: { stroke: '#ff0000', strokeWidth: 4, strokeOpacity: 0.4, dashPattern: [2, 3] },
-        }),
-        { sales: rows },
-        cartOpts,
-      ),
-    );
+  it.each([0, 0.4])(
+    'connectNulls overrides bridge stroke opacity %s without changing normal runs or extrapolating endpoints',
+    strokeOpacity => {
+      const rows = [
+        { month: -1, revenue: null },
+        { month: 0, revenue: 10 },
+        { month: 1, revenue: 12 },
+        { month: 2, revenue: null },
+        { month: 3, revenue: null },
+        { month: 4, revenue: 9 },
+        { month: 5, revenue: 11 },
+        { month: 6, revenue: null },
+      ];
+      const paths = collectPaths(
+        firstLayer(
+          lineSpec({
+            strokeWidth: { kind: 'constant', value: 2 },
+            connectNulls: { stroke: '#ff0000', strokeWidth: 4, strokeOpacity, dashPattern: [2, 3] },
+          }),
+          { sales: rows },
+          cartOpts,
+        ),
+      );
 
-    expect(paths).toHaveLength(3);
-    expect(paths[1].style).toMatchObject({
-      stroke: '#ff0000',
-      strokeWidth: 4,
-      strokeOpacity: 0.4,
-      dashPattern: [2, 3],
-    });
-    expect(paths[0].style?.strokeWidth).toBe(2);
-    expect(paths[2].style?.strokeWidth).toBe(2);
-    expect(paths[0].style?.dashPattern).toBeUndefined();
-    expect(
-      firstLayer(lineSpec({ connectNulls: true }), { sales: [{ month: 0, revenue: null }] }, cartOpts),
-    ).toBeUndefined();
-  });
+      expect(paths).toHaveLength(3);
+      expect(paths[1].style).toMatchObject({
+        stroke: '#ff0000',
+        strokeWidth: 4,
+        opacity: { stroke: strokeOpacity },
+        dashPattern: [2, 3],
+      });
+      expect(paths[0].style?.strokeWidth).toBe(2);
+      expect(paths[2].style?.strokeWidth).toBe(2);
+      expect(paths[0].style?.dashPattern).toBeUndefined();
+      expect(
+        compileToScene({ type: 'scene', version: 1, children: [paths[1]] }).scene.primitives.length,
+      ).toBeGreaterThan(0);
+      expect(
+        firstLayer(lineSpec({ connectNulls: true }), { sales: [{ month: 0, revenue: null }] }, cartOpts),
+      ).toBeUndefined();
+    },
+  );
 
   it.each([
     { closed: true },

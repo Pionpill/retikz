@@ -6,7 +6,7 @@ import {
   PathLineJoinSchema,
   ShadowPreset,
   StrokeDashPatternSchema,
-  OpacitySchema,
+  GraphicOpacityValueSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -35,8 +35,7 @@ export const ConnectedScatterPathPropertiesSchema = strictObject({
   curve: PathMarkSchema.shape.curve,
   stroke: CssColorSchema.optional(),
   strokeWidth: StrokeWidthSchema.optional(),
-  strokeOpacity: OpacitySchema.optional(),
-  opacity: OpacitySchema.optional(),
+  opacity: GraphicOpacityValueSchema.optional(),
   lineCap: PathLineCapSchema.optional(),
   lineJoin: PathLineJoinSchema.optional(),
   dashPattern: StrokeDashPatternSchema.optional(),
@@ -58,7 +57,7 @@ export const ConnectedScatterChartPropertiesSchema = ConnectedScatterMarkPropert
     .default('series')
     .optional()
     .describe(
-      'Color allocation: series shares point/path colors (default); mark assigns consecutive palette colors to each series point and path; muted shares series colors and defaults path.strokeOpacity to 0.6 without changing points',
+      'Color allocation: series shares point/path colors (default); mark assigns consecutive palette colors to each series point and path; muted shares series colors and defaults path.opacity.stroke to 0.6 without changing points',
     ),
   autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),

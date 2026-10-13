@@ -165,8 +165,8 @@ const translations: Record<string, string> = {
   直属单元格的非负整数下标: 'Nonnegative integer index of the direct cell',
   '参数非法时抛出 RetikzStandardError': 'Throws RetikzStandardError for invalid arguments',
   'Array 的 React authoring 属性': 'React authoring props for Array',
-  'Map 的 React authoring 属性；键值角色覆盖统一位于 style.key/value 与 layout.key/value':
-    'React authoring props for Map; key/value overrides live in style.key/value and layout.key/value',
+  'Map 的 React authoring 属性；键值角色覆盖统一位于 defaultCell.key/value':
+    'React authoring props for Map; key/value overrides live in defaultCell.key/value',
   'Standard Array 呈现组件': 'Standard Array presentation component',
   'Standard Map 呈现组件': 'Standard Map presentation component',
   'Array 单元格的文本或 drawable 输入，以及单格外观': 'Text or drawable input and appearance for a Array cell',
@@ -178,8 +178,8 @@ const translations: Record<string, string> = {
   'MapEntry 的键槽位': 'Key slot of a MapEntry',
   'MapEntry 的值槽位': 'Value slot of a MapEntry',
   'Array 的 Vanilla authoring 输入': 'Vanilla authoring input for Array',
-  'Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value':
-    'Vanilla authoring input for Map; key/value overrides live in style.key/value and layout.key/value',
+  'Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 defaultCell.key/value':
+    'Vanilla authoring input for Map; key/value overrides live in defaultCell.key/value',
   '将 Array 输入与嵌套内容交给根级 traversal': 'Pass Array input and nested content to root-level traversal',
   '将 Map 输入与嵌套内容交给根级 traversal': 'Pass Map input and nested content to root-level traversal',
   '创建 Array embed；显式 input.id 同时用作领域与 embed 身份':

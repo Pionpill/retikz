@@ -32,7 +32,7 @@ export const renderConnectedScatterMarksPreview = (
       <ConnectedScatterMark
         override
         properties={{
-          point: { fillOpacity: values.fillOpacity, strokeWidth: values.strokeWidth },
+          point: { opacity: { fill: values.fillOpacity }, strokeWidth: values.strokeWidth },
           path: { ...(values.dashed ? { dashPattern: [6, 4] } : {}) },
         }}
       />

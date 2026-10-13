@@ -53,9 +53,8 @@ export const emitTableCellBackground = (
     style: {
       color: masterColor,
       fill: PaintValueSchema.parse(background.fill),
-      fillOpacity: background.fillOpacity ?? 1,
       stroke: 'none',
-      strokeOpacity: 0,
+      opacity: { fill: background.fillOpacity ?? 1, stroke: 0 },
     },
   };
 };
@@ -74,10 +73,10 @@ export const emitTableBorderPath = (edge: TableBorderEdge, tableId?: string): IR
     color: edge.style.color,
     stroke: PaintValueSchema.parse(edge.style.stroke),
     strokeWidth: edge.style.width,
-    strokeOpacity: edge.style.strokeOpacity,
     ...(edge.style.dashPattern === undefined ? {} : { dashPattern: [...edge.style.dashPattern] }),
     dashOffset: edge.style.dashOffset,
     lineCap: edge.style.lineCap,
     lineJoin: edge.style.lineJoin,
+    opacity: { stroke: edge.style.strokeOpacity },
   },
 });

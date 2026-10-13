@@ -35,9 +35,8 @@ export const renderFramePlaygroundPreview = (values: FramePlaygroundPreviewValue
   const borderStyle = {
     stroke: values.borderStroke,
     strokeWidth: values.strokeWidth,
-    strokeOpacity: values.strokeOpacity,
     fill: 'dodgerblue',
-    fillOpacity: values.fillOpacity,
+    opacity: { stroke: values.strokeOpacity, fill: values.fillOpacity },
     ...borderLineStyle,
   };
 
@@ -53,8 +52,8 @@ export const renderFramePlaygroundPreview = (values: FramePlaygroundPreviewValue
         <FrameTitle
           style={{
             fill: 'dodgerblue',
-            fillOpacity: values.titleFillOpacity,
             font: { size: values.titleFontSize, weight: values.titleFontWeight },
+            opacity: { fill: values.titleFillOpacity },
           }}
           layout={{ padding: values.titlePadding }}
         >

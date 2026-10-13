@@ -24,7 +24,7 @@ it.each(['down', 'up', 'right', 'left'] as const)('%s保留空子槽，连接隐
     layout: { direction },
   };
   const result = compile(source);
-  const hidden = compile({ ...source, connection: false });
+  const hidden = compile({ ...source, defaultConnection: false });
   expect(result.spatialHandles).toEqual(hidden.spatialHandles);
   const texts = flat(result.scene.primitives).filter(n => n.type === 'text');
   expect(texts).toHaveLength(2);
@@ -37,9 +37,9 @@ it('null 根为空树且不产生图元', () => {
 it('圆形连接命中真实边界，外部引用保留节点身份', () => {
   const tree: IRTree = {
     ...base,
-    node: { layout: { padding: 0, minimumSize: 36 } },
+    defaultNode: { layout: { padding: 0, minimumSize: 36 } },
     root: { id: 'p', content: '1', children: [{ id: 'c', content: '2' }] },
-    connection: { path: { meta: { edge: true } } },
+    defaultConnection: { path: { meta: { edge: true } } },
   };
   const result = compileToScene(
     {
@@ -70,13 +70,13 @@ it('圆形连接命中真实边界，外部引用保留节点身份', () => {
 it('逐边覆盖可以重新开启、清空箭头', () => {
   const enabled = compile({
     ...base,
-    connection: false,
+    defaultConnection: false,
     root: { children: [{ content: 'a', connection: { path: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } } }, 'b'] },
   });
   expect(flat(enabled.scene.primitives).filter(n => n.type === 'path' && n.arrowEnd !== undefined)).toHaveLength(1);
   const cleared = compile({
     ...base,
-    connection: { path: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } },
+    defaultConnection: { path: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } },
     root: { children: [{ connection: { path: { marks: [] } } }] },
   });
   expect(flat(cleared.scene.primitives).filter(n => n.type === 'path' && n.arrowEnd !== undefined)).toHaveLength(0);
@@ -104,7 +104,7 @@ it.each(['straight', '-|', '|-', '-|-', '|-|'] as const)('%s 连接与直接引�
                 },
               ],
             },
-            connection: { ...connection, path: { meta: { edge: true } } },
+            defaultConnection: { ...connection, path: { meta: { edge: true } } },
           },
           {
             type: 'path',
@@ -134,9 +134,12 @@ it.each(['straight', '-|', '|-', '-|-', '|-|'] as const)('%s 连接与直接引�
 it.each(['circle', 'ellipse', 'diamond', 'rectangle'] as const)('%s 带不对称留白的边与真实外部引用等价', shape => {
   const source: IRTree = {
     ...base,
-    node: { shape, layout: { margin: { left: 3, right: 7, top: 2, bottom: 9 }, padding: { left: 4, right: 16 } } },
+    defaultNode: {
+      shape,
+      layout: { margin: { left: 3, right: 7, top: 2, bottom: 9 }, padding: { left: 4, right: 16 } },
+    },
     root: { id: 'p', content: 'wide parent', children: [{ id: 'c', content: 'child' }] },
-    connection: { path: { meta: { edge: true } } },
+    defaultConnection: { path: { meta: { edge: true } } },
   };
   const result = compileToScene(
     {
@@ -168,7 +171,7 @@ it('空子槽保留默认节点宽度及子树净距，唯一子节点居中', (
         children: [
           {
             ...base,
-            node: { layout: { padding: 0, minimumSize: 36 } },
+            defaultNode: { layout: { padding: 0, minimumSize: 36 } },
             root: { id: 'p', children: [...(missing ? [null] : []), { id: 'c' }] },
           },
           {
@@ -205,7 +208,7 @@ it('多个匿名树的内部引用互不冲突，根变换保留实际节点引�
         { ...base, root: { children: ['a', 'b'] } },
         {
           ...base,
-          node: { layout: { padding: 0, minimumSize: 36 } },
+          defaultNode: { layout: { padding: 0, minimumSize: 36 } },
           transforms: [{ kind: 'translate', x: 200, y: 100 }],
           root: { id: 'shifted', children: ['c'] },
         },
@@ -251,7 +254,7 @@ it('父分配保留自然节点尺寸，过小约束失败', () => {
           {
             namespace: 'tree-test',
             type: 'harness',
-            child: { ...base, root: {}, node: { layout: { padding: 0, minimumSize: 36 } } },
+            child: { ...base, root: {}, defaultNode: { layout: { padding: 0, minimumSize: 36 } } },
           },
         ],
       },
@@ -277,7 +280,7 @@ it('非均匀子树不重叠，同层中心对齐且兄弟顺序稳定', () => {
           {
             ...base,
             layout: { direction },
-            node: { layout: { padding: 0, minimumSize: 36 } },
+            defaultNode: { layout: { padding: 0, minimumSize: 36 } },
             root: { children: [{ id: 'a', node: { layout: { minimumSize: 80 } } }, { id: 'b' }] },
           },
           {
@@ -312,7 +315,7 @@ it('根容器引用和整体标签保留', () => {
           ...base,
           id: 'tree-container',
           root: {},
-          node: { layout: { padding: 0, minimumSize: 36 } },
+          defaultNode: { layout: { padding: 0, minimumSize: 36 } },
           label: { text: 'Tree' },
         },
         {
@@ -340,9 +343,9 @@ it('继承节点旋转时直线仍与真实形状边界相接', () => {
         {
           ...base,
           defaults: { node: { rotate: 30 } },
-          node: { shape: 'ellipse', layout: { margin: { left: 3, right: 7 }, padding: 0 } },
+          defaultNode: { shape: 'ellipse', layout: { margin: { left: 3, right: 7 }, padding: 0 } },
           root: { id: 'rotated-parent', content: 'long parent', children: [{ id: 'rotated-child', content: 'child' }] },
-          connection: { path: { meta: { edge: true } } },
+          defaultConnection: { path: { meta: { edge: true } } },
         },
         {
           type: 'path',
@@ -422,7 +425,7 @@ it('匿名与显式节点混用时内部引用不冲突，路径保持同图', (
           'D',
         ],
       },
-      connection: { route: '-|-', path: { meta: { edge: true } } },
+      defaultConnection: { route: '-|-', path: { meta: { edge: true } } },
     });
     return flat(result.scene.primitives)
       .filter(n => n.type === 'path')

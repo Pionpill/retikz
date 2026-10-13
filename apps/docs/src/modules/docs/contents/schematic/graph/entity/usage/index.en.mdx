@@ -180,7 +180,7 @@ The planning, delivery and support groups below contain two, three and four enti
 
 Built-in `role` values primarily determine shape and base size, with a clear separation from the built-in `status` appearance. A custom role can also have appearance rules that affect the same fields as status or kind rules. Following the built-in separation is recommended, but not required.
 
-For the main color, precedence is: explicit Entity `style.color` > author `graphDefaults` / `graphRules` color > `group` categorical color > built-in `status` color. `group` directly supplies only the main color; for other appearance fields, explicit instance styles still take precedence over author rules and built-in status appearance. If multiple business rules match, later rules override earlier ones; role and kind have no fixed appearance precedence of their own. See [Implementation](/schematic/graph/entity/mechanism) for the full rule behavior.
+For the main color, precedence is: explicit Entity `style.color` > author `defaultGraph` / `graphRules` color > `group` categorical color > built-in `status` color. `group` directly supplies only the main color; for other appearance fields, explicit instance styles still take precedence over author rules and built-in status appearance. If multiple business rules match, later rules override earlier ones; role and kind have no fixed appearance precedence of their own. See [Implementation](/schematic/graph/entity/mechanism) for the full rule behavior.
 
 Use the playground below to switch role and status or apply a group to the entity. Turn on "Apply group" to let its color override the status color, then "Override theme color" to make the instance color take precedence over both.
 

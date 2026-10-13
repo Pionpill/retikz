@@ -48,7 +48,7 @@ export const AnimationTriggerPreview: FC<AnimationTriggerPreviewProps> = props =
             shape="circle"
             position={[0, -15]}
             layout={{ minimumSize: 52 }}
-            style={{ fill: 'dodgerblue', fillOpacity: 0.3, stroke: 'dodgerblue' }}
+            style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.3 } }}
             animations={[track]}
           >
             {text.node}

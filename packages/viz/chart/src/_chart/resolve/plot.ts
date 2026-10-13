@@ -336,9 +336,9 @@ export const resolveChartPlot = (
     ...(source.dataExecution === undefined ? {} : { dataExecution: source.dataExecution }),
     ...(transforms.length === 0 ? {} : { transform: transforms }),
     scales,
-    ...(themePlotDefaults === undefined && extension?.plotDefaults === undefined
+    ...(themePlotDefaults === undefined && extension?.defaultPlot === undefined
       ? {}
-      : { plotDefaults: mergePlotDefaults(themePlotDefaults, extension?.plotDefaults) }),
+      : { defaultPlot: mergePlotDefaults(themePlotDefaults, extension?.defaultPlot) }),
     ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
     ...spatial,
     marks,

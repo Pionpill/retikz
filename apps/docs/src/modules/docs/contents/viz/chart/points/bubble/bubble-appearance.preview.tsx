@@ -5,7 +5,7 @@ import { gapminderBubbleData } from './bubble-basic.data';
 /** 图形参数 */
 export type BubbleAppearancePreviewValues = {
   coordinateSystem: 'cartesian2D' | 'polar2D';
-  fillOpacity: number;
+  opacity: { fill: number };
   stroke: string;
   strokeWidth: number;
   shape: 'circle' | 'rectangle' | 'diamond';
@@ -23,7 +23,7 @@ export const renderBubbleAppearancePreview = (
   >
     <BubbleEncodings x="gdpPerCapita" y="lifeExpectancy" size="population" color="continent" />
     <BubbleProperties
-      fillOpacity={values.fillOpacity}
+      opacity={values.opacity}
       stroke={values.stroke}
       strokeWidth={values.strokeWidth}
       shape={values.shape}

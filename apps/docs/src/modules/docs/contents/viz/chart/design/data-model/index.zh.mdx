@@ -38,7 +38,7 @@ Chart Source
 │   ├── title?
 │   ├── subtitle?
 │   └── ......
-├── chartDefaults?
+├── defaultChart?
 ├── data                                   # 共享数据入口
 │   ├── reference: 'rows'
 │   └── model?
@@ -83,7 +83,7 @@ Chart Source
 
 `coordinate` 可选择 Plot 的坐标配置。通常由图形类型提供适合它的默认坐标；需要改变坐标形式时，在根部显式指定兼容的坐标配置。字段到坐标轴的映射仍在 recipe 中，`coordinate` 本身不代替 `encodings`。
 
-`presentation` 提供 `title`、`subtitle`、`note`、`source` 四个快捷文本槽位。Chart 基于 Standard Surface 与 Layout，按标题、副标题、Plot、注记、来源的固定顺序组织已有内容；这些文本说明整张图，不是 Plot 的轴标签或数据标注。可选 `background` 指定整图背景；`chartDefaults` 提供 Chart 自身的背景、布局和文本默认值。
+`presentation` 提供 `title`、`subtitle`、`note`、`source` 四个快捷文本槽位。Chart 基于 Standard Surface 与 Layout，按标题、副标题、Plot、注记、来源的固定顺序组织已有内容；这些文本说明整张图，不是 Plot 的轴标签或数据标注。可选 `background` 指定整图背景；`defaultChart` 提供 Chart 自身的背景、布局和文本默认值。
 
 ## recipe 承担类型语义
 

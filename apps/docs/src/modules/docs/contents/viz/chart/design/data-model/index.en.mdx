@@ -38,7 +38,7 @@ Chart Source
 │   ├── title?
 │   ├── subtitle?
 │   └── ......
-├── chartDefaults?
+├── defaultChart?
 ├── data                                   # shared data entry
 │   ├── reference: 'rows'
 │   └── model?
@@ -83,7 +83,7 @@ Shared root fields come from one schema field set; each chart adds its exact fam
 
 `coordinate` can select a Plot coordinate configuration. A chart type normally supplies a suitable default; you can specify a compatible coordinate at the root when you need a different form. Field-to-position mappings remain in the recipe: `coordinate` does not replace `encodings`.
 
-`presentation` offers four convenient text slots: `title`, `subtitle`, `note`, and `source`. Using Standard Surface and Layout, Chart arranges the present slots in title, subtitle, Plot, note, source order. These texts explain the whole chart; they are not Plot axis labels or data annotations. Optional `background` sets the chart-wide background; `chartDefaults` provides Chart-owned background, layout, and text defaults.
+`presentation` offers four convenient text slots: `title`, `subtitle`, `note`, and `source`. Using Standard Surface and Layout, Chart arranges the present slots in title, subtitle, Plot, note, source order. These texts explain the whole chart; they are not Plot axis labels or data annotations. Optional `background` sets the chart-wide background; `defaultChart` provides Chart-owned background, layout, and text defaults.
 
 ## recipe carries the type semantics
 

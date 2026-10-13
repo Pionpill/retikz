@@ -2,9 +2,8 @@ import {
   BoxSpacingSchema,
   ChildSchema,
   CompositeBaseSchema,
-  GraphicFillSchema,
   GraphicColorSchema,
-  GraphicElementOpacitySchema,
+  GraphicOpacitySchema,
   GraphicStrokeSchema,
   PathStrokeSchema,
   PaintValueSchema,
@@ -20,13 +19,13 @@ import { SURFACE_TYPE } from './constants';
 /** 校验覆盖 Surface 完整分配区域的背景填充 */
 export const SurfaceBackgroundSchema = strictObject({
   fill: PaintValueSchema.describe('Fill paint covering the complete Surface allocation box.'),
-  fillOpacity: GraphicFillSchema.shape.fillOpacity,
+  ...GraphicOpacitySchema.shape,
 }).describe('Optional fill appearance for the Surface allocation box.');
 
 /** 校验 Surface 边框的颜色、透明度与描边配置 */
 export const SurfaceBorderSchema = strictObject({
   ...GraphicColorSchema.shape,
-  ...GraphicElementOpacitySchema.shape,
+  ...GraphicOpacitySchema.shape,
   ...GraphicStrokeSchema.shape,
   ...PathStrokeSchema.shape,
 }).describe('Optional stroke appearance drawn on the Surface allocation boundary.');

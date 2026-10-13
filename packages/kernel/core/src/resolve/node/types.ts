@@ -20,7 +20,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolutionInput } from '../resource';
-import type { EffectiveScopeDefaults } from '../style';
+import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
 import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
 
 /** 已把派生颜色确定为字符串的 Node label pin */
@@ -95,44 +95,46 @@ export type CanonicalNode = Omit<
   | 'shadow'
   | 'fill'
   | 'stroke'
-> & {
-  /** 已解析的节点填充 */
-  fill?: PaintResolutionInput;
-  /** 已解析的节点描边 */
-  stroke?: PaintResolutionInput;
-  /** 已补齐默认值的位置，非笛卡尔形态交由布局阶段定位 */
-  position: NonNullable<IRNode['position']>;
-  /** 完整内边距 */
-  padding: BoundsInsets;
-  /** 完整外边距 */
-  margin: BoundsInsets;
-  /** 完整最小尺寸 */
-  minimumSize: {
-    /** 节点边界的最小宽度 */
-    width: number;
-    /** 节点边界的最小高度 */
-    height: number;
+  | 'opacity'
+> &
+  GraphicOpacityResolution & {
+    /** 已解析的节点填充 */
+    fill?: PaintResolutionInput;
+    /** 已解析的节点描边 */
+    stroke?: PaintResolutionInput;
+    /** 已补齐默认值的位置，非笛卡尔形态交由布局阶段定位 */
+    position: NonNullable<IRNode['position']>;
+    /** 完整内边距 */
+    padding: BoundsInsets;
+    /** 完整外边距 */
+    margin: BoundsInsets;
+    /** 完整最小尺寸 */
+    minimumSize: {
+      /** 节点边界的最小宽度 */
+      width: number;
+      /** 节点边界的最小高度 */
+      height: number;
+    };
+    /** 完整轴向缩放 */
+    scale: {
+      /** 水平方向缩放系数 */
+      x: number;
+      /** 垂直方向缩放系数 */
+      y: number;
+    };
+    /** 多行正文 */
+    text?: Array<ResolvedTextLine>;
+    /** 已按数组形态展开的附属标签 */
+    label?: Array<CanonicalNodeLabel>;
+    /** 正文对齐 */
+    align: NodeTextAlign;
+    /** 节点旋转角度 */
+    rotate: number;
+    /** 已解析的边框虚线样式 */
+    dashPattern?: StrokeDashPattern;
+    /** 已展开预设与静态默认值的投影 */
+    shadow?: ResolvedDropShadow;
   };
-  /** 完整轴向缩放 */
-  scale: {
-    /** 水平方向缩放系数 */
-    x: number;
-    /** 垂直方向缩放系数 */
-    y: number;
-  };
-  /** 多行正文 */
-  text?: Array<ResolvedTextLine>;
-  /** 已按数组形态展开的附属标签 */
-  label?: Array<CanonicalNodeLabel>;
-  /** 正文对齐 */
-  align: NodeTextAlign;
-  /** 节点旋转角度 */
-  rotate: number;
-  /** 已解析的边框虚线样式 */
-  dashPattern?: StrokeDashPattern;
-  /** 已展开预设与静态默认值的投影 */
-  shadow?: ResolvedDropShadow;
-};
 
 /** 已解析的节点 shape 定义与实例参数 */
 export type ShapeResolution = {

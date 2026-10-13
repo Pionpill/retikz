@@ -53,7 +53,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { width: 'auto', rowGap: 6, columnGap: 10, row: 'before', column: 'before' },
-    relatedApis: ['Matrix.layout', 'Matrix.index', 'Matrix.style'],
+    relatedApis: ['Matrix.layout', 'Matrix.index', 'Matrix.defaultCell.style'],
   } satisfies PreviewControlContract;
 };
 

@@ -68,7 +68,10 @@ export type ChannelRegistry = Map<string, AnyChannelDefinition> & {
 
 /**
  * 解析通道 registry：内置 definition 先注册，自定义 definition 再合并
- * @description 所有通道类型共用一张 registry；kind 决定解析结果进入 mark values、scope/node/path deliveries，或由坐标系 role 消费
+ * @description 名称索引保留首个同名内置定义；definitions 保留全部定义和注册顺序
+ * @param options 自定义定义与标签回调；省略时仅注册内置定义
+ * @returns 新建的名称索引及其完整定义列表
+ * @throws {RetikzPlotError} 自定义名称为空、重复或与内置保留名称冲突
  */
 export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): ChannelRegistry => {
   const registry = new Map<string, AnyChannelDefinition>() as ChannelRegistry;

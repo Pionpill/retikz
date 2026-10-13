@@ -105,12 +105,12 @@ export const defineFlowThemeControlContract = (copy: FlowThemeControlCopy) => {
       relationStrokeOpacity: 0.9,
     },
     relatedApis: [
-      'FlowDiagram.flowDefaults.entity.style.color',
-      'FlowDiagram.flowDefaults.entity.style.fillOpacity',
-      'FlowDiagram.flowDefaults.entity.style.strokeWidth',
-      'FlowDiagram.flowDefaults.relation.style.stroke',
-      'FlowDiagram.flowDefaults.relation.style.strokeWidth',
-      'FlowDiagram.flowDefaults.relation.style.strokeOpacity',
+      'FlowDiagram.defaultFlow.entity.style.color',
+      'FlowDiagram.defaultFlow.entity.style.opacity.fill',
+      'FlowDiagram.defaultFlow.entity.style.strokeWidth',
+      'FlowDiagram.defaultFlow.relation.style.stroke',
+      'FlowDiagram.defaultFlow.relation.style.strokeWidth',
+      'FlowDiagram.defaultFlow.relation.style.opacity.stroke',
     ],
   } satisfies PreviewControlContract;
 };

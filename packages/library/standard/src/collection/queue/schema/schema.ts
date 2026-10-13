@@ -1,20 +1,19 @@
 import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { JsonValueSchema, NonNegativeNumberSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, literal, never, string, union } from 'zod';
+import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
 import { SurfaceSchema } from '../../../presentation/surface/schema';
 import { DataExpandSchema } from '../../_cell/data';
 import {
   LinearCellSkeletonSchema,
   CellSchema,
-  CellStyleSchema,
-  CellLayoutSchema,
+  CellDefaultSchema,
   OpenBorderSchema,
   CollectionArrowSchema,
 } from '../../_cell/schema';
 
-/** 单格尺寸与队首到队尾的排列方向 */
-export const QueueLayoutSchema = CellLayoutSchema.extend({
+/** 队首到队尾的排列方向与间距 */
+export const QueueLayoutSchema = strictObject({
   direction: zodEnum(['up', 'down', 'left', 'right']).default('right').describe('Direction from front to back.'),
   gap: NonNegativeNumberSchema.default(8).describe('Distance between adjacent cells.'),
 });
@@ -29,8 +28,6 @@ const QueueBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard collection namespace.'),
   type: literal('queue').describe('Static queue discriminator.'),
   ...ScopePropsSchema.shape,
-  style: CellStyleSchema.optional(),
-  layout: QueueLayoutSchema.optional().describe('Cell sizing, direction and spacing.'),
   label: NodeSchema.shape.label,
   arrow: CollectionArrowSchema,
   border: union([boolean(), QueueBorderSchema])
@@ -40,6 +37,8 @@ const QueueBaseSchema = CompositeBaseSchema.extend({
     .unwrap()
     .default(8)
     .describe('Space around the cell envelope, independent of cell padding and border visibility.'),
+  layout: QueueLayoutSchema.optional().describe('Collection direction and spacing.'),
+  defaultCell: CellDefaultSchema.optional(),
 });
 
 /** 有序单元、JSON 数据与骨架互斥的静态队列 Source */

@@ -90,7 +90,7 @@ describe('Node auto-contrast opacity boundary and contrast', () => {
   it.each([
     ['#0008', {}],
     ['rgb(0 0 0 / 50%)', {}],
-    ['#ffffff', { style: { fillOpacity: 0.5 } }],
+    ['#ffffff', { style: { opacity: { fill: 0.5 } } }],
     ['transparent', {}],
     ['none', {}],
     [undefined, {}],

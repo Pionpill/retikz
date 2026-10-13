@@ -7,7 +7,7 @@ const PresentationComposition: FC = () => (
   <Layout>
     <Grid
       bounds={{ start: [-120, -80], end: [120, 80] }}
-      line={{ spacing: 20, style: { stroke: 'gray', strokeOpacity: 0.6, strokeWidth: 0.75 } }}
+      line={{ spacing: 20, style: { stroke: 'gray', strokeWidth: 0.75, opacity: { stroke: 0.6 } } }}
     />
     <Axes
       origin={{ position: [0, 0], label: { text: '0' } }}

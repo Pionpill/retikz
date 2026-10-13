@@ -118,7 +118,7 @@ const sourceInput = {
       routing: { kind: 'orthogonal' as const, cornerRadius: 0 },
     },
   ],
-  flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } },
+  defaultFlow: { layout: { nodeGap: 0, rankGap: 48 } },
   graphRules: [{ type: 'entity' as const, selector: { role: 'activity' }, style: { color: 'dodgerblue' } }],
 };
 

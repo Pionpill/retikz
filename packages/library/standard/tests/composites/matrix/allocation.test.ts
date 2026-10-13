@@ -50,7 +50,8 @@ describe('Matrix parent allocation', () => {
     id: 'm',
     cellIdMode: 'index',
     skeleton: { rows: 2, columns: 2 },
-    layout: { width: 30, height: 20, gap: 2 },
+    layout: { gap: 2 },
+    defaultCell: { layout: { width: 30, height: 20 } },
   };
   it('keeps cell sizes when parent gives surplus space', () => {
     const result = compile(source, { x: { kind: 'exact', value: 100 }, y: { kind: 'range', min: 80, max: 100 } });

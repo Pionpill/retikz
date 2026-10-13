@@ -56,7 +56,7 @@ Header、Section、Row 各有独立的 composite definition，编译时测量下
 
 Block 当前外框先取得有效 Graph Theme 的基线，再让显式 background、border、cornerRadius 覆盖对应顶层字段。一个显式 border 对象替换整个主题 border，不会逐字段继承其中的虚线或透明度。
 
-Block 上的 graphDefaults / graphRules 则为可见后代建立上下文：defaults 可影响 Entity、Relation、Group、Block；rules 匹配 Entity / Relation。它们沿已知内容边界传播，不修改当前 Block 外框、普通 Core child 或未知 composite。局部 theme 不清除这些作者规则。
+Block 上的 defaultGraph / graphRules 则为可见后代建立上下文：defaults 可影响 Entity、Relation、Group、Block；rules 匹配 Entity / Relation。它们沿已知内容边界传播，不修改当前 Block 外框、普通 Core child 或未知 composite。局部 theme 不清除这些作者规则。
 
 id 原样进入 Scope；Block 不生成父级前缀。需要独立命名空间时显式开启 localNamespace，引用解析与边界诊断继续使用 Core 的同一套规则。
 

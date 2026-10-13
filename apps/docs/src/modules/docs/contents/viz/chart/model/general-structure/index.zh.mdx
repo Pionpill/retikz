@@ -37,7 +37,7 @@ Vanilla 图表工厂接收相同运行时输入。异步 SSR 使用 `renderChart
 | `type`      | 图形家族，例如 `point`；与 `recipe.chartType` 一起选择精确 schema |
 | `id`        | 可选的整图标识，用于在更大的绘图内容中识别这张 Chart              |
 
-其余根字段按职责分为 `data`、`presentation`、`layout`、`background`、`chartDefaults` 和 `coordinate`。具体类型的 `recipe` 与底层 `plotExtension` 见[核心结构](/viz/chart/model/core-structure)。
+其余根字段按职责分为 `data`、`presentation`、`layout`、`background`、`defaultChart` 和 `coordinate`。具体类型的 `recipe` 与底层 `plotExtension` 见[核心结构](/viz/chart/model/core-structure)。
 
 ## 数据入口
 
@@ -122,19 +122,19 @@ React 用 `ChartTitle`、`ChartSubtitle`、`ChartNote`、`ChartSource` 提供槽
 
 `layout` 分配整张 Chart Surface 的外部尺寸，而非 Plot 内部绘图区。未指定尺寸时，笛卡尔坐标系默认使用 `800 × 500`，极坐标系默认使用 `400 × 500`；显式宽高逐字段覆盖默认值。标题、注记等展示文本占据自己的区域，Plot 填满扣除这些区域、内边距和间距后的剩余空间。
 
-| 字段            | 子字段         | 作用                                              |
-| --------------- | -------------- | ------------------------------------------------- |
-| `layout`        | `width`        | 可选；整图 Surface 的外部宽度                     |
-|                 | `height`       | 可选；整图 Surface 的外部高度                     |
-|                 | `padding`      | 可选；展示区域与 Plot 内容周围的内边距            |
-|                 | `gap`          | 可选；已有展示区域与 Plot 内容之间的间距          |
-| `background`    | `fill`         | 提供 `background` 时必填；整图 Surface 的显式填充 |
-|                 | `fillOpacity`  | 可选；背景填充的不透明度                          |
-| `chartDefaults` | `background`   | 可选；整图背景的默认值，可被显式背景覆盖          |
-|                 | `layout`       | 可选；`padding` 与 `gap` 的默认值                 |
-|                 | `presentation` | 可选；已有展示槽位的 `style` 与 `layout` 默认值   |
+| 字段           | 子字段         | 作用                                              |
+| -------------- | -------------- | ------------------------------------------------- |
+| `layout`       | `width`        | 可选；整图 Surface 的外部宽度                     |
+|                | `height`       | 可选；整图 Surface 的外部高度                     |
+|                | `padding`      | 可选；展示区域与 Plot 内容周围的内边距            |
+|                | `gap`          | 可选；已有展示区域与 Plot 内容之间的间距          |
+| `background`   | `fill`         | 提供 `background` 时必填；整图 Surface 的显式填充 |
+|                | `opacity.fill` | 可选；背景填充的不透明度                          |
+| `defaultChart` | `background`   | 可选；整图背景的默认值，可被显式背景覆盖          |
+|                | `layout`       | 可选；`padding` 与 `gap` 的默认值                 |
+|                | `presentation` | 可选；已有展示槽位的 `style` 与 `layout` 默认值   |
 
-根级 `background` 与 `chartDefaults.background` 都可省略；两者都省略时使用 Chart 主题背景。`chartDefaults.layout` 只接受 `padding`、`gap`，不设置外部宽高；`chartDefaults.presentation` 只为已有槽位设置 `style`、`layout`，不会创建新文本。具体图形类型的视觉属性仍由 `recipe.properties` 控制。
+根级 `background` 与 `defaultChart.background` 都可省略；两者都省略时使用 Chart 主题背景。`defaultChart.layout` 只接受 `padding`、`gap`，不设置外部宽高；`defaultChart.presentation` 只为已有槽位设置 `style`、`layout`，不会创建新文本。具体图形类型的视觉属性仍由 `recipe.properties` 控制。
 
 ## 坐标配置
 

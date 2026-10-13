@@ -17,7 +17,7 @@ const Demo: FC = () => (
       startAngle={-50}
       endAngle={50}
       close="chord"
-      style={{ strokeWidth: 2, fill: 'dodgerblue', fillOpacity: 0.3 }}
+      style={{ strokeWidth: 2, fill: 'dodgerblue', opacity: { fill: 0.3 } }}
     />
     {/* 扇形闭合：两端连回圆心 */}
     <Arc
@@ -26,7 +26,7 @@ const Demo: FC = () => (
       startAngle={-50}
       endAngle={50}
       close="sector"
-      style={{ strokeWidth: 2, fill: 'darkorange', fillOpacity: 0.4 }}
+      style={{ strokeWidth: 2, fill: 'darkorange', opacity: { fill: 0.4 } }}
     />
   </Layout>
 );

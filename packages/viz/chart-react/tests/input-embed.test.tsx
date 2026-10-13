@@ -67,7 +67,7 @@ describe('Chart React InputEmbed routing', () => {
   });
 
   it('produces the same precise Regression input as its Vanilla factory', () => {
-    const regressionInput: RegressionChartInputEmbedProps = {
+    const regressionInput = {
       data: [
         { x: 1, y: 2, species: 'setosa' },
         { x: 2, y: 4, species: 'setosa' },
@@ -88,8 +88,10 @@ describe('Chart React InputEmbed routing', () => {
         point: { opacity: 0.5 },
         trend: { strokeWidth: 2 },
       },
-      marks: [{ kind: 'regression', hidePoints: true, override: true, properties: { trend: { strokeOpacity: 0.7 } } }],
-    };
+      marks: [
+        { kind: 'regression', hidePoints: true, override: true, properties: { trend: { opacity: { stroke: 0.7 } } } },
+      ],
+    } satisfies RegressionChartInputEmbedProps;
     const reactInput = inputOf(RegressionChart, {
       children: (
         <>
@@ -97,7 +99,7 @@ describe('Chart React InputEmbed routing', () => {
           <ChartLayout layout={regressionInput.layout} />
           <RegressionEncodings {...regressionInput.encodings} />
           <RegressionProperties {...regressionInput.properties} />
-          <RegressionMark override hidePoints properties={{ trend: { strokeOpacity: 0.7 } }} />
+          <RegressionMark override hidePoints properties={{ trend: { opacity: { stroke: 0.7 } } }} />
         </>
       ),
     });

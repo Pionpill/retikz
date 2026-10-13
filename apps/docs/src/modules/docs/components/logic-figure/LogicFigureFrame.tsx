@@ -35,7 +35,7 @@ type LogicFigureFrameParts = Readonly<{
 }>;
 
 const logicFigureFrameDefaults = {
-  background: { fill: 'lightgray', fillOpacity: 0.04 },
+  background: { fill: 'lightgray', opacity: { fill: 0.04 } },
   border: { stroke: 'lightgray', dashPattern: [4, 3] },
   cornerRadius: 4,
   padding: 10,

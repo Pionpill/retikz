@@ -11,7 +11,7 @@ In Chart Source, configuration for the drawing structure is concentrated in `rec
   description="Chart is still in development. plotExtension can temporarily expose capabilities that Plot already supports but recipe does not yet encapsulate; common needs should move into recipe encodings, properties, and marks. If a stable chart still depends on plotExtension, it is better to build that chart type directly on Plot."
 />
 
-The `data`, `coordinate`, `presentation`, `layout`, `background`, and `chartDefaults` fields in [General Structure](/viz/chart/model/general-structure) provide data, coordinates, and chart-wide presentation. Changing them does not switch the chartType or the recipe's mark composition, but it can still change plotted positions, coordinate behavior, and the final appearance.
+The `data`, `coordinate`, `presentation`, `layout`, `background`, and `defaultChart` fields in [General Structure](/viz/chart/model/general-structure) provide data, coordinates, and chart-wide presentation. Changing them does not switch the chartType or the recipe's mark composition, but it can still change plotted positions, coordinate behavior, and the final appearance.
 
 Root `type` identifies a chart family for grouping and provider routing. Chart types in one family can reuse local logic, such as automatic edge padding for Point charts, but `type` does not determine how a specific chart is resolved. `recipe.chartType` determines two things:
 
@@ -63,7 +63,7 @@ The default `override: false` appends a mark. Setting it to `true` replaces the 
 
 `plotExtension` is a root Chart Source field, but its role is easiest to understand beside the recipe. The recipe generates the Plot content required by its chart type; authors can then provide an explicit lower-level Plot fragment through `plotExtension`. The generated Plot result is never written back into this field.
 
-It can provide Plot `transform`, `scales`, `composition`, `marks`, `guides`, `plotDefaults`, `plotRules`, and `meta`. In particular, `plotExtension.marks` are independent Plot marks: they do not inherit `recipe.encodings` or `recipe.properties`, though they consume the same final encoding data view as Chart marks. Root `coordinate` cannot coexist with `plotExtension.composition`.
+It can provide Plot `transform`, `scales`, `composition`, `marks`, `guides`, `defaultPlot`, `plotRules`, and `meta`. In particular, `plotExtension.marks` are independent Plot marks: they do not inherit `recipe.encodings` or `recipe.properties`, though they consume the same final encoding data view as Chart marks. Root `coordinate` cannot coexist with `plotExtension.composition`.
 
 Use recipe encodings, properties, and marks for common chart configuration. When full control over the lower-level graphics grammar is needed, use Plot directly.
 

@@ -26,7 +26,7 @@ export const renderStarPlaygroundPreview = (values: StarPlaygroundPreviewValues)
       <Circle
         center={[0, 0]}
         radius={innerRadius}
-        style={{ stroke: 'lightgray', strokeOpacity: 0.45, dashPattern: [1, 4], lineCap: 'round' }}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round', opacity: { stroke: 0.45 } }}
       />
       <Star
         center={[0, 0]}
@@ -34,7 +34,7 @@ export const renderStarPlaygroundPreview = (values: StarPlaygroundPreviewValues)
         innerRatio={values.innerRatio}
         points={values.points}
         rotate={values.rotate}
-        style={{ fill: values.fill, fillOpacity: 0.72, stroke: values.stroke, strokeWidth: values.strokeWidth }}
+        style={{ fill: values.fill, stroke: values.stroke, strokeWidth: values.strokeWidth, opacity: { fill: 0.72 } }}
       />
     </Layout>
   );

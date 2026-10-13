@@ -53,12 +53,12 @@ export const TableCellLayoutDefaultsSchema = strictObject({
 
 /** Table Source 的 Table defaults 聚合片段 */
 export const TableDefaultsSchema = strictObject({
-  cellLayoutDefaults: TableCellLayoutDefaultsSchema.nullable().optional(),
-  appearanceDefaults: TableAppearanceDefaultsSchema.nullable()
+  defaultCellLayout: TableCellLayoutDefaultsSchema.nullable().optional(),
+  defaultAppearance: TableAppearanceDefaultsSchema.nullable()
     .optional()
     .describe('Default appearance for existing Cell regions.'),
   layout: TableLayoutDefaultsSchema.nullable().optional().describe('Default Table border layout.'),
-  visualDefaults: TableVisualDefaultsSchema.nullable()
+  defaultVisual: TableVisualDefaultsSchema.nullable()
     .optional()
     .describe('Default ranges for existing visual encodings.'),
 }).describe('Sparse Table defaults restricted to existing appearance, Cell padding, border, and visual scale fields.');

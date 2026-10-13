@@ -30,7 +30,7 @@ it('keeps data-transform source IR semantic without inline visual styles', () =>
   expect(source).not.toContain('"font"');
   expect(source).not.toContain('"headerLayout"');
   expect(source).not.toContain('"bodyLayout"');
-  expect(source).not.toContain('"cellLayoutDefaults"');
+  expect(source).not.toContain('"defaultCellLayout"');
   expect(preview.sourceIr.theme).toEqual({ style: 'docs.logic' });
   expect(source).toContain('docs.logic.operation');
   expect(source).toContain('summarize');

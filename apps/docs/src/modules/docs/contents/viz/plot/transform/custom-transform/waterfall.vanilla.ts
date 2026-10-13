@@ -9,7 +9,7 @@ const spec = PlotSchema.parse({
   type: 'plot',
   data: { reference: 'changes' },
   transform: [{ operation: { kind: 'waterfall', params: { field: 'delta', initialValue: 60 } } }],
-  plotDefaults: { palette: { categorical: ['#16a34a', '#dc2626'] } },
+  defaultPlot: { palette: { categorical: ['#16a34a', '#dc2626'] } },
   scales: [
     { type: 'band', name: 'period', paddingInner: 0.2, paddingOuter: 0.08 },
     { type: 'linear', name: 'value', domain: [-20, 160], domainPadding: 0 },

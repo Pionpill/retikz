@@ -31,7 +31,7 @@ export type TypedChartParts<TSource extends IRChartSource, TNative = never> = Re
     /** 图表表面背景样式 */
     background?: TSource['background'];
     /** 沿正式输入路径组织的稀疏默认值 */
-    chartDefaults?: TSource['chartDefaults'];
+    defaultChart?: TSource['defaultChart'];
     /** 显式追加或覆盖的 Plot 所属配置 */
     plotExtension?: TSource['plotExtension'];
   }>;
@@ -68,7 +68,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
     id,
     themeDefinitions,
     background,
-    chartDefaults,
+    defaultChart,
     lowerOptions,
     panel,
   } = input;
@@ -85,7 +85,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
       ...(layout === undefined ? {} : { layout }),
       ...(coordinate === undefined ? {} : { coordinate }),
       ...(background === undefined ? {} : { background }),
-      ...(chartDefaults === undefined ? {} : { chartDefaults }),
+      ...(defaultChart === undefined ? {} : { defaultChart }),
       ...(input.plotExtension === undefined ? {} : { plotExtension: input.plotExtension }),
     },
     datasets: data === undefined ? {} : { [reference]: data },

@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="rows"
       position={[-295, 20]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>(x, y) rows</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="group"
       position={[-160, 20]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Filter finite pairs</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="method"
       position={[-10, -55]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>method</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
       id="fit"
       position={[-10, 20]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Fit OLS</Text>
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       id="sampling"
       position={[140, -55]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Sampling</Text>
@@ -68,7 +68,7 @@ const Demo: FC = () => (
       id="predict"
       position={[140, 20]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Sample x → predict y</Text>
@@ -80,7 +80,7 @@ const Demo: FC = () => (
       id="error"
       position={[-10, 95]}
       cornerRadius={4}
-      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.06 }}
+      style={{ stroke: 'red', fill: 'red', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Cannot fit</Text>
@@ -92,7 +92,7 @@ const Demo: FC = () => (
       id="output"
       position={[290, 20]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Trend rows</Text>

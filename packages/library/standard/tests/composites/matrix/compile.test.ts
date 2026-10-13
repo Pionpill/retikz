@@ -21,8 +21,8 @@ it('骨架与显式格输出相同，行列坐标身份独立于标号', () => {
     ...base,
     id: 'm',
     cellIdMode: 'index' as const,
-    layout: { width: 30, height: 20 },
     index: { row: { start: 5 }, column: { labels: ['i', 'j'] } },
+    defaultCell: { layout: { width: 30, height: 20 } },
   };
   const actual = compile(
     createMatrix({
@@ -112,7 +112,8 @@ it('索引带只偏移对应轴，前后位置保持相同总尺寸', () => {
     id: 'm',
     cellIdMode: 'index' as const,
     skeleton: { rows: 2, columns: 2 },
-    layout: { width: 30, height: 20, gap: { row: 3, column: 7 } },
+    layout: { gap: { row: 3, column: 7 } },
+    defaultCell: { layout: { width: 30, height: 20 } },
   };
   const plain = compile(source);
   const root = (result: ReturnType<typeof compile>) =>
@@ -151,8 +152,8 @@ it('空根保留标签，别名与生成身份经过变换仍共用一个格子�
     id: 'm',
     cellIdMode: 'index',
     items: [[{ id: 'named', content: 'A' }, { id: 'm-0-1' }]],
-    layout: { width: 30, height: 20 },
     transforms: [{ kind: 'translate', x: 7, y: 11 }],
+    defaultCell: { layout: { width: 30, height: 20 } },
   });
   const generated = resolveSpatialHandle(result.spatialHandles, { id: 'cell:m-0-0' });
 

@@ -162,9 +162,9 @@ const FlowEntityStyleFieldsSchema = EntitySchema.shape.style.unwrap().pick({
   textColor: true,
   fill: true,
   stroke: true,
-  fillOpacity: true,
+
   strokeWidth: true,
-  strokeOpacity: true,
+
   opacity: true,
   shadow: true,
   blendMode: true,
@@ -549,8 +549,8 @@ export const FlowDiagramSchema = strictObject({
   ...ScopePropsSchema.shape,
   presentation: DiagramPresentationSchema.optional().describe('Optional complete Diagram Presentation.'),
   frame: DiagramFrameSchema.optional().describe('Optional Diagram Frame overrides.'),
-  diagramDefaults: DiagramDefaultsSchema.optional().describe('Optional Diagram Source defaults.'),
-  flowDefaults: FlowDefaultsSchema.optional().describe('Optional Flow Source defaults.'),
+  defaultDiagram: DiagramDefaultsSchema.optional().describe('Optional Diagram Source defaults.'),
+  defaultFlow: FlowDefaultsSchema.optional().describe('Optional Flow Source defaults.'),
   graphRules: array(GraphRuleSchema)
     .optional()
     .describe('Optional ordered Graph rules for Flow-materialized Entities and Relations.'),

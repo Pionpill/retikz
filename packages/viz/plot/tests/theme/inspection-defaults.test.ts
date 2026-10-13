@@ -19,7 +19,7 @@ describe('Plot defaults inspection', () => {
         colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
       },
       {
-        plotDefaults: { palette: { categorical: ['#source-categorical'] } },
+        defaultPlot: { palette: { categorical: ['#source-categorical'] } },
         plotRules: [{ select: { dimension: 'x' }, axis: { grid: false } }],
       },
       [style],

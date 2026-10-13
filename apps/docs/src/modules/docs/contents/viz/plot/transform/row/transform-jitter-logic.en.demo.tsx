@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="rows"
       position={[-350, 40]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Input rows</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="select"
       position={[-225, 40]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Select target fields</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="rng"
       position={[-40, -50]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>mulberry32(seed)</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
       id="perturb"
       position={[-40, 40]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data-space offset</Text>
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       id="output"
       position={[170, 40]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Write next row</Text>
@@ -68,7 +68,7 @@ const Demo: FC = () => (
       id="scale"
       position={[350, 40]}
       cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Scale</Text>

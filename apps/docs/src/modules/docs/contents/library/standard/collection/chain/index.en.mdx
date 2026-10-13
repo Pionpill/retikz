@@ -61,9 +61,9 @@ Choose exactly one of items, data, and skeleton. An items string is literal text
 
 These forms exclude one another.
 
-**Branch skeletons** use `skeleton.items` to describe sequences and branches with symbols only, without drawings, ids, or local styling. For those settings, full items use `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`, with optional local layout and connection overrides.
+**Branch skeletons** use `skeleton.items` to describe sequences and branches with symbols only, without drawings, ids, or local styling. For those settings, full items use `{ kind: 'parallel', branches: [{ items: [...] }, ...] }`, with optional local layout and defaultConnection overrides.
 
-Nested collections default to no outer Cell background and zero outer padding; ordinary text retains its light gray background and default padding. Automatic JSON expansion and authored nesting behave alike. Explicit style.fill and layout.padding, including inherited settings, still take precedence.
+Nested collections default to no outer Cell background and zero outer padding; ordinary text retains its light gray background and default padding. Automatic JSON expansion and authored nesting behave alike. Explicit style.fill and defaultCell.layout.padding, including inherited settings, still take precedence.
 
 <ComponentPreview
   files={['chain-inputs', 'chain-inputs.preview.tsx']}
@@ -114,7 +114,7 @@ This example embeds a Matrix and adds a nested parallel block in another branch.
 
 ### Connections, labels, and references
 
-`connection.route` defaults to `auto`: branching and joining reserve corridors around the branch bounds, using `-|-` horizontally and `|-|` vertically. Short branches join through the shared corridor too. Ordinary sequential items connect directly. Core Path generates the folded geometry.
+`defaultConnection.route` defaults to `auto`: branching and joining reserve corridors around the branch bounds, using `-|-` horizontally and `|-|` vertically. Short branches join through the shared corridor too. Ordinary sequential items connect directly. Core Path generates the folded geometry.
 
 | route      | Connection                                |
 | ---------- | ----------------------------------------- |
@@ -125,7 +125,7 @@ This example embeds a Matrix and adds a nested parallel block in another branch.
 | `-\|-`     | Horizontal–vertical–horizontal            |
 | `\|-\|`    | Vertical–horizontal–vertical              |
 
-Connections reference the whole cell without fixed side anchors; paths clip to its boundary according to their outgoing and incoming directions. Explicit routes use drawing coordinates: their horizontal/vertical meaning does not swap with the Chain direction, and they do not avoid other content automatically. For three-leg folds, `connection.fraction` places the middle leg between the cell centers from 0 to 1, defaulting to 0.5; `fraction` is accepted only with an explicit `-|-` or `|-|`, never with other or omitted routes. A local style-only override inherits the current route; the same explicit route can inherit or override its fraction, while a different route uses its own parameters and defaults. Layout computes the corridor for `auto`.
+Connections reference the whole cell without fixed side anchors; paths clip to its boundary according to their outgoing and incoming directions. Explicit routes use drawing coordinates: their horizontal/vertical meaning does not swap with the Chain direction, and they do not avoid other content automatically. For three-leg folds, `defaultConnection.fraction` places the middle leg between the cell centers from 0 to 1, defaulting to 0.5; `fraction` is accepted only with an explicit `-|-` or `|-|`, never with other or omitted routes. A local style-only override inherits the current route; the same explicit route can inherit or override its fraction, while a different route uses its own parameters and defaults. Layout computes the corridor for `auto`.
 
 <ComponentPreview
   files={['chain-connection', 'chain-connection.preview.tsx']}
@@ -133,7 +133,7 @@ Connections reference the whole cell without fixed side anchors; paths clip to i
   size="md"
 />
 
-This example overrides the stroke to blue. React/Vanilla connection.path.arrow accepts none, forward, and bidirectional arrows through existing path normalization. Source IR uses marks; an empty array removes the default end arrow. The path label field is label. Path configuration cannot replace identity, type, or steps.
+This example overrides the stroke to blue. React/Vanilla defaultConnection.path.arrow accepts none, forward, and bidirectional arrows through existing path normalization. Source IR uses marks; an empty array removes the default end arrow. The path label field is label. Path configuration cannot replace identity, type, or steps.
 
 An explicit cell id supports external references: React/Vanilla use `target.right`, while Source IR uses `{ id: 'target', anchor: 'right' }`. These target the cell's actual border box rather than its content or branch. Root label attaches to the whole Chain. Branch settings inherit by field; explicit marks replace inherited arrays.
 

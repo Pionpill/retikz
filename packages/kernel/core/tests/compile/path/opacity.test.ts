@@ -37,7 +37,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
             { type: 'step', kind: 'line', to: [10, 10] },
             { type: 'step', kind: 'cycle' },
           ],
-          style: { fill: 'red', fillOpacity: 0.3 },
+          style: { fill: 'red', opacity: { fill: 0.3 } },
         },
       ],
     };
@@ -56,7 +56,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
-          style: { strokeOpacity: 0.7 },
+          style: { opacity: { stroke: 0.7 } },
         },
       ],
     };

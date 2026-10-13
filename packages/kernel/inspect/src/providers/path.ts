@@ -168,7 +168,7 @@ const inspectionChildrenOf = (
         { type: 'step' as const, kind: 'move' as const, to: handle.from },
         { type: 'step' as const, kind: 'line' as const, to: handle.to },
       ]),
-      style: pathStyle(color, { strokeOpacity: 0.75, dashPattern: [4, 3] }),
+      style: pathStyle(color, { opacity: { stroke: 0.75 }, dashPattern: [4, 3] }),
     });
     points.forEach(point => addMarker(point.position));
   }
@@ -195,7 +195,7 @@ const inspectionChildrenOf = (
     output.push({
       type: 'path',
       children: radiusChildren,
-      style: pathStyle(color, { strokeOpacity: 0.75, dashPattern: [4, 3] }),
+      style: pathStyle(color, { opacity: { stroke: 0.75 }, dashPattern: [4, 3] }),
     });
     arcs.forEach(arc => {
       addMarker(arc.center, 5);
@@ -222,7 +222,7 @@ const inspectionChildrenOf = (
       output.push({
         type: 'path',
         children,
-        style: { ...pathStyle(color, { strokeOpacity: 0.75, dashPattern: [1, 4] }), lineCap: 'round' },
+        style: { ...pathStyle(color, { opacity: { stroke: 0.75 }, dashPattern: [1, 4] }), lineCap: 'round' },
       });
   }
 

@@ -16,7 +16,6 @@ export const renderMapLabelsPreview = (values: MapLabelsPreviewValues) => (
         { key: 'id', value: 'a' },
         { key: 'ok', value: 'yes' },
       ]}
-      layout={{ height: 32, key: { width: 40 }, value: { width: 60 } }}
       label={{
         text: 'record',
         position: values.position,
@@ -24,6 +23,7 @@ export const renderMapLabelsPreview = (values: MapLabelsPreviewValues) => (
         textColor: 'dodgerblue',
         pin: values.pin ? { stroke: 'dodgerblue' } : false,
       }}
+      defaultCell={{ layout: { height: 32 }, key: { layout: { width: 40 } }, value: { layout: { width: 60 } } }}
     />
   </Layout>
 );

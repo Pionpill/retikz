@@ -76,7 +76,7 @@ const Demo: FC = () => (
       center={[12, 0]}
       width={ALLOCATION_WIDTH}
       height={ALLOCATION_HEIGHT}
-      style={{ fill: 'dodgerblue', fillOpacity: 0.08, stroke: 'dodgerblue' }}
+      style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.08 } }}
     />
     <Node position={[12, 0]} style={{ stroke: 'none', font: NOTE_FONT }} layout={{ padding: 0 }}>
       child

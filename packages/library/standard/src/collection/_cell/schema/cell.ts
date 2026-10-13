@@ -1,7 +1,7 @@
 import {
   ChildSchema,
   GraphicColorSchema,
-  GraphicElementOpacitySchema,
+  GraphicOpacitySchema,
   GraphicFillSchema,
   GraphicStrokeSchema,
   PathStrokeSchema,
@@ -16,7 +16,7 @@ import { SurfaceSchema } from '../../../presentation/surface/schema';
 /** 校验单格的稀疏视觉配置，未提供的字段留待集合样式继承 */
 export const CellStyleSchema = strictObject({
   ...GraphicColorSchema.shape,
-  ...GraphicElementOpacitySchema.shape,
+  ...GraphicOpacitySchema.shape,
   ...GraphicStrokeSchema.shape,
   ...PathStrokeSchema.shape,
   ...GraphicFillSchema.shape,
@@ -46,17 +46,22 @@ export const CellSchema = strictObject({
   layout: CellLayoutSchema.optional(),
 }).describe('A drawable cell with optional allocation identity.');
 
+/** 单元格的稀疏默认配置，不包含内容或身份 */
+export const CellDefaultSchema = CellSchema.pick({ style: true, layout: true }).describe(
+  'Sparse shared cell style and layout defaults; explicit cell fields take precedence.',
+);
+
 /** 在样式继承完成后补齐单格的基础填充、描边与圆角默认值 */
 export const CellDefaultsSchema = CellStyleSchema.extend({
   fill: CellStyleSchema.shape.fill.default('gray'),
-  fillOpacity: CellStyleSchema.shape.fillOpacity.default(0.14),
+  opacity: CellStyleSchema.shape.opacity.default({ fill: 0.14 }),
   stroke: CellStyleSchema.shape.stroke.default('none'),
   cornerRadius: CellStyleSchema.shape.cornerRadius.default(0),
 }).describe('Resolved base cell visual defaults.');
 
 /** Map 键角色的最低优先级视觉默认，继承合并后应用 */
 export const KeyCellDefaultsSchema = CellDefaultsSchema.extend({
-  fillOpacity: CellDefaultsSchema.shape.fillOpacity.default(0.4),
+  opacity: CellDefaultsSchema.shape.opacity.default({ fill: 0.4 }),
 });
 
 /** 在布局继承完成后补齐单格的内边距与溢出默认值 */

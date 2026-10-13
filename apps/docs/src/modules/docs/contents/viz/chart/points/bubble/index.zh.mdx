@@ -194,7 +194,7 @@ recipe: {
 <DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-<BubbleProperties fillOpacity={0.35} stroke="#475569" strokeWidth={1.5} shape="circle" />
+<BubbleProperties opacity={{ fill: 0.35 }} stroke="#475569" strokeWidth={1.5} shape="circle" />
 ```
 
 </DocTab>
@@ -202,7 +202,7 @@ recipe: {
 
 ```ts
 properties: {
-  fillOpacity: 0.35,
+  opacity: { fill: 0.35 },
   stroke: '#475569',
   strokeWidth: 1.5,
   shape: 'circle',
@@ -215,7 +215,7 @@ properties: {
 ```ts
 recipe: {
   properties: {
-    fillOpacity: 0.35,
+    opacity: { fill: 0.35 },
     stroke: '#475569',
     strokeWidth: 1.5,
     shape: 'circle',
@@ -228,7 +228,7 @@ recipe: {
 
 同一数据中，人口较大的气泡可能盖住邻近国家。本节用透明填充和轮廓调整可读性，位置与人口映射保持不变。
 
-- `fillOpacity`：设为 0.35，降低填充不透明度，让重叠区域更容易辨认。
+- `opacity.fill`：设为 0.35，降低填充不透明度，让重叠区域更容易辨认。
 - `stroke`：为轮廓选取颜色，帮助辨认相邻气泡。
 - `strokeWidth`：设为 1.5，突出轮廓；调为 0 可比较无描边的效果。
 - `shape`：改变绘制形状，不提供固定 size。
@@ -259,7 +259,7 @@ recipe: {
 <BubbleMark
   override
   properties={{
-    fillOpacity: 0.15,
+    opacity: { fill: 0.15 },
     strokeWidth: 2,
   }}
 />
@@ -274,7 +274,7 @@ marks: [
     kind: 'bubble',
     override: true,
     properties: {
-      fillOpacity: 0.15,
+      opacity: { fill: 0.15 },
       strokeWidth: 2,
     },
   },
@@ -291,7 +291,7 @@ recipe: {
       kind: 'bubble',
       override: true,
       properties: {
-        fillOpacity: 0.15,
+        opacity: { fill: 0.15 },
         strokeWidth: 2,
       },
     },
@@ -305,7 +305,7 @@ recipe: {
 下面仍展示收入、寿命与人口，但将主气泡替换为低透明度填充和较粗轮廓。图中不会因这次替换增加第二套人口数据。
 
 - `override`：设为 true，原位替换主图元。
-- `properties.fillOpacity`：设置为 0.15，减轻大气泡的遮挡。
+- `properties.opacity.fill`：设置为 0.15，减轻大气泡的遮挡。
 - `properties.strokeWidth`：设置为 2，让轮廓更清晰。
 
 替换前后 size 都来自 recipe 的 population 字段。Bubble 图元没有 size 覆盖入口，因此不会无意中失去第三个数值角色。
@@ -331,12 +331,12 @@ recipe: {
 
 下表分组均为 IR `recipe` 内的属性；React 与 Vanilla 使用上文对应入口。
 
-| 分组         | 属性名        | 类型         | 说明                       |
-| ------------ | ------------- | ------------ | -------------------------- |
-| `encodings`  | `x.scale`     | log 尺度对象 | 人均 GDP 必须为正          |
-|              | `size`        | string       | 以 population 表示人口规模 |
-|              | `color`       | string       | continent 分类             |
-| `properties` | `fillOpacity` | number       | 减轻重叠遮挡               |
+| 分组         | 属性名         | 类型         | 说明                       |
+| ------------ | -------------- | ------------ | -------------------------- |
+| `encodings`  | `x.scale`      | log 尺度对象 | 人均 GDP 必须为正          |
+|              | `size`         | string       | 以 population 表示人口规模 |
+|              | `color`        | string       | continent 分类             |
+| `properties` | `opacity.fill` | number       | 减轻重叠遮挡               |
 
 切换横轴尺度时，观察国家之间的水平距离如何改变；不要把对数轴的等距读成相同美元差额。
 
@@ -361,7 +361,7 @@ recipe: {
 | `encodings`  | `x / y / size` | 字段映射 | 收入、寿命和人口                   |
 |              | `row`          | string   | 按 continent 建立行面板            |
 |              | `facet`        | 分面选项 | 保留共享尺度，显示行标题并设置间距 |
-| `properties` | `fillOpacity`  | number   | 以半透明填充呈现重叠               |
+| `properties` | `opacity.fill` | number   | 以半透明填充呈现重叠               |
 
 对照同一横坐标区间中的各面板，区分组内分布和洲之间的差异。面板中气泡数量不代表人口总量。
 
@@ -392,11 +392,11 @@ React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，�
 
 Chart 将气泡图元解析为 Plot Point，以数值字段控制点的大小。下表只列气泡图特有的转换。
 
-| 分组 | `@retikz/chart`              | `@retikz/plot`               | 描述                                                  |
-| ---- | ---------------------------- | ---------------------------- | ----------------------------------------------------- |
-| 映射 | `size`                       | `size`                       | 将必需的数值字段映射到点尺寸；尺寸尺度默认使用 `sqrt` |
-| 属性 | `fillOpacity`、`strokeWidth` | `fillOpacity`、`strokeWidth` | 先应用 0.7 和 1 的默认外观，再由显式属性覆盖          |
-| 图元 | `BubbleChartMarkSchema`      | `PointMarkSchema`            | 每个气泡图元解析为一个 Plot Point                     |
+| 分组 | `@retikz/chart`               | `@retikz/plot`                | 描述                                                  |
+| ---- | ----------------------------- | ----------------------------- | ----------------------------------------------------- |
+| 映射 | `size`                        | `size`                        | 将必需的数值字段映射到点尺寸；尺寸尺度默认使用 `sqrt` |
+| 属性 | `opacity.fill`、`strokeWidth` | `opacity.fill`、`strokeWidth` | 先应用 0.7 和 1 的默认外观，再由显式属性覆盖          |
+| 图元 | `BubbleChartMarkSchema`       | `PointMarkSchema`             | 每个气泡图元解析为一个 Plot Point                     |
 
 <SourceLinks
   sources={[

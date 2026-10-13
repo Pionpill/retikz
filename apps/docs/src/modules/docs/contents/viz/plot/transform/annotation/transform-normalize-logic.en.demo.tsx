@@ -8,7 +8,7 @@ const Demo: FC = () => (
       id="rows"
       position={[-305, 20]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Detail rows</Text>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       id="group"
       position={[-185, 20]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Build group key</Text>
@@ -32,7 +32,7 @@ const Demo: FC = () => (
       id="sum"
       position={[-35, 20]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Sum each group</Text>
@@ -44,7 +44,7 @@ const Demo: FC = () => (
       id="negative"
       position={[-35, -65]}
       cornerRadius={4}
-      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.06 }}
+      style={{ stroke: 'red', fill: 'red', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Negative finite value</Text>
@@ -56,7 +56,7 @@ const Demo: FC = () => (
       id="zero"
       position={[125, -65]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Zero-sum guard</Text>
@@ -68,7 +68,7 @@ const Demo: FC = () => (
       id="share"
       position={[125, 20]}
       cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Compute each share</Text>
@@ -80,7 +80,7 @@ const Demo: FC = () => (
       id="config"
       position={[125, 105]}
       cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      style={{ stroke: 'gray', fill: 'gray', opacity: { fill: 0.06 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Output config</Text>
@@ -92,7 +92,7 @@ const Demo: FC = () => (
       id="output"
       position={[285, 20]}
       cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', opacity: { fill: 0.08 } }}
       layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Write share field</Text>

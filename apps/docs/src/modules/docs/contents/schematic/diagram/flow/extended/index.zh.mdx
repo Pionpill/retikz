@@ -179,7 +179,7 @@ React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` �
 | `caption.itemGap` / `bodyGap`                                     | 非负数，默认 `4`                            | 两个文本项之间、说明区与内容之间的间距 |
 | `labels`                                                          | 非空标签数组，可省略                        | 边界标签；复用 Graph 的位置与文字格式  |
 | `padding` / `background` / `border` / `cornerRadius` / `overflow` | Graph Group 同名属性                        | 外壳留白、填充、边框、圆角和内容溢出   |
-| `graphDefaults` / `graphRules`                                    | Graph 的默认片段与规则                      | 设置分组内 Graph 后代的默认外观        |
+| `defaultGraph` / `graphRules`                                     | Graph 的默认片段与规则                      | 设置分组内 Graph 后代的默认外观        |
 | `layout.direction`                                                | `up`、`right`、`down`、`left`               | 指定 Group 内自动布局的方向            |
 | `layout.nodeGap`                                                  | 非负数                                      | 调整同一层级中并列实体的间距           |
 | `layout.rankGap`                                                  | 非负数                                      | 调整相邻层级的间距                     |
@@ -223,7 +223,7 @@ Flow、Graph 与 Diagram 的外观配置可以改变可见样式，而不改动�
 
 ### 默认值与主题
 
-`flowDefaults` 让 Flow 根为全部同类对象提供统一默认样式。`entity.style` 会作用于每个 Entity，`relation.style` 会作用于每条 Relation；这里的设置不改变 Source 的 id、包含关系、节点布局或连线路径。局部 `style` 仍可在需要时覆盖全局值，但本例只展示全局配置。
+`defaultFlow` 让 Flow 根为全部同类对象提供统一默认样式。`entity.style` 会作用于每个 Entity，`relation.style` 会作用于每条 Relation；这里的设置不改变 Source 的 id、包含关系、节点布局或连线路径。局部 `style` 仍可在需要时覆盖全局值，但本例只展示全局配置。
 
 <ComponentPreview
   files="flow-theme"
@@ -231,7 +231,7 @@ Flow、Graph 与 Diagram 的外观配置可以改变可见样式，而不改动�
   caption="调整任一分区后，同类对象会一起更新；节点和连线的结构与相对位置保持不变。"
 />
 
-`theme: { style, mode }` 选择主题环境；`flowThemeStyles` / `diagramThemeStyles` 注入对应 Definition。Flow 根级的 `graphRules` 为下沉的 Entity 与 Relation 设置条件外观；Group 的同名字段可为其后代追加局部规则，不改变 routing 或包含关系。`flowDefaults` 与 `diagramDefaults` 是显式默认值，使用正式 Source 的相同路径。Entity 与 Relation 的 `group` 直接复用 Graph：同一 Flow 根中相同 group 共享从分类色板正序自动取得的颜色，未分组元素保持原有外观。Entity / Relation 外观的覆盖顺序为 Graph Theme、所属 Graph 上下文的默认值与规则、`flowDefaults`、实例字段。
+`theme: { style, mode }` 选择主题环境；`flowThemeStyles` / `diagramThemeStyles` 注入对应 Definition。Flow 根级的 `graphRules` 为下沉的 Entity 与 Relation 设置条件外观；Group 的同名字段可为其后代追加局部规则，不改变 routing 或包含关系。`defaultFlow` 与 `defaultDiagram` 是显式默认值，使用正式 Source 的相同路径。Entity 与 Relation 的 `group` 直接复用 Graph：同一 Flow 根中相同 group 共享从分类色板正序自动取得的颜色，未分组元素保持原有外观。Entity / Relation 外观的覆盖顺序为 Graph Theme、所属 Graph 上下文的默认值与规则、`defaultFlow`、实例字段。
 
 Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group 的 Surface 外观与 caption 排列和文字格式，以及 Relation 的路径、marker 和标签格式。`caption.title` 和 `caption.description` 的默认格式只应用于已声明的文本项，不会创建内容。它不包含 identity、children、自动布局 direction、routing 或 overflow，也不会创建 Group 或 marker。空对象与 undefined 不覆盖已有值，0 和 false 保留；Node 字体整体替换，Relation 的 `labelFont` 按字段合并。
 
@@ -332,11 +332,11 @@ Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group �
       description: '只引用本 Layout 的直接子项 id；被排除项仍绘制，但不扩大向父级报告的占位边界。',
     },
     {
-      name: 'FlowDiagram.flowDefaults',
+      name: 'FlowDiagram.defaultFlow',
       kind: 'property',
-      type: "InputFlowDiagram['flowDefaults']",
+      type: "InputFlowDiagram['defaultFlow']",
       description:
-        '集中配置稀疏默认值，实例字段优先。本页的外观示例使用：\n- `entity.style`: `{ color?: string; fillOpacity?: number; strokeWidth?: number }`，改变所有 Entity 的颜色、填充透明度和描边宽度\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; strokeOpacity?: number }`，改变所有 Relation 的描边颜色、宽度和透明度\n还可设置 `layout`、`group` 等片段；完整字段见 Schema 参考。',
+        '集中配置稀疏默认值，实例字段优先。本页的外观示例使用：\n- `entity.style`: `{ color?: string; opacity?: { fill?: number }; strokeWidth?: number }`，改变所有 Entity 的颜色、填充透明度和描边宽度\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; opacity?: { stroke?: number } }`，改变所有 Relation 的描边颜色、宽度和透明度\n还可设置 `layout`、`group` 等片段；完整字段见 Schema 参考。',
     },
   ]}
 />

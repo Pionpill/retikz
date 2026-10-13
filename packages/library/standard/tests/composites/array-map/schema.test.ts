@@ -86,16 +86,20 @@ describe('Array / Map Source contracts', () => {
     const source = {
       namespace: 'standard',
       type: 'array',
-      layout: { width: 'content' },
       items: [{ content: 'A', layout: { width: 'content' } }],
+      defaultCell: { layout: { width: 'content' } },
     };
     const parsed = ArraySchema.parse(JSON.parse(JSON.stringify(source)));
 
-    expect(parsed.layout?.width).toBe('content');
+    expect(parsed.defaultCell?.layout?.width).toBe('content');
     expect(parsed.items?.[0]).toMatchObject({ layout: { width: 'content' } });
 
-    for (const layout of [{ width: 'content' }, { key: { width: 'content' } }, { value: { width: 'content' } }]) {
-      expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], layout }).success).toBe(false);
+    for (const defaultCell of [
+      { layout: { width: 'content' } },
+      { key: { layout: { width: 'content' } } },
+      { value: { layout: { width: 'content' } } },
+    ]) {
+      expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], defaultCell }).success).toBe(false);
     }
 
     expect(
@@ -111,13 +115,13 @@ describe('Array / Map Source contracts', () => {
     const source = {
       namespace: 'standard',
       type: 'map',
-      style: { fillOpacity: 0 },
       entries: [{ key: { content }, value: { content, style: { fill: 'none' } } }],
+      defaultCell: { style: { opacity: { fill: 0 } } },
     };
     const parsed = MapSchema.parse(JSON.parse(JSON.stringify(source)));
 
     expect(parsed.entries?.[0].key).not.toHaveProperty('style');
-    expect(parsed.style?.fillOpacity).toBe(0);
+    expect(parsed.defaultCell?.style?.opacity).toEqual({ fill: 0 });
     expect(parsed.entries?.[0].value).toMatchObject({ style: { fill: 'none' } });
   });
 
@@ -147,8 +151,8 @@ describe('Array / Map Source contracts', () => {
   it.each([
     { layout: { gap: -1 } },
     { layout: { gap: Infinity } },
-    { layout: { width: -2 } },
-    { layout: { height: Infinity } },
+    { defaultCell: { layout: { width: -2 } } },
+    { defaultCell: { layout: { height: Infinity } } },
     { items: [{ content, layout: { height: -1 } }] },
     { index: { start: 0.5 } },
     { showIndex: true },
@@ -181,29 +185,25 @@ it('preserves JSON text cells including empty text and requires both Map roles',
 });
 
 it('preserves sparse grouped Map role overrides through JSON parsing', () => {
-  const style = { fillOpacity: 0, key: { fill: 'blue' }, value: { fill: 'none' } };
-  const layout = { width: 80, key: { width: 'auto' }, value: { height: 0 } };
+  const defaultCell = {
+    style: { opacity: { fill: 0 } },
+    layout: { width: 80 },
+    key: { style: { fill: 'blue' }, layout: { width: 'auto' } },
+    value: { style: { fill: 'none' }, layout: { height: 0 } },
+  };
   const parsed = MapSchema.parse(
     JSON.parse(
-      JSON.stringify({
-        namespace: 'standard',
-        type: 'map',
-        style,
-        layout,
-        entries: [{ key: 'a', value: 'b' }],
-      }),
+      JSON.stringify({ namespace: 'standard', type: 'map', entries: [{ key: 'a', value: 'b' }], defaultCell }),
     ),
   );
-
-  expect(parsed.style).toEqual(style);
-  expect(parsed.layout).toMatchObject(layout);
-  expect(parsed.layout?.key).toEqual({ width: 'auto' });
+  expect(parsed.defaultCell).toEqual(defaultCell);
+  expect(parsed.layout).toBeUndefined();
 });
 it.each([
-  { style: { key: { gap: 1 } } },
-  { style: { value: { key: { fill: 'red' } } } },
-  { layout: { key: { width: -1 } } },
-  { layout: { value: { gap: 2 } } },
+  { defaultCell: { key: { style: { gap: 1 } } } },
+  { defaultCell: { value: { style: { key: { fill: 'red' } } } } },
+  { defaultCell: { key: { layout: { width: -1 } } } },
+  { defaultCell: { value: { layout: { gap: 2 } } } },
 ])('rejects invalid grouped Map role fields %j', fields => {
   expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], ...fields }).success).toBe(false);
 });

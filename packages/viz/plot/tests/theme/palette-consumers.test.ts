@@ -44,11 +44,11 @@ const base = {
 } as const;
 
 describe('Plot defaults palette consumers', () => {
-  it('sequential scheme from plotDefaults reaches the real scale consumer', () => {
+  it('sequential scheme from defaultPlot reaches the real scale consumer', () => {
     const root = lower(
       {
         ...base,
-        plotDefaults: { palette: { sequential: 'theme-sequential' } },
+        defaultPlot: { palette: { sequential: 'theme-sequential' } },
         scales: [...base.scales, { type: 'sequential', name: 'color', domain: [0, 100] }],
         marks: [
           {
@@ -73,7 +73,7 @@ describe('Plot defaults palette consumers', () => {
   it('explicit scale range and mark color retain priority over palette defaults', () => {
     const source = {
       ...base,
-      plotDefaults: { palette: { categorical: ['#default-a', '#default-b'] } },
+      defaultPlot: { palette: { categorical: ['#default-a', '#default-b'] } },
       scales: [...base.scales, { type: 'ordinal', name: 'color', range: ['#range-a', '#range-b'] }],
       marks: [
         {
@@ -98,7 +98,7 @@ describe('Plot defaults palette consumers', () => {
   it('categorical palette reaches the legend swatch consumer', () => {
     const source = {
       ...base,
-      plotDefaults: { palette: { categorical: ['#legend-a', '#legend-b'] } },
+      defaultPlot: { palette: { categorical: ['#legend-a', '#legend-b'] } },
       scales: [...base.scales, { type: 'ordinal', name: 'color' }],
       marks: [
         {

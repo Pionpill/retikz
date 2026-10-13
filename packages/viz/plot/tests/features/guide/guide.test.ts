@@ -666,7 +666,7 @@ describe('lowerGuide (contract)', () => {
     expect(majorGrid.children).toHaveLength(4);
     expect(minorGrid.children).toHaveLength(2);
     expect(minorGrid.style?.stroke).toBe('#e2e8f0');
-    expect(minorGrid.style?.strokeOpacity).toBe(0.08);
+    expect(typeof minorGrid.style?.opacity === 'object' ? minorGrid.style.opacity.stroke : undefined).toBe(0.08);
   });
 
   it('axis_grid_band_position_offsets_grid_line_inside_band', () => {
@@ -839,7 +839,7 @@ describe('lowerGuide (contract)', () => {
     expect((axisLayer as IRScope).defaults?.path?.style?.stroke).toBe('currentColor');
     expect((axisLayer as IRScope).defaults?.node?.style?.font?.size).toBe(11);
     expect((axisLayer as IRScope).defaults?.node?.style?.stroke).toBe('none');
-    expect(((gridLayer as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
+    expect(((gridLayer as IRScope).children[0] as IRPath).style?.opacity).toEqual({ stroke: 0.15 });
   });
 
   it('axis_text_nodes_inherit_no_stroke_or_fill_defaults', () => {
@@ -1359,8 +1359,8 @@ describe('lowerPlots guide orchestration (contract)', () => {
     expect(outer.children).toHaveLength(5);
 
     // 前两个是网格层（带 strokeOpacity）
-    expect(((outer.children[0] as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
-    expect(((outer.children[1] as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
+    expect(((outer.children[0] as IRScope).children[0] as IRPath).style?.opacity).toEqual({ stroke: 0.15 });
+    expect(((outer.children[1] as IRScope).children[0] as IRPath).style?.opacity).toEqual({ stroke: 0.15 });
 
     // 最后一个是轴层（纯文字 nodeDefault）
     expect((outer.children[4] as IRScope).defaults?.node?.style?.stroke).toBe('none');

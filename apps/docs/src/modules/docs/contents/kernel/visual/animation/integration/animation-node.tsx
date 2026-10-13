@@ -29,7 +29,7 @@ const AnimationNode: FC<AnimationNodeProps> = props => {
         shape="rectangle"
         label={{ text: text.label, position: 'top' }}
         layout={{ minimumSize: { width: 104, height: 56 } }}
-        style={{ fill: 'dodgerblue', fillOpacity: 0.25, stroke: 'dodgerblue' }}
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', opacity: { fill: 0.25 } }}
         animations={[fadeIn({ duration: 2400 }), slideIn({ axis: 'x', offset: -35, duration: 2400 })]}
       >
         {text.node}
@@ -40,7 +40,7 @@ const AnimationNode: FC<AnimationNodeProps> = props => {
         shape="rectangle"
         label={{ text: text.label, position: 'top' }}
         layout={{ minimumSize: { width: 104, height: 56 } }}
-        style={{ fill: 'darkorange', fillOpacity: 0.25, stroke: 'darkorange' }}
+        style={{ fill: 'darkorange', stroke: 'darkorange', opacity: { fill: 0.25 } }}
         animations={[pulse({ peak: 1.12, duration: 1800 })]}
       >
         {text.node}

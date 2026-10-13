@@ -13,10 +13,8 @@ const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 const DRAWABLE_STYLE_KEYS = [
   'color',
   'fill',
-  'fillOpacity',
   'stroke',
   'strokeWidth',
-  'strokeOpacity',
   'opacity',
   'shadow',
   'blendMode',

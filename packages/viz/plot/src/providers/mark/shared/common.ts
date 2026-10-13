@@ -22,6 +22,7 @@ import type {
   MarkProvenance,
 } from '../../../contract';
 import { ChannelDefinitionKind, datumMeta, markLayerId, markLayerMeta } from '../../../contract';
+import type { IRPlotMarkOpacityStyle } from '../../../schemas';
 import type {
   IRPlotAnchorId,
   IRPlotIntervalMark,
@@ -85,20 +86,30 @@ export const colorGroupedScope = (
   return { type: 'scope', children };
 };
 
+/** 提取透明度常量因子，字段绑定留给通道解析 */
+export const constantMarkOpacity = (
+  opacity: IRPlotMarkOpacityStyle | undefined,
+): NonNullable<IRNodeDefault['style']>['opacity'] => {
+  if (opacity === undefined) return undefined;
+  const result: { overall?: number; fill?: number; stroke?: number } = {};
+  for (const key of ['overall', 'fill', 'stroke'] as const) {
+    const binding = opacity[key];
+    if (binding?.kind === 'constant') result[key] = binding.value;
+  }
+  return result;
+};
+
 /** 收集 mark 上可直接提升为 Node 默认样式的常量值 */
 export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefault> => {
   const stroke = 'stroke' in mark && mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
   const strokeWidth =
     'strokeWidth' in mark && mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
-  const fillOpacity =
-    'fillOpacity' in mark && mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
-  const opacity = 'opacity' in mark && mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
+  const opacity = constantMarkOpacity('opacity' in mark ? mark.opacity : undefined);
 
   return {
     style: {
       ...(stroke === undefined ? {} : { stroke }),
       ...(strokeWidth === undefined ? {} : { strokeWidth }),
-      ...(fillOpacity === undefined ? {} : { fillOpacity }),
       ...(opacity === undefined ? {} : { opacity }),
     },
   };
@@ -438,7 +449,18 @@ const collectChannelDefinitionFields = (
   definitions: ChannelDefinitionMap,
 ): void => {
   const record = mark as Record<string, FieldChannel | undefined>;
-  for (const def of Object.values(definitions)) fields.addChannel(record[def.channel]);
+  const opacity = (mark as { opacity?: IRPlotMarkOpacityStyle }).opacity;
+  for (const def of Object.values(definitions)) {
+    const value =
+      def.channel === 'opacity'
+        ? opacity?.overall
+        : def.channel === 'fillOpacity'
+          ? opacity?.fill
+          : def.channel === 'strokeOpacity'
+            ? opacity?.stroke
+            : record[def.channel];
+    fields.addChannel(value);
+  }
 };
 
 /** 收集当前 mark 消费的内置 Node channel 字段 */

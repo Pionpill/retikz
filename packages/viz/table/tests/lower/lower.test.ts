@@ -78,7 +78,7 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
@@ -95,7 +95,7 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -128,8 +128,8 @@ describe('Table layout-aware lowering', () => {
         type: TableComposite.Table,
         data: { reference: 'people' },
         structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
-        tableDefaults: {
-          appearanceDefaults: {
+        defaultTable: {
+          defaultAppearance: {
             body: { background: { fill: 0.2 }, content: { defaults: { style: { color: '#336699' } } } },
             columnHeader: {
               background: { fill: 0.4 },

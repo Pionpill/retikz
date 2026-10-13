@@ -12,7 +12,6 @@ export type MapOverflowPreviewValues = {
 export const renderMapOverflowPreview = (values: MapOverflowPreviewValues) => (
   <Layout viewBox={{ x: -10, y: -10, width: 280, height: 144 }}>
     <Map
-      layout={{ height: 36, key: { width: 56 } }}
       entries={[
         {
           key: 'task',
@@ -24,6 +23,7 @@ export const renderMapOverflowPreview = (values: MapOverflowPreviewValues) => (
           },
         },
       ]}
+      defaultCell={{ layout: { height: 36 }, key: { layout: { width: 56 } } }}
     />
     {values.reference && <Draw way={['selected.bottom', [230, 112]]} arrow="->" style={{ stroke: 'dodgerblue' }} />}
   </Layout>

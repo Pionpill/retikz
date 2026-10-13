@@ -179,7 +179,7 @@ Exclusion changes only the footprint and alignment basis reported to the parent.
 | `caption.itemGap` / `bodyGap`                                     | Nonnegative number; default `4`                | Space between text items and between caption and content   |
 | `labels`                                                          | Optional nonempty label array                  | Boundary labels with Graph positioning and text formatting |
 | `padding` / `background` / `border` / `cornerRadius` / `overflow` | Corresponding Graph Group properties           | Shell spacing, fill, border, corners, and content overflow |
-| `graphDefaults` / `graphRules`                                    | Graph defaults and rules                       | Default appearance for Graph descendants inside the Group  |
+| `defaultGraph` / `graphRules`                                     | Graph defaults and rules                       | Default appearance for Graph descendants inside the Group  |
 | `layout.direction`                                                | `up`, `right`, `down`, `left`                  | Sets the automatic layout direction inside the Group       |
 | `layout.nodeGap`                                                  | Nonnegative number                             | Changes the gap between peers in one rank                  |
 | `layout.rankGap`                                                  | Nonnegative number                             | Changes the gap between adjacent ranks                     |
@@ -223,7 +223,7 @@ Flow, Graph, and Diagram appearance settings change visible styles without chang
 
 ### Defaults and themes
 
-`flowDefaults` supplies one shared default style for each Flow object category at the root. `entity.style` applies to every Entity, while `relation.style` applies to every Relation; neither setting changes Source ids, containment, node layout, or routing. Local `style` can still override a global value when needed, but this example shows global configuration only.
+`defaultFlow` supplies one shared default style for each Flow object category at the root. `entity.style` applies to every Entity, while `relation.style` applies to every Relation; neither setting changes Source ids, containment, node layout, or routing. Local `style` can still override a global value when needed, but this example shows global configuration only.
 
 <ComponentPreview
   files="flow-theme"
@@ -231,7 +231,7 @@ Flow, Graph, and Diagram appearance settings change visible styles without chang
   caption="Changing either section updates every object of that category, while the nodes, relations, and their relative positions remain unchanged."
 />
 
-`theme: { style, mode }` selects the theme environment; `flowThemeStyles` / `diagramThemeStyles` inject matching Definitions. Flow-level `graphRules` set conditional appearance for materialized Entities and Relations. The same field on Group adds local rules for its descendants without changing routing or containment. Explicit `flowDefaults` and `diagramDefaults` use the same paths as formal Source. Entity and Relation `group` directly reuse Graph: equal groups in one Flow root share an automatic color taken from the head of the categorical palette, while ungrouped elements keep their existing appearance. Entity and Relation appearance precedence is Graph Theme, defaults and rules from the owning Graph context, `flowDefaults`, then instance fields.
+`theme: { style, mode }` selects the theme environment; `flowThemeStyles` / `diagramThemeStyles` inject matching Definitions. Flow-level `graphRules` set conditional appearance for materialized Entities and Relations. The same field on Group adds local rules for its descendants without changing routing or containment. Explicit `defaultFlow` and `defaultDiagram` use the same paths as formal Source. Entity and Relation `group` directly reuse Graph: equal groups in one Flow root share an automatic color taken from the head of the categorical palette, while ungrouped elements keep their existing appearance. Entity and Relation appearance precedence is Graph Theme, defaults and rules from the owning Graph context, `defaultFlow`, then instance fields.
 
 Flow defaults contain `layout.nodeGap/rankGap`, `entity.style/layout`, Group Surface appearance and caption arrangement and formatting, and Relation path, marker, and label formatting. Defaults for `caption.title` and `caption.description` apply only to authored text items and never create content. They exclude identity, children, automatic layout direction, routing, and overflow, and never create Groups or markers. Empty objects and undefined do not override values; 0 and false remain meaningful. Node fonts replace as a whole; Relation `labelFont` merges by field.
 
@@ -336,11 +336,11 @@ These are the members used to combine the features on this page. See the [API re
         'Names direct children of this Layout only. Excluded children still draw but do not enlarge the footprint reported to the parent.',
     },
     {
-      name: 'FlowDiagram.flowDefaults',
+      name: 'FlowDiagram.defaultFlow',
       kind: 'property',
-      type: "InputFlowDiagram['flowDefaults']",
+      type: "InputFlowDiagram['defaultFlow']",
       description:
-        'Sets sparse defaults; instance fields take precedence. This page uses:\n- `entity.style`: `{ color?: string; fillOpacity?: number; strokeWidth?: number }` to change every Entity’s color, fill opacity, and stroke width\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; strokeOpacity?: number }` to change every Relation’s stroke color, width, and opacity\nOther fragments include `layout` and `group`; see the Schema reference for all fields.',
+        'Sets sparse defaults; instance fields take precedence. This page uses:\n- `entity.style`: `{ color?: string; opacity?: { fill?: number }; strokeWidth?: number }` to change every Entity’s color, fill opacity, and stroke width\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; opacity?: { stroke?: number } }` to change every Relation’s stroke color, width, and opacity\nOther fragments include `layout` and `group`; see the Schema reference for all fields.',
     },
   ]}
 />

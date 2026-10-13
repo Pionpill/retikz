@@ -1,174 +1,309 @@
-﻿---
-title: Built-In Channels
-description: Look up plot built-in channels by visual goal, including their field, fixed-value, and legend support.
+---
+title: Built-in Channels
+description: Choose Plot position, color, size, shape, and text channels, then explore node and path appearance through interactive examples.
 ---
 
-Built-in channels map data to visual results such as position, style, text, and paths. In React DSL, declare channels directly as mark props, such as `<PointMark x="gdp" color="region" />`. Start with a visual goal in the overview below, then use the corresponding section to check value forms, visual results, and legend support.
+After learning [channel binding](/viz/plot/channel/binding), use this page to choose built-in channels: compare values by position, distinguish categories by color and shape, express quantities through size, and add text and path styling.
 
-Each table gives the form and visible meaning first, then the internal property destination in its last column. You can skip destinations on a first read.
-
-When a table lists both a field and a string constant, a built-in flat style prop matches current data fields first and only tries a valid constant after a miss. See [Fields And Constants](/viz/plot/channel/binding#fields-and-constants) for collisions, explicit forms, and scope.
-
-| Type          | Channels                                                                                                | Meaning                                        |
-| ------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Position      | `x` / `y` / `z`                                                                                         | Fields determine coordinate roles              |
-| Style         | `color` / `fill` / `stroke` / `textColor`<br />`opacity` / `size` / `shape`                             | Color, opacity, size, and shape                |
-| Node geometry | `padding` / `cornerRadius`<br />`rotate` / `minimumSize`                                                | Node size, spacing, and transforms             |
-| Text          | `text` / `label`                                                                                        | Text inside nodes and labels attached to nodes |
-| Paths         | `strokeWidth` / `thickness` / `lineCap` / `lineJoin`<br />`roundedCorners` / `fillRule` / `dashPattern` | Path stroke, caps, joins, fill, and dashes     |
-| Effects       | `shadow` / `blendMode`                                                                                  | Shadows and compositing                        |
-| Other         | `zIndex` / `order` / `series`                                                                           | Drawing order, ordering, and series splitting  |
+The property tables describe the example marks; they do not imply that every mark supports every property. Label layout, path ordering, and series grouping also affect the result and are explained separately from visual channels.
 
 ## Position
 
-Position channels say which row fields participate in coordinate projection. `x` / `y` / `z` are not fixed screen directions; the coordinate system reinterprets them. `cartesian2D` treats `x` / `y` as horizontal / vertical, while `polar2D` treats them as angle / radius.
+Position channels select fields for coordinate calculation. In this 2D Cartesian example, x sets horizontal position and y sets vertical position. Switch fields to compare a different pair of quantities.
+
+| Property | Values     | Effect and constraints                                                                  |
+| -------- | ---------- | --------------------------------------------------------------------------------------- |
+| `x`      | Field name | First position role; horizontal in this example.                                        |
+| `y`      | Field name | Second position role; vertical in this example.                                         |
+| `z`      | Field name | Third position role for custom coordinates; unused by the built-in 2D coordinates here. |
+
+<ComponentAlert
+  type="tip"
+  title="Polar coordinates reuse position channels"
+  description="Plot has only three position channels: x, y, and z. There are no additional polar alias channels. In 2D polar coordinates, x represents the angular role and y the radial role; coordinate.angle and coordinate.radius bind the corresponding scales rather than introduce new channel names."
+/>
+
+Choose the preset comparing orders and sales, then change the horizontal and vertical fields. Rows stay unchanged while the new fields determine point positions.
 
 <ComponentPreview
   files={['builtin-position', 'builtin-position.preview.tsx', 'builtin-position.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="This playground keeps Cartesian coordinates fixed and only changes the x / y bindings; the data and chart size stay fixed."
   defaultSourceFile="builtin-position.preview.tsx"
+  caption="The selected fields determine positions for the same rows."
 />
 
-| Channel | Channel Value        | Meaning                | Delivery                        |
-| ------- | -------------------- | ---------------------- | ------------------------------- |
-| `x`     | Field: `x = "field"` | First positional role  | first coordinate position role  |
-| `y`     | Field: `y = "field"` | Second positional role | second coordinate position role |
-| `z`     | Field: `z = "field"` | Third positional role  | third coordinate position role  |
+Point position props accept field names; use reference marks for fixed thresholds.
 
-## Style
+## Visual encoding
 
-Style channels control the visible appearance of a mark. Color, opacity, size, and shape are style channels. Use the panel to change the target channel and values while the same points and data remain fixed.
+Color distinguishes categories, size compares quantities, and shape provides another way to identify categories. Constants give marks a uniform appearance; field bindings let styles vary by record.
+
+| Property         | Values                                       | Effect and constraints                                                                       |
+| ---------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `color`          | Field or explicit color constant             | Main color; the mark determines which visual properties it affects.                          |
+| `fill`           | Field, color, or paint object                | Controls the interior fill.                                                                  |
+| `stroke`         | Field, color, or paint object                | Controls the outline paint.                                                                  |
+| `opacity`        | Field, 0–1, or grouped object                | Shorthand sets overall opacity; an object adjusts individual factors.                        |
+| `opacity.fill`   | Field or 0–1                                 | Changes fill opacity only.                                                                   |
+| `opacity.stroke` | Field or 0–1                                 | Changes stroke opacity only.                                                                 |
+| `size`           | Numeric field or nonnegative radius          | Fields use a square-root radius mapping by default; numeric constants are final point radii. |
+| `shape`          | Categorical field or explicit shape constant | Fields assign shapes by category; example constants are circle, rectangle, and diamond.      |
+| `strokeWidth`    | Numeric field or nonnegative number          | Controls stroke width independently of stroke color.                                         |
+
+<ComponentAlert
+  type="tip"
+  title="Opacity values multiply"
+  description="opacity.overall, opacity.fill, and opacity.stroke specify opacity: 0 is fully transparent and 1 is fully opaque. Overall opacity multiplies fill or stroke opacity. For example, opacity: { overall: 0.5, fill: 0.5 } produces an effective fill opacity of 0.5 × 0.5 = 0.25: 25% opaque and 75% transparent. Stroke opacity follows the same rule: overall × stroke. This assumes a fully opaque color and no additional ancestor opacity."
+/>
+
+Use `opacity: 0.5` for overall opacity. For separate control, use `opacity: { overall: 0.5, fill: 0.5, stroke: 1 }`. Each member supports a field binding or a constant. Omitted members inherit independently and otherwise resolve to 1; a numeric shorthand sets only overall.
+
+Switch the paint channel, then adjust opacity, radius, and shape to compare the same points. This playground uses constants; compare field-driven color and size on the channel binding page.
 
 <ComponentPreview
   files={['builtin-point-style', 'builtin-point-style.preview.tsx', 'builtin-point-style.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="The target chooses whether paint enters color, fill, or stroke; the remaining controls keep the subject and data fixed."
   defaultSourceFile="builtin-point-style.preview.tsx"
+  caption="Constant styles affect every point; fill and stroke can be adjusted independently."
 />
 
-### Color
+Choose fill or stroke to isolate those effects. Field-driven color, size, shape, and opacity can use corresponding legends. Fixed values do not express data mappings, so this example has no legends for them. Larger points need more domain padding.
 
-| Channel     | Channel Value                                                   | Meaning             | Delivery / guide                                                            |
-| ----------- | --------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------- |
-| `color`     | Field: `color = "field"`<br />Constant: `color = "red"`         | Main semantic color | mark-selected fill / stroke / text color; field values support color legend |
-| `fill`      | Field: `fill = "field"`<br />Constant: `fill = "red"`           | Fill paint          | mark fill; node-backed marks can write node `fill`                          |
-| `stroke`    | Field: `stroke = "field"`<br />Constant: `stroke = "red"`       | Stroke paint        | mark stroke; path-backed marks can write path stroke                        |
-| `textColor` | Field: `textColor = "field"`<br />Constant: `textColor = "red"` | Text paint          | core node `textColor`                                                       |
+## Mark styling
 
-### Opacity
+After choosing positions and visual encodings, adjust node appearance, label layout, and path strokes. The following sections cover each part separately.
 
-Overall opacity affects both fill and stroke, fill opacity only fades the interior, and stroke opacity only fades the outline.
+<ComponentAlert
+  type="tip"
+  title="Underlying primitives (optional)"
+  description={
+    <>
+      Plot marks are ultimately lowered to Kernel primitives such as nodes and paths. See the{' '}
+      <a href="/kernel/components" className="font-medium underline underline-offset-4">
+        Kernel documentation
+      </a>{' '}
+      to explore these drawing primitives. No prior knowledge of Kernel is needed to continue with this page.
+    </>
+  }
+/>
 
-| Channel         | Channel Value                                                           | Meaning         | Delivery / guide                                                                           |
-| --------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
-| `opacity`       | Field: `opacity = "field"`<br />Constant: `opacity = {0.45}`            | Overall opacity | `IRScope.opacity`, `IRNode.opacity`, or `IRPath.opacity`; field values support ramp legend |
-| `fillOpacity`   | Field: `fillOpacity = "field"`<br />Constant: `fillOpacity = {0.7}`     | Fill opacity    | scope / node / path fill opacity                                                           |
-| `strokeOpacity` | Field: `strokeOpacity = "field"`<br />Constant: `strokeOpacity = {0.7}` | Stroke opacity  | scope / node / path stroke opacity                                                         |
+### Nodes
 
-### Size
+Node styles control shape size, corner radius, rotation, scale, and shadow. This example omits text so you can focus on the node bodies.
 
-The `size` channel is for quantitative magnitude. Field values default to a sqrt scale so perceived area is closer to the data difference.
+| Property       | Values                                  | Effect and constraints                                                                      |
+| -------------- | --------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `minimumSize`  | Nonnegative number or size object       | Minimum node size; a datum’s size binding takes precedence when present.                    |
+| `padding`      | Number or spacing object                | Internal node spacing.                                                                      |
+| `cornerRadius` | Nonnegative number                      | Rectangle corner radius.                                                                    |
+| `rotate`       | Number                                  | Node rotation angle.                                                                        |
+| `scale`        | Number or axis-scale object             | Scales node appearance without changing positional field bindings.                          |
+| `shadow`       | Here: none, sm, md, lg, xl              | Shadow preset; none disables shadows, while the other presets change the shadow appearance. |
+| `blendMode`    | Here: normal, multiply, screen, overlay | Color compositing in overlapping regions; the result depends on the background and overlap. |
 
-| Channel | Channel Value                                       | Meaning    | Delivery / guide                                                                 |
-| ------- | --------------------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| `size`  | Field: `size = "field"`<br />Constant: `size = {8}` | Glyph size | node `minimumSize`; field values default to a sqrt scale and support size legend |
-
-### Shape
-
-The `shape` channel is for categories. Categorical values map to built-in glyph shapes and can produce a symbol legend.
-
-| Channel | Channel Value                                              | Meaning     | Delivery / guide                                 |
-| ------- | ---------------------------------------------------------- | ----------- | ------------------------------------------------ |
-| `shape` | Field: `shape = "field"`<br />Constant: `shape = "circle"` | Glyph shape | node `shape`; field values support symbol legend |
-
-## Nodes, Text, And Effects
-
-These channels all act on nodes produced by a mark. The panel keeps the same text nodes in place so size, typography, outside labels, and effects can be adjusted continuously instead of split across four static figures.
+Adjust minimum size and corner radius, then try rotation, scale, and shadow on the three rectangles.
 
 <ComponentPreview
-  files={['builtin-node-text', 'builtin-node-text.preview.tsx', 'builtin-node-text.data.ts']}
-  size="lg"
-  caption="The lower rectangles show node geometry, labels, and effects; the upper text shows textColor and layout while both subjects stay fixed."
-  defaultSourceFile="builtin-node-text.preview.tsx"
+  files={['builtin-node', 'builtin-node.preview.tsx', 'builtin-node.data.ts']}
+  responsive
+  mode="showcase"
+  size="md"
+  defaultSourceFile="builtin-node.preview.tsx"
+  caption="The gray dashed grid behind the nodes provides a backdrop for comparing blend modes; data positions and the view stay fixed."
 />
 
-### Node Geometry
+### Text
 
-Node geometry channels directly control a node's size constraints, spacing, corner radius, and rotation. They do not map data to color or visual size.
+With text set, PointMark displays each data point as field text. This example covers text color, font, alignment, and wrapping. These text marks are separate from external label annotations.
 
-| Channel              | Channel Value                                                                            | Meaning                 | Delivery                   |
-| -------------------- | ---------------------------------------------------------------------------------------- | ----------------------- | -------------------------- |
-| `minimumSize`        | Field: `minimumSize = "field"`<br />Constant: `minimumSize = {54}`                       | Node size constraints   | core node size fields      |
-| `padding` / `margin` | Field: `padding = "field"`<br />Constant: `padding = {8}` / `padding = {{ x: 8, y: 4 }}` | Node spacing            | core node spacing fields   |
-| `cornerRadius`       | Field: `cornerRadius = "field"`<br />Constant: `cornerRadius = {8}`                      | Rectangle corner radius | core node `cornerRadius`   |
-| `rotate` / `scale`   | Field: `rotate = "field"`<br />Constant: `rotate = {18}`                                 | Node transform hints    | core node transform fields |
+| Property       | Values                           | Effect and constraints                       |
+| -------------- | -------------------------------- | -------------------------------------------- |
+| `text`         | Field name                       | Uses field text as the point mark’s content. |
+| `textColor`    | Field or explicit color constant | Color of text inside the node.               |
+| `align`        | start, middle, end               | Horizontal alignment of node text.           |
+| `font`         | Font object, e.g. `{ size: 14 }` | Font size, weight, and related settings.     |
+| `lineHeight`   | Positive number                  | Text line height.                            |
+| `maxTextWidth` | Positive number                  | Maximum text width, affecting wrapping.      |
 
-### Text inside nodes
+Reduce the maximum text width to observe wrapping, then adjust font size, line height, and alignment.
 
-`text` makes a point mark display text from a field. `textColor`, `align`, `lineHeight`, `maxTextWidth`, and `font` control its layout and color.
+<ComponentPreview
+  files={['builtin-text', 'builtin-text.preview.tsx', 'builtin-text.data.ts']}
+  responsive
+  mode="showcase"
+  size="sm"
+  defaultSourceFile="builtin-text.preview.tsx"
+  caption="This example displays field text without a second set of shape marks."
+/>
 
-| Channel                                             | Channel Value                                                                                               | Meaning                                | Delivery                           |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------- |
-| `text`                                              | Field: `text = "field"`                                                                                     | Visible text for text-like point marks | mark assembly, then core node text |
-| `align` / `lineHeight`<br />`maxTextWidth` / `font` | Field: `maxTextWidth = "field"`<br />Constant: `maxTextWidth = {54}`<br />Constant: `font = {{ size: 13 }}` | Text layout                            | core node text layout fields       |
+### Labels
 
-### Node labels
+label adds an annotation beside a mark while keeping the node body visible. Use it to identify a data point by name or value. Text inside the node is still set through text.
 
-`label` does not replace node content. It adds an outside label to the node for each data point. `labelPosition`, `labelDistance`, and `labelPin` control placement and the leader line.
+| Property          | Values                           | Effect and constraints                        |
+| ----------------- | -------------------------------- | --------------------------------------------- |
+| `label`           | Field, detailed object, or array | Adds external labels; omitted means no label. |
+| `label.position`  | Here: top, right, bottom, left   | Label placement relative to the node.         |
+| `label.distance`  | Number                           | Distance between label and node.              |
+| `label.pin`       | Boolean                          | Whether to show a label pin.                  |
+| `label.textColor` | Color                            | Label text color.                             |
 
-| Channel                                           | Channel Value                                                           | Meaning          | Delivery               |
-| ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | ---------------------- |
-| `label`                                           | Field: `label = "field"`                                                | Datum host label | core node `label`      |
-| `labelPosition` / `labelDistance`<br />`labelPin` | Constant: `labelPosition = "top"`<br />Constant: `labelDistance = {16}` | Label layout     | core node label fields |
+Use `label: 'name'` to display the name field for each record. For finer control, use `label: { field: 'name', position: 'top', distance: 12, pin: true }`. Use value instead of field for fixed text, or an array for multiple labels.
 
-### Effects
+The example labels three nodes with the tag field. Change the label position, distance, or pin while the node bodies and data positions stay fixed.
 
-Effect channels are shared visual hints. `shadow` changes the node projection, while `blendMode` changes color compositing where shapes overlap. `boundary` remains in the table as the advanced boundary override.
+<ComponentPreview
+  files={['builtin-label', 'builtin-label.preview.tsx', 'builtin-label.data.ts']}
+  responsive
+  mode="showcase"
+  size="sm"
+  defaultSourceFile="builtin-label.preview.tsx"
+  caption="This example explicitly sets label placement, distance, and pins. Hiding labels preserves the nodes."
+/>
 
-| Channel     | Channel Value                                                                 | Meaning                 | Delivery                   |
-| ----------- | ----------------------------------------------------------------------------- | ----------------------- | -------------------------- |
-| `shadow`    | Field: `shadow = "field"`<br />Constant: `shadow = "xl"`                      | Shadow preset or object | core node/path `shadow`    |
-| `blendMode` | Field: `blendMode = "field"`<br />Constant: `blendMode = "multiply"`          | Compositing mode        | core node/path `blendMode` |
-| `boundary`  | Field: `boundary = "field"`<br />Constant: `boundary = {{ shape: "circle" }}` | Node boundary override  | core node `boundary`       |
+### Paths
 
-## Paths
+Path styles control line paint, width, dashes, endpoints, and joins. Choose the feature you want to change, then adjust its property.
 
-Path channels apply to marks that produce paths, such as line marks, relation lines, region boundaries, and reference lines. Endpoint arrows are not channels; configure them with `marks` on the relevant path.
+| Property         | Values                              | Effect and constraints                                                 |
+| ---------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| `stroke`         | Field or explicit color constant    | Line paint.                                                            |
+| `strokeWidth`    | Numeric field or nonnegative number | Line width.                                                            |
+| `opacity`        | Field or 0–1                        | Opacity of the path.                                                   |
+| `dashPattern`    | Numeric array                       | Alternating dash and gap lengths; this example uses [7, 4] and [1, 4]. |
+| `lineCap`        | butt, round, square                 | Flat, rounded, or projecting square endpoints.                         |
+| `lineJoin`       | miter, round, bevel                 | Mitered, rounded, or beveled joins.                                    |
+| `roundedCorners` | Nonnegative number                  | Rounds the path geometry at corners.                                   |
+
+Set corner rounding to 0 and compare the three join styles, then increase the radius. Switch between dashed and dotted lines to observe how endpoint style affects them.
 
 <ComponentPreview
   files={['builtin-path-style', 'builtin-path-style.preview.tsx', 'builtin-path-style.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="With roundedCorners at 0, compare miter, round, and bevel joins. Raising roundedCorners replaces sharp joints with geometric curves, so the join control is hidden."
   defaultSourceFile="builtin-path-style.preview.tsx"
+  caption="Join-style controls hide when geometry rounding is enabled."
 />
 
-### Path styling
+Once geometry rounding replaces a corner, lineJoin differences are no longer apparent, so this playground hides that control. thickness provides named widths; dashed and dotted are dash shortcuts. fillRule affects closed-path filling; consult the mark reference for these configurations. Endpoint arrows are declared through marks in the corresponding path configuration.
 
-| Channel                                | Channel Value                                                           | Meaning               | Delivery / guide                                                            |
-| -------------------------------------- | ----------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------- |
-| `strokeWidth`                          | Field: `strokeWidth = "field"`<br />Constant: `strokeWidth = {4}`       | Stroke width          | scope / node / path `strokeWidth`; field values default to range `[0.5, 4]` |
-| `thickness`                            | Field: `thickness = "field"`<br />Constant: `thickness = "thick"`       | Semantic width preset | converted to core path `strokeWidth`                                        |
-| `roundedCorners`                       | Field: `roundedCorners = "field"`<br />Constant: `roundedCorners = {8}` | Path corner hint      | core path `roundedCorners`                                                  |
-| `fillRule`                             | Field: `fillRule = "field"`<br />Constant: `fillRule = "evenodd"`       | Closed-path fill rule | core path `fillRule`                                                        |
-| `lineCap`<br />`lineJoin`              | Field: `lineCap = "field"`<br />Constant: `lineCap = "round"`           | Stroke cap and join   | core path line fields                                                       |
-| `dashPattern` / `dashed`<br />`dotted` | Field: `dashPattern = "field"`<br />Constant: `dashPattern = {[7, 4]}`  | Stroke pattern        | core node/path dash fields                                                  |
+## Ordering and grouping
 
-## Other
+Drawing order, connection order, and series grouping serve different purposes. zIndex controls overlap order, order sorts rows along a path, and series splits rows into separate series.
 
-Other channels do not directly describe color, position, or path shape. They control drawing order, row ordering, and series splitting.
+| Property | Values          | Effect and constraints                                                      |
+| -------- | --------------- | --------------------------------------------------------------------------- |
+| `zIndex` | Field or number | Controls point overlap within a drawing layer; larger values appear on top. |
+| `order`  | Field name      | Sorts rows by this field before connecting; omission uses input order.      |
+| `series` | Field name      | Splits rows by field value, generating a separate path per series.          |
+
+Rows are deliberately shuffled. Toggle sorting to compare input order with step order, and grouping to compare one path with two series paths. A and B overlap at step=2; adjust B’s drawing order to change which point covers the other.
 
 <ComponentPreview
   files={['builtin-other', 'builtin-other.preview.tsx', 'builtin-other.data.ts']}
+  responsive
+  mode="showcase"
   size="lg"
-  caption="The input rows are intentionally shuffled: series splits two lines, order restores their step sequence, and the overlapping A/B points at step=2 use zIndex to decide which series stays on top."
   defaultSourceFile="builtin-other.preview.tsx"
+  caption="The points at step=2 overlap to reveal drawing order."
 />
 
-| Channel  | Channel Value                                           | Meaning                            | Delivery                                 |
-| -------- | ------------------------------------------------------- | ---------------------------------- | ---------------------------------------- |
-| `zIndex` | Field: `zIndex = "field"`<br />Constant: `zIndex = {1}` | Drawing-order hint                 | scope / node / path `zIndex`             |
-| `order`  | Field: `order = "field"`                                | Connection order for path marks    | mark reads the field and sorts datums    |
-| `series` | Field: `series = "field"`                               | Multi-series splitting or grouping | mark reads the field and splits elements |
+order and series live at the top level of mark configuration, outside encoding. They organize the data consumed by the mark rather than encode a visual property such as color or position. zIndex changes drawing order without changing path connections or row sorting.
 
-`order` and `series` are not part of the `encoding` object, but they are still field-driven channel entries. In React DSL, users write them as mark props too.
+<ComponentAlert
+  type="tip"
+  title="How this differs from data transforms"
+  description="Data transforms run first: sort changes output row order, while groupBy defines groups for the current operation, such as sorting within groups, summarizing, selecting rows, or annotating rows with computed results. A mark’s order and series then determine how points connect and split into paths, without aggregation or changes to upstream data. Transform grouping does not automatically create separate paths; use series to specify them. You can omit order for already sorted data; setting it sorts the rows again when constructing paths."
+/>
+
+## Errors and limitations
+
+- **Check mark support first.** Point, path, and reference mark properties do not all have the same shape. Do not copy configurations between mark types without checking.
+- **Strings match fields first.** React style shorthand may interpret a color or shape name as an existing field. Use `{ kind: 'constant', value: '#2563eb' }` for a fixed color. See [channel binding](/viz/plot/channel/binding#errors-and-limitations) for position and field lookup rules.
+- **Distinguish mappings from direct values.** A point size field uses a square-root scale by default; a constant size is a radius. Shape fields must be categorical. Opacity ranges from 0 to 1; radii and stroke widths cannot be negative.
+- **Target the intended paint.** Use fill and stroke to control them independently. textColor affects node text; label.textColor affects external labels.
+- **Leave space for large marks and labels.** domainPadding expands position-scale domains. Large radii, rotation, or labels may need more room; check dimensions and domains if marks extend outside the drawing.
+
+## Related props
+
+These are selected members used on this page. See the [mark reference](/viz/plot/reference/mark) and [encoding reference](/viz/plot/reference/encoding) for complete input forms.
+
+<ComponentProps
+  items={[
+    {
+      name: 'PointMark.x',
+      kind: 'property',
+      type: 'string',
+      description: 'Position field; sets the horizontal coordinate in 2D Cartesian coordinates.',
+    },
+    {
+      name: 'PointMark.y',
+      kind: 'property',
+      type: 'string',
+      description: 'Position field; sets the vertical coordinate in 2D Cartesian coordinates.',
+    },
+    {
+      name: 'PointMark.color',
+      kind: 'property',
+      type: "string | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: string }",
+      description:
+        'A shorthand field or explicit binding. Field bindings read the named field and may reference a scale; constants use a fixed CSS color.',
+    },
+    {
+      name: 'PointMark.size',
+      kind: 'property',
+      type: "string | number | { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number }",
+      description:
+        'Fields map to radii; nonnegative numbers set a radius directly. The explicit field binding can reference a named scale.',
+    },
+    {
+      name: 'PointMark.text',
+      kind: 'property',
+      type: 'string',
+      description: 'Field displayed inside the node; changes the point mark into text.',
+    },
+    {
+      name: 'PointMark.label',
+      kind: 'property',
+      type: 'InputPlotNodeLabel | Array<InputPlotNodeLabel>',
+      description:
+        'Field name or an object with field/value, placement, and style; arrays add multiple labels. Omitted means no label.',
+    },
+    {
+      name: 'PathMark.order',
+      kind: 'property',
+      type: 'string',
+      description: 'Sorts by a field before connecting points; lives outside encoding.',
+    },
+    {
+      name: 'PathMark.series',
+      kind: 'property',
+      type: 'string',
+      description: 'Splits paths into series by a field; lives outside encoding.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Custom channels',
+      description: 'Register a project-specific visual channel.',
+      url: '/viz/plot/channel/custom-channel',
+    },
+    { title: 'Scales', description: 'Adjust mapping ranges, colors, and domain padding.', url: '/viz/plot/scale' },
+    {
+      title: 'Coordinates',
+      description: 'Understand position roles in different coordinates.',
+      url: '/viz/plot/coordinate',
+    },
+    { title: 'Legends', description: 'Explain field-driven styles with legends.', url: '/viz/plot/guide/legend' },
+  ]}
+/>

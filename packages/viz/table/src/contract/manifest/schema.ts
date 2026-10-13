@@ -309,7 +309,7 @@ const defaultsPathOfAppearanceTrace = (
   tracePath: string,
 ): Array<string> => {
   const location = cell.location === 'columnHeader' ? 'columnHeader' : 'body';
-  return ['appearanceDefaults', location, ...tracePath.split('/').filter(Boolean)];
+  return ['defaultAppearance', location, ...tracePath.split('/').filter(Boolean)];
 };
 
 /** 校验 Cell defaults trace 指向实际贡献最终叶的来源层 */
@@ -361,7 +361,7 @@ const validateBorderDefaultsProvenance = (
       );
       const location = cell?.location === 'columnHeader' ? 'columnHeader' : 'body';
 
-      return ['appearanceDefaults', location, 'borders', source.side];
+      return ['defaultAppearance', location, 'borders', source.side];
     }
 
     if (source.scope === 'outer') {

@@ -1,0 +1,52 @@
+---
+title: 简介
+description: 用数据字段决定位置、颜色和尺寸，组合点、线、区间与坐标轴，构建自己的数据图形。
+---
+
+Plot 是一套图形语法：你提供数据，选择用点、线或区间表示每条记录，再指定字段怎样决定图形的位置、颜色或尺寸。Plot 将这些声明绘制成图形，适合需要自行组合图层、控制映射方式的场景。
+
+## 从数据到图形
+
+下面是四次测量。每行记录有时间 `time` 和测量值 `value`；横坐标对应时间，纵坐标对应测量值，折线按时间顺序连接这四条记录，呈现测量值的变化。坐标轴标出数值，帮助读者读图。
+
+<ComponentPreview
+  files={[
+    '/viz/plot/get-start/first-plot',
+    '/viz/plot/get-start/first-plot.preview.tsx',
+    '/viz/plot/get-start/first-plot.data.ts',
+  ]}
+  responsive
+  defaultSourceFile="first-plot.preview.tsx"
+  size="lg"
+  hideCode
+/>
+
+描述这张图需要三个选择：使用哪些数据、哪些字段决定位置、用什么图形表示记录。Plot 把位置、颜色等视觉属性称为“通道”，把点、线等绘制形式称为“图元”。比例尺负责将数据范围换算为绘图区中的位置或样式，坐标系决定这些位置如何排列。
+
+## 何时使用
+
+当一张图需要叠加多种图元、分别配置比例尺或尝试不同坐标系时，可以从 Plot 开始。通道、图元、比例尺和辅助元素可以独立配置，再组合成同一张图。React 组件与 Vanilla 配置对象都能表达这些选择。
+
+| 你的任务                                           | 起点                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| 自行组合点、线、区间等图元，控制数据如何映射到图形 | Plot                                                        |
+| 已选定具体图表类型，希望使用整图配置直接绘制       | [Chart](/viz/chart/introduction)，先确认其已有类型满足需求  |
+| 清洗、派生或聚合数据后再绘图                       | [Data](/viz/data/introduction)，处理后的数据可继续交给 Plot |
+| 以行列和单元格呈现数据                             | [Table](/viz/table)                                         |
+
+## 怎样接入
+
+React 项目使用 `@retikz/plot-react` 的 `Plot` 和图元组件；普通 TypeScript 项目使用 `@retikz/plot-vanilla` 的 `plot()` 与 `renderPlot()`，可以生成 SVG 字符串。两种方式都从自己的数据出发。
+
+需要保存图形配置时，可以使用 Plot IR，也就是可序列化的 JSON 图形描述。数据行在运行时单独传入，配置通过名称引用数据集；不必为了画第一张图先学习这套格式。
+
+安装步骤和上图的完整代码见[快速开始](/viz/plot/get-start)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '图元', description: '选择点、路径、区间等绘制形式。', url: '/viz/plot/mark' },
+    { title: '通道', description: '了解字段与位置、颜色、尺寸之间的映射。', url: '/viz/plot/channel' },
+  ]}
+/>

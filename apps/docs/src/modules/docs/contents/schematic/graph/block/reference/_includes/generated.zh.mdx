@@ -214,10 +214,10 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 | `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | 块容器内按作者顺序排列的绘制子内容                       |
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                   |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | 外框圆角                                                 |
+| `defaultGraph?`      | `BlockInputEmbedProps["defaultGraph"]`                                                                                                                                                                             | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `defaults?`          | `BlockInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | 后代默认样式及继承屏障                                   |
 | `frame?`             | `BlockInputEmbedProps["frame"]`                                                                                                                                                                                    | —       | 固有包络装饰，不参与布局                                 |
 | `gap?`               | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                           |
-| `graphDefaults?`     | `BlockInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `graphRules?`        | `BlockInputEmbedProps["graphRules"]`                                                                                                                                                                               | —       | 可见后代 Entity / Relation 的有序条件规则                |
 | `id?`                | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                            |
 | `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —       | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级   |
@@ -1208,11 +1208,11 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | 引用 id 的合成包络形状                                   |
 | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | 局部坐标系中的裁剪区域                                   |
 | `cornerRadius?`   | `number`                                                                                                                                                                                                           | —       | 外框圆角                                                 |
+| `defaultGraph?`   | `IRCodeBlockProps['defaultGraph']`                                                                                                                                                                                 | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `defaults?`       | `IRCodeBlockProps['defaults']`                                                                                                                                                                                     | —       | 后代默认样式及继承屏障                                   |
 | `description?`    | `string`                                                                                                                                                                                                           | —       | 可选实体说明                                             |
 | `frame?`          | `IRCodeBlockProps['frame']`                                                                                                                                                                                        | —       | 固有包络装饰，不参与布局                                 |
 | `gap?`            | `number`                                                                                                                                                                                                           | —       | 直接内容项之间的间距，用户单位                           |
-| `graphDefaults?`  | `IRCodeBlockProps['graphDefaults']`                                                                                                                                                                                | —       | 可见后代 Entity、Relation、Group、Block 的稀疏默认值     |
 | `graphRules?`     | `IRCodeBlockProps['graphRules']`                                                                                                                                                                                   | —       | 可见后代 Entity / Relation 的有序条件规则                |
 | `icon?`           | `IRCodeBlockProps['icon']`                                                                                                                                                                                         | —       | 省略使用实体默认图标，null 隐藏，child 替换              |
 | `id?`             | `string`                                                                                                                                                                                                           | —       | 可选引用 id，注册到父命名空间                            |
@@ -1505,7 +1505,7 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
     overflow: '内容溢出行为，visible 或 clip',
     children: '按声明顺序保存的任意绘图子元素',
     gap: '直接内容项之间的间距，用户单位',
-    graphDefaults: '可见后代 Entity、Relation、Group、Block 的稀疏默认值',
+    defaultGraph: '可见后代 Entity、Relation、Group、Block 的稀疏默认值',
     graphRules: '可见后代 Entity / Relation 的有序条件规则',
     width: '含水平 padding 的固定外层总宽度',
     minWidth: '含水平 padding 的最小外层总宽度，省略时 resolve 使用 240',
@@ -1598,7 +1598,7 @@ export type IRCodeSignature = ZodInfer<typeof CodeSignatureSchema>;
     cornerRadius: '外框圆角',
     overflow: '内容溢出行为，visible 或 clip',
     gap: '直接内容项之间的间距，用户单位',
-    graphDefaults: '可见后代 Entity、Relation、Group、Block 的稀疏默认值',
+    defaultGraph: '可见后代 Entity、Relation、Group、Block 的稀疏默认值',
     graphRules: '可见后代 Entity / Relation 的有序条件规则',
     width: '含水平 padding 的固定外层总宽度',
     minWidth: '含水平 padding 的最小外层总宽度，省略时 resolve 使用 240',
