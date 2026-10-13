@@ -68,7 +68,7 @@ export const normalizePlotRoot = (
 
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
-  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <BuiltinPlotScale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
+  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <PlotScale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
   // 直接调用 buildPlotIR 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）
   const shouldDeferPositionScales = context.model !== undefined || rootContext.deferPositionScaleInference === true;
   let coordinate: IRPlotCoordinateOperation;
@@ -95,7 +95,7 @@ export const normalizePlotRoot = (
       ...(!shouldDeferPositionScales || explicitScales.radius !== undefined ? [radiusScale] : []),
     ];
   } else if (coordKind === 'cartesian1D') {
-    // 单维直线：orientation 取对象配置；单一位置 scale 可由 <BuiltinPlotScale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
+    // 单维直线：orientation 取对象配置；单一位置 scale 可由 <PlotScale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
     const orientation =
       typeof coordinateInput === 'object' && coordinateInput.type === 'cartesian1D'
         ? coordinateInput.orientation
@@ -175,7 +175,7 @@ export const normalizePlotRoot = (
   });
 
   // topology 规范化会为 framework-neutral plain authoring 补 cartesian 默认 scale；React defer 路径只移除本次补出的维度，
-  // 保留用户显式 <BuiltinPlotScale> 与多轴 binding 需要的派生 scale，让 lowering 继续按实际字段类型推断
+  // 保留用户显式 <PlotScale> 与多轴 binding 需要的派生 scale，让 lowering 继续按实际字段类型推断
   const normalizedScales =
     shouldDeferPositionScales &&
     coordKind === 'cartesian2D' &&

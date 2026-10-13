@@ -1,4 +1,4 @@
-import { Plot, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotScale, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { textRows } from './builtin-text.data';
@@ -41,8 +41,8 @@ export const BuiltinTextPreview = (
       width={520}
       height={280}
     >
-      <BuiltinPlotScale dimension="x" type="linear" domain={[0, 4]} domainPadding={0} />
-      <BuiltinPlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
+      <PlotScale dimension="x" type="linear" domain={[0, 4]} domainPadding={0} />
+      <PlotScale dimension="y" type="linear" domain={[8, 16]} domainPadding={0} />
       <PointMark
         x="x"
         y="y"

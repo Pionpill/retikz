@@ -123,9 +123,5 @@ export const previewControlContract = {
     [POINT_JITTER_POLAR_CONTROL_IDS.sigma]: 0.5,
     [POINT_JITTER_POLAR_CONTROL_IDS.seed]: 7,
   },
-  relatedApis: [
-    'BuiltinPlotScale.type',
-    'IRPlotJitterPositionAdjustment.span',
-    'IRPlotJitterPositionAdjustment.distribution',
-  ],
+  relatedApis: ['PlotScale.type', 'IRPlotJitterPositionAdjustment.span', 'IRPlotJitterPositionAdjustment.distribution'],
 } satisfies PreviewControlContract;

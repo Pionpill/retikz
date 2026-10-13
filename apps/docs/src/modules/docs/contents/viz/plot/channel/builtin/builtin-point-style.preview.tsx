@@ -1,4 +1,4 @@
-import { Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { pointStyleRows } from './builtin-point-style.data';
 
@@ -38,8 +38,8 @@ export const BuiltinPointStylePreview = (
       width={440}
       height={280}
     >
-      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
-      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PointMark
         x="x"
         y="y"

@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, BuiltinPlotScale, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { otherRows } from './builtin-other.data';
 
@@ -38,8 +38,8 @@ export const BuiltinOtherPreview = (
       width={380}
       height={240}
     >
-      <BuiltinPlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
-      <BuiltinPlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <PlotScale dimension="x" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
+      <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.2, upper: 0.2 }} />
       <PointMark x="step" y="value" fill="fill" size={18} zIndex="zIndex" />
       <PathMark
         x="step"
