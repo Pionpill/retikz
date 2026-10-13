@@ -53,7 +53,7 @@ const createHighlightRules = (
           selector: highlight,
           appearance: {
             background: { fill: color, fillOpacity: 0.12 },
-            content: { style: { color } },
+            content: { defaults: { style: { color } } },
           },
         },
       ];

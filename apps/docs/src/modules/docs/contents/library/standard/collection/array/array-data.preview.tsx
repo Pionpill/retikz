@@ -12,7 +12,7 @@ export const renderArrayDataPreview = (values: ArrayDataPreviewValues) => (
     <Array
       data={['a', 'a', null, { ready: false }, [1, { active: true }]]}
       dataExpand={values.dataExpand === 'all' ? true : values.dataExpand === 'none' ? false : [values.dataExpand]}
-      layout={{ width: 'content' }}
+      defaultCell={{ layout: { width: 'content' } }}
     />
   </Layout>
 );

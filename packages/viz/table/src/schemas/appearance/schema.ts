@@ -16,7 +16,8 @@ export const TableCellBackgroundSchema = strictObject({
 /** 校验既有单元格的稀疏背景默认值，null 用于清除下层默认 */
 export const TableCellBackgroundDefaultsSchema = strictObject({
   fill: PaintValueSchema.nullable().optional().describe('Optional background paint; null removes lower defaults.'),
-  fillOpacity: OpacitySchema.nullable()
+  fillOpacity: OpacitySchema.optional()
+    .nullable()
     .optional()
     .describe('Optional background fill opacity; null removes lower defaults.'),
 })
@@ -24,11 +25,11 @@ export const TableCellBackgroundDefaultsSchema = strictObject({
   .describe('Sparse background defaults for an existing Table Cell box.');
 
 const TableCellContentStyleDefaultsStyleSchema = strictObject({
-  color: ScopeSchema.shape.style.unwrap().shape.color.nullable().optional(),
-  fill: ScopeSchema.shape.style.unwrap().shape.fill.nullable().optional(),
-  stroke: ScopeSchema.shape.style.unwrap().shape.stroke.nullable().optional(),
-  strokeWidth: ScopeSchema.shape.style.unwrap().shape.strokeWidth.nullable().optional(),
-  opacity: ScopeSchema.shape.style.unwrap().shape.opacity.nullable().optional(),
+  color: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.color.nullable().optional(),
+  fill: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.fill.nullable().optional(),
+  stroke: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.stroke.nullable().optional(),
+  strokeWidth: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.strokeWidth.nullable().optional(),
+  opacity: ScopeSchema.shape.defaults.unwrap().shape.style.unwrap().shape.opacity.nullable().optional(),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell content style defaults'))
   .describe('Sparse Core Scope style defaults for Table Cell content.');
@@ -64,6 +65,7 @@ const TableCellLabelDefaultsSchema = ScopeSchema.shape.defaults
   .describe('Table Cell Label defaults with leaf-level font clearing.');
 
 const TableCellScopeDefaultsSchema = strictObject({
+  style: TableCellContentStyleDefaultsStyleSchema.nullable().optional(),
   node: union([TableCellNodeDefaultsSchema, TableCellNodeDefaultsWithNullableFontSchema]).nullable().optional(),
   path: ScopeSchema.shape.defaults.unwrap().shape.path.nullable().optional(),
   label: TableCellLabelDefaultsSchema.nullable().optional(),
@@ -74,14 +76,13 @@ const TableCellScopeDefaultsSchema = strictObject({
   .describe('Sparse Core Scope descendant defaults for Table Cell content.');
 
 const TableCellContentStyleDefaultsSchema = strictObject({
-  style: TableCellContentStyleDefaultsStyleSchema.nullable().optional(),
   defaults: TableCellScopeDefaultsSchema.nullable().optional(),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell content defaults'))
   .describe('Sparse Core Scope defaults applied to Table Cell content.');
 
 /** 校验单元格内容布局前应用的 Core Scope 默认样式 */
-export const TableCellContentStyleSchema = ScopeSchema.pick({ style: true, defaults: true }).describe(
+export const TableCellContentStyleSchema = ScopeSchema.pick({ defaults: true }).describe(
   'Core Scope style defaults applied to Table Cell content before layout.',
 );
 

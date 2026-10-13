@@ -25,7 +25,7 @@ export const ComparisonPlot: FC<ComparisonPlotProps> = props => {
       ]}
       width={width}
       height={height}
-      plotDefaults={{ palette: { categorical: policyColors } }}
+      defaultPlot={{ palette: { categorical: policyColors } }}
       renderer="svg"
       style={{ width: '100%', height: '100%', color: 'var(--muted-foreground)' }}
     >

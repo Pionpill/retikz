@@ -20,9 +20,8 @@ const NamespaceStorage: FC<NamespaceStorageProps> = props => {
       <Array
         position={[20, 45]}
         label={{ text: t.frames, opacity: 0.8, font: { size: 12 } }}
-        layout={{ width: 158, height: 34, padding: 0 }}
-        style={{ font: { size: 14 } }}
         items={[{ content: t.root }, { id: 'top', content: t.current }]}
+        defaultCell={{ style: { font: { size: 14 } }, layout: { width: 158, height: 34, padding: 0 } }}
       />
       <Map
         position={[65, 160]}
@@ -33,8 +32,6 @@ const NamespaceStorage: FC<NamespaceStorageProps> = props => {
           font: { size: 12 },
         }}
         id="current-map"
-        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 152 } }}
-        style={{ font: { size: 13 }, textColor: 'currentColor' }}
         entries={[
           {
             key: { id: 'a-entry-key', content: 'a', style: { fill: 'dodgerblue' } },
@@ -45,17 +42,22 @@ const NamespaceStorage: FC<NamespaceStorageProps> = props => {
             value: { id: 'b-entry', content: '{ layout, state }' },
           },
         ]}
+        defaultCell={{
+          style: { font: { size: 13 }, textColor: 'currentColor' },
+          layout: { height: 32, padding: 0 },
+          key: { layout: { width: 60 } },
+          value: { layout: { width: 152 } },
+        }}
       />
       <Map
         position={[430, 45]}
         label={{ text: t.record, opacity: 0.8, font: { size: 12 } }}
         id="record"
-        layout={{ padding: 6 }}
-        style={{ font: { size: 13 }, textColor: 'currentColor' }}
         data={{
           state: 'resolved',
           layout: { rect: { x: 40, y: 0, width: 60, height: 32 }, shapeName: 'rectangle' },
         }}
+        defaultCell={{ style: { font: { size: 13 }, textColor: 'currentColor' }, layout: { padding: 6 } }}
       />
       <Node
         position={[172, 115]}

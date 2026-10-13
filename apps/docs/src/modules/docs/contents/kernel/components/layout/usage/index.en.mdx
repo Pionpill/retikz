@@ -163,13 +163,13 @@ Use `viewBox` only for fixed framing or clipping. Ordinary component demos keep 
 
 ## Whole-figure defaults
 
-Whole-figure defaults are defined by a root [Scope](/kernel/components/scope/usage) wrapping all primitives, available in React, Vanilla and IR. Layout provides the `rootScope` shorthand for JSX: it creates this Scope and passes through `style` and `defaults`. In Vanilla, use `scope(...)`; in IR, declare `type: 'scope'` in the scene's `children` and wrap all primitives in it.
+Whole-figure defaults are defined by a root [Scope](/kernel/components/scope/usage) wrapping all primitives, available in React, Vanilla and IR. Layout provides the `rootScope` shorthand for JSX: it creates this Scope and passes through `defaults`. In Vanilla, use `scope(...)`; in IR, declare `type: 'scope'` in the scene's `children` and wrap all primitives in it.
 
-| Property    | Type                                      | Description                                                                |
-| ----------- | ----------------------------------------- | -------------------------------------------------------------------------- |
-| `rootScope` | `Pick<InputScope, 'style' \| 'defaults'>` | Figure-wide visual cascade, four default channels and inheritance barriers |
+| Property    | Type                           | Description                                                                |
+| ----------- | ------------------------------ | -------------------------------------------------------------------------- |
+| `rootScope` | `Pick<InputScope, 'defaults'>` | Figure-wide visual cascade, four default channels and inheritance barriers |
 
-The three Nodes and three Paths (declared with Draw) have no local styles. Change the stroke and opacity in `rootScope.style` to update every primitive; fill and padding in `rootScope.defaults.node` affect only the nodes. The blue color, stroke width and padding are chosen for this demo, not library defaults.
+The three Nodes and three Paths (declared with Draw) have no local styles. Change the stroke and opacity in `rootScope.defaults.style` to update every primitive; fill and padding in `rootScope.defaults.node` affect only the nodes. The blue color, stroke width and padding are chosen for this demo, not library defaults.
 
 <ComponentPreview
   files={['layout-defaults', 'layout-defaults.preview.tsx']}
@@ -182,7 +182,7 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
 - **Rendering backend**: SVG is the default output. Set `renderer="canvas"` to switch to Canvas. See [Animation](/kernel/visual/animation/usage) for playback and static snapshots.
 - **Input precedence**: When React receives both `ir` and `children`, `ir` takes precedence.
 - **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Layout does not apply `rootScope` and warns in development when it contains effective settings.
-- **Style scope**: `Layout.style` sets host CSS; use `rootScope.style` for primitive styles.
+- **Style scope**: `Layout.style` sets host CSS; use `rootScope.defaults.style` for primitive styles.
 
 ## Related props
 
@@ -205,7 +205,7 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
     {
       name: 'rootScope',
       kind: 'property',
-      type: "Pick<InputScope, 'style' | 'defaults'>",
+      type: "Pick<InputScope, 'defaults'>",
       description:
         'The implicit root Scope for JSX children. Use it to set figure-wide cascading styles and primitive defaults.',
     },

@@ -60,9 +60,9 @@ const screenShift = definePositionAdjustment<ScreenShift>({
     })),
 });
 
-const plotDefaults = {
+const defaultPlot = {
   plotArea: { fill: '#123456' },
-} satisfies NonNullable<IRPlot['plotDefaults']>;
+} satisfies NonNullable<IRPlot['defaultPlot']>;
 
 type ScenePrimLike = { type: string; id?: string; children?: Array<ScenePrimLike> };
 
@@ -101,7 +101,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 
   it('Plot local defaults override 生效', () => {
-    const svg = renderPlot({ ...spec, plotDefaults }, data, { width: 480, height: 300 });
+    const svg = renderPlot({ ...spec, defaultPlot }, data, { width: 480, height: 300 });
 
     expect(svg).toContain('fill="#123456"');
   });

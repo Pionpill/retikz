@@ -88,7 +88,7 @@ const inspectNodeGeometry = (
       output.push({
         type: 'path',
         children: baselineSteps,
-        style: pathStyle(color, { dashPattern: [2, 2], strokeOpacity: 0.8 }),
+        style: pathStyle(color, { dashPattern: [2, 2], opacity: { stroke: 0.8 } }),
       });
       if (context.options.labels) {
         const baseline = subject.content.baselines[0];

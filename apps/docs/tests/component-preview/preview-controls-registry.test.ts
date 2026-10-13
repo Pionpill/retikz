@@ -2085,13 +2085,13 @@ describe('preview controls registry', () => {
 
     if (!zhContract || !enContract) return;
 
-    expect(zhContract.canonicalValues.placementEnabled).toBe(false);
-    expect(enContract.canonicalValues.placementEnabled).toBe(false);
+    expect(zhContract.canonicalValues.positionEnabled).toBe(false);
+    expect(enContract.canonicalValues.positionEnabled).toBe(false);
     expect(
-      getPreviewControlFields(zhContract.controls).find(field => field.id === 'placementEnabled')?.defaultValue,
+      getPreviewControlFields(zhContract.controls).find(field => field.id === 'positionEnabled')?.defaultValue,
     ).toBe(false);
     expect(
-      getPreviewControlFields(enContract.controls).find(field => field.id === 'placementEnabled')?.defaultValue,
+      getPreviewControlFields(enContract.controls).find(field => field.id === 'positionEnabled')?.defaultValue,
     ).toBe(false);
     expect(getPreviewControlFields(zhContract.controls).find(field => field.id === 'selfAnchor')?.label).toBe(
       '自身锚点',
@@ -2112,7 +2112,7 @@ describe('preview controls registry', () => {
 
     const visibleFieldIds = (
       definition: typeof zhDefinition,
-      values: { operation: string; placementEnabled: boolean; selfAnchor?: string; pivot?: string },
+      values: { operation: string; positionEnabled: boolean; selfAnchor?: string; pivot?: string },
     ) =>
       definition?.presentation === 'panel'
         ? resolveVisiblePreviewControlSections(definition.sections, values).flatMap(section =>
@@ -2131,33 +2131,35 @@ describe('preview controls registry', () => {
     ];
 
     for (const operation of operations) {
-      expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: true })).toContain('selfAnchor');
-      expect(visibleFieldIds(zhDefinition, { operation, placementEnabled: false })).not.toContain('selfAnchor');
+      expect(visibleFieldIds(zhDefinition, { operation, positionEnabled: true })).toContain('selfAnchor');
+      expect(visibleFieldIds(zhDefinition, { operation, positionEnabled: false })).not.toContain('selfAnchor');
     }
 
     expect(
-      visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: true, selfAnchor: 'center' }),
-    ).toEqual(['operation', 'placementEnabled', 'placementTarget', 'selfAnchor', 'translateX', 'translateY']);
+      visibleFieldIds(zhDefinition, { operation: 'translate', positionEnabled: true, selfAnchor: 'center' }),
+    ).toEqual(['operation', 'positionEnabled', 'positionTarget', 'selfAnchor', 'translateX', 'translateY']);
     expect(
-      visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: true, selfAnchor: 'explicit' }),
+      visibleFieldIds(zhDefinition, { operation: 'translate', positionEnabled: true, selfAnchor: 'explicit' }),
     ).toEqual([
       'operation',
-      'placementEnabled',
-      'placementTarget',
+      'positionEnabled',
+      'positionTarget',
       'selfAnchor',
       'selfPoint',
       'translateX',
       'translateY',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'translateX',
       'translateY',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'polar-translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'polar-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'referent',
       'polarAngle',
       'distance',
@@ -2165,47 +2167,52 @@ describe('preview controls registry', () => {
     expect(
       visibleFieldIds(zhDefinition, {
         operation: 'polar-translate',
-        placementEnabled: true,
+        positionEnabled: true,
         selfAnchor: 'center',
       }),
-    ).toEqual(['operation', 'placementEnabled', 'placementTarget', 'selfAnchor', 'polarAngle', 'distance']);
-    expect(visibleFieldIds(zhDefinition, { operation: 'at-translate', placementEnabled: false })).toEqual([
+    ).toEqual(['operation', 'positionEnabled', 'positionTarget', 'selfAnchor', 'polarAngle', 'distance']);
+    expect(visibleFieldIds(zhDefinition, { operation: 'at-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'referent',
       'distance',
       'direction',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'offset-translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'offset-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'referent',
       'offsetX',
       'offsetY',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'between-translate', placementEnabled: false })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'between-translate', positionEnabled: false })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'fraction',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', placementEnabled: false, pivot: 'origin' })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', positionEnabled: false, pivot: 'origin' })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'rotateDegrees',
       'pivot',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', placementEnabled: true, pivot: 'explicit' })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'rotate', positionEnabled: true, pivot: 'explicit' })).toEqual([
       'operation',
-      'placementEnabled',
-      'placementTarget',
+      'positionEnabled',
+      'positionTarget',
       'selfAnchor',
       'rotateDegrees',
       'pivot',
       'pivotPoint',
     ]);
-    expect(visibleFieldIds(zhDefinition, { operation: 'scale', placementEnabled: false, pivot: 'center' })).toEqual([
+    expect(visibleFieldIds(zhDefinition, { operation: 'scale', positionEnabled: false, pivot: 'center' })).toEqual([
       'operation',
-      'placementEnabled',
+      'positionEnabled',
+      'originPosition',
       'scaleX',
       'scaleY',
       'pivot',

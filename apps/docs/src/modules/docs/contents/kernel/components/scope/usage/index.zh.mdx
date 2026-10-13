@@ -165,7 +165,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 | 子树上下文 | `transforms`           | 整体变换子图；不计算子元素原始位置              |
 |            | `localNamespace`       | 隔离可复用子图 id；`scope.id` 仍注册到外层      |
 |            | `theme`                | 切换局部领域主题；Core 图元不会自动着色         |
-|            | `style` / `defaults`   | 统一默认值；元素显式值仍然优先                  |
+|            | `defaults`             | 统一默认值；元素显式值仍然优先                  |
 |            | `clip`                 | 限制子树可见区域；不定义 renderer 专属语义      |
 |            | `zIndex`               | 调整整组相对父级内容的栈序；不重排组内 children |
 
@@ -256,7 +256,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `style` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `style` 会继承外层风格，不能重置为基线。
 
-**样式默认值。** Scope 同时提供 `style.color`、共享视觉属性 与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
+**样式默认值。** Scope 同时提供 `defaults.style.color`、`defaults.style` 中的共享视觉属性与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
 
 样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时查看 [API 参考](/kernel/components/scope/reference)，不必为颜色、线宽或透明度建立额外 Scope。
 

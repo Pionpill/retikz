@@ -73,6 +73,7 @@ export const ScopePositionSchema = union([PositionSchema, ScopeAnchorPositionSch
 
 /** 后代默认通道与继承屏障 */
 export const ScopeDefaultsSchema = strictObject({
+  style: CascadingGraphicStyleSchema.optional().describe('Shared graphic defaults inherited by descendants.'),
   node: NodeDefaultSchema.optional().describe(
     'Default style applied to nodes in this scope. Independent from the other default channels.',
   ),
@@ -112,7 +113,6 @@ export const ScopePropsSchema = strictObject({
   frame: ScopeFrameSchema.optional().describe(
     'Optional intrinsic-envelope decoration drawn beneath all scope children.',
   ),
-  style: CascadingGraphicStyleSchema.optional().describe('Cascading graphic overrides for descendants.'),
   theme: ThemeSchema.optional().describe('Sparse Theme override inherited by this Scope descendants.'),
   id: NonBlankStringSchema.optional().describe(
     'Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.',

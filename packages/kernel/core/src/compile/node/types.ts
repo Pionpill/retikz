@@ -2,9 +2,8 @@ import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, Position } from '@retikz/math';
 
 import type { ConnectionEnvelopeKind, PathCommand, ShapeDefinition, TextLine } from '../../contract';
-import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve';
-import type { PaintResolutionInput } from '../../resolve/resource';
-import type { BlendMode, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
+import type { CanonicalNode, CanonicalNodeLabel, NodeResolution } from '../../resolve';
+import type { IRFont } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { CompileWarningCode } from '../constants';
 import type { LaidLine, LowerTex, TextFont, TextMeasurer } from '../text';
@@ -70,139 +69,70 @@ export type NodeTextLayoutContext = {
   fontStyle?: TextFont['style'];
 };
 
-/** 节点内容测量、视觉边界与连接面解析完成后的布局结果，供路径连接和场景输出共同消费 */
-export type NodeLayout = {
-  /** 构建本 layout 的 IR 路径 */
-  irPath?: string;
-  /** 节点 id */
-  id?: string;
-  /** 节点形状名 */
-  shapeName: string;
-  /** 已解析的 shape 定义 */
-  shapeDef: ShapeDefinition;
-  /** 已校验的 per-instance shape 参数 */
-  shapeParams?: JsonObject;
-  /** 节点视觉边界框 */
+/** 布局消费所需的节点属性，复用解析后的样式与身份契约 */
+export type NodeLayoutProperties = Pick<
+  CanonicalNode,
+  | 'id'
+  | 'fill'
+  | 'fillOpacity'
+  | 'stroke'
+  | 'strokeOpacity'
+  | 'strokeWidth'
+  | 'dashPattern'
+  | 'dashOffset'
+  | 'cornerRadius'
+  | 'textColor'
+  | 'opacity'
+  | 'shadow'
+  | 'blendMode'
+  | 'boundary'
+  | 'meta'
+  | 'animations'
+>;
+
+/** 节点测量和定位产生的几何结果 */
+export type NodeLayoutGeometry = {
+  /** 视觉外框，rotate 使用弧度 */
   rect: Rect;
-  /** 文本内容块中心；非对称 padding 时与视觉 rect 中心不同 */
-  contentCenter: [number, number];
-  /** IR 原始旋转角 */
-  rotateDeg: number;
-  /** 外边距 */
+  /** 缩放后的外边距 */
   margin: BoundsInsets;
-  /** 节点文本行；undefined 表示无文本 */
-  lines?: Array<TextLine>;
-  /** 含 math run 的混排块，与 lines 互斥 */
-  inlineBlock?: {
-    /** 按正文顺序排列的混排行及其基线位置 */
-    lines: Array<{
-      /** 该行的测量结果与图元生成函数 */
-      laid: LaidLine;
-      /** 相对正文块顶部的基线垂直偏移 */
-      baselineOffset: number;
-    }>;
-  };
-  /** 文本块宽度 */
-  textWidth: number;
-  /** 文本块高度 */
-  textHeight: number;
-  /** 同次正文排版得到的 authored physical-line baseline offsets */
-  textBaselineOffsets?: Array<number>;
-  /** 文本对齐 */
+  /** 正文内容中心 */
+  contentCenter: Position;
+  /** 正文内容尺寸，合成布局也可保留无文本的内容盒 */
+  contentSize: { width: number; height: number };
+};
+
+/** 节点正文排版结果 */
+export type NodeTextLayout = {
+  /** 实际用于测量和输出的字体 */
+  font: TextFont;
+  /** 正文对齐方式 */
   align: 'start' | 'middle' | 'end';
-  /** 行高 */
+  /** 实际行高 */
   lineHeight: number;
-  /** 文本字号 */
-  fontSize: number;
-  /**
-   * 字体族
-   * @default 'sans-serif'
-   */
-  fontFamily?: string;
-  /**
-   * 字重
-   * @default 'normal'
-   */
-  fontWeight?: NodeFontWeight;
-  /**
-   * 字形
-   * @default 'normal'
-   */
-  fontStyle?: 'normal' | 'italic' | 'oblique';
-  /**
-   * 节点背景填充
-   * @default 'transparent'
-   */
-  fill?: string | IRPaint;
-  /** 已由 resolve/resource 解析的 fill */
-  fillResolution?: PaintResolutionInput;
-  /**
-   * 填充透明度 0~1
-   * @default 1
-   */
-  fillOpacity?: number;
-  /**
-   * 节点边框 paint
-   * @default 'currentColor'
-   */
-  stroke?: string | IRPaint;
-  /** 已由 resolve/resource 解析的 stroke */
-  strokeResolution?: PaintResolutionInput;
-  /**
-   * 描边透明度
-   * @default 1
-   */
-  strokeOpacity?: number;
-  /**
-   * 边框宽度
-   * @default 1
-   */
-  strokeWidth?: number;
-  /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
-  dashPattern?: Array<number>;
-  /** 描边 dash offset */
-  dashOffset?: number;
-  /**
-   * rectangle 圆角半径
-   * @default 0
-   */
-  cornerRadius?: number;
-  /**
-   * 文字颜色
-   * @default 'currentColor'
-   */
-  textColor?: string;
-  /**
-   * 整节点透明度
-   * @default 1
-   */
-  opacity?: number;
-  /** 已解析的主形状投影 */
-  shadow?: ResolvedDropShadow;
-  /**
-   * 主形状混合模式
-   * @default 'normal'
-   */
-  blendMode?: BlendMode;
-  /** 已解析的 label 列表 */
+  /** 物理行相对内容顶部的基线偏移 */
+  baselineOffsets?: Array<number>;
+} & (
+  | { kind: 'plain'; lines: Array<TextLine> }
+  | { kind: 'inline'; lines: Array<{ laid: LaidLine; baselineOffset: number }> }
+);
+
+/** 节点完成测量和定位后的消费结果 */
+export type NodeLayout = {
+  /** 构建布局的 IR 路径 */
+  irPath: string;
+  /** 保留的身份和视觉属性 */
+  node: NodeLayoutProperties;
+  /** 已绑定的形状定义和参数 */
+  shape: NodeResolution['shape'];
+  /** 已绑定的连接面定义和参数 */
+  boundary: NodeResolution['boundary'];
+  /** 测量和定位结果 */
+  geometry: NodeLayoutGeometry;
+  /** 正文排版结果 */
+  text?: NodeTextLayout;
+  /** 已定位的附属标签 */
   labels?: Array<NodeLabelLayout>;
-  /**
-   * 节点连接面
-   * @default 'shape'
-   */
-  boundary?: IRBoundary;
-  /** provenance 元数据 */
-  meta?: JsonObject;
-  /** 时间轴动画 tracks */
-  animations?: Array<IRAnimationTrack>;
-  /** 已绑定的默认连接面 provider 与参数 */
-  boundaryResolution: BoundaryReferenceResolution;
-  /** shape-aware connection envelope 缓存 */
-  connectionEnvelopeCache?: Map<string, Rect>;
-  /** tight fallback warning 去重集合 */
-  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
-  /** 当前 node 的 compile warning 分发函数 */
-  warn?: (code: CompileWarningCode, message: string) => void;
 };
 
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */

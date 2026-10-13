@@ -9,7 +9,10 @@ describe('AxesSchema', () => {
     const source = createAxes({ x: { extent: 20, label: false }, y: { extent: 20 } });
 
     expect(source.x).toEqual({ extent: 20, label: false });
-    expect(resolveAxes(AxesSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual(resolveAxes(source));
+    expect(resolveAxes(AxesSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual({
+      ...resolveAxes(source),
+      position: [0, 0],
+    });
     expect(resolveAxes(source).x.label).toBe(false);
 
     const excessive = createAxes({

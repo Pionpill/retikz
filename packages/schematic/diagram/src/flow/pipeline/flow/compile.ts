@@ -31,8 +31,8 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
     type: _type,
     presentation: _presentation,
     frame: _frame,
-    diagramDefaults: _diagramDefaults,
-    flowDefaults: _flowDefaults,
+    defaultDiagram: _defaultDiagram,
+    defaultFlow: _defaultFlow,
     graphRules: _graphRules,
     layout: _layout,
     routing: _routing,
@@ -47,8 +47,8 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
   void _type;
   void _presentation;
   void _frame;
-  void _diagramDefaults;
-  void _flowDefaults;
+  void _defaultDiagram;
+  void _defaultFlow;
   void _graphRules;
   void _layout;
   void _routing;
@@ -290,7 +290,7 @@ export const createCompileFlowDiagram =
       {
         ...(source.presentation === undefined ? {} : { presentation: source.presentation }),
         ...(source.frame === undefined ? {} : { frame: source.frame }),
-        ...(source.diagramDefaults === undefined ? {} : { diagramDefaults: source.diagramDefaults }),
+        ...(source.defaultDiagram === undefined ? {} : { defaultDiagram: source.defaultDiagram }),
       },
       { theme: context.theme, diagramThemeStyles: options.diagramThemeStyles },
     );

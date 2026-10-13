@@ -92,7 +92,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### Scope defaults
 
-`Scope.style` does not accept `shadow`; defaults pass it to descendant primary geometry. In the demo, both the Node and closed Path inherit the Scope projection, while the Node on the right explicitly disables it with `none`.
+`Scope.defaults.style` does not accept `shadow`; defaults pass it to descendant primary geometry. In the demo, both the Node and closed Path inherit the Scope projection, while the Node on the right explicitly disables it with `none`.
 
 <ComponentPreview files="shadow-integration" size="sm" />
 

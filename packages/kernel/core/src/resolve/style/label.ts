@@ -1,21 +1,5 @@
-import { mergeProperties } from '@retikz/foundation';
-
-import type { IRFont, IRGeometryLabel, IRLabelDefault } from '../../schemas';
-import { cutsStyleChannel } from './frame';
-import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
-
-/** fold labelDefault 通道 */
-export const resolveEffectiveLabelDefault = (stack: ReadonlyArray<StyleResolveFrame>): EffectiveLabelDefault => {
-  let acc: IRLabelDefault = {};
-
-  for (const frame of stack) {
-    if (cutsStyleChannel(frame.resetStyle, 'label')) acc = {};
-    if (frame.labelDefault)
-      acc = { ...acc, ...mergeProperties([frame.labelDefault], { shouldOverride: value => value !== undefined }) };
-  }
-
-  return acc;
-};
+import type { IRFont, IRGeometryLabel } from '../../schemas';
+import type { EffectiveLabelDefault } from './types';
 
 /** 逐字段合并字体 */
 const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undefined => {

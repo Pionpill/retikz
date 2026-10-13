@@ -329,7 +329,7 @@ describe('lowerPlots (contract)', () => {
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
       ],
-      plotDefaults: {
+      defaultPlot: {
         axis: {
           grid: { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15 },
         },
@@ -349,7 +349,7 @@ describe('lowerPlots (contract)', () => {
   ] as const)('projects the Plot typography master into presentation layers in %s mode', (mode, area, grid, line) => {
     const spec = PlotSchema.parse({
       ...pointSpec(),
-      plotDefaults: {
+      defaultPlot: {
         typography: { textColor: '#336699' },
         plotArea: { fill: 0.2 },
         axis: {
@@ -396,15 +396,15 @@ describe('lowerPlots (contract)', () => {
       style: { color: '#336699', fill: 0.2 },
     });
     expect(gridLayer).toMatchObject({
-      style: { color: '#336699' },
+      defaults: { style: { color: '#336699' } },
     });
     expect(axisLayer).toMatchObject({
-      style: { color: '#336699' },
+      defaults: { style: { color: '#336699' } },
     });
     expect(legendLayer).toMatchObject({
-      style: { color: '#336699' },
+      defaults: { style: { color: '#336699' } },
     });
-    expect(markLayer.style?.color).toBeUndefined();
+    expect(markLayer.defaults?.style?.color).toBeUndefined();
 
     const scene = compileToScene(
       { version: 1, type: 'scene', theme: { mode }, children: [spec] },
@@ -629,7 +629,7 @@ describe('lowerPlots (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
-      plotDefaults: { axis: { grid: false } },
+      defaultPlot: { axis: { grid: false } },
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },

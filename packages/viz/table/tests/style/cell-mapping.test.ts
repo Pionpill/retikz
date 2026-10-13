@@ -9,11 +9,11 @@ const lightColors = resolveDefaultCoreThemeColors(ThemeMode.Light);
 
 const resolvedBaseline = resolveTableThemeDefaults();
 
-const sequential = resolvedBaseline.defaults.visualDefaults?.sequential;
+const sequential = resolvedBaseline.defaults.defaultVisual?.sequential;
 if (sequential === undefined || sequential === null)
   throw new Error('test fixture requires the default sequential palette');
 const scaleContext = {
-  categoricalColors: resolvedBaseline.defaults.visualDefaults?.categorical ?? lightColors.categorical,
+  categoricalColors: resolvedBaseline.defaults.defaultVisual?.categorical ?? lightColors.categorical,
   sequentialColors: [sequential[0], sequential[1]] as const,
 };
 
@@ -23,29 +23,29 @@ describe('Source defaults Cell mapping', () => {
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
-    const tableDefaults = resolveTableThemeDefaults({ style: 'mapping', mode: ThemeMode.Light, colors: lightColors }, [
+    const defaultTable = resolveTableThemeDefaults({ style: 'mapping', mode: ThemeMode.Light, colors: lightColors }, [
       defineTableThemeStyle({
         name: 'mapping',
         resolve: () => ({
           defaults: {
-            appearanceDefaults: {
+            defaultAppearance: {
               body: {
                 content: { defaults: { node: { style: { font: { family: 'monospace', weight: 400 } } } } },
               },
-              columnHeader: { content: { style: { color: '#123456' } } },
+              columnHeader: { content: { defaults: { style: { color: '#123456' } } } },
             },
           },
         }),
       }),
     ]);
-    const result = resolveTableCellPlans(model, { tableDefaults, scaleContext });
+    const result = resolveTableCellPlans(model, { defaultTable, scaleContext });
 
     expect(result.cells[0]).toMatchObject({
       appearance: {
         background: { fill: '#ffffff', fillOpacity: 1 },
         content: {
-          style: { color: '#123456' },
           defaults: {
+            style: { color: '#123456' },
             node: { style: { font: { family: 'sans-serif', weight: 500 } } },
             label: { font: { family: 'sans-serif', weight: 500 } },
           },
@@ -54,15 +54,15 @@ describe('Source defaults Cell mapping', () => {
       },
       trace: {
         appearance: {
-          '/content/style/color': { kind: 'defaults', path: '$style/mapping/light' },
+          '/content/defaults/style/color': { kind: 'defaults', path: '$style/mapping/light' },
         },
       },
     });
     expect(result.cells[1]).toMatchObject({
       appearance: {
         content: {
-          style: { color: '#18181b' },
           defaults: {
+            style: { color: '#18181b' },
             node: { style: { font: { family: 'monospace', weight: 400 } } },
             label: { font: { family: 'sans-serif', weight: 400 } },
           },
@@ -82,14 +82,14 @@ describe('Source defaults Cell mapping', () => {
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
-    const tableDefaults = resolveTableThemeDefaults(
+    const defaultTable = resolveTableThemeDefaults(
       { style: 'transparent', mode: ThemeMode.Light, colors: lightColors },
       [
         defineTableThemeStyle({
           name: 'transparent',
           resolve: () => ({
             defaults: {
-              appearanceDefaults: {
+              defaultAppearance: {
                 body: { background: { fill: 'none', fillOpacity: 0.5 } },
                 columnHeader: { background: { fill: 'none', fillOpacity: 0.25 } },
               },
@@ -98,7 +98,7 @@ describe('Source defaults Cell mapping', () => {
         }),
       ],
     );
-    const result = resolveTableCellPlans(model, { tableDefaults, scaleContext });
+    const result = resolveTableCellPlans(model, { defaultTable, scaleContext });
 
     for (const cell of result.cells) {
       expect(cell.appearance.background).toMatchObject({ fill: 'none' });

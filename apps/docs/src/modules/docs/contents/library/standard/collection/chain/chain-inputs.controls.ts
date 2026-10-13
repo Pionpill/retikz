@@ -32,7 +32,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { mode: 'branches' },
-    relatedApis: ['Chain.layout', 'Chain.connection'],
+    relatedApis: ['Chain.layout', 'Chain.defaultConnection'],
   } satisfies PreviewControlContract;
 };
 

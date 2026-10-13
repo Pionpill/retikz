@@ -42,14 +42,14 @@ describe('IR numeric constraints', () => {
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: { strokeWidth: Infinity },
+        defaults: { style: { strokeWidth: Infinity } },
       }).success,
     ).toBe(false);
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: { strokeWidth: -1 },
+        defaults: { style: { strokeWidth: -1 } },
       }).success,
     ).toBe(false);
   });
@@ -89,7 +89,7 @@ describe('IR numeric constraints', () => {
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: { strokeWidth: 0 },
+        defaults: { style: { strokeWidth: 0 } },
       }).success,
     ).toBe(true);
   });

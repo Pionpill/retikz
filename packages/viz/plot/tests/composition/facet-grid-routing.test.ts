@@ -455,7 +455,7 @@ describe('facet grid data routing lowering', () => {
   it('typography_supplies_facet_header_defaults_beneath_local_header_style', () => {
     const spec = {
       ...baseFacetSpec,
-      plotDefaults: {
+      defaultPlot: {
         typography: {
           font: { family: 'Source Serif 4', size: 15 },
           textColor: '#0f766e',

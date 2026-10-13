@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene, SceneSchema } from '../../src';
-import { createStyleResolveFrame, resolveEffectiveNodeStyle } from '../../src/resolve/style';
+import { resolveScopeDefaults, resolveEffectiveNodeStyle } from '../../src/resolve/style';
 import { NodeSchema, ScopeSchema } from '../../src/schemas';
 
 describe('分组 Source 解析与编译', () => {
@@ -25,12 +25,15 @@ describe('分组 Source 解析与编译', () => {
   });
 
   it('实例单字段覆盖保留其它继承字段，节点字体整体覆盖', () => {
-    const frame = createStyleResolveFrame(
+    const frame = resolveScopeDefaults(
       ScopeSchema.parse({
         type: 'scope',
         children: [],
-        style: { stroke: 'blue' },
-        defaults: { node: { style: { font: { family: 'serif', size: 20 } }, layout: { minimumSize: 30 } } },
+
+        defaults: {
+          style: { stroke: 'blue' },
+          node: { style: { font: { family: 'serif', size: 20 } }, layout: { minimumSize: 30 } },
+        },
       }),
     );
     const node = NodeSchema.parse({
@@ -40,11 +43,11 @@ describe('分组 Source 解析与编译', () => {
       layout: { padding: 0 },
     });
 
-    expect(resolveEffectiveNodeStyle(node, [frame])).toMatchObject({
+    expect(resolveEffectiveNodeStyle(node, frame)).toMatchObject({
       style: { fill: 'red', stroke: 'blue', font: { size: 12 } },
       layout: { padding: 0, minimumSize: 30 },
     });
-    expect(resolveEffectiveNodeStyle(node, [frame])).not.toMatchObject({ style: { font: { family: 'serif' } } });
+    expect(resolveEffectiveNodeStyle(node, frame)).not.toMatchObject({ style: { font: { family: 'serif' } } });
   });
 
   it('空分组不清除继承，JSON 往返保持绘图结果', () => {
@@ -54,8 +57,8 @@ describe('分组 Source 解析与编译', () => {
       children: [
         {
           type: 'scope',
-          style: { fill: 'red', stroke: 'blue' },
-          defaults: { reset: false },
+
+          defaults: { style: { fill: 'red', stroke: 'blue' }, reset: false },
           children: [
             {
               type: 'node',
@@ -72,10 +75,12 @@ describe('分组 Source 解析与编译', () => {
 
     expect(compileToScene(SceneSchema.parse(JSON.parse(JSON.stringify(source)))).scene).toEqual(output);
 
-    const frame = createStyleResolveFrame(ScopeSchema.parse({ type: 'scope', children: [], style: { fill: 'red' } }));
+    const frame = resolveScopeDefaults(
+      ScopeSchema.parse({ type: 'scope', children: [], defaults: { style: { fill: 'red' } } }),
+    );
 
     expect(
-      resolveEffectiveNodeStyle(NodeSchema.parse({ type: 'node', position: [0, 0], style: {}, layout: {} }), [frame]),
+      resolveEffectiveNodeStyle(NodeSchema.parse({ type: 'node', position: [0, 0], style: {}, layout: {} }), frame),
     ).toMatchObject({ style: { fill: 'red' } });
   });
 });

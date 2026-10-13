@@ -122,8 +122,7 @@ describe('Code block root and composition semantics', () => {
       position: { kind: 'anchor', target: [100, 100], selfAnchor: 'center' },
       clip: { kind: 'rect', x: 0, y: 0, width: 300, height: 160 },
       meta: { file: 'service.ts' },
-      style: { opacity: 0.8 },
-      defaults: { node: { style: { textColor: '#123456' } } },
+      defaults: { style: { opacity: 0.8 }, node: { style: { textColor: '#123456' } } },
     });
     const actual = compileToScene({ type: 'scene', version: 1, children: [source] }, providers);
     const shell = {
@@ -135,7 +134,6 @@ describe('Code block root and composition semantics', () => {
       position: source.position,
       clip: source.clip,
       meta: source.meta,
-      style: source.style,
       defaults: source.defaults,
     };
     const name = source.name;
@@ -205,7 +203,7 @@ describe('Code block root and composition semantics', () => {
     );
   });
 
-  it('passes graphDefaults to generated descendants and keeps empty composed content as one Block', () => {
+  it('passes defaultGraph to generated descendants and keeps empty composed content as one Block', () => {
     const definition = Graph.defineCodeBlock({
       namespace: 'test',
       type: 'service',
@@ -224,7 +222,7 @@ describe('Code block root and composition semantics', () => {
             namespace: 'test',
             type: 'service',
             name: 'Service',
-            graphDefaults: { entity: { style: { fill: '#fedcba' } } },
+            defaultGraph: { entity: { style: { fill: '#fedcba' } } },
           }),
         ],
       },

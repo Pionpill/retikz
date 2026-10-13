@@ -55,7 +55,7 @@ export const GroupSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Group).describe('Group Source composite discriminator.'),
   ...ScopePropsSchema.shape,
-  graphDefaults: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
+  defaultGraph: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
   graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   caption: GroupCaptionSchema.optional().describe('Structured caption placed inside the shell.'),
   labels: array(NodeLabelSchema)

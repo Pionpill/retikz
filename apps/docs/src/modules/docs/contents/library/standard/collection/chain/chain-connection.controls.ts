@@ -55,7 +55,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { route: 'auto', fraction: 0.5, arrow: '->', label: 'Chain' },
-    relatedApis: ['Chain.layout', 'Chain.connection'],
+    relatedApis: ['Chain.layout', 'Chain.defaultConnection'],
   } satisfies PreviewControlContract;
 };
 

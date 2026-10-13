@@ -103,8 +103,8 @@ describe('Array direct cell identities', () => {
       namespace: 'standard',
       type: 'array',
       items: [{ content: nested }],
-      layout: { width: 120, height: 80 },
       transforms: [{ kind: 'translate', x: 50, y: 70 }],
+      defaultCell: { layout: { width: 120, height: 80 } },
     };
 
     expect(compile([parent, path('named')])).toEqual(compile([parent, path('array-0')]));

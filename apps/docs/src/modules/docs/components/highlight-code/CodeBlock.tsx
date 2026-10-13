@@ -1,8 +1,9 @@
-import { Check, Copy } from 'lucide-react';
+import { Check, ChevronsDownUp, ChevronsUpDown, Copy } from 'lucide-react';
 import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib';
 
 import type { DiffLineKind } from '../component-preview';
 import { HighlightCode } from './HighlightCode';
@@ -36,6 +37,7 @@ export const CodeBlock: FC<CodeBlockProps> = ({ lang, code, showLineNumbers }) =
   const displayCode = displayLines.join('\n');
 
   const [copied, setCopied] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -52,16 +54,36 @@ export const CodeBlock: FC<CodeBlockProps> = ({ lang, code, showLineNumbers }) =
   };
 
   return (
-    <div className="group relative my-6 overflow-hidden rounded-lg bg-muted/50 text-sm">
-      <Button
-        size="icon"
-        variant="ghost"
-        aria-label={copied ? 'Copied' : 'Copy'}
-        className="absolute top-2 right-2 z-10 size-7 cursor-pointer rounded-sm text-muted-foreground"
-        onClick={handleCopy}
-      >
-        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-      </Button>
+    <div
+      className={cn(
+        'group relative my-6 overflow-hidden rounded-lg bg-muted/50 text-sm [&_pre]:overflow-y-auto',
+        !isExpanded && '[&_pre]:max-h-[calc(15*1.5rem+2rem)]',
+      )}
+    >
+      <div className="absolute top-2 right-2 z-10 flex gap-1">
+        {displayLines.length > 15 ? (
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={isExpanded ? 'Collapse' : 'Expand'}
+            title={isExpanded ? 'Collapse' : 'Expand'}
+            aria-expanded={isExpanded}
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={() => setIsExpanded(expanded => !expanded)}
+          >
+            {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+          </Button>
+        ) : null}
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label={copied ? 'Copied' : 'Copy'}
+          className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+          onClick={handleCopy}
+        >
+          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+        </Button>
+      </div>
       <HighlightCode
         lang={lang}
         code={displayCode}

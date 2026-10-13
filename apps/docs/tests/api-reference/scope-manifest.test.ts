@@ -40,11 +40,8 @@ describe('Scope API 公开范围', () => {
     expect(source).toContain("IRScope['position']");
     expect(source).toContain('HydrationEventProps');
     expect(source).toContain('`authoring?`');
-    expect(source).toContain("InputScope['style']");
+    expect(source).not.toContain("InputScope['style']");
     expect(source).toContain("InputScope['defaults']");
-    expect(source).toContain(
-      "`style?` | `InputScope['style']` | — | Scope-level visual overrides cascade declared fields to descendant Composites",
-    );
     expect(source).toContain(
       "`defaults?` | `InputScope['defaults']` | — | Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels",
     );

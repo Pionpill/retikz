@@ -35,8 +35,8 @@ export type IRChainLayout = input<typeof ChainLayoutSchema>;
 export type IRChainSkeleton = input<typeof ChainSkeletonSchema>;
 
 /** 三种互斥输入共用 Core 作用域与单元内容契约 */
-export type IRChain = Omit<input<typeof ChainSchema>, Exclude<keyof IRScopeProps, 'style'> | 'items'> &
-  Omit<IRScopeProps, 'style'> &
+export type IRChain = Omit<input<typeof ChainSchema>, keyof IRScopeProps | 'items'> &
+  IRScopeProps &
   (
     | {
         /** 显式链项序列，与数据和骨架入口互斥 */

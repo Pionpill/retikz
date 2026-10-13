@@ -22,7 +22,7 @@ export const renderArraySkeletonPreview = (values: ArraySkeletonPreviewValues) =
 
   return (
     <Layout viewBox={{ x: -30, y: -40, width: 380, height: 140 }}>
-      <Array skeleton={skeleton} index={index} layout={{ width: 42, height: 36 }} />
+      <Array skeleton={skeleton} index={index} defaultCell={{ layout: { width: 42, height: 36 } }} />
     </Layout>
   );
 };

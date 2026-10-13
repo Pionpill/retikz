@@ -31,44 +31,41 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout */
 const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
-  id: 'test',
-  shapeName: 'rectangle',
-  shapeDef: BUILTIN_SHAPES.rectangle,
-  rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
-  contentCenter: [cx, cy],
-  rotateDeg: 0,
-  margin: boxInsets(0),
-  textWidth: w,
-  textHeight: h,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-  boundaryResolution: {
+  node: { id: 'test' },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  geometry: {
+    rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
+    contentCenter: [cx, cy],
+    margin: boxInsets(0),
+    contentSize: { width: w, height: h },
+  },
+  boundary: {
     name: BUILTIN_SHAPES.rectangle.name,
     definition: BUILTIN_SHAPES.rectangle,
     params: {},
     isShape: true,
   },
+  irPath: 'synthetic.test',
 });
 
 describe('createScopeCircleLayout 单元测试', () => {
   it('shapeName ellipse + shapeParams circumscribe:equal', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [0, 0] });
 
-    expect(layout.shapeName).toBe('ellipse');
-    expect(layout.shapeParams).toEqual({ circumscribe: 'equal' });
+    expect(layout.shape.name).toBe('ellipse');
+    expect(layout.shape.params).toEqual({ circumscribe: 'equal' });
   });
 
   it('空点集 → 0×0 占位落在 fallbackOrigin', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [30, 40] });
 
-    expect(layout.id).toBe('g');
-    expect(layout.rect.x).toBe(30);
-    expect(layout.rect.y).toBe(40);
-    expect(layout.rect.width).toBe(0);
-    expect(layout.rect.height).toBe(0);
-    expect(layout.rect.rotate).toBe(0);
-    expect(layout.margin).toEqual(boxInsets(0));
+    expect(layout.node.id).toBe('g');
+    expect(layout.geometry.rect.x).toBe(30);
+    expect(layout.geometry.rect.y).toBe(40);
+    expect(layout.geometry.rect.width).toBe(0);
+    expect(layout.geometry.rect.height).toBe(0);
+    expect(layout.geometry.rect.rotate).toBe(0);
+    expect(layout.geometry.margin).toEqual(boxInsets(0));
   });
 
   it('有点集 → rect width===height===2*radius，center 等于 MEC center', () => {
@@ -84,12 +81,12 @@ describe('createScopeCircleLayout 单元测试', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: corners, fallbackOrigin: [0, 0] });
     const diameter = mec!.radius * 2;
 
-    expect(layout.rect.width).toBeCloseTo(diameter, 5);
-    expect(layout.rect.height).toBeCloseTo(diameter, 5);
-    expect(layout.rect.x).toBeCloseTo(mec!.center[0], 5);
-    expect(layout.rect.y).toBeCloseTo(mec!.center[1], 5);
-    expect(layout.textWidth).toBeCloseTo(diameter, 5);
-    expect(layout.textHeight).toBeCloseTo(diameter, 5);
+    expect(layout.geometry.rect.width).toBeCloseTo(diameter, 5);
+    expect(layout.geometry.rect.height).toBeCloseTo(diameter, 5);
+    expect(layout.geometry.rect.x).toBeCloseTo(mec!.center[0], 5);
+    expect(layout.geometry.rect.y).toBeCloseTo(mec!.center[1], 5);
+    expect(layout.geometry.contentSize.width).toBeCloseTo(diameter, 5);
+    expect(layout.geometry.contentSize.height).toBeCloseTo(diameter, 5);
   });
 });
 

@@ -57,13 +57,13 @@ Flow owns measurement, layout, and routing, then delegates drawing to Graph. Its
 
 ## Appearance defaults do not create content
 
-Themes provide an appearance baseline, `diagramDefaults` supplies explicit author defaults, and instance fields take final precedence. `theme.style` selects same-name Definitions, while `theme.mode` selects light or dark mode. These settings do not replace content and relation declarations.
+Themes provide an appearance baseline, `defaultDiagram` supplies explicit author defaults, and instance fields take final precedence. `theme.style` selects same-name Definitions, while `theme.mode` selects light or dark mode. These settings do not replace content and relation declarations.
 
-`diagramDefaults.presentation.title/description` follows the formal supporting-region paths and contains only `style.textColor/font/opacity` and `layout.align/lineHeight/maxTextWidth`, without `text`. Setting a default title font does not create a title; font configurations replace as a whole.
+`defaultDiagram.presentation.title/description` follows the formal supporting-region paths and contains only `style.textColor/font/opacity` and `layout.align/lineHeight/maxTextWidth`, without `text`. Setting a default title font does not create a title; font configurations replace as a whole.
 
-`diagramDefaults.frame` supplies padding, the three gaps, background, border, and corner radius. Legend docking and overflow are specified in the formal `frame`. Theme Definitions return the same sparse structure; omitted fields retain the baseline.
+`defaultDiagram.frame` supplies padding, the three gaps, background, border, and corner radius. Legend docking and overflow are specified in the formal `frame`. Theme Definitions return the same sparse structure; omitted fields retain the baseline.
 
-Concrete components manage their defaults separately. For example, Flow uses `flowDefaults` for object and relation appearance defaults. Layout direction and routing remain formal fields rather than theme settings. See Flow basic usage for the detailed precedence rules.
+Concrete components manage their defaults separately. For example, Flow uses `defaultFlow` for object and relation appearance defaults. Layout direction and routing remain formal fields rather than theme settings. See Flow basic usage for the detailed precedence rules.
 
 ## Further reading
 

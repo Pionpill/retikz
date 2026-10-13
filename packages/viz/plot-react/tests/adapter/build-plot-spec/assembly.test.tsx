@@ -15,11 +15,11 @@ const compilePlot = (
 ) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
 
 describe('buildPlotIR 装配', () => {
-  it('透传 Plot plotDefaults 到 canonical IRPlot', () => {
-    const plotDefaults: NonNullable<IRPlot['plotDefaults']> = { palette: { series: ['#2563eb'] } };
-    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotDefaults });
+  it('透传 Plot defaultPlot 到 canonical IRPlot', () => {
+    const defaultPlot: NonNullable<IRPlot['defaultPlot']> = { palette: { series: ['#2563eb'] } };
+    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { defaultPlot });
 
-    expect(spec.plotDefaults).toEqual(plotDefaults);
+    expect(spec.defaultPlot).toEqual(defaultPlot);
   });
 
   it('透传 Plot plotRules 到 canonical IRPlot', () => {

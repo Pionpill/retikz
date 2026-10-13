@@ -99,7 +99,7 @@ describe('FrameSchema', () => {
       title: { text: 'Group' },
       description: { text: 'Details', layout: { maxTextWidth: 160 } },
       children: [node],
-      style: { fill: '#fff', opacity: 0.8 },
+      defaults: { style: { fill: '#fff', opacity: 0.8 } },
     });
 
     expect(parsed).toMatchObject({
@@ -110,7 +110,7 @@ describe('FrameSchema', () => {
       zIndex: 3,
       title: { text: 'Group' },
       description: { text: 'Details', layout: { maxTextWidth: 160 } },
-      style: { fill: '#fff', opacity: 0.8 },
+      defaults: { style: { fill: '#fff', opacity: 0.8 } },
     });
   });
 

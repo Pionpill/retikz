@@ -8,14 +8,12 @@ const ArrayOverflow: FC = () => (
     <Array
       position={[-120, 0]}
       items={['ABCDEFGHIJKLMNOPQRST']}
-      layout={{ width: 84, height: 40, overflow: 'visible' }}
-      style={{ stroke: 'gray' }}
+      defaultCell={{ style: { stroke: 'gray' }, layout: { width: 84, height: 40, overflow: 'visible' } }}
     />
     <Array
       position={[110, 0]}
       items={['ABCDEFGHIJKLMNOPQRST']}
-      layout={{ width: 84, height: 40, overflow: 'clip' }}
-      style={{ stroke: 'gray' }}
+      defaultCell={{ style: { stroke: 'gray' }, layout: { width: 84, height: 40, overflow: 'clip' } }}
     />
   </Layout>
 );

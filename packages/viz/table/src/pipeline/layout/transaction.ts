@@ -82,7 +82,7 @@ export type PresentedTableTransactionInput = Readonly<{
   /** 同次 style resolution 与选择值 */
   theme?: LayoutCompositeCompileContext['theme'];
   /** 当前表格布局与呈现共同采用的已解析默认值 */
-  tableDefaults?: ResolvedTableDefaults;
+  defaultTable?: ResolvedTableDefaults;
   /** 同次 Cell/encoding plan bundle */
   plan?: ResolvedTablePlan;
 }>;
@@ -234,7 +234,7 @@ const trackLayoutsOf = (
 const resolveTableDefaults = (
   theme: LayoutCompositeCompileContext['theme'],
   spec:
-    | Pick<IRTable, 'appearanceDefaults' | 'cellLayoutDefaults' | 'layout' | 'visualDefaults' | 'tableDefaults'>
+    | Pick<IRTable, 'defaultAppearance' | 'defaultCellLayout' | 'layout' | 'defaultVisual' | 'defaultTable'>
     | undefined,
   tableThemeStyles: LowerTablesOptions['tableThemeStyles'] | undefined,
 ): ResolvedTableDefaults => {
@@ -245,20 +245,20 @@ const resolveTableDefaults = (
     layers.push({ kind: 'source', path, defaults: structuredClone(defaults) });
   };
 
-  if (spec?.tableDefaults !== undefined) append('$spec/tableDefaults', spec.tableDefaults);
-  if (spec?.appearanceDefaults !== undefined) {
-    append('$spec/appearanceDefaults', { appearanceDefaults: spec.appearanceDefaults });
+  if (spec?.defaultTable !== undefined) append('$spec/defaultTable', spec.defaultTable);
+  if (spec?.defaultAppearance !== undefined) {
+    append('$spec/defaultAppearance', { defaultAppearance: spec.defaultAppearance });
   }
 
-  if (spec?.cellLayoutDefaults !== undefined) {
-    append('$spec/cellLayoutDefaults', { cellLayoutDefaults: spec.cellLayoutDefaults });
+  if (spec?.defaultCellLayout !== undefined) {
+    append('$spec/defaultCellLayout', { defaultCellLayout: spec.defaultCellLayout });
   }
 
   if (spec?.layout?.borders !== undefined) {
     append('$spec/layout/borders', { layout: { borders: spec.layout.borders } });
   }
 
-  if (spec?.visualDefaults !== undefined) append('$spec/visualDefaults', { visualDefaults: spec.visualDefaults });
+  if (spec?.defaultVisual !== undefined) append('$spec/defaultVisual', { defaultVisual: spec.defaultVisual });
   const defaults = layers.reduce<IRTableDefaults>(
     (resolvedDefaults, layer) => mergeTableDefaults(resolvedDefaults, layer.defaults),
     {},
@@ -501,16 +501,16 @@ export const resolvePresentedTableTransaction = (
       mode: ThemeMode.Light,
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const);
-  const tableDefaults = input.tableDefaults ?? resolveTableDefaults(manifestTheme, undefined, undefined);
-  const manifestStyle = tableDefaults.style;
+  const defaultTable = input.defaultTable ?? resolveTableDefaults(manifestTheme, undefined, undefined);
+  const manifestStyle = defaultTable.style;
   const cellContentMasterColor = (index: number): string =>
-    presented.cells[index].appearance.content?.style?.color ??
+    presented.cells[index].appearance.content?.defaults?.style?.color ??
     (semantic.cells[index].location === TableCellLocation.ColumnHeader
-      ? tableDefaults.defaults.appearanceDefaults?.columnHeader?.content?.style?.color
-      : tableDefaults.defaults.appearanceDefaults?.body?.content?.style?.color) ??
+      ? defaultTable.defaults.defaultAppearance?.columnHeader?.content?.defaults?.style?.color
+      : defaultTable.defaults.defaultAppearance?.body?.content?.defaults?.style?.color) ??
     'currentColor';
   const tableContentMasterColor =
-    tableDefaults.defaults.appearanceDefaults?.body?.content?.style?.color ?? 'currentColor';
+    defaultTable.defaults.defaultAppearance?.body?.content?.defaults?.style?.color ?? 'currentColor';
 
   const intrinsic = presented.cells.map((cell, index) => {
     const semanticCell = semantic.cells[index];
@@ -646,14 +646,14 @@ export const resolvePresentedTableTransaction = (
     } satisfies TableCellLayout;
   });
 
-  const defaultBorders = tableDefaults.defaults.layout?.borders;
+  const defaultBorders = defaultTable.defaults.layout?.borders;
   const explicitHorizontalBorder = resolved.borders?.horizontal;
   const defaultHorizontalBorder = defaultBorders?.horizontal ?? undefined;
   const explicitVerticalBorder = resolved.borders?.vertical;
   const defaultVerticalBorder = defaultBorders?.vertical ?? undefined;
 
   const resolveDefaultBorder = (border: DeepReadonly<IRTableBorder>, path: ReadonlyArray<string>) => {
-    const sourcePath = defaultsSourcePathOf(tableDefaults, path);
+    const sourcePath = defaultsSourcePathOf(defaultTable, path);
     return sourcePath === undefined
       ? resolveBorderCandidate(border, tableContentMasterColor)
       : resolveDefaultBorderCandidate(border, tableContentMasterColor, sourcePath);
@@ -680,7 +680,7 @@ export const resolvePresentedTableTransaction = (
         if (border === undefined) return [];
         if (explicit !== undefined) return [[side, resolveBorderCandidate(explicit, tableContentMasterColor)] as const];
 
-        const path = defaultsSourcePathOf(tableDefaults, ['layout', 'borders', 'outer', side]);
+        const path = defaultsSourcePathOf(defaultTable, ['layout', 'borders', 'outer', side]);
 
         return [
           [
@@ -770,7 +770,7 @@ export const resolvePresentedTableTransaction = (
     manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
       ...(manifestStyle === undefined ? {} : { style: manifestStyle }),
       themeMode: manifestTheme.mode,
-      tableDefaults,
+      defaultTable,
       presented,
       ...(input.plan === undefined ? {} : { plans: input.plan.cells, encodings: input.plan.encodings }),
       legendDescriptors: input.plan?.legendDescriptors ?? [],
@@ -785,17 +785,17 @@ export const resolveTableTransaction = (
   options: LowerTablesOptions,
   context: LayoutCompositeCompileContext,
 ): ResolvedTableTransaction => {
-  const tableDefaults = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);
+  const defaultTable = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);
   const semantic = normalizeTableStructure(spec.structure, {
-    cellLayoutDefaults: tableDefaults.defaults.cellLayoutDefaults,
+    defaultCellLayout: defaultTable.defaults.defaultCellLayout,
     data: spec.data,
     datasets,
     preparedData:
       (context.runtimeInput as DataTransformResult | undefined) ?? resolveTableData(spec, datasets, options),
     structureDefinitions: options.structureDefinitions,
   });
-  const categoricalPalette = tableDefaults.defaults.visualDefaults?.categorical;
-  const sequentialPalette = tableDefaults.defaults.visualDefaults?.sequential;
+  const categoricalPalette = defaultTable.defaults.defaultVisual?.categorical;
+  const sequentialPalette = defaultTable.defaults.defaultVisual?.sequential;
   const categoricalColors = categoricalPalette === null ? undefined : categoricalPalette;
   const sequentialColors =
     sequentialPalette === undefined || sequentialPalette === null
@@ -805,7 +805,7 @@ export const resolveTableTransaction = (
     rules: spec.rules,
     encodings: spec.encodings,
     visualScaleDefinitions: options.visualScaleDefinitions,
-    tableDefaults,
+    defaultTable,
     scaleContext: {
       ...(categoricalColors === undefined ? {} : { categoricalColors }),
       ...(sequentialColors === undefined ? {} : { sequentialColors }),
@@ -824,7 +824,7 @@ export const resolveTableTransaction = (
       ...(spec.layout === undefined ? {} : { layout: spec.layout }),
       presented,
       theme: context.theme,
-      tableDefaults,
+      defaultTable,
       plan,
     },
     context,

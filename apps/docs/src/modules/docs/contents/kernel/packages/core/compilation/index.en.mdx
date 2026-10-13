@@ -1,0 +1,532 @@
+﻿---
+title: Compilation Flow
+description: Follow IR, node layout, and deferred paths through one full Core compilation to Scene, resources, and associated outputs.
+---
+
+This page follows one synchronous compilation from a complete IR input to a Scene ready for a renderer. React / Vanilla input construction happens upstream, rendering happens downstream, and subsequent updates belong to another execution.
+
+## Input and example
+
+IR stores drawing declarations such as “place a node here” and “connect A to B.” Scene stores primitives with resolved geometry and appearance, such as rectangles, text, and path commands. `compileToScene` performs this conversion and returns a result containing the Scene. Its public signature, with generic details omitted, is:
+
+```ts
+compileToScene(ir: IRScene, options?: CompileOptions): CompileResult
+```
+
+| Input / output          | Meaning in this page                                                            |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| `ir`                    | A complete drawing declaration conforming to the Core contract                  |
+| `options`               | Measurement, extension definitions, and output settings for this call; optional |
+| `result.scene`          | Laid-out primitives, the canvas bounds, and drawing resources                   |
+| `result.artifacts`      | Composite outputs and explicitly requested node layout data                     |
+| `result.spatialHandles` | Named spatial regions collected during this compilation                         |
+
+`compileToScene` accepts typed IR; it does not call `SceneSchema.parse` on the entire tree at entry. External data such as JSON should pass through the schema boundary first. Compilation still checks constraints that require a Definition or layout context.
+
+Our example contains two rectangular nodes, each 60 wide and 40 high, centered at `[0, 0]` and `[180, 0]`. The connection is deliberately declared before the nodes. The short labels A and B fit inside the specified minimum size.
+
+<ComponentPreview files={['compilation-example', 'compilation-example.data']} size="xs" hideCode type="illustration" />
+
+Here is the Core input for that drawing. `minimumSize` constrains the node border, while `padding` and `margin` set inner spacing and the outer offset of the connection boundary. Setting both to zero places this example's endpoints directly on the rectangles.
+
+```ts
+import { compileToScene, type IRScene } from '@retikz/core';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'line', to: { id: 'B' } },
+      ],
+    },
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+    {
+      type: 'node',
+      id: 'B',
+      position: [180, 0],
+      text: 'B',
+      layout: { minimumSize: { width: 60, height: 40 }, padding: 0, margin: 0 },
+    },
+  ],
+};
+
+const result = compileToScene(ir, { padding: 10 });
+```
+
+The preview shows the final geometry. We will follow the same path as its `{ id: 'A' }` and `{ id: 'B' }` references become a segment from `[30, 0]` to `[150, 0]`.
+
+<SourceLinks
+  sources={[
+    { label: 'Synchronous entry and return value', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'CompileOptions / CompileResult', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: 'External scene validation', path: 'packages/kernel/core/src/schemas/scene/schema.ts' },
+  ]}
+/>
+
+## Overall flow
+
+When traversal first reaches the Path, A and B have no layout results yet. Core records the path and continues with the nodes. Once their centers and connection boundaries are known, it computes the path endpoints and then assembles the canvas bounds.
+
+<ComponentPreview files="compilation-overview" size="sm" hideCode type="flow" />
+
+The diagram follows a full compilation at the root. Each Scope performs its own layout and path emission during recursion, so traversal and deferred path emission also occur inside local groups. Elements are resolved and emitted as needed; the whole tree does not first become a single Canonical Scene.
+
+<SourceLinks
+  sources={[{ label: 'Full compilation orchestration', path: 'packages/kernel/core/src/compile/compile.ts' }]}
+/>
+
+## Compilation context
+
+Core needs a way to measure text, resolve shapes, and collect shared drawing resources. Two concepts describe how capabilities are supplied:
+
+- Definition: an implementation of a shape, path, or composite capability.
+- Registry: a lookup table used to find a Definition by name during this compilation.
+
+`createCompileContext` assembles built-in and caller-provided definitions into their registries, resolves the root theme, and prepares measurement, output precision, resource tables, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
+
+Built-in definitions and external definitions from CompileOptions are registered by capability in the context's registries for lookup and invocation during compilation, while generated paint and clip resources are collected by the context's `paint` and `clip` and written to the Scene resource table.
+
+This example uses the built-in rectangle and path capabilities. The context's `loweredIr` still refers to the input IR here. Composites are processed when traversal reaches them.
+
+Traversal also creates state for this execution: emitted primitives, accumulated bounds, and a namespace. The namespace stores queryable layouts by id so that a path can find the geometry of A and B. This state belongs to one full compilation and does not retain update results across calls.
+
+<SourceLinks
+  sources={[
+    { label: 'Dependency and resource context', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    {
+      label: 'Register built-in and external definitions',
+      path: 'packages/kernel/core/src/providers/registry/registry.ts',
+    },
+    { label: 'Traversal state and named lookup', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## Node resolution
+
+`compileChildrenToPrimitives` dispatches children in declaration order. Here it records the pending Path before processing A and B. Three results explain the work inside a node:
+
+- CanonicalNode: the node after effective styles are merged, defaults are filled, and paints are resolved; `fill` / `stroke` directly carry the paint resolution results.
+- NodeResolution: CanonicalNode together with the selected shape and connection boundary, ready for layout.
+- NodeLayout: the measured and positioned result, grouped into node properties, shape, boundary, geometry, text layout, and labels.
+
+These are the source definitions of the three internal types, with comments omitted and referenced types left unexpanded.
+
+<DocTabs defaultValue="canonical-node">
+
+<DocTab value="canonical-node" label="CanonicalNode">
+
+```ts
+export type CanonicalNode = Omit<
+  Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
+  | 'padding'
+  | 'position'
+  | 'margin'
+  | 'minimumSize'
+  | 'scale'
+  | 'text'
+  | 'label'
+  | 'align'
+  | 'rotate'
+  | 'dashed'
+  | 'dotted'
+  | 'dashPattern'
+  | 'shadow'
+  | 'fill'
+  | 'stroke'
+> & {
+  fill?: PaintResolutionInput;
+  stroke?: PaintResolutionInput;
+  position: NonNullable<IRNode['position']>;
+  padding: BoundsInsets;
+  margin: BoundsInsets;
+  minimumSize: {
+    width: number;
+    height: number;
+  };
+  scale: {
+    x: number;
+    y: number;
+  };
+  text?: Array<ResolvedTextLine>;
+  label?: Array<CanonicalNodeLabel>;
+  align: NodeTextAlign;
+  rotate: number;
+  dashPattern?: StrokeDashPattern;
+  shadow?: ResolvedDropShadow;
+};
+```
+
+</DocTab>
+
+<DocTab value="node-resolution" label="NodeResolution">
+
+```ts
+export type NodeResolution = Readonly<{
+  irPath: string;
+  node: CanonicalNode;
+  shape: ShapeResolution;
+  boundary: BoundaryReferenceResolution;
+}>;
+```
+
+</DocTab>
+
+<DocTab value="node-layout" label="NodeLayout">
+
+```ts
+export type NodeLayout = {
+  irPath: string;
+  node: NodeLayoutProperties;
+  shape: NodeResolution['shape'];
+  boundary: NodeResolution['boundary'];
+  geometry: NodeLayoutGeometry;
+  text?: NodeTextLayout;
+  labels?: Array<NodeLabelLayout>;
+};
+
+export type NodeLayoutGeometry = {
+  rect: Rect;
+  margin: BoundsInsets;
+  contentCenter: Position;
+  contentSize: { width: number; height: number };
+};
+
+export type NodeLayoutProperties = Pick<
+  CanonicalNode,
+  | 'id'
+  | 'fill'
+  | 'fillOpacity'
+  | 'stroke'
+  | 'strokeOpacity'
+  | 'strokeWidth'
+  | 'dashPattern'
+  | 'dashOffset'
+  | 'cornerRadius'
+  | 'textColor'
+  | 'opacity'
+  | 'shadow'
+  | 'blendMode'
+  | 'boundary'
+  | 'meta'
+  | 'animations'
+>;
+
+export type NodeTextLayout = {
+  font: TextFont;
+  align: 'start' | 'middle' | 'end';
+  lineHeight: number;
+  baselineOffsets?: Array<number>;
+} & (
+  | { kind: 'plain'; lines: Array<TextLine> }
+  | { kind: 'inline'; lines: Array<{ laid: LaidLine; baselineOffset: number }> }
+);
+```
+
+</DocTab>
+
+</DocTabs>
+
+`resolveNode` determines effective configuration and capability bindings. `layoutNode` consumes measurement and position context to lay out text and determine the node's size and position. `emitNodePrimitives` turns that layout into Scene primitives such as rectangles and text. Resolution interprets configuration, layout computes geometry, and emission writes structures that a renderer can consume.
+
+<ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
+
+In this example, A has a border centered at `[0, 0]` with size `60 × 40`; B has the same size and center `[180, 0]`. Core registers these layouts in the namespace and emits two named Groups, each containing a rectangle and text. One IR Node can therefore produce multiple drawing primitives.
+
+| The same A      | Field excerpt or geometry                               |
+| --------------- | ------------------------------------------------------- |
+| Source IR       | `position: [0, 0]`, `text: 'A'`, minimum size `60 × 40` |
+| Node layout     | Border center `[0, 0]`, width 60, height 40             |
+| Scene rectangle | Top-left `[-30, -20]`, width 60, height 40              |
+
+The layout border uses a center position; a Scene rectangle uses its top-left corner. The different numbers reflect a change in representation, with no movement of the node.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'resolveNode: effective configuration and bindings',
+      path: 'packages/kernel/core/src/resolve/node/resolve.ts',
+    },
+    { label: 'Node layout', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'Node primitive emission', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+  ]}
+/>
+
+## Path resolution
+
+Node layout finishes before paths that depend on those nodes are resolved. Traversal visits children in declaration order:
+
+1. On a Node, Core immediately resolves its configuration, measures and positions it, registers its layout, and emits its primitives.
+2. On a Path, Core records a pending task and inserts a placeholder, postponing node-reference resolution and path emission.
+3. When the current container finishes, Core looks up the registered node layouts, resolves the pending paths, and emits their primitives.
+
+This order applies within each container. A Scope recursively processes its children and handles its pending paths as it finishes. The root handles its pending paths after visiting its children. Paths inside a Scope can therefore be processed before all nodes in the entire tree have been visited.
+
+A path may reference nodes declared later. `queuePathChild` saves a pending path record and inserts a placeholder into the current primitive array. The record preserves the path input, style and coordinate environment, plus references to the placeholder and its owning array.
+
+Each row below shows an array state from our example. Group A and Group B contain their node's rectangle and text; cell labels summarize those structures.
+
+<ComponentPreview files="compilation-slots" size="xl" hideCode type="illustration" />
+
+Once A and B are registered, `flushPendingPathEmissions` looks up their layouts, resolves the path, and emits its primitives. With only node ids as targets, this example clips the endpoints to the connection boundaries. A's right edge at `[30, 0]` and B's left edge at `[150, 0]` become the visible segment endpoints.
+
+Core then finds the placeholder in its original array and replaces it with the actual PathPrim. Although computed after the nodes, the path remains at index 0. Once paths are filled, a stable `zIndex` sort preserves declaration order among equal values. All placeholders must be gone before Scene is returned.
+
+The final path contains these fields:
+
+```ts
+{
+  type: 'path',
+  commands: [
+    { kind: 'move', to: [30, 0] },
+    { kind: 'line', to: [150, 0] },
+  ],
+}
+```
+
+Deferred work runs when its enclosing group finishes. It supports this example's Path references to later nodes in the same group. A node's own relative position needs its target during layout, so forward references are not available for every position expression.
+
+<SourceLinks
+  sources={[
+    { label: 'Queue and emit pending paths', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Placeholders and stable sorting', path: 'packages/kernel/core/src/compile/orchestration/primitive.ts' },
+    {
+      label: 'Functional tests for order and failed paths',
+      path: 'packages/kernel/core/tests/compile/z-order.test.ts',
+    },
+  ]}
+/>
+
+## Scope processing
+
+When traversal encounters a Scope, it enters that subtree before continuing with the parent's next child. Core prepares styles, a theme, a transform chain, and separate result containers, then visits `children` in declaration order: Nodes are laid out immediately, Paths are queued, and nested Scopes recursively follow the same steps.
+
+The diagram follows entry, recursive processing, and return. A nested Scope completes this same sequence before traversal resumes in its parent:
+
+<ComponentPreview files="compilation-scope" size="md" hideCode type="flow" />
+
+For example, let S contain Node A, Scope T, and Node B in that order. Core processes A, enters T, finishes T's children, layout, and pending paths, then returns to S and processes B. Once all of S's children are complete, Core determines S's bounds and final placement, updates queryable layouts, processes S's pending paths, and passes a Group to the parent.
+
+Every Scope has its own child traversal context, but it shares the current namespace frame by default. Suppose the outer frame already contains node A, and the Scope declares nodes A and B:
+
+| Operation                     | `localNamespace: false` (default)                                        | `localNamespace: true`                                                              |
+| ----------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Enter Scope                   | Reuse the current frame                                                  | Push a new local frame                                                              |
+| Register inner A and B        | Write to the current frame; replace A and issue a duplicate-name warning | Write to the local frame; inner A shadows outer A                                   |
+| Look up a name inside         | Search from the current frame outward                                    | Search the local frame first, then outer frames on a miss                           |
+| After returning to the parent | Inner A and B remain accessible by name                                  | The local frame is gone; A resolves to outer A, and inner B is no longer accessible |
+
+Pending paths inside the Scope are resolved before the local frame is popped, so they can still reference inner nodes. Popping removes name visibility, not the primitives already emitted into Scene. If the Scope itself has an id, Core registers it in the parent frame before pushing the local frame and updates it to the final layout during finalization. Outside references can therefore still target the whole group by that id.
+
+Scene output can retain local geometry and Group transforms. Named queries use the coordinate projection they need; the output does not require every point to be expanded into world coordinates.
+
+Composite entries join compilation through registered Definitions, and the basic IR they produce follows the same processing steps; see [Composite implementation](/kernel/components/composite/mechanism).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Scope traversal and finalization',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+    { label: 'Namespace registration, lookup, and pop', path: 'packages/kernel/core/src/compile/namespace.ts' },
+  ]}
+/>
+
+## Assemble the result
+
+After child compilation, `compileCoreSnapshot` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Core computes them from accumulated layout bounds and `padding`.
+
+The example's content spans `[-30, -20]` to `[210, 20]`. Adding 10 units on all sides produces this `result.scene.layout`:
+
+```ts
+{ x: -40, y: -30, width: 260, height: 60 }
+```
+
+This step determines the canvas bounds without moving A or B again. The output `primitives` are the path, Group A, and Group B, in that order. This example has no gradient or clip resources, so `resources` is omitted.
+
+Alongside Scene, the result carries `artifacts` and `spatialHandles`. The former contains composite outputs or requested node layouts; the latter contains named spatial regions. Both correspond to this compilation's Scene. The renderer does not use them to rerun node layout. Ordinary `compileToScene` does not create an observer session; the explicit observation entry dispatches final observations as part of the same full compilation.
+
+| Property         | Type                                                             | Purpose                                                                                                                                                                                                      |
+| ---------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scene`          | `Scene`                                                          | Holds laid-out primitives in drawing order, canvas bounds, optional resources, and root timeline animations for the renderer.                                                                                |
+| `artifacts`      | `ReadonlyArray<TCompositeArtifact \| NodeLayoutCompileArtifact>` | Holds domain artifacts returned by composites and explicitly requested node layout results for callers to inspect or process. Empty when no artifacts are produced.                                          |
+| `spatialHandles` | `SpatialHandleIndex`                                             | Holds named spatial regions declared by composites, including their owners, world-space bounds, roles, and tags, for callers to query and locate. Its `entries` array is empty when no regions are declared. |
+
+The tabs below show the source types for the result and its main fields, with comments omitted. Other referenced types are not expanded.
+
+<DocTabs defaultValue="compile-result">
+
+<DocTab value="compile-result" label="CompileResult">
+
+```ts
+export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
+  scene: Scene;
+  artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
+  spatialHandles: SpatialHandleIndex;
+}>;
+```
+
+</DocTab>
+
+<DocTab value="scene" label="Scene">
+
+```ts
+export type Scene = {
+  primitives: Array<ScenePrimitive>;
+  layout: BoundsRect;
+  resources?: Array<SceneResource>;
+  animations?: Array<IRAnimationTrack>;
+};
+
+export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+```
+
+</DocTab>
+
+<DocTab value="artifacts" label="artifacts">
+
+```ts
+export type CompositeCompileArtifact<
+  TNamespace extends string = string,
+  TType extends string = string,
+  TValue extends JsonValue = JsonValue,
+> = Readonly<{
+  kind: 'composite';
+  namespace: TNamespace;
+  type: TType;
+  occurrence: CompileOccurrenceLocator;
+  value: TValue;
+}>;
+
+export type NodeLayoutCompileArtifact = Readonly<{
+  kind: 'nodeLayout';
+  occurrence: CompileOccurrenceLocator;
+  value: CompiledNodeLayout;
+}>;
+
+export type CompiledNodeLayout = {
+  kind: 'node';
+  id?: string;
+  content: {
+    center: [number, number];
+    size: {
+      width: number;
+      height: number;
+    };
+    bounds: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+  };
+  rect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotate: number;
+  };
+  text: {
+    hasInlineTex: boolean;
+    lineCount: number;
+  };
+};
+```
+
+</DocTab>
+
+<DocTab value="spatial-handles" label="spatialHandles">
+
+```ts
+export type SpatialHandleIndex = Readonly<{
+  entries: ReadonlyArray<QualifiedSpatialHandle>;
+}>;
+
+export type QualifiedSpatialHandle = Readonly<{
+  ownerPath: ReadonlyArray<SpatialHandleOwner>;
+  id: string;
+  aliasIds?: ReadonlyArray<string>;
+  role: string;
+  geometry: Readonly<{
+    kind: 'rect';
+    bounds: Readonly<BoundsRect>;
+  }>;
+  tags: ReadonlyArray<string>;
+  payload?: Readonly<JsonObject>;
+  finalOccurrence: CompileOccurrenceLocator;
+  originOccurrence: CompileOccurrenceLocator;
+}>;
+
+export type SpatialHandleOwner = Readonly<{
+  namespace: string;
+  type: string;
+  instanceId?: string;
+  occurrence: CompileOccurrenceLocator;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+Warnings and fatal errors have different outcomes. Recoverable cases follow the capability's degradation rules: for example, a missing path target can produce a warning and remove that path's placeholder. The synchronous entry dispatches collected warnings only after full compilation succeeds. A fatal error terminates the call without returning a partial Scene.
+
+<SourceLinks
+  sources={[
+    { label: 'Scene assembly and warning dispatch', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'Compile result and artifact types', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: 'Spatial index types', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' },
+    { label: 'Automatic canvas bounds', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
+    { label: 'Renderer-neutral Scene contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
+  ]}
+/>
+
+## Complete implementation flow
+
+This diagram maps the earlier stages to actual implementation members. The synchronous `compileToScene` entry calls `compileCoreSnapshot`. Path emission and sorting happen inside traversal, which returns to the outer function for `CompileResult` assembly.
+
+<ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
+
+Start in `compileCoreSnapshot` to see context creation, traversal, and assembly together. Then enter `compileChildrenToPrimitives`: begin with the root `compileChildren` call near its end, follow dispatch in `compileChild`, trace a Node through resolve, layout, and emit, and finally follow Path queuing and emission. Scope and Composite are recursive branches to explore after this example.
+
+<SourceLinks
+  sources={[
+    { label: 'From the synchronous entry to full compilation', path: 'packages/kernel/core/src/compile/compile.ts' },
+    {
+      label: 'Child dispatch, recursion, and completion',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Node implementation',
+      description: 'Explore text measurement, node size, and connection boundaries',
+      url: '/kernel/components/node/mechanism',
+    },
+    {
+      title: 'Path implementation',
+      description: 'Explore cursor state, path segments, and endpoint processing',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'Composite implementation',
+      description: 'Understand child layout probes and result replay',
+      url: '/kernel/components/composite/mechanism',
+    },
+  ]}
+/>

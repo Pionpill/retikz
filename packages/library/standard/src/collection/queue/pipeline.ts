@@ -11,7 +11,7 @@ import type { IRQueue } from './schema';
 
 /** 按队首到队尾排列，并下沉两端开放的边框与进出箭头 */
 export const compileQueue = (source: IRQueue, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
-  const { namespace, type, items, layout, style, label, arrow, border, padding, ...scope } = resolveQueue(source);
+  const { namespace, type, items, layout, defaultCell, label, arrow, border, padding, ...scope } = resolveQueue(source);
   const input = typeof arrow === 'object' ? arrow.input : arrow;
   const output = typeof arrow === 'object' ? arrow.output : arrow;
   void namespace;
@@ -46,5 +46,9 @@ export const compileQueue = (source: IRQueue, context: LayoutCompositeCompileCon
     if (input) extra.push(context.scope({}, [createOperationArrow(input, [point(half + 32), point(half + 8)])]));
     if (output) extra.push(context.scope({}, [createOperationArrow(output, [point(-half - 8), point(-half - 32)])]));
   }
-  return compileCells(cells, { width, height, scope, extra, decoration: { label, style } }, context);
+  return compileCells(
+    cells,
+    { width, height, scope, extra, decoration: { label, style: defaultCell?.style } },
+    context,
+  );
 };

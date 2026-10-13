@@ -9,21 +9,21 @@ Base Table contracts define the top-level identity and Cell content shared by ev
 
 `IRTable` aggregates `IRDetailTable | IRManualTable | IRCustomTable`. The three variants share `namespace + type` fields and constrain `data` and `structure` independently.
 
-| Field                 | Type                                | Default        | Description                                                         |
-| --------------------- | ----------------------------------- | -------------- | ------------------------------------------------------------------- |
-| `namespace`           | `'table'`                           | —              | Tier 2 composite namespace                                          |
-| `type`                | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                           |
-| `id?`                 | `string`                            | —              | Optional stable id                                                  |
-| `appearanceDefaults?` | `IRTableAppearanceDefaults`         | `{}`           | Sparse appearance defaults for existing Cells                       |
-| `cellLayoutDefaults?` | `IRTableCellLayoutDefaults`         | `{}`           | Padding defaults by body / columnHeader; explicit Cell padding wins |
-| `layout?`             | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders                         |
-| `meta?`               | `JsonObject`                        | —              | JSON-safe metadata preserved by lowering                            |
-| `rules?`              | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                                  |
-| `encodings?`          | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels                        |
-| `visualDefaults?`     | `IRTableVisualDefaults`             | `{}`           | Default color ranges for existing visual encodings                  |
-| `tableDefaults?`      | `IRTableDefaults`                   | `{}`           | Sparse defaults below explicit Source fields                        |
-| `data?`               | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom            |
-| `structure`           | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                                 |
+| Field                | Type                                | Default        | Description                                                         |
+| -------------------- | ----------------------------------- | -------------- | ------------------------------------------------------------------- |
+| `namespace`          | `'table'`                           | —              | Tier 2 composite namespace                                          |
+| `type`               | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                           |
+| `id?`                | `string`                            | —              | Optional stable id                                                  |
+| `defaultAppearance?` | `IRTableAppearanceDefaults`         | `{}`           | Sparse appearance defaults for existing Cells                       |
+| `defaultCellLayout?` | `IRTableCellLayoutDefaults`         | `{}`           | Padding defaults by body / columnHeader; explicit Cell padding wins |
+| `layout?`            | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders                         |
+| `meta?`              | `JsonObject`                        | —              | JSON-safe metadata preserved by lowering                            |
+| `rules?`             | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                                  |
+| `encodings?`         | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels                        |
+| `defaultVisual?`     | `IRTableVisualDefaults`             | `{}`           | Default color ranges for existing visual encodings                  |
+| `defaultTable?`      | `IRTableDefaults`                   | `{}`           | Sparse defaults below explicit Source fields                        |
+| `data?`              | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom            |
+| `structure`          | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                                 |
 
 ### TableSchema
 
@@ -81,7 +81,7 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 ### TableCellRuleSchema
 
-Cell `appearance.content.style` sets cascading content colors and opacity. `appearance.content.defaults` contains `node`, `path`, `label`, `arrow`, and the `reset` inheritance barrier. Node defaults use `style` / `layout`; Path defaults use `style`. Label and Arrow leaves retain their structure. Fields override independently; empty groups retain inherited values, and `0` and `false` are preserved.
+Cell `appearance.content.defaults.style` sets cascading content colors and opacity. `appearance.content.defaults` contains `node`, `path`, `label`, `arrow`, and the `reset` inheritance barrier. Node defaults use `style` / `layout`; Path defaults use `style`. Label and Arrow leaves retain their structure. Fields override independently; empty groups retain inherited values, and `0` and `false` are preserved.
 
 <ZodSchema name="TableCellRuleSchema" />
 
@@ -91,9 +91,9 @@ Cell `appearance.content.style` sets cascading content colors and opacity. `appe
 
 ## Table Source defaults
 
-Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table builds an owner-local baseline for the mode, then merges the same-named `TableThemeStyleDefinition` result shaped as `{ defaults?: IRTableDefaults }`. Source `tableDefaults`, `appearanceDefaults`, `visualDefaults`, and explicit `layout.borders` override earlier defaults in order; Cell-local configuration, visual encodings, and ordered rules then complete the final plan.
+Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table builds an owner-local baseline for the mode, then merges the same-named `TableThemeStyleDefinition` result shaped as `{ defaults?: IRTableDefaults }`. Source `defaultTable`, `defaultAppearance`, `defaultVisual`, and explicit `layout.borders` override earlier defaults in order; Cell-local configuration, visual encodings, and ordered rules then complete the final plan.
 
-`appearanceDefaults`, `visualDefaults`, and `tableDefaults` are sparse objects. They provide defaults only for existing Cells, borders, or visual encodings and never create Cells, rules, borders, encodings, or Legends. `layout.borders.outer` is a sparse physical-side object with independent `top`, `right`, `bottom`, and `left` candidates.
+`defaultAppearance`, `defaultVisual`, and `defaultTable` are sparse objects. They provide defaults only for existing Cells, borders, or visual encodings and never create Cells, rules, borders, encodings, or Legends. `layout.borders.outer` is a sparse physical-side object with independent `top`, `right`, `bottom`, and `left` candidates.
 
 Published packages do not pre-register named Core or Table definitions. This site's `academic`, `vibrant`, and `clean` reference styles follow the same rule as application-defined styles: inject the same name into both consuming owners. Standalone `compileTable` receives the Core definition through `compile.themeStyles` and the Table definition through `lower.tableThemeStyles`. Missing the matching Table definition fails loudly in the Table resolver.
 

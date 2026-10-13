@@ -34,8 +34,11 @@ describe('Table Cell content appearance', () => {
 
   it('wraps value and direct content in one anonymous Core Scope with exact style defaults', () => {
     const content = {
-      style: { color: '#9a4d00', strokeWidth: 2 },
-      defaults: { node: { style: { font: { weight: 600 } } }, reset: ['path' as const] },
+      defaults: {
+        style: { color: '#9a4d00', strokeWidth: 2 },
+        node: { style: { font: { weight: 600 } } },
+        reset: ['path' as const],
+      },
     };
     const presented = presentTable(formatted(), {
       cells: [
@@ -47,8 +50,9 @@ describe('Table Cell content appearance', () => {
     for (const cell of presented.cells) {
       expect(cell.content).toMatchObject({
         type: 'scope',
-        style: { color: '#9a4d00', strokeWidth: 2 },
+
         defaults: {
+          style: { color: '#9a4d00', strokeWidth: 2 },
           node: {
             style: { font: { weight: 600 } },
           },

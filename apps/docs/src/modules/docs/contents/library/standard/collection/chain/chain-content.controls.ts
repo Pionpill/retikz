@@ -31,7 +31,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { width: 64, overflow: 'clip', matrixAutoWidth: false },
-    relatedApis: ['Chain.layout', 'Chain.connection'],
+    relatedApis: ['Chain.layout', 'Chain.defaultConnection'],
   } satisfies PreviewControlContract;
 };
 

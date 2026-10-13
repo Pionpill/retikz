@@ -447,9 +447,9 @@ export type FlowEntitiesProps = Readonly<{
 | `readonly children?` | `ReactNode`                                                                                                                                                                                                        | —      | 递归 Flow Entity、Group 或 Layout children   |
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                       |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | Group 外壳的圆角                             |
+| `defaultGraph?`      | `FlowGroupProps["defaultGraph"]`                                                                                                                                                                                   | —      | 可见后代的稀疏默认值                         |
 | `defaults?`          | `FlowGroupProps["defaults"]`                                                                                                                                                                                       | —      | 后代默认样式及继承屏障                       |
 | `frame?`             | `FlowGroupProps["frame"]`                                                                                                                                                                                          | —      | 固有包络装饰，不参与布局                     |
-| `graphDefaults?`     | `FlowGroupProps["graphDefaults"]`                                                                                                                                                                                  | —      | 可见后代的稀疏默认值                         |
 | `graphRules?`        | `FlowGroupProps["graphRules"]`                                                                                                                                                                                     | —      | 可见 Entity / Relation 后代的有序规则        |
 | `id`                 | `string`                                                                                                                                                                                                           | —      | 整张 Flow 图内唯一的作者 id                  |
 | `labels?`            | `FlowGroupProps["labels"]`                                                                                                                                                                                         | —      | 非空外围标签数组，只扩展视觉边界             |
@@ -459,7 +459,6 @@ export type FlowEntitiesProps = Readonly<{
 | `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | Group 外壳的内边距                           |
 | `rank?`              | `number`                                                                                                                                                                                                           | —      | 最近 Flow 作用域内的可选层级约束             |
 | `routing?`           | `FlowGroupProps["routing"]`                                                                                                                                                                                        | —      | Group 作用域内关系的默认路由                 |
-| `style?`             | `FlowGroupProps["style"]`                                                                                                                                                                                          | —      | 后代的级联视觉覆盖                           |
 | `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                           |
 | `zIndex?`            | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                   |
 
@@ -1059,15 +1058,15 @@ export type FlowRelationsProps = Readonly<{
 | `boundingShape?`               | `"rectangle" \| "circle"`                                                                                                         | —                                  | 图示引用 id 使用的合成包络形状                                                     |
 | `children`                     | `Array<string>`                                                                                                                   | —                                  | 根级直接子项 id 的非空有序列表                                                     |
 | `clip?`                        | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —                                  | 图示局部坐标系中的裁剪区域                                                         |
+| `defaultDiagram?`              | `InputFlowDiagram['defaultDiagram']`                                                                                              | —                                  | Diagram 层的稀疏默认值                                                             |
+| `defaultFlow?`                 | `InputFlowDiagram['defaultFlow']`                                                                                                 | —                                  | Flow 布局和对象外观的稀疏默认值                                                    |
 | `readonly defaultFlowLayout?`  | `string`                                                                                                                          | `LayeredFlowLayoutDefinition.name` | 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局                    |
 | `defaults?`                    | `InputFlowDiagram['defaults']`                                                                                                    | —                                  | 后代默认样式及继承屏障                                                             |
-| `diagramDefaults?`             | `InputFlowDiagram['diagramDefaults']`                                                                                             | —                                  | Diagram 层的稀疏默认值                                                             |
 | `readonly diagramThemeStyles?` | `ReadonlyArray<DiagramThemeStyleDefinition>`                                                                                      | `[]`                               | 与 Core Theme style 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义 |
 | `entities`                     | `InputFlowDiagram['entities']`                                                                                                    | —                                  | 非空的平级 Entity 声明目录                                                         |
 | `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`                                                                                             | `[]`                               | 自定义 Entity kind definitions                                                     |
 | `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`                                                                                        | `[]`                               | 自定义 Entity predicate definitions                                                |
 | `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`                                                                                             | `[]`                               | 自定义 Entity role definitions                                                     |
-| `flowDefaults?`                | `InputFlowDiagram['flowDefaults']`                                                                                                | —                                  | Flow 布局和对象外观的稀疏默认值                                                    |
 | `readonly flowLayouts?`        | `ReadonlyArray<FlowLayoutDefinition>`                                                                                             | `[]`                               | 追加到内置布局目录的自定义定义；名称不能与不同定义重复                             |
 | `readonly flowThemeStyles?`    | `ReadonlyArray<FlowThemeStyleDefinition>`                                                                                         | `[]`                               | 与 Core Theme style 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义    |
 | `frame?`                       | `InputFlowDiagram['frame']`                                                                                                       | —                                  | 图示外框覆盖                                                                       |
@@ -1086,7 +1085,6 @@ export type FlowRelationsProps = Readonly<{
 | `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`                                                                                           | `[]`                               | 自定义 Relation role definitions                                                   |
 | `relations?`                   | `InputFlowDiagram['relations']`                                                                                                   | —                                  | 可选的根级有序 Relation 声明                                                       |
 | `routing?`                     | `InputFlowDiagram['routing']`                                                                                                     | —                                  | 根级关系路由默认值                                                                 |
-| `style?`                       | `InputFlowDiagram['style']`                                                                                                       | —                                  | 后代的级联图形样式                                                                 |
 | `theme?`                       | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                         | —                                  | 本图及后代的稀疏主题覆盖                                                           |
 | `transforms?`                  | `InputFlowDiagram['transforms']`                                                                                                  | —                                  | 应用于图示整体的局部变换                                                           |
 | `zIndex?`                      | `number`                                                                                                                          | —                                  | 整张图在同级内容中的绘制顺序                                                       |
@@ -2126,34 +2124,33 @@ export declare const defineFlowLayout: (definition: FlowLayoutDefinition) => Flo
 
 <ApiTable>
 
-| 成员               | 类型                                                                                                                              | 默认值  | 说明                                              |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------- |
-| `animations?`      | `IRFlowDiagram["animations"]`                                                                                                     | —       | 整张图的动画轨道，不参与 Flow 排布                |
-| `boundingShape?`   | `"rectangle" \| "circle"`                                                                                                         | —       | 图示引用 id 使用的合成包络形状                    |
-| `children`         | `Array<string>`                                                                                                                   | —       | 根级直接子项 id 的非空有序列表                    |
-| `clip?`            | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —       | 图示局部坐标系中的裁剪区域                        |
-| `defaults?`        | `IRFlowDiagram["defaults"]`                                                                                                       | —       | 后代默认样式及继承屏障                            |
-| `diagramDefaults?` | `IRFlowDiagram["diagramDefaults"]`                                                                                                | —       | Diagram 层的稀疏默认值                            |
-| `entities`         | `IRFlowDiagram["entities"]`                                                                                                       | —       | 非空的平级 Entity 声明目录                        |
-| `flowDefaults?`    | `IRFlowDiagram["flowDefaults"]`                                                                                                   | —       | Flow 布局和对象外观的稀疏默认值                   |
-| `frame?`           | `IRFlowDiagram["frame"]`                                                                                                          | —       | 图示外框覆盖                                      |
-| `graphRules?`      | `IRFlowDiagram["graphRules"]`                                                                                                     | —       | 作用于生成的 Entity 与 Relation 的有序 Graph 规则 |
-| `groups?`          | `IRFlowDiagram["groups"]`                                                                                                         | `[]`    | 平级 Group 声明目录，省略时解析为空数组           |
-| `id?`              | `string`                                                                                                                          | —       | 可选的图示引用 id                                 |
-| `layout?`          | `{ direction?: "up" \| "right" \| "down" \| "left" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —       | 根级方向与间距覆盖                                |
-| `layouts?`         | `IRFlowDiagram["layouts"]`                                                                                                        | `[]`    | 平级无外壳 Layout 声明目录，省略时解析为空数组    |
-| `localNamespace?`  | `false \| true`                                                                                                                   | —       | 将后代 id 留在本图的局部命名空间                  |
-| `meta?`            | `Record<string, JsonValue>`                                                                                                       | —       | 透传且不参与编译的 JSON 元信息                    |
-| `namespace`        | `"diagram"`                                                                                                                       | —       | 命名空间，固定为 diagram                          |
-| `position?`        | `IRFlowDiagram["position"]`                                                                                                       | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐        |
-| `presentation?`    | `IRFlowDiagram["presentation"]`                                                                                                   | —       | 标题、说明与图例等完整图示内容                    |
-| `relations?`       | `IRFlowDiagram["relations"]`                                                                                                      | —       | 可选的根级有序 Relation 声明                      |
-| `routing?`         | `IRFlowDiagram["routing"]`                                                                                                        | —       | 根级关系路由默认值                                |
-| `style?`           | `IRFlowDiagram["style"]`                                                                                                          | —       | 后代的级联图形样式                                |
-| `theme?`           | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                         | —       | 本图及后代的稀疏主题覆盖                          |
-| `transforms?`      | `IRFlowDiagram["transforms"]`                                                                                                     | —       | 应用于图示整体的局部变换                          |
-| `type`             | `"flow"`                                                                                                                          | —       | Flow Diagram Source 的判别字段                    |
-| `zIndex?`          | `number`                                                                                                                          | —       | 整张图在同级内容中的绘制顺序                      |
+| 成员              | 类型                                                                                                                              | 默认值  | 说明                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------- |
+| `animations?`     | `IRFlowDiagram["animations"]`                                                                                                     | —       | 整张图的动画轨道，不参与 Flow 排布                |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                         | —       | 图示引用 id 使用的合成包络形状                    |
+| `children`        | `Array<string>`                                                                                                                   | —       | 根级直接子项 id 的非空有序列表                    |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —       | 图示局部坐标系中的裁剪区域                        |
+| `defaultDiagram?` | `IRFlowDiagram["defaultDiagram"]`                                                                                                 | —       | Diagram 层的稀疏默认值                            |
+| `defaultFlow?`    | `IRFlowDiagram["defaultFlow"]`                                                                                                    | —       | Flow 布局和对象外观的稀疏默认值                   |
+| `defaults?`       | `IRFlowDiagram["defaults"]`                                                                                                       | —       | 后代默认样式及继承屏障                            |
+| `entities`        | `IRFlowDiagram["entities"]`                                                                                                       | —       | 非空的平级 Entity 声明目录                        |
+| `frame?`          | `IRFlowDiagram["frame"]`                                                                                                          | —       | 图示外框覆盖                                      |
+| `graphRules?`     | `IRFlowDiagram["graphRules"]`                                                                                                     | —       | 作用于生成的 Entity 与 Relation 的有序 Graph 规则 |
+| `groups?`         | `IRFlowDiagram["groups"]`                                                                                                         | `[]`    | 平级 Group 声明目录，省略时解析为空数组           |
+| `id?`             | `string`                                                                                                                          | —       | 可选的图示引用 id                                 |
+| `layout?`         | `{ direction?: "up" \| "right" \| "down" \| "left" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —       | 根级方向与间距覆盖                                |
+| `layouts?`        | `IRFlowDiagram["layouts"]`                                                                                                        | `[]`    | 平级无外壳 Layout 声明目录，省略时解析为空数组    |
+| `localNamespace?` | `false \| true`                                                                                                                   | —       | 将后代 id 留在本图的局部命名空间                  |
+| `meta?`           | `Record<string, JsonValue>`                                                                                                       | —       | 透传且不参与编译的 JSON 元信息                    |
+| `namespace`       | `"diagram"`                                                                                                                       | —       | 命名空间，固定为 diagram                          |
+| `position?`       | `IRFlowDiagram["position"]`                                                                                                       | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐        |
+| `presentation?`   | `IRFlowDiagram["presentation"]`                                                                                                   | —       | 标题、说明与图例等完整图示内容                    |
+| `relations?`      | `IRFlowDiagram["relations"]`                                                                                                      | —       | 可选的根级有序 Relation 声明                      |
+| `routing?`        | `IRFlowDiagram["routing"]`                                                                                                        | —       | 根级关系路由默认值                                |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                         | —       | 本图及后代的稀疏主题覆盖                          |
+| `transforms?`     | `IRFlowDiagram["transforms"]`                                                                                                     | —       | 应用于图示整体的局部变换                          |
+| `type`            | `"flow"`                                                                                                                          | —       | Flow Diagram Source 的判别字段                    |
+| `zIndex?`         | `number`                                                                                                                          | —       | 整张图在同级内容中的绘制顺序                      |
 
 </ApiTable>
 
@@ -2216,8 +2213,8 @@ export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
     animations: '整张图的动画轨道，不参与 Flow 排布',
     defaults: '后代默认样式及继承屏障',
     presentation: '标题、说明与图例等完整图示内容',
-    diagramDefaults: 'Diagram 层的稀疏默认值',
-    flowDefaults: 'Flow 布局和对象外观的稀疏默认值',
+    defaultDiagram: 'Diagram 层的稀疏默认值',
+    defaultFlow: 'Flow 布局和对象外观的稀疏默认值',
     graphRules: '作用于生成的 Entity 与 Relation 的有序 Graph 规则',
     layout: '根级方向与间距覆盖',
     routing: '根级关系路由默认值',

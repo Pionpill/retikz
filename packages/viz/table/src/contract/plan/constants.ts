@@ -21,19 +21,19 @@ export const TableCellAppearanceTracePath = {
   /** Cell 背景填充不透明度 */
   BackgroundFillOpacity: '/background/fillOpacity',
   /** Cell 内容主颜色 */
-  ContentColor: '/content/style/color',
+  ContentColor: '/content/defaults/style/color',
   /** Cell 内容填充 */
-  ContentFill: '/content/style/fill',
+  ContentFill: '/content/defaults/style/fill',
   /** Cell 内容填充不透明度 */
-  ContentFillOpacity: '/content/style/opacity/fill',
+  ContentFillOpacity: '/content/defaults/style/opacity/fill',
   /** Cell 内容描边 */
-  ContentStroke: '/content/style/stroke',
+  ContentStroke: '/content/defaults/style/stroke',
   /** Cell 内容描边宽度 */
-  ContentStrokeWidth: '/content/style/strokeWidth',
+  ContentStrokeWidth: '/content/defaults/style/strokeWidth',
   /** Cell 内容描边不透明度 */
-  ContentStrokeOpacity: '/content/style/opacity/stroke',
+  ContentStrokeOpacity: '/content/defaults/style/opacity/stroke',
   /** Cell 内容整体不透明度 */
-  ContentOpacity: '/content/style/opacity/overall',
+  ContentOpacity: '/content/defaults/style/opacity/overall',
   /** Cell 内容样式重置配置 */
   ContentResetStyle: '/content/defaults/reset',
   /** Node 默认主颜色 */

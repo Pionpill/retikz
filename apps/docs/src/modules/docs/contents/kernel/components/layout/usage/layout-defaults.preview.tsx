@@ -13,8 +13,10 @@ export type LayoutDefaultsPreviewValues = {
 export const LayoutDefaultsPreview = (values: LayoutDefaultsPreviewValues) => (
   <Layout
     rootScope={{
-      style: { stroke: values.stroke, strokeWidth: values.strokeWidth, opacity: values.opacity },
-      defaults: { node: { style: { fill: values.fill, textColor: '#0f172a' }, layout: { padding: values.padding } } },
+      defaults: {
+        style: { stroke: values.stroke, strokeWidth: values.strokeWidth, opacity: values.opacity },
+        node: { style: { fill: values.fill, textColor: '#0f172a' }, layout: { padding: values.padding } },
+      },
     }}
   >
     <Node id="A" position={[0, 0]}>

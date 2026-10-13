@@ -22,8 +22,7 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
         id="source"
         position={[106, 0]}
         label={{ text: t.source, position: 'left', opacity: 0.8, font: { size: 12 } }}
-        style={{ font: { size: 13 } }}
-        layout={{ key: { width: 150 } }}
+        defaultCell={{ style: { font: { size: 13 } }, key: { layout: { width: 150 } } }}
       >
         <MapEntry>
           <MapKey text="children" />
@@ -48,7 +47,6 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
         id="tree"
         position={[0, 180]}
         label={{ text: t.tree, opacity: 0.8, font: { size: 12 } }}
-        style={{ font: { size: 13 } }}
         data={{
           elements: [
             {
@@ -62,6 +60,7 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
             },
           ],
         }}
+        defaultCell={{ style: { font: { size: 13 } } }}
       />
       <Path
         way={['source.bottom', 'tree.top']}

@@ -118,7 +118,7 @@ Inside and outside labels are independent: skeleton.labels goes inside cells; in
 
 ### Configure tracks, styles, and indices
 
-Each column uses the largest cell width demand in that column; each row uses its largest height demand. layout.width and height accept numbers or auto, but not content. Auto cells fill their tracks; smaller fixed cells keep their size at the track's upper-left corner. Unused track space is outside the cell reference region.
+Each column uses the largest cell width demand in that column; each row uses its largest height demand. defaultCell.layout.width and height accept numbers or auto, but not content. Auto cells fill their tracks; smaller fixed cells keep their size at the track's upper-left corner. Unused track space is outside the cell reference region.
 
 <ComponentPreview
   files={['matrix-layout', 'matrix-layout.preview.tsx']}
@@ -174,7 +174,7 @@ DataExpand applies only to data and controls structures inside each cell:
 | ['map']        | Map       | JSON text |
 | ['array']      | JSON text | Array     |
 
-The selection propagates recursively. A structure rendered as text retains its entire subtree as compact JSON. Empty objects and arrays display as {} and []. Deeper rectangular arrays still become nested Array components; Matrix is never inferred, and there is no matrix selector. Overall cell style/layout affects only this level, while font and text color inherit through content.
+The selection propagates recursively. A structure rendered as text retains its entire subtree as compact JSON. Empty objects and arrays display as {} and []. Deeper rectangular arrays still become nested Array components; Matrix is never inferred, and there is no matrix selector. defaultCell.style / defaultCell.layout affects only this level, while font and text color inherit through content.
 
 Direct IR using data also registers ArrayDefinition and MapDefinition; clipping requires PathClipDefinition. React and Vanilla collect these automatically.
 

@@ -56,16 +56,19 @@ it('preserves the string identity option across React and Vanilla', () => {
 describe('Array / Map adapter parity', () => {
   it('preserves Array content width through items, markers and Vanilla', () => {
     const items = [{ content: 'A', layout: { width: 'content' as const } }, 'longer'];
-    const fromItems = createInputScene(<Array items={items} layout={{ width: 'content' }} />);
+    const fromItems = createInputScene(<Array items={items} defaultCell={{ layout: { width: 'content' } }} />);
     const fromMarkers = createInputScene(
-      <Array layout={{ width: 'content' }}>
+      <Array defaultCell={{ layout: { width: 'content' } }}>
         <ArrayItem text="A" layout={{ width: 'content' }} />
         <ArrayItem text="longer" />
       </Array>,
     );
-    const fromVanilla = normalizeScene(scene({ children: [array({ items, layout: { width: 'content' } })] }), {
-      adapters: [ArrayInputEmbedAdapter],
-    });
+    const fromVanilla = normalizeScene(
+      scene({ children: [array({ items, defaultCell: { layout: { width: 'content' } } })] }),
+      {
+        adapters: [ArrayInputEmbedAdapter],
+      },
+    );
 
     expect(normalizeScene(fromItems.scene, { adapters: synchronousAdapters(fromItems.adapters) }).ir).toEqual(
       fromVanilla.ir,
@@ -77,7 +80,7 @@ describe('Array / Map adapter parity', () => {
         children: [
           array({
             items: [{ content: 'A', layout: { width: 'content' } }, { content: 'longer' }],
-            layout: { width: 'content' },
+            defaultCell: { layout: { width: 'content' } },
           }),
         ],
       }),
@@ -108,8 +111,12 @@ describe('Array / Map adapter parity', () => {
   it('retains nested providers, styles and sparse IR equally across React and Vanilla', () => {
     const input = createInputScene(
       <Map
-        style={{ fill: 'red', key: { fill: 'green' }, value: { opacity: { fill: 0.3 } } }}
-        layout={{ padding: 0, key: { width: 60 }, value: { height: 40 } }}
+        defaultCell={{
+          style: { fill: 'red' },
+          layout: { padding: 0 },
+          key: { style: { fill: 'green' }, layout: { width: 60 } },
+          value: { style: { opacity: { fill: 0.3 } }, layout: { height: 40 } },
+        }}
       >
         <MapEntry>
           <MapKey>
@@ -130,14 +137,18 @@ describe('Array / Map adapter parity', () => {
       scene({
         children: [
           map({
-            style: { fill: 'red', key: { fill: 'green' }, value: { opacity: { fill: 0.3 } } },
-            layout: { padding: 0, key: { width: 60 }, value: { height: 40 } },
             entries: [
               {
                 key: { content: node },
                 value: { style: { fill: 'blue' }, content: array({ items: [{ content: node }] }) },
               },
             ],
+            defaultCell: {
+              style: { fill: 'red' },
+              layout: { padding: 0 },
+              key: { style: { fill: 'green' }, layout: { width: 60 } },
+              value: { style: { opacity: { fill: 0.3 } }, layout: { height: 40 } },
+            },
           }),
         ],
       }),
@@ -145,8 +156,10 @@ describe('Array / Map adapter parity', () => {
     );
 
     expect(react.ir.children[0]).toMatchObject({
-      style: { key: { fill: 'green' }, value: { opacity: { fill: 0.3 } } },
-      layout: { key: { width: 60 }, value: { height: 40 } },
+      defaultCell: {
+        key: { style: { fill: 'green' }, layout: { width: 60 } },
+        value: { style: { opacity: { fill: 0.3 } }, layout: { height: 40 } },
+      },
     });
     expect(react.ir).toEqual(vanilla.ir);
     expect(react.contributions).toEqual(vanilla.contributions);
@@ -281,11 +294,14 @@ describe('Array / Map adapter parity', () => {
 
 it('passes mixed JSON data through React and Vanilla with identical contributions', () => {
   const data = { id: 'ordinary data', values: ['', '', null, { enabled: false }] };
-  const input = createInputScene(<Map data={data} layout={{ value: { width: 70 } }} />);
+  const input = createInputScene(<Map data={data} defaultCell={{ value: { layout: { width: 70 } } }} />);
   const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
-  const vanilla = normalizeScene(scene({ children: [map({ data, layout: { value: { width: 70 } } })] }), {
-    adapters: [MapInputEmbedAdapter],
-  });
+  const vanilla = normalizeScene(
+    scene({ children: [map({ data, defaultCell: { value: { layout: { width: 70 } } } })] }),
+    {
+      adapters: [MapInputEmbedAdapter],
+    },
+  );
 
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.contributions).toEqual(vanilla.contributions);
@@ -301,7 +317,7 @@ it('passes mixed JSON data through React and Vanilla with identical contribution
   expect(reactArray.ir).toEqual(vanillaArray.ir);
   expect(reactArray.contributions).toEqual(vanillaArray.contributions);
   expect(renderToSvgString(input.scene, { adapters: synchronousAdapters(input.adapters) })).toEqual(
-    renderToSvgString(scene({ children: [map({ data, layout: { value: { width: 70 } } })] }), {
+    renderToSvgString(scene({ children: [map({ data, defaultCell: { value: { layout: { width: 70 } } } })] }), {
       adapters: [MapInputEmbedAdapter],
     }),
   );
@@ -366,14 +382,14 @@ it('骨架的格内外标号与 Map 键在 React 和 Vanilla 中等价', () => {
   const layout = { width: 40, height: 30 };
   const react = createInputScene(
     <>
-      <Array id="v" cellIdMode="index" skeleton={skeleton} index={index} layout={layout} />
-      <Map skeleton={{ keys: ['k', '', 'k'] }} layout={layout} />
+      <Array id="v" cellIdMode="index" skeleton={skeleton} index={index} defaultCell={{ layout }} />
+      <Map skeleton={{ keys: ['k', '', 'k'] }} defaultCell={{ layout }} />
     </>,
   );
   const vanilla = scene({
     children: [
-      array({ id: 'v', cellIdMode: 'index', skeleton, index, layout }),
-      map({ skeleton: { keys: ['k', '', 'k'] }, layout }),
+      array({ id: 'v', cellIdMode: 'index', skeleton, index, defaultCell: { layout } }),
+      map({ skeleton: { keys: ['k', '', 'k'] }, defaultCell: { layout } }),
     ],
   });
   const adapters = react.adapters.filter(adapter => adapter.lower !== undefined);

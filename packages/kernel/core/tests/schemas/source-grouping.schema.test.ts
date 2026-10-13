@@ -30,16 +30,17 @@ describe('Source 语义分组', () => {
 
     expect(NodeSchema.parse(source)).toEqual(source);
     expect(
-      ScopeSchema.parse({ type: 'scope', children: [], style: {}, defaults: { node: {}, reset: false } }),
-    ).toMatchObject({ style: {}, defaults: { node: {}, reset: false } });
+      ScopeSchema.parse({ type: 'scope', children: [], defaults: { style: {}, node: {}, reset: false } }),
+    ).toMatchObject({ defaults: { style: {}, node: {}, reset: false } });
   });
 
   it('Scope 只接收允许级联的字段和具名默认通道', () => {
     const source = {
       type: 'scope',
       children: [],
-      style: { stroke: 'blue' },
+
       defaults: {
+        style: { stroke: 'blue' },
         node: { style: { font: { size: 12 } }, layout: { padding: 0 } },
         path: { style: { lineCap: 'round' } },
         label: { font: { size: 10 } },
@@ -48,12 +49,14 @@ describe('Source 语义分组', () => {
       },
     };
 
-    expect(ScopeSchema.parse(source)).toEqual(source);
+    expect(ScopeSchema.parse(source)).toEqual({ ...source, position: [0, 0] });
 
     for (const invalid of [
       { nodeDefault: {} },
       { resetStyle: false },
+      { style: { color: 'red' } },
       { style: { font: {} } },
+      { defaults: { style: { font: {} } } },
       { defaults: { node: { id: 'bad' } } },
     ]) {
       expect(ScopeSchema.safeParse({ type: 'scope', children: [], ...invalid }).success).toBe(false);

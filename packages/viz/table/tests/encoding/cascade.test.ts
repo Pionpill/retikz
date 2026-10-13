@@ -6,13 +6,13 @@ import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 import { cascadeTableCellAppearance } from '../../src/pipeline/rule/cascade';
 
-const tableDefaults = resolveTableThemeDefaults();
+const defaultTable = resolveTableThemeDefaults();
 
-const sequential = tableDefaults.defaults.visualDefaults?.sequential;
+const sequential = defaultTable.defaults.defaultVisual?.sequential;
 if (sequential === undefined || sequential === null)
   throw new Error('test fixture requires the default sequential palette');
 const scaleContext = {
-  categoricalColors: tableDefaults.defaults.visualDefaults?.categorical ?? [],
+  categoricalColors: defaultTable.defaults.defaultVisual?.categorical ?? [],
   sequentialColors: [sequential[0], sequential[1]] as const,
 };
 
@@ -44,7 +44,7 @@ describe('Table visual encoding cascade', () => {
       },
     });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       visualScaleDefinitions: [custom],
       encodings: [
@@ -71,15 +71,15 @@ describe('Table visual encoding cascade', () => {
         range: ['#123456'],
       },
     ]);
-    expect(result.cells[0].appearance.content?.style?.color).toBe('#123456');
-    expect(result.cells[1].appearance.content?.style?.color).toBe('#18181b');
+    expect(result.cells[0].appearance.content?.defaults?.style?.color).toBe('#123456');
+    expect(result.cells[1].appearance.content?.defaults?.style?.color).toBe('#18181b');
     expect(result.cells[3].trace).not.toHaveProperty('encodingIds');
   });
 
   it('applies style, ordered owned channels, then ordered root rules', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[1]] });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       encodings: [
         {
@@ -106,7 +106,7 @@ describe('Table visual encoding cascade', () => {
     expect(result.cells[0]).toMatchObject({
       appearance: {
         background: { fill: 'green' },
-        content: { style: { color: '#18181b' } },
+        content: { defaults: { style: { color: '#18181b' } } },
       },
       trace: {
         encodingIds: ['first', 'second'],
@@ -118,7 +118,7 @@ describe('Table visual encoding cascade', () => {
   it('treats undefined resolution as no patch, trace, descriptor, or evaluator call', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] });
     const result = resolveTableCellPlans(model, {
-      tableDefaults,
+      defaultTable,
       scaleContext,
       encodings: [
         {
@@ -142,7 +142,7 @@ it('content opacity inherits by member and records each winner', () => {
     {},
     {},
     {
-      content: { style: { opacity: { fill: 0.4, stroke: 0.8 } } },
+      content: { defaults: { style: { opacity: { fill: 0.4, stroke: 0.8 } } } },
     },
     { kind: 'defaults', path: '/defaults/content' },
   );
@@ -150,14 +150,14 @@ it('content opacity inherits by member and records each winner', () => {
     first.appearance,
     first.trace,
     {
-      content: { style: { opacity: 0.5 } },
+      content: { defaults: { style: { opacity: 0.5 } } },
     },
     { kind: 'structure' },
   );
-  expect(second.appearance.content?.style?.opacity).toEqual({ fill: 0.4, stroke: 0.8, overall: 0.5 });
+  expect(second.appearance.content?.defaults?.style?.opacity).toEqual({ fill: 0.4, stroke: 0.8, overall: 0.5 });
   expect(second.trace).toMatchObject({
-    '/content/style/opacity/fill': { kind: 'defaults', path: '/defaults/content' },
-    '/content/style/opacity/stroke': { kind: 'defaults', path: '/defaults/content' },
-    '/content/style/opacity/overall': { kind: 'structure' },
+    '/content/defaults/style/opacity/fill': { kind: 'defaults', path: '/defaults/content' },
+    '/content/defaults/style/opacity/stroke': { kind: 'defaults', path: '/defaults/content' },
+    '/content/defaults/style/opacity/overall': { kind: 'structure' },
   });
 });

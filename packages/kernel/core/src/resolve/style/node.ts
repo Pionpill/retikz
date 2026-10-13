@@ -1,31 +1,17 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRNode, IRNodeDefault, IRNodeLayout, IRNodeStyle } from '../../schemas';
-import { cutsStyleChannel } from './frame';
+import type { IRNode, IRNodeStyle } from '../../schemas';
 import { mergeGraphicStyle } from './opacity';
-import type { StyleResolveFrame } from './types';
+import type { EffectiveScopeDefaults } from './types';
 
 /** 按各字段的原有覆盖粒度解析节点分组，复合叶子保持整体覆盖 */
-export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleResolveFrame>): IRNode => {
-  let defaults: IRNodeDefault = {};
-  let style: IRNodeStyle = {};
-  let layout: IRNodeLayout = {};
-
-  for (const frame of stack) {
-    if (cutsStyleChannel(frame.resetStyle, 'node')) {
-      defaults = {};
-      style = {};
-      layout = {};
-    }
-
-    const { style: nodeStyle, layout: nodeLayout, ...geometry } = frame.nodeDefault ?? {};
-    defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
-    style = mergeGraphicStyle<IRNodeStyle>(style, frame.cascade, nodeStyle);
-    layout = { ...layout, ...mergeProperties([nodeLayout ?? {}], { shouldOverride: value => value !== undefined }) };
-  }
-
-  style = mergeGraphicStyle(style, node.style);
-  layout = { ...layout, ...mergeProperties([node.layout ?? {}], { shouldOverride: value => value !== undefined }) };
+export const resolveEffectiveNodeStyle = (node: IRNode, scopeDefaults: EffectiveScopeDefaults): IRNode => {
+  const defaults = scopeDefaults.node;
+  const style = mergeGraphicStyle<IRNodeStyle>(defaults?.style, node.style);
+  const layout = {
+    ...defaults?.layout,
+    ...mergeProperties([node.layout ?? {}], { shouldOverride: value => value !== undefined }),
+  };
   if (style.color !== undefined) {
     style.stroke ??= style.color;
     style.fill ??= style.color;
@@ -33,7 +19,7 @@ export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<Sty
   }
 
   return {
-    ...defaults,
+    ...defaults?.geometry,
     ...mergeProperties([node], { shouldOverride: value => value !== undefined }),
     type: node.type,
     position: node.position,

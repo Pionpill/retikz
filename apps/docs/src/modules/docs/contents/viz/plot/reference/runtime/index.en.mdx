@@ -23,7 +23,7 @@ For async SSR, call `renderPlotAsync(spec, dataBindings, options?)` from `@retik
 
 React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` bridges its `XxxProps` / children to a Plot Vanilla `InputPlotEmbed` and hands it to the same `PlotInputEmbedAdapter`; `embedPlot()` creates an `InputEmbed` for Vanilla `scene()`, and `PlotInputEmbedAdapter` performs the `InputPlot -> IRPlot` normalization and lowering. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
-`<Plot theme>` is the local Core Scope Theme around the Plot panel: it selects that Plot's `style` and `mode`. It is distinct from Plot-owned `plotDefaults` and `plotRules`, which are persisted Plot Source inputs. Vanilla `renderPlot(spec, data, { theme })` writes `theme` to the root `IRScene.theme` for the compiled Scene; it does not rewrite `spec.plotDefaults` or `spec.plotRules`.
+`<Plot theme>` is the local Core Scope Theme around the Plot panel: it selects that Plot's `style` and `mode`. It is distinct from Plot-owned `defaultPlot` and `plotRules`, which are persisted Plot Source inputs. Vanilla `renderPlot(spec, data, { theme })` writes `theme` to the root `IRScene.theme` for the compiled Scene; it does not rewrite `spec.defaultPlot` or `spec.plotRules`.
 
 All three entries delegate data, scale, coordinate, mark, and guide semantics to `@retikz/plot`, then return Core IR to the shared compilation path. SVG, Canvas, and SVG strings are output forms; SSR is a host scenario supported by Vanilla, not a separate Plot semantics path.
 

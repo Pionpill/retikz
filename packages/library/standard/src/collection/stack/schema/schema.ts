@@ -1,20 +1,19 @@
 import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { JsonValueSchema, NonNegativeNumberSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, literal, never, string, union } from 'zod';
+import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
 import { SurfaceSchema } from '../../../presentation/surface/schema';
 import { DataExpandSchema } from '../../_cell/data';
 import {
   LinearCellSkeletonSchema,
   CellSchema,
-  CellStyleSchema,
-  CellLayoutSchema,
+  CellDefaultSchema,
   OpenBorderSchema,
   CollectionArrowSchema,
 } from '../../_cell/schema';
 
-/** 单格尺寸与栈底到栈顶的堆叠方向 */
-export const StackLayoutSchema = CellLayoutSchema.extend({
+/** 栈底到栈顶的堆叠方向与间距 */
+export const StackLayoutSchema = strictObject({
   direction: zodEnum(['up', 'down', 'left', 'right']).default('up').describe('Direction from bottom to top.'),
   reverseArrows: boolean().default(false).describe('Swap operation arrow sides without changing flow or cell order.'),
   gap: NonNegativeNumberSchema.default(8).describe('Distance between adjacent cells.'),
@@ -29,9 +28,7 @@ export const StackSkeletonSchema = LinearCellSkeletonSchema;
 const StackBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard collection namespace.'),
   type: literal('stack').describe('Static stack discriminator.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
-  style: CellStyleSchema.optional(),
-  layout: StackLayoutSchema.optional().describe('Cell sizing, direction and spacing.'),
+  ...ScopePropsSchema.shape,
   label: NodeSchema.shape.label,
   arrow: CollectionArrowSchema,
   border: union([boolean(), StackBorderSchema])
@@ -41,6 +38,8 @@ const StackBaseSchema = CompositeBaseSchema.extend({
     .unwrap()
     .default(8)
     .describe('Space around the cell envelope, independent of cell padding and border visibility.'),
+  layout: StackLayoutSchema.optional().describe('Collection direction and spacing.'),
+  defaultCell: CellDefaultSchema.optional(),
 });
 
 /** 有序单元、JSON 数据与骨架互斥的静态栈 Source */

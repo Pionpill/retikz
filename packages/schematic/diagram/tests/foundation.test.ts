@@ -77,7 +77,7 @@ const resolveFoundation = (
   source: Readonly<{
     presentation?: ReturnType<typeof DiagramPresentationSchema.parse>;
     frame?: ReturnType<typeof DiagramFrameSchema.parse>;
-    diagramDefaults?: ReturnType<typeof DiagramDefaultsSchema.parse>;
+    defaultDiagram?: ReturnType<typeof DiagramDefaultsSchema.parse>;
   }> = {},
 ) =>
   resolveDiagramFoundation(source, {
@@ -144,7 +144,7 @@ describe('Diagram Foundation resolve', () => {
   it('applies inline Theme then preserves every legal falsy Frame override', () => {
     const resolution = resolveFoundation({
       presentation: DiagramPresentationSchema.parse({ legend }),
-      diagramDefaults: DiagramDefaultsSchema.parse({
+      defaultDiagram: DiagramDefaultsSchema.parse({
         frame: { padding: 20, cornerRadius: 8, background: { fill: '#ffffff' } },
         presentation: { title: { style: { opacity: 0.7, font: { family: 'Inter' } } } },
       }),
@@ -181,7 +181,7 @@ describe('Diagram Foundation resolve', () => {
   it('lets an authored title font replace defaults while preserving independent formatting fields', () => {
     const result = resolveFoundation({
       presentation: { title: { text: 'Title', style: { font: { size: 13 }, opacity: 0 } } },
-      diagramDefaults: {
+      defaultDiagram: {
         presentation: {
           title: {
             style: { font: { family: 'serif', size: 24, weight: 700 }, textColor: '#123456' },

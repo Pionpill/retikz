@@ -23,8 +23,8 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
         boundingShape: 'circle',
         meta: { role: 'wrapper' },
         animations: [],
-        style: { fill: 'lightblue', opacity: 0.8 },
         defaults: {
+          style: { fill: 'lightblue', opacity: 0.8 },
           node: {
             shape: 'circle',
             style: { fill: 'white' },
@@ -39,10 +39,9 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
 
   it('与完整 Scope 共享字段校验并保持 JSON round-trip', () => {
     const props = {
-      style: { fill: 'lightblue' },
       transforms: [{ kind: 'scale' as const, x: 1.5, pivot: [2, 3] as [number, number] }],
       position: { kind: 'anchor', target: [10, 20] as [number, number] },
-      defaults: { node: { style: { fill: 'white' } }, reset: ['label' as const] },
+      defaults: { style: { fill: 'lightblue' }, node: { style: { fill: 'white' } }, reset: ['label' as const] },
     };
     const parsed = ScopePropsSchema.parse(JSON.parse(JSON.stringify(props)));
 
@@ -265,7 +264,7 @@ describe('ScopeSchema 级联 graphic state', () => {
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: { color: 'blue' },
+        defaults: { style: { color: 'blue' } },
       }).success,
     ).toBe(true);
   });
@@ -275,12 +274,14 @@ describe('ScopeSchema 级联 graphic state', () => {
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: {
-          color: 'blue',
-          stroke: 'red',
-          fill: 'yellow',
-          strokeWidth: 2,
-          opacity: { overall: 0.5, fill: 0.4, stroke: 0.3 },
+        defaults: {
+          style: {
+            color: 'blue',
+            stroke: 'red',
+            fill: 'yellow',
+            strokeWidth: 2,
+            opacity: { overall: 0.5, fill: 0.4, stroke: 0.3 },
+          },
         },
       }).success,
     ).toBe(true);
@@ -291,14 +292,14 @@ describe('ScopeSchema 级联 graphic state', () => {
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: { fill: 0.08, stroke: 1 },
+        defaults: { style: { fill: 0.08, stroke: 1 } },
       }).success,
     ).toBe(true);
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: { color: 0.4 },
+        defaults: { style: { color: 0.4 } },
       }).success,
     ).toBe(false);
   });
@@ -308,7 +309,7 @@ describe('ScopeSchema 级联 graphic state', () => {
       ScopeSchema.safeParse({
         type: 'scope',
         children: [],
-        style: { opacity: 1.5 },
+        defaults: { style: { opacity: 1.5 } },
       }).success,
     ).toBe(false);
   });
@@ -409,8 +410,8 @@ describe('Scope 样式 JSON round-trip', () => {
           style: { color: 'red' },
         },
       ],
-      style: { color: 'blue', strokeWidth: 2 },
       defaults: {
+        style: { color: 'blue', strokeWidth: 2 },
         node: {
           shape: 'circle' as const,
           style: { fill: 'lightblue' },

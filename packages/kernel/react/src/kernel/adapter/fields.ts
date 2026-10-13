@@ -72,7 +72,6 @@ export const SCOPE_FIELDS = [
   'boundingShape',
   'meta',
   'animations',
-  'style',
   'defaults',
 ] as const satisfies ReadonlyArray<keyof IRScope>;
 
@@ -86,7 +85,7 @@ void _assertScopeFieldsCheck;
  * @description 同 NODE_FIELDS 互锁防漂移：下方 _ScopeStyleFieldsCheck 校验它恰好覆盖 ScopeStyleProps 全部 key，
  *   也是 SCOPE_FIELDS 的真子集（不含容器 / 屏障 / 栈序 / 裁剪字段）
  */
-export const SCOPE_STYLE_FIELDS = ['style', 'defaults'] as const satisfies ReadonlyArray<keyof ScopeStyleProps>;
+export const SCOPE_STYLE_FIELDS = ['defaults'] as const satisfies ReadonlyArray<keyof ScopeStyleProps>;
 
 type _ScopeStyleFieldsCheck = AssertEqual<(typeof SCOPE_STYLE_FIELDS)[number], keyof ScopeStyleProps>;
 

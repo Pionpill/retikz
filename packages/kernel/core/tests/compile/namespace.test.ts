@@ -7,24 +7,21 @@ import { boxInsets } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
-  id,
-  shapeName: 'rectangle',
-  shapeDef: BUILTIN_SHAPES.rectangle,
-  rect: { x, y, width: 0, height: 0, rotate: 0 },
-  contentCenter: [x, y],
-  rotateDeg: 0,
-  margin: boxInsets(0),
-  textWidth: 0,
-  textHeight: 0,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-  boundaryResolution: {
+  node: { id },
+  shape: { name: 'rectangle', definition: BUILTIN_SHAPES.rectangle, params: {} },
+  geometry: {
+    rect: { x, y, width: 0, height: 0, rotate: 0 },
+    contentCenter: [x, y],
+    margin: boxInsets(0),
+    contentSize: { width: 0, height: 0 },
+  },
+  boundary: {
     name: BUILTIN_SHAPES.rectangle.name,
     definition: BUILTIN_SHAPES.rectangle,
     params: {},
     isShape: true,
   },
+  irPath: 'synthetic.test',
 });
 
 describe('NamespaceStack 基本 register / lookup', () => {

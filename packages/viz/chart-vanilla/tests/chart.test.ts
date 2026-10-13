@@ -191,10 +191,10 @@ describe('Chart Vanilla authoring', () => {
     const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
-      chartDefaults: { background: { fill: '#abcdef' } },
+      defaultChart: { background: { fill: '#abcdef' } },
     });
 
-    expect(sourceOf(result).chartDefaults).toEqual({ background: { fill: '#abcdef' } });
+    expect(sourceOf(result).defaultChart).toEqual({ background: { fill: '#abcdef' } });
     expect(result).not.toHaveProperty('theme');
   });
 

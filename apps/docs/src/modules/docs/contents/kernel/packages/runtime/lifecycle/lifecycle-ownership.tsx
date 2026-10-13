@@ -17,34 +17,46 @@ const LifecycleOwnership: FC<LifecycleOwnershipProps> = props => {
     <Layout>
       <Map
         label={{ text: text.definitions, font: { size: 14 } }}
-        style={{ font: { size: 14 } }}
-        layout={{ height: 34, key: { width: 155 }, value: { width: 185 } }}
         entries={[
           { key: text.source, value: text.reuse },
           { key: text.computation, value: text.reuse },
           { key: text.participant, value: text.host },
         ]}
+        defaultCell={{
+          style: { font: { size: 14 } },
+          layout: { height: 34 },
+          key: { layout: { width: 155 } },
+          value: { layout: { width: 185 } },
+        }}
       />
       <Map
         position={[375, 0]}
         label={{ text: text.instance, font: { size: 14 } }}
-        style={{ font: { size: 14 } }}
-        layout={{ height: 34, key: { width: 160 }, value: { width: 180 } }}
         entries={[
           { key: text.sourceState, value: text.own },
           { key: text.result, value: text.own },
           { key: text.participant, value: text.host },
         ]}
+        defaultCell={{
+          style: { font: { size: 14 } },
+          layout: { height: 34 },
+          key: { layout: { width: 160 } },
+          value: { layout: { width: 180 } },
+        }}
       />
       <Map
         position={[180, 170]}
         label={{ text: text.transaction, font: { size: 14 } }}
-        style={{ font: { size: 14 } }}
-        layout={{ height: 34, key: { width: 190 }, value: { width: 200 } }}
         entries={[
           { key: text.candidate, value: text.temporary },
           { key: text.prepared, value: 'commit / rollback / dispose' },
         ]}
+        defaultCell={{
+          style: { font: { size: 14 } },
+          layout: { height: 34 },
+          key: { layout: { width: 190 } },
+          value: { layout: { width: 200 } },
+        }}
       />
     </Layout>
   );

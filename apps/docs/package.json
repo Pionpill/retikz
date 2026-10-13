@@ -7,6 +7,7 @@
     "check:figure-size": "node scripts/check-figure-size.mjs",
     "check:build": "pnpm run build",
     "check:runtime": "node scripts/check-doc-runtime.mjs",
+    "check:demos": "node scripts/check-doc-demos.mjs",
     "check:site": "pnpm run check:static && pnpm run check:build && pnpm run check:runtime",
     "check:static": "node scripts/check-doc-static.mjs",
     "dev": "vite",

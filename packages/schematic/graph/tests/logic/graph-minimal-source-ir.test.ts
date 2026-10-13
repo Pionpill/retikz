@@ -28,16 +28,16 @@ describe('Graph minimal Source IR', () => {
     expect(() => Graph.GraphSchema.parse({ ...minimalGraph, entities: [] })).toThrow();
   });
 
-  it('preserves omitted root fields instead of materializing collections, defaults, or wrappers', () => {
+  it('materializes the Scope position while preserving omitted collections and author defaults', () => {
     const parsed = Graph.GraphSchema.parse(minimalGraph);
     const explicit = Graph.GraphSchema.parse({ ...minimalGraph, children: [] });
 
-    expect(parsed).toEqual(minimalGraph);
+    expect(parsed).toEqual({ ...minimalGraph, position: [0, 0] });
     expect(parsed).not.toHaveProperty('entities');
     expect(parsed).not.toHaveProperty('relations');
     expect(parsed).not.toHaveProperty('entityVariant');
     expect(parsed).not.toHaveProperty('theme');
-    expect(parsed).not.toHaveProperty('graphDefaults');
+    expect(parsed).not.toHaveProperty('defaultGraph');
     expect(parsed).not.toHaveProperty('graphRules');
     expect(parsed).not.toHaveProperty('children');
     expect(explicit).toMatchObject({ children: [] });

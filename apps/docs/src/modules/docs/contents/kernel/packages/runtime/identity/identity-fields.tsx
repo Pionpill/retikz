@@ -23,8 +23,6 @@ const IdentityFields: FC<IdentityFieldsProps> = props => {
           key={state.x}
           position={[state.x, 0]}
           label={{ text: state.title, font: { size: 12 } }}
-          layout={{ height: 28, key: { width: 64 }, value: { width: 190 } }}
-          style={{ font: { size: 13 } }}
           entries={[
             {
               key: { content: 'owner', style: { fill: 'dodgerblue' } },
@@ -39,6 +37,12 @@ const IdentityFields: FC<IdentityFieldsProps> = props => {
               value: { content: state.color, style: { fill: 'darkorange' } },
             },
           ]}
+          defaultCell={{
+            style: { font: { size: 13 } },
+            layout: { height: 28 },
+            key: { layout: { width: 64 } },
+            value: { layout: { width: 190 } },
+          }}
         />
       ))}
       <Node

@@ -1288,8 +1288,8 @@ export const vizV01: Release = {
         {
           label: { zh: '待发布：单元格内边距默认值', en: 'Unreleased: Cell padding defaults' },
           content: {
-            zh: '新增 cellLayoutDefaults，按 body / columnHeader 为既有单元格提供 padding，主题 definition、tableDefaults 与实例复用同一片段。显式单元格 padding（包括 0）优先，默认片段支持 null 清除；主题默认不展开进 Source IR。',
-            en: 'New cellLayoutDefaults supplies padding to existing body / columnHeader Cells through the same fragment in theme definitions, tableDefaults, and instances. Explicit Cell padding, including 0, wins; null clears lower defaults. Theme defaults remain outside Source IR.',
+            zh: '新增 defaultCellLayout，按 body / columnHeader 为既有单元格提供 padding，主题 definition、defaultTable 与实例复用同一片段。显式单元格 padding（包括 0）优先，默认片段支持 null 清除；主题默认不展开进 Source IR。',
+            en: 'New defaultCellLayout supplies padding to existing body / columnHeader Cells through the same fragment in theme definitions, defaultTable, and instances. Explicit Cell padding, including 0, wins; null clears lower defaults. Theme defaults remain outside Source IR.',
           },
         },
         {
@@ -1343,8 +1343,8 @@ export const vizV01: Release = {
             {
               label: { zh: '确定性视觉级联', en: 'Deterministic visual cascade' },
               content: {
-                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core baseline < style definition < `tableDefaults` < 正式 Source defaults < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
-                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core baseline < style definition < `tableDefaults` < formal Source defaults < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
+                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core baseline < style definition < `defaultTable` < 正式 Source defaults < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
+                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core baseline < style definition < `defaultTable` < formal Source defaults < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
               },
             },
             {
@@ -1360,8 +1360,8 @@ export const vizV01: Release = {
                 en: 'BREAKING: Table visuals move to Core Theme',
               },
               content: {
-                zh: 'IRTable 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 style definition，`tableDefaults` 与正式 Source defaults 提供稀疏覆盖。未知字段仍会按 owner schema fail-loud。',
-                en: 'IRTable and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the style definition, while `tableDefaults` and formal Source defaults provide sparse overrides. Unknown fields still fail loudly through the owner schema.',
+                zh: 'IRTable 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 style definition，`defaultTable` 与正式 Source defaults 提供稀疏覆盖。未知字段仍会按 owner schema fail-loud。',
+                en: 'IRTable and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the style definition, while `defaultTable` and formal Source defaults provide sparse overrides. Unknown fields still fail loudly through the owner schema.',
               },
             },
             {
@@ -1517,8 +1517,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'BREAKING：Theme 与宿主 CSS 分层', en: 'BREAKING: Theme and host CSS are separated' },
               content: {
-                zh: '三个 standalone root 用 `containerStyle` 承载宿主 CSS；standalone `theme` 写入根 Core Scene，embedded Table 从外层 `Layout` 继承 Theme，`tableDefaults` 与正式 Source defaults 属于 IRTable 的稀疏默认片段。三种 root 的宿主能力仍在同一 Layout runtime 中透传。',
-                en: 'All three standalone roots use `containerStyle` for host CSS. Standalone `theme` writes the root Core Scene, embedded Tables inherit Theme from the outer `Layout`, and `tableDefaults` plus formal Source defaults are IRTable sparse default fragments. Host capabilities continue through the same Layout runtime.',
+                zh: '三个 standalone root 用 `containerStyle` 承载宿主 CSS；standalone `theme` 写入根 Core Scene，embedded Table 从外层 `Layout` 继承 Theme，`defaultTable` 与正式 Source defaults 属于 IRTable 的稀疏默认片段。三种 root 的宿主能力仍在同一 Layout runtime 中透传。',
+                en: 'All three standalone roots use `containerStyle` for host CSS. Standalone `theme` writes the root Core Scene, embedded Tables inherit Theme from the outer `Layout`, and `defaultTable` plus formal Source defaults are IRTable sparse default fragments. Host capabilities continue through the same Layout runtime.',
               },
             },
             {

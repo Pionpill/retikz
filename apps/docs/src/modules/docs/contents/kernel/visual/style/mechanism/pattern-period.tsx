@@ -16,13 +16,15 @@ const PatternPeriod: FC<PatternPeriodProps> = props => {
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Scope
-        style={{
-          fill: {
-            kind: 'pattern',
-            shape: 'lines',
-            size: 10,
-            color: 'dodgerblue',
-            lineStyleCycle: { period: 3, overrides: [{ index: 0, style: { color: 'darkorange', lineWidth: 2 } }] },
+        defaults={{
+          style: {
+            fill: {
+              kind: 'pattern',
+              shape: 'lines',
+              size: 10,
+              color: 'dodgerblue',
+              lineStyleCycle: { period: 3, overrides: [{ index: 0, style: { color: 'darkorange', lineWidth: 2 } }] },
+            },
           },
         }}
       >

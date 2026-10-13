@@ -28,7 +28,10 @@ export const resolveMatrix = (source: IRMatrix): CanonicalMatrix => {
     ...input,
     items: rows.map((row, r) =>
       row.map((cell, c) => {
-        const resolved = resolveCell(cell, { overallStyle: source.style, overallLayout: layout });
+        const resolved = resolveCell(cell, {
+          overallStyle: source.defaultCell?.style,
+          overallLayout: source.defaultCell?.layout,
+        });
         if (cellIdMode !== 'index') return resolved;
 
         const id = `${source.id}-${r}-${c}`;
@@ -42,8 +45,8 @@ export const resolveMatrix = (source: IRMatrix): CanonicalMatrix => {
     ),
     layout: { ...layout, gap: typeof gap === 'number' ? { row: gap, column: gap } : gap },
     index: {
-      row: resolveCollectionIndex(axes.row, source.style),
-      column: resolveCollectionIndex(axes.column, source.style),
+      row: resolveCollectionIndex(axes.row, source.defaultCell?.style),
+      column: resolveCollectionIndex(axes.column, source.defaultCell?.style),
     },
   };
 };

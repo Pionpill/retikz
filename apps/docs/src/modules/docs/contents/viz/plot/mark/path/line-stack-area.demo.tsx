@@ -19,7 +19,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         height={230}
         position={[0, 35]}
 
-        plotDefaults={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
+        defaultPlot={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
         <BuiltinPlotScale dimension="x" type="point" padding={0} />
         <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
@@ -46,7 +46,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         coordinate="polar2D"
         position={[410, 10]}
 
-        plotDefaults={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
+        defaultPlot={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
         <BuiltinPlotScale dimension="y" type="linear" domainPadding={0} />
         <PathMark

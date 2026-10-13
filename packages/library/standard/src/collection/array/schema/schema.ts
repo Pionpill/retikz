@@ -1,6 +1,6 @@
 import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { JsonValueSchema, NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, literal, never, string, union } from 'zod';
+import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
 import { DataExpandSchema } from '../../_cell/data';
 import { CellSchema, CellStyleSchema, CellLayoutSchema, LinearCellSkeletonSchema } from '../../_cell/schema';
@@ -29,8 +29,13 @@ export const ArrayCellSchema = CellSchema.extend({
   style: CellStyleSchema.optional().describe('Sparse visual overrides for a Array or Map cell.'),
 });
 
+/** Array 单格默认配置，支持独立内容宽度 */
+export const ArrayCellDefaultSchema = ArrayCellSchema.pick({ style: true, layout: true }).describe(
+  'Shared Array cell style and layout defaults.',
+);
+
 /** 校验不换行的单轴格子布局，并补齐排列方向与相邻间距 */
-export const ArrayLayoutSchema = ArrayCellLayoutSchema.extend({
+export const ArrayLayoutSchema = strictObject({
   direction: zodEnum(ArrayDirection).default(ArrayDirection.Row).describe('Single-axis cell order without wrapping.'),
   gap: NonNegativeNumberSchema.default(2).describe('Distance between adjacent cells and the index strip.'),
 }).describe('Array cell allocation and ordering.');
@@ -38,7 +43,7 @@ export const ArrayLayoutSchema = ArrayCellLayoutSchema.extend({
 const ArrayBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('array').describe('Composite type for the array presentation.'),
-  ...ScopePropsSchema.omit({ style: true }).shape,
+  ...ScopePropsSchema.shape,
   skeleton: ArraySkeletonSchema.optional().describe(
     'Schematic structure without real data; excludes other content inputs.',
   ),
@@ -54,12 +59,12 @@ const ArrayBaseSchema = CompositeBaseSchema.extend({
     .readonly()
     .optional()
     .describe('JSON array rendered recursively without inferred cell ids; mutually exclusive with items.'),
-  style: CellStyleSchema.optional(),
   label: NodeSchema.shape.label,
-  layout: ArrayLayoutSchema.optional(),
   index: union([boolean(), ArrayIndexOptionsSchema])
     .default(false)
     .describe('False hides indices; true or an object enables the index strip.'),
+  layout: ArrayLayoutSchema.optional(),
+  defaultCell: ArrayCellDefaultSchema.optional(),
 });
 
 /** 校验数组集合的显式格子、JSON 数据或骨架输入，并拒绝混用互斥来源 */

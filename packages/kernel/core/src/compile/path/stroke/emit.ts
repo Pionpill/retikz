@@ -55,7 +55,7 @@ const emitCanonicalPathPrimitive = (
   const { path } = resolution;
   const canonicalPath = path;
   const canonicalSteps = path.children ?? [];
-  const irPath = pathEmitOptions.irPath ?? 'path';
+  const irPath = resolution.irPath;
 
   const warn = (code: string, message: string, subPath = ''): void => {
     pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
@@ -343,8 +343,6 @@ const emitCanonicalPathPrimitive = (
 
   const baseProps = emitPathBaseProps(canonicalPath, {
     resolvePaint,
-    paint: resolution.paint,
-    style: resolution.style,
   });
   const strokeWidth = baseProps.strokeWidth;
   const logicalGeometry = createStrokePathGeometry(commands, stepIndexes);

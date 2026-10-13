@@ -122,7 +122,7 @@ describe('Flow Theme cascade', () => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',
-      flowDefaults: {
+      defaultFlow: {
         layout: { nodeGap: 12, rankGap: 24 },
         entity: { style: { fill: 'transparent', opacity: 0.7, font: { size: 16 } }, layout: { margin: 2 } },
       },

@@ -7,18 +7,24 @@ description: Browse @retikz/core IR, Definitions, compilation, and Scene semanti
 
 ## Responsibilities
 
-| Document | Responsibility                                     | Reach for it when                                  |
-| -------- | -------------------------------------------------- | -------------------------------------------------- |
-| Overview | IR, Definitions, registries, and Scene compilation | Integrating or extending core drawing capabilities |
+| Document                 | Responsibility                           | Reach for it when                                              |
+| ------------------------ | ---------------------------------------- | -------------------------------------------------------------- |
+| Compilation Flow         | Full compilation from IR to Scene        | Understanding node layout, deferred paths, and result assembly |
+| Configuration resolution | From sparse declarations to layout input | Understanding inheritance, colors, and Definition binding      |
 
-## Documentation
+## Contents
 
 <LinkedSections
   items={[
     {
-      title: 'Overview',
-      description: 'Compilation semantics and runtime integration',
-      url: '/kernel/packages/core/overview',
+      title: 'Compilation Flow',
+      description: 'Follow input, layout, and output in a full compilation',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Configuration resolution',
+      description: 'Follow style overrides, theme colors, and capability binding',
+      url: '/kernel/packages/core/resolution',
     },
   ]}
 />

@@ -79,7 +79,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -119,7 +119,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -201,7 +201,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -356,7 +356,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -497,7 +497,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'intrinsic-failure' } }]],
@@ -573,7 +573,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'nested-table-failure' } }]],
@@ -646,7 +646,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -706,7 +706,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableDefaults: CLEAN_TABLE_DEFAULTS,
+      defaultTable: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ layout: { wrap: true }, content: { namespace: 'fixture', type: 'anonymous-constrained-failure' } }]],

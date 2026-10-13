@@ -45,7 +45,7 @@ it('JSX rows preserve empty cells and explicit aliases with Vanilla parity', () 
 });
 it('automatically collects nested Matrix, Array, Map and clipping providers', () => {
   const jsx = createInputScene(
-    <Matrix layout={{ width: 80, height: 50 }}>
+    <Matrix defaultCell={{ layout: { width: 80, height: 50 } }}>
       <MatrixRow>
         <MatrixCell>
           <Map data={{ a: [1, 2] }} />

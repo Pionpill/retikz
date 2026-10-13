@@ -8,21 +8,15 @@ import { resolveContextualColor } from './contextual-color';
 import type { ContextualColorResolveContext } from './contextual-color';
 import { resolveDropShadow } from './drawable';
 import { resolveGraphicOpacity } from './opacity';
-import type { StyleResolveFrame } from './types';
+import type { EffectiveScopeDefaults } from './types';
 
 /** 仅共享有效颜色上下文，解析独立外框外观 */
 export const resolveScopeFrame = (
   frame: IRScopeFrame,
-  stack: ReadonlyArray<StyleResolveFrame>,
+  scopeDefaults: EffectiveScopeDefaults,
   context: PaintResolveContext & Pick<ContextualColorResolveContext, 'mode'>,
 ) => {
-  let masterColor: string | undefined;
-
-  for (const entry of stack) {
-    if (entry.cascade.color !== undefined) masterColor = entry.cascade.color;
-  }
-
-  masterColor = frame.style?.color ?? masterColor;
+  const masterColor = frame.style?.color ?? scopeDefaults.scopeColor;
   const defaults = ScopeFrameStyleSchema.parse({});
   const style = {
     ...defaults,

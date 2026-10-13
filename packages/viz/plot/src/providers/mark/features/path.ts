@@ -1,4 +1,5 @@
 import type { IRChild, IRCoordinate, IRNodeLabel, IRPath, IRScope, IRStep } from '@retikz/core';
+import { mergeGraphicStyle } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 
@@ -557,7 +558,15 @@ const defaultNullConnectionStyle = PlotPathConnectNullsStyleSchema.parse({});
 const applyNullConnectionStyle = (path: IRPath, segment: PathStepSegment, mark: IRPlotPathMark): IRPath => {
   if (!segment.bridgesNulls) return path;
   const overrides = typeof mark.connectNulls === 'object' ? mark.connectNulls : defaultNullConnectionStyle;
-  return { ...path, style: { ...path.style, ...defaultNullConnectionStyle, ...overrides } };
+  const { strokeOpacity, ...styleOverrides } = { ...defaultNullConnectionStyle, ...overrides };
+  return {
+    ...path,
+    style: mergeGraphicStyle(
+      path.style,
+      styleOverrides,
+      strokeOpacity === undefined ? {} : { opacity: { stroke: strokeOpacity } },
+    ),
+  };
 };
 
 const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCurve): Array<IRStep> | null => {

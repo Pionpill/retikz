@@ -256,10 +256,10 @@ const plotAreaBorderNode = (
 
 /** 只把 Plot typography 主色投影到 presentation guide 图层，不污染数据 mark 图层 */
 const withGuideMasterColor = (layer: IRScope, masterColor: string): IRScope =>
-  layer.style?.color === undefined
+  layer.defaults?.style?.color === undefined
     ? {
         ...layer,
-        style: { ...layer.style, color: masterColor },
+        defaults: { ...layer.defaults, style: { ...layer.defaults?.style, color: masterColor } },
       }
     : layer;
 
@@ -495,7 +495,7 @@ export const lowerPlotWithDataArtifact = (
   const themeResolution = resolvePlotTheme(
     effectiveTheme,
     {
-      plotDefaults: node.plotDefaults,
+      defaultPlot: node.defaultPlot,
       plotRules: node.plotRules,
     },
     options.plotThemeStyles,
@@ -935,8 +935,9 @@ export const lowerPlotWithDataArtifact = (
             },
           },
         ],
-        style: { color: resolvedTheme.typography.textColor ?? 'currentColor' },
+
         defaults: {
+          style: { color: resolvedTheme.typography.textColor ?? 'currentColor' },
           node: {
             style: { fill: 'none', stroke: 'none' },
             layout: { padding: 0 },

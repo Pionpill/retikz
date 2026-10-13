@@ -27,18 +27,33 @@ const compile = (children: Array<IRChild>) =>
   );
 
 describe('Array / Map appearance and identity', () => {
+  it('resolves numeric content paint against the cell master color before replay', () => {
+    const result = compile([
+      {
+        namespace: 'standard',
+        type: 'array',
+        items: [{ content: { ...content, style: { fill: 0.2, stroke: 'none' } } }],
+        defaultCell: { style: { color: '#336699' } },
+      },
+    ]);
+
+    expect(flat(result.scene.primitives).filter(node => node.type === 'rect')).toEqual(
+      expect.arrayContaining([expect.objectContaining({ fill: '#d6e0eb' })]),
+    );
+  });
+
   it('overrides index text style without changing cell text and merges font fields', () => {
     const result = compile([
       {
         namespace: 'standard',
         type: 'array',
         items: ['A'],
-        style: { font: { family: 'monospace', size: 14 }, textColor: 'blue' },
         index: {
           start: 7,
           position: 'after',
           style: { font: { size: 28, weight: 'bold' }, textColor: 'red', opacity: 0.5 },
         },
+        defaultCell: { style: { font: { family: 'monospace', size: 14 }, textColor: 'blue' } },
       },
     ]);
     const texts = flat(result.scene.primitives).filter(node => node.type === 'text');
@@ -61,9 +76,8 @@ describe('Array / Map appearance and identity', () => {
       {
         namespace: 'standard',
         type: 'array',
-        layout: { width: 12, height: 8, padding: 0 },
-        style: { font: { size: 30 } },
         items: [{ id: 'small', content: 'Unscaled long text' }],
+        defaultCell: { style: { font: { size: 30 } }, layout: { width: 12, height: 8, padding: 0 } },
       },
     ]);
     const primitives = flat(result.scene.primitives);
@@ -97,13 +111,11 @@ describe('Array / Map appearance and identity', () => {
       {
         namespace: 'standard',
         type: 'map',
-        style: {
-          fill: 'red',
-          font: { family: 'monospace' },
-          key: { fill: 'blue', font: { size: 16 } },
-          opacity: { fill: 0.2 },
-        },
         entries: [{ key: { content }, value: { content, style: { fill: 'green', opacity: { fill: 0 } } } }],
+        defaultCell: {
+          style: { fill: 'red', font: { family: 'monospace' }, opacity: { fill: 0.2 } },
+          key: { style: { fill: 'blue', font: { size: 16 } } },
+        },
       },
     ]);
     const primitives = flat(result.scene.primitives);
@@ -127,10 +139,9 @@ describe('Array / Map appearance and identity', () => {
         namespace: 'standard',
         type: 'array',
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
-        style: { fill: 'none', stroke: 'none' },
-        layout: { width: 100, height: 60 },
         cellIdMode: 'string',
         items: ['slot'],
+        defaultCell: { style: { fill: 'none', stroke: 'none' }, layout: { width: 100, height: 60 } },
       },
       {
         type: 'path',
@@ -169,11 +180,11 @@ describe('Array / Map appearance and identity', () => {
         namespace: 'standard',
         type: 'array',
         defaults: { node: { style: { font: { size: 30 } } } },
-        layout: { overflow: 'clip' },
         items: [
           { id: 'one', content },
           { id: 'two', content },
         ],
+        defaultCell: { layout: { overflow: 'clip' } },
       },
     ]);
 
@@ -209,10 +220,9 @@ it('preserves Core namespace isolation, duplicate diagnostics, and delayed cell 
             namespace: 'standard',
             type: 'array',
             localNamespace,
-            style: { fill: 'none', stroke: 'none' },
-            layout: { width: 100, height: 60 },
             cellIdMode: 'string',
             items: ['slot'],
+            defaultCell: { style: { fill: 'none', stroke: 'none' }, layout: { width: 100, height: 60 } },
           },
         ],
       },
@@ -248,13 +258,18 @@ it('compiles persistent text cells exactly like explicit undecorated nodes witho
     layout: { padding: 0, margin: 0 },
   };
   const source: Array<IRChild> = [
-    { namespace: 'standard', type: 'array', style: { font: { size: 18 } }, items: ['A'] },
+    { namespace: 'standard', type: 'array', items: ['A'], defaultCell: { style: { font: { size: 18 } } } },
     { namespace: 'standard', type: 'map', entries: [{ key: 'A', value: { content: 'A', style: { fill: 'blue' } } }] },
   ];
   const before = JSON.stringify(source);
   const actual = compile(source);
   const explicit = compile([
-    { namespace: 'standard', type: 'array', style: { font: { size: 18 } }, items: [{ content: textNode }] },
+    {
+      namespace: 'standard',
+      type: 'array',
+      items: [{ content: textNode }],
+      defaultCell: { style: { font: { size: 18 } } },
+    },
     {
       namespace: 'standard',
       type: 'map',

@@ -1,4 +1,4 @@
-import type { IRChild, IRPosition, IRStep, PathCommand } from '@retikz/core';
+import type { IRChild, IRPathStyle, IRPosition, IRStep, PathCommand } from '@retikz/core';
 import { alignAngleSweep, DEG_TO_RAD } from '@retikz/core';
 import type { AffineMatrix } from '@retikz/math';
 import { applyAffine, DEFAULT_EPSILON, localToWorld } from '@retikz/math';
@@ -11,12 +11,8 @@ export type InspectionPathStyle = Readonly<{
   stroke: string;
   /** 辅助轮廓的描边宽度，单位与场景坐标一致 */
   strokeWidth: number;
-  /** 仅作用于辅助轮廓描边的不透明度 */
-  strokeOpacity?: number;
-  /** 填充通道的不透明度；无填充时不产生可见区域 */
-  fillOpacity?: number;
-  /** 辅助路径整体的不透明度 */
-  opacity?: number;
+  /** 复用 Core 的整体、填充与描边透明度契约 */
+  opacity?: IRPathStyle['opacity'];
   /** 辅助轮廓的虚线段长序列，采用场景单位 */
   dashPattern?: Array<number>;
   /** 辅助轮廓虚线序列的相位偏移 */
